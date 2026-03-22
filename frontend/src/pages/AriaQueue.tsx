@@ -5,9 +5,9 @@
  * Like a printed intelligence bulletin from an anti-corruption unit.
  */
 
-import { useState, useCallback } from 'react'
+import { useState, useRef, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -32,10 +32,11 @@ import {
   Sparkles,
   FileText,
   ArrowRight,
-  ArrowDown,
   Building2,
   Crosshair,
-  X,
+  ClipboardEdit,
+  Check,
+  X as XIcon,
 } from 'lucide-react'
 
 // ============================================================================
@@ -124,6 +125,121 @@ function NewVendorBadge() {
       <Sparkles className="h-3 w-3" />
       {t('badges.new')}
     </span>
+  )
+}
+
+// ============================================================================
+// Review Status Badge
+// ============================================================================
+
+type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
+
+const REVIEW_STATUS_META: Record<ReviewStatus, { label: string; className: string }> = {
+  pending:   { label: 'Pendiente',  className: 'bg-stone-800/60 text-stone-400 border-stone-700' },
+  reviewing: { label: 'En revisión', className: 'bg-orange-950/60 text-orange-400 border-orange-800' },
+  confirmed: { label: 'Confirmado', className: 'bg-green-950/60 text-green-400 border-green-800' },
+  dismissed: { label: 'Descartado', className: 'bg-stone-900/60 text-stone-500 border-stone-800' },
+}
+
+function ReviewStatusBadge({ status }: { status: ReviewStatus | null | undefined }) {
+  const s = (status ?? 'pending') as ReviewStatus
+  const meta = REVIEW_STATUS_META[s] ?? REVIEW_STATUS_META.pending
+  return (
+    <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border', meta.className)}>
+      {meta.label}
+    </span>
+  )
+}
+
+// ============================================================================
+// Review Popover
+// ============================================================================
+
+function ReviewPopover({
+  vendorId,
+  currentStatus,
+  onClose,
+}: {
+  vendorId: number
+  currentStatus: ReviewStatus | null | undefined
+  onClose: () => void
+}) {
+  const queryClient = useQueryClient()
+  const [status, setStatus] = useState<ReviewStatus>((currentStatus ?? 'pending') as ReviewStatus)
+  const ref = useRef<HTMLDivElement>(null)
+
+  // Close on outside click
+  useEffect(() => {
+    function handleClickOutside(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose()
+      }
+    }
+    document.addEventListener('mousedown', handleClickOutside)
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [onClose])
+
+  const mutation = useMutation({
+    mutationFn: (s: ReviewStatus) =>
+      ariaApi.updateReview(vendorId, { review_status: s }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['aria-queue-leads'] })
+      queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
+      onClose()
+    },
+  })
+
+  const statuses: ReviewStatus[] = ['pending', 'reviewing', 'confirmed', 'dismissed']
+
+  return (
+    <div
+      ref={ref}
+      className="absolute right-0 top-8 z-50 w-52 rounded-lg border border-border bg-background-card shadow-xl p-3 space-y-2"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <p className="text-[10px] uppercase tracking-wider font-mono text-text-muted font-bold mb-2">
+        Estado de Revisión
+      </p>
+      {statuses.map((s) => {
+        const meta = REVIEW_STATUS_META[s]
+        const isSelected = status === s
+        return (
+          <button
+            key={s}
+            onClick={() => setStatus(s)}
+            className={cn(
+              'w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium border transition-colors',
+              isSelected
+                ? cn(meta.className, 'ring-1 ring-white/10')
+                : 'bg-background-elevated/40 border-border text-text-secondary hover:border-accent/40'
+            )}
+          >
+            {isSelected && <Check className="h-3 w-3 shrink-0" />}
+            {!isSelected && <span className="w-3 shrink-0" />}
+            {meta.label}
+          </button>
+        )
+      })}
+      <div className="flex items-center gap-2 pt-1 border-t border-border">
+        <button
+          onClick={() => mutation.mutate(status)}
+          disabled={mutation.isPending}
+          className="flex-1 py-1.5 rounded text-xs font-medium bg-accent text-white hover:bg-accent/80 disabled:opacity-50 transition-colors"
+        >
+          {mutation.isPending ? 'Guardando…' : 'Guardar'}
+        </button>
+        <button
+          onClick={onClose}
+          className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated transition-colors"
+          aria-label="Cerrar"
+        >
+          <XIcon className="h-3.5 w-3.5" />
+        </button>
+      </div>
+      {mutation.isError && (
+        <p className="text-[10px] text-red-400">Error al guardar. Intenta de nuevo.</p>
+      )}
+    </div>
   )
 }
 
@@ -335,6 +451,7 @@ function LeadRow({
 }) {
   const navigate = useNavigate()
   const ips = item.ips_final ?? 0
+  const [reviewOpen, setReviewOpen] = useState(false)
 
   return (
     <>
@@ -383,19 +500,41 @@ function LeadRow({
             T{item.ips_tier ?? '?'}
           </span>
         </td>
+        {/* Review status column */}
+        <td className="px-4 py-3 hidden xl:table-cell">
+          <ReviewStatusBadge status={item.review_status as ReviewStatus | undefined} />
+        </td>
+        {/* Actions column */}
         <td className="px-4 py-3">
-          <button
-            onClick={(e) => { e.stopPropagation(); navigate(`/thread/${item.vendor_id}`) }}
-            className="text-accent hover:text-accent/80 p-1 rounded hover:bg-accent/10 transition-colors"
-            aria-label="Red Thread investigation"
-          >
-            <ArrowRight className="h-3.5 w-3.5" />
-          </button>
+          <div className="relative flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+            <button
+              onClick={() => setReviewOpen((v) => !v)}
+              className="text-text-muted hover:text-accent p-1 rounded hover:bg-accent/10 transition-colors"
+              aria-label="Review"
+              title="Actualizar estado de revisión"
+            >
+              <ClipboardEdit className="h-3.5 w-3.5" />
+            </button>
+            <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/thread/${item.vendor_id}`) }}
+              className="text-accent hover:text-accent/80 p-1 rounded hover:bg-accent/10 transition-colors"
+              aria-label="Red Thread investigation"
+            >
+              <ArrowRight className="h-3.5 w-3.5" />
+            </button>
+            {reviewOpen && (
+              <ReviewPopover
+                vendorId={item.vendor_id}
+                currentStatus={item.review_status as ReviewStatus | undefined}
+                onClose={() => setReviewOpen(false)}
+              />
+            )}
+          </div>
         </td>
       </tr>
       {expanded && (
         <tr className="border-b border-border bg-background-elevated/20">
-          <td colSpan={6} className="px-6 py-4">
+          <td colSpan={8} className="px-6 py-4">
             <div className="border-l-2 border-accent/30 pl-4">
               <div className="text-[10px] uppercase tracking-[0.2em] text-accent/60 font-mono font-bold mb-2">
                 Detalles de inteligencia
@@ -441,31 +580,14 @@ function LeadRow({
 // Main Page
 // ============================================================================
 
-// Pattern filter options for the search bar dropdown
-const PATTERN_FILTER_OPTIONS = [
-  { value: 'P1', label: 'patternFilter.P1' },
-  { value: 'P2', label: 'patternFilter.P2' },
-  { value: 'P3', label: 'patternFilter.P3' },
-  { value: 'P6', label: 'patternFilter.P6' },
-  { value: 'P7', label: 'patternFilter.P7' },
-] as const
-
 export default function AriaPage() {
   const { t } = useTranslation('aria')
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [newVendorOnly, setNewVendorOnly] = useState(false)
+  const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<number | null>(null)
-
-  // Task 1: Primer dismissible state
-  const [primerDismissed, setPrimerDismissed] = useState(() =>
-    localStorage.getItem('rubli_aria_intro_seen') === '1'
-  )
-  const dismissPrimer = useCallback(() => {
-    localStorage.setItem('rubli_aria_intro_seen', '1')
-    setPrimerDismissed(true)
-  }, [])
 
   const PER_PAGE = 50
 
@@ -547,68 +669,6 @@ export default function AriaPage() {
       </div>
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
-
-        {/* ================================================================ */}
-        {/* ARIA ONBOARDING PRIMER (Task 1)                                  */}
-        {/* ================================================================ */}
-        {!primerDismissed && (
-          <div className="relative border-l-4 border-[#dc2626] bg-zinc-900 rounded-r-lg p-5">
-            <button
-              onClick={dismissPrimer}
-              className="absolute top-3 right-3 text-zinc-500 hover:text-zinc-300 transition-colors"
-              aria-label={t('primer.dismiss')}
-            >
-              <X className="h-4 w-4" />
-            </button>
-            <p className="text-sm text-zinc-300 leading-relaxed pr-8 mb-3">
-              {t('primer.text')}
-            </p>
-            <button
-              onClick={() => {
-                dismissPrimer()
-                const tier1Section = document.getElementById('aria-tier1-section')
-                tier1Section?.scrollIntoView({ behavior: 'smooth' })
-              }}
-              className="inline-flex items-center gap-1.5 text-xs font-semibold text-red-400 hover:text-red-300 transition-colors"
-            >
-              {t('primer.cta')} <ArrowDown className="h-3.5 w-3.5" />
-            </button>
-          </div>
-        )}
-
-        {/* ================================================================ */}
-        {/* SEARCH / FILTER BAR (Task 2)                                     */}
-        {/* ================================================================ */}
-        <div className="flex flex-col sm:flex-row gap-3">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-zinc-500" />
-            <input
-              type="text"
-              placeholder={t('searchBar.placeholder')}
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-10 pr-3 py-2.5 text-sm bg-zinc-900 border border-zinc-700 rounded-lg text-text-primary placeholder-zinc-500 focus:outline-none focus:border-accent/60 font-mono"
-            />
-            {search && (
-              <button
-                onClick={() => { setSearch(''); setPage(1) }}
-                className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
-              >
-                <X className="h-3.5 w-3.5" />
-              </button>
-            )}
-          </div>
-          <select
-            value={patternFilter ?? ''}
-            onChange={(e) => { setPatternFilter(e.target.value || null); setPage(1) }}
-            className="px-3 py-2.5 text-sm bg-zinc-900 border border-zinc-700 rounded-lg text-text-primary focus:outline-none focus:border-accent/60 font-mono min-w-[200px]"
-          >
-            <option value="">{t('searchBar.allPatterns')}</option>
-            {PATTERN_FILTER_OPTIONS.map(({ value, label }) => (
-              <option key={value} value={value}>{t(label)}</option>
-            ))}
-          </select>
-        </div>
 
         <EditorialHeadline
           section="INTELIGENCIA RUBLI"
@@ -772,7 +832,7 @@ export default function AriaPage() {
         {/* TIER 1 SPOTLIGHT — critical targets                              */}
         {/* ================================================================ */}
         {!patternFilter && !newVendorOnly && !search && (
-          <section id="aria-tier1-section">
+          <section>
             <div className="flex items-center justify-between mb-4">
               <div>
                 <div className="flex items-center gap-2 mb-1">
@@ -845,6 +905,31 @@ export default function AriaPage() {
             </div>
           </div>
 
+          {/* Review status filter chips */}
+          <div className="flex flex-wrap items-center gap-2 mb-3">
+            <span className="text-[10px] uppercase tracking-wider font-mono text-text-muted">Revisión:</span>
+            {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
+              const meta = s ? REVIEW_STATUS_META[s] : null
+              const isActive = reviewStatusFilter === s
+              return (
+                <button
+                  key={s ?? 'all'}
+                  onClick={() => { setReviewStatusFilter(s); setPage(1) }}
+                  className={cn(
+                    'px-2.5 py-1 rounded text-xs font-medium border transition-colors',
+                    isActive
+                      ? s
+                        ? cn(meta!.className, 'ring-1 ring-white/10')
+                        : 'bg-accent text-white border-accent'
+                      : 'bg-background-elevated text-text-muted border-border hover:border-accent/40'
+                  )}
+                >
+                  {s ? REVIEW_STATUS_META[s].label : 'Todos'}
+                </button>
+              )
+            })}
+          </div>
+
           <Card className="border border-border bg-background-card overflow-hidden">
             {leadsLoading ? (
               <div className="p-6 space-y-2">
@@ -877,7 +962,10 @@ export default function AriaPage() {
                       <th className="px-4 py-3 text-left text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider w-12">
                         TIER
                       </th>
-                      <th className="px-4 py-3 w-10" />
+                      <th className="px-4 py-3 text-left text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider hidden xl:table-cell">
+                        REVISIÓN
+                      </th>
+                      <th className="px-4 py-3 w-16" />
                     </tr>
                   </thead>
                   <tbody>

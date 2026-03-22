@@ -11,6 +11,7 @@ import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleC
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
+import { ResponsibleUseNotice } from '@/components/ResponsibleUseNotice'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
@@ -3273,6 +3274,8 @@ export function VendorProfile() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
       />
+
+      <ResponsibleUseNotice className="mt-6" />
     </div>
   )
 }

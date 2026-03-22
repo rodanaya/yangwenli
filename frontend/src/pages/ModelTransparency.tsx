@@ -93,10 +93,10 @@ const VALIDATION_METRICS = {
   brier_score: 0.107,
   detection_rate_medium_plus: 1.000,
   detection_rate_high_plus: 0.674,
-  high_risk_rate: 0.100,
-  pu_correction: 0.343,
-  ground_truth_cases: 347,
-  ground_truth_vendors: 507,
+  high_risk_rate: 0.092,
+  pu_correction: 0.3432,
+  ground_truth_cases: 748,
+  ground_truth_vendors: 603,
   ground_truth_contracts: 252072,
 } as const
 
@@ -638,13 +638,14 @@ function DriftMonitorSection() {
 // ============================================================================
 
 const RACETRACK_FEATURES = [
-  { name: 'Price Volatility', coeff: 1.148, direction: 'risk' as const },
-  { name: 'Vendor Concentration', coeff: 0.375, direction: 'risk' as const },
-  { name: 'Price Ratio', coeff: 0.235, direction: 'risk' as const },
-  { name: 'Network Members', coeff: 0.181, direction: 'risk' as const },
-  { name: 'Same-Day Contracts', coeff: 0.095, direction: 'risk' as const },
-  { name: 'Win Rate', coeff: 0.049, direction: 'risk' as const },
-  { name: 'Institution Diversity', coeff: 0.382, direction: 'protect' as const },
+  { name: 'Price Volatility', coeff: 1.857, direction: 'risk' as const },
+  { name: 'Price Ratio', coeff: 0.391, direction: 'risk' as const },
+  { name: 'Vendor Concentration', coeff: 0.238, direction: 'risk' as const },
+  { name: 'Network Members', coeff: 0.187, direction: 'risk' as const },
+  { name: 'Same-Day Contracts', coeff: 0.111, direction: 'risk' as const },
+  { name: 'Single Bid', coeff: 0.098, direction: 'risk' as const },
+  { name: 'Ad Period Days', coeff: 0.042, direction: 'risk' as const },
+  { name: 'Institution Diversity', coeff: 0.468, direction: 'protect' as const },
 ]
 
 function FeatureWeightsRacetrack() {
@@ -740,10 +741,10 @@ function FeatureWeightsRacetrack() {
 // ============================================================================
 
 const DISTRIBUTION_SEGMENTS = [
-  { label: 'Low', pct: 69.2, count: 2_110_325, color: '#16a34a' },
-  { label: 'Medium', pct: 18.5, count: 564_758, color: '#eab308' },
-  { label: 'High', pct: 3.6, count: 110_163, color: '#ea580c' },
-  { label: 'Critical', pct: 8.7, count: 266_048, color: '#dc2626' },
+  { label: 'Low', pct: 74.44, count: 2_271_247, color: '#16a34a' },
+  { label: 'Medium', pct: 16.34, count: 498_432, color: '#eab308' },
+  { label: 'High', pct: 4.85, count: 148_043, color: '#ea580c' },
+  { label: 'Critical', pct: 4.38, count: 133_572, color: '#dc2626' },
 ]
 
 function useCountUpEffect(target: number, duration: number, active: boolean): number {
@@ -856,7 +857,7 @@ function RiskDistributionStrip() {
       </div>
 
       <p className="text-[11px] text-text-muted">
-        3,051,294 contracts analyzed — HR rate 12.3% (OECD 2-15% compliant)
+        3,051,294 contracts analyzed — HR rate 9.2% (OECD 2-15% compliant)
       </p>
     </div>
   )
@@ -897,14 +898,14 @@ function GroundTruthDetection() {
   const getBadgeColor = useCallback((score: number) => {
     if (score >= 0.60) return '#dc2626'
     if (score >= 0.40) return '#ea580c'
-    if (score >= 0.15) return '#eab308'
+    if (score >= 0.25) return '#eab308'
     return '#16a34a'
   }, [])
 
   const getBadgeLabel = useCallback((score: number) => {
     if (score >= 0.60) return 'Critical'
     if (score >= 0.40) return 'High'
-    if (score >= 0.15) return 'Medium'
+    if (score >= 0.25) return 'Medium'
     return 'Low'
   }, [])
 
@@ -1214,6 +1215,24 @@ export default function ModelTransparency() {
             icon={Target}
             color="#58a6ff"
           />
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <Card>
+            <CardContent className="p-4">
+              <div className="flex items-start gap-4">
+                <div className="rounded-lg p-2 shrink-0" style={{ backgroundColor: '#a78bfa15', color: '#a78bfa' }}>
+                  <Info className="h-4 w-4" aria-hidden="true" />
+                </div>
+                <div className="min-w-0">
+                  <p className="text-xs text-text-muted">Population AUC</p>
+                  <p className="text-xl font-bold text-text-primary tabular-nums mt-0.5">0.7280</p>
+                  <p className="text-xs text-text-secondary mt-0.5">
+                    All GT contracts vs all 2.7M unlabeled. Use for external reporting.
+                  </p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </motion.div>
         <motion.div variants={staggerItem}>
           <MetricGauge

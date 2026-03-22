@@ -211,9 +211,9 @@ const LIMITATIONS = [
     severity: 'high',
     summary: 'The Elkan & Noto correction assumes labeled positives are a random sample of all corrupt contracts (SCAR). They are not — known cases are high-profile scandals selected by media attention and prosecution, not a random draw.',
     body: [
-      'The PU-learning correction c=0.8815 estimates P(labeled=1 | corrupt): how likely a truly corrupt contract is to appear in the labeled set. This requires the SCAR assumption — that labeled positives are a Selected Completely At Random sample of all corrupt contracts.',
+      'The PU-learning correction c=0.3432 estimates P(labeled=1 | corrupt): how likely a truly corrupt contract is to appear in the labeled set. This requires the SCAR assumption — that labeled positives are a Selected Completely At Random sample of all corrupt contracts.',
       'This assumption is structurally violated. The labeled positives are contracts from publicly documented, high-profile scandals (IMSS, Segalmex, COVID procurement) selected because they attracted regulatory and media attention. Selection probability is correlated with vendor size, sector prominence, and media visibility.',
-      'The correction factor c=0.8815 estimates how well the model detects cases similar to already-known scandals. True coverage of all corruption — including undiscovered, small-scale, or non-media-visible fraud — is likely far lower (estimated 0.10–0.30). Risk scores should be interpreted as similarity to documented scandal patterns, not as calibrated probabilities of corruption.',
+      'The correction factor c=0.3432 estimates how well the model detects cases similar to already-known scandals. True coverage of all corruption — including undiscovered, small-scale, or non-media-visible fraud — is likely far lower (estimated 0.10–0.30). Risk scores should be interpreted as similarity to documented scandal patterns, not as calibrated probabilities of corruption.',
     ],
     blind_spots: [
       'Small-scale corruption that never reaches media or prosecutors',
@@ -288,7 +288,7 @@ const SUMMARY_ROWS = [
   { limitation: 'Temporal stationarity', impact: 'New fraud patterns may be undetected', fixable: 'yes', fix: 'Periodic retraining with new cases' },
   { limitation: 'Contract modifications invisible', impact: 'Infrastructure/energy execution-phase costs untracked', fixable: 'partial', fix: 'Requires ASF audit data integration (Phase 6)' },
   { limitation: 'Mexico-specific concentration model', impact: 'Bid-rotation collusion in competitive procedures underdetected', fixable: 'yes', fix: 'Add collusion-ring ground truth cases to training data' },
-  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.448 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
+  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.3432 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
   { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Vendor-level features use full history; mitigated by vendor-stratified split in v6.0', fixable: 'yes', fix: 'Point-in-time rolling features (vendor_rolling_stats table)' },
 ] as const
 

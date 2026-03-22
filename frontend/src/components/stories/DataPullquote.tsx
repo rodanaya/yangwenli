@@ -15,9 +15,9 @@ interface DataPullquoteProps {
 }
 
 const OUTLET_BORDER_COLORS: Record<OutletType, string> = {
-  nyt: '#000000',
-  wapo: '#14213D',
-  animal_politico: '#e6420e',
+  longform: '#71717a',
+  investigative: '#3b82f6',
+  data_analysis: '#8b5cf6',
   rubli: '#dc2626',
 }
 

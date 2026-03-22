@@ -136,12 +136,15 @@ export function InvestigationCaseDetail() {
   // Status change state
   const [newStatus, setNewStatus] = useState<InvestigationValidationStatus>('corroborated')
   const [statusNotes, setStatusNotes] = useState('')
+  const [reviewerName, setReviewerName] = useState('')
 
   // Evidence form state
   const [evidenceUrl, setEvidenceUrl] = useState('')
   const [evidenceTitle, setEvidenceTitle] = useState('')
   const [evidenceSummary, setEvidenceSummary] = useState('')
   const [evidenceType, setEvidenceType] = useState('news')
+  const [credibility, setCredibility] = useState<'low' | 'medium' | 'high'>('medium')
+  const [datePublished, setDatePublished] = useState('')
 
   // Data fetch
   const { data: detail, isLoading, isError } = useQuery({
@@ -154,7 +157,7 @@ export function InvestigationCaseDetail() {
   // Review mutation
   const reviewMutation = useMutation({
     mutationFn: ({ status, notes }: { status: string; notes?: string }) =>
-      investigationApi.reviewCase(caseId!, status, notes, 'analyst'),
+      investigationApi.reviewCase(caseId!, status, notes, reviewerName || 'analyst'),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['investigation'] })
       setShowStatusModal(false)
@@ -170,8 +173,8 @@ export function InvestigationCaseDetail() {
         source_title: evidenceTitle,
         source_type: evidenceType,
         summary: evidenceSummary,
-        date_published: null,
-        credibility: 'medium',
+        date_published: datePublished || null,
+        credibility: credibility,
       }]),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['investigation'] })
@@ -640,7 +643,7 @@ export function InvestigationCaseDetail() {
                 value={evidenceSummary}
                 onChange={(e) => setEvidenceSummary(e.target.value)}
               />
-              <div className="flex items-center gap-2 pt-1">
+              <div className="flex items-center gap-2 pt-1 flex-wrap">
                 <select
                   className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
                   value={evidenceType}
@@ -651,6 +654,21 @@ export function InvestigationCaseDetail() {
                   <option value="legal">{t('evidenceForm.types.legal')}</option>
                   <option value="investigative">{t('evidenceForm.types.investigative')}</option>
                 </select>
+                <select
+                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
+                  value={credibility}
+                  onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
+                >
+                  <option value="low">Low credibility</option>
+                  <option value="medium">Medium credibility</option>
+                  <option value="high">High credibility</option>
+                </select>
+                <input
+                  type="date"
+                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
+                  value={datePublished}
+                  onChange={(e) => setDatePublished(e.target.value)}
+                />
                 <Button
                   size="sm"
                   className="h-7 text-xs"
@@ -764,6 +782,12 @@ export function InvestigationCaseDetail() {
                 placeholder="Optional notes..."
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
+              />
+              <input
+                className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent/50"
+                placeholder="Your name (optional)"
+                value={reviewerName}
+                onChange={(e) => setReviewerName(e.target.value)}
               />
             </div>
             <div className="flex items-center gap-2 mt-4 justify-end">

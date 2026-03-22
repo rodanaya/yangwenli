@@ -15,9 +15,9 @@ const TYPE_LABELS: Record<StoryType, string> = {
 }
 
 const OUTLET_ACCENT: Record<OutletType, string> = {
-  nyt: '#71717a',       // zinc-500
-  wapo: '#1e3a5f',      // navy
-  animal_politico: '#e6420e',
+  longform: '#1a1714',
+  investigative: '#c41e3a',
+  data_analysis: '#2563eb',
   rubli: '#dc2626',
 }
 

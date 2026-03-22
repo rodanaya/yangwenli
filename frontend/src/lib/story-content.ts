@@ -10,7 +10,7 @@
 // Types
 // ---------------------------------------------------------------------------
 
-export type StoryOutlet = 'nyt' | 'wapo' | 'animal_politico' | 'rubli'
+export type StoryOutlet = 'longform' | 'investigative' | 'data_analysis' | 'rubli'
 export type StoryType = 'era' | 'case' | 'thematic' | 'year'
 export type StoryEra = 'fox' | 'calderon' | 'pena' | 'amlo' | 'sheinbaum' | 'cross'
 
@@ -74,7 +74,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'la-cuarta-adjudicación',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'era',
     era: 'amlo',
     headline: 'La Cuarta Adjudicación: Como la 4T Rompio el Record de Contratos Sin Licitación',
@@ -198,7 +198,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'el-granero-vacio',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'amlo',
     headline: 'El Granero Vacio: Como SEGALMEX Convirtio la Lucha Contra el Hambre en un Negocio',
@@ -302,7 +302,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'los-nuevos-ricos-de-la-4t',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     era: 'amlo',
     headline: 'Los Nuevos Ricos de la 4T: 1,253 Empresas Sin Historial que Ganaron Millones',
@@ -392,7 +392,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'hemoser-el-2-de-agosto',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'amlo',
     headline: 'HEMOSER: El 2 de Agosto de 2023, Doce Contratos, 17 Mil Millones',
@@ -477,7 +477,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'la-austeridad-que-no-fue',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'era',
     era: 'amlo',
     headline: 'The Austerity That Wasn\'t: How AMLO\'s Spending Cuts Spared the Direct Award Machine',
@@ -577,7 +577,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'cero-competencia',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     era: 'cross',
     headline: 'Cero Competencia: 505,219 Licitaciónes con un Solo Postor',
@@ -638,7 +638,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'triangulo-farmacéutico',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     era: 'amlo',
     headline: 'The Pharma Triangle: Three Companies, $270 Billion, and México\'s Medicine Crisis',
@@ -693,7 +693,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'avalancha-diciembre',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'year',
     era: 'pena',
     headline: 'The December Avalanche: $57.5 Billion in 31 Days',
@@ -747,7 +747,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'cartel-del-corazon',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     era: 'cross',
     headline: 'The Cardiac Cartel: Vitalmex and the $50 Billion Heart Equipment Monopoly',
@@ -802,7 +802,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'red-fantasma',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     era: 'cross',
     headline: 'Red Fantasma: Anatomia de una Empresa Fantasma en COMPRANET',
@@ -864,7 +864,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'infraestructura-sin-competencia',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     era: 'cross',
     headline: 'Built Without Bidders: México\'s $2.1 Trillion Infrastructure Spending Gap',
@@ -918,7 +918,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'sixsigma-hacienda',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'cross',
     headline: 'SixSigma y el SAT: 27 Mil Millones en Contratos Amañados',
@@ -974,7 +974,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'oceanografia',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     era: 'pena',
     headline: 'Oceanografia: The $22.4 Billion Fraud that Crossed Borders',
@@ -1027,7 +1027,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'sexenio-a-sexenio',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'era',
     era: 'cross',
     headline: 'Four Presidents, One Trend: México\'s 23-Year Drift Toward No-Bid Contracting',
@@ -1104,7 +1104,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'la-casa-de-los-contratos',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'cross',
     headline: 'La Casa de los Contratos: La Red de Fraude en Infraestructura de $85 Mil Millones',
@@ -1160,7 +1160,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'el-ano-sin-excusas',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'year',
     era: 'amlo',
     headline: '2023: El Año en que México Rompió Todos los Récords de Adjudicación Directa',
@@ -1241,7 +1241,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'insabi-el-experimento',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'amlo',
     headline: 'INSABI: El Experimento que Colapsó el Abasto de Médicamentos',
@@ -1321,7 +1321,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'tren-maya-sin-reglas',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'case',
     era: 'amlo',
     headline: 'Tren Maya: $180 Billion Pesos Without a Single Competitive Bid',
@@ -1397,7 +1397,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'fabrica-de-monopolios',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     era: 'amlo',
     headline: 'La Fábrica de Monopolios: Cómo el Estado Concentró el Gasto en Unas Pocas Manos',
@@ -1478,7 +1478,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'el-dinero-de-todos',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'thematic',
     era: 'cross',
     headline: "The People's Money: How Mexican Procurement Spending Became Ever More Concentrated",
@@ -1559,7 +1559,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'pandemia-sin-supervisión',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     era: 'amlo',
     headline: 'Pandemia Sin Supervisión: Los Contratos de Emergencia que Nadie Vigiló',
@@ -1634,7 +1634,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'pemex-el-gigante',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'case',
     era: 'cross',
     headline: "PEMEX Never Competes: México's Oil Giant and the $2 Trillion Procurement Black Hole",
@@ -1710,7 +1710,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'atlas-del-riesgo',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     era: 'cross',
     headline: 'Atlas del Riesgo: Los Sectores Donde la Corrupción Deja más Huellas',
@@ -1791,7 +1791,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'la-herencia-envenenada',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'era',
     era: 'amlo',
     headline: 'La Herencia Envenenada: Lo que AMLO Dejó en las Finanzas Públicas',
@@ -1872,7 +1872,7 @@ export const STORIES: StoryDef[] = [
   // =========================================================================
   {
     slug: 'dividir-para-evadir',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     era: 'amlo',
     headline: "Divide and Evade: México's 275,670 Contracts Designed to Avoid Scrutiny",

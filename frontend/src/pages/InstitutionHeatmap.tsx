@@ -52,7 +52,7 @@ function buildMatrix(
   institutions: InstitutionHealthItem[],
   scatterRows: ScatterRow[],
   sectorCols: string[]
-): { rows: string[]; data: Array<{ row: string; col: string; value: number }> } {
+): { rows: string[]; data: Array<{ row: string; col: string; value: number | null }> } {
   // Build lookup: institution_id → sector.code → avg_risk
   const lookup = new Map<number, Map<string, number>>()
   for (const row of scatterRows) {
@@ -68,7 +68,7 @@ function buildMatrix(
   const top20 = institutions.slice(0, 20)
   const rows = top20.map((inst) => shortName(inst.institution_name))
 
-  const data: Array<{ row: string; col: string; value: number }> = []
+  const data: Array<{ row: string; col: string; value: number | null }> = []
   for (const inst of top20) {
     const rowLabel = shortName(inst.institution_name)
     const sectorMap = lookup.get(inst.institution_id)
@@ -76,7 +76,7 @@ function buildMatrix(
     for (let i = 0; i < SECTORS.length; i++) {
       const sectorCode = SECTORS[i].code
       const col = sectorCols[i]
-      const value = sectorMap?.get(sectorCode) ?? inst.avg_risk_score ?? 0
+      const value = sectorMap?.get(sectorCode) ?? null
       data.push({ row: rowLabel, col, value })
     }
   }
@@ -153,7 +153,10 @@ export default function InstitutionHeatmap() {
       idMap.set(shortName(inst.institution_name), inst.institution_id)
     }
 
-    return { rows: r, heatmapData: d, institutionIds: idMap }
+    // Filter out null-value cells so heatmap shows empty/gray for missing sector data
+    const filteredData = d.filter((item): item is { row: string; col: string; value: number } => item.value !== null)
+
+    return { rows: r, heatmapData: filteredData, institutionIds: idMap }
   }, [rankingsData, scatterData, sectorCols])
 
   const handleCellClick = (row: string, col: string, _value: number) => {

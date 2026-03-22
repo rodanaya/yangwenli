@@ -18,7 +18,7 @@ import {
 import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
 import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
 import { NarrativeCard } from '@/components/NarrativeCard'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
@@ -123,9 +123,9 @@ function TabPanel({ tabKey: _tabKey, children }: { tabKey: string; children: Rea
 // ─── InstitutionNarrativeHeader ────────────────────────────────────────────────
 
 function narrativeBorderColor(score: number): string {
-  if (score >= 0.60) return '#ef4444'
-  if (score >= 0.40) return '#f97316'
-  if (score >= 0.15) return '#fbbf24'
+  if (score >= RISK_THRESHOLDS.critical) return '#ef4444'
+  if (score >= RISK_THRESHOLDS.high) return '#f97316'
+  if (score >= RISK_THRESHOLDS.medium) return '#fbbf24'
   return '#22c55e'
 }
 
@@ -136,9 +136,9 @@ function buildNarrativeText(inst: {
   total_contracts?: number | null
 }): string {
   const score = inst.avg_risk_score ?? 0
-  const riskLabel = score >= 0.60 ? 'perfil de riesgo critico'
-    : score >= 0.40 ? 'perfil de riesgo alto'
-    : score >= 0.15 ? 'perfil de riesgo moderado'
+  const riskLabel = score >= RISK_THRESHOLDS.critical ? 'perfil de riesgo critico'
+    : score >= RISK_THRESHOLDS.high ? 'perfil de riesgo alto'
+    : score >= RISK_THRESHOLDS.medium ? 'perfil de riesgo moderado'
     : 'perfil de riesgo bajo'
   const daPct = inst.direct_award_pct ?? inst.direct_award_rate ?? 0
   const daContext = daPct > 70

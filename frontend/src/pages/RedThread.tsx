@@ -271,7 +271,9 @@ function ChapterTimeline({ contracts }: {
         <div className="relative h-48 bg-background border border-border rounded-xl overflow-hidden px-4 py-4">
           {dots.map((dot, idx) => {
             const xPct = maxYear > minYear ? ((dot.year - minYear) / (maxYear - minYear)) * 96 : 50
-            const yPct = 10 + Math.random() * 80 // deterministic-ish scatter
+            const seed = dot.id != null ? Number(dot.id) : idx
+            const sinVal = Math.sin(seed * 9301 + 49297) * 233280
+            const yPct = 10 + (sinVal - Math.floor(sinVal)) * 80
             return (
               <motion.div
                 key={dot.id ?? idx}
@@ -745,7 +747,12 @@ function ChapterVerdict({
         </button>
 
         <button
-          onClick={() => window.print()}
+          onClick={() => {
+            const prev = document.title
+            document.title = `RUBLI — ${vendor.name} — Investigation Thread`
+            window.print()
+            window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
+          }}
           className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-xl px-5 py-3.5 transition-colors border border-border"
         >
           <Download className="w-4 h-4" />
@@ -766,7 +773,7 @@ function ChapterVerdict({
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary leading-relaxed">
-            <strong className="text-text-muted">Methodology note:</strong> Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v6.0, vendor-stratified validation, AUC 0.861. See{' '}
+            <strong className="text-text-muted">Methodology note:</strong> Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v6.0, vendor-stratified validation, AUC 0.840 (internal) / 0.728 (population). See{' '}
             <Link to="/methodology" className="text-text-muted underline hover:text-text-primary">
               full methodology
             </Link>.

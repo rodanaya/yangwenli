@@ -11,6 +11,7 @@ import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
 import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText, List, GitBranch } from 'lucide-react'
+import { DataQualityWarning } from '@/components/DataQualityWarning'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -1660,6 +1661,9 @@ export function NetworkGraph() {
         <div className="px-3 pb-3 flex flex-wrap items-center gap-3 border-t border-border/20 pt-3">
           <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
         </div>
+        {filters.year != null && (
+          <DataQualityWarning year={filters.year} className="mx-3 mb-3" />
+        )}
       </details>
       <div className="flex items-center gap-3">
         {/* Color mode toggle */}

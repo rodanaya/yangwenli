@@ -52,9 +52,9 @@ const TYPE_TO_CHART_ID: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 const OUTLET_ACCENT: Record<string, string> = {
-  nyt: '#71717a',
-  wapo: '#1e3a5f',
-  animal_politico: '#e6420e',
+  longform: '#1a1714',
+  investigative: '#c41e3a',
+  data_analysis: '#2563eb',
   rubli: '#dc2626',
 }
 
@@ -348,7 +348,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
           </p>
           <p>
             Los puntajes de riesgo son generados por el modelo v6.4 (AUC 0.840, split por proveedor),
-            entrenado con 347 casos documentados de corrupcion y 507 proveedores vinculados.
+            entrenado con 748 casos documentados de corrupcion y 603 proveedores vinculados.
             Los puntajes miden similitud con patrones de corrupcion documentada — no constituyen
             prueba de irregularidad.
           </p>

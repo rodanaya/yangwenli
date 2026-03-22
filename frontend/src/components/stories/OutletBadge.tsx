@@ -1,22 +1,22 @@
 import { cn } from '@/lib/utils'
 
-export type OutletType = 'nyt' | 'wapo' | 'animal_politico' | 'rubli'
+export type OutletType = 'longform' | 'investigative' | 'data_analysis' | 'rubli'
 
 const OUTLET_CONFIG: Record<OutletType, { label: string; bg: string; text: string }> = {
-  nyt: {
-    label: 'NYT',
-    bg: 'bg-zinc-950',
-    text: 'text-white',
+  longform: {
+    label: 'FORMATO LARGO',
+    bg: 'bg-zinc-800',
+    text: 'text-zinc-200',
   },
-  wapo: {
-    label: 'WASHINGTON POST',
-    bg: 'bg-[#14213D]',
-    text: 'text-white',
+  investigative: {
+    label: 'INVESTIGACIÓN',
+    bg: 'bg-zinc-800',
+    text: 'text-zinc-200',
   },
-  animal_politico: {
-    label: 'ANIMAL POLITICO',
-    bg: 'bg-[#e6420e]',
-    text: 'text-white',
+  data_analysis: {
+    label: 'ANÁLISIS DE DATOS',
+    bg: 'bg-zinc-800',
+    text: 'text-zinc-200',
   },
   rubli: {
     label: 'RUBLI',

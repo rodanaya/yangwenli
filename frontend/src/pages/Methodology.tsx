@@ -72,10 +72,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '4.4%', count: '133,842', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '4.6%', count: '140,723', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.15', meaning: 'Moderate similarity to known corruption patterns', pct: '76.7%', count: '2,339,378', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.15', meaning: 'Low similarity to known corruption patterns', pct: '14.3%', count: '437,351', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '4.38%', count: '133,572', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '4.85%', count: '148,043', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '16.34%', count: '498,432', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '74.44%', count: '2,271,247', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -842,8 +842,9 @@ export function Methodology() {
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: t('body.validation.metricTestAuc'), value: '0.849' },
-                  { label: t('body.validation.metricTrainAuc'), value: '0.849' },
+                  { label: t('body.validation.metricTestAuc'), value: '0.840' },
+                  { label: t('body.validation.metricTrainAuc'), value: '0.880' },
+                  { label: 'Population AUC (external reporting)', value: '0.728' },
                   { label: t('body.validation.metricHighPlus'), value: '25.3%' },
                   { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
@@ -855,6 +856,10 @@ export function Methodology() {
                   </div>
                 ))}
               </div>
+
+              <p className="text-xs text-text-muted italic">
+                Population AUC 0.728 — all GT contracts vs all 2.7M unlabeled. Use for external reporting. The internal AUC (0.840) measures generalization to new vendors from the same GT distribution; the population AUC measures how well the model ranks any corrupt contract above any clean contract across the full dataset.
+              </p>
             </div>
           </CollapsibleSection>
           </motion.div>

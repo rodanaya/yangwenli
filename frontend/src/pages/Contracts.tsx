@@ -26,7 +26,7 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { RiskExplainTooltip } from '@/components/RiskExplainTooltip'
 import { TableExportButton } from '@/components/TableExportButton'
-import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS, RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { useDebouncedSearch, useDebouncedValue } from '@/hooks/useDebouncedSearch'
 import { useSavedSearches } from '@/hooks/useSavedSearches'
 import type { ContractFilterParams, ContractListItem } from '@/api/types'
@@ -449,8 +449,8 @@ export function Contracts() {
     const contracts = data.data
     const totalValue = contracts.reduce((s, c) => s + c.amount_mxn, 0)
     const avgRisk = contracts.reduce((s, c) => s + (c.risk_score || 0), 0) / contracts.length
-    const criticalCount = contracts.filter((c) => (c.risk_score || 0) >= 0.50).length
-    const highPlusCount = contracts.filter((c) => (c.risk_score || 0) >= 0.30).length
+    const criticalCount = contracts.filter((c) => (c.risk_score || 0) >= RISK_THRESHOLDS.critical).length
+    const highPlusCount = contracts.filter((c) => (c.risk_score || 0) >= RISK_THRESHOLDS.high).length
     const daCount = contracts.filter((c) => c.is_direct_award).length
     const daPct = contracts.length > 0 ? (daCount / contracts.length) * 100 : 0
     return { totalValue, avgRisk, criticalCount, highPlusCount, daPct }
@@ -460,11 +460,10 @@ export function Contracts() {
   const riskHistogram = useMemo(() => {
     if (!data?.data?.length) return null
     const buckets = [
-      { label: '0–0.1', min: 0, max: 0.1, color: '#4ade80', count: 0 },
-      { label: '0.1–0.2', min: 0.1, max: 0.2, color: '#fbbf24', count: 0 },
-      { label: '0.2–0.3', min: 0.2, max: 0.3, color: '#fbbf24', count: 0 },
-      { label: '0.3–0.5', min: 0.3, max: 0.5, color: '#fb923c', count: 0 },
-      { label: '0.5–1.0', min: 0.5, max: 1.01, color: '#f87171', count: 0 },
+      { label: '0–0.25', min: 0, max: RISK_THRESHOLDS.medium, color: '#4ade80', count: 0 },
+      { label: '0.25–0.40', min: RISK_THRESHOLDS.medium, max: RISK_THRESHOLDS.high, color: '#fbbf24', count: 0 },
+      { label: '0.40–0.60', min: RISK_THRESHOLDS.high, max: RISK_THRESHOLDS.critical, color: '#fb923c', count: 0 },
+      { label: '0.60–1.0', min: RISK_THRESHOLDS.critical, max: 1.01, color: '#f87171', count: 0 },
     ]
     for (const c of data.data) {
       const score = c.risk_score ?? 0

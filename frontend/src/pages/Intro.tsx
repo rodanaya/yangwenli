@@ -361,13 +361,13 @@ const ManifestoCounters = memo(function ManifestoCounters({ isEn }: { isEn: bool
           label={isEn ? 'Contracts analyzed' : 'Contratos analizados'}
         />
         <ManifestoCounterItem
-          target={6.8}
+          target={9.9}
           prefix="MX$"
           suffix="T"
           label={isEn ? 'Total value evaluated' : 'Valor total evaluado'}
         />
         <ManifestoCounterItem
-          target={12.3}
+          target={9.2}
           suffix="%"
           label={isEn ? 'Flagged high-risk' : 'Marcados alto riesgo'}
         />
@@ -748,7 +748,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const by = ch - 50
       ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
       ctx.fillText('MONTO TOTAL: ~$9.6T MXN', bx, by + 16)
-      ctx.fillText('ALTO RIESGO: 12.33%', bx, by + 32)
+      ctx.fillText('ALTO RIESGO: 9.2%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
     }
@@ -1432,6 +1432,19 @@ export default function Intro() {
       {/* MANIFESTO COUNTERS -- giant count-up stats */}
       {/* ================================================================= */}
       <ManifestoCounters isEn={isEn} />
+
+      {/* Risk score disclaimer */}
+      <div
+        className="w-full text-center py-3 px-6"
+        style={{ background: '#0a0c0b' }}
+      >
+        <p className="text-xs text-stone-500 leading-relaxed">
+          ⚠ {isEn
+            ? <>Risk scores indicate statistical similarity to documented corruption patterns — not proof of wrongdoing. <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">See Methodology</a>.</>
+            : <>Los puntajes de riesgo indican similitud estadística con patrones de corrupción documentados — no constituyen prueba de irregularidades. <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">Ver Metodología</a>.</>
+          }
+        </p>
+      </div>
 
       {/* ================================================================= */}
       {/* CASE MARQUEE -- scrolling corruption case names */}

@@ -129,7 +129,7 @@ export function SectorProfile() {
   const vendorChartRef = useRef<HTMLDivElement>(null)
   const yearOptions = useMemo(() => {
     const years: number[] = []
-    for (let y = currentYear; y >= 2010; y--) years.push(y)
+    for (let y = currentYear; y >= 2002; y--) years.push(y)
     return years
   }, [currentYear])
 
@@ -744,6 +744,14 @@ export function SectorProfile() {
                   </div>
                 </div>
               </div>
+              {selectedYear < 2010 && (
+                <div className="mx-5 mb-2 mt-1 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
+                  <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-400" aria-hidden="true" />
+                  <p className="text-xs text-amber-300/90 leading-relaxed">
+                    Data from 2002–2009 has limited RFC coverage (0.1%). Risk scores may be less reliable.
+                  </p>
+                </div>
+              )}
             </CardHeader>
             <CardContent>
               <div ref={monthlyChartRef}>

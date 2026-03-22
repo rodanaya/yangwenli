@@ -37,7 +37,7 @@ const STORIES: StoryDef[] = [
   // Row 1 — AMLO themed
   {
     slug: 'la-cuarta-adjudicacion',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'era',
     headline: 'La Cuarta Adjudicacion',
     subheadline: 'Como el gobierno de AMLO llevo las adjudicaciones directas a su punto mas alto en 23 anos de datos.',
@@ -50,7 +50,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'el-granero-vacio',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     headline: 'El Granero Vacio: Segalmex',
     subheadline: 'La historia del fraude mas grande en la distribucion de alimentos del gobierno federal.',
@@ -63,7 +63,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'los-nuevos-ricos-de-la-4t',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     headline: 'Los Nuevos Ricos de la 4T',
     subheadline: '1,253 empresas fantasma creadas despues de 2018 que acumulan contratos gubernamentales.',
@@ -77,7 +77,7 @@ const STORIES: StoryDef[] = [
   // Row 2 — AMLO continued + Cross-era
   {
     slug: 'hemoser-el-2-de-agosto',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     headline: 'HEMOSER: El 2 de Agosto',
     subheadline: '17.2 mil millones de pesos en 12 contratos, adjudicados en un solo dia a un proveedor de hemoderivados.',
@@ -90,7 +90,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'la-austeridad-que-no-fue',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'era',
     headline: 'La Austeridad que No Fue',
     subheadline: 'En plena retorica de austeridad, el 80% de los contratos federales se entregaron sin licitacion en 2021.',
@@ -103,7 +103,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'cero-competencia',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     headline: 'Cero Competencia',
     subheadline: 'Medio millon de licitaciones donde solo se presento un oferente. La competencia que nunca llego.',
@@ -116,7 +116,7 @@ const STORIES: StoryDef[] = [
   // Row 3 — Cross-era + Cases
   {
     slug: 'triangulo-farmaceutico',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'thematic',
     headline: 'El Triangulo Farmaceutico',
     subheadline: 'Tres proveedores que se reparten 270 mil millones en contratos del sector salud.',
@@ -128,7 +128,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'avalancha-diciembre',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     headline: 'La Avalancha de Diciembre',
     subheadline: 'Cada ano, el gobierno gasta mas en diciembre que en cualquier otro mes. En 2015, fueron 57.5 mil millones.',
@@ -140,7 +140,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'cartel-del-corazon',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     headline: 'El Cartel del Corazon',
     subheadline: 'Un cartel de equipo medico cardiaco que domino las compras publicas por mas de una decada.',
@@ -153,7 +153,7 @@ const STORIES: StoryDef[] = [
   // Row 4 — Infrastructure + PEN
   {
     slug: 'infraestructura-sin-competencia',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     headline: 'Infraestructura Sin Competencia',
     subheadline: '2.1 billones de pesos en contratos de infraestructura donde solo hubo una propuesta.',
@@ -165,7 +165,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'la-casa-de-los-contratos',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'era',
     headline: 'La Casa de los Contratos',
     subheadline: 'La red de empresas vinculadas a Grupo Higa y el megaproyecto de infraestructura del sexenio pasado.',
@@ -178,7 +178,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'oceanografia',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'case',
     headline: 'Oceanografia: Dos Fronteras',
     subheadline: 'El fraude que cruzo de PEMEX a Banamex a Citibank. Una historia de facturas falsas a escala internacional.',
@@ -192,7 +192,7 @@ const STORIES: StoryDef[] = [
   // Row 5 — Systemic
   {
     slug: 'sixsigma-hacienda',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     headline: 'SixSigma y el SAT',
     subheadline: 'Como una empresa de tecnologia manipulo las licitaciones del SAT durante anos.',
@@ -204,7 +204,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'sexenio-a-sexenio',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'era',
     headline: 'Sexenio a Sexenio',
     subheadline: 'De 63% a 82%: como las adjudicaciones directas crecieron sin parar durante 23 anos, sin importar quien gobernara.',
@@ -216,7 +216,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'red-fantasma',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     headline: 'Red Fantasma: Anatomia de una Empresa Inexistente',
     subheadline: 'El SAT confirma 13,960 empresas que facturaron operaciones simuladas al gobierno. Como se construyen, como operan, y como detectarlas.',
@@ -229,7 +229,7 @@ const STORIES: StoryDef[] = [
   // 10 new investigative stories
   {
     slug: 'el-ano-sin-excusas',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'year',
     headline: '2023: El Año en que México Rompió Todos los Récords',
     subheadline: 'El último año completo del sexenio registró la tasa más alta de contratos sin licitación en la historia moderna del país: 81.9% del gasto federal.',
@@ -242,7 +242,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'insabi-el-experimento',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     headline: 'INSABI: El Experimento que Colapsó el Abasto',
     subheadline: 'La disolución del Seguro Popular desmanteló los mecanismos de competencia en compras de medicamentos, disparando adjudicaciones directas al 94%.',
@@ -255,7 +255,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'tren-maya-sin-reglas',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'case',
     headline: 'Tren Maya: $180 Mil Millones Sin Una Sola Licitación',
     subheadline: 'El proyecto de infraestructura más caro de México evitó las reglas de contratación mediante declaratorias de emergencia y contratos directos a empresas sin experiencia ferroviaria.',
@@ -268,7 +268,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'fabrica-de-monopolios',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     headline: 'La Fábrica de Monopolios',
     subheadline: 'En energía y tecnología, el 10% de los proveedores se quedó con más del 70% del presupuesto. El modelo AMLO repitió el patrón priísta pero a mayor escala.',
@@ -281,7 +281,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'el-dinero-de-todos',
-    outlet: 'wapo',
+    outlet: 'investigative',
     type: 'thematic',
     headline: 'El Dinero de Todos: Cómo la Contratación se Concentró en Pocas Manos',
     subheadline: 'En dos décadas, el gasto federal mexicano pasó de una competencia amplia a un oligopolio. El análisis de RUBLI sobre 3.1 millones de contratos revela un estrechamiento sistemático de quién se beneficia.',
@@ -293,7 +293,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'pandemia-sin-supervision',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'case',
     headline: 'Pandemia Sin Supervisión',
     subheadline: 'México gastó más de 40,000 millones en compras COVID sin licitación. El 73% fue a empresas creadas menos de dos años antes de recibir el contrato.',
@@ -306,7 +306,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'pemex-el-gigante',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'case',
     headline: 'PEMEX Nunca Compite: El Agujero Negro de $2 Billones',
     subheadline: 'PEMEX y CFE concentran el 40% de la contratación federal pero menos del 5% es competitiva. Veinte años de datos muestran que el patrón precedió a AMLO — y lo sobrevivió.',
@@ -318,7 +318,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'atlas-del-riesgo',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'thematic',
     headline: 'Atlas del Riesgo: Los Sectores Donde la Corrupción Deja Más Huellas',
     subheadline: 'El modelo RUBLI identifica 118,061 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto, pero infraestructura suma los mayores montos.',
@@ -330,7 +330,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'la-herencia-envenenada',
-    outlet: 'animal_politico',
+    outlet: 'data_analysis',
     type: 'era',
     headline: 'La Herencia Envenenada: Lo que AMLO Dejó en las Finanzas Públicas',
     subheadline: 'El sexenio concluyó con tasas históricas de contratación directa, 247,946 contratos sospechosos de fraccionamiento y una deuda de transparencia que tomará años resolver.',
@@ -343,7 +343,7 @@ const STORIES: StoryDef[] = [
   },
   {
     slug: 'dividir-para-evadir',
-    outlet: 'nyt',
+    outlet: 'longform',
     type: 'thematic',
     headline: 'Dividir para Evadir: 247,946 Contratos Diseñados para Burlar el Escrutinio',
     subheadline: 'La ley exige licitación pública por encima de ciertos umbrales. El análisis de RUBLI encontró 247,946 contratos agrupados justo por debajo de esos límites — un patrón estadísticamente improbable por azar.',
@@ -399,7 +399,7 @@ export default function Journalists() {
   // Live stats for hero counters
   const totalContracts = 3051294
   const totalValueBillions = 9.87
-  const totalCases = 347
+  const totalCases = 748
 
   // Filtered stories
   const currentFilter = FILTERS.find((f) => f.id === activeFilter) ?? FILTERS[0]
@@ -422,10 +422,13 @@ export default function Journalists() {
             subtitle="Datos, metodolog&iacute;a y gu&iacute;as para periodistas de investigaci&oacute;n"
             className="mb-4"
           />
-          <div className="flex flex-wrap items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-3">
             <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
             <FuentePill source="SAT EFOS" count={13960} countLabel="empresas fantasma" />
           </div>
+          <p className="text-xs text-zinc-500 mb-6">
+            Última actualización de datos: marzo 2026
+          </p>
         </div>
 
         {/* ================================================================ */}
@@ -616,13 +619,13 @@ export default function Journalists() {
                   Metodologia y Datos
                   <MetodologiaTooltip
                     title="Modelo de riesgo v6.4"
-                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 347 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
+                    body="Regresi&oacute;n log&iacute;stica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 748 casos documentados de corrupci&oacute;n. PU-learning (Elkan &amp; Noto 2008)."
                     link="/methodology"
                   />
                 </h3>
                 <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
                   RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML
-                  entrenado con 347 casos documentados de corrupcion. Codigo abierto, datos verificables.
+                  entrenado con 748 casos documentados de corrupcion. Codigo abierto, datos verificables.
                 </p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
