@@ -897,6 +897,14 @@ export default function Administrations() {
         </p>
       </div>
 
+      {/* Inflation disclaimer */}
+      <div className="mb-4 flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/8 px-3 py-2.5">
+        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-400/70" aria-hidden="true" />
+        <p className="text-[11px] text-text-muted leading-relaxed">
+          All amounts in nominal MXN. Cumulative inflation 2002–2025 exceeds 150%. Cross-administration spending comparisons should account for purchasing power changes.
+        </p>
+      </div>
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L2: Administration Comparison Table */}
         <div className="card-elevated">

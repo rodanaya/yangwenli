@@ -153,6 +153,7 @@ export function ExecutiveSummary() {
   const navigate = useNavigate()
   const { t } = useTranslation('executive')
   const { data, isLoading, isError, refetch } = useExecutiveSummary()
+  const [showFullBreakdown, setShowFullBreakdown] = useState(false)
 
   if (isLoading) {
     return <LoadingSkeleton />
@@ -175,8 +176,6 @@ export function ExecutiveSummary() {
       </div>
     )
   }
-
-  const [showFullBreakdown, setShowFullBreakdown] = useState(false)
 
   const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
   const totalValueT = (data.headline.total_value / 1e12).toFixed(1)

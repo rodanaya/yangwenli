@@ -2224,9 +2224,9 @@ function ReportCard() {
   const handleIntroComplete = useCallback(() => setIntroComplete(true), [])
 
   const tabs: { id: Tab; label: string; sub: string }[] = [
-    { id: 'phi', label: 'Salud Procuratoria', sub: 'PHI · 12 sectores' },
-    { id: 'institutions', label: 'Instituciones', sub: 'Ranking 0-100 · 2,569 inst.' },
-    { id: 'vendors', label: 'Proveedores', sub: 'Ranking 0-100 · 139K proveed.' },
+    { id: 'phi', label: t('tabPHI'), sub: t('tabPHISub') },
+    { id: 'institutions', label: t('tabInstitutions'), sub: t('tabInstitutionsSub') },
+    { id: 'vendors', label: t('tabVendors'), sub: t('tabVendorsSub') },
   ]
 
   return (
@@ -2239,39 +2239,39 @@ function ReportCard() {
         {/* Page header */}
         <div className="mb-8 text-center">
           <p className="text-xs font-semibold tracking-[0.15em] uppercase mb-2" style={{ color: '#c41e3a' }}>
-            Reporte de Integridad Procuratoria
+            {t('pageEyebrow')}
           </p>
           <h1
             className="text-editorial-h1 md:text-editorial-display mb-3"
             style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
           >
-            Calificaciones del Gasto Publico Federal
+            {t('pageTitle')}
           </h1>
           <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
-            2026 · 3.1M contratos · Sistema de 10 niveles
+            {t('pageSubtitle')}
           </p>
         </div>
 
         {/* Editorial masthead */}
         <EditorialHeadline
-          section="AN&Aacute;LISIS DE DESEMPE&Ntilde;O"
-          headline="Tarjeta de Reporte"
-          subtitle="Evaluaci&oacute;n institucional de contrataciones federales 2002–2025"
+          section={t('sectionPerformance')}
+          headline={t('headlineReportCard')}
+          subtitle={t('subtitleReportCard')}
           className="mb-6"
         />
 
         {/* Key stats row */}
         <div className="flex flex-wrap gap-8 mb-6">
-          <HallazgoStat value="847" label="instituciones evaluadas" color="border-blue-500" />
-          <HallazgoStat value="9.0%" label="tasa de alto riesgo &middot; v6.4" color="border-red-500" />
-          <HallazgoStat value="&#8369;6.8T" label="MXN bajo an&aacute;lisis" color="border-amber-500" />
+          <HallazgoStat value="847" label={t('statInstitutions')} color="border-blue-500" />
+          <HallazgoStat value="9.0%" label={t('statHighRiskRate')} color="border-red-500" />
+          <HallazgoStat value="&#8369;6.8T" label={t('statValueAnalyzed')} color="border-amber-500" />
         </div>
 
         <div className="flex flex-wrap items-center gap-3 mb-8">
-          <FuentePill source="COMPRANET" count={3051294} countLabel="contratos" verified={true} />
+          <FuentePill source="COMPRANET" count={3051294} countLabel={t('countLabel')} verified={true} />
           <MetodologiaTooltip
-            title="&iquest;C&oacute;mo se calcula el grado?"
-            body="El grado institucional se basa en la tasa de contratos de alto riesgo, concentraci&oacute;n de proveedores y uso de procedimientos directos vs. competitivos. Escala A-F."
+            title={t('tooltipGradeTitle')}
+            body={t('tooltipGradeBody')}
             link="/methodology"
           />
         </div>
@@ -2305,14 +2305,12 @@ function ReportCard() {
         {activeTab === 'institutions' && (
           <>
             <div className="mb-6">
-              <SectionLabel>Integridad Institucional</SectionLabel>
+              <SectionLabel>{t('sectionInstitutionalIntegrity')}</SectionLabel>
               <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-                Ranking de Instituciones
+                {t('rankingInstitutions')}
               </h2>
               <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                Calificacion 0-100 basada en 5 dimensiones: apertura competitiva, integridad de precios,
-                independencia de proveedores, transparencia de proceso y alertas externas.
-                Haz clic en una fila para ver el detalle por pilar.
+                {t('rankingInstitutionsDesc')}
               </p>
               <GradeScale10 />
             </div>
@@ -2323,14 +2321,12 @@ function ReportCard() {
         {activeTab === 'vendors' && (
           <>
             <div className="mb-6">
-              <SectionLabel>Integridad de Proveedores</SectionLabel>
+              <SectionLabel>{t('sectionVendorIntegrity')}</SectionLabel>
               <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-                Ranking de Proveedores
+                {t('rankingVendors')}
               </h2>
               <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                Calificacion 0-100 basada en 5 pilares: senal de riesgo ML, conducta vs norma sectorial,
-                alcance institucional, patrones de adjudicacion y banderas de registros externos.
-                Puntuacion alta = proveedor de bajo riesgo.
+                {t('rankingVendorsDesc')}
               </p>
               <GradeScale10 />
             </div>

@@ -24,7 +24,7 @@ import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatNumber, formatPercentSafe } from '@/lib/utils'
 import { sectorApi, analysisApi, institutionApi, phiApi } from '@/api/client'
 import type { IndustryClusterItem } from '@/api/client'
-import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN } from '@/lib/constants'
+import { SECTOR_COLORS, SECTORS, RISK_COLORS, getRiskLevelFromScore, getSectorNameEN, RISK_THRESHOLDS } from '@/lib/constants'
 import { Heatmap } from '@/components/charts/Heatmap'
 import { SectorSlopeChart } from '@/components/charts/SectorSlopeChart'
 import { AnnotatedAreaChart } from '@/components/charts/AnnotatedAreaChart'
@@ -153,9 +153,9 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
         const isSelected = selectedCode === sector.sector_code
 
         const riskBorderColor =
-          sector.avg_risk_score >= 0.30 ? 'border-risk-critical/40' :
-          sector.avg_risk_score >= 0.20 ? 'border-risk-high/40' :
-          sector.avg_risk_score >= 0.10 ? 'border-risk-medium/30' :
+          sector.avg_risk_score >= RISK_THRESHOLDS.critical ? 'border-risk-critical/40' :
+          sector.avg_risk_score >= RISK_THRESHOLDS.high ? 'border-risk-high/40' :
+          sector.avg_risk_score >= RISK_THRESHOLDS.medium ? 'border-risk-medium/30' :
           'border-border/30'
 
         return (
@@ -203,9 +203,9 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
             <span
               className={cn(
                 'text-[10px] font-black tabular-nums font-mono',
-                sector.avg_risk_score >= 0.30 ? 'text-risk-critical' :
-                sector.avg_risk_score >= 0.20 ? 'text-risk-high' :
-                sector.avg_risk_score >= 0.10 ? 'text-risk-medium' :
+                sector.avg_risk_score >= RISK_THRESHOLDS.critical ? 'text-risk-critical' :
+                sector.avg_risk_score >= RISK_THRESHOLDS.high ? 'text-risk-high' :
+                sector.avg_risk_score >= RISK_THRESHOLDS.medium ? 'text-risk-medium' :
                 'text-risk-low'
               )}
             >
@@ -482,7 +482,7 @@ function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
   const showVendors = width > 80 && height > 52
   // Continuous gradient: lerp from dark-teal (#134e4a) at risk=0 to bright-red (#ef4444) at risk>=0.3
   // This gives much better visual contrast than categorical colors for low-risk clustering
-  const t = Math.min(avg_risk_score / 0.30, 1)
+  const t = Math.min(avg_risk_score / RISK_THRESHOLDS.critical, 1)
   const fillColor = t < 0.5
     ? lerpColor('#134e4a', '#eab308', t * 2)    // teal → amber
     : lerpColor('#eab308', '#ef4444', (t - 0.5) * 2) // amber → red
@@ -895,7 +895,7 @@ export function Sectors() {
             <span className="text-[10px] uppercase tracking-wider text-text-muted">Riesgo Promedio</span>
             <span className={cn(
               'pull-stat !text-base',
-              aggregates.avgRisk >= 0.30 ? 'text-risk-critical' : aggregates.avgRisk >= 0.15 ? 'text-risk-high' : 'text-text-primary'
+              aggregates.avgRisk >= RISK_THRESHOLDS.critical ? 'text-risk-critical' : aggregates.avgRisk >= RISK_THRESHOLDS.medium ? 'text-risk-high' : 'text-text-primary'
             )}>
               {(aggregates.avgRisk * 100).toFixed(1)}%
             </span>
