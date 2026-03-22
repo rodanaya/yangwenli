@@ -142,11 +142,12 @@ const REVIEW_STATUS_META: Record<ReviewStatus, { label: string; className: strin
 }
 
 function ReviewStatusBadge({ status }: { status: ReviewStatus | null | undefined }) {
+  const { t } = useTranslation('aria')
   const s = (status ?? 'pending') as ReviewStatus
   const meta = REVIEW_STATUS_META[s] ?? REVIEW_STATUS_META.pending
   return (
     <span className={cn('inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold border', meta.className)}>
-      {meta.label}
+      {t('status.' + s)}
     </span>
   )
 }
@@ -164,6 +165,7 @@ function ReviewPopover({
   currentStatus: ReviewStatus | null | undefined
   onClose: () => void
 }) {
+  const { t } = useTranslation('aria')
   const queryClient = useQueryClient()
   const [status, setStatus] = useState<ReviewStatus>((currentStatus ?? 'pending') as ReviewStatus)
   const ref = useRef<HTMLDivElement>(null)
@@ -198,7 +200,7 @@ function ReviewPopover({
       onClick={(e) => e.stopPropagation()}
     >
       <p className="text-[10px] uppercase tracking-wider font-mono text-text-muted font-bold mb-2">
-        Estado de Revisión
+        {t('reviewPopover.reviewStatus')}
       </p>
       {statuses.map((s) => {
         const meta = REVIEW_STATUS_META[s]
@@ -216,7 +218,7 @@ function ReviewPopover({
           >
             {isSelected && <Check className="h-3 w-3 shrink-0" />}
             {!isSelected && <span className="w-3 shrink-0" />}
-            {meta.label}
+            {t('status.' + s)}
           </button>
         )
       })}
@@ -226,18 +228,18 @@ function ReviewPopover({
           disabled={mutation.isPending}
           className="flex-1 py-1.5 rounded text-xs font-medium bg-accent text-white hover:bg-accent/80 disabled:opacity-50 transition-colors"
         >
-          {mutation.isPending ? 'Guardando…' : 'Guardar'}
+          {mutation.isPending ? t('reviewPopover.saving') : t('reviewPopover.save')}
         </button>
         <button
           onClick={onClose}
           className="p-1.5 rounded text-text-muted hover:text-text-primary hover:bg-background-elevated transition-colors"
-          aria-label="Cerrar"
+          aria-label={t('reviewPopover.close')}
         >
           <XIcon className="h-3.5 w-3.5" />
         </button>
       </div>
       {mutation.isError && (
-        <p className="text-[10px] text-red-400">Error al guardar. Intenta de nuevo.</p>
+        <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
       )}
     </div>
   )
@@ -461,6 +463,10 @@ function LeadRow({
           expanded && 'bg-background-elevated/30'
         )}
         onClick={onToggle}
+        tabIndex={0}
+        role="button"
+        aria-expanded={expanded}
+        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onToggle() } }}
       >
         <td className="px-4 py-3">
           <div className="flex items-center gap-2">
@@ -511,7 +517,7 @@ function LeadRow({
               onClick={() => setReviewOpen((v) => !v)}
               className="text-text-muted hover:text-accent p-1 rounded hover:bg-accent/10 transition-colors"
               aria-label="Review"
-              title="Actualizar estado de revisión"
+              title={t('reviewPopover.updateTitle')}
             >
               <ClipboardEdit className="h-3.5 w-3.5" />
             </button>
@@ -537,7 +543,7 @@ function LeadRow({
           <td colSpan={8} className="px-6 py-4">
             <div className="border-l-2 border-accent/30 pl-4">
               <div className="text-[10px] uppercase tracking-[0.2em] text-accent/60 font-mono font-bold mb-2">
-                Detalles de inteligencia
+                {t('intelligenceDetails')}
               </div>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs mb-2">
                 <div>
@@ -651,19 +657,18 @@ export default function AriaPage() {
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-6">
           <div className="flex items-center gap-3 mb-3">
             <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-mono">
-              Sistema ARIA &middot; Inteligencia de Adquisiciones
+              {t('header.systemLabel')}
             </div>
             <div className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-live animate-pulse" />
-              <span className="text-[10px] text-signal-live font-mono font-bold">EN VIVO</span>
+              <span className="text-[10px] text-signal-live font-mono font-bold">{t('header.live')}</span>
             </div>
           </div>
           <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
-            El Cuarto de Guerra
+            {t('header.title')}
           </h1>
           <p className="text-sm text-text-secondary max-w-2xl">
-            {formatNumber(stats?.queue_total ?? 198038)} proveedores bajo vigilancia activa. Sistema automatizado de
-            deteccion de riesgo en contratacion publica federal.
+            {t('header.subtitle', { count: stats?.queue_total ?? 198038 })}
           </p>
         </div>
       </div>
@@ -671,9 +676,9 @@ export default function AriaPage() {
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
         <EditorialHeadline
-          section="INTELIGENCIA RUBLI"
-          headline="Briefing de Investigacion"
-          subtitle="Cola de investigacion automatizada con priorizacion por nivel de amenaza"
+          section={t('editorial.section')}
+          headline={t('editorial.headline')}
+          subtitle={t('editorial.subtitle')}
         />
 
         {/* ================================================================ */}
@@ -682,7 +687,7 @@ export default function AriaPage() {
         <section className="border-l-4 border-red-600 bg-background-elevated/30 rounded-r-lg p-5">
           <div className="flex items-center gap-2 mb-4">
             <span className="text-[10px] tracking-[0.3em] uppercase font-mono text-red-400 font-bold">
-              Estado de Situacion
+              {t('situationReport')}
             </span>
             <span className="text-[10px] text-text-muted font-mono">
               &middot; {todayStr}
@@ -697,23 +702,23 @@ export default function AriaPage() {
           <div className="flex flex-wrap gap-8">
             <HallazgoStat
               value={formatNumber(stats?.queue_total ?? 198038)}
-              label="proveedores bajo vigilancia"
+              label={t('stats.vendorsSurveillance')}
               color="border-red-500"
             />
             <HallazgoStat
               value={formatCompactMXN(elevatedValue)}
-              label="valor bajo riesgo elevado"
+              label={t('stats.elevatedValueRisk')}
               color="border-orange-500"
             />
             <HallazgoStat
               value={formatNumber(efosCount)}
-              label="en Lista EFOS (SAT)"
-              annotation={`+ ${formatNumber(sfpCount)} sanciones SFP`}
+              label={t('stats.efosOnList')}
+              annotation={t('stats.efosAnnotation', { count: sfpCount })}
               color="border-yellow-500"
             />
             <HallazgoStat
               value={formatNumber(stats?.new_vendor_count ?? 0)}
-              label="proveedores nuevos de riesgo"
+              label={t('stats.newVendorRisk')}
               color="border-purple-500"
             />
           </div>
@@ -724,8 +729,8 @@ export default function AriaPage() {
           <FuentePill source="COMPRANET" count={3051294} verified={true} />
           <FuentePill source="SAT EFOS" count={13960} />
           <MetodologiaTooltip
-            title="Como funciona ARIA?"
-            body="ARIA combina score de riesgo ML (v6.4), deteccion de anomalias PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
+            title={t('methodology.title')}
+            body={t('methodology.body')}
             link="/methodology"
           />
         </div>
@@ -737,7 +742,7 @@ export default function AriaPage() {
           <div className="flex items-center gap-2 mb-4">
             <Crosshair className="h-4 w-4 text-red-400" />
             <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-              Niveles de Amenaza
+              {t('threatLevels')}
             </h2>
           </div>
 

@@ -294,6 +294,7 @@ function MiniSparkline({
 }) {
   const gradId = `spark-${dataKey}-${color.replace('#', '')}`
   return (
+    <div role="img" aria-label={`Mini sparkline trend chart for ${dataKey}`}>
     <ResponsiveContainer width={120} height={24}>
       <AreaChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
         <defs>
@@ -313,6 +314,7 @@ function MiniSparkline({
         />
       </AreaChart>
     </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -541,7 +543,14 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
   const aggregateColor = hasSectorOverlay ? 'rgba(139,148,158,0.45)' : RISK_COLORS.high
 
   return (
-    <div className="h-[300px]">
+    <div
+      className="h-[300px]"
+      role="img"
+      aria-label="Composed chart showing contract count and total value by year, with administration period bands"
+    >
+      <span className="sr-only">
+        Composed chart showing annual contract count and total value from 2002 to 2025, with shaded regions for each presidential administration period.
+      </span>
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} onClick={(e: Record<string, unknown>) => {
           const label = e?.activeLabel as number | undefined
@@ -1344,15 +1353,10 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Secondary queries — deferred until fastDashboard data arrives to reduce
-  // initial page load from ~11 simultaneous requests to 2 (fastDashboard + execData).
-  const fastLoaded = fastDashboard?.overview != null
-
   const { data: phiSectorsData } = useQuery({
     queryKey: ['phi', 'sectors'],
     queryFn: () => phiApi.getSectors(),
     staleTime: 10 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   const { data: execData, isLoading: execLoading } = useQuery({
@@ -1365,14 +1369,12 @@ export function Dashboard() {
     queryKey: ['analysis', 'patterns', 'counts'],
     queryFn: () => analysisApi.getPatternCounts(),
     staleTime: 5 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   const { data: moneyFlowData } = useQuery({
     queryKey: ['analysis', 'money-flow', 'dashboard'],
     queryFn: () => analysisApi.getMoneyFlow(),
     staleTime: 10 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   const { data: modelMeta } = useQuery({
@@ -1381,28 +1383,24 @@ export function Dashboard() {
     staleTime: 60 * 60 * 1000,
     retry: 0,
     refetchOnWindowFocus: false,
-    enabled: fastLoaded,
   })
 
   const { data: _topInvestigationCase } = useQuery({
     queryKey: ['investigation', 'top-1-dashboard'],
     queryFn: () => investigationApi.getTopCases(1),
     staleTime: 30 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   const { data: sectorYearData } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 10 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   const { data: seasonalRiskData } = useQuery({
     queryKey: ['analysis', 'seasonal-risk'],
     queryFn: () => analysisApi.getSeasonalRisk(12),
     staleTime: 10 * 60 * 1000,
-    enabled: fastLoaded,
   })
 
   // Year drill-down state

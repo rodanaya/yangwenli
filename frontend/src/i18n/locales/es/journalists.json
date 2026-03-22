@@ -1,0 +1,42 @@
+{
+  "masthead": {
+    "section": "PARA PERIODISTAS",
+    "headline": "Herramientas de Investigacion",
+    "subtitle": "Datos, metodologia y guias para periodistas de investigacion",
+    "lastUpdated": "Ultima actualizacion de datos: marzo 2026",
+    "compranetLabel": "contratos",
+    "satEfosLabel": "empresas fantasma"
+  },
+  "hero": {
+    "platform": "Plataforma de Inteligencia en Contrataciones Publicas",
+    "tagline": "Datos. Patrones. Pistas.",
+    "contractsLabel": "contratos analizados",
+    "valueLabel": "pesos evaluados",
+    "casesLabel": "casos documentados"
+  },
+  "featured": {
+    "label": "HISTORIA DESTACADA",
+    "readMore": "Leer investigacion",
+    "statSuffix": "adjudicaciones directas en 2023 — el ano mas alto en 23 anos"
+  },
+  "filters": {
+    "all": "Todos",
+    "amlo": "AMLO",
+    "pena": "Pena Nieto",
+    "salud": "Salud",
+    "infra": "Infraestructura",
+    "case": "Casos",
+    "thematic": "Tematico"
+  },
+  "grid": {
+    "noStories": "No hay historias para este filtro."
+  },
+  "methodology": {
+    "title": "Metodologia y Datos",
+    "description": "RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML entrenado con 748 casos documentados de corrupcion. Codigo abierto, datos verificables.",
+    "viewMethodology": "Ver metodologia",
+    "downloadData": "Descargar datos",
+    "tooltipTitle": "Modelo de riesgo v6.4",
+    "tooltipBody": "Regresion logistica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 748 casos documentados de corrupcion. PU-learning (Elkan & Noto 2008)."
+  }
+}

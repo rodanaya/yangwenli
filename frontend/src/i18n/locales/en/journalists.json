@@ -1,0 +1,42 @@
+{
+  "masthead": {
+    "section": "FOR JOURNALISTS",
+    "headline": "Investigation Tools",
+    "subtitle": "Data, methodology and guides for investigative journalists",
+    "lastUpdated": "Last data update: March 2026",
+    "compranetLabel": "contracts",
+    "satEfosLabel": "shell companies"
+  },
+  "hero": {
+    "platform": "Public Procurement Intelligence Platform",
+    "tagline": "Data. Patterns. Leads.",
+    "contractsLabel": "contracts analyzed",
+    "valueLabel": "pesos evaluated",
+    "casesLabel": "documented cases"
+  },
+  "featured": {
+    "label": "FEATURED STORY",
+    "readMore": "Read investigation",
+    "statSuffix": "direct awards in 2023 — highest year in 23 years"
+  },
+  "filters": {
+    "all": "All",
+    "amlo": "AMLO",
+    "pena": "Pena Nieto",
+    "salud": "Health",
+    "infra": "Infrastructure",
+    "case": "Cases",
+    "thematic": "Thematic"
+  },
+  "grid": {
+    "noStories": "No stories for this filter."
+  },
+  "methodology": {
+    "title": "Methodology & Data",
+    "description": "RUBLI analyzes 3 million federal contracts (2002-2025) with an ML model trained on 748 documented corruption cases. Open source, verifiable data.",
+    "viewMethodology": "View methodology",
+    "downloadData": "Download data",
+    "tooltipTitle": "Risk model v6.4",
+    "tooltipBody": "Logistic regression with 16 z-scores, 13 sector sub-models, AUC=0.840. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
+  }
+}

@@ -119,5 +119,7 @@
     "modelCoefficient": "Model coefficient",
     "riskIncreasing": "Risk-increasing factor",
     "riskReducing": "Risk-reducing factor"
-  }
+  },
+  "noContributingFactors": "No contributing risk factors found.",
+  "untitledContract": "Untitled"
 }

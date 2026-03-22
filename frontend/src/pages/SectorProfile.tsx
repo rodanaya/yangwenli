@@ -129,7 +129,7 @@ export function SectorProfile() {
   const vendorChartRef = useRef<HTMLDivElement>(null)
   const yearOptions = useMemo(() => {
     const years: number[] = []
-    for (let y = currentYear; y >= 2002; y--) years.push(y)
+    for (let y = currentYear; y >= 2010; y--) years.push(y)
     return years
   }, [currentYear])
 
@@ -744,14 +744,6 @@ export function SectorProfile() {
                   </div>
                 </div>
               </div>
-              {selectedYear < 2010 && (
-                <div className="mx-5 mb-2 mt-1 flex items-start gap-2 rounded-md border border-amber-500/30 bg-amber-500/10 px-3 py-2">
-                  <Info className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-amber-400" aria-hidden="true" />
-                  <p className="text-xs text-amber-300/90 leading-relaxed">
-                    Data from 2002–2009 has limited RFC coverage (0.1%). Risk scores may be less reliable.
-                  </p>
-                </div>
-              )}
             </CardHeader>
             <CardContent>
               <div ref={monthlyChartRef}>
@@ -1077,7 +1069,12 @@ function RiskDonut({
 
   return (
     <div className="flex items-center gap-4">
-      <div className="relative h-52 w-52 flex-shrink-0">
+      <div
+        className="relative h-52 w-52 flex-shrink-0"
+        role="img"
+        aria-label="Donut chart showing contract distribution by risk level for this sector"
+      >
+        <span className="sr-only">Donut chart showing the proportion of contracts at Critical, High, Medium, and Low risk levels for this sector.</span>
         <ResponsiveContainer width="100%" height="100%">
           <PieChart>
             <Pie
@@ -1350,7 +1347,12 @@ function TrendArea({
     .map((d) => ({ year: d.year, value: d.total_value_mxn / 1e9, contracts: d.total_contracts }))
 
   return (
-    <div className="h-72">
+    <div
+      className="h-72"
+      role="img"
+      aria-label="Area chart showing contract value trend by year for this sector"
+    >
+      <span className="sr-only">Area chart showing annual contract value in billions of MXN for this sector from 2002 to 2025.</span>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
           <defs>
@@ -1450,7 +1452,12 @@ function MonthlyDeviation({
       </div>
 
       {/* diverging chart */}
-      <div className="h-72">
+      <div
+        className="h-72"
+        role="img"
+        aria-label="Horizontal bar chart comparing this sector's metrics against the national average"
+      >
+        <span className="sr-only">Horizontal diverging bar chart comparing this sector's contract value, single bid rate, and direct award rate relative to the national average.</span>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}

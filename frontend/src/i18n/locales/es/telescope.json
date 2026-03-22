@@ -1,0 +1,40 @@
+{
+  "title": "El Telescopio",
+  "subtitle": "El universo de contratos publicos mexicanos",
+  "nebulaeCount": "nebulosas",
+  "contractsCount": "contratos",
+  "loading": "Calibrando telescopio...",
+  "controls": {
+    "none": "Ninguno",
+    "all": "Todos",
+    "yAxis": "Eje Y",
+    "size": "Tamano",
+    "zoom": "Zoom",
+    "reset": "Reset"
+  },
+  "yLabels": {
+    "avg_risk": "Riesgo Promedio",
+    "high_risk_pct": "% Alto Riesgo",
+    "direct_award_pct": "% Adjudicacion Directa"
+  },
+  "sizeLabels": {
+    "total_value": "Valor Total",
+    "contracts": "No. Contratos",
+    "vendor_count": "No. Proveedores"
+  },
+  "legend": {
+    "size": "Tamano",
+    "brightness": "Brillo",
+    "highRisk": "% Alto Riesgo",
+    "positionY": "Posicion Y"
+  },
+  "tooltip": {
+    "contracts": "Contratos",
+    "value": "Valor",
+    "avgRisk": "Riesgo prom.",
+    "highRisk": "Alto riesgo",
+    "directAward": "Adj. directa",
+    "vendors": "Proveedores",
+    "institutions": "Instituciones"
+  }
+}

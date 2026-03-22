@@ -4,14 +4,13 @@
  * Replaces the previous 3-level accordion tree (Sectors → Institutions → Vendors).
  */
 
-import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
+import { useState, useMemo, useCallback, useRef, useEffect, useSyncExternalStore } from 'react'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
 import { Network, Search, X, ExternalLink, Users, UserCircle, RotateCcw, ChevronDown, ChevronUp, ZoomIn, ZoomOut, AlertTriangle, Info, Eye, Layers, FileText, List, GitBranch } from 'lucide-react'
-import { DataQualityWarning } from '@/components/DataQualityWarning'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
@@ -22,6 +21,22 @@ import type { NetworkNode, NetworkLink, CoBidderItem, CommunitiesResponse, Commu
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { getInstitutionGroup, getShortName as getInstShortName, getInstitutionColor } from '@/lib/institution-groups'
 import { CommunityBubbles } from '@/components/charts/CommunityBubbles'
+import { BottomSheet } from '@/components/ui/sheet'
+
+// ---------------------------------------------------------------------------
+// useIsMobile — returns true when viewport width < 768px (Tailwind md breakpoint)
+// ---------------------------------------------------------------------------
+function subscribe(cb: () => void) {
+  const mq = window.matchMedia('(max-width: 767px)')
+  mq.addEventListener('change', cb)
+  return () => mq.removeEventListener('change', cb)
+}
+function getSnapshot() {
+  return window.matchMedia('(max-width: 767px)').matches
+}
+function useIsMobile() {
+  return useSyncExternalStore(subscribe, getSnapshot, () => false)
+}
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -375,12 +390,14 @@ function SidePanel({
   coBiddersLoading,
   onClose,
   onLoadCoBidders,
+  mobileMode = false,
 }: {
   node: NetworkNode
   coBidders: CoBidderItem[] | null
   coBiddersLoading: boolean
   onClose: () => void
   onLoadCoBidders: (id: number) => void
+  mobileMode?: boolean
 }) {
   const { t } = useTranslation('network')
   const isVendor = node.type === 'vendor'
@@ -390,7 +407,7 @@ function SidePanel({
   const { open: openDrawer } = useEntityDrawer()
 
   return (
-    <div className="w-72 shrink-0 border-l border-border bg-background-card flex flex-col overflow-hidden">
+    <div className={mobileMode ? 'flex flex-col overflow-hidden' : 'w-72 shrink-0 border-l border-border bg-background-card flex flex-col overflow-hidden'}>
       {/* Header */}
       <div className="flex items-start justify-between gap-2 p-4 border-b border-border">
         <div className="min-w-0">
@@ -1097,6 +1114,7 @@ interface CenterEntity {
 export function NetworkGraph() {
   const { t } = useTranslation('network')
   const { open: openEntityDrawer } = useEntityDrawer()
+  const isMobile = useIsMobile()
   const [mainTab, setMainTab] = useState<'graph' | 'list'>('list')
   const [filters, setFilters] = useState<GraphFilters>(DEFAULT_FILTERS)
   const [centerEntity, setCenterEntity] = useState<CenterEntity | null>(null)
@@ -1661,9 +1679,6 @@ export function NetworkGraph() {
         <div className="px-3 pb-3 flex flex-wrap items-center gap-3 border-t border-border/20 pt-3">
           <FiltersBar filters={filters} onChange={patchFilters} onReset={resetFilters} />
         </div>
-        {filters.year != null && (
-          <DataQualityWarning year={filters.year} className="mx-3 mb-3" />
-        )}
       </details>
       <div className="flex items-center gap-3">
         {/* Color mode toggle */}
@@ -2089,26 +2104,45 @@ export function NetworkGraph() {
           )}
         </div>
 
-        {/* Side panel — always rendered, slide in/out via CSS */}
-        <div
-          style={{
-            transform: selectedNode ? 'translateX(0)' : 'translateX(20px)',
-            opacity: selectedNode ? 1 : 0,
-            transition: 'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
-            pointerEvents: selectedNode ? 'auto' : 'none',
-            flexShrink: 0,
-          }}
-        >
-          {selectedNode && (
-            <SidePanel
-              node={selectedNode}
-              coBidders={coBidders}
-              coBiddersLoading={coBiddersLoading}
-              onClose={() => setSelectedNode(null)}
-              onLoadCoBidders={handleLoadCoBidders}
-            />
-          )}
-        </div>
+        {/* Side panel — desktop: slide in from right; mobile: bottom sheet */}
+        {isMobile ? (
+          <BottomSheet
+            open={selectedNode !== null}
+            onClose={() => setSelectedNode(null)}
+            aria-label={selectedNode ? `Details for ${selectedNode.name}` : 'Node details'}
+          >
+            {selectedNode && (
+              <SidePanel
+                node={selectedNode}
+                coBidders={coBidders}
+                coBiddersLoading={coBiddersLoading}
+                onClose={() => setSelectedNode(null)}
+                onLoadCoBidders={handleLoadCoBidders}
+                mobileMode={true}
+              />
+            )}
+          </BottomSheet>
+        ) : (
+          <div
+            style={{
+              transform: selectedNode ? 'translateX(0)' : 'translateX(20px)',
+              opacity: selectedNode ? 1 : 0,
+              transition: 'transform 350ms cubic-bezier(0.16, 1, 0.3, 1), opacity 300ms ease',
+              pointerEvents: selectedNode ? 'auto' : 'none',
+              flexShrink: 0,
+            }}
+          >
+            {selectedNode && (
+              <SidePanel
+                node={selectedNode}
+                coBidders={coBidders}
+                coBiddersLoading={coBiddersLoading}
+                onClose={() => setSelectedNode(null)}
+                onLoadCoBidders={handleLoadCoBidders}
+              />
+            )}
+          </div>
+        )}
       </div>
 
       {/* Legend */}

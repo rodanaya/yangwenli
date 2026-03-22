@@ -1,0 +1,24 @@
+{
+  "title": "EL SISMOGRAFO",
+  "subtitle": "Monitoring anomalies in public procurement",
+  "dateRange": "2010-2025",
+  "system": "RUBLI temporal risk detection system",
+  "loading": "Loading seismic data...",
+  "error": "Error loading data",
+  "legend": {
+    "scandal": "SCANDAL"
+  },
+  "tooltip": {
+    "totalContracts": "Total contracts"
+  },
+  "footer": "Each channel shows the deviation of the high-risk contract percentage from the sector's historical mean. Upward oscillations indicate periods with anomalies above average.",
+  "scandalEvents": {
+    "laEstafaMaestra": "La Estafa\nMaestra",
+    "casoLozoya": "Caso Lozoya\nOdebrecht",
+    "comprasCovid": "Compras\nCOVID-19",
+    "segalmexEscandalo": "Segalmex\nEscandalo"
+  },
+  "aria": {
+    "chartLabel": "Seismograph visualization of procurement risk anomalies across sectors from 2010 to 2025"
+  }
+}

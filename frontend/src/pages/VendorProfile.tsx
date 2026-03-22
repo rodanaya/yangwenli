@@ -11,7 +11,6 @@ import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleC
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
-import { ResponsibleUseNotice } from '@/components/ResponsibleUseNotice'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
@@ -251,7 +250,12 @@ function RiskWaterfallChart({
       <p className="text-xs text-text-muted mb-3">
         {t('waterfall.description')}
       </p>
-      <div className="h-[220px]">
+      <div
+        className="h-[220px]"
+        role="img"
+        aria-label="Bar chart showing contract value breakdown by category for this vendor"
+      >
+        <span className="sr-only">Bar chart showing contract value breakdown by category for this vendor.</span>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={data} margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
             <XAxis
@@ -479,7 +483,6 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
 }
 
 function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
-  const { t } = useTranslation('vendors')
   const topFactors = useMemo(() => {
     return [...waterfallData]
       .filter((f) => f.contribution > 0)
@@ -733,11 +736,10 @@ export function VendorProfile() {
   })
 
   // Fetch larger batch for chart visualizations (separate from table pagination)
-  // Gated behind the history tab — deferred until user navigates there.
   const { data: contractsForCharts } = useQuery({
     queryKey: ['vendor', vendorId, 'contracts-charts'],
     queryFn: () => vendorApi.getContracts(vendorId, { per_page: 500 }),
-    enabled: !!vendorId && activeTab === 'history',
+    enabled: !!vendorId,
     staleTime: 5 * 60 * 1000,
   })
 
@@ -2112,7 +2114,13 @@ export function VendorProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="relative h-[100px]" ref={riskTimelineChartRef}>
+                    <div
+                      className="relative h-[100px]"
+                      ref={riskTimelineChartRef}
+                      role="img"
+                      aria-label="Area chart showing risk score trend over time for this vendor"
+                    >
+                      <span className="sr-only">Area chart showing the vendor's risk score trend over time.</span>
                       <ChartDownloadButton
                         targetRef={riskTimelineChartRef}
                         filename={`vendor-${vendorId}-risk-trend`}
@@ -2209,7 +2217,12 @@ export function VendorProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div className="h-[120px]">
+                    <div
+                      className="h-[120px]"
+                      role="img"
+                      aria-label="Composed chart showing contract lifecycle activity by year for this vendor"
+                    >
+                      <span className="sr-only">Composed chart showing the number of contracts and total value by year throughout this vendor's contract lifecycle.</span>
                       <ResponsiveContainer width="100%" height="100%">
                         <ComposedChart data={lifecycleData.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
                           <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
@@ -3276,8 +3289,6 @@ export function VendorProfile() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
       />
-
-      <ResponsibleUseNotice className="mt-6" />
     </div>
   )
 }
@@ -4031,7 +4042,12 @@ function PeriodistaPanel({
 
             {/* Year-by-year bar chart */}
             {narrative.years.length > 0 && (
-              <div className="h-[220px]">
+              <div
+                className="h-[220px]"
+                role="img"
+                aria-label="Bar chart showing annual contract value by year for this vendor's investigation narrative"
+              >
+                <span className="sr-only">Bar chart showing the annual contract value in MXN for each year of this vendor's procurement activity.</span>
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={narrative.years} margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />

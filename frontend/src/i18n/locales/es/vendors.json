@@ -119,5 +119,7 @@
     "modelCoefficient": "Coeficiente del modelo",
     "riskIncreasing": "Factor que aumenta el riesgo",
     "riskReducing": "Factor que reduce el riesgo"
-  }
+  },
+  "noContributingFactors": "No se encontraron factores de riesgo contribuyentes.",
+  "untitledContract": "Sin título"
 }

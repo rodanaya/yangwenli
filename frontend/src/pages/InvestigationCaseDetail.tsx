@@ -221,7 +221,7 @@ export function InvestigationCaseDetail() {
     return (
       <div className="flex flex-col items-center justify-center py-20 gap-4">
         <AlertCircle className="h-10 w-10 text-risk-critical opacity-60" />
-        <p className="text-sm text-text-muted">Could not load case. It may not exist.</p>
+        <p className="text-sm text-text-muted">{t('caseDetail.loadError')}</p>
         <Button variant="outline" size="sm" onClick={() => navigate('/investigation')}>
           <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
           {t('caseDetail.backToQueue')}
@@ -592,7 +592,7 @@ export function InvestigationCaseDetail() {
                 <div key={i} className="flex gap-3 p-3 rounded bg-background-elevated/30 border border-border/20">
                   <Newspaper className="h-4 w-4 text-emerald-400/60 flex-shrink-0 mt-0.5" />
                   <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-text-primary">{ev.source_title || 'Untitled source'}</p>
+                    <p className="text-xs font-medium text-text-primary">{ev.source_title || t('caseDetail.untitledSource')}</p>
                     {ev.summary && (
                       <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{ev.summary}</p>
                     )}
@@ -779,13 +779,13 @@ export function InvestigationCaseDetail() {
               <textarea
                 className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary placeholder-text-muted/50 resize-none focus:outline-none focus:border-accent/50"
                 rows={3}
-                placeholder="Optional notes..."
+                placeholder={t('statusModal.notesPlaceholder')}
                 value={statusNotes}
                 onChange={(e) => setStatusNotes(e.target.value)}
               />
               <input
                 className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent/50"
-                placeholder="Your name (optional)"
+                placeholder={t('statusModal.reviewerPlaceholder')}
                 value={reviewerName}
                 onChange={(e) => setReviewerName(e.target.value)}
               />
@@ -803,7 +803,7 @@ export function InvestigationCaseDetail() {
                 disabled={reviewMutation.isPending}
                 onClick={() => reviewMutation.mutate({ status: newStatus, notes: statusNotes })}
               >
-                {reviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+                {reviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('statusModal.save')}
               </Button>
             </div>
           </div>

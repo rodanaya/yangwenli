@@ -1,0 +1,40 @@
+{
+  "title": "El Telescopio",
+  "subtitle": "The universe of Mexican public contracts",
+  "nebulaeCount": "nebulae",
+  "contractsCount": "contracts",
+  "loading": "Calibrating telescope...",
+  "controls": {
+    "none": "None",
+    "all": "All",
+    "yAxis": "Y Axis",
+    "size": "Size",
+    "zoom": "Zoom",
+    "reset": "Reset"
+  },
+  "yLabels": {
+    "avg_risk": "Avg Risk",
+    "high_risk_pct": "% High Risk",
+    "direct_award_pct": "% Direct Award"
+  },
+  "sizeLabels": {
+    "total_value": "Total Value",
+    "contracts": "No. Contracts",
+    "vendor_count": "No. Vendors"
+  },
+  "legend": {
+    "size": "Size",
+    "brightness": "Brightness",
+    "highRisk": "% High Risk",
+    "positionY": "Position Y"
+  },
+  "tooltip": {
+    "contracts": "Contracts",
+    "value": "Value",
+    "avgRisk": "Avg risk",
+    "highRisk": "High risk",
+    "directAward": "Direct award",
+    "vendors": "Vendors",
+    "institutions": "Institutions"
+  }
+}
