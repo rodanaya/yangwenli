@@ -23,7 +23,7 @@ export function MainLayout() {
 
       {/* Skip to content link for keyboard users */}
       <a href="#main-content" className="skip-link">
-        Skip to main content
+        {t('skipToContent')}
       </a>
 
       {/* First-visit onboarding */}

@@ -233,7 +233,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
               <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.0</span>
             </div>
-            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">Transparencia Procuratoria</p>
+            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
           </div>
         )}
         {/* Mobile close button */}
@@ -290,7 +290,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981] flex-shrink-0" />
               <span className="text-[10px] font-mono text-stone-500 tracking-wide">
-                3.1M contracts indexed
+                {t('contractsIndexed')}
               </span>
             </div>
           </div>
@@ -301,7 +301,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
-                <p className="text-xs font-mono">3.1M indexed</p>
+                <p className="text-xs font-mono">{t('contractsIndexedShort')}</p>
               </TooltipContent>
             </Tooltip>
           </div>
@@ -316,13 +316,13 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               <button
                 onClick={() => setReportOpen(true)}
                 className="w-full flex justify-center items-center rounded-md py-1.5 text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
-                aria-label="Report an issue"
+                aria-label={t('reportIssue')}
               >
                 <MessageSquarePlus className="h-4 w-4" />
               </button>
             </TooltipTrigger>
             <TooltipContent side="right" sideOffset={8}>
-              <p className="text-xs">Report an issue</p>
+              <p className="text-xs">{t('reportIssue')}</p>
             </TooltipContent>
           </Tooltip>
         ) : (
@@ -331,7 +331,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
           >
             <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
-            <span className="truncate">Report an issue</span>
+            <span className="truncate">{t('reportIssue')}</span>
           </button>
         )}
       </div>

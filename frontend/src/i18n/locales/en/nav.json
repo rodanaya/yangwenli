@@ -59,5 +59,9 @@
   "expandSidebar": "Expand sidebar",
   "collapseSidebar": "Collapse sidebar",
   "openMenu": "Open menu",
-  "closeMenu": "Close menu"
+  "closeMenu": "Close menu",
+  "tagline": "Procurement Transparency",
+  "contractsIndexed": "3.1M contracts indexed",
+  "contractsIndexedShort": "3.1M indexed",
+  "reportIssue": "Report an issue"
 }

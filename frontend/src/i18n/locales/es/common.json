@@ -64,6 +64,14 @@
     "create": "Crear expediente",
     "creating": "Creando\u2026"
   },
+  "banner": "Verdad Base expandida a 748 casos · Narrativas Red Thread · Briefing de Inteligencia ARIA — ahora bilingüe EN/ES",
+  "dismissBanner": "Cerrar anuncio",
+  "footerBrand": "RUBLI 2.0",
+  "footerTagline": "Plataforma de Transparencia en Contrataciones",
+  "footerStats": "3.1M contratos · 9.9T MXN · 2002-2025",
+  "skipToContent": "Saltar al contenido principal",
+  "verified": "verificado",
+  "readMethodology": "Leer metodología →",
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "Sigue el Dinero",

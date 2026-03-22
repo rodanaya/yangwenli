@@ -64,6 +64,14 @@
     "create": "Create Dossier",
     "creating": "Creating\u2026"
   },
+  "banner": "Ground Truth expanded to 748 cases · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES",
+  "dismissBanner": "Dismiss announcement",
+  "footerBrand": "RUBLI 2.0",
+  "footerTagline": "Procurement Transparency Platform",
+  "footerStats": "3.1M contracts · 9.9T MXN · 2002-2025",
+  "skipToContent": "Skip to main content",
+  "verified": "verified",
+  "readMethodology": "Read methodology \u2192",
   "welcome": {
     "subtitle": "Red Unificada de Busqueda de Licitaciones Irregulares — AI-Powered Corruption Detection for Mexican Government Procurement",
     "step1Title": "Follow the Money",

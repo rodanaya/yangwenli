@@ -59,5 +59,9 @@
   "expandSidebar": "Expandir barra lateral",
   "collapseSidebar": "Contraer barra lateral",
   "openMenu": "Abrir menú",
-  "closeMenu": "Cerrar menú"
+  "closeMenu": "Cerrar menú",
+  "tagline": "Transparencia Procuratoria",
+  "contractsIndexed": "3.1M contratos indexados",
+  "contractsIndexedShort": "3.1M indexados",
+  "reportIssue": "Reportar un problema"
 }

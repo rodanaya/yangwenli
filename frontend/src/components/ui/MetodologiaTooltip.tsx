@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 interface MetodologiaTooltipProps {
@@ -9,6 +10,7 @@ interface MetodologiaTooltipProps {
 }
 
 export function MetodologiaTooltip({ title, body, link, className }: MetodologiaTooltipProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   const containerRef = useRef<HTMLSpanElement>(null)
 
@@ -59,7 +61,7 @@ export function MetodologiaTooltip({ title, body, link, className }: Metodologia
               href={link}
               className="block mt-2 text-accent-data hover:underline"
             >
-              Leer metodologia &rarr;
+              {t('readMethodology')}
             </a>
           )}
           {/* Arrow */}

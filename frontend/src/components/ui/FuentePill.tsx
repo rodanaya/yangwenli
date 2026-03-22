@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 interface FuentePillProps {
@@ -11,10 +12,11 @@ interface FuentePillProps {
 export function FuentePill({
   source,
   count,
-  countLabel = 'contratos',
+  countLabel,
   verified = false,
   className,
 }: FuentePillProps) {
+  const { t } = useTranslation('common')
   return (
     <span
       className={cn(
@@ -27,12 +29,12 @@ export function FuentePill({
       <span className="text-text-primary font-semibold">{source}</span>
       {count != null && (
         <span className="text-text-muted">
-          &middot; {count.toLocaleString()} {countLabel}
+          &middot; {count.toLocaleString()} {countLabel ?? t('contracts')}
         </span>
       )}
       {verified && (
         <span className="inline-flex items-center gap-0.5 text-emerald-500 font-semibold ml-0.5">
-          &#10003; verificado
+          &#10003; {t('verified')}
         </span>
       )}
     </span>
