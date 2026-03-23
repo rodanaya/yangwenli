@@ -104,5 +104,13 @@
   "resultCount": "{{count}} casos",
   "noResultsHint": "Intente ajustar su búsqueda o filtros",
   "noResults": "Ningún caso coincide con los filtros actuales.",
-  "loading": "Cargando casos..."
+  "loading": "Cargando casos...",
+  "caseCount": {
+    "explanation": "43 expedientes documentados con análisis narrativo. El modelo de riesgo fue entrenado con 1,156 asociaciones de casos de verdad fundamental."
+  },
+  "sources": {
+    "efosList": "Lista EFOS (SAT)",
+    "sfpSanctions": "Registro de Sanciones SFP",
+    "asfAudits": "Informes de Auditoría ASF"
+  }
 }

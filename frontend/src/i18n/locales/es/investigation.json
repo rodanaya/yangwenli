@@ -297,5 +297,17 @@
     "amount": "Monto",
     "year": "Año",
     "viewReport": "Ver Reporte →"
-  }
+  },
+  "verify": {
+    "heading": "Cómo verificar esta pista",
+    "toggle": "▸ Cómo verificar",
+    "step1": "Busca en COMPRANET (compranet.hacienda.gob.mx) el RFC o nombre completo del proveedor para acceder a los registros de contratos originales",
+    "step2": "Verifica en la lista SAT EFOS (sat.gob.mx) si el proveedor está clasificado como empresa fantasma",
+    "step3": "Revisa los informes de auditoría de la ASF (asf.gob.mx) para la institución contratante en el año correspondiente",
+    "step4": "Solicita documentos a través de la Plataforma Nacional de Transparencia (infomex.gob.mx) bajo los artículos 70-73 de la LGTAIP",
+    "editorial": "Cita sugerida: 'De acuerdo con el análisis de contrataciones de RUBLI, los contratos adjudicados a [proveedor] muestran patrones de compra estadísticamente similares a casos documentados de corrupción (indicador de riesgo: [X]/1.0). Esto no constituye prueba de irregularidades y requiere corroboración periodística.'",
+    "disclaimer": "Los indicadores de riesgo son estadísticos, no determinaciones legales. Las puntuaciones altas indican similitud con patrones de corrupción documentada y requieren verificación independiente antes de su publicación."
+  },
+  "riskScoreLabel": "Indicador de riesgo",
+  "riskScoreTooltip": "Indicador de riesgo = similitud estadística con patrones conocidos de corrupción. No es prueba de irregularidad."
 }

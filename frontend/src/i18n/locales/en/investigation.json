@@ -297,5 +297,17 @@
     "amount": "Amount",
     "year": "Year",
     "viewReport": "View Report →"
-  }
+  },
+  "verify": {
+    "heading": "How to verify this lead",
+    "toggle": "▸ How to verify",
+    "step1": "Search COMPRANET (compranet.hacienda.gob.mx) for this vendor's RFC or full name to access original contract records",
+    "step2": "Cross-reference against SAT EFOS list (sat.gob.mx) to check if the vendor is classified as a ghost company",
+    "step3": "Review ASF audit reports (asf.gob.mx) for the contracting institution in the relevant year",
+    "step4": "Request documents via Plataforma Nacional de Transparencia (infomex.gob.mx) under articles 70-73 of LGTAIP",
+    "editorial": "Suggested citation: 'According to RUBLI procurement analysis, contracts awarded to [vendor] show procurement patterns statistically similar to documented corruption cases (risk score: [X]/1.0). This does not constitute proof of wrongdoing and requires journalistic corroboration.'",
+    "disclaimer": "Risk scores are statistical indicators, not legal determinations. High scores indicate similarity to documented corruption patterns and require independent verification before publication."
+  },
+  "riskScoreLabel": "Risk indicator",
+  "riskScoreTooltip": "Risk score = statistical similarity to known corruption patterns. Not proof of wrongdoing."
 }

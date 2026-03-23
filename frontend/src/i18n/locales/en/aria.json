@@ -175,5 +175,8 @@
     "title": "How does ARIA work?",
     "body": "ARIA combines ML risk score (v6.4), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
   },
-  "threatLevels": "Threat Levels"
+  "threatLevels": "Threat Levels",
+  "vendorCard": {
+    "disclaimer": "ⓘ Statistical risk indicator — not a legal determination"
+  }
 }

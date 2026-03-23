@@ -65,8 +65,14 @@ class FolderExportResponse(BaseModel):
 # TABLE SETUP
 # =============================================================================
 
+_folders_tables_ready = False
+
+
 def _ensure_tables(conn: sqlite3.Connection):
-    """Create investigation_folders and folder_items tables if needed."""
+    """Create investigation_folders and folder_items tables if needed (once per process)."""
+    global _folders_tables_ready
+    if _folders_tables_ready:
+        return
     conn.execute("""
         CREATE TABLE IF NOT EXISTS investigation_folders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -88,6 +94,7 @@ def _ensure_tables(conn: sqlite3.Connection):
     """)
     conn.execute("CREATE INDEX IF NOT EXISTS idx_folder_items_folder ON investigation_folder_items(folder_id)")
     conn.commit()
+    _folders_tables_ready = True
 
 
 # =============================================================================

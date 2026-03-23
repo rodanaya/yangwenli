@@ -83,8 +83,14 @@ class WatchlistStatsResponse(BaseModel):
 # HELPER FUNCTIONS
 # =============================================================================
 
+_watchlist_table_ready = False
+
+
 def ensure_watchlist_table(conn: sqlite3.Connection):
-    """Create watchlist table if it doesn't exist."""
+    """Create watchlist table if it doesn't exist (runs once per process)."""
+    global _watchlist_table_ready
+    if _watchlist_table_ready:
+        return
     cursor = conn.cursor()
 
     cursor.execute("""
@@ -121,6 +127,7 @@ def ensure_watchlist_table(conn: sqlite3.Connection):
     """)
 
     conn.commit()
+    _watchlist_table_ready = True
 
 
 def get_item_name_and_risk(conn: sqlite3.Connection, item_type: str, item_id: int) -> tuple:

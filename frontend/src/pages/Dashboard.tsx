@@ -1546,7 +1546,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       <div className="px-6 pt-4 pb-2 border-b border-border/40">
         <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
-          {t('lede', { contracts: '3.1M', value: '9.9T', year: new Date().getFullYear() })}
+          {t('lede')}
         </p>
       </div>
 
@@ -1557,6 +1557,11 @@ export function Dashboard() {
         value={formatCompactMXN(criticalHighValue || overview?.total_value_mxn || 0)}
         loading={dashLoading}
       />
+      {!dashLoading && criticalHighValue > 0 && (
+        <p className="px-6 text-[10px] font-mono text-text-muted/50 -mt-2">
+          {t('budgetContext', { pct: '56' })}
+        </p>
+      )}
 
       {/* ================================================================ */}
       {/* CINEMATIC HERO — dark editorial hero with GSAP animations        */}
@@ -1583,7 +1588,10 @@ export function Dashboard() {
                 <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
               </div>
             )}
-            <span className="text-[10px] font-mono text-text-muted/50">
+            <span
+              className="text-[10px] font-mono text-text-muted/50 cursor-help"
+              title={t('aucExplanation')}
+            >
               {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
             </span>
           </div>

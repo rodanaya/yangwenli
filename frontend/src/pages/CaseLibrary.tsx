@@ -261,27 +261,58 @@ function EvidenceManifest() {
   ]
 
   return (
-    <motion.div
-      className="grid grid-cols-2 sm:grid-cols-4 gap-0 mb-8 border border-border/60 rounded-sm overflow-hidden"
-      variants={staggerContainer}
-      initial="initial"
-      animate="animate"
-    >
-      {stats.map(({ label, value, accent }, i) => (
-        <motion.div
-          key={label}
-          variants={slideUp}
-          className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
-        >
-          <div
-            className={`text-2xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}
+    <div className="mb-8">
+      <motion.div
+        className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-border/60 rounded-sm overflow-hidden"
+        variants={staggerContainer}
+        initial="initial"
+        animate="animate"
+      >
+        {stats.map(({ label, value, accent }, i) => (
+          <motion.div
+            key={label}
+            variants={slideUp}
+            className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
           >
-            {value}
-          </div>
-          <div className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-medium">{label}</div>
-        </motion.div>
-      ))}
-    </motion.div>
+            <div
+              className={`text-2xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}
+            >
+              {value}
+            </div>
+            <div className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-medium">{label}</div>
+          </motion.div>
+        ))}
+      </motion.div>
+      <p className="mt-2 text-[11px] text-text-muted leading-relaxed">
+        {t('caseCount.explanation')}
+      </p>
+      <div className="flex flex-wrap items-center gap-3 mt-1.5">
+        <a
+          href="https://www.sat.gob.mx/consultas/76674/consulta-la-lista-de-contribuyentes-con-operaciones-no-localizadas-o-inexistentes"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text-muted hover:text-accent text-xs underline"
+        >
+          {t('sources.efosList')} ↗
+        </a>
+        <a
+          href="https://www.gob.mx/sfp"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text-muted hover:text-accent text-xs underline"
+        >
+          {t('sources.sfpSanctions')} ↗
+        </a>
+        <a
+          href="https://www.asf.gob.mx"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="text-text-muted hover:text-accent text-xs underline"
+        >
+          {t('sources.asfAudits')} ↗
+        </a>
+      </div>
+    </div>
   )
 }
 

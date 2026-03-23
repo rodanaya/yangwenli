@@ -446,6 +446,11 @@ function App() {
               <Route path="data-quality" element={<Navigate to="/settings?tab=quality" replace />} />
               <Route path="export" element={<Navigate to="/settings?tab=export" replace />} />
 
+              {/* Route aliases — common plural/alternate spellings */}
+              <Route path="investigations" element={<Navigate to="/investigation" replace />} />
+              <Route path="for-journalists" element={<Navigate to="/journalists" replace />} />
+              <Route path="cases-library" element={<Navigate to="/cases" replace />} />
+
               {/* Red Thread — scroll-driven investigation narrative */}
               <Route
                 path="thread/:vendorId"

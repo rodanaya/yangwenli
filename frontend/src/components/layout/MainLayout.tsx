@@ -84,6 +84,14 @@ export function MainLayout() {
             <span>{t('footerBrand')} • {t('footerTagline')}</span>
             <span>{t('footerStats')}</span>
           </div>
+          <details className="mt-1.5">
+            <summary className="text-[10px] text-text-muted/50 cursor-pointer hover:text-text-muted transition-colors select-none list-none font-mono">
+              ▸ {t('aboutDataToggle')}
+            </summary>
+            <p className="mt-1 text-[10px] text-text-muted/50 leading-relaxed max-w-3xl">
+              {t('aboutData')}
+            </p>
+          </details>
         </footer>
       </div>
 

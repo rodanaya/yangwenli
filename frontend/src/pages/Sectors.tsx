@@ -851,15 +851,15 @@ export function Sectors() {
         transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Informe de Diagnostico &middot; 12 Sectores &middot; 2001&ndash;2025
+          {t('diagnostico.reportLabel')}
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
-          El Diagnostico Nacional
+          {t('diagnostico.title')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
           {aggregates
-            ? `Analisis sistemico de riesgo por sector en contratacion publica federal. ${aggregates.sectorCount} sectores bajo vigilancia. Resultados basados en ${formatNumber(aggregates.totalContracts)} contratos.`
-            : 'Analisis sistemico de riesgo por sector en contratacion publica federal. 12 sectores bajo vigilancia. Resultados basados en 3.05 millones de contratos.'}
+            ? t('diagnostico.subtitleDynamic', { count: aggregates.sectorCount, contracts: formatNumber(aggregates.totalContracts) })
+            : t('diagnostico.subtitleFallback')}
         </p>
       </motion.div>
 
@@ -872,11 +872,8 @@ export function Sectors() {
         animate={{ opacity: 1, x: 0 }}
         transition={{ duration: 0.45, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        <div className="text-xs uppercase tracking-wide text-accent font-semibold mb-1">Hallazgo Principal</div>
-        <p className="text-sm text-text-primary">
-          El sector <strong>Salud</strong> concentra el mayor riesgo absoluto: redes de empresas fantasma en IMSS,
-          ISSSTE y compras de emergencia COVID-19 representan mas de $200B MXN en contratos de alto riesgo.
-        </p>
+        <div className="text-xs uppercase tracking-wide text-accent font-semibold mb-1">{t('diagnostico.hallazgoLabel')}</div>
+        <p className="text-sm text-text-primary" dangerouslySetInnerHTML={{ __html: t('diagnostico.hallazgoText') }} />
       </motion.div>
 
       {/* Summary stat pills — vital signs */}
@@ -888,11 +885,11 @@ export function Sectors() {
           transition={{ duration: 0.4, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
           <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Gasto Total</span>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.gastoTotal')}</span>
             <span className="pull-stat !text-base">{formatCompactMXN(aggregates.totalValue)}</span>
           </div>
           <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">Riesgo Promedio</span>
+            <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.riesgoPromedio')}</span>
             <span className={cn(
               'pull-stat !text-base',
               aggregates.avgRisk >= RISK_THRESHOLDS.critical ? 'text-risk-critical' : aggregates.avgRisk >= RISK_THRESHOLDS.medium ? 'text-risk-high' : 'text-text-primary'
@@ -902,7 +899,7 @@ export function Sectors() {
           </div>
           {topSector && (
             <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">Mayor Gasto</span>
+              <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.mayorGasto')}</span>
               <div className="flex items-center gap-1.5">
                 <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
                 <span className="pull-stat !text-base">{getSectorNameEN(topSector.sector_code)}</span>
@@ -1109,7 +1106,7 @@ export function Sectors() {
 
       {/* Section 1: Stat Cards — Vital Signs */}
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">SIGNOS VITALES</span>
+        <span className="editorial-label">{t('diagnostico.signosVitales')}</span>
       </div>
       <motion.div
         className="grid gap-4 grid-cols-2 lg:grid-cols-4"
@@ -1196,7 +1193,7 @@ export function Sectors() {
 
       {/* Section 2a: Sector Risk Heatmap — strongest signal, visible by default */}
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">MATRIZ DE RIESGO</span>
+        <span className="editorial-label">{t('diagnostico.matrizRiesgo')}</span>
       </div>
       <ScrollReveal direction="fade">
         <Card className="fern-card">
@@ -1245,7 +1242,7 @@ export function Sectors() {
                 )
               })()}
             <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
-              Fuente: COMPRANET 2002-2025, modelo de riesgo v6.4 &middot; Valores normalizados min-max por metrica
+              {t('diagnostico.sourceFootnote')}
             </p>
           </CardContent>
         </Card>
@@ -1257,7 +1254,7 @@ export function Sectors() {
       {criScatterData && criScatterData.data.length > 0 && (
         <>
         <div className="editorial-rule mb-3">
-          <span className="editorial-label">PAISAJE INSTITUCIONAL</span>
+          <span className="editorial-label">{t('diagnostico.paisajeInstitucional')}</span>
         </div>
         <ScrollReveal direction="fade">
           <Card className="fern-card">
@@ -1359,7 +1356,7 @@ export function Sectors() {
                 Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
               </p>
               <p className="mt-2 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
-                Fuente: COMPRANET &middot; Instituciones con min. 200 contratos &middot; Metodologia Fazekas CRI
+                {t('diagnostico.sourceFootnote')}
               </p>
             </CardContent>
           </Card>
@@ -1375,7 +1372,7 @@ export function Sectors() {
         }
       `}</style>
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">PANEL COMPARATIVO</span>
+        <span className="editorial-label">{t('table.title')}</span>
       </div>
       <motion.div
         variants={fadeIn}

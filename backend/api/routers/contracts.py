@@ -399,29 +399,31 @@ def get_contract_risk(
             factors_str = row[4] or ""
             factors = []
 
-            # Map factor codes to descriptions and weights (v5.0 global coefficients)
+            # Map factor codes to descriptions and weights (v6.4 global coefficients)
+            # Source: CAL-v6.1-202603191034, C=0.01, l1_ratio=0.9673
             factor_info = {
-                # Behavioral factors
-                "price_volatility": ("Price Volatility", 1.219, "Behavioral"),
-                "institution_diversity": ("Institution Diversity", -0.848, "Behavioral"),
-                "win_rate": ("Win Rate", 0.727, "Behavioral"),
-                "vendor_concentration": ("Vendor Concentration", 0.428, "Behavioral"),
-                "sector_spread": ("Sector Spread", -0.374, "Behavioral"),
-                # Procedure factors
-                "direct_award": ("Direct Award", 0.182, "Procedure"),
-                "single_bid": ("Single Bidder", 0.013, "Procedure"),
-                "ad_period_days": ("Ad Period Duration", -0.104, "Procedure"),
-                # Pricing factors
-                "price_ratio": ("Price Ratio", -0.015, "Pricing"),
-                "price_hyp_confidence": ("Price Hypothesis Confidence", 0.001, "Pricing"),
-                # Network factors
-                "network_member_count": ("Network Member Count", 0.064, "Network"),
-                "industry_mismatch": ("Industry-Sector Mismatch", 0.305, "Network"),
+                # Behavioral factors (active)
+                "price_volatility": ("Price Volatility", 1.8566, "Behavioral"),
+                "institution_diversity": ("Institution Diversity", -0.4679, "Behavioral"),
+                "vendor_concentration": ("Vendor Concentration", 0.2378, "Behavioral"),
+                # Procedure factors (active)
+                "single_bid": ("Single Bidder", 0.0984, "Procedure"),
+                "ad_period_days": ("Ad Period Duration", 0.0423, "Procedure"),
+                # Pricing factors (active)
+                "price_ratio": ("Price Ratio", 0.3907, "Pricing"),
+                # Network factors (active)
+                "network_member_count": ("Network Member Count", 0.1873, "Network"),
+                # Timing factors (active)
+                "same_day_count": ("Same-Day Contracts", 0.1114, "Timing"),
+                # Zeroed by regularization (C=0.01, near-L1) or sign constraints
+                "win_rate": ("Win Rate", 0.0, "Behavioral"),
+                "sector_spread": ("Sector Spread", 0.0, "Behavioral"),
+                "direct_award": ("Direct Award", 0.0, "Procedure"),
+                "price_hyp_confidence": ("Price Hypothesis Confidence", 0.0, "Pricing"),
                 "co_bid_rate": ("Co-Bidding Rate", 0.0, "Network"),
-                # Timing factors
-                "same_day_count": ("Same-Day Contracts", 0.222, "Timing"),
-                "year_end": ("Year-End Timing", 0.059, "Timing"),
-                "institution_risk": ("Institution Risk Baseline", 0.057, "Timing"),
+                "industry_mismatch": ("Industry-Sector Mismatch", 0.0, "Network"),
+                "year_end": ("Year-End Timing", 0.0, "Timing"),
+                "institution_risk": ("Institution Risk Baseline", 0.0, "Timing"),
             }
 
             for factor in factors_str.split(","):

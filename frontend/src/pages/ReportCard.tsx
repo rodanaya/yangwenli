@@ -1367,7 +1367,7 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
       {/* Section header */}
       <div className="flex items-center gap-2 mb-3">
         <h3 className="text-sm font-semibold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-          Ranking de Instituciones
+          {t('rankingInstitutions')}
         </h3>
         <span
           className="text-[10px] font-bold px-2 py-0.5 rounded-full"

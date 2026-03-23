@@ -64,7 +64,7 @@
     "create": "Crear expediente",
     "creating": "Creando\u2026"
   },
-  "banner": "Verdad Base expandida a 748 casos · Narrativas Red Thread · Briefing de Inteligencia ARIA — ahora bilingüe EN/ES",
+  "banner": "Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES",
   "dismissBanner": "Cerrar anuncio",
   "footerBrand": "RUBLI 2.0",
   "footerTagline": "Plataforma de Transparencia en Contrataciones",
@@ -123,5 +123,24 @@
     "skip": "Saltar tour",
     "next": "Siguiente",
     "getStarted": "Comenzar"
+  },
+  "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 748 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia",
+  "aboutDataToggle": "Acerca de estos datos",
+  "storyType": {
+    "era": "Analisis de Era",
+    "case": "Caso de Investigacion",
+    "thematic": "Investigacion Tematica",
+    "year": "Analisis Anual",
+    "readTime": "lectura",
+    "chapter": "Capitulo",
+    "chapterNav": "Navegacion de capitulos"
+  },
+  "era": {
+    "fox": "Fox (2000-2006)",
+    "calderon": "Calderon (2006-2012)",
+    "pena": "Pena Nieto (2012-2018)",
+    "amlo": "Lopez Obrador (2018-2024)",
+    "sheinbaum": "Sheinbaum (2024-)",
+    "cross": "Multi-sexenio"
   }
 }

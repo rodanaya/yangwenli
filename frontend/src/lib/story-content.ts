@@ -29,7 +29,7 @@ export interface StoryChapterDef {
     barLabel?: string
   }
   chartConfig?: {
-    type: 'da-trend' | 'sector-bar' | 'year-bar' | 'vendor-list' | 'comparison'
+    type: 'da-trend' | 'sector-bar' | 'year-bar' | 'vendor-list' | 'comparison' | 'sunburst' | 'racing' | 'network' | 'pyramid' | 'scatter' | 'breakdown' | 'fingerprint' | 'radar' | 'trends' | 'calendar'
     highlight?: string
     title: string
     chartId?: string
@@ -73,7 +73,7 @@ export const STORIES: StoryDef[] = [
   // STORY 1: La Cuarta Adjudicación
   // =========================================================================
   {
-    slug: 'la-cuarta-adjudicación',
+    slug: 'la-cuarta-adjudicacion',
     outlet: 'data_analysis',
     type: 'era',
     era: 'amlo',
@@ -112,6 +112,11 @@ export const STORIES: StoryDef[] = [
           statLabel: 'adjudicación directa en 2019 — antes del COVID',
           barValue: 77.8,
           barLabel: 'Tasa de adjudicación directa',
+        },
+        chartConfig: {
+          type: 'sunburst',
+          title: 'Huella presupuestal por administración — 5 sexenios, 12 sectores',
+          chartId: 'admin-sunburst',
         },
       },
       {
@@ -158,6 +163,7 @@ export const STORIES: StoryDef[] = [
           type: 'sector-bar',
           highlight: 'agricultura',
           title: 'Adjudicación directa por sector durante la 4T (2019-2024)',
+          chartId: 'da-by-sector',
         },
       },
       {
@@ -177,6 +183,30 @@ export const STORIES: StoryDef[] = [
           statLabel: '81.9% vs 25% recomendado por OCDE',
           barValue: 82,
           barLabel: 'México vs benchmark OCDE (25%)',
+        },
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Mapa de riesgo por sector 2002-2025 — patrón histórico completo',
+          chartId: 'sector-risk-heatmap',
+        },
+      },
+      {
+        id: 'la-conclusion',
+        number: 5,
+        title: 'Qué Puede Hacer un Periodista con Estos Datos',
+        subtitle: 'De los datos a la historia: guía de investigación',
+        prose: [
+          'Los datos de COMPRANET son públicos. Están en compranet.hacienda.gob.mx y en la plataforma de datos abiertos del gobierno federal. El sistema de RUBLI los ha procesado, normalizado y puntuado: cada uno de los 3,051,294 contratos de 2002 a 2025 tiene una puntuación de riesgo, un nivel de alerta y un conjunto de indicadores que señalan por qué llama la atención.',
+          'El primer paso para una investigación es la institución. ¿Qué dependencia tiene la tasa más alta de adjudicaciones directas en tu sector de interés? La respuesta está disponible en RUBLI: cada institución tiene su perfil con sus estadísticas de contratación, sus proveedores recurrentes y sus patrones temporales. Una dependencia que adjudicó directamente el 95% de sus contratos durante cuatro años consecutivos merece una solicitud de transparencia puntual.',
+          'El segundo paso es el proveedor. El directorio de proveedores de RUBLI permite identificar quiénes acumularon contratos durante el sexenio, qué porcentaje fue por adjudicación directa, y si esos patrones coinciden con las señales del modelo de riesgo. Una empresa creada en 2019, con menos de cinco empleados registrados ante el SAT, que acumuló cien contratos federales por adjudicación directa entre 2020 y 2024, es una historia.',
+          'El tercer paso, y el más importante, es la fuente humana. Los datos señalan anomalías; las personas explican por qué ocurrieron. Funciona Bien, IMCO, FUNDAR y el Archivo de Inteligencia tienen investigadores especializados en contratación pública. Los exfuncionarios de compras son frecuentemente más accesibles de lo que parece. Y los perdedores de licitaciones — las empresas que participaron y no ganaron — tienen incentivos para hablar.',
+        ],
+        pullquote: {
+          quote: 'Los datos señalan anomalías. Las personas explican por qué ocurrieron.',
+          stat: '3.1M',
+          statLabel: 'contratos públicos disponibles para investigación',
+          barValue: 100,
+          barLabel: 'Contratos accesibles en COMPRANET',
         },
       },
     ],
@@ -201,7 +231,7 @@ export const STORIES: StoryDef[] = [
       'Verificar en el Registro de Empresas Sancionadas (SFP) si los proveedores identificados ya están inhabilitados.',
       'Consultar los expedientes del proceso penal abierto por la FGR en 2023 para identificar flujos adicionales no documentados.',
     ],
-    relatedSlugs: ['la-cuarta-adjudicación', 'los-nuevos-ricos-de-la-4t', 'red-fantasma'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'los-nuevos-ricos-de-la-4t', 'red-fantasma'],
     caseIds: [2],
     chapters: [
       {
@@ -228,6 +258,11 @@ export const STORIES: StoryDef[] = [
           barValue: 93.4,
           barLabel: 'Sin competencia',
         },
+        chartConfig: {
+          type: 'racing',
+          title: 'Gasto federal por sector 2002–2025 — el ascenso de la agricultura',
+          chartId: 'racing-bar',
+        },
       },
       {
         id: 'la-red',
@@ -243,6 +278,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Veintidós proveedores. Una sola dependencia. Cero competencia.',
           stat: '22',
           statLabel: 'proveedores en la red SEGALMEX',
+        },
+        chartConfig: {
+          type: 'network',
+          title: 'Comunidades de proveedores vinculados — tamaño = valor, color = riesgo',
+          chartId: 'community-bubbles',
         },
       },
       {
@@ -260,6 +300,11 @@ export const STORIES: StoryDef[] = [
           stat: '$15,000M',
           statLabel: 'pesos en irregularidades documentadas por la ASF',
         },
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Flujo de dinero: instituciones de salud → triángulo farmacéutico',
+          chartId: 'money-sankey',
+        },
       },
       {
         id: 'la-impunidad',
@@ -275,6 +320,11 @@ export const STORIES: StoryDef[] = [
           quote: 'El mayor escándalo de la 4T. Las menores consecuencias penales.',
           stat: '0',
           statLabel: 'de los 22 proveedores ha sido condenado',
+        },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'Pirámide de riesgo — dónde está el dinero en el sistema de contratación',
+          chartId: 'risk-pyramid',
         },
       },
     ],
@@ -299,7 +349,7 @@ export const STORIES: StoryDef[] = [
       'Verificar si los representantes legales coinciden con funcionarios públicos o sus familiares (cruce con declaraciones patrimoniales en Plataforma Nacional de Transparencia).',
       'Identificar qué funcionario firmó cada contrato (campo "funcionario_firmante" en COMPRANET) y mapear patrones de repetición.',
     ],
-    relatedSlugs: ['la-cuarta-adjudicación', 'red-fantasma', 'el-granero-vacio'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'red-fantasma', 'el-granero-vacio'],
     chapters: [
       {
         id: 'el-patron',
@@ -324,6 +374,11 @@ export const STORIES: StoryDef[] = [
           barValue: 0.4,
           barLabel: '0.4% de los 320K proveedores',
         },
+        chartConfig: {
+          type: 'scatter',
+          title: 'La paradoja: adjudicación directa ≠ riesgo de corrupción',
+          chartId: 'sector-paradox',
+        },
       },
       {
         id: 'el-dinero',
@@ -344,6 +399,7 @@ export const STORIES: StoryDef[] = [
           type: 'sector-bar',
           highlight: 'salud',
           title: 'Empresas fantasma post-2018 por sector',
+          chartId: 'da-by-sector',
         },
       },
       {
@@ -384,7 +440,7 @@ export const STORIES: StoryDef[] = [
       'Verificar en el RFC de HEMOSER su fecha de constitución y capital social en el SAT (comparar con el monto contratado).',
       'Presentar denuncia ante la SFP citando el artículo 27 de la LAASSP que prohíbe el fraccionamiento de contratos.',
     ],
-    relatedSlugs: ['la-cuarta-adjudicación', 'triangulo-farmacéutico', 'cero-competencia'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'triangulo-farmaceutico', 'cero-competencia'],
     chapters: [
       {
         id: 'el-dia',
@@ -409,6 +465,11 @@ export const STORIES: StoryDef[] = [
           barValue: 99.99,
           barLabel: 'Percentil de anomalía (same_day_count)',
         },
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'HEMOSER — 12 contratos bajo el umbral de supervisión · 2 agosto 2023',
+          chartId: 'threshold-splitting',
+        },
       },
       {
         id: 'la-ley',
@@ -425,6 +486,11 @@ export const STORIES: StoryDef[] = [
           stat: 'Art. 27',
           statLabel: 'Ley de Adquisiciones: "No podrán fraccionar operaciones"',
         },
+        chartConfig: {
+          type: 'breakdown',
+          title: 'Tipos de procedimiento por sector — adjudicación directa vs licitación',
+          chartId: 'procedure-breakdown',
+        },
       },
       {
         id: 'la-cadena-rota',
@@ -440,6 +506,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Si esto no activa las alarmas, las alarmas no existen.',
           stat: '72 horas',
           statLabel: 'plazo máximo para que la SFP detecte fraccionamiento — no actuó',
+        },
+        chartConfig: {
+          type: 'fingerprint',
+          title: 'Huella digital de riesgo: HEMOSER — 8 factores del modelo v6.4',
+          chartId: 'vendor-fingerprint',
         },
       },
     ],
@@ -458,7 +529,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 10,
     leadStat: { value: '80.0%', label: 'no-bid contracts in 2021', sublabel: 'as healthcare workers were cut, the machine kept running', color: 'text-red-400' },
-    relatedSlugs: ['la-cuarta-adjudicación', 'sexenio-a-sexenio', 'triangulo-farmacéutico'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'sexenio-a-sexenio', 'triangulo-farmaceutico'],
     chapters: [
       {
         id: 'the-promise',
@@ -476,6 +547,11 @@ export const STORIES: StoryDef[] = [
           statLabel: 'no-bid contracts in 2021 — as healthcare workers were fired',
           barValue: 80,
           barLabel: 'Direct award rate',
+        },
+        chartConfig: {
+          type: 'radar',
+          title: 'Huella de contratación por sexenio — Fox a Sheinbaum',
+          chartId: 'administration-fingerprints',
         },
       },
       {
@@ -496,6 +572,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'comparison',
           title: 'What austerity cut vs. what it spared',
+          chartId: 'amlo-era-comparison',
         },
       },
       {
@@ -515,6 +592,11 @@ export const STORIES: StoryDef[] = [
           barValue: 16.6,
           barLabel: '16.6% of all contracts',
         },
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Risk by sector — who benefited most from opacity',
+          chartId: 'risk-by-sector',
+        },
       },
       {
         id: 'the-reckoning',
@@ -533,6 +615,11 @@ export const STORIES: StoryDef[] = [
           barValue: 81.9,
           barLabel: 'Peak opacity under "austerity"',
         },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'Pirámide de riesgo — cuánto dinero concentra el riesgo crítico',
+          chartId: 'risk-pyramid',
+        },
       },
     ],
   },
@@ -550,7 +637,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Unidad de Análisis de Datos',
     estimatedMinutes: 7,
     leadStat: { value: '505,219', label: 'licitaciones con un solo postor', sublabel: '$5.43 billones MXN | la ficción de la competencia', color: 'text-amber-500' },
-    relatedSlugs: ['la-cuarta-adjudicación', 'infraestructura-sin-competencia', 'sexenio-a-sexenio'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'infraestructura-sin-competencia', 'sexenio-a-sexenio'],
     chapters: [
       {
         id: 'la-ficcion',
@@ -568,6 +655,11 @@ export const STORIES: StoryDef[] = [
           statLabel: 'en licitaciones con un solo postor',
           barValue: 16.6,
           barLabel: '16.6% de todos los contratos',
+        },
+        chartConfig: {
+          type: 'scatter',
+          title: 'La paradoja: sectores con más adjudicación directa no son los más corruptos',
+          chartId: 'sector-paradox',
         },
       },
       {
@@ -591,6 +683,7 @@ export const STORIES: StoryDef[] = [
           type: 'sector-bar',
           highlight: 'infraestructura',
           title: 'Contratos de postor único por sector',
+          chartId: 'da-by-sector',
         },
       },
     ],
@@ -600,7 +693,7 @@ export const STORIES: StoryDef[] = [
   // STORY 7: El Triángulo Farmacéutico
   // =========================================================================
   {
-    slug: 'triangulo-farmacéutico',
+    slug: 'triangulo-farmaceutico',
     outlet: 'investigative',
     type: 'case',
     era: 'amlo',
@@ -609,7 +702,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 8,
     leadStat: { value: '$270B', label: 'combined contracts — 3 pharma firms', sublabel: 'risk score > 0.96 | 75%+ direct award', color: 'text-red-500' },
-    relatedSlugs: ['la-austeridad-que-no-fue', 'la-cuarta-adjudicación', 'cero-competencia'],
+    relatedSlugs: ['la-austeridad-que-no-fue', 'la-cuarta-adjudicacion', 'cero-competencia'],
     chapters: [
       {
         id: 'the-three',
@@ -628,6 +721,11 @@ export const STORIES: StoryDef[] = [
           barValue: 96,
           barLabel: 'Percentile of corruption-pattern similarity',
         },
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Flujo de dinero: instituciones de salud → triángulo farmacéutico 2019-2023',
+          chartId: 'money-sankey',
+        },
       },
       {
         id: 'the-crisis',
@@ -643,6 +741,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Children lacked cancer drugs. Three firms accumulated $270 billion.',
           stat: '75%+',
           statLabel: 'direct-award rate for all three firms',
+        },
+        chartConfig: {
+          type: 'trends',
+          title: 'Tendencia de riesgo por sector — la salud lideró el ascenso 2018-2023',
+          chartId: 'sector-risk-trends',
         },
       },
     ],
@@ -661,7 +764,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 6,
     leadStat: { value: '$57.5B', label: 'contracted in December 2015 alone', sublabel: '13,478 contracts in 31 days | Peña Nieto administration', color: 'text-amber-500' },
-    relatedSlugs: ['sexenio-a-sexenio', 'la-cuarta-adjudicación', 'infraestructura-sin-competencia'],
+    relatedSlugs: ['sexenio-a-sexenio', 'la-cuarta-adjudicacion', 'infraestructura-sin-competencia'],
     chapters: [
       {
         id: 'the-rush',
@@ -680,6 +783,11 @@ export const STORIES: StoryDef[] = [
           barValue: 100,
           barLabel: 'Contracts per day vs. monthly average',
         },
+        chartConfig: {
+          type: 'year-bar',
+          title: 'The December Effect — monthly procurement patterns across 23 years',
+          chartId: 'seasonality-calendar',
+        },
       },
       {
         id: 'the-pattern',
@@ -695,6 +803,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Year-end rushes are bipartisan. The fix is structural.',
           stat: '26,404',
           statLabel: 'December-rush contracts flagged across all years',
+        },
+        chartConfig: {
+          type: 'calendar',
+          title: 'Mapa de riesgo mensual 2016–2025 — diciembre = rojo permanente',
+          chartId: 'risk-calendar',
         },
       },
     ],
@@ -713,7 +826,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 6,
     leadStat: { value: '$50B', label: 'cardiac equipment contracts — Vitalmex', sublabel: 'COFECE investigation active | monopoly pattern', color: 'text-red-500' },
-    relatedSlugs: ['triangulo-farmacéutico', 'cero-competencia', 'la-cuarta-adjudicación'],
+    relatedSlugs: ['triangulo-farmaceutico', 'cero-competencia', 'la-cuarta-adjudicacion'],
     chapters: [
       {
         id: 'the-monopoly',
@@ -732,6 +845,11 @@ export const STORIES: StoryDef[] = [
           barValue: 95,
           barLabel: 'Vendor concentration percentile',
         },
+        chartConfig: {
+          type: 'vendor-list',
+          title: 'Top vendor concentration — cardiac equipment market capture',
+          chartId: 'vendor-concentration',
+        },
       },
       {
         id: 'the-cost',
@@ -747,6 +865,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Monopoly pricing on cardiac equipment: up to $20 billion in potential overpayment',
           stat: '20-40%',
           statLabel: 'estimated monopoly premium, based on OECD studies',
+        },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'Concentración de valor en contratos de riesgo crítico — equipo cardíaco',
+          chartId: 'risk-pyramid',
         },
       },
     ],
@@ -771,7 +894,7 @@ export const STORIES: StoryDef[] = [
       'Solicitar al SAT cuántos de los 13,960 RFC en EFOS tienen contratos gubernamentales activos después de su inclusión en la lista.',
       'Identificar qué Órganos Internos de Control (OICs) de las dependencias contratantes abrieron expedientes por haber contratado con EFOS.',
     ],
-    relatedSlugs: ['los-nuevos-ricos-de-la-4t', 'el-granero-vacio', 'la-cuarta-adjudicación'],
+    relatedSlugs: ['los-nuevos-ricos-de-la-4t', 'el-granero-vacio', 'la-cuarta-adjudicacion'],
     chapters: [
       {
         id: 'anatomia',
@@ -787,6 +910,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Una empresa fantasma no parece fantasma. Eso es lo que la hace efectiva.',
           stat: '13,960',
           statLabel: 'empresas EFOS confirmadas por el SAT',
+        },
+        chartConfig: {
+          type: 'network',
+          title: 'Comunidades de proveedores — redes de empresas fantasma detectadas',
+          chartId: 'community-bubbles',
         },
       },
       {
@@ -805,6 +933,11 @@ export const STORIES: StoryDef[] = [
           statLabel: 'precisión del modelo de detección v6.4',
           barValue: 84.0,
           barLabel: 'Área bajo la curva ROC',
+        },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'Cómo distribuye el modelo RUBLI — pirámide de riesgo 3.05M contratos',
+          chartId: 'risk-pyramid',
         },
       },
     ],
@@ -842,6 +975,11 @@ export const STORIES: StoryDef[] = [
           barValue: 39.5,
           barLabel: '39.5% of all single-bid value',
         },
+        chartConfig: {
+          type: 'trends',
+          title: 'Tendencia de riesgo por sector — la brecha estructural de infraestructura',
+          chartId: 'sector-risk-trends',
+        },
       },
       {
         id: 'the-alternative',
@@ -857,6 +995,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Average bidders per infrastructure contract: 1.3',
           stat: '1.3',
           statLabel: 'average bidders — vs. 5+ in comparable OECD countries',
+        },
+        chartConfig: {
+          type: 'scatter',
+          title: 'Infraestructura tiene la tasa de DA más baja — pero no el menor riesgo',
+          chartId: 'sector-paradox',
         },
       },
     ],
@@ -875,7 +1018,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Unidad de Análisis de Datos',
     estimatedMinutes: 5,
     leadStat: { value: '$27B', label: 'contratos amañados en el SAT', sublabel: 'caso documentado | tender rigging', color: 'text-red-500' },
-    relatedSlugs: ['cero-competencia', 'la-cuarta-adjudicación', 'cartel-del-corazon'],
+    relatedSlugs: ['cero-competencia', 'la-cuarta-adjudicacion', 'cartel-del-corazon'],
     caseIds: [14],
     chapters: [
       {
@@ -895,6 +1038,11 @@ export const STORIES: StoryDef[] = [
           barValue: 87.8,
           barLabel: '87.8% de contratos clasificados como alto riesgo',
         },
+        chartConfig: {
+          type: 'radar',
+          title: 'Huella de Hacienda — cómo difiere su perfil de contratación del promedio',
+          chartId: 'administration-fingerprints',
+        },
       },
       {
         id: 'la-detección',
@@ -910,6 +1058,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Contrato por contrato, todo parecía normal. En conjunto, era un patrón.',
           stat: '147',
           statLabel: 'contratos vinculados al caso',
+        },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'Lo que el modelo ve — distribución de riesgo en Hacienda 2002-2025',
+          chartId: 'risk-pyramid',
         },
       },
     ],
@@ -946,6 +1099,11 @@ export const STORIES: StoryDef[] = [
           stat: '$22.4B',
           statLabel: 'estimated fraud value',
         },
+        chartConfig: {
+          type: 'network',
+          title: 'Red de proveedores PEMEX — comunidades de co-contratación detectadas',
+          chartId: 'community-bubbles',
+        },
       },
       {
         id: 'the-gap',
@@ -961,6 +1119,11 @@ export const STORIES: StoryDef[] = [
           quote: 'A transparency system with a hole large enough for $22.4 billion',
           stat: '2',
           statLabel: 'COMPRANET contracts found — out of an estimated hundreds',
+        },
+        chartConfig: {
+          type: 'trends',
+          title: 'Tendencia de riesgo en energía — el patrón que el modelo detecta',
+          chartId: 'sector-risk-trends',
         },
       },
     ],
@@ -979,7 +1142,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 10,
     leadStat: { value: '62.7% to 81.9%', label: 'direct award rate, 2010 to 2023', sublabel: '23 years of data | 3.05 million contracts', color: 'text-zinc-300' },
-    relatedSlugs: ['la-cuarta-adjudicación', 'avalancha-diciembre', 'la-austeridad-que-no-fue'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'avalancha-diciembre', 'la-austeridad-que-no-fue'],
     chapters: [
       {
         id: 'the-arc',
@@ -1002,6 +1165,7 @@ export const STORIES: StoryDef[] = [
           type: 'da-trend',
           highlight: '2023',
           title: 'Direct award rate by year (2010-2023) across 4 administrations',
+          chartId: 'da-rate-trend',
         },
       },
       {
@@ -1019,6 +1183,11 @@ export const STORIES: StoryDef[] = [
           stat: '+5.7pp',
           statLabel: 'increase in DA rate under AMLO (76.2% to 81.9%)',
         },
+        chartConfig: {
+          type: 'comparison',
+          title: 'Direct award rate by administration — 4 sexenios compared',
+          chartId: 'sexenio-comparison',
+        },
       },
       {
         id: 'what-comes-next',
@@ -1034,6 +1203,11 @@ export const STORIES: StoryDef[] = [
           quote: 'The faces change. The system endures.',
           stat: '3,051,294',
           statLabel: 'contracts analysed across 23 years and 4 presidencies',
+        },
+        chartConfig: {
+          type: 'comparison',
+          title: 'Risk score trajectory 2010–2025 — where the system is heading',
+          chartId: 'temporal-risk',
         },
       },
     ],
@@ -1072,6 +1246,11 @@ export const STORIES: StoryDef[] = [
           barValue: 99.5,
           barLabel: 'Tasa de detección del modelo',
         },
+        chartConfig: {
+          type: 'network',
+          title: 'Comunidades de empresas de infraestructura — cinco nodos, una red',
+          chartId: 'community-bubbles',
+        },
       },
       {
         id: 'la-detección',
@@ -1087,6 +1266,11 @@ export const STORIES: StoryDef[] = [
           quote: 'Sin informantes. Sin documentos filtrados. Sólo datos.',
           stat: '0.962',
           statLabel: 'puntaje promedio de riesgo — percentil 99.9',
+        },
+        chartConfig: {
+          type: 'scatter',
+          title: 'Infraestructura: alta concentración de valor, no la mayor adjudicación directa',
+          chartId: 'sector-paradox',
         },
       },
     ],
@@ -1105,7 +1289,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Unidad de Análisis de Datos',
     estimatedMinutes: 9,
     leadStat: { value: '81.9%', label: 'contratos sin competencia en 2023', color: '#e6420e' },
-    relatedSlugs: ['la-cuarta-adjudicación', 'la-herencia-envenenada', 'sexenio-a-sexenio'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'la-herencia-envenenada', 'sexenio-a-sexenio'],
     chapters: [
       {
         id: 'el-record',
@@ -1165,6 +1349,11 @@ export const STORIES: StoryDef[] = [
           'Revertir ese nivel de opacidad institucionalizada requeriría voluntad política, una reforma profunda de los mecanismos de supervisión, una reestructuración de los incentivos para los funcionarios de compras y una inversión sostenida en la Secretaría de la Función Pública — la agencia encargada de supervisar la contratación pública que, paradójicamente, fue también la que más recortó su presupuesto durante el sexenio de López Obrador.',
           'El 81.9% de 2023 es el punto desde el que México tendrá que descender si quiere cumplir con los estándares de la OCDE en adquisiciones públicas, que recomiendan no superar el 15% de adjudicaciones directas en contratos por encima del umbral legal. La distancia entre ese estándar y la realidad mexicana es de 66.9 puntos porcentuales.',
         ],
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Mapa de riesgo por sector 2002-2025 — legado estructural de la opacidad',
+          chartId: 'sector-risk-heatmap',
+        },
       },
     ],
   },
@@ -1194,6 +1383,11 @@ export const STORIES: StoryDef[] = [
           'Tres años después, el 40% de las unidades de salud del país reportaban desabasto de medicamentos, según datos de la Cofepris. El INSABI fue disuelto en abril de 2023 — apenas cuatro años después de su creación — y sus funciones absorbidas por el IMSS-Bienestar. El experimento había fracasado. Pero antes de desaparecer, había gastado.',
           'Los datos de COMPRANET revelan que el INSABI adjudicó directamente el 94% de sus contratos de medicamentos y material de curación entre 2020 y 2023. En el período equivalente del Seguro Popular (2016-2019), bajo Peña Nieto, la tasa de adjudicación directa en salud era del 71%. La creación del INSABI no redujo la corrupción. Eliminó la competencia que la hacía más costosa.',
         ],
+        chartConfig: {
+          type: 'sunburst',
+          title: 'Reconfiguración del gasto en salud — 2018 vs 2022 por administración',
+          chartId: 'admin-sunburst',
+        },
       },
       {
         id: 'la-emergencia',
@@ -1242,6 +1436,11 @@ export const STORIES: StoryDef[] = [
           stat: '94%',
           statLabel: 'adjudicaciones directas en compras INSABI',
         },
+        chartConfig: {
+          type: 'pyramid',
+          title: 'El peso del riesgo crítico en salud — 41.8% del valor en 6.1% de contratos',
+          chartId: 'risk-pyramid',
+        },
       },
     ],
   },
@@ -1259,7 +1458,7 @@ export const STORIES: StoryDef[] = [
     byline: 'RUBLI · Data Analysis Unit',
     estimatedMinutes: 13,
     leadStat: { value: '$180B', label: 'MXN en contratos sin licitación', color: '#1e3a5f' },
-    relatedSlugs: ['la-cuarta-adjudicación', 'infraestructura-sin-competencia', 'sexenio-a-sexenio'],
+    relatedSlugs: ['la-cuarta-adjudicacion', 'infraestructura-sin-competencia', 'sexenio-a-sexenio'],
     chapters: [
       {
         id: 'the-project',
@@ -1271,6 +1470,11 @@ export const STORIES: StoryDef[] = [
           'The cost grew from an initial estimate of 120 billion pesos to over 300 billion by the time partial operations began in December 2023. Independent analysts at IMCO estimated the true cost, including financing and overruns, at closer to 400 billion pesos. The government\'s official figure held at 177 billion pesos through most of the construction period — a number that excluded debt-financing costs and the military\'s contribution.',
           'RUBLI\'s analysis of COMPRANET records finds 180 billion pesos in contracts directly attributable to Tren Maya construction through FONATUR, the government tourism fund that served as contracting authority. Of those contracts, 97.3% were awarded without competitive bidding. The remainder went through what COMPRANET classifies as "restricted tender" — invitations to a preselected group of companies, not open public competition. The companies that received those contracts present a consistent pattern: created in 2019 or 2020, after the project was announced, with no prior rail or infrastructure experience.',
         ],
+        chartConfig: {
+          type: 'racing',
+          title: 'El ascenso de infraestructura — gasto federal por sector 2002-2025',
+          chartId: 'racing-bar',
+        },
       },
       {
         id: 'the-military',
@@ -1282,13 +1486,170 @@ export const STORIES: StoryDef[] = [
           'The use of military contractors for civilian infrastructure is not unique to the Tren Maya. Under López Obrador, SEDENA was also assigned construction of the Felipe Ángeles airport, management of several ports and coordination of the Sembrando Vida agricultural programme. The military became, in practice, a parallel procurement system — one that operated with the resources of the federal budget but without the transparency requirements that apply to civilian agencies.',
           'RUBLI cannot fully analyse contracts awarded through military channels, because those contracts are not fully reflected in COMPRANET. The 180 billion pesos identified in this analysis is therefore a lower bound. The true cost of Tren Maya contracts awarded without competitive bidding — including the military\'s contribution — is higher, and not publicly known.',
         ],
+        chartConfig: {
+          type: 'sunburst',
+          title: 'Huella presupuestal bajo AMLO — hacia dónde fue el gasto 2018-2024',
+          chartId: 'admin-sunburst',
+        },
+      },
+    ],
+  },
+
+  // =========================================================================
+  // NEW STORY: La Máquina de Papel / The Paper Machine
+  // History of COMPRANET, its creation, dissolution, and the rigged tender system
+  // =========================================================================
+  {
+    slug: 'la-maquina-de-papel',
+    outlet: 'longform',
+    type: 'thematic',
+    era: 'cross',
+    headline: 'La Máquina de Papel: COMPRANET y las Licitaciones Imposibles',
+    subheadline: 'Creado en 1996 para hacer transparentes las compras del gobierno, COMPRANET se convirtió en el escenario perfecto para un truco más sofisticado: la licitación que cumple todas las formas — y garantiza el resultado.',
+    byline: 'RUBLI · Unidad de Análisis de Datos',
+    estimatedMinutes: 16,
+    leadStat: { value: '23', label: 'años de datos de contratación en COMPRANET', sublabel: '3.1 millones de contratos | 2002-2025', color: 'text-blue-400' },
+    status: 'solo_datos',
+    nextSteps: [
+      'Solicitar vía InfoMex el expediente completo de cualquier licitación donde el plazo de publicación fue inferior a 5 días hábiles.',
+      'Verificar si las especificaciones técnicas de contratos de adjudicación directa recurrentes son idénticas o coinciden con las marcas registradas del proveedor ganador.',
+      'Cruzar las fechas de apertura de licitaciones con el calendario de días festivos y periodos vacacionales para identificar ventanas imposibles.',
+      'Comparar las licitaciones con "invitación a tres" con los registros de participación real: ¿cuántas tuvieron tres ofertas auténticas?',
+    ],
+    relatedSlugs: ['sexenio-a-sexenio', 'cero-competencia', 'la-cuarta-adjudicacion', 'dividir-para-evadir'],
+    chapters: [
+      {
+        id: 'el-origen',
+        number: 1,
+        title: 'La Promesa Original',
+        subtitle: 'México, 1996: el gobierno que quería ser transparente',
+        sources: [
+          'DOF, 28 de julio de 1997 — Acuerdo por el que se crea COMPRANET.',
+          'Ugalde, L.C. (2002). Transparency and Accountability in Mexico. Woodrow Wilson Center Press.',
+          'SECODAM (2000). Manual de Operación de COMPRANET.',
+          'BID (2009). Contrataciones Públicas Electrónicas en América Latina.',
+        ],
+        prose: [
+          'En 1996, bajo la presidencia de Ernesto Zedillo, México tomó una decisión que en su momento se presentó como revolucionaria: todas las licitaciones del gobierno federal serían publicadas en un sistema electrónico unificado al que cualquier empresa podría acceder. Se llamó COMPRANET — el Sistema Electrónico de Contrataciones Gubernamentales.',
+          'La lógica era impecable. Si los contratos son visibles, los funcionarios no pueden asignarlos en la oscuridad. Si cualquier empresa puede conocer las convocatorias, hay más competencia. Más competencia significa mejores precios. Y precios más justos significan menos dinero robado. Era la aplicación del principio más elemental de la economía: la transparencia disciplina al mercado.',
+          'En su primera década, COMPRANET funcionó de manera rudimentaria: boletines de papel escaneados, conexiones lentas, sistemas que colapsaban. Pero el principio estaba ahí. Para 2004, cuando SECODAM fue sustituida por la Secretaría de la Función Pública (SFP), el sistema ya procesaba decenas de miles de contratos por año. Para 2011, con el lanzamiento de COMPRANET 5.0, México se convirtió en uno de los primeros países latinoamericanos con un sistema de compras públicas completamente electrónico.',
+          'Los analistas internacionales aplaudieron. La OCDE citó a México como modelo. El Banco Mundial financió parte de la modernización. Y en las reuniones de transparencia presupuestal, México era un caso de éxito. En los datos, la realidad era más complicada.',
+        ],
+        pullquote: {
+          quote: 'La transparencia disciplina al mercado. Eso era la teoría.',
+          stat: '1996',
+          statLabel: 'año de creación de COMPRANET',
+          barValue: 38,
+          barLabel: 'porcentaje de licitaciones competitivas en 2002',
+        },
+        chartConfig: {
+          type: 'da-trend',
+          title: 'Evolución de la adjudicación directa 2002-2024',
+          chartId: 'da-rate-trend',
+        },
+      },
+      {
+        id: 'la-ventana',
+        number: 2,
+        title: 'La Ventana Imposible',
+        subtitle: 'Cómo los plazos de licitación se convirtieron en la herramienta de selección',
+        prose: [
+          'La Ley de Adquisiciones, Arrendamientos y Servicios del Sector Público establece plazos mínimos para las licitaciones públicas: 20 días hábiles para licitaciones nacionales, 40 para internacionales. En teoría, ese tiempo permite que cualquier empresa interesada conozca los requisitos, prepare su oferta y la presente.',
+          'En la práctica, el sistema tiene un truco que no requiere violar ninguna norma. Se llama licitación convocada con plazos mínimos y especificaciones de marca. El mecanismo funciona así: una dependencia publica una convocatoria un viernes por la tarde, con veinte días exactos de plazo — el mínimo legal. Las especificaciones técnicas no describen qué se necesita; describen qué marca específica se quiere, con palabras como "o equivalente" añadidas al final para cumplir la forma. El plazo suficiente, las especificaciones imposibles de cumplir para otra empresa en ese tiempo.',
+          'RUBLI ha documentado miles de contratos que siguen este patrón. El indicador técnico que los identifica se llama z_same_day_count — contratos adjudicados en el mismo día, al mismo proveedor, por la misma institución. En el análisis estadístico, estos racimos aparecen como anomalías. En la realidad presupuestal, son el resultado de un proceso que comenzó semanas antes con una decisión ya tomada.',
+          'El fenómeno tiene nombre en los círculos de contratación: "licitación a modo". La convocatoria existe. Los documentos están en COMPRANET. El plazo está en la ley. Y el resultado es el que siempre iba a ser.',
+        ],
+        pullquote: {
+          quote: 'La convocatoria existe. Los documentos están en COMPRANET. El resultado ya estaba decidido.',
+          stat: '505,219',
+          statLabel: 'contratos con un solo oferente en 23 años de datos',
+          barValue: 505219,
+          barLabel: 'Licitaciones con un solo participante',
+        },
+      },
+      {
+        id: 'los-tres',
+        number: 3,
+        title: 'La Invitación a Tres',
+        subtitle: 'La licitación restringida que funciona como adjudicación directa',
+        prose: [
+          'Cuando el monto del contrato no justifica una licitación pública abierta — por ser menor al umbral legal —, la ley permite una modalidad intermedia: la "invitación a cuando menos tres personas". La institución puede seleccionar tres empresas y pedirles que presenten propuestas. En apariencia, hay competencia. En la práctica, los datos cuentan otra historia.',
+          'El análisis de RUBLI sobre los contratos de invitación restringida muestra un patrón consistente: en muchos sectores, las mismas tres empresas aparecen juntas en licitación tras licitación, durante años. Esto tiene un nombre en la teoría de la colusión: bid rotation. Una empresa gana hoy, la siguiente gana mañana, la tercera la semana siguiente. Todas presentan propuestas. Ninguna compite realmente.',
+          'No es necesario que exista un acuerdo explícito. Basta con que las instituciones contratantes inviten siempre a las mismas empresas. El resultado es funcionalmente idéntico al de una adjudicación directa, pero con la cobertura formal de haber seguido un proceso competitivo. Los expedientes están en orden. COMPRANET registra tres propuestas. Y el dinero va a donde siempre iba.',
+          'El sistema identifica estos patrones a través del indicador co_bid_rate: la tasa de co-licitación entre pares de proveedores. En el modelo v6.4, este indicador fue regularizado a cero — no porque el patrón no exista, sino porque los datos de entrenamiento no contienen suficientes casos documentados de carteles de licitación. Lo que el modelo no puede ver, los datos de COMPRANET sí lo sugieren.',
+        ],
+        pullquote: {
+          quote: 'Tres ofertas, la misma empresa ganadora, año tras año. Eso no es competencia.',
+          stat: '247,946',
+          statLabel: 'contratos con fraccionamiento sospechoso detectado',
+          barValue: 66,
+          barLabel: 'Porcentaje de contratos bajo umbral de licitación',
+        },
+        chartConfig: {
+          type: 'sector-bar',
+          title: 'Comparación de licitaciones por administración',
+          chartId: 'sexenio-comparison',
+        },
+      },
+      {
+        id: 'el-fraccionamiento',
+        number: 4,
+        title: 'El Arte del Fraccionamiento',
+        subtitle: 'Dividir para no licitar: 247,946 contratos diseñados para quedar bajo el umbral',
+        prose: [
+          'La Ley de Adquisiciones establece umbrales: por encima de cierta cantidad, se requiere licitación pública. Por debajo, adjudicación directa es legal. La lógica del umbral existe para reducir la burocracia en contratos pequeños. Lo que el legislador no anticipó — o tal vez sí anticipó pero no supo cómo evitar — es el incentivo que crea: dividir un contrato grande en fragmentos pequeños para quedar siempre por debajo del límite.',
+          'El análisis estadístico de RUBLI detecta este patrón mediante el indicador z_same_day_count: contratos firmados el mismo día, con el mismo proveedor, por la misma institución, por montos que individualmente no superan el umbral pero que en conjunto sí lo harían. La distribución de esos contratos tiene una forma estadísticamente improbable: hay una acumulación anómala justo por debajo del límite legal y un vacío inmediatamente por encima.',
+          'En 23 años de datos de COMPRANET, RUBLI ha identificado 247,946 contratos que muestran este patrón de fraccionamiento sospechoso. No todos son necesariamente fraudulentos: algunos pueden reflejar decisiones de compra legítimas. Pero la concentración estadística no puede explicarse por el azar. Alguien, sistemáticamente, está calculando los montos para quedar bajo el radar.',
+          'La ironía es que COMPRANET registra todo. Cada contrato fraccionado está ahí, con su fecha, su monto, su proveedor, su institución. El sistema que fue creado para la transparencia contiene la evidencia de su propia evasión. Solo hace falta el análisis estadístico para verlo.',
+        ],
+        pullquote: {
+          quote: 'Los datos están ahí. El sistema que fue creado para la transparencia contiene la evidencia de su propia evasión.',
+          stat: '247,946',
+          statLabel: 'contratos con patrón de fraccionamiento sospechoso',
+          barValue: 82,
+          barLabel: 'Concentración bajo umbrales legales',
+        },
+        chartConfig: {
+          type: 'comparison',
+          title: 'Contratos con fraccionamiento sospechoso por año',
+          chartId: 'threshold-splitting',
+        },
+      },
+      {
+        id: 'el-futuro',
+        number: 5,
+        title: 'Lo Que los Datos Dicen',
+        subtitle: 'Tres décadas de COMPRANET: la promesa y el rezago',
+        prose: [
+          'En 2018, el gobierno entrante anunció una revisión integral de COMPRANET. La plataforma, dijeron, era vieja, ineficiente y había sido cooptada. Se lanzaría una nueva versión. Mientras tanto, la calidad de los datos publicados en el sistema deterioró notablemente: menos campos completados, más contratos sin proveedor identificado, más registros con montos en blanco.',
+          'Los especialistas en transparencia presupuestal documentaron el deterioro. El IMCO publicó reportes alertando sobre la reducción en la calidad de los datos. FUNDAR señaló que miles de contratos de los años 2019-2022 tenían información incompleta o contradictoria. La herramienta creada para iluminar el gasto público se volvía más opaca, justo cuando el gasto sin licitación alcanzaba sus niveles históricos más altos.',
+          'Para los 3.1 millones de contratos que RUBLI ha procesado, el patrón es claro: la calidad de los datos mejora con el tiempo en términos de cobertura técnica — más campos, mejor digitalización — pero el contenido real del gasto se vuelve menos competitivo. Más dinero, menos licitaciones. Más registros, menos información real sobre quién gana y por qué.',
+          'COMPRANET sigue operando. Los contratos siguen publicándose. Y en cada convocatoria con plazos de veinte días y especificaciones de marca, en cada invitación a tres donde siempre gana el mismo, en cada racimo de contratos fraccionados justo bajo el umbral, el sistema hace lo que fue diseñado para hacer: registrar una decisión que ya estaba tomada.',
+        ],
+        pullquote: {
+          quote: 'Más registros, menos competencia real. La promesa de 1996 sigue incumplida.',
+          stat: '81.9%',
+          statLabel: 'contratos sin licitación en 2023 — récord histórico',
+          barValue: 81.9,
+          barLabel: 'Adjudicación directa 2023',
+        },
+        chartConfig: {
+          type: 'comparison',
+          title: 'Administración por administración: la tendencia de 23 años',
+          chartId: 'amlo-era-comparison',
+        },
       },
     ],
   },
 ]
 
+function normalizeSlug(slug: string): string {
+  return slug.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase()
+}
+
 export function getStoryBySlug(slug: string): StoryDef | undefined {
-  return STORIES.find(s => s.slug === slug)
+  const norm = normalizeSlug(slug)
+  return STORIES.find(s => s.slug === slug || normalizeSlug(s.slug) === norm)
 }
 
 export function getRelatedStories(story: StoryDef): StoryDef[] {

@@ -536,7 +536,8 @@ export interface DashboardOverview {
   avg_risk_score: number
   high_risk_contracts: number
   high_risk_value_mxn: number
-  high_risk_pct?: number
+  high_risk_pct: number
+  critical_contracts?: number
   direct_award_pct: number
   single_bid_pct: number
   min_year: number

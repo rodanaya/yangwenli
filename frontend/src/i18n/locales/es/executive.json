@@ -11,8 +11,12 @@
     "highRiskRate": "Tasa de Alto Riesgo",
     "highRiskRateContext": "Contratos senalados como de riesgo alto o critico (calibrado OCDE)",
     "valueAtRisk": "Valor Estimado en Riesgo",
-    "valueAtRiskContext": "Valor total de contratos senalados como riesgo alto o critico"
+    "valueAtRiskContext": "Valor total de contratos senalados como riesgo alto o critico (≈ 56% del presupuesto federal anual de Mexico de ~8B MXN)"
   },
+  "budgetContext": "≈ {{pct}}% del presupuesto federal anual de Mexico (~8B MXN)",
+  "rateExplanation": "Esto significa que aproximadamente 1 de cada 11 contratos federales muestra patrones de contratacion estadisticamente similares a casos documentados de corrupcion.",
+  "aucExplanation": "AUC 0.84: si se presentan un contrato de un caso de corrupcion confirmado y un contrato aleatorio, el modelo identifica correctamente el corrupto 84 de cada 100 veces.",
+  "sectionNumberNote": "Los numeros de seccion reflejan la estructura original del informe de 11 capitulos. Los capitulos mostrados son los cinco mas relevantes para periodistas.",
   "seeFullBreakdown": "Ver desglose completo",
   "hideBreakdown": "Ocultar desglose",
   "header": {
@@ -397,7 +401,7 @@
     "yearsCoveredContext": "Cuatro estructuras de datos distintas, desde registros tempranos de baja calidad hasta declaraciones casi completas de 2023-2025.",
     "modelAuc": "AUC del Modelo",
     "modelAucSub": "Division estratificada \u00b7 v6.4",
-    "modelAucContext": "El modelo clasifica correctamente un contrato corrupto por encima de uno limpio el 84% de las veces en proveedores no vistos.",
+    "modelAucContext": "AUC 0.84: si se presentan un contrato de un caso confirmado de corrupcion y un contrato aleatorio, el modelo identifica correctamente el corrupto 84 de cada 100 veces.",
     "documentedCases": "Casos Documentados",
     "documentedCasesSub": "Verdad base para deteccion de corrupcion",
     "documentedCasesContext": "Abarcando empresas fantasma, manipulacion de licitaciones, sobreprecio, soborno y captura institucional en los 12 sectores.",

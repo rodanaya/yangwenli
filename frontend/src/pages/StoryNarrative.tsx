@@ -37,6 +37,20 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'vendor-concentration': StoryCharts.VendorConcentrationChart,
   'threshold-splitting': StoryCharts.ThresholdSplittingChart,
   'sexenio-comparison': StoryCharts.SexenioComparisonChart,
+  'temporal-risk': StoryCharts.StoryTemporalRiskChart,
+  'sector-risk-heatmap': StoryCharts.StorySectorRiskHeatmap,
+  'seasonality-calendar': StoryCharts.StorySeasonalityCalendar,
+  'money-sankey': StoryCharts.StoryMoneySankeyChart,
+  'admin-sunburst': StoryCharts.StoryAdminSunburst,
+  'sector-paradox': StoryCharts.StorySectorParadox,
+  'risk-pyramid': StoryCharts.StoryRiskPyramid,
+  'administration-fingerprints': StoryCharts.StoryAdminFingerprints,
+  'sector-risk-trends': StoryCharts.StorySectorRiskTrends,
+  'racing-bar': StoryCharts.StoryRacingBar,
+  'risk-calendar': StoryCharts.StoryRiskCalendar,
+  'community-bubbles': StoryCharts.StoryCommunityBubbles,
+  'procedure-breakdown': StoryCharts.StoryProcedureBreakdown,
+  'vendor-fingerprint': StoryCharts.StoryVendorFingerprint,
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified
@@ -59,20 +73,26 @@ const OUTLET_ACCENT: Record<string, string> = {
   rubli: '#dc2626',
 }
 
-const ERA_LABELS: Record<string, string> = {
-  fox: 'Fox (2000-2006)',
-  calderon: 'Calderon (2006-2012)',
-  pena: 'Pena Nieto (2012-2018)',
-  amlo: 'Lopez Obrador (2018-2024)',
-  sheinbaum: 'Sheinbaum (2024-)',
-  cross: 'Multi-sexenio',
+function getEraLabel(era: string, t: ReturnType<typeof useTranslation>['t']): string {
+  const map: Record<string, string> = {
+    fox: t('era.fox', 'Fox (2000-2006)'),
+    calderon: t('era.calderon', 'Calderón (2006-2012)'),
+    pena: t('era.pena', 'Peña Nieto (2012-2018)'),
+    amlo: t('era.amlo', 'López Obrador (2018-2024)'),
+    sheinbaum: t('era.sheinbaum', 'Sheinbaum (2024-)'),
+    cross: t('era.cross', 'Multi-administration'),
+  }
+  return map[era] || era
 }
 
-const TYPE_LABELS: Record<string, string> = {
-  era: 'Analisis de Era',
-  case: 'Caso de Investigacion',
-  thematic: 'Investigacion Tematica',
-  year: 'Analisis Anual',
+function getTypeLabel(type: string, t: ReturnType<typeof useTranslation>['t']): string {
+  const map: Record<string, string> = {
+    era: t('storyType.era', 'Era Analysis'),
+    case: t('storyType.case', 'Investigation Case'),
+    thematic: t('storyType.thematic', 'Thematic Investigation'),
+    year: t('storyType.year', 'Annual Analysis'),
+  }
+  return map[type] || type
 }
 
 // ---------------------------------------------------------------------------
@@ -105,17 +125,18 @@ function ChapterSection({
   story: StoryDef
   accentColor: string
 }) {
+  const { t } = useTranslation('common')
   return (
     <section
       id={`chapter-${chapter.id}`}
-      aria-label={`Capitulo ${chapter.number}: ${chapter.title}`}
+      aria-label={`${t('storyType.chapter', 'Chapter')} ${chapter.number}: ${chapter.title}`}
       className="mb-16"
     >
       <ChapterBanner
         number={chapter.number}
         title={chapter.title}
         subtitle={chapter.subtitle}
-        era={story.era ? ERA_LABELS[story.era] : undefined}
+        era={story.era ? getEraLabel(story.era, t) : undefined}
         color={accentColor}
       />
 
@@ -169,6 +190,7 @@ function ChapterSection({
 // ---------------------------------------------------------------------------
 
 function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: string }) {
+  const { t } = useTranslation('common')
   const parsed = parseLeadStat(story.leadStat.value)
 
   return (
@@ -190,14 +212,14 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
         >
           <OutletBadge outlet={story.outlet} />
           <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-zinc-500">
-            {TYPE_LABELS[story.type] || story.type}
+            {getTypeLabel(story.type, t)}
           </span>
           {story.era && (
             <span
               className="text-[10px] font-semibold tracking-wider uppercase px-2 py-0.5 rounded-full border"
               style={{ borderColor: accentColor, color: accentColor }}
             >
-              {ERA_LABELS[story.era] || story.era}
+              {getEraLabel(story.era, t)}
             </span>
           )}
         </motion.div>
@@ -234,7 +256,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           <span className="w-px h-4 bg-zinc-700" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
-            {story.estimatedMinutes} min lectura
+            {story.estimatedMinutes} min {t('storyType.readTime', 'read')}
           </span>
         </motion.div>
 
@@ -282,17 +304,18 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
 // ---------------------------------------------------------------------------
 
 function ChapterNav({ chapters, accentColor }: { chapters: StoryChapterDef[]; accentColor: string }) {
+  const { t } = useTranslation('common')
   return (
     <nav
       className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 flex-col gap-3"
-      aria-label="Navegacion de capitulos"
+      aria-label={t('storyType.chapterNav', 'Chapter navigation')}
     >
       {chapters.map((ch) => (
         <a
           key={ch.id}
           href={`#chapter-${ch.id}`}
           className="group relative flex items-center justify-end gap-2"
-          aria-label={`Capitulo ${ch.number}: ${ch.title}`}
+          aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${ch.title}`}
         >
           <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-zinc-400 whitespace-nowrap pr-2">
             {ch.title}
@@ -436,7 +459,7 @@ function RelatedSection({ story }: { story: StoryDef }) {
               leadStatLabel={r.leadStat.label}
               leadStatColor={r.leadStat.color}
               estimatedMinutes={r.estimatedMinutes}
-              era={r.era ? ERA_LABELS[r.era] : undefined}
+              era={r.era ? getEraLabel(r.era, t) : undefined}
               onClick={() => {
                 navigate(`/stories/${r.slug}`)
                 window.scrollTo({ top: 0, behavior: 'smooth' })

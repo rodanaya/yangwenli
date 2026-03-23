@@ -42,6 +42,7 @@ import {
   Landmark,
   Network,
   Target,
+  Info,
 } from 'lucide-react'
 
 // ============================================================================
@@ -89,6 +90,60 @@ function StatusPill({ status }: { status: InvestigationValidationStatus }) {
       <Icon className="h-3 w-3" />
       {t(`status.${status}`)}
     </span>
+  )
+}
+
+// ============================================================================
+// RISK SCORE DISCLAIMER — reusable inline chip
+// ============================================================================
+
+function RiskScoreDisclaimer() {
+  const { t } = useTranslation('investigation')
+  return (
+    <span
+      className="inline-flex items-center gap-0.5 cursor-default"
+      title={t('riskScoreTooltip')}
+      aria-label={t('riskScoreTooltip')}
+    >
+      <Info className="h-3 w-3 text-text-muted/50 hover:text-text-muted transition-colors" />
+    </span>
+  )
+}
+
+// ============================================================================
+// VERIFY PANEL — collapsible "how to verify" guidance for journalists
+// ============================================================================
+
+function VerifyPanel() {
+  const { t } = useTranslation('investigation')
+  return (
+    <details className="mt-3 border border-amber-500/15 rounded bg-amber-500/[0.03] group/verify">
+      <summary className="flex items-center gap-1.5 px-3 py-2 cursor-pointer select-none text-[10px] font-mono font-semibold text-text-muted/70 hover:text-text-muted transition-colors list-none">
+        <Info className="h-3 w-3 text-amber-500/60 flex-shrink-0" aria-hidden="true" />
+        {t('verify.toggle')}
+      </summary>
+      <div className="px-3 pb-3 pt-1 space-y-2">
+        <p className="text-[10px] font-bold text-text-muted/80 uppercase tracking-wider font-mono">
+          {t('verify.heading')}
+        </p>
+        <ol className="space-y-1.5 text-[10px] text-text-muted/70 leading-relaxed">
+          {(['step1', 'step2', 'step3', 'step4'] as const).map((step, i) => (
+            <li key={step} className="flex gap-2">
+              <span className="font-mono text-text-muted/40 flex-shrink-0">{i + 1}.</span>
+              <span>{t(`verify.${step}`)}</span>
+            </li>
+          ))}
+        </ol>
+        <div className="mt-2 p-2 bg-background-elevated/50 rounded border border-border/20">
+          <p className="text-[10px] text-text-muted/60 italic leading-relaxed">
+            {t('verify.editorial')}
+          </p>
+        </div>
+        <p className="text-[10px] text-amber-500/60 italic leading-relaxed">
+          {t('verify.disclaimer')}
+        </p>
+      </div>
+    </details>
   )
 }
 
@@ -210,13 +265,21 @@ function CaseCard({
             <StatusPill status={caseItem.validation_status} />
           </div>
 
-          {/* Suspicion score — large badge */}
-          <div className={cn(
-            'text-2xl font-black font-mono tabular-nums leading-none',
-            SCORE_COLOR[priority.level]
-          )}>
-            {(caseItem.suspicion_score * 100).toFixed(0)}
-            <span className="text-sm">%</span>
+          {/* Suspicion score — framed as risk indicator, not probability */}
+          <div className="flex flex-col items-end gap-0.5">
+            <div className={cn(
+              'text-2xl font-black font-mono tabular-nums leading-none',
+              SCORE_COLOR[priority.level]
+            )}>
+              {(caseItem.suspicion_score * 100).toFixed(0)}
+              <span className="text-sm font-normal text-text-muted/50">/100</span>
+            </div>
+            <div className="flex items-center gap-0.5">
+              <span className="text-[9px] text-text-muted/50 font-mono uppercase tracking-wide">
+                {t('riskScoreLabel')}
+              </span>
+              <RiskScoreDisclaimer />
+            </div>
           </div>
         </div>
 
@@ -290,6 +353,11 @@ function CaseCard({
             className={cn('h-full rounded-full transition-all duration-700', riskBarColor)}
             style={{ width: `${Math.min(caseItem.suspicion_score * 100, 100)}%` }}
           />
+        </div>
+
+        {/* Verify panel — stops click propagation so opening it doesn't navigate */}
+        <div onClick={(e) => e.stopPropagation()}>
+          <VerifyPanel />
         </div>
 
         <ChevronRight className="absolute bottom-3 right-3 h-3.5 w-3.5 text-text-muted/30 group-hover:text-accent transition-colors" />
@@ -1043,12 +1111,16 @@ function CaseTableRow({
         </span>
       </td>
 
-      {/* Score — risk-colored */}
+      {/* Score — framed as risk indicator */}
       <td className="px-3 py-3 whitespace-nowrap">
         <div className="flex flex-col items-start gap-0.5">
-          <span className={cn('text-sm font-black tabular-nums font-mono', SCORE_COLOR[priority.level])}>
-            {(caseItem.suspicion_score * 100).toFixed(0)}%
-          </span>
+          <div className="flex items-center gap-1">
+            <span className={cn('text-sm font-black tabular-nums font-mono', SCORE_COLOR[priority.level])}>
+              {(caseItem.suspicion_score * 100).toFixed(0)}
+              <span className="text-xs font-normal text-text-muted/50">/100</span>
+            </span>
+            <RiskScoreDisclaimer />
+          </div>
           {/* Mini progress bar in table cell */}
           <div className="h-0.5 w-12 bg-border rounded-full overflow-hidden">
             <div

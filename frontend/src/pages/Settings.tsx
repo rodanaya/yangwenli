@@ -302,7 +302,7 @@ function GeneralTab() {
             irregular procurement patterns across federal sectors.
           </p>
           <div className="text-xs text-text-muted space-y-1 font-mono">
-            <p><span className="text-accent">Risk Model:</span> v6.2 Vendor-Stratified Framework (Test AUC: 0.861)</p>
+            <p><span className="text-accent">Risk Model:</span> v6.4 Vendor-Stratified Calibrated (Internal AUC: 0.840 · Population AUC: 0.728)</p>
             <p><span className="text-accent">Sectors:</span> 12-sector taxonomy</p>
             <p><span className="text-accent">Backend:</span> FastAPI + SQLite</p>
             <p><span className="text-accent">Frontend:</span> React + TypeScript + TailwindCSS</p>

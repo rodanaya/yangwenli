@@ -1,3 +1,7 @@
+// Global stats — single source of truth for platform-wide headline numbers
+export { useGlobalStats } from './useGlobalStats'
+export type { GlobalStats } from './useGlobalStats'
+
 // Search and filtering hooks
 export { useDebouncedSearch, useDebouncedValue } from './useDebouncedSearch'
 export { useDeferredFilters, useFiltersWithDeferred } from './useDeferredFilters'

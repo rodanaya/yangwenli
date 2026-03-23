@@ -386,12 +386,17 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             <CardStatItem label="card.totalValue" value={formatCompactMXN(value)} />
             <CardStatItem label="card.contracts" value={formatNumber(contracts)} />
             {item.avg_risk_score != null && (
-              <CardStatItem label="card.avgRisk" value={`${(item.avg_risk_score * 100).toFixed(0)}%`} />
+              <CardStatItem label="card.avgRisk" value={`${(item.avg_risk_score * 100).toFixed(0)}/100`} />
             )}
             {item.direct_award_rate != null && (
               <CardStatItem label="card.directAward" value={`${(item.direct_award_rate * 100).toFixed(0)}%`} />
             )}
           </div>
+
+          {/* Risk indicator disclaimer */}
+          <p className="text-[10px] text-text-muted/60 italic">
+            {t('vendorCard.disclaimer')}
+          </p>
 
           {/* Memo excerpt */}
           {memoSnippet && (

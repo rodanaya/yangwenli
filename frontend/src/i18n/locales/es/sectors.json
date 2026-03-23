@@ -80,5 +80,20 @@
     "directAwardPct": "Adj. Directa %",
     "avgRisk": "Riesgo Prom.",
     "contracts": "Contratos"
+  },
+  "diagnostico": {
+    "reportLabel": "Informe de Diagnóstico · 12 Sectores · 2001–2025",
+    "title": "El Diagnóstico Nacional",
+    "subtitleDynamic": "Análisis sistémico de riesgo por sector en contratación pública federal. {{count}} sectores bajo vigilancia. Resultados basados en {{contracts}} contratos.",
+    "subtitleFallback": "Análisis sistémico de riesgo por sector en contratación pública federal. 12 sectores bajo vigilancia. Resultados basados en 3.05 millones de contratos.",
+    "hallazgoLabel": "Hallazgo Principal",
+    "hallazgoText": "El sector <strong>Salud</strong> concentra el mayor riesgo absoluto: redes de empresas fantasma en IMSS, ISSSTE y compras de emergencia COVID-19 representan más de $200B MXN en contratos de alto riesgo.",
+    "signosVitales": "SIGNOS VITALES",
+    "matrizRiesgo": "MATRIZ DE RIESGO",
+    "paisajeInstitucional": "PAISAJE INSTITUCIONAL",
+    "gastoTotal": "Gasto Total",
+    "riesgoPromedio": "Riesgo Promedio",
+    "mayorGasto": "Mayor Gasto",
+    "sourceFootnote": "Fuente: COMPRANET 2002–2025, modelo de riesgo v6.4 · Valores normalizados min-max por métrica"
   }
 }

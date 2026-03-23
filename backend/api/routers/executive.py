@@ -326,7 +326,7 @@ def _build_summary(conn) -> dict:
             detection_rate = round(gt_detected / gt_contracts * 100, 1) if gt_contracts else 0
             high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception:
-        gt_cases, gt_vendors, gt_contracts = 376, 594, 314700
+        gt_cases, gt_vendors, gt_contracts = 748, 603, 225559
         detection_rate, high_plus_rate = 99.8, 93.0
 
     # Per-case detection stats — uses precomputed vendor_stats to avoid 3.1M scan
@@ -360,8 +360,8 @@ def _build_summary(conn) -> dict:
         "contracts": gt_contracts,
         "detection_rate": detection_rate,
         "high_plus_rate": high_plus_rate,
-        "auc": 0.849,
-        "train_auc": 0.858,
+        "auc": 0.840,
+        "train_auc": 0.880,
         "case_details": case_details,
     }
 
@@ -417,8 +417,8 @@ def _build_summary(conn) -> dict:
             "version": "v6.0",
             "features": 16,
             "sub_models": 1,
-            "auc": 0.849,
-            "train_auc": 0.858,
+            "auc": 0.840,
+            "train_auc": 0.880,
             "brier": 0.090,
             "pu_correction": 0.448,
         }

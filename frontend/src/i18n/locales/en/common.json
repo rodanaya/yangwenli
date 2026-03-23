@@ -64,7 +64,7 @@
     "create": "Create Dossier",
     "creating": "Creating\u2026"
   },
-  "banner": "Ground Truth expanded to 748 cases · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES",
+  "banner": "Ground Truth expanded · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES",
   "dismissBanner": "Dismiss announcement",
   "footerBrand": "RUBLI 2.0",
   "footerTagline": "Procurement Transparency Platform",
@@ -123,5 +123,24 @@
     "skip": "Skip tour",
     "next": "Next",
     "getStarted": "Get Started"
+  },
+  "aboutData": "Risk scores are computed by a machine learning model trained on 748 documented corruption cases in Mexican federal procurement (2002–2025). Scores measure statistical similarity to known cases — they are not legal determinations or proof of wrongdoing. Source: COMPRANET (SHCP). Methodology: rubli.mx/methodology",
+  "aboutDataToggle": "About this data",
+  "storyType": {
+    "era": "Era Analysis",
+    "case": "Investigation Case",
+    "thematic": "Thematic Investigation",
+    "year": "Annual Analysis",
+    "readTime": "read",
+    "chapter": "Chapter",
+    "chapterNav": "Chapter navigation"
+  },
+  "era": {
+    "fox": "Fox (2000-2006)",
+    "calderon": "Calderón (2006-2012)",
+    "pena": "Peña Nieto (2012-2018)",
+    "amlo": "López Obrador (2018-2024)",
+    "sheinbaum": "Sheinbaum (2024-)",
+    "cross": "Multi-administration"
   }
 }

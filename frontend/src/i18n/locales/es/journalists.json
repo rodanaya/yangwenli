@@ -38,5 +38,137 @@
     "downloadData": "Descargar datos",
     "tooltipTitle": "Modelo de riesgo v6.4",
     "tooltipBody": "Regresion logistica con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 748 casos documentados de corrupcion. PU-learning (Elkan & Noto 2008)."
+  },
+  "stories": {
+    "la-cuarta-adjudicacion": {
+      "headline": "La Cuarta Adjudicacion",
+      "subheadline": "Como el gobierno de AMLO llevo las adjudicaciones directas a su punto mas alto en 23 anos de datos.",
+      "statLabel": "adjudicaciones directas en 2023 — record historico"
+    },
+    "el-granero-vacio": {
+      "headline": "El Granero Vacio: Segalmex",
+      "subheadline": "La historia del fraude mas grande en la distribucion de alimentos del gobierno federal.",
+      "statLabel": "mil millones MXN en fraude de distribucion alimentaria"
+    },
+    "los-nuevos-ricos-de-la-4t": {
+      "headline": "Los Nuevos Ricos de la 4T",
+      "subheadline": "1,253 empresas fantasma creadas despues de 2018 que acumulan contratos gubernamentales.",
+      "statLabel": "empresas fantasma post-2018"
+    },
+    "hemoser-el-2-de-agosto": {
+      "headline": "HEMOSER: El 2 de Agosto",
+      "subheadline": "17.2 mil millones de pesos en 12 contratos, adjudicados en un solo dia a un proveedor de hemoderivados.",
+      "statLabel": "mil millones MXN en 12 contratos, un solo dia"
+    },
+    "la-austeridad-que-no-fue": {
+      "headline": "La Austeridad que No Fue",
+      "subheadline": "En plena retorica de austeridad, el 80% de los contratos federales se entregaron sin licitacion en 2021.",
+      "statLabel": "contratos sin licitacion en 2021"
+    },
+    "cero-competencia": {
+      "headline": "Cero Competencia",
+      "subheadline": "Medio millon de licitaciones donde solo se presento un oferente. La competencia que nunca llego.",
+      "statLabel": "contratos con un solo oferente"
+    },
+    "triangulo-farmaceutico": {
+      "headline": "El Triangulo Farmaceutico",
+      "subheadline": "Tres proveedores que se reparten 270 mil millones en contratos del sector salud.",
+      "statLabel": "mil millones MXN a 3 proveedores de salud"
+    },
+    "avalancha-diciembre": {
+      "headline": "La Avalancha de Diciembre",
+      "subheadline": "Cada ano, el gobierno gasta mas en diciembre que en cualquier otro mes. En 2015, fueron 57.5 mil millones.",
+      "statLabel": "mil millones MXN en 31 dias — diciembre 2015"
+    },
+    "cartel-del-corazon": {
+      "headline": "El Cartel del Corazon",
+      "subheadline": "Un cartel de equipo medico cardiaco que domino las compras publicas por mas de una decada.",
+      "statLabel": "mil millones MXN — cartel de equipo medico cardiaco"
+    },
+    "infraestructura-sin-competencia": {
+      "headline": "Infraestructura Sin Competencia",
+      "subheadline": "2.1 billones de pesos en contratos de infraestructura donde solo hubo una propuesta.",
+      "statLabel": "billones MXN en contratos con propuesta unica"
+    },
+    "la-casa-de-los-contratos": {
+      "headline": "La Casa de los Contratos",
+      "subheadline": "La red de empresas vinculadas a Grupo Higa y el megaproyecto de infraestructura del sexenio pasado.",
+      "statLabel": "mil millones MXN — red de fraude en infraestructura"
+    },
+    "oceanografia": {
+      "headline": "Oceanografia: Dos Fronteras",
+      "subheadline": "El fraude que cruzo de PEMEX a Banamex a Citibank. Una historia de facturas falsas a escala internacional.",
+      "statLabel": "mil millones MXN — fraude PEMEX-Banamex-Citibank"
+    },
+    "sixsigma-hacienda": {
+      "headline": "SixSigma y el SAT",
+      "subheadline": "Como una empresa de tecnologia manipulo las licitaciones del SAT durante anos.",
+      "statLabel": "mil millones MXN — manipulacion de licitaciones, SAT"
+    },
+    "sexenio-a-sexenio": {
+      "headline": "Sexenio a Sexenio",
+      "subheadline": "De 63% a 82%: como las adjudicaciones directas crecieron sin parar durante 23 anos, sin importar quien gobernara.",
+      "statLabel": "adjudicaciones directas — tendencia de 23 anos"
+    },
+    "red-fantasma": {
+      "headline": "Red Fantasma: Anatomia de una Empresa Inexistente",
+      "subheadline": "El SAT confirma 13,960 empresas que facturaron operaciones simuladas al gobierno. Como se construyen, como operan, y como detectarlas.",
+      "statLabel": "empresas en lista EFOS del SAT — operaciones simuladas confirmadas"
+    },
+    "el-ano-sin-excusas": {
+      "headline": "2023: El Ano en que Mexico Rompio Todos los Records",
+      "subheadline": "El ultimo ano completo del sexenio registro la tasa mas alta de contratos sin licitacion en la historia moderna del pais: 81.9% del gasto federal.",
+      "statLabel": "contratos sin competencia en 2023"
+    },
+    "insabi-el-experimento": {
+      "headline": "INSABI: El Experimento que Colapso el Abasto",
+      "subheadline": "La disolucion del Seguro Popular desmanelo los mecanismos de competencia en compras de medicamentos, disparando adjudicaciones directas al 94%.",
+      "statLabel": "adjudicaciones directas en compras INSABI"
+    },
+    "tren-maya-sin-reglas": {
+      "headline": "Tren Maya: $180 Mil Millones Sin Una Sola Licitacion",
+      "subheadline": "El proyecto de infraestructura mas caro de Mexico evito las reglas de contratacion mediante declaratorias de emergencia y contratos directos a empresas sin experiencia ferroviaria.",
+      "statLabel": "MXN en contratos sin licitacion"
+    },
+    "fabrica-de-monopolios": {
+      "headline": "La Fabrica de Monopolios",
+      "subheadline": "En energia y tecnologia, el 10% de los proveedores se quedo con mas del 70% del presupuesto.",
+      "statLabel": "del presupuesto a 10% de proveedores"
+    },
+    "el-dinero-de-todos": {
+      "headline": "El Dinero de Todos",
+      "subheadline": "En dos decadas, el gasto federal mexicano paso de una competencia amplia a un oligopolio.",
+      "statLabel": "proveedores con riesgo critico"
+    },
+    "pandemia-sin-supervision": {
+      "headline": "Pandemia Sin Supervision",
+      "subheadline": "Mexico gasto mas de 40,000 millones en compras COVID sin licitacion. El 73% fue a empresas creadas menos de dos anos antes.",
+      "statLabel": "a empresas recien creadas"
+    },
+    "pemex-el-gigante": {
+      "headline": "PEMEX Nunca Compite",
+      "subheadline": "PEMEX y CFE concentran el 40% de la contratacion federal pero menos del 5% es competitiva.",
+      "statLabel": "MXN en compras energeticas sin competencia"
+    },
+    "atlas-del-riesgo": {
+      "headline": "Atlas del Riesgo",
+      "subheadline": "El modelo RUBLI identifica 118,061 contratos con senales de alerta critica. Salud y agricultura concentran el riesgo mas alto.",
+      "statLabel": "contratos en nivel critico de riesgo (v6.4, umbral >= 0.60)"
+    },
+    "la-herencia-envenenada": {
+      "headline": "La Herencia Envenenada",
+      "subheadline": "El sexenio concluyo con tasas historicas de contratacion directa, 247,946 contratos sospechosos de fraccionamiento.",
+      "statLabel": "contratos licitados en solitario"
+    },
+    "dividir-para-evadir": {
+      "headline": "Dividir para Evadir",
+      "subheadline": "La ley exige licitacion publica por encima de ciertos umbrales. RUBLI encontro 247,946 contratos agrupados justo por debajo de esos limites.",
+      "statLabel": "contratos con fraccionamiento sospechoso"
+    },
+    "la-maquina-de-papel": {
+      "headline": "La Maquina de Papel",
+      "subheadline": "COMPRANET fue creado en 1996 para hacer transparentes las compras publicas. Lo que se convirtio fue en un sistema donde las reglas de competencia podian cumplirse — y burlarse — al mismo tiempo.",
+      "statLabel": "anos de datos de contratacion en COMPRANET"
+    }
   }
 }

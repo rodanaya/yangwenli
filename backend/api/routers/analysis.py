@@ -382,8 +382,8 @@ def get_model_metadata():
             if not row:
                 return {
                     "version": "v6.0", "trained_at": "2026-03-10",
-                    "n_contracts": 3051294, "auc_test": 0.849,
-                    "auc_train": 0.858, "pu_correction": 0.448,
+                    "n_contracts": 3051294, "auc_test": 0.840,
+                    "auc_train": 0.880, "pu_correction": 0.448,
                     "updated_at": "2026-03-10",
                 }
             train_auc = None
@@ -2193,7 +2193,7 @@ def get_concentration_patterns(
                     FROM contracts
                     WHERE institution_id IS NOT NULL
                       AND amount_mxn > 0
-                      AND amount_mxn < MAX_CONTRACT_VALUE
+                      AND amount_mxn < ?
                     GROUP BY institution_id
                     HAVING total_contracts >= ?
                 ),
@@ -2226,7 +2226,7 @@ def get_concentration_patterns(
                 WHERE CAST(vs.vendor_value AS REAL) / vs.total_value * 100 >= ?
                 ORDER BY value_share DESC
                 LIMIT ?
-            """, (min_contracts, min_share, limit))
+            """, (MAX_CONTRACT_VALUE, min_contracts, min_share, limit))
 
             alerts = []
             for row in cursor.fetchall():
@@ -2293,9 +2293,9 @@ def get_year_end_patterns(
             conditions = [
                 "contract_year >= ?", "contract_year <= ?",
                 "contract_month IS NOT NULL",
-                "amount_mxn > 0", "amount_mxn < MAX_CONTRACT_VALUE"
+                "amount_mxn > 0", "amount_mxn < ?"
             ]
-            params: List[Any] = [start_year, end_year]
+            params: List[Any] = [start_year, end_year, MAX_CONTRACT_VALUE]
 
             if sector_id:
                 conditions.append("sector_id = ?")
@@ -2398,9 +2398,9 @@ def get_investigation_leads(
                 conditions = [
                     "c.risk_score IS NOT NULL",
                     "c.amount_mxn > 1000000",
-                    "c.amount_mxn < MAX_CONTRACT_VALUE"
+                    "c.amount_mxn < ?"
                 ]
-                params: List[Any] = []
+                params: List[Any] = [MAX_CONTRACT_VALUE]
 
                 if sector_id:
                     conditions.append("c.sector_id = ?")
@@ -2450,9 +2450,9 @@ def get_investigation_leads(
                     "c.is_year_end = 1",
                     "c.risk_score >= 0.3",
                     "c.amount_mxn > 10000000",
-                    "c.amount_mxn < MAX_CONTRACT_VALUE"
+                    "c.amount_mxn < ?"
                 ]
-                params = []
+                params = [MAX_CONTRACT_VALUE]
 
                 if sector_id:
                     conditions.append("c.sector_id = ?")
@@ -2548,8 +2548,8 @@ def get_institution_period_comparison(
                     FROM contracts
                     WHERE institution_id = ?
                       AND contract_year >= ? AND contract_year <= ?
-                      AND amount_mxn > 0 AND amount_mxn < MAX_CONTRACT_VALUE
-                """, (institution_id, start, end))
+                      AND amount_mxn > 0 AND amount_mxn < ?
+                """, (institution_id, start, end, MAX_CONTRACT_VALUE))
                 row = cursor.fetchone()
                 return {
                     "period": f"{start}-{end}",
@@ -3952,7 +3952,7 @@ def get_asf_institution_summary():
                 TRIM(LOWER(a.entity_name))                                      AS entity_key,
                 MIN(a.entity_name)                                              AS entity_name,
                 COUNT(*)                                                        AS finding_count,
-                SUM(CASE WHEN a.amount_mxn < MAX_CONTRACT_VALUE THEN a.amount_mxn
+                SUM(CASE WHEN a.amount_mxn < ? THEN a.amount_mxn
                          ELSE 0 END)                                           AS total_amount_mxn,
                 MIN(a.report_year)                                              AS earliest_year,
                 MAX(a.report_year)                                              AS latest_year,
@@ -3970,7 +3970,8 @@ def get_asf_institution_summary():
             WHERE a.amount_mxn IS NOT NULL
             GROUP BY TRIM(LOWER(a.entity_name))
             ORDER BY finding_count DESC
-            """
+            """,
+            (MAX_CONTRACT_VALUE,)
         ).fetchall()
 
     items = []

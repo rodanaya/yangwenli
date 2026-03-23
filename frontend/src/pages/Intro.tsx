@@ -338,7 +338,7 @@ function ManifestoCounterItem({ target, prefix, suffix, label }: {
   )
 }
 
-const ManifestoCounters = memo(function ManifestoCounters({ isEn }: { isEn: boolean }) {
+const ManifestoCounters = memo(function ManifestoCounters({ isEn, highRiskPct }: { isEn: boolean; highRiskPct: number }) {
   return (
     <section
       className="relative px-6 sm:px-12 lg:px-24 py-20 sm:py-28 overflow-hidden"
@@ -367,7 +367,7 @@ const ManifestoCounters = memo(function ManifestoCounters({ isEn }: { isEn: bool
           label={isEn ? 'Total value evaluated' : 'Valor total evaluado'}
         />
         <ManifestoCounterItem
-          target={9.2}
+          target={highRiskPct}
           suffix="%"
           label={isEn ? 'Flagged high-risk' : 'Marcados alto riesgo'}
         />
@@ -747,7 +747,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const bx = 16
       const by = ch - 50
       ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
-      ctx.fillText('MONTO TOTAL: ~$9.6T MXN', bx, by + 16)
+      ctx.fillText('MONTO TOTAL: ~$9.9T MXN', bx, by + 16)
       ctx.fillText('ALTO RIESGO: 9.2%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
@@ -1019,7 +1019,8 @@ export default function Intro() {
   // ---- Derived data ----
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_051_294
-  const totalValueMxn = overview?.total_value_mxn ?? 9_560_000_000_000
+  const totalValueMxn = overview?.total_value_mxn ?? 9_900_000_000_000
+  const highRiskPct = overview?.high_risk_pct ?? 9.2
   const yearlyTrends = fastDashboard?.yearly_trends ?? []
   const phiSectors = phiSectorsData?.sectors ?? []
 
@@ -1431,7 +1432,7 @@ export default function Intro() {
       {/* ================================================================= */}
       {/* MANIFESTO COUNTERS -- giant count-up stats */}
       {/* ================================================================= */}
-      <ManifestoCounters isEn={isEn} />
+      <ManifestoCounters isEn={isEn} highRiskPct={highRiskPct} />
 
       {/* Risk score disclaimer */}
       <div

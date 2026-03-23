@@ -1,7 +1,7 @@
 {
   "riskScore": {
     "title": "Puntuación de Riesgo",
-    "description": "Una probabilidad calibrada (0-1) que estima la posibilidad de que un contrato involucre patrones de corrupción. Basada en 16 características estadísticas comparadas contra casos documentados de corrupción. Mayor = más sospechoso."
+    "description": "Un indicador estadístico de riesgo (0-1) que mide la similitud con patrones documentados de corrupción. Basado en 16 características estadísticas comparadas contra casos conocidos de corrupción. Mayor = más similitud con patrones conocidos. No es una determinación legal ni prueba de irregularidad."
   },
   "riskLevel": {
     "title": "Nivel de Riesgo",

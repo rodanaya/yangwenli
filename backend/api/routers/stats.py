@@ -1,8 +1,11 @@
 """API router for classification and database statistics endpoints."""
 import json
+import logging
 import threading
 import time
 from fastapi import APIRouter, Response
+
+logger = logging.getLogger(__name__)
 from pydantic import BaseModel, Field
 from typing import Optional, List, Dict, Any
 from datetime import datetime
@@ -221,8 +224,8 @@ def get_classification_stats():
             verified_vendors=verified_vendors,
             unverified_vendors=unverified_vendors,
             coverage_percentage=round(coverage_percentage, 2),
-            total_patterns=5000,
-            total_industries=35,
+            total_patterns=len(top_industries) * 100,  # approximation; ~100 patterns per industry
+            total_industries=len(top_industries),
             top_industries=top_industries,
             sector_coverage=sector_coverage,
             methodology_version="1.0"
@@ -358,6 +361,7 @@ def get_fast_dashboard(response: Response):
                     FROM contracts
                 """).fetchone()
                 if ov_row and ov_row["tc"] > 0:
+                    hr_pct = round(ov_row["hr"] * 100.0 / ov_row["tc"], 2) if ov_row["tc"] > 0 else 0
                     overview = {
                         "total_contracts": ov_row["tc"],
                         "total_value_mxn": ov_row["tv"],
@@ -365,6 +369,7 @@ def get_fast_dashboard(response: Response):
                         "total_institutions": ov_row["institutions"],
                         "avg_risk_score": round(ov_row["avg_risk"], 4),
                         "high_risk_contracts": ov_row["hr"],
+                        "high_risk_pct": hr_pct,
                         "direct_award_pct": 0,
                         "single_bid_pct": 0,
                         "min_year": 2002,

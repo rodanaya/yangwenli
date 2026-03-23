@@ -38,5 +38,137 @@
     "downloadData": "Download data",
     "tooltipTitle": "Risk model v6.4",
     "tooltipBody": "Logistic regression with 16 z-scores, 13 sector sub-models, AUC=0.840. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
+  },
+  "stories": {
+    "la-cuarta-adjudicacion": {
+      "headline": "The Fourth Direct Award",
+      "subheadline": "How the AMLO government drove no-bid contracts to a 23-year high — while promising to end corruption.",
+      "statLabel": "no-bid contracts in 2023 — all-time record"
+    },
+    "el-granero-vacio": {
+      "headline": "The Empty Granary: Segalmex",
+      "subheadline": "The story of the largest fraud in federal food distribution history — $15 billion, zero competitive tenders.",
+      "statLabel": "billion MXN in food distribution fraud"
+    },
+    "los-nuevos-ricos-de-la-4t": {
+      "headline": "The 4T's New Rich",
+      "subheadline": "1,253 ghost companies created after 2018 that accumulated government contracts without competition.",
+      "statLabel": "ghost companies created post-2018"
+    },
+    "hemoser-el-2-de-agosto": {
+      "headline": "HEMOSER: August 2nd",
+      "subheadline": "17.2 billion pesos in 12 contracts — all awarded in a single day to a single blood-products supplier.",
+      "statLabel": "billion MXN in 12 contracts, one day"
+    },
+    "la-austeridad-que-no-fue": {
+      "headline": "The Austerity That Wasn't",
+      "subheadline": "In the middle of austerity rhetoric, 80% of federal contracts went without competitive tender in 2021.",
+      "statLabel": "contracts without tender in 2021"
+    },
+    "cero-competencia": {
+      "headline": "Zero Competition",
+      "subheadline": "Half a million tenders where only one bidder showed up. The competition that never arrived.",
+      "statLabel": "contracts with a single bidder"
+    },
+    "triangulo-farmaceutico": {
+      "headline": "The Pharmaceutical Triangle",
+      "subheadline": "Three suppliers that divided 270 billion pesos in health sector contracts across two administrations.",
+      "statLabel": "billion MXN to 3 health suppliers"
+    },
+    "avalancha-diciembre": {
+      "headline": "The December Avalanche",
+      "subheadline": "Every year, the government spends more in December than any other month. In 2015: 57.5 billion pesos in 31 days.",
+      "statLabel": "billion MXN in 31 days — December 2015"
+    },
+    "cartel-del-corazon": {
+      "headline": "The Cardiac Cartel",
+      "subheadline": "One company dominated cardiac equipment procurement for over a decade — until COFECE launched an investigation.",
+      "statLabel": "billion MXN — cardiac equipment monopoly"
+    },
+    "infraestructura-sin-competencia": {
+      "headline": "Infrastructure Without Competition",
+      "subheadline": "2.1 trillion pesos in infrastructure contracts with only one proposal submitted. The bidder was always the same.",
+      "statLabel": "trillion MXN in single-bidder infrastructure"
+    },
+    "la-casa-de-los-contratos": {
+      "headline": "The House of Contracts",
+      "subheadline": "The network of companies linked to Grupo Higa and the mega infrastructure project that defined the Peña Nieto era.",
+      "statLabel": "billion MXN — infrastructure fraud network"
+    },
+    "oceanografia": {
+      "headline": "Oceanografía: Two Frontiers",
+      "subheadline": "The fraud that crossed from PEMEX to Banamex to Citibank. Fake invoices at international scale.",
+      "statLabel": "billion MXN — PEMEX-Banamex-Citibank fraud"
+    },
+    "sixsigma-hacienda": {
+      "headline": "SixSigma and the SAT",
+      "subheadline": "How a technology company manipulated the tax authority's tenders for years — and the data trail it left.",
+      "statLabel": "billion MXN — SAT tender manipulation"
+    },
+    "sexenio-a-sexenio": {
+      "headline": "Administration by Administration",
+      "subheadline": "From 63% to 82%: how direct awards grew without pause across 23 years, regardless of who was in power.",
+      "statLabel": "direct awards — a 23-year trend"
+    },
+    "red-fantasma": {
+      "headline": "Ghost Network: Anatomy of a Non-Existent Company",
+      "subheadline": "SAT confirmed 13,960 companies that invoiced simulated operations to the government. Here is how they work.",
+      "statLabel": "companies on SAT's EFOS list — confirmed shell operations"
+    },
+    "el-ano-sin-excusas": {
+      "headline": "2023: The Year Mexico Broke Every Record",
+      "subheadline": "The last full year of the administration recorded the highest rate of no-bid contracts in the country's modern history: 81.9%.",
+      "statLabel": "contracts without competition in 2023"
+    },
+    "insabi-el-experimento": {
+      "headline": "INSABI: The Experiment That Collapsed Supply",
+      "subheadline": "Dissolving the Seguro Popular dismantled competition mechanisms in drug procurement, sending direct awards to 94%.",
+      "statLabel": "direct awards in INSABI drug procurement"
+    },
+    "tren-maya-sin-reglas": {
+      "headline": "Tren Maya: $180 Billion Without a Single Tender",
+      "subheadline": "Mexico's most expensive infrastructure project bypassed procurement rules through emergency declarations and direct contracts to inexperienced companies.",
+      "statLabel": "MXN in contracts without tender"
+    },
+    "fabrica-de-monopolios": {
+      "headline": "The Monopoly Factory",
+      "subheadline": "In energy and technology, 10% of suppliers took over 70% of the budget. The AMLO model repeated the PRI pattern — at greater scale.",
+      "statLabel": "of the budget to 10% of suppliers"
+    },
+    "el-dinero-de-todos": {
+      "headline": "Everyone's Money: How Procurement Concentrated in Few Hands",
+      "subheadline": "Over two decades, Mexican federal spending shifted from broad competition to oligopoly. RUBLI's analysis of 3.1 million contracts reveals who benefits.",
+      "statLabel": "vendors with critical-level risk"
+    },
+    "pandemia-sin-supervision": {
+      "headline": "Pandemic Without Supervision",
+      "subheadline": "Mexico spent over 40 billion in COVID procurement without tenders. 73% went to companies created less than two years before receiving their contract.",
+      "statLabel": "to newly created companies"
+    },
+    "pemex-el-gigante": {
+      "headline": "PEMEX Never Competes: The $2 Trillion Black Hole",
+      "subheadline": "PEMEX and CFE account for 40% of federal procurement but less than 5% is competitive. Twenty years of data show the pattern predated AMLO — and outlasted him.",
+      "statLabel": "MXN in non-competitive energy procurement"
+    },
+    "atlas-del-riesgo": {
+      "headline": "Risk Atlas: The Sectors Where Corruption Leaves the Most Traces",
+      "subheadline": "RUBLI's model identifies 118,061 contracts with critical-level risk signals. Health and agriculture lead in risk rate; infrastructure leads in amount.",
+      "statLabel": "contracts at critical risk level (v6.4, threshold ≥0.60)"
+    },
+    "la-herencia-envenenada": {
+      "headline": "The Poisoned Legacy: What AMLO Left in Public Finances",
+      "subheadline": "The administration ended with historic direct-award rates, 247,946 contracts suspected of threshold-splitting, and a transparency debt that will take years to resolve.",
+      "statLabel": "contracts put to a single bidder"
+    },
+    "dividir-para-evadir": {
+      "headline": "Divide to Evade: 247,946 Contracts Designed to Dodge Scrutiny",
+      "subheadline": "The law requires public tendering above certain thresholds. RUBLI found 247,946 contracts clustered just below those limits — statistically improbable by chance.",
+      "statLabel": "contracts with suspected threshold-splitting"
+    },
+    "la-maquina-de-papel": {
+      "headline": "The Paper Machine",
+      "subheadline": "COMPRANET was created in 1996 to make procurement transparent. What it became was a system where the rules of competition could be observed — and gamed — simultaneously.",
+      "statLabel": "years of procurement data in COMPRANET"
+    }
   }
 }
