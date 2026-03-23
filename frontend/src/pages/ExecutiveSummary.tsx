@@ -250,6 +250,16 @@ export function ExecutiveSummary() {
         </motion.div>
       </motion.div>
 
+      {/* ── Editorial context notes below KPI cards ── */}
+      <div className="space-y-1.5">
+        <p className="text-xs text-text-muted leading-relaxed italic">
+          {t('rateExplanation')}
+        </p>
+        <p className="text-xs text-text-muted leading-relaxed italic">
+          {t('budgetContext', { pct: '56' })}
+        </p>
+      </div>
+
       {/* ── Expandable Full Breakdown ── */}
       <div>
         <button
@@ -279,6 +289,12 @@ export function ExecutiveSummary() {
       </PullQuote>
 
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
+
+      {/* Section numbering note — sections 02/04/06/07/11 reflect original 11-chapter report */}
+      <p className="text-[10px] text-text-muted/60 font-mono text-right">
+        {t('sectionNumberNote')}
+      </p>
+
       <AnimatedDivider />
       {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
       <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
