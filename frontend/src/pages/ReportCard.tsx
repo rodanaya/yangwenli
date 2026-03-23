@@ -1479,6 +1479,100 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
   )
 }
 
+// InstitutionLedeBanner — at-risk callout for institutions tab
+// ---------------------------------------------------------------------------
+
+function InstitutionLedeBanner({ summary }: { summary: ScorecardSummary }) {
+  const dist = summary.institution_grade_distribution
+  const concerningGrades = ['C+', 'C', 'D', 'D-', 'F', 'F-']
+  const concerningCount = concerningGrades.reduce((acc, g) => acc + (dist[g] ?? 0), 0)
+  const total = summary.institutions_scored
+  if (!concerningCount || !total) return null
+  const pct = ((concerningCount / total) * 100).toFixed(1)
+
+  return (
+    <div
+      className="rounded-xl px-5 py-4 mb-6 flex flex-wrap items-center gap-5"
+      style={{
+        border: '1px solid rgba(220,38,38,0.15)',
+        borderLeftWidth: '4px',
+        borderLeftColor: '#dc2626',
+        borderLeftStyle: 'solid',
+        backgroundColor: 'rgba(220,38,38,0.05)',
+      }}
+    >
+      <div className="flex-shrink-0 text-center min-w-[5rem]">
+        <span
+          className="font-bold leading-none"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '3.5rem', color: '#dc2626' }}
+        >
+          {concerningCount.toLocaleString()}
+        </span>
+        <p className="text-[10px] font-semibold uppercase tracking-wide mt-1" style={{ color: '#dc2626', opacity: 0.8 }}>
+          {pct}% of agencies
+        </p>
+      </div>
+      <div className="flex-1 min-w-[200px]">
+        <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+          federal agencies score{' '}
+          <span style={{ color: '#dc2626' }}>C+ or below</span>
+          {' '}— in the Watch, Concerning, or High Risk zone
+        </p>
+        <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+          Average score: {summary.institution_avg_score}/100 · RUBLI 5-pillar model · {total.toLocaleString()} institutions evaluated
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// VendorLedeBanner — at-risk callout for vendors tab
+// ---------------------------------------------------------------------------
+
+function VendorLedeBanner({ summary }: { summary: ScorecardSummary }) {
+  const dist = summary.vendor_grade_distribution
+  const highRiskGrades = ['D', 'D-', 'F', 'F-']
+  const highRiskCount = highRiskGrades.reduce((acc, g) => acc + (dist[g] ?? 0), 0)
+  const total = summary.vendors_scored
+  if (!highRiskCount || !total) return null
+  const pct = ((highRiskCount / total) * 100).toFixed(1)
+
+  return (
+    <div
+      className="rounded-xl px-5 py-4 mb-6 flex flex-wrap items-center gap-5"
+      style={{
+        border: '1px solid rgba(220,38,38,0.15)',
+        borderLeftWidth: '4px',
+        borderLeftColor: '#dc2626',
+        borderLeftStyle: 'solid',
+        backgroundColor: 'rgba(220,38,38,0.05)',
+      }}
+    >
+      <div className="flex-shrink-0 text-center min-w-[5rem]">
+        <span
+          className="font-bold leading-none"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '3.5rem', color: '#dc2626' }}
+        >
+          {highRiskCount.toLocaleString()}
+        </span>
+        <p className="text-[10px] font-semibold uppercase tracking-wide mt-1" style={{ color: '#dc2626', opacity: 0.8 }}>
+          {pct}% of vendors
+        </p>
+      </div>
+      <div className="flex-1 min-w-[200px]">
+        <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+          vendors score{' '}
+          <span style={{ color: '#dc2626' }}>D or below</span>
+          {' '}— Concerning to Red Flag — actively supplying the federal government
+        </p>
+        <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+          Average score: {summary.vendor_avg_score}/100 · Higher score = cleaner vendor · {total.toLocaleString()} suppliers evaluated
+        </p>
+      </div>
+    </div>
+  )
+}
+
 function InstitutionScorecardsTab() {
   const { t } = useTranslation('reportcard')
   const [page, setPage] = useState(1)
@@ -1562,6 +1656,9 @@ function InstitutionScorecardsTab() {
           </div>
         </div>
       )}
+
+      {summary && <InstitutionLedeBanner summary={summary} />}
+      <GradeScale10 />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -1863,16 +1960,8 @@ function VendorScorecardsTab() {
         </div>
       )}
 
-      {/* Methodology note for vendors */}
-      <div
-        className="rounded-xl px-4 py-3 mb-4 text-xs flex items-start gap-2"
-        style={{ backgroundColor: 'var(--color-background-elevated)', border: '1px solid var(--color-border)', color: 'var(--color-text-secondary)' }}
-      >
-        <span className="mt-0.5 text-base">ℹ</span>
-        <span>
-          <strong style={{ color: 'var(--color-text-primary)' }}>{t('vendorNoteTitle')}</strong> {t('vendorNoteBody')}
-        </span>
-      </div>
+      {summary && <VendorLedeBanner summary={summary} />}
+      <GradeScale10 />
 
       {/* Filters */}
       <div className="flex flex-wrap gap-2 mb-4">
@@ -2370,37 +2459,9 @@ function ReportCard() {
         {/* Tab content */}
         {activeTab === 'phi' && <PHITab t={t} />}
 
-        {activeTab === 'institutions' && (
-          <>
-            <div className="mb-6">
-              <SectionLabel>{t('sectionInstitutionalIntegrity')}</SectionLabel>
-              <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-                {t('rankingInstitutions')}
-              </h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                {t('rankingInstitutionsDesc')}
-              </p>
-              <GradeScale10 />
-            </div>
-            <InstitutionScorecardsTab />
-          </>
-        )}
+        {activeTab === 'institutions' && <InstitutionScorecardsTab />}
 
-        {activeTab === 'vendors' && (
-          <>
-            <div className="mb-6">
-              <SectionLabel>{t('sectionVendorIntegrity')}</SectionLabel>
-              <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-                {t('rankingVendors')}
-              </h2>
-              <p className="text-sm mb-4" style={{ color: 'var(--color-text-muted)' }}>
-                {t('rankingVendorsDesc')}
-              </p>
-              <GradeScale10 />
-            </div>
-            <VendorScorecardsTab />
-          </>
-        )}
+        {activeTab === 'vendors' && <VendorScorecardsTab />}
     </div>
   )
 }
