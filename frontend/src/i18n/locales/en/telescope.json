@@ -1,4 +1,6 @@
 {
+  "eyebrow": "VISUAL INTELLIGENCE · CONTRACT UNIVERSE",
+  "description": "Each bubble is a sector-year data point: size = contract value, vertical position = risk level. Brighter, higher bubbles demand attention first.",
   "title": "El Telescopio",
   "subtitle": "The universe of Mexican public contracts",
   "nebulaeCount": "nebulae",

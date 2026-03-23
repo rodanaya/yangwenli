@@ -415,6 +415,9 @@ export default function PriceIntelligence() {
 
       {/* ── 1. Intelligence Header ─────────────────────────────────────────── */}
       <div className="space-y-1.5">
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-text-muted/70">
+          {t('eyebrow')}
+        </p>
         <div className="flex items-center gap-2">
           <AlertTriangle className="h-3.5 w-3.5 text-risk-critical shrink-0" />
           <span className="text-[10px] font-bold tracking-widest uppercase text-risk-critical font-mono">

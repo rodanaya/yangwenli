@@ -436,8 +436,13 @@ export default function Journalists() {
     <div className="min-h-screen bg-zinc-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        {/* Editorial masthead */}
-        <div className="pt-12 sm:pt-16">
+        {/* Editorial masthead — single unified header */}
+        <motion.div
+          variants={slideUp}
+          initial="initial"
+          animate="animate"
+          className="pt-12 sm:pt-16 pb-10 sm:pb-14"
+        >
           <EditorialHeadline
             section={t('masthead.section')}
             headline={t('masthead.headline')}
@@ -448,34 +453,11 @@ export default function Journalists() {
             <FuentePill source="COMPRANET" count={3051294} countLabel={t('masthead.compranetLabel')} verified={true} />
             <FuentePill source="SAT EFOS" count={13960} countLabel={t('masthead.satEfosLabel')} />
           </div>
-          <p className="text-xs text-zinc-500 mb-6">
+          <p className="text-xs text-zinc-500 mb-8">
             {t('masthead.lastUpdated')}
           </p>
-        </div>
 
-        {/* ================================================================ */}
-        {/* HERO SECTION                                                      */}
-        {/* ================================================================ */}
-        <motion.section
-          variants={slideUp}
-          initial="initial"
-          animate="animate"
-          className="pb-10 sm:pb-14"
-        >
-          <p className="text-xs font-bold tracking-[0.3em] uppercase text-zinc-500 mb-4">
-            {t('hero.platform')}
-          </p>
-          <h1
-            className="text-4xl sm:text-5xl lg:text-6xl font-black text-white leading-[1.05] mb-4"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-          >
-            RUBLI INVESTIGACIONES
-          </h1>
-          <p className="text-xl sm:text-2xl text-zinc-400 font-light tracking-wide mb-10">
-            {t('hero.tagline')}
-          </p>
-
-          {/* Three animated counters */}
+          {/* Stat row — key numbers surface in the header, not a separate hero */}
           <div className="flex flex-wrap gap-8 sm:gap-12 mb-8">
             <div>
               <AnimatedNumber
@@ -503,7 +485,7 @@ export default function Journalists() {
 
           {/* Crimson divider */}
           <div className="h-[2px] w-24 bg-[#dc2626]" />
-        </motion.section>
+        </motion.div>
 
         {/* ================================================================ */}
         {/* FEATURED STORY                                                    */}

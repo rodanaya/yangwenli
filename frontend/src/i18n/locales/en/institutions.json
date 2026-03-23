@@ -48,6 +48,7 @@
     "concentrated": "Concentrated"
   },
   "heatmapPage": {
+    "eyebrow": "VISUAL INTELLIGENCE · INSTITUTION RISK MATRIX",
     "title": "Institution × Sector Risk Heatmap",
     "description": "Average risk score for each of the top 20 institutions (by contract count) across all 12 procurement sectors. Green = low risk, amber = moderate, red = high risk. Click any cell to explore the contracts for that institution and sector.",
     "clickHint": "Click a cell to explore those contracts in the Contracts view with institution and sector pre-filtered.",

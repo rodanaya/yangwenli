@@ -336,6 +336,9 @@ export default function Seismograph() {
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         >
+          <p className="font-mono text-[10px] font-semibold tracking-[0.2em] uppercase text-white/30 mb-2">
+            {t('eyebrow')}
+          </p>
           <h1
             className="font-mono text-2xl md:text-3xl font-bold tracking-[0.3em] text-white/90"
             style={{ letterSpacing: '0.3em' }}
@@ -349,6 +352,9 @@ export default function Seismograph() {
             {t('dateRange')}
             <span className="text-white/15 mx-2">&middot;</span>
             {t('system')}
+          </p>
+          <p className="mt-2 font-mono text-[11px] text-white/50 leading-relaxed max-w-2xl">
+            {t('description')}
           </p>
         </motion.div>
 

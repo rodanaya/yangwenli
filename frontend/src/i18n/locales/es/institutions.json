@@ -37,6 +37,7 @@
     "concentrated": "Concentrado"
   },
   "heatmapPage": {
+    "eyebrow": "INTELIGENCIA VISUAL · MATRIZ DE RIESGO INSTITUCIONAL",
     "title": "Mapa de Calor: Institución × Sector",
     "description": "Puntuación de riesgo promedio de las 20 principales instituciones (por cantidad de contratos) en los 12 sectores de adquisiciones. Verde = riesgo bajo, ámbar = moderado, rojo = alto riesgo. Haz clic en cualquier celda para explorar los contratos.",
     "clickHint": "Haz clic en una celda para explorar esos contratos en la vista de Contratos con institución y sector prefiltrados.",

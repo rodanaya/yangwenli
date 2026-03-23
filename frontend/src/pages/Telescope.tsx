@@ -423,6 +423,9 @@ export default function Telescope() {
     >
       {/* Header */}
       <header className="relative z-20 flex-shrink-0 px-8 pt-6 pb-2">
+        <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-white/30 mb-1.5">
+          {t('eyebrow')}
+        </p>
         <h1
           className="text-2xl font-light tracking-[0.4em] text-white/90 uppercase"
           style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
@@ -438,6 +441,9 @@ export default function Telescope() {
           {formatNumber(totalContracts)} {t('contractsCount')}
           <span className="mx-2 text-white/20">.</span>
           {years.length > 0 ? `${years[0]}-${years[years.length - 1]}` : ''}
+        </p>
+        <p className="mt-1.5 text-[11px] text-white/45 leading-relaxed max-w-2xl">
+          {t('description')}
         </p>
       </header>
 

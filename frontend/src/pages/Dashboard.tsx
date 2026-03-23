@@ -54,8 +54,6 @@ import {
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-import { PageHeader } from '@/components/layout/PageHeader'
-import { LayoutDashboard } from 'lucide-react'
 // AnomalyLeadsWidget and PoliticalIntelligenceStrip removed — API 500 errors
 
 // ============================================================================
@@ -1573,30 +1571,27 @@ export function Dashboard() {
         loading={dashLoading}
       />
 
-      {/* Page Header */}
-      <PageHeader
-        label={t('panoramaLabel')}
-        title={t('title')}
-        subtitle={t('subtitle')}
-        icon={LayoutDashboard}
-        actions={
-          <div className="flex items-center gap-2">
-            <LiveDataPulse />
-            {lastUpdated && (
-              <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
-                <Activity className="h-3 w-3 text-signal-live" />
-                <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
-              </div>
-            )}
-            <span
-              className="text-[10px] font-mono text-text-muted/50 cursor-help"
-              title={t('aucExplanation')}
-            >
-              {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
-            </span>
-          </div>
-        }
-      />
+      {/* Section divider — "NATIONAL OVERVIEW" label + live-data badges */}
+      <div className="flex items-center justify-between px-1 py-2 border-b border-border/30">
+        <span className="text-[10px] font-mono font-semibold tracking-widest text-text-muted uppercase">
+          {t('panoramaLabel')}
+        </span>
+        <div className="flex items-center gap-2">
+          <LiveDataPulse />
+          {lastUpdated && (
+            <div className="flex items-center gap-1.5 text-[10px] text-text-muted font-mono">
+              <Activity className="h-3 w-3 text-signal-live" />
+              <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
+            </div>
+          )}
+          <span
+            className="text-[10px] font-mono text-text-muted/50 cursor-help"
+            title={t('aucExplanation')}
+          >
+            {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
+          </span>
+        </div>
+      </div>
 
       {/* Error Banner */}
       {dashError && (

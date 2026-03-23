@@ -42,57 +42,6 @@ import {
   ChevronDown,
 } from 'lucide-react'
 
-// ============================================================================
-// Cinematic Components — Fern/NYT editorial enhancements
-// ============================================================================
-
-function CinematicHero() {
-  const reduced = useReducedMotion()
-  const { t } = useTranslation('executive')
-
-  return (
-    <div className="relative overflow-hidden pt-12 pb-16 mb-8">
-      {/* Giant ghost year range */}
-      <div
-        className="select-none pointer-events-none text-center"
-        style={{
-          fontSize: 'clamp(2.5rem, 8vw, 6rem)',
-          fontWeight: 900,
-          lineHeight: 1,
-          WebkitTextStroke: '1px rgba(220,38,38,0.3)',
-          color: 'transparent',
-          letterSpacing: '-0.02em',
-        }}
-        aria-hidden="true"
-      >
-        2002–2025
-      </div>
-
-      {/* Overlaid subtitle */}
-      <motion.p
-        className="text-center text-sm sm:text-base tracking-[0.3em] uppercase text-text-muted/70 font-mono mt-4"
-        initial={reduced ? {} : { opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ delay: 0.6, duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {t('heroSubtitle')}
-      </motion.p>
-
-      {/* Animated horizontal gradient line */}
-      <motion.div
-        className="mx-auto mt-6 h-px"
-        style={{
-          background: 'linear-gradient(90deg, transparent, #dc2626, transparent)',
-          maxWidth: '80%',
-        }}
-        initial={reduced ? {} : { scaleX: 0 }}
-        animate={{ scaleX: 1 }}
-        transition={{ delay: 1.0, duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-      />
-    </div>
-  )
-}
-
 function PullQuote({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef<HTMLQuoteElement>(null)
   const isInView = useInView(ref, { once: true, margin: '-40px' })
@@ -183,9 +132,6 @@ export function ExecutiveSummary() {
 
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
-      {/* Cinematic opening hero */}
-      <CinematicHero />
-
       <EditorialHeadline
         section={t('editorialSection')}
         headline={t('editorialHeadline')}

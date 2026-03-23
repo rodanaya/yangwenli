@@ -173,6 +173,9 @@ export default function InstitutionHeatmap() {
     <div className="container mx-auto px-4 py-8 max-w-7xl">
       {/* Header */}
       <div className="mb-6">
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-accent/60 mb-1.5">
+          {t('heatmapPage.eyebrow')}
+        </p>
         <div className="flex items-center gap-2 mb-2">
           <Grid3X3 className="h-5 w-5 text-accent" aria-hidden="true" />
           <h1 className="text-2xl font-bold text-text-primary">
