@@ -1,5 +1,5 @@
 import { useState, useMemo, useCallback, useRef, useEffect } from 'react'
-import { motion, useInView, AnimatePresence, type Variants } from 'framer-motion'
+import { motion, useInView, type Variants } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
@@ -13,13 +13,12 @@ import {
   ResponsiveContainer,
   CartesianGrid,
   ReferenceArea,
+  ReferenceLine,
 } from 'recharts'
 import { phiApi, scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import { formatCompactMXN } from '@/lib/utils'
 import { cn } from '@/lib/utils'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
@@ -222,7 +221,7 @@ function useTypewriter(text: string, speed = 30) {
   return { displayed, done }
 }
 
-function LoadingIntro({ onComplete }: { onComplete: () => void }) {
+export function LoadingIntro({ onComplete }: { onComplete: () => void }) {
   useEffect(() => {
     const timer = setTimeout(onComplete, 1500)
     return () => clearTimeout(timer)
@@ -374,25 +373,6 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 
   return (
     <section className="mb-10">
-      {/* Page header */}
-      <motion.div
-        className="mb-8 text-center"
-        initial={{ opacity: 0, y: -16 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <SectionLabel>{t('nationalGradeTitle')}</SectionLabel>
-        <h1
-          className="text-editorial-h1 md:text-editorial-display mb-3"
-          style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-        >
-          {t('pageTitle')}
-        </h1>
-        <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
-          {new Date().getFullYear()} &middot; {(national.total_contracts / 1_000_000).toFixed(1)}M {t('contractsOf')} &middot; 12 {t('sectorEvaluated')}
-        </p>
-      </motion.div>
-
       {/* Grade card */}
       <div
         className="fern-card rounded-2xl mx-auto max-w-2xl overflow-hidden"
@@ -807,6 +787,18 @@ function TrendSection({ t }: { t: (k: string) => string }) {
                   label={{ value: p.name, position: 'insideTopLeft', fontSize: 10, fill: 'var(--color-text-muted)', dy: 4 }}
                 />
               ))}
+              <ReferenceLine
+                x={2020}
+                stroke="rgba(239,68,68,0.5)"
+                strokeDasharray="4 2"
+                label={{ value: 'COVID', position: 'top', fontSize: 10, fill: '#f87171', dy: -4 }}
+              />
+              <ReferenceLine
+                x={2019}
+                stroke="rgba(251,191,36,0.3)"
+                strokeDasharray="4 2"
+                label={{ value: 'AMLO', position: 'top', fontSize: 10, fill: '#fcd34d', dy: -20 }}
+              />
               <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
               <XAxis
                 dataKey="year"
@@ -2114,6 +2106,106 @@ function GradeScale10() {
 }
 
 // ---------------------------------------------------------------------------
+// LedeBanner — top-of-PHI at-risk callout
+// ---------------------------------------------------------------------------
+
+function LedeBanner({ national }: { national: PHINational }) {
+  const dist = national.risk_distribution
+  if (!dist) return null
+  const critPct = dist.critical?.value_pct ?? 0
+  const highPct = dist.high?.value_pct ?? 0
+  const combined = critPct + highPct
+  if (combined < 1) return null
+
+  return (
+    <div
+      className="rounded-xl px-5 py-4 mb-8 flex flex-wrap items-center gap-5"
+      style={{
+        borderLeft: '4px solid #dc2626',
+        backgroundColor: 'rgba(220,38,38,0.05)',
+        border: '1px solid rgba(220,38,38,0.15)',
+        borderLeftWidth: '4px',
+        borderLeftColor: '#dc2626',
+        borderLeftStyle: 'solid',
+      }}
+    >
+      <div className="flex-shrink-0 text-center min-w-[5rem]">
+        <span
+          className="font-bold leading-none"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '3.5rem', color: '#dc2626' }}
+        >
+          {combined.toFixed(0)}%
+        </span>
+        <p className="text-[10px] font-semibold uppercase tracking-wide mt-1" style={{ color: '#dc2626', opacity: 0.8 }}>
+          At risk
+        </p>
+      </div>
+      <div className="flex-1 min-w-[200px]">
+        <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text-primary)' }}>
+          of all federal spending — measured by peso value — flows through contracts flagged{' '}
+          <span style={{ color: '#dc2626' }}>Critical or High risk</span>
+        </p>
+        <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
+          {critPct.toFixed(0)}% Critical · {highPct.toFixed(0)}% High · RUBLI v6.4 model · {national.total_contracts.toLocaleString()} contracts analyzed
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// WorstSectorsAlert — worst-3 sectors highlight row
+// ---------------------------------------------------------------------------
+
+function WorstSectorsAlert({ sectors, t }: { sectors: PHISector[]; t: (k: string) => string }) {
+  if (sectors.length === 0) return null
+  const worst = sectors.slice(0, 3)
+  return (
+    <div className="mb-5">
+      <p className="text-xs font-semibold uppercase tracking-wider mb-3 flex items-center gap-2" style={{ color: '#dc2626' }}>
+        <span>⚠</span> {t('worstSectorsLabel')}
+      </p>
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        {worst.map((sector) => {
+          const meta = SECTORS.find((s) => s.id === sector.sector_id)
+          const color = meta?.color || '#64748b'
+          const gc = GRADE_COLORS[sector.grade] || GRADE_COLORS['F']
+          const name = SECTOR_NAME_ES[sector.sector_name] || sector.sector_name
+          return (
+            <div
+              key={sector.sector_id}
+              className="rounded-lg px-4 py-3 flex items-center gap-3"
+              style={{
+                backgroundColor: 'rgba(220,38,38,0.05)',
+                border: '1px solid rgba(220,38,38,0.15)',
+                borderLeft: `4px solid ${color}`,
+              }}
+            >
+              <span
+                className="font-bold leading-none flex-shrink-0"
+                style={{ fontFamily: "'Playfair Display', Georgia, serif", fontSize: '2.2rem', color: gc.text }}
+              >
+                {sector.grade}
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold truncate" style={{ color: 'var(--color-text-primary)' }}>
+                  {name}
+                </p>
+                {sector.competition_by_value != null && (
+                  <p className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                    {sector.competition_by_value.toFixed(0)}% competitive spend
+                  </p>
+                )}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main Page
 // ---------------------------------------------------------------------------
 
@@ -2137,9 +2229,6 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       (a, b) => (GRADE_ORDER[a.grade] ?? 2) - (GRADE_ORDER[b.grade] ?? 2)
     )
   }, [data])
-
-  const sectorsRef = useRef<HTMLDivElement>(null)
-  const sectorsInView = useInView(sectorsRef, { once: true, margin: '-60px' })
 
   if (isLoading) {
     return (
@@ -2182,7 +2271,9 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
 
   return (
     <>
+      <LedeBanner national={national} />
       <NationalGradeHero national={national} />
+      <AgreementSection t={t} />
       <GradeLegend />
 
       <section className="mb-12">
@@ -2193,12 +2284,13 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
         <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
           {t('clickCardDetail')}
         </p>
+        <WorstSectorsAlert sectors={sortedSectors} t={t} />
         <motion.div
-          ref={sectorsRef}
           className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4"
           variants={cardContainerVariants}
           initial="hidden"
-          animate={sectorsInView ? 'show' : 'hidden'}
+          whileInView="show"
+          viewport={{ once: true, margin: '-60px' }}
         >
           {sortedSectors.map((sector) => (
             <motion.div key={sector.sector_id} variants={cardItemVariants}>
@@ -2209,7 +2301,6 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       </section>
 
       <TrendSection t={t} />
-      <AgreementSection t={t} />
       <MethodologyFooter sources={methodology.based_on} />
     </>
   )
@@ -2218,8 +2309,6 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
 function ReportCard() {
   const { t } = useTranslation('reportcard')
   const [activeTab, setActiveTab] = useState<Tab>('phi')
-  const [introComplete, setIntroComplete] = useState(false)
-  const handleIntroComplete = useCallback(() => setIntroComplete(true), [])
 
   const tabs: { id: Tab; label: string; sub: string }[] = [
     { id: 'phi', label: t('tabPHI'), sub: t('tabPHISub') },
@@ -2228,51 +2317,32 @@ function ReportCard() {
   ]
 
   return (
-    <>
-      <AnimatePresence>
-        {!introComplete && <LoadingIntro onComplete={handleIntroComplete} />}
-      </AnimatePresence>
-
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Page header */}
-        <div className="mb-8 text-center">
-          <p className="text-xs font-semibold tracking-[0.15em] uppercase mb-2" style={{ color: '#c41e3a' }}>
-            {t('pageEyebrow')}
-          </p>
+    <div className="max-w-6xl mx-auto px-4 py-8">
+      {/* Single page header */}
+      <div className="mb-6 pb-5 border-b" style={{ borderColor: 'var(--color-border)' }}>
+        <p className="text-xs font-semibold tracking-[0.15em] uppercase mb-2" style={{ color: '#c41e3a' }}>
+          {t('pageEyebrow')}
+        </p>
+        <div className="flex flex-wrap items-end justify-between gap-3">
           <h1
-            className="text-editorial-h1 md:text-editorial-display mb-3"
+            className="text-editorial-h1 md:text-editorial-display"
             style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
           >
             {t('pageTitle')}
           </h1>
-          <p className="text-base" style={{ color: 'var(--color-text-muted)' }}>
-            {t('pageSubtitle')}
-          </p>
+          <div className="flex flex-wrap items-center gap-3 mb-1">
+            <FuentePill source="COMPRANET" count={3051294} countLabel={t('countLabel')} verified={true} />
+            <MetodologiaTooltip
+              title={t('tooltipGradeTitle')}
+              body={t('tooltipGradeBody')}
+              link="/methodology"
+            />
+          </div>
         </div>
-
-        {/* Editorial masthead */}
-        <EditorialHeadline
-          section={t('sectionPerformance')}
-          headline={t('headlineReportCard')}
-          subtitle={t('subtitleReportCard')}
-          className="mb-6"
-        />
-
-        {/* Key stats row */}
-        <div className="flex flex-wrap gap-8 mb-6">
-          <HallazgoStat value="847" label={t('statInstitutions')} color="border-blue-500" />
-          <HallazgoStat value="9.0%" label={t('statHighRiskRate')} color="border-red-500" />
-          <HallazgoStat value="&#8369;6.8T" label={t('statValueAnalyzed')} color="border-amber-500" />
-        </div>
-
-        <div className="flex flex-wrap items-center gap-3 mb-8">
-          <FuentePill source="COMPRANET" count={3051294} countLabel={t('countLabel')} verified={true} />
-          <MetodologiaTooltip
-            title={t('tooltipGradeTitle')}
-            body={t('tooltipGradeBody')}
-            link="/methodology"
-          />
-        </div>
+        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
+          {t('subtitleReportCard')}
+        </p>
+      </div>
 
         {/* Tab bar */}
         <div
@@ -2331,8 +2401,7 @@ function ReportCard() {
             <VendorScorecardsTab />
           </>
         )}
-      </div>
-    </>
+    </div>
   )
 }
 

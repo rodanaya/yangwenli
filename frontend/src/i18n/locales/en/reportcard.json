@@ -60,12 +60,12 @@
   "statValueAnalyzed": "MXN under analysis",
   "tooltipGradeTitle": "How is the grade calculated?",
   "tooltipGradeBody": "The institutional grade is based on high-risk contract rate, vendor concentration, and direct vs. competitive procedure use. Scale A–F.",
-  "tabPHI": "Procurement Health",
-  "tabPHISub": "PHI · 12 sectors",
+  "tabPHI": "Health Index",
+  "tabPHISub": "PHI · 12 sectors evaluated",
   "tabInstitutions": "Institutions",
-  "tabInstitutionsSub": "Ranking 0–100 · 2,569 inst.",
+  "tabInstitutionsSub": "2,569 agencies · 5-pillar scorecard",
   "tabVendors": "Vendors",
-  "tabVendorsSub": "Ranking 0–100 · 139K vendors",
+  "tabVendorsSub": "139K suppliers · risk-graded",
   "sectionInstitutionalIntegrity": "Institutional Integrity",
   "rankingInstitutions": "Institution Ranking",
   "rankingInstitutionsDesc": "Score 0–100 based on 5 dimensions: competitive openness, price integrity, vendor independence, process transparency, and external alerts. Click a row to see pillar detail.",
@@ -165,5 +165,6 @@
   "sourcesLabel": "Sources",
   "hideDetail": "Hide detail",
   "viewDetail": "View detail",
-  "goToSector": "Go to sector"
+  "goToSector": "Go to sector",
+  "worstSectorsLabel": "Sectors requiring immediate attention"
 }

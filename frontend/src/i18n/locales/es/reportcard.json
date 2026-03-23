@@ -60,12 +60,12 @@
   "statValueAnalyzed": "MXN bajo analisis",
   "tooltipGradeTitle": "Como se calcula el grado?",
   "tooltipGradeBody": "El grado institucional se basa en la tasa de contratos de alto riesgo, concentracion de proveedores y uso de procedimientos directos vs. competitivos. Escala A-F.",
-  "tabPHI": "Salud Procuratoria",
-  "tabPHISub": "PHI · 12 sectores",
+  "tabPHI": "Índice de Salud",
+  "tabPHISub": "PHI · 12 sectores evaluados",
   "tabInstitutions": "Instituciones",
-  "tabInstitutionsSub": "Ranking 0-100 · 2,569 inst.",
+  "tabInstitutionsSub": "2,569 dependencias · 5 pilares",
   "tabVendors": "Proveedores",
-  "tabVendorsSub": "Ranking 0-100 · 139K proveed.",
+  "tabVendorsSub": "139K proveedores · calificados",
   "sectionInstitutionalIntegrity": "Integridad Institucional",
   "rankingInstitutions": "Ranking de Instituciones",
   "rankingInstitutionsDesc": "Calificacion 0-100 basada en 5 dimensiones: apertura competitiva, integridad de precios, independencia de proveedores, transparencia de proceso y alertas externas. Clic en una fila para ver el detalle por pilar.",
@@ -165,5 +165,6 @@
   "sourcesLabel": "Fuentes",
   "hideDetail": "Ocultar detalle",
   "viewDetail": "Ver detalle",
-  "goToSector": "Ir al sector"
+  "goToSector": "Ir al sector",
+  "worstSectorsLabel": "Sectores que requieren atención inmediata"
 }
