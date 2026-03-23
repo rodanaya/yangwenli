@@ -22,9 +22,28 @@
     "newVendorOnly": "Riesgo de Proveedor Nuevo"
   },
   "tier1": {
-    "heading": "Pistas Críticas — Nivel 1",
-    "subtitle": "Proveedores prioritarios según la Puntuación de Prioridad de Investigación",
-    "empty": "No se encontraron pistas de Nivel 1. Ejecuta el pipeline de ARIA para rellenar."
+    "heading": "Pistas Criticas — Nivel 1",
+    "subtitle": "Proveedores prioritarios segun la Puntuacion de Prioridad de Investigacion",
+    "empty": "No se encontraron pistas de Nivel 1. Ejecuta el pipeline de ARIA para rellenar.",
+    "description": "Requieren investigacion inmediata",
+    "label": "NIVEL 1",
+    "name": "CRITICO",
+    "objective": "OBJETIVO #{{number}}"
+  },
+  "tier2": {
+    "description": "Revision prioritaria",
+    "label": "NIVEL 2",
+    "name": "ALTO"
+  },
+  "tier3": {
+    "description": "Bajo monitoreo activo",
+    "label": "NIVEL 3",
+    "name": "MEDIO"
+  },
+  "tier4": {
+    "description": "Vigilancia pasiva",
+    "label": "NIVEL 4",
+    "name": "BAJO"
   },
   "leads": {
     "filteredResults": "Resultados Filtrados",
@@ -37,10 +56,11 @@
   "table": {
     "headers": {
       "vendor": "Proveedor",
-      "pattern": "Patrón",
+      "pattern": "Patron",
       "value": "Valor",
       "ips": "IPS"
-    }
+    },
+    "review": "Revision:"
   },
   "card": {
     "totalValue": "Valor Total",
@@ -102,6 +122,18 @@
     "show": "Mostrar {{count}} proveedores",
     "hide": "Colapsar"
   },
+  "patternSection": {
+    "title": "Patrones de Riesgo Detectados"
+  },
+  "tierSection": {
+    "objectives": "Objetivos Prioritarios - Tier 1"
+  },
+  "queueSection": {
+    "title": "Cola de Investigacion"
+  },
+  "reviewFilter": {
+    "all": "Todos"
+  },
   "status": {
     "pending": "Pendiente",
     "reviewing": "En revisión",
@@ -121,7 +153,10 @@
     "systemLabel": "Sistema ARIA · Inteligencia de Adquisiciones",
     "live": "EN VIVO",
     "title": "El Cuarto de Guerra",
-    "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de detección de riesgo en contratación pública federal."
+    "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de deteccion de riesgo en contratacion publica federal.",
+    "statusActive": "Activo",
+    "t1Require": "proveedores T1 requieren investigacion inmediata",
+    "lastUpdated": "Ultima actualizacion"
   },
   "editorial": {
     "section": "INTELIGENCIA RUBLI",
@@ -131,10 +166,13 @@
   "situationReport": "Estado de Situación",
   "stats": {
     "vendorsSurveillance": "proveedores bajo vigilancia",
+    "vendorsUnderSurveillance": "proveedores bajo vigilancia",
     "elevatedValueRisk": "valor bajo riesgo elevado",
+    "valueAtRisk": "valor en riesgo",
     "efosOnList": "en Lista EFOS (SAT)",
     "efosAnnotation": "+ {{count}} sanciones SFP",
-    "newVendorRisk": "proveedores nuevos de riesgo"
+    "newVendorRisk": "proveedores nuevos de riesgo",
+    "onEfos": "en lista EFOS"
   },
   "methodology": {
     "title": "¿Cómo funciona ARIA?",

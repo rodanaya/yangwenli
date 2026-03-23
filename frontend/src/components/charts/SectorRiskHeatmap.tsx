@@ -35,26 +35,22 @@ function metricColor(value: number, metric: CellMetric): string {
   // Normalize to 0-1 based on metric-specific ranges
   let t: number
   if (metric === 'risk') {
-    // risk 0-0.5+ → clamp at 0.5 = full red
     t = Math.min(value / 0.5, 1)
   } else {
-    // pct values 0-100
     t = Math.min(value / 100, 1)
   }
-  if (t === 0) return '#1e293b' // no data — dark slate
-  // Low → dark green, high → deep red via amber
-  if (t < 0.2) return '#166534'
-  if (t < 0.4) return '#4d7c0f'
-  if (t < 0.55) return '#854d0e'
-  if (t < 0.7) return '#c2410c'
-  return '#991b1b'
+  if (t === 0) return 'transparent' // no data
+  // Use saturated mid-brightness colors that work in both light and dark mode
+  if (t < 0.2) return '#4ade80'  // green-400 — low risk
+  if (t < 0.4) return '#a3e635'  // lime-400 — medium-low
+  if (t < 0.55) return '#fbbf24' // amber-400 — medium
+  if (t < 0.7) return '#fb923c'  // orange-400 — medium-high
+  return '#f87171'               // red-400 — high risk
 }
 
-function metricTextColor(value: number, metric: CellMetric): string {
-  let t: number
-  if (metric === 'risk') t = Math.min(value / 0.5, 1)
-  else t = Math.min(value / 100, 1)
-  return t > 0.2 ? 'rgba(255,255,255,0.85)' : 'rgba(255,255,255,0.35)'
+function metricTextColor(_value: number, _metric: CellMetric): string {
+  // All mid-brightness colors → dark text reads well in both themes
+  return 'rgba(0,0,0,0.75)'
 }
 
 interface Tooltip {
@@ -176,7 +172,7 @@ export function SectorRiskHeatmap() {
                     {YEARS.map(year => {
                       const cell = lookup.get(sector.id)?.get(year)
                       const value = cell?.value ?? 0
-                      const bg = cell ? metricColor(value, metric) : '#0f172a'
+                      const bg = cell ? metricColor(value, metric) : 'var(--color-background-elevated)'
                       const textC = cell ? metricTextColor(value, metric) : 'transparent'
                       return (
                         <div

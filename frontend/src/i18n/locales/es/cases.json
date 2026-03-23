@@ -73,7 +73,9 @@
     "compranetPartial": "COMPRANET parcial",
     "compranetInvisible": "Sin COMPRANET",
     "yearSingle": "{{year}}",
-    "contracts": "{{count}} contratos"
+    "contracts": "{{count}} contratos",
+    "contractsLink": "Contratos",
+    "categoriesLink": "Categorías"
   },
   "detail": {
     "backToLibrary": "← Biblioteca de Casos",

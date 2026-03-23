@@ -351,7 +351,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
 
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#1e293b"
+            stroke="var(--color-border)"
             vertical={false}
             opacity={0.6}
           />
@@ -361,8 +361,8 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             type="number"
             domain={[minYear, maxYear]}
             allowDecimals={false}
-            tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
-            axisLine={{ stroke: '#1e293b' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
             tickCount={Math.min(chartData.length, 8)}
           />
@@ -370,7 +370,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           {/* Left Y-axis: high-risk rate % */}
           <YAxis
             yAxisId="left"
-            tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `${v.toFixed(0)}%`}
@@ -382,7 +382,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fill: '#64748b', fontSize: 10, fontFamily: 'var(--font-mono, monospace)' }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => v.toFixed(2)}
@@ -393,7 +393,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           <Tooltip content={<CustomTooltip />} />
 
           <Legend
-            wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-mono, monospace)', color: '#64748b', paddingTop: 8 }}
+            wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)", color: 'var(--color-text-muted)', paddingTop: 8 }}
           />
 
           {/* Scandal reference lines — alternate label position to avoid overlap */}

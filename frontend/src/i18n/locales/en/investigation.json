@@ -268,6 +268,15 @@
     "capture": "Capture Patterns",
     "captureSub": "Institutional control patterns"
   },
+  "search": {
+    "placeholder": "Search by vendor, institution, sector, fraud type..."
+  },
+  "angles": {
+    "bySector": "By Sector",
+    "byAdmin": "By Administration",
+    "byNetwork": "By Network",
+    "byPattern": "By Pattern"
+  },
   "entrySearch": "Search contracts, vendors, or cases...",
   "headerTracking": "ARIA System · Active Investigations · ML-Generated",
   "headerTitle": "The Archive",

@@ -188,6 +188,7 @@
   "chartLegendStdDev": "+/-1 std dev",
   "criticalContractsDetected": "{{num}} critical-risk contracts detected",
   "dashboardLoadError": "Dashboard data failed to load. Some sections may be unavailable.",
+  "lede": "As of {{year}}, RUBLI has analyzed {{contracts}} federal contracts worth {{value}} MXN. Here is what the data shows.",
   "panoramaLabel": "NATIONAL OVERVIEW",
   "ariaTickerLoading": "ARIA pipeline loading...",
   "ariaRisk": "RISK",

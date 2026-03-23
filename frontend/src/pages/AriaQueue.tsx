@@ -11,8 +11,6 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
@@ -70,10 +68,10 @@ const IPS_TEXT_COLOR = (score: number) => {
 }
 
 const TIER_CONFIG = [
-  { tier: 1, label: 'NIVEL 1', name: 'CRITICO',  color: 'border-red-600',    bg: 'bg-red-950/40',    textColor: 'text-red-400',    dotColor: 'bg-red-500',    count: 285,    desc: 'Requieren investigacion inmediata' },
-  { tier: 2, label: 'NIVEL 2', name: 'ALTO',      color: 'border-orange-600', bg: 'bg-orange-950/30', textColor: 'text-orange-400', dotColor: 'bg-orange-500', count: 894,    desc: 'Revision prioritaria' },
-  { tier: 3, label: 'NIVEL 3', name: 'MEDIO',     color: 'border-yellow-600', bg: 'bg-yellow-950/20', textColor: 'text-yellow-400', dotColor: 'bg-yellow-500', count: 5151,   desc: 'Bajo monitoreo activo' },
-  { tier: 4, label: 'NIVEL 4', name: 'BAJO',       color: 'border-blue-800',   bg: 'bg-blue-950/15',   textColor: 'text-blue-400',   dotColor: 'bg-blue-500',   count: 191708, desc: 'Vigilancia pasiva' },
+  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', color: 'border-red-600',    bg: 'bg-red-950/40',    textColor: 'text-red-400',    dotColor: 'bg-red-500',    count: 285,    descKey: 'tier1.description' },
+  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', color: 'border-orange-600', bg: 'bg-orange-950/30', textColor: 'text-orange-400', dotColor: 'bg-orange-500', count: 894,    descKey: 'tier2.description' },
+  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', color: 'border-yellow-600', bg: 'bg-yellow-950/20', textColor: 'text-yellow-400', dotColor: 'bg-yellow-500', count: 5151,   descKey: 'tier3.description' },
+  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', color: 'border-blue-800',   bg: 'bg-blue-950/15',   textColor: 'text-blue-400',   dotColor: 'bg-blue-500',   count: 191708, descKey: 'tier4.description' },
 ] as const
 
 // ============================================================================
@@ -250,6 +248,7 @@ function ReviewPopover({
 // ============================================================================
 
 function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[number]; actualCount?: number }) {
+  const { t } = useTranslation('aria')
   const count = actualCount ?? config.count
   return (
     <div className={cn(
@@ -259,7 +258,7 @@ function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[n
     )}>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">
-          {config.label}
+          {t(config.labelKey)}
         </span>
         {config.tier === 1 && (
           <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.dotColor)} />
@@ -269,10 +268,10 @@ function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[n
         {formatNumber(count)}
       </div>
       <div className="text-[10px] tracking-[0.15em] uppercase font-semibold text-text-muted mt-0.5">
-        {config.name}
+        {t(config.nameKey)}
       </div>
       <div className="text-xs text-text-muted/70 mt-1.5">
-        {config.desc}
+        {t(config.descKey)}
       </div>
     </div>
   )
@@ -320,7 +319,7 @@ function IntelPatternCard({
         {formatNumber(count)}
       </div>
       <div className="text-[10px] text-text-muted uppercase tracking-wider">
-        proveedores
+        {t('leads.vendorCount')}
       </div>
     </button>
   )
@@ -351,7 +350,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             <div className="flex-1 min-w-0">
               <div className="flex flex-wrap items-center gap-1.5 mb-1">
                 <span className="text-[10px] font-mono tracking-wider text-red-400/80 font-bold">
-                  OBJETIVO #{index + 1}
+                  {t('tier1.objective', { number: index + 1 })}
                 </span>
                 <PatternPill pattern={item.primary_pattern ?? null} />
                 {item.new_vendor_risk && <NewVendorBadge />}
@@ -587,13 +586,14 @@ function LeadRow({
 // ============================================================================
 
 export default function AriaPage() {
-  const { t } = useTranslation('aria')
+  const { t, i18n } = useTranslation('aria')
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<number | null>(null)
+  const [collapsedTiers, setCollapsedTiers] = useState<Set<number>>(new Set([3, 4]))
 
   const PER_PAGE = 50
 
@@ -631,98 +631,60 @@ export default function AriaPage() {
 
   const patternCounts = stats?.pattern_counts ?? {}
   const efosCount = stats?.external_counts?.efos ?? 0
-  const sfpCount = stats?.external_counts?.sfp ?? 0
   const elevatedValue = stats?.elevated_value_mxn ?? 0
 
   const tier1Items: AriaQueueItem[] = tier1Data?.data ?? []
   const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
 
+  const locale = i18n.language === 'es' ? 'es-MX' : 'en-US'
   const lastRunAt = stats?.latest_run?.completed_at
-    ? new Date(stats.latest_run.completed_at).toLocaleDateString('es-MX', {
+    ? new Intl.DateTimeFormat(locale, {
         month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit',
-      })
+      }).format(new Date(stats.latest_run.completed_at))
     : null
 
-  const todayStr = new Date().toLocaleDateString('es-MX', {
+  const todayStr = new Intl.DateTimeFormat(locale, {
     day: 'numeric', month: 'long', year: 'numeric',
-  })
+  }).format(new Date())
 
   return (
     <div className="min-h-screen bg-background">
 
       {/* ================================================================== */}
-      {/* WAR ROOM HEADER                                                     */}
+      {/* COMPACT STATUS BAR                                                  */}
       {/* ================================================================== */}
-      <div className="border-b border-border">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-mono">
-              {t('header.systemLabel')}
-            </div>
-            <div className="flex items-center gap-1.5">
+      <div className="px-6 py-3 border-b border-border flex items-center justify-between">
+        <div>
+          <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted font-mono">
+            ARIA SYSTEM &middot; {t('header.statusActive')}
+          </span>
+          <div className="flex items-center gap-3 mt-0.5">
+            <span className="text-sm font-semibold text-text-primary">{t('header.title')}</span>
+            <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-live animate-pulse" />
-              <span className="text-[10px] text-signal-live font-mono font-bold">{t('header.live')}</span>
-            </div>
+              <span className="text-[11px] text-text-muted">
+                {tier1Data?.pagination?.total ?? 285} {t('header.t1Require')}
+              </span>
+            </span>
           </div>
-          <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
-            {t('header.title')}
-          </h1>
-          <p className="text-sm text-text-secondary max-w-2xl">
-            {t('header.subtitle', { count: stats?.queue_total ?? 198038 })}
-          </p>
+        </div>
+        <div className="text-[10px] text-text-muted font-mono">
+          {t('header.lastUpdated')}: {lastRunAt ?? todayStr}
         </div>
       </div>
 
+      {/* ================================================================== */}
+      {/* COMPACT STATS PILL ROW                                              */}
+      {/* ================================================================== */}
+      <div className="flex flex-wrap gap-4 px-6 py-2 bg-background-card/50 border-b border-border text-[11px] text-text-muted">
+        <span><strong className="text-text-primary font-mono">{formatNumber(stats?.queue_total ?? 198038)}</strong> {t('stats.vendorsUnderSurveillance')}</span>
+        <span>&middot;</span>
+        <span><strong className="text-text-primary font-mono">{formatCompactMXN(elevatedValue)}</strong> {t('stats.valueAtRisk')}</span>
+        <span>&middot;</span>
+        <span><strong className="text-red-400 font-mono">{formatNumber(efosCount)}</strong> {t('stats.onEfos')}</span>
+      </div>
+
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
-
-        <EditorialHeadline
-          section={t('editorial.section')}
-          headline={t('editorial.headline')}
-          subtitle={t('editorial.subtitle')}
-        />
-
-        {/* ================================================================ */}
-        {/* ESTADO DE SITUACION — briefing band                              */}
-        {/* ================================================================ */}
-        <section className="border-l-4 border-red-600 bg-background-elevated/30 rounded-r-lg p-5">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="text-[10px] tracking-[0.3em] uppercase font-mono text-red-400 font-bold">
-              {t('situationReport')}
-            </span>
-            <span className="text-[10px] text-text-muted font-mono">
-              &middot; {todayStr}
-            </span>
-            {lastRunAt && (
-              <span className="text-[10px] text-text-muted font-mono flex items-center gap-1">
-                <FileText className="h-3 w-3" />
-                {t('stats.lastRun', { date: lastRunAt })}
-              </span>
-            )}
-          </div>
-          <div className="flex flex-wrap gap-8">
-            <HallazgoStat
-              value={formatNumber(stats?.queue_total ?? 198038)}
-              label={t('stats.vendorsSurveillance')}
-              color="border-red-500"
-            />
-            <HallazgoStat
-              value={formatCompactMXN(elevatedValue)}
-              label={t('stats.elevatedValueRisk')}
-              color="border-orange-500"
-            />
-            <HallazgoStat
-              value={formatNumber(efosCount)}
-              label={t('stats.efosOnList')}
-              annotation={t('stats.efosAnnotation', { count: sfpCount })}
-              color="border-yellow-500"
-            />
-            <HallazgoStat
-              value={formatNumber(stats?.new_vendor_count ?? 0)}
-              label={t('stats.newVendorRisk')}
-              color="border-purple-500"
-            />
-          </div>
-        </section>
 
         {/* Data source attribution */}
         <div className="flex flex-wrap items-center gap-3">
@@ -736,60 +698,14 @@ export default function AriaPage() {
         </div>
 
         {/* ================================================================ */}
-        {/* THREAT LEVEL INDICATORS                                          */}
-        {/* ================================================================ */}
-        <section>
-          <div className="flex items-center gap-2 mb-4">
-            <Crosshair className="h-4 w-4 text-red-400" />
-            <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-              {t('threatLevels')}
-            </h2>
-          </div>
-
-          {statsLoading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-              {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-28 rounded-lg" />
-              ))}
-            </div>
-          ) : (
-            <motion.div
-              variants={staggerContainer}
-              initial="hidden"
-              animate="show"
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4"
-            >
-              {TIER_CONFIG.map((cfg) => (
-                <motion.div key={cfg.tier} variants={staggerItem}>
-                  <ThreatLevelCard config={cfg} />
-                </motion.div>
-              ))}
-            </motion.div>
-          )}
-        </section>
-
-        {/* ── Pipeline Not Run Yet ── */}
-        {!statsLoading && !lastRunAt && (stats?.queue_total ?? 0) === 0 && (
-          <Card className="border border-border bg-background-card">
-            <CardContent className="p-10 text-center text-text-muted">
-              <Shield className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="text-sm font-medium text-text-secondary mb-1">{t('errors.notRun')}</p>
-              <p className="text-xs">
-                {t('errors.notRunDesc')}
-              </p>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* ================================================================ */}
-        {/* INTEL PATTERNS — classification grid                             */}
+        {/* INTEL PATTERNS — classification grid (FIRST interactive element) */}
         {/* ================================================================ */}
         {Object.keys(patternCounts).length > 0 && (
           <section>
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="h-4 w-4 text-orange-400" />
               <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-                Patrones de Riesgo Detectados
+                {t('patternSection.title')}
               </h2>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
@@ -834,6 +750,97 @@ export default function AriaPage() {
         )}
 
         {/* ================================================================ */}
+        {/* THREAT LEVEL INDICATORS — T1/T2 expanded, T3/T4 collapsed        */}
+        {/* ================================================================ */}
+        <section>
+          <div className="flex items-center gap-2 mb-4">
+            <Crosshair className="h-4 w-4 text-red-400" />
+            <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
+              {t('threatLevels')}
+            </h2>
+          </div>
+
+          {statsLoading ? (
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {Array.from({ length: 4 }).map((_, i) => (
+                <Skeleton key={i} className="h-28 rounded-lg" />
+              ))}
+            </div>
+          ) : (
+            <motion.div
+              variants={staggerContainer}
+              initial="hidden"
+              animate="show"
+              className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+            >
+              {TIER_CONFIG.map((cfg) => {
+                const isCollapsed = collapsedTiers.has(cfg.tier)
+                return (
+                  <motion.div key={cfg.tier} variants={staggerItem}>
+                    {isCollapsed ? (
+                      <button
+                        onClick={() => {
+                          const next = new Set(collapsedTiers)
+                          next.delete(cfg.tier)
+                          setCollapsedTiers(next)
+                        }}
+                        className={cn(
+                          'w-full text-left relative border-l-4 rounded-r-lg p-3 opacity-60 hover:opacity-100 transition-opacity',
+                          cfg.color,
+                          cfg.bg,
+                        )}
+                      >
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">{t(cfg.labelKey)}</span>
+                            <div className={cn('text-lg font-bold font-mono', cfg.textColor)}>
+                              {formatNumber(cfg.count)}
+                            </div>
+                          </div>
+                          <ChevronDown className="h-4 w-4 text-text-muted" />
+                        </div>
+                        <div className="text-[10px] text-text-muted/60 mt-1">
+                          {t('tierCollapse.show', { count: cfg.count })}
+                        </div>
+                      </button>
+                    ) : (
+                      <div className="relative">
+                        <ThreatLevelCard config={cfg} />
+                        {cfg.tier >= 3 && (
+                          <button
+                            onClick={() => {
+                              const next = new Set(collapsedTiers)
+                              next.add(cfg.tier)
+                              setCollapsedTiers(next)
+                            }}
+                            className="absolute top-2 right-2 text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+                          >
+                            <ChevronUp className="h-3.5 w-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    )}
+                  </motion.div>
+                )
+              })}
+            </motion.div>
+          )}
+        </section>
+
+        {/* ── Pipeline Not Run Yet ── */}
+        {!statsLoading && !lastRunAt && (stats?.queue_total ?? 0) === 0 && (
+          <Card className="border border-border bg-background-card">
+            <CardContent className="p-10 text-center text-text-muted">
+              <Shield className="h-10 w-10 mx-auto mb-3 opacity-20" />
+              <p className="text-sm font-medium text-text-secondary mb-1">{t('errors.notRun')}</p>
+              <p className="text-xs">
+                {t('errors.notRunDesc')}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* ================================================================ */}
         {/* TIER 1 SPOTLIGHT — critical targets                              */}
         {/* ================================================================ */}
         {!patternFilter && !newVendorOnly && !search && (
@@ -843,7 +850,7 @@ export default function AriaPage() {
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="h-4 w-4 text-red-400" />
                   <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-red-400 font-bold">
-                    Objetivos Prioritarios — Tier 1
+                    {t('tierSection.objectives')}
                   </h2>
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 </div>
@@ -890,7 +897,7 @@ export default function AriaPage() {
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-4 w-4 text-text-muted" />
                 <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-                  {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : 'Cola de Investigacion'}
+                  {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : t('queueSection.title')}
                 </h2>
               </div>
               {totalLeads > 0 && (
@@ -912,7 +919,7 @@ export default function AriaPage() {
 
           {/* Review status filter chips */}
           <div className="flex flex-wrap items-center gap-2 mb-3">
-            <span className="text-[10px] uppercase tracking-wider font-mono text-text-muted">Revisión:</span>
+            <span className="text-[10px] uppercase tracking-wider font-mono text-text-muted">{t('table.review')}</span>
             {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
               const meta = s ? REVIEW_STATUS_META[s] : null
               const isActive = reviewStatusFilter === s
@@ -929,7 +936,7 @@ export default function AriaPage() {
                       : 'bg-background-elevated text-text-muted border-border hover:border-accent/40'
                   )}
                 >
-                  {s ? REVIEW_STATUS_META[s].label : 'Todos'}
+                  {s ? t('status.' + s) : t('reviewFilter.all')}
                 </button>
               )
             })}

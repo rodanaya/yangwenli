@@ -268,6 +268,15 @@
     "capture": "Patrones de Captura",
     "captureSub": "Patrones de control institucional"
   },
+  "search": {
+    "placeholder": "Buscar por proveedor, institucion, sector, tipo de fraude..."
+  },
+  "angles": {
+    "bySector": "Por Sector",
+    "byAdmin": "Por Administracion",
+    "byNetwork": "Por Red",
+    "byPattern": "Por Patron"
+  },
   "entrySearch": "Buscar contratos, proveedores o casos...",
   "headerTracking": "Sistema ARIA · Investigaciones Activas · Generado por ML",
   "headerTitle": "El Archivo",

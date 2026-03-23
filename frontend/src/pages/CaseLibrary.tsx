@@ -26,12 +26,7 @@ const SEVERITY_COLORS: Record<number, string> = {
   4: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/20',
 }
 
-const SEVERITY_LABELS: Record<number, string> = {
-  1: 'BAJO',
-  2: 'MODERADO',
-  3: 'ALTO',
-  4: 'CRITICO',
-}
+// Severity labels are resolved via t('severity.N') in CaseCard
 
 const LEGAL_STATUS_COLORS: Record<string, string> = {
   impunity: 'border-red-500/50 text-red-400',
@@ -149,7 +144,7 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
           </Badge>
           {/* Severity as damage level */}
           <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
-            {SEVERITY_LABELS[cas.severity] ?? t(`severity.${cas.severity}`)}
+            {t(`severity.${cas.severity}`)}
           </span>
         </div>
 
@@ -215,10 +210,10 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
                 onNavigate(`/contracts?${params}`)
               }}
               className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
-              title="View high-risk contracts in this sector/year"
+              title={t('card.viewDetail')}
             >
               <Search className="h-3 w-3" />
-              Contracts
+              {t('card.contractsLink')}
             </button>
           )}
           {/* View spending categories for this sector */}
@@ -229,10 +224,10 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
                 onNavigate(`/categories?sector_id=${cas.sector_ids[0]}`)
               }}
               className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
-              title="View spending categories for this sector"
+              title={t('card.categoriesLink')}
             >
               <BarChart3 className="h-3 w-3" />
-              Categories
+              {t('card.categoriesLink')}
             </button>
           )}
         </div>

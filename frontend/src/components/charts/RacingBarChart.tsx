@@ -112,7 +112,7 @@ export function RacingBarChart() {
       {/* Header with year + admin badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-4xl font-black tabular-nums text-foreground">{currentYear}</span>
+          <span className="text-4xl font-black tabular-nums text-text-primary">{currentYear}</span>
           <span
             className="text-xs font-semibold px-2 py-1 rounded-full text-white"
             style={{ backgroundColor: adminColor }}
@@ -150,7 +150,7 @@ export function RacingBarChart() {
                 className="absolute left-0 right-0 flex items-center gap-2"
                 style={{ top: entry.rank * 30, height: 26 }}
               >
-                <span className="text-[10px] text-muted-foreground w-20 shrink-0 text-right truncate pr-1.5">
+                <span className="text-[10px] text-text-muted w-20 shrink-0 text-right truncate pr-1.5">
                   {entry.name}
                 </span>
                 <div className="flex-1 relative h-full flex items-center">
@@ -160,7 +160,7 @@ export function RacingBarChart() {
                     animate={{ width: `${Math.max(pct, 2)}%` }}
                     transition={{ type: 'spring', stiffness: 200, damping: 25 }}
                   />
-                  <span className="text-[10px] tabular-nums text-muted-foreground ml-1.5 whitespace-nowrap">
+                  <span className="text-[10px] tabular-nums text-text-muted ml-1.5 whitespace-nowrap">
                     {formatCompactMXN(entry.value)}
                   </span>
                 </div>
@@ -199,7 +199,7 @@ export function RacingBarChart() {
             )
           })}
         </div>
-        <div className="flex justify-between text-[9px] text-muted-foreground">
+        <div className="flex justify-between text-[9px] text-text-muted">
           {ADMINS.map(a => (
             <span key={a.name} style={{ color: a.color }}>{a.name}</span>
           ))}

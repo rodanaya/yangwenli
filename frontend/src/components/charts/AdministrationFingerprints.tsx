@@ -170,10 +170,10 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
       <div className="w-full" style={{ height: 180 }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-            <PolarGrid stroke="rgba(255,255,255,0.08)" />
+            <PolarGrid stroke="var(--color-border)" />
             <PolarAngleAxis
               dataKey="axis"
-              tick={{ fill: 'rgba(255,255,255,0.55)', fontSize: 9, fontFamily: 'monospace' }}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             />
             <Radar
               name={admin.shortName}

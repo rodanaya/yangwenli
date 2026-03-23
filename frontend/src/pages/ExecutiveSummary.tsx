@@ -56,7 +56,7 @@ function CinematicHero() {
       <div
         className="select-none pointer-events-none text-center"
         style={{
-          fontSize: 'clamp(4rem, 15vw, 14rem)',
+          fontSize: 'clamp(2.5rem, 8vw, 6rem)',
           fontWeight: 900,
           lineHeight: 1,
           WebkitTextStroke: '1px rgba(220,38,38,0.3)',
@@ -482,78 +482,66 @@ function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
 
   const bombs = [
     {
+      key: 'highRiskRate',
       value: `${highRiskRate}%`,
       label: t('statBombs.highRiskRate'),
       sub: t('statBombs.highRiskRateSub'),
-      glow: 'rgba(248,113,113,0.3)',
+      context: t('statBombs.highRiskRateContext'),
       color: '#f87171',
     },
     {
+      key: 'highCritical',
       value: highCriticalFormatted,
       label: t('statBombs.highCritical'),
       sub: t('statBombs.highCriticalSub', { pct: highRiskRate }),
-      glow: 'rgba(251,146,60,0.3)',
+      context: t('statBombs.highCriticalContext'),
       color: '#fb923c',
     },
     {
+      key: 'yearsCovered',
       value: '23',
       label: t('statBombs.yearsCovered'),
       sub: t('statBombs.yearsCoveredSub'),
-      glow: 'rgba(6,182,212,0.3)',
+      context: t('statBombs.yearsCoveredContext'),
       color: '#22d3ee',
     },
     {
+      key: 'modelAuc',
       value: '0.840',
       label: t('statBombs.modelAuc'),
       sub: t('statBombs.modelAucSub'),
-      glow: 'rgba(34,197,94,0.3)',
+      context: t('statBombs.modelAucContext'),
       color: '#4ade80',
     },
     {
+      key: 'documentedCases',
       value: '22',
       label: t('statBombs.documentedCases'),
       sub: t('statBombs.documentedCasesSub'),
-      glow: 'rgba(251,191,36,0.3)',
+      context: t('statBombs.documentedCasesContext'),
       color: '#fbbf24',
     },
     {
+      key: 'dualConfirmed',
       value: pyodData ? `${Math.round(pyodData.both_flagged / 1000)}K` : '130K',
       label: t('statBombs.dualConfirmed'),
       sub: t('statBombs.dualConfirmedSub'),
-      glow: 'rgba(139,92,246,0.3)',
+      context: t('statBombs.dualConfirmedContext'),
       color: '#a78bfa',
     },
   ]
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
       {bombs.map((b, i) => (
-        <ScrollReveal key={b.label} delay={i * 80}>
-          <div
-            className="fern-card relative p-3 sm:p-4 text-center overflow-hidden transition-all duration-300"
-            style={{ borderColor: `${b.color}33` }}
-            onMouseEnter={e => (e.currentTarget.style.boxShadow = `0 0 32px 4px ${b.glow}`)}
-            onMouseLeave={e => (e.currentTarget.style.boxShadow = 'none')}
-          >
-            {/* Subtle radial glow background */}
-            <div
-              className="absolute inset-0 opacity-5 pointer-events-none"
-              style={{ background: `radial-gradient(ellipse at 50% 50%, ${b.color}, transparent 70%)` }}
-            />
-            <div
-              className="stat-bomb-value stat-hero text-white relative z-10 whitespace-nowrap"
-              style={{
-                textShadow: `0 0 40px ${b.glow}`,
-                fontSize: b.value.length > 5 ? '1.6rem' : b.value.length > 3 ? '2rem' : '2.5rem',
-              }}
-            >
-              {b.value}
+        <ScrollReveal key={b.key} delay={i * 80}>
+          <div className="flex items-start gap-4 p-4 bg-background-card border border-border rounded-lg">
+            <div className="flex-shrink-0">
+              <div className="text-2xl font-mono font-bold text-text-primary">{b.value}</div>
+              <div className="text-[10px] uppercase tracking-wider text-text-muted mt-0.5">{b.label}</div>
             </div>
-            <div className="editorial-label mt-1.5 relative z-10 leading-tight">
-              {b.label}
-            </div>
-            <div className="text-[10px] mt-0.5 font-mono relative z-10 leading-tight" style={{ color: `${b.color}99` }}>
-              {b.sub}
+            <div className="text-xs text-text-muted leading-relaxed border-l border-border pl-4">
+              {b.context}
             </div>
           </div>
         </ScrollReveal>

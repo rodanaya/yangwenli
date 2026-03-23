@@ -132,12 +132,12 @@ const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }>
   'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.75)',      border: 'rgba(153,27,27,0.40)' },
 }
 
-// Risk level visual config
+// Risk level visual config — labels resolved via t('riskLevelCritical') etc.
 const RISK_LEVEL_CONFIG = {
-  critical: { color: '#dc2626', label: 'Crítico' },
-  high:     { color: '#ea580c', label: 'Alto' },
-  medium:   { color: '#eab308', label: 'Medio' },
-  low:      { color: '#22c55e', label: 'Bajo' },
+  critical: { color: '#dc2626', labelKey: 'riskLevelCritical' },
+  high:     { color: '#ea580c', labelKey: 'riskLevelHigh' },
+  medium:   { color: '#eab308', labelKey: 'riskLevelMedium' },
+  low:      { color: '#22c55e', labelKey: 'riskLevelLow' },
 } as const
 
 const LIGHT_COLORS = {
@@ -297,6 +297,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 // Stacked horizontal bar: risk level distribution by MXN value
 function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistribution; compact?: boolean }) {
+  const { t } = useTranslation('reportcard')
   if (!dist) return null
   const total = (dist.critical?.value_mxn ?? 0) + (dist.high?.value_mxn ?? 0) + (dist.medium?.value_mxn ?? 0) + (dist.low?.value_mxn ?? 0)
   if (total === 0) return null
@@ -310,7 +311,7 @@ function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistributio
     <div className={compact ? '' : 'mt-3'}>
       {!compact && (
         <p className="text-[10px] font-medium uppercase tracking-wide mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
-          Distribución de riesgo (valor MXN)
+          {t('riskDistribution')}
         </p>
       )}
       <div className={cn('flex rounded-full overflow-hidden gap-[1px]', compact ? 'h-2' : 'h-3')}>
@@ -322,7 +323,7 @@ function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistributio
             <div
               key={key}
               style={{ width: `${pct}%`, backgroundColor: cfg.color, minWidth: '3px' }}
-              title={`${cfg.label}: ${pct.toFixed(1)}% del valor`}
+              title={`${t(cfg.labelKey)}: ${pct.toFixed(1)}% ${t('ofValue')}`}
             />
           )
         })}
@@ -335,7 +336,7 @@ function RiskDistributionBar({ dist, compact = false }: { dist?: RiskDistributio
             return (
               <span key={key} className="flex items-center gap-1 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
                 <span className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: cfg.color }} />
-                <span style={{ color: cfg.color }}>{cfg.label}</span>
+                <span style={{ color: cfg.color }}>{t(cfg.labelKey)}</span>
                 {entry.value_pct.toFixed(0)}%
               </span>
             )
@@ -367,8 +368,8 @@ function NationalGradeHero({ national }: { national: PHINational }) {
 
   // Typewriter summary
   const summaryText = compositeScore != null
-    ? `Calificacion Nacional: ${national.grade} (${compositeScore.toFixed(1)}/100) -- ${national.greens} indicadores bien, ${national.yellows} en alerta, ${national.reds} deficientes.`
-    : `Calificacion Nacional: ${national.grade} -- ${national.greens} indicadores bien, ${national.yellows} en alerta, ${national.reds} deficientes.`
+    ? t('typewriterSummary', { grade: national.grade, score: compositeScore.toFixed(1), greens: national.greens, yellows: national.yellows, reds: national.reds })
+    : t('typewriterSummaryNoScore', { grade: national.grade, greens: national.greens, yellows: national.yellows, reds: national.reds })
   const { displayed: typedSummary, done: typingDone } = useTypewriter(summaryText, 30)
 
   return (
@@ -673,14 +674,14 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
             className="text-xs font-medium transition-colors"
             style={{ color: '#c41e3a' }}
           >
-            {expanded ? 'Ocultar detalle' : 'Ver detalle'} {expanded ? '\u2191' : '\u2192'}
+            {expanded ? t('hideDetail') : t('viewDetail')} {expanded ? '\u2191' : '\u2192'}
           </button>
           <button
             onClick={() => navigate(`/sectors/${sector.sector_id}`)}
             className="text-xs transition-colors"
             style={{ color: 'var(--color-text-muted)' }}
           >
-            Ir al sector
+            {t('goToSector')}
           </button>
         </div>
       </div>
@@ -956,6 +957,7 @@ function AgreementSection({ t }: { t: (k: string, o?: Record<string, unknown>) =
 // ---------------------------------------------------------------------------
 
 function MethodologyFooter({ sources }: { sources: string[] }) {
+  const { t } = useTranslation('reportcard')
   const navigate = useNavigate()
 
   return (
@@ -965,26 +967,23 @@ function MethodologyFooter({ sources }: { sources: string[] }) {
         style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
       >
         <h3 className="text-sm font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
-          Nota metodol&oacute;gica
+          {t('methodologyNoteTitle')}
         </h3>
         <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--color-text-secondary)' }}>
-          Este reporte eval&uacute;a la salud de los procesos de contrataci&oacute;n p&uacute;blica, no determina
-          corrupci&oacute;n. Las calificaciones se basan en indicadores como tasa de competencia, licitaciones con un
-          solo postor, y d&iacute;as de publicaci&oacute;n. Los benchmarks provienen de est&aacute;ndares
-          internacionales (OECD, Banco Mundial, FMI).
+          {t('methodologyNoteBody')}
         </p>
         <button
           onClick={() => navigate('/methodology')}
           className="text-xs font-medium transition-colors"
           style={{ color: '#c41e3a' }}
         >
-          Ver metodolog&iacute;a completa &rarr;
+          {t('viewFullMethodology')}
         </button>
 
         {sources.length > 0 && (
           <div className="mt-4 pt-3" style={{ borderTop: '1px solid var(--color-border)' }}>
             <p className="text-[10px] font-medium uppercase tracking-wide mb-1.5" style={{ color: 'var(--color-text-muted)' }}>
-              Fuentes
+              {t('sourcesLabel')}
             </p>
             <ul className="text-[11px] space-y-0.5" style={{ color: 'var(--color-text-muted)' }}>
               {sources.map((s) => (
@@ -1230,11 +1229,11 @@ const SECTORS_ES: Record<string, string> = {
 }
 
 const INST_PILLARS = [
-  { key: 'pillar_openness' as const, label: 'Apertura', max: 20 },
-  { key: 'pillar_price' as const, label: 'Precios', max: 20 },
-  { key: 'pillar_vendors' as const, label: 'Proveedores', max: 20 },
-  { key: 'pillar_process' as const, label: 'Proceso', max: 20 },
-  { key: 'pillar_external' as const, label: 'Externo', max: 20 },
+  { key: 'pillar_openness' as const, labelKey: 'pillarOpenness', max: 20 },
+  { key: 'pillar_price' as const, labelKey: 'pillarPrice', max: 20 },
+  { key: 'pillar_vendors' as const, labelKey: 'pillarVendors', max: 20 },
+  { key: 'pillar_process' as const, labelKey: 'pillarProcess', max: 20 },
+  { key: 'pillar_external' as const, labelKey: 'pillarExternal', max: 20 },
 ]
 
 // InstitutionTbody — wraps tbody, triggers row stagger animation on scroll
@@ -1274,6 +1273,7 @@ const DOT_GRADE_COLORS: Record<string, string> = {
 }
 
 function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
+  const { t } = useTranslation('reportcard')
   const containerRef = useRef<HTMLDivElement>(null)
   const [containerWidth, setContainerWidth] = useState(0)
   const [tooltip, setTooltip] = useState<DotTooltipState | null>(null)
@@ -1344,7 +1344,7 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
           <h3 className="text-sm font-semibold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-            Ranking de Instituciones
+            {t('rankingInstitutionsShort')}
           </h3>
           <span
             className="text-[10px] font-bold px-2 py-0.5 rounded-full"
@@ -1394,7 +1394,7 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
               className="dot-scale-dot absolute cursor-pointer"
               role="button"
               tabIndex={0}
-              aria-label={`${inst.institution_name}: ${inst.total_score} puntos, grado ${inst.grade}`}
+              aria-label={`${inst.institution_name}: ${inst.total_score} ${t('points')}, ${t('gradeWord')} ${inst.grade}`}
               style={{
                 left: x,
                 top: row * ROW_HEIGHT,
@@ -1433,10 +1433,10 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
           style={{ top: AXIS_TOP + 10 }}
         >
           <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
-            Mas Riesgo
+            {t('moreRisk')}
           </span>
           <span className="text-[10px] font-medium" style={{ color: 'var(--color-text-muted)' }}>
-            Mas Transparente
+            {t('moreTransparent')}
           </span>
         </div>
 
@@ -1488,6 +1488,7 @@ function InstitutionDotScale({ items }: { items: InstitutionScorecardItem[] }) {
 }
 
 function InstitutionScorecardsTab() {
+  const { t } = useTranslation('reportcard')
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState('total_score')
   const [order, setOrder] = useState<'asc' | 'desc'>('desc')
@@ -1549,17 +1550,17 @@ function InstitutionScorecardsTab() {
               <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.institutions_scored.toLocaleString()}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Instituciones evaluadas</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('institutionsEvaluated')}</p>
             </div>
             <div>
               <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.institution_avg_score}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Puntuación media</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('averageScore')}</p>
             </div>
             <div className="flex-1 min-w-[200px]">
               <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                Distribución de calificaciones
+                {t('gradeDistribution')}
               </p>
               <GradeDistBar
                 distribution={summary.institution_grade_distribution}
@@ -1576,7 +1577,7 @@ function InstitutionScorecardsTab() {
           type="text"
           value={searchInput}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Buscar institución..."
+          placeholder={t('searchInstitution')}
           className="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px]"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         />
@@ -1586,7 +1587,7 @@ function InstitutionScorecardsTab() {
           className="border rounded-lg px-3 py-2 text-sm"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
-          <option value="">Todas las calificaciones</option>
+          <option value="">{t('allGrades')}</option>
           {GRADE10_ORDER_KEYS.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
         <select
@@ -1595,7 +1596,7 @@ function InstitutionScorecardsTab() {
           className="border rounded-lg px-3 py-2 text-sm"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
-          <option value="">Todos los sectores</option>
+          <option value="">{t('allSectors')}</option>
           {Object.entries(SECTORS_ES).map(([k, v]) => <option key={k} value={k}>{v}</option>)}
         </select>
       </div>
@@ -1613,20 +1614,20 @@ function InstitutionScorecardsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}>
-                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--color-text-secondary)' }}>Institución</th>
+                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('institution')}</th>
                 <th
                   className="px-3 py-3 text-center font-medium cursor-pointer whitespace-nowrap"
                   style={{ color: 'var(--color-text-secondary)' }}
                   onClick={() => handleSort('total_score')}
                 >
-                  Puntos <SortIcon col="total_score" />
+                  Pts <SortIcon col="total_score" />
                 </th>
-                <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>Grado</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Apert.</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Precio</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Proveed.</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Proceso</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Externo</th>
+                <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('grade')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarOpenness')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarPrice')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarVendors')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarProcess')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarExternal')}</th>
                 <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Percentil</th>
               </tr>
             </thead>
@@ -1698,7 +1699,7 @@ function InstitutionScorecardsTab() {
                             {INST_PILLARS.map((p) => (
                               <PillarBar
                                 key={p.key}
-                                label={p.label}
+                                label={t(p.labelKey)}
                                 score={inst[p.key]}
                                 maxScore={p.max}
                                 color={c.bar}
@@ -1707,7 +1708,7 @@ function InstitutionScorecardsTab() {
                           </div>
                           {inst.top_risk_driver && (
                             <p className="text-xs mt-3" style={{ color: '#c41e3a' }}>
-                              ⚠ Principal factor de riesgo: <strong>{inst.top_risk_driver}</strong>
+                              ⚠ {t('topRiskDriver')}: <strong>{inst.top_risk_driver}</strong>
                             </p>
                           )}
                         </td>
@@ -1727,7 +1728,7 @@ function InstitutionScorecardsTab() {
             style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}
           >
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {total.toLocaleString()} instituciones · página {page} de {totalPages}
+              {total.toLocaleString()} {t('institutionsCount')} · {t('pageOf', { page, total: totalPages })}
             </span>
             <div className="flex gap-1">
               <button
@@ -1736,7 +1737,7 @@ function InstitutionScorecardsTab() {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border transition-colors"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
-                ← Anterior
+                ← {t('previous')}
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
@@ -1744,7 +1745,7 @@ function InstitutionScorecardsTab() {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border transition-colors"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
-                Siguiente →
+                {t('next')} →
               </button>
             </div>
           </div>
@@ -1781,14 +1782,15 @@ function MiniBar({ score, max }: { score: number; max: number }) {
 // ---------------------------------------------------------------------------
 
 const VENDOR_PILLARS = [
-  { key: 'pillar_risk_signal' as const, label: 'Señal de Riesgo', max: 25 },
-  { key: 'pillar_conduct' as const, label: 'Conducta', max: 20 },
-  { key: 'pillar_spread' as const, label: 'Alcance', max: 20 },
-  { key: 'pillar_behavior' as const, label: 'Patrones', max: 20 },
-  { key: 'pillar_flags' as const, label: 'Banderas Ext.', max: 15 },
+  { key: 'pillar_risk_signal' as const, labelKey: 'pillarRiskSignal', max: 25 },
+  { key: 'pillar_conduct' as const, labelKey: 'pillarConduct', max: 20 },
+  { key: 'pillar_spread' as const, labelKey: 'pillarSpread', max: 20 },
+  { key: 'pillar_behavior' as const, labelKey: 'pillarBehavior', max: 20 },
+  { key: 'pillar_flags' as const, labelKey: 'pillarFlags', max: 15 },
 ]
 
 function VendorScorecardsTab() {
+  const { t } = useTranslation('reportcard')
   const [page, setPage] = useState(1)
   const [sortBy, setSortBy] = useState('total_score')
   const [order, setOrder] = useState<'asc' | 'desc'>('asc')  // asc = cleanest first by default
@@ -1848,17 +1850,17 @@ function VendorScorecardsTab() {
               <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.vendors_scored.toLocaleString()}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Proveedores evaluados</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('vendorsEvaluated')}</p>
             </div>
             <div>
               <p className="text-3xl font-bold" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
                 {summary.vendor_avg_score}
               </p>
-              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>Puntuación media</p>
+              <p className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{t('averageScore')}</p>
             </div>
             <div className="flex-1 min-w-[200px]">
               <p className="text-xs font-medium uppercase tracking-wide mb-2" style={{ color: 'var(--color-text-muted)' }}>
-                Distribución de calificaciones
+                {t('gradeDistribution')}
               </p>
               <GradeDistBar
                 distribution={summary.vendor_grade_distribution}
@@ -1876,10 +1878,7 @@ function VendorScorecardsTab() {
       >
         <span className="mt-0.5 text-base">ℹ</span>
         <span>
-          <strong style={{ color: 'var(--color-text-primary)' }}>Nota:</strong> Puntuación alta = proveedor limpio.
-          Ordenado por puntuación ascendente para mostrar primero los proveedores de mayor riesgo.
-          5 pilares: señal de riesgo ML (25pts), conducta vs sector (20pts), diversidad institucional (20pts),
-          patrones de contratación (20pts), banderas externas (15pts).
+          <strong style={{ color: 'var(--color-text-primary)' }}>{t('vendorNoteTitle')}</strong> {t('vendorNoteBody')}
         </span>
       </div>
 
@@ -1889,7 +1888,7 @@ function VendorScorecardsTab() {
           type="text"
           value={searchInput}
           onChange={(e) => handleSearch(e.target.value)}
-          placeholder="Buscar proveedor..."
+          placeholder={t('searchVendor')}
           className="border rounded-lg px-3 py-2 text-sm flex-1 min-w-[180px]"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         />
@@ -1899,7 +1898,7 @@ function VendorScorecardsTab() {
           className="border rounded-lg px-3 py-2 text-sm"
           style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-primary)', backgroundColor: 'var(--color-background-elevated)' }}
         >
-          <option value="">Todas las calificaciones</option>
+          <option value="">{t('allGrades')}</option>
           {GRADE10_ORDER_KEYS.map(g => <option key={g} value={g}>{g}</option>)}
         </select>
         <div className="flex gap-1">
@@ -1916,7 +1915,7 @@ function VendorScorecardsTab() {
               color: sortBy === 'total_score' && order === 'asc' ? '#fff' : 'var(--color-text-secondary)',
             }}
           >
-            Mayor riesgo primero
+            {t('highestRiskFirst')}
           </button>
           <button
             onClick={() => { setSortBy('total_score'); setOrder('desc'); setPage(1) }}
@@ -1927,7 +1926,7 @@ function VendorScorecardsTab() {
               color: sortBy === 'total_score' && order === 'desc' ? '#fff' : 'var(--color-text-secondary)',
             }}
           >
-            Más limpio primero
+            {t('cleanestFirst')}
           </button>
         </div>
       </div>
@@ -1942,7 +1941,7 @@ function VendorScorecardsTab() {
           <table className="w-full text-sm">
             <thead>
               <tr style={{ borderBottom: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}>
-                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--color-text-secondary)' }}>Proveedor</th>
+                <th className="px-4 py-3 text-left font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('vendor')}</th>
                 <th
                   className="px-3 py-3 text-center font-medium cursor-pointer whitespace-nowrap"
                   style={{ color: 'var(--color-text-secondary)' }}
@@ -1950,13 +1949,13 @@ function VendorScorecardsTab() {
                 >
                   Pts <SortIcon col="total_score" />
                 </th>
-                <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>Grado</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Riesgo</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Conducta</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Alcance</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Patrones</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Banderas</th>
-                <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Percentil</th>
+                <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('grade')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarRiskSignal')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarConduct')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarSpread')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarBehavior')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarFlags')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Percentile</th>
               </tr>
             </thead>
             <tbody>
@@ -2016,7 +2015,7 @@ function VendorScorecardsTab() {
                             {VENDOR_PILLARS.map((p) => (
                               <PillarBar
                                 key={p.key}
-                                label={p.label}
+                                label={t(p.labelKey)}
                                 score={vendor[p.key]}
                                 maxScore={p.max}
                                 color={c.bar}
@@ -2025,7 +2024,7 @@ function VendorScorecardsTab() {
                           </div>
                           {vendor.top_risk_driver && (
                             <p className="text-xs mt-3" style={{ color: '#c41e3a' }}>
-                              ⚠ Principal factor: <strong>{vendor.top_risk_driver}</strong>
+                              ⚠ {t('topFactor')}: <strong>{vendor.top_risk_driver}</strong>
                             </p>
                           )}
                         </td>
@@ -2045,7 +2044,7 @@ function VendorScorecardsTab() {
             style={{ borderTop: '1px solid var(--color-border)', backgroundColor: 'var(--color-background-elevated)' }}
           >
             <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
-              {total.toLocaleString()} proveedores · página {page} de {totalPages}
+              {total.toLocaleString()} {t('vendorsCount')} · {t('pageOf', { page, total: totalPages })}
             </span>
             <div className="flex gap-1">
               <button
@@ -2054,7 +2053,7 @@ function VendorScorecardsTab() {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
-                ← Anterior
+                ← {t('previous')}
               </button>
               <button
                 onClick={() => setPage(p => Math.min(totalPages, p + 1))}
@@ -2062,7 +2061,7 @@ function VendorScorecardsTab() {
                 className="px-3 py-1.5 rounded-lg text-xs font-medium disabled:opacity-40 border"
                 style={{ borderColor: 'var(--color-border)', color: 'var(--color-text-secondary)' }}
               >
-                Siguiente →
+                {t('next')} →
               </button>
             </div>
           </div>
@@ -2077,13 +2076,14 @@ function VendorScorecardsTab() {
 // ---------------------------------------------------------------------------
 
 function GradeScale10() {
+  const { t } = useTranslation('reportcard')
   return (
     <div
       className="border rounded-xl px-5 py-3 mb-8 flex flex-wrap items-center gap-x-4 gap-y-2"
       style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
     >
       <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
-        Escala 0–100
+        {t('scale0to100')}
       </span>
       {GRADE10_ORDER_KEYS.map((g) => {
         const c = GRADE10_COLORS[g]
@@ -2092,10 +2092,10 @@ function GradeScale10() {
           'C+': '50–59', 'C': '40–49', 'D': '30–39', 'D-': '20–29',
           'F': '10–19', 'F-': '0–9',
         }
-        const labels: Record<string, string> = {
-          'S': 'Modelo', 'A': 'Sólido', 'B+': 'Sobresaliente', 'B': 'Adecuado',
-          'C+': 'Atención', 'C': 'Preocupante', 'D': 'Alto Riesgo', 'D-': 'Grave',
-          'F': 'Crítico', 'F-': 'Bandera Roja',
+        const labelKeys: Record<string, string> = {
+          'S': 'gradeLabelSFull', 'A': 'gradeLabelAFull', 'B+': 'gradeLabelBPlusFull', 'B': 'gradeLabelBFull',
+          'C+': 'gradeLabelCPlusFull', 'C': 'gradeLabelCFull', 'D': 'gradeLabelDFull', 'D-': 'gradeLabelDMinusFull',
+          'F': 'gradeLabelFFull', 'F-': 'gradeLabelFMinusFull',
         }
         return (
           <span key={g} className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
@@ -2105,7 +2105,7 @@ function GradeScale10() {
             >
               {g}
             </span>
-            <span>{labels[g]} <span style={{ color: 'var(--color-text-muted)' }}>({ranges[g]})</span></span>
+            <span>{t(labelKeys[g])} <span style={{ color: 'var(--color-text-muted)' }}>({ranges[g]})</span></span>
           </span>
         )
       })}
@@ -2188,10 +2188,10 @@ function PHITab({ t }: { t: (k: string, opts?: Record<string, unknown>) => strin
       <section className="mb-12">
         <SectionLabel>{t('sectorGrades')}</SectionLabel>
         <h2 className="text-editorial-h2 mb-1" style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}>
-          ¿Cómo se desempeña cada sector?
+          {t('howEachSector')}
         </h2>
         <p className="text-sm mb-6" style={{ color: 'var(--color-text-muted)' }}>
-          Haz clic en cualquier tarjeta para ver los indicadores detallados y los puntos de alerta.
+          {t('clickCardDetail')}
         </p>
         <motion.div
           ref={sectorsRef}

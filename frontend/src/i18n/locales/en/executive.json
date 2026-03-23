@@ -387,17 +387,23 @@
 
   "statBombs": {
     "highRiskRate": "High-Risk Rate",
-    "highRiskRateSub": "OECD-calibrated · v6.0",
+    "highRiskRateSub": "OECD-calibrated \u00b7 v6.0",
+    "highRiskRateContext": "Calibrated to OECD 2-15% benchmark. Contracts flagged critical or high risk by a 16-feature per-sector model.",
     "highCritical": "High/Critical Contracts",
     "highCriticalSub": "{{pct}}% of all 3.1M contracts",
+    "highCriticalContext": "Each flagged contract shares statistical patterns with documented corruption cases across 23 years.",
     "yearsCovered": "Years Covered",
-    "yearsCoveredSub": "2002 - 2025 · 3.1M contracts",
+    "yearsCoveredSub": "2002 - 2025 \u00b7 3.1M contracts",
+    "yearsCoveredContext": "Four distinct data structures, from lowest-quality early records to near-complete 2023-2025 filings.",
     "modelAuc": "Model AUC",
-    "modelAucSub": "Vendor-stratified split · v6.4",
+    "modelAucSub": "Vendor-stratified split \u00b7 v6.4",
+    "modelAucContext": "The model correctly ranks a corrupt contract above a clean one 84% of the time on held-out vendors.",
     "documentedCases": "Documented Cases",
     "documentedCasesSub": "Ground truth for corruption detection",
+    "documentedCasesContext": "Spanning ghost companies, bid rigging, overpricing, bribery, and institutional capture across all 12 sectors.",
     "dualConfirmed": "Dual-Confirmed",
-    "dualConfirmedSub": "v6.0 model AND PyOD ML · unsupervised cross-validation"
+    "dualConfirmedSub": "v6.0 model AND PyOD ML \u00b7 unsupervised cross-validation",
+    "dualConfirmedContext": "Contracts flagged by both the supervised risk model and unsupervised anomaly detection independently."
   },
   "funnel": {
     "title": "Risk Stratification — 3.1M Contracts",

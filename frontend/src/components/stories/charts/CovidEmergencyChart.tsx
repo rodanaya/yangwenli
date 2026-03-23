@@ -30,7 +30,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">
         {d.year} {d.covid ? '(COVID-19)' : ''}
       </p>
@@ -48,12 +48,12 @@ export function CovidEmergencyChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Adjudicacion Directa y Licitacion unica durante COVID-19
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <ComposedChart data={data} margin={{ top: 10, right: 30, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <ReferenceArea
             x1="2020"
             x2="2021"
@@ -63,16 +63,16 @@ export function CovidEmergencyChart() {
           />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             yAxisId="left"
             domain={[70, 85]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             label={{
               value: 'DA %',
               angle: -90,
@@ -84,9 +84,9 @@ export function CovidEmergencyChart() {
             yAxisId="right"
             orientation="right"
             domain={[14, 22]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             label={{
               value: 'Licitacion unica %',
               angle: 90,
@@ -98,7 +98,7 @@ export function CovidEmergencyChart() {
           <Legend
             wrapperStyle={{ fontSize: 11 }}
             formatter={(value: string) => (
-              <span style={{ color: '#a1a1aa' }}>{value}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{value}</span>
             )}
           />
           <Area

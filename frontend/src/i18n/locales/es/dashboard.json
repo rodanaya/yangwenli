@@ -188,6 +188,7 @@
   "chartLegendStdDev": "+/-1 desv. est.",
   "criticalContractsDetected": "{{num}} contratos de riesgo critico detectados",
   "dashboardLoadError": "Los datos del panel no se pudieron cargar. Algunas secciones pueden no estar disponibles.",
+  "lede": "Al {{year}}, RUBLI ha analizado {{contracts}} contratos federales por valor de {{value}} MXN. Esto es lo que revelan los datos.",
   "panoramaLabel": "PANORAMA NACIONAL",
   "ariaTickerLoading": "Pipeline ARIA cargando...",
   "ariaRisk": "RIESGO",

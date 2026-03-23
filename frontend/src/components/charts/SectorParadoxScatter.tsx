@@ -93,7 +93,7 @@ function ScatterTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-surface border border-border rounded-lg p-3 shadow-xl text-xs space-y-1 min-w-[180px]">
+    <div className="bg-background-card border border-border rounded-lg p-3 shadow-xl text-xs space-y-1 min-w-[180px]">
       <div className="flex items-center gap-2 mb-1">
         <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: d.color }} />
         <span className="font-semibold text-text-primary capitalize">{d.sector}</span>
@@ -137,22 +137,22 @@ export function SectorParadoxScatter() {
       <div className="relative h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 16, right: 24, bottom: 36, left: 36 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, rgba(255,255,255,0.06))" />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
             <XAxis
               type="number"
               dataKey="directAwardPct"
               name="Direct Award %"
               domain={[25, 100]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: 'var(--color-text-muted, #71717a)' }}
-              axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+              tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+              axisLine={{ stroke: 'var(--color-border)' }}
               tickLine={false}
               label={{
                 value: 'Direct Award Rate (%)',
                 position: 'insideBottom',
                 offset: -20,
                 fontSize: 10,
-                fill: 'var(--color-text-muted, #71717a)',
+                fill: 'var(--color-text-muted)',
               }}
             />
             <YAxis
@@ -161,8 +161,8 @@ export function SectorParadoxScatter() {
               name="High-Risk %"
               domain={[0, 22]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: 'var(--color-text-muted, #71717a)' }}
-              axisLine={{ stroke: 'rgba(255,255,255,0.1)' }}
+              tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
+              axisLine={{ stroke: 'var(--color-border)' }}
               tickLine={false}
               label={{
                 value: 'High-Risk Rate (%)',
@@ -170,7 +170,7 @@ export function SectorParadoxScatter() {
                 position: 'insideLeft',
                 offset: 10,
                 fontSize: 10,
-                fill: 'var(--color-text-muted, #71717a)',
+                fill: 'var(--color-text-muted)',
               }}
             />
             <RechartsTooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />

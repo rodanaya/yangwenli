@@ -1,166 +1,150 @@
+#!/usr/bin/env python3
 """
-Batch WW: GT cases from ARIA T3 queue investigation (Mar 20, 2026)
+GT Mining Batch WW - ARIA T3 investigation (4 vendors)
 
-Vendors investigated:
-  v226303 SOLUCIONES SALUDABLES MTY  -> IMSS capture, 861M, 99.6% DA, 2018-2024
-  v148876 COMERCIALIZADORA LINI      -> IMSS capture ring, 978M, 92% DA IMSS + competitive SEDENA
-  v103293 AIDYCSA                    -> PGR 395M direct award anomaly
-  v208520 CONSORCIO EMPRESARIAL INTERTAMPS -> 226M DA to parastatals
+Investigated 2026-03-20:
+  v226303  SOLUCIONES SALUDABLES MTY              ADD  (P6 IMSS capture, 860M)
+  v148876  COMERCIALIZADORA LINI                  ADD  (P6 IMSS ring, 830M)
+  v103293  AIDYCSA                                ADD  (P3 intermediary, 394.8M)
+  v208520  CONSORCIO EMPRESARIAL INTERTAMPS       ADD  (P3/P2 intermediary, 226M)
+
+Cases added: 4  |  Vendors skipped: 0
 """
-import sqlite3
-import sys
+import sqlite3, sys, os
 
-DB = "D:/Python/yangwenli/backend/RUBLI_NORMALIZED.db"
+sys.stdout.reconfigure(encoding="utf-8")
+
+DB = os.path.join(os.path.dirname(__file__), "..", "RUBLI_NORMALIZED.db")
 
 
 def main():
     conn = sqlite3.connect(DB)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA synchronous=NORMAL")
+    conn.execute("PRAGMA busy_timeout=60000")
 
     max_id = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
-    if max_id < 857:
-        print(f"ABORT: max_id={max_id}, expected >= 857")
-        sys.exit(1)
+    if max_id is None or max_id < 857:
+        print(f"ERROR: max_id={max_id}, expected >= 857. Aborting.")
+        conn.close()
+        return
 
-    c0 = max_id + 1
-    c1 = max_id + 2
-    c2 = max_id + 3
-    c3 = max_id + 4
+    c1 = max_id + 1
+    c2 = max_id + 2
+    c3 = max_id + 3
+    c4 = max_id + 4
 
     print(f"Max GT case id: {max_id}")
-    print(f"Will insert cases {c0}-{c3}")
+    print(f"Inserting cases {c1}-{c4}")
 
     sql_case = (
         "INSERT OR IGNORE INTO ground_truth_cases "
-        "(id, case_id, case_name, case_type, confidence_level, estimated_fraud_mxn, "
-        "year_start, year_end, notes) VALUES (?,?,?,?,?,?,?,?,?)"
+        "(id, case_id, case_name, case_type, year_start, year_end, "
+        "confidence_level, estimated_fraud_mxn, source_news, notes) "
+        "VALUES (?,?,?,?,?,?,?,?,?,?)"
     )
-
-    conn.execute(sql_case, (
-        c0, f"CASE-{c0}",
-        "Soluciones Saludables MTY - IMSS Institutional Capture",
-        "institutional_capture", "medium", 860000000,
-        2018, 2024,
-        "280 contracts exclusively at IMSS, 99.6% direct award (279/280). "
-        "Concentrated in 2022-2024 (271 contracts, 850M MXN). "
-        "Single competitive contract worth 1.2M. Classic P6 capture pattern."
-    ))
-
-    conn.execute(sql_case, (
-        c1, f"CASE-{c1}",
-        "Comercializadora LINI - IMSS Capture Ring Pattern",
-        "institutional_capture", "medium", 830000000,
-        2015, 2025,
-        "4509 contracts at IMSS with 92.5% DA rate (830M MXN). "
-        "Simultaneously wins competitive bids at SEDENA. "
-        "Classic IMSS ring pattern: high DA capture at IMSS while competing legitimately elsewhere. "
-        "DA rate increased from 76% (2019) to 97% (2023-2024), suggesting deepening capture."
-    ))
-
-    conn.execute(sql_case, (
-        c2, f"CASE-{c2}",
-        "AIDYCSA - PGR Anomalous Direct Award",
-        "direct_award_abuse", "medium", 395000000,
-        2015, 2016,
-        "12 total contracts but 99.96% of value (394.8M) from a single PGR direct award in 2016. "
-        "Prior history: only 75K in tiny IMSS/SAT contracts in 2013. "
-        "A vendor with minimal track record receiving a 395M direct award from PGR "
-        "is consistent with shell company or front company pattern (P3 intermediary)."
-    ))
-
-    conn.execute(sql_case, (
-        c3, f"CASE-{c3}",
-        "Consorcio Empresarial Intertamps - Parastatal Direct Awards",
-        "direct_award_abuse", "medium", 226000000,
-        2017, 2018,
-        "4 contracts, 226M MXN, 100% direct award. "
-        "172M to Impresora y Encuadernadora Progreso (government parastatal linked to "
-        "Estafa Maestra irregularities) and 50M to Diconsa. "
-        "Brief 2017-2018 activity window then disappears. "
-        "Pattern consistent with intermediary used for parastatal fund diversion."
-    ))
-
     sql_vendor = (
         "INSERT OR IGNORE INTO ground_truth_vendors "
         "(case_id, vendor_id, vendor_name_source, role, evidence_strength, "
         "match_method, match_confidence, notes) VALUES (?,?,?,?,?,?,?,?)"
     )
 
+    conn.execute(sql_case, (
+        c1, f"CASE-{c1}",
+        "IMSS Medicine DA Capture - Soluciones Saludables MTY",
+        "capture", 2021, 2024, "medium", 850_000_000,
+        "ARIA T3 queue pattern analysis",
+        "SOLUCIONES SALUDABLES MTY S DE RL DE CV: 280 contracts exclusively "
+        "at IMSS, 99.6% DA rate, 860.6M MXN total (2018-2024). Explosive "
+        "growth from 0.2M (2018) to 337M (2022) to 359M (2024). All contracts "
+        "for medicine/health supplies via direct award. 100% institution "
+        "concentration at IMSS. P6 capture flag in ARIA.",
+    ))
     conn.execute(sql_vendor, (
-        c0, 226303, "SOLUCIONES SALUDABLES MTY, S. DE R.L. DE C.V.",
-        "primary", "medium", "aria_queue", 0.9,
-        "IMSS-exclusive vendor, 99.6% DA rate, P6 capture pattern"
+        c1, 226303, "SOLUCIONES SALUDABLES MTY S DE RL DE CV",
+        "primary", "medium", "aria_queue_t3", 0.9,
+        "IMSS-exclusive vendor, 99.6% DA, P6 capture pattern",
     ))
 
+    conn.execute(sql_case, (
+        c2, f"CASE-{c2}",
+        "IMSS Ring Pattern - Comercializadora LINI",
+        "capture", 2017, 2024, "high", 830_000_000,
+        "ARIA T3 queue pattern analysis",
+        "COMERCIALIZADORA LINI SA DE CV: 4561 contracts, 4509 at IMSS (98.9%) "
+        "with 92.5% DA rate, 830M MXN at IMSS. Simultaneously wins competitive "
+        "licitaciones at SEDENA (45 contracts, 147M, 75.6% LP/competitive). "
+        "Classic IMSS ring pattern. P6 capture flag in ARIA.",
+    ))
     conn.execute(sql_vendor, (
-        c1, 148876, "COMERCIALIZADORA LINI SA DE CV",
-        "primary", "medium", "aria_queue", 0.9,
-        "IMSS ring pattern: 92.5% DA at IMSS, competitive at SEDENA"
+        c2, 148876, "COMERCIALIZADORA LINI SA DE CV",
+        "primary", "high", "aria_queue_t3", 0.9,
+        "IMSS ring: 92.5% DA at IMSS, competitive at SEDENA",
     ))
 
+    conn.execute(sql_case, (
+        c3, f"CASE-{c3}",
+        "PGR Direct Award Intermediary - AIDYCSA",
+        "intermediary", 2015, 2016, "medium", 394_800_000,
+        "ARIA T3 queue pattern analysis",
+        "AIDYCSA SA DE CV: 12 contracts total (2013-2016). One massive 394.8M "
+        "MXN direct award at PGR in 2016 = 99.9% of total value. Remaining "
+        "11 contracts at IMSS/SAT total only 0.2M. Small supplier that received "
+        "outsized DA at law enforcement institution. P3 intermediary flag.",
+    ))
     conn.execute(sql_vendor, (
-        c2, 103293, "AIDYCSA SA DE CV",
-        "primary", "medium", "aria_queue", 0.9,
-        "75K vendor that received 395M PGR direct award. P3 intermediary pattern."
+        c3, 103293, "AIDYCSA SA DE CV",
+        "primary", "medium", "aria_queue_t3", 0.9,
+        "75K vendor that received 395M PGR direct award. P3 intermediary.",
     ))
 
-    conn.execute(sql_vendor, (
-        c3, 208520, "CONSORCIO EMPRESARIAL INTERTAMPS S DE RL DE CV",
-        "primary", "medium", "aria_queue", 0.9,
-        "226M in DA to Estafa Maestra-linked parastatal + Diconsa. Brief 2017-2018 window."
+    conn.execute(sql_case, (
+        c4, f"CASE-{c4}",
+        "Parastatal School Supply Intermediary - Consorcio Intertamps",
+        "intermediary", 2017, 2018, "medium", 225_900_000,
+        "ARIA T3 queue pattern analysis",
+        "CONSORCIO EMPRESARIAL INTERTAMPS S DE RL DE CV: 4 contracts, ALL DA, "
+        "225.9M MXN total (2017-2018). School materials (crayons, pencils) via "
+        "100% DA to Impresora y Encuadernadora Progreso (176M) and Diconsa (50M). "
+        "Two-year window then disappeared. P2 ghost 0.65, P3 intermediary.",
     ))
+    conn.execute(sql_vendor, (
+        c4, 208520, "CONSORCIO EMPRESARIAL INTERTAMPS S DE RL DE CV",
+        "primary", "medium", "aria_queue_t3", 0.9,
+        "226M DA to parastatals. Brief 2017-2018 window.",
+    ))
+
+    # Link contracts to GT
+    links = [
+        (c1, 226303, 2021, 2024),
+        (c2, 148876, 2017, 2024),
+        (c3, 103293, 2015, 2016),
+        (c4, 208520, 2017, 2018),
+    ]
+    total_linked = 0
+    for case_id, vendor_id, yr_start, yr_end in links:
+        rows = conn.execute(
+            "SELECT id FROM contracts WHERE vendor_id=? AND contract_year BETWEEN ? AND ?",
+            (vendor_id, yr_start, yr_end),
+        ).fetchall()
+        for (cid,) in rows:
+            conn.execute(
+                "INSERT OR IGNORE INTO ground_truth_contracts (case_id, contract_id) VALUES (?,?)",
+                (case_id, cid),
+            )
+        total_linked += len(rows)
+        print(f"  Case {case_id} (v{vendor_id}): linked {len(rows)} contracts ({yr_start}-{yr_end})")
 
     # ARIA queue updates
-    vendor_ids = [226303, 148876, 103293, 208520]
-    for vid in vendor_ids:
+    SQ = chr(39)
+    for vid in [226303, 148876, 103293, 208520]:
         conn.execute(
-            "UPDATE aria_queue SET in_ground_truth = 1, review_status = 'reviewed', "
-            "reviewer_notes = 'Batch WW - GT case added (Mar 20 2026)' "
-            "WHERE vendor_id = ?",
-            (vid,)
+            f"UPDATE aria_queue SET in_ground_truth=1, review_status={SQ}confirmed{SQ} WHERE vendor_id=?",
+            (vid,),
         )
 
     conn.commit()
-
-    # Verification
-    print()
-    print("--- Verification ---")
-    new_max = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()[0]
-    print(f"New max GT case id: {new_max}")
-
-    for case_id in [c0, c1, c2, c3]:
-        r = conn.execute(
-            "SELECT id, case_name, case_type, confidence_level "
-            "FROM ground_truth_cases WHERE id=?",
-            (case_id,)
-        ).fetchone()
-        if r:
-            print(f"  Case {r[0]}: {r[1]} [{r[2]}, {r[3]}]")
-        else:
-            print(f"  Case {case_id}: NOT FOUND!")
-
-    vc = conn.execute(
-        "SELECT COUNT(*) FROM ground_truth_vendors WHERE case_id IN (?,?,?,?)",
-        (c0, c1, c2, c3)
-    ).fetchone()[0]
-    print(f"Vendors inserted: {vc}")
-
-    for vid in vendor_ids:
-        r = conn.execute(
-            "SELECT in_ground_truth, review_status FROM aria_queue WHERE vendor_id=?",
-            (vid,)
-        ).fetchone()
-        gt_val = r[0] if r else "N/A"
-        st_val = r[1] if r else "N/A"
-        print(f"  v{vid}: in_gt={gt_val}, status={st_val}")
-
-    total_cases = conn.execute("SELECT COUNT(*) FROM ground_truth_cases").fetchone()[0]
-    total_vendors = conn.execute("SELECT COUNT(*) FROM ground_truth_vendors").fetchone()[0]
-    print(f"GT totals: {total_cases} cases, {total_vendors} vendors")
-
     conn.close()
-    print("Done.")
+    print(f"Done. Inserted 4 cases ({c1}-{c4}), linked {total_linked} contracts.")
 
 
 if __name__ == "__main__":

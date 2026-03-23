@@ -177,7 +177,7 @@ export function SeasonalityCalendar() {
             />
             <RadialBar
               dataKey="value"
-              background={{ fill: 'rgba(255,255,255,0.04)' }}
+              background={{ fill: 'var(--color-border)' }}
               label={false}
             >
               {chartData.map((entry) => (

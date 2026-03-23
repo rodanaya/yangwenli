@@ -113,7 +113,7 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
       initial={reduced ? false : { opacity: 0, y: 20 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-      className="relative overflow-hidden rounded-xl px-8 py-6"
+      className="relative overflow-hidden rounded-xl px-5 py-4"
       style={{
         background: 'linear-gradient(135deg, rgba(10,10,10,0.97) 0%, rgba(20,10,15,0.97) 100%)',
         border: '1px solid rgba(196,30,58,0.15)',
@@ -125,7 +125,7 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
       <p
         className="font-black tabular-nums leading-none tracking-tighter"
         style={{
-          fontSize: 'clamp(2rem, 5vw, 3.5rem)',
+          fontSize: 'clamp(1.4rem, 3vw, 2rem)',
           fontFamily: 'var(--font-family-mono)',
           background: reduced
             ? '#c41e3a'
@@ -350,7 +350,7 @@ function KPINumber({ value, color }: { value: string; color: string }) {
     // Non-numeric value, just render directly
     return (
       <p
-        className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight transition-colors"
+        className="text-xl font-black tabular-nums leading-none tracking-tight transition-colors font-mono"
         style={{ color, letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
       >
         {value}
@@ -384,7 +384,7 @@ const KPICard = memo(function KPICard({
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
       className={cn(
-        'fern-card relative flex flex-col justify-between p-7 text-left overflow-hidden group',
+        'fern-card relative flex flex-col justify-between p-4 text-left overflow-hidden group',
         onClick && 'cursor-pointer',
         !onClick && 'cursor-default',
       )}
@@ -1137,8 +1137,8 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 
   return (
     <div ref={heroRef} style={{
-      background: 'radial-gradient(ellipse at 15% 60%, rgba(196,30,58,0.12) 0%, transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(37,99,235,0.08) 0%, transparent 55%), #060608',
-      padding: '48px 32px 40px',
+      background: 'radial-gradient(ellipse at 15% 60%, rgba(196,30,58,0.08) 0%, transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(37,99,235,0.05) 0%, transparent 55%), var(--color-background-base)',
+      padding: '24px 24px 20px',
       margin: '-24px -24px 0',
       position: 'relative',
       overflow: 'hidden',
@@ -1156,21 +1156,21 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
         {t('heroSurveillanceLabel')} &middot; RUBLI v6.4 &middot; {t('heroSurveillanceActive')}
       </div>
 
-      <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 800, color: 'white', fontFamily: 'var(--font-family-serif)', lineHeight: 1.1, marginBottom: '24px', maxWidth: '700px' }}>
+      <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', lineHeight: 1.15, marginBottom: '16px', maxWidth: '700px' }}>
         {loading ? '\u2014' : `${(overview?.total_contracts ?? 3051294).toLocaleString('en-US')} ${t('heroContracts')}`}
         <br/>
-        <span style={{ color: '#c41e3a' }}>{t('heroUnderSurveillance')}</span>
+        <span style={{ color: 'var(--color-accent)' }}>{t('heroUnderSurveillance')}</span>
       </h1>
 
-      <div style={{ display: 'flex', gap: '32px', flexWrap: 'wrap', marginBottom: '28px' }}>
+      <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap', marginBottom: '16px' }}>
         {[
           { label: t('heroAlertContracts'), value: loading ? '\u2014' : `${criticalHighContractPct.toFixed(1)}%`, color: '#ef4444' },
           { label: t('heroCriticalLevel'), value: loading ? '\u2014' : criticalCount.toLocaleString('en-US'), color: '#f97316' },
           { label: t('heroTotalValueAnalyzed'), value: loading ? '\u2014' : formatCompactMXN(overview?.total_value_mxn ?? 0), color: '#fbbf24' },
         ].map((stat, i) => (
           <div key={i} className="dash-hero-stat">
-            <div style={{ fontSize: '11px', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em', fontFamily: 'var(--font-family-mono)', marginBottom: '4px' }}>{stat.label.toUpperCase()}</div>
-            <div style={{ fontSize: 'clamp(1.4rem, 3vw, 2rem)', fontWeight: 700, color: stat.color, fontFamily: 'var(--font-family-mono)', letterSpacing: '-0.02em' }}>{stat.value}</div>
+            <div style={{ fontSize: '10px', color: 'var(--color-text-muted)', letterSpacing: '0.1em', fontFamily: 'var(--font-family-mono)', marginBottom: '2px' }}>{stat.label.toUpperCase()}</div>
+            <div style={{ fontSize: 'clamp(1.1rem, 2vw, 1.5rem)', fontWeight: 700, color: stat.color, fontFamily: 'var(--font-family-mono)', letterSpacing: '-0.02em' }}>{stat.value}</div>
           </div>
         ))}
       </div>
@@ -1268,7 +1268,7 @@ function InvestigationSpotlight() {
         </div>
       </div>
       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-        <div style={{ fontSize: '3rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#c41e3a', lineHeight: 1, letterSpacing: '-0.04em' }}>
+        <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#c41e3a', lineHeight: 1, letterSpacing: '-0.04em' }}>
           {ipsScore.toFixed(3)}
         </div>
         <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(196,30,58,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
@@ -1542,7 +1542,16 @@ export function Dashboard() {
       <RiskTicker />
 
       {/* ================================================================ */}
-      {/* HERO STAT BAR — Enormous KPI: critical+high risk value           */}
+      {/* EDITORIAL LEDE — Journalistic framing line                       */}
+      {/* ================================================================ */}
+      <div className="px-6 pt-4 pb-2 border-b border-border/40">
+        <p className="text-[11px] uppercase tracking-[0.15em] text-muted-foreground font-medium">
+          {t('lede', { contracts: '3.1M', value: '9.9T', year: new Date().getFullYear() })}
+        </p>
+      </div>
+
+      {/* ================================================================ */}
+      {/* HERO STAT BAR — KPI: critical+high risk value                    */}
       {/* ================================================================ */}
       <HeroStatBar
         value={formatCompactMXN(criticalHighValue || overview?.total_value_mxn || 0)}

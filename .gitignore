@@ -190,3 +190,9 @@ backend/scripts/_write_batch*_helper.py
 backend/precompute_log*.txt
 backend/precompute_err*.txt
 fix_accents.py
+
+# ComprasMX bulk data files (large CSVs)
+backend/data/comprasmx/*.csv
+
+# Auto-memory (user-specific)
+memory/

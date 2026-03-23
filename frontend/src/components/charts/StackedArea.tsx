@@ -77,12 +77,12 @@ export const StackedAreaChart = memo(function StackedAreaChart({
           />
           <XAxis
             dataKey="year"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
           />
           <YAxis
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={{ stroke: 'var(--color-border)' }}
             tickLine={false}
             tickFormatter={(v) => (showPercentage ? `${v}%` : formatNumber(v))}
@@ -130,7 +130,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
             stackId="1"
             stroke={RISK_COLORS.low}
             fill={RISK_COLORS.low}
-            fillOpacity={0.8}
+            fillOpacity={0.65}
           />
           <Area
             type="monotone"
@@ -138,7 +138,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
             stackId="1"
             stroke={RISK_COLORS.medium}
             fill={RISK_COLORS.medium}
-            fillOpacity={0.8}
+            fillOpacity={0.65}
           />
           <Area
             type="monotone"
@@ -146,7 +146,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
             stackId="1"
             stroke={RISK_COLORS.high}
             fill={RISK_COLORS.high}
-            fillOpacity={0.8}
+            fillOpacity={0.65}
           />
           <Area
             type="monotone"
@@ -154,7 +154,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
             stackId="1"
             stroke={RISK_COLORS.critical}
             fill={RISK_COLORS.critical}
-            fillOpacity={0.8}
+            fillOpacity={0.65}
           />
         </AreaChart>
       </ResponsiveContainer>

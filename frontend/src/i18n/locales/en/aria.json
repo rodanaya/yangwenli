@@ -8,9 +8,16 @@
     "elevatedValueSub": "Tier 1 + 2 combined",
     "efosListed": "EFOS Listed",
     "efosListedSub": "+ {{sfpCount}} SFP sanctioned",
-    "newVendorRisk": "New Vendor Risk",
+    "newVendorRisk": "new high-risk vendors",
     "newVendorRiskSub": "ghost company signals",
-    "lastRun": "Last pipeline run: {{date}}"
+    "lastRun": "Last pipeline run: {{date}}",
+    "vendorsSurveillance": "vendors under surveillance",
+    "vendorsUnderSurveillance": "vendors under surveillance",
+    "elevatedValueRisk": "value at elevated risk",
+    "valueAtRisk": "value at risk",
+    "efosOnList": "on EFOS List (SAT)",
+    "efosAnnotation": "+ {{count}} SFP sanctions",
+    "onEfos": "on EFOS list"
   },
   "errors": {
     "notRun": "Pipeline hasn't run yet",
@@ -24,13 +31,32 @@
   "tier1": {
     "heading": "Critical Leads — Tier 1",
     "subtitle": "Highest-priority vendors by Investigation Priority Score",
-    "empty": "No Tier 1 leads found. Run the ARIA pipeline to populate."
+    "empty": "No Tier 1 leads found. Run the ARIA pipeline to populate.",
+    "description": "Require immediate investigation",
+    "label": "TIER 1",
+    "name": "CRITICAL",
+    "objective": "TARGET #{{number}}"
+  },
+  "tier2": {
+    "description": "Priority review",
+    "label": "TIER 2",
+    "name": "HIGH"
+  },
+  "tier3": {
+    "description": "Under active monitoring",
+    "label": "TIER 3",
+    "name": "MEDIUM"
+  },
+  "tier4": {
+    "description": "Passive surveillance",
+    "label": "TIER 4",
+    "name": "LOW"
   },
   "leads": {
     "filteredResults": "Filtered Results",
     "allLeads": "All Leads",
     "vendorCount": "vendors",
-    "searchPlaceholder": "Search vendors…",
+    "searchPlaceholder": "Search vendors\u2026",
     "investigateBtn": "Investigate vendor",
     "empty": "No leads match your filters."
   },
@@ -40,7 +66,8 @@
       "pattern": "Pattern",
       "value": "Value",
       "ips": "IPS"
-    }
+    },
+    "review": "Review:"
   },
   "card": {
     "totalValue": "Total Value",
@@ -89,7 +116,7 @@
     "efos": "EFOS"
   },
   "primer": {
-    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 198,000 vendors across 4 threat tiers — start with Tier 1 for the highest-priority cases.",
+    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 198,000 vendors across 4 threat tiers \u2014 start with Tier 1 for the highest-priority cases.",
     "cta": "Start here",
     "dismiss": "Dismiss"
   },
@@ -102,6 +129,18 @@
     "show": "Show {{count}} vendors",
     "hide": "Collapse"
   },
+  "patternSection": {
+    "title": "Detected Risk Patterns"
+  },
+  "tierSection": {
+    "objectives": "Priority Objectives \u2014 Tier 1"
+  },
+  "queueSection": {
+    "title": "Investigation Queue"
+  },
+  "reviewFilter": {
+    "all": "All"
+  },
   "status": {
     "pending": "Pending",
     "reviewing": "Reviewing",
@@ -111,17 +150,20 @@
   "reviewPopover": {
     "reviewStatus": "Review Status",
     "save": "Save",
-    "saving": "Saving…",
+    "saving": "Saving\u2026",
     "close": "Close",
     "error": "Error saving. Please try again.",
     "updateTitle": "Update review status"
   },
   "intelligenceDetails": "Intelligence Details",
   "header": {
-    "systemLabel": "ARIA System · Procurement Intelligence",
+    "systemLabel": "ARIA System \u00b7 Procurement Intelligence",
     "live": "LIVE",
     "title": "The War Room",
-    "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting."
+    "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting.",
+    "statusActive": "Active",
+    "t1Require": "T1 vendors require immediate investigation",
+    "lastUpdated": "Last updated"
   },
   "editorial": {
     "section": "RUBLI INTELLIGENCE",
@@ -129,13 +171,6 @@
     "subtitle": "Automated investigation queue with threat-level prioritization"
   },
   "situationReport": "Situation Report",
-  "stats": {
-    "vendorsSurveillance": "vendors under surveillance",
-    "elevatedValueRisk": "value at elevated risk",
-    "efosOnList": "on EFOS List (SAT)",
-    "efosAnnotation": "+ {{count}} SFP sanctions",
-    "newVendorRisk": "new high-risk vendors"
-  },
   "methodology": {
     "title": "How does ARIA work?",
     "body": "ARIA combines ML risk score (v6.4), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."

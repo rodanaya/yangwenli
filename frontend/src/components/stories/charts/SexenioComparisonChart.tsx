@@ -30,7 +30,7 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="mb-1 font-semibold">{d.metric}</p>
       <p style={{ color: FOX_COLOR }}>Fox: {d.fox}%</p>
       <p style={{ color: CALDERON_COLOR }}>Calderon: {d.calderon}%</p>
@@ -48,30 +48,30 @@ export function SexenioComparisonChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Indicadores de riesgo por sexenio
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="metric"
-            tick={{ fill: '#a1a1aa', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             interval={0}
           />
           <YAxis
             domain={[0, 85]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <Legend
             wrapperStyle={{ fontSize: 11, paddingTop: 8 }}
             formatter={(value: string) => (
-              <span style={{ color: '#a1a1aa' }}>{value}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{value}</span>
             )}
           />
           <Bar

@@ -37,6 +37,16 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/cases': 'caseLibrary',
   '/procurement-intelligence': 'procurementIntelligence',
   '/journalists': 'journalists',
+  '/aria': 'ariaQueue',
+  '/report-card': 'reportCard',
+  '/glossary': 'methodology',
+  '/limitations': 'limitations',
+  '/seismograph': 'seismograph',
+  '/telescope': 'telescope',
+  '/heatmap': 'heatmap',
+  '/year-in-review': 'yearInReview',
+  '/thread': 'journalists',
+  '/vendor-compare': 'contracts',
 }
 
 export function Header({ onMenuClick }: { onMenuClick?: () => void }) {

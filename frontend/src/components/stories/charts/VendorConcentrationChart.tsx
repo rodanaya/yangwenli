@@ -37,9 +37,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   const d = payload[0].payload
   const riskLabel = d.risk === 'critical' ? 'Critico' : d.risk === 'high' ? 'Alto' : 'Medio'
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">{d.vendor}</p>
-      <p className="text-zinc-300">{d.share}% del gasto total</p>
+      <p className="text-text-secondary">{d.share}% del gasto total</p>
       <p style={{ color: RISK_COLORS[d.risk] }}>Riesgo: {riskLabel}</p>
     </div>
   )
@@ -53,17 +53,17 @@ export function VendorConcentrationChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Concentracion por categoria de proveedor (% del gasto total)
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 20, right: 20, left: 10, bottom: 40 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="vendor"
-            tick={{ fill: '#a1a1aa', fontSize: 9 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             angle={-25}
             textAnchor="end"
             height={60}
@@ -71,17 +71,17 @@ export function VendorConcentrationChart() {
           />
           <YAxis
             domain={[0, 14]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             label={{
               value: '% gasto total',
               angle: -90,
               position: 'insideLeft',
-              style: { fill: '#a1a1aa', fontSize: 10 },
+              style: { fill: 'var(--color-text-muted)', fontSize: 10 },
             }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <Bar
             dataKey="share"
             radius={[4, 4, 0, 0]}
@@ -97,7 +97,7 @@ export function VendorConcentrationChart() {
               position="top"
               // eslint-disable-next-line @typescript-eslint/no-explicit-any
               formatter={((v: number | string) => `${v}%`) as any}
-              style={{ fill: '#e4e4e7', fontSize: 10 }}
+              style={{ fill: 'var(--color-text-primary)', fontSize: 10 }}
             />
           </Bar>
         </BarChart>

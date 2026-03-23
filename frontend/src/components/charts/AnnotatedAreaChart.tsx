@@ -143,15 +143,15 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
               <stop offset="95%" stopColor={areaColor} stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
             dataKey="year"
-            tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             tickLine={false}
-            axisLine={{ stroke: 'rgba(255,255,255,0.12)' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
-            tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => formatMetricValue(v, metric)}
@@ -159,13 +159,14 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'rgba(15,15,20,0.95)',
-              border: '1px solid rgba(255,255,255,0.1)',
+              backgroundColor: 'var(--color-background-card)',
+              border: '1px solid var(--color-border)',
               borderRadius: '8px',
               fontSize: 12,
-              fontFamily: 'var(--font-mono)',
+              fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)",
+              color: 'var(--color-text-primary)',
             }}
-            labelStyle={{ color: 'rgba(255,255,255,0.6)' }}
+            labelStyle={{ color: 'var(--color-text-muted)' }}
             formatter={(v: number | undefined) => [formatMetricValue(v ?? 0, metric), METRIC_LABELS[metric]]}
           />
 
@@ -200,13 +201,13 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
               r: 5,
               stroke: areaColor,
               strokeWidth: 2,
-              fill: 'rgba(15,15,20,0.9)',
+              fill: 'var(--color-background-card)',
             }}
             name={title}
           />
         </AreaChart>
       </ResponsiveContainer>
-      <p className="text-xs text-zinc-500 font-mono mt-2 pt-2 border-t border-zinc-800">
+      <p className="text-xs text-text-muted font-mono mt-2 pt-2 border-t border-border">
         {DATA_SOURCE}
       </p>
     </div>

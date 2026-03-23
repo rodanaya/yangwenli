@@ -53,10 +53,10 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">{d.year}</p>
-      <p className="text-zinc-300">{d.rate}% Adj. Directa</p>
-      <p className="text-zinc-500">{ERA_LABELS[d.era]}</p>
+      <p className="text-text-secondary">{d.rate}% Adj. Directa</p>
+      <p className="text-text-muted">{ERA_LABELS[d.era]}</p>
     </div>
   )
 }
@@ -75,8 +75,8 @@ function CustomDot({ cx, cy, payload }: DotProps) {
       cx={cx}
       cy={cy}
       r={isAmlo ? 4 : 2.5}
-      fill={isAmlo ? '#dc2626' : '#52525b'}
-      stroke={isAmlo ? '#dc2626' : '#52525b'}
+      fill={isAmlo ? '#dc2626' : 'var(--color-text-muted)'}
+      stroke={isAmlo ? '#dc2626' : 'var(--color-text-muted)'}
       strokeWidth={1}
     />
   )
@@ -90,32 +90,32 @@ export function DaRateTrendChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Adjudicacion Directa como % del total de contratos (2002-2023)
       </p>
       <ResponsiveContainer width="100%" height={320}>
         <LineChart data={data} margin={{ top: 10, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-          <ReferenceArea x1="2002" x2="2006" fill="#18181b" fillOpacity={0.5} />
-          <ReferenceArea x1="2007" x2="2012" fill="#172554" fillOpacity={0.15} />
-          <ReferenceArea x1="2013" x2="2018" fill="#431407" fillOpacity={0.15} />
-          <ReferenceArea x1="2019" x2="2023" fill="#450a0a" fillOpacity={0.3} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <ReferenceArea x1="2002" x2="2006" fill="#64748b" fillOpacity={0.05} />
+          <ReferenceArea x1="2007" x2="2012" fill="#3b82f6" fillOpacity={0.05} />
+          <ReferenceArea x1="2013" x2="2018" fill="#f97316" fillOpacity={0.06} />
+          <ReferenceArea x1="2019" x2="2023" fill="#dc2626" fillOpacity={0.08} />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             domain={[20, 90]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             label={{
               value: '% Adj. Directa',
               angle: -90,
               position: 'insideLeft',
-              style: { fill: '#a1a1aa', fontSize: 11 },
+              style: { fill: 'var(--color-text-muted)', fontSize: 11 },
             }}
           />
           <Tooltip content={<CustomTooltip />} />
@@ -133,7 +133,7 @@ export function DaRateTrendChart() {
           <Line
             type="monotone"
             dataKey="rate"
-            stroke="#52525b"
+            stroke="var(--color-text-muted)"
             strokeWidth={2}
             dot={<CustomDot />}
             isAnimationActive={true}

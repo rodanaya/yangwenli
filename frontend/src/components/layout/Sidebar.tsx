@@ -217,14 +217,20 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
-      {/* Logo — Bauhaus half-circle mark */}
+      {/* Logo — tri-sector intelligence mark */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            {/* Bauhaus: full circle outline */}
-            <circle cx="16" cy="16" r="13" stroke="#c41e3a" strokeWidth="2"/>
-            {/* Left half — solid fill */}
-            <path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#c41e3a"/>
+            <circle cx="16" cy="16" r="15.5" fill="#0d0f0e"/>
+            <path d="M16 16 L16 1 A15 15 0 0 1 28.99 23.5 Z" fill="#c41e3a" opacity="0.85"/>
+            <path d="M16 16 L28.99 23.5 A15 15 0 0 1 3.01 23.5 Z" fill="#16a34a" opacity="0.8"/>
+            <path d="M16 16 L3.01 23.5 A15 15 0 0 1 16 1 Z" fill="#eab308" opacity="0.6"/>
+            <circle cx="16" cy="16" r="15" stroke="#ffffff" strokeWidth="0.4" opacity="0.1"/>
+            <circle cx="16" cy="16" r="3" fill="#0d0f0e"/>
+            <circle cx="16" cy="16" r="2" fill="#ffffff" opacity="0.9"/>
+            <circle cx="16" cy="7.5" r="1.3" fill="#c41e3a"/>
+            <circle cx="23.36" cy="20.25" r="1.3" fill="#16a34a"/>
+            <circle cx="8.64" cy="20.25" r="1.3" fill="#eab308"/>
           </svg>
         </div>
         {!isCollapsed && (

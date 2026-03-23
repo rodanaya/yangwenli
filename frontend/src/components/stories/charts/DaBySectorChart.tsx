@@ -37,10 +37,10 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   const d = payload[0].payload
   const diff = (d.rate - 25).toFixed(1)
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">{d.sector}</p>
-      <p className="text-zinc-300">{d.rate}% Adj. Directa</p>
-      <p className="text-zinc-500">vs OCDE: +{diff} pts</p>
+      <p className="text-text-secondary">{d.rate}% Adj. Directa</p>
+      <p className="text-text-muted">vs OCDE: +{diff} pts</p>
     </div>
   )
 }
@@ -53,7 +53,7 @@ export function DaBySectorChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Adjudicacion Directa por sector (%)
       </p>
       <ResponsiveContainer width="100%" height={340}>
@@ -62,23 +62,23 @@ export function DaBySectorChart() {
           layout="vertical"
           margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" horizontal={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
           <XAxis
             type="number"
             domain={[0, 100]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             type="category"
             dataKey="sector"
             width={100}
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <ReferenceLine
             x={25}
             stroke={OECD_COLOR}

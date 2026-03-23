@@ -123,7 +123,7 @@ export const Heatmap = memo(function Heatmap({
           data: chartData,
           label: {
             show: true,
-            color: '#e2e8f0',
+            color: 'rgba(0,0,0,0.75)',
             fontSize: 10,
             fontWeight: 600,
             formatter: (params: { data: [number, number, number] }) => {

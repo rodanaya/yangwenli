@@ -31,7 +31,7 @@ function getBarColor(index: number): string {
   if (index === 11) return '#dc2626' // Dec
   if (index === 10) return '#f97316' // Nov
   if (index === 9) return '#ea580c' // Oct
-  return '#52525b'
+  return 'var(--color-text-muted)'
 }
 
 interface PayloadEntry {
@@ -42,9 +42,9 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">{d.mes} 2023</p>
-      <p className="text-zinc-300">${d.value}B MXN</p>
+      <p className="text-text-secondary">${d.value}B MXN</p>
     </div>
   )
 }
@@ -78,32 +78,32 @@ export function MonthlySpendingChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Gasto mensual en contratacion publica, 2023 (miles de millones MXN)
       </p>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="mes"
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             domain={[0, 80]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <ReferenceLine
             y={45}
-            stroke="#71717a"
+            stroke="var(--color-text-muted)"
             strokeDasharray="4 2"
             label={{
               value: 'Promedio mensual',
-              fill: '#71717a',
+              fill: 'var(--color-text-muted)',
               fontSize: 10,
               position: 'right',
             }}

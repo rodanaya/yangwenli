@@ -33,10 +33,10 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">Contrato {d.contrato}</p>
-      <p className="text-zinc-300">${d.monto}M MXN</p>
-      <p className="text-zinc-500">Hora: {d.hora}</p>
+      <p className="text-text-secondary">${d.monto}M MXN</p>
+      <p className="text-text-muted">Hora: {d.hora}</p>
     </div>
   )
 }
@@ -49,31 +49,31 @@ export function ThresholdSplittingChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         HEMOSER — 2 Agosto 2023: 12 contratos bajo el umbral
       </p>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 15, right: 15, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" vertical={false} />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
           <XAxis
             dataKey="contrato"
-            tick={{ fill: '#a1a1aa', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
           <YAxis
             domain={[1400, 1520]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             label={{
               value: 'Millones MXN',
               angle: -90,
               position: 'insideLeft',
-              style: { fill: '#a1a1aa', fontSize: 10 },
+              style: { fill: 'var(--color-text-muted)', fontSize: 10 },
             }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <ReferenceLine
             y={1500}
             stroke="#dc2626"

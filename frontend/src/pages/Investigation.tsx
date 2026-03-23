@@ -484,6 +484,7 @@ export function Investigation() {
   const [minScore, setMinScore] = useState<number | undefined>(undefined)
   const [priorityFilter, setPriorityFilter] = useState<'all' | PriorityLevel>('all')
   const [searchQuery, setSearchQuery] = useState('')
+  const [activeAngle, setActiveAngle] = useState<string | null>(null)
 
   // Sort state
   const [sortKey, setSortKey] = useState<SortKey>('suspicion_score')
@@ -623,29 +624,64 @@ export function Investigation() {
   return (
     <div className="space-y-0">
       {/* ================================================================
-          PAGE HEADER — Editorial bureau header
+          PAGE HEADER — Editorial investigation hub
           ================================================================ */}
-      <div className="border-b border-border pb-6 mb-8">
+      <div className="border-b border-border pb-4 mb-0">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2 font-mono">
           {t('headerTracking')}
         </div>
         <h1
           style={{ fontFamily: 'var(--font-family-serif)' }}
-          className="text-4xl font-bold text-text-primary mb-2"
+          className="text-3xl font-bold text-text-primary mb-1"
         >
           {t('headerTitle')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl leading-relaxed">
           {t('headerDesc')}
         </p>
-        <div className="mt-3 flex items-center gap-2 text-xs text-text-muted">
-          <span
-            className="w-1.5 h-1.5 rounded-full animate-pulse"
-            style={{ backgroundColor: 'var(--color-signal-warn)' }}
-          />
-          <span className="font-mono">
-            {t('headerPipeline')}
-          </span>
+      </div>
+
+      {/* ================================================================
+          SEARCH-FIRST EXPERIENCE
+          ================================================================ */}
+      <div className="px-0 py-8 border-b border-border mb-8">
+        <div className="max-w-2xl mx-auto">
+          <div className="flex items-center gap-3 px-4 py-3 bg-background-card border border-border rounded-lg focus-within:border-accent transition-colors">
+            <Search className="h-4 w-4 text-text-muted flex-shrink-0" />
+            <input
+              type="text"
+              placeholder={t('search.placeholder', 'Search by vendor, institution, sector...')}
+              className="flex-1 bg-transparent text-sm outline-none placeholder:text-text-muted text-text-primary"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+            />
+          </div>
+
+          {/* Quick investigation angles */}
+          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+            {[
+              { label: t('angles.bySector', 'By Sector'), filter: 'sector', href: '/sectors' },
+              { label: t('angles.byAdmin', 'By Administration'), filter: 'admin', href: '/administrations' },
+              { label: t('angles.byNetwork', 'By Network'), filter: 'network', href: '/network' },
+              { label: t('angles.byPattern', 'By Pattern'), filter: 'pattern', href: '/money-flow' },
+            ].map(angle => (
+              <button
+                key={angle.filter}
+                onClick={() => {
+                  setActiveAngle(activeAngle === angle.filter ? null : angle.filter)
+                  navigate(angle.href)
+                }}
+                className={cn(
+                  'px-3 py-2 text-xs font-medium border rounded-md transition-colors text-left',
+                  activeAngle === angle.filter
+                    ? 'bg-accent/10 border-accent text-accent'
+                    : 'bg-background-card border-border text-text-muted hover:text-text-primary hover:border-text-muted/30'
+                )}
+              >
+                {angle.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -693,28 +729,6 @@ export function Investigation() {
           )
         })}
       </motion.div>
-
-      {/* ================================================================
-          SEARCH BAR — investigation search entry point
-          ================================================================ */}
-      <div className="mb-10">
-        <button
-          onClick={() => {
-            // Trigger Ctrl+K command palette
-            const event = new KeyboardEvent('keydown', { key: 'k', ctrlKey: true, bubbles: true })
-            document.dispatchEvent(event)
-          }}
-          className="w-full flex items-center gap-3 px-5 py-4 rounded-xl border border-border/50 bg-background-elevated/30 hover:border-accent/40 hover:bg-background-elevated/60 transition-all group cursor-pointer"
-        >
-          <Search className="h-5 w-5 text-text-muted/50 group-hover:text-accent transition-colors" />
-          <span className="text-sm text-text-muted/60 group-hover:text-text-secondary transition-colors">
-            {t('entrySearch')}
-          </span>
-          <span className="ml-auto text-[10px] font-mono text-text-muted/40 border border-border/40 rounded px-1.5 py-0.5">
-            Ctrl+K
-          </span>
-        </button>
-      </div>
 
       {/* ================================================================
           KPI STRIP

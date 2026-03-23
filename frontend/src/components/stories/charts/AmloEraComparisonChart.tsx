@@ -30,10 +30,10 @@ function CustomTooltip({ active, payload }: { active?: boolean; payload?: Payloa
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm text-white shadow-lg">
+    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
       <p className="font-semibold">{d.era}</p>
-      <p className="text-zinc-300">Promedio: {d.avg}%</p>
-      <p className="text-zinc-300">Maximo: {d.peak}%</p>
+      <p className="text-text-secondary">Promedio: {d.avg}%</p>
+      <p className="text-text-secondary">Maximo: {d.peak}%</p>
     </div>
   )
 }
@@ -46,32 +46,32 @@ export function AmloEraComparisonChart() {
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
     >
-      <p className="mb-2 text-center text-xs text-zinc-500">
+      <p className="mb-2 text-center text-xs text-text-muted">
         Adjudicacion Directa promedio y maximo por sexenio
       </p>
       <ResponsiveContainer width="100%" height={280}>
         <BarChart data={data} margin={{ top: 20, right: 20, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
           <XAxis
             dataKey="era"
-            tick={{ fill: '#a1a1aa', fontSize: 10 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
             angle={-15}
             textAnchor="end"
             height={50}
           />
           <YAxis
             domain={[0, 90]}
-            tick={{ fill: '#71717a', fontSize: 11 }}
+            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
             tickLine={false}
-            axisLine={{ stroke: '#27272a' }}
+            axisLine={{ stroke: 'var(--color-border)' }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a40' }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <Legend
-            wrapperStyle={{ color: '#a1a1aa', fontSize: 11 }}
+            wrapperStyle={{ color: 'var(--color-text-muted)', fontSize: 11 }}
             formatter={(value: string) => (
-              <span style={{ color: '#a1a1aa' }}>{value}</span>
+              <span style={{ color: 'var(--color-text-muted)' }}>{value}</span>
             )}
           />
           <ReferenceLine
@@ -90,7 +90,7 @@ export function AmloEraComparisonChart() {
             {data.map((entry, index) => (
               <Cell key={index} fill={entry.color} fillOpacity={0.6} />
             ))}
-            <LabelList dataKey="avg" position="top" style={{ fill: '#a1a1aa', fontSize: 10 }} />
+            <LabelList dataKey="avg" position="top" style={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
           </Bar>
           <Bar
             dataKey="peak"
@@ -102,7 +102,7 @@ export function AmloEraComparisonChart() {
             {data.map((entry, index) => (
               <Cell key={index} fill={entry.color} />
             ))}
-            <LabelList dataKey="peak" position="top" style={{ fill: '#e4e4e7', fontSize: 10 }} />
+            <LabelList dataKey="peak" position="top" style={{ fill: 'var(--color-text-primary)', fontSize: 10 }} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>

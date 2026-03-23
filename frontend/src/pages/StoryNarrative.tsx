@@ -8,6 +8,7 @@
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight } from 'lucide-react'
 import { getStoryBySlug, getRelatedStories } from '@/lib/story-content'
@@ -310,27 +311,28 @@ function ChapterNav({ chapters, accentColor }: { chapters: StoryChapterDef[]; ac
 // Methodology footer
 // ---------------------------------------------------------------------------
 
-const STATUS_CONFIG: Record<StoryStatus, { label: string; color: string; bg: string; border: string }> = {
-  solo_datos:  { label: 'Solo datos — pista sin reportear', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
-  reporteado:  { label: 'Reporteado por medios',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
-  auditado:    { label: 'Auditado por ASF / SFP',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
-  procesado:   { label: 'Proceso penal abierto',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
+const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
+  solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
+  reporteado:  { labelKey: 'story.statusReporteado',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
+  auditado:    { labelKey: 'story.statusAuditado',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
+  procesado:   { labelKey: 'story.statusProcesado',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
 }
 
 function MethodologySection({ story }: { story: StoryDef }) {
+  const { t } = useTranslation('common')
   const statusCfg = story.status ? STATUS_CONFIG[story.status] : null
 
   return (
     <ScrollReveal>
       <section
         className="max-w-prose mx-auto px-4 sm:px-0 my-16 py-8 border-t border-zinc-800"
-        aria-label="Metodologia"
+        aria-label={t('story.methodology')}
       >
         {/* Investigation status badge */}
         {statusCfg && (
           <div className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full border text-xs font-semibold mb-6 ${statusCfg.bg} ${statusCfg.border} ${statusCfg.color}`}>
             <span className="w-2 h-2 rounded-full bg-current opacity-80" />
-            Estado de la investigacion: {statusCfg.label}
+            {t('story.statusLabel')}: {t(statusCfg.labelKey)}
           </div>
         )}
 
@@ -338,24 +340,19 @@ function MethodologySection({ story }: { story: StoryDef }) {
           className="text-xl font-bold text-zinc-200 mb-4"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Metodologia
+          {t('story.methodology')}
         </h3>
         <div className="text-sm text-zinc-400 leading-relaxed space-y-3">
           <p>
-            Este analisis fue producido por la plataforma RUBLI, que procesa{' '}
+            {t('story.methodologyP1')}{' '}
             <ProseStat value="3,051,294" color="text-red-400" animate={false} />{' '}
-            contratos federales registrados en COMPRANET entre 2002 y 2025.
+            {t('story.methodologyP2')}
           </p>
           <p>
-            Los puntajes de riesgo son generados por el modelo v6.4 (AUC 0.840, split por proveedor),
-            entrenado con 748 casos documentados de corrupcion y 603 proveedores vinculados.
-            Los puntajes miden similitud con patrones de corrupcion documentada — no constituyen
-            prueba de irregularidad.
+            {t('story.methodologyP3')}
           </p>
           <p>
-            Todas las cifras provienen de datos publicos de COMPRANET. Los calculos de adjudicacion
-            directa se basan en el campo procedure_type del registro oficial. Las clasificaciones
-            sectoriales usan la taxonomia de 12 sectores de RUBLI basada en codigos de ramo presupuestal.
+            {t('story.methodologyP4')}
           </p>
         </div>
 
@@ -364,7 +361,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
           <div className="mt-8 p-4 rounded-lg border border-zinc-700/60 bg-zinc-900/60">
             <h4 className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">
               <ChevronRight className="h-4 w-4 text-red-400" />
-              Proximos pasos para periodistas
+              {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">
               {story.nextSteps.map((step, i) => (
@@ -382,14 +379,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
             to="/methodology"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
           >
-            Metodologia completa
+            {t('story.fullMethodology')}
             <ExternalLink className="h-3 w-3" />
           </Link>
           <Link
             to="/model"
             className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
           >
-            Transparencia del modelo
+            {t('story.modelTransparency')}
             <ExternalLink className="h-3 w-3" />
           </Link>
         </div>
@@ -403,6 +400,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 function RelatedSection({ story }: { story: StoryDef }) {
+  const { t } = useTranslation('common')
   const navigate = useNavigate()
   const related = getRelatedStories(story)
   if (related.length === 0) return null
@@ -411,13 +409,13 @@ function RelatedSection({ story }: { story: StoryDef }) {
     <ScrollReveal>
       <section
         className="max-w-5xl mx-auto px-4 sm:px-6 my-16"
-        aria-label="Historias relacionadas"
+        aria-label={t('story.investigateMore')}
       >
         <h3
           className="text-xl font-bold text-zinc-200 mb-6"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Investigar mas
+          {t('story.investigateMore')}
         </h3>
         <motion.div
           variants={staggerContainer}
@@ -456,14 +454,15 @@ function RelatedSection({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 function PlatformLinks({ story }: { story: StoryDef }) {
+  const { t } = useTranslation('common')
   const links = [
-    { label: 'ARIA Intelligence Briefing', to: '/aria', description: 'Colas de investigacion automatizada' },
-    { label: 'Casos documentados', to: '/cases', description: 'Biblioteca de ground truth' },
-    { label: 'Explorar contratos', to: '/contracts', description: 'Buscar en 3M+ contratos' },
+    { label: t('story.ariaIntelligence'), to: '/aria', description: t('story.ariaDesc') },
+    { label: t('story.documentedCases'), to: '/cases', description: t('story.documentedCasesDesc') },
+    { label: t('story.exploreContracts'), to: '/contracts', description: t('story.exploreContractsDesc') },
   ]
 
   if (story.era === 'amlo' || story.slug.includes('granero')) {
-    links.push({ label: 'Sector Agricultura', to: '/sectors/9', description: '93.4% adjudicacion directa' })
+    links.push({ label: t('story.sectorAgricultura'), to: '/sectors/9', description: t('story.sectorAgriculturaDesc') })
   }
 
   return (
@@ -473,7 +472,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
           className="text-lg font-bold text-zinc-300 mb-4"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
-          Ver en la plataforma
+          {t('story.viewOnPlatform')}
         </h3>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {links.map((link) => (
@@ -502,6 +501,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 function ShareBar({ story }: { story: StoryDef }) {
+  const { t } = useTranslation('common')
   const handleShare = async () => {
     const url = window.location.href
     const text = `${story.headline} - ${story.leadStat.value} ${story.leadStat.label}`
@@ -523,7 +523,7 @@ function ShareBar({ story }: { story: StoryDef }) {
         className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
       >
         <Share2 className="h-3.5 w-3.5" />
-        Compartir esta investigacion
+        {t('story.shareInvestigation')}
       </button>
     </div>
   )
@@ -534,6 +534,7 @@ function ShareBar({ story }: { story: StoryDef }) {
 // ---------------------------------------------------------------------------
 
 export default function StoryNarrative() {
+  const { t } = useTranslation('common')
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
 
@@ -567,10 +568,10 @@ export default function StoryNarrative() {
             className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
-            Todas las historias
+            {t('story.allStories')}
           </Link>
           <span className="text-[10px] text-zinc-600 uppercase tracking-wider">
-            RUBLI Investigaciones
+            {t('story.investigations')}
           </span>
         </div>
       </div>
