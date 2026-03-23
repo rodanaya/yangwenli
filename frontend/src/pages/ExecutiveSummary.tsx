@@ -6,7 +6,7 @@
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
-import React, { useMemo, useRef, useEffect, useState } from 'react'
+import React, { useMemo, useRef, useState } from 'react'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
@@ -771,52 +771,126 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// GRAPHIC 1: Corruption Funnel
+// GRAPHIC 1: Investigation Cascade (replaces Corruption Funnel)
+// A left-aligned cascade showing how 3.1M contracts triage down to 133K critical
 // ============================================================================
 
 function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { risk } = data
-  const medPlusPct = ((risk.medium_pct ?? 0) + risk.high_pct + risk.critical_pct)
+  const criticalCount = risk.critical_count ?? 133572
+  const highCount = risk.high_count ?? 148043
   const highPlusPct = risk.high_pct + risk.critical_pct
+  const highPlusCount = criticalCount + highCount
+  const medPlusPct = (risk.medium_pct ?? 0) + highPlusPct
+  const medPlusCount = Math.round(medPlusPct / 100 * 3051294)
 
-  const rows = [
-    { label: t('funnel.allContracts'), sub: t('funnel.allContractsSub'), value: '3.1M', pct: 100, highlight: false },
-    { label: t('funnel.mediumRisk'), sub: t('funnel.mediumRiskSub'), value: `${medPlusPct.toFixed(1)}%`, pct: medPlusPct, highlight: false },
-    { label: t('funnel.highRisk'), sub: t('funnel.highRiskSub'), value: `${highPlusPct.toFixed(1)}%`, pct: highPlusPct, highlight: false },
-    { label: t('funnel.criticalRisk'), sub: t('funnel.criticalRiskSub'), value: `${risk.critical_pct.toFixed(1)}%`, pct: risk.critical_pct, highlight: true },
+  const stages = [
+    {
+      label: t('funnel.allContracts'),
+      pct: 100,
+      count: 3051294,
+      barH: 16,
+      color: 'var(--color-text-muted)',
+      accent: false,
+    },
+    {
+      label: t('funnel.mediumRisk'),
+      pct: medPlusPct,
+      count: medPlusCount,
+      barH: 14,
+      color: 'var(--color-text-secondary)',
+      accent: false,
+    },
+    {
+      label: t('funnel.highRisk'),
+      pct: highPlusPct,
+      count: highPlusCount,
+      barH: 14,
+      color: '#ea580c',
+      accent: false,
+    },
+    {
+      label: t('funnel.criticalRisk'),
+      pct: risk.critical_pct,
+      count: criticalCount,
+      barH: 22,
+      color: 'var(--color-accent)',
+      accent: true,
+    },
   ]
 
   return (
-    <div className="my-6">
-      <p className="text-[10px] font-bold uppercase tracking-widest font-mono mb-3" style={{ color: '#64748b' }}>
+    <div className="my-8 p-5 rounded-lg border border-border bg-background-card">
+      {/* Headline */}
+      <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-1">
         {t('funnel.title')}
       </p>
-      <table className="w-full border-collapse">
-        <tbody>
-          {rows.map((row, i) => (
-            <tr key={i} style={{ borderTop: '1px solid #e2e8f0' }}>
-              <td className="py-2.5 pr-4 text-xs font-medium" style={{ width: '160px', color: row.highlight ? '#c41e3a' : '#1e293b' }}>
-                {row.label}
-              </td>
-              <td className="py-2.5 pr-2">
-                <div style={{ height: '12px', backgroundColor: '#f1f5f9', position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: '0 auto 0 0', width: `${row.pct}%`, backgroundColor: row.highlight ? '#c41e3a' : '#94a3b8' }} />
-                </div>
-              </td>
-              <td className="py-2.5 pl-3 text-right" style={{ width: '56px' }}>
-                <span className="text-xs font-black font-mono tabular-nums" style={{ color: row.highlight ? '#c41e3a' : '#1e293b' }}>
-                  {row.value}
+      <p className="text-xs text-text-muted font-mono mb-5">
+        3,051,294 {t('funnel.allContractsSub')}
+      </p>
+
+      <div className="space-y-3">
+        {stages.map((stage, i) => (
+          <div key={i}>
+            {/* Label row */}
+            <div className="flex items-center justify-between mb-1">
+              <span
+                className="text-[11px] font-bold uppercase tracking-wider font-mono"
+                style={{ color: stage.accent ? 'var(--color-accent)' : 'var(--color-text-secondary)' }}
+              >
+                {stage.label}
+              </span>
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-[11px] font-mono tabular-nums text-text-muted"
+                >
+                  {stage.count.toLocaleString()} contracts
                 </span>
-              </td>
-              <td className="py-2.5 pl-4 text-[10px] font-mono hidden sm:table-cell" style={{ width: '160px', color: '#94a3b8' }}>
-                {row.sub}
-              </td>
-            </tr>
-          ))}
-          <tr><td colSpan={4} style={{ borderTop: '2px solid #cbd5e1', padding: 0 }} /></tr>
-        </tbody>
-      </table>
+                <span
+                  className={`font-mono tabular-nums font-black ${stage.accent ? 'text-lg' : 'text-sm'}`}
+                  style={{ color: stage.accent ? 'var(--color-accent)' : 'var(--color-text-primary)', minWidth: '52px', textAlign: 'right' }}
+                >
+                  {stage.pct.toFixed(1)}%
+                </span>
+              </div>
+            </div>
+            {/* Bar — left-aligned, proportional width */}
+            <div className="relative" style={{ height: `${stage.barH}px`, backgroundColor: 'var(--color-background-elevated)', borderRadius: 2 }}>
+              <div
+                style={{
+                  position: 'absolute',
+                  inset: '0 auto 0 0',
+                  width: `${stage.pct}%`,
+                  backgroundColor: stage.color,
+                  borderRadius: 2,
+                  opacity: stage.accent ? 1 : 0.65,
+                }}
+              />
+              {/* Inline % label for narrow bars */}
+              {stage.pct < 15 && (
+                <span
+                  className="absolute left-[calc(var(--w)+6px)] top-1/2 -translate-y-1/2 text-[10px] font-bold font-mono tabular-nums"
+                  style={{ '--w': `${stage.pct}%` } as React.CSSProperties}
+                />
+              )}
+            </div>
+            {/* Separator */}
+            {i < stages.length - 1 && (
+              <div className="mt-3 border-t border-border opacity-40" />
+            )}
+          </div>
+        ))}
+      </div>
+
+      {/* Critical callout */}
+      <div className="mt-5 pt-4 border-t border-border flex items-start gap-3">
+        <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-accent)' }} />
+        <p className="text-xs text-text-secondary leading-relaxed">
+          <strong className="text-text-primary font-mono">{criticalCount.toLocaleString()}</strong>
+          {' '}{t('funnel.criticalRiskSub')}
+        </p>
+      </div>
     </div>
   )
 }
@@ -835,66 +909,102 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       pct: risk.critical_pct,
       count: risk.critical_count != null ? risk.critical_count.toLocaleString() : '133,572',
       action: t('riskInfographic.immediate'),
-      highlight: true,
+      color: 'var(--color-accent)',
+      bg: 'rgba(196,30,58,0.08)',
+      accent: true,
     },
     {
       level: 'HIGH',
       pct: risk.high_pct,
       count: risk.high_count != null ? risk.high_count.toLocaleString() : '148,043',
       action: t('riskInfographic.priority'),
-      highlight: false,
+      color: '#ea580c',
+      bg: 'rgba(234,88,12,0.06)',
+      accent: false,
     },
     {
       level: 'MEDIUM',
       pct: risk.medium_pct,
       count: '~498K',
       action: t('riskInfographic.watchList'),
-      highlight: false,
+      color: '#ca8a04',
+      bg: 'rgba(202,138,4,0.05)',
+      accent: false,
     },
     {
       level: 'LOW',
       pct: risk.low_pct,
       count: '~2.3M',
       action: t('riskInfographic.standard'),
-      highlight: false,
+      color: 'var(--color-text-muted)',
+      bg: 'transparent',
+      accent: false,
     },
   ]
 
+  // Full-width distribution bar across the top
+  const barSegments = [
+    { pct: risk.critical_pct, color: 'var(--color-accent)' },
+    { pct: risk.high_pct, color: '#ea580c' },
+    { pct: risk.medium_pct, color: '#ca8a04' },
+    { pct: risk.low_pct, color: 'var(--color-background-elevated)' },
+  ]
+
   return (
-    <div className="my-6">
-      <p className="text-[10px] font-bold uppercase tracking-widest font-mono mb-3" style={{ color: '#64748b' }}>
+    <div className="my-8">
+      <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-4">
         {t('riskInfographic.title')}
       </p>
-      <table className="w-full border-collapse">
-        <tbody>
-          {tiers.map((tier, i) => (
-            <tr key={i} style={{ borderTop: '1px solid #e2e8f0' }}>
-              <td className="py-2.5 pr-3 text-[10px] font-black uppercase tracking-widest font-mono" style={{ width: '72px', color: tier.highlight ? '#c41e3a' : '#64748b' }}>
+
+      {/* Distribution bar — thin strip showing proportional split */}
+      <div className="flex h-2 rounded overflow-hidden mb-1 gap-px">
+        {barSegments.map((s, i) => (
+          <div key={i} style={{ width: `${s.pct}%`, backgroundColor: s.color, minWidth: 2 }} />
+        ))}
+      </div>
+      <div className="flex justify-between text-[9px] font-mono text-text-muted mb-6">
+        <span style={{ color: 'var(--color-accent)' }}>CRITICAL {risk.critical_pct.toFixed(1)}%</span>
+        <span style={{ color: '#ea580c' }}>HIGH {risk.high_pct.toFixed(1)}%</span>
+        <span style={{ color: '#ca8a04' }}>MEDIUM {risk.medium_pct.toFixed(1)}%</span>
+        <span>LOW {risk.low_pct.toFixed(1)}%</span>
+      </div>
+
+      {/* 2×2 stat grid */}
+      <div className="grid grid-cols-2 gap-3">
+        {tiers.map((tier) => (
+          <div
+            key={tier.level}
+            className="rounded-lg border border-border p-4 relative overflow-hidden"
+            style={{ backgroundColor: tier.bg }}
+          >
+            {/* Left accent bar */}
+            <div
+              className="absolute left-0 inset-y-0 w-[3px] rounded-l-lg"
+              style={{ backgroundColor: tier.color }}
+            />
+            <div className="pl-1">
+              <p className="text-[10px] font-black uppercase tracking-widest font-mono mb-1" style={{ color: tier.color }}>
                 {tier.level}
-              </td>
-              <td className="py-2.5 pr-2">
-                <div style={{ height: '10px', backgroundColor: '#f1f5f9', position: 'relative' }}>
-                  <div style={{ position: 'absolute', inset: '0 auto 0 0', width: `${tier.pct}%`, backgroundColor: tier.highlight ? '#c41e3a' : '#cbd5e1' }} />
-                </div>
-              </td>
-              <td className="py-2.5 px-3 text-right" style={{ width: '44px' }}>
-                <span className="text-xs font-black font-mono tabular-nums" style={{ color: tier.highlight ? '#c41e3a' : '#334155' }}>
-                  {tier.pct.toFixed(1)}%
-                </span>
-              </td>
-              <td className="py-2.5 pl-1 text-[11px] font-mono hidden sm:table-cell" style={{ width: '120px', color: '#94a3b8' }}>
+              </p>
+              <p
+                className="font-black font-mono tabular-nums leading-none mb-1"
+                style={{ fontSize: tier.accent ? '2rem' : '1.5rem', color: tier.accent ? 'var(--color-accent)' : 'var(--color-text-primary)' }}
+              >
+                {tier.pct.toFixed(1)}%
+              </p>
+              <p className="text-[11px] text-text-secondary font-mono tabular-nums">
                 {tier.count}
-              </td>
-              <td className="py-2.5 pl-3 text-[10px] font-mono hidden md:table-cell text-right" style={{ width: '160px', color: '#94a3b8' }}>
+              </p>
+              <p className="text-[10px] text-text-muted mt-1.5 leading-tight">
                 {tier.action}
-              </td>
-            </tr>
-          ))}
-          <tr><td colSpan={5} style={{ borderTop: '2px solid #cbd5e1', padding: 0 }} /></tr>
-        </tbody>
-      </table>
-      <p className="text-[10px] font-mono mt-2" style={{ color: '#94a3b8' }}>
-        Source: COMPRANET 2002–2025 · RUBLI risk model v6.4 · OECD benchmark: 2–15%
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <p className="text-[10px] font-mono text-text-muted mt-3">
+        Source: COMPRANET 2002–2025 · RUBLI v6.4 · OECD benchmark: 2–15%
       </p>
     </div>
   )
@@ -945,20 +1055,20 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </p>
 
-      {/* Risk distribution by value — Economist style stacked bar */}
+      {/* Risk distribution by value — stacked bar */}
       <div className="mb-6">
         <div className="flex items-center gap-2 mb-3">
-          <p className="text-[10px] font-bold tracking-widest uppercase font-mono" style={{ color: '#64748b' }}>
+          <p className="text-[10px] font-bold tracking-widest uppercase font-mono text-text-muted">
             {t('s1.riskDistLabel')}
           </p>
           <RiskScoreDisclaimer />
         </div>
-        <div style={{ display: 'flex', height: '20px', gap: '1px' }}>
+        <div className="flex rounded overflow-hidden gap-px" style={{ height: '24px' }}>
           {[
-            { pct: criticalPctValue, color: '#c41e3a', label: t('s1.riskLevel.critical') },
+            { pct: criticalPctValue, color: 'var(--color-accent)', label: t('s1.riskLevel.critical') },
             { pct: highPctValue, color: '#ea580c', label: t('s1.riskLevel.high') },
             { pct: mediumPctValue, color: '#ca8a04', label: t('s1.riskLevel.medium') },
-            { pct: lowPctValue, color: '#e2e8f0', label: t('s1.riskLevel.low') },
+            { pct: lowPctValue, color: 'var(--color-background-elevated)', label: t('s1.riskLevel.low') },
           ].map((seg) => (
             <div
               key={seg.label}
@@ -969,15 +1079,16 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         </div>
         <div className="flex gap-5 mt-2.5 flex-wrap">
           {[
-            { color: '#c41e3a', label: t('s1.riskLevel.critical'), pct: criticalPctValue },
+            { color: 'var(--color-accent)', label: t('s1.riskLevel.critical'), pct: criticalPctValue },
             { color: '#ea580c', label: t('s1.riskLevel.high'), pct: highPctValue },
             { color: '#ca8a04', label: t('s1.riskLevel.medium'), pct: mediumPctValue },
-            { color: '#94a3b8', label: t('s1.riskLevel.low'), pct: lowPctValue },
+            { color: 'var(--color-text-muted)', label: t('s1.riskLevel.low'), pct: lowPctValue },
           ].map((item) => (
             <div key={item.label} className="flex items-center gap-1.5">
-              <div style={{ width: 8, height: 8, backgroundColor: item.color, flexShrink: 0 }} />
-              <span className="text-[10px] font-mono" style={{ color: '#64748b' }}>
-                {item.label} <span className="font-bold" style={{ color: '#1e293b' }}>{item.pct.toFixed(0)}%</span>
+              <div style={{ width: 8, height: 8, backgroundColor: item.color, flexShrink: 0, borderRadius: 1 }} />
+              <span className="text-[10px] font-mono text-text-muted">
+                {item.label}{' '}
+                <span className="font-bold text-text-primary">{item.pct.toFixed(0)}%</span>
               </span>
             </div>
           ))}
@@ -1068,46 +1179,76 @@ function SectionSectors({
         />
       </p>
 
-      {/* Sector bars — Economist style */}
-      <div className="my-6">
-        <p className="text-[10px] font-bold uppercase tracking-widest font-mono mb-3" style={{ color: '#64748b' }}>
-          {t('s3.riskLabel')}
-        </p>
+      {/* Sector bars — ranked by estimated value at risk */}
+      <div className="my-6 rounded-lg border border-border bg-background-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2 border-b border-border">
+          <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
+            {t('s3.riskLabel')}
+          </p>
+        </div>
         <table className="w-full border-collapse">
           <tbody>
             {sortedSectors.map((s, idx) => {
               const riskValue = (s.high_plus_pct / 100) * s.value
               const pct = maxRiskValue > 0 ? (riskValue / maxRiskValue) * 100 : 0
+              const sectorColor = SECTOR_COLORS[s.code] || SECTOR_COLORS.otros
+              const isTop = idx === 0
               return (
                 <tr
                   key={s.code}
-                  className="group cursor-pointer"
-                  style={{ borderTop: '1px solid #e2e8f0' }}
+                  className="group cursor-pointer hover:bg-background-elevated transition-colors"
+                  style={{ borderTop: '1px solid var(--color-border)' }}
                   onClick={() => {
                     const sector = data.sectors.find((x) => x.code === s.code)
                     if (sector) navigate(`/sectors/${data.sectors.indexOf(sector) + 1}`)
                   }}
                 >
-                  <td className="py-2 pr-4 text-xs group-hover:text-slate-900 transition-colors" style={{ width: '120px', color: '#475569' }}>
-                    {t(s.code, { ns: 'sectors' })}
+                  {/* Rank */}
+                  <td className="py-2.5 px-3 text-[10px] font-mono text-text-muted tabular-nums text-right" style={{ width: '28px' }}>
+                    {idx + 1}
                   </td>
-                  <td className="py-2 pr-2">
-                    <div style={{ height: '10px', backgroundColor: '#f1f5f9', position: 'relative' }}>
-                      <div style={{ position: 'absolute', inset: '0 auto 0 0', width: `${Math.max(pct, 0.5)}%`, backgroundColor: '#c41e3a' }} />
+                  {/* Sector name + color dot */}
+                  <td className="py-2.5 pr-3" style={{ width: '130px' }}>
+                    <div className="flex items-center gap-1.5">
+                      <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sectorColor, flexShrink: 0 }} />
+                      <span className={`text-xs transition-colors ${isTop ? 'font-bold text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                        {t(s.code, { ns: 'sectors' })}
+                      </span>
                     </div>
                   </td>
-                  <td className="py-2 pl-3 text-right text-xs font-mono font-bold tabular-nums" style={{ width: '100px', color: '#1e293b' }}>
+                  {/* Bar */}
+                  <td className="py-2.5 pr-3">
+                    <div className="relative" style={{ height: '8px', backgroundColor: 'var(--color-background-elevated)', borderRadius: 2 }}>
+                      <div
+                        style={{
+                          position: 'absolute',
+                          inset: '0 auto 0 0',
+                          width: `${Math.max(pct, 0.5)}%`,
+                          backgroundColor: isTop ? 'var(--color-accent)' : sectorColor,
+                          borderRadius: 2,
+                          opacity: isTop ? 1 : 0.7,
+                        }}
+                      />
+                    </div>
+                  </td>
+                  {/* Risk rate */}
+                  <td className="py-2.5 pr-2 text-right text-[11px] font-mono tabular-nums text-text-muted" style={{ width: '48px' }}>
+                    {s.high_plus_pct.toFixed(1)}%
+                  </td>
+                  {/* MXN value */}
+                  <td className="py-2.5 pl-1 pr-4 text-right font-mono font-bold tabular-nums text-text-primary" style={{ width: '96px', fontSize: '12px' }}>
                     {formatCompactMXN(riskValue)}
                   </td>
                 </tr>
               )
             })}
-            <tr><td colSpan={3} style={{ borderTop: '2px solid #cbd5e1', padding: 0 }} /></tr>
           </tbody>
         </table>
-        <p className="text-[10px] font-mono mt-2" style={{ color: '#94a3b8' }}>
-          Estimated value at risk = high+critical rate × sector total. Source: COMPRANET 2002–2025
-        </p>
+        <div className="px-4 py-2.5 border-t border-border bg-background-elevated/50">
+          <p className="text-[10px] font-mono text-text-muted">
+            Value at risk = high+critical rate × sector spend · Source: COMPRANET 2002–2025
+          </p>
+        </div>
       </div>
 
       {/* Sector callouts */}
