@@ -128,6 +128,44 @@ class VendorDetailResponse(BaseModel):
         description="Top 3 risk-driving SHAP factors from v5.2 analytical engine",
     )
 
+    # P1 enrichment fields (computed from aria_queue, contract_z_features, factor_baselines)
+    direct_award_rate_corrected: Optional[float] = Field(
+        None,
+        description="Corrected direct award rate from aria_queue (0-100%), avoids corrupted vendor_stats.direct_award_pct",
+    )
+    avg_z_price_volatility: Optional[float] = Field(
+        None,
+        description="Average z-score for price_volatility across contracts (from contract_z_features)",
+    )
+    new_vendor_risk_score: Optional[float] = Field(
+        None,
+        description="Ghost company risk score (0-1) from vendor_stats.new_vendor_risk_score",
+    )
+    new_vendor_risk_triggers: Optional[str] = Field(
+        None,
+        description="Comma-separated list of ghost company risk triggers",
+    )
+    year_end_pct: Optional[float] = Field(
+        None,
+        description="Percentage of this vendor's contracts signed in December",
+    )
+    year_end_sector_avg: Optional[float] = Field(
+        None,
+        description="Sector baseline for year-end contract percentage (from factor_baselines)",
+    )
+    avg_confidence_lower: Optional[float] = Field(
+        None,
+        description="Average lower bound of 95% risk score CI across contracts",
+    )
+    avg_confidence_upper: Optional[float] = Field(
+        None,
+        description="Average upper bound of 95% risk score CI across contracts",
+    )
+    sector_risk_percentile: Optional[int] = Field(
+        None,
+        description="Vendor's risk score percentile rank within its primary sector (1-99)",
+    )
+
     model_config = ConfigDict(from_attributes=True)
 
 

@@ -2177,7 +2177,7 @@ export interface AriaQueueItem {
   ips_tier: 1 | 2 | 3 | 4
   primary_pattern: string | null
   pattern_confidence: number
-  pattern_confidences?: Record<string, number>
+  pattern_confidences?: Record<string, number> | null
   total_contracts: number
   total_value_mxn: number
   avg_risk_score: number
@@ -2186,17 +2186,26 @@ export interface AriaQueueItem {
   in_ground_truth: boolean
   new_vendor_risk: boolean
   fp_penalty: number
+  fp_patent_exception?: boolean | null
+  fp_data_error?: boolean | null
+  fp_structural_monopoly?: boolean | null
   burst_score: number
   review_status: 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
   primary_sector_name: string | null
   direct_award_rate?: number
   years_active?: number
+  // IPS component scores (also returned from queue list endpoint)
+  risk_score_norm?: number | null
+  ensemble_norm?: number | null
+  financial_scale_norm?: number | null
+  external_flags_score?: number | null
+  // Disappeared vendor
+  is_disappeared?: boolean | null
+  last_contract_year?: number | null
+  // Value per contract
+  value_per_contract?: number | null
   // detail only:
-  risk_score_norm?: number
   mahalanobis_norm?: number
-  ensemble_norm?: number
-  financial_scale_norm?: number
-  external_flags_score?: number
   memo_text?: string | null
   memo_generated_at?: string | null
   activity_span_days?: number
