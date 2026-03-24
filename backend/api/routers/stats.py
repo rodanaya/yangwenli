@@ -241,6 +241,16 @@ class FastDashboardResponse(BaseModel):
     december_spike: Optional[Dict[str, Any]] = Field(None, description="December spending spike analysis (precomputed)")
     monthly_2023: Optional[Dict[str, Any]] = Field(None, description="Monthly breakdown for 2023 (precomputed)")
     cached_at: Optional[str] = Field(None, description="When stats were computed")
+    # P1 additions
+    multivariate_anomaly_count: Optional[int] = Field(None, description="Contracts with Mahalanobis p-value < 0.01")
+    election_year_avg_risk: Optional[float] = Field(None, description="Average risk score in election years")
+    non_election_year_avg_risk: Optional[float] = Field(None, description="Average risk score in non-election years")
+    election_year_contract_count: Optional[int] = Field(None, description="Number of contracts in election years")
+    new_vendor_risk_count: Optional[int] = Field(None, description="New vendors (2022+) with risk score > 0.40")
+    grade_a_pct: Optional[float] = Field(None, description="Percentage of contracts with data quality grade A")
+    grade_b_pct: Optional[float] = Field(None, description="Percentage of contracts with data quality grade B")
+    direct_award_pct: Optional[float] = Field(None, description="Overall direct award percentage")
+    sexenio_comparison: Optional[Dict[str, Any]] = Field(None, description="AMLO vs Sheinbaum era comparison")
 
 
 @router.get("/dashboard/fast", response_model=FastDashboardResponse)
@@ -378,6 +388,110 @@ def get_fast_dashboard(response: Response):
             except Exception as e:
                 logger.warning("overview_fallback_failed: %s", e)
 
+        # P1: Multivariate anomaly count
+        multivariate_anomaly_count = None
+        try:
+            row = cursor.execute(
+                "SELECT COUNT(*) FROM contract_z_features WHERE mahalanobis_pvalue < 0.01"
+            ).fetchone()
+            multivariate_anomaly_count = row[0] if row else None
+        except Exception as e:
+            logger.warning("p1_multivariate_anomaly_failed: %s", e)
+
+        # P1: Election year risk comparison
+        election_year_avg_risk = None
+        non_election_year_avg_risk = None
+        election_year_contract_count = None
+        try:
+            ey_row = cursor.execute("""
+                SELECT
+                    AVG(CASE WHEN is_election_year = 1 THEN risk_score END) as ey_avg,
+                    AVG(CASE WHEN is_election_year = 0 THEN risk_score END) as non_ey_avg,
+                    SUM(CASE WHEN is_election_year = 1 THEN 1 ELSE 0 END) as ey_count
+                FROM contracts WHERE risk_score IS NOT NULL
+            """).fetchone()
+            if ey_row:
+                election_year_avg_risk = round(ey_row[0], 4) if ey_row[0] is not None else None
+                non_election_year_avg_risk = round(ey_row[1], 4) if ey_row[1] is not None else None
+                election_year_contract_count = ey_row[2]
+        except Exception as e:
+            logger.warning("p1_election_year_risk_failed: %s", e)
+
+        # P1: New vendor risk count
+        new_vendor_risk_count = None
+        try:
+            nvr_row = cursor.execute("""
+                SELECT COUNT(*) FROM vendor_stats
+                WHERE new_vendor_risk_score > 0.40 AND last_contract_year >= 2022
+            """).fetchone()
+            new_vendor_risk_count = nvr_row[0] if nvr_row else None
+        except Exception as e:
+            logger.warning("p1_new_vendor_risk_failed: %s", e)
+
+        # P1: Data quality grade distribution
+        grade_a_pct = None
+        grade_b_pct = None
+        try:
+            grade_rows = cursor.execute("""
+                SELECT data_quality_grade, COUNT(*) as cnt
+                FROM contracts WHERE data_quality_grade IS NOT NULL
+                GROUP BY data_quality_grade
+            """).fetchall()
+            if grade_rows:
+                total_graded = sum(r[1] for r in grade_rows)
+                grade_map = {r[0]: r[1] for r in grade_rows}
+                if total_graded > 0:
+                    grade_a_pct = round(grade_map.get('A', 0) * 100.0 / total_graded, 1)
+                    grade_b_pct = round(grade_map.get('B', 0) * 100.0 / total_graded, 1)
+        except Exception as e:
+            logger.warning("p1_grade_distribution_failed: %s", e)
+
+        # P1: Direct award pct — use precomputed overview first, fallback to live query
+        direct_award_pct = overview.get("direct_award_pct")
+        if direct_award_pct is None:
+            try:
+                da_row = cursor.execute("""
+                    SELECT
+                        ROUND(SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) * 100.0 / COUNT(*), 1)
+                    FROM contracts
+                """).fetchone()
+                direct_award_pct = da_row[0] if da_row else None
+            except Exception as e:
+                logger.warning("p1_direct_award_pct_failed: %s", e)
+
+        # P1: Sexenio comparison (AMLO 2018-2024 vs Sheinbaum 2025+)
+        sexenio_comparison = None
+        try:
+            sx_rows = cursor.execute("""
+                SELECT
+                    CASE
+                        WHEN contract_year >= 2025 THEN 'sheinbaum'
+                        WHEN contract_year >= 2018 AND contract_year <= 2024 THEN 'amlo'
+                        ELSE NULL
+                    END AS era,
+                    COUNT(*) as contracts,
+                    AVG(risk_score) as avg_risk,
+                    AVG(CAST(is_direct_award AS REAL)) * 100.0 as direct_award_pct,
+                    SUM(amount_mxn) as total_value_mxn
+                FROM contracts
+                WHERE contract_year >= 2018
+                GROUP BY era
+                HAVING era IS NOT NULL
+            """).fetchall()
+            if sx_rows:
+                sexenio_map = {}
+                for sx in sx_rows:
+                    sexenio_map[sx[0]] = {
+                        "contracts": sx[1],
+                        "avg_risk": round(sx[2], 4) if sx[2] is not None else None,
+                        "direct_award_pct": round(sx[3], 1) if sx[3] is not None else None,
+                        "total_value_mxn": sx[4],
+                    }
+                if sexenio_map:
+                    sexenio_comparison = sexenio_map
+        except Exception as e:
+            logger.warning("p1_sexenio_comparison_failed: %s", e)
+
         response.headers["Cache-Control"] = "public, max-age=300"  # 5 min browser cache
         return FastDashboardResponse(
             overview=overview,
@@ -386,7 +500,16 @@ def get_fast_dashboard(response: Response):
             yearly_trends=yearly_trends,
             december_spike=stats.get('december_spike'),
             monthly_2023=stats.get('monthly_2023'),
-            cached_at=cached_at
+            cached_at=cached_at,
+            multivariate_anomaly_count=multivariate_anomaly_count,
+            election_year_avg_risk=election_year_avg_risk,
+            non_election_year_avg_risk=non_election_year_avg_risk,
+            election_year_contract_count=election_year_contract_count,
+            new_vendor_risk_count=new_vendor_risk_count,
+            grade_a_pct=grade_a_pct,
+            grade_b_pct=grade_b_pct,
+            direct_award_pct=direct_award_pct,
+            sexenio_comparison=sexenio_comparison,
         )
 
 

@@ -150,12 +150,18 @@ def get_aria_queue(
     rows = conn.execute(
         f"""
         SELECT q.vendor_id, q.vendor_name, q.ips_final, q.ips_raw, q.ips_tier,
-               q.primary_pattern, q.pattern_confidence, q.total_contracts,
-               q.total_value_mxn, q.avg_risk_score, q.is_efos_definitivo,
-               q.is_sfp_sanctioned, q.in_ground_truth, q.fp_penalty,
-               q.burst_score, COALESCE(q.review_status, 'pending') as review_status, q.primary_sector_name,
-               q.primary_sector_id, q.years_active, q.direct_award_rate,
-               q.computed_at, COALESCE(q.new_vendor_risk, 0) as new_vendor_risk
+               q.primary_pattern, q.pattern_confidence, q.pattern_confidences,
+               q.total_contracts, q.total_value_mxn, q.avg_risk_score,
+               q.is_efos_definitivo, q.is_sfp_sanctioned, q.in_ground_truth,
+               q.fp_penalty, q.fp_patent_exception, q.fp_data_error,
+               q.fp_structural_monopoly, q.burst_score,
+               COALESCE(q.review_status, 'pending') as review_status,
+               q.primary_sector_name, q.primary_sector_id, q.years_active,
+               q.direct_award_rate, q.computed_at,
+               COALESCE(q.new_vendor_risk, 0) as new_vendor_risk,
+               q.risk_score_norm, q.ensemble_norm, q.financial_scale_norm,
+               q.external_flags_score, q.is_disappeared, q.last_contract_year,
+               q.top_institution, q.top_institution_ratio, q.value_per_contract
         FROM aria_queue q
         {where_sql}
         ORDER BY q.ips_final DESC
@@ -167,7 +173,12 @@ def get_aria_queue(
     data = []
     for row in rows:
         d = _row_to_dict(row)
-        _bool_fields(d, "is_efos_definitivo", "is_sfp_sanctioned", "in_ground_truth", "new_vendor_risk")
+        _bool_fields(
+            d, "is_efos_definitivo", "is_sfp_sanctioned", "in_ground_truth",
+            "new_vendor_risk", "fp_patent_exception", "fp_data_error",
+            "fp_structural_monopoly", "is_disappeared",
+        )
+        d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))
         data.append(d)
 
     # Latest run summary
@@ -349,6 +360,10 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     review_stats = {"pending": 0, "confirmed": 0, "dismissed": 0, "reviewing": 0}
     queue_total = 0
     new_vendor_count = 0
+    reviewed_count = 0
+    confirmed_count = 0
+    dismissed_count = 0
+    t1_reviewed_count = 0
 
     if _table_exists(conn, "aria_queue"):
         queue_total_row = conn.execute("SELECT COUNT(*) FROM aria_queue").fetchone()
@@ -373,6 +388,27 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
             new_vendor_count = nv_row[0] if nv_row else 0
         except Exception:
             new_vendor_count = 0
+
+        # Review efficiency metrics (#64)
+        try:
+            rev_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE review_status != 'pending' AND review_status IS NOT NULL"
+            ).fetchone()
+            reviewed_count = rev_row[0] if rev_row else 0
+            conf_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE review_status = 'confirmed'"
+            ).fetchone()
+            confirmed_count = conf_row[0] if conf_row else 0
+            dism_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE review_status = 'dismissed'"
+            ).fetchone()
+            dismissed_count = dism_row[0] if dism_row else 0
+            t1_rev_row = conn.execute(
+                "SELECT COUNT(*) FROM aria_queue WHERE ips_tier = 1 AND review_status != 'pending' AND review_status IS NOT NULL"
+            ).fetchone()
+            t1_reviewed_count = t1_rev_row[0] if t1_rev_row else 0
+        except Exception:
+            pass
 
         # Pattern counts and external flag counts
         pattern_counts: dict = {}
@@ -424,6 +460,10 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
         "pattern_counts": pattern_counts,
         "external_counts": external_counts,
         "elevated_value_mxn": elevated_value,
+        "reviewed_count": reviewed_count,
+        "confirmed_count": confirmed_count,
+        "dismissed_count": dismissed_count,
+        "t1_reviewed_count": t1_reviewed_count,
     }
     app_cache.set("aria", _STATS_CACHE_KEY, result, maxsize=4, ttl=300)
     return result

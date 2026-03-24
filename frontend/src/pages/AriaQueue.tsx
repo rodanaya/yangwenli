@@ -88,17 +88,51 @@ function CardStatItem({ label, value }: { label: string; value: string }) {
   )
 }
 
-function IpsBar({ score }: { score: number }) {
+// #54 — IPS Breakdown Tooltip
+type IpsItemData = { risk_score_norm?: number | null; ensemble_norm?: number | null; financial_scale_norm?: number | null; external_flags_score?: number | null }
+
+function IpsBar({ score, item }: { score: number; item?: IpsItemData }) {
+  const { t } = useTranslation('aria')
   const pct = Math.min(100, Math.round(score * 100))
+  const [showTooltip, setShowTooltip] = useState(false)
+  const hasBreakdown = item && (
+    item.risk_score_norm != null ||
+    item.ensemble_norm != null ||
+    item.financial_scale_norm != null ||
+    item.external_flags_score != null
+  )
+
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden">
+    <div className="relative flex items-center gap-2">
+      <div
+        className={cn('flex-1 h-1.5 bg-background-elevated rounded-full overflow-hidden', hasBreakdown && 'cursor-help')}
+        onMouseEnter={() => hasBreakdown && setShowTooltip(true)}
+        onMouseLeave={() => setShowTooltip(false)}
+      >
         <div
           className={cn('h-full rounded-full transition-all', IPS_COLOR(score))}
           style={{ width: `${pct}%` }}
         />
       </div>
       <span className="text-xs font-mono text-text-muted w-8 text-right">{pct}</span>
+      {showTooltip && hasBreakdown && item && (
+        <div className="absolute bottom-full left-0 mb-2 z-50 w-52 rounded-lg border border-border bg-background-card shadow-xl p-3 space-y-1.5 text-xs pointer-events-none">
+          <p className="text-[10px] uppercase tracking-wider font-mono text-text-muted font-bold mb-2">{t('ipsBreakdown.title')}</p>
+          {([
+            { label: t('ipsBreakdown.risk'),     value: item.risk_score_norm,      weight: 0.40, color: 'text-red-400' },
+            { label: t('ipsBreakdown.ensemble'),  value: item.ensemble_norm,        weight: 0.20, color: 'text-purple-400' },
+            { label: t('ipsBreakdown.financial'), value: item.financial_scale_norm, weight: 0.20, color: 'text-yellow-400' },
+            { label: t('ipsBreakdown.external'),  value: item.external_flags_score, weight: 0.20, color: 'text-green-400' },
+          ] as { label: string; value: number | null | undefined; weight: number; color: string }[]).map((row) => (
+            <div key={row.label} className="flex justify-between items-center">
+              <span className="text-text-muted">{row.label}</span>
+              <span className={cn('font-mono tabular-nums', row.color)}>
+                {row.value != null ? (row.value * row.weight).toFixed(2) : '—'}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }
@@ -123,6 +157,77 @@ function NewVendorBadge() {
       <Sparkles className="h-3 w-3" />
       {t('badges.new')}
     </span>
+  )
+}
+
+// #61 — EFOS Definitivo vs Provisional
+function EfosBadge({ definitivo }: { definitivo: boolean }) {
+  const { t } = useTranslation('aria')
+  return definitivo ? (
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-950/70 text-red-300 border border-red-700">
+      {t('efosBadge.definitivo')}
+    </span>
+  ) : (
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-amber-950/60 text-amber-300 border border-amber-800">
+      {t('efosBadge.provisional')}
+    </span>
+  )
+}
+
+// #60 — False Positive / Known Signal badge
+function FpBadge({ item }: { item: AriaQueueItem }) {
+  const { t } = useTranslation('aria')
+  if (!item.fp_penalty) return null
+  const reason = item.fp_patent_exception
+    ? t('fpBadge.patent')
+    : item.fp_data_error
+    ? t('fpBadge.dataError')
+    : item.fp_structural_monopoly
+    ? t('fpBadge.structural')
+    : t('fpBadge.penalty')
+  return (
+    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-stone-800/60 text-stone-400 border border-stone-700">
+      {t('fpBadge.label')}: {reason}
+    </span>
+  )
+}
+
+// #56 — Disappeared Vendor badge
+function DisappearedBadge({ lastYear }: { lastYear?: number | null }) {
+  const { t } = useTranslation('aria')
+  return (
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-xs font-bold bg-red-950/80 text-red-400 border border-red-700 uppercase tracking-wider">
+      {t('disappeared.badge')}
+      {lastYear != null && (
+        <span className="font-normal normal-case tracking-normal text-red-400/70">
+          {t('disappeared.lastContract', { year: lastYear })}
+        </span>
+      )}
+    </span>
+  )
+}
+
+// #55 — Pattern confidence breakdown row
+function PatternConfidenceRow({ confidences, primaryPattern }: { confidences: Record<string, number> | null | undefined; primaryPattern?: string | null }) {
+  const { t } = useTranslation('aria')
+  if (!confidences) return null
+  const entries = Object.entries(confidences)
+    .filter(([k, v]) => v > 0.10 && k !== primaryPattern)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 3)
+  if (entries.length === 0) return null
+  return (
+    <div className="flex flex-wrap gap-1 mt-1">
+      {entries.map(([pattern, conf]) => {
+        const meta = getPatternMeta()[pattern as keyof ReturnType<typeof getPatternMeta>]
+        if (!meta) return null
+        return (
+          <span key={pattern} className={cn('inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[10px] font-medium border opacity-75', meta.bg, meta.color, meta.border)}>
+            {t(`patterns.${pattern}`)} <span className="font-mono opacity-60">{Math.round(conf * 100)}%</span>
+          </span>
+        )
+      })}
+    </div>
   )
 }
 
@@ -354,21 +459,37 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
                 </span>
                 <PatternPill pattern={item.primary_pattern ?? null} />
                 {item.new_vendor_risk && <NewVendorBadge />}
-                {item.is_efos_definitivo && (
-                  <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-red-950/60 text-red-300 border border-red-800">
-                    {t('badges.efos')}
-                  </span>
+                {item.is_efos_definitivo != null && (
+                  <EfosBadge definitivo={item.is_efos_definitivo} />
+                )}
+                {item.is_disappeared && (
+                  <DisappearedBadge lastYear={item.last_contract_year} />
                 )}
               </div>
               <h3 className="font-semibold text-text-primary text-sm leading-snug line-clamp-2">
                 {item.vendor_name}
               </h3>
               {item.top_institution && (
-                <p className="text-xs text-text-muted mt-0.5 flex items-center gap-1">
+                <p className={cn(
+                  'text-xs mt-0.5 flex items-center gap-1',
+                  item.top_institution_ratio != null && item.top_institution_ratio > 0.80
+                    ? 'text-amber-400/80'
+                    : 'text-text-muted'
+                )}>
                   <Building2 className="h-3 w-3 shrink-0" />
                   <span className="truncate">{item.top_institution}</span>
+                  {item.top_institution_ratio != null && (
+                    <span className="font-mono shrink-0">
+                      {Math.round(item.top_institution_ratio * 100)}%
+                      {item.top_institution_ratio > 0.80 && (
+                        <span className="ml-1 text-[10px] text-amber-500/70">{t('topInstitution.capture')}</span>
+                      )}
+                    </span>
+                  )}
                 </p>
               )}
+              <PatternConfidenceRow confidences={item.pattern_confidences} primaryPattern={item.primary_pattern} />
+              <FpBadge item={item} />
             </div>
             <div className="shrink-0 text-right">
               <div className={cn('text-2xl font-bold font-mono', IPS_TEXT_COLOR(ips))}>
@@ -378,17 +499,41 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             </div>
           </div>
 
-          {/* IPS bar */}
-          <IpsBar score={ips} />
+          {/* IPS bar with breakdown tooltip (#54) */}
+          <IpsBar score={ips} item={item} />
 
           {/* Key stats */}
           <div className="grid grid-cols-2 gap-2 text-xs">
             <CardStatItem label="card.totalValue" value={formatCompactMXN(value)} />
-            <CardStatItem label="card.contracts" value={formatNumber(contracts)} />
+            <div className="bg-background-elevated rounded p-2">
+              <div className="text-text-muted mb-0.5 text-xs">{t('card.contracts')}</div>
+              <div className="font-semibold text-text-primary flex items-center gap-1.5">
+                {formatNumber(contracts)}
+                {item.burst_score != null && item.burst_score > 0.70 && (
+                  <span className={cn(
+                    'text-[10px] font-mono px-1 py-0.5 rounded',
+                    item.burst_score > 0.85 ? 'text-red-400 bg-red-950/40' : 'text-orange-400 bg-orange-950/40'
+                  )}>
+                    {t('burst.label')} {(item.burst_score * 100).toFixed(0)}
+                  </span>
+                )}
+              </div>
+            </div>
             {item.avg_risk_score != null && (
               <CardStatItem label="card.avgRisk" value={`${(item.avg_risk_score * 100).toFixed(0)}/100`} />
             )}
-            {item.direct_award_rate != null && (
+            {item.value_per_contract != null && (
+              <div className="bg-background-elevated rounded p-2">
+                <div className="text-text-muted mb-0.5 text-xs">{t('valuePerContract.label')}</div>
+                <div className="font-semibold text-text-primary flex items-center gap-1">
+                  {formatCompactMXN(item.value_per_contract)}
+                  {item.value_per_contract > 5_000_000 && (
+                    <span className="text-amber-400 text-[10px]" title={t('valuePerContract.highFlag')}>⚠</span>
+                  )}
+                </div>
+              </div>
+            )}
+            {item.value_per_contract == null && item.direct_award_rate != null && (
               <CardStatItem label="card.directAward" value={`${(item.direct_award_rate * 100).toFixed(0)}%`} />
             )}
           </div>
@@ -687,6 +832,29 @@ export default function AriaPage() {
         <span><strong className="text-text-primary font-mono">{formatCompactMXN(elevatedValue)}</strong> {t('stats.valueAtRisk')}</span>
         <span>&middot;</span>
         <span><strong className="text-red-400 font-mono">{formatNumber(efosCount)}</strong> {t('stats.onEfos')}</span>
+        {stats?.reviewed_count != null && stats.reviewed_count > 0 && (
+          <>
+            <span>&middot;</span>
+            <span>
+              <strong className="text-text-primary font-mono">{formatNumber(stats.reviewed_count)}</strong> {t('efficiencyStats.reviewed')}
+              {stats.confirmed_count != null && stats.reviewed_count > 0 && (
+                <span className="ml-1 text-green-400/80">
+                  ({Math.round((stats.confirmed_count / stats.reviewed_count) * 100)}% {t('efficiencyStats.confirmationRate')})
+                </span>
+              )}
+            </span>
+            {stats.t1_reviewed_count != null && (
+              <>
+                <span>&middot;</span>
+                <span>
+                  <strong className="text-text-primary font-mono">
+                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 285)) * 100)}%
+                  </strong> {t('efficiencyStats.t1Complete')}
+                </span>
+              </>
+            )}
+          </>
+        )}
       </div>
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">

@@ -697,6 +697,130 @@ def get_vendor(
         except Exception as e:
             logger.debug("SHAP factors unavailable for vendor %s: %s", vendor_id, e)
 
+        # P1 enrichment fields
+        direct_award_rate_corrected: Optional[float] = None
+        avg_z_price_volatility: Optional[float] = None
+        new_vendor_risk_score: Optional[float] = None
+        new_vendor_risk_triggers: Optional[str] = None
+        year_end_pct: Optional[float] = None
+        year_end_sector_avg: Optional[float] = None
+        avg_confidence_lower: Optional[float] = None
+        avg_confidence_upper: Optional[float] = None
+        sector_risk_percentile: Optional[int] = None
+
+        try:
+            # #22: corrected direct award rate from aria_queue (0-1 fraction → %)
+            aq_row = cursor.execute(
+                "SELECT direct_award_rate FROM aria_queue WHERE vendor_id = ? LIMIT 1",
+                (vendor_id,),
+            ).fetchone()
+            if aq_row and aq_row["direct_award_rate"] is not None:
+                direct_award_rate_corrected = round(float(aq_row["direct_award_rate"]) * 100, 2)
+        except Exception as e:
+            logger.debug("aria_queue direct_award_rate unavailable for vendor %s: %s", vendor_id, e)
+
+        try:
+            # #24: average z_price_volatility across contracts
+            pv_row = cursor.execute(
+                """
+                SELECT AVG(czf.z_price_volatility) AS avg_pv
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.vendor_id = ?
+                """,
+                (vendor_id,),
+            ).fetchone()
+            if pv_row and pv_row["avg_pv"] is not None:
+                avg_z_price_volatility = round(float(pv_row["avg_pv"]), 3)
+        except Exception as e:
+            logger.debug("avg_z_price_volatility unavailable for vendor %s: %s", vendor_id, e)
+
+        try:
+            # #27: ghost company risk from vendor_stats
+            vs_row = cursor.execute(
+                "SELECT new_vendor_risk_score, new_vendor_risk_triggers FROM vendor_stats WHERE vendor_id = ? LIMIT 1",
+                (vendor_id,),
+            ).fetchone()
+            if vs_row:
+                if vs_row["new_vendor_risk_score"] is not None:
+                    new_vendor_risk_score = round(float(vs_row["new_vendor_risk_score"]), 4)
+                if vs_row["new_vendor_risk_triggers"] is not None:
+                    new_vendor_risk_triggers = str(vs_row["new_vendor_risk_triggers"])
+        except Exception as e:
+            logger.debug("new_vendor_risk unavailable for vendor %s: %s", vendor_id, e)
+
+        try:
+            # #28: year-end concentration
+            ye_row = cursor.execute(
+                """
+                SELECT
+                    100.0 * SUM(CASE WHEN is_year_end = 1 THEN 1 ELSE 0 END) / COUNT(*) AS pct
+                FROM contracts
+                WHERE vendor_id = ?
+                """,
+                (vendor_id,),
+            ).fetchone()
+            if ye_row and ye_row["pct"] is not None:
+                year_end_pct = round(float(ye_row["pct"]), 1)
+
+            # Sector baseline for year_end (raw fraction → %)
+            primary_sector = extra["primary_sector_id"] if extra else None
+            if primary_sector:
+                fb_row = cursor.execute(
+                    """
+                    SELECT mean FROM factor_baselines
+                    WHERE factor_name = 'year_end' AND sector_id = ? AND scope = 'sector'
+                    LIMIT 1
+                    """,
+                    (primary_sector,),
+                ).fetchone()
+                if not fb_row:
+                    fb_row = cursor.execute(
+                        "SELECT mean FROM factor_baselines WHERE factor_name = 'year_end' AND scope = 'global' LIMIT 1",
+                    ).fetchone()
+                if fb_row and fb_row["mean"] is not None:
+                    year_end_sector_avg = round(float(fb_row["mean"]) * 100, 1)
+        except Exception as e:
+            logger.debug("year_end_pct unavailable for vendor %s: %s", vendor_id, e)
+
+        try:
+            # #33: average CI bounds across contracts
+            ci_row = cursor.execute(
+                """
+                SELECT AVG(risk_confidence_lower) AS avg_lo, AVG(risk_confidence_upper) AS avg_hi
+                FROM contracts
+                WHERE vendor_id = ? AND risk_confidence_lower IS NOT NULL
+                """,
+                (vendor_id,),
+            ).fetchone()
+            if ci_row and ci_row["avg_lo"] is not None:
+                avg_confidence_lower = round(float(ci_row["avg_lo"]), 4)
+                avg_confidence_upper = round(float(ci_row["avg_hi"]), 4)
+        except Exception as e:
+            logger.debug("avg CI unavailable for vendor %s: %s", vendor_id, e)
+
+        try:
+            # #34: sector risk percentile
+            primary_sector = extra["primary_sector_id"] if extra else None
+            vendor_avg_risk = detail.get("avg_risk_score")
+            if primary_sector and vendor_avg_risk is not None:
+                pct_row = cursor.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS total,
+                        SUM(CASE WHEN vs2.avg_risk_score < ? THEN 1 ELSE 0 END) AS below
+                    FROM vendor_stats vs2
+                    JOIN vendors v2 ON vs2.vendor_id = v2.id
+                    WHERE vs2.primary_sector_id = ? AND vs2.avg_risk_score IS NOT NULL
+                    """,
+                    (vendor_avg_risk, primary_sector),
+                ).fetchone()
+                if pct_row and pct_row["total"] and pct_row["total"] > 0:
+                    raw_pct = int(round((pct_row["below"] / pct_row["total"]) * 100))
+                    sector_risk_percentile = min(99, max(1, raw_pct))
+        except Exception as e:
+            logger.debug("sector_risk_percentile unavailable for vendor %s: %s", vendor_id, e)
+
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
@@ -737,7 +861,80 @@ def get_vendor(
             is_efos_ghost=is_efos_ghost,
             is_sfp_sanctioned=is_sfp_sanctioned,
             shap_top_risk_factors=shap_top_risk_factors,
+            direct_award_rate_corrected=direct_award_rate_corrected,
+            avg_z_price_volatility=avg_z_price_volatility,
+            new_vendor_risk_score=new_vendor_risk_score,
+            new_vendor_risk_triggers=new_vendor_risk_triggers,
+            year_end_pct=year_end_pct,
+            year_end_sector_avg=year_end_sector_avg,
+            avg_confidence_lower=avg_confidence_lower,
+            avg_confidence_upper=avg_confidence_upper,
+            sector_risk_percentile=sector_risk_percentile,
         )
+
+
+class ContractHistogramBucket(BaseModel):
+    bucket: str
+    count: int
+    min_amount: float
+    max_amount: float
+
+
+class ContractHistogramResponse(BaseModel):
+    vendor_id: int
+    total_contracts: int
+    buckets: List[ContractHistogramBucket]
+    threshold_mxn: float
+
+
+@router.get("/{vendor_id:int}/contract-histogram", response_model=ContractHistogramResponse)
+def get_contract_histogram(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Return contract size distribution for a vendor, bucketed for a BarChart.
+    The threshold_mxn field marks the 3M MXN single-tender threshold.
+    """
+    THRESHOLD = 3_000_000.0
+    BUCKETS = [
+        ("<100K",    0.0,          100_000.0),
+        ("100K–1M",  100_000.0,    1_000_000.0),
+        ("1M–3M",    1_000_000.0,  3_000_000.0),
+        ("3M–5M",    3_000_000.0,  5_000_000.0),
+        ("5M–10M",   5_000_000.0,  10_000_000.0),
+        ("10M–100M", 10_000_000.0, 100_000_000.0),
+        (">100M",    100_000_000.0, float("inf")),
+    ]
+    with get_db() as conn:
+        cursor = conn.cursor()
+        rows = cursor.execute(
+            "SELECT importe_contrato FROM contracts WHERE vendor_id = ? AND importe_contrato > 0 AND importe_contrato <= ?",
+            (vendor_id, MAX_CONTRACT_VALUE),
+        ).fetchall()
+
+    counts = [0] * len(BUCKETS)
+    for row in rows:
+        amt = row["importe_contrato"]
+        for i, (_, lo, hi) in enumerate(BUCKETS):
+            if lo <= amt < hi:
+                counts[i] += 1
+                break
+
+    buckets = [
+        ContractHistogramBucket(
+            bucket=BUCKETS[i][0],
+            count=counts[i],
+            min_amount=BUCKETS[i][1],
+            max_amount=BUCKETS[i][2] if BUCKETS[i][2] != float("inf") else MAX_CONTRACT_VALUE,
+        )
+        for i in range(len(BUCKETS))
+    ]
+    return ContractHistogramResponse(
+        vendor_id=vendor_id,
+        total_contracts=len(rows),
+        buckets=buckets,
+        threshold_mxn=THRESHOLD,
+    )
 
 
 @router.get("/{vendor_id:int}/shap", response_model=VendorSHAPResponse)

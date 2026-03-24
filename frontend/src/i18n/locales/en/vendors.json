@@ -121,5 +121,35 @@
     "riskReducing": "Risk-reducing factor"
   },
   "noContributingFactors": "No contributing risk factors found.",
-  "untitledContract": "Untitled"
+  "untitledContract": "Untitled",
+  "priceVolatility": {
+    "title": "Price Volatility",
+    "zscore": "z-score vs. sector",
+    "description": "This vendor's contract amounts vary significantly more than sector peers — a top predictor of corruption risk in the v6.4 model."
+  },
+  "ghostRisk": {
+    "title": "Ghost Company Risk",
+    "triggers": "Triggers",
+    "description": "This vendor shows structural patterns consistent with ghost companies: new, minimal activity, concentrated awards."
+  },
+  "yearEnd": {
+    "title": "Year-End Concentration",
+    "vendorPct": "This vendor",
+    "sectorAvg": "Sector avg",
+    "description": "December contracts bypass normal review cycles — a timing anomaly associated with budget dumping."
+  },
+  "protectiveFactors": {
+    "title": "Protective Factors",
+    "description": "These factors lower the risk score — the model treats them as signals of legitimate operations.",
+    "show": "Show protective factors",
+    "hide": "Hide protective factors"
+  },
+  "histogram": {
+    "title": "Contract Size Distribution",
+    "description": "3M MXN threshold marks the single-tender limit. Clusters just below the line may indicate threshold splitting.",
+    "yLabel": "Contracts",
+    "thresholdLabel": "3M MXN limit"
+  },
+  "sectorPercentile": "Top {{pct}}% in sector",
+  "confidenceInterval": "95% CI: {{lo}}–{{hi}}"
 }

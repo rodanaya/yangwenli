@@ -104,6 +104,7 @@ import type {
   StoryPackagesResponse,
   VendorSimilarCasesResponse,
   VendorNarrativeResponse,
+  ContractHistogramResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -261,6 +262,36 @@ export const sectorApi = {
    */
   async getRiskDistribution(sectorId: number): Promise<{ data: RiskDistribution[] }> {
     const { data } = await api.get(`/analysis/risk-distribution?sector_id=${sectorId}`)
+    return data
+  },
+
+  /**
+   * P2 #47: Get per-sector model coefficients
+   */
+  async getModelCoefficients(sectorId: number): Promise<{
+    sector_id: number
+    sector_code: string
+    sector_name: string
+    model_used: 'sector' | 'global'
+    intercept: number | null
+    coefficients: Array<{ feature: string; coefficient: number }>
+  }> {
+    const { data } = await api.get(`/sectors/${sectorId}/model-coefficients`)
+    return data
+  },
+
+  /**
+   * P2 #50: Get temporal anomaly for a sector
+   */
+  async getTemporalAnomaly(sectorId: number, year = 2024): Promise<{
+    sector_id: number
+    sector_code: string
+    sector_name: string
+    current_year: number
+    contract_count: number
+    anomalies: Array<{ feature: string; label: string; z_score: number; direction: 'above' | 'below'; severity: 'high' | 'moderate' }>
+  }> {
+    const { data } = await api.get(`/sectors/${sectorId}/temporal-anomaly?year=${year}`)
     return data
   },
 }
@@ -564,6 +595,11 @@ export const vendorApi = {
    */
   async getPercentile(vendorId: number): Promise<{ percentile: number; rank: number; total: number }> {
     const { data } = await api.get(`/vendors/${vendorId}/percentile`)
+    return data
+  },
+
+  async getContractHistogram(vendorId: number): Promise<ContractHistogramResponse> {
+    const { data } = await api.get<ContractHistogramResponse>(`/vendors/${vendorId}/contract-histogram`)
     return data
   },
 }
@@ -2461,6 +2497,19 @@ export const ariaApi = {
   async getVendorDetail(vendorId: number): Promise<AriaQueueItem> {
     const { data } = await api.get<AriaQueueItem>(`/aria/queue/${vendorId}`)
     return data
+  },
+
+  /**
+   * Fetch the ARIA queue entry for a vendor (for VendorProfile review notes #63).
+   * Returns null if the vendor is not in the queue.
+   */
+  async getAriaQueueEntry(vendorId: number): Promise<AriaQueueItem | null> {
+    try {
+      const { data } = await api.get<AriaQueueItem>(`/aria/queue/${vendorId}`)
+      return data
+    } catch {
+      return null
+    }
   },
 
   /**

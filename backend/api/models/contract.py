@@ -39,6 +39,11 @@ class ContractListItem(ContractBase):
     procedure_type: Optional[str] = None
     mahalanobis_distance: Optional[float] = None
     risk_factors: Optional[List[str]] = None
+    # P1 additions
+    ensemble_anomaly_score: Optional[float] = None
+    publication_delay_days: Optional[int] = None
+    risk_model_version: Optional[str] = None
+    exception_article: Optional[str] = None
 
 
 class ContractDetail(ContractBase):

@@ -32,6 +32,8 @@ CONTRACT_SORT_WHITELIST = {
     "sector_id": "c.sector_id",
     "risk_level": "c.risk_level",
     "mahalanobis_distance": "c.mahalanobis_distance",
+    "ensemble_anomaly": "c.ensemble_anomaly_score",
+    "publication_delay": "c.publication_delay_days",
 }
 
 

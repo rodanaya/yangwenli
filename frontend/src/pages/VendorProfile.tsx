@@ -33,7 +33,7 @@ import InvestigationLede from '@/components/ui/InvestigationLede'
 import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem, ContractHistogramResponse } from '@/api/types'
 import {
   AreaChart,
   Area,
@@ -839,6 +839,15 @@ export function VendorProfile() {
     retry: false, // 404 = no SHAP data for this vendor, don't retry
   })
 
+  // #32: Contract size histogram — deferred until Risk tab
+  const { data: histogramData } = useQuery<ContractHistogramResponse>({
+    queryKey: ['vendor', vendorId, 'contract-histogram'],
+    queryFn: () => vendorApi.getContractHistogram(vendorId),
+    enabled: !!vendorId && activeTab === 'risk',
+    staleTime: 30 * 60 * 1000,
+    retry: false,
+  })
+
   // P9: Model evolution trajectory — deferred until Risk tab
   interface TrajectoryResponse {
     vendor_id: number
@@ -1248,9 +1257,26 @@ export function VendorProfile() {
             entityName={toTitleCase(vendor.name)}
           />
           {vendor.avg_risk_score !== undefined && (
-            <div className="flex items-center gap-1">
-              <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
-              <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
+            <div className="flex flex-col items-end gap-0.5">
+              <div className="flex items-center gap-1">
+                <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
+                <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
+              </div>
+              {/* #33 — CI range */}
+              {vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null && (
+                <span className="text-[10px] text-text-muted font-mono tabular-nums">
+                  {t('confidenceInterval', {
+                    lo: (vendor.avg_confidence_lower * 100).toFixed(0),
+                    hi: (vendor.avg_confidence_upper * 100).toFixed(0),
+                  })}
+                </span>
+              )}
+              {/* #34 — sector percentile */}
+              {vendor.sector_risk_percentile != null && vendor.sector_risk_percentile >= 70 && (
+                <span className="text-[10px] font-semibold text-risk-high tabular-nums">
+                  {t('sectorPercentile', { pct: 100 - vendor.sector_risk_percentile })}
+                </span>
+              )}
             </div>
           )}
           {scorecard && (
@@ -1273,8 +1299,8 @@ export function VendorProfile() {
         vendorName={toTitleCase(vendor.name)}
         riskLevel={riskLevel}
         topFinding={
-          (vendor.direct_award_pct ?? 0) > 50
-            ? `${vendor.direct_award_pct?.toFixed(0)}% adjudicacion directa`
+          (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50
+            ? `${(vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0)}% adjudicacion directa`
             : riskLevel === 'critical' || riskLevel === 'high'
               ? `Riesgo ${riskLevel} detectado por modelo v6.0`
               : `${vendor.total_contracts.toLocaleString()} contratos analizados`
@@ -1321,8 +1347,9 @@ export function VendorProfile() {
           flags.push({ icon: '🟠', text: `High risk score (${(score * 100).toFixed(0)}/100) — strong similarity to documented corruption patterns`, severity: 'high' })
         }
         // Procurement patterns
-        if ((vendor.direct_award_pct ?? 0) > 70) {
-          flags.push({ icon: '🟠', text: t('flags.highDirectAward', { pct: vendor.direct_award_pct?.toFixed(0) }), severity: 'high' })
+        const effectiveDirectAwardPct = vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0
+        if (effectiveDirectAwardPct > 70) {
+          flags.push({ icon: '🟠', text: t('flags.highDirectAward', { pct: effectiveDirectAwardPct.toFixed(0) }), severity: 'high' })
         }
         if ((vendor.single_bid_pct ?? 0) > 40) {
           flags.push({ icon: '🟡', text: t('flags.highSingleBid', { pct: vendor.single_bid_pct?.toFixed(0) }), severity: 'medium' })
@@ -1657,7 +1684,7 @@ export function VendorProfile() {
                 <CardContent className="space-y-4">
                   <PatternBar
                     label={t('cards.directAwards')}
-                    value={vendor.direct_award_pct}
+                    value={vendor.direct_award_rate_corrected ?? vendor.direct_award_pct}
                     isPercent100
                   />
                   <PatternBar
@@ -1675,6 +1702,143 @@ export function VendorProfile() {
                   </div>
                 </CardContent>
               </Card>
+
+              {/* #24 — Price Volatility KPI */}
+              {vendor.avg_z_price_volatility != null && Math.abs(vendor.avg_z_price_volatility) > 0.5 && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <TrendingUp className="h-4 w-4" />
+                      {t('priceVolatility.title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-text-muted text-sm">{t('priceVolatility.zscore')}</span>
+                      <span
+                        className={`font-mono font-bold tabular-nums text-lg ${
+                          vendor.avg_z_price_volatility > 2 ? 'text-risk-critical' :
+                          vendor.avg_z_price_volatility > 1 ? 'text-risk-high' :
+                          vendor.avg_z_price_volatility > 0 ? 'text-risk-medium' :
+                          'text-risk-low'
+                        }`}
+                      >
+                        {vendor.avg_z_price_volatility > 0 ? '+' : ''}{vendor.avg_z_price_volatility.toFixed(2)}σ
+                      </span>
+                    </div>
+                    <p className="text-[10px] text-text-muted/70 italic">{t('priceVolatility.description')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* #27 — Ghost company risk */}
+              {(vendor.new_vendor_risk_score ?? 0) > 0.40 && (
+                <Card className="fern-card border-amber-500/20">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <AlertTriangle className="h-4 w-4 text-amber-400" />
+                      {t('ghostRisk.title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="text-text-muted text-sm">Score</span>
+                      <span className="font-mono font-bold tabular-nums text-amber-400">
+                        {((vendor.new_vendor_risk_score ?? 0) * 100).toFixed(0)}%
+                      </span>
+                    </div>
+                    {vendor.new_vendor_risk_triggers && (
+                      <div className="flex flex-wrap gap-1 mt-1">
+                        <span className="text-[10px] text-text-muted">{t('ghostRisk.triggers')}:</span>
+                        {vendor.new_vendor_risk_triggers.split(',').map((trigger) => (
+                          <span key={trigger.trim()} className="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                            {trigger.trim()}
+                          </span>
+                        ))}
+                      </div>
+                    )}
+                    <p className="text-[10px] text-text-muted/70 italic mt-2">{t('ghostRisk.description')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* #28 — Year-end concentration */}
+              {vendor.year_end_pct != null && vendor.year_end_sector_avg != null &&
+                vendor.year_end_pct > vendor.year_end_sector_avg * 1.5 && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <Activity className="h-4 w-4" />
+                      {t('yearEnd.title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-muted">{t('yearEnd.vendorPct')}</span>
+                      <span className="font-mono font-bold tabular-nums text-risk-high">
+                        {vendor.year_end_pct.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="flex items-center justify-between text-sm">
+                      <span className="text-text-muted">{t('yearEnd.sectorAvg')}</span>
+                      <span className="font-mono tabular-nums text-text-secondary">
+                        {vendor.year_end_sector_avg.toFixed(1)}%
+                      </span>
+                    </div>
+                    <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
+                      <div
+                        className="h-full rounded-full bg-amber-500/70"
+                        style={{ width: `${Math.min(100, (vendor.year_end_pct / Math.max(vendor.year_end_pct, 100)) * 100)}%` }}
+                      />
+                    </div>
+                    <p className="text-[10px] text-text-muted/70 italic">{t('yearEnd.description')}</p>
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* #31 — Protective factors (collapsible) */}
+              {(() => {
+                const protectFactors = (shapData?.top_protect_factors ?? []) as Array<{ factor: string; shap: number; label?: string }>
+                if (protectFactors.length === 0) return null
+                return (
+                  <Card className="fern-card border-green-500/20">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <ShieldCheck className="h-4 w-4 text-green-400" />
+                        {t('protectiveFactors.title')}
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <p className="text-[10px] text-text-muted/70 italic mb-3">{t('protectiveFactors.description')}</p>
+                      <div className="space-y-2">
+                        {protectFactors.slice(0, 3).map((f) => {
+                          const absShap = Math.abs(f.shap)
+                          const maxAbs = Math.abs(protectFactors[0]?.shap ?? 1)
+                          const barPct = maxAbs > 0 ? (absShap / maxAbs) * 100 : 0
+                          return (
+                            <div key={f.factor}>
+                              <div className="flex items-center justify-between text-xs mb-0.5">
+                                <span className="text-text-secondary font-medium">
+                                  {f.label ?? f.factor.replace(/_/g, ' ')}
+                                </span>
+                                <span className="font-mono tabular-nums text-green-400">
+                                  {f.shap.toFixed(3)}
+                                </span>
+                              </div>
+                              <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
+                                <div
+                                  className="h-full rounded-full bg-green-500/60"
+                                  style={{ width: `${barPct}%` }}
+                                />
+                              </div>
+                            </div>
+                          )
+                        })}
+                      </div>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
             </div>
             </ScrollReveal>
 
@@ -2599,6 +2763,77 @@ export function VendorProfile() {
                       currentScore={riskProfile.avg_risk_score}
                       waterfallData={waterfallData}
                     />
+                  </CardContent>
+                </Card>
+              )}
+
+              {/* #32 — Contract Size Histogram */}
+              {histogramData && histogramData.buckets.some((b) => b.count > 0) && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <BarChart3 className="h-4 w-4" />
+                      {t('histogram.title')}
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent>
+                    <div
+                      className="h-[160px]"
+                      role="img"
+                      aria-label="Bar chart showing the distribution of contract sizes for this vendor"
+                    >
+                      <span className="sr-only">
+                        Bar chart showing how many contracts fall into each contract size bucket. A reference line marks the 3M MXN single-tender threshold.
+                      </span>
+                      <ResponsiveContainer width="100%" height="100%">
+                        <BarChart data={histogramData.buckets} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
+                          <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" vertical={false} />
+                          <XAxis
+                            dataKey="bucket"
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                          />
+                          <YAxis
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                            width={28}
+                            allowDecimals={false}
+                          />
+                          <RechartsTooltip
+                            content={({ active, payload }) => {
+                              if (active && payload?.[0]) {
+                                const d = payload[0].payload as { bucket: string; count: number }
+                                return (
+                                  <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
+                                    <span className="font-medium">{d.bucket}</span>
+                                    <span className="ml-2 tabular-nums">{d.count.toLocaleString()} contracts</span>
+                                  </div>
+                                )
+                              }
+                              return null
+                            }}
+                          />
+                          <Bar dataKey="count" fill={riskColor} opacity={0.75} radius={[2, 2, 0, 0]}>
+                            {histogramData.buckets.map((entry, index) => (
+                              <Cell
+                                key={`cell-${index}`}
+                                fill={entry.min_amount < histogramData.threshold_mxn && entry.max_amount > histogramData.threshold_mxn
+                                  ? '#f59e0b'
+                                  : entry.min_amount >= histogramData.threshold_mxn
+                                    ? riskColor
+                                    : 'var(--color-text-secondary)'}
+                                opacity={0.75}
+                              />
+                            ))}
+                          </Bar>
+                          <ReferenceLine
+                            x="1M–3M"
+                            stroke="#f59e0b"
+                            strokeDasharray="4 2"
+                            label={{ value: t('histogram.thresholdLabel'), position: 'top', fill: '#f59e0bcc', fontSize: 9 }}
+                          />
+                        </BarChart>
+                      </ResponsiveContainer>
+                    </div>
+                    <p className="text-[10px] text-text-muted/70 italic mt-2">{t('histogram.description')}</p>
                   </CardContent>
                 </Card>
               )}

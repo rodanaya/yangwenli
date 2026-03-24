@@ -215,6 +215,22 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // P2 #47: Per-sector model coefficients
+  const { data: modelCoefficients } = useQuery({
+    queryKey: ['sector', sectorId, 'model-coefficients'],
+    queryFn: () => sectorApi.getModelCoefficients(sectorId),
+    enabled: !!sectorId,
+    staleTime: 60 * 60 * 1000, // model rarely changes
+  })
+
+  // P2 #50: Temporal anomaly
+  const { data: temporalAnomaly } = useQuery({
+    queryKey: ['sector', sectorId, 'temporal-anomaly'],
+    queryFn: () => sectorApi.getTemporalAnomaly(sectorId),
+    enabled: !!sectorId,
+    staleTime: 30 * 60 * 1000,
+  })
+
   // ── SECTOR INTELLIGENCE insights ─────────────────────────────────────────
   // Must be declared before early returns (Rules of Hooks)
   const insights = useMemo(() => {
@@ -609,6 +625,87 @@ export function SectorProfile() {
               <StatRow label="High Risk Count" value={formatNumber((stats?.high_risk_count || 0) + (stats?.critical_risk_count || 0))} />
             </CardContent>
           </div>
+
+          {/* P2 #47: MODEL COEFFICIENTS */}
+          {modelCoefficients && (
+            <div className="card-elevated">
+              <details>
+                <summary className="cursor-pointer px-4 py-3 flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors select-none">
+                  <Brain className="h-4 w-4 text-purple-400 flex-shrink-0" />
+                  <span>
+                    Modelo v6.4
+                    <span className="ml-2 text-[10px] font-mono text-text-muted">
+                      ({modelCoefficients.model_used === 'sector' ? 'sector-specific' : 'global fallback'})
+                    </span>
+                  </span>
+                </summary>
+                <div className="px-4 pb-3 space-y-1.5">
+                  {modelCoefficients.coefficients.slice(0, 6).map((c: { feature: string; coefficient: number }) => {
+                    const isPositive = c.coefficient > 0
+                    const barWidth = Math.min(100, Math.abs(c.coefficient) / 2 * 100)
+                    return (
+                      <div key={c.feature} className="flex items-center gap-2 text-xs">
+                        <span className="w-36 truncate text-text-muted font-mono" title={c.feature}>
+                          {c.feature.replace(/_/g, ' ')}
+                        </span>
+                        <div className="flex-1 h-1.5 bg-surface rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{
+                              width: `${barWidth}%`,
+                              backgroundColor: isPositive ? 'var(--color-risk-high)' : 'var(--color-risk-low)',
+                            }}
+                          />
+                        </div>
+                        <span
+                          className="w-12 text-right font-mono tabular-nums"
+                          style={{ color: isPositive ? 'var(--color-risk-high)' : 'var(--color-risk-low)' }}
+                        >
+                          {c.coefficient > 0 ? '+' : ''}{c.coefficient.toFixed(3)}
+                        </span>
+                      </div>
+                    )
+                  })}
+                  {modelCoefficients.intercept != null && (
+                    <p className="text-[10px] text-text-muted font-mono pt-1">
+                      intercept: {modelCoefficients.intercept.toFixed(4)}
+                    </p>
+                  )}
+                </div>
+              </details>
+            </div>
+          )}
+
+          {/* P2 #50: TEMPORAL ANOMALY */}
+          {temporalAnomaly && (temporalAnomaly.anomalies?.length ?? 0) > 0 && (
+            <div className="card-elevated border border-amber-500/20">
+              <CardHeader className="pb-2">
+                <CardTitle className="flex items-center gap-2 text-sm">
+                  <Activity className="h-4 w-4 text-amber-400" />
+                  Anomalías {temporalAnomaly.current_year}
+                  <span className="ml-1 text-[10px] font-mono text-text-muted">
+                    ({temporalAnomaly.contract_count?.toLocaleString()} contratos)
+                  </span>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="space-y-2 pb-3">
+                {temporalAnomaly.anomalies.map((a: { feature: string; label: string; z_score: number; direction: 'above' | 'below'; severity: 'high' | 'moderate' }) => (
+                  <div key={a.feature} className="flex items-start gap-2 text-xs">
+                    <span
+                      className="mt-0.5 h-2 w-2 rounded-full flex-shrink-0"
+                      style={{ backgroundColor: a.severity === 'high' ? 'var(--color-risk-critical)' : 'var(--color-risk-medium)' }}
+                    />
+                    <div className="flex-1 min-w-0">
+                      <span className="text-text-secondary">{a.label}</span>
+                      <span className="ml-1.5 font-mono text-text-muted">
+                        {a.direction === 'above' ? '↑' : '↓'} {Math.abs(a.z_score).toFixed(1)}σ
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </CardContent>
+            </div>
+          )}
 
           {/* PRICE INTELLIGENCE */}
           {(priceLoading || priceBaseline || priceBaselinesError) && (

@@ -121,5 +121,35 @@
     "riskReducing": "Factor que reduce el riesgo"
   },
   "noContributingFactors": "No se encontraron factores de riesgo contribuyentes.",
-  "untitledContract": "Sin título"
+  "untitledContract": "Sin título",
+  "priceVolatility": {
+    "title": "Volatilidad de Precios",
+    "zscore": "z-score vs. sector",
+    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v6.4."
+  },
+  "ghostRisk": {
+    "title": "Riesgo de Empresa Fantasma",
+    "triggers": "Indicadores",
+    "description": "Este proveedor muestra patrones estructurales consistentes con empresas fantasma: reciente, actividad mínima, adjudicaciones concentradas."
+  },
+  "yearEnd": {
+    "title": "Concentración de Fin de Año",
+    "vendorPct": "Este proveedor",
+    "sectorAvg": "Promedio sectorial",
+    "description": "Los contratos de diciembre evitan los ciclos normales de revisión — una anomalía de tiempo asociada con el vaciado de presupuesto."
+  },
+  "protectiveFactors": {
+    "title": "Factores Protectores",
+    "description": "Estos factores reducen la puntuación de riesgo — el modelo los trata como señales de operaciones legítimas.",
+    "show": "Mostrar factores protectores",
+    "hide": "Ocultar factores protectores"
+  },
+  "histogram": {
+    "title": "Distribución por Tamaño de Contrato",
+    "description": "El umbral de 3M MXN marca el límite de licitación directa. Los grupos justo por debajo de la línea pueden indicar fraccionamiento.",
+    "yLabel": "Contratos",
+    "thresholdLabel": "Límite 3M MXN"
+  },
+  "sectorPercentile": "Top {{pct}}% en sector",
+  "confidenceInterval": "IC 95%: {{lo}}–{{hi}}"
 }

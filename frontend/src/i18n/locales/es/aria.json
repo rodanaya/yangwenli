@@ -178,5 +178,50 @@
   "threatLevels": "Niveles de Amenaza",
   "vendorCard": {
     "disclaimer": "ⓘ Indicador estadístico de riesgo — no es una determinación legal"
+  },
+  "ipsBreakdown": {
+    "title": "Desglose IPS",
+    "risk": "Riesgo (40%)",
+    "ensemble": "Ensemble (20%)",
+    "financial": "Financiero (20%)",
+    "external": "Externo (20%)"
+  },
+  "disappeared": {
+    "badge": "DESAPARECIÓ",
+    "lastContract": "Último contrato: {{year}}"
+  },
+  "burst": {
+    "label": "Burst"
+  },
+  "topInstitution": {
+    "label": "Cliente principal",
+    "capture": "Captura institucional"
+  },
+  "valuePerContract": {
+    "label": "Contrato promedio",
+    "highFlag": "⚠ Por encima del rango típico"
+  },
+  "fpBadge": {
+    "label": "Señal Conocida",
+    "patent": "Titular de patente",
+    "dataError": "Error de datos",
+    "structural": "Monopolio estructural",
+    "penalty": "Penalización"
+  },
+  "efosBadge": {
+    "definitivo": "EFOS Definitivo",
+    "provisional": "EFOS Provisional"
+  },
+  "efficiencyStats": {
+    "reviewed": "Revisados",
+    "confirmationRate": "Tasa confirmación",
+    "t1Complete": "T1 completo"
+  },
+  "ariaReview": {
+    "sectionTitle": "Revisión ARIA",
+    "status": "Estado",
+    "notes": "Notas",
+    "reviewedAt": "Revisado",
+    "noReview": "Sin revisión"
   }
 }

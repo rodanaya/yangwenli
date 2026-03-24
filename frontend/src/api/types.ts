@@ -316,6 +316,35 @@ export interface VendorDetailResponse {
   // Co-bidding triangle clustering (Wachs, Fazekas & Kertész 2021)
   cobid_clustering_coeff?: number
   cobid_triangle_count?: number
+  // External watchlist flags
+  is_efos_ghost?: boolean
+  is_sfp_sanctioned?: boolean
+  // v5.2 SHAP
+  shap_top_risk_factors?: Array<{ factor: string; shap: number }> | null
+  // P1 enrichment
+  direct_award_rate_corrected?: number | null
+  avg_z_price_volatility?: number | null
+  new_vendor_risk_score?: number | null
+  new_vendor_risk_triggers?: string | null
+  year_end_pct?: number | null
+  year_end_sector_avg?: number | null
+  avg_confidence_lower?: number | null
+  avg_confidence_upper?: number | null
+  sector_risk_percentile?: number | null
+}
+
+export interface ContractHistogramBucket {
+  bucket: string
+  count: number
+  min_amount: number
+  max_amount: number
+}
+
+export interface ContractHistogramResponse {
+  vendor_id: number
+  total_contracts: number
+  buckets: ContractHistogramBucket[]
+  threshold_mxn: number
 }
 
 export interface NameVariant {
@@ -2246,6 +2275,10 @@ export interface AriaStatsResponse {
   pattern_counts: Record<string, number>
   external_counts: { efos: number; sfp: number }
   elevated_value_mxn: number
+  reviewed_count?: number
+  confirmed_count?: number
+  dismissed_count?: number
+  t1_reviewed_count?: number
 }
 
 export interface AriaQueueResponse {

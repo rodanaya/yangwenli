@@ -1531,6 +1531,13 @@ export function Sectors() {
                       {t('table.directAwardPct')}
                       <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
                     </th>
+                    <th
+                      className="data-cell-header text-right whitespace-nowrap hidden lg:table-cell"
+                      title="% of contracts via competitive procedure (not direct award). OECD recommends ≥70%."
+                    >
+                      Competitivo
+                      <span className="ml-1 text-text-muted/50 font-normal text-[10px]">≥70%</span>
+                    </th>
                     <th className="data-cell-header text-center whitespace-nowrap">
                       PHI Grade
                     </th>
@@ -1607,6 +1614,23 @@ export function Sectors() {
                         </td>
                         <td className="data-cell text-right font-mono text-text-secondary tabular-nums">
                           {formatPercentSafe(sector.direct_award_pct, false)}
+                        </td>
+                        <td
+                          className="data-cell text-right font-mono tabular-nums hidden lg:table-cell"
+                          title="Competitive procedure rate (OECD benchmark ≥70%)"
+                        >
+                          {(() => {
+                            const compPct = (sector as any).competitive_pct != null
+                              ? (sector as any).competitive_pct as number
+                              : sector.direct_award_pct != null
+                                ? Math.round(100 - sector.direct_award_pct)
+                                : null
+                            if (compPct == null) return <span className="text-text-muted/40">—</span>
+                            const color = compPct >= 70 ? 'var(--color-risk-low)'
+                              : compPct >= 50 ? 'var(--color-risk-medium)'
+                              : 'var(--color-risk-critical)'
+                            return <span style={{ color, fontWeight: compPct < 50 ? 700 : 400 }}>{compPct.toFixed(1)}%</span>
+                          })()}
                         </td>
                         <td className="data-cell text-center">
                           {(() => {
