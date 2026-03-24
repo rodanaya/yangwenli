@@ -10,6 +10,10 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --legacy-peer-deps
 
+# Build-time env vars (VITE_ prefix required for Vite to expose them)
+ARG VITE_RUBLI_WRITE_KEY=""
+ENV VITE_RUBLI_WRITE_KEY=${VITE_RUBLI_WRITE_KEY}
+
 # Copy source code
 COPY . .
 

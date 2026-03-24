@@ -47,6 +47,8 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+      args:
+        - VITE_RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
     container_name: rubli-frontend
     # No host port binding — Caddy proxies to this container internally
     depends_on:
