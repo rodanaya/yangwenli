@@ -192,6 +192,18 @@ export const api: AxiosInstance = axios.create({
   },
 })
 
+// Attach write key to all mutating requests if configured
+const WRITE_KEY = import.meta.env.VITE_RUBLI_WRITE_KEY as string | undefined
+if (WRITE_KEY) {
+  api.interceptors.request.use((config) => {
+    const method = (config.method ?? '').toUpperCase()
+    if (['POST', 'PUT', 'PATCH', 'DELETE'].includes(method)) {
+      config.headers['X-Rubli-Key'] = WRITE_KEY
+    }
+    return config
+  })
+}
+
 // Error handler
 api.interceptors.response.use(
   (response) => response,
