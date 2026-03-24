@@ -3280,7 +3280,7 @@ export function VendorProfile() {
 
         {/* TAB 7: Periodista */}
         <TabPanel tabKey="periodista">
-          <PeriodistaPanel vendorId={vendorId} vendorName={vendor?.name ?? ''} avgRiskScore={vendor?.avg_risk_score} activeTab={activeTab} />
+          <PeriodistaPanel vendorId={vendorId} vendorName={vendor?.name ?? ''} avgRiskScore={vendor?.avg_risk_score} activeTab={activeTab} onExportCSV={exportContractsCSV} />
         </TabPanel>
       </SimpleTabs>
 
@@ -3955,11 +3955,13 @@ function PeriodistaPanel({
   vendorId,
   avgRiskScore,
   activeTab,
+  onExportCSV,
 }: {
   vendorId: number
   vendorName: string
   avgRiskScore?: number
   activeTab: string
+  onExportCSV?: () => void
 }) {
   const [copiedLede, setCopiedLede] = useState(false)
 
@@ -4189,7 +4191,7 @@ function PeriodistaPanel({
       {/* 4. Descargar evidencia */}
       <div>
         <button
-          onClick={exportContractsCSV}
+          onClick={onExportCSV}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
         >
           <Download className="h-4 w-4" />
