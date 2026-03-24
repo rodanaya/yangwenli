@@ -2905,7 +2905,7 @@ export function VendorProfile() {
             {/* Contract Analysis — new visualization section */}
             <div className="space-y-4 mb-6">
               <div className="editorial-rule">
-                <span className="editorial-label">ANALISIS DE CONTRATOS</span>
+                <span className="editorial-label">ANÁLISIS DE CONTRATOS</span>
               </div>
 
               {/* Donut charts row — uses larger chart dataset */}
@@ -3588,8 +3588,8 @@ export function VendorProfile() {
             ) : (
               <div className="p-8 text-center text-text-muted">
                 <Target className="h-8 w-8 mx-auto mb-2 opacity-40" />
-                <p className="text-sm">Este vendedor no se encuentra en la cola de investigacion ARIA.</p>
-                <p className="text-xs mt-1 text-text-muted/60">Solo vendedores con IPS significativo aparecen aqui.</p>
+                <p className="text-sm">Este vendedor no se encuentra en la cola de investigación ARIA.</p>
+                <p className="text-xs mt-1 text-text-muted/60">Solo vendedores con IPS significativo aparecen aquí.</p>
               </div>
             )}
           </div>

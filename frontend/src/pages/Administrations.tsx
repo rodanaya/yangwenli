@@ -532,7 +532,7 @@ export default function Administrations() {
           Los Sexenios de la Sombra
         </h1>
         <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
-          Analisis comparativo de riesgo en contratacion publica federal · 2001-2025 · {formatNumber(3049988)} contratos · $9.87T MXN auditados
+          Análisis comparativo de riesgo en contratación pública federal · 2001-2025 · {formatNumber(3049988)} contratos · $9.87T MXN auditados
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-text-muted">
@@ -785,7 +785,7 @@ export default function Administrations() {
         viewport={{ once: true, margin: '-50px' }}
       >
         <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-2">
-          Investigacion
+          Investigación
         </div>
         <p style={{ fontFamily: 'var(--font-family-serif)' }} className="text-sm text-text-secondary leading-relaxed">
           {ADMIN_NARRATIVES[selectedAdmin]}

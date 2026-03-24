@@ -123,6 +123,13 @@ class ContractService(BaseService):
             whitelist=CONTRACT_SORT_WHITELIST,
             default="c.contract_date DESC",
         )
+        # Tiebreaker: when sorting by risk_score descending, use Mahalanobis
+        # distance as a secondary sort so the ~96K contracts capped at 1.0
+        # are ranked by anomaly severity rather than arbitrary insertion order.
+        if sort_by == "risk_score" and sort_order.lower() == "desc":
+            qb.order_by(
+                "c.risk_score DESC, c.mahalanobis_distance DESC NULLS LAST"
+            )
 
         columns = """
             c.id, c.contract_number, c.title, c.amount_mxn,

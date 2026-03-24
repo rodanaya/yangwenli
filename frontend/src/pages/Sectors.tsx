@@ -1724,7 +1724,7 @@ export function Sectors() {
 
       {/* Section 3: Contract Value by Sector */}
       <div className="editorial-rule mb-3">
-        <span className="editorial-label">DISTRIBUCION DE GASTO</span>
+        <span className="editorial-label">DISTRIBUCIÓN DE GASTO</span>
       </div>
       <ScrollReveal direction="fade">
         <div>
@@ -1799,7 +1799,7 @@ export function Sectors() {
                 </p>
               )}
               <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
-                Fuente: COMPRANET 2002-2025 &middot; Valores en pesos mexicanos nominales &middot; Clasificacion por taxonomia de 12 sectores RUBLI
+                Fuente: COMPRANET 2002-2025 &middot; Valores en pesos mexicanos nominales &middot; Clasificación por taxonomía de 12 sectores RUBLI
               </p>
             </CardContent>
           </Card>

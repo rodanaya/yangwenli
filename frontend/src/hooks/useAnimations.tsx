@@ -59,7 +59,18 @@ export function useCountUp(target: number, duration = 1800, decimals = 0) {
   const ref = useRef<HTMLSpanElement>(null)
   const [value, setValue] = useState(0)
   const startedRef = useRef(false)
+  const prevTargetRef = useRef(0)
+
+  // Reset animation state when target changes from 0 to a real value,
+  // so counters animate properly after async data loads.
+  if (target > 0 && prevTargetRef.current === 0) {
+    startedRef.current = false
+  }
+  prevTargetRef.current = target
+
   useEffect(() => {
+    // If target is still 0 (data not loaded), skip — don't start a 0→0 animation
+    if (target === 0) return
     const el = ref.current
     if (!el) return
     const observer = new IntersectionObserver(

@@ -1620,11 +1620,21 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* RISK DISTRIBUTION BAR — Staggered horizontal fill               */}
       {/* ================================================================ */}
-      {riskDist && (
+      {dashLoading ? (
+        <div className="space-y-2">
+          <div className="flex gap-1">
+            <div className="animate-pulse bg-muted rounded h-4 w-16" />
+            <div className="animate-pulse bg-muted rounded h-4 w-12" />
+            <div className="animate-pulse bg-muted rounded h-4 w-20" />
+            <div className="animate-pulse bg-muted rounded h-4 w-24" />
+          </div>
+          <div className="animate-pulse bg-muted rounded h-5 w-full" />
+        </div>
+      ) : riskDist ? (
         <ScrollReveal delay={0}>
           <RiskDistributionBar data={riskDist} />
         </ScrollReveal>
-      )}
+      ) : null}
 
       <SectionDivider />
 
@@ -1859,6 +1869,88 @@ export function Dashboard() {
           ))}
         </div>
       )}
+
+      {/* ================================================================ */}
+      {/* HISTORIAS DESTACADAS — 3 investigation-ready story cards        */}
+      {/* Numbers from DuckDB analysis of 3.05M contracts 2002-2025      */}
+      {/* ================================================================ */}
+      <div className="mb-2">
+        <div className="flex items-center gap-2 mb-4">
+          <FileSearch className="h-4 w-4 text-accent" />
+          <h2 className="text-sm font-bold tracking-[0.10em] uppercase font-mono text-text-muted">
+            Historias destacadas
+          </h2>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+          {/* Story A: El Fenómeno de Diciembre */}
+          <Card className="fern-card border-l-4 border-l-amber-500 hover:border-l-amber-400 transition-colors cursor-pointer group" onClick={() => navigate('/seismograph')}>
+            <CardContent className="pt-4 pb-4">
+              <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
+                Temporalidad
+              </p>
+              <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-amber-400 transition-colors">
+                El Fenómeno de Diciembre
+              </h3>
+              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#d97706', fontFamily: 'var(--font-family-mono)' }}>
+                +47%
+              </p>
+              <p className="text-[10px] text-text-muted mb-3 leading-snug">
+                El monto promedio en diciembre (5.4M MXN) supera en 47% al promedio del resto del año — el clásico "gasto de fin de año" que favorece adjudicaciones directas.
+              </p>
+              <Link to="/seismograph" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <ArrowRight className="h-3 w-3" />
+                Ver en sismógrafo
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Story B: Concentración en Hacienda 2021 */}
+          <Card className="fern-card border-l-4 border-l-red-500 hover:border-l-red-400 transition-colors cursor-pointer group" onClick={() => navigate('/contracts?sector_id=7')}>
+            <CardContent className="pt-4 pb-4">
+              <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
+                Concentración
+              </p>
+              <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-red-400 transition-colors">
+                CFE acapara Hacienda 2021
+              </h3>
+              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#ef4444', fontFamily: 'var(--font-family-mono)' }}>
+                18.9%
+              </p>
+              <p className="text-[10px] text-text-muted mb-3 leading-snug">
+                En 2021, un solo proveedor (CFE) concentró casi 1 de cada 5 pesos del sector Hacienda — 6.2B MXN de un total de 32.8B MXN.
+              </p>
+              <Link to="/contracts?sector_id=7" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <ArrowRight className="h-3 w-3" />
+                Explorar contratos
+              </Link>
+            </CardContent>
+          </Card>
+
+          {/* Story C: Auge de adjudicaciones directas */}
+          <Card className="fern-card border-l-4 border-l-blue-500 hover:border-l-blue-400 transition-colors cursor-pointer group" onClick={() => navigate('/detective?pattern=december_rush')}>
+            <CardContent className="pt-4 pb-4">
+              <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
+                Tendencia 2010–2023
+              </p>
+              <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-blue-400 transition-colors">
+                Adjudicaciones directas: auge histórico
+              </h3>
+              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#3b82f6', fontFamily: 'var(--font-family-mono)' }}>
+                82.2%
+              </p>
+              <p className="text-[10px] text-text-muted mb-3 leading-snug">
+                En 2023, el 82.2% de todos los contratos fueron adjudicaciones directas — subida de +19.5pp desde el 62.7% de 2010. El pico más alto en 23 años de datos.
+              </p>
+              <Link to="/detective?pattern=december_rush" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+                <ArrowRight className="h-3 w-3" />
+                Analizar patrones
+              </Link>
+            </CardContent>
+          </Card>
+
+        </div>
+      </div>
 
       <SectionDivider />
 

@@ -174,6 +174,26 @@ function EfosBadge({ definitivo }: { definitivo: boolean }) {
   )
 }
 
+// Ground truth status badges
+function GtStatusBadge({ inGroundTruth }: { inGroundTruth: boolean }) {
+  const { t } = useTranslation('aria')
+  if (inGroundTruth) {
+    return (
+      <span
+        className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-stone-800/60 text-stone-400 border border-stone-700"
+        title={t('gtBadge.knownTooltip', { defaultValue: 'Ya en base de casos documentados' })}
+      >
+        GT
+      </span>
+    )
+  }
+  return (
+    <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-semibold bg-green-950/60 text-green-300 border border-green-800">
+      {t('gtBadge.nuevo', { defaultValue: 'Nuevo' })}
+    </span>
+  )
+}
+
 // #60 — False Positive / Known Signal badge
 function FpBadge({ item }: { item: AriaQueueItem }) {
   const { t } = useTranslation('aria')
@@ -459,6 +479,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
                 </span>
                 <PatternPill pattern={item.primary_pattern ?? null} />
                 {item.new_vendor_risk && <NewVendorBadge />}
+                <GtStatusBadge inGroundTruth={item.in_ground_truth} />
                 {item.is_efos_definitivo != null && (
                   <EfosBadge definitivo={item.is_efos_definitivo} />
                 )}
@@ -631,6 +652,7 @@ function LeadRow({
           <div className="flex flex-wrap gap-1">
             <PatternPill pattern={item.primary_pattern ?? null} />
             {item.new_vendor_risk && <NewVendorBadge />}
+            <GtStatusBadge inGroundTruth={item.in_ground_truth} />
           </div>
         </td>
         <td className="px-4 py-3 hidden sm:table-cell text-text-secondary font-mono text-xs">
@@ -740,6 +762,7 @@ export default function AriaPage() {
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
   const [newVendorOnly, setNewVendorOnly] = useState(false)
+  const [novelOnly, setNovelOnly] = useState(false)
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
   const [expandedId, setExpandedId] = useState<number | null>(null)
@@ -784,7 +807,10 @@ export default function AriaPage() {
   const elevatedValue = stats?.elevated_value_mxn ?? 0
 
   const tier1Items: AriaQueueItem[] = tier1Data?.data ?? []
-  const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
+  const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
+  const leadsItems: AriaQueueItem[] = novelOnly
+    ? leadsItemsRaw.filter((item) => !item.in_ground_truth)
+    : leadsItemsRaw
 
   const locale = i18n.language === 'es' ? 'es-MX' : 'en-US'
   const lastRunAt = stats?.latest_run?.completed_at
@@ -895,7 +921,7 @@ export default function AriaPage() {
             {/* Additional filter toggles */}
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <button
-                onClick={() => { setPatternFilter(null); setNewVendorOnly(false); setSearch(''); setPage(1) }}
+                onClick={() => { setPatternFilter(null); setNewVendorOnly(false); setNovelOnly(false); setSearch(''); setPage(1) }}
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors font-mono',
                   !patternFilter && !newVendorOnly
@@ -917,6 +943,18 @@ export default function AriaPage() {
                 <Sparkles className="h-3 w-3" />
                 {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count ? <span className="opacity-60">({formatNumber(stats.new_vendor_count)})</span> : null}
+              </button>
+              <button
+                onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
+                className={cn(
+                  'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors flex items-center gap-1.5',
+                  novelOnly
+                    ? 'bg-green-950/60 text-green-300 border-green-800'
+                    : 'bg-background-elevated text-text-secondary border-border hover:border-accent/50'
+                )}
+                title={t('filters.novelOnlyTooltip', { defaultValue: 'Mostrar solo leads que no están en la base de casos documentados' })}
+              >
+                {t('filters.novelOnly', { defaultValue: 'Solo nuevos' })}
               </button>
             </div>
           </section>

@@ -187,7 +187,7 @@ export default function RedesKnownDossier() {
       {/* Editorial header — "LA RED INVISIBLE" */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Analisis de Redes &middot; ARIA Tier 1 y Tier 2
+          Análisis de Redes &middot; ARIA Tier 1 y Tier 2
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
           La Red Invisible

@@ -22,6 +22,7 @@ services:
       - DATABASE_PATH=/app/RUBLI_DEPLOY.db
       # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site)
       - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
+      - RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
       interval: 30s
@@ -135,9 +136,56 @@ services:
     networks:
       - rubli-network
 
+  backup-cron:
+    image: keinos/sqlite3:latest
+    container_name: rubli-backup-cron
+    volumes:
+      - ./backend/RUBLI_DEPLOY.db:/db/RUBLI_DEPLOY.db:ro
+      - rubli_backups:/backups
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        echo "Backup cron started — daily at 02:00 UTC"
+        while true; do
+          now=$$(date -u +%s)
+          target=$$(date -u -d "tomorrow 02:00" +%s 2>/dev/null || \
+            python3 -c "import datetime,calendar; t=datetime.datetime.utcnow().replace(hour=2,minute=0,second=0,microsecond=0)+datetime.timedelta(days=1); print(int(calendar.timegm(t.timetuple())))" 2>/dev/null || \
+            echo $$(( now + 86400 )) )
+          if [ "$$target" -le "$$now" ]; then target=$$(( $$target + 86400 )); fi
+          wait_secs=$$(( $$target - $$now ))
+          echo "Next backup in $${wait_secs}s"
+          sleep $$wait_secs
+          stamp=$$(date -u +%Y%m%d_%H%M%S)
+          echo "$$(date -u) — Starting backup rubli_$${stamp}.db"
+          sqlite3 /db/RUBLI_DEPLOY.db ".backup /backups/rubli_$${stamp}.db" && \
+            echo "Backup complete: rubli_$${stamp}.db" || \
+            echo "Backup FAILED"
+          # Rotate: keep only last 7 days
+          find /backups -name 'rubli_*.db' -mtime +7 -delete 2>/dev/null || true
+          echo "Rotation done — listing backups:"
+          ls -lh /backups/rubli_*.db 2>/dev/null || echo "(no backups yet)"
+        done
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    logging:
+      driver: "json-file"
+      options:
+        max-size: "5m"
+        max-file: "2"
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+          cpus: '0.25'
+    networks:
+      - rubli-network
+
 volumes:
   caddy_data:
   caddy_config:
+  rubli_backups:
 
 networks:
   rubli-network:

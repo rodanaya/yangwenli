@@ -343,7 +343,7 @@ const ManifestoCounters = memo(function ManifestoCounters({ isEn, highRiskPct }:
     <section
       className="relative px-6 sm:px-12 lg:px-24 py-20 sm:py-28 overflow-hidden"
       style={{ background: '#0a0c0b' }}
-      aria-label={isEn ? 'Key statistics' : 'Estadisticas clave'}
+      aria-label={isEn ? 'Key statistics' : 'Estadísticas clave'}
     >
       {/* Subtle crimson grid pattern */}
       <div
@@ -1754,7 +1754,7 @@ export default function Intro() {
                 className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
                 style={{ color: '#8b5cf6' }}
               >
-                {isEn ? 'AUTOMATED INVESTIGATION' : 'INVESTIGACION AUTOMATIZADA'}
+                {isEn ? 'AUTOMATED INVESTIGATION' : 'INVESTIGACIÓN AUTOMATIZADA'}
               </span>
               <h2
                 className="text-3xl sm:text-4xl font-black mb-6 leading-tight"
@@ -1765,7 +1765,7 @@ export default function Intro() {
               <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '500px' }}>
                 {isEn
                   ? 'Our 9-module Automated Risk Investigation Algorithm classifies 198K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.'
-                  : 'Nuestro algoritmo automatizado de investigacion de riesgos de 9 modulos clasifica 198K proveedores en niveles de investigacion, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.'}
+                  : 'Nuestro algoritmo automatizado de investigación de riesgos de 9 módulos clasifica 198K proveedores en niveles de investigación, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.'}
               </p>
               <button
                 onClick={() => goToApp('/aria')}
@@ -1802,7 +1802,7 @@ export default function Intro() {
                 {
                   icon: BarChart3,
                   stat: '4',
-                  label: isEn ? 'Investigation tiers' : 'Niveles de investigacion',
+                  label: isEn ? 'Investigation tiers' : 'Niveles de investigación',
                   color: '#2563eb',
                 },
               ].map((item, i) => (
@@ -1885,7 +1885,7 @@ export default function Intro() {
             <span style={{ color: CRIMSON }}>&#9679;</span>
             {isEn
               ? 'Follow the investigation trail on Laboratorios Pisa'
-              : 'Sigue el hilo de investigacion sobre Laboratorios Pisa'}
+              : 'Sigue el hilo de investigación sobre Laboratorios Pisa'}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
 
@@ -1894,8 +1894,8 @@ export default function Intro() {
             className="gsap-reveal mt-14 text-xs"
             style={{ color: 'rgba(255,255,255,0.25)' }}
           >
-            {isEn ? 'Data' : 'Datos'}: COMPRANET &bull; {isEn ? 'Methodology' : 'Metodologia'}: OECD, IMF CRI &bull;{' '}
-            {isEn ? 'Open-source procurement intelligence' : 'Inteligencia en contrataciones de codigo abierto'}
+            {isEn ? 'Data' : 'Datos'}: COMPRANET &bull; {isEn ? 'Methodology' : 'Metodología'}: OECD, IMF CRI &bull;{' '}
+            {isEn ? 'Open-source procurement intelligence' : 'Inteligencia en contrataciones de código abierto'}
           </p>
         </div>
       </section>
@@ -2011,7 +2011,7 @@ const FeaturedCase = forwardRef<
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
               onClick={() => goToApp(`/vendor/${fc.vendorId}`)}
             >
-              {isEn ? 'See full investigation' : 'Ver investigacion completa'}
+              {isEn ? 'See full investigation' : 'Ver investigación completa'}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>

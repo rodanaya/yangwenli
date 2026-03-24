@@ -91,6 +91,7 @@ def get_aria_queue(
     search: Optional[str] = Query(None),
     efos_only: bool = Query(False),
     new_vendor_only: bool = Query(False),
+    novel_only: bool = Query(False, description="When True, exclude vendors already in ground truth"),
     min_ips: Optional[float] = Query(None, ge=0, le=1),
     status: Optional[str] = Query(None),
     page: int = Query(1, ge=1),
@@ -130,6 +131,8 @@ def get_aria_queue(
         conditions.append("q.is_efos_definitivo = 1")
     if new_vendor_only:
         conditions.append("q.new_vendor_risk = 1")
+    if novel_only:
+        conditions.append("q.in_ground_truth = 0")
     if min_ips is not None:
         conditions.append("q.ips_final >= ?")
         params.append(min_ips)

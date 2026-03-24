@@ -91,7 +91,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
         <div className="flex items-center gap-2">
           <Sparkles className="h-4 w-4 text-purple-400" />
           <span className="text-sm font-semibold text-text-primary">
-            Analisis de Investigacion
+            Análisis de Investigación
           </span>
           <span className="text-[10px] text-text-muted">Generado por IA</span>
           {effectiveTier != null && <TierBadge tier={effectiveTier} />}
@@ -161,7 +161,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
                 // Navigate to ARIA queue — non-functional placeholder
               }}
             >
-              Solicitar analisis
+              Solicitar análisis
             </button>
           </div>
         )}
