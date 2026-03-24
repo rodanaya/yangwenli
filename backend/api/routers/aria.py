@@ -160,7 +160,7 @@ def get_aria_queue(
                q.direct_award_rate, q.computed_at,
                COALESCE(q.new_vendor_risk, 0) as new_vendor_risk,
                q.risk_score_norm, q.ensemble_norm, q.financial_scale_norm,
-               q.external_flags_score, q.is_disappeared, q.last_contract_year,
+               q.external_flags_score, q.is_disappeared,
                q.top_institution, q.top_institution_ratio, q.value_per_contract
         FROM aria_queue q
         {where_sql}
