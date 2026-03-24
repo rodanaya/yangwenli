@@ -60,6 +60,16 @@ const TYPE_TO_CHART_ID: Record<string, string> = {
   'comparison':  'amlo-era-comparison',
   'year-bar':    'monthly-spending',
   'vendor-list': 'vendor-concentration',
+  'radar':       'administration-fingerprints',
+  'fingerprint': 'vendor-fingerprint',
+  'trends':      'sector-risk-trends',
+  'calendar':    'risk-calendar',
+  'network':     'community-bubbles',
+  'pyramid':     'risk-pyramid',
+  'scatter':     'sector-paradox',
+  'sunburst':    'admin-sunburst',
+  'racing':      'racing-bar',
+  'breakdown':   'procedure-breakdown',
 }
 
 // ---------------------------------------------------------------------------
