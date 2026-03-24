@@ -12,48 +12,7 @@ from fastapi import APIRouter, Query, HTTPException, Path, Request
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
-
-
-# =============================================================================
-# SIMPLE IN-MEMORY CACHE
-# =============================================================================
-
-class SimpleCache:
-    """Thread-safe in-memory cache with TTL support for expensive queries."""
-
-    def __init__(self):
-        import threading
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._lock = threading.Lock()
-
-    def get(self, key: str) -> Any:
-        """Get cached value if not expired."""
-        with self._lock:
-            if key in self._cache:
-                entry = self._cache[key]
-                if datetime.now() < entry["expires_at"]:
-                    return entry["value"]
-                else:
-                    del self._cache[key]
-            return None
-
-    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:
-        """Set cached value with TTL."""
-        with self._lock:
-            self._cache[key] = {
-                "value": value,
-                "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
-            }
-
-    def invalidate(self, pattern: str = None) -> None:
-        """Invalidate cache entries matching pattern (or all if None)."""
-        with self._lock:
-            if pattern is None:
-                self._cache.clear()
-            else:
-                keys_to_delete = [k for k in self._cache if pattern in k]
-                for k in keys_to_delete:
-                    del self._cache[k]
+from ..cache import SimpleCache
 
 
 # Global cache instance

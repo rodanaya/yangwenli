@@ -603,7 +603,8 @@ def get_vendor(
                 WHERE v.id = ?
             """, (vendor_id,))
             extra = cursor.fetchone()
-        except Exception:
+        except Exception as e:
+            logger.debug("Vendor extra detail query failed for vendor %s: %s", vendor_id, e)
             extra = None
 
         total_contracts = detail.get("total_contracts", 0) or 0
@@ -624,7 +625,8 @@ def get_vendor(
             ).fetchall()
             name_variants = [{"variant_name": r["variant_name"], "source": r["source"]}
                              for r in name_variants_rows]
-        except Exception:
+        except Exception as e:
+            logger.debug("Name variants query failed for vendor %s: %s", vendor_id, e)
             name_variants = []
 
         # Fetch top institution tenures (Coviello & Gagliarducci 2017)
@@ -651,7 +653,8 @@ def get_vendor(
                 )
                 for r in tenure_rows
             ]
-        except Exception:
+        except Exception as e:
+            logger.debug("Institution tenure query failed for vendor %s: %s", vendor_id, e)
             top_institutions = []
 
         # Check EFOS ghost company and SFP sanctions flags via RFC match
@@ -668,7 +671,8 @@ def get_vendor(
                     LIMIT 1
                 """, (vendor_rfc,)).fetchone()
                 is_efos_ghost = efos_row is not None
-            except Exception:
+            except Exception as e:
+                logger.debug("EFOS check failed for rfc %s: %s", vendor_rfc, e)
                 is_efos_ghost = False
             try:
                 sfp_row = cursor.execute(
@@ -676,7 +680,8 @@ def get_vendor(
                     (vendor_rfc,),
                 ).fetchone()
                 is_sfp_sanctioned = sfp_row is not None
-            except Exception:
+            except Exception as e:
+                logger.debug("SFP sanctions check failed for rfc %s: %s", vendor_rfc, e)
                 is_sfp_sanctioned = False
 
         # Fetch SHAP top risk factors from v5.2 engine (best-effort, non-blocking)
@@ -689,8 +694,8 @@ def get_vendor(
             if shap_row and shap_row["top_risk_factors"]:
                 raw_shap = shap_row["top_risk_factors"]
                 shap_top_risk_factors = json.loads(raw_shap) if isinstance(raw_shap, str) else raw_shap
-        except Exception:
-            pass  # SHAP table missing or malformed — degrade gracefully
+        except Exception as e:
+            logger.debug("SHAP factors unavailable for vendor %s: %s", vendor_id, e)
 
         return VendorDetailResponse(
             id=detail["id"],
@@ -1369,8 +1374,8 @@ def get_vendor_external_flags(
                     params,
                 ).fetchall()
             result["sfp_sanctions"] = [dict(r) for r in rows]
-        except Exception:
-            pass  # Table may not exist yet
+        except Exception as e:
+            logger.debug("SFP sanctions table unavailable: %s", e)
 
         # --- RUPC grade ---
         if vendor_rfc:
@@ -1381,8 +1386,8 @@ def get_vendor_external_flags(
                 ).fetchone()
                 if row:
                     result["rupc"] = dict(row)
-            except Exception:
-                pass  # Table may not exist yet
+            except Exception as e:
+                logger.debug("RUPC table unavailable: %s", e)
 
         # --- SAT EFOS ghost company list ---
         if vendor_rfc:
@@ -1393,8 +1398,8 @@ def get_vendor_external_flags(
                 ).fetchone()
                 if row:
                     result["sat_efos"] = dict(row)
-            except Exception:
-                pass  # Table may be empty
+            except Exception as e:
+                logger.debug("SAT EFOS table unavailable: %s", e)
 
         # --- ASF cases (existing table) ---
         try:
@@ -1415,8 +1420,8 @@ def get_vendor_external_flags(
                     params,
                 ).fetchall()
             result["asf_cases"] = [dict(r) for r in rows]
-        except Exception:
-            pass  # Table may be empty
+        except Exception as e:
+            logger.debug("ASF cases table unavailable: %s", e)
 
         return result
 

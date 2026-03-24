@@ -79,7 +79,8 @@ def _query_top_vendors(cur) -> list[dict]:
             ORDER BY total_value_mxn DESC
             LIMIT 10
         """)
-    except Exception:
+    except Exception as e:
+        logger.debug("vendor_canonical_map unavailable, using simple query: %s", e)
         # Fallback: no dedup table, use simple query
         cur.execute("""
             SELECT v.id AS canonical_id, v.name,
@@ -325,7 +326,8 @@ def _build_summary(conn) -> dict:
             gt_high = gt_row[2] or 0
             detection_rate = round(gt_detected / gt_contracts * 100, 1) if gt_contracts else 0
             high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
-    except Exception:
+    except Exception as e:
+        logger.warning("Ground truth query failed, using hardcoded fallback: %s", e)
         gt_cases, gt_vendors, gt_contracts = 748, 603, 225559
         detection_rate, high_plus_rate = 99.8, 93.0
 
@@ -351,7 +353,8 @@ def _build_summary(conn) -> dict:
             {**dict(r), "high_plus_pct": round(min(r["avg_score"] * 180, 100), 1)}
             for r in case_rows
         ]
-    except Exception:
+    except Exception as e:
+        logger.warning("Per-case detection query failed: %s", e)
         case_details = []
 
     ground_truth = {
@@ -374,14 +377,16 @@ def _build_summary(conn) -> dict:
             "FROM model_calibration WHERE sector_id IS NULL "
             "ORDER BY created_at DESC LIMIT 1"
         ).fetchone()
-    except Exception:
+    except Exception as e:
+        logger.debug("model_calibration temporal_metrics column missing, retrying: %s", e)
         try:
             cal_row = cur.execute(
                 "SELECT model_version, brier_score, pu_correction_factor, created_at "
                 "FROM model_calibration WHERE sector_id IS NULL "
                 "ORDER BY created_at DESC LIMIT 1"
             ).fetchone()
-        except Exception:
+        except Exception as e2:
+            logger.warning("model_calibration query failed entirely: %s", e2)
             cal_row = None
 
     if cal_row:

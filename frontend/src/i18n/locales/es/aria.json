@@ -8,9 +8,16 @@
     "elevatedValueSub": "Niveles 1 + 2 combinados",
     "efosListed": "En Lista EFOS",
     "efosListedSub": "+ {{sfpCount}} sancionados por SFP",
-    "newVendorRisk": "Riesgo de Proveedor Nuevo",
+    "newVendorRisk": "proveedores nuevos de riesgo",
     "newVendorRiskSub": "señales de empresa fantasma",
-    "lastRun": "Última ejecución del pipeline: {{date}}"
+    "lastRun": "Última ejecución del pipeline: {{date}}",
+    "vendorsSurveillance": "proveedores bajo vigilancia",
+    "vendorsUnderSurveillance": "proveedores bajo vigilancia",
+    "elevatedValueRisk": "valor bajo riesgo elevado",
+    "valueAtRisk": "valor en riesgo",
+    "efosOnList": "en Lista EFOS (SAT)",
+    "efosAnnotation": "+ {{count}} sanciones SFP",
+    "onEfos": "en lista EFOS"
   },
   "errors": {
     "notRun": "El pipeline aún no se ha ejecutado",
@@ -164,16 +171,6 @@
     "subtitle": "Cola de investigación automatizada con priorización por nivel de amenaza"
   },
   "situationReport": "Estado de Situación",
-  "stats": {
-    "vendorsSurveillance": "proveedores bajo vigilancia",
-    "vendorsUnderSurveillance": "proveedores bajo vigilancia",
-    "elevatedValueRisk": "valor bajo riesgo elevado",
-    "valueAtRisk": "valor en riesgo",
-    "efosOnList": "en Lista EFOS (SAT)",
-    "efosAnnotation": "+ {{count}} sanciones SFP",
-    "newVendorRisk": "proveedores nuevos de riesgo",
-    "onEfos": "en lista EFOS"
-  },
   "methodology": {
     "title": "¿Cómo funciona ARIA?",
     "body": "ARIA combina score de riesgo ML (v6.4), detección de anomalías PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."

@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -11,8 +11,18 @@ import { WelcomeModal } from '@/components/WelcomeModal'
 import { pageVariants } from '@/lib/animations'
 
 export function MainLayout() {
-  const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(
+    () => window.innerWidth < 1280
+  )
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
+
+  // Auto-collapse sidebar below 1280px breakpoint
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 1280px)')
+    const handler = (e: MediaQueryListEvent) => setSidebarCollapsed(!e.matches)
+    mq.addEventListener('change', handler)
+    return () => mq.removeEventListener('change', handler)
+  }, [])
   const location = useLocation()
   const { t } = useTranslation('common')
 
@@ -85,10 +95,10 @@ export function MainLayout() {
             <span>{t('footerStats')}</span>
           </div>
           <details className="mt-1.5">
-            <summary className="text-[10px] text-text-muted/50 cursor-pointer hover:text-text-muted transition-colors select-none list-none font-mono">
+            <summary className="text-[10px] text-text-muted/70 cursor-pointer hover:text-text-muted transition-colors select-none list-none font-mono">
               ▸ {t('aboutDataToggle')}
             </summary>
-            <p className="mt-1 text-[10px] text-text-muted/50 leading-relaxed max-w-3xl">
+            <p className="mt-1 text-[10px] text-text-muted/70 leading-relaxed max-w-3xl">
               {t('aboutData')}
             </p>
           </details>

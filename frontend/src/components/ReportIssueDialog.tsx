@@ -136,7 +136,7 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
 
             {/* Category selector */}
             <div>
-              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/60 mb-2">Category</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">Category</p>
               <div className="grid grid-cols-2 gap-2">
                 {CATEGORIES.map(({ value, label, description, Icon, color }) => (
                   <button
@@ -204,7 +204,7 @@ export function ReportIssueDialog({ open, onOpenChange }: ReportIssueDialogProps
             </div>
 
             {/* Auto-captured URL */}
-            <p className="text-[10px] text-text-muted/60">
+            <p className="text-[10px] text-text-muted/80">
               Current page will be captured automatically: <span className="font-mono">{location.pathname}</span>
             </p>
 

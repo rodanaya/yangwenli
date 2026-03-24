@@ -70,7 +70,7 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
 
           {/* Quick-start templates */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/60 mb-2">Quick Start</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">Quick Start</p>
             <div className="flex flex-wrap gap-1.5">
               {QUICK_TEMPLATES.map((tpl) => (
                 <button

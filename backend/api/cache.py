@@ -61,3 +61,40 @@ class AppCache:
 
 # Global cache instance — import this in routers
 app_cache = AppCache()
+
+
+class SimpleCache:
+    """Thread-safe in-memory cache with TTL support for expensive queries."""
+
+    def __init__(self):
+        self._cache: dict[str, dict] = {}
+        self._lock = threading.Lock()
+
+    def get(self, key: str):
+        """Get cached value if not expired."""
+        from datetime import datetime
+        with self._lock:
+            if key in self._cache:
+                entry = self._cache[key]
+                if datetime.now() < entry["expires_at"]:
+                    return entry["value"]
+                del self._cache[key]
+            return None
+
+    def set(self, key: str, value, ttl_seconds: int = 3600) -> None:
+        """Set cached value with TTL."""
+        from datetime import datetime, timedelta
+        with self._lock:
+            self._cache[key] = {
+                "value": value,
+                "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
+            }
+
+    def invalidate(self, pattern: str = None) -> None:
+        """Invalidate cache entries matching pattern (or all if None)."""
+        with self._lock:
+            if pattern is None:
+                self._cache.clear()
+            else:
+                for k in [k for k in self._cache if pattern in k]:
+                    del self._cache[k]

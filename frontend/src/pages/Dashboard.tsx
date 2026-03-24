@@ -117,7 +117,7 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
         border: '1px solid rgba(196,30,58,0.15)',
       }}
     >
-      <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/60 uppercase mb-2">
+      <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/80 uppercase mb-2">
         {t('heroHighRiskLabel')}
       </p>
       <p
@@ -1395,9 +1395,9 @@ export function Dashboard() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const { data: seasonalRiskData } = useQuery({
-    queryKey: ['analysis', 'seasonal-risk'],
-    queryFn: () => analysisApi.getSeasonalRisk(12),
+  const { data: monthlyRiskSummaryData } = useQuery({
+    queryKey: ['analysis', 'monthly-risk-summary'],
+    queryFn: () => analysisApi.getMonthlyRiskSummary(),
     staleTime: 10 * 60 * 1000,
   })
 
@@ -1556,7 +1556,7 @@ export function Dashboard() {
         loading={dashLoading}
       />
       {!dashLoading && criticalHighValue > 0 && (
-        <p className="px-6 text-[10px] font-mono text-text-muted/50 -mt-2">
+        <p className="px-6 text-[10px] font-mono text-text-muted/70 -mt-2">
           {t('budgetContext', { pct: '56' })}
         </p>
       )}
@@ -1585,7 +1585,7 @@ export function Dashboard() {
             </div>
           )}
           <span
-            className="text-[10px] font-mono text-text-muted/50 cursor-help"
+            className="text-[10px] font-mono text-text-muted/70 cursor-help"
             title={t('aucExplanation')}
           >
             {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
@@ -1853,7 +1853,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* SEASONAL RISK WIDGET (P13)                                       */}
       {/* ================================================================ */}
-      {seasonalRiskData?.data && seasonalRiskData.data.length > 0 && (
+      {monthlyRiskSummaryData?.data && monthlyRiskSummaryData.data.length > 0 && (
         <DashboardSection
           title={t('seasonalPatternsTitle')}
           subtitle={t('seasonalPatternsDesc')}
@@ -1861,29 +1861,25 @@ export function Dashboard() {
         >
           <div className="space-y-2">
             <div className="grid grid-cols-6 sm:grid-cols-12 gap-1">
-              {Array.from({ length: 12 }, (_, i) => i + 1).map(month => {
-                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-                const allSectors = seasonalRiskData.data
-                const avgPremium = allSectors.length > 0
-                  ? allSectors.reduce((s, d) => s + d.risk_premium_pct, 0) / allSectors.length
-                  : 0
+              {monthlyRiskSummaryData.data.map(item => {
+                const avgPremium = item.risk_premium_pct
                 const intensity = Math.min(Math.abs(avgPremium) / 30, 1)
                 const bgColor = avgPremium > 0
                   ? `rgba(248,113,113,${0.1 + intensity * 0.5})`
                   : `rgba(74,222,128,${0.1 + intensity * 0.3})`
                 const textColor = avgPremium > 5 ? '#f87171' : avgPremium > 0 ? '#fbbf24' : '#4ade80'
-                const isDecember = month === 12
+                const isDecember = item.month === 12
                 return (
                   <div
-                    key={month}
+                    key={item.month}
                     className={cn(
                       'flex flex-col items-center p-1.5 rounded',
                       isDecember && 'ring-1 ring-risk-critical/50',
                     )}
                     style={{ backgroundColor: bgColor }}
-                    title={`${monthNames[month - 1]}: ${avgPremium > 0 ? '+' : ''}${avgPremium.toFixed(1)}% risk premium`}
+                    title={`${item.month_name}: ${avgPremium > 0 ? '+' : ''}${avgPremium.toFixed(1)}% risk premium`}
                   >
-                    <span className="text-[8px] font-mono text-text-muted">{monthNames[month - 1]}</span>
+                    <span className="text-[8px] font-mono text-text-muted">{item.month_name}</span>
                     <span className="text-[10px] font-bold font-mono tabular-nums" style={{ color: textColor }}>
                       {avgPremium > 0 ? '+' : ''}{avgPremium.toFixed(0)}%
                     </span>

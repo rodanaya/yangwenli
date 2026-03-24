@@ -460,7 +460,8 @@ def get_data_quality(response: Response):
             row = cursor.execute(
                 "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'data_quality'"
             ).fetchone()
-        except Exception:
+        except Exception as e:
+            logger.debug("precomputed_stats data_quality fetch failed: %s", e)
             row = None
 
     if row is not None:

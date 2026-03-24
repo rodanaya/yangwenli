@@ -359,7 +359,7 @@ export const ModelDetectionStory = memo(function ModelDetectionStory({
         })}
       </div>
 
-      <p className="text-[10px] text-text-muted/40 font-mono px-2">
+      <p className="text-[10px] text-text-muted/65 font-mono px-2">
         Bar color: <span style={{ color: '#4ade80' }}>■</span> ≥90% · <span style={{ color: '#fbbf24' }}>■</span> ≥50% · <span style={{ color: '#f87171' }}>■</span> &lt;50% · Left stripe = fraud type · Dot = sector · v6.0 model
       </p>
     </div>

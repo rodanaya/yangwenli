@@ -8,6 +8,7 @@ price hypothesis analysis, and event-based analysis.
 import sqlite3
 import logging
 import json
+import threading
 import time as _time
 from typing import Optional, List, Dict, Any, Tuple
 from fastapi import APIRouter, HTTPException, Query, Path, Request
@@ -16,6 +17,7 @@ from datetime import datetime, timedelta
 
 from ..dependencies import get_db
 from ..config.constants import MAX_CONTRACT_VALUE
+from ..cache import SimpleCache
 from ..config.temporal_events import TEMPORAL_EVENTS, TemporalEventData
 from ..helpers.analysis_helpers import (
     build_where_clause,
@@ -46,48 +48,6 @@ def _rate_limit(limit_string: str):
     if _analysis_limiter:
         return _analysis_limiter.limit(limit_string)
     return lambda f: f
-
-
-# =============================================================================
-# SIMPLE IN-MEMORY CACHE (matches pattern in sectors.py)
-# =============================================================================
-
-class SimpleCache:
-    """Thread-safe in-memory cache with TTL support for expensive queries."""
-
-    def __init__(self):
-        import threading
-        self._cache: Dict[str, Dict[str, Any]] = {}
-        self._lock = threading.Lock()
-
-    def get(self, key: str) -> Any:
-        """Get cached value if not expired."""
-        with self._lock:
-            if key in self._cache:
-                entry = self._cache[key]
-                if datetime.now() < entry["expires_at"]:
-                    return entry["value"]
-                else:
-                    del self._cache[key]
-            return None
-
-    def set(self, key: str, value: Any, ttl_seconds: int = 3600) -> None:
-        """Set cached value with TTL."""
-        with self._lock:
-            self._cache[key] = {
-                "value": value,
-                "expires_at": datetime.now() + timedelta(seconds=ttl_seconds),
-            }
-
-    def invalidate(self, pattern: str = None) -> None:
-        """Invalidate cache entries matching pattern (or all if None)."""
-        with self._lock:
-            if pattern is None:
-                self._cache.clear()
-            else:
-                keys_to_delete = [k for k in self._cache if pattern in k]
-                for k in keys_to_delete:
-                    del self._cache[k]
 
 
 # Global cache instance for analysis router
@@ -3850,7 +3810,7 @@ _SECTOR_NAMES: dict[int, str] = {
 }
 
 _asf_sector_cache: dict = {}
-_asf_sector_cache_lock = __import__("threading").Lock()
+_asf_sector_cache_lock = threading.Lock()
 _ASF_SECTOR_TTL = 86400  # 24 hours
 
 
@@ -3862,7 +3822,7 @@ def get_sector_asf_findings(sector_id: int = Path(..., ge=1, le=12)):
     cache_key = f"asf_sector_{sector_id}"
     with _asf_sector_cache_lock:
         entry = _asf_sector_cache.get(cache_key)
-        if entry and __import__("datetime").datetime.now() < entry["expires_at"]:
+        if entry and datetime.now() < entry["expires_at"]:
             return entry["value"]
 
     ramo_codes = _SECTOR_RAMOS.get(sector_id, [])
@@ -3925,7 +3885,7 @@ def get_sector_asf_findings(sector_id: int = Path(..., ge=1, le=12)):
 # ---------------------------------------------------------------------------
 
 _asf_inst_summary_cache: dict = {}
-_asf_inst_summary_lock = __import__("threading").Lock()
+_asf_inst_summary_lock = threading.Lock()
 _ASF_INST_SUMMARY_TTL = 86400  # 24 hours
 
 
@@ -4030,7 +3990,7 @@ class InstitutionRiskFactorsResponse(BaseModel):
 
 
 _inst_risk_factors_cache: dict = {}
-_inst_risk_factors_lock = __import__("threading").Lock()
+_inst_risk_factors_lock = threading.Lock()
 _INST_RISK_FACTORS_TTL = 3600
 
 
@@ -4383,7 +4343,7 @@ class IndustryRiskClustersResponse(BaseModel):
 
 
 _industry_clusters_cache: Dict[str, Any] = {}
-_industry_clusters_lock = __import__("threading").Lock()
+_industry_clusters_lock = threading.Lock()
 _INDUSTRY_CLUSTERS_TTL = 3600  # 1 hour
 
 
@@ -4641,6 +4601,120 @@ def get_seasonal_risk(
         raise HTTPException(status_code=503, detail="Database temporarily unavailable")
     except Exception as e:
         logger.error("Error in get_seasonal_risk: %s", e, exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+# =============================================================================
+# MONTHLY RISK SUMMARY ENDPOINT — all 12 months, cross-year averages
+# =============================================================================
+
+class MonthlyRiskSummaryItem(BaseModel):
+    month: int = Field(..., ge=1, le=12, description="Month number (1-12)")
+    month_name: str
+    avg_risk: float = Field(..., description="Average risk score across all years")
+    overall_avg_risk: float = Field(..., description="Overall average risk score (all months)")
+    risk_premium_pct: float = Field(..., description="(avg_risk - overall_avg) / overall_avg * 100")
+    contract_count: int
+
+
+class MonthlyRiskSummaryResponse(BaseModel):
+    data: List[MonthlyRiskSummaryItem]
+    overall_avg_risk: float
+
+
+_monthly_risk_summary_cache: Dict[str, Any] = {}
+_MONTHLY_RISK_SUMMARY_TTL = 3600  # 1 hour
+
+_MONTH_NAMES_SHORT = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+                      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+
+
+@router.get("/monthly-risk-summary", response_model=MonthlyRiskSummaryResponse)
+def get_monthly_risk_summary(
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter to a single sector"),
+):
+    """
+    Return average risk score per calendar month (1-12) aggregated across all years.
+    Includes risk_premium_pct = deviation from the overall mean.
+    """
+    cache_key = "monthly_risk_summary:{}".format(sector_id)
+    cached = _monthly_risk_summary_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _MONTHLY_RISK_SUMMARY_TTL:
+        return cached["data"]
+
+    sector_filter = "AND sector_id = ?" if sector_id else ""
+    params: List[Any] = []
+    if sector_id:
+        params.append(sector_id)
+
+    sql = (
+        "SELECT"
+        " CAST(strftime('%m', contract_date) AS INTEGER) AS month,"
+        " AVG(risk_score) AS avg_risk,"
+        " COUNT(*) AS contract_count"
+        " FROM contracts"
+        " WHERE risk_score IS NOT NULL"
+        "   AND contract_date IS NOT NULL"
+        "   AND COALESCE(amount_mxn, 0) <= 100000000000"
+        "   " + sector_filter +
+        " GROUP BY month"
+        " ORDER BY month"
+    )
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(sql, params)
+            rows = cursor.fetchall()
+
+        month_data: Dict[int, dict] = {}
+        for row in rows:
+            m = row["month"]
+            if m and 1 <= m <= 12:
+                month_data[m] = {
+                    "avg_risk": row["avg_risk"] or 0.0,
+                    "contract_count": row["contract_count"] or 0,
+                }
+
+        # Overall average across all months (weighted by contract count)
+        total_contracts = sum(v["contract_count"] for v in month_data.values())
+        if total_contracts > 0:
+            overall_avg = sum(
+                v["avg_risk"] * v["contract_count"] for v in month_data.values()
+            ) / total_contracts
+        else:
+            overall_avg = 0.0
+
+        items: List[MonthlyRiskSummaryItem] = []
+        for m in range(1, 13):
+            if m in month_data:
+                avg_r = month_data[m]["avg_risk"]
+                cnt = month_data[m]["contract_count"]
+            else:
+                avg_r = overall_avg
+                cnt = 0
+            premium = ((avg_r - overall_avg) / overall_avg * 100) if overall_avg else 0.0
+            items.append(MonthlyRiskSummaryItem(
+                month=m,
+                month_name=_MONTH_NAMES_SHORT[m - 1],
+                avg_risk=round(avg_r, 6),
+                overall_avg_risk=round(overall_avg, 6),
+                risk_premium_pct=round(premium, 2),
+                contract_count=cnt,
+            ))
+
+        result = MonthlyRiskSummaryResponse(
+            data=items,
+            overall_avg_risk=round(overall_avg, 6),
+        )
+        _monthly_risk_summary_cache[cache_key] = {"ts": _time.time(), "data": result}
+        return result
+
+    except sqlite3.OperationalError as e:
+        logger.error("DB error in get_monthly_risk_summary: %s", e)
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error("Error in get_monthly_risk_summary: %s", e, exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 

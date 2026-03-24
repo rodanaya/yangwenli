@@ -661,15 +661,16 @@ def _load_vendor_gt_set(conn: sqlite3.Connection) -> set:
 
 
 def _load_vendor_p90_risk(conn: sqlite3.Connection) -> dict:
-    """P90 risk score per vendor."""
+    """P90 risk score per vendor — restricted to scored vendors only."""
     log.info("Computing P90 risk scores per vendor (approx) ...")
     rows = conn.execute("""
         WITH ranked AS (
-            SELECT vendor_id, risk_score,
-                   ROW_NUMBER() OVER (PARTITION BY vendor_id ORDER BY risk_score) AS rn,
-                   COUNT(*) OVER (PARTITION BY vendor_id) AS cnt
-            FROM contracts
-            WHERE risk_score IS NOT NULL AND vendor_id IS NOT NULL
+            SELECT c.vendor_id, c.risk_score,
+                   ROW_NUMBER() OVER (PARTITION BY c.vendor_id ORDER BY c.risk_score) AS rn,
+                   COUNT(*) OVER (PARTITION BY c.vendor_id) AS cnt
+            FROM contracts c
+            INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
+            WHERE c.risk_score IS NOT NULL AND c.vendor_id IS NOT NULL
         )
         SELECT vendor_id, risk_score
         FROM ranked
@@ -679,14 +680,15 @@ def _load_vendor_p90_risk(conn: sqlite3.Connection) -> dict:
 
 
 def _load_vendor_value_weighted_da(conn: sqlite3.Connection) -> dict:
-    """Value-weighted DA rate per vendor."""
+    """Value-weighted DA rate per vendor — restricted to scored vendors only."""
     rows = conn.execute("""
-        SELECT vendor_id,
-               SUM(CASE WHEN is_direct_award = 1 THEN amount_mxn ELSE 0 END) AS da_value,
-               SUM(amount_mxn) AS total_value
-        FROM contracts
-        WHERE amount_mxn > 0 AND vendor_id IS NOT NULL
-        GROUP BY vendor_id
+        SELECT c.vendor_id,
+               SUM(CASE WHEN c.is_direct_award = 1 THEN c.amount_mxn ELSE 0 END) AS da_value,
+               SUM(c.amount_mxn) AS total_value
+        FROM contracts c
+        INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
+        WHERE c.amount_mxn > 0 AND c.vendor_id IS NOT NULL
+        GROUP BY c.vendor_id
     """).fetchall()
     result = {}
     for r in rows:
@@ -696,23 +698,37 @@ def _load_vendor_value_weighted_da(conn: sqlite3.Connection) -> dict:
 
 
 def _load_vendor_trends(conn: sqlite3.Connection, min_year: int = 2022) -> dict:
-    """Per-year risk for vendor trend computation."""
+    """Per-year risk for vendor trend computation.
+
+    Fetches raw rows and aggregates in Python to avoid GROUP BY sort/hash
+    that can hang after heavy window-function queries on the same connection.
+    """
+    # Fetch raw contract rows for scored vendors from min_year onwards.
     rows = conn.execute("""
-        SELECT vendor_id, contract_year,
-               AVG(risk_score) AS avg_risk,
-               AVG(CASE WHEN is_direct_award = 1 THEN 1.0 ELSE 0.0 END) AS da_rate
-        FROM contracts
-        WHERE contract_year >= ? AND vendor_id IS NOT NULL
-        GROUP BY vendor_id, contract_year
-        HAVING COUNT(*) >= 3
-        ORDER BY vendor_id, contract_year
+        SELECT c.vendor_id, c.contract_year, c.risk_score, c.is_direct_award
+        FROM contracts c
+        INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
+        WHERE c.contract_year >= ? AND c.vendor_id IS NOT NULL
+              AND c.risk_score IS NOT NULL
     """, (min_year,)).fetchall()
-    result = defaultdict(list)
-    for r in rows:
-        result[r[0]].append({
-            "year": r[1],
-            "avg_risk": r[2] or 0.0,
-            "da_rate": r[3] or 0.0,
+
+    # Aggregate per (vendor_id, year) in Python — O(n) single pass
+    acc: dict = {}
+    for vid, yr, risk, da in rows:
+        key = (vid, yr)
+        if key not in acc:
+            acc[key] = [0.0, 0.0, 0]
+        bucket = acc[key]
+        bucket[0] += risk
+        bucket[1] += 1.0 if da else 0.0
+        bucket[2] += 1
+
+    result: dict = defaultdict(list)
+    for (vid, yr), (rs, das, n) in acc.items():
+        result[vid].append({
+            "year": yr,
+            "avg_risk": rs / n,
+            "da_rate": das / n,
         })
     return dict(result)
 
@@ -1053,6 +1069,8 @@ def main() -> None:
     conn.execute("PRAGMA journal_mode = WAL")
     conn.execute("PRAGMA synchronous = NORMAL")
     conn.execute("PRAGMA busy_timeout = 30000")
+    conn.execute("PRAGMA cache_size = -32768")    # 32 MB page cache (leave RAM for Python dicts)
+    conn.execute("PRAGMA temp_store = MEMORY")   # GROUP BY sorting in-memory
 
     log.info("Creating / verifying tables ...")
     create_tables(conn)
@@ -1067,6 +1085,8 @@ def main() -> None:
         log.info("Institution grade distribution: %s", dict(sorted(grade_dist.items())))
 
     if not args.institutions_only:
+        # Flush WAL between phases to free any memory held by the write transaction
+        conn.execute("PRAGMA wal_checkpoint(TRUNCATE)")
         log.info("=== Computing Vendor Scorecards (v2.0) ===")
         v_rows = compute_vendor_scorecards(conn)
         upsert_vendors(conn, v_rows)

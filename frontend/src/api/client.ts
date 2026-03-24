@@ -1137,6 +1137,17 @@ export const analysisApi = {
   },
 
   /**
+   * Get monthly risk summary — avg risk per calendar month (1-12) across all years
+   */
+  async getMonthlyRiskSummary(sectorId?: number): Promise<MonthlyRiskSummaryResponse> {
+    const qs = sectorId != null ? `?sector_id=${sectorId}` : ''
+    const { data } = await api.get<MonthlyRiskSummaryResponse>(
+      `/analysis/monthly-risk-summary${qs}`
+    )
+    return data
+  },
+
+  /**
    * Get procedure risk comparison — direct award vs. competitive risk by sector/year
    */
   async getProcedureRiskComparison(params: {
@@ -2071,6 +2082,21 @@ export interface SeasonalRiskItem {
 export interface SeasonalRiskResponse {
   month: number
   data: SeasonalRiskItem[]
+}
+
+// Monthly Risk Summary (all 12 months, cross-year averages)
+export interface MonthlyRiskSummaryItem {
+  month: number
+  month_name: string
+  avg_risk: number
+  overall_avg_risk: number
+  risk_premium_pct: number
+  contract_count: number
+}
+
+export interface MonthlyRiskSummaryResponse {
+  data: MonthlyRiskSummaryItem[]
+  overall_avg_risk: number
 }
 
 // Procedure Risk Comparison

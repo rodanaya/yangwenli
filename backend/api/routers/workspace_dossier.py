@@ -1,4 +1,7 @@
+import time as _time
+
 from fastapi import APIRouter, HTTPException
+from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
@@ -200,3 +203,32 @@ def remove_item(dossier_id: int, item_id: int):
         conn.execute("DELETE FROM dossier_items WHERE id=? AND dossier_id=?", (item_id, dossier_id))
         conn.execute("UPDATE investigation_dossiers SET updated_at=CURRENT_TIMESTAMP WHERE id=?", (dossier_id,))
         conn.commit()
+
+@router.get("/{dossier_id}/export")
+def export_dossier(dossier_id: int):
+    """Export dossier with all items as a JSON file download."""
+    with get_db() as conn:
+        dossier = conn.execute(
+            "SELECT * FROM investigation_dossiers WHERE id = ?", (dossier_id,)
+        ).fetchone()
+        if not dossier:
+            raise HTTPException(status_code=404, detail="Dossier not found")
+        items = conn.execute(
+            "SELECT * FROM dossier_items WHERE dossier_id = ? ORDER BY created_at",
+            (dossier_id,)
+        ).fetchall()
+
+    export_data = {
+        "dossier": dict(dossier),
+        "items": [dict(i) for i in items],
+        "exported_at": _time.strftime("%Y-%m-%dT%H:%M:%SZ", _time.gmtime()),
+        "platform": "RUBLI",
+    }
+    safe_name = dossier["name"].replace(" ", "-").replace("/", "-")
+    return JSONResponse(
+        content=export_data,
+        headers={
+            "Content-Disposition": f'attachment; filename="{safe_name}-report.json"',
+            "Content-Type": "application/json",
+        },
+    )

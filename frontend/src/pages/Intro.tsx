@@ -748,7 +748,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const by = ch - 50
       ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
       ctx.fillText('MONTO TOTAL: ~$9.9T MXN', bx, by + 16)
-      ctx.fillText('ALTO RIESGO: 9.2%', bx, by + 32)
+      ctx.fillText('ALTO RIESGO: ~9.2%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
     }
@@ -1098,9 +1098,9 @@ export default function Intro() {
     const counterObj = { contracts: 0, valueT: 0, risk: 0, cases: 0 }
     tl.to(counterObj, {
       contracts: 3051294,
-      valueT: 132,
-      risk: 1233,
-      cases: 390,
+      valueT: 99,
+      risk: 920,
+      cases: 748,
       duration: 2.5,
       ease: 'power2.out',
       snap: { contracts: 1, valueT: 1, risk: 1, cases: 1 },

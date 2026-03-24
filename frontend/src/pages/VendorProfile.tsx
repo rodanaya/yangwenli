@@ -4189,7 +4189,7 @@ function PeriodistaPanel({
       {/* 4. Descargar evidencia */}
       <div>
         <button
-          onClick={() => window.open(`/api/v1/vendors/${vendorId}/contracts?format=csv`, '_blank')}
+          onClick={exportContractsCSV}
           className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
         >
           <Download className="h-4 w-4" />
