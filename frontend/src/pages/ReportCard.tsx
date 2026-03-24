@@ -1025,6 +1025,11 @@ interface InstitutionScorecardItem {
   pillar_process: number
   pillar_external: number
   top_risk_driver: string | null
+  confidence_band?: string | null
+  p90_risk_score?: number | null
+  trend_direction?: string | null
+  peer_percentile_sector?: number | null
+  key_metrics?: string | null
 }
 
 interface InstitutionScorecardListResponse {
@@ -1047,6 +1052,11 @@ interface VendorScorecardItem {
   national_percentile: number
   sector_percentile: number
   pillar_risk_signal: number
+  confidence_band?: string | null
+  p90_risk_score?: number | null
+  trend_direction?: string | null
+  risk_tier?: string | null
+  key_metrics?: string | null
   pillar_conduct: number
   pillar_spread: number
   pillar_behavior: number
@@ -1098,6 +1108,249 @@ function GradeBadge10({
     >
       {grade}
     </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// TrendArrow — inline trend indicator
+// ---------------------------------------------------------------------------
+
+function TrendArrow({ direction, invertColor = false }: { direction: string | null | undefined; invertColor?: boolean }) {
+  if (!direction) return null
+  const configs: Record<string, { arrow: string; color: string }> = {
+    improving:     { arrow: invertColor ? '\u2191' : '\u2193', color: '#16a34a' },
+    deteriorating: { arrow: invertColor ? '\u2193' : '\u2191', color: '#dc2626' },
+    stable:        { arrow: '\u2192', color: '#6b7280' },
+  }
+  const cfg = configs[direction]
+  if (!cfg) return null
+  return (
+    <span className="font-mono text-xs font-bold" style={{ color: cfg.color }} title={direction}>
+      {cfg.arrow}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ConfidencePill — data reliability indicator
+// ---------------------------------------------------------------------------
+
+function ConfidencePill({ band }: { band: string | null | undefined }) {
+  if (!band) return null
+  const configs: Record<string, { label: string; bg: string; text: string }> = {
+    wide:   { label: '~uncertain', bg: 'rgba(249,115,22,0.12)', text: '#ea580c' },
+    medium: { label: '~moderate',  bg: 'rgba(234,179,8,0.12)',  text: '#ca8a04' },
+    narrow: { label: '~reliable',  bg: 'rgba(59,130,246,0.12)', text: '#2563eb' },
+    high:   { label: '\u25CF reliable', bg: 'rgba(22,163,74,0.12)', text: '#16a34a' },
+  }
+  const cfg = configs[band]
+  if (!cfg) return null
+  return (
+    <span
+      className="inline-flex items-center font-mono rounded-full px-1.5 py-0.5"
+      style={{ fontSize: '9px', lineHeight: '1', backgroundColor: cfg.bg, color: cfg.text }}
+    >
+      {cfg.label}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// SignalDot — colored circle for signal status
+// ---------------------------------------------------------------------------
+
+function SignalDot({ signal, title: dotTitle }: { signal: 'green' | 'yellow' | 'red' | null | undefined; title?: string }) {
+  const colors: Record<string, string> = { green: '#16a34a', yellow: '#eab308', red: '#dc2626' }
+  const color = signal ? colors[signal] : '#6b7280'
+  return (
+    <span
+      className="inline-block w-2 h-2 rounded-full flex-shrink-0"
+      style={{ backgroundColor: color, opacity: signal ? 1 : 0.3 }}
+      title={dotTitle}
+    />
+  )
+}
+
+// ---------------------------------------------------------------------------
+// RiskTierBadge — replaces A-F grade for vendors
+// ---------------------------------------------------------------------------
+
+function RiskTierBadge({ tier, t }: { tier: string | null | undefined; t: (k: string) => string }) {
+  const configs: Record<string, { bg: string; text: string; labelKey: string }> = {
+    flag:     { bg: '#7f1d1d', text: '#ffffff', labelKey: 'riskTierFlag' },
+    watch:    { bg: '#dc2626', text: '#ffffff', labelKey: 'riskTierWatch' },
+    elevated: { bg: '#ea580c', text: '#ffffff', labelKey: 'riskTierElevated' },
+    low:      { bg: '#16a34a', text: '#ffffff', labelKey: 'riskTierLow' },
+  }
+  const cfg = tier ? configs[tier] : null
+  const label = cfg ? t(cfg.labelKey) : t('riskTierUnscored')
+  const bg = cfg?.bg ?? '#6b7280'
+  const textColor = cfg?.text ?? '#ffffff'
+  return (
+    <span
+      className="inline-flex items-center font-mono font-bold rounded px-1.5 py-0.5 uppercase"
+      style={{ fontSize: '10px', lineHeight: '1.2', backgroundColor: bg, color: textColor }}
+    >
+      {label}
+    </span>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// SignalStrip — 5 dots inline for table row quick view
+// ---------------------------------------------------------------------------
+
+function SignalStrip({ metrics }: { metrics: Record<string, unknown> | null }) {
+  const { t } = useTranslation('reportcard')
+  const signals = [
+    { key: 'signal_competitive', labelKey: 'signalCompetitive' },
+    { key: 'signal_single_bid', labelKey: 'signalSingleBid' },
+    { key: 'signal_short_ad', labelKey: 'signalShortAd' },
+    { key: 'signal_p90_risk', labelKey: 'signalP90Risk' },
+    { key: 'signal_external', labelKey: 'signalExternal' },
+  ]
+  return (
+    <div className="flex items-center gap-1">
+      {signals.map((s) => {
+        const val = metrics ? (metrics[s.key] as string | undefined) : null
+        const signal = (val === 'green' || val === 'yellow' || val === 'red') ? val : null
+        return <SignalDot key={s.key} signal={signal} title={t(s.labelKey)} />
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// parseKeyMetrics — safely parse JSON key_metrics
+// ---------------------------------------------------------------------------
+
+function parseKeyMetrics(raw: string | null | undefined): Record<string, unknown> | null {
+  if (!raw) return null
+  try {
+    const parsed: unknown = JSON.parse(raw)
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>
+    }
+    return null
+  } catch {
+    return null
+  }
+}
+
+// ---------------------------------------------------------------------------
+// countAlerts — count red/yellow signals in key_metrics
+// ---------------------------------------------------------------------------
+
+function countAlerts(metrics: Record<string, unknown> | null): number {
+  if (!metrics) return 0
+  const signalKeys = ['signal_competitive', 'signal_single_bid', 'signal_short_ad', 'signal_p90_risk', 'signal_external']
+  return signalKeys.filter((k) => {
+    const v = metrics[k]
+    return v === 'red' || v === 'yellow'
+  }).length
+}
+
+// ---------------------------------------------------------------------------
+// InstitutionSignalPanel — expanded signal dashboard for institutions
+// ---------------------------------------------------------------------------
+
+function InstitutionSignalPanel({ metrics, t }: { metrics: Record<string, unknown>; t: (k: string, opts?: Record<string, unknown>) => string }) {
+  const signalCards = [
+    {
+      labelKey: 'signalCompetitive',
+      value: metrics.competitive_rate != null ? `${((metrics.competitive_rate as number) * 100).toFixed(0)}%` : '--',
+      subValue: metrics.competitive_rate_value != null ? `${((metrics.competitive_rate_value as number) * 100).toFixed(0)}% ${t('signalByValue')}` : null,
+      trend: metrics.trend_competitive as string | undefined,
+      signal: metrics.signal_competitive as string | undefined,
+      benchmark: 'OECD: >50%',
+      invertTrend: true,
+    },
+    {
+      labelKey: 'signalSingleBid',
+      value: metrics.single_bid_pct != null ? `${((metrics.single_bid_pct as number) * 100).toFixed(0)}%` : '--',
+      subValue: null,
+      trend: metrics.trend_single_bid as string | undefined,
+      signal: metrics.signal_single_bid as string | undefined,
+      benchmark: 'OECD: <20%',
+      invertTrend: false,
+    },
+    {
+      labelKey: 'signalP90Risk',
+      value: metrics.p90_risk != null ? ((metrics.p90_risk as number)).toFixed(2) : '--',
+      subValue: null,
+      trend: metrics.trend_risk as string | undefined,
+      signal: metrics.signal_p90_risk as string | undefined,
+      benchmark: null,
+      invertTrend: false,
+    },
+    {
+      labelKey: 'signalShortAd',
+      value: metrics.short_ad_rate != null ? `${((metrics.short_ad_rate as number) * 100).toFixed(0)}%` : '--',
+      subValue: null,
+      trend: null,
+      signal: metrics.signal_short_ad as string | undefined,
+      benchmark: '<15%',
+      invertTrend: false,
+    },
+    {
+      labelKey: 'signalYearEnd',
+      value: metrics.year_end_rate != null ? `${((metrics.year_end_rate as number) * 100).toFixed(0)}%` : '--',
+      subValue: null,
+      trend: null,
+      signal: metrics.signal_year_end as string | undefined,
+      benchmark: '<12%',
+      invertTrend: false,
+    },
+    {
+      labelKey: 'signalExternal',
+      value: metrics.efos_vendors != null ? `${metrics.efos_vendors} EFOS` : '--',
+      subValue: metrics.aria_t1_vendors != null ? `${metrics.aria_t1_vendors} T1 / ${metrics.aria_t2_vendors ?? 0} T2` : null,
+      trend: null,
+      signal: metrics.signal_external as string | undefined,
+      benchmark: null,
+      invertTrend: false,
+    },
+  ]
+
+  return (
+    <div className="mt-2">
+      <p className="text-[10px] font-semibold uppercase tracking-wide mb-3" style={{ color: 'var(--color-text-muted)' }}>
+        {t('signalPanelTitle')}
+      </p>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+        {signalCards.map((card) => {
+          const signalVal = (card.signal === 'green' || card.signal === 'yellow' || card.signal === 'red') ? card.signal : null
+          return (
+            <div
+              key={card.labelKey}
+              className="rounded-lg p-3"
+              style={{ backgroundColor: 'var(--color-background-card)', border: '1px solid var(--color-border)' }}
+            >
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[10px] font-medium uppercase tracking-wide" style={{ color: 'var(--color-text-muted)' }}>
+                  {t(card.labelKey)}
+                </span>
+                <SignalDot signal={signalVal} />
+              </div>
+              <div className="flex items-baseline gap-2">
+                <span className="text-lg font-bold font-mono tabular-nums" style={{ color: 'var(--color-text-primary)' }}>
+                  {card.value}
+                </span>
+                {card.trend && <TrendArrow direction={card.trend} invertColor={card.invertTrend} />}
+              </div>
+              {card.subValue && (
+                <p className="text-[10px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{card.subValue}</p>
+              )}
+              {card.benchmark && (
+                <p className="text-[10px] mt-1" style={{ color: 'var(--color-text-muted)', opacity: 0.7 }}>
+                  {t('benchmarkOECD')}: {card.benchmark}
+                </p>
+              )}
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -1530,6 +1783,7 @@ function InstitutionLedeBanner({ summary }: { summary: ScorecardSummary }) {
 // ---------------------------------------------------------------------------
 
 function VendorLedeBanner({ summary }: { summary: ScorecardSummary }) {
+  const { t } = useTranslation('reportcard')
   const dist = summary.vendor_grade_distribution
   const highRiskGrades = ['D', 'D-', 'F', 'F-']
   const highRiskCount = highRiskGrades.reduce((acc, g) => acc + (dist[g] ?? 0), 0)
@@ -1561,12 +1815,10 @@ function VendorLedeBanner({ summary }: { summary: ScorecardSummary }) {
       </div>
       <div className="flex-1 min-w-[200px]">
         <p className="text-sm font-semibold leading-snug" style={{ color: 'var(--color-text-primary)' }}>
-          vendors score{' '}
-          <span style={{ color: '#dc2626' }}>D or below</span>
-          {' '}— Concerning to Red Flag — actively supplying the federal government
+          {t('vendorLedeHighRisk')}
         </p>
         <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
-          Average score: {summary.vendor_avg_score}/100 · Higher score = cleaner vendor · {total.toLocaleString()} suppliers evaluated
+          {t('riskScoreLabel')}: {summary.vendor_avg_score}/100 avg {'\u00b7'} {total.toLocaleString()} suppliers evaluated
         </p>
       </div>
     </div>
@@ -1709,21 +1961,21 @@ function InstitutionScorecardsTab() {
                   style={{ color: 'var(--color-text-secondary)' }}
                   onClick={() => handleSort('total_score')}
                 >
-                  Pts <SortIcon col="total_score" />
+                  {t('grade')} <SortIcon col="total_score" />
                 </th>
-                <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('grade')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarOpenness')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarPrice')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarVendors')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarProcess')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarExternal')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Percentil</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Signals</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('p90RiskLabel')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Peer</th>
               </tr>
             </thead>
             <InstitutionTbody>
               {(data?.data ?? []).map((inst, rowIdx) => {
                 const c = GRADE10_COLORS[inst.grade] ?? GRADE10_COLORS['F']
                 const isExpanded = expandedId === inst.institution_id
+                const km = parseKeyMetrics(inst.key_metrics)
+                const alertCount = countAlerts(km)
+                const sectorMeta = SECTORS.find((s) => s.name?.toLowerCase() === inst.sector_name?.toLowerCase())
+                const sectorColor = sectorMeta?.color || '#64748b'
                 return (
                   <>
                     <tr
@@ -1736,68 +1988,84 @@ function InstitutionScorecardsTab() {
                       onClick={() => setExpandedId(isExpanded ? null : inst.institution_id)}
                     >
                       <td className="px-4 py-3">
-                        <div className="flex flex-col">
-                          <span className="font-medium text-sm leading-tight" style={{ color: 'var(--color-text-primary)' }}>
-                            {inst.institution_name}
-                          </span>
-                          {inst.sector_name && (
-                            <span className="text-xs mt-0.5" style={{ color: 'var(--color-text-muted)' }}>
-                              {SECTORS_ES[inst.sector_name] ?? inst.sector_name}
-                              {inst.ramo_code ? ` · Ramo ${inst.ramo_code}` : ''}
+                        <div className="flex items-start gap-2">
+                          <span className="w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium text-sm leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+                              {inst.institution_name}
                             </span>
-                          )}
+                            <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                              {inst.sector_name && (
+                                <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>
+                                  {SECTORS_ES[inst.sector_name] ?? inst.sector_name}
+                                  {inst.ramo_code ? ` \u00b7 Ramo ${inst.ramo_code}` : ''}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       </td>
                       <td className="px-3 py-3 text-center">
-                        <span
-                          className="text-lg font-bold tabular-nums"
-                          style={{ fontFamily: SERIF, color: c.text }}
-                        >
-                          {inst.total_score.toFixed(0)}
-                        </span>
-                      </td>
-                      <td className="px-3 py-3 text-center">
-                        <GradeBadge10 grade={inst.grade} size="sm" />
-                        <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{inst.grade_label}</div>
+                        <div className="flex flex-col items-center gap-1">
+                          <GradeBadge10 grade={inst.grade} size="sm" />
+                          <div className="flex items-center gap-1">
+                            <TrendArrow direction={inst.trend_direction} />
+                            <ConfidencePill band={inst.confidence_band} />
+                          </div>
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={inst.pillar_openness} max={20} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={inst.pillar_price} max={20} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={inst.pillar_vendors} max={20} />
+                        <div className="flex flex-col items-center gap-1">
+                          <SignalStrip metrics={km} />
+                          <span className="text-[9px] font-mono" style={{ color: alertCount > 0 ? '#dc2626' : 'var(--color-text-muted)' }}>
+                            {t('signalAlertsCount', { count: alertCount })}
+                          </span>
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center hidden lg:table-cell">
-                        <MiniBar score={inst.pillar_process} max={20} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden lg:table-cell">
-                        <MiniBar score={inst.pillar_external} max={20} />
+                        {inst.p90_risk_score != null && inst.p90_risk_score > 0.50 ? (
+                          <span className="text-xs font-mono font-bold tabular-nums" style={{ color: '#dc2626' }}>
+                            {inst.p90_risk_score.toFixed(2)}
+                          </span>
+                        ) : inst.p90_risk_score != null ? (
+                          <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                            {inst.p90_risk_score.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>--</span>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-center hidden xl:table-cell">
-                        <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>
-                          {(inst.national_percentile * 100).toFixed(0)}°
-                        </span>
+                        {inst.peer_percentile_sector != null ? (
+                          <span className="text-[10px] font-mono tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>
+                            {t('peerPercentile', { pct: ((1 - inst.peer_percentile_sector) * 100).toFixed(0) })}
+                          </span>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>--</span>
+                        )}
                       </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${inst.institution_id}-exp`} style={{ backgroundColor: 'var(--color-background-elevated)', borderTop: '1px solid var(--color-border)' }}>
-                        <td colSpan={9} className="px-4 py-4">
-                          <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-                            {INST_PILLARS.map((p) => (
-                              <PillarBar
-                                key={p.key}
-                                label={t(p.labelKey)}
-                                score={inst[p.key]}
-                                maxScore={p.max}
-                                color={c.bar}
-                              />
-                            ))}
-                          </div>
+                        <td colSpan={5} className="px-4 py-4">
+                          {km ? (
+                            <InstitutionSignalPanel metrics={km} t={t} />
+                          ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
+                              {INST_PILLARS.map((p) => (
+                                <PillarBar
+                                  key={p.key}
+                                  label={t(p.labelKey)}
+                                  score={inst[p.key]}
+                                  maxScore={p.max}
+                                  color={c.bar}
+                                />
+                              ))}
+                            </div>
+                          )}
                           {inst.top_risk_driver && (
                             <p className="text-xs mt-3" style={{ color: '#c41e3a' }}>
-                              ⚠ {t('topRiskDriver')}: <strong>{inst.top_risk_driver}</strong>
+                              {t('topRiskDriver')}: <strong>{inst.top_risk_driver}</strong>
                             </p>
                           )}
                         </td>
@@ -1839,28 +2107,6 @@ function InstitutionScorecardsTab() {
             </div>
           </div>
         )}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// MiniBar — inline pillar indicator for table cells
-// ---------------------------------------------------------------------------
-
-function MiniBar({ score, max }: { score: number; max: number }) {
-  const pct = Math.max(0, Math.min(100, (score / max) * 100))
-  const color = pct >= 70 ? '#22c55e' : pct >= 40 ? '#f59e0b' : '#ef4444'
-  return (
-    <div className="flex flex-col items-center gap-0.5">
-      <span className="text-xs font-medium tabular-nums" style={{ color }}>
-        {score.toFixed(0)}
-      </span>
-      <div className="w-10 h-1.5 rounded-full" style={{ backgroundColor: 'var(--color-border)' }}>
-        <div
-          className="h-1.5 rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
       </div>
     </div>
   )
@@ -2028,14 +2274,11 @@ function VendorScorecardsTab() {
                   style={{ color: 'var(--color-text-secondary)' }}
                   onClick={() => handleSort('total_score')}
                 >
-                  Pts <SortIcon col="total_score" />
+                  {t('riskScoreLabel')} <SortIcon col="total_score" />
                 </th>
                 <th className="px-3 py-3 text-center font-medium" style={{ color: 'var(--color-text-secondary)' }}>{t('grade')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarRiskSignal')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarConduct')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarSpread')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarBehavior')}</th>
-                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('pillarFlags')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden md:table-cell" style={{ color: 'var(--color-text-secondary)' }}>{t('p90RiskLabel')}</th>
+                <th className="px-3 py-3 text-center font-medium hidden lg:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Details</th>
                 <th className="px-3 py-3 text-center font-medium hidden xl:table-cell" style={{ color: 'var(--color-text-secondary)' }}>Percentile</th>
               </tr>
             </thead>
@@ -2043,6 +2286,8 @@ function VendorScorecardsTab() {
               {(data?.data ?? []).map((vendor) => {
                 const c = GRADE10_COLORS[vendor.grade] ?? GRADE10_COLORS['F']
                 const isExpanded = expandedId === vendor.vendor_id
+                const riskScore = vendor.total_score
+                const riskColor = riskScore >= 60 ? '#dc2626' : riskScore >= 40 ? '#ea580c' : riskScore >= 25 ? '#eab308' : '#16a34a'
                 return (
                   <>
                     <tr
@@ -2052,46 +2297,59 @@ function VendorScorecardsTab() {
                       onClick={() => setExpandedId(isExpanded ? null : vendor.vendor_id)}
                     >
                       <td className="px-4 py-3">
-                        <span className="font-medium text-sm" style={{ color: 'var(--color-text-primary)' }}>
-                          {vendor.vendor_name}
-                        </span>
+                        <div className="flex items-start gap-2">
+                          <RiskTierBadge tier={vendor.risk_tier} t={t} />
+                          <div className="flex flex-col min-w-0">
+                            <span className="font-medium text-sm leading-tight" style={{ color: 'var(--color-text-primary)' }}>
+                              {vendor.vendor_name}
+                            </span>
+                            <div className="flex items-center gap-1.5 mt-0.5">
+                              <ConfidencePill band={vendor.confidence_band} />
+                              <TrendArrow direction={vendor.trend_direction} />
+                            </div>
+                          </div>
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <span
-                          className="text-lg font-bold tabular-nums"
-                          style={{ fontFamily: SERIF, color: c.text }}
+                          className="text-lg font-bold font-mono tabular-nums"
+                          style={{ color: riskColor }}
                         >
-                          {vendor.total_score.toFixed(0)}
+                          {riskScore.toFixed(0)}
                         </span>
+                        <div className="text-[9px]" style={{ color: 'var(--color-text-muted)' }}>/100</div>
                       </td>
                       <td className="px-3 py-3 text-center">
                         <GradeBadge10 grade={vendor.grade} size="sm" />
-                        <div className="text-[9px] mt-0.5" style={{ color: 'var(--color-text-muted)' }}>{vendor.grade_label}</div>
                       </td>
                       <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={vendor.pillar_risk_signal} max={25} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={vendor.pillar_conduct} max={20} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden md:table-cell">
-                        <MiniBar score={vendor.pillar_spread} max={20} />
+                        {vendor.p90_risk_score != null && vendor.p90_risk_score > 0.50 ? (
+                          <span className="text-xs font-mono font-bold tabular-nums" style={{ color: '#dc2626' }}>
+                            {vendor.p90_risk_score.toFixed(2)}
+                          </span>
+                        ) : vendor.p90_risk_score != null ? (
+                          <span className="text-xs font-mono tabular-nums" style={{ color: 'var(--color-text-muted)' }}>
+                            {vendor.p90_risk_score.toFixed(2)}
+                          </span>
+                        ) : (
+                          <span className="text-xs" style={{ color: 'var(--color-text-muted)' }}>--</span>
+                        )}
                       </td>
                       <td className="px-3 py-3 text-center hidden lg:table-cell">
-                        <MiniBar score={vendor.pillar_behavior} max={20} />
-                      </td>
-                      <td className="px-3 py-3 text-center hidden lg:table-cell">
-                        <MiniBar score={vendor.pillar_flags} max={15} />
+                        <div className="flex flex-col items-center gap-0.5 text-[10px] font-mono" style={{ color: 'var(--color-text-secondary)' }}>
+                          <span>DA: {vendor.pillar_conduct != null ? `${vendor.pillar_conduct}` : '--'}</span>
+                          <span>SB: {vendor.pillar_behavior != null ? `${vendor.pillar_behavior}` : '--'}</span>
+                        </div>
                       </td>
                       <td className="px-3 py-3 text-center hidden xl:table-cell">
                         <span className="text-xs tabular-nums" style={{ color: 'var(--color-text-secondary)' }}>
-                          {(vendor.national_percentile * 100).toFixed(0)}°
+                          {(vendor.national_percentile * 100).toFixed(0)}{'\u00b0'}
                         </span>
                       </td>
                     </tr>
                     {isExpanded && (
                       <tr key={`${vendor.vendor_id}-exp`} style={{ backgroundColor: 'var(--color-background-elevated)', borderTop: '1px solid var(--color-border)' }}>
-                        <td colSpan={9} className="px-4 py-4">
+                        <td colSpan={6} className="px-4 py-4">
                           <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
                             {VENDOR_PILLARS.map((p) => (
                               <PillarBar
@@ -2105,7 +2363,7 @@ function VendorScorecardsTab() {
                           </div>
                           {vendor.top_risk_driver && (
                             <p className="text-xs mt-3" style={{ color: '#c41e3a' }}>
-                              ⚠ {t('topFactor')}: <strong>{vendor.top_risk_driver}</strong>
+                              {t('topFactor')}: <strong>{vendor.top_risk_driver}</strong>
                             </p>
                           )}
                         </td>

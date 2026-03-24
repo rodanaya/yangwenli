@@ -13,7 +13,7 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/v1/scorecards", tags=["scorecards"])
 
 
-# ─── Pydantic models ──────────────────────────────────────────────────────────
+# --- Pydantic models --------------------------------------------------------
 
 class GradeInfo(BaseModel):
     grade: str
@@ -39,6 +39,11 @@ class InstitutionScorecardResponse(BaseModel):
     pillar_external: float
     top_risk_driver: Optional[str]
     key_metrics: Dict[str, Any]
+    confidence_band: Optional[str] = None
+    p90_risk_score: Optional[float] = None
+    trend_direction: Optional[str] = None
+    peer_percentile_sector: Optional[float] = None
+    signal_count_red: Optional[int] = None
 
 
 class VendorScorecardResponse(BaseModel):
@@ -57,6 +62,10 @@ class VendorScorecardResponse(BaseModel):
     pillar_flags: float
     top_risk_driver: Optional[str]
     key_metrics: Dict[str, Any]
+    confidence_band: Optional[str] = None
+    p90_risk_score: Optional[float] = None
+    trend_direction: Optional[str] = None
+    risk_tier: Optional[str] = None
 
 
 class InstitutionScorecardListItem(BaseModel):
@@ -75,6 +84,11 @@ class InstitutionScorecardListItem(BaseModel):
     pillar_process: float
     pillar_external: float
     top_risk_driver: Optional[str]
+    confidence_band: Optional[str] = None
+    p90_risk_score: Optional[float] = None
+    trend_direction: Optional[str] = None
+    peer_percentile_sector: Optional[float] = None
+    signal_count_red: Optional[int] = None
 
 
 class VendorScorecardListItem(BaseModel):
@@ -92,6 +106,10 @@ class VendorScorecardListItem(BaseModel):
     pillar_behavior: float
     pillar_flags: float
     top_risk_driver: Optional[str]
+    confidence_band: Optional[str] = None
+    p90_risk_score: Optional[float] = None
+    trend_direction: Optional[str] = None
+    risk_tier: Optional[str] = None
 
 
 class InstitutionScorecardListResponse(BaseModel):
@@ -122,7 +140,32 @@ class ScorecardSummary(BaseModel):
     computed_at: Optional[str]
 
 
-# ─── Routes ───────────────────────────────────────────────────────────────────
+# --- Helpers -----------------------------------------------------------------
+
+def _extract_signal_count_red(key_metrics_json: str) -> int:
+    """Count red signals from key_metrics JSON."""
+    try:
+        km = json.loads(key_metrics_json) if key_metrics_json else {}
+        return km.get("worst_signal_count", 0)
+    except Exception:
+        return 0
+
+
+def _grade_from_risk(avg_risk: float) -> tuple:
+    """Fallback: compute grade from avg risk score."""
+    if avg_risk < 0.10:
+        return ("A", "Solido", "#22c55e")
+    elif avg_risk < 0.20:
+        return ("B", "Adecuado", "#eab308")
+    elif avg_risk < 0.35:
+        return ("C", "Preocupante", "#f97316")
+    elif avg_risk < 0.50:
+        return ("D", "Alto Riesgo", "#ef4444")
+    else:
+        return ("F", "Critico", "#991b1b")
+
+
+# --- Routes ------------------------------------------------------------------
 
 @router.get("/summary", response_model=ScorecardSummary)
 def get_scorecard_summary():
@@ -155,23 +198,18 @@ def get_scorecard_summary():
             computed_at=i_row[2],
         )
     except Exception as exc:
-        # Tables may not exist in older deploy DBs — compute from stats tables
         logger.warning("scorecard_summary_fallback: %s", exc)
         try:
             with get_db() as conn:
                 i_count = conn.execute("SELECT COUNT(*) FROM institution_stats").fetchone()[0]
                 v_count = conn.execute("SELECT COUNT(*) FROM vendor_stats").fetchone()[0]
-                i_avg_risk = conn.execute("SELECT AVG(avg_risk_score) FROM institution_stats").fetchone()[0] or 0
-                v_avg_risk = conn.execute("SELECT AVG(avg_risk_score) FROM vendor_stats").fetchone()[0] or 0
-                i_avg_score = round(max(0, (1 - i_avg_risk)) * 100, 1)
-                v_avg_score = round(max(0, (1 - v_avg_risk)) * 100, 1)
             return ScorecardSummary(
                 institutions_scored=i_count,
                 vendors_scored=v_count,
                 institution_grade_distribution={},
                 vendor_grade_distribution={},
-                institution_avg_score=i_avg_score,
-                vendor_avg_score=v_avg_score,
+                institution_avg_score=0.0,
+                vendor_avg_score=0.0,
                 computed_at=None,
             )
         except Exception:
@@ -186,23 +224,6 @@ def get_scorecard_summary():
             )
 
 
-def _grade_from_risk(avg_risk: float) -> tuple:
-    """Compute grade, label, color from average risk score.
-
-    Returns (grade, grade_label, grade_color).
-    """
-    if avg_risk < 0.10:
-        return ("A", "Excellent", "#16a34a")
-    elif avg_risk < 0.20:
-        return ("B", "Good", "#22c55e")
-    elif avg_risk < 0.35:
-        return ("C", "Fair", "#eab308")
-    elif avg_risk < 0.50:
-        return ("D", "Poor", "#f97316")
-    else:
-        return ("F", "Critical", "#dc2626")
-
-
 def _fallback_institution_scorecards(
     conn, page: int, per_page: int, sort_by: str, order: str,
     grade: Optional[str], sector: Optional[str],
@@ -210,7 +231,7 @@ def _fallback_institution_scorecards(
     search: Optional[str],
 ) -> InstitutionScorecardListResponse:
     """Build institution scorecards from institution_stats when the
-    institution_scorecards table is missing (e.g. deploy DB)."""
+    institution_scorecards table is missing."""
     where_clauses = ["1=1"]
     params: list = []
 
@@ -222,7 +243,6 @@ def _fallback_institution_scorecards(
         params.append(sector)
 
     where_sql = " AND ".join(where_clauses)
-    # Map sort_by to available columns; default to avg_risk_score desc
     sort_col = "ist.avg_risk_score"
     if sort_by == "institution_name":
         sort_col = "i.name"
@@ -257,7 +277,6 @@ def _fallback_institution_scorecards(
     grade_counts: dict = {}
     for r in rows:
         avg_risk = r[4] or 0
-        # Convert avg_risk (0-1) to a 0-100 score (inverted: lower risk = higher score)
         total_score = round(max(0, (1 - avg_risk)) * 100, 1)
         g, gl, gc = _grade_from_risk(avg_risk)
 
@@ -270,21 +289,17 @@ def _fallback_institution_scorecards(
 
         grade_counts[g] = grade_counts.get(g, 0) + 1
 
-        openness = round(max(0, (1 - (r[7] or 0) / 100)) * 100, 1)  # inverse DA%
-        price_pillar = round(max(0, (1 - avg_risk)) * 100, 1)
-        vendors_pillar = round(max(0, (1 - (r[8] or 0) / 100)) * 100, 1)
-
         items.append(InstitutionScorecardListItem(
             institution_id=r[0], institution_name=r[1], ramo_code=r[2],
             sector_name=r[3], total_score=total_score,
             grade=g, grade_label=gl, grade_color=gc,
             national_percentile=0.5,
-            pillar_openness=openness,
-            pillar_price=price_pillar,
-            pillar_vendors=vendors_pillar,
-            pillar_process=50.0,
-            pillar_external=50.0,
-            top_risk_driver="direct_award" if (r[7] or 0) > 70 else "risk_score",
+            pillar_openness=0.0, pillar_price=0.0,
+            pillar_vendors=0.0, pillar_process=0.0, pillar_external=0.0,
+            top_risk_driver=None,
+            confidence_band=None, p90_risk_score=None,
+            trend_direction=None, peer_percentile_sector=None,
+            signal_count_red=None,
         ))
 
     filtered_total = len(items) if (grade or min_score is not None or max_score is not None) else total
@@ -302,7 +317,7 @@ def _fallback_vendor_scorecards(
     search: Optional[str],
 ) -> VendorScorecardListResponse:
     """Build vendor scorecards from vendor_stats when the
-    vendor_scorecards table is missing (e.g. deploy DB)."""
+    vendor_scorecards table is missing."""
     where_clauses = ["1=1"]
     params: list = []
 
@@ -323,18 +338,16 @@ def _fallback_vendor_scorecards(
         SELECT COUNT(*)
         FROM vendor_stats vs
         JOIN vendors v ON v.id = vs.vendor_id
-        WHERE {where_sql}
+        WHERE vs.vendor_id IS NOT NULL AND {where_sql}
     """, params).fetchone()[0]
 
     offset = (page - 1) * per_page
     rows = conn.execute(f"""
         SELECT vs.vendor_id, v.name,
-               vs.avg_risk_score, vs.total_contracts,
-               vs.direct_award_pct, vs.single_bid_pct,
-               vs.high_risk_pct, vs.sector_count
+               vs.avg_risk_score, vs.total_contracts
         FROM vendor_stats vs
         JOIN vendors v ON v.id = vs.vendor_id
-        WHERE {where_sql}
+        WHERE vs.vendor_id IS NOT NULL AND {where_sql}
         ORDER BY {sort_col} {order_dir}
         LIMIT ? OFFSET ?
     """, params + [per_page, offset]).fetchall()
@@ -343,7 +356,8 @@ def _fallback_vendor_scorecards(
     grade_counts: dict = {}
     for r in rows:
         avg_risk = r[2] or 0
-        total_score = round(max(0, (1 - avg_risk)) * 100, 1)
+        # Vendor score is now risk-oriented (higher = riskier)
+        total_score = round(min(100, avg_risk * 100), 1)
         g, gl, gc = _grade_from_risk(avg_risk)
 
         if min_score is not None and total_score < min_score:
@@ -355,22 +369,17 @@ def _fallback_vendor_scorecards(
 
         grade_counts[g] = grade_counts.get(g, 0) + 1
 
-        risk_signal = round(max(0, (1 - avg_risk)) * 100, 1)
-        conduct = round(max(0, (1 - (r[4] or 0) / 100)) * 100, 1)
-        spread = round(min((r[7] or 1) / 12 * 100, 100), 1)
-
         items.append(VendorScorecardListItem(
             vendor_id=r[0], vendor_name=r[1],
             total_score=total_score,
             grade=g, grade_label=gl, grade_color=gc,
             national_percentile=0.5,
             sector_percentile=0.5,
-            pillar_risk_signal=risk_signal,
-            pillar_conduct=conduct,
-            pillar_spread=spread,
-            pillar_behavior=50.0,
-            pillar_flags=50.0,
-            top_risk_driver="risk_score" if avg_risk > 0.3 else "direct_award",
+            pillar_risk_signal=0.0, pillar_conduct=0.0,
+            pillar_spread=0.0, pillar_behavior=0.0, pillar_flags=0.0,
+            top_risk_driver=None,
+            confidence_band=None, p90_risk_score=None,
+            trend_direction=None, risk_tier=None,
         ))
 
     filtered_total = len(items) if (grade or min_score is not None or max_score is not None) else total
@@ -395,7 +404,6 @@ def list_institution_scorecards(
 ):
     """Ranked list of institution scorecards."""
     with get_db() as conn:
-        # Check if institution_scorecards table exists
         exists = conn.execute(
             "SELECT 1 FROM sqlite_master WHERE type='table' AND name='institution_scorecards'"
         ).fetchone()
@@ -443,7 +451,9 @@ def list_institution_scorecards(
                    s.national_percentile,
                    s.pillar_openness, s.pillar_price, s.pillar_vendors,
                    s.pillar_process, s.pillar_external,
-                   s.top_risk_driver
+                   s.top_risk_driver, s.key_metrics,
+                   s.confidence_band, s.p90_risk_score,
+                   s.trend_direction, s.peer_percentile_sector
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
             LEFT JOIN sectors sec ON i.sector_id = sec.id
@@ -470,11 +480,16 @@ def list_institution_scorecards(
             institution_id=r[0], institution_name=r[1], ramo_code=r[2],
             sector_name=r[3], total_score=round(r[4], 1),
             grade=r[5], grade_label=r[6], grade_color=r[7],
-            national_percentile=round(r[8], 3),
+            national_percentile=round(r[8] or 0.5, 3),
             pillar_openness=round(r[9], 1), pillar_price=round(r[10], 1),
             pillar_vendors=round(r[11], 1), pillar_process=round(r[12], 1),
             pillar_external=round(r[13], 1),
             top_risk_driver=r[14],
+            confidence_band=r[16],
+            p90_risk_score=round(r[17], 3) if r[17] is not None else None,
+            trend_direction=r[18],
+            peer_percentile_sector=round(r[19], 3) if r[19] is not None else None,
+            signal_count_red=_extract_signal_count_red(r[15]),
         )
         for r in rows
     ]
@@ -497,7 +512,9 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
                    s.national_percentile,
                    s.pillar_openness, s.pillar_price, s.pillar_vendors,
                    s.pillar_process, s.pillar_external,
-                   s.top_risk_driver, s.key_metrics
+                   s.top_risk_driver, s.key_metrics,
+                   s.confidence_band, s.p90_risk_score,
+                   s.trend_direction, s.peer_percentile_sector
             FROM institution_scorecards s
             JOIN institutions i ON s.institution_id = i.id
             LEFT JOIN sectors sec ON i.sector_id = sec.id
@@ -512,11 +529,16 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
         institution_id=row[0], institution_name=row[1], ramo_code=row[2],
         sector_name=row[3], total_score=round(row[4], 1),
         grade=row[5], grade_label=row[6], grade_color=row[7],
-        national_percentile=round(row[8], 3),
+        national_percentile=round(row[8] or 0.5, 3),
         pillar_openness=round(row[9], 1), pillar_price=round(row[10], 1),
         pillar_vendors=round(row[11], 1), pillar_process=round(row[12], 1),
         pillar_external=round(row[13], 1),
         top_risk_driver=row[14], key_metrics=metrics,
+        confidence_band=row[16],
+        p90_risk_score=round(row[17], 3) if row[17] is not None else None,
+        trend_direction=row[18],
+        peer_percentile_sector=round(row[19], 3) if row[19] is not None else None,
+        signal_count_red=metrics.get("worst_signal_count", 0),
     )
 
 
@@ -541,9 +563,6 @@ def list_vendor_scorecards(
                 conn, page, per_page, sort_by, order,
                 grade, min_score, max_score, search,
             )
-        # Separate WHERE clauses: ones that only touch vendor_scorecards (s_*) and
-        # ones that require joining vendors (v_*). The JOIN is expensive (~900ms on
-        # 320K vendors) so we skip it when no vendor-name search is active.
         s_where: list = ["1=1"]
         s_params: list = []
         needs_join = False
@@ -569,9 +588,6 @@ def list_vendor_scorecards(
         else:
             order_sql = f"s.{sort_by} {'DESC' if order == 'desc' else 'ASC'}"
 
-        join_clause = "JOIN vendors v ON s.vendor_id = v.id" if needs_join else "JOIN vendors v ON s.vendor_id = v.id"
-
-        # COUNT: avoid join when not filtering/sorting by vendor name (saves ~870ms)
         if needs_join:
             total = conn.execute(f"""
                 SELECT COUNT(*) FROM vendor_scorecards s
@@ -584,14 +600,15 @@ def list_vendor_scorecards(
 
         offset = (page - 1) * per_page
         if needs_join:
-            # When filtering/sorting by vendor name, join must be in outer query
             rows = conn.execute(f"""
                 SELECT s.vendor_id, v.name,
                        s.total_score, s.grade, s.grade_label, s.grade_color,
                        s.national_percentile, s.sector_percentile,
                        s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
                        s.pillar_behavior, s.pillar_flags,
-                       s.top_risk_driver
+                       s.top_risk_driver,
+                       s.confidence_band, s.p90_risk_score,
+                       s.trend_direction, s.risk_tier
                 FROM vendor_scorecards s
                 JOIN vendors v ON s.vendor_id = v.id
                 WHERE {where_sql}
@@ -599,21 +616,22 @@ def list_vendor_scorecards(
                 LIMIT ? OFFSET ?
             """, s_params + [per_page, offset]).fetchall()
         else:
-            # No name filter: subquery first so idx_vsc_score is used for ORDER BY,
-            # then join only the LIMIT rows to vendors for names (0ms vs 400ms).
-            # Alias inner table as s so where_sql column refs (s.grade etc.) work.
             rows = conn.execute(f"""
                 SELECT vs.vendor_id, v.name,
                        vs.total_score, vs.grade, vs.grade_label, vs.grade_color,
                        vs.national_percentile, vs.sector_percentile,
                        vs.pillar_risk_signal, vs.pillar_conduct, vs.pillar_spread,
                        vs.pillar_behavior, vs.pillar_flags,
-                       vs.top_risk_driver
+                       vs.top_risk_driver,
+                       vs.confidence_band, vs.p90_risk_score,
+                       vs.trend_direction, vs.risk_tier
                 FROM (
                     SELECT s.vendor_id, s.total_score, s.grade, s.grade_label, s.grade_color,
                            s.national_percentile, s.sector_percentile,
                            s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
-                           s.pillar_behavior, s.pillar_flags, s.top_risk_driver
+                           s.pillar_behavior, s.pillar_flags, s.top_risk_driver,
+                           s.confidence_band, s.p90_risk_score,
+                           s.trend_direction, s.risk_tier
                     FROM vendor_scorecards AS s
                     WHERE {where_sql}
                     ORDER BY {order_sql}
@@ -622,7 +640,6 @@ def list_vendor_scorecards(
                 JOIN vendors v ON vs.vendor_id = v.id
             """, s_params + [per_page, offset]).fetchall()
 
-        # Grade distribution: also avoid join when no name filter
         where_no_grade = " AND ".join([c for c in s_where if "s.grade" not in c])
         filter_params_no_grade = [p for p, w in zip(s_params, s_where[1:]) if "s.grade" not in w]
         if needs_join:
@@ -643,14 +660,18 @@ def list_vendor_scorecards(
             vendor_id=r[0], vendor_name=r[1],
             total_score=round(r[2], 1),
             grade=r[3], grade_label=r[4], grade_color=r[5],
-            national_percentile=round(r[6], 3),
-            sector_percentile=round(r[7], 3),
+            national_percentile=round(r[6] or 0.5, 3),
+            sector_percentile=round(r[7] or 0.5, 3),
             pillar_risk_signal=round(r[8], 1),
             pillar_conduct=round(r[9], 1),
             pillar_spread=round(r[10], 1),
             pillar_behavior=round(r[11], 1),
             pillar_flags=round(r[12], 1),
             top_risk_driver=r[13],
+            confidence_band=r[14],
+            p90_risk_score=round(r[15], 3) if r[15] is not None else None,
+            trend_direction=r[16],
+            risk_tier=r[17],
         )
         for r in rows
     ]
@@ -673,7 +694,9 @@ def get_vendor_scorecard(vendor_id: int = Path(..., ge=1)):
                        s.national_percentile, s.sector_percentile,
                        s.pillar_risk_signal, s.pillar_conduct, s.pillar_spread,
                        s.pillar_behavior, s.pillar_flags,
-                       s.top_risk_driver, s.key_metrics
+                       s.top_risk_driver, s.key_metrics,
+                       s.confidence_band, s.p90_risk_score,
+                       s.trend_direction, s.risk_tier
                 FROM vendor_scorecards s
                 JOIN vendors v ON s.vendor_id = v.id
                 WHERE s.vendor_id = ?
@@ -689,12 +712,16 @@ def get_vendor_scorecard(vendor_id: int = Path(..., ge=1)):
         vendor_id=row[0], vendor_name=row[1],
         total_score=round(row[2], 1),
         grade=row[3], grade_label=row[4], grade_color=row[5],
-        national_percentile=round(row[6], 3),
-        sector_percentile=round(row[7], 3),
+        national_percentile=round(row[6] or 0.5, 3),
+        sector_percentile=round(row[7] or 0.5, 3),
         pillar_risk_signal=round(row[8], 1),
         pillar_conduct=round(row[9], 1),
         pillar_spread=round(row[10], 1),
         pillar_behavior=round(row[11], 1),
         pillar_flags=round(row[12], 1),
         top_risk_driver=row[13], key_metrics=metrics,
+        confidence_band=row[15],
+        p90_risk_score=round(row[16], 3) if row[16] is not None else None,
+        trend_direction=row[17],
+        risk_tier=row[18],
     )
