@@ -598,6 +598,19 @@ export interface FastDashboardData {
   december_spike?: Record<string, unknown> | null
   monthly_2023?: Record<string, unknown> | null
   cached_at: string | null
+  // P1 enrichment fields
+  multivariate_anomaly_count?: number | null
+  election_year_avg_risk?: number | null
+  non_election_year_avg_risk?: number | null
+  election_year_contract_count?: number | null
+  new_vendor_risk_count?: number | null
+  grade_a_pct?: number | null
+  grade_b_pct?: number | null
+  direct_award_pct?: number | null
+  sexenio_comparison?: {
+    amlo?: { avg_risk: number; contract_count: number; high_risk_pct: number }
+    sheinbaum?: { avg_risk: number; contract_count: number; high_risk_pct: number }
+  } | null
 }
 
 // ============================================================================
@@ -723,6 +736,7 @@ export interface RiskFactorAnalysisResponse {
 export interface InstitutionHealthItem {
   institution_id: number
   institution_name: string
+  institution_type?: string
   total_contracts: number
   total_value: number
   avg_risk_score: number

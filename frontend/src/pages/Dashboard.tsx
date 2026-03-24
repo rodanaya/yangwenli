@@ -1695,6 +1695,141 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
+      {/* P1 INSIGHT CARDS — Multivariate anomalies, election effect,      */}
+      {/* new vendor risk, sexenio comparison                              */}
+      {/* ================================================================ */}
+      {(fastDashboard?.multivariate_anomaly_count != null ||
+        (fastDashboard?.election_year_avg_risk != null && fastDashboard?.non_election_year_avg_risk != null) ||
+        fastDashboard?.new_vendor_risk_count != null) && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {fastDashboard?.multivariate_anomaly_count != null && (
+            <ScrollReveal delay={0}>
+              <Card className="fern-card border-t-[3px]" style={{ borderTopColor: '#ef4444' }}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
+                      {t('anomaliasEstadisticas', { defaultValue: 'Anomalías Estadísticas' })}
+                    </p>
+                    <Target className="h-4 w-4 text-risk-critical opacity-50" />
+                  </div>
+                  <p
+                    className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight"
+                    style={{ color: '#ef4444', letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {formatNumber(fastDashboard.multivariate_anomaly_count)}
+                  </p>
+                  <p className="text-[10px] text-text-muted leading-tight mt-3">
+                    contratos con patrón multivariado (p &lt; 0.01)
+                  </p>
+                </CardContent>
+              </Card>
+            </ScrollReveal>
+          )}
+          {fastDashboard?.election_year_avg_risk != null && fastDashboard?.non_election_year_avg_risk != null && (() => {
+            const diff = fastDashboard.election_year_avg_risk - fastDashboard.non_election_year_avg_risk
+            const diffPct = fastDashboard.non_election_year_avg_risk > 0
+              ? ((diff / fastDashboard.non_election_year_avg_risk) * 100).toFixed(1)
+              : '0.0'
+            const isHigher = diff > 0
+            return (
+              <ScrollReveal delay={100}>
+                <Card className="fern-card border-t-[3px]" style={{ borderTopColor: '#eab308' }}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-3">
+                      <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
+                        Efecto Año Electoral
+                      </p>
+                      <Calendar className="h-4 w-4 opacity-50" style={{ color: '#eab308' }} />
+                    </div>
+                    <p
+                      className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight"
+                      style={{ color: '#eab308', letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
+                    >
+                      {isHigher ? '+' : ''}{diffPct}%
+                    </p>
+                    <p className={cn('text-[10px] leading-tight mt-3', isHigher ? 'text-risk-high' : 'text-text-muted')}>
+                      {isHigher ? 'mayor riesgo en años electorales' : 'similar en años electorales'}
+                    </p>
+                  </CardContent>
+                </Card>
+              </ScrollReveal>
+            )
+          })()}
+          {fastDashboard?.new_vendor_risk_count != null && (
+            <ScrollReveal delay={200}>
+              <Card className="fern-card border-t-[3px]" style={{ borderTopColor: '#fb923c' }}>
+                <CardContent className="p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
+                      Nuevos Proveedores Riesgosos
+                    </p>
+                    <AlertTriangle className="h-4 w-4 text-risk-high opacity-50" />
+                  </div>
+                  <p
+                    className="text-[2.5rem] font-black tabular-nums leading-none tracking-tight"
+                    style={{ color: '#fb923c', letterSpacing: '-0.035em', fontVariantNumeric: 'tabular-nums' }}
+                  >
+                    {formatNumber(fastDashboard.new_vendor_risk_count)}
+                  </p>
+                  <p className="text-[10px] text-text-muted leading-tight mt-3">
+                    proveedores 2022+ con riesgo alto (&gt;0.40)
+                  </p>
+                </CardContent>
+              </Card>
+            </ScrollReveal>
+          )}
+        </div>
+      )}
+
+      {/* Sexenio Comparison — side-by-side AMLO vs Sheinbaum */}
+      {fastDashboard?.sexenio_comparison?.amlo != null && fastDashboard?.sexenio_comparison?.sheinbaum != null && (() => {
+        const amlo = fastDashboard.sexenio_comparison!.amlo!
+        const sheinbaum = fastDashboard.sexenio_comparison!.sheinbaum!
+        const delta = sheinbaum.avg_risk - amlo.avg_risk
+        const isHigher = delta > 0
+        return (
+          <ScrollReveal delay={0}>
+            <Card className="fern-card">
+              <CardContent className="p-4">
+                <div className="flex items-center gap-2 mb-4">
+                  <BarChart3 className="h-3.5 w-3.5 text-accent" />
+                  <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono">
+                    Comparación Sexenial
+                  </p>
+                </div>
+                <div className="grid grid-cols-2 gap-4">
+                  {/* AMLO */}
+                  <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3">
+                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">AMLO (2018-2024)</p>
+                    <p className="text-xl font-black font-mono tabular-nums" style={{ color: '#f97316' }}>
+                      {(amlo.avg_risk * 100).toFixed(2)}%
+                    </p>
+                    <p className="text-[10px] text-text-muted mt-1">
+                      {formatNumber(amlo.contract_count)} contratos &middot; {amlo.high_risk_pct.toFixed(1)}% alto riesgo
+                    </p>
+                  </div>
+                  {/* Sheinbaum */}
+                  <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3">
+                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">Sheinbaum (2024+)</p>
+                    <p className="text-xl font-black font-mono tabular-nums" style={{ color: '#dc2626' }}>
+                      {(sheinbaum.avg_risk * 100).toFixed(2)}%
+                    </p>
+                    <p className="text-[10px] text-text-muted mt-1">
+                      {formatNumber(sheinbaum.contract_count)} contratos &middot; {sheinbaum.high_risk_pct.toFixed(1)}% alto riesgo
+                    </p>
+                  </div>
+                </div>
+                <p className={cn('text-[10px] mt-3 font-mono', isHigher ? 'text-risk-high' : 'text-risk-low')}>
+                  {isHigher ? <TrendingUp className="h-3 w-3 inline mr-1" /> : <TrendingDown className="h-3 w-3 inline mr-1" />}
+                  Sheinbaum {isHigher ? '+' : ''}{(delta * 100).toFixed(2)}pp vs AMLO
+                </p>
+              </CardContent>
+            </Card>
+          </ScrollReveal>
+        )
+      })()}
+
+      {/* ================================================================ */}
       {/* RED FLAG PATTERNS — 5 compact KPI cards from patternCounts       */}
       {/* ================================================================ */}
       {patternCountsData?.counts && (

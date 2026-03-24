@@ -645,6 +645,22 @@ export default function InstitutionHealth() {
     }
   }
 
+  // ---------- Rank within institution_type (by avg_risk_score desc) ----------
+  const rankMap = useMemo(() => {
+    const byType: Record<string, typeof sortedItems> = {}
+    sortedItems.forEach(inst => {
+      const t = inst.institution_type ?? 'other'
+      if (!byType[t]) byType[t] = []
+      byType[t].push(inst)
+    })
+    const ranks: Record<number, number> = {}
+    Object.values(byType).forEach(group => {
+      const sorted = [...group].sort((a, b) => (b.avg_risk_score ?? 0) - (a.avg_risk_score ?? 0))
+      sorted.forEach((inst, i) => { ranks[inst.institution_id] = i + 1 })
+    })
+    return ranks
+  }, [sortedItems])
+
   // ---------- Derived summary metrics ----------
   const summary = useMemo(() => {
     if (!items.length) return null
@@ -1096,6 +1112,7 @@ export default function InstitutionHealth() {
               <thead>
                 <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
                   <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
+                  <th className="px-2 py-2.5 text-left font-medium whitespace-nowrap w-12" title="Rank within institution type by avg risk score">Rank</th>
                   <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">{t('columns.institution')}</th>
                   <th
                     className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
@@ -1173,17 +1190,49 @@ export default function InstitutionHealth() {
                     onClick={() => navigate(`/institutions/${item.institution_id}`)}
                   >
                     <td className="px-3 py-2 font-mono text-text-muted">{idx + 1}</td>
+                    <td className="px-2 py-2 text-left">
+                      <div className="flex flex-col leading-none">
+                        <span className="font-mono text-text-secondary text-xs tabular-nums">
+                          #{rankMap[item.institution_id] ?? '—'}
+                        </span>
+                        {item.institution_type && (
+                          <span className="text-[9px] text-text-muted font-mono uppercase tracking-wider truncate max-w-[48px]">
+                            {item.institution_type.slice(0, 6)}
+                          </span>
+                        )}
+                      </div>
+                    </td>
                     <td className="px-3 py-2">
                       <div className="flex items-center gap-2">
                         <InstitutionBadge name={item.institution_name} size={28} />
-                        <Link
-                          to={`/institutions/${item.institution_id}`}
-                          className="text-accent hover:underline truncate block max-w-[280px]"
-                          title={item.institution_name}
-                          onClick={e => e.stopPropagation()}
-                        >
-                          {toTitleCase(item.institution_name)}
-                        </Link>
+                        <div className="flex items-center gap-1.5 min-w-0">
+                          <Link
+                            to={`/institutions/${item.institution_id}`}
+                            className="text-accent hover:underline truncate block max-w-[240px]"
+                            title={item.institution_name}
+                            onClick={e => e.stopPropagation()}
+                          >
+                            {toTitleCase(item.institution_name)}
+                          </Link>
+                          {item.avg_risk_score >= 0.50 && (
+                            <span className="inline-flex shrink-0 items-center rounded px-1 py-0 text-[9px] font-black font-mono border"
+                              style={{ color: '#ef4444', backgroundColor: 'rgba(239,68,68,0.10)', borderColor: 'rgba(239,68,68,0.30)' }}
+                              title="ARIA Tier 1 proxy — avg risk ≥ 0.50"
+                            >T1</span>
+                          )}
+                          {item.avg_risk_score >= 0.40 && item.avg_risk_score < 0.50 && (
+                            <span className="inline-flex shrink-0 items-center rounded px-1 py-0 text-[9px] font-black font-mono border"
+                              style={{ color: '#fb923c', backgroundColor: 'rgba(251,146,60,0.10)', borderColor: 'rgba(251,146,60,0.30)' }}
+                              title="ARIA Tier 2 proxy — avg risk ≥ 0.40"
+                            >T2</span>
+                          )}
+                          {item.avg_risk_score >= 0.30 && item.avg_risk_score < 0.40 && (
+                            <span className="inline-flex shrink-0 items-center rounded px-1 py-0 text-[9px] font-black font-mono border"
+                              style={{ color: '#eab308', backgroundColor: 'rgba(234,179,8,0.10)', borderColor: 'rgba(234,179,8,0.30)' }}
+                              title="ARIA Tier 3 proxy — avg risk ≥ 0.30"
+                            >T3</span>
+                          )}
+                        </div>
                       </div>
                     </td>
                     <td className="px-3 py-2 text-right font-mono text-text-secondary tabular-nums">
