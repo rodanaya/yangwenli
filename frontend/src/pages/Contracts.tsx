@@ -206,6 +206,8 @@ export function Contracts() {
   const { t: ts } = useTranslation('sectors')
   const [searchParams, setSearchParams] = useSearchParams()
   const [activePreset, setActivePreset] = useState<string | null>(null)
+  // #9 — toggle for ensemble anomaly score column
+  const [showAnomalyScore, setShowAnomalyScore] = useState(false)
   const { open: openEntityDrawer } = useEntityDrawer()
 
   const {
@@ -803,6 +805,21 @@ export function Contracts() {
           {t('filters.singleBid')}
         </button>
 
+        {/* #9 — Toggle anomaly score column */}
+        <button
+          onClick={() => setShowAnomalyScore((v) => !v)}
+          className={cn(
+            'h-8 px-3 rounded-md text-xs border transition-colors whitespace-nowrap',
+            showAnomalyScore
+              ? 'border-purple-500 text-purple-400 bg-purple-500/10 font-semibold'
+              : 'border-border text-text-muted hover:border-purple-500/50 hover:text-purple-400'
+          )}
+          aria-pressed={showAnomalyScore}
+          title="Toggle PyOD ensemble anomaly score column"
+        >
+          Puntuaci&oacute;n anomal&iacute;a
+        </button>
+
         {/* Per page — Fix 6: value always from filters.per_page */}
         <select
           className="h-8 rounded-md border border-border bg-background-card px-2 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
@@ -1059,6 +1076,15 @@ export function Contracts() {
                         )}
                       </th>
                     ))}
+                    {/* #9 — optional ensemble anomaly score column header */}
+                    {showAnomalyScore && (
+                      <th
+                        className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-purple-400 select-none whitespace-nowrap"
+                        title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
+                      >
+                        PyOD
+                      </th>
+                    )}
                     <th className="px-2 py-2.5 w-8" />
                   </tr>
                 </thead>
@@ -1071,6 +1097,7 @@ export function Contracts() {
                       isSelected={compareIds.has(contract.id)}
                       onToggleCompare={toggleCompare}
                       onOpenVendorDrawer={openEntityDrawer}
+                      showAnomalyScore={showAnomalyScore}
                     />
                   ))}
                 </tbody>
@@ -1195,12 +1222,14 @@ function ContractRow({
   isSelected,
   onToggleCompare,
   onOpenVendorDrawer,
+  showAnomalyScore,
 }: {
   contract: ContractListItem
   onView: (id: number) => void
   isSelected: boolean
   onToggleCompare: (id: number) => void
   onOpenVendorDrawer: (id: number, type: 'vendor' | 'institution') => void
+  showAnomalyScore?: boolean
 }) {
   const { t } = useTranslation('contracts')
   const { t: ts } = useTranslation('sectors')
@@ -1365,20 +1394,67 @@ function ContractRow({
         </span>
       </td>
 
-      {/* Anomaly (Mahalanobis D\u00B2) — Fix 5: 2 decimal places + i18n tooltip */}
+      {/* Anomaly (Mahalanobis D²) — Fix 5: 2 decimal places + i18n tooltip + #12 multivariate warning */}
       <td className="px-3 py-2 text-right">
         {contract.mahalanobis_distance != null ? (
-          <span
-            className="text-xs tabular-nums font-mono"
-            style={anomalyInfo ? { color: anomalyInfo.dotClass.includes('red') ? RISK_COLORS.critical : anomalyInfo.dotClass.includes('amber') ? RISK_COLORS.medium : 'inherit' } : undefined}
-            title={t('table.anomalyTooltip')}
-          >
-            {contract.mahalanobis_distance.toFixed(2)}
+          <span className="inline-flex items-center gap-1 justify-end">
+            {/* #12: multivariate anomaly warning when D² > 20 */}
+            {contract.mahalanobis_distance > 20 && (
+              <span
+                title={`Anomalía multivariada detectada (distancia=${contract.mahalanobis_distance.toFixed(1)})`}
+                aria-label="Multivariate anomaly detected"
+                className="text-amber-400 cursor-help leading-none"
+              >
+                ⚠
+              </span>
+            )}
+            <span
+              className="text-xs tabular-nums font-mono"
+              style={anomalyInfo ? { color: anomalyInfo.dotClass.includes('red') ? RISK_COLORS.critical : anomalyInfo.dotClass.includes('amber') ? RISK_COLORS.medium : 'inherit' } : undefined}
+              title={t('table.anomalyTooltip')}
+            >
+              {contract.mahalanobis_distance.toFixed(2)}
+            </span>
           </span>
         ) : (
           <span className="text-xs text-text-muted">\u2014</span>
         )}
       </td>
+
+      {/* #9 — Ensemble anomaly score column (optional) */}
+      {showAnomalyScore && (
+        <td className="px-3 py-2 text-right">
+          {contract.ensemble_anomaly_score != null ? (
+            <div className="flex items-center gap-1.5 justify-end" title={`PyOD ensemble score: ${contract.ensemble_anomaly_score.toFixed(3)}`}>
+              <div className="h-1.5 w-14 bg-background-elevated/20 rounded-full overflow-hidden flex-shrink-0">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{
+                    width: `${Math.min(contract.ensemble_anomaly_score * 100, 100)}%`,
+                    backgroundColor:
+                      contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
+                      : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
+                      : '#94a3b8',
+                  }}
+                />
+              </div>
+              <span
+                className="font-mono text-[10px] tabular-nums"
+                style={{
+                  color:
+                    contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
+                    : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
+                    : '#94a3b8',
+                }}
+              >
+                {contract.ensemble_anomaly_score.toFixed(2)}
+              </span>
+            </div>
+          ) : (
+            <span className="text-xs text-text-muted">\u2014</span>
+          )}
+        </td>
+      )}
 
       {/* View link */}
       <td className="px-2 py-2 text-right">
@@ -1489,7 +1565,7 @@ function ContractRow({
       id={contract.id}
       cells={cells}
       detail={detail}
-      colSpan={11}
+      colSpan={showAnomalyScore ? 12 : 11}
       className={cn('hover:bg-background-card/[0.02] cursor-pointer transition-colors group', rowBorder)}
     />
   )

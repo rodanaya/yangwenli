@@ -298,6 +298,8 @@ export default function PriceIntelligence() {
 
   // ── ML model toggle: price_only (IQR-missed) vs full_z_vector ───────────
   const [mlModel, setMlModel] = useState<'price_only' | 'full_z_vector'>('price_only')
+  // #73 — inflation-adjusted price toggle (2020=100 Mexican CPI)
+  const [inflationAdjusted, setInflationAdjusted] = useState(false)
 
   // ── ML anomaly detections (price_only: Isolation Forest, IQR-missed) ────
   const { data: mlAnomaliesData } = useQuery<MlAnomaliesResponse>({
@@ -898,7 +900,22 @@ export default function PriceIntelligence() {
             </div>
           </summary>
           <CardContent className="pt-0">
-            <p className="text-xs text-text-muted mb-3">{t('baselinesDesc')}</p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-xs text-text-muted">{t('baselinesDesc')}</p>
+              {/* #73 — Inflation adjustment toggle */}
+              <button
+                onClick={() => setInflationAdjusted((v) => !v)}
+                className={`ml-4 shrink-0 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
+                  inflationAdjusted
+                    ? 'border-amber-500 text-amber-400 bg-amber-500/10 font-semibold'
+                    : 'border-border text-text-muted hover:border-amber-500/50 hover:text-amber-400'
+                }`}
+                aria-pressed={inflationAdjusted}
+                title="Adjust prices to constant 2020 MXN using approximate Mexican CPI"
+              >
+                {inflationAdjusted ? 'MXN constantes 2020' : 'Ajustar por inflaci\u00f3n (2020=100)'}
+              </button>
+            </div>
             {baselinesLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 6 }).map((_, i) => (
@@ -906,7 +923,7 @@ export default function PriceIntelligence() {
                 ))}
               </div>
             ) : sortedBaselines.length > 0 ? (
-              <BaselineTable data={sortedBaselines} />
+              <BaselineTable data={sortedBaselines} inflationAdjusted={inflationAdjusted} />
             ) : (
               <p className="text-sm text-text-muted py-4 text-center">{t('noBaselines')}</p>
             )}
@@ -1602,12 +1619,27 @@ function PaginationBar({
 // BaselineTable (sector reference, inside <details>)
 // ============================================================================
 
+// #73 — SectorPriceBaseline has no year field.
+// Baselines are full-dataset aggregates (2002-2025); we deflate to constant 2020 MXN
+// by dividing by the approximate CPI midpoint of the dataset (~2013 = 0.654 on 2020=1 scale).
+const BASELINE_CPI_PROXY = 0.654 // approximate dataset midpoint 2013 on 2020=1 CPI scale
+
 const BaselineTable = memo(function BaselineTable({
   data,
+  inflationAdjusted = false,
 }: {
   data: SectorPriceBaseline[]
+  inflationAdjusted?: boolean
 }) {
-  const maxFence = useMemo(() => Math.max(...data.map((d) => d.upper_fence || 0), 1), [data])
+  // When inflationAdjusted is on, deflate values from nominal to 2020 MXN
+  // using the proxy CPI: adjusted = nominal / BASELINE_CPI_PROXY
+  const adjust = (v: number) => inflationAdjusted ? v / BASELINE_CPI_PROXY : v
+
+  const maxFence = useMemo(
+    () => Math.max(...data.map((d) => adjust(d.upper_fence || 0)), 1),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [data, inflationAdjusted]
+  )
 
   return (
     <div className="overflow-x-auto">
@@ -1623,15 +1655,22 @@ const BaselineTable = memo(function BaselineTable({
             <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P95</th>
             <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Upper Fence</th>
             <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Contracts</th>
-            <th className="px-3 py-2.5 text-xs font-medium text-text-muted w-28">Range</th>
+            <th className="px-3 py-2.5 text-xs font-medium text-text-muted w-28">
+              Range
+              {inflationAdjusted && (
+                <span className="ml-1 text-[9px] text-amber-400 font-normal">2020 MXN</span>
+              )}
+            </th>
           </tr>
         </thead>
         <tbody>
           {data.map((row) => {
             const sectorCode = row.sector_name
             const color = SECTOR_COLORS[sectorCode] || '#64748b'
-            const barWidth = maxFence > 0 ? (row.upper_fence / maxFence) * 100 : 0
-            const medianPos = maxFence > 0 ? (row.percentile_50 / maxFence) * 100 : 0
+            const adjFence = adjust(row.upper_fence)
+            const adjMedian = adjust(row.percentile_50)
+            const barWidth = maxFence > 0 ? (adjFence / maxFence) * 100 : 0
+            const medianPos = maxFence > 0 ? (adjMedian / maxFence) * 100 : 0
 
             return (
               <tr key={row.sector_id} className="border-b border-border/50 hover:bg-surface-hover/50">
@@ -1648,25 +1687,25 @@ const BaselineTable = memo(function BaselineTable({
                   </div>
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(row.percentile_10)}
+                  {formatCompactMXN(adjust(row.percentile_10))}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(row.percentile_25)}
+                  {formatCompactMXN(adjust(row.percentile_25))}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums font-bold text-text-primary">
-                  {formatCompactMXN(row.percentile_50)}
+                  {formatCompactMXN(adjMedian)}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(row.percentile_75)}
+                  {formatCompactMXN(adjust(row.percentile_75))}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(row.percentile_90)}
+                  {formatCompactMXN(adjust(row.percentile_90))}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(row.percentile_95)}
+                  {formatCompactMXN(adjust(row.percentile_95))}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-risk-high font-medium">
-                  {formatCompactMXN(row.upper_fence)}
+                  {formatCompactMXN(adjFence)}
                 </td>
                 <td className="text-right px-3 py-2 tabular-nums text-text-muted">
                   {formatNumber(row.sample_count)}

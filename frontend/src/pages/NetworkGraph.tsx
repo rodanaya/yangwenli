@@ -59,9 +59,6 @@ function nodeSymbolSize(value: number, _nodeType: string): number {
   return clamp(8 + normalized * 20, 8, 28)
 }
 
-function linkWidth(contracts: number): number {
-  return clamp(Math.log2(contracts + 1), 1, 5)
-}
 
 function truncate(name: string, max = 18): string {
   return name.length > max ? name.slice(0, max) + '…' : name
@@ -441,19 +438,38 @@ function SidePanel({
           </div>
         )}
 
-        {/* Community badge — vendors only, shown when graph features are available */}
-        {isVendor && node.community_id != null && node.community_size != null && (
-          <div className="flex items-center justify-between text-xs">
-            <span className="text-text-muted">Co-bid community</span>
-            <span className="flex items-center gap-1.5">
+        {/* #88 — Community size badge with avg risk */}
+        {isVendor && node.community_id != null && (
+          <div className="rounded bg-background-elevated/60 border border-border/30 px-2.5 py-2 text-xs space-y-1.5">
+            <div className="flex items-center gap-1.5 font-medium text-text-secondary">
               <span
-                className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                className="inline-block w-2 h-2 rounded-full shrink-0"
                 style={{ backgroundColor: communityToColor(node.community_id) }}
               />
-              <span className="font-mono text-text-secondary">
-                #{node.community_id} · {formatNumber(node.community_size)} vendors
-              </span>
-            </span>
+              Red #{node.community_id}
+            </div>
+            {node.community_size != null && (
+              <div className="flex items-center justify-between text-[11px] text-text-muted">
+                <span>Miembros</span>
+                <span className="font-mono text-text-secondary">{formatNumber(node.community_size)} vendors</span>
+              </div>
+            )}
+            {(() => {
+              const avgRisk = (node as NetworkNode & { avg_community_risk?: number | null }).avg_community_risk
+              if (avgRisk == null) return null
+              const level = getRiskLevelFromScore(avgRisk)
+              return (
+                <div className="flex items-center justify-between text-[11px] text-text-muted">
+                  <span>Riesgo promedio red</span>
+                  <span
+                    className="font-mono px-1 py-0.5 rounded text-[10px]"
+                    style={{ color: RISK_COLORS[level], backgroundColor: `${RISK_COLORS[level]}20` }}
+                  >
+                    {(avgRisk * 100).toFixed(1)}%
+                  </span>
+                </div>
+              )
+            })()}
           </div>
         )}
 
@@ -1287,13 +1303,26 @@ export function NetworkGraph() {
       const shadowColor = riskLevel === 'critical' ? '#f87171' : '#fb923c'
 
       const isSanctioned = (node as NetworkNode & { is_sanctioned?: boolean }).is_sanctioned === true
+      // #85 — EFOS / high-risk tier highlighting
+      const extNode = node as NetworkNode & { is_sanctioned?: boolean; is_efos?: boolean; efos_status?: string; aria_tier?: number }
+      const efosDefinitivo = extNode.is_efos === true || extNode.efos_status === 'definitivo'
+      const efosProvisional = extNode.efos_status === 'provisional'
+      // Fallback: ARIA T1 vendors (aria_tier === 1) get a glow indicator
+      const isT1Glow = !efosDefinitivo && !efosProvisional && extNode.aria_tier === 1
+
       const borderColor = isCenter ? '#ffffff'
+        : efosDefinitivo ? '#ef4444'
+        : efosProvisional ? '#f59e0b'
         : isSanctioned ? '#dc2626'
         : hasShadow ? shadowColor
+        : isT1Glow ? '#a78bfa'
         : undefined
       const borderWidth = isCenter ? 3
+        : efosDefinitivo ? 2.5
+        : efosProvisional ? 2
         : isSanctioned ? 2.5
         : hasShadow ? 1.5
+        : isT1Glow ? 2
         : 0
 
       const nodeSymbol = isInstitution ? institutionSymbol(node.name) : 'circle'
@@ -1315,8 +1344,23 @@ export function NetworkGraph() {
           color: itemColor,
           borderColor: passesRiskFilter ? borderColor : undefined,
           borderWidth: passesRiskFilter ? borderWidth : 0,
-          shadowColor: passesRiskFilter ? (isSanctioned ? '#dc2626' : hasShadow ? shadowColor : undefined) : undefined,
-          shadowBlur: passesRiskFilter ? (isSanctioned ? 15 : hasShadow ? 12 : undefined) : undefined,
+          borderType: passesRiskFilter
+            ? (efosDefinitivo || efosProvisional ? 'dashed' : 'solid')
+            : 'solid',
+          shadowColor: passesRiskFilter
+            ? (isSanctioned ? '#dc2626'
+              : efosDefinitivo ? '#ef4444'
+              : isT1Glow ? '#a78bfa'
+              : hasShadow ? shadowColor
+              : undefined)
+            : undefined,
+          shadowBlur: passesRiskFilter
+            ? (isSanctioned ? 15
+              : efosDefinitivo ? 14
+              : isT1Glow ? 10
+              : hasShadow ? 12
+              : undefined)
+            : undefined,
           opacity: passesRiskFilter ? 1 : 0.15,
         },
         label: {
@@ -1329,18 +1373,31 @@ export function NetworkGraph() {
       }
     })
 
-    const links = rawLinks.map((link: NetworkLink) => ({
-      source: link.source,
-      target: link.target,
-      value: link.value,
-      contracts: link.contracts,
-      avg_risk: link.avg_risk,
-      lineStyle: {
-        width: linkWidth(link.contracts),
-        color: (link.avg_risk ?? 0) >= 0.3 ? '#f8717180' : '#47556980',
-        curveness: 0.1,
-      },
-    }))
+    // #86 — Edge weight by shared contracts, color by suspicion level
+    const nodeRiskMap = new Map<string, number | null>()
+    rawNodes.forEach((n) => nodeRiskMap.set(n.id, n.risk_score))
+
+    const links = rawLinks.map((link: NetworkLink) => {
+      // Scale edge width by log of shared contracts
+      const edgeWidth = Math.max(1, Math.min(6, Math.log(link.contracts + 1) * 1.5))
+      const srcRisk = nodeRiskMap.get(link.source) ?? 0
+      const tgtRisk = nodeRiskMap.get(link.target) ?? 0
+      const bothHigh = srcRisk > 0.40 && tgtRisk > 0.40
+      const oneHigh = !bothHigh && (srcRisk > 0.40 || tgtRisk > 0.40)
+      const edgeColor = bothHigh ? '#ef444480' : oneHigh ? '#f9731680' : '#47556980'
+      return {
+        source: link.source,
+        target: link.target,
+        value: link.value,
+        contracts: link.contracts,
+        avg_risk: link.avg_risk,
+        lineStyle: {
+          width: edgeWidth,
+          color: edgeColor,
+          curveness: 0.1,
+        },
+      }
+    })
 
     return {
       backgroundColor: 'transparent',
@@ -1737,6 +1794,50 @@ export function NetworkGraph() {
           <Users className="h-3.5 w-3.5" />
           Group institutions
         </button>
+
+        {/* #87 — Export network as JSON */}
+        {graphData && (
+          <button
+            onClick={() => {
+              const exportData = {
+                nodes: (graphData.nodes as NetworkNode[]).map((n) => ({
+                  id: n.id,
+                  name: n.name,
+                  type: n.type,
+                  risk_score: n.risk_score,
+                  contracts: n.contracts,
+                  value: n.value,
+                  community_id: n.community_id ?? null,
+                })),
+                edges: (graphData.links as NetworkLink[]).map((e) => ({
+                  source: e.source,
+                  target: e.target,
+                  contracts: e.contracts,
+                  value: e.value,
+                  avg_risk: e.avg_risk ?? null,
+                })),
+                exported_at: new Date().toISOString(),
+                platform: 'RUBLI',
+                center_entity: centerEntity
+                  ? { id: centerEntity.id, name: centerEntity.name, type: centerEntity.entityType }
+                  : null,
+              }
+              const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' })
+              const url = URL.createObjectURL(blob)
+              const a = document.createElement('a')
+              a.href = url
+              a.download = `rubli-network-${Date.now()}.json`
+              a.click()
+              URL.revokeObjectURL(url)
+            }}
+            className="flex items-center gap-1.5 text-xs border border-border text-text-muted hover:text-text-primary hover:border-border/60 rounded px-2.5 py-1.5 transition-colors shrink-0"
+            title="Export current network as JSON"
+            aria-label="Export network as JSON"
+          >
+            <FileText className="h-3.5 w-3.5" />
+            Export JSON
+          </button>
+        )}
       </div>
       </ScrollReveal>
 
@@ -2070,6 +2171,39 @@ export function NetworkGraph() {
                 )}
               </div>
 
+              {/* #85 — EFOS legend entries */}
+              <div className="border-t border-border/30 pt-1.5 space-y-1">
+                <div className="text-text-muted uppercase tracking-wider font-medium">EFOS / SAT</div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ border: '2px dashed #ef4444', background: 'transparent' }}
+                  />
+                  <span className="text-text-secondary">EFOS Definitivo</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
+                    style={{ border: '2px dashed #f59e0b', background: 'transparent' }}
+                  />
+                  <span className="text-text-secondary">EFOS Provisional</span>
+                </div>
+              </div>
+
+              {/* #86 — Edge legend */}
+              <div className="border-t border-border/30 pt-1.5 space-y-1">
+                <div className="text-text-muted uppercase tracking-wider font-medium">Edges</div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block h-0.5 w-4 shrink-0" style={{ background: '#ef4444' }} />
+                  <span className="text-text-secondary">Both high-risk</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-block h-0.5 w-4 shrink-0" style={{ background: '#f97316' }} />
+                  <span className="text-text-secondary">One high-risk</span>
+                </div>
+                <div className="text-text-muted/60 text-[9px]">Thickness = shared contracts</div>
+              </div>
+
               {/* Size scale note */}
               <div className="border-t border-border/30 pt-1.5 space-y-1">
                 <div className="text-text-muted uppercase tracking-wider font-medium">Node size</div>
@@ -2173,6 +2307,23 @@ export function NetworkGraph() {
             ))}
           </>
         )}
+        {/* #85 — EFOS legend entries */}
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-full"
+            style={{ border: '2px dashed #ef4444', background: 'transparent' }}
+          />
+          EFOS Definitivo
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span
+            className="inline-block w-3 h-3 rounded-full"
+            style={{ border: '2px dashed #f59e0b', background: 'transparent' }}
+          />
+          EFOS Provisional
+        </span>
+        {/* #86 — Edge note */}
+        <span className="text-text-muted/70">· Edge thickness = shared contracts</span>
         <span className="text-text-muted">· {t('legendSizeNote')}</span>
       </div>
 
