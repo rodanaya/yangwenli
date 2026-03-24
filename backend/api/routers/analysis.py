@@ -11,11 +11,11 @@ import json
 import threading
 import time as _time
 from typing import Optional, List, Dict, Any, Tuple
-from fastapi import APIRouter, HTTPException, Query, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 from ..config.constants import MAX_CONTRACT_VALUE
 from ..cache import SimpleCache
 from ..config.temporal_events import TEMPORAL_EVENTS, TemporalEventData
@@ -1255,7 +1255,7 @@ def get_price_hypothesis_detail(hypothesis_id: str = Path(...)):
 
 
 @router.put("/price-hypotheses/{hypothesis_id}/review")
-def review_price_hypothesis(hypothesis_id: str = Path(...), review: HypothesisReviewRequest = None):
+def review_price_hypothesis(hypothesis_id: str = Path(...), review: HypothesisReviewRequest = None, _: None = Depends(require_write_key)):
     """Review and validate a price hypothesis."""
     try:
         with get_db() as conn:

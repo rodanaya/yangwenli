@@ -273,6 +273,7 @@ def patch_aria_review(
     vendor_id: int,
     body: ReviewUpdate,
     conn: sqlite3.Connection = Depends(get_db_dep),
+    _: None = Depends(require_write_key),
 ):
     """Update the review status for a vendor in the ARIA queue."""
     if body.status not in _VALID_REVIEW_STATUSES:
@@ -518,6 +519,7 @@ def patch_gt_update_review(
     update_id: int,
     body: GTUpdateReview,
     conn: sqlite3.Connection = Depends(get_db_dep),
+    _: None = Depends(require_write_key),
 ):
     """Approve or reject an ARIA ground truth update proposal."""
     if body.status not in _VALID_GT_REVIEW_STATUSES:

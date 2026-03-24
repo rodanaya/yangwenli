@@ -9,10 +9,10 @@ import logging
 import time as _time
 from typing import Optional, List, Dict, Any
 from datetime import datetime
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 from pydantic import BaseModel, Field
 
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -27,9 +27,9 @@ class WatchlistItemCreate(BaseModel):
     """Request model for creating a watchlist item."""
     item_type: str = Field(..., description="Type: vendor, institution, or contract")
     item_id: int = Field(..., description="ID of the entity to track")
-    reason: str = Field(..., description="Reason for adding to watchlist")
+    reason: str = Field(..., max_length=2000, description="Reason for adding to watchlist")
     priority: str = Field(default="medium", description="Priority: high, medium, low")
-    notes: Optional[str] = Field(None, description="Additional notes")
+    notes: Optional[str] = Field(None, max_length=5000, description="Additional notes")
     alert_threshold: Optional[float] = Field(None, ge=0, le=1, description="Risk threshold for alerts")
 
 
@@ -250,6 +250,7 @@ def list_watchlist_items(
                     CASE priority WHEN 'high' THEN 1 WHEN 'medium' THEN 2 ELSE 3 END,
                     CASE status WHEN 'investigating' THEN 1 WHEN 'watching' THEN 2 ELSE 3 END,
                     updated_at DESC
+                LIMIT 1000
             """, params)
 
             all_rows = cursor.fetchall()
@@ -317,7 +318,7 @@ def list_watchlist_items(
 
 
 @router.post("", response_model=WatchlistItem)
-def add_watchlist_item(item: WatchlistItemCreate):
+def add_watchlist_item(item: WatchlistItemCreate, _: None = Depends(require_write_key)):
     """
     Add an item to the watchlist.
 
@@ -621,7 +622,8 @@ def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist i
 @router.patch("/{watchlist_id}", response_model=WatchlistItem)
 def update_watchlist_item(
     watchlist_id: int = Path(..., description="Watchlist item ID"),
-    update: WatchlistItemUpdate = None
+    update: WatchlistItemUpdate = None,
+    _: None = Depends(require_write_key),
 ):
     """Update a watchlist item."""
     try:
@@ -706,7 +708,7 @@ def update_watchlist_item(
 
 
 @router.delete("/{watchlist_id}")
-def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
+def delete_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
     """Remove an item from the watchlist."""
     try:
         with get_db() as conn:

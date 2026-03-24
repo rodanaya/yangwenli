@@ -6,13 +6,13 @@ requests.  Reports are stored in the user_issues table and reviewable
 via GET /api/v1/issues.
 """
 
-from fastapi import APIRouter, HTTPException, Query
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, HTTPException, Query
+from pydantic import BaseModel, Field
 from typing import Optional
 import sqlite3
 import logging
 
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -56,10 +56,10 @@ def _ensure_table(conn: sqlite3.Connection) -> None:
 
 class IssueIn(BaseModel):
     category: str = "other"
-    subject: str
-    description: str
-    page_url: Optional[str] = None
-    email: Optional[str] = None
+    subject: str = Field(..., max_length=500)
+    description: str = Field(..., max_length=5000)
+    page_url: Optional[str] = Field(default=None, max_length=2000)
+    email: Optional[str] = Field(default=None, max_length=200)
 
 
 class IssueOut(BaseModel):
@@ -147,7 +147,7 @@ def list_issues(
 
 
 @router.patch("/{issue_id}/status", response_model=IssueOut)
-def update_issue_status(issue_id: int, status: str):
+def update_issue_status(issue_id: int, status: str, _: None = Depends(require_write_key)):
     """Update an issue's status (admin action)."""
     if status not in VALID_STATUSES:
         raise HTTPException(

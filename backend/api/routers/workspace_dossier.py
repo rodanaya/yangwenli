@@ -1,11 +1,11 @@
 import time as _time
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from fastapi.responses import JSONResponse
 from pydantic import BaseModel, Field
 from typing import Optional, List
 
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 
 router = APIRouter(prefix="/workspace/dossiers", tags=["dossiers"])
 
@@ -109,7 +109,7 @@ def list_dossiers(status: Optional[str] = None):
         return dossiers
 
 @router.post("", response_model=DossierOut, status_code=201)
-def create_dossier(body: DossierIn):
+def create_dossier(body: DossierIn, _: None = Depends(require_write_key)):
     valid_statuses = {"active", "archived", "closed"}
     if body.status not in valid_statuses:
         raise HTTPException(400, f"status must be one of {valid_statuses}")
@@ -140,7 +140,7 @@ def get_dossier(dossier_id: int):
         return dict(row)
 
 @router.patch("/{dossier_id}", response_model=DossierOut)
-def update_dossier(dossier_id: int, body: DossierIn):
+def update_dossier(dossier_id: int, body: DossierIn, _: None = Depends(require_write_key)):
     with get_db() as conn:
         existing = conn.execute("SELECT id FROM investigation_dossiers WHERE id=?", (dossier_id,)).fetchone()
         if not existing:
@@ -160,7 +160,7 @@ def update_dossier(dossier_id: int, body: DossierIn):
         return dict(row)
 
 @router.delete("/{dossier_id}", status_code=204)
-def delete_dossier(dossier_id: int):
+def delete_dossier(dossier_id: int, _: None = Depends(require_write_key)):
     with get_db() as conn:
         existing = conn.execute("SELECT id FROM investigation_dossiers WHERE id=?", (dossier_id,)).fetchone()
         if not existing:
@@ -180,7 +180,7 @@ def list_items(dossier_id: int):
         return [dict(r) for r in rows]
 
 @router.post("/{dossier_id}/items", response_model=DossierItemOut, status_code=201)
-def add_item(dossier_id: int, body: DossierItemIn):
+def add_item(dossier_id: int, body: DossierItemIn, _: None = Depends(require_write_key)):
     valid_types = {"vendor", "institution", "contract", "note"}
     if body.item_type not in valid_types:
         raise HTTPException(400, f"item_type must be one of {valid_types}")
@@ -198,7 +198,7 @@ def add_item(dossier_id: int, body: DossierItemIn):
         return dict(row)
 
 @router.delete("/{dossier_id}/items/{item_id}", status_code=204)
-def remove_item(dossier_id: int, item_id: int):
+def remove_item(dossier_id: int, item_id: int, _: None = Depends(require_write_key)):
     with get_db() as conn:
         conn.execute("DELETE FROM dossier_items WHERE id=? AND dossier_id=?", (item_id, dossier_id))
         conn.execute("UPDATE investigation_dossiers SET updated_at=CURRENT_TIMESTAMP WHERE id=?", (dossier_id,))

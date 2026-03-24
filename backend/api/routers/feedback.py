@@ -6,12 +6,12 @@ not_suspicious / confirmed_suspicious / needs_review so that
 manual judgments can be tracked alongside AI risk scores.
 """
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from typing import Optional
 import sqlite3
 import logging
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 
 logger = logging.getLogger(__name__)
 
@@ -73,7 +73,7 @@ class FeedbackOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("", response_model=FeedbackOut, status_code=201)
-def submit_feedback(body: FeedbackIn):
+def submit_feedback(body: FeedbackIn, _: None = Depends(require_write_key)):
     """
     Submit (or update) feedback for a vendor, institution, or contract.
 
@@ -135,7 +135,7 @@ def get_feedback(entity_type: str, entity_id: int):
 
 
 @router.delete("")
-def delete_feedback(entity_type: str, entity_id: int):
+def delete_feedback(entity_type: str, entity_id: int, _: None = Depends(require_write_key)):
     """Remove feedback for a specific entity."""
     try:
         with get_db() as conn:
