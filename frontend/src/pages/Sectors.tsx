@@ -1922,6 +1922,21 @@ export function Sectors() {
           </CardContent>
         </Card>
       </ScrollReveal>
+
+      {/* Data freshness timestamp */}
+      <div className="flex justify-end pt-2 pb-1">
+        <p className="text-[10px] text-text-muted/50 font-mono">
+          {(() => {
+            const raw = (data as any)?.cached_at ?? (data as any)?.updated_at
+            if (raw) {
+              const d = new Date(raw)
+              const formatted = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
+              return `Datos actualizados: ${formatted}`
+            }
+            return 'Datos actualizados: Mar 2026'
+          })()}
+        </p>
+      </div>
     </div>
   )
 }

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { getRiskLevelFromScore } from '@/lib/constants'
 import type { RiskLevel } from '@/api/types'
 import { AlertTriangle, AlertCircle, AlertOctagon, CheckCircle } from 'lucide-react'
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const badgeVariants = cva(
   'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
@@ -52,6 +53,13 @@ interface RiskBadgeProps extends Omit<BadgeProps, 'variant'> {
   level?: RiskLevel
 }
 
+const RISK_THRESHOLD_DESCRIPTIONS: Record<RiskLevel, string> = {
+  critical: 'Critical (≥0.60): Similitud fuerte con casos documentados de corrupción',
+  high:     'High (≥0.40): Similitud significativa con patrones de corrupción conocidos',
+  medium:   'Medium (≥0.25): Similitud moderada — vigilancia recomendada',
+  low:      'Low (<0.25): Similitud baja con patrones conocidos',
+}
+
 function RiskBadge({ score, level, className, children, ...props }: RiskBadgeProps) {
   const riskLevel = level ?? getRiskLevelFromScore(score ?? 0)
   const label = children ?? riskLevel.toUpperCase()
@@ -64,17 +72,24 @@ function RiskBadge({ score, level, className, children, ...props }: RiskBadgePro
     : `Risk level: ${riskLevel}`
 
   return (
-    <Badge
-      variant={riskLevel}
-      className={cn('tabular-nums gap-1', className)}
-      role="status"
-      aria-label={ariaLabel}
-      {...props}
-    >
-      <Icon className="h-3 w-3" aria-hidden="true" />
-      {label}
-      {scoreDisplay && <span className="ml-0.5 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
-    </Badge>
+    <Tooltip>
+      <TooltipTrigger asChild>
+        <Badge
+          variant={riskLevel}
+          className={cn('tabular-nums gap-1 cursor-help', className)}
+          role="status"
+          aria-label={ariaLabel}
+          {...props}
+        >
+          <Icon className="h-3 w-3" aria-hidden="true" />
+          {label}
+          {scoreDisplay && <span className="ml-0.5 opacity-75" aria-hidden="true">({scoreDisplay})</span>}
+        </Badge>
+      </TooltipTrigger>
+      <TooltipContent side="top" className="max-w-[220px] text-center">
+        {RISK_THRESHOLD_DESCRIPTIONS[riskLevel]}
+      </TooltipContent>
+    </Tooltip>
   )
 }
 

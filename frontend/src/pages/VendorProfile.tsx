@@ -711,6 +711,9 @@ export function VendorProfile() {
   const [contractPage, setContractPage] = useState(1)
   const CONTRACTS_PER_PAGE = 50
 
+  // RFC copy button state
+  const [rfcCopied, setRfcCopied] = useState(false)
+
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
     queryKey: ['vendor', vendorId],
@@ -1145,7 +1148,27 @@ export function VendorProfile() {
                 )}
               </div>
               <div className="flex items-center gap-2 text-sm text-text-muted">
-                {vendor.rfc && <span className="font-mono">{vendor.rfc}</span>}
+                {vendor.rfc && (
+                  <span className="inline-flex items-center gap-1">
+                    <span className="font-mono">{vendor.rfc}</span>
+                    <button
+                      onClick={() => {
+                        navigator.clipboard.writeText(vendor.rfc!).then(() => {
+                          setRfcCopied(true)
+                          setTimeout(() => setRfcCopied(false), 1500)
+                        }).catch(() => {})
+                      }}
+                      className="p-0.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
+                      aria-label={rfcCopied ? 'RFC copiado' : 'Copiar RFC'}
+                      title={rfcCopied ? '¡Copiado!' : 'Copiar RFC'}
+                    >
+                      {rfcCopied
+                        ? <Check className="h-3 w-3 text-green-400" />
+                        : <Copy className="h-3 w-3" />
+                      }
+                    </button>
+                  </span>
+                )}
                 {vendor.primary_sector_name && (
                   <>
                     <span>·</span>
@@ -2979,6 +3002,22 @@ export function VendorProfile() {
                         <option value="risk_desc">Risk Score (highest)</option>
                       </select>
                     </div>
+
+                    {/* Jump to highest risk contract */}
+                    {(contracts?.data?.length ?? 0) > 0 && (
+                      <button
+                        onClick={() => {
+                          setContractSort('risk_desc')
+                          setContractRiskFilter('all')
+                          setContractPage(1)
+                        }}
+                        className="ml-auto flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-risk-critical/30 bg-risk-critical/10 text-risk-critical hover:bg-risk-critical/20 transition-colors"
+                        title="Ordena por riesgo y va al inicio de la lista"
+                      >
+                        <Target className="h-3 w-3" />
+                        Ver contrato más riesgoso
+                      </button>
+                    )}
                   </div>
 
                   {/* Row 2: Risk level tabs */}
@@ -3178,19 +3217,45 @@ export function VendorProfile() {
 
                   {/* Partner list with detailed stats */}
                   {coBidders?.co_bidders && coBidders.co_bidders.length > 0 && (
-                    <div className="divide-y divide-border rounded-lg border overflow-hidden">
+                    <div className="space-y-3">
+                      {/* Role legend */}
+                      <div className="flex flex-wrap gap-2 p-2.5 rounded-lg bg-background-elevated/40 border border-border/30 text-[10px]">
+                        <span className="font-medium text-text-muted uppercase tracking-wide mr-1 self-center">Roles:</span>
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/25">
+                          🔴 Señuelo — bids but never wins
+                        </span>
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25">
+                          🟠 Rotación — vendors take turns winning
+                        </span>
+                        <span className="flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25">
+                          🟡 Cómplice — both win frequently together
+                        </span>
+                      </div>
+
+                      <div className="divide-y divide-border rounded-lg border overflow-hidden">
                       {coBidders.co_bidders.map((partner) => {
                         const totalBids = partner.win_count + partner.loss_count
                         const winPct = totalBids > 0 ? (partner.win_count / totalBids) * 100 : null
+
+                        // Legacy flags
                         const isCoverBidder = winPct !== null && winPct < 10 && partner.co_bid_count >= 3
                         const isAlwaysWinner = winPct !== null && winPct > 90 && partner.co_bid_count >= 3
+
+                        // New role classification
+                        // "Posible Señuelo" — co-bidder wins < 15% of shared procedures
+                        const isDecoy = winPct !== null && winPct < 15 && partner.co_bid_count >= 3
+                        // "Rotación" — co-bidder wins 30-70% (taking turns)
+                        const isRotation = winPct !== null && winPct >= 30 && winPct <= 70 && partner.co_bid_count >= 3
+                        // "Posible Cómplice" — co-bidder wins > 60% (both winning often)
+                        const isAccomplice = winPct !== null && winPct > 60 && !isRotation && partner.co_bid_count >= 3
+
                         return (
                           <div
                             key={partner.vendor_id}
                             className="p-3 bg-background-card hover:bg-background-elevated/30 transition-colors"
                           >
                             <div className="flex items-start justify-between gap-2">
-                              <div className="flex items-center gap-2 min-w-0">
+                              <div className="flex items-center gap-2 min-w-0 flex-wrap">
                                 <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
                                 <Link
                                   to={`/vendors/${partner.vendor_id}`}
@@ -3198,7 +3263,24 @@ export function VendorProfile() {
                                 >
                                   {toTitleCase(partner.vendor_name)}
                                 </Link>
-                                {(isCoverBidder || isAlwaysWinner) && (
+                                {/* Role badges (new) */}
+                                {isDecoy && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-red-500/15 text-red-400 border border-red-500/25 font-medium shrink-0">
+                                    🔴 Posible Señuelo
+                                  </span>
+                                )}
+                                {isRotation && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-orange-500/15 text-orange-400 border border-orange-500/25 font-medium shrink-0">
+                                    🟠 Rotación
+                                  </span>
+                                )}
+                                {isAccomplice && (
+                                  <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500/15 text-amber-400 border border-amber-500/25 font-medium shrink-0">
+                                    🟡 Posible Cómplice
+                                  </span>
+                                )}
+                                {/* Legacy flags (keep for compatibility) */}
+                                {!isDecoy && !isRotation && !isAccomplice && (isCoverBidder || isAlwaysWinner) && (
                                   <span className="text-[10px] px-1.5 py-0.5 rounded bg-risk-critical/15 text-risk-critical font-mono shrink-0">
                                     {isCoverBidder ? t('coBidding.coverBidder') : t('coBidding.alwaysWins')}
                                   </span>
@@ -3229,6 +3311,7 @@ export function VendorProfile() {
                           </div>
                         )
                       })}
+                      </div>
                     </div>
                   )}
 

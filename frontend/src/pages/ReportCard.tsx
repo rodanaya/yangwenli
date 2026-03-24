@@ -595,11 +595,13 @@ function SectorReportCard({ sector, t }: { sector: PHISector; t: (k: string) => 
 
           {/* Grade */}
           <span
-            className="font-bold flex-shrink-0 leading-none"
+            className="font-bold flex-shrink-0 leading-none rounded-xl px-3 py-1"
             style={{
               fontFamily: SERIF,
               fontSize: '2.8rem',
               color: gradeColors.text,
+              backgroundColor: gradeColors.bg,
+              border: `1px solid ${gradeColors.border}`,
             }}
           >
             {sector.grade}
@@ -852,6 +854,28 @@ function TrendSection({ t }: { t: (k: string) => string }) {
                 dot={{ r: 3, fill: 'var(--color-text-muted)' }}
                 connectNulls
               />
+              {/* OECD benchmark: competition rate target band ≥50% */}
+              <ReferenceArea
+                y1={50}
+                y2={70}
+                fill="rgba(34,197,94,0.07)"
+                strokeOpacity={0}
+                label={{ value: 'OECD target', position: 'insideRight', fontSize: 9, fill: '#22c55e', dy: -4 }}
+              />
+              {/* OECD single-bid benchmark ≤15% */}
+              <ReferenceLine
+                y={15}
+                stroke="rgba(234,179,8,0.6)"
+                strokeDasharray="5 3"
+                label={{ value: 'SB ≤15%', position: 'insideRight', fontSize: 9, fill: '#eab308', dy: -6 }}
+              />
+              {/* OECD direct-award benchmark ≤30% */}
+              <ReferenceLine
+                y={30}
+                stroke="rgba(251,146,60,0.5)"
+                strokeDasharray="5 3"
+                label={{ value: 'DA ≤30%', position: 'insideRight', fontSize: 9, fill: '#fb923c', dy: 10 }}
+              />
             </LineChart>
           </ResponsiveContainer>
         </div>
@@ -869,6 +893,22 @@ function TrendSection({ t }: { t: (k: string) => string }) {
           <span className="flex items-center gap-2">
             <span className="w-5" style={{ borderTop: '2px dashed var(--color-text-muted)', height: 0 }} />
             {t('singleBidRateYAxis')}
+          </span>
+        </div>
+
+        {/* OECD benchmark legend */}
+        <div className="flex flex-wrap items-center justify-center gap-4 mt-2 text-[10px]" style={{ color: 'var(--color-text-muted)' }}>
+          <span className="flex items-center gap-1.5">
+            <span className="w-8 h-2 rounded-sm" style={{ backgroundColor: 'rgba(34,197,94,0.3)' }} />
+            OECD competition target (50–70%)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-5" style={{ borderTop: '2px dashed rgba(234,179,8,0.8)', height: 0 }} />
+            Single-bid benchmark (≤15%)
+          </span>
+          <span className="flex items-center gap-1.5">
+            <span className="w-5" style={{ borderTop: '2px dashed rgba(251,146,60,0.8)', height: 0 }} />
+            Direct-award benchmark (≤30%)
           </span>
         </div>
 

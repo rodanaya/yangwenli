@@ -5,7 +5,7 @@
  * risk level breakdown, and administration context for a selected year.
  */
 
-import { useMemo } from 'react'
+import { useMemo, type CSSProperties } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -252,7 +252,7 @@ export default function YearInReview() {
           >
             {ALL_YEARS.map((y) => (
               <option key={y} value={y}>
-                {y}
+                {y} ({getAdminForYear(y).key})
               </option>
             ))}
           </select>
@@ -281,6 +281,95 @@ export default function YearInReview() {
           </span>
         </div>
       </motion.div>
+
+      {/* Year-over-Year delta banner */}
+      {yearRow && priorRow && (
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+          {/* Contracts delta */}
+          {(() => {
+            const delta = priorRow.contracts > 0
+              ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100
+              : null
+            const isUp = delta != null && delta > 0
+            const Icon = isUp ? TrendingUp : TrendingDown
+            const color = isUp ? '#4ade80' : '#f87171'
+            return (
+              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{t('heroStats.totalContracts')}</p>
+                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.contracts.toLocaleString()}</p>
+                </div>
+                {delta != null && (
+                  <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
+                    <Icon className="h-3 w-3" />
+                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}%
+                  </span>
+                )}
+              </div>
+            )
+          })()}
+
+          {/* High-risk rate delta */}
+          {(() => {
+            const delta = yearRow.high_risk_pct - priorRow.high_risk_pct
+            const isWorse = delta > 0
+            const color = isWorse ? '#f87171' : '#4ade80'
+            const Icon = isWorse ? TrendingUp : TrendingDown
+            return (
+              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{t('heroStats.highRiskRate')}</p>
+                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.high_risk_pct.toFixed(1)}%</p>
+                </div>
+                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
+                  <Icon className="h-3 w-3" />
+                  {delta > 0 ? '+' : ''}{delta.toFixed(1)}pp
+                </span>
+              </div>
+            )
+          })()}
+
+          {/* Direct award rate delta */}
+          {(() => {
+            const delta = yearRow.direct_award_pct - priorRow.direct_award_pct
+            const isWorse = delta > 0
+            const color = isWorse ? '#f87171' : '#4ade80'
+            const Icon = isWorse ? TrendingUp : TrendingDown
+            return (
+              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">Adjudicación Directa</p>
+                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.direct_award_pct.toFixed(1)}%</p>
+                </div>
+                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
+                  <Icon className="h-3 w-3" />
+                  {delta > 0 ? '+' : ''}{delta.toFixed(1)}pp
+                </span>
+              </div>
+            )
+          })()}
+
+          {/* Avg risk delta */}
+          {(() => {
+            const delta = yearRow.avg_risk - priorRow.avg_risk
+            const isWorse = delta > 0
+            const color = isWorse ? '#f87171' : '#4ade80'
+            const Icon = isWorse ? TrendingUp : TrendingDown
+            return (
+              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">Riesgo Promedio</p>
+                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.avg_risk.toFixed(3)}</p>
+                </div>
+                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
+                  <Icon className="h-3 w-3" />
+                  {delta > 0 ? '+' : ''}{(delta * 100).toFixed(1)}pp
+                </span>
+              </div>
+            )
+          })()}
+        </div>
+      )}
 
       {/* Hero stats */}
       {isLoading ? (
@@ -487,13 +576,35 @@ export default function YearInReview() {
                   {(riskVendorsResp?.data ?? []).map((v, i) => {
                     const score = v.avg_risk_score ?? 0
                     const riskColor = score >= 0.5 ? '#f87171' : score >= 0.3 ? '#fb923c' : '#fbbf24'
+                    // Top-3 rank highlight borders
+                    const rankBorderStyle: CSSProperties =
+                      i === 0 ? { borderLeft: '3px solid #dc2626', backgroundColor: 'rgba(220,38,38,0.06)' }
+                      : i === 1 ? { borderLeft: '3px solid #ea580c' }
+                      : i === 2 ? { borderLeft: '3px solid #eab308' }
+                      : {}
                     return (
                       <tr
                         key={v.vendor_id}
                         className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer"
+                        style={rankBorderStyle}
                         onClick={() => navigate(`/vendors/${v.vendor_id}`)}
                       >
-                        <td className="py-2 pr-2 text-xs font-mono text-text-muted">{i + 1}</td>
+                        <td className="py-2 pr-2 text-xs font-mono text-text-muted pl-2">
+                          {i === 0 ? (
+                            <span className="inline-flex items-center gap-1">
+                              <span>{i + 1}</span>
+                              <span
+                                className="text-[9px] font-bold px-1 py-0.5 rounded uppercase tracking-wide"
+                                style={{ backgroundColor: 'rgba(220,38,38,0.15)', color: '#f87171' }}
+                                title="Más riesgoso del año"
+                              >
+                                🏴
+                              </span>
+                            </span>
+                          ) : (
+                            i + 1
+                          )}
+                        </td>
                         <td className="py-2 text-xs text-text-secondary truncate max-w-[200px] hover:text-accent transition-colors">
                           {v.vendor_name}
                         </td>
