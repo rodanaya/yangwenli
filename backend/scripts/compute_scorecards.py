@@ -700,28 +700,34 @@ def _load_vendor_value_weighted_da(conn: sqlite3.Connection) -> dict:
 def _load_vendor_trends(conn: sqlite3.Connection, min_year: int = 2022) -> dict:
     """Per-year risk for vendor trend computation.
 
-    Fetches raw rows and aggregates in Python to avoid GROUP BY sort/hash
-    that can hang after heavy window-function queries on the same connection.
+    Uses a sequential full-table scan (no INNER JOIN) to avoid 138K random
+    B-tree seeks on Windows after the page cache is saturated by p90 queries.
+    Filters to scored vendors in Python using a pre-built set.
     """
-    # Fetch raw contract rows for scored vendors from min_year onwards.
+    # Pre-build set of scored vendor IDs (fast, small)
+    scored = {r[0] for r in conn.execute(
+        "SELECT vendor_id FROM vendor_scorecards WHERE vendor_id IS NOT NULL"
+    ).fetchall()}
+
+    # Sequential scan of recent contracts — no random seeks
     rows = conn.execute("""
-        SELECT c.vendor_id, c.contract_year, c.risk_score, c.is_direct_award
-        FROM contracts c
-        INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
-        WHERE c.contract_year >= ? AND c.vendor_id IS NOT NULL
-              AND c.risk_score IS NOT NULL
+        SELECT vendor_id, contract_year, risk_score, is_direct_award
+        FROM contracts
+        WHERE contract_year >= ? AND vendor_id IS NOT NULL AND risk_score IS NOT NULL
     """, (min_year,)).fetchall()
 
-    # Aggregate per (vendor_id, year) in Python — O(n) single pass
+    # Aggregate per (vendor_id, year) in Python, keeping only scored vendors
     acc: dict = {}
     for vid, yr, risk, da in rows:
+        if vid not in scored:
+            continue
         key = (vid, yr)
         if key not in acc:
             acc[key] = [0.0, 0.0, 0]
-        bucket = acc[key]
-        bucket[0] += risk
-        bucket[1] += 1.0 if da else 0.0
-        bucket[2] += 1
+        b = acc[key]
+        b[0] += risk
+        b[1] += 1.0 if da else 0.0
+        b[2] += 1
 
     result: dict = defaultdict(list)
     for (vid, yr), (rs, das, n) in acc.items():
