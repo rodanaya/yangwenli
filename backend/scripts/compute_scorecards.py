@@ -697,30 +697,26 @@ def _load_vendor_value_weighted_da(conn: sqlite3.Connection) -> dict:
     return result
 
 
-def _load_vendor_trends(conn: sqlite3.Connection, min_year: int = 2022) -> dict:
+def _load_vendor_trends(conn: sqlite3.Connection, known_vids: set,
+                        min_year: int = 2022) -> dict:
     """Per-year risk for vendor trend computation.
 
-    Uses a sequential full-table scan (no INNER JOIN) to avoid 138K random
-    B-tree seeks on Windows after the page cache is saturated by p90 queries.
-    Filters to scored vendors in Python using a pre-built set.
+    Runs BEFORE the p90 window function so the contracts page cache is still
+    warm.  Uses NOT INDEXED to force a sequential full-table scan — prevents
+    idx_c_year from triggering 590K random rowid lookups.  Filters to the
+    known vendor set in Python (passed in from _load_vendor_base).
     """
-    # Pre-build set of scored vendor IDs (fast, small)
-    scored = {r[0] for r in conn.execute(
-        "SELECT vendor_id FROM vendor_scorecards WHERE vendor_id IS NOT NULL"
-    ).fetchall()}
-
-    # Full sequential table scan — NOT INDEXED prevents idx_c_year from causing
-    # 590K random row lookups after p90 has evicted the main table pages from cache.
+    # Full sequential table scan — NOT INDEXED prevents idx_c_year random I/O.
     rows = conn.execute("""
         SELECT vendor_id, contract_year, risk_score, is_direct_award
         FROM contracts NOT INDEXED
         WHERE contract_year >= ? AND vendor_id IS NOT NULL AND risk_score IS NOT NULL
     """, (min_year,)).fetchall()
 
-    # Aggregate per (vendor_id, year) in Python, keeping only scored vendors
+    # Aggregate per (vendor_id, year) in Python, keeping only known vendors
     acc: dict = {}
     for vid, yr, risk, da in rows:
-        if vid not in scored:
+        if vid not in known_vids:
             continue
         key = (vid, yr)
         if key not in acc:
@@ -896,14 +892,18 @@ def compute_vendor_scorecards(conn: sqlite3.Connection) -> list:
     log.info("Loading ground truth vendor set ...")
     gt_set = _load_vendor_gt_set(conn)
 
+    # Load trends FIRST — before the p90 window function evicts all contracts
+    # pages from the 32 MB SQLite cache.  NOT INDEXED sequential scan works well
+    # when cache is still warm from the institution phase.
+    base_vids = {v["vendor_id"] for v in base}
+    log.info("Loading vendor trend data ...")
+    trend_map = _load_vendor_trends(conn, known_vids=base_vids)
+
     log.info("Computing P90 risk scores per vendor ...")
     p90_map = _load_vendor_p90_risk(conn)
 
     log.info("Computing value-weighted DA rates per vendor ...")
     vw_da_map = _load_vendor_value_weighted_da(conn)
-
-    log.info("Loading vendor trend data ...")
-    trend_map = _load_vendor_trends(conn)
 
     results = []
     for v in base:
