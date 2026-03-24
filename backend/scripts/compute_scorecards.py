@@ -25,6 +25,7 @@ Grade tiers (10 bands):
 import json
 import logging
 import math
+import bisect
 import sqlite3
 from collections import defaultdict
 from datetime import datetime, timezone
@@ -65,11 +66,8 @@ def _percentile_grade(scores: list, score: float) -> tuple:
     if not scores:
         return "C", "Preocupante", "#f97316"
     n = len(scores)
-    # Count how many scores are strictly less than this score
-    rank_below = 0
-    for s in scores:
-        if s < score:
-            rank_below += 1
+    # Binary search on pre-sorted list — O(log n) instead of O(n)
+    rank_below = bisect.bisect_left(scores, score)
     pct = rank_below / n  # 0.0 = lowest, 1.0 = highest
     if pct >= 0.95:
         return "S", "Modelo", "#10b981"
@@ -591,13 +589,13 @@ def compute_institution_scorecards(conn: sqlite3.Connection) -> list:
         r["grade_label"] = label
         r["grade_color"] = color
 
-    # Compute national percentile
+    # Compute national percentile — O(n log n) with binary search
     n = len(all_scores_sorted)
     for r in results:
-        rank_below = sum(1 for s in all_scores_sorted if s < r["total_score"])
+        rank_below = bisect.bisect_left(all_scores_sorted, r["total_score"])
         r["national_percentile"] = round(rank_below / n, 3) if n > 0 else 0.5
 
-    # Compute peer percentile within sector
+    # Compute peer percentile within sector — O(n log n)
     by_sector = defaultdict(list)
     for r in results:
         by_sector[r["sector_id"]].append(r)
@@ -605,7 +603,7 @@ def compute_institution_scorecards(conn: sqlite3.Connection) -> list:
         sector_scores = sorted([r["total_score"] for r in sector_results])
         ns = len(sector_scores)
         for r in sector_results:
-            rank_below = sum(1 for s in sector_scores if s < r["total_score"])
+            rank_below = bisect.bisect_left(sector_scores, r["total_score"])
             r["peer_percentile_sector"] = round(rank_below / ns, 3) if ns > 0 else 0.5
 
     return results
@@ -660,80 +658,82 @@ def _load_vendor_gt_set(conn: sqlite3.Connection) -> set:
         return set()
 
 
-def _load_vendor_p90_risk(conn: sqlite3.Connection) -> dict:
-    """P90 risk score per vendor — restricted to scored vendors only."""
-    log.info("Computing P90 risk scores per vendor (approx) ...")
-    rows = conn.execute("""
-        WITH ranked AS (
-            SELECT c.vendor_id, c.risk_score,
-                   ROW_NUMBER() OVER (PARTITION BY c.vendor_id ORDER BY c.risk_score) AS rn,
-                   COUNT(*) OVER (PARTITION BY c.vendor_id) AS cnt
-            FROM contracts c
-            INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
-            WHERE c.risk_score IS NOT NULL AND c.vendor_id IS NOT NULL
-        )
-        SELECT vendor_id, risk_score
-        FROM ranked
-        WHERE rn = CAST(cnt * 0.9 AS INTEGER) + 1
-    """).fetchall()
-    return {r[0]: r[1] for r in rows}
+def _load_vendor_contract_metrics(conn: sqlite3.Connection, known_vids: set,
+                                   trend_min_year: int = 2022) -> tuple:
+    """Single-pass extraction: p90, DA rate, and trend data in one contracts scan.
 
+    Reads the contracts table exactly once (NOT INDEXED sequential scan) and
+    computes all three metrics in Python.  Avoids the repeated cache-eviction
+    problem on Windows where each separate SQL query thrashes the 32 MB page
+    cache with random B-tree seeks after the previous query evicted everything.
 
-def _load_vendor_value_weighted_da(conn: sqlite3.Connection) -> dict:
-    """Value-weighted DA rate per vendor — restricted to scored vendors only."""
-    rows = conn.execute("""
-        SELECT c.vendor_id,
-               SUM(CASE WHEN c.is_direct_award = 1 THEN c.amount_mxn ELSE 0 END) AS da_value,
-               SUM(c.amount_mxn) AS total_value
-        FROM contracts c
-        INNER JOIN vendor_scorecards vs ON c.vendor_id = vs.vendor_id
-        WHERE c.amount_mxn > 0 AND c.vendor_id IS NOT NULL
-        GROUP BY c.vendor_id
-    """).fetchall()
-    result = {}
-    for r in rows:
-        total = r[2] or 1
-        result[r[0]] = (r[1] or 0) / total
-    return result
-
-
-def _load_vendor_trends(conn: sqlite3.Connection, known_vids: set,
-                        min_year: int = 2022) -> dict:
-    """Per-year risk for vendor trend computation.
-
-    Runs BEFORE the p90 window function so the contracts page cache is still
-    warm.  Uses NOT INDEXED to force a sequential full-table scan — prevents
-    idx_c_year from triggering 590K random rowid lookups.  Filters to the
-    known vendor set in Python (passed in from _load_vendor_base).
+    Returns: (p90_map, da_map, trend_map)
     """
-    # Full sequential table scan — NOT INDEXED prevents idx_c_year random I/O.
-    rows = conn.execute("""
-        SELECT vendor_id, contract_year, risk_score, is_direct_award
-        FROM contracts NOT INDEXED
-        WHERE contract_year >= ? AND vendor_id IS NOT NULL AND risk_score IS NOT NULL
-    """, (min_year,)).fetchall()
+    log.info("Computing P90 risk scores per vendor ...")
+    log.info("Computing P90 risk scores per vendor (approx) ...")
 
-    # Aggregate per (vendor_id, year) in Python, keeping only known vendors
-    acc: dict = {}
-    for vid, yr, risk, da in rows:
+    # One sequential scan — NOT INDEXED prevents idx_c_year random rowid lookups.
+    rows = conn.execute("""
+        SELECT vendor_id, contract_year, risk_score, is_direct_award, amount_mxn
+        FROM contracts NOT INDEXED
+        WHERE vendor_id IS NOT NULL AND risk_score IS NOT NULL
+    """).fetchall()
+
+    # Accumulate all three metrics in a single Python pass
+    p90_acc: dict = {}   # vendor_id -> sorted list built incrementally
+    da_acc: dict  = {}   # vendor_id -> [da_value, total_value]
+    trend_acc: dict = {} # (vendor_id, year) -> [sum_risk, sum_da_flag, count]
+
+    for vid, yr, risk, da, amt in rows:
         if vid not in known_vids:
             continue
-        key = (vid, yr)
-        if key not in acc:
-            acc[key] = [0.0, 0.0, 0]
-        b = acc[key]
-        b[0] += risk
-        b[1] += 1.0 if da else 0.0
-        b[2] += 1
 
-    result: dict = defaultdict(list)
-    for (vid, yr), (rs, das, n) in acc.items():
-        result[vid].append({
+        # p90 — collect raw scores; sort once after loop
+        if vid not in p90_acc:
+            p90_acc[vid] = []
+        p90_acc[vid].append(risk)
+
+        # value-weighted DA rate
+        if vid not in da_acc:
+            da_acc[vid] = [0.0, 0.0]
+        if amt and amt > 0:
+            da_acc[vid][0] += amt if da else 0.0
+            da_acc[vid][1] += amt
+
+        # trend (only recent years)
+        if yr and yr >= trend_min_year:
+            key = (vid, yr)
+            if key not in trend_acc:
+                trend_acc[key] = [0.0, 0.0, 0]
+            b = trend_acc[key]
+            b[0] += risk
+            b[1] += 1.0 if da else 0.0
+            b[2] += 1
+
+    # Finalise p90
+    log.info("Computing value-weighted DA rates per vendor ...")
+    p90_map: dict = {}
+    for vid, scores in p90_acc.items():
+        scores.sort()
+        idx = max(0, int(len(scores) * 0.9))
+        p90_map[vid] = scores[idx]
+
+    # Finalise DA map
+    da_map: dict = {}
+    for vid, (da_val, total_val) in da_acc.items():
+        da_map[vid] = da_val / total_val if total_val > 0 else 0.0
+
+    # Finalise trend map
+    log.info("Loading vendor trend data ...")
+    trend_result: dict = defaultdict(list)
+    for (vid, yr), (rs, das, n) in trend_acc.items():
+        trend_result[vid].append({
             "year": yr,
             "avg_risk": rs / n,
             "da_rate": das / n,
         })
-    return dict(result)
+
+    return p90_map, da_map, dict(trend_result)
 
 
 def score_vendor(v: dict, gt_set: set, p90_risk: float,
@@ -892,18 +892,11 @@ def compute_vendor_scorecards(conn: sqlite3.Connection) -> list:
     log.info("Loading ground truth vendor set ...")
     gt_set = _load_vendor_gt_set(conn)
 
-    # Load trends FIRST — before the p90 window function evicts all contracts
-    # pages from the 32 MB SQLite cache.  NOT INDEXED sequential scan works well
-    # when cache is still warm from the institution phase.
+    # Single-pass over contracts: compute p90, value-weighted DA rate, and
+    # per-year trend data simultaneously.  Avoids repeated cache-eviction on
+    # Windows where each separate query thrashes the 32 MB SQLite page cache.
     base_vids = {v["vendor_id"] for v in base}
-    log.info("Loading vendor trend data ...")
-    trend_map = _load_vendor_trends(conn, known_vids=base_vids)
-
-    log.info("Computing P90 risk scores per vendor ...")
-    p90_map = _load_vendor_p90_risk(conn)
-
-    log.info("Computing value-weighted DA rates per vendor ...")
-    vw_da_map = _load_vendor_value_weighted_da(conn)
+    p90_map, vw_da_map, trend_map = _load_vendor_contract_metrics(conn, base_vids)
 
     results = []
     for v in base:
@@ -933,7 +926,7 @@ def compute_vendor_scorecards(conn: sqlite3.Connection) -> list:
 
     for i, r in enumerate(results):
         r["sector_percentile"] = sector_pcts.get(i, 0.5)
-        rank_below = sum(1 for s in scores if s < r["total_score"])
+        rank_below = bisect.bisect_left(scores, r["total_score"])
         r["national_percentile"] = round(rank_below / n, 3) if n > 0 else 0.5
         # Store peer percentile in key_metrics
         km = json.loads(r["key_metrics"])
