@@ -709,10 +709,11 @@ def _load_vendor_trends(conn: sqlite3.Connection, min_year: int = 2022) -> dict:
         "SELECT vendor_id FROM vendor_scorecards WHERE vendor_id IS NOT NULL"
     ).fetchall()}
 
-    # Sequential scan of recent contracts — no random seeks
+    # Full sequential table scan — NOT INDEXED prevents idx_c_year from causing
+    # 590K random row lookups after p90 has evicted the main table pages from cache.
     rows = conn.execute("""
         SELECT vendor_id, contract_year, risk_score, is_direct_award
-        FROM contracts
+        FROM contracts NOT INDEXED
         WHERE contract_year >= ? AND vendor_id IS NOT NULL AND risk_score IS NOT NULL
     """, (min_year,)).fetchall()
 
