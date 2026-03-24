@@ -37,6 +37,17 @@ for (const s of SECTORS) {
   SECTOR_ID_TO_COLOR[s.id] = s.color
 }
 
+// #76 — Political cycle data
+const SEXENIOS = [
+  { name: 'Fox', start: 2001, end: 2006, color: '#dbeafe' },
+  { name: 'Calderón', start: 2007, end: 2012, color: '#fef9c3' },
+  { name: 'Peña Nieto', start: 2013, end: 2018, color: '#fee2e2' },
+  { name: 'AMLO', start: 2019, end: 2024, color: '#dcfce7' },
+  { name: 'Sheinbaum', start: 2025, end: 2030, color: '#ede9fe' },
+] as const
+
+const ELECTION_YEARS = [2006, 2009, 2012, 2015, 2018, 2021, 2024] as const
+
 const SCANDAL_EVENTS_BASE = [
   { year: 2017, labelKey: 'scandalEvents.laEstafaMaestra', color: '#ef4444' },
   { year: 2019, labelKey: 'scandalEvents.casoLozoya', color: '#ef4444' },
@@ -50,7 +61,7 @@ const LABEL_WIDTH = 140
 const YEAR_MIN = 2010
 const YEAR_MAX = 2025
 const TOP_PADDING = 24
-const BOTTOM_PADDING = 40
+const BOTTOM_PADDING = 52
 const RIGHT_PADDING = 20
 
 // ---------------------------------------------------------------------------
@@ -380,6 +391,15 @@ export default function Seismograph() {
             <div className="w-3 h-3 rounded-sm bg-red-500/15 border border-red-500/30" />
             <span className="font-mono text-[10px] tracking-wider text-red-400/50">{t('legend.scandal')}</span>
           </div>
+          {/* #76 — Sexenio legend */}
+          <div className="flex items-center gap-1.5 ml-3">
+            <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: 'rgba(219,234,254,0.25)', border: '1px solid rgba(219,234,254,0.2)' }} />
+            <span className="font-mono text-[10px] tracking-wider text-white/30">sexenio</span>
+          </div>
+          <div className="flex items-center gap-1.5">
+            <div className="w-1.5 h-1.5 rounded-full bg-amber-400/70" />
+            <span className="font-mono text-[10px] tracking-wider text-amber-400/50">año electoral</span>
+          </div>
         </motion.div>
       </div>
 
@@ -415,6 +435,40 @@ export default function Seismograph() {
                 )
               })}
             </defs>
+
+            {/* #76 — Sexenio background bands */}
+            {SEXENIOS.map((sx) => {
+              const clampedStart = Math.max(sx.start, YEAR_MIN)
+              const clampedEnd = Math.min(sx.end, YEAR_MAX)
+              if (clampedStart >= clampedEnd) return null
+              const x1 = yearX(clampedStart)
+              const x2 = yearX(clampedEnd)
+              const midX = (x1 + x2) / 2
+              return (
+                <g key={sx.name}>
+                  <rect
+                    x={x1}
+                    y={0}
+                    width={x2 - x1}
+                    height={svgHeight - BOTTOM_PADDING + 8}
+                    fill={sx.color}
+                    opacity={0.04}
+                  />
+                  <text
+                    x={midX}
+                    y={svgHeight - BOTTOM_PADDING + 35}
+                    textAnchor="middle"
+                    fill={sx.color}
+                    opacity={0.5}
+                    fontSize={8}
+                    fontFamily="monospace"
+                    letterSpacing="0.06em"
+                  >
+                    {sx.name}
+                  </text>
+                </g>
+              )
+            })}
 
             {/* Scandal bands */}
             {SCANDAL_EVENTS_BASE.map((evt) => {
@@ -605,6 +659,7 @@ export default function Seismograph() {
             {/* X-axis year labels */}
             {years.map((year) => {
               const cx = yearX(year)
+              const isElectionYear = (ELECTION_YEARS as ReadonlyArray<number>).includes(year)
               return (
                 <g key={`year-${year}`}>
                   <line
@@ -612,16 +667,26 @@ export default function Seismograph() {
                     y1={svgHeight - BOTTOM_PADDING + 4}
                     x2={cx}
                     y2={svgHeight - BOTTOM_PADDING + 10}
-                    stroke="white"
-                    strokeWidth={0.6}
-                    opacity={0.2}
+                    stroke={isElectionYear ? '#f59e0b' : 'white'}
+                    strokeWidth={isElectionYear ? 1.2 : 0.6}
+                    opacity={isElectionYear ? 0.6 : 0.2}
                   />
+                  {/* #76 — Election year dot */}
+                  {isElectionYear && (
+                    <circle
+                      cx={cx}
+                      cy={svgHeight - BOTTOM_PADDING + 12}
+                      r={2}
+                      fill="#f59e0b"
+                      opacity={0.7}
+                    />
+                  )}
                   <text
                     x={cx}
                     y={svgHeight - BOTTOM_PADDING + 22}
                     textAnchor="middle"
-                    fill="white"
-                    opacity={year % 5 === 0 ? 0.4 : 0.2}
+                    fill={isElectionYear ? '#f59e0b' : 'white'}
+                    opacity={isElectionYear ? 0.65 : year % 5 === 0 ? 0.4 : 0.2}
                     fontSize={10}
                     fontFamily="monospace"
                     letterSpacing="0.05em"

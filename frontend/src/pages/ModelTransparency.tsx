@@ -856,9 +856,53 @@ function RiskDistributionStrip() {
         ))}
       </div>
 
-      <p className="text-[11px] text-text-muted">
-        3,051,294 contracts analyzed — HR rate 9.2% (OECD 2-15% compliant)
-      </p>
+      {/* #79 — HR% Gauge */}
+      <div className="space-y-1" style={{ maxWidth: 600 }}>
+        <div className="flex items-center justify-between text-[10px] text-text-muted">
+          <span>High-risk rate (HR%)</span>
+          <span className="tabular-nums font-medium text-text-primary">9.2%</span>
+        </div>
+        <div className="relative h-4 rounded-full overflow-hidden" style={{ backgroundColor: '#1e293b' }}>
+          <div
+            className="h-full rounded-full"
+            style={{ width: '9.2%', backgroundColor: '#ea580c' }}
+            role="meter"
+            aria-valuenow={9.2}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label="High-risk rate 9.2%"
+          />
+          {/* OECD min marker at 2% */}
+          <div
+            className="absolute top-0 bottom-0 w-px"
+            style={{ left: '2%', backgroundColor: '#16a34a' }}
+            title="OECD mín 2%"
+          />
+          {/* OECD max marker at 15% */}
+          <div
+            className="absolute top-0 bottom-0 w-px"
+            style={{ left: '15%', backgroundColor: '#16a34a' }}
+            title="OECD máx 15%"
+          />
+        </div>
+        <div className="flex items-center gap-4 text-[10px] text-text-muted">
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-px h-2.5" style={{ backgroundColor: '#16a34a' }} />
+            OECD mín 2%
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-2 h-2 rounded-sm" style={{ backgroundColor: '#ea580c' }} />
+            HR actual 9.2%
+          </span>
+          <span className="flex items-center gap-1">
+            <span className="inline-block w-px h-2.5" style={{ backgroundColor: '#16a34a' }} />
+            OECD máx 15%
+          </span>
+        </div>
+        <p className="text-[10px] text-text-muted">
+          3,051,294 contratos analizados — HR 9.2% cumple rango OECD (2–15%)
+        </p>
+      </div>
     </div>
   )
 }
@@ -1187,6 +1231,29 @@ export default function ModelTransparency() {
           </p>
         </div>
       </div>
+      {/* #77 — Model Version Tag */}
+      <div className="flex flex-wrap items-start gap-3 rounded-md border border-border/40 bg-background-elevated/30 px-4 py-3 text-xs">
+        <div className="flex items-center gap-2 shrink-0">
+          <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+          <span className="font-semibold text-text-primary font-mono">v6.4 (C=0.01)</span>
+        </div>
+        <span className="text-text-muted/40">|</span>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="text-text-muted shrink-0">Run ID:</span>
+          <span className="font-mono text-text-secondary truncate">CAL-v6.1-202603191034</span>
+        </div>
+        <span className="text-text-muted/40">|</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-text-muted shrink-0">Hyperparams:</span>
+          <span className="font-mono text-text-secondary">C=0.0100, l1_ratio=0.9673</span>
+        </div>
+        <span className="text-text-muted/40">|</span>
+        <div className="flex items-center gap-1.5">
+          <span className="text-text-muted shrink-0">PU c:</span>
+          <span className="font-mono text-text-secondary">0.3432</span>
+        </div>
+      </div>
+
       <div className="flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/[0.04] px-3 py-2 text-xs text-text-muted">
         <Info className="h-3.5 w-3.5 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
         <span>
@@ -1263,6 +1330,29 @@ export default function ModelTransparency() {
           />
         </motion.div>
       </motion.div>
+
+      {/* ================================================================ */}
+      {/* #78 — Calibration Curve / AUC Explanation Info Card             */}
+      {/* ================================================================ */}
+      <div className="flex items-start gap-3 rounded-lg border border-blue-400/20 bg-blue-400/[0.04] px-4 py-3 text-xs">
+        <Info className="h-4 w-4 text-blue-400 shrink-0 mt-0.5" aria-hidden="true" />
+        <div className="space-y-1.5 text-text-muted leading-relaxed">
+          <p className="font-semibold text-text-secondary">Interpretación de las métricas AUC</p>
+          <p>
+            <span className="font-medium text-text-primary">AUC interno 0.840</span>
+            {' '}— validación vendor-estratificada 70/30. El modelo nunca vio contratos de los vendors de prueba durante el entrenamiento.
+          </p>
+          <p>
+            <span className="font-medium text-text-primary">AUC población 0.728</span>
+            {' '}— todos los contratos GT vs. todos los contratos sin etiquetar (2.7M). Más difícil y realista; menor porque la asunción SCAR está violada (los casos GT son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción).
+          </p>
+          <p className="border-t border-blue-400/15 pt-1.5 text-[11px]">
+            <span className="font-medium text-blue-400">Guía de uso:</span>
+            {' '}Use <span className="font-mono text-text-primary">0.728</span> para reportes externos e informes públicos;
+            {' '}<span className="font-mono text-text-primary">0.840</span> para iteración interna del modelo y comparación entre versiones.
+          </p>
+        </div>
+      </div>
 
       {/* ================================================================ */}
       {/* L2: Coefficient Chart                                            */}
@@ -1378,9 +1468,9 @@ export default function ModelTransparency() {
             </span>
           </div>
 
-          {/* Coefficient annotations */}
+          {/* Coefficient annotations — active features */}
           <div className="mt-4 space-y-2">
-            {MODEL_COEFFICIENTS.filter((c) => c.note).map((c) => (
+            {MODEL_COEFFICIENTS.filter((c) => c.note && c.direction !== 'zeroed').map((c) => (
               <div key={c.factor} className="flex items-start gap-2 text-xs text-text-muted">
                 <Info className="h-3 w-3 shrink-0 mt-0.5" aria-hidden="true" />
                 <span>
@@ -1389,6 +1479,33 @@ export default function ModelTransparency() {
                 </span>
               </div>
             ))}
+          </div>
+
+          {/* #80 — Feature Zero Explanation */}
+          <div className="mt-4 rounded-md border border-border/30 bg-background-elevated/20 p-3 space-y-2">
+            <p className="text-[11px] font-medium text-text-secondary">Por qué algunos coeficientes son exactamente cero</p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-medium text-text-muted uppercase tracking-wide">Regularización ElasticNet (C=0.01, l1_ratio=0.97)</p>
+                {MODEL_COEFFICIENTS.filter((c) => c.direction === 'zeroed' && c.note === 'L1 regularized to zero').map((c) => (
+                  <div key={c.factor} className="flex items-center gap-1.5 text-[11px] text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#475569] shrink-0" />
+                    <span className="font-mono">{c.factor}</span>
+                    <span className="text-text-muted/50 text-[10px]">— penalización L1 eliminó señal</span>
+                  </div>
+                ))}
+              </div>
+              <div className="space-y-1.5">
+                <p className="text-[10px] font-medium text-text-muted uppercase tracking-wide">Restricción de signo (coef debe ser positivo)</p>
+                {MODEL_COEFFICIENTS.filter((c) => c.direction === 'zeroed' && c.note === 'Sign-constrained to zero').map((c) => (
+                  <div key={c.factor} className="flex items-center gap-1.5 text-[11px] text-text-muted">
+                    <span className="w-1.5 h-1.5 rounded-full bg-[#475569] shrink-0" />
+                    <span className="font-mono">{c.factor}</span>
+                    <span className="text-text-muted/50 text-[10px]">— coef negativo ajustado → forzado a 0</span>
+                  </div>
+                ))}
+              </div>
+            </div>
           </div>
         </CardContent>
       </Card>
@@ -1838,6 +1955,9 @@ export default function ModelTransparency() {
           <CardDescription className="text-xs">
             Exact Shapley values from 456K vendors — replaces coefficient-based approximation
           </CardDescription>
+          <p className="text-[11px] text-text-muted mt-1 font-mono">
+            SHAP exacto para regresión logística: φᵢ = βᵢ × (zᵢ − E[zᵢ])
+          </p>
         </CardHeader>
         <CardContent>
           <SHAPImportanceSection />

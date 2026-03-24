@@ -21,6 +21,7 @@ import { DossierCard } from '@/components/DossierCard'
 import { DossierCreateDialog } from '@/components/DossierCreateDialog'
 import WorkspaceJournalistGuide from '@/components/WorkspaceJournalistGuide'
 import { watchlistApi, vendorApi, dossierApi, type WatchlistItem, type WatchlistItemUpdate, type DossierItem } from '@/api/client'
+import { DossierAddItemDialog } from '@/components/DossierAddItemDialog'
 import {
   Eye,
   Trash2,
@@ -377,6 +378,11 @@ export function Watchlist() {
   const [activeTab, setActiveTab] = useState<'entities' | 'dossiers'>('entities')
   const [dossierDialogOpen, setDossierDialogOpen] = useState(false)
   const [activeDossierId, setActiveDossierId] = useState<number | null>(null)
+  // #92 — dossier status filter
+  type DossierStatusFilter = 'all' | 'active' | 'archived' | 'closed'
+  const [dossierStatusFilter, setDossierStatusFilter] = useState<DossierStatusFilter>('all')
+  // #91 — add item to dossier dialog
+  const [addItemDossierId, setAddItemDossierId] = useState<number | null>(null)
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all')
   const [typeFilter, setTypeFilter] = useState<TypeFilter>('all')
   const [priorityFilter, setPriorityFilter] = useState<PriorityFilter>('all')
@@ -448,10 +454,10 @@ export function Watchlist() {
     onError: (err) => console.error('[Watchlist] Failed to delete item:', err),
   })
 
-  // Dossier queries and mutations
+  // Dossier queries and mutations — #92 status filter wired here
   const { data: dossiers, isLoading: dossiersLoading } = useQuery({
-    queryKey: ['dossiers'],
-    queryFn: () => dossierApi.list(),
+    queryKey: ['dossiers', dossierStatusFilter],
+    queryFn: () => dossierApi.list(dossierStatusFilter === 'all' ? undefined : dossierStatusFilter),
     enabled: activeTab === 'dossiers',
     staleTime: 60 * 1000,
   })
@@ -893,9 +899,45 @@ export function Watchlist() {
               </Button>
             </div>
 
-            {/* Active dossier stats bar */}
+            {/* #92 — Dossier status filter tabs */}
+            <div className="flex items-center gap-1.5">
+              <Filter className="h-3.5 w-3.5 text-text-muted shrink-0" />
+              {([
+                { value: 'all', label: 'Todos' },
+                { value: 'active', label: 'Activos' },
+                { value: 'archived', label: 'Archivados' },
+                { value: 'closed', label: 'Cerrados' },
+              ] as const).map(({ value, label }) => (
+                <button
+                  key={value}
+                  onClick={() => setDossierStatusFilter(value)}
+                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                    dossierStatusFilter === value
+                      ? 'bg-accent text-white border-accent'
+                      : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {/* Active dossier stats bar + #91 quick-add vendor */}
             {activeDossierId !== null && activeDossier && (
-              <DossierStatsBar dossierId={activeDossierId} dossierName={activeDossier.name} />
+              <div className="space-y-2">
+                <DossierStatsBar dossierId={activeDossierId} dossierName={activeDossier.name} />
+                <div className="flex justify-end">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="text-xs h-7"
+                    onClick={() => setAddItemDossierId(activeDossierId)}
+                  >
+                    <Users className="h-3.5 w-3.5 mr-1.5" />
+                    Buscar proveedores
+                  </Button>
+                </div>
+              </div>
             )}
 
             {/* Dossier list */}
@@ -936,6 +978,16 @@ export function Watchlist() {
           })
         }}
       />
+
+      {/* #91 — Add item (vendor search) dialog */}
+      {addItemDossierId !== null && (dossiers ?? []).find((d) => d.id === addItemDossierId) && (
+        <DossierAddItemDialog
+          open={addItemDossierId !== null}
+          onOpenChange={(isOpen) => { if (!isOpen) setAddItemDossierId(null) }}
+          dossierId={addItemDossierId}
+          dossierName={(dossiers ?? []).find((d) => d.id === addItemDossierId)?.name ?? ''}
+        />
+      )}
     </div>
   )
 }
