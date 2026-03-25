@@ -114,15 +114,33 @@ def create_output_tables(conn: sqlite3.Connection):
 
 
 def load_calibration(conn: sqlite3.Connection):
-    """Load global + per-sector models from model_calibration."""
+    """Load global + per-sector models from model_calibration.
+
+    Uses the most-recently created run (by created_at DESC on the global row),
+    which is the active v6.5 model (model_version='v6.0', run_id=CAL-v6.1-202603251039).
+    Falls back gracefully to the latest available if the preferred run is absent.
+    """
     cursor = conn.cursor()
+
+    # Determine the run_id of the most recently created global calibration
+    cursor.execute("""
+        SELECT run_id FROM model_calibration
+        WHERE sector_id IS NULL
+        ORDER BY created_at DESC LIMIT 1
+    """)
+    run_row = cursor.fetchone()
+    if not run_row:
+        raise ValueError("No calibration rows found in model_calibration.")
+    active_run_id = run_row[0]
+    print(f"Loading calibration for run_id: {active_run_id}")
+
     cursor.execute("""
         SELECT sector_id, intercept, coefficients, pu_correction_factor,
                auc_roc, test_auc
         FROM model_calibration
-        WHERE model_version = 'v5.0'
+        WHERE run_id = ?
         ORDER BY sector_id NULLS FIRST, created_at DESC
-    """)
+    """, (active_run_id,))
     rows = cursor.fetchall()
 
     global_cal = None
@@ -152,7 +170,7 @@ def load_calibration(conn: sqlite3.Connection):
             sector_cals[sid] = cal
 
     if global_cal is None:
-        raise ValueError("No v5.0 global calibration found. Run calibrate_risk_model_v5.py first.")
+        raise ValueError(f"No global calibration found for run_id={active_run_id}.")
 
     print(f"Loaded: global model + {len(sector_cals)} sector models")
     return global_cal, sector_cals
@@ -387,9 +405,9 @@ def main():
         print(f"ERROR: {DB_PATH} not found")
         return 1
 
-    conn = sqlite3.connect(DB_PATH, timeout=60)
+    conn = sqlite3.connect(DB_PATH, timeout=300)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=60000")
+    conn.execute("PRAGMA busy_timeout=300000")
     conn.execute("PRAGMA synchronous=NORMAL")
     conn.execute("PRAGMA cache_size=-200000")
 

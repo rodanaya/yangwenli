@@ -44,7 +44,27 @@ MIN_SECTOR_AUC = 0.70  # Fallback to global if sector model AUC < this threshold
 # Fix 3: Ghost companion boost weight. A max-confidence ghost flag (score=1.0)
 # adds this much to the base risk_score, enough to push a zero-scored new vendor
 # into medium risk territory (threshold=0.25) for investigation triage.
+# GHOST_BOOST_WEIGHT is the maximum weight (used for ghost_score >= 0.8).
+# Lower confidence ghost scores receive proportionally reduced boost weights.
 GHOST_BOOST_WEIGHT = 0.4
+
+
+def get_ghost_boost_weight(ghost_score: float) -> float:
+    """Return graduated boost weight based on ghost_score confidence.
+
+    ghost_score >= 0.8 → 0.40 (high confidence — full boost)
+    ghost_score >= 0.6 → 0.30
+    ghost_score >= 0.4 → 0.20
+    ghost_score <  0.4 → 0.10 (uncertain — minimal boost)
+    """
+    if ghost_score >= 0.8:
+        return 0.40
+    elif ghost_score >= 0.6:
+        return 0.30
+    elif ghost_score >= 0.4:
+        return 0.20
+    else:
+        return 0.10
 
 # v6.4 thresholds — medium raised from 0.15→0.25 (audit finding: 76.7% medium at 0.15
 # provided near-zero lift over random; 0.25 gives 18.1% medium, actionable tier).
@@ -242,7 +262,8 @@ def main():
                 if vid is not None and vid in ghost_scores:
                     ghost_s = ghost_scores[vid]
                     if ghost_s > 0:
-                        boost = ghost_s * GHOST_BOOST_WEIGHT
+                        weight = get_ghost_boost_weight(ghost_s)
+                        boost = ghost_s * weight
                         scores[i] = min(1.0, float(scores[i]) + boost)
                         # Boost CI upper bound too (lower stays as base model CI)
                         cu_arr[i] = min(1.0, float(cu_arr[i]) + boost)
