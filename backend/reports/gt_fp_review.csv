@@ -1,0 +1,884 @@
+vendor_id,vendor_name,case_id,case_name,case_type,evidence_strength,tier,is_false_positive,fp_reason,curriculum_weight,year_start,year_end,changed
+124393,CYBER ROBOTIC SOLUTIONS SA DE CV,1,COVID-19 Emergency Procurement Irregularities,embezzlement,high,3,0,active_or_captured:high,0.8,2020,2021,True
+26793,"LOMEDIC, S.A. DE C.V.",1,COVID-19 Emergency Procurement Irregularities,embezzlement,medium,3,0,active_or_captured:medium,0.5,2020,2021,True
+42890,FARMACEUTICOS MAYPO,1,COVID-19 Emergency Procurement Irregularities,embezzlement,medium,3,0,active_or_captured:medium,0.5,2020,2021,True
+13885,"DISTRIBUIDORA INTERNACIONAL DE MEDICAMENTOS Y EQUIPO MEDICO, S.A. DE C.V.",1,COVID-19 Emergency Procurement Irregularities,embezzlement,medium,3,0,active_or_captured:medium,0.5,2020,2021,True
+5196,"IMPORTADORA Y MANUFACTURERA BRULUART, S.A.",1,COVID-19 Emergency Procurement Irregularities,embezzlement,medium,3,0,active_or_captured:medium,0.5,2020,2021,True
+14057,EQUIPOS MEDICOS VIZCARRA,1,COVID-19 Emergency Procurement Irregularities,embezzlement,medium,3,0,active_or_captured:medium,0.5,2020,2021,True
+4249,"GRUPO CONSTRUCTOR ROGURA, S.A. DE C.V.",2,La Estafa Maestra,ghost_company,high,3,0,active_or_captured:high,0.8,2013,2018,True
+16951,"GRUPO CONSTRUCTOR CINCO, S.A. DE C.V.",2,La Estafa Maestra,ghost_company,medium,3,0,active_or_captured:medium,0.5,2013,2018,True
+19852,DISTRIBUIDORA QUIRURGICA NACIONAL S.A.DE C.V.,3,IMSS Ghost Company Network,ghost_company,medium,3,0,active_or_captured:medium,0.5,2012,2018,True
+4335,"LABORATORIOS PISA, S.A. DE C.V.",3,IMSS Ghost Company Network,ghost_company,low,2,0,beneficiary_low_evidence:pharma_in_ghost_network,0.1,2012,2018,True
+209773,ALTOS HORNOS DE MEXICO S A B DE C V,4,Odebrecht-PEMEX Bribery Scheme,bribery,medium,3,0,active_or_captured:medium,0.5,2010,2016,True
+441,TRADECO INFRAESTRUCTURA S.A. DE C.V.,4,Odebrecht-PEMEX Bribery Scheme,bribery,medium,3,0,active_or_captured:medium,0.5,2010,2016,True
+10775,"LICONSA, S.A. DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+38534,"DICONSA, S.A. DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+229178,D SAZON SEGURIDAD ALIMENTARIA SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2019,2023,True
+42334,CONSTRUCTORA TEYA S.A. DE C.V.,6,Grupo Higa / Casa Blanca,conflict_of_interest,high,3,0,active_or_captured:high,0.8,2010,2018,True
+8362,"OCEANOGRAFIA, S.A.",7,Oceanografia PEMEX Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2014,True
+124393,CYBER ROBOTIC SOLUTIONS SA DE CV,8,IT Procurement Overpricing,overpricing,high,3,0,active_or_captured:high,0.8,2015,2024,True
+286318,SERVICIOS INTEGRALES RETIMAR SA DE CV,10,IPN Cartel de la Limpieza,bribery,high,3,0,active_or_captured:high,0.8,2015,2024,True
+258499,ICA CONSTRUCTORA SA DE CV,11,Infrastructure Procurement Fraud Network,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2025,True
+48064,COCONAL  SAPI DE CV,11,Infrastructure Procurement Fraud Network,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2025,True
+104322,"COCONAL, S.A.P.I. DE C.V.",11,Infrastructure Procurement Fraud Network,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2025,True
+312,COCONAL S.A. DE C.V.,11,Infrastructure Procurement Fraud Network,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2025,True
+108513,MOTA-ENGIL MEXICO SA DE CV,11,Infrastructure Procurement Fraud Network,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2025,True
+102627,TOKA INTERNACIONAL S A P I DE CV,12,Toka Government IT Monopoly,procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2024,True
+8002,"COTEMAR, S. A. DE C. V.",13,PEMEX-Cotemar Irregularities,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2024,True
+43904,SIXSIGMA NETWORKS MEXICO,14,SAT Tender Rigging (SixSigma),bid_rigging,high,3,0,active_or_captured:high,0.8,2015,2024,True
+44372,EDENRED MEXICO SA DE CV,15,Government Voucher Monopoly (Edenred),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+44553,CASANOVA VALLEJO SA DE CV,16,ISSSTE Ambulance Leasing Fraud (Casanova Vallejo),overpricing,high,3,0,active_or_captured:high,0.8,2011,2025,True
+981,"MAINBIT, S.A. DE C.V.",19,SEGOB-Mainbit IT Monopoly (Osorio Chong Era),procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+158864,ETHOMEDICAL SA DE CV,20,IMSS Overpriced Medicines — Ethomedical Network,overpricing,high,3,0,active_or_captured:high,0.8,2015,2024,True
+243542,"Fonatur Infraestructura, S.A. de C.V.",21,Tren Maya Direct Award Irregularities (FONATUR Infraestructura),procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2024,True
+220903,"CONSORCIO HANDEL&BAUEN, COMERCIO Y EDIFICACION SA DE CV",22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+248612,COMERCIO Y CONSTRUCCION DE TABASCO SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+221634,EDIFICACIONES HALA KEN SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+279168,CONSTRUAGREGADOS HOPELCHEN SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+236078,FERROCLIN U&Q SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+248360,DAGICO SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+290509,CONSTRUCTORA BARLE SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+244785,SERVICIOS Y SUMINISTROS KAABA SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+221026,LIDXI MATERIALES SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+247986,MARROME SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+258893,SERVICIOS DE LIMPIEZA ECOCLORX SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+234341,SERVICIOS ESPECIALES PARA LA CONSTRUCCION COFRADIA SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+301794,SERVICIOS COMERCIALES SHAJAE SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+232466,MATERIALES PARA LA CONSTRUCCION EDIMEX SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+232553,GRUPO CONSTRUCTOR RAIZA SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+258756,CUBSO CONSTRUCCIONES SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+246088,CONSTRUCTORES ASFALTICOS ZOONDU SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+219738,YO MERENGUES SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+257085,SOCPROCAMPO SPR DE RL DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+254568,PRODUCTOS MOBEQT SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+223732,PAVIZAC SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+219196,MAQARRENDA SERVICIOS PETREOS SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+218631,LIN BLUP SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+296748,GIOVANNI ISLAS MUÑOZ,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+219068,HABITAT TERRA SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+229335,FORTAR SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+223402,FERMAL DISEÑO Y PUBLICIDAD SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+220927,FORUM CAPELLI SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+249189,ESTRUCTURAS ARQUITECTONICAS THOLOI SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+222229,LA DORADA VISION INGENIERIA SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+239859,DUPPLEXSA PENINSULAR SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+231488,COMERCIALIZADORA RIUA S DE RL DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+230397,CONSTRUCTORA PRESITE SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+264140,COOKOUT PARTY SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+293009,COMERCIALIZADORA ELISMAR SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+227549,CONSTRUCTORA Y DESARROLLOS INFINITI SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+223958,CORPORATIVO BXE SA DE CV,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+226763,ASISTENCIA TECNICA Y ASESORIA EDUCATIVA SC,22,SAT EFOS Art. 69-B Definitivo Ghost Company Network,ghost_company,high,4,0,confirmed_ghost_company,1.0,2014,2026,True
+274821,BAHUD PROCESSING MEXICO S DE RL DE CV,23,Bahud Processing Mexico — Banco del Bienestar Payment Card Monopoly,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2021,2021,True
+28506,"CONSTRUCTORA GARZA PONCE, S.A. DE C.V.",24,Constructora Garza Ponce — Nuevo León Infrastructure Overpricing,overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2006,2024,True
+233284,"SUMINISTRADOR DE VACUNAS, S.A. DE C.V.",25,BIRMEX Vaccine Intermediary Extraction (Suministrador de Vacunas),overpricing,strong,4,0,active_or_captured:strong,0.8,2018,2022,True
+266933,UAB JORINIS,25,BIRMEX Vaccine Intermediary Extraction (Suministrador de Vacunas),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2022,True
+267422,ENTAFARMA UAB,25,BIRMEX Vaccine Intermediary Extraction (Suministrador de Vacunas),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2022,True
+266932,KLASNIC SA DE CV,25,BIRMEX Vaccine Intermediary Extraction (Suministrador de Vacunas),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2022,True
+261748,MULTICORPORACION BREXOT SA DE CV,26,Multicorporacion Brexot — COVID ISSSTE Medical Equipment Fraud (2020),procurement_fraud,direct,4,0,active_or_captured:direct,1.0,2020,2020,True
+236035,GRUPO LABORATORIOS IMPERIALES PHARMA SA DE CV,27,Grupo Laboratorios Imperiales Pharma — Vaccine Intermediary SSA/IMSS (2018),overpricing,direct,4,0,active_or_captured:direct,1.0,2017,2018,True
+132864,MOLINOS AZTECA  SA DE CV,125,Molinos Azteca DICONSA Food Program 100%DA Ring Leader,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2014,2025,True
+45184,"INDUSTRIAL PATRONA, S.A. DE C.V.",126,Industrial Patrona DICONSA 100%DA Food Distribution,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+19493,MARCAS NESTLE S.A. DE C.V.,127,Marcas Nestle DICONSA 99%DA Food Supply Capture,procurement_fraud,low,2,0,beneficiary_low_evidence:brand_monopoly_diconsa,0.1,2005,2022,True
+259061,CREATIVIDAD E INTEGRACION EN SERVICIOS MEDICOS SA DE CV,128,Creatividad e Integracion en Servicios Medicos IMSS Hemodialysis Capture,monopoly,high,3,0,active_or_captured:high,0.8,2020,2025,True
+44125,Impromed,129,Impromed IMSS-ISSSTE Laboratory Services 78%DA Capture,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+40862,"CENTRO DE DIAGNOSTICO ANGELES, S.A. DE C.V.",130,Centro de Diagnostico Angeles IMSS Private Diagnostics 63%DA,monopoly,medium,3,0,active_or_captured:medium,0.5,2009,2025,True
+45460,AEROVIAS DE MEXICO,131,Aerovias de Mexico (Aeromexico) Government Travel 96%DA Monopoly,monopoly,low,2,0,beneficiary_low_evidence:govt_travel_capture,0.1,2010,2025,True
+17455,"JET VAN CAR RENTAL, S.A. DE C.V.",132,Jet Van Car Rental Government Vehicle Fleet 71%DA Capture,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+148437,CESAR ALFONSO FUENTES AGUIRRE,133,Cesar Alfonso Fuentes Aguirre - Persona Fisica 1.73B IMSS 90%DA,ghost_company,high,3,0,active_or_captured:high,0.8,2015,2024,True
+266005,PV METALLS LLC,134,PV Metalls LLC Foreign Entity 1.66B Casa de Moneda 100%DA Metal Sheets,procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2022,True
+45722,DEMOS DESARROLLO DE MEDIOS SA DE CV,135,Demos Desarrollo de Medios (La Jornada) Government Advertising 100%DA,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+80346,"CUETARA DISTRIBUCION, S.A. DE C.V.",136,Cuetara Distribucion DICONSA 100%DA Food Ring Member,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+44997,"COMERCIALIZADORA PEPSICO MEXICO, S. DE R.L. DE C.V.",137,Comercializadora Pepsico Mexico DICONSA 100%DA Food Ring,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2019,True
+45050,ALEN DEL NORTE SA DE CV,138,Alen del Norte DICONSA 100%DA Cleaning Products 13945 Contracts,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+45117,"MINSA, S.A. DE C.V.",139,Minsa SA DICONSA 100%DA Corn Flour (Masa Harina) Capture,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2021,True
+61022,"COMERCIALIZADORA COLUMBIA, S.A. DE C.V.",140,Comercializadora Columbia DICONSA 98%DA 1.69B Capture,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2020,True
+136141,INTEGRA ARRENDA SA DE CV SOFOM ENR,141,Integra Arrenda SOFOM ENR - 3.6B DA Bienestar 2024 Vehicle Transport,procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2025,True
+200343,GRUPO DE SEGURIDAD PRIVADA PRYSE DE MEXICO SA DE CV,142,Grupo de Seguridad Privada Pryse IMSS Hospital Security 55%DA,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+44362,SI VALE MEXICO SA DE CV,143,Si Vale Mexico Meal Voucher Monopoly 62%DA - 15.92B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+17700,"ABALAT, S.A. DE C.V.",144,Abalat SA de CV Blood Bank Services National Health Institutes 68%DA,monopoly,high,3,0,active_or_captured:high,0.8,2005,2025,True
+1378,"INFRA, S.A. DE C.V.",145,Infra SA de CV Medical Oxygen Monopoly Trending 75%DA - 41.82B,monopoly,low,1,1,structural_market_monopoly:industrial_oxygen,0.0,2003,2025,True
+5259,"ELECTRONICA Y MEDICINA, S.A.",146,Electronica y Medicina SA IMSS Medical Equipment Maintenance 55%DA,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+5299,"GALIA TEXTIL, S.A. DE C.V.",147,Galia Textil SA de CV IMSS Medical Materials (Curacion) 60%DA,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+4041,"UNINET, S.A. DE C.V",148,Uninet SA de CV IMSS-CONAGUA Telecom Services 56%DA,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+38095,LABORATORIOS DE BIOLOGICOS Y REACTIVOS DE MEXICO S.A. DE C.V,149,BIRMEX Government Vaccine/Pharmacy Intermediary Monopoly 52%DA - 26.69B,monopoly,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+5319,"BAXTER, S.A. DE C.V.",150,Baxter SA de CV IMSS Peritoneal Dialysis Monopoly 75%DA - 28.11B,monopoly,low,1,1,structural_market_monopoly:peritoneal_dialysis,0.0,2002,2025,True
+126642,CURRIE & BROWN - MEXICO SA DE CV,151,Currie & Brown Mexico ISSSTE 25.8B Supervision Megacontract 2022,overpricing,high,3,0,active_or_captured:high,0.8,2015,2025,True
+1486,"PRAXAIR MÉXICO, S.DE R.L. DE C.V.",152,Praxair Mexico Medical Oxygen PEMEX Gas 67%DA - 17.82B,monopoly,low,1,1,structural_market_monopoly:industrial_gas,0.0,2002,2025,True
+473,"TELEFONOS DE MEXICO, S.A.B DE C.V.",153,TELMEX Government Telecom Monopoly 77%DA - 20.55B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+78178,BCONNECT SERVICES SA DE CV,154,BConnect Services ISSSTE Contact Center 4.35B Year-End DA 2014,procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2025,True
+127959,LUMO FINANCIERA DEL CENTRO SA DE CV SOFOM ENR,155,Lumo Financiera del Centro SOFOM ENR Vehicle Leasing Bienestar 71%DA - 4.35B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2016,2025,True
+17873,"GRUPO PAPELERO GABOR, S. A. DE C. V.",156,Grupo Papelero Gabor CONALITEG Paper Monopoly 92%DA - 4.94B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+124466,"ILAS MEXICO, S.A. DE C.V.",157,ILAS Mexico LICONSA Powdered Milk Monopoly 100%DA - 3.82B (2021),procurement_fraud,high,3,0,active_or_captured:high,0.8,2021,2022,True
+46571,CENTRO NACIONAL DE EVALUACION PARA LA EDUCACION SUPERIOR,158,CENEVAL Education Evaluation Monopoly 100%DA SEP/USICAMM - 3.98B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+73795,"PIGUDI GASTRONOMICO, S.A. DE C.V.",159,Pigudi Gastronomico IMSS Hospitality Transport 58%DA - 4.00B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2025,True
+43785,AXTEL S A B DE C V,160,Axtel SAB de CV PEMEX-SAT-SEP Telecom Capture 71%DA - 14.04B,monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+44923,TECNOPROGRAMACION HUMANA ESP EN SISTEMAS OPERATIVOS SA DE CV,161,Tecnoprogramacion Humana ISSSTE-FGR IT Managed Services 57%DA - 5.31B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+45219,MOLINERA DE MEXICO SA DE CV,162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+44985,FABRICA DE JABON LA CORONA SA DE CV,162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+45086,"GRUPO INDUSTRIAL MASECA, S.A.B. DE C.V.",162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+92401,AXA ASSISTANCE MEXICO SA DE CV,163,AXA Assistance Mexico NAFIN-BANJERCITO Health Insurance 70%DA - 4.15B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+35071,"QUALITY LABORAL SERVICES, S.A. DE C.V.",164,Quality Laboral Services COMEX PEMEX Staffing 67%DA - 2.59B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2008,2015,True
+124466,"ILAS MEXICO, S.A. DE C.V.",157,ILAS Mexico LICONSA Powdered Milk Monopoly 100%DA - 3.82B (2021),procurement_fraud,high,3,0,active_or_captured:high,0.8,2021,2022,True
+46571,CENTRO NACIONAL DE EVALUACION PARA LA EDUCACION SUPERIOR,158,CENEVAL Education Evaluation Monopoly 100%DA SEP/USICAMM - 3.98B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+73795,"PIGUDI GASTRONOMICO, S.A. DE C.V.",159,Pigudi Gastronomico IMSS Hospitality Transport 58%DA - 4.00B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2025,True
+43785,AXTEL S A B DE C V,160,Axtel SAB de CV PEMEX-SAT-SEP Telecom Capture 71%DA - 14.04B,monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+44923,TECNOPROGRAMACION HUMANA ESP EN SISTEMAS OPERATIVOS SA DE CV,161,Tecnoprogramacion Humana ISSSTE-FGR IT Managed Services 57%DA - 5.31B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+45219,MOLINERA DE MEXICO SA DE CV,162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+44985,FABRICA DE JABON LA CORONA SA DE CV,162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+45086,"GRUPO INDUSTRIAL MASECA, S.A.B. DE C.V.",162,DICONSA Ring Completion: Molinera 3.04B + La Corona 2.70B + Maseca 2.66B (8.40B total),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+92401,AXA ASSISTANCE MEXICO SA DE CV,163,AXA Assistance Mexico NAFIN-BANJERCITO Health Insurance 70%DA - 4.15B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+35071,"QUALITY LABORAL SERVICES, S.A. DE C.V.",164,Quality Laboral Services COMEX PEMEX Staffing 67%DA - 2.59B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2008,2015,True
+291533,ABASTECEDORA DE MEDICINAS Y MATERIALES SA DE CV,20,IMSS Overpriced Medicines — Ethomedical Network,overpricing,high,3,0,active_or_captured:high,0.8,2015,2024,True
+4325,"VITALMEX INTERNACIONAL, S.A. DE C.V.",165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+4715,CENTRUM PROMOTORA INTERNACIONAL S.A. DE C.V,165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+6038,"HEMOSER, S.A. DE C.V.",165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+31371,"SELECCIONES MEDICAS DEL CENTRO, S.A. DE C.V.",165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+4427,SELECCIONES MEDICAS S.A. DE C.V.,165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+35633,VITALMEX COMERCIAL S.A. DE C.V.,165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+28769,GRUPO VITALMEX S.A. DE C.V.,165,Vitalmex Group COFECE Medical Equipment Cartel ~101B MXN,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+235708,GAMS SOLUTIONS SA DE CV,166,GAMS Solutions IMSS 6.28B Direct Award Pharma Favoritism 88%DA - 8.21B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2025,True
+280146,ALMACENAJE Y DISTRIBUCION AVIOR SA DE CV,167,Almacenaje y Distribucion AVIOR BIRMEX Fuerza Mayor DA 3.98B - ASF Confirmed,procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2025,True
+2873,FARMACEUTICOS MAYPO S.A DE C.V,168,Farmaceuticos MAYPO BIRMEX Sub-Contract 88B 82%DA - ASF Documented,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+297273,KONKISTOLO SA DE CV,169,Alimentacion Bienestar Shell Network KONKISTOLO/FamilyDuck/Pelmu/Todologos ~1.8B,ghost_companies,high,3,0,active_or_captured:high,0.8,2022,2025,True
+293066,COMERCIALIZADORA FAMILYDUCK SA DE CV,169,Alimentacion Bienestar Shell Network KONKISTOLO/FamilyDuck/Pelmu/Todologos ~1.8B,ghost_companies,high,3,0,active_or_captured:high,0.8,2022,2025,True
+279096,GRUPO PELMU SA DE CV,169,Alimentacion Bienestar Shell Network KONKISTOLO/FamilyDuck/Pelmu/Todologos ~1.8B,ghost_companies,high,3,0,active_or_captured:high,0.8,2022,2025,True
+288385,TODOLOGOS.COM SA DE CV,169,Alimentacion Bienestar Shell Network KONKISTOLO/FamilyDuck/Pelmu/Todologos ~1.8B,ghost_companies,high,3,0,active_or_captured:high,0.8,2022,2025,True
+300207,POYAGO SA DE CV,170,POYAGO SA de CV IMSS Diabetes Drug 1000%+ Overpricing - MCCI 2024,overpricing,high,3,0,active_or_captured:high,0.8,2020,2025,True
+48,"OCEANOGRAFÍA, S.A. DE C.V.",7,Oceanografia PEMEX Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2008,2014,True
+8362,"OCEANOGRAFIA, S.A.",7,Oceanografia PEMEX Fraud,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2008,2014,True
+3846,SAVI DISTRIBUCIONES S.A. DE C.V.,171,Savi Distribuciones IMSS+ISSSTE Medical Supply 22%DA - 17.15B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+4636,"COMERCIALIZADORA DE PRODUCTOS INSTITUCIONALES, S.A. DE C.V.",172,Comercializadora Productos Institucionales IMSS+ISSSTE Medicines 27%DA - 23.41B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+48,"OCEANOGRAFÍA, S.A. DE C.V.",173,Oceanografia PEMEX Full Scale 22.46B — Banamex Fraud Expansion (50 contracts),procurement_fraud,high,3,0,active_or_captured:high,0.8,2000,2014,True
+8362,"OCEANOGRAFIA, S.A.",173,Oceanografia PEMEX Full Scale 22.46B — Banamex Fraud Expansion (50 contracts),procurement_fraud,high,3,0,active_or_captured:high,0.8,2000,2014,True
+36961,"OPERADORA CICSA, S.A DE C.V.",174,"CICSA FONATUR Tren Maya DA ""Extraordinary Works"" 3.35B + NAICM 84.83B — Carso Group",procurement_fraud,low,2,0,beneficiary_low_evidence:low,0.1,2016,2025,True
+678,IBM DE MEXICO COMERCIALIZACION Y SERVICIOS S DE RL DE CV,175,IBM de Mexico SAT/IMSS IT Lock-in Monopoly 83%DA - 9.3B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+164798,SOFTTEK SERVICIOS Y TECNOLOGIA SA DE CV,176,Softtek Servicios y Tecnologia IMSS IT Continuidad Operativa 100%DA - 1.08B,monopoly,high,3,0,active_or_captured:high,0.8,2018,2025,True
+112386,"MABE, S.A. DE C.V.",177,MABE SEDENA Electrodomesticos Social Program DA 100%DA - 1.33B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2020,2022,True
+4726,"FRESENIUS MEDICAL CARE DE MEXICO, S.A. DE C.V.",178,Fresenius Medical Care IMSS Hemodialysis Structural Monopoly 65%DA - 12.4B,monopoly,low,1,1,structural_market_monopoly:hemodialysis,0.0,2002,2025,True
+250829,OPERADORA DE COMEDORES SALUDABLES SA DE CV,179,Operadora de Comedores Saludables INAMI/SSPC Food Services 54%DA - 4.1B,monopoly,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+148586,BIORESEARCH DE MEXICO SA DE CV,180,Bioresearch de Mexico IMSS Pharmaceutical Distributor 50%DA - 7.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+266026,WHIRLPOOL MEXICO,177,MABE SEDENA Electrodomesticos Social Program DA 100%DA - 1.33B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2020,2022,True
+506,"FARMACOS ESPECIALIZADOS, S.A. DE C.V.",181,Farmacos Especializados CENSIDA HIV Drug Direct Award Monopoly 2.35B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2013,True
+57548,COMERCIALIZADORA MILENIO SA DE CV,182,Comercializadora Milenio SCT Concentrated Procurement 13.97B (2014-2015),procurement_fraud,low,2,0,beneficiary_low_evidence:low,0.1,2014,2015,True
+64,"EFECTIVALE,S.A. DE C.V.",183,Efectivale SA de CV Government Voucher Predecessor Monopoly 15.25B (2002-2010),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2010,True
+291538,AEROENLACES NACIONALES SA DE CV,184,Aeroenlaces Nacionales INAMI Deportation Air Charter Monopoly 100%DA - 635M,monopoly,medium,3,0,active_or_captured:medium,0.5,2023,2025,True
+52803,"SUMINISTROS DE MAIZ DEL MAYAB, S.A. DE C.V.",185,Suministros de Maiz del Mayab DICONSA Corn Supply 100%DA - 2.15B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+71174,GRAFICAS CORONA J.E. SA DE CV,186,Graficas Corona JE Government Printing Supply Ring 81%DA - 2.14B,monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+258829,ASEO PRIVADO INSTITUCIONAL SA DE CV,187,Aseo Privado Institucional ISSSTE/SSPC Cleaning Services 62%DA - 1.91B,overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+286306,EPSILON.NET SA DE CV,188,Epsilon.Net CENAGAS Gas Infrastructure Surveillance Single DA 2024 - 709M,overpricing,medium,3,0,active_or_captured:medium,0.5,2022,2025,True
+131147,GRUPO TELEVISA S A B,189,Grupo Televisa Government Advertising 100%DA Monopoly - 2.33B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+3723,"HEWLETT-PACKARD MEXICO, S. DE R.L. DE C.V.",190,Hewlett-Packard Mexico SAT IT Equipment/Services Lock-In 72%DA - 10.44B,monopoly,low,2,0,beneficiary_low_evidence:it_vendor_capture,0.1,2005,2025,True
+103424,MEDI ACCESS S A P I DE CV,191,Medi Access SAPI de CV SAE Opaque 100%DA Contracts 2013 - 1.88B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2013,True
+474,"SODEXO MOTIVATION SOLUTIONS MÉXICO, S.A. DE C.V.",192,Sodexo Motivation Solutions Govt Voucher Ecosystem 8.79B (2002-2024),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2024,True
+2214,"SERVICIOS INDUSTRIALES E INSTITUCIONALES, S.A. DE C.V.",193,Servicios Industriales e Institucionales IMSS Security Services 24-Year Monopoly 11.51B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+139,"GAMI INGENIERIA E INSTALACIONES, S.A. DE C.V.",194,GAMI Ingenieria Infrastructure DA Irregularities 14.2B (4.15B ASIPONA + 2B ISSSTE),procurement_fraud,low,2,0,beneficiary_low_evidence:low,0.1,2016,2025,True
+178862,"KOL-TOV, S.A. DE C.V.",195,Kol-Tov SA de CV Federal Police Hotel/Food Services 100%DA - 1.64B,monopoly,high,3,0,active_or_captured:high,0.8,2017,2025,True
+65004,"PLAZA INSURGENTES SUR, S.A. DE C.V.",196,Plaza Insurgentes Sur NAFIN Office Rental 100%DA - 2.33B,overpricing,medium,3,0,active_or_captured:medium,0.5,2008,2025,True
+49612,EDITORIAL SANTILLANA SA DE CV,197,Editorial Santillana CONALITEG Free Textbook Program 99%DA - 1.56B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+46920,COMERCIALIZADORA INTERNACIONAL DE COMPRESORES,198,Comercializadora Internacional de Compresores IMSS Medical Equipment Maintenance 73%DA - 2.31B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+22565,"SERTRES DEL NORTE, S.A. DE C.V.",199,Sertres del Norte SAT IT Infrastructure Lock-In 88%DA - 2.30B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2009,2025,True
+40514,"TURISMO Y CONVENCIONES, S.A. DE C.V.",200,Turismo y Convenciones SA de CV SRE/SHCP Hospitality Services 79%DA - 1.58B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+104776,ILS INTEGRADORA LOGISTICA EN SALUD SA DE CV,201,ILS Integradora Logistica en Salud INSABI/IMSS Pharma Logistics 77%DA - 1.66B,monopoly,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+224516,DISTRIBUIDORA INTERNACIONAL RALMO SA DE CV,202,Distribuidora Internacional Ralmo IMSS Cardiac Catheterization Subrogation 88%DA - 1.54B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+6222,PRODUCTOS HOSPITALARIOS S.A DE C.V.,203,Productos Hospitalarios IMSS Hospital Services DA Monopoly 12.42B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+4377,"DENTILAB, S.A. DE C.V.",204,Dentilab IMSS Dental Laboratory Services DA Monopoly 5.3B (4368 contracts),procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+19927,MEDIGROUP DEL PACIFICO S.A. DE C.V.,205,Medigroup del Pacifico IMSS Medicine DA Monopoly 3.66B (86%DA to IMSS),procurement_fraud,high,3,0,active_or_captured:high,0.8,2005,2025,True
+53331,TV AZTECA S A B DE C V,189,Grupo Televisa Government Advertising 100%DA Monopoly - 2.33B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+54854,FERNANDO AGISS BITAR,191,Medi Access SAPI de CV SAE Opaque 100%DA Contracts 2013 - 1.88B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2013,True
+6222,PRODUCTOS HOSPITALARIOS S.A DE C.V.,203,Productos Hospitalarios IMSS Hospital Services DA Monopoly 12.42B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+4377,"DENTILAB, S.A. DE C.V.",204,Dentilab IMSS Dental Laboratory Services DA Monopoly 5.3B (4368 contracts),procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+19927,MEDIGROUP DEL PACIFICO S.A. DE C.V.,205,Medigroup del Pacifico IMSS Medicine DA Monopoly 3.66B (86%DA to IMSS),procurement_fraud,high,3,0,active_or_captured:high,0.8,2005,2025,True
+198525,TAS TEVEL S. A. DE C. V.,206,Tas Tevel SA de CV Policia Federal Tactical Transport 100%DA Null Description - 923M,procurement_fraud,high,3,0,active_or_captured:high,0.8,2017,2019,True
+205012,"RAPISCAN SYSTEMS, INC.",207,Rapiscan Systems SAT/Customs Security Scanner Equipment/Maintenance 100%DA - 3.25B,monopoly,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+284117,RAPISCAN SYSTEMS MEXICO S DE RL DE CV,207,Rapiscan Systems SAT/Customs Security Scanner Equipment/Maintenance 100%DA - 3.25B,monopoly,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+128837,LEIDOS INC,207,Rapiscan Systems SAT/Customs Security Scanner Equipment/Maintenance 100%DA - 3.25B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2017,2025,True
+44252,FONTERRA MEXICO SA DE CV,208,Fonterra + Corporacion Alimentaria Penasanta LICONSA Powdered Milk 100%DA - 3.46B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+215287,"CORPORACIÓN ALIMENTARIA PEÑASANTA, S.A.",208,Fonterra + Corporacion Alimentaria Penasanta LICONSA Powdered Milk 100%DA - 3.46B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+149137,CORPORACION ALIMENTARIA PENASANTA,208,Fonterra + Corporacion Alimentaria Penasanta LICONSA Powdered Milk 100%DA - 3.46B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+305260,CAMARA NACIONAL DEL AUTOTRANSPORTE DE PASAJE Y TURISMO,209,Camara Nacional Autotransporte SEDENA Military Transport Intermediary 100%DA - 794M,procurement_fraud,high,3,0,active_or_captured:high,0.8,2024,2025,True
+46992,EDICIONES CASTILLO SA DE CV,210,Ediciones Castillo SA de CV CONALITEG Textbooks 100%DA - 1.15B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+54851,MEDIOS MASIVOS MEXICANOS SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+189766,GIM TELEVISION NACIONAL SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+45797,RADIORAMA SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+46961,NRM COMUNICACIONES SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+172817,IMAGEN RADIO COMERCIAL SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+51704,AGENCIA DIGITAL SA DE CV,212,Agencia Digital + Cinetika Producciones Govt Digital/Video Content 100%DA - 1.31B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+72966,CINETICA PRODUCCIONES SA DE CV,212,Agencia Digital + Cinetika Producciones Govt Digital/Video Content 100%DA - 1.31B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+199011,"VIVERES DE SAN RAFAEL, S.A. DE C.V.",213,Viveres San Rafael + Comercializadora Dulcinea APBSA/DICONSA Food Supply 100%DA - 1.61B,monopoly,medium,3,0,active_or_captured:medium,0.5,2020,2025,True
+288240,"COMERCIALIZADORA DULCINEA, S.A. DE C.V.",213,Viveres San Rafael + Comercializadora Dulcinea APBSA/DICONSA Food Supply 100%DA - 1.61B,monopoly,medium,3,0,active_or_captured:medium,0.5,2020,2025,True
+56421,PEGSA CONSTRUCCIONES S.A. DE C.V.,214,Pegsa Construcciones ASIPONA Dos Bocas DA Port Expansion 8.9B (2024-2025),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2024,2025,True
+16573,"INGENIERIA Y CONTROL DE PROYECTOS, S.A. DE C.V.",215,Ingenieria y Control de Proyectos ISSSTE Hospital DA 2.55B + IMSS 30%DA - 8.99B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2003,2024,True
+6842,"CASA PLARRE, S.A. DE C.V.",216,Casa Plarre IMSS+ISSSTE Anesthesia Gas Service DA Monopoly 46.5%DA - 6.18B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2011,2025,True
+61263,PROCESADORA Y DISTRIBUIDORA LOS CHANEQUES SA DE CV,217,Procesadora Los Chaneques ISSSTE+IMSS-Bienestar Hospital Food DA - 5.4B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2012,2025,True
+48645,ALIMENTOS LA V DEL MU SA DE CV,218,Alimentos La V del Mu: opaque hospital food supply (INCAN + Hospital General) 100%DA null descriptions - 580M,ghost_company,high,3,0,active_or_captured:high,0.8,2010,2017,True
+181415,"RICO GRUPO GASTRONÓMICO, S,A, DE C,V,",219,Rico Grupo Gastronomico: exclusive food services to INAMI (immigration) 100%DA null descriptions - 163M,institution_capture,high,3,0,active_or_captured:high,0.8,2016,2021,True
+252444,DIGITAL SIGNAGE SOLUTIONS SA DE CV,220,Digital Signage Solutions: IT company selling refrigerators/appliances to SEDENA for disaster victims (industry mismatch) - 247M,overpricing,medium,3,0,active_or_captured:medium,0.5,2019,2024,True
+197555,PROTACTIC SA DE CV,221,Protactic SA de CV: exclusive Navy uniforms and tactical equipment monopoly 100%DA no RFC - 750M,monopoly,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+35140,SOLUCIONES LOGISTICAS INTELIGENTES S.A. DE C.V.,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+214755,TEAM BUSINESS MANAGEMENT S DE RL DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+200201,TRANSPORTE DE CARGA GRUPO MYM SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+289071,"AGRO SERVICIOS A PRODUCTORES DEL VALLE, S.A DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+287011,"ALMACENES Y SERVICIOS SANTAROSA, S.A DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+246798,PROFESIONAL BRIGHT XRW SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+167478,"ESESPA, S.A. DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+73253,"MERCANTA, S.A. DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+286925,AGRICOLA TERRO CULTIVOS S.P.R DE R.I,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+197195,"NARGO SUMINISTROS INTERNACIONAL DEL NORTE, S.A. DE C.V.",222,Nargo Suministros Internacional del Norte: no-RFC intermediary LICONSA milk powder 100%DA - 149M,ghost_company,medium,3,0,active_or_captured:medium,0.5,2022,2022,True
+230022,INSTITUTO TECNOLOGICO SUPRIOR DE POZA RIDA,223,DICONSA university intermediary network: La Estafa Maestra variant using public tech institutes as pass-through for 1.4B,ghost_company,high,3,0,active_or_captured:high,0.8,2013,2020,True
+44035,FONDO DE FOMENTO Y DESARROLLO DE LA INVESTIGACION CIENTIFICA Y TECNOLOGICA DE LA UNIVERSIDAD AUTONOMA DEL ESTADO DE MEXICO,223,DICONSA university intermediary network: La Estafa Maestra variant using public tech institutes as pass-through for 1.4B,ghost_company,high,3,0,active_or_captured:high,0.8,2013,2020,True
+88639,INSTITUTO TECNOLOGICO SUPERIOR DE COSAMALOAPAN,223,DICONSA university intermediary network: La Estafa Maestra variant using public tech institutes as pass-through for 1.4B,ghost_company,high,3,0,active_or_captured:high,0.8,2013,2020,True
+45384,GRAFICOS DIGITALES AVANZADOS SA DE CV,224,Graficos Digitales Avanzados: exclusive printing supplies monopoly for Talleres Graficos de Mexico 99%DA no RFC - 225M,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+45357,MILENIO DIARIO SA DE CV,211,Medios Masivos Mexicanos + GIM TV Nacional + Radiorama Govt Advertising 100%DA - 2.77B,monopoly,high,3,0,active_or_captured:high,0.8,2010,2025,True
+131147,GRUPO TELEVISA S A B,225,Grupo Televisa SAB 100%DA Government Advertising 2.33B (2014-2021),procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2021,True
+42781,HISA FARMACEUTICA SA DE CV,226,Hisa Farmaceutica IMSS DA Monopoly 94.8%DA - 3.45B (Most Extreme IMSS Pharma Ring),procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+71174,GRAFICAS CORONA J.E. SA DE CV,227,Graficas Corona Government Printing DA 81.1%DA — Talleres Graficos+IEPSA - 2.14B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+6806,"ESTRATEC, S.A. DE C.V.",228,Estratec SA de CV ISSSTE Managed Document Services DA 66.7%DA - 3.14B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+44870,"LAND O´LAKES, INC.",229,LICONSA International Dairy Ecosystem: Land O Lakes + Philpot + Industrias Lacteas Asturianas 100%DA no RFC - 7.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+43454,PHILPOT DAIRY PRODUCTS LTD,229,LICONSA International Dairy Ecosystem: Land O Lakes + Philpot + Industrias Lacteas Asturianas 100%DA no RFC - 7.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+44871,"INDUSTRIAS LACTEAS ASTURIANAS, S.A.",229,LICONSA International Dairy Ecosystem: Land O Lakes + Philpot + Industrias Lacteas Asturianas 100%DA no RFC - 7.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+27258,"TRANSLIQUIDOS REFRIGERADOS LOPEZ, S.A. DE C.V.",230,LICONSA Transport Distribution Ecosystem: Transliquidos Lopez + Tranasa + EHL del Centro 100%DA - 5.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+21193,"TRANSPORTES TRANASA, S.A. DE C.V.",230,LICONSA Transport Distribution Ecosystem: Transliquidos Lopez + Tranasa + EHL del Centro 100%DA - 5.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+52258,TRANSPORTES EHL DEL CENTRO SA DE CV,230,LICONSA Transport Distribution Ecosystem: Transliquidos Lopez + Tranasa + EHL del Centro 100%DA - 5.2B,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+45541,TETRA PAK SA DE CV,231,LICONSA Packaging Ecosystem: Tetra Pak + Poly Rafia + Empaques Plasticos Industriales 100%DA no RFC - 2.5B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2002,2025,True
+71832,POLY RAFIA SA DE CV,231,LICONSA Packaging Ecosystem: Tetra Pak + Poly Rafia + Empaques Plasticos Industriales 100%DA no RFC - 2.5B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2002,2025,True
+9173,"EMPAQUES PLASTICOS INDUSTRIALES, S.A. DE C.V.",231,LICONSA Packaging Ecosystem: Tetra Pak + Poly Rafia + Empaques Plasticos Industriales 100%DA no RFC - 2.5B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2002,2025,True
+223449,INTERFOOD INC,232,LICONSA Agro Intermediaries: Interfood + Indamex + Lamex + Apis Food + Queseria Dos Lagunas 100%DA - 4.4B,ghost_company,high,3,0,active_or_captured:high,0.8,2010,2025,True
+290377,INDAMEX INDUSTRIALIZADORA DE ALIMENTOS MEXICANOS SA DE CV,232,LICONSA Agro Intermediaries: Interfood + Indamex + Lamex + Apis Food + Queseria Dos Lagunas 100%DA - 4.4B,ghost_company,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+297307,LAMEX AGRIALIMENTOS S DE RL DE CV,232,LICONSA Agro Intermediaries: Interfood + Indamex + Lamex + Apis Food + Queseria Dos Lagunas 100%DA - 4.4B,ghost_company,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+124418,APIS FOOD BV,232,LICONSA Agro Intermediaries: Interfood + Indamex + Lamex + Apis Food + Queseria Dos Lagunas 100%DA - 4.4B,ghost_company,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+310464,QUESERIA DOS LAGUNAS SA DE CV,232,LICONSA Agro Intermediaries: Interfood + Indamex + Lamex + Apis Food + Queseria Dos Lagunas 100%DA - 4.4B,ghost_company,low,2,0,beneficiary_low_evidence:low,0.1,2010,2025,True
+7252,ALFONSO NAVA BURGOS,233,"LICONSA individual/cooperative vendors: Alfonso Nava Burgos (person, 678M) + Union Logistica Jalisco + Grupo Turbofin - 1.8B",ghost_company,high,3,0,active_or_captured:high,0.8,2002,2025,True
+263579,GRUPO TURBOFIN S A P I DE CV,233,"LICONSA individual/cooperative vendors: Alfonso Nava Burgos (person, 678M) + Union Logistica Jalisco + Grupo Turbofin - 1.8B",ghost_company,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+189997,UNION LOGISTICA DE JALISCO POBA S DE RL DE CV,233,"LICONSA individual/cooperative vendors: Alfonso Nava Burgos (person, 678M) + Union Logistica Jalisco + Grupo Turbofin - 1.8B",ghost_company,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+258597,SPIMED SA DE CV,234,Spimed + Comevo: large IMSS medical supply contracts with null descriptions 100%DA - 470M,procurement_fraud,high,3,0,active_or_captured:high,0.8,2021,2024,True
+305351,COMEVO SA DE CV,234,Spimed + Comevo: large IMSS medical supply contracts with null descriptions 100%DA - 470M,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2021,2024,True
+67322,"CAR INFORMATION SYSTEM, S.A. DE C.V.",235,Car Information System: exclusive vehicle history lookup monopoly for BANJERCITO 100%DA - 2.34B,monopoly,medium,3,0,active_or_captured:medium,0.5,2011,2024,True
+267977,PNPDMI SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+262050,"SOLUCIONES INTEGRALES AL TRANSPORTE, LOGISTICA, OPERACIONES Y MANTENIMIENTO SA DE CV",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+251510,MICRO CREDIT SAPI DE CV SOFOM ENR,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+267480,TRANSPORTES SUVI SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+285212,Palmicultores De San Marcos S.P.R. DE R.L.,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+239702,FORZA ARRENDADORA AUTOMOTRIZ SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+242977,"FRUVERLOZ, S.A. DE C.V.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+198116,ABACOMEX ABASTECEDORA COMERCIAL MEXIQUENSE SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+198285,AGRO TECNOLOGIAS DE JALISCO S DE PR DE RL,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+155246,"AGROASEMEX, S.A.",5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+4483,"ROGERI, S.A. DE C.V.",236,Rogeri SA de CV IMSS Medical Supply DA Monopoly 65.8%DA - 2.59B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+15880,"CASA MARZAM, S.A. DE C.V.",237,Casa Marzam SA de CV IMSS+ISSSTE+PEMEX Pharmaceutical DA Monopoly 59.7%DA - 3.03B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2003,2021,True
+44926,LABORATORIOS VANQUISH,238,Laboratorios Vanquish IMSS Lab Reagents DA Monopoly 92.8%DA - 3.03B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2011,2025,True
+4838,COMERCIALIZADORA DE REACTIVOS PARA LABORATORIOS  Y MATERIALES PARA HOSPITALES  S.A DE C.V,239,Comercializadora de Reactivos para Laboratorio IMSS Lab DA 85.6%DA - 3.08B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+246144,FARMACEUTICA HISPANOAMERICANA SA DE CV,240,Farmaceutica Hispanoamericana IMSS+ISSSTE Pharmaceutical DA 68.2%DA - 4.90B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+244273,ALTERNAVIDA SA DE CV,241,Alternavida SA de CV IMSS Pharmaceutical DA Ring 59.7%DA - 3.55B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+48374,INDALJIM SA DE CV,242,Indaljim SA de CV IMSS Hospital Laundry/Textiles DA Ring 84.1%DA - 1.88B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2003,2025,True
+125381,BIONOVA LABORATORIOS SA DE CV,243,Bionova Laboratorios SA de CV IMSS Lab Reagents DA Ring 88.9%DA - 1.98B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2011,2025,True
+13186,"RELIABLE DE MEXICO, S.A. DE C.V.",244,Reliable de Mexico SA de CV IMSS Medical Supply DA Ring 54.5%DA - 2.60B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+57263,INFOCREDIT,245,Infocredit IMSS Call Center Services DA Monopoly 78.9%DA - 3.29B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2011,2025,True
+20949,CASANOVA RENT VOLKS S.A. DE C.V.,246,Casanova Rent Volks SA de CV Fiscalia+PGR Vehicle Transport DA Monopoly - 3.15B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+196120,HIDALGO VIGUERAS CONSULTORES SA DE CV,247,Hidalgo Vigueras Consultores SA de CV IMSS Construction/Engineering DA 68.8%DA - 4.26B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+205212,SAVARE MEDIKA SA DE CV,248,Savare Medika ISSSTE: 930M CT scanner + 598M MRI unit via 100%DA (10-20x market price overpricing) - 1.95B,overpricing,high,3,0,active_or_captured:high,0.8,2018,2024,True
+2932,"COMPAÑIA EDITORIAL ULTRA, S.A. DE C.V.",249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+51438,CORPORACION EN SERVICIOS INTEGRALES DE ASESORIA PROFESIONAL SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+18533,"REPRODUCCIONES FOTOMECANICAS, S.A. DE C.V.",249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+253650,IMPRECORME SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+85006,SM DE EDICIONES SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+30001,"LITOGRAFIA MAGNO GRAF, S.A. DE C.V.",249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+31832,IMPRESORA Y ENCUADERNADORA PROGRESO S.A DE C.V.,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+47458,INFAGON WEB SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+2940,TRANSPORTES ESDO S.A. DE C.V.,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+4312,EDITORIAL TRILLAS S.A. DE C.V.,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2002,2025,True
+150457,LYON AG SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+30000,MORGAN EXPRESS S.A. DE C.V.,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+2928,"SERVICIOS PROFESIONALES DE IMPRESION, S.A. DE C.V.",249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+63922,PEARSON EDUCACION DE MEXICO SA DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2002,2025,True
+2945,"IMPRESORA Y EDITORA XALCO, S.A. DE C.V.",249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+48092,PRINT LSC COMMUNICATIONS S DE RL DE CV,249,CONALITEG printing ecosystem: 16 publishers/printers with no RFC in 12B+ ecosystem — monopoly ring for national textbook procurement,monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+101951,DISTRIBUIDORA QUIMICA Y HOSPITALARIA GAP SA DE CV,250,Distribuidora Quimica y Hospitalaria GAP: IMSS 1.13B blood bank service contract + DA medical supplies - 1.33B,overpricing,medium,3,0,active_or_captured:medium,0.5,2019,2022,True
+125381,BIONOVA LABORATORIOS SA DE CV,251,Bionova Laboratorios: 1.98B in null-description IMSS/ISSSTE contracts 2015 - competitive but opaque,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2015,2015,True
+226820,COBRO ELECTRONICO DE PEAJE SA DE CV,252,Cobro Electronico de Peaje SA de CV: CAPUFE electronic toll system monopoly 50%DA - 1.87B,monopoly,medium,3,0,active_or_captured:medium,0.5,2015,2022,True
+13632,IMPROMED SA DE CV,253,Impromed + Medalfa: IMSS medical equipment distributors with 50%+ DA and 1.4B + 1.8B - 3.4B,overpricing,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+231818,MEDALFA SA DE CV,253,Impromed + Medalfa: IMSS medical equipment distributors with 50%+ DA and 1.4B + 1.8B - 3.4B,overpricing,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+249276,CHIESI MEXICO SA DE CV,254,Chiesi + Asofarma + Beckman: pharmaceutical/lab consolidated procurement with high DA - 5.6B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2010,2025,True
+70647,"ASOFARMA DE MEXICO, S.A DE C.V.",254,Chiesi + Asofarma + Beckman: pharmaceutical/lab consolidated procurement with high DA - 5.6B,monopoly,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+259128,BECKMAN LABORATORIES DE MEXICO SA DE CV,254,Chiesi + Asofarma + Beckman: pharmaceutical/lab consolidated procurement with high DA - 5.6B,monopoly,low,2,0,potential_structural_monopoly:monopoly,0.1,2010,2025,True
+31377,"EQUIMED DEL CENTRO, S.A. DE C.V.",255,Equimed del Centro SA de CV IMSS Pharmaceutical DA Ring 69.7%DA - 6.03B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2007,2015,True
+101951,DISTRIBUIDORA QUIMICA Y HOSPITALARIA GAP SA DE CV,256,Distribuidora Quimica y Hospitalaria GAP IMSS Lab Chemicals DA 72.2%DA - 1.33B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2020,True
+149783,"LABORATORIOS SOLFRAN, S.A.",257,Laboratorios Solfran SA IMSS/ISSSTE Consolidated Medicines DA Ring 55.6%DA - 2.77B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2025,True
+80366,METRO NET,258,Metro Net Federal IT Data Center DA Monopoly 100%DA - 2.65B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2012,2021,True
+4421,"MEDICAL DIMEGAR, S.A DE C.V.",259,Medical Dimegar SA de CV IMSS Medical Consumables/Devices DA Ring 54%DA - 2.30B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+205212,SAVARE MEDIKA SA DE CV,260,Savare Medika SA de CV ISSSTE Medical Imaging DA Ring 66.7%DA - 1.95B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+26454,DISTRIBUIDORA DE EQUIPO MEDICO E INDUSTRIAL DE MEXICO SA DE CV,261,Distribuidora Equipo Medico Industrial Mexico - Consumibles IMSS DA COVID,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2020,True
+82544,PROVEEDORA DE SERVICIOS EMPRESARIALES Y SOLUCIONES OPTIMAS SA DE CV,262,Proveedora Servicios Empresariales - Salud Financiero NAFINSA BANCOMEXT DA,institution_capture,medium,3,0,active_or_captured:medium,0.5,2020,2025,True
+308216,LAMAP SA DE CV,263,LAMAP + ARMOT - Nuevas Empresas Shell Limpieza Hospitalaria IMSS 2021-2022,ghost_company,high,3,0,active_or_captured:high,0.8,2023,2025,True
+291667,ARMOT SEGURIDAD PRIVADA Y SERVICIOS INSTITUCIONALES SA DE CV,263,LAMAP + ARMOT - Nuevas Empresas Shell Limpieza Hospitalaria IMSS 2021-2022,ghost_company,high,3,0,active_or_captured:high,0.8,2023,2025,True
+259308,ASIMEX DEL CARIBE SA DE CV,264,Tren Maya Rieles FONATUR - Switch LP a DA 2022 (Asimex del Caribe + Sumitomo),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2020,2022,True
+258808,SUMITOMO CORPORATION DE MEXICO,264,Tren Maya Rieles FONATUR - Switch LP a DA 2022 (Asimex del Caribe + Sumitomo),procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2020,2022,True
+288609,GX2 DESARROLLOS SA DE CV,265,GX2 Desarrollos Sinaloa - Planta Potabilizadora 5.89B empresa nueva 2020,overpricing,medium,3,0,active_or_captured:medium,0.5,2022,2022,True
+305483,COMERCIALIZADORA DE SEGURIDAD PRIVADA CON RESPONSABILIDAD SOCIAL,266,Comercializadora Seguridad Privada - Monopolio Vigilancia CONAGUA OCLSP 4.34B,institution_capture,medium,3,0,active_or_captured:medium,0.5,2025,2025,True
+136648,MANEJO INTEGRAL EN CONSULTA EMPRESARIAL SA DE CV,267,Manejo Integral en Consulta Empresarial - COMESA/PEMEX Servicios Especializados 6.3B sin RFC,procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2014,True
+291507,ARMOUR KING SA DE CV,268,Armour King SA de CV - Empresa Nueva 2019 Captura Seguridad AICM+ISSSTE 2.1B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2023,2025,True
+100419,"COLEGIO PARTICULAR KELLER, A.C.",269,Colegio Particular Keller AC - ISSSTE Estancias Bienestar Infantil 3.14B sin RFC,overpricing,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+14066,"ANALISIS CLINICOS DE LEON, S.A. DE C.V.",270,Analisis Clinicos de Leon + Lab RAAM Sahuayo - Laboratorios Regionales Capturan IMSS/ISSSTE 3.3B,overpricing,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+245450,LABORATORIO RAAM DE SAHUAYO,270,Analisis Clinicos de Leon + Lab RAAM Sahuayo - Laboratorios Regionales Capturan IMSS/ISSSTE 3.3B,overpricing,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+6285,"APLICACIONES MEDICAS INTEGRALES, S.A. DE C.V.",271,Aplicaciones Medicas Integrales — Monopolio Servicio Integral Anestesia IMSS/ISSSTE (11B),institution_capture,medium,3,0,active_or_captured:medium,0.5,2005,2023,True
+253837,CELGENE LOGISTICS SARL,272,Celgene Logistics SARL — Entidad Offshore Luxemburgo Suministro Medicamentos IMSS (2B),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2020,2022,True
+119824,"NIZA ÑUDEE ASOCIADOS, S.A. DE C.V",273,Niza Nudee Asociados — Refacciones Equipo Medico IMSS 2B Sin RFC,overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2013,2018,True
+45114,MEDAM S DE RL DE CV,274,Medam S de RL de CV IMSS Biomedical Waste (RPBI) DA Ring 62.3%DA - 1.67B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+173854,VANTAGE SERVICIOS INTEGRALES DE SALUD SA DE CV,275,Vantage Servicios Integrales de Salud INSABI Pharma Logistics DA 95.7%DA - 2.35B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2016,2025,True
+41094,FOREFRONT MEDICA MEXICO S.A. DE C.V.,276,Forefront Medica Mexico SA de CV Multi-Institution Neurosurgery DA 80.1%DA - 1.08B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2009,2025,True
+84409,CODEQUIM SA DE CV,277,Codequim SA de CV CENAPRECE Public Health Insecticide DA Monopoly 100%DA - 1.07B,procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+13414,KBN MEDICAL S.A. DE C.V.,278,KBN Medical SA de CV ISSSTE Orthopedic Implants DA - 1.26B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+40859,SOLOMED S.A. DE C.V.,279,Solomed SA de CV SSISSSTE/IMSS Consolidated Pharma Supply Emerging Capture - 2.33B,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2009,2025,True
+256792,ALTUM TECNOLOGIC SA DE CV,280,Altum Tecnologic IT DA Monopoly at AEFCM,IT monopoly,high,3,0,active_or_captured:high,0.8,2020,2025,True
+43734,"GOTT UND GLÜCK, S.A. DE C.V.",281,Gott und Gluck Cleaning Services DA Ring,Bid rigging,high,3,0,active_or_captured:high,0.8,2016,2024,True
+44822,OFI STORE SA DE CV,282,Ofi Store IT Managed Services DA Monopoly,IT monopoly,medium,3,0,active_or_captured:medium,0.5,2011,2025,True
+57242,TECNO ALTA DISTRIBUCION SA DE CV,283,Tecno Alta Vehicle Transport DA Monopoly at INAH,Procurement fraud,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+218413,SCONTINUIDAD LATAM SA DE CV,284,SContinuidad LATAM Data Center DA at IPICYT,IT monopoly,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+19883,SOLUCIONES TECNOLOGICAS ESPECIALIZADAS S.A. DE C.V.,285,Soluciones Tecnologicas Especializadas IT DA at Welfare Agencies,IT monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+152690,GRUPO ESTUDIAT SA DE CV,286,Grupo Estudiat Office/School Supplies DA,Procurement fraud,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+33177,ARRENDOMÒVIL DE MÈXICO SA DE CV,287,Arrenmovil de Mexico - Vehicle Rental DA Monopoly Across Federal Agencies,monopoly,medium,3,0,active_or_captured:medium,0.5,2007,2020,True
+33716,DLG INDUSTRIAS SA DE CV,288,DLG Industrias - Ferrocarril del Istmo Railroad Supply 100% DA Capture,institution_capture,medium,3,0,active_or_captured:medium,0.5,2014,2025,True
+12036,COAHUILA INDUSTRIAL MINERA S.A DE C.V.,289,CFE Carbón Coahuila — Suministro Monopolio Sin RFC (COAHUILA INDUSTRIAL + CIC CORPORATIVO),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2003,2013,True
+114024,CIC CORPORATIVO INDUSTRIAL COAHUILA SA DE CV,289,CFE Carbón Coahuila — Suministro Monopolio Sin RFC (COAHUILA INDUSTRIAL + CIC CORPORATIVO),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2003,2013,True
+46663,"INTEGRACION DE SOLUCIONES ELECTRICAS Y DE MANTENIMIENTO, INTELICAM SA DE CV",290,INTELICAM — CFE Red Eléctrica 14.5 km a 251M MXN/km (4.87B sobreprecio),overpricing,medium,3,0,active_or_captured:medium,0.5,2016,2016,True
+56666,CORPORATIVO GIORMAR DE MEXICO,291,Corporativo Giormar — Implantes Ortopédicos ISSSTE/SEDENA Sin RFC (3.95B sobreprecio),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2022,True
+12036,COAHUILA INDUSTRIAL MINERA S.A DE C.V.,289,CFE Carbón Coahuila — Suministro Monopolio Sin RFC (COAHUILA INDUSTRIAL + CIC CORPORATIVO),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2003,2013,True
+114024,CIC CORPORATIVO INDUSTRIAL COAHUILA SA DE CV,289,CFE Carbón Coahuila — Suministro Monopolio Sin RFC (COAHUILA INDUSTRIAL + CIC CORPORATIVO),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2003,2013,True
+46663,"INTEGRACION DE SOLUCIONES ELECTRICAS Y DE MANTENIMIENTO, INTELICAM SA DE CV",290,INTELICAM — CFE Red Eléctrica 14.5 km a 251M MXN/km (4.87B sobreprecio),overpricing,medium,3,0,active_or_captured:medium,0.5,2016,2016,True
+56666,CORPORATIVO GIORMAR DE MEXICO,291,Corporativo Giormar — Implantes Ortopédicos ISSSTE/SEDENA Sin RFC (3.95B sobreprecio),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2022,True
+6285,"APLICACIONES MEDICAS INTEGRALES, S.A. DE C.V.",271,Aplicaciones Medicas Integrales — Monopolio Servicio Integral Anestesia IMSS/ISSSTE (11B),institution_capture,medium,3,0,active_or_captured:medium,0.5,2005,2023,True
+253837,CELGENE LOGISTICS SARL,272,Celgene Logistics SARL — Entidad Offshore Luxemburgo Suministro Medicamentos IMSS (2B),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2020,2022,True
+119824,"NIZA ÑUDEE ASOCIADOS, S.A. DE C.V",273,Niza Nudee Asociados — Refacciones Equipo Medico IMSS 2B Sin RFC,overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2013,2018,True
+40859,SOLOMED S.A. DE C.V.,292,Solomed — Concentración Sistémica de Suministros Médicos IMSS/ISSSTE (2.33B MXN),concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2009,2025,True
+13414,KBN MEDICAL S.A. DE C.V.,293,KBN Medical — Monopolio de Osteosíntesis y Endoprótesis ISSSTE (1.26B MXN),institution_capture,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+108273,SOLUGLOB IKON SA DE CV,294,Soluglob Ikon — Servicio Médico Integral Capitado Multisector (2.35B MXN),concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2013,2025,True
+103353,TALLER ELECTRICO GONZALEZ SA DE CV,295,"Taller Eléctrico González — Monopolio Mantenimiento Electromecánico IMSS Nuevo León (1.01B, 82.6% DA)",institution_capture,high,3,0,active_or_captured:high,0.8,,,True
+178705,3GH MULTISERVICIOS  S.A. DE C.V.,296,"3GH Multiservicios — Servicios Electromecánicos IMSS Nuevo León (1.03B, 53.8% DA)",concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,,,True
+103197,MEXICO MONTECITOS SA DE CV,297,"México Montecitos — Proveedor Balístico SEDENA (1.37B, 60% DA, sin RFC)",institution_capture,medium,3,0,active_or_captured:medium,0.5,,,True
+40859,SOLOMED S.A. DE C.V.,292,Solomed — Concentración Sistémica de Suministros Médicos IMSS/ISSSTE (2.33B MXN),concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2009,2025,True
+185928,DESARROLLO DE INFRAESTRUCTURA I.C.G. SA DE CV,298,"ICG Infraestructura — Adjudicaciones Directas en Obra Publica sin RFC (1.03B, 2015-2024)",institution_capture,medium,3,0,active_or_captured:medium,0.5,2015,2024,True
+116886,REISCO OPERADORA DE SERVICIOS SA DE CV,299,"REISCO Operadora — Servicios Limpieza 32.6% Single-Bid SCT/SEP/IPN (1.18B, 2013-2018)",bid_rigging,medium,3,0,active_or_captured:medium,0.5,2013,2018,True
+124162,CONSORCIO CONTINENTAL DE INFRAESTRUCTURA,300,"Consorcio Continental — 100% Single-Bid en Licitaciones SIOP Michoacan (1.13B, 2015-2025)",bid_rigging,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+13597,"CENTRO DE ASISTENCIA RENAL, S.A. DE C.V.",301,Centro de Asistencia Renal — Monopolio Hemodiálisis Subrogada IMSS/SEDENA 5.90B 2003-2025,institution_capture,medium,3,0,active_or_captured:medium,0.5,,,True
+31487,"PRO INMUNE DE MEXICO, S.A. DE C.V.",302,Pro Inmune de México — Distribuidor Farmacéutico IMSS/ISSSTE 2.33B 2007-2012,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,,,True
+35772,"COSTO POR PROCEDIMIENTO, S.A. DE C.V.",303,Costo por Procedimiento — Intermediario Endoscopia ISSSTE Sin RFC 0.83B 2008-2022,overpricing,high,3,0,active_or_captured:high,0.8,,,True
+146480,GERARDO NAVA SAN MARTIN,304,Gerardo Nava San Martín — Persona Física 4.816B Pavimento Chalma VER (posible error de datos),overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2014,2020,True
+14127,MAURICIO SOTELO SANTILLAN,305,"Mauricio Sotelo Santillán — Persona Física 875M Adecuación Consultorios IMSS (sin RFC, 2010)",overpricing,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+107564,"AIRELECSA, SA DE CV",306,Airelecsa SA de CV — Captura Institucional IMSS HVAC 814M via Licitacion Publica 2021 (sin RFC),institution_capture,medium,3,0,active_or_captured:medium,0.5,2013,2024,True
+20375,"GRIMANN, S.A. DE C.V.",307,Grimann — Distribuidor Medicamento Patente IMSS/ISSSTE Sin RFC 0.57B 2005-2025,concentrated_monopoly,low,2,0,potential_structural_monopoly:concentrated_monopoly,0.1,2005,2025,True
+4642,"DLP MEDICAL, S.A. DE C.V.",308,DLP Medical — Material Curacion/Radiologico IMSS/ISSSTE 1.29B Sin RFC 2002-2007,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2007,True
+19872,PRODIFARMA PROMCIONES Y DISTRIBUCIONES FARMACEUTICAS   S.A. DE C.V.,309,Prodifarma — Servicio Integral Diabetes IMSS Sin RFC 0.58B 2005-2009,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2009,True
+5724,LANDSTEINER SCIENTIFIC S.A. DE C.V.,310,Landsteiner Scientific — Monopolio ARV/Diagnóstico IMSS Sin RFC 6.66B MXN,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+190131,ALVARTIS PHARMA SA DE CV,311,Alvartis Pharma — Crecimiento Anómalo DA 41% 4.62B MXN Sin RFC 2016-2025,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2016,2025,True
+106586,"MEDI ACCESS SEGUROS DE SALUD, S.A. DE C.V.",312,Medi Access Seguros de Salud — ISES Intermediario Médico 3.11B Sin RFC 2013-2018,single_use_intermediary,low,2,0,beneficiary_low_evidence:low,0.1,2013,2018,True
+5724,LANDSTEINER SCIENTIFIC S.A. DE C.V.,310,Landsteiner Scientific — Monopolio ARV/Diagnóstico IMSS Sin RFC 6.66B MXN,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+54881,ESMA INSTALACIONES SA DE CV,313,ESMA Instalaciones Captura CAPUFE/SCT Carreteras 7.72B Sin RFC 2010-2025,institution_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+6602,"CONSTRUCTORA GERMER, S.A. DE C.V.",314,Constructora Germer Monopolio IMSS Obras 6.80B Sin RFC 2002-2025,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+13415,"TELECOMUNICACIÓN Y EQUIPOS, S. A. DE C.V.",315,Telecomunicacion y Equipos Equipo Medico IMSS/ISSSTE DA 39.4pct 4.89B Sin RFC 2003-2025,institution_capture,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+1545,FARMACOS ESPECILIAZDOS S.A. DE C.V.,316,Farmacos Especializados - Operador Cadena Suministro 7.04B Sin RFC ISSSTE/IMSS 2002-2010,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,2002,2010,True
+594,"ASESORIA MEDICA RADIOLOGICA Y FARMACEUTICA, SA DE CV",317,Asesoria Medica Radiologica y Farmaceutica - Proveedor Cautivo Servicios Medicos Loteria/INDEP 3.40B,institution_capture,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+20073,"OCTAPHARMA, S. A. DE C. V.",318,Octapharma - Hemoderivados/Plasma Adjudicacion Directa IMSS/ISSSTE 4.00B Sin RFC 2005-2025,concentrated_monopoly,low,2,0,potential_structural_monopoly:concentrated_monopoly,0.1,2005,2025,True
+54881,ESMA INSTALACIONES SA DE CV,319,ESMA Instalaciones — Rehabilitación Carreteras CAPUFE/SCT 7.72B Sin RFC 2010-2025,institution_capture,medium,3,0,active_or_captured:medium,0.5,,,True
+6602,"CONSTRUCTORA GERMER, S.A. DE C.V.",320,Constructora Germer — Construcción/Rehabilitación IMSS 6.80B Sin RFC (contrato 4.57B sospechoso),overpricing,medium,3,0,active_or_captured:medium,0.5,,,True
+13415,"TELECOMUNICACIÓN Y EQUIPOS, S. A. DE C.V.",321,Telecomunicación y Equipos — Equipo Médico/Mantenimiento IMSS/ISSSTE 4.89B DA 39.4% Sin RFC,institution_capture,medium,3,0,active_or_captured:medium,0.5,,,True
+149312,MARIA PATRICIA PEREZ ZEPEDA,322,Persona Física Pérez Zepeda — Contrato Anómalo de Abarrotes INC,overpricing,medium,3,0,active_or_captured:medium,0.5,,,True
+200238,SILODISA SERVICIO INTEGRAL DE LOGISTICA Y DISTRIBUCION S A P I DE CV,323,Silodisa SAPI — Monopolio de Cadena de Suministro Farmacéutico ISSSTE,concentrated_monopoly,medium,3,0,active_or_captured:medium,0.5,,,True
+14312,"DISTRIBUIDORA MEDICA LUNA, S.A. DE C.V.",324,Distribuidora Médica Luna — Contrato Anómalo Material de Curación ISSSTE,overpricing,medium,3,0,active_or_captured:medium,0.5,,,True
+84232,INGENIERIA Y SERVICIOS ADM SA DE CV,325,Ingeniería y Servicios ADM — Contratos Multi-Sector CFE/SCT/CAPUFE,concentrated_monopoly,low,2,0,potential_structural_monopoly:concentrated_monopoly,0.1,,,True
+24384,DRAGADOS Y URBANIZACIONES SIGLO 21 S.A. DE C.V.,330,Dragados y Urbanizaciones Siglo 21 - Captura Institucional CONAGUA,institution_capture,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2006,2025,True
+13583,"GRUPO OPERATIVO INTERNACIONAL EN SEGURIDAD PRIVADA, S.A. DE C.V.",331,Grupo Operativo Internacional - Monopolio Vigilancia ISSSTE,concentrated_monopoly,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2003,2015,True
+4699,LAVANDERIA DE HOSPITALES Y SANATORIOS S.A. DE C.V.,332,Lavanderia de Hospitales y Sanatorios - Monopolio Lavanderia Sector Salud,concentrated_monopoly,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2002,2025,True
+34768,GVARGAS COMERCIALIZADORA SA DE CV,333,GVARGAS Comercializadora - Intermediario Equipo Seguridad Pemex,single_use_intermediary,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2008,2019,True
+96263,DENTILAB,334,Dentilab IMSS Dental Supply Concentration,concentrated_monopoly,statistical,2,0,beneficiary_low_evidence:statistical,0.1,,,True
+13908,"LABORATORIOS DE BIOLOGICOS Y REACTIVOS DE MEXICO, S.A. DE C.",335,BIRMEX Laboratorios de Biologicos y Reactivos,concentrated_monopoly,statistical,2,0,beneficiary_low_evidence:statistical,0.1,,,True
+42876,EQUIMED,336,Equimed IMSS Pharmaceutical Concentration,concentrated_monopoly,statistical,2,0,beneficiary_low_evidence:statistical,0.1,,,True
+25847,MEDICAMENTOS SELECTIVOS S.A DE C.V,337,Medicamentos Selectivos Cross-Sector Anomaly,overpricing,statistical,2,0,beneficiary_low_evidence:statistical,0.1,,,True
+54393,URBANISSA SA DE CV,338,Mantenimiento Express Marítimo — Anomalía de Datos PEMEX,data_anomaly,strong,4,0,active_or_captured:strong,0.8,,,True
+1196,LA PENINSULAR COMPAÑIA CONSTRUCTORA S.A. DE C.V.,339,Constructora Arhnos — Anomalía de Datos Infraestructura NL,data_anomaly,weak,2,0,beneficiary_low_evidence:weak,0.1,,,True
+30845,"PROMOTORA Y DESARROLLADORA MEXICANA, S.A. DE C.V.",340,DMGP Servicios de Integridad — Anomalía de Datos PEMEX,data_anomaly,weak,2,0,beneficiary_low_evidence:weak,0.1,,,True
+5985,"SERVICIO DE TRANSPORTE, S.A. DE C.V.",341,Consultores Prof. en Seguridad — Anomalía de Datos Parque Fundidora,data_anomaly,strong,4,0,active_or_captured:strong,0.8,,,True
+8392,"INDUSTRIAL PERFORADORA DE CAMPECHE, S.A. DE C.V.",346,Industrial Perforadora de Campeche — Concentración PEMEX,concentration,low,2,0,beneficiary_low_evidence:low,0.1,,,True
+27502,NOBLE CONTRACTING SARL,347,Noble Contracting SARL — Concentración PEMEX Offshore,concentration,low,2,0,beneficiary_low_evidence:low,0.1,,,True
+18406,"COBRA INSTALACIONES MÉXICO, S.A. DE C.V.",348,Cobra Instalaciones México — Concentración Energía/Infraestructura,concentration,low,2,0,beneficiary_low_evidence:low,0.1,,,True
+28815,"CAF MEXICO, S.A. DE C.V.",349,CAF México — Concentración Transporte Ferroviario,concentration,low,2,0,beneficiary_low_evidence:low,0.1,,,True
+194723,LABORATORIOS SAN ANGEL SA,342,URBANISSA SCT Chihuahua — Error de Datos,data_error,high,3,0,active_or_captured:high,0.8,,,True
+198864,ZURICH PHARMA SA DE CV,343,La Peninsular Mega-Infraestructura CONAGUA/SCT,concentrated_infrastructure,high,3,0,active_or_captured:high,0.8,,,True
+1144,"CONSTRUCTORA Y PAVIMENTADORA VISE, S.A. DE C.V.",26,Multicorporacion Brexot — COVID ISSSTE Medical Equipment Fraud (2020),procurement_fraud,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2020,2020,True
+1154,"PAVIMENTACIONES CAMINOS Y COMPACTACIONES, S.A. DE C.V.",27,Grupo Laboratorios Imperiales Pharma — Vaccine Intermediary SSA/IMSS (2018),overpricing,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2017,2018,True
+246450,DL MEDICA SA DE CV,28,Confecciones Isaac — IMSS/Penal Uniform Overpricing,overpricing,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2010,2025,True
+11497,"GUTSA INFRAESTRUCTURA, S. A. DE C.V.",29,Zapata Internacional SA CV — PEMEX Ghost (SAT EFOS),ghost_company,circumstantial,2,0,beneficiary_low_evidence:circumstantial,0.1,2006,2007,True
+121,"INGENIERIA Y DESARROLLO INMOBILIARIO DE MEXICO, S.A. DE C.V.",392,Ingeniería y Desarrollo Inmobiliario - Hospitales ISSSTE/IMSS,institution_capture,high,3,0,active_or_captured:high,0.8,2005,2025,True
+19007,PRODUCTOS Y ESTRUCTURAS DE CONCRETO SA DE CV,391,Productos y Estructuras de Concreto - Infraestructura Single-Bid Sistemático,monopoly,high,3,0,active_or_captured:high,0.8,2011,2014,True
+1314,TECNOPROGRAMACION HUMANA ESPECIALIZADA EN SISTEMAS OPERATIVO,390,Tecnoprogramación Humana - Monopolio TI SEP/Gobierno,monopoly,high,3,0,active_or_captured:high,0.8,2002,2014,True
+2423,GRUPO DE TECNOLOGIA CIBERNETICA S.A. DE C.V.,389,Grupo de Tecnología Cibernética - Pasaporte Electrónico y TI Gubernamental,monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+37422,"RINOACERO, S.A. DE C.V.",388,Rinoacero - Mega-Contrato Tamaulipas,overpricing,high,3,0,active_or_captured:high,0.8,2008,2009,True
+29587,"CONTROLADORA DE OPERACIONES DE INFRAESTRUCTURAS, S.A. DE C.V.",387,Controladora de Operaciones de Infraestructuras - Contratos Agua Single-Bid,overpricing,high,3,0,active_or_captured:high,0.8,2007,2009,True
+6784,ABASTOS Y DISTRIBUCIONES INSTITUCIONALES S.A. DE C.V.,386,Abastos y Distribuciones Institucionales - Alimentación Guardia Nacional/DIF,institution_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+35078,"TIENDAS SORIANA, S. A. DE C. V.",385,Tiendas Soriana - Programas Alimentarios DIF Licitación Única,monopoly,high,3,0,active_or_captured:high,0.8,2008,2015,True
+96101,DRUGSTORE INCORPORATED S A P I DE CV,384,Drugstore Incorporated - Contratos Dispersos Multi-Institucionales,intermediary,high,3,0,active_or_captured:high,0.8,2012,2019,True
+92745,COMERCIALIZADORA ELECTRICA DE GUADALAJARA,383,Comercializadora Eléctrica de Guadalajara - Concentración CFE,institution_capture,high,3,0,active_or_captured:high,0.8,2011,2020,True
+309677,NUTRIBLEND S A P I DE CV,382,Nutriblend - Empresa Nueva con Mega-Contratos IMSS Alimentos,institution_capture,high,3,0,active_or_captured:high,0.8,2024,2025,True
+26289,"MK HUMANA, S.A. DE C.V.",381,MK Humana - Monopolio Cirugía Cardiovascular IMSS,monopoly,high,3,0,active_or_captured:high,0.8,2013,2025,True
+155562,ROHJAN SA DE CV,380,Rohjan - Salto de CFE a Ventiladores IMSS,intermediary,high,3,0,active_or_captured:high,0.8,2015,2021,True
+263351,NITROMED SA DE CV,379,Nitromed - Intermediario COVID IMSS,intermediary,high,3,0,active_or_captured:high,0.8,2020,2022,True
+264903,COMERCIALIZADORA DE NEGOCIOS DIVERSOS SA DE CV,378,Comercializadora de Negocios Diversos - Shell Company SEDENA,ghost_company,high,3,0,active_or_captured:high,0.8,2020,2022,True
+35563,COCINAS INDUSTRIALES MULTIFUNCIONALES DE CALIDAD SA. DE CV.,377,Cocinas Industriales Multifuncionales - Monopolio Alimentario INM,institution_capture,high,3,0,active_or_captured:high,0.8,2008,2019,True
+176576,SOLUCIONES MEDCO SA DE CV,376,Soluciones Medco Hemodynamics Concentrated Supplier,Concentrated monopoly,high,3,0,active_or_captured:high,0.8,2016,2025,True
+14731,"SANITY INTERNACIONAL, S.A. DE C.V.",375,Sanity Internacional IMSS Hygiene Product Concentration,Concentrated monopoly,high,3,0,active_or_captured:high,0.8,2016,2022,True
+43223,INGENIERIA PROYECTOS Y CONSTRUCCIONES IPC SA DE CV,374,IPC Construcciones - Concentración SEMAR/Dos Bocas,institution_capture,high,3,0,active_or_captured:high,0.8,2012,2025,True
+234430,"ARMOR LIFE LAB, S.A. DE C.V.",373,Armor Life Lab - Proveedor Balístico Defensa,monopoly,high,3,0,active_or_captured:high,0.8,2018,2025,True
+6811,"MICROSCOPIA ELECTRONICA E INSUMOS, S.A. DE C.V.",372,Microscopía Electrónica - Contrato Atípico Neurología,overpricing,high,3,0,active_or_captured:high,0.8,2010,2025,True
+5402,NEURONIC MEXICANA S.A. DE C.V.,371,Neuronic Mexicana - Intermediario Farmacéutico IMSS,intermediary,high,3,0,active_or_captured:high,0.8,2020,2025,True
+11494,"DESARROLLO Y CONSTRUCCIONES URBANAS, S.A. DE C.V.",370,Desarrollo y Construcciones Urbanas NL Monopoly,single_bid_monopoly,high,3,0,active_or_captured:high,0.8,,,True
+18935,CALZADA CONSTRUCCIONES S.A. DE C.V.,369,Calzada Construcciones Multi-State Single-Bid Network,single_bid_monopoly,high,3,0,active_or_captured:high,0.8,,,True
+11432,CONSTRUCCIONES Y TRITURACIONES S.A. DE C.V.,368,Construcciones y Trituraciones Extreme Concentration,single_bid_monopoly,high,3,0,active_or_captured:high,0.8,,,True
+49212,"CONSTRUCCIONES ALDESEM, S.A. DE C.V.",367,Aldesem Infrastructure Single-Bid Monopoly,single_bid_monopoly,high,3,0,active_or_captured:high,0.8,,,True
+11497,"GUTSA INFRAESTRUCTURA, S. A. DE C.V.",366,GUTSA Infraestructura / Grupo Hermes,Single-bid dominance,high,3,0,active_or_captured:high,0.8,,,True
+246450,DL MEDICA SA DE CV,365,DL Medica IMSS/INSABI Medical Supply Concentration,Concentrated monopoly,high,3,0,active_or_captured:high,0.8,,,True
+10616,PCC CORPORACION S.A. DE C.V.,364,PCC Road Paving Single-Bid Dominance,Single-bid dominance,medium,3,0,active_or_captured:medium,0.5,,,True
+1144,"CONSTRUCTORA Y PAVIMENTADORA VISE, S.A. DE C.V.",363,VISE Road Construction Single-Bid Dominance,Single-bid dominance,high,3,0,active_or_captured:high,0.8,,,True
+16324,TECNICOS ESPECIALIZADOS DE CHIAPAS S.A. DE C.V.,362,Técnicos Especializados de Chiapas — Concentración Carreteras 22 Años,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2003,2025,True
+18363,"CONSTRUCTORA Y PERFORADORA LATINA, S.A. DE C.V.",361,Constructora y Perforadora Latina — Monopolio Perforación CFE,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2005,2017,True
+228202,PROC MINA S. DE R.L. DE C.V.,360,PROC MINA — Contrato Único 6.5B NAICM (Nuevo Aeropuerto),procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2018,True
+140538,INFRALUX SA DE CV,359,INFRALUX QRoo Turismo — Probable Error de Datos 7.76B,data_error,high,3,0,active_or_captured:high,0.8,2014,2018,True
+198864,ZURICH PHARMA SA DE CV,358,Zurich Pharma — Inhabilitación SFP + Registro Sanitario Falso,procurement_fraud,high,3,0,active_or_captured:high,0.8,,,True
+194723,LABORATORIOS SAN ANGEL SA,357,IMSS Laboratorios San Angel — Sobreprecio Laboratorio Clínico,overpricing,high,3,0,active_or_captured:high,0.8,,,True
+13330,"COMERCIALIZADORA BREVER, S. A. DE C. V.",356,Comercializadora Brever — Intermediario Material de Curación,intermediary_review,high,3,0,active_or_captured:high,0.8,,,True
+105180,EPCCOR SA DE CV,355,EPCCOR SA de CV — Constructora de Infraestructura,concentration_review,high,3,0,active_or_captured:high,0.8,,,True
+55419,ANGAR AZCAPOTZALCO,354,Angar Azcapotzalco — Vehículos SEDENA,concentration_review,high,3,0,active_or_captured:high,0.8,,,True
+83386,LUIS GABRIEL CARDENAS PEREZ,353,Luis Gabriel Cárdenas Pérez — Error de Datos IMSS,data_error,medium,3,0,active_or_captured:medium,0.5,,,True
+5267,SUMINISTRO PARA USO MEDICO Y HOSPITALARIO,352,Suministro para Uso Médico — Monopolio Mantenimiento Equipo Médico,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+5957,"REACTIVOS Y QUIMICOS, S.A. DE C.V.",351,Reactivos y Químicos — Monopolio Reactivos + Hemodiálisis,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+5212,"PROBIOMED, S.A. DE C.V.",350,Probiomed — Concentración Biosimilares IMSS,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2002,2025,True
+5985,"SERVICIO DE TRANSPORTE, S.A. DE C.V.",345,Servicio de Transporte IMSS — Error de Datos,data_error,high,3,0,active_or_captured:high,0.8,,,True
+30845,"PROMOTORA Y DESARROLLADORA MEXICANA, S.A. DE C.V.",344,Promotora y Desarrolladora Mexicana Multi-Institucional,institutional_capture,high,3,0,active_or_captured:high,0.8,,,True
+89613,"INOVAMEDIK, S.A. DE C.V.",329,Inovamedik — Monopolio Servicio Integral de Anestesia,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2010,2025,True
+173854,VANTAGE SERVICIOS INTEGRALES DE SALUD SA DE CV,328,Vantage Servicios Integrales de Salud — Intermediario Logistico Farmaceutico,single_use_intermediary,high,3,0,active_or_captured:high,0.8,2016,2025,True
+201986,HUMAN CORPORIS SA DE CV,327,Human Corporis — Monopolio Aceleradores Lineales IMSS,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2017,2025,True
+126363,PROACON MEXICO,326,Proacon Mexico — Monopolio de Tuneles Federales,concentrated_monopoly,high,3,0,active_or_captured:high,0.8,2014,2025,True
+305455,WALA SERVICIOS MEXICO SA DE CV,124,Wala Servicios Mexico SA de CV — IMSS 92%DA + Guardia Nacional Backpacks + CENISIDA 100%DA (2024-2025),procurement_fraud,high,3,0,active_or_captured:high,0.8,2024,2025,True
+43963,AIRBUS SLC SA DE CV,123,Airbus SLC SA de CV — Guardia Nacional 2.04B TETRA Radio System 100%DA Technology Monopoly,monopoly,high,3,0,active_or_captured:high,0.8,2020,2025,True
+11640,"SUMINISTROS MEDICOS DEL CENTRO, S.A. DE C.V.",122,Suministros Medicos del Centro SA de CV — SEMAR/SEDENA 1.13B Medical Supplies DA Ring (1239 contracts),procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+30834,GRUPO UNIMEDICAL SOLUCIONES S.A. DE C.V.,121,Grupo Unimedical Soluciones SA de CV — IMSS 1.14B 88%DA (1441 contracts — extreme model blind spot),procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2025,True
+29085,"OPERADORA DE PROGRAMAS DE ABASTO MULTIPLE, S.A. DE C.V.",120,Operadora de Programas de Abasto Multiple SA de CV — 11.6B Multi-Institution DA Ring (SEP/ISSSTE/SEPOMEX),procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2020,True
+64,"EFECTIVALE,S.A. DE C.V.",119,Efectivale S de RL de CV — Guardia Nacional 3.13B Fuel/Voucher Services (2.08B Single DA 2020),overpricing,high,3,0,active_or_captured:high,0.8,2019,2025,True
+46629,Televisa,118,Televisa SA de CV — 7.33B Government TV Advertising at 99.8%DA (2010-2025),monopoly,high,3,0,active_or_captured:high,0.8,2010,2025,True
+45436,ESTUDIOS AZTECA SA DE CV,117,Estudios Azteca SA de CV — 5.65B Government TV Advertising at 99.8%DA (2010-2021),monopoly,high,3,0,active_or_captured:high,0.8,2010,2021,True
+292227,BRAND AND PUSH SA DE CV,116,Brand and Push SA de CV — Alimentación para el Bienestar 753M 100%DA (1874 contracts — extreme model blind spot),procurement_fraud,high,3,0,active_or_captured:high,0.8,2023,2025,True
+73979,CORPORATIVO INAGRO COMERCIAL S.A DE C.V.,115,"Corporativo Inagro Comercial SA de CV — DICONSA 790M Food Program 100%DA (17 contracts, 2012-2016)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2012,2016,True
+80024,GRANOS Y SERVICIOS OMEGA S.A. DE C.V.,114,"Granos y Servicios Omega SA de CV — DICONSA 858M Food Program 100%DA (31 contracts, 2012-2016)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2012,2016,True
+63937,PROCESAR SA DE CV,113,"Procesar SA de CV — ISSSTE/FONACOT 848M DA Ring (100%DA, 25 contracts, 2010-2025)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+124451,"CARREY, S.A. DE C.V.",112,Carrey SA de CV — CFE Single 568M Direct Award with No Description (2014),procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2014,True
+279307,ADACA MEDICAL SA DE CV,111,Adaca Medical SA de CV — INSABI Single 618M Direct Award for Medical Supplies (2022),procurement_fraud,high,3,0,active_or_captured:high,0.8,2022,2025,True
+43971,PHARMA TYCSA,110,Pharma Tycsa — INSABI/ISSSTE/BIRMEX 2.49B Pharmaceutical & Vaccine Logistics DA Ring (68.1%DA),procurement_fraud,high,3,0,active_or_captured:high,0.8,2012,2025,True
+30829,ASOKAM S.A. DE C.V.,109,"Asokam SA de CV — IMSS 1.96B Pharmaceutical DA Ring (83%DA, 928 contracts, model blind spot)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2007,2025,True
+5608,CREATIVIDAD Y ESPECTACULOS SA DE CV,108,Creatividad y Espectáculos SA de CV — IMSS/SEP 6.81B Events & Services DA Ring (69.7%DA),overpricing,high,3,0,active_or_captured:high,0.8,2011,2024,True
+38555,OPERBES SA DE CV,107,"Operbes SA de CV — ISSSTE/SAT Telecom Monopoly 11.1B (62%DA, including 1.64B emergency DA)",monopoly,high,3,0,active_or_captured:high,0.8,2010,2025,True
+10484,ORACLE DE MÉXICO S.A. DE C.V.,106,"Oracle de México SA de CV — SAT/IMSS IT Monopoly 8.17B (98.2%DA, proprietary lock-in)",monopoly,high,3,0,active_or_captured:high,0.8,2010,2025,True
+35812,"COMERCIALIZADORA PENTAMED, S.A. DE C.V.",105,"Comercializadora Pentamed SA de CV — IMSS 5.97B Pharmaceutical DA Ring (87%DA, 938 contracts)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2010,2025,True
+1544,"RALCA, S.A. DE C.V.",104,"Ralca SA de CV — IMSS/ISSSTE 25.1B Pharmaceutical Dual-Institution Monopoly (68.5%DA, 5257 contracts)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+17657,"DELMAN INTERNACIONAL, S.A. DE C.V.",103,"Delman Internacional SA de CV — CONALITEG Paper Monopoly 4.07B (84.4%DA, textbook supply chain capture)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2025,True
+5214,"PROQUIGAMA, S.A. DE C.V.",102,"Proquigama SA de CV — IMSS 4.78B Pharmaceutical DA Ring (87%DA, 2868 contracts)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2002,2025,True
+124647,TOTAL FARMA SA DE CV,101,"Total Farma SA de CV — IMSS 7.23B Pharmaceutical DA Ring (86.1%DA, 3685 contracts, 2014-2022)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2022,True
+293248,CONSORCIO LAMAT TRAMO 1 S A P I DE CV,100,"Consorcio Lamat Tramo 1 SAPI — Tren Maya 3.38B (FONATUR 2.922B ""trabajos extraordinarios"" + 456M sole-source, 100%DA)",overpricing,high,3,0,active_or_captured:high,0.8,2023,2024,True
+274892,PRODUCTOS LONEG SA DE CV,99,"Productos Loneg SA de CV — LICONSA 3.08B (powdered milk @91.7%DA, SEGALMEX ecosystem extension)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2021,2025,True
+278036,SAGO MEDICAL SERVICE SA DE CV,98,"Sago Medical Service SA de CV — IMSS 1.82B (2064 contracts @93.1%DA, Inc. July 2020, rs=0.050 blind spot)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2022,2025,True
+258353,GRUPO FARMACEUTICO TOTALFARMA SA DE CV,97,"Grupo Farmaceutico Totalfarma SA de CV — IMSS 2.39B (2620 contracts @90.6%DA, Inc. June 2019, rs=0.106 blind spot)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2025,True
+283521,EJIDO MAZAHUA,96,"Ejido Mazahua — Sistema de Aguas CDMX 1.105B DA (January 31 2022, communal land entity, no RFC)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2022,2022,True
+265626,COMERCIALIZADORA MORAIRA SA DE CV,95,Comercializadora Moraira SA de CV — IMSS COVID-19 1.65B DA 2020 (SARS-COV-2 emergency),embezzlement,high,3,0,active_or_captured:high,0.8,2020,2020,True
+287458,OZORE GESTION DE AGUA SA DE CV,94,"Ozore Gestion de Agua SA de CV — CONAGUA 1.689B DA (incorporated April 27 2022, contract May 6 2022 — 9 days)",ghost_company,high,3,0,active_or_captured:high,0.8,2022,2022,True
+35633,VITALMEX COMERCIAL S.A. DE C.V.,93,"Vitalmex Comercial SA de CV — 1.85B (41.5%DA, 318 contracts, Vitalmex group third entity)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+28769,GRUPO VITALMEX S.A. DE C.V.,92,"Grupo Vitalmex SA de CV — 1.81B (88.2%DA, 102 contracts, IMSS medical device DA ring, related to Vitalmex Internacional)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+5222,"NOVAG INFANCIA, S.A. DE C.V.",91,"Novag Infancia SA de CV — 4.32B IMSS+INSABI (869M ""caso fortuito"" 2025, INSABI 98.9%DA, no RFC)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2025,True
+13491,"LABORATORIOS JAYOR, S.A. DE C.V.",90,"Laboratorios Jayor SA de CV — 5.13B IMSS+INSABI (2025 emergency cluster: 665M+663M ""caso fortuito"", no RFC)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2025,True
+19551,ULTRA LABORATORIOS S.A DE C.V,89,"Ultra Laboratorios SA de CV — IMSS 7.52B (2025 emergency DA cluster: ""caso fortuito"" + failed-tender DAs, no RFC)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2016,2025,True
+4325,"VITALMEX INTERNACIONAL, S.A. DE C.V.",88,Vitalmex Internacional SA de CV — 32.06B ISSSTE+IMSS+SEDENA (15.44B ISSSTE @72.8%DA cardiovascular monopoly),overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+168261,"GRUPO JACARIC, S.A. DE C.V.",87,"Grupo Jacaric SA de CV — IMSS 776M (610M DA cluster 2021, 95.3%DA, 1162 contracts, no RFC)",overpricing,high,3,0,active_or_captured:high,0.8,2019,2022,True
+227470,GNK LOGISTICA SA DE CV,86,GNK Logistica SA de CV — INSABI 302M COVID Logistics DA Capture (2019-2023),procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2023,True
+239305,RICARDO URIBE CASTILLO,85,Ricardo Uribe Castillo — Natural Person 819M IMSS (798M LP Mar 2021 + DA series),procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2024,True
+4715,CENTRUM PROMOTORA INTERNACIONAL S.A. DE C.V,84,"Centrum Promotora Internacional SA de CV — 17.76B IMSS+ISSSTE+SEDENA Medical Services Ring (rs=0.946, 2025 DA surge)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+127800,SERVICIOS DE FARMACIA PREFARMA SA DE CV,83,"Servicios de Farmacia Prefarma SA de CV — IMSS 4.31B (1.858B single DA Feb 2021, 88%DA, 6543 contracts)",overpricing,high,3,0,active_or_captured:high,0.8,2014,2022,True
+251926,MEBCO S DE RL DE CV,82,"Mebco S de RL de CV — CENAPRECE 499M COVID-Era Direct Award (209M+150M+140M DA, Inc. Jun 2016)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2022,True
+304280,BUFFINGTON BIOTECH SA DE CV,81,"Buffington Biotech SA de CV — IMSS 584M Shell Company (Inc. Apr 2023, ""proveedor vigente"" 2024-2025)",monopoly,high,3,0,active_or_captured:high,0.8,2024,2025,True
+131163,COMERCIALIZADORA ARVIEN  S.A. DE C.V.,80,"Comercializadora Arvien SA de CV — IMSS/ISSSTE 2.8B Direct Award Ring (92%DA, 4274 contracts, 2014-2025)",overpricing,high,3,0,active_or_captured:high,0.8,2014,2025,True
+61022,"COMERCIALIZADORA COLUMBIA, S.A. DE C.V.",79,"Comercializadora Columbia SAPI de CV — SEGALMEX 529M DA (385M single DA 2022, Inc. May 1991)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2025,True
+300233,PROVEGLIA SA DE CV,78,"Proveglia SA de CV — IMSS 808M Year-End Emergency DA (469M ""caso fortuito"" Dec 31 2024, 98.8% DA)",overpricing,high,3,0,active_or_captured:high,0.8,2023,2025,True
+223741,ABASTO Y SUMINISTRO EN FARMACOS GADEC SA DE CV,77,"Abasto y Suministro en Farmacos GADEC SA de CV — IMSS 4.1B (3.31B single DA Mar 2021, Inc. Sep 2018)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2018,2025,True
+4488,"DISIMED, S.A. DE C.V.",76,"DISIMED SA de CV — IMSS 6.7B Medical Supply (30 contracts Aug 2, 2023 = 5.057B same-day cluster)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+6996,"INTERMET, S.A. DE C.V",75,"INTERMET SA de CV — IMSS 8.2B Medical Supply Ring (60% DA, 432 contracts, 2002-2025)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+149087,MULTIEQUIPOS Y MEDICAMENTOS SA DE CV,74,Multiequipos y Medicamentos SA de CV — Coahuila 8.95B Single State Contract + IMSS 97% DA (2015-2024),overpricing,high,3,0,active_or_captured:high,0.8,2015,2024,True
+167733,ANGEL ANGUIANO MARTINEZ,73,"Angel Anguiano Martinez — IMSS 793M Natural Person Direct Award (Adquisiciones, September 2021)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2024,True
+280939,PUERTA DEL SOL CAPITAL SA DE CV,72,"Puerta del Sol Capital SA de CV — IMSS 1.44B Emergency DA Ring (June 2025: 613M+548M same month, 92% DA)",overpricing,high,3,0,active_or_captured:high,0.8,2022,2025,True
+241330,TRANS CE CARGO S DE RL DE CV,71,"Trans CE Cargo SRL de CV — SEDENA 2.57B Sole-Source Military Logistics (Inc. Sep 2016, 1.42B+833M Jan 2024)",monopoly,high,3,0,active_or_captured:high,0.8,2019,2025,True
+294524,ELEMENTCO S A P I DE CV,70,"Elementco SAPI de CV — IMSS 880M Shell Company (Incorporated Dec 2022, 97% DA, 541M single DA)",monopoly,high,3,0,active_or_captured:high,0.8,2023,2025,True
+264752,PREVENCION Y SOLUCIONES K-B SA DE CV,69,"Prevencion y Soluciones K-B SA de CV — IMSS 2.84B Direct Award Ring (Incorporated Jul 2019, 76% DA)",overpricing,high,3,0,active_or_captured:high,0.8,2020,2025,True
+259351,ATLANTIS OPERADORA SERVICIOS DE SALUD SA DE CV,68,Atlantis Operadora Servicios de Salud SA de CV — INDEP 3.22B + NAFIN 1.87B (Incorporated Dec 2018),procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2025,True
+4325,"VITALMEX INTERNACIONAL, S.A. DE C.V.",67,"Vitalmex Internacional SA de CV — IMSS/ISSSTE 32B COVID-Era Medical Supply Overpricing (70-78% DA, 2019-2024)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+31371,"SELECCIONES MEDICAS DEL CENTRO, S.A. DE C.V.",66,"Selecciones Medicas del Centro SA de CV — IMSS/ISSSTE 16.3B Medical Ring (60-72% DA, shift from 0% pre-2010)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+1361,"INSTRUMENTOS Y EQUIPOS FALCON, S.A. DE C.V.",65,"Instrumentos y Equipos Falcon SA de CV — IMSS/ISSSTE 31B Medical Equipment DA Ring (65-89% DA rate, 2010+)",overpricing,high,3,0,active_or_captured:high,0.8,2002,2025,True
+6038,"HEMOSER, S.A. DE C.V.",64,"HEMOSER SA de CV — IMSS 17.2B COVID Medical Supply Same-Day Threshold Splitting (12 contracts Aug 2, 2023)",bid_rigging,high,3,0,active_or_captured:high,0.8,2008,2025,True
+87141,TRIARA COM SA DE CV,63,"TRIARA COM SA de CV — Multi-Agency IT Capture: Banco del Bienestar 7.7B + SAT/SEGOB/FGR/ISSSTE (16.6B, 2017-2025)",monopoly,high,3,0,active_or_captured:high,0.8,2017,2025,True
+310412,PHARMAJAL SERVICIOS INTEGRALES FARMACEUTICOS SA DE CV,62,Pharmajal Servicios Integrales Farmaceuticos SA de CV — Jalisco State Finance Ministry 1.65B (2024-2025),overpricing,high,3,0,active_or_captured:high,0.8,2024,2025,True
+246015,LOGISTICA Y TRANSPORTE PARA LA INDUSTRIA DE LA SALUD SAPI DE CV,61,Logistica y Transporte para la Industria de la Salud SAPI — IMSS 1.47B Sole-Source (2025),monopoly,high,3,0,active_or_captured:high,0.8,2019,2025,True
+261043,RHINNO SMART SA DE CV,60,"Rhinno Smart SA de CV — IMSS/ISSSTE 3.2B (Incorporated 2018, 2.15B + 816M in Early 2025)",overpricing,high,3,0,active_or_captured:high,0.8,2020,2025,True
+278669,HEALTH & PHARMA CONTROL SA DE CV,59,"Health & Pharma Control SA de CV — INDEP 871M + NAFIN 380M (Incorporated Oct 2021, Seized Assets)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2022,2023,True
+280146,ALMACENAJE Y DISTRIBUCION AVIOR SA DE CV,58,Almacenaje y Distribucion Avior SA de CV — BIRMEX 3.98B Emergency Direct Award Scheme (2022-2025),overpricing,high,3,0,active_or_captured:high,0.8,2022,2025,True
+124907,GRUPO C.E.N. SA DE CV,57,Grupo C.E.N. SA de CV — IMSS 1.31B Same-Week Direct Award Threshold Splitting (June 2017),bid_rigging,high,3,0,active_or_captured:high,0.8,2014,2018,True
+168672,COMERCIALIZADORA HAGRE SA DE CV,56,"Comercializadora Hagre SA de CV — CFE 3.25B Restricted Tender Concentration (7 contracts, March 2017)",bid_rigging,high,3,0,active_or_captured:high,0.8,2015,2017,True
+176835,VICTOR MANUEL ZARATE MARTINEZ,55,Victor Manuel Zarate Martinez — CENAF (SEP) 176M Natural Person Direct Award,procurement_fraud,high,3,0,active_or_captured:high,0.8,2009,2015,True
+194352,FRANCISCO HERRERA OREA,54,Francisco Herrera Orea — INPI 467M Natural Person Direct Award (Indigenous Rights Agency Capture),procurement_fraud,high,3,0,active_or_captured:high,0.8,2014,2019,True
+121130,"GRUPO ACOPIADOR 24 DE AGOSTO, S.A. DE C.V.",53,Grupo Acopiador 24 de Agosto SC — DICONSA 594M Direct Award Supply Network (Segalmex-Adjacent),procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2017,True
+117824,NGBS MEXICO SA DE CV,52,NGBS Mexico SA de CV — BANSEFI (Banco del Ahorro) 664M Single Direct Award (2013),procurement_fraud,high,3,0,active_or_captured:high,0.8,2013,2014,True
+288231,PHARMA MANAGEMENT AND INNOVATION SA DE CV,51,Pharma Management and Innovation SA de CV — IMSS 1.156B Direct Award Pharmaceutical Ring (2022-2024),overpricing,high,3,0,active_or_captured:high,0.8,2022,2024,True
+49941,"TRENDY MEDIA, S.A. DE C.V.",50,"Trendy Media SA de CV — IMSS 462M Direct Award (Branding/Media Company to Healthcare, 2012)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2012,2013,True
+312747,WHITEMED SA DE CV,49,"WHITEMED SA de CV — IMSS 1.065B Sole-Source (Incorporated Oct 2023, first contract Apr 2024)",monopoly,high,3,0,active_or_captured:high,0.8,2024,2025,True
+151581,"PROCESADORA DE CARNICOS, DERIVADOS Y GRANOS DEL CENTRO SA DE CV",48,"Procesadora de Carnicos, Derivados y Granos — LICONSA/DICONSA Supply Fraud (Segalmex Network)",procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2017,True
+306926,GRUPO FARMACEUTICO SIGMUN SA DE CV,47,Grupo Farmaceutico Sigmun SA de CV — BIRMEX Sole-Source 709M MXN (2024),overpricing,high,3,0,active_or_captured:high,0.8,2024,2024,True
+236890,COMERCIALIZADORA REALZA SA DE CV,46,Comercializadora Realza SA de CV — Secretaria de Bienestar 629M Same-Day Threshold Splitting,bid_rigging,high,3,0,active_or_captured:high,0.8,2019,2019,True
+265577,MATTE BRANDING SA DE CV,45,Matte Branding SA de CV — IMSS 290M MXN COVID-Era Direct Award (Industry Mismatch),procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2021,True
+296952,INTEGMEV SA DE CV,44,INTEGMEV SA de CV — ISSSTE 3B MXN Sole-Source Monopoly (2023-2025),monopoly,high,3,0,active_or_captured:high,0.8,2023,2025,True
+235708,GAMS SOLUTIONS SA DE CV,43,"GAMS Solutions SA de CV — IMSS Pharmaceutical Ring (6.3B Direct Award, Ethomedical Network)",overpricing,high,3,0,active_or_captured:high,0.8,2018,2025,True
+258886,GRUPO GOI SP SA DE CV,41,Grupo GOI SP SA de CV — ISSSTE COVID-Era Direct Award (SFP inhabilitacion),procurement_fraud,high,3,0,active_or_captured:high,0.8,2020,2022,True
+245743,DRIVE PRODUCCIONES SA DE CV,40,Drive Producciones SA de CV — ISSSTE Contract Fraud (SFP inhabilitacion),procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2021,True
+267054,ADIBSA CONSTRUCCIONES SA DE CV,39,ADIBSA Construcciones SA de CV — SEDATU Construction Contract (2023),procurement_fraud,high,3,0,active_or_captured:high,0.8,2023,2023,True
+254344,"GRUPO ZOHMEX, S.A DE C.V.",38,Grupo Zohmex SA de CV — SEDATU Construction Conflict of Interest (ASF 2024),conflict_of_interest,high,3,0,active_or_captured:high,0.8,2020,2024,True
+148733,GRUPO INDUSTRIAL ASAD SA DE CV,37,Grupo Industrial Asad SA de CV — Clothing/Uniform Contract Non-Compliance (SFP 2026),procurement_fraud,high,3,0,active_or_captured:high,0.8,2015,2025,True
+29277,"GRUPO FARMACOS ESPECIALIZADOS, S.A. DE C.V.",36,GRUFESA Grupo Farmacos Especializados — Pharma Oligopoly + SFP Inhabilitacion,monopoly,high,3,0,active_or_captured:high,0.8,2007,2020,True
+148296,INTERACCION BIOMEDICA SA DE CV,35,Clan Biomedica - Interaccion Biomedica + 83 Shells (IPN/ISSSTE),ghost_company,high,3,0,active_or_captured:high,0.8,2012,2023,True
+142577,CLOUD ENTERPRISE SERVICES S DE RL DE CV,33,Cloud Enterprise Services - Guardia Nacional Drone Overpricing 2023,overpricing,high,3,0,active_or_captured:high,0.8,2022,2024,True
+281686,DISTRIBUIDOR MEDICO TECNOMED SA DE CV,727,DISTRIBUIDOR MEDICO TECNOMED - IMSS Pharma DA Saturation 1.2B,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2023,2025,True
+264212,HOLDING INFRAESTRUCTURA ESPECIALIZADA S A P I DE CV,728,HOLDING INFRAESTRUCTURA ESPECIALIZADA - CONAGUA SB Monopoly 646M,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2020,2024,True
+258100,TECNOLOGIAS EFICIENTES DE VILLA S A P I DE CV,729,TECNOLOGIAS EFICIENTES VILLA - SEP Computer Equipment Capture 298M,overpricing,medium,3,0,active_or_captured:medium,0.5,2025,2025,True
+281686,DISTRIBUIDOR MEDICO TECNOMED SA DE CV,727,DISTRIBUIDOR MEDICO TECNOMED - IMSS Pharma DA Saturation 1.2B,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2023,2025,True
+264212,HOLDING INFRAESTRUCTURA ESPECIALIZADA S A P I DE CV,728,HOLDING INFRAESTRUCTURA ESPECIALIZADA - CONAGUA SB Monopoly 646M,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2020,2024,True
+258100,TECNOLOGIAS EFICIENTES DE VILLA S A P I DE CV,729,TECNOLOGIAS EFICIENTES VILLA - SEP Computer Equipment Capture 298M,overpricing,medium,3,0,active_or_captured:medium,0.5,2025,2025,True
+35922,"INGENIERIA, MANTENIMIENTO Y SERVICIOS INTEGRALES EN LA CONSTRUCCION, S.A. DE C.V.",730,INGENIERIA MANT SERVICIOS INTEGRA - IMSS/ISSSTE Construction Capture 564M,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2021,2025,True
+11221,INFRAESTRUCTURA MARITÍMA Y PORTUARIA DEL SURESTE S.A. DE C.V,731,INFRAESTRUCTURA MARITIMA PORTUARIA SURESTE - Yucatan Port SB Monopoly 482M,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2003,2015,True
+53122,INAGRO DEL SUR SA DE CV,732,INAGRO DEL SUR - Diconsa/Segalmex DA Saturation 916M,direct_award_abuse,high,3,0,active_or_captured:high,0.8,2010,2021,True
+61061,CONSULEZA PROFESIONALE SA DE CV,733,CONSULEZA PROFESIONALE - Puebla State 100% SB Infrastructure 583M,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2010,2018,True
+48696,ALVARGA CONSTRUCCIONES,734,ALVARGA CONSTRUCCIONES - Infrastructure SB Capture 2.2B,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2010,2018,True
+22614,TECNOLOGIA EN SEGURIDAD Y COMUNICACIONES SA DE CV,735,TECNOLOGIA EN SEGURIDAD Y COMUNICACIONES - FONACOT IT Security Monopoly via SB,monopoly,medium,3,0,active_or_captured:medium,0.5,2005,2025,True
+156315,TECNOLOGIA APLICADA A NEGOCIOS SA DE CV,736,TECNOLOGIA APLICADA A NEGOCIOS - SADER/SCT IT Systems Annual SB Capture,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+98857,GRUPO ESPECIALIZADO EN SEGURIDAD PRIVADA DIMAC SA DE CV,737,GRUPO ESPECIALIZADO SEGURIDAD PRIVADA DIMAC - Manzanillo Port SB Security Capture,bid_rigging,low,2,0,beneficiary_low_evidence:low,0.1,2016,2025,True
+37835,CASANOVA RENT SA DE CV,738,CASANOVA RENT - SEDESOL 502M Single-Bid Vehicle Rental Anomaly,overpricing,low,2,0,beneficiary_low_evidence:low,0.1,2008,2008,True
+134706,SYE SOFTWARE SA DE CV,739,SYE SOFTWARE SAT SDMA IT Monopoly,monopoly,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+63200,TECNOLOGIA EN SISTEMAS DE APOYO SA,740,TECNOLOGIA SISTEMAS APOYO SEGOB-ISSSTE IT Capture,capture,medium,3,0,active_or_captured:medium,0.5,2010,2017,True
+51550,CORPORACION DE ASESORIA EN PROTECCION Y SEGURIDAD INTERNA EMPRES,741,CORPORACION ASESORIA PROTECCION SEP-INBA Security Capture,capture,medium,3,0,active_or_captured:medium,0.5,2012,2017,True
+154103,"COMERCIALIZADORA MEDICA OM, S.A. DE C.V.",742,COMERCIALIZADORA MEDICA OM - IMSS DA Pharma Capture,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+20900,"IVG COMERCIALIZADORA, S. A. DE C. V.",743,IVG COMERCIALIZADORA - FGR/PGR DA Capture,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+268284,SOLUCIONES INTEGRALES ELYM S DE RL DE CV,744,SOLUCIONES INTEGRALES ELYM - New Company SB Agriculture Capture,procurement_fraud,medium,3,0,active_or_captured:medium,0.5,2021,2025,True
+36771,"ETMN, S.A. DE C.V.",745,ETMN DA capture at Telecomunicaciones de Mexico,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2014,2021,True
+177118,FINUTIL SA DE CV,746,FINUTIL systematic single-bid across federal agencies,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2017,2019,True
+17515,"NORTH AMERICAN SOFTWARE, S.A.P.I., DE C.V.",747,NORTH AMERICAN SOFTWARE single-bid IT monopoly,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2005,2013,True
+32905,CUAR CONSTRUCTORES ASOCIADOS SA DE CV,748,CUAR CONSTRUCTORES systematic bid-rigging infrastructure,bid_rigging,high,3,0,active_or_captured:high,0.8,2007,2024,True
+40097,PARDO INFRAESTRUCTURA Y TERRACERIAS S.A. DE C.V.,749,Pardo Infraestructura - Nayarit municipal SB infrastructure capture,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2009,2015,True
+31776,"PROTECCION RESGUARDO Y SERVICIOS EMPRESARIALES, S.A. DE C.V.",750,Proteccion Resguardo - multi-institution security services bid-rigging,bid_rigging,high,3,0,active_or_captured:high,0.8,2013,2024,True
+5220,LABORATORIOS ALPHARMA S.A. DE C.V.,751,Laboratorios Alpharma - IMSS pharma DA capture (2010-2023 regime shift),direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2010,2023,True
+89737,HIDROVIAS Y CARRETERAS SA DE CV,752,HIDROVIAS Y CARRETERAS dredging single-bid capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2010,2020,True
+12221,CONSTRUMAQUINAS DEL BAJIO S.A DE C. V.,753,CONSTRUMAQUINAS DEL BAJIO Guanajuato construction SB capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2003,2014,True
+54599,JOMTEL TELECOMUNICACIONES SA DE CV,754,JOMTEL SEDENA/Marina Telecom Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2014,2024,True
+253888,"DESARROLLADORA DE IDEAS Y ESPACIOS, S.A DE C.V.",755,Desarrolladora de Ideas — SEDATU Construction SB Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2019,2023,True
+55640,VIAJES INTERNACIONALES MONARCA,756,Viajes Internacionales Monarca -- Travel Services SB Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2011,2025,True
+13287,"DIBITER, S.A. DE C.V.",757,DIBITER -- IMSS/ISSSTE Pharma DA Concentration,direct_award_capture,medium,3,0,active_or_captured:medium,0.5,2011,2020,True
+13018,"SOLUCIONES INTEGRALES AMR, S.A. DE C.V.",758,SOLUCIONES INTEGRALES AMR -- INR Direct Award Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2016,2024,True
+53237,"TONANTZI MEX, S.A. DE C.V.",759,TONANTZI MEX ISSSTE Medical Equipment Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+136992,LIAD PRODUCTOS PARA ROPA Y CALZADO SA DE CV,760,LIAD PRODUCTOS - SEDENA Uniform Supply Monopoly,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2014,2025,True
+975,CONTROLES ELECTROMECÁNICOS S.A. DE C.V.,761,CONTROLES ELECTROMECANICOS - CAPUFE Toll Systems Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+109221,CUSTODIA DE SEGURIDAD PRIVADA VEILLEUR SA DE CV,762,CUSTODIA VEILLEUR - Multi-Institution Security Single-Bid Pattern,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2018,2020,True
+49812,I + D MEXICO SA DE CV,763,I+D MEXICO - CAPUFE Direct Award Spike 2013,overpricing,strong,4,0,active_or_captured:strong,0.8,2013,2013,True
+263927,MARIA ARACELI VARGAS ZARCO,764,MARIA ARACELI VARGAS ZARCO - Persona Fisica IMSS Licitacion Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2020,2025,True
+16446,"ARRENTRAC, S.A. DE C.V.",765,ARRENTRAC Infrastructure Single-Bid Capture (SCT/Jalisco),bid_rigging,medium,3,0,active_or_captured:medium,0.5,2003,2019,True
+81700,DRAGAMEX,766,DRAGAMEX Port Authority Dredging Single-Bid Pattern,bid_rigging,medium,3,0,active_or_captured:medium,0.5,2010,2018,True
+4679,"SERVISAN, S.A. DE C.V.",767,SERVISAN Health Services ISSSTE/INCan Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+31018,"MESALUD, S.A. DE C.V.",768,MESALUD IMSS Medical Supply DA Concentration,institutional_capture,low,2,0,beneficiary_low_evidence:low,0.1,2007,2021,True
+90150,AGRUPACION CIVICA DEPORTIVA PLATEROS AC,769,Universidad Veracruzana - Plateros AC Fund Laundering,ghost_company,high,3,0,active_or_captured:high,0.8,2017,2018,True
+229401,"AMAROX PHARMA, S.A. DE C.V.",770,IMSS/ISSSTE Pharma DA Saturation - Amarox Pharma,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+15977,UNIVERSAL  MOTOR GERÄTE DE MÉXICO S.A. DE C.V.,771,SEDENA/Marina Industrial Equipment DA Concentration,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+15615,"INTERNACIONAL DE CALZADO TEN PAC, S.A. DE C.V.",772,PEMEX Footwear SB+DA Capture (Ten Pac),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2005,2013,True
+18948,"AVANZADA TECNICA CONSTRUCTIVA, S.A. DE C.V.",773,ISSSTE/AICM Construction SB Capture (Avanzada Tecnica),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2011,2017,True
+3837,"TELETEC DE MEXICO, S.A. DE C.V.",774,INBA + Multi-State Telecom SB Manipulation (Teletec),single_bid_manipulation,medium,3,0,active_or_captured:medium,0.5,2005,2010,True
+139508,P&C LIMPIEZA SA DE CV,775,ISSSTE/AICM Cleaning DA Capture (P&C Limpieza),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2017,2021,True
+108982,GRUPO CORPORATIVO URBIS SA DE CV,776,Port Infrastructure SB Capture (Grupo Urbis),institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2018,True
+50171,GROBSON S DE RL,777,CONAGUA Water Infrastructure Capture (Grobson),institutional_capture,high,3,0,active_or_captured:high,0.8,2022,2025,True
+3848,"PSICOFARMA, S.A. DE C.V.",778,IMSS Psychiatric Pharma DA Capture - Psicofarma,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+314270,CIMMO MEDICAL SA DE CV,779,IMSS/SSA Emergency DA New Vendor - CIMMO Medical,ghost_company,medium,3,0,active_or_captured:medium,0.5,2025,2025,True
+223371,GIM COMPAÑIA EDITORIAL SA DE CV,780,Multi-Institution Editorial Services DA Monopoly - GIM Editorial,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+10319,"CONSTRUCTORA EUNICE, S.A. DE C.V.",781,SCT Road Construction 100pct Single-Bid Capture - Constructora Eunice,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2019,True
+135804,NC REMODELACIONES Y COMERCIALIZADORA SA DE CV,782,IMSS Hospital Construction Desert Manipulation - NC Remodelaciones,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2024,2025,True
+14713,"GRUPO FARLA, S.A. DE C.V.",783,Culture/Arts DA Capture - Grupo Farla at SEGOB/SecCultura/CasaMoneda,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+163535,INNDOT SA DE CV,784,IT Single-Bid Monopoly Across Multiple Institutions - INNDOT,single_bid_abuse,high,3,0,active_or_captured:high,0.8,2015,2025,True
+112569,LIBER SALUS SA DE CV,785,ISSSTE Pharma DA Capture + Anomalous Airport Contract - Liber Salus,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2014,2020,True
+176001,EDICION Y PUBLICIDAD DE MEDIOS DE LOS ESTADOS S DE RL DE CV,786,Multi-Institution Government Advertising DA Monopoly - Edicion y Publicidad,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2016,2025,True
+254088,ULSA TECH SA DE CV,787,Health Sector DA Saturation with Emergency Justifications - ULSA Tech,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+197399,AL.CO SALUD INTELIGENTE SA DE CV,788,IMSS Pharma/Medical DA Capture - AL.CO Salud Inteligente,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2017,2025,True
+2680,RAIMA CONSTRUCCIONES SA DE CV,789,Multi-Institution 100% Single-Bid Construction - Raima Construcciones,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2002,2015,True
+20254,"MEDICA IDEAS, S.A. DE C.V.",790,IMSS Medical Device Capture via Single-Bid - Medica Ideas,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2005,2020,True
+4253,"CONSTRUCCIONES E INSTALACIONES MODERNAS, S.A. DE C.V.",793,SEGOB construccion DA saturation + multi-institution single-bid,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2002,2018,True
+61828,PUNTO PEN,794,PUNTO PEN single-bid capture at financial/military institutions,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2011,2024,True
+14489,"SERVICIOS TRONCALIZADOS, S.A. DE C.V.",795,CFE trunked radio institutional capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2003,2025,True
+91072,CORPORACION AUXILIAR DE POLICIA DE PROTECCION CIUDADANA,796,Banco del Bienestar / Diconsa single-bid security capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+130274,"BM MEXICANA DE COMERCIO, S.A. DE C.V.",797,BM Mexicana 410M single-bid to public broadcasting,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2014,2014,True
+43649,TECNO LOGICA MEXICANA,798,Tecno Logica Mexicana IMSS direct-award capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2016,2020,True
+1008,"MAQUINARIA INTERCONTINENTAL, S.A. DE C.V.",799,PEMEX SB Capture — Maquinaria Intercontinental,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2002,2012,True
+149097,UFARA POWER NETWORKS SA DE CV,800,CFE SB Capture — Ufara Power Networks,single_bid_capture,high,3,0,active_or_captured:high,0.8,2015,2017,True
+268801,"CARGO CRANE, S.A. DE C.V.",801,CDMX/SCT Intermediary — Cargo Crane,intermediary_capture,medium,3,0,active_or_captured:medium,0.5,2021,2023,True
+154709,Diagnóstico de Seguridad Privada Especializada S. de R.L.,802,CFE Single-Bid Security Diagnostics Intermediary,intermediary,medium,3,0,active_or_captured:medium,0.5,2017,2017,True
+224019,"GRUPO RELISSA SERVICIOS CORPORATIVOS, S.A DE C.V.",803,ISSSTE/SSa Shell Intermediary — Grupo Relissa,intermediary,high,3,0,active_or_captured:high,0.8,2020,2020,True
+4379,"AMBIDERM, S.A. DE C.V.",804,AMBIDERM IMSS Medical Supplies DA Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+4394,"JUSTESA IMAGEN MEXICANA, S.A DE C.V.",805,JUSTESA IMAGEN IMSS Medical Imaging DA Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+16579,CONSTRUCTORA MOYEDA SA DE CV,806,CONSTRUCTORA MOYEDA SCT Single-Bid Infrastructure Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2005,2020,True
+101650,RYSE MEDICA,807,RYSE MEDICA — IMSS medical supplies and cardiac surgery DA saturation,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2013,2025,True
+33566,"GANADEROS PRODUCTORES DE LECHE PURA, S.A. DE C.V.",808,DIF EdoMex Dairy Single-Bid Capture -- Ganaderos Productores,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2007,2008,True
+83456,COMERCIALIZADORA SALYMED SA DE CV,809,ISSSTE Pharma Distributor Capture -- Comercializadora Salymed,procurement_capture,medium,3,0,active_or_captured:medium,0.5,2017,2018,True
+264411,KIT WEAR DE MEXICO SA DE CV,810,Bienestar Uniform Single-Bid Monopoly — Kit Wear,single_bid_capture,high,3,0,active_or_captured:high,0.8,2020,2025,True
+10800,IMAGE TECHNOLOGY MEXICO S.A. DE C.V.,811,Seguro Popular IT Single-Bid Capture — Image Technology,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2006,True
+25673,MULTISERVICIOS DE CONSTRUCCION AMBIENTAL Y RESTAURACION S.A. DE C.V.,812,CDMX/Morelos Construction Single-Bid Capture — Multiservicios Javer,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2006,2017,True
+2938,"MUEBLES Y MUDANZAS, S.A. DE C.V.",813,SEPOMEX Logistics Single-Bid Capture — Muebles y Mudanzas,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2013,True
+55923,CAMSA  INFRAESTRUCTURA S A P I DE CV,814,SCT Single-Bid Infrastructure Capture — CAMSA,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2010,2013,True
+70277,QUIMICA APOLLO,815,CFE Electrical Substation Capture — Quimica Apollo,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2017,True
+31542,FJ REPRESENTACIONES SA DE CV,816,IMSS Maintenance Capture — FJ Representaciones,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2016,2025,True
+209619,"JUNTOS A NUTRIR, S.A. DE C.V.",817,Diconsa Rural Food Supply DA Abuse — Juntos a Nutrir,direct_award_abuse,high,3,0,active_or_captured:high,0.8,2017,2019,True
+154709,Diagnóstico de Seguridad Privada Especializada S. de R.L.,818,CFE Single-Bid Security Diagnostics Intermediary,intermediary,medium,3,0,active_or_captured:medium,0.5,2017,2017,True
+224019,"GRUPO RELISSA SERVICIOS CORPORATIVOS, S.A DE C.V.",819,ISSSTE/SSa Shell Intermediary — Grupo Relissa,intermediary,high,3,0,active_or_captured:high,0.8,2020,2020,True
+27506,ZAPATA INTERNACIONAL SA CV,820,PEMEX PEP Single-Bid Capture - Zapata Internacional,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2006,2007,True
+21092,"EXPLORACIONES MINERAS DEL DESIERTO, S.A. DE C.V.",821,Sonora Infrastructure Single-Bid Monopoly - Exploraciones Mineras del Desierto,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2011,True
+36960,"DRAGADOS OFFSHORE DE MÉXICO, S.A. DE C.V.",822,PEMEX PEP Single-Bid Capture - Dragados Offshore de Mexico,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2008,2009,True
+58850,JOSE MANUEL TRONCO VAZQUEZ,823,IMSS Surgical Instrument Maintenance — Persona Fisica Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2015,2018,True
+64384,GRUPO EMPRESARIAL CALZADO INDUSTRIAL DE MEXICO SA DE CV,824,CFE Footwear Single-Bid Capture — Grupo Calzado Industrial,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2010,2017,True
+38686,"SST DE MEXICO, S.A. DE C.V.",825,ASA Airport Infrastructure Capture — SST de Mexico,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2012,2024,True
+282210,IMPACTO INGENIERIA & CONSTRUCCION SA DE CV,826,CENAGAS Gas Infrastructure Intermediary — Impacto Ingenieria,intermediary,medium,3,0,active_or_captured:medium,0.5,2022,2023,True
+34293,"NOVUTEK, SC",827,ISSSTE IT Single-Bid Intermediary — NOVUTEK SC,intermediary,medium,3,0,active_or_captured:medium,0.5,2011,2011,True
+144600,LIC. ALONDRA EUGENIA DE LA TORRE HERNANDEZ,828,CONAGUA Natural-Person Intermediary — Lic. De La Torre,intermediary,medium,3,0,active_or_captured:medium,0.5,2016,2016,True
+267312,RECURSOS OMEGA S DE RL DE CV,829,IMP Single-Bid Petroleum Intermediary — Recursos Omega,intermediary,medium,3,0,active_or_captured:medium,0.5,2021,2023,True
+183321,COMERCIALIZADORA DE MULTIPLES PRODUCTOS ZAGAL SA DE CV,830,ZAGAL IMSS Direct Award Saturation,direct_award_abuse,high,3,0,active_or_captured:high,0.8,2016,2025,True
+102693,INFRAEXT DE MEXICO SA DE CV,831,INFRAEXT SCT Infrastructure Single Bid Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2013,2018,True
+162140,CONSTRUCTORA TEGO SA DE CV,832,TEGO 100% Single Bid State Judiciary and Energy,single_bid_capture,high,3,0,active_or_captured:high,0.8,2015,2016,True
+67554,"PHOENIX FARMACEUTICA, S.A. DE C.V.",833,PHOENIX FARMACEUTICA Oaxaca Single Bid Pharma,single_bid_capture,high,3,0,active_or_captured:high,0.8,2012,2014,True
+102564,CONSTRUCCIONES ARYVE SA DE CV,834,ARYVE Tamaulipas Construction Single Bid Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2013,2022,True
+291668,ALMACENES Y SERVICIOS SANTA ROSA SA DE CV,5,Segalmex Food Distribution Fraud,procurement_fraud,high,3,0,active_or_captured:high,0.8,2019,2023,True
+128330,CONSTRUCTORA JBE SA DE CV,835,Constructora JBE - IMSS 313M Single-Bid Construction Capture (2016),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2016,2016,True
+190801,ABEQU SA DE CV,836,ABEQU - Multi-State Construction 495M 100pct Single-Bid (2016-2019),intermediary,medium,3,0,active_or_captured:medium,0.5,2016,2019,True
+47792,INMOBILIARIA Y CONSTRUCTORA BARQUIN SA DE CV,837,Inmobiliaria Barquin - Veracruz Duarte-Era Infrastructure 255M 100pct SB (2010-2013),institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2013,True
+15385,"SYNCOM INTERNATIONAL, S.A. DE C.V.",838,SYNCOM International CFE Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2017,True
+107930,"FARMACON, S.A. DE C.V.",839,FARMACON NAFIN Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2018,2021,True
+54863,COMERCIALIZADORA PETROLERA DEL GOLFO,840,PEMEX Comercializadora Petrolera del Golfo intermediary,intermediary_capture,medium,3,0,active_or_captured:medium,0.5,2010,2014,True
+181681,CORPORATIVO DE PROMOCIONES DOEX SA DE CV,841,CONAVI/INDEP Corporativo DOEX single-bid capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2016,2019,True
+176200,AZTECA E INFRAESTRUCTURA DE MEXICO SA DE CV,842,Azteca Infraestructura Veracruz single-bid network,single_bid_intermediary,medium,3,0,active_or_captured:medium,0.5,2016,2020,True
+144525,AUTOTRANSPORTES NIETO ACOSTA SA DE CV,843,IEPSA Autotransportes Nieto Acosta industry mismatch,intermediary_capture,medium,3,0,active_or_captured:medium,0.5,2014,2016,True
+171645,GRUPO BORSEN SA DE CV,844,GRUPO BORSEN CDMX Obras Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2018,True
+183288,DESPENSAS Y PROVISIONES DE ALIMENTOS SA DE CV,845,DESPENSAS y Provisiones State Food Supply SB,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2016,2018,True
+145583,DEISY LIZZETH REYES PACHECO,846,DEISY LIZZETH Natural Person CFE Direct Award,ghost_company,medium,3,0,active_or_captured:medium,0.5,2014,2017,True
+253965,EAPRO CONSTRUCCIONES SA DE CV,847,EAPRO Construcciones - IPN Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2023,2025,True
+5256,ARTIMEDICA  S.A. DE C.V.,848,ARTIMEDICA IMSS Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2013,2025,True
+177420,D&P MEXICO SERVICIOS DIGITALES SA DE CV,849,D&P Mexico PROSPERA Intermediary Shell,intermediary_shell,medium,3,0,active_or_captured:medium,0.5,2016,2016,True
+104127,COMERCIALIZADORA DICLINSA SA DE CV,850,DICLINSA IMSS Pharma Ring,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2018,2025,True
+256543,INGENIA AG SAS DE CV,851,INGENIA AG Ghost Stepping-Stone,ghost_company,medium,3,0,active_or_captured:medium,0.5,2020,2024,True
+192928,ESPECIALISTAS EN FARMACOS DEL NORTE SA DE CV,852,Especialistas en Farmacos del Norte - IMSS DA Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2021,2025,True
+40425,"FARMACEUTICA ALTHOS, S.A. DE C.V.",853,Farmaceutica Althos - ISSSTE DA Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2022,True
+4360,"INTERBIOL, S.A. DE C.V.",854,Interbiol - CNEGSR/CENAPRECE DA Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2019,2020,True
+42638,EERMS SA DE CV,855,EERMS CFE Energia Capture,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2017,True
+224275,CONSTRUCCIONES E INMOBILIARIAS CANARO SA DE CV,856,CANARO Tampamolon Corona Municipal Ghost,ghost_company,high,3,0,active_or_captured:high,0.8,2016,2018,True
+2839,"TRENA, S.A. DE C.V.",857,TRENA Multi-State Monopoly Single-Bid,bid_rigging,high,3,0,active_or_captured:high,0.8,2002,2014,True
+41408,"TRANSFORMACION TECNOLOGICA DE TAMAULIPAS, S.A. DE C.V.",858,Transformacion Tecnologica Tamaulipas - PEMEX SB Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2009,2011,True
+158943,DAVID OMAR GARCIA GARCIA,859,David Omar Garcia Garcia - Coahuila Finanzas SB Capture,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2015,True
+116419,SCOI SOLUCIONES CORPORATIVAS INTEGRALES S DE RL DE CV,860,SCOI Soluciones Corporativas - Multi-Institution SB Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2013,2013,True
+35766,SACJAV S.A. DE C.V.,861,SACJAV - ISSSTE Single-Bid Capture,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2008,2010,True
+226303,"SOLUCIONES SALUDABLES MTY, S. DE R.L. DE C.V.",862,Soluciones Saludables MTY - IMSS Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2018,2024,True
+148876,COMERCIALIZADORA LINI SA DE CV,863,Comercializadora LINI - IMSS Capture Ring Pattern,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2025,True
+103293,AIDYCSA SA DE CV,864,AIDYCSA - PGR Anomalous Direct Award,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2015,2016,True
+208520,CONSORCIO EMPRESARIAL INTERTAMPS S DE RL DE CV,865,Consorcio Empresarial Intertamps - Parastatal Direct Awards,direct_award_abuse,medium,3,0,active_or_captured:medium,0.5,2017,2018,True
+203996,"OPERADORA Y ADMINISTRADORA DE VALES, DESPENSAS Y SERVICIOS S A P I DE CV",866,Operadora Vales Despensas - ISSSTE Voucher Ecosystem SB 1.08B,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2017,2017,True
+148992,"VITER MEDICAL, S.A. DE C.V.",867,Viter Medical - IMSS Medical Supply Concentration 1.0B (2019-2023),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2019,2023,True
+188125,IMEHI DE MEXICO S DE RL DE CV,868,IMEHI de Mexico - Salvador Zubiran Overpriced Inv3 598M (2018),overpricing,medium,3,0,active_or_captured:medium,0.5,2018,2018,True
+7570,QUIMICA APOLLO S.A. DE C.V.,871,Quimica Apollo SA - PEMEX/CFE Multi-Subsidiary SB Capture 4.86B,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2002,2010,True
+32189,"GPA ENERGY, S.A. DE C.V.",872,GPA Energy - PEP Single 4.84B SB Contract (2007),single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2007,2007,True
+15242,"MARITIMA DE ECOLOGIA, S.A. DE C.V.",873,Maritima de Ecologia - PEP Marine Services SB Capture 4.54B,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2003,2009,True
+15243,"MEYER & ASOCIATES, S.A. DE C.V.",874,Meyer and Asociates - PEP Single-Bid Capture 4.32B,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2003,2007,True
+4404,LA COSMOPOLITANA S.A. DE C.V.,875,IMSS/State Food Capture -- La Cosmopolitana (Grupo Kosmos),institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2019,True
+15447,"CONSTRUCCIONES MECÁNICAS MONCLOVA, S.A. DE C.V.",876,PEMEX SB Capture -- Construcciones Mecanicas Monclova,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2003,2010,True
+15279,"GLOBAL DRILLING FLUIDS DE MÉXICO, S.A. DE C.V.",877,PEMEX SB Capture -- Global Drilling Fluids de Mexico,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2003,2010,True
+152287,OMEGA ALEACIONES SA DE CV,878,Casa de Moneda Metals Monopoly - OMEGA ALEACIONES,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2025,True
+44987,"ACEITES GRASAS Y DERIVADOS, S.A. DE C.V.",879,Diconsa/Alimentacion Food Distribution Monopoly - ACEITES GRASAS,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+148090,ETN TURISTAR LUJO SA DE CV,880,ETN TURISTAR LUJO - INM Institution Capture,institution_capture,high,3,0,active_or_captured:high,0.8,,,True
+25627,"GRUPO INDUSTRIAL VIDA, S.A. DE C.V.",881,GRUPO INDUSTRIAL VIDA - Diconsa Food Distribution Monopoly,institutional_capture,high,3,0,active_or_captured:high,0.8,,,True
+128027,CONSORCIO EMPRESARIAL ADPER SA DE CV,882,CONSORCIO EMPRESARIAL ADPER - Infrastructure Intermediary Network,intermediary,high,3,0,active_or_captured:high,0.8,2014,2018,True
+5072,"AUTOBUSES DE LA PIEDAD, S.A. DE C.V.",883,IMSS Ambulance Transport Capture - Autobuses de la Piedad,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+285316,ORTHOPBONE & SPINE SA DE CV,884,IMSS Medical Device Ghost Company - Orthopbone & Spine,ghost_company,high,3,0,active_or_captured:high,0.8,2022,2025,True
+28510,"FOJA INGENIEROS CONSTRUCTORES, S.A. DE C.V.",885,FOJA INGENIEROS Construction Contracts - Single-Bid Capture,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2006,2020,True
+165033,PROVECTUS TECNOLOGIA SA DE CV,886,PROVECTUS TECNOLOGIA — Single-Bid IMSS Mega-Contract,single_bid_capture,high,3,0,active_or_captured:high,0.8,2023,2023,True
+94974,DISEÑO Y MANUFACTURA DIGITAL,887,DISEÑO Y MANUFACTURA DIGITAL - UdT Monopoly,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2016,True
+256417,JUAN RAMON CARDENAS SALAZAR,888,JUAN RAMON CARDENAS SALAZAR - DICONSA Intermediary,ghost_company,high,3,0,active_or_captured:high,0.8,2019,2022,True
+4690,"GRUPO MORAVI, S.A. DE C.V.",891,IMSS Cleaners & Medical Supplies Capture — Grupo Moravi,institutional_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+2866,"ESPECIALISTAS EN ESTERILIZACIÓN Y ENVASE, S.A. DE C.V.",892,IMSS Sterilization & Packaging Monopoly — Especialistas en Esterilizacion y Envase,institutional_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+42524,"INDUSTRIAL  SOLUTIONS DE MEXICO, S.A. DE C.V.",893,Industrial Solutions INM/BANMEX Single Bid Intermediary,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2009,2024,True
+25488,COMBUSTIBLES BAJA SUR SA DE CV,894,COMBUSTIBLES BAJA SUR — EXPORTADORA DE SAL Monopoly,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2019,2025,True
+6829,"PRODUCTOS STANTON, S.A. DE C.V.",895,PRODUCTOS STANTON — IMSS Medical Supply Institutional Capture (2017-2023),institutional_capture,high,3,0,active_or_captured:high,0.8,2017,2023,True
+60561,SERVICIOS MEDICOS Y DE EQUIPAMIENTO SA DE CV,896,Servicios Medicos y de Equipamiento SA de CV - IMSS Institutional Capture,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+19543,GLOBAL BUSINESS GROUP S.A. DE C.V.,897,Global Business Group SA de CV - IMSS Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2017,2022,True
+10051,"TERRACERIAS, PAVIMENTOS Y CAMINOS S.A. DE C.V.",898,SCT Pavimentos y Caminos Capture,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2002,2022,True
+3214,INGENIEROS Y EQUIPOS MECANICOS S.A. DE C.V.,899,SCT Ingenieros y Equipos Capture,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2002,2025,True
+9655,CONSTRUCTORA MOOL S.A. DE C.V.,900,SCT Mool Yucatan Capture,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2002,2020,True
+8175,"RAGER DE TABASCO, S.A DE C.V.",901,SCT Rager Tabasco Capture,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2002,2015,True
+169633,PROYECTOS Y SISTEMAS INFORMATICOS SA DE CV,902,PROYECTOS INFORMATICOS Federal Roads DA Capture,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2021,True
+8963,"CONSULTORIA EN OBRA, S.A. DE C.V.",903,CONSULTORIA OBRA CENAGAS/PEMEX Single-Bid Capture,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+19550,COMERCIALIZADORA PHARMACEUTICA COMPHARMA S.A. DE C.V.,904,COMPHARMA IMSS Pharmaceutical Distribution Capture,institutional_capture,"IMSS concentration (61% of contracts), DA pattern",3,0,"default_medium:IMSS concentration (61% of contracts), DA pattern",0.3,2005,2025,True
+5210,"PIHCSA MEDICA, S.A. DE C.V.",905,PIHCSA MEDICA IMSS Medical Supply Dominance,institutional_capture,"IMSS concentration (81% of contracts), 20-year dominance",3,0,"default_medium:IMSS concentration (81% of contracts), 20-year dominance",0.3,2002,2022,True
+13650,"MEDICAL LIFE SUPPLY, S.A. DE C.V.",906,Medical Life Supply IMSS Institutional Capture,institutional_capture,high,3,0,active_or_captured:high,0.8,2003,2025,True
+10307,"CONSTRUCCIONES Y CARRETERAS, S.A. DE C.V.",907,Construcciones y Carreteras Single Bid Infrastructure,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2020,True
+148962,ESPECIALISTAS EN APLICACIONES Y SOPORTE TECNICO MEDICO SA DE CV,908,IMSS IT Support Services Monopoly (Especialistas),institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2025,True
+20119,"SOPORTE MÉDICO INTEGRAL, S. A. DE C. V.",909,Soporte Medico Integral IMSS Direct Award Capture 2005-2025,institutional_capture,strong,4,0,active_or_captured:strong,0.8,2005,2025,True
+54697,MERP EDIFICACIONES Y TERRACERIAS,910,MERP Edificaciones SCT Single-Bid Capture 2012-2018,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2012,2025,True
+11906,CONSTRUCTORA ARRENDADORA Y MATERIALES,911,Constructora Arrendadora SCT Single-Bid Capture 2003-2010,single_bid_capture,strong,4,0,active_or_captured:strong,0.8,2003,2010,True
+20214,"BIOSKINCO, S.A. DE C.V.",912,BIOSKINCO IMSS Direct Award,institutional_capture,high,3,0,active_or_captured:high,0.8,2005,2025,True
+64778,LEVIC SA DE CV,913,LEVIC IMSS Institutional Capture,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2023,True
+39197,"MAQUINAS DIESEL, S.A. DE C.V.",914,SEMAR Naval Equipment Direct Award Capture - Maquinas Diesel,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2009,2025,True
+1988,BREYSA CONSTRUCTORA S.A. DE C.V.,915,Jalisco State Construction Single-Bid Capture - Breysa Constructora,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2021,True
+19011,"CONSTRUCTORA JILSA, S.A. DE C.V.",916,IMSS Construction Single-Bid Capture - Constructora Jilsa,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2023,True
+23929,CONSTRUCTORA E INMOBILIARIA RIO MEDIO S. A. DE C. V.,917,Veracruz Port Single-Bid Capture - Constructora Rio Medio,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2017,True
+60173,CONSTRUMAQ SA DE CV,918,Jalisco State Construction Single-Bid Capture - Construmaq,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2021,True
+256471,ASCH SA DE CV,919,CONAGUA Water Infrastructure Single-Bid Capture - ASCH,single_bid_capture,high,3,0,active_or_captured:high,0.8,2020,2025,True
+82754,PROPIEDADES INMOBILIARIAS DE MEXICO SA DE CV,920,SCT Government Real Estate Single-Bid Capture - Propiedades Inmobiliarias,single_bid_capture,high,3,0,active_or_captured:high,0.8,2012,2018,True
+35196,ASFALTOS Y DERIVADOS DE LA COSTA S.A DE C.V,921,Veracruz Port and Isthmus Railway SB Capture - Asfaltos y Derivados,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2008,2024,True
+219259,SKY BOOK SA DE CV,922,EDOMEX Education Ghost Vendor - Sky Book,ghost_company,high,3,0,active_or_captured:high,0.8,2018,2018,True
+36122,"SANIPAP DE MÉXICO, S.A. DE C.V.",923,IMSS and Government Printing House Paper Supply Capture - Sanipap,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2008,2024,True
+135338,SOLUCIONES TECNOLOGICAS MEDICAS SA DE CV,924,Dual IMSS-ISSSTE Medical Technology Capture - Soluciones Tecnologicas Medicas,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2025,True
+19293,"EDM DE MEXICO, SA DE CV",925,Sonora State Financial Services Single-Bid Capture - EDM de Mexico,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2016,True
+24328,"CONSTRUCTORA INCO, S.A. DE C.V.",926,SEDATU Construction Single-Bid Capture - Constructora Inco,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2024,True
+1724,REPRESENTACIONES ALDO DE CAMPECHE S.A. DE C.V.,927,Campeche State Public Works Single-Bid Capture - Representaciones Aldo,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2024,True
+15446,"BOSNOR, S.A. DE C.V.",928,PEMEX Exploration Direct Award Capture - Bosnor,institutional_capture,high,3,0,active_or_captured:high,0.8,2003,2014,True
+118914,SARENGGO SA DE CV,929,Banco del Bienestar IT Institutional Capture - Sarenggo,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2020,True
+91742,SUMINISTROS MEDICOS DE MEXICO SA DE CV,930,Hospital General de Mexico and IMSS Medical Supply Capture - Suministros Medicos,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+50645,COMERCIALIZADORA E IMPORTADORA DE PRODUCTOS QUIMICOS,931,INCAN Cancer Institute Direct Award Monopoly - Comercializadora Incan,institutional_capture,high,3,0,active_or_captured:high,0.8,2004,2025,True
+76012,CONSTRUCTORA V V R SA DE CV,932,Coahuila State Construction Single-Bid Capture - Constructora VVR,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+1117,"CONSTRUCCION Y ARRENDAMIENTO DE MAQUINARIA DE SINALOA, S.A. DE C.V.",933,Sinaloa and CONAGUA Infrastructure Single-Bid Capture - Construccion y Arrendamiento,single_bid_capture,high,3,0,active_or_captured:high,0.8,2007,2020,True
+87441,FYSIS SOLUCIONES AMBIENTALES SA DE CV,934,CFE Environmental Services Direct Award Capture - Fysis Soluciones Ambientales,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2019,True
+138799,GRUPO TOTAL INBAS SA DE CV,935,Sonora State and CONAGUA Infrastructure Single-Bid Capture - Grupo Total Inbas,single_bid_capture,high,3,0,active_or_captured:high,0.8,2016,2023,True
+18990,"CONSTRUCTORA COSS BU,S.A. DE C.V.",936,Nuevo Leon State Construction Single-Bid Capture - Constructora Coss Bu,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+49801,"ENLACES TERRESTRES NACIONALES , S.A DE C.V.",937,SEDENA Ground Transport Direct Award Capture - Enlaces Terrestres Nacionales,institutional_capture,high,3,0,active_or_captured:high,0.8,2017,2019,True
+54748,LANDUCCI SA DE CV,938,Foreign Ministry and Presidency Direct Award Capture - Landucci,institutional_capture,high,3,0,active_or_captured:high,0.8,2011,2013,True
+46780,RUBEN MIGUEL VELASCO OCAMPO,939,Veracruz State Construction Single-Bid Capture - Ruben Miguel Velasco Ocampo,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2016,True
+48919,ANUNCIOS UNIPOLARES SA DE CV,940,CONAGUA and Chihuahua Water Signage Single-Bid Capture - Anuncios Unipolares,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2010,2025,True
+44096,CONSTRUCTORA MELARE SA DE CV,941,Multi-State Construction Single-Bid Capture - Constructora Melare,single_bid_capture,high,3,0,active_or_captured:high,0.8,2014,2024,True
+253514,KOM BUSINESS SA DE CV,942,Banco del Bienestar Direct Award Capture - Kom Business,institutional_capture,high,3,0,active_or_captured:high,0.8,2019,2022,True
+99184,"NO. 1 SONORA APPAREL, S.A. DE C.V.",943,Sonora State Education Clothing Single-Bid Capture - No. 1 Sonora Apparel,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2015,True
+34219,DISTRIBUIDORA DE EQUIPOS DE PERFORACIÓN S.A. DE C.V.,944,CONAGUA Drilling Equipment Single-Bid Capture - Distribuidora Equipos Perforacion,institutional_capture,high,3,0,active_or_captured:high,0.8,2009,2025,True
+94920,IECISA MEXICO,945,Foreign Ministry and Security Sector IT Direct Award Capture - IECISA Mexico,institutional_capture,high,3,0,active_or_captured:high,0.8,2011,2020,True
+57594,LATINOAMERICANA DE CONCRETOS SA DE CV,946,Altamira Port Concrete Single-Bid Capture - Latinoamericana de Concretos,single_bid_capture,high,3,0,active_or_captured:high,0.8,2012,2015,True
+41330,"AGROREYVI, S.A. DE C.V.",947,CINVESTAV Research Center Direct Award Supply Capture - Agroreyvi,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+82923,GIBITNET SOLUCIONES INTEGRALES SA DE CV,948,BANJERCITO Military Bank IT Institutional Capture - Gibitnet,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2021,True
+43159,OPERADORA DE AUTOPISTAS ALDESEM SA DE CV,949,BANOBRAS Highway Infrastructure Single-Bid Ghost Contract - Aldesem,ghost_company,high,3,0,active_or_captured:high,0.8,2012,2012,True
+10139,"CONSTANCIA DEL GOLFO, S.A DE C.V.",950,SCT Road Infrastructure Single-Bid Capture - Constancia del Golfo,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2019,True
+38422,"ARQUITECTURA CONSTRUCTIVA SAENZ, S.A. DE C.V.",951,Nuevo Leon State Infrastructure Single-Bid Capture - Arquitectura Saenz,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2015,True
+140404,CLIMATIZACION ESPECIALIZADA DEL NORESTE SA DE CV,952,National Health Institute HVAC Direct Award Capture - Climatizacion Especializada,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2015,2024,True
+158910,"TECNOLOGÍA EN SEGURIDAD PRIVADA SSIA, Q. ROO, S.A. DE C.V.",953,Mexico City Airport Security Single-Bid and DA Capture - Tecnologia SSI,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2021,True
+37190,"CLINIC AND WORK LINE, S.A. DE C.V.",954,COFEPRIS Health Regulator Direct Award Capture - Clinic and Work Line,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2015,True
+138828,CIFO TECHNOLOGIES SA DE CV,955,FONACOT Workers Fund IT Direct Award Capture - CIFO Technologies,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2019,True
+25396,PROYECCION Y ADMINISTRACION EMPRESARIAL DE MEXICO SA DE CV,956,PEMEX Exploration Subsidiary Administrative SB Capture - Proyeccion y Administracion,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2010,True
+195663,GAVIL INGENIERIA SA DE CV,957,Attorney General Office Single-Bid Capture - Gavil Ingenieria,single_bid_capture,high,3,0,active_or_captured:high,0.8,2022,2025,True
+85858,ALEJANDRO CARREON IBAÑEZ,958,Dolores Hidalgo Municipal Capture Individual Contractor - Alejandro Carreon,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2014,True
+45433,SOFILAB S.A.D E C.V.,959,Hospital Juarez Federal Hospital Direct Award Capture - Sofilab,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2025,True
+32995,"MAGGSA CONSTRUCTORA, S.A. DE C.V.",960,CAPUFE and SCT Road Infrastructure Single-Bid Capture - Maggsa Constructora,single_bid_capture,high,3,0,active_or_captured:high,0.8,2007,2022,True
+26168,"JM CONSTRUCTORA Y SUPERVISION, S. A. DE C. V.",961,CDMX Alcaldias and Jalisco Construction Single-Bid Capture - JM Constructora,single_bid_capture,high,3,0,active_or_captured:high,0.8,2014,2018,True
+31195,COMTELSAT SA DE CV,962,SEGOB and Prison System Telecom Direct Award Capture - Comtelsat,institutional_capture,high,3,0,active_or_captured:high,0.8,2007,2023,True
+21269,TOPTEL S DE RL DE CV,963,Federal Ministry Telecom Multi-Capture - Toptel,institutional_capture,high,3,0,active_or_captured:high,0.8,2005,2014,True
+114160,GRUPO METAINDUSTRIAL DE INNOVACIONES S A P I DE CV,964,SEDATU Housing Ministry Single Direct Award Capture - Grupo Metaindustrial,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2016,True
+34040,"ECATEPEC, S.A. DE C.V.",965,SEDENA Defense Ministry Single Direct Award - Ecatepec SA,institutional_capture,high,3,0,active_or_captured:high,0.8,2016,2016,True
+51311,GRUPO EMPRESARIAL BABASAC SA DE CV,966,SAGARPA and Sonora Agriculture Multi-Agency SB Capture - Babasac,single_bid_capture,high,3,0,active_or_captured:high,0.8,2008,2018,True
+16530,"CONSTRUCTORA AUTLENSE, S.A. DE C.V.",967,Jalisco State Infrastructure Single-Bid Capture - Constructora Autlense,single_bid_capture,high,3,0,active_or_captured:high,0.8,2008,2017,True
+31907,CONSTRUCCIONES JOSE S.A. DE C.V.,968,Fisheries and Water Infrastructure SB Capture - Construcciones Jose,single_bid_capture,high,3,0,active_or_captured:high,0.8,2007,2016,True
+48829,GRUPO CONSTRUCTOR LANROL,969,Durango State and SEDATU Housing SB Capture - Grupo Constructor Lanrol,single_bid_capture,high,3,0,active_or_captured:high,0.8,2011,2019,True
+98187,DIABE CONSTRUCCIONES Y DISEÑOS SA DE CV,970,PROSPERA Anti-Poverty Program Construction Capture - Diabe Construcciones,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2017,True
+47654,CIRCULO LLANTERO SA DE CV,971,CFE Federal Electricity Utility Direct Award Capture - Circulo Llantero,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2017,True
+40946,KT SERVICIO ANAYA S.A. DE C.V.,972,IMSS Health Security Single-Bid Service Capture - KT Servicio Anaya,single_bid_capture,high,3,0,active_or_captured:high,0.8,2009,2025,True
+103946,KJFM DISEÑOS Y SOLUCIONES SA DE CV,973,FONACOT Workers Fund and Immigration Institute IT DA Capture - KJFM,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2018,True
+53,"GRUPO RAUDALES, S.A. DE C.V.",974,Gulf Coast Port Authority Long-Term SB Capture - Grupo Raudales,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+3171,"GRUPO MESIS, SA DE CV",975,CONAGUA and SAGARPA Water-Agriculture SB Capture - Grupo Mesis,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+224628,GARKEN MEDICAL SA DE CV,976,IMSS Medical Supply Direct Award Capture - Garken Medical,institutional_capture,high,3,0,active_or_captured:high,0.8,2018,2025,True
+33615,"GOVERNMENT SOLUTIONS MEXICO, S.A. DE C.V.",977,SEP Education Ministry Single-Bid Ghost Contract - Government Solutions Mexico,ghost_company,high,3,0,active_or_captured:high,0.8,2008,2021,True
+47626,CAV DISEÑO E INGENIERIA,978,Infrastructure Ministry and SEDATU Recent SB Capture - CAV Diseno e Ingenieria,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+111701,DISTRIBUIDORA DE COMBUSTIBLES DE SAN QUINTIN SA DE CV,979,Exportadora de Sal State Company Fuel SB Capture - Distribuidora San Quintin,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2016,True
+145823,LIDERES EN MATERIALES MEDICOS DEL NORTE S DE RL DE CV,980,IMSS and ISSSTE Medical Materials Direct Award Capture - Lideres Materiales Medicos,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2025,True
+23025,CMCO SA. DE CV.,981,SCT and Navy Ministry Dual Single-Bid Capture - CMCO,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2023,True
+76384,IDEVVSA CONSTRUCCIONES SA DE CV,982,Federal Roads and Transport Ministry 100% SB Capture - IDEVVSA Construcciones,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+14706,"CONSTRUCTORA WONGPEC, S.A. DE C.V.",983,CONAGUA and IPN Infrastructure 100% SB Capture - Constructora Wongpec,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2015,True
+46423,MUEBLES Y MUDANZAS,984,SAT Tax Authority and Postal Service Direct Award Capture - Muebles y Mudanzas,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2017,True
+140883,PROTECCION AGROPECUARIA COMPA&IA DE SEGUROS SA,985,Michoacan State Agricultural Insurance Capture - Proteccion Agropecuaria,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2019,True
+3145,LINOS CONSTRUCCIONES S. A. DE C. V.,986,SEDATU and IMSS Multi-Agency Construction SB Capture - Linos Construcciones,single_bid_capture,medium,3,0,active_or_captured:medium,0.5,2008,2022,True
+15298,"BARCA DE REYNOSA, S.A. DE C.V.",987,PEMEX Oil Exploration Single-Bid Capture - Barca de Reynosa,single_bid_capture,high,3,0,active_or_captured:high,0.8,2003,2016,True
+8059,"DM INGENIEROS, S.A. DEC.V.",988,PEMEX Infrastructure Single-Bid Capture - DM Ingenieros,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2012,True
+126590,RT4 COMUNICACIONES SA DE CV,989,IPICYT Research Institute Ghost Direct Award - RT4 Comunicaciones,ghost_company,high,3,0,active_or_captured:high,0.8,2014,2025,True
+6989,SPACE TOURS S.A DE C.V.,990,Immigration Institute Long-Term Service Capture - Space Tours,institutional_capture,high,3,0,active_or_captured:high,0.8,2002,2018,True
+203442,LOS CEDROS CONSTRUCCIONES SA DE CV,991,SEDATU Housing Ministry Concentrated SB and DA Capture - Los Cedros Construcciones,institutional_capture,high,3,0,active_or_captured:high,0.8,2017,2022,True
+149345,"SAMPOL INGENIERIA Y OBRAS MÉXICO, S.A. de C.V.",992,ISSSTE Government Workers Institute DA Capture - Sampol Ingenieria,institutional_capture,high,3,0,active_or_captured:high,0.8,2015,2022,True
+24338,"COMERCIALIZADORA Y CONSTRUCTORA DEL SURESTE, S.A. DE C.V.",993,Chiapas State Infrastructure Single-Bid Capture - Comercializadora del Sureste,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2015,True
+22458,CONSTRUCTORA DE INFRAESTRUCTURA DE DURANGO S.A DE C.V.,994,Durango State and SCT Road Infrastructure 100% SB Capture - Constructora Durango,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2014,True
+61790,AUTOTRANSPORTES INTERNACIONALES S DE RL DE CV,995,Foreign Ministry and Trade Promotion Capture - Autotransportes Internacionales,institutional_capture,high,3,0,active_or_captured:high,0.8,2011,2019,True
+11322,"CONSTRUCTORA ARPOZA, S.A. DE C.V.",996,IMSS Single-Bid Ghost Construction Contract - Constructora Arpoza,ghost_company,high,3,0,active_or_captured:high,0.8,2003,2014,True
+136640,CONSTRUCTORA MENDEZ D SA DE CV,997,Sonora State Infrastructure Recent SB Capture - Constructora Mendez D,single_bid_capture,high,3,0,active_or_captured:high,0.8,2017,2025,True
+7538,"J. A. DIAZ Y CIA., S.A. DE C.V.",998,CENAGAS Gas Network Single-Bid Ghost Contract - JA Diaz y Cia,ghost_company,high,3,0,active_or_captured:high,0.8,2002,2025,True
+36132,"SELECT PRODUCE DE MEXICO, S.A. DE C.V",999,IMSS and ISSSTE Long-Term Exclusive Produce Supply Capture - Select Produce,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2008,2025,True
+107566,GCQ CONSTRUCCIONES SA DE CV,1000,Michoacan State Health and Roads 100% SB Capture - GCQ Construcciones,single_bid_capture,high,3,0,active_or_captured:high,0.8,2017,2018,True
+132571,OVAIDE SA DE CV,1001,SEP and SCT Dual Ministry Ghost Single-Bid Contracts - Ovaide,ghost_company,high,3,0,active_or_captured:high,0.8,2014,2024,True
+87100,GRUPO CONSTRUCCIONES PLANIFICADAS,1002,Federal and State Road Infrastructure 100% SB Capture - Grupo Construcciones Planificadas,single_bid_capture,high,3,0,active_or_captured:high,0.8,2012,2020,True
+119068,SACYR MEXICO S.A. DE C.V.,1003,IMSS Hospital and SCT Road Infrastructure DA/SB Capture - Sacyr Mexico,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2018,True
+5836,TOBOGAN TOURS SA DE CV,1004,SCT Transport Ministry Ghost SB Capture by Travel Company - Tobogan Tours,ghost_company,high,3,0,active_or_captured:high,0.8,2002,2009,True
+102742,"GRUPO LIBRA SERVICIOS ADMINISTRATIVOS, S.A. DE C.V.",1005,"Education, Culture and Health Multi-Ministry Administrative Capture - Grupo Libra",institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2018,True
+42642,AMPLI BIO SA DE CV,1006,SENASICA Food Safety and Health Institute DA Capture - Ampli Bio,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2010,2024,True
+51859,CONSTRUCCIONES DISEÑO Y SERVICIOS AMBIENTALES SA DE CV,1007,Queretaro State Water Commission Ghost Single-Bid Contract - Construcciones Diseño,ghost_company,high,3,0,active_or_captured:high,0.8,2010,2016,True
+21069,INFRAESTRUCTURA  DEL  GOLFO  S.A.  DE C.V.,1008,Federal Roads and Toll Authority 99% SB Capture - Infraestructura del Golfo,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2021,True
+3142,"GEUR INGENIERIA, S.A. DE C.V.",1009,SEDATU Housing Ministry Concentrated Capture - GEUR Ingenieria,institutional_capture,high,3,0,active_or_captured:high,0.8,2002,2024,True
+44569,ARTICULOS PROMOCIONALES CASA XAVIER SA DE CV,1010,Aguascalientes Women's Institute Promotional Goods Ghost Capture - Casa Xavier,ghost_company,high,3,0,active_or_captured:high,0.8,2010,2018,True
+170,"INFRAESTRUCTURA MARITIMA Y PORTUARIA, S.A. DE C.V.",1011,Federal Port Authorities and Navy Ministry SB Capture - Infraestructura Maritima,single_bid_capture,high,3,0,active_or_captured:high,0.8,2002,2025,True
+84581,TECHNOTREND,1012,INEGI National Statistics Institute Ghost SB Capture - Technotrend,ghost_company,high,3,0,active_or_captured:high,0.8,2010,2018,True
+14171,"REGIOMONTANA DE CONSTRUCCIÓN Y SERVICIOS, S.A. DE C.V.",1013,Monterrey Multi-Agency Infrastructure 96% SB Capture - Regiomontana de Construccion,single_bid_capture,high,3,0,active_or_captured:high,0.8,2003,2013,True
+23060,"INMOBILIARIA RUSO, S.A. DE C.V.",1014,Veracruz State Toll Roads Single-Bid Capture - Inmobiliaria Ruso,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2017,True
+67887,AUDITORIA DE MEDIOS Y SERVICIOS A ANUNCIANTES SA DE CV,1015,Telecom Regulator and Gaming Agency Dual Capture - Auditoria de Medios,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+67309,"ROTHS INGENIERIA Y REPRESENTACIONES, S.A. DE C.V.",1016,Michoacan and Jalisco State Infrastructure Dual SB Capture - Roths Ingenieria,single_bid_capture,high,3,0,active_or_captured:high,0.8,2012,2017,True
+18559,"CENTRO DE SERVICIO AVEMEX, S.A. DE C.V.",1017,Federal Transport and Aviation Authority SB Capture - Centro de Servicio Avemex,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2020,True
+139325,ONE TO ONE SOLUTION MEXICO SA DE CV,1018,State Printing Company Non-Competitive Capture - One to One Solution Mexico,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2021,True
+34359,"CONSTRUCTORA SOGU, S.A. DE C.V",1019,SEDATU Housing Ministry Non-Competitive Capture - Constructora Sogu,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+9673,"REPRESENTACIONES REYCO DE SALTILLO, S.A. DE C.V.",1020,Federal Transport Ministry Extreme Concentration - Representaciones Reyco de Saltillo,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2016,True
+172800,TECROM SA DE CV,1021,IMSS Direct Award Pharmaceutical Capture - Tecrom,institutional_capture,high,3,0,active_or_captured:high,0.8,2016,2025,True
+155170,ECO BAJA TOURS SA DE CV,1022,Travel Agency Industry Mismatch Capture at Social Security Institutions - Eco Baja Tours,ghost_company,high,3,0,active_or_captured:high,0.8,2015,2025,True
+39196,MOTORES E INGENIERIA MEXMOT S.A. DE C.V.,1023,Water and Electricity Agency SB Capture - Motores e Ingenieria Mexmot,single_bid_capture,high,3,0,active_or_captured:high,0.8,2009,2025,True
+21096,EDIFICACION INTEGRAL DEL NOROESTE S.A. DE C.V.,1024,SEDATU Housing Ministry Non-Competitive Capture - Edificacion Integral del Noroeste,institutional_capture,high,3,0,active_or_captured:high,0.8,2007,2024,True
+65155,L C PROYECTOS Y CONSTRUCCIONES,1025,Sonora State and Federal Multi-Agency SB Capture - LC Proyectos y Construcciones,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+24386,GRUPO COVASA S.A. DE C.V.,1026,State of Mexico Water Commission 100% SB Capture - Grupo Covasa,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2014,True
+203404,SINERGIA SERVICIOS DE PLANIFICACION EMPRESARIAL SA DE CV,1027,Agricultural Statistics Agency and Cancer Institute SB Mismatch - Sinergia Servicios,ghost_company,high,3,0,active_or_captured:high,0.8,2019,2024,True
+112145,CONCRETOS ASFALTICOS TECAMAC,1028,Mexico City Airport 75% SB Concrete Capture - Concretos Asfalticos Tecamac,single_bid_capture,high,3,0,active_or_captured:high,0.8,2013,2022,True
+78,LIMPIEZA PROFESIONAL DE MICHOACAN,1029,Agriculture Ministry Ghost Cleaning Company Capture - Limpieza Profesional de Michoacan,ghost_company,high,3,0,active_or_captured:high,0.8,2002,2010,True
+103816,MAHARBA SERVICIOS INMOBILIARIOS SA DE CV,1030,Tulum Municipality 100% SB Real Estate Capture - Maharba Servicios Inmobiliarios,single_bid_capture,high,3,0,active_or_captured:high,0.8,2013,2018,True
+22993,LA AZTECA CONSTRUCCIONES Y URBANIZACIONES S.A. DE C.V.,1031,Federal and Sonora State Roads 100% SB Capture - La Azteca Construcciones,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2019,True
+34356,CONSTRUCTORA E IMPULSORA CONDOR SA DE CV,1032,Chiapas and Federal Infrastructure SB Capture - Constructora e Impulsora Condor,single_bid_capture,high,3,0,active_or_captured:high,0.8,2008,2022,True
+21088,"TESIA CONSTRUCCIONES, S.A. DE C.V.",1033,"Agriculture, Water and Transport Ministry Multi-Agency 100% SB - Tesia Construcciones",single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+23328,"CONSTRUCCIONES Y ESTRUCTURALES CAMACHO, S.A. DE C.V.",1034,Nuevo Leon State Infrastructure 100% SB Capture - Construcciones y Estructurales Camacho,single_bid_capture,high,3,0,active_or_captured:high,0.8,2005,2015,True
+66733,GRUPO MULTISERVICIOS ALCAR SA DE CV,1035,IMSS SB and CINVESTAV DA Dual Capture - Grupo Multiservicios Alcar,institutional_capture,high,3,0,active_or_captured:high,0.8,2012,2025,True
+11915,CONSTRUCTORA CADENA S.A. DE C.V.,1036,Baja California and Federal Infrastructure 93% SB Multi-Agency Capture - Constructora Cadena,single_bid_capture,high,3,0,active_or_captured:high,0.8,2011,2022,True
+44048,CYO FACTORY SA DE CV,1037,IMSS Single-Client Direct Award Capture 1108M - CYO Factory,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+39155,TECNICA EN MATERIALES ELECTRICOS S.A. DE C.V.,1038,CFE Electricity Commission 79% DA Electrical Materials Capture - Tecnica en Materiales Electricos,institutional_capture,high,3,0,active_or_captured:high,0.8,2009,2016,True
+47211,INSUMOS Y SOLUCIONES MEDICAS S.A. DE C.V.,1039,IMSS and IMSS-Bienestar Exclusive Direct Award Medical Capture - Insumos y Soluciones Medicas,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2025,True
+5013,"GRUPO OCTANO, S.A. DE C.V.",1040,"IMSS, Transport and Social Security Multi-Agency Non-Competitive Capture - Grupo Octano",institutional_capture,high,3,0,active_or_captured:high,0.8,2002,2022,True
+279396,COMERCIALIZADORA FTICA HIPERMEDIC SA DE CV,1041,IMSS 100% Direct Award Pharmaceutical Ghost Capture 2022-2024 - Hipermedic,ghost_company,high,3,0,active_or_captured:high,0.8,2022,2024,True
+5393,"EL BC SUPPLY, S.A. DE C.V.",1042,Children's Hospital and IMSS Medical Supply Non-Competitive Dual Capture - El BC Supply,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+1454,AUTOBUSES ESTRELLA BLANCA S.A. DE C.V.,1043,IMSS Transport Services 69% Non-Competitive Capture - Autobuses Estrella Blanca,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2025,True
+172563,COMERCIT SA DE CV,1044,IMSS 87% Direct Award Micro-Contract Capture - Comercit,institutional_capture,high,3,0,active_or_captured:high,0.8,2016,2024,True
+93976,KABLA COMERCIAL SA DE CV,1045,IMSS 89% Direct Award Cable/Equipment Capture - Kabla Comercial,institutional_capture,high,3,0,active_or_captured:high,0.8,2014,2025,True
+210043,AVANTARE CONSULTORES SA DE CV,1046,IMSS Ghost Consultant 99.3% Non-Competitive Capture 2022-2025 - Avantare Consultores,ghost_company,high,3,0,active_or_captured:high,0.8,2017,2025,True
+115009,AMC BIOMEDICAL SA DE CV,1047,IMSS Biomedical Direct Award Sustained Capture - AMC Biomedical,institutional_capture,high,3,0,active_or_captured:high,0.8,2013,2025,True
+115286,TERRACERIAS Y PAVIMENTOS G & A SA DE CV,1048,Jalisco Infrastructure and SCT 100% SB Road Capture - Terracerias y Pavimentos G&A,single_bid_capture,high,3,0,active_or_captured:high,0.8,2013,2021,True
+30179,GLOBAL MEXICANA DE INFRAESTRUCTURA SA DE CV,1049,Medical Research Institutions 100% SB Ghost Capture - Global Mexicana de Infraestructura,ghost_company,high,3,0,active_or_captured:high,0.8,2007,2018,True
+72082,DEPROYCO SA DE CV,1050,"Agriculture, Transport and Sonora 100% SB Multi-Agency Capture - Deproyco",single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2024,True
+11636,GALUMEDICAL S.A. DE C.V.,1051,Hospital General 83% DA Medical Capture - Galumedical,institutional_capture,high,3,0,active_or_captured:high,0.8,2007,2025,True
+614,"SERVICIOS HOSPITALARIOS DE MEXICO, S.A. DE C.V.",1052,IMSS 76% DA and Chihuahua Health 100% DA Hospital Services Capture - Servicios Hospitalarios,institutional_capture,high,3,0,active_or_captured:high,0.8,2006,2025,True
+66757,MARURBED CONSTRUCTORA SA DE CV,1053,Sinaloa Port Authority and Fisheries Agency SB Capture - Marurbed Constructora,single_bid_capture,high,3,0,active_or_captured:high,0.8,2007,2023,True
+258316,CORPORATIVO SAG DE TO S DE RL DE CV,1054,AMLO-Era Multi-Agency Capture Bienestar+INDEP+SRE 1095M - Corporativo SAG de TO,institutional_capture,high,3,0,active_or_captured:high,0.8,2020,2023,True
+41996,"GRUPO CONSTRUCTOR ANGELO MIXTECO, S.A. DE C.V.",1055,Federal Roads and Puebla 97% SB Infrastructure Capture - Grupo Constructor Angelo Mixteco,single_bid_capture,high,3,0,active_or_captured:high,0.8,2009,2022,True
+33052,SUPERCATE S.A. DE C.V.,1056,SCT and CONAGUA 100% SB Roads and Water Capture - Supercate,single_bid_capture,high,3,0,active_or_captured:high,0.8,2007,2020,True
+211297,SERVICIOS PJP4 DE MEXICO SA DE CV,1057,CENAGAS Natural Gas Pipeline 83% Non-Competitive Capture 1384M - Servicios PJP4,institutional_capture,high,3,0,active_or_captured:high,0.8,2017,2023,True
+795,"HYSOL INDAEL DE MEXICO, S.A. DE C.V.",1058,Health Ministry Ghost Single Contract 285M - Hysol Indael de Mexico,ghost_company,high,3,0,active_or_captured:high,0.8,2002,2023,True
+94,SCIENCE APPLICATIONS INTERNATIONAL CORPORATION,1059,Culture Trust SB and Tax Authority DA Multi-Client Capture - SAIC Mexico,institutional_capture,medium,3,0,active_or_captured:medium,0.5,2002,2013,True
+57616,ERKAM SERVICIOS INTEGRALES PARA LA CONSTRUCCION,1060,SCT and Sonora Entities 89% SB Construction Capture - Erkam Servicios Integrales,single_bid_capture,high,3,0,active_or_captured:high,0.8,2010,2015,True
+20187,FARMACEUTICO EMPRESARIAL MARTINEZ SA DE CV,1061,PEMEX 96.8% 78% DA Pharmaceutical Capture - Farmaceutico Empresarial Martinez,institutional_capture,high,3,0,active_or_captured:high,0.8,2010,2015,True
+159820,CAPITAL LEASING MEXICO SA DE CV,1062,IMSS 445M Single Direct Award Ghost Leasing - Capital Leasing Mexico,ghost_company,high,3,0,active_or_captured:high,0.8,2015,2019,True
+241705,JD ABARROTES Y PERECEDEROS SA DE CV,1063,Maritime University Trust Industry Mismatch Grocery Capture - JD Abarrotes y Perecederos,ghost_company,high,3,0,active_or_captured:high,0.8,2019,2021,True
+24548,DESARROLLOS INTEGRALES CONIN S.A. DE C.V.,1064,Queretaro State Infrastructure 100% SB Multi-Agency Capture - Desarrollos Integrales Conin,single_bid_capture,high,3,0,active_or_captured:high,0.8,2006,2019,True
