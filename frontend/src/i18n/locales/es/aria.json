@@ -29,16 +29,16 @@
     "newVendorOnly": "Riesgo de Proveedor Nuevo"
   },
   "tier1": {
-    "heading": "Pistas Criticas — Nivel 1",
-    "subtitle": "Proveedores prioritarios segun la Puntuacion de Prioridad de Investigacion",
+    "heading": "Pistas Críticas — Nivel 1",
+    "subtitle": "Proveedores prioritarios según la Puntuación de Prioridad de Investigación",
     "empty": "No se encontraron pistas de Nivel 1. Ejecuta el pipeline de ARIA para rellenar.",
-    "description": "Requieren investigacion inmediata",
+    "description": "Requieren investigación inmediata",
     "label": "NIVEL 1",
-    "name": "CRITICO",
+    "name": "CRÍTICO",
     "objective": "OBJETIVO #{{number}}"
   },
   "tier2": {
-    "description": "Revision prioritaria",
+    "description": "Revisión prioritaria",
     "label": "NIVEL 2",
     "name": "ALTO"
   },
@@ -63,11 +63,11 @@
   "table": {
     "headers": {
       "vendor": "Proveedor",
-      "pattern": "Patron",
+      "pattern": "Patrón",
       "value": "Valor",
       "ips": "IPS"
     },
-    "review": "Revision:"
+    "review": "Revisión:"
   },
   "card": {
     "totalValue": "Valor Total",
@@ -136,7 +136,7 @@
     "objectives": "Objetivos Prioritarios - Tier 1"
   },
   "queueSection": {
-    "title": "Cola de Investigacion"
+    "title": "Cola de Investigación"
   },
   "reviewFilter": {
     "all": "Todos"
@@ -160,10 +160,10 @@
     "systemLabel": "Sistema ARIA · Inteligencia de Adquisiciones",
     "live": "EN VIVO",
     "title": "El Cuarto de Guerra",
-    "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de deteccion de riesgo en contratacion publica federal.",
+    "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de detección de riesgo en contratación pública federal.",
     "statusActive": "Activo",
-    "t1Require": "proveedores T1 requieren investigacion inmediata",
-    "lastUpdated": "Ultima actualizacion"
+    "t1Require": "proveedores T1 requieren investigación inmediata",
+    "lastUpdated": "Última actualización"
   },
   "editorial": {
     "section": "INTELIGENCIA RUBLI",

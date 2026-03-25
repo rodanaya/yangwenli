@@ -149,14 +149,14 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
             value={competitionIndex}
             maxValue={100}
             color={gaugeColor}
-            label={`Mexico ${year}`}
-            sublabel="Mexico"
+            label={`México ${year}`}
+            sublabel="México"
           />
           <AnimatedGauge
             value={oecdTarget}
             maxValue={100}
             color="#4ade80"
-            label="OCDE minimo"
+            label="OCDE mínimo"
             sublabel="OCDE"
           />
         </div>
@@ -164,10 +164,10 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
         <div className="mt-4 text-center space-y-1.5">
           <p className="text-xs text-text-muted font-mono tabular-nums">
             <span style={{ color: gaugeColor }} className="font-bold">
-              Mexico: {competitionIndex.toFixed(0)}%
+              México: {competitionIndex.toFixed(0)}%
             </span>
             <span className="mx-2 text-border">|</span>
-            <span className="text-green-400 font-bold">OCDE minimo: {oecdTarget}%</span>
+            <span className="text-green-400 font-bold">OCDE mínimo: {oecdTarget}%</span>
           </p>
           {gap > 0 && (
             <p

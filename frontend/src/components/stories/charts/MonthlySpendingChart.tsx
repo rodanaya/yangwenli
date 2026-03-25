@@ -79,7 +79,7 @@ export function MonthlySpendingChart() {
       transition={{ duration: 0.5 }}
     >
       <p className="mb-2 text-center text-xs text-text-muted">
-        Gasto mensual en contratacion publica, 2023 (miles de millones MXN)
+        Gasto mensual en contratación pública, 2023 (miles de millones MXN)
       </p>
       <ResponsiveContainer width="100%" height={260}>
         <BarChart data={data} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>

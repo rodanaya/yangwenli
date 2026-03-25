@@ -78,6 +78,9 @@ from .routers.procurement_health import router as phi_router
 from .routers.alerts import router as alerts_router
 from .routers.scorecards import router as scorecards_router
 from .routers.stories import router as stories_router
+from .routers.health import router as health_router
+from .routers.analysis_patterns import router as analysis_patterns_router
+from .routers.analysis_vendor_sector import router as analysis_vendor_sector_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -341,6 +344,8 @@ app.include_router(sectors_router, prefix="/api/v1")
 app.include_router(export_router, prefix="/api/v1")
 app.include_router(network_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1")
+app.include_router(analysis_patterns_router, prefix="/api/v1")
+app.include_router(analysis_vendor_sector_router, prefix="/api/v1")
 app.include_router(watchlist_folders_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
@@ -359,6 +364,9 @@ app.include_router(alerts_router, prefix="/api/v1")
 app.include_router(phi_router)  # PHI has its own /api/v1/procurement-health prefix
 app.include_router(scorecards_router)  # Scorecards has its own /api/v1/scorecards prefix
 app.include_router(stories_router)    # Story endpoints for journalist investigation starting-points
+# Health router — registered before the inline /health decorator so it takes precedence.
+# Provides fast health check (<100ms) using precomputed_stats instead of COUNT(*).
+app.include_router(health_router)  # No prefix — endpoint defines /health directly
 
 
 def _get_latest_backup_info() -> dict | None:

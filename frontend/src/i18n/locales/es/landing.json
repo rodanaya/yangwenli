@@ -2,10 +2,10 @@
   "skip_to_app": "Ir a la app",
   "hero": {
     "headline": "3.1 Millones de Contratos. Una Pregunta:",
-    "headline_accent": "A Quien le Pagaron?",
-    "sub": "RUBLI rastrea cada contrato de adquisiciones federales de Mexico desde 2002. Con puntuacion de riesgo por ML, analisis de redes y 390 casos documentados de corrupcion.",
+    "headline_accent": "¿A Quién le Pagaron?",
+    "sub": "RUBLI rastrea cada contrato de adquisiciones federales de México desde 2002. Con puntuación de riesgo por ML, análisis de redes y 390 casos documentados de corrupción.",
     "cta_primary": "Explorar los Datos",
-    "cta_secondary": "Leer la Metodologia",
+    "cta_secondary": "Leer la Metodología",
     "stat_contracts": "Contratos escaneados",
     "stat_flagged": "De riesgo alto",
     "stat_value": "Analizados (MXN)"
@@ -18,22 +18,22 @@
     "years": "2002 - 2025"
   },
   "how": {
-    "tag": "Como Funciona",
-    "title": "De Datos Brutos a Pistas de Investigacion",
-    "sub": "Tres pasos. 16 caracteristicas ML. 12 modelos por sector.",
+    "tag": "Cómo Funciona",
+    "title": "De Datos Brutos a Pistas de Investigación",
+    "sub": "Tres pasos. 16 características ML. 12 modelos por sector.",
     "step1_title": "Ingerir",
-    "step1_body": "23 anos de datos de adquisiciones de COMPRANET -- 3.1 millones de contratos, 320K proveedores, 12 sectores. Limpiados, clasificados y normalizados.",
+    "step1_body": "23 años de datos de adquisiciones de COMPRANET -- 3.1 millones de contratos, 320K proveedores, 12 sectores. Limpiados, clasificados y normalizados.",
     "step2_title": "Analizar",
-    "step2_body": "Puntuacion de riesgo ML con 16 caracteristicas z-score, modelos logisticos por sector, correccion PU-learning. AUC entrenamiento 0.880, AUC prueba 0.840.",
+    "step2_body": "Puntuación de riesgo ML con 16 características z-score, modelos logísticos por sector, corrección PU-learning. AUC entrenamiento 0.880, AUC prueba 0.840.",
     "step3_title": "Investigar",
-    "step3_body": "Cola de investigacion priorizada con evidencia, explicaciones SHAP, intervalos de confianza. Cada puntuacion tiene una razon."
+    "step3_body": "Cola de investigación priorizada con evidencia, explicaciones SHAP, intervalos de confianza. Cada puntuación tiene una razón."
   },
   "snapshot": {
     "tag": "Riesgo en Vivo",
-    "title": "Distribucion de Riesgo Actual",
+    "title": "Distribución de Riesgo Actual",
     "high_risk_rate": "Tasa de riesgo alto",
     "top_sectors": "Sectores con mayor riesgo",
-    "critical": "Critico",
+    "critical": "Crítico",
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo",
@@ -42,13 +42,13 @@
   },
   "cta": {
     "tag": "Comienza Ahora",
-    "title": "Codigo abierto. Sin cuenta requerida.",
+    "title": "Código abierto. Sin cuenta requerida.",
     "sub": "Datos de COMPRANET 2002-2025. Modelo v6.1. AUC 0.840.",
     "dashboard": "Ir al Panel de Control",
     "executive": "Leer el Resumen Ejecutivo"
   },
   "footer": {
-    "platform": "RUBLI -- Plataforma de Analisis de Adquisiciones del Gobierno Mexicano",
+    "platform": "RUBLI -- Plataforma de Análisis de Adquisiciones del Gobierno Mexicano",
     "data": "Datos: COMPRANET 2002-2025 | Modelo: v6.1 | AUC 0.840"
   }
 }

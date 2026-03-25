@@ -261,7 +261,7 @@
   "entryTiles": {
     "bySector": "Por Sector",
     "bySectorSub": "Riesgo de contratacion en 12 sectores",
-    "byAdmin": "Por Administracion",
+    "byAdmin": "Por Administración",
     "byAdminSub": "Gasto por regimen, 2000-2024",
     "networks": "Redes de Proveedores",
     "networksSub": "Co-licitacion y empresas fantasma",
@@ -273,7 +273,7 @@
   },
   "angles": {
     "bySector": "Por Sector",
-    "byAdmin": "Por Administracion",
+    "byAdmin": "Por Administración",
     "byNetwork": "Por Red",
     "byPattern": "Por Patron"
   },

@@ -97,29 +97,47 @@ services:
       - rubli-network
 
   aria-cron:
-    image: docker:cli
+    # SECURITY: Docker socket removed.
+    # Previously this service mounted /var/run/docker.sock:ro and used
+    #   `docker exec rubli-backend sh /app/scripts/aria_cron.sh`
+    # to trigger the ARIA pipeline.  Mounting the Docker socket grants
+    # container-breakout-level access (full Docker API including image pulls,
+    # container creation, and volume access), which violates least-privilege.
+    #
+    # Replacement: the cron container triggers the pipeline via an HTTP POST
+    # to the backend's internal /api/v1/aria/run-pipeline endpoint, which is
+    # only reachable inside rubli-network (not exposed to the public internet).
+    # Authentication is enforced via the X-Rubli-Key header (RUBLI_WRITE_KEY).
+    image: alpine:3.19
     container_name: rubli-aria-cron
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock:ro
-    # Run ARIA pipeline daily at 03:00 UTC via docker exec into the backend container.
+    # No volume mounts — no socket, no DB access.
+    environment:
+      - RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
+      - BACKEND_URL=http://rubli-backend:8001
+    # Run ARIA pipeline daily at 03:00 UTC via internal HTTP call.
     # Uses sh + while-sleep loop (no cron daemon needed, simpler than alpine/cron).
     entrypoint: ["/bin/sh", "-c"]
     command:
       - |
-        echo "ARIA cron scheduler started — will run daily at 03:00 UTC"
+        # Install wget (busybox wget is built-in to alpine, no extra install needed)
+        echo "ARIA cron scheduler started — will trigger daily at 03:00 UTC via HTTP"
         while true; do
           # Calculate seconds until next 03:00 UTC
           now=$$(date -u +%s)
-          target=$$(date -u -d "tomorrow 03:00" +%s 2>/dev/null || date -u -d "$$(date -u +%Y-%m-%d) 03:00" +%s)
-          if [ "$$target" -le "$$now" ]; then
-            target=$$(( $$target + 86400 ))
+          tomorrow=$$(date -u -d "tomorrow 03:00" +%s 2>/dev/null || \
+            awk 'BEGIN{print systime() + 86400 - (systime() % 86400) + 10800}')
+          if [ "$$tomorrow" -le "$$now" ]; then
+            tomorrow=$$(( $$tomorrow + 86400 ))
           fi
-          wait_secs=$$(( $$target - $$now ))
-          next_run=$$(date -u -d "@$$target" '+%Y-%m-%d %H:%M UTC' 2>/dev/null || echo "in $${wait_secs}s")
-          echo "Next ARIA run at $$next_run (sleeping $${wait_secs}s)"
+          wait_secs=$$(( $$tomorrow - $$now ))
+          echo "Next ARIA run in $${wait_secs}s"
           sleep $$wait_secs
-          echo "$$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Triggering ARIA daily pipeline"
-          docker exec rubli-backend sh /app/scripts/aria_cron.sh || echo "ARIA cron run failed"
+          echo "$$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Triggering ARIA daily pipeline via HTTP"
+          wget -q -O - --header="X-Rubli-Key: $${RUBLI_WRITE_KEY}" \
+               --post-data="" \
+               "$${BACKEND_URL}/api/v1/aria/run-pipeline" \
+            && echo "ARIA trigger sent" \
+            || echo "ARIA HTTP trigger failed — check backend logs"
         done
     depends_on:
       backend:

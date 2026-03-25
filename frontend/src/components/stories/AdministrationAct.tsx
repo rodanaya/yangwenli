@@ -88,7 +88,7 @@ export default function AdministrationAct({
           borderLeft: `4px solid ${partyStyle.border}`,
           boxShadow: isHighlight ? `0 0 40px ${partyStyle.border}15` : undefined,
         }}
-        aria-label={`Administracion ${presidentLabel} (${years})`}
+        aria-label={`Administración ${presidentLabel} (${years})`}
       >
         {/* Header */}
         <div className="flex items-center justify-between px-5 pt-5 pb-3">

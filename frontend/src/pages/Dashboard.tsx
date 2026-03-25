@@ -1,4 +1,5 @@
 import React, { memo, useEffect, useMemo, useRef, useState } from 'react'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { motion, type Variants, useInView, useReducedMotion } from 'framer-motion'
 // animations.ts: staggerContainer replaced by inline fernStaggerContainer
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
@@ -1202,15 +1203,29 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 
 function InvestigationSpotlight() {
   const { t } = useTranslation('dashboard')
-  const { data: ariaT1 } = useQuery({
+  const { data: ariaT1, isLoading: ariaLoading } = useQuery({
     queryKey: ['aria', 'queue', 'spotlight'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 1 }),
     staleTime: 10 * 60 * 1000,
   })
 
+  if (ariaLoading) {
+    return (
+      <div className="rounded-lg border border-border/40 bg-background-card/30 p-5 space-y-3">
+        <Skeleton className="h-3 w-32" />
+        <Skeleton className="h-6 w-3/4" />
+        <Skeleton className="h-4 w-1/2" />
+        <div className="flex gap-3 pt-1">
+          <Skeleton className="h-8 w-20 rounded" />
+          <Skeleton className="h-8 w-20 rounded" />
+        </div>
+      </div>
+    )
+  }
+
   const top = ariaT1?.data?.[0] as AriaQueueItem | undefined
 
-  const vendorName = top?.vendor_name ?? 'Loading...'
+  const vendorName = top?.vendor_name ?? '—'
   const vendorId = top?.vendor_id ?? 0
   const ipsScore = top?.ips_final ?? 0
   const totalValue = top?.total_value_mxn ?? 0
@@ -1329,6 +1344,29 @@ function DashboardSection({
       <div className={noPadding ? '' : 'px-5 pb-5'}>
         {children}
       </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// SECTION ERROR FALLBACK — lightweight card shown when a section crashes
+// ============================================================================
+
+function SectionErrorFallback({ onRetry }: { onRetry?: () => void }) {
+  return (
+    <div className="flex items-center justify-between rounded-lg border border-border/40 bg-background-card/30 px-4 py-3">
+      <div className="flex items-center gap-2 text-text-muted">
+        <AlertTriangle className="h-4 w-4 text-risk-high flex-shrink-0" />
+        <span className="text-xs">No se pudo cargar esta sección.</span>
+      </div>
+      {onRetry && (
+        <button
+          onClick={onRetry}
+          className="text-xs text-accent hover:underline ml-4 flex-shrink-0"
+        >
+          Reintentar
+        </button>
+      )}
     </div>
   )
 }
@@ -1641,7 +1679,9 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* INVESTIGATION SPOTLIGHT — editorial breaking news card           */}
       {/* ================================================================ */}
-      <InvestigationSpotlight />
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+        <InvestigationSpotlight />
+      </ErrorBoundary>
 
       {/* ================================================================ */}
       {/* STORY INFOGRAPHIC — "La Historia en Datos"                       */}
@@ -1708,7 +1748,20 @@ export function Dashboard() {
       {/* P1 INSIGHT CARDS — Multivariate anomalies, election effect,      */}
       {/* new vendor risk, sexenio comparison                              */}
       {/* ================================================================ */}
-      {(fastDashboard?.multivariate_anomaly_count != null ||
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+      {dashLoading ? (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {[0, 1, 2].map(i => (
+            <Card key={i} className="fern-card">
+              <CardContent className="p-4 space-y-3">
+                <Skeleton className="h-3 w-24" />
+                <Skeleton className="h-10 w-32" />
+                <Skeleton className="h-3 w-40" />
+              </CardContent>
+            </Card>
+          ))}
+        </div>
+      ) : (fastDashboard?.multivariate_anomaly_count != null ||
         (fastDashboard?.election_year_avg_risk != null && fastDashboard?.non_election_year_avg_risk != null) ||
         fastDashboard?.new_vendor_risk_count != null) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1790,9 +1843,22 @@ export function Dashboard() {
           )}
         </div>
       )}
+      </ErrorBoundary>
 
       {/* Sexenio Comparison — side-by-side AMLO vs Sheinbaum */}
-      {fastDashboard?.sexenio_comparison?.amlo != null && fastDashboard?.sexenio_comparison?.sheinbaum != null && (() => {
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+      {dashLoading ? (
+        <Card className="fern-card">
+          <CardContent className="p-4 space-y-3">
+            <Skeleton className="h-3 w-36" />
+            <div className="grid grid-cols-2 gap-4">
+              <Skeleton className="h-20 rounded-lg" />
+              <Skeleton className="h-20 rounded-lg" />
+            </div>
+            <Skeleton className="h-3 w-48" />
+          </CardContent>
+        </Card>
+      ) : fastDashboard?.sexenio_comparison?.amlo != null && fastDashboard?.sexenio_comparison?.sheinbaum != null && (() => {
         const amlo = fastDashboard.sexenio_comparison!.amlo!
         const sheinbaum = fastDashboard.sexenio_comparison!.sheinbaum!
         const delta = sheinbaum.avg_risk - amlo.avg_risk
@@ -1838,11 +1904,19 @@ export function Dashboard() {
           </ScrollReveal>
         )
       })()}
+      </ErrorBoundary>
 
       {/* ================================================================ */}
       {/* RED FLAG PATTERNS — 5 compact KPI cards from patternCounts       */}
       {/* ================================================================ */}
-      {patternCountsData?.counts && (
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+      {!patternCountsData?.counts && !dashLoading ? null : !patternCountsData?.counts ? (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+          {[0, 1, 2, 3, 4].map(i => (
+            <Skeleton key={i} className="h-12 rounded-lg" />
+          ))}
+        </div>
+      ) : patternCountsData?.counts && (
         <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
           {([
             { key: 'critical' as const, label: t('criticalRisk'), icon: AlertTriangle, color: '#f87171', route: '/contracts?risk_level=critical' },
@@ -1869,6 +1943,7 @@ export function Dashboard() {
           ))}
         </div>
       )}
+      </ErrorBoundary>
 
       {/* ================================================================ */}
       {/* HISTORIAS DESTACADAS — 3 investigation-ready story cards        */}
@@ -2080,7 +2155,20 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* SEASONAL RISK WIDGET (P13)                                       */}
       {/* ================================================================ */}
-      {monthlyRiskSummaryData?.data && monthlyRiskSummaryData.data.length > 0 && (
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+      {!monthlyRiskSummaryData && !dashLoading ? null : !monthlyRiskSummaryData?.data ? (
+        <DashboardSection
+          title={t('seasonalPatternsTitle')}
+          subtitle={t('seasonalPatternsDesc')}
+          icon={Calendar}
+        >
+          <div className="grid grid-cols-6 sm:grid-cols-12 gap-1">
+            {Array.from({ length: 12 }, (_, i) => (
+              <Skeleton key={i} className="h-16 rounded" />
+            ))}
+          </div>
+        </DashboardSection>
+      ) : monthlyRiskSummaryData?.data && monthlyRiskSummaryData.data.length > 0 && (
         <DashboardSection
           title={t('seasonalPatternsTitle')}
           subtitle={t('seasonalPatternsDesc')}
@@ -2120,6 +2208,7 @@ export function Dashboard() {
           </div>
         </DashboardSection>
       )}
+      </ErrorBoundary>
 
       <SectionDivider />
 
@@ -2237,7 +2326,20 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* SECTOR GRID: 12 cards                                            */}
       {/* ================================================================ */}
-      {sectorData.length > 0 && (
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+      {dashLoading ? (
+        <div>
+          <div className="flex items-center gap-2 mb-3">
+            <Skeleton className="h-4 w-4 rounded" />
+            <Skeleton className="h-4 w-40" />
+          </div>
+          <div className="grid gap-3 grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
+            {Array.from({ length: 12 }, (_, i) => (
+              <Skeleton key={i} className="h-24 rounded-lg" />
+            ))}
+          </div>
+        </div>
+      ) : sectorData.length > 0 && (
         <div>
           <div className="flex items-center gap-2 mb-3">
             <Layers className="h-4 w-4 text-accent" />
@@ -2263,6 +2365,7 @@ export function Dashboard() {
           </motion.div>
         </div>
       )}
+      </ErrorBoundary>
 
       {/* ================================================================ */}
       {/* RESEARCH CONTEXT — CompraNet abolished                          */}

@@ -146,10 +146,12 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
 
     # Steps 1-4: Load scoped GT contracts via VIEW (fraud-window-restricted)
     # Uses ground_truth_contracts_scoped VIEW - see _update_gt_fraud_windows.py
-    # The VIEW handles: time-window filtering, institution scoping, inactive case exclusion
+    # The VIEW handles: time-window filtering, institution scoping, FP exclusion
+    # VIEW columns: contract_id, z_features..., contract_year, sector_id, vendor_id,
+    #               case_id, vendor_curriculum_weight (NULL if not set)
     cursor.execute(f"""
         SELECT zf.contract_id, {z_select}, c.contract_year, c.sector_id, c.vendor_id,
-               gcs.case_id
+               gcs.case_id, gcs.vendor_curriculum_weight
         FROM ground_truth_contracts_scoped gcs
         JOIN contract_z_features zf ON zf.contract_id = gcs.contract_id
         JOIN contracts c ON c.id = gcs.contract_id
@@ -158,19 +160,25 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     print(f"  Scoped GT contracts (from VIEW): {len(scoped_rows):,}")
 
     # Deduplicate (a contract may appear in multiple cases via the VIEW)
-    # When deduplicating, keep the highest-confidence case assignment
-    seen_ids = {}  # contract_id -> row (best confidence)
+    # When deduplicating, keep the highest-confidence case assignment.
+    # Vendor-level curriculum_weight (from gt_fp_framework) overrides case-level
+    # confidence weight when set (used for Tier-2/3 partial-trust vendors).
+    seen_ids = {}  # contract_id -> (row, weight)
     for row in scoped_rows:
         cid = row[0]
-        case_id = row[-1]  # last column = gcs.case_id
-        conf = case_confidence.get(case_id)
-        weight = CONFIDENCE_WEIGHTS.get(conf, 0.5)
+        case_id = row[-2]           # second-to-last = gcs.case_id
+        vendor_w = row[-1]          # last = vendor_curriculum_weight (may be None)
+        if vendor_w is not None:
+            weight = float(vendor_w)
+        else:
+            conf = case_confidence.get(case_id)
+            weight = CONFIDENCE_WEIGHTS.get(conf, 0.5)
         if cid not in seen_ids or weight > seen_ids[cid][1]:
             seen_ids[cid] = (row, weight)
 
     positive_by_vendor = defaultdict(list)
     for cid, (row, weight) in seen_ids.items():
-        vid = row[-2]  # vendor_id is second-to-last (before case_id)
+        vid = row[-3]  # vendor_id: ..., vendor_id, case_id, vendor_curriculum_weight
         positive_by_vendor[vid].append((row, weight))
 
     gt_vendor_ids = list(positive_by_vendor.keys())
@@ -246,12 +254,14 @@ def load_enhanced_data(conn, neg_ratio=2.0, seed=42, max_per_vendor=200, case_wi
     print(f"  Pos:Neg ratio: 1:{len(negative_rows)/max(len(positive_rows),1):.1f}")
 
     # Step 7: Split into train/test by vendor
-    # positive_rows: [(row, weight), ...]  — use row[-2] for vendor_id (before case_id)
+    # positive_rows: [(row, weight), ...]
+    # row layout: contract_id, z_features..., contract_year, sector_id, vendor_id,
+    #             case_id, vendor_curriculum_weight
     train_X, train_y, train_sectors, train_weights = [], [], [], []
     test_X, test_y, test_sectors, test_weights = [], [], [], []
 
     for row, weight in positive_rows:
-        vid = row[-2]  # vendor_id (case_id is last column)
+        vid = row[-3]  # vendor_id: row[-3]=vendor_id, row[-2]=case_id, row[-1]=vendor_w
         sid = row[len(Z_COLS) + 2] or 12
         features = [row[i + 1] if row[i + 1] is not None else 0.0 for i in range(len(Z_COLS))]
         if vid in train_vendors:

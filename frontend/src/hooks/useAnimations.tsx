@@ -60,9 +60,12 @@ export function useCountUp(target: number, duration = 1800, decimals = 0) {
   const [value, setValue] = useState(0)
   const startedRef = useRef(false)
   const prevTargetRef = useRef(0)
+  const inViewRef = useRef(false)
 
-  // Reset animation state when target changes from 0 to a real value,
-  // so counters animate properly after async data loads.
+  // When target transitions from 0 to a real value (async data arrives),
+  // reset startedRef so the animation re-fires. If the element is already
+  // visible, kick off the animation directly without waiting for another
+  // IntersectionObserver callback (it won't fire again after disconnect).
   if (target > 0 && prevTargetRef.current === 0) {
     startedRef.current = false
   }
@@ -73,28 +76,44 @@ export function useCountUp(target: number, duration = 1800, decimals = 0) {
     if (target === 0) return
     const el = ref.current
     if (!el) return
+
+    // Helper that runs the count-up rAF loop
+    function runAnimation() {
+      if (startedRef.current) return
+      startedRef.current = true
+      let startTime: number
+      let frame: number
+      const animate = (ts: number) => {
+        if (!startTime) startTime = ts
+        const progress = Math.min((ts - startTime) / duration, 1)
+        // Elastic overshoot easing: overshoots ~8% then settles
+        const c4 = (2 * Math.PI) / 3
+        const eased = progress === 0 ? 0
+          : progress === 1 ? 1
+          : progress < 0.7
+            ? 1 - Math.pow(1 - progress / 0.7, 3) * 1.0
+            : 1 + Math.sin((progress - 0.7) * c4) * 0.08 * (1 - progress) / 0.3
+        setValue(parseFloat((target * Math.min(eased, 1.08)).toFixed(decimals)))
+        if (progress < 1) frame = requestAnimationFrame(animate)
+        else setValue(target)
+      }
+      frame = requestAnimationFrame(animate)
+      return () => cancelAnimationFrame(frame)
+    }
+
+    // If the element is already in view (e.g. data loaded after mount while
+    // element was visible), run immediately instead of waiting for observer.
+    if (inViewRef.current) {
+      runAnimation()
+      return
+    }
+
     const observer = new IntersectionObserver(
       ([entry]) => {
-        if (entry.isIntersecting && !startedRef.current) {
-          startedRef.current = true
-          let startTime: number
-          let frame: number
-          const animate = (ts: number) => {
-            if (!startTime) startTime = ts
-            const progress = Math.min((ts - startTime) / duration, 1)
-            // Elastic overshoot easing: overshoots ~8% then settles
-            const c4 = (2 * Math.PI) / 3
-            const eased = progress === 0 ? 0
-              : progress === 1 ? 1
-              : progress < 0.7
-                ? 1 - Math.pow(1 - progress / 0.7, 3) * 1.0
-                : 1 + Math.sin((progress - 0.7) * c4) * 0.08 * (1 - progress) / 0.3
-            setValue(parseFloat((target * Math.min(eased, 1.08)).toFixed(decimals)))
-            if (progress < 1) frame = requestAnimationFrame(animate)
-            else setValue(target)
-          }
-          frame = requestAnimationFrame(animate)
-          return () => cancelAnimationFrame(frame)
+        inViewRef.current = entry.isIntersecting
+        if (entry.isIntersecting) {
+          runAnimation()
+          observer.disconnect()
         }
       },
       { threshold: 0.3 }

@@ -569,16 +569,36 @@ def populate_default_windows(conn):
     return updated
 
 
+def _has_fp_columns(conn):
+    """Check if is_false_positive column exists on ground_truth_vendors."""
+    cursor = conn.execute("PRAGMA table_info(ground_truth_vendors)")
+    columns = {row['name'] for row in cursor.fetchall()}
+    return 'is_false_positive' in columns
+
+
 def create_scoped_view(conn):
     """Create the ground_truth_contracts_scoped view.
 
     This view restricts positive labels to contracts within the fraud window.
     It handles the dual-join pattern where ground_truth_vendors.case_id
     can match either ground_truth_cases.id or ground_truth_cases.case_id.
+
+    If the FP framework columns exist (is_false_positive), Tier-1 structural
+    false positives (is_false_positive=1) are excluded from the training set.
     """
     conn.execute("DROP VIEW IF EXISTS ground_truth_contracts_scoped")
 
-    conn.execute("""
+    # Conditionally use FP framework columns if migration has been run
+    has_fp = _has_fp_columns(conn)
+    # fp_condition is the first WHERE clause predicate (no leading AND)
+    fp_condition = "COALESCE(gtv.is_false_positive, 0) = 0" if has_fp else "1=1"
+    vendor_weight_col = "gtv.curriculum_weight" if has_fp else "NULL"
+    if has_fp:
+        print("  FP framework columns detected — structural FPs will be excluded")
+    else:
+        print("  FP framework columns not found — run gt_fp_framework --migrate first")
+
+    conn.execute(f"""
         CREATE VIEW ground_truth_contracts_scoped AS
         SELECT
             gtv.case_id as gtv_case_id,
@@ -592,15 +612,18 @@ def create_scoped_view(conn):
             c.amount_mxn,
             c.risk_score,
             c.is_direct_award,
-            1 as is_positive_label
+            1 as is_positive_label,
+            {vendor_weight_col} as vendor_curriculum_weight
         FROM ground_truth_vendors gtv
         JOIN ground_truth_cases gtc
             ON (gtv.case_id = CAST(gtc.id AS TEXT) OR gtv.case_id = gtc.case_id)
         JOIN vendors v ON gtv.vendor_id = v.id
         JOIN contracts c ON c.vendor_id = v.id
         WHERE
+            -- Exclude Tier-1 structural false positives from training (if migrated)
+            {fp_condition}
             -- Apply temporal scoping using fraud windows (fall back to year_start/year_end)
-            c.contract_year >= COALESCE(gtc.fraud_year_start, gtc.year_start, 1900)
+            AND c.contract_year >= COALESCE(gtc.fraud_year_start, gtc.year_start, 1900)
             AND c.contract_year <= COALESCE(gtc.fraud_year_end, gtc.year_end, 2100)
             -- Apply institution scoping if specified
             AND (
