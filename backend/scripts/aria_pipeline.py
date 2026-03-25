@@ -891,10 +891,10 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
     run_id = str(uuid.uuid4())[:8]
     logger.info("ARIA run %s starting (dry_run=%s, limit=%s)...", run_id, dry_run, limit)
 
-    conn = sqlite3.connect(str(DB_PATH), timeout=60)
+    conn = sqlite3.connect(str(DB_PATH), timeout=300)
     conn.row_factory = sqlite3.Row
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA busy_timeout=300000")  # 5 min — MCP servers hold read locks
 
     try:
         # -- CENTINELA freshness check ---------------------------------------
