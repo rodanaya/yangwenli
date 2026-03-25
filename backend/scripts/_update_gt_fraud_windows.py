@@ -58,7 +58,7 @@ TIGHT_WINDOWS = {
     1: {
         'fraud_year_start': 2020,
         'fraud_year_end': 2022,  # extend to 2022 for delayed contracts
-        'fraud_institution_ids': None,  # multiple institutions involved
+        'fraud_institution_ids': [251, 3744],  # IMSS + INSABI
         'label_scope_notes': (
             'COVID-19 emergency procurement fraud documented 2020-2021. '
             'Extended to 2022 for delayed delivery/payment contracts. '
@@ -74,7 +74,7 @@ TIGHT_WINDOWS = {
     3: {
         'fraud_year_start': 2012,
         'fraud_year_end': 2018,
-        'fraud_institution_ids': None,
+        'fraud_institution_ids': [251, 3780],  # IMSS + IMSS-BIENESTAR
         'label_scope_notes': (
             'IMSS ghost company scheme documented 2012-2018. '
             'Laboratorios Pisa (9,173 ct) is a legitimate large pharma company '
@@ -90,7 +90,7 @@ TIGHT_WINDOWS = {
     5: {
         'fraud_year_start': 2019,
         'fraud_year_end': 2023,
-        'fraud_institution_ids': None,
+        'fraud_institution_ids': [160, 161, 162, 163, 164, 165, 166, 167, 168, 169, 170, 297, 509, 641, 937, 1327, 2245, 3667, 3785],  # DICONSA branches + LICONSA + Segalmex + Alimentacion
         'label_scope_notes': (
             'Segalmex fraud documented 2019-2023 (Ignacio Ovalle administration). '
             'LICONSA (5,858 ct) is a legitimate government parastatal distributing '
