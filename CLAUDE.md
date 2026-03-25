@@ -99,10 +99,10 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 
 ## Risk Scoring Model
 
-**Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (preserved), v6.4 (active), v5.2 (analytical engine):
+**Model versions** — v3.3 (weighted checklist), v4.0 (statistical), v5.1 (preserved), v6.4 (preserved), v6.5 (active), v5.2 (analytical engine):
 
-> **DB STATE (2026-03-19)**: All 3,051,294 contracts rescored with v6.4 C=0.01 model (`risk_model_version='v6.0'` tag, run ID: CAL-v6.1-202603191034). HR=9.2%, precomputed_stats done.
-> v6.4 high-risk rate: **9.2%** OECD compliant. v5.2 adds SHAP explanations, PyOD anomaly ensemble, drift detection — enrichment layer on top of scores.
+> **DB STATE (2026-03-25)**: All 3,051,294 contracts rescored with v6.5 model (`risk_model_version='v6.5'` tag, run ID: CAL-v6.1-202603251039). HR=13.49% OECD compliant (critical 6.01%, high 7.48%). precomputed_stats done.
+> v6.5 improvements: institution-scoped GT labels (IMSS Ghost -85% noise, COVID -73%, Segalmex -17%); structural FPs excluded (BAXTER, FRESENIUS, INFRA, PRAXAIR); vendor curriculum_weight overrides applied. price_volatility coef healthier (+0.53 vs +1.86 in v6.4).
 > Cold-start fix is in place (vendor_rolling_stats point-in-time features, z_vendor_concentration capped at ±5 SD).
 > **DO NOT run `_score_v6_now.py`** without verifying calibration sanity (intercept < -0.5, PU c > 0.30).
 
@@ -113,20 +113,20 @@ For detailed validation rules, see @.claude/rules/data-validation.md
 - `refresh_vendor_communities.py` — lightweight Louvain community refresh
 - `calibrate_risk_model_v6_enhanced.py` — Optuna TPE (150 trials), per-vendor cap, per-sector models
 
-### v6.4: Vendor-Stratified Calibrated Model (ACTIVE)
+### v6.5: Cleaner-Label Calibrated Model (ACTIVE)
 
-Per-sector calibrated risk indicators P(corrupt|z) with confidence intervals. **Train AUC: 0.880, Test AUC: 0.840** internal (vendor-stratified); **Population AUC: 0.728** (use for external reporting). HR=9.2% OECD compliant.
+Per-sector calibrated risk indicators P(corrupt|z) with institution-scoped GT labels and FP exclusions. **Train AUC: 0.798, Test AUC: 0.828** (vendor-stratified). HR=13.49% OECD compliant (within 2-15% range).
 
-- 8 active features: price_volatility +1.8566, institution_diversity -0.4679, price_ratio +0.3907, vendor_concentration +0.2378, network_member_count +0.1873, same_day_count +0.1114, single_bid +0.0984, ad_period_days +0.0423
-- 13 models: 1 global + 12 per-sector logistic regressions (Otros falls back to global n<500)
-- Ground truth: **347 cases (windowed), 507 vendors, ~315K contracts across all 12 sectors**
-- Curriculum learning: confirmed_corrupt=1.0, high=0.8, medium=0.5, low=0.2 per-sample weights
-- Elkan & Noto (2008) PU-learning correction (c=0.3432)
-- Optuna TPE (C=0.0100, l1_ratio=0.9673, 150 trials); intercept=-2.3880 (OECD delta=-0.3105)
+- 9 active features: price_volatility +0.5343, institution_diversity -0.3821, vendor_concentration +0.3749, price_ratio +0.2345, network_member_count +0.1811, same_day_count +0.0945, win_rate +0.0488, direct_award +0.0306, ad_period_days +0.0423
+- 13 models: 1 global + 12 per-sector logistic regressions (sectors 6/11/12 fall back to global, n_positive<500)
+- Ground truth: **748 cases (windowed, institution-scoped), 603 vendors, ~288K scoped contracts**; structural FPs excluded (BAXTER, FRESENIUS, INFRA, PRAXAIR = is_false_positive=1)
+- Curriculum learning: confirmed_corrupt=1.0, high=0.8, medium=0.5, low=0.2; vendor-level curriculum_weight overrides from gt_fp_framework
+- Elkan & Noto (2008) PU-learning correction (c=0.3000, floor value)
+- Optuna TPE (C=0.0100, l1_ratio=0.9673, 150 trials); intercept=-2.3837 (OECD delta=-0.0040)
 
-**Top predictors**: price_volatility (+1.8566), institution_diversity (-0.4679), price_ratio (+0.3907), vendor_concentration (+0.2378), network_member_count (+0.1873)
+**Top predictors**: price_volatility (+0.5343), vendor_concentration (+0.3749), price_ratio (+0.2345), institution_diversity (-0.3821), network_member_count (+0.1811)
 **Risk Levels**: Critical (>=0.60), High (>=0.40), Medium (>=0.25), Low (<0.25)
-**Distribution**: Critical 4.38% (133K), High 4.85% (148K), Medium 16.34% (498K), Low 74.44% (2.3M)
+**Distribution**: Critical 6.01% (184K), High 7.48% (229K), Medium 26.84% (821K), Low 59.39% (1.8M); 8,298 NULL (no z-features)
 
 ### v4.0: Statistical Framework (preserved in risk_score_v4)
 
