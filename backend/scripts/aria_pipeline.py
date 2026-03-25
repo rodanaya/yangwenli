@@ -213,26 +213,51 @@ def classify_patterns(vendor_data: dict) -> dict:
 
     # ------------------------------------------------------------------
     # P4: Bid Rigging
+    # co_bid_rate is now sourced from co_bidding_stats (0-1 normalised).
+    # Values represent the max pairwise co-bid rate for this vendor.
+    # co_bidding_stats stores percentage 0-100; load_vendor_co_bid_rates
+    # normalises to 0-1.  Thresholds: >=80% strong, >=50% moderate,
+    # >=30% weak signal.  Single-bid rate boosts the signal.
     # ------------------------------------------------------------------
-    if co_bid > 0.50:
-        patterns["P4"] = 0.40
-    else:
-        patterns["P4"] = 0.0
+    p4 = 0.0
+    if co_bid >= 0.80:
+        p4 = 0.70
+    elif co_bid >= 0.50:
+        p4 = 0.40
+    elif co_bid >= 0.30:
+        p4 = 0.20
+
+    if p4 > 0 and sb_rate > 0.50:
+        p4 = min(1.0, p4 + 0.15)
+
+    patterns["P4"] = round(p4, 4)
 
     # ------------------------------------------------------------------
     # P5: Overpricing
+    # Uses both avg and max z_price_ratio.  avg_z_price catches vendors
+    # that are *consistently* overpriced; max_z_price catches vendors
+    # with at least one extreme outlier contract.  price_hyp_count
+    # (contracts with z_price_ratio > 2.0) adds further signal.
     # ------------------------------------------------------------------
+    max_z_price = vendor_data.get("max_z_price_ratio", 0) or 0
+
     if avg_z_price > 2.0:
         p5 = 0.50
-    elif avg_z_price > 1.5:
+    elif avg_z_price > 1.0:
         p5 = 0.30
+    elif max_z_price > 3.0:
+        p5 = 0.35
+    elif max_z_price > 2.0:
+        p5 = 0.20
     else:
         p5 = 0.0
 
-    if mismatch > 0.50:
-        p5 = min(1.0, p5 + 0.25)
+    if mismatch > 0.30:
+        p5 = min(1.0, p5 + 0.20)
     if price_hyp_count > 3:
         p5 = min(1.0, p5 + 0.15)
+    elif price_hyp_count > 0:
+        p5 = min(1.0, p5 + 0.05)
 
     patterns["P5"] = round(p5, 4)
 
@@ -638,7 +663,8 @@ def load_vendor_institution_features(conn: sqlite3.Connection, vendor_ids: list)
 # ---------------------------------------------------------------------------
 
 def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
-    """Returns {vendor_id: {avg_z_price_ratio, avg_z_industry_mismatch, avg_co_bid_rate}}."""
+    """Returns {vendor_id: {avg_z_price_ratio, max_z_price_ratio, avg_z_industry_mismatch,
+    price_hypothesis_count}}."""
     if not vendor_ids:
         return {}
     # Use temp table (already created by load_vendor_institution_features, or create here)
@@ -648,7 +674,8 @@ def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
         SELECT c.vendor_id,
                AVG(czf.z_price_ratio) as avg_z_price_ratio,
                AVG(czf.z_industry_mismatch) as avg_z_industry_mismatch,
-               AVG(czf.z_co_bid_rate) as avg_co_bid_rate
+               MAX(czf.z_price_ratio) as max_z_price_ratio,
+               SUM(CASE WHEN czf.z_price_ratio > 2.0 THEN 1 ELSE 0 END) as price_outlier_count
         FROM contracts c
         JOIN contract_z_features czf ON c.id = czf.contract_id
         INNER JOIN _aria_vids t ON c.vendor_id = t.vendor_id
@@ -658,10 +685,42 @@ def load_vendor_z_features(conn: sqlite3.Connection, vendor_ids: list) -> dict:
         r[0]: {
             "avg_z_price_ratio": r[1] or 0,
             "avg_z_industry_mismatch": r[2] or 0,
-            "avg_co_bid_rate": r[3] or 0,
+            "max_z_price_ratio": r[3] or 0,
+            "price_outlier_count": r[4] or 0,
         }
         for r in rows
     }
+
+
+def load_vendor_co_bid_rates(conn: sqlite3.Connection, vendor_ids: list) -> dict:
+    """Returns {vendor_id: max_co_bid_rate} from co_bidding_stats table.
+
+    co_bidding_stats.co_bid_rate is stored as percentage (0-100).
+    We return it normalised to 0-1 range for the classifier.
+    """
+    if not vendor_ids:
+        return {}
+    # Check if the table exists
+    tbl = conn.execute(
+        "SELECT name FROM sqlite_master WHERE type='table' AND name='co_bidding_stats'"
+    ).fetchone()
+    if not tbl:
+        return {}
+    conn.execute("CREATE TEMP TABLE IF NOT EXISTS _aria_vids (vendor_id INTEGER PRIMARY KEY)")
+    rows = conn.execute("""
+        SELECT vendor_id, MAX(co_bid_rate) as max_rate
+        FROM (
+            SELECT cbs.vendor_id_a AS vendor_id, cbs.co_bid_rate
+            FROM co_bidding_stats cbs
+            INNER JOIN _aria_vids t ON cbs.vendor_id_a = t.vendor_id
+            UNION ALL
+            SELECT cbs.vendor_id_b AS vendor_id, cbs.co_bid_rate
+            FROM co_bidding_stats cbs
+            INNER JOIN _aria_vids t ON cbs.vendor_id_b = t.vendor_id
+        )
+        GROUP BY vendor_id
+    """).fetchall()
+    return {r[0]: (r[1] or 0) / 100.0 for r in rows}
 
 
 
@@ -910,14 +969,18 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
 
         # -- Load z-score features per vendor (if available) -----------------
         z_count = conn.execute("SELECT COUNT(*) FROM contract_z_features").fetchone()[0]
-        if z_count > 0 and limit and limit <= 5000:
+        if z_count > 0:
             logger.info("  Loading z-score features...")
             z_features = load_vendor_z_features(conn, vendor_ids)
             logger.info("  Z-features loaded for %d vendors", len(z_features))
         else:
             z_features = {}
-            if z_count == 0:
-                logger.warning("  contract_z_features is empty — skipping z-feature enrichment")
+            logger.warning("  contract_z_features is empty — skipping z-feature enrichment")
+
+        # -- Load co-bidding rates from co_bidding_stats table -----------------
+        logger.info("  Loading co-bidding rates...")
+        co_bid_rates = load_vendor_co_bid_rates(conn, vendor_ids)
+        logger.info("  Co-bid rates loaded for %d vendors", len(co_bid_rates))
 
         results = []
         tier_counts = [0, 0, 0, 0]
@@ -975,12 +1038,15 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 "is_efos_definitivo":   is_efos,
                 "in_ground_truth":      in_gt,
                 "avg_z_price_ratio":    zf.get("avg_z_price_ratio", 0),
+                "max_z_price_ratio":    zf.get("max_z_price_ratio", 0),
                 "industry_mismatch_rate": max(0, zf.get("avg_z_industry_mismatch", 0)),
+                "price_hypothesis_count": zf.get("price_outlier_count", 0),
                 "top_institution_ratio":  inst_feat.get("top_institution_ratio", 0),
                 "sector_vendor_count":  sector_counts.get(v["sector_id"], 999),
                 "max_contract_amount":  v["max_risk_score"] or 0.0,
                 "avg_contract_amount":  avg_contract_amt,
                 "total_value_mxn":      total_val,
+                "co_bid_rate":          co_bid_rates.get(vid, 0.0),
             }
 
             patterns = classify_patterns(vendor_data_dict)

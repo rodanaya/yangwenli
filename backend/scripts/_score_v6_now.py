@@ -119,6 +119,7 @@ def main():
     conn.execute('PRAGMA busy_timeout=300000')
     conn.execute('PRAGMA synchronous=OFF')
     conn.execute('PRAGMA cache_size=-200000')
+    conn.execute('PRAGMA wal_autocheckpoint=0')  # Disable auto-checkpoint during scoring
 
     models = load_all_calibrations(conn)
     if 'global' not in models:
