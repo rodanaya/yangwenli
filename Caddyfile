@@ -15,6 +15,10 @@ www.rubli.xyz {
     redir https://rubli.xyz{uri} permanent
 }
 
+vizsga.rubli.xyz {
+    reverse_proxy magyar:8000
+}
+
 # Fallback: serve plain HTTP on bare IP while DNS is propagating
 :80 {
     reverse_proxy frontend:80
