@@ -14,6 +14,7 @@ import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
+import { Card, CardContent } from '@/components/ui/card'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
@@ -25,6 +26,7 @@ import type {
   InvestigationFilterParams,
 } from '@/api/types'
 import {
+  AlertTriangle,
   CheckCircle2,
   Clock,
   XCircle,
@@ -568,7 +570,7 @@ export function Investigation() {
     per_page: 100,
   }), [statusFilter, minScore])
 
-  const { data: casesData, isLoading: casesLoading } = useQuery({
+  const { data: casesData, isLoading: casesLoading, isError: casesError } = useQuery({
     queryKey: ['investigation', 'cases', filterParams],
     queryFn: () => investigationApi.getCases(filterParams),
     staleTime: 5 * 60 * 1000,
@@ -688,6 +690,19 @@ export function Investigation() {
       border: 'rgba(190,18,60,0.25)',
     },
   ]
+
+  if (casesError) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-6 text-muted-foreground">
+            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+            <span>No se pudo cargar la información. Intente de nuevo más tarde.</span>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-0">

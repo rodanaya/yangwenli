@@ -877,7 +877,7 @@ export default function RedThread() {
   }, [])
 
   // Queries
-  const { data: vendor, isLoading: vendorLoading } = useQuery({
+  const { data: vendor, isLoading: vendorLoading, isError: vendorError } = useQuery({
     queryKey: ['vendor', id],
     queryFn: () => vendorApi.getById(id),
     enabled: !!id && !isNaN(id),
@@ -921,6 +921,17 @@ export default function RedThread() {
   }
 
   if (vendorLoading) return <ThreadSkeleton />
+  if (vendorError) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-screen gap-4">
+        <AlertTriangle className="h-8 w-8 text-destructive" />
+        <p className="text-text-muted">No se pudo cargar la información. Intente de nuevo más tarde.</p>
+        <button onClick={() => navigate(-1)} className="text-[#dc2626] text-sm underline">
+          Go back
+        </button>
+      </div>
+    )
+  }
   if (!vendor) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">

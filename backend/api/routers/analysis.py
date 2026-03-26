@@ -3871,17 +3871,20 @@ def get_price_anomalies(
             cursor.execute(f"""
                 SELECT
                     c.id as contract_id,
-                    c.vendor_name,
+                    COALESCE(v.name, 'Desconocido') as vendor_name,
                     c.amount_mxn,
                     c.sector_id,
                     c.contract_year,
-                    c.institution_name,
+                    COALESCE(inst.name, 'Desconocida') as institution_name,
                     c.risk_score,
                     c.risk_level,
                     z.z_price_ratio,
-                    z.z_price_volatility
+                    z.z_price_volatility,
+                    c.vendor_id
                 FROM contracts c
                 JOIN contract_z_features z ON c.id = z.contract_id
+                LEFT JOIN vendors v ON c.vendor_id = v.id
+                LEFT JOIN institutions inst ON c.institution_id = inst.id
                 WHERE z.z_price_ratio > ?
                 {sector_filter}
                 AND c.amount_mxn IS NOT NULL

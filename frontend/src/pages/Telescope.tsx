@@ -10,6 +10,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
+import { AlertTriangle } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import type { SectorYearItem } from '@/api/types'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
@@ -157,7 +158,7 @@ export default function Telescope() {
   const reducedMotion = useReducedMotion()
 
   // Fetch data
-  const { data: resp, isLoading } = useQuery({
+  const { data: resp, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 30 * 60 * 1000,
@@ -393,6 +394,17 @@ export default function Telescope() {
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
+
+  if (isError) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center" style={{ background: '#030509' }}>
+        <div className="flex flex-col items-center gap-3 text-white/60">
+          <AlertTriangle className="h-8 w-8 text-red-400" />
+          <p className="text-sm">No se pudo cargar la información. Intente de nuevo más tarde.</p>
+        </div>
+      </div>
+    )
+  }
 
   if (isLoading) {
     return (

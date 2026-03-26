@@ -375,6 +375,8 @@ export default function PriceIntelligence() {
     staleTime: STALE_TIME,
   })
 
+  const isError = anomalyQuery.isError
+
 
   // ARIA queue T1+T2 — used to resolve vendor IDs for deep-link profile links
   const ariaT1Query = useQuery({
@@ -427,6 +429,19 @@ export default function PriceIntelligence() {
   const topSectorName = chartData[0]?.name ?? '—'
 
   const loading = anomalyQuery.isLoading
+
+  if (isError) {
+    return (
+      <div className="container mx-auto p-6">
+        <Card>
+          <CardContent className="flex items-center gap-3 p-6 text-muted-foreground">
+            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+            <span>No se pudo cargar la información. Intente de nuevo más tarde.</span>
+          </CardContent>
+        </Card>
+      </div>
+    )
+  }
 
   return (
     <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">

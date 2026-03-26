@@ -273,7 +273,7 @@ function SectorHeatmap() {
   const navigate = useNavigate()
   const { t: ts } = useTranslation('sectors')
 
-  const { data: sectorYearResp, isLoading } = useQuery({
+  const { data: sectorYearResp, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown', 'pi-simple'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 30 * 60 * 1000,
@@ -300,7 +300,12 @@ function SectorHeatmap() {
           High-risk contract rate (%) per sector per year. Click any cell to view those contracts.
         </p>
 
-        {isLoading ? (
+        {isError ? (
+          <div className="flex items-center gap-3 p-4 text-muted-foreground">
+            <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
+            <span className="text-sm">No se pudo cargar la información. Intente de nuevo más tarde.</span>
+          </div>
+        ) : isLoading ? (
           <Skeleton className="h-48 w-full" />
         ) : (
           <div className="overflow-x-auto">
