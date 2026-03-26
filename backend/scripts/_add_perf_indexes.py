@@ -25,16 +25,30 @@ INDEXES = [
      "CREATE INDEX IF NOT EXISTS idx_aria_queue_tier_score ON aria_queue(ips_tier, ips_final DESC)"),
 ]
 
+def table_exists(conn, name):
+    row = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name=?", (name,)
+    ).fetchone()
+    return row is not None
+
+
 print(f"DB: {DB_PATH}")
 conn = sqlite3.connect(str(DB_PATH))
 conn.execute("PRAGMA journal_mode=WAL")
 
+created = 0
 for name, sql in INDEXES:
+    # Extract table name from CREATE INDEX ... ON <table>(...)
+    table = sql.split(" ON ")[1].split("(")[0].strip()
+    if not table_exists(conn, table):
+        print(f"  Skipping {name} — table '{table}' not in this DB")
+        continue
     t0 = time.time()
     print(f"  Creating {name}...", end=" ", flush=True)
     conn.execute(sql)
     conn.commit()
     print(f"done ({time.time()-t0:.1f}s)")
+    created += 1
 
 conn.close()
-print("All indexes created.")
+print(f"Done. {created}/{len(INDEXES)} indexes created.")
