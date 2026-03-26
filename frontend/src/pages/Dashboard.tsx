@@ -17,7 +17,7 @@ import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import RedaccionWidget from '@/components/ui/RedaccionWidget'
 import StoryInfographic from '@/components/ui/StoryInfographic'
 import { analysisApi, investigationApi, phiApi, ariaApi } from '@/api/client'
-import type { AriaQueueItem } from '@/api/types'
+import type { AriaQueueItem, FastDashboardData } from '@/api/types'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
   ArrowRight,
@@ -1387,12 +1387,24 @@ export function Dashboard() {
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
     staleTime: 5 * 60 * 1000,
+    retry: 1,
+  })
+
+  // Fallback when fastDashboard fails — risk-overview reads same precomputed_stats keys
+  // and is always available, ensuring KPI cards show real data instead of zeros
+  const { data: riskOverviewFallback } = useQuery({
+    queryKey: ['analysis', 'risk-overview-fallback'],
+    queryFn: () => analysisApi.getRiskOverview(),
+    staleTime: 5 * 60 * 1000,
+    enabled: !dashLoading && !fastDashboard,
+    retry: 1,
   })
 
   const { data: phiSectorsData } = useQuery({
     queryKey: ['phi', 'sectors'],
     queryFn: () => phiApi.getSectors(),
     staleTime: 10 * 60 * 1000,
+    retry: 0,
   })
 
   const { data: execData, isLoading: execLoading } = useQuery({
@@ -1450,9 +1462,9 @@ export function Dashboard() {
 
   // ── Derived data ──────────────────────────────────────────────────────────
 
-  const overview = fastDashboard?.overview
+  const overview = fastDashboard?.overview ?? (riskOverviewFallback?.overview as FastDashboardData['overview'] | undefined)
   const sectors = fastDashboard?.sectors
-  const riskDist = fastDashboard?.risk_distribution
+  const riskDist = fastDashboard?.risk_distribution ?? (riskOverviewFallback?.risk_distribution as FastDashboardData['risk_distribution'] | undefined)
 
   const criticalHighContractPct = useMemo(() => {
     if (!riskDist) return 0
@@ -1516,8 +1528,9 @@ export function Dashboard() {
   }, [sectors, phiGradeMap])
 
   const riskTrajectory = useMemo(() => {
-    if (!fastDashboard?.yearly_trends) return []
-    return fastDashboard.yearly_trends
+    const yearlyTrends = fastDashboard?.yearly_trends ?? (riskOverviewFallback?.yearly_trends as typeof fastDashboard.yearly_trends | undefined)
+    if (!yearlyTrends) return []
+    return yearlyTrends
       .filter((d) => d.year >= 2010)
       .map((d) => ({
         year: d.year,
