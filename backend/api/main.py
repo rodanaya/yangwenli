@@ -447,51 +447,6 @@ async def root():
     }
 
 
-@app.get("/health", tags=["root"])
-async def health_check():
-    """Health check endpoint with database, backup, and uptime status."""
-    import sqlite3
-    from fastapi.responses import JSONResponse
-    from .dependencies import DB_PATH
-
-    db_exists = verify_database_exists()
-    backup_info = _get_latest_backup_info()
-    uptime_seconds = round(_time_module.time() - _server_start_time)
-
-    # Database details
-    db_info = {"status": "not found"}
-    db_reachable = False
-    if db_exists:
-        try:
-            conn = sqlite3.connect(str(DB_PATH), timeout=5)
-            cursor = conn.cursor()
-            cursor.execute("SELECT COUNT(*) FROM contracts")
-            contract_count = cursor.fetchone()[0]
-            db_size = DB_PATH.stat().st_size
-            conn.close()
-            db_info = {
-                "status": "connected",
-                "size_mb": round(db_size / (1024 * 1024)),
-                "contract_count": contract_count,
-            }
-            db_reachable = True
-        except Exception:
-            db_info = {"status": "error"}
-
-    overall_status = "healthy" if db_reachable else ("degraded" if db_exists else "unavailable")
-    http_status = 200 if db_reachable else 503
-
-    return JSONResponse(
-        status_code=http_status,
-        content={
-            "status": overall_status,
-            "version": API_VERSION,
-            "database": db_info,
-            "uptime_seconds": uptime_seconds,
-            "last_backup": backup_info,
-        },
-    )
-
 
 @app.get("/metrics", tags=["root"])
 async def metrics():

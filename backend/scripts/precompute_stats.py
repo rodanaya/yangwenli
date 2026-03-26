@@ -955,8 +955,114 @@ def precompute_stats():
     except Exception as e:
         print(f"   Warning: ground truth stats failed: {e}")
 
+    # 14. P1 dashboard stats (prevents fallback live queries in /stats/dashboard/fast)
+    print("14. Computing P1 dashboard stats...")
+    start = time.time()
+
+    # multivariate_anomaly_count: contracts with Mahalanobis p-value < 0.01
+    try:
+        row = cursor.execute(
+            "SELECT COUNT(*) FROM contract_z_features WHERE mahalanobis_pvalue < 0.01"
+        ).fetchone()
+        stats['multivariate_anomaly_count'] = row[0] if row else 0
+        print(f"   multivariate_anomaly_count: {stats['multivariate_anomaly_count']:,}")
+    except Exception as e:
+        print(f"   Warning: multivariate_anomaly_count failed (table may not exist): {e}")
+
+    # election_year_avg_risk / non_election_year_avg_risk / election_year_contract_count
+    try:
+        ey_rows = cursor.execute("""
+            SELECT is_election_year,
+                   AVG(risk_score) as avg_risk,
+                   SUM(CASE WHEN is_election_year = 1 THEN 1 ELSE 0 END) as ey_count
+            FROM contracts
+            WHERE risk_score IS NOT NULL AND is_election_year IS NOT NULL
+            GROUP BY is_election_year
+        """).fetchall()
+        ey_avg = None
+        non_ey_avg = None
+        ey_count = 0
+        for r in ey_rows:
+            if r["is_election_year"]:
+                ey_avg = round(r["avg_risk"], 4) if r["avg_risk"] is not None else None
+                ey_count = r["ey_count"] or 0
+            else:
+                non_ey_avg = round(r["avg_risk"], 4) if r["avg_risk"] is not None else None
+        stats['election_year_avg_risk'] = ey_avg
+        stats['non_election_year_avg_risk'] = non_ey_avg
+        stats['election_year_contract_count'] = ey_count
+        print(f"   election_year_avg_risk: {ey_avg}, non_election: {non_ey_avg}, count: {ey_count:,}")
+    except Exception as e:
+        print(f"   Warning: election_year stats failed: {e}")
+
+    # new_vendor_risk_count: vendors scoring > 0.40 with last activity >= 2022
+    try:
+        nvr_row = cursor.execute("""
+            SELECT COUNT(*) FROM vendor_stats
+            WHERE new_vendor_risk_score IS NOT NULL
+              AND new_vendor_risk_score > 0.40
+              AND last_contract_year >= 2022
+        """).fetchone()
+        stats['new_vendor_risk_count'] = nvr_row[0] if nvr_row else None
+        print(f"   new_vendor_risk_count: {stats['new_vendor_risk_count']}")
+    except Exception as e:
+        print(f"   Warning: new_vendor_risk_count failed: {e}")
+
+    # grade_a_pct / grade_b_pct: data quality grade distribution
+    try:
+        grade_rows = cursor.execute("""
+            SELECT data_quality_grade,
+                   COUNT(*) * 100.0 / (SELECT COUNT(*) FROM contracts WHERE data_quality_grade IS NOT NULL) as pct
+            FROM contracts
+            WHERE data_quality_grade IS NOT NULL
+            GROUP BY data_quality_grade
+        """).fetchall()
+        grade_map = {r["data_quality_grade"]: round(r["pct"], 1) for r in grade_rows}
+        stats['grade_a_pct'] = grade_map.get('A', 0)
+        stats['grade_b_pct'] = grade_map.get('B', 0)
+        print(f"   grade_a_pct: {stats['grade_a_pct']}, grade_b_pct: {stats['grade_b_pct']}")
+    except Exception as e:
+        print(f"   Warning: grade distribution failed: {e}")
+
+    # sexenio_comparison: AMLO (2018-2024) vs Sheinbaum (2025+) era stats
+    try:
+        sx_rows = cursor.execute("""
+            SELECT
+                CASE
+                    WHEN contract_year >= 2025 THEN 'sheinbaum'
+                    WHEN contract_year >= 2018 AND contract_year <= 2024 THEN 'amlo'
+                    ELSE NULL
+                END AS era,
+                COUNT(*) as contracts,
+                AVG(risk_score) as avg_risk,
+                AVG(CAST(is_direct_award AS REAL)) * 100.0 as direct_award_pct,
+                SUM(amount_mxn) as total_value_mxn
+            FROM contracts
+            WHERE contract_year >= 2018
+            GROUP BY era
+            HAVING era IS NOT NULL
+        """).fetchall()
+        if sx_rows:
+            sexenio_map = {}
+            for sx in sx_rows:
+                era = sx["era"]
+                sexenio_map[era] = {
+                    "contracts": sx["contracts"],
+                    "avg_risk": round(sx["avg_risk"], 4) if sx["avg_risk"] is not None else None,
+                    "direct_award_pct": round(sx["direct_award_pct"], 1) if sx["direct_award_pct"] is not None else None,
+                    "total_value_mxn": sx["total_value_mxn"],
+                }
+            stats['sexenio_comparison'] = sexenio_map
+            print(f"   sexenio_comparison: {list(sexenio_map.keys())}")
+        else:
+            stats['sexenio_comparison'] = {}
+    except Exception as e:
+        print(f"   Warning: sexenio_comparison failed: {e}")
+
+    print(f"   Done ({time.time() - start:.1f}s)")
+
     # Save all stats to database
-    print("\n13. Saving to database...")
+    print("\n15. Saving to database...")
     for key, value in stats.items():
         cursor.execute("""
             INSERT OR REPLACE INTO precomputed_stats (stat_key, stat_value, updated_at)

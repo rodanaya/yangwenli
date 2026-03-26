@@ -42,16 +42,16 @@ import {
 // ============================================================================
 
 const V6_COEFFICIENTS = [
-  { nameKey: 'priceVolatility', coeff: 1.857 },
-  { nameKey: 'institutionDiversity', coeff: -0.468 },
-  { nameKey: 'priceRatio', coeff: 0.391 },
-  { nameKey: 'vendorConcentration', coeff: 0.238 },
-  { nameKey: 'networkMembers', coeff: 0.187 },
-  { nameKey: 'sameDayContracts', coeff: 0.111 },
-  { nameKey: 'singleBid', coeff: 0.098 },
+  { nameKey: 'priceVolatility', coeff: 0.534 },
+  { nameKey: 'institutionDiversity', coeff: -0.382 },
+  { nameKey: 'priceRatio', coeff: 0.235 },
+  { nameKey: 'vendorConcentration', coeff: 0.375 },
+  { nameKey: 'networkMembers', coeff: 0.181 },
+  { nameKey: 'sameDayContracts', coeff: 0.095 },
+  { nameKey: 'winRate', coeff: 0.049 },
+  { nameKey: 'directAward', coeff: 0.031 },
   { nameKey: 'adPeriodDays', coeff: 0.042 },
-  { nameKey: 'winRate', coeff: 0.0 },
-  { nameKey: 'directAward', coeff: 0.0 },
+  { nameKey: 'singleBid', coeff: 0.0 },
   { nameKey: 'sectorSpread', coeff: 0.0 },
   { nameKey: 'coBidRate', coeff: 0.0 },
   { nameKey: 'priceHypConfidence', coeff: 0.0 },
@@ -72,10 +72,10 @@ const V33_WEIGHTS = [
 ] as const
 
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '4.38%', count: '133,572', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '4.85%', count: '148,043', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '16.34%', count: '498,432', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '74.44%', count: '2,271,247', color: '#4ade80' },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: '#f87171' },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: '#fb923c' },
+  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: '#fbbf24' },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: '#4ade80' },
 ] as const
 
 const CORRUPTION_CASES = [

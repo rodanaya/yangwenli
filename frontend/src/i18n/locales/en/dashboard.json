@@ -189,7 +189,7 @@
   "chartLegendStdDev": "+/-1 std dev",
   "criticalContractsDetected": "{{num}} critical-risk contracts detected",
   "dashboardLoadError": "Dashboard data failed to load. Some sections may be unavailable.",
-  "lede": "RUBLI analysis of 3.1M federal contracts (2002–2025): 9.2% flagged as high-risk, representing an estimated 4.5T MXN — more than half the annual federal budget — in contracts that statistically resemble documented corruption patterns.",
+  "lede": "RUBLI analysis of 3.1M federal contracts (2002–2025): 13.49% flagged as high or critical risk — 413K contracts worth an estimated 1.3T MXN — carrying statistical patterns consistent with documented procurement fraud.",
   "budgetContext": "≈ {{pct}}% of Mexico's annual federal budget",
   "panoramaLabel": "NATIONAL OVERVIEW",
   "ariaTickerLoading": "ARIA pipeline loading...",

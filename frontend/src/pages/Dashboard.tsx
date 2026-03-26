@@ -629,7 +629,7 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                     <div className="space-y-0.5 mt-1">
                       <p className="text-xs text-text-muted tabular-nums">
                         <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: aggregateColor }} />
-                        {t('highRiskRate')} (all): <strong className="text-text-secondary">{d.highRiskPct.toFixed(1)}%</strong>
+                        {t('highRiskRate')} (all): <strong className="text-text-secondary">{(d.highRiskPct ?? 0).toFixed(1)}%</strong>
                       </p>
                       {hasSectorOverlay && d.sectorHighRiskPct != null && (
                         <p className="text-xs text-text-muted tabular-nums">

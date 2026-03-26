@@ -62,22 +62,22 @@ describe('formatPercent', () => {
 })
 
 describe('Risk model version', () => {
-  it('is set to v6.0', () => {
-    expect(CURRENT_MODEL_VERSION).toBe('v6.0')
+  it('is set to v6.5', () => {
+    expect(CURRENT_MODEL_VERSION).toBe('v6.5')
   })
 })
 
-describe('Risk thresholds (v4.0)', () => {
-  it('defines correct v4.0 thresholds', () => {
-    // v4.0+ risk score thresholds
-    // Critical: >= 0.50 (very high similarity to known corruption patterns)
-    // High: >= 0.30 (high similarity)
-    // Medium: >= 0.10 (moderate similarity)
-    // Low: < 0.10
+describe('Risk thresholds (v6.5)', () => {
+  it('defines correct v6.5 thresholds', () => {
+    // v6.5 risk score thresholds (OECD-calibrated, HR=13.49%)
+    // Critical: >= 0.60 (strongest similarity to known corruption patterns)
+    // High: >= 0.40 (strong similarity)
+    // Medium: >= 0.25 (moderate similarity — actionable)
+    // Low: < 0.25
 
-    expect(RISK_THRESHOLDS.critical).toBe(0.50)
-    expect(RISK_THRESHOLDS.high).toBe(0.30)
-    expect(RISK_THRESHOLDS.medium).toBe(0.10)
+    expect(RISK_THRESHOLDS.critical).toBe(0.60)
+    expect(RISK_THRESHOLDS.high).toBe(0.40)
+    expect(RISK_THRESHOLDS.medium).toBe(0.25)
     expect(RISK_THRESHOLDS.low).toBe(0)
   })
 
@@ -88,29 +88,29 @@ describe('Risk thresholds (v4.0)', () => {
   })
 })
 
-describe('getRiskLevel (v4.0 thresholds)', () => {
-  it('returns critical for scores >= 0.50', () => {
-    expect(getRiskLevel(0.50)).toBe('critical')
+describe('getRiskLevel (v6.5 thresholds)', () => {
+  it('returns critical for scores >= 0.60', () => {
+    expect(getRiskLevel(0.60)).toBe('critical')
     expect(getRiskLevel(0.75)).toBe('critical')
     expect(getRiskLevel(1.0)).toBe('critical')
   })
 
-  it('returns high for scores >= 0.30 and < 0.50', () => {
-    expect(getRiskLevel(0.30)).toBe('high')
-    expect(getRiskLevel(0.35)).toBe('high')
-    expect(getRiskLevel(0.49)).toBe('high')
+  it('returns high for scores >= 0.40 and < 0.60', () => {
+    expect(getRiskLevel(0.40)).toBe('high')
+    expect(getRiskLevel(0.50)).toBe('high')
+    expect(getRiskLevel(0.59)).toBe('high')
   })
 
-  it('returns medium for scores >= 0.10 and < 0.30', () => {
-    expect(getRiskLevel(0.10)).toBe('medium')
-    expect(getRiskLevel(0.20)).toBe('medium')
-    expect(getRiskLevel(0.29)).toBe('medium')
+  it('returns medium for scores >= 0.25 and < 0.40', () => {
+    expect(getRiskLevel(0.25)).toBe('medium')
+    expect(getRiskLevel(0.30)).toBe('medium')
+    expect(getRiskLevel(0.39)).toBe('medium')
   })
 
-  it('returns low for scores < 0.10', () => {
+  it('returns low for scores < 0.25', () => {
     expect(getRiskLevel(0.0)).toBe('low')
-    expect(getRiskLevel(0.05)).toBe('low')
-    expect(getRiskLevel(0.099)).toBe('low')
+    expect(getRiskLevel(0.10)).toBe('low')
+    expect(getRiskLevel(0.249)).toBe('low')
   })
 })
 

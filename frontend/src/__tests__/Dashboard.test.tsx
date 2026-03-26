@@ -69,16 +69,16 @@ function renderDashboard() {
 }
 
 describe('Dashboard', () => {
-  it('renders the Intelligence Brief heading', () => {
+  it('renders the Procurement Intelligence heading', () => {
     renderDashboard()
-    expect(screen.getByText('INTELLIGENCE BRIEF')).toBeInTheDocument()
+    expect(screen.getByText(/PROCUREMENT INTELLIGENCE/)).toBeInTheDocument()
   })
 
   it('renders key section headings', () => {
     renderDashboard()
-    expect(screen.getByText('Sector Intelligence')).toBeInTheDocument()
     expect(screen.getByText('Risk Trajectory 2010-2025')).toBeInTheDocument()
     expect(screen.getByText('Start Your Investigation')).toBeInTheDocument()
+    expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
   })
 
   it('renders action cards', () => {
@@ -101,9 +101,6 @@ describe('Dashboard', () => {
 
   it('renders new dashboard section headings', () => {
     renderDashboard()
-    expect(screen.getByText('Value Concentration')).toBeInTheDocument()
-    expect(screen.getByText('Single Bidder')).toBeInTheDocument()
-    expect(screen.getByText('AI Intelligence · 23 Years of Data')).toBeInTheDocument()
-    expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
+    expect(screen.getByText('NATIONAL OVERVIEW')).toBeInTheDocument()
   })
 })

@@ -65,13 +65,13 @@ export const RISK_COLORS = {
 } as const
 
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)
-export const CURRENT_MODEL_VERSION = 'v6.0'
+export const CURRENT_MODEL_VERSION = 'v6.5'
 
-// Risk thresholds (v6.4 — medium raised from 0.15→0.25 to make medium actionable)
+// Risk thresholds (v6.5 — medium raised from 0.15→0.25 to make medium actionable)
 // Rationale: at 0.15 threshold, 76.7% of contracts were "medium" — near-zero lift.
-// At 0.25, medium is 18.1% of contracts (investigable) and low is 73.6% (noise floor).
+// At 0.25, medium is 26.8% of contracts (investigable) and low is 59.4% (noise floor).
 // Structural FP vendors (pharma OEMs) capped at medium via DB risk_level override.
-// High+ rate: 8.3% | GT detection critical+high: 62.8%
+// High+ rate: 13.49% | Train AUC: 0.798 | Test AUC: 0.828
 // SINGLE SOURCE OF TRUTH — all other files import from here
 export const RISK_THRESHOLDS = {
   critical: 0.60, // Strongest similarity to known corruption patterns

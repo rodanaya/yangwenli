@@ -23,6 +23,18 @@ INDEXES = [
     # MEDIUM: ARIA queue tier+score ordering needs temp B-tree
     ("idx_aria_queue_tier_score",
      "CREATE INDEX IF NOT EXISTS idx_aria_queue_tier_score ON aria_queue(ips_tier, ips_final DESC)"),
+    # NEW: Multivariate anomaly filtering (contract_z_features)
+    ("idx_z_features_mahalanobis_pvalue",
+     "CREATE INDEX IF NOT EXISTS idx_z_features_mahalanobis_pvalue ON contract_z_features(mahalanobis_pvalue)"),
+    # NEW: Election year risk query filtering
+    ("idx_contracts_is_election_year",
+     "CREATE INDEX IF NOT EXISTS idx_contracts_is_election_year ON contracts(is_election_year)"),
+    # NEW: Data quality grade distribution
+    ("idx_contracts_data_quality_grade",
+     "CREATE INDEX IF NOT EXISTS idx_contracts_data_quality_grade ON contracts(data_quality_grade)"),
+    # NEW: New vendor risk score query
+    ("idx_vendor_stats_new_vendor_risk_score",
+     "CREATE INDEX IF NOT EXISTS idx_vendor_stats_new_vendor_risk_score ON vendor_stats(new_vendor_risk_score)"),
 ]
 
 def table_exists(conn, name):

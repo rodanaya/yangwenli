@@ -21,7 +21,7 @@
   "hideBreakdown": "Ocultar desglose",
   "header": {
     "badge": "RESUMEN EJECUTIVO DE INTELIGENCIA",
-    "dateline": "Febrero 2026  |  Plataforma de Inteligencia RUBLI",
+    "dateline": "Marzo 2026  |  Plataforma de Inteligencia RUBLI",
     "title": "9.6 Billones de Pesos Bajo el Microscopio",
     "subtitle": "Un An\u00e1lisis Integral de la Contrataci\u00f3n P\u00fablica Federal de M\u00e9xico, 2002-2025",
     "lead": "Entre 2002 y 2025, el gobierno federal mexicano adjudic\u00f3 {{totalContracts}} contratos de contrataci\u00f3n p\u00fablica por un valor combinado de {{totalValue}} \u2014 aproximadamente {{totalValueUSD}}. Este informe presenta los hallazgos de un an\u00e1lisis sistem\u00e1tico impulsado por inteligencia artificial de cada uno de esos contratos. Utilizando un modelo calibrado por sector con 16 variables, validado contra ~390 casos documentados de corrupci\u00f3n (~725 proveedores), identificamos patrones consistentes con fraude, colusi\u00f3n y abuso en contratos por un valor estimado de {{valueAtRisk}} \u2014 {{pct}}% del valor total de contrataci\u00f3n. Estos hallazgos no constituyen prueba de irregularidades. Son se\u00f1ales estad\u00edsticas que ameritan investigaci\u00f3n.",

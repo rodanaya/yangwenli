@@ -31,35 +31,34 @@ describe('Sidebar', () => {
   it('renders overview navigation items when expanded', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Explore')).toBeInTheDocument()
+    expect(screen.getByText('Sectors')).toBeInTheDocument()
   })
 
   it('renders brand text when expanded', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('RUBLI')).toBeInTheDocument()
-    expect(screen.getByText('INTEL PLATFORM')).toBeInTheDocument()
+    expect(screen.getByText('Procurement Transparency')).toBeInTheDocument()
   })
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
+    expect(screen.getByText('FRONT PAGE')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
-    expect(screen.getByText('MY WORKSPACE')).toBeInTheDocument()
+    expect(screen.getByText('DATA')).toBeInTheDocument()
   })
 
   it('renders overview nav items', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
-    expect(screen.getByText('Explore')).toBeInTheDocument()
     expect(screen.getByText('Sectors')).toBeInTheDocument()
     expect(screen.getByText('By Administration')).toBeInTheDocument()
+    expect(screen.getByText('Methodology')).toBeInTheDocument()
   })
 
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Procurement Intelligence')).toBeInTheDocument()
     expect(screen.getByText('Investigation')).toBeInTheDocument()
-    expect(screen.getByText('Network')).toBeInTheDocument()
+    expect(screen.getByText('Known Networks')).toBeInTheDocument()
     expect(screen.getByText('Contracts')).toBeInTheDocument()
     expect(screen.getByText('Cases')).toBeInTheDocument()
   })

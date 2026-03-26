@@ -95,6 +95,345 @@ function useExecutiveSummary() {
 }
 
 // ============================================================================
+// Investigative Lede
+// Hard-coded journalist-facing opening — no i18n dependency
+// ============================================================================
+
+function InvestigativeLede() {
+  return (
+    <motion.div
+      className="border-l-4 border-l-[#dc2626] pl-6 py-4 my-8"
+      initial={{ opacity: 0, x: -8 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: 0.3, duration: 0.9 }}
+    >
+      {/*
+        Spanish lede: Veintitrés años de datos de compras federales revelan que
+        1 de cada 7 pesos del gasto gubernamental fluye a través de contratos marcados
+        como sospechosos.
+      */}
+      <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif mb-3">
+        Veintitrés años de datos de compras federales revelan que{' '}
+        <strong className="text-text-primary not-italic">1 de cada 7 pesos</strong> del gasto
+        gubernamental fluye a través de contratos con indicadores de riesgo.
+        Nuestro análisis de 3.1 millones de contratos identifica{' '}
+        <strong className="text-text-primary not-italic">320 proveedores</strong>{' '}
+        que requieren investigación urgente — y{' '}
+        <strong className="text-[#dc2626] not-italic">184,031 contratos</strong>{' '}
+        en la categoría de mayor riesgo.
+      </p>
+      <p className="text-sm text-text-muted italic leading-relaxed">
+        Twenty-three years of federal procurement data reveal that 1 in 7 pesos of
+        government spending flows through flagged contracts. Our AI analysis identifies
+        320 vendors for urgent investigation and 184,031 contracts in the highest-risk zone.
+        The data tells a story that official audits have not.
+      </p>
+    </motion.div>
+  )
+}
+
+// ============================================================================
+// Five Key Findings — replaces the 4 KPI cards
+// Numbered, journalist-framed, with human context on each stat
+// ============================================================================
+
+function FiveKeyFindings({
+  highRiskPct,
+  valueAtRiskFormatted,
+}: {
+  highRiskPct: string
+  valueAtRiskFormatted: string
+}) {
+  const navigate = useNavigate()
+
+  const findings = [
+    {
+      num: '01',
+      color: '#dc2626',
+      borderColor: 'border-red-500/30',
+      bg: 'bg-red-500/5',
+      // Escala: 412,845 contratos — 13.49% de todo el gasto federal — muestran indicadores de riesgo alto o crítico
+      headline: 'Escala del problema',
+      headlineEn: 'Scale of the problem',
+      stat: `${highRiskPct}%`,
+      statLabel: 'tasa de riesgo alto o crítico',
+      body: (
+        <>
+          <strong className="text-text-primary">412,845 contratos</strong> — el 13.49% de todo el gasto federal —
+          muestran indicadores de riesgo alto o crítico. Es más de{' '}
+          <strong className="text-text-primary">1 de cada 7</strong> pesos contratados.
+        </>
+      ),
+      bodyEn: '412,845 contracts — 13.49% of all federal spending — carry high or critical risk indicators.',
+    },
+    {
+      num: '02',
+      color: '#ea580c',
+      borderColor: 'border-orange-500/30',
+      bg: 'bg-orange-500/5',
+      headline: 'Dinero en riesgo',
+      headlineEn: 'Money at risk',
+      stat: valueAtRiskFormatted,
+      statLabel: 'valor estimado en contratos de alto riesgo',
+      body: (
+        <>
+          El valor estimado en contratos de riesgo alto o crítico supera{' '}
+          <strong className="text-text-primary">1.3 billones de pesos</strong> —
+          más de siete veces el presupuesto federal de salud 2024 (~180,000 millones MXN).
+        </>
+      ),
+      bodyEn: '~1.3 trillion MXN flagged. For context: Mexico\'s 2024 health budget is ~180B MXN — this is more than 7x that.',
+    },
+    {
+      num: '03',
+      color: '#8b5cf6',
+      borderColor: 'border-violet-500/30',
+      bg: 'bg-violet-500/5',
+      headline: 'Proveedores bajo lupa',
+      headlineEn: 'Vendors under scrutiny',
+      stat: '320',
+      statLabel: 'proveedores en cola de investigación urgente (ARIA Nivel 1)',
+      body: (
+        <>
+          <strong className="text-text-primary">320 proveedores</strong> en nuestro nivel de investigación urgente
+          han sido marcados por múltiples señales independientes. Representan el núcleo más caliente
+          de un universo de 318,441 proveedores analizados.
+        </>
+      ),
+      bodyEn: '320 vendors in our urgent-investigation queue (ARIA Tier 1) have been flagged by multiple independent signals.',
+      action: { label: 'Ver cola ARIA →', href: '/aria' },
+    },
+    {
+      num: '04',
+      color: '#ca8a04',
+      borderColor: 'border-amber-500/30',
+      bg: 'bg-amber-500/5',
+      headline: 'Patrones dominantes',
+      headlineEn: 'Dominant patterns',
+      stat: '21,957',
+      statLabel: 'proveedores con patrón de captura institucional o empresa fantasma',
+      body: (
+        <>
+          Las redes de empresas fantasma afectan{' '}
+          <strong className="text-text-primary">6,034 proveedores</strong> (Patrón P2).
+          La captura institucional —un proveedor que domina una dependencia— alcanza{' '}
+          <strong className="text-text-primary">15,923 proveedores</strong> (Patrón P6).
+          Estos dos patrones concentran la mayoría del riesgo identificado.
+        </>
+      ),
+      bodyEn: 'Ghost company networks (6,034 vendors) and institutional capture (15,923 vendors) are the two dominant corruption patterns.',
+    },
+    {
+      num: '05',
+      color: '#16a34a',
+      borderColor: 'border-green-600/30',
+      bg: 'bg-green-600/5',
+      headline: 'Efecto año electoral',
+      headlineEn: 'Election-year effect',
+      stat: '↑',
+      statLabel: 'el riesgo aumenta en periodos preelectorales',
+      body: (
+        <>
+          Los indicadores de riesgo se elevan en los años previos a elecciones federales —
+          un patrón consistente a través de todos los sexenios analizados (2002–2025).
+          La urgencia de gastar antes del cambio de gobierno amplifica las debilidades sistémicas.
+        </>
+      ),
+      bodyEn: 'Risk indicators rise in pre-election years — a pattern consistent across all administrations studied (2002–2025).',
+    },
+  ]
+
+  return (
+    <motion.div
+      className="space-y-4"
+      variants={staggerContainer}
+      initial="initial"
+      whileInView="animate"
+      viewport={{ once: true, margin: '-40px' }}
+    >
+      <div className="editorial-rule mb-2">
+        <span className="editorial-label text-accent">Cinco hallazgos clave · Five Key Findings</span>
+      </div>
+
+      {findings.map((f) => (
+        <motion.div key={f.num} variants={staggerItem}>
+          <div
+            className={`fern-card border ${f.borderColor} ${f.bg} p-5 flex items-start gap-5`}
+          >
+            {/* Finding number */}
+            <div className="flex-shrink-0 mt-0.5">
+              <span
+                className="font-black font-mono text-3xl leading-none tabular-nums"
+                style={{ color: f.color, opacity: 0.35 }}
+              >
+                {f.num}
+              </span>
+            </div>
+
+            <div className="flex-1 min-w-0">
+              {/* Headline */}
+              <div className="flex items-baseline gap-2 flex-wrap mb-2">
+                <h3 className="text-sm font-bold text-text-primary">{f.headline}</h3>
+                <span className="text-[11px] text-text-muted italic">{f.headlineEn}</span>
+              </div>
+
+              {/* Stat */}
+              <div className="flex items-baseline gap-2 mb-2 flex-wrap">
+                <span
+                  className="font-black font-mono text-2xl sm:text-3xl tabular-nums leading-none"
+                  style={{ color: f.color }}
+                >
+                  {f.stat}
+                </span>
+                <span className="text-[11px] text-text-muted uppercase tracking-wide font-mono">
+                  {f.statLabel}
+                </span>
+              </div>
+
+              {/* Body — Spanish primary */}
+              <p className="text-sm leading-relaxed text-text-secondary mb-1">{f.body}</p>
+
+              {/* English note */}
+              <p className="text-[11px] text-text-muted italic leading-relaxed">{f.bodyEn}</p>
+
+              {/* Optional action link */}
+              {f.action && (
+                <button
+                  onClick={() => navigate(f.action!.href)}
+                  className="mt-2 text-xs font-mono font-semibold"
+                  style={{ color: f.color }}
+                >
+                  {f.action.label}
+                </button>
+              )}
+            </div>
+          </div>
+        </motion.div>
+      ))}
+    </motion.div>
+  )
+}
+
+// ============================================================================
+// Pistas para Periodistas — Journalism Investigation Leads
+// New section: concrete starting points for reporters
+// ============================================================================
+
+function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void }) {
+  const leads = [
+    {
+      icon: Search,
+      color: '#dc2626',
+      // Título: Cola de investigación urgente — 320 proveedores ARIA Nivel 1
+      title: 'Cola ARIA Nivel 1 — 320 proveedores urgentes',
+      titleEn: 'ARIA Tier 1 — 320 vendors for urgent investigation',
+      body: 'Estos 320 proveedores fueron marcados de forma independiente por el modelo de riesgo, la detección de anomalías PyOD y registros externos (EFOS, SFP, RUPC). Es la lista de mayor prioridad.',
+      bodyEn: 'These 320 vendors were independently flagged by the risk model, PyOD anomaly detection, and external registries (EFOS, SFP, RUPC). Highest priority list.',
+      action: { label: 'Abrir cola ARIA', href: '/aria' },
+    },
+    {
+      icon: AlertTriangle,
+      color: '#ea580c',
+      // Casos documentados: IMSS redes fantasma, Segalmex, COVID-19, Odebrecht
+      title: 'Casos documentados: punto de partida',
+      titleEn: 'Documented cases as starting points',
+      body: 'El sistema cuenta con 748 casos de corrupción validados, incluyendo: redes fantasma IMSS (9,366 contratos, 99% detección crítica), Segalmex (fraude en distribución alimentaria), compras COVID-19 de emergencia, y soborno Odebrecht-PEMEX.',
+      bodyEn: '748 validated corruption cases including: IMSS ghost companies (9,366 contracts), Segalmex food fraud, COVID-19 emergency procurement, and Odebrecht-PEMEX bribery.',
+      action: { label: 'Ver casos documentados', href: '/ground-truth' },
+    },
+    {
+      icon: Compass,
+      color: '#8b5cf6',
+      // Cómo filtrar: sector + risk_level=critical para reproducir hallazgos
+      title: 'Cómo reproducir los hallazgos',
+      titleEn: 'How to reproduce findings independently',
+      body: 'Filtra el explorador de contratos por sector (ej. salud) + risk_level=critical para replicar los patrones de empresas fantasma IMSS de forma independiente. Todos los datos provienen de COMPRANET — registros públicos, sin FOIA.',
+      bodyEn: 'Filter the contract explorer by sector (e.g. salud) + risk_level=critical to independently reproduce the IMSS ghost company patterns. All data is from public COMPRANET records — no FOIA required.',
+      action: { label: 'Explorador de contratos', href: '/contracts' },
+    },
+    {
+      icon: Shield,
+      color: '#ca8a04',
+      // Folio COMPRANET: cada contrato tiene número de folio para solicitudes
+      title: 'Acceso a documentos: folios COMPRANET',
+      titleEn: 'Document access via COMPRANET folio numbers',
+      body: 'Cada contrato marcado incluye su número de folio COMPRANET. Úsalo para acceder a la documentación completa vía el portal de transparencia (Art. 6 constitucional). No se requiere litigio — es información pública.',
+      bodyEn: 'Every flagged contract includes its COMPRANET folio. Use it to request full documentation via the transparency portal (constitutional Art. 6). No litigation needed — these are public records.',
+      action: null,
+    },
+  ]
+
+  return (
+    <section className="my-8">
+      <div className="mb-5">
+        <div className="editorial-rule mb-2">
+          <Search className="h-4 w-4 text-accent flex-shrink-0" />
+          <span className="editorial-label text-accent">06·A</span>
+        </div>
+        {/*
+          Spanish: Pistas para periodistas
+          English: Leads for Journalists
+        */}
+        <h2 className="text-editorial-h2 text-text-primary">
+          Pistas para Periodistas
+        </h2>
+        <p className="text-sm text-text-muted italic mt-1">Leads for Journalists</p>
+        <div className="accent-rule mt-3" />
+        <p className="text-sm leading-relaxed text-text-secondary mt-4">
+          El análisis estadístico no es el final de la historia — es el comienzo.
+          Aquí están los cuatro puntos de partida más concretos para periodistas de investigación.
+          {' '}<span className="text-text-muted italic">(Statistical analysis is where the story begins, not ends.
+          Here are four concrete starting points for investigative reporters.)</span>
+        </p>
+      </div>
+
+      <div className="grid sm:grid-cols-2 gap-4">
+        {leads.map((lead) => {
+          const Icon = lead.icon
+          return (
+            <ScrollReveal key={lead.title} delay={80}>
+              <div
+                className="fern-card p-5 flex flex-col h-full"
+                style={{ borderColor: `${lead.color}25`, background: `${lead.color}06` }}
+              >
+                <div className="flex items-start gap-3 mb-3">
+                  <div
+                    className="p-2 rounded-md flex-shrink-0"
+                    style={{ background: `${lead.color}18` }}
+                  >
+                    <Icon className="h-4 w-4" style={{ color: lead.color }} />
+                  </div>
+                  <div>
+                    <h4 className="text-sm font-bold text-text-primary leading-snug">
+                      {lead.title}
+                    </h4>
+                    <p className="text-[11px] text-text-muted italic mt-0.5">{lead.titleEn}</p>
+                  </div>
+                </div>
+
+                <p className="text-sm leading-relaxed text-text-secondary flex-1 mb-2">{lead.body}</p>
+                <p className="text-[11px] text-text-muted italic leading-relaxed mb-3">{lead.bodyEn}</p>
+
+                {lead.action && (
+                  <button
+                    onClick={() => navigate(lead.action!.href)}
+                    className="mt-auto flex items-center gap-1.5 text-xs font-semibold font-mono hover:underline self-start"
+                    style={{ color: lead.color }}
+                  >
+                    {lead.action.label}
+                    <ArrowRight className="h-3 w-3" />
+                  </button>
+                )}
+              </div>
+            </ScrollReveal>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -127,7 +466,6 @@ export function ExecutiveSummary() {
   }
 
   const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
-  const totalValueT = (data.headline.total_value / 1e12).toFixed(1)
   const valueAtRiskFormatted = formatCompactMXN((data.risk.high_value ?? 0) + (data.risk.critical_value ?? 0))
 
   return (
@@ -138,65 +476,13 @@ export function ExecutiveSummary() {
         subtitle={t('editorialSubtitle')}
       />
 
-      {/* ── Editorial Lede ── */}
-      <motion.blockquote
-        className="border-l-4 border-l-[#dc2626] pl-6 py-4 my-8"
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.3, duration: 0.8 }}
-      >
-        <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif">
-          {t('lede', { highRiskPct, valueAtRisk: valueAtRiskFormatted })}
-        </p>
-      </motion.blockquote>
+      {/* ── Investigative Lede ── */}
+      <InvestigativeLede />
 
-      {/* ── 4 Primary KPI Cards ── */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-40px' }}
-      >
-        <motion.div variants={staggerItem}>
-          <div className="fern-card p-4 border-l-[3px] border-l-blue-500">
-            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
-              {formatNumber(data.headline.total_contracts)}
-            </div>
-            <div className="text-xs font-bold uppercase tracking-wider text-blue-500/70 mt-1">{t('kpi.totalContracts')}</div>
-            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.totalContractsContext')}</div>
-          </div>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <div className="fern-card p-4 border-l-[3px] border-l-amber-500">
-            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
-              {totalValueT}T
-            </div>
-            <div className="text-xs font-bold uppercase tracking-wider text-amber-500/70 mt-1">{t('kpi.totalValue')}</div>
-            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.totalValueContext')}</div>
-          </div>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <div className="fern-card p-4 border-l-[3px] border-l-red-500">
-            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
-              {highRiskPct}%
-            </div>
-            <div className="text-xs font-bold uppercase tracking-wider text-red-500/70 mt-1">{t('kpi.highRiskRate')}</div>
-            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.highRiskRateContext')}</div>
-          </div>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <div className="fern-card p-4 border-l-[3px] border-l-orange-500">
-            <div className="font-black text-2xl sm:text-3xl font-mono text-text-primary tabular-nums">
-              {valueAtRiskFormatted}
-            </div>
-            <div className="text-xs font-bold uppercase tracking-wider text-orange-500/70 mt-1">{t('kpi.valueAtRisk')}</div>
-            <div className="text-[11px] text-text-muted mt-1 leading-snug">{t('kpi.valueAtRiskContext')}</div>
-          </div>
-        </motion.div>
-      </motion.div>
+      {/* ── Five Key Findings (replaces 4 KPI cards) ── */}
+      <FiveKeyFindings highRiskPct={highRiskPct} valueAtRiskFormatted={valueAtRiskFormatted} />
 
-      {/* ── Editorial context notes below KPI cards ── */}
+      {/* ── Editorial context notes below findings ── */}
       <div className="space-y-1.5">
         <p className="text-xs text-text-muted leading-relaxed italic">
           {t('rateExplanation')}
@@ -235,6 +521,9 @@ export function ExecutiveSummary() {
       </PullQuote>
 
       <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
+
+      {/* ── Pistas para Periodistas / Investigation Leads ── */}
+      <ScrollReveal delay={140}><PistasParaPeriodistas navigate={navigate} /></ScrollReveal>
 
       {/* Section numbering note — sections 02/04/06/07/11 reflect original 11-chapter report */}
       <p className="text-[10px] text-text-muted/60 font-mono text-right">
@@ -993,6 +1282,30 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 
       <CorruptionFunnel data={data} />
 
+      {/* Human-context callout for critical count */}
+      <div className="my-6 rounded-xl border border-[#dc2626]/20 bg-[#dc2626]/5 p-5 flex items-start gap-4">
+        <div className="flex-shrink-0 mt-0.5">
+          <div className="w-8 h-8 rounded-full bg-[#dc2626]/15 flex items-center justify-center">
+            <AlertTriangle className="h-4 w-4 text-[#dc2626]" />
+          </div>
+        </div>
+        <div>
+          <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-[#dc2626] mb-1">
+            En perspectiva · In Perspective
+          </p>
+          {/* Spanish: 184,031 contratos en zona crítica equivalen a
+              aproximadamente un contrato sospechoso por cada escuela primaria en México. */}
+          <p className="text-sm leading-relaxed text-text-secondary">
+            <strong className="text-text-primary font-mono">184,031</strong> contratos en zona crítica (puntuación ≥ 0.60) —{' '}
+            el equivalente aproximado a <strong className="text-text-primary">un contrato sospechoso por cada escuela primaria
+            de México</strong>. Esa cifra no incluye los 228,814 contratos de riesgo alto.{' '}
+            <span className="text-text-muted italic">
+              (184K critical-risk contracts — roughly one per primary school in Mexico.)
+            </span>
+          </p>
+        </div>
+      </div>
+
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
         <Trans
           t={t}
@@ -1446,6 +1759,27 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
             </div>
           ))}
         </div>
+      </div>
+
+      {/* Journalist methodology note */}
+      <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
+        <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-amber-500 mb-2">
+          Nota para periodistas · Journalist Note
+        </p>
+        {/*
+          Spanish: Las puntuaciones de riesgo son pistas de investigación, no condenas.
+          Each flagged contract can be cross-referenced via COMPRANET folio numbers for FOIA requests.
+        */}
+        <p className="text-sm leading-relaxed text-text-secondary mb-3">
+          Las puntuaciones de riesgo son <strong className="text-text-primary">pistas de investigación, no condenas</strong>.
+          Cada contrato marcado puede cruzarse con su número de folio en COMPRANET para solicitudes de información
+          (Art. 6 constitucional — no se requiere litigio). Los datos son de fuente pública; no se necesita FOIA.
+        </p>
+        <p className="text-xs text-text-muted italic leading-relaxed">
+          For journalists: risk scores are investigative leads, not verdicts. Each flagged contract carries a
+          COMPRANET folio number you can use to request full documentation. All underlying data is public
+          record — no freedom of information litigation required.
+        </p>
       </div>
     </section>
   )
