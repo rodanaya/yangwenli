@@ -1827,9 +1827,17 @@ def get_false_negatives(
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
+_factor_analysis_result: dict | None = None
+_factor_analysis_ts: float = 0.0
+_FACTOR_ANALYSIS_TTL = 7200  # 2 hours — stable analytical endpoint
+
+
 @router.get("/validation/factor-analysis", response_model=FactorAnalysisResponse)
 def get_factor_analysis():
     """Analyze which risk factors are most effective at detecting known bad contracts."""
+    global _factor_analysis_result, _factor_analysis_ts
+    if _factor_analysis_result and (_time.time() - _factor_analysis_ts) < _FACTOR_ANALYSIS_TTL:
+        return _factor_analysis_result
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -1860,12 +1868,12 @@ def get_factor_analysis():
                 except (json.JSONDecodeError, TypeError):
                     pass
 
-            # Get baseline factor triggers (random sample)
+            # Get baseline factor triggers (systematic sample every ~310th row ≈ 10K / 3.1M)
             cursor.execute("""
                 SELECT risk_factors
                 FROM contracts
                 WHERE risk_factors IS NOT NULL
-                ORDER BY RANDOM()
+                AND (rowid % 310) = 0
                 LIMIT 10000
             """)
 
@@ -1901,7 +1909,7 @@ def get_factor_analysis():
             # Sort by effectiveness
             effectiveness.sort(key=lambda x: x.effectiveness_score, reverse=True)
 
-            return {
+            result = {
                 "factors": effectiveness,
                 "sample_sizes": {
                     "known_bad_contracts": known_bad_count,
@@ -1912,6 +1920,9 @@ def get_factor_analysis():
                     if f.lift > 1.5 and f.trigger_rate_known_bad > 10
                 ][:5]
             }
+            _factor_analysis_result = result
+            _factor_analysis_ts = _time.time()
+            return result
 
     except HTTPException:
         raise
