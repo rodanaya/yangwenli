@@ -20,6 +20,23 @@ router = APIRouter(prefix="/api/v1/stories", tags=["stories"])
 _stories_cache: dict = {"data": None, "expires": 0.0, "computing": False}
 _stories_lock = threading.Lock()
 
+# Simple TTL caches for individual story endpoints (1-hour TTL)
+_story_individual_cache: dict[str, dict] = {}
+_story_individual_lock = threading.Lock()
+
+
+def _get_cached(key: str) -> dict | None:
+    with _story_individual_lock:
+        entry = _story_individual_cache.get(key)
+        if entry and time.time() < entry["expires"]:
+            return entry["data"]
+    return None
+
+
+def _set_cached(key: str, data: dict, ttl: int = 3600) -> None:
+    with _story_individual_lock:
+        _story_individual_cache[key] = {"data": data, "expires": time.time() + ttl}
+
 
 def _run_packages_computation() -> None:
     """Compute all 8 story packages in background and populate the cache."""
@@ -65,6 +82,9 @@ def administration_comparison():
     """
     Compare procurement patterns across Mexico's 6-year presidential administrations.
     """
+    cached = _get_cached("administration-comparison")
+    if cached:
+        return cached
     with get_db() as conn:
         rows = conn.execute("""
             SELECT
@@ -96,7 +116,7 @@ def administration_comparison():
             "avg_risk_score", "high_risk_pct"]
     data = [dict(zip(cols, r)) for r in rows]
 
-    return {
+    result = {
         "title": "Comparación entre Administraciones",
         "subtitle": "¿Cómo cambian los patrones de corrupción con cada gobierno?",
         "key_question": "¿Qué administración tuvo mayor concentración de adjudicaciones directas?",
@@ -107,6 +127,8 @@ def administration_comparison():
         ),
         "data": data,
     }
+    _set_cached("administration-comparison", result)
+    return result
 
 
 @router.get("/ghost-companies")
@@ -238,6 +260,9 @@ def overpricing_patterns():
     """
     Contracts with critical risk scores grouped by sector and year.
     """
+    cached = _get_cached("overpricing-patterns")
+    if cached:
+        return cached
     with get_db() as conn:
         rows = conn.execute("""
             SELECT
@@ -262,7 +287,7 @@ def overpricing_patterns():
             "total_value_mxn", "avg_contract_value", "avg_risk_score"]
     data = [dict(zip(cols, r)) for r in rows]
 
-    return {
+    result = {
         "title": "Patrones de Sobreprecio por Sector",
         "subtitle": "Sectores y años con mayor concentración de contratos de riesgo crítico",
         "key_question": "¿Dónde se concentra el sobreprecio en la contratación pública mexicana?",
@@ -273,6 +298,8 @@ def overpricing_patterns():
         ),
         "data": data,
     }
+    _set_cached("overpricing-patterns", result)
+    return result
 
 
 def _fmt_value(v: float) -> str:
