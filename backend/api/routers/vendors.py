@@ -908,13 +908,13 @@ def get_contract_histogram(
     with get_db() as conn:
         cursor = conn.cursor()
         rows = cursor.execute(
-            "SELECT importe_contrato FROM contracts WHERE vendor_id = ? AND importe_contrato > 0 AND importe_contrato <= ?",
+            "SELECT amount_mxn FROM contracts WHERE vendor_id = ? AND amount_mxn > 0 AND amount_mxn <= ?",
             (vendor_id, MAX_CONTRACT_VALUE),
         ).fetchall()
 
     counts = [0] * len(BUCKETS)
     for row in rows:
-        amt = row["importe_contrato"]
+        amt = row["amount_mxn"]
         for i, (_, lo, hi) in enumerate(BUCKETS):
             if lo <= amt < hi:
                 counts[i] += 1

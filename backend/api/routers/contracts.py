@@ -399,26 +399,26 @@ def get_contract_risk(
             factors_str = row[4] or ""
             factors = []
 
-            # Map factor codes to descriptions and weights (v6.4 global coefficients)
-            # Source: CAL-v6.1-202603191034, C=0.01, l1_ratio=0.9673
+            # Map factor codes to descriptions and weights (v6.5 global coefficients)
+            # Source: CAL-v6.1-202603251039, C=0.01, l1_ratio=0.9673
             factor_info = {
                 # Behavioral factors (active)
-                "price_volatility": ("Price Volatility", 1.8566, "Behavioral"),
-                "institution_diversity": ("Institution Diversity", -0.4679, "Behavioral"),
-                "vendor_concentration": ("Vendor Concentration", 0.2378, "Behavioral"),
+                "price_volatility": ("Price Volatility", 0.5343, "Behavioral"),
+                "institution_diversity": ("Institution Diversity", -0.3821, "Behavioral"),
+                "vendor_concentration": ("Vendor Concentration", 0.3749, "Behavioral"),
+                "win_rate": ("Win Rate", 0.0488, "Behavioral"),
                 # Procedure factors (active)
-                "single_bid": ("Single Bidder", 0.0984, "Procedure"),
+                "direct_award": ("Direct Award", 0.0306, "Procedure"),
                 "ad_period_days": ("Ad Period Duration", 0.0423, "Procedure"),
+                "single_bid": ("Single Bidder", 0.0, "Procedure"),
                 # Pricing factors (active)
-                "price_ratio": ("Price Ratio", 0.3907, "Pricing"),
+                "price_ratio": ("Price Ratio", 0.2345, "Pricing"),
                 # Network factors (active)
-                "network_member_count": ("Network Member Count", 0.1873, "Network"),
+                "network_member_count": ("Network Member Count", 0.1811, "Network"),
                 # Timing factors (active)
-                "same_day_count": ("Same-Day Contracts", 0.1114, "Timing"),
-                # Zeroed by regularization (C=0.01, near-L1) or sign constraints
-                "win_rate": ("Win Rate", 0.0, "Behavioral"),
+                "same_day_count": ("Same-Day Contracts", 0.0945, "Timing"),
+                # Zeroed by regularization or sign constraints
                 "sector_spread": ("Sector Spread", 0.0, "Behavioral"),
-                "direct_award": ("Direct Award", 0.0, "Procedure"),
                 "price_hyp_confidence": ("Price Hypothesis Confidence", 0.0, "Pricing"),
                 "co_bid_rate": ("Co-Bidding Rate", 0.0, "Network"),
                 "industry_mismatch": ("Industry-Sector Mismatch", 0.0, "Network"),
