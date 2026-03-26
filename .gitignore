@@ -196,3 +196,4 @@ backend/data/comprasmx/*.csv
 
 # Auto-memory (user-specific)
 memory/
+scripts/resumable_upload.py
