@@ -1,16 +1,17 @@
 /**
- * EL TELESCOPIO — The Procurement Contract Universe
+ * RADAR DE SECTORES — Sector-Year Risk Intelligence
  *
- * A space/astronomy-themed visualization where each sector-year data point
- * appears as a stellar body in deep space. 12 sectors x 24 years = ~288
- * nebulae, each representing thousands of contracts.
+ * Replaces the astronomy metaphor with a practical scatter plot:
+ *   X = year (2000-2025), Y = avg_risk, bubble size = total_value, color = sector
+ * Plus a sortable ranked table of all 288 sector-year data points.
  */
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
-import { motion, AnimatePresence, useReducedMotion } from 'framer-motion'
+import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { AlertTriangle } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
+import ReactECharts from 'echarts-for-react'
+import { AlertTriangle, ArrowUpDown, ArrowUp, ArrowDown, TrendingUp } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import type { SectorYearItem } from '@/api/types'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
@@ -20,40 +21,9 @@ import { formatCompactMXN, formatNumber } from '@/lib/utils'
 // Types
 // ---------------------------------------------------------------------------
 
-interface Star {
-  x: number
-  y: number
-  r: number
-  opacity: number
-}
-
-interface NebulaDatum {
-  id: string
-  year: number
-  sectorId: number
-  sectorKey: string
-  sectorName: string
-  color: string
-  contracts: number
-  totalValue: number
-  avgRisk: number
-  highRiskPct: number
-  directAwardPct: number
-  vendorCount: number
-  institutionCount: number
-  cx: number
-  cy: number
-  radius: number
-  glowIntensity: number
-  baseOpacity: number
-}
-
-type YAxisMetric = 'avg_risk' | 'high_risk_pct' | 'direct_award_pct'
-type SizeMetric = 'total_value' | 'contracts' | 'vendor_count'
-
-// ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
+type SortKey = 'year' | 'sector' | 'contracts' | 'total_value' | 'avg_risk' | 'high_risk_pct' | 'direct_award_pct'
+type SortDir = 'asc' | 'desc'
+type YMetric = 'avg_risk' | 'high_risk_pct' | 'direct_award_pct'
 
 const SECTOR_ID_TO_KEY: Record<number, string> = {
   1: 'salud', 2: 'educacion', 3: 'infraestructura', 4: 'energia',
@@ -61,897 +31,436 @@ const SECTOR_ID_TO_KEY: Record<number, string> = {
   9: 'agricultura', 10: 'ambiente', 11: 'trabajo', 12: 'otros',
 }
 
-const SECTOR_ID_TO_NAME: Record<number, string> = Object.fromEntries(
-  SECTORS.map(s => [s.id, s.name])
-)
+// Max bubble area in px² — scales down so bubbles don't overlap too much
+const MAX_BUBBLE_AREA = 3600
 
-const ADMINISTRATIONS = [
-  { startYear: 2000, endYear: 2006, name: 'Fox', color: '#3b82f6' },
-  { startYear: 2006, endYear: 2012, name: 'Calderon', color: '#22c55e' },
-  { startYear: 2012, endYear: 2018, name: 'EPN', color: '#f97316' },
-  { startYear: 2018, endYear: 2024, name: 'AMLO', color: '#8b5cf6' },
-  { startYear: 2024, endYear: 2030, name: 'Sheinbaum', color: '#ec4899' },
-]
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
 
-const MARGIN = { top: 100, right: 60, bottom: 140, left: 70 }
-
-const Y_LABEL_KEYS: Record<YAxisMetric, string> = {
-  avg_risk: 'yLabels.avg_risk',
-  high_risk_pct: 'yLabels.high_risk_pct',
-  direct_award_pct: 'yLabels.direct_award_pct',
+function getSectorName(sectorId: number): string {
+  const entry = SECTORS.find(s => s.id === sectorId)
+  return entry ? entry.name : SECTOR_ID_TO_KEY[sectorId] ?? `Sector ${sectorId}`
 }
 
-const SIZE_LABEL_KEYS: Record<SizeMetric, string> = {
-  total_value: 'sizeLabels.total_value',
-  contracts: 'sizeLabels.contracts',
-  vendor_count: 'sizeLabels.vendor_count',
+function getRiskColor(risk: number): string {
+  if (risk >= 0.60) return '#f87171'
+  if (risk >= 0.40) return '#fb923c'
+  if (risk >= 0.25) return '#fbbf24'
+  return '#4ade80'
 }
 
 // ---------------------------------------------------------------------------
-// Starfield generator (seeded pseudorandom)
-// ---------------------------------------------------------------------------
-
-function generateStarField(count: number, width: number, height: number): Star[] {
-  let seed = 42
-  function rand() {
-    seed = (seed * 1664525 + 1013904223) & 0xffffffff
-    return (seed >>> 0) / 4294967296
-  }
-  return Array.from({ length: count }, () => ({
-    x: rand() * width,
-    y: rand() * height,
-    r: rand() * 1.2 + 0.4,
-    opacity: rand() * 0.5 + 0.1,
-  }))
-}
-
-// ---------------------------------------------------------------------------
-// Data mapping helpers
-// ---------------------------------------------------------------------------
-
-function getYValue(item: SectorYearItem, metric: YAxisMetric): number {
-  switch (metric) {
-    case 'avg_risk': return item.avg_risk
-    case 'high_risk_pct': return item.high_risk_pct
-    case 'direct_award_pct': return item.direct_award_pct
-  }
-}
-
-function getSizeValue(item: SectorYearItem, metric: SizeMetric): number {
-  switch (metric) {
-    case 'total_value': return item.total_value
-    case 'contracts': return item.contracts
-    case 'vendor_count': return item.vendor_count
-  }
-}
-
-function computeRadius(value: number, metric: SizeMetric): number {
-  if (value <= 0) return 3
-  switch (metric) {
-    case 'total_value':
-      return Math.max(3, Math.log10(Math.max(value, 1)) * 3.2 - 20)
-    case 'contracts':
-      return Math.max(3, Math.log10(Math.max(value, 1)) * 5)
-    case 'vendor_count':
-      return Math.max(3, Math.log10(Math.max(value, 1)) * 6)
-  }
-}
-
-// ---------------------------------------------------------------------------
-// Component
+// Main component
 // ---------------------------------------------------------------------------
 
 export default function Telescope() {
-  const { t } = useTranslation('telescope')
-  const containerRef = useRef<HTMLDivElement>(null)
-  const [dimensions, setDimensions] = useState({ width: 1200, height: 700 })
-  const [hoveredId, setHoveredId] = useState<string | null>(null)
-  const [visibleSectors, setVisibleSectors] = useState<Set<number>>(
-    new Set(SECTORS.map(s => s.id))
-  )
-  const [yMetric, setYMetric] = useState<YAxisMetric>('avg_risk')
-  const [sizeMetric, setSizeMetric] = useState<SizeMetric>('total_value')
-  const [zoom, setZoom] = useState(1)
-  const [pan, setPan] = useState({ x: 0, y: 0 })
-  const [isPanning, setIsPanning] = useState(false)
-  const panStart = useRef({ x: 0, y: 0, panX: 0, panY: 0 })
-  const reducedMotion = useReducedMotion()
+  const { t, i18n } = useTranslation('telescope')
+  const navigate = useNavigate()
+  const lang = i18n.language
 
-  // Fetch data
-  const { data: resp, isLoading, isError } = useQuery({
-    queryKey: ['analysis', 'sector-year-breakdown'],
+  const [yMetric, setYMetric] = useState<YMetric>('avg_risk')
+  const [selectedSectors, setSelectedSectors] = useState<Set<number>>(new Set())
+  const [sortKey, setSortKey] = useState<SortKey>('avg_risk')
+  const [sortDir, setSortDir] = useState<SortDir>('desc')
+  const [tableSearch, setTableSearch] = useState('')
+  const [yearRange, setYearRange] = useState<[number, number]>([2010, 2025])
+
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: 10 * 60 * 1000,
   })
 
-  // Resize observer
-  useEffect(() => {
-    const el = containerRef.current
-    if (!el) return
-    const ro = new ResizeObserver(entries => {
-      const entry = entries[0]
-      if (entry) {
-        setDimensions({
-          width: entry.contentRect.width,
-          height: Math.max(entry.contentRect.height, 500),
-        })
-      }
+  const allItems: SectorYearItem[] = data?.data ?? []
+
+  // All sector IDs present in data
+  const sectorIds = useMemo(() => {
+    const ids = new Set(allItems.map(d => d.sector_id))
+    return Array.from(ids).sort((a, b) => a - b)
+  }, [allItems])
+
+  const isFilterActive = selectedSectors.size > 0
+
+  const filteredItems = useMemo(() => {
+    return allItems.filter(d => {
+      if (isFilterActive && !selectedSectors.has(d.sector_id)) return false
+      if (d.year < yearRange[0] || d.year > yearRange[1]) return false
+      return true
     })
-    ro.observe(el)
-    return () => ro.disconnect()
-  }, [])
+  }, [allItems, selectedSectors, yearRange, isFilterActive])
 
-  // Zoom handler
-  const handleWheel = useCallback((e: React.WheelEvent) => {
-    e.preventDefault()
-    const delta = e.deltaY > 0 ? 0.9 : 1.1
-    setZoom(z => Math.min(Math.max(z * delta, 0.5), 4))
-  }, [])
+  // Scatter chart data
+  const maxValue = useMemo(() => Math.max(...filteredItems.map(d => d.total_value || 0)), [filteredItems])
 
-  // Pan handlers
-  const handleMouseDown = useCallback((e: React.MouseEvent) => {
-    if (e.button !== 0) return
-    setIsPanning(true)
-    panStart.current = { x: e.clientX, y: e.clientY, panX: pan.x, panY: pan.y }
-  }, [pan])
+  const scatterSeries = useMemo(() => {
+    // Group by sector for separate series (needed for legend + color)
+    const bySector = new Map<number, SectorYearItem[]>()
+    for (const d of filteredItems) {
+      if (!bySector.has(d.sector_id)) bySector.set(d.sector_id, [])
+      bySector.get(d.sector_id)!.push(d)
+    }
 
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!isPanning) return
-    setPan({
-      x: panStart.current.panX + (e.clientX - panStart.current.x),
-      y: panStart.current.panY + (e.clientY - panStart.current.y),
-    })
-  }, [isPanning])
-
-  const handleMouseUp = useCallback(() => {
-    setIsPanning(false)
-  }, [])
-
-  // Reset view
-  const resetView = useCallback(() => {
-    setZoom(1)
-    setPan({ x: 0, y: 0 })
-  }, [])
-
-  // Compute nebulae
-  const items = resp?.data ?? []
-
-  const { nebulae, years, totalContracts } = useMemo(() => {
-    if (!items.length) return { nebulae: [], years: [] as number[], totalContracts: 0 }
-
-    const allYears = [...new Set(items.map(i => i.year))].sort((a, b) => a - b)
-    const minYear = allYears[0]
-    const maxYear = allYears[allYears.length - 1]
-    const yearSpan = maxYear - minYear || 1
-
-    // Compute y range
-    const yValues = items.map(i => getYValue(i, yMetric))
-    const maxY = Math.max(...yValues, 0.01)
-    const minY = Math.min(...yValues, 0)
-    const yRange = maxY - minY || 0.01
-
-    const plotW = dimensions.width - MARGIN.left - MARGIN.right
-    const plotH = dimensions.height - MARGIN.top - MARGIN.bottom
-
-    let total = 0
-    const mapped: NebulaDatum[] = items.map(item => {
-      const sectorKey = SECTOR_ID_TO_KEY[item.sector_id] ?? 'otros'
-      const sectorName = SECTOR_ID_TO_NAME[item.sector_id] ?? 'Otros'
-      const color = SECTOR_COLORS[sectorKey] ?? '#64748b'
-
-      const xNorm = (item.year - minYear) / yearSpan
-      const yVal = getYValue(item, yMetric)
-      const yNorm = (yVal - minY) / yRange
-
-      const cx = MARGIN.left + xNorm * plotW
-      const cy = MARGIN.top + (1 - yNorm) * plotH // invert: high risk = top
-
-      const radius = computeRadius(getSizeValue(item, sizeMetric), sizeMetric)
-      const glowIntensity = Math.min(item.high_risk_pct, 1)
-      const baseOpacity = Math.min(Math.log10(Math.max(item.contracts, 1)) / 6, 1)
-
-      total += item.contracts
+    return Array.from(bySector.entries()).map(([sectorId, items]) => {
+      const key = SECTOR_ID_TO_KEY[sectorId] ?? 'otros'
+      const color = SECTOR_COLORS[key] ?? '#64748b'
+      const name = getSectorName(sectorId)
 
       return {
-        id: `${item.sector_id}-${item.year}`,
-        year: item.year,
-        sectorId: item.sector_id,
-        sectorKey,
-        sectorName,
-        color,
-        contracts: item.contracts,
-        totalValue: item.total_value,
-        avgRisk: item.avg_risk,
-        highRiskPct: item.high_risk_pct,
-        directAwardPct: item.direct_award_pct,
-        vendorCount: item.vendor_count,
-        institutionCount: item.institution_count,
-        cx,
-        cy,
-        radius,
-        glowIntensity,
-        baseOpacity,
+        name,
+        type: 'scatter',
+        data: items.map(d => {
+          const yVal = yMetric === 'avg_risk' ? d.avg_risk
+            : yMetric === 'high_risk_pct' ? d.high_risk_pct
+            : d.direct_award_pct
+          // Bubble size proportional to sqrt(total_value) → area ∝ value
+          const size = maxValue > 0
+            ? Math.sqrt((d.total_value / maxValue) * MAX_BUBBLE_AREA)
+            : 8
+          return {
+            value: [d.year, yVal, d.total_value, size, sectorId, d.contracts, d.avg_risk, d.high_risk_pct, d.direct_award_pct],
+            symbolSize: Math.max(6, Math.round(size)),
+          }
+        }),
+        itemStyle: { color, opacity: 0.75 },
+        emphasis: { itemStyle: { opacity: 1, shadowBlur: 12, shadowColor: color + '88' } },
       }
     })
+  }, [filteredItems, yMetric, maxValue])
 
-    return { nebulae: mapped, years: allYears, totalContracts: total }
-  }, [items, yMetric, sizeMetric, dimensions])
+  const yLabel = yMetric === 'avg_risk'
+    ? t('yLabels.avg_risk')
+    : yMetric === 'high_risk_pct'
+    ? t('yLabels.high_risk_pct')
+    : t('yLabels.direct_award_pct')
 
-  // Starfield
-  const stars = useMemo(
-    () => generateStarField(400, dimensions.width, dimensions.height),
-    [dimensions.width, dimensions.height]
-  )
+  const chartOption = useMemo(() => ({
+    backgroundColor: 'transparent',
+    grid: { left: 60, right: 20, top: 20, bottom: 60 },
+    tooltip: {
+      trigger: 'item',
+      backgroundColor: '#1e293b',
+      borderColor: '#334155',
+      textStyle: { color: '#e2e8f0', fontSize: 12 },
+      formatter: (params: { data: { value: number[] }; seriesName: string }) => {
+        const [year, , value, , , contracts, avgRisk, highRiskPct, directPct] = params.data.value
+        return `
+          <div style="min-width:160px">
+            <div style="font-weight:600;margin-bottom:4px">${params.seriesName} · ${year}</div>
+            <div>${t('tooltip.contracts')}: <b>${formatNumber(contracts)}</b></div>
+            <div>${t('tooltip.value')}: <b>${formatCompactMXN(value)}</b></div>
+            <div>${t('tooltip.avgRisk')}: <b>${(avgRisk * 100).toFixed(1)}%</b></div>
+            <div>${t('tooltip.highRisk')}: <b>${(highRiskPct * 100).toFixed(1)}%</b></div>
+            <div>${t('tooltip.directAward')}: <b>${(directPct * 100).toFixed(1)}%</b></div>
+          </div>
+        `
+      },
+    },
+    xAxis: {
+      type: 'value',
+      name: lang === 'es' ? 'Año' : 'Year',
+      nameLocation: 'middle',
+      nameGap: 30,
+      min: yearRange[0] - 0.5,
+      max: yearRange[1] + 0.5,
+      axisLabel: { color: '#94a3b8', formatter: (v: number) => v.toFixed(0) },
+      axisLine: { lineStyle: { color: '#334155' } },
+      splitLine: { lineStyle: { color: '#1e293b' } },
+    },
+    yAxis: {
+      type: 'value',
+      name: yLabel,
+      nameLocation: 'middle',
+      nameGap: 45,
+      min: 0,
+      axisLabel: {
+        color: '#94a3b8',
+        formatter: (v: number) => yMetric === 'avg_risk' ? v.toFixed(2) : `${(v * 100).toFixed(0)}%`,
+      },
+      axisLine: { lineStyle: { color: '#334155' } },
+      splitLine: { lineStyle: { color: '#1e293b' } },
+    },
+    legend: { show: false },
+    series: scatterSeries,
+  }), [scatterSeries, yLabel, yMetric, yearRange, t, lang])
 
-  // Constellation lines: connect same-sector orbs by year
-  const constellationLines = useMemo(() => {
-    const bySector: Record<number, NebulaDatum[]> = {}
-    for (const n of nebulae) {
-      if (!visibleSectors.has(n.sectorId)) continue
-      if (!bySector[n.sectorId]) bySector[n.sectorId] = []
-      bySector[n.sectorId].push(n)
-    }
-    const lines: { x1: number; y1: number; x2: number; y2: number; color: string; sectorId: number }[] = []
-    for (const sectorId of Object.keys(bySector)) {
-      const sorted = bySector[Number(sectorId)].sort((a, b) => a.year - b.year)
-      for (let i = 0; i < sorted.length - 1; i++) {
-        lines.push({
-          x1: sorted[i].cx, y1: sorted[i].cy,
-          x2: sorted[i + 1].cx, y2: sorted[i + 1].cy,
-          color: sorted[i].color,
-          sectorId: Number(sectorId),
-        })
-      }
-    }
-    return lines
-  }, [nebulae, visibleSectors])
-
-  // Administration bands
-  const adminBands = useMemo(() => {
-    if (!years.length) return []
-    const minYear = years[0]
-    const maxYear = years[years.length - 1]
-    const yearSpan = maxYear - minYear || 1
-    const plotW = dimensions.width - MARGIN.left - MARGIN.right
-
-    return ADMINISTRATIONS.filter(a => a.endYear > minYear && a.startYear <= maxYear).map(admin => {
-      const clampedStart = Math.max(admin.startYear, minYear)
-      const clampedEnd = Math.min(admin.endYear, maxYear)
-      const x1 = MARGIN.left + ((clampedStart - minYear) / yearSpan) * plotW
-      const x2 = MARGIN.left + ((clampedEnd - minYear) / yearSpan) * plotW
-      return { ...admin, x1, x2 }
+  // Table
+  const tableItems = useMemo(() => {
+    let items = filteredItems.filter(d => {
+      if (!tableSearch) return true
+      const name = getSectorName(d.sector_id).toLowerCase()
+      return name.includes(tableSearch.toLowerCase()) || String(d.year).includes(tableSearch)
     })
-  }, [years, dimensions])
 
-  // Y-axis ticks
-  const yTicks = useMemo(() => {
-    const yValues = items.map(i => getYValue(i, yMetric))
-    const maxY = Math.max(...yValues, 0.01)
-    const minY = Math.min(...yValues, 0)
-    const yRange = maxY - minY || 0.01
-    const plotH = dimensions.height - MARGIN.top - MARGIN.bottom
-    const tickCount = 5
-    const ticks: { value: number; y: number }[] = []
-    for (let i = 0; i <= tickCount; i++) {
-      const val = minY + (yRange * i) / tickCount
-      const y = MARGIN.top + (1 - i / tickCount) * plotH
-      ticks.push({ value: val, y })
-    }
-    return ticks
-  }, [items, yMetric, dimensions])
+    items = [...items].sort((a, b) => {
+      let av: number | string, bv: number | string
+      switch (sortKey) {
+        case 'year': av = a.year; bv = b.year; break
+        case 'sector': av = getSectorName(a.sector_id); bv = getSectorName(b.sector_id); break
+        case 'contracts': av = a.contracts; bv = b.contracts; break
+        case 'total_value': av = a.total_value; bv = b.total_value; break
+        case 'avg_risk': av = a.avg_risk; bv = b.avg_risk; break
+        case 'high_risk_pct': av = a.high_risk_pct; bv = b.high_risk_pct; break
+        case 'direct_award_pct': av = a.direct_award_pct; bv = b.direct_award_pct; break
+        default: av = a.avg_risk; bv = b.avg_risk
+      }
+      if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv as string) : (bv as string).localeCompare(av)
+      return sortDir === 'asc' ? (av as number) - (bv as number) : (bv as number) - (av as number)
+    })
 
-  // X-axis ticks (every 2 years)
-  const xTicks = useMemo(() => {
-    if (!years.length) return []
-    const minYear = years[0]
-    const maxYear = years[years.length - 1]
-    const yearSpan = maxYear - minYear || 1
-    const plotW = dimensions.width - MARGIN.left - MARGIN.right
-    return years.filter(y => y % 2 === 0).map(y => ({
-      year: y,
-      x: MARGIN.left + ((y - minYear) / yearSpan) * plotW,
-    }))
-  }, [years, dimensions])
+    return items
+  }, [filteredItems, tableSearch, sortKey, sortDir])
 
-  // Hovered nebula data
-  const hoveredNebula = hoveredId ? nebulae.find(n => n.id === hoveredId) : null
+  function toggleSort(key: SortKey) {
+    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
+    else { setSortKey(key); setSortDir('desc') }
+  }
 
-  // Hover connection lines (adjacent same-sector years)
-  const hoverLines = useMemo(() => {
-    if (!hoveredNebula) return []
-    return nebulae.filter(n =>
-      n.sectorId === hoveredNebula.sectorId &&
-      Math.abs(n.year - hoveredNebula.year) === 1 &&
-      visibleSectors.has(n.sectorId)
-    ).map(n => ({
-      x1: hoveredNebula.cx, y1: hoveredNebula.cy,
-      x2: n.cx, y2: n.cy,
-      color: hoveredNebula.color,
-    }))
-  }, [hoveredNebula, nebulae, visibleSectors])
+  function SortIcon({ k }: { k: SortKey }) {
+    if (sortKey !== k) return <ArrowUpDown size={12} className="opacity-30 ml-1 inline" />
+    return sortDir === 'desc'
+      ? <ArrowDown size={12} className="ml-1 inline text-blue-400" />
+      : <ArrowUp size={12} className="ml-1 inline text-blue-400" />
+  }
 
-  // Toggle sector
-  const toggleSector = useCallback((id: number) => {
-    setVisibleSectors(prev => {
+  function toggleSector(id: number) {
+    setSelectedSectors(prev => {
       const next = new Set(prev)
-      if (next.has(id)) {
-        next.delete(id)
-      } else {
-        next.add(id)
-      }
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
       return next
     })
-  }, [])
-
-  // Toggle all
-  const toggleAll = useCallback(() => {
-    setVisibleSectors(prev => {
-      if (prev.size === SECTORS.length) return new Set()
-      return new Set(SECTORS.map(s => s.id))
-    })
-  }, [])
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
-
-  if (isError) {
-    return (
-      <div className="flex h-screen w-full items-center justify-center" style={{ background: '#030509' }}>
-        <div className="flex flex-col items-center gap-3 text-white/60">
-          <AlertTriangle className="h-8 w-8 text-red-400" />
-          <p className="text-sm">No se pudo cargar la información. Intente de nuevo más tarde.</p>
-        </div>
-      </div>
-    )
   }
+
+  // Summary stats
+  const totalContracts = useMemo(() => filteredItems.reduce((s, d) => s + d.contracts, 0), [filteredItems])
+  const totalValue = useMemo(() => filteredItems.reduce((s, d) => s + d.total_value, 0), [filteredItems])
+  const avgRisk = useMemo(() => filteredItems.length
+    ? filteredItems.reduce((s, d) => s + d.avg_risk, 0) / filteredItems.length
+    : 0, [filteredItems])
 
   if (isLoading) {
     return (
-      <div className="flex h-screen w-full items-center justify-center" style={{ background: '#030509' }}>
-        <div className="text-center">
-          <div className="mb-4 text-sm tracking-[0.3em] text-white/40 uppercase">{t('loading')}</div>
-          <div className="mx-auto h-1 w-48 overflow-hidden rounded-full bg-white/10">
-            <motion.div
-              className="h-full rounded-full bg-white/30"
-              animate={{ x: ['-100%', '100%'] }}
-              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
-              style={{ width: '40%' }}
-            />
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-64">
+        <div className="text-slate-400 animate-pulse">{t('loading')}</div>
       </div>
     )
   }
 
-  const svgW = dimensions.width
-  const svgH = dimensions.height
+  if (isError || allItems.length === 0) {
+    return (
+      <div className="flex items-center justify-center h-64 gap-3 text-red-400">
+        <AlertTriangle size={20} />
+        <span>{lang === 'es' ? 'Error cargando datos de sectores' : 'Error loading sector data'}</span>
+      </div>
+    )
+  }
 
   return (
-    <div
-      ref={containerRef}
-      className="relative flex h-screen w-full flex-col overflow-hidden"
-      style={{ background: '#030509' }}
-    >
+    <div className="p-4 md:p-6 space-y-6 max-w-screen-xl mx-auto">
       {/* Header */}
-      <header className="relative z-20 flex-shrink-0 px-8 pt-6 pb-2">
-        <p className="text-[10px] font-semibold tracking-[0.2em] uppercase text-white/30 mb-1.5">
-          {t('eyebrow')}
-        </p>
-        <h1
-          className="text-2xl font-light tracking-[0.4em] text-white/90 uppercase"
-          style={{ fontFamily: 'system-ui, -apple-system, sans-serif' }}
-        >
-          {t('title')}
+      <div>
+        <p className="text-xs tracking-widest text-slate-500 uppercase mb-1">{t('eyebrow')}</p>
+        <h1 className="text-2xl font-bold text-white">
+          {lang === 'es' ? 'Radar de Sectores' : 'Sector Radar'}
         </h1>
-        <div className="mt-1 h-px bg-gradient-to-r from-white/30 via-white/10 to-transparent" />
-        <p className="mt-2 text-xs tracking-[0.2em] text-white/40 uppercase">
-          {t('subtitle')}
-          <span className="mx-3 text-white/20">|</span>
-          {nebulae.length} {t('nebulaeCount')}
-          <span className="mx-2 text-white/20">.</span>
-          {formatNumber(totalContracts)} {t('contractsCount')}
-          <span className="mx-2 text-white/20">.</span>
-          {years.length > 0 ? `${years[0]}-${years[years.length - 1]}` : ''}
+        <p className="text-slate-400 text-sm mt-1">
+          {lang === 'es'
+            ? 'Riesgo por sector y año · tamaño = valor contratado · color = sector'
+            : 'Risk by sector and year · size = contract value · color = sector'}
         </p>
-        <p className="mt-1.5 text-[11px] text-white/45 leading-relaxed max-w-2xl">
-          {t('description')}
-        </p>
-      </header>
-
-      {/* SVG Universe */}
-      <div
-        className="relative flex-1"
-        onWheel={handleWheel}
-        onMouseDown={handleMouseDown}
-        onMouseMove={handleMouseMove}
-        onMouseUp={handleMouseUp}
-        onMouseLeave={handleMouseUp}
-        style={{ cursor: isPanning ? 'grabbing' : 'grab' }}
-      >
-        <svg
-          width={svgW}
-          height={svgH}
-          className="absolute inset-0"
-          style={{
-            transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
-            transformOrigin: 'center center',
-          }}
-        >
-          <defs>
-            {/* Glow filter */}
-            <filter id="stellar-glow" x="-200%" y="-200%" width="500%" height="500%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Hover glow filter */}
-            <filter id="stellar-glow-hover" x="-300%" y="-300%" width="700%" height="700%">
-              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur1" />
-              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur2" />
-              <feMerge>
-                <feMergeNode in="blur1" />
-                <feMergeNode in="blur2" />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-
-            {/* Subtle radial gradient for admin bands */}
-            {ADMINISTRATIONS.map(admin => (
-              <linearGradient key={admin.name} id={`admin-grad-${admin.name}`} x1="0" x2="0" y1="0" y2="1">
-                <stop offset="0%" stopColor={admin.color} stopOpacity="0.04" />
-                <stop offset="50%" stopColor={admin.color} stopOpacity="0.02" />
-                <stop offset="100%" stopColor={admin.color} stopOpacity="0" />
-              </linearGradient>
-            ))}
-          </defs>
-
-          {/* Background stars */}
-          <g className="pointer-events-none">
-            {stars.map((star, i) => (
-              <circle
-                key={i}
-                cx={star.x}
-                cy={star.y}
-                r={star.r}
-                fill="white"
-                opacity={star.opacity}
-              />
-            ))}
-          </g>
-
-          {/* Administration bands */}
-          {adminBands.map(band => (
-            <g key={band.name}>
-              <rect
-                x={band.x1}
-                y={MARGIN.top - 20}
-                width={Math.max(band.x2 - band.x1, 0)}
-                height={svgH - MARGIN.top - MARGIN.bottom + 40}
-                fill={`url(#admin-grad-${band.name})`}
-              />
-              <line
-                x1={band.x1}
-                y1={MARGIN.top - 20}
-                x2={band.x1}
-                y2={svgH - MARGIN.bottom + 20}
-                stroke={band.color}
-                strokeOpacity="0.08"
-                strokeWidth="1"
-                strokeDasharray="4,8"
-              />
-              <text
-                x={(band.x1 + band.x2) / 2}
-                y={MARGIN.top - 28}
-                textAnchor="middle"
-                fill={band.color}
-                fontSize="10"
-                opacity="0.35"
-                fontFamily="system-ui, sans-serif"
-                letterSpacing="0.15em"
-              >
-                {band.name.toUpperCase()}
-              </text>
-            </g>
-          ))}
-
-          {/* Y-axis */}
-          <g className="pointer-events-none">
-            <text
-              x={MARGIN.left - 50}
-              y={MARGIN.top + (svgH - MARGIN.top - MARGIN.bottom) / 2}
-              textAnchor="middle"
-              fill="white"
-              fontSize="10"
-              opacity="0.3"
-              fontFamily="system-ui, sans-serif"
-              letterSpacing="0.1em"
-              transform={`rotate(-90, ${MARGIN.left - 50}, ${MARGIN.top + (svgH - MARGIN.top - MARGIN.bottom) / 2})`}
-            >
-              {t(Y_LABEL_KEYS[yMetric])}
-            </text>
-            {yTicks.map((tick, i) => (
-              <g key={i}>
-                <line
-                  x1={MARGIN.left - 4}
-                  y1={tick.y}
-                  x2={dimensions.width - MARGIN.right}
-                  y2={tick.y}
-                  stroke="white"
-                  strokeOpacity="0.04"
-                  strokeWidth="1"
-                />
-                <text
-                  x={MARGIN.left - 8}
-                  y={tick.y + 3}
-                  textAnchor="end"
-                  fill="white"
-                  fontSize="9"
-                  opacity="0.3"
-                  fontFamily="monospace"
-                >
-                  {yMetric === 'avg_risk'
-                    ? tick.value.toFixed(2)
-                    : `${(tick.value * 100).toFixed(0)}%`}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          {/* X-axis */}
-          <g className="pointer-events-none">
-            {xTicks.map(tick => (
-              <g key={tick.year}>
-                <line
-                  x1={tick.x}
-                  y1={MARGIN.top}
-                  x2={tick.x}
-                  y2={svgH - MARGIN.bottom}
-                  stroke="white"
-                  strokeOpacity="0.03"
-                  strokeWidth="1"
-                />
-                <text
-                  x={tick.x}
-                  y={svgH - MARGIN.bottom + 18}
-                  textAnchor="middle"
-                  fill="white"
-                  fontSize="10"
-                  opacity="0.35"
-                  fontFamily="monospace"
-                >
-                  {tick.year}
-                </text>
-              </g>
-            ))}
-          </g>
-
-          {/* Constellation lines */}
-          {constellationLines.map((line, i) => (
-            <line
-              key={`const-${i}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke={line.color}
-              strokeOpacity={hoveredNebula?.sectorId === line.sectorId ? 0.25 : 0.07}
-              strokeWidth={hoveredNebula?.sectorId === line.sectorId ? 1.5 : 0.8}
-              className="transition-all duration-300"
-            />
-          ))}
-
-          {/* Hover connection lines */}
-          {hoverLines.map((line, i) => (
-            <line
-              key={`hover-${i}`}
-              x1={line.x1}
-              y1={line.y1}
-              x2={line.x2}
-              y2={line.y2}
-              stroke={line.color}
-              strokeOpacity="0.5"
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-          ))}
-
-          {/* Nebulae (sector-year orbs) */}
-          {nebulae
-            .filter(n => visibleSectors.has(n.sectorId))
-            .map((n) => {
-              const isHovered = hoveredId === n.id
-              const scale = isHovered ? 1.4 : 1
-              const sectorIndex = n.sectorId - 1
-
-              return (
-                <g
-                  key={n.id}
-                  onMouseEnter={() => setHoveredId(n.id)}
-                  onMouseLeave={() => setHoveredId(null)}
-                  style={{ cursor: 'pointer' }}
-                >
-                  {/* Outer glow (large, very faint) */}
-                  <circle
-                    cx={n.cx}
-                    cy={n.cy}
-                    r={n.radius * 3 * scale}
-                    fill={n.color}
-                    opacity={0.03 + n.glowIntensity * 0.12}
-                    filter={isHovered ? 'url(#stellar-glow-hover)' : undefined}
-                  >
-                    {!reducedMotion && (
-                      <animate
-                        attributeName="opacity"
-                        values={`${0.03 + n.glowIntensity * 0.1};${0.05 + n.glowIntensity * 0.15};${0.03 + n.glowIntensity * 0.1}`}
-                        dur={`${4 + sectorIndex * 0.3}s`}
-                        repeatCount="indefinite"
-                      />
-                    )}
-                  </circle>
-
-                  {/* Medium glow */}
-                  <circle
-                    cx={n.cx}
-                    cy={n.cy}
-                    r={n.radius * 1.8 * scale}
-                    fill={n.color}
-                    opacity={0.08 + n.glowIntensity * 0.22}
-                  />
-
-                  {/* Core orb */}
-                  <circle
-                    cx={n.cx}
-                    cy={n.cy}
-                    r={n.radius * scale}
-                    fill={n.color}
-                    opacity={0.5 + n.baseOpacity * 0.4}
-                    stroke={isHovered ? 'white' : 'none'}
-                    strokeWidth={isHovered ? 1 : 0}
-                    strokeOpacity={0.6}
-                    className="transition-all duration-200"
-                  >
-                    {!reducedMotion && (
-                      <animate
-                        attributeName="r"
-                        values={`${n.radius * scale};${n.radius * scale * 1.04};${n.radius * scale}`}
-                        dur={`${4 + sectorIndex * 0.3}s`}
-                        repeatCount="indefinite"
-                      />
-                    )}
-                  </circle>
-
-                  {/* Bright center point */}
-                  <circle
-                    cx={n.cx}
-                    cy={n.cy}
-                    r={Math.max(n.radius * 0.3 * scale, 1)}
-                    fill="white"
-                    opacity={0.4 + n.baseOpacity * 0.3}
-                  />
-
-                  {/* Dimmed sector label when highlighted */}
-                  {isHovered && (
-                    <text
-                      x={n.cx}
-                      y={n.cy - n.radius * scale - 10}
-                      textAnchor="middle"
-                      fill={n.color}
-                      fontSize="9"
-                      fontFamily="system-ui, sans-serif"
-                      opacity="0.8"
-                      letterSpacing="0.1em"
-                    >
-                      {n.sectorName} {n.year}
-                    </text>
-                  )}
-                </g>
-              )
-            })}
-
-          {/* Staggered entrance animation overlay — fade in via motion group */}
-          {!reducedMotion && nebulae.length > 0 && (
-            <rect
-              width={svgW}
-              height={svgH}
-              fill="#030509"
-              opacity="0"
-              className="pointer-events-none"
-            >
-              <animate
-                attributeName="opacity"
-                values="1;0"
-                dur="2s"
-                fill="freeze"
-                repeatCount="1"
-              />
-            </rect>
-          )}
-        </svg>
-
-        {/* Tooltip */}
-        <AnimatePresence>
-          {hoveredNebula && (
-            <motion.div
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 8 }}
-              transition={{ duration: 0.15 }}
-              className="pointer-events-none absolute z-30"
-              style={{
-                left: Math.min(
-                  hoveredNebula.cx * zoom + pan.x + 20,
-                  dimensions.width - 280
-                ),
-                top: Math.max(
-                  hoveredNebula.cy * zoom + pan.y - 100,
-                  10
-                ),
-              }}
-            >
-              <div
-                className="rounded-lg border px-4 py-3 shadow-2xl backdrop-blur-md"
-                style={{
-                  background: 'rgba(3, 5, 9, 0.92)',
-                  borderColor: hoveredNebula.color + '40',
-                  minWidth: 220,
-                }}
-              >
-                <div className="mb-2 flex items-center gap-2">
-                  <div
-                    className="h-2.5 w-2.5 rounded-full"
-                    style={{ background: hoveredNebula.color, boxShadow: `0 0 6px ${hoveredNebula.color}` }}
-                  />
-                  <span className="text-xs font-medium tracking-wider text-white/90 uppercase">
-                    {hoveredNebula.sectorName}
-                  </span>
-                  <span className="ml-auto font-mono text-xs text-white/50">{hoveredNebula.year}</span>
-                </div>
-                <div className="h-px mb-2" style={{ background: hoveredNebula.color + '20' }} />
-                <div className="grid grid-cols-2 gap-x-4 gap-y-1 text-xs">
-                  <span className="text-white/40">{t('tooltip.contracts')}</span>
-                  <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.contracts)}</span>
-                  <span className="text-white/40">{t('tooltip.value')}</span>
-                  <span className="text-right font-mono text-white/80">{formatCompactMXN(hoveredNebula.totalValue)}</span>
-                  <span className="text-white/40">{t('tooltip.avgRisk')}</span>
-                  <span className="text-right font-mono text-white/80">{(hoveredNebula.avgRisk * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">{t('tooltip.highRisk')}</span>
-                  <span className="text-right font-mono text-white/80">{(hoveredNebula.highRiskPct * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">{t('tooltip.directAward')}</span>
-                  <span className="text-right font-mono text-white/80">{(hoveredNebula.directAwardPct * 100).toFixed(1)}%</span>
-                  <span className="text-white/40">{t('tooltip.vendors')}</span>
-                  <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.vendorCount)}</span>
-                  <span className="text-white/40">{t('tooltip.institutions')}</span>
-                  <span className="text-right font-mono text-white/80">{formatNumber(hoveredNebula.institutionCount)}</span>
-                </div>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
-      {/* Bottom control panel */}
-      <footer className="relative z-20 flex-shrink-0 border-t border-white/5 bg-black/40 px-6 py-3 backdrop-blur-sm">
-        <div className="flex flex-wrap items-center gap-6">
-          {/* Sector toggles */}
-          <div className="flex flex-wrap items-center gap-1.5">
-            <button
-              onClick={toggleAll}
-              className="mr-1 rounded px-2 py-0.5 text-[10px] tracking-wider text-white/40 uppercase transition-colors hover:bg-white/5 hover:text-white/60"
-            >
-              {visibleSectors.size === SECTORS.length ? t('controls.none') : t('controls.all')}
-            </button>
-            {SECTORS.map(s => {
-              const active = visibleSectors.has(s.id)
-              return (
-                <button
-                  key={s.id}
-                  onClick={() => toggleSector(s.id)}
-                  className="flex items-center gap-1 rounded px-1.5 py-0.5 text-[10px] tracking-wider uppercase transition-all"
-                  style={{
-                    background: active ? s.color + '20' : 'transparent',
-                    color: active ? s.color : 'rgba(255,255,255,0.2)',
-                    border: `1px solid ${active ? s.color + '40' : 'transparent'}`,
-                  }}
-                  title={s.name}
-                >
-                  <span
-                    className="inline-block h-1.5 w-1.5 rounded-full transition-all"
-                    style={{
-                      background: active ? s.color : 'rgba(255,255,255,0.15)',
-                      boxShadow: active ? `0 0 4px ${s.color}` : 'none',
-                    }}
-                  />
-                  {s.code.slice(0, 4)}
-                </button>
-              )
-            })}
+      {/* KPI strip */}
+      <div className="grid grid-cols-3 gap-3">
+        {[
+          { label: lang === 'es' ? 'Contratos' : 'Contracts', value: formatNumber(totalContracts) },
+          { label: lang === 'es' ? 'Valor Total' : 'Total Value', value: formatCompactMXN(totalValue) },
+          { label: lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk', value: (avgRisk * 100).toFixed(1) + '%', color: getRiskColor(avgRisk) },
+        ].map(kpi => (
+          <div key={kpi.label} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
+            <p className="text-xs text-slate-400 uppercase tracking-wide">{kpi.label}</p>
+            <p className="text-xl font-bold mt-1" style={{ color: kpi.color ?? '#f1f5f9' }}>{kpi.value}</p>
           </div>
+        ))}
+      </div>
 
-          {/* Divider */}
-          <div className="h-6 w-px bg-white/10" />
-
-          {/* Y-axis metric */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.yAxis')}</span>
-            {(Object.keys(Y_LABEL_KEYS) as YAxisMetric[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => setYMetric(key)}
-                className="rounded px-2 py-0.5 text-[10px] tracking-wider uppercase transition-colors"
-                style={{
-                  background: yMetric === key ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: yMetric === key ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {t(Y_LABEL_KEYS[key])}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="h-6 w-px bg-white/10" />
-
-          {/* Size metric */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.size')}</span>
-            {(Object.keys(SIZE_LABEL_KEYS) as SizeMetric[]).map((key) => (
-              <button
-                key={key}
-                onClick={() => setSizeMetric(key)}
-                className="rounded px-2 py-0.5 text-[10px] tracking-wider uppercase transition-colors"
-                style={{
-                  background: sizeMetric === key ? 'rgba(255,255,255,0.1)' : 'transparent',
-                  color: sizeMetric === key ? 'rgba(255,255,255,0.8)' : 'rgba(255,255,255,0.3)',
-                }}
-              >
-                {t(SIZE_LABEL_KEYS[key])}
-              </button>
-            ))}
-          </div>
-
-          {/* Divider */}
-          <div className="h-6 w-px bg-white/10" />
-
-          {/* Zoom controls */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[9px] tracking-wider text-white/30 uppercase">{t('controls.zoom')}</span>
+      {/* Controls row */}
+      <div className="flex flex-wrap gap-3 items-center">
+        {/* Y-axis metric */}
+        <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+          {(['avg_risk', 'high_risk_pct', 'direct_award_pct'] as YMetric[]).map(m => (
             <button
-              onClick={() => setZoom(z => Math.max(z * 0.8, 0.5))}
-              className="rounded px-2 py-0.5 text-[11px] text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
+              key={m}
+              onClick={() => setYMetric(m)}
+              className={`px-3 py-1 text-xs rounded-md transition-colors ${
+                yMetric === m ? 'bg-blue-600 text-white' : 'text-slate-400 hover:text-white'
+              }`}
             >
-              -
+              {m === 'avg_risk' ? t('yLabels.avg_risk')
+                : m === 'high_risk_pct' ? t('yLabels.high_risk_pct')
+                : t('yLabels.direct_award_pct')}
             </button>
-            <span className="min-w-[3em] text-center font-mono text-[10px] text-white/40">
-              {(zoom * 100).toFixed(0)}%
-            </span>
-            <button
-              onClick={() => setZoom(z => Math.min(z * 1.25, 4))}
-              className="rounded px-2 py-0.5 text-[11px] text-white/40 transition-colors hover:bg-white/5 hover:text-white/70"
-            >
-              +
-            </button>
-            <button
-              onClick={resetView}
-              className="rounded px-2 py-0.5 text-[10px] tracking-wider text-white/30 uppercase transition-colors hover:bg-white/5 hover:text-white/50"
-            >
-              {t('controls.reset')}
-            </button>
-          </div>
+          ))}
         </div>
-      </footer>
 
-      {/* Legend — bottom-right floating */}
-      <div className="pointer-events-none absolute right-6 bottom-20 z-20">
-        <div className="rounded-lg border border-white/5 bg-black/50 px-3 py-2 text-[9px] text-white/30 backdrop-blur-sm">
-          <div className="mb-1 tracking-wider uppercase">{t('legend.size')} = {t(SIZE_LABEL_KEYS[sizeMetric])}</div>
-          <div className="mb-1 tracking-wider uppercase">{t('legend.brightness')} = {t('legend.highRisk')}</div>
-          <div className="tracking-wider uppercase">{t('legend.positionY')} = {t(Y_LABEL_KEYS[yMetric])}</div>
+        {/* Year range */}
+        <div className="flex items-center gap-2 text-xs text-slate-400">
+          <span>{lang === 'es' ? 'Años' : 'Years'}:</span>
+          <select
+            value={yearRange[0]}
+            onChange={e => setYearRange([Number(e.target.value), yearRange[1]])}
+            className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white"
+          >
+            {Array.from({length: 26}, (_, i) => 2000 + i).map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+          <span>–</span>
+          <select
+            value={yearRange[1]}
+            onChange={e => setYearRange([yearRange[0], Number(e.target.value)])}
+            className="bg-slate-800 border border-slate-700 rounded px-2 py-1 text-white"
+          >
+            {Array.from({length: 26}, (_, i) => 2000 + i).map(y => (
+              <option key={y} value={y}>{y}</option>
+            ))}
+          </select>
+        </div>
+
+        {isFilterActive && (
+          <button
+            onClick={() => setSelectedSectors(new Set())}
+            className="text-xs text-blue-400 hover:text-blue-300 underline"
+          >
+            {lang === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+          </button>
+        )}
+      </div>
+
+      {/* Sector legend / filter pills */}
+      <div className="flex flex-wrap gap-2">
+        {sectorIds.map(id => {
+          const key = SECTOR_ID_TO_KEY[id] ?? 'otros'
+          const color = SECTOR_COLORS[key] ?? '#64748b'
+          const name = getSectorName(id)
+          const active = !isFilterActive || selectedSectors.has(id)
+          return (
+            <button
+              key={id}
+              onClick={() => toggleSector(id)}
+              className={`flex items-center gap-1.5 px-3 py-1 rounded-full text-xs border transition-all ${
+                active
+                  ? 'border-transparent text-white'
+                  : 'border-slate-700 text-slate-500 bg-transparent'
+              }`}
+              style={active ? { backgroundColor: color + '33', borderColor: color + '66' } : {}}
+            >
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: active ? color : '#475569' }}
+              />
+              {name}
+            </button>
+          )
+        })}
+      </div>
+
+      {/* Scatter chart */}
+      <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
+        <ReactECharts
+          option={chartOption}
+          style={{ height: 420 }}
+          theme="dark"
+          notMerge
+        />
+      </div>
+
+      {/* Ranked table */}
+      <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl overflow-hidden">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-slate-700/50">
+          <div className="flex items-center gap-2">
+            <TrendingUp size={16} className="text-blue-400" />
+            <span className="text-sm font-semibold text-white">
+              {lang === 'es' ? 'Ranking sector-año' : 'Sector-Year Ranking'}
+            </span>
+            <span className="text-xs text-slate-500 ml-1">({tableItems.length})</span>
+          </div>
+          <input
+            type="text"
+            placeholder={lang === 'es' ? 'Buscar sector o año…' : 'Search sector or year…'}
+            value={tableSearch}
+            onChange={e => setTableSearch(e.target.value)}
+            className="bg-slate-800 border border-slate-700 rounded px-3 py-1 text-xs text-white placeholder-slate-500 w-48"
+          />
+        </div>
+
+        <div className="overflow-x-auto">
+          <table className="w-full text-xs">
+            <thead>
+              <tr className="border-b border-slate-700/50">
+                {([
+                  ['year', lang === 'es' ? 'Año' : 'Year'],
+                  ['sector', lang === 'es' ? 'Sector' : 'Sector'],
+                  ['contracts', lang === 'es' ? 'Contratos' : 'Contracts'],
+                  ['total_value', lang === 'es' ? 'Valor Total' : 'Total Value'],
+                  ['avg_risk', lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk'],
+                  ['high_risk_pct', lang === 'es' ? '% Alto Riesgo' : '% High Risk'],
+                  ['direct_award_pct', lang === 'es' ? '% Adj. Directa' : '% Direct Award'],
+                ] as [SortKey, string][]).map(([k, label]) => (
+                  <th
+                    key={k}
+                    onClick={() => toggleSort(k)}
+                    className="px-3 py-2 text-left text-slate-400 cursor-pointer hover:text-white select-none whitespace-nowrap"
+                  >
+                    {label}<SortIcon k={k} />
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {tableItems.slice(0, 100).map(d => {
+                const key = SECTOR_ID_TO_KEY[d.sector_id] ?? 'otros'
+                const color = SECTOR_COLORS[key] ?? '#64748b'
+                const riskColor = getRiskColor(d.avg_risk)
+                return (
+                  <tr
+                    key={`${d.sector_id}-${d.year}`}
+                    onClick={() => navigate(`/sectors/${d.sector_id}`)}
+                    className="border-b border-slate-800/60 hover:bg-slate-800/40 cursor-pointer transition-colors"
+                  >
+                    <td className="px-3 py-2 text-slate-300">{d.year}</td>
+                    <td className="px-3 py-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+                        <span className="text-white">{getSectorName(d.sector_id)}</span>
+                      </div>
+                    </td>
+                    <td className="px-3 py-2 text-slate-300 text-right">{formatNumber(d.contracts)}</td>
+                    <td className="px-3 py-2 text-slate-300 text-right">{formatCompactMXN(d.total_value)}</td>
+                    <td className="px-3 py-2 text-right font-mono" style={{ color: riskColor }}>
+                      {(d.avg_risk * 100).toFixed(1)}%
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-300">
+                      {(d.high_risk_pct * 100).toFixed(1)}%
+                    </td>
+                    <td className="px-3 py-2 text-right text-slate-300">
+                      {(d.direct_award_pct * 100).toFixed(1)}%
+                    </td>
+                  </tr>
+                )
+              })}
+              {tableItems.length > 100 && (
+                <tr>
+                  <td colSpan={7} className="px-3 py-2 text-center text-slate-500 text-xs">
+                    {lang === 'es'
+                      ? `Mostrando 100 de ${tableItems.length}. Filtra por sector o año para ver más.`
+                      : `Showing 100 of ${tableItems.length}. Filter by sector or year to see more.`}
+                  </td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
       </div>
     </div>

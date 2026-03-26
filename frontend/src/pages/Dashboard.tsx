@@ -55,7 +55,8 @@ import {
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
-// AnomalyLeadsWidget and PoliticalIntelligenceStrip removed — API 500 errors
+import { AnomalyLeadsWidget } from '@/components/widgets/AnomalyLeadsWidget'
+import { PoliticalIntelligenceStrip } from '@/components/widgets/PoliticalIntelligenceStrip'
 
 // ============================================================================
 // Dashboard 2.0: Situation Room
@@ -2414,6 +2415,18 @@ export function Dashboard() {
             </div>
           </div>
         </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* ARIA INVESTIGATION QUEUE + POLITICAL INTELLIGENCE              */}
+      {/* ================================================================ */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <ErrorBoundary fallback={<SectionErrorFallback />}>
+          <AnomalyLeadsWidget />
+        </ErrorBoundary>
+        <ErrorBoundary fallback={<SectionErrorFallback />}>
+          <PoliticalIntelligenceStrip />
+        </ErrorBoundary>
       </div>
 
       {/* ================================================================ */}

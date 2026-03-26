@@ -1,23 +1,21 @@
 {
-  "eyebrow": "INTELIGENCIA VISUAL · UNIVERSO DE CONTRATOS",
-  "description": "Cada burbuja representa un sector-año: tamaño = valor contratado, posición vertical = nivel de riesgo. Las burbujas más brillantes y elevadas merecen atención prioritaria.",
-  "title": "El Telescopio",
-  "subtitle": "El universo de contratos publicos mexicanos",
-  "nebulaeCount": "nebulosas",
-  "contractsCount": "contratos",
-  "loading": "Calibrando telescopio...",
+  "eyebrow": "INTELIGENCIA VISUAL · ANÁLISIS POR SECTOR Y AÑO",
+  "description": "Cada burbuja representa un sector-año: tamaño = valor contratado, posición vertical = nivel de riesgo. Las burbujas más elevadas merecen atención prioritaria.",
+  "title": "Radar de Sectores",
+  "subtitle": "Riesgo por sector y año en la contratación pública mexicana",
+  "loading": "Cargando datos de sectores...",
   "controls": {
     "none": "Ninguno",
     "all": "Todos",
     "yAxis": "Eje Y",
-    "size": "Tamano",
+    "size": "Tamaño",
     "zoom": "Zoom",
     "reset": "Reset"
   },
   "yLabels": {
     "avg_risk": "Riesgo Promedio",
     "high_risk_pct": "% Alto Riesgo",
-    "direct_award_pct": "% Adjudicacion Directa"
+    "direct_award_pct": "% Adjudicación Directa"
   },
   "sizeLabels": {
     "total_value": "Valor Total",
@@ -25,10 +23,10 @@
     "vendor_count": "No. Proveedores"
   },
   "legend": {
-    "size": "Tamano",
+    "size": "Tamaño",
     "brightness": "Brillo",
     "highRisk": "% Alto Riesgo",
-    "positionY": "Posicion Y"
+    "positionY": "Posición Y"
   },
   "tooltip": {
     "contracts": "Contratos",
