@@ -848,3 +848,146 @@ def get_anomaly_comparison():
 
         _anomaly_comparison_cache["data"] = {"ts": _time.time(), "data": result}
         return result
+
+
+# =============================================================================
+# Z-SCORE BASED PRICE ANOMALY ENDPOINT (uses contract_z_features — always populated)
+# =============================================================================
+
+_price_anomalies_cache: Dict[str, Any] = {}
+_PRICE_ANOMALIES_TTL = 1800  # 30 min
+
+
+@router.get("/price-anomalies")
+def get_price_anomalies(
+    sector_id: Optional[int] = Query(None, ge=1, le=12),
+    min_z: float = Query(3.0, ge=1.0, le=10.0, description="Minimum z_price_ratio threshold"),
+    limit: int = Query(50, ge=1, le=200),
+):
+    """
+    Return contracts with extreme price z-scores (statistical price outliers).
+    Uses contract_z_features.z_price_ratio — always populated for all 3.1M contracts.
+    A z-score > 3 means the contract amount is >3 standard deviations above the sector-year mean.
+    """
+    cache_key = f"{sector_id}:{min_z}:{limit}"
+    if cache_key in _price_anomalies_cache:
+        entry = _price_anomalies_cache[cache_key]
+        if _time.time() - entry["ts"] < _PRICE_ANOMALIES_TTL:
+            return entry["data"]
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            sector_filter = "AND c.sector_id = ?" if sector_id else ""
+            params: List[Any] = [min_z]
+            if sector_id:
+                params.append(sector_id)
+            params.append(limit)
+
+            cursor.execute(f"""
+                SELECT
+                    c.id as contract_id,
+                    c.vendor_name,
+                    c.amount_mxn,
+                    c.sector_id,
+                    c.contract_year,
+                    c.institution_name,
+                    c.risk_score,
+                    c.risk_level,
+                    z.z_price_ratio,
+                    z.z_price_volatility
+                FROM contracts c
+                JOIN contract_z_features z ON c.id = z.contract_id
+                WHERE z.z_price_ratio > ?
+                {sector_filter}
+                AND c.amount_mxn IS NOT NULL
+                AND c.amount_mxn > 0
+                ORDER BY z.z_price_ratio DESC
+                LIMIT ?
+            """, params)
+            rows = cursor.fetchall()
+            cols = [d[0] for d in cursor.description]
+
+            # Summary stats
+            count_params: List[Any] = [min_z]
+            if sector_id:
+                count_params.append(sector_id)
+            cursor.execute(f"""
+                SELECT
+                    COUNT(*) as total_outliers,
+                    SUM(c.amount_mxn) as total_value_mxn,
+                    AVG(z.z_price_ratio) as avg_z_score,
+                    MAX(z.z_price_ratio) as max_z_score
+                FROM contracts c
+                JOIN contract_z_features z ON c.id = z.contract_id
+                WHERE z.z_price_ratio > ?
+                {sector_filter}
+                AND c.amount_mxn IS NOT NULL
+            """, count_params)
+            summary_row = cursor.fetchone()
+
+            # Sector breakdown
+            cursor.execute("""
+                SELECT
+                    c.sector_id,
+                    COUNT(*) as outlier_count,
+                    SUM(c.amount_mxn) as total_mxn,
+                    AVG(z.z_price_ratio) as avg_z
+                FROM contracts c
+                JOIN contract_z_features z ON c.id = z.contract_id
+                WHERE z.z_price_ratio > 3
+                AND c.amount_mxn IS NOT NULL
+                GROUP BY c.sector_id
+                ORDER BY outlier_count DESC
+                LIMIT 12
+            """)
+            sector_rows = cursor.fetchall()
+            sector_cols = [d[0] for d in cursor.description]
+
+            result = {
+                "summary": {
+                    "total_outliers": summary_row[0] or 0,
+                    "total_value_mxn": summary_row[1] or 0,
+                    "avg_z_score": round(summary_row[2] or 0, 2),
+                    "max_z_score": round(summary_row[3] or 0, 2),
+                    "threshold_applied": min_z,
+                    "methodology": (
+                        "Z-score = (amount - sector_year_mean) / sector_year_std. "
+                        "Values > 3 indicate contracts priced >3 standard deviations above the sector-year baseline. "
+                        "Higher z-scores indicate more extreme pricing anomalies."
+                    ),
+                },
+                "by_sector": [
+                    dict(zip(sector_cols, r)) for r in sector_rows
+                ],
+                "data": [dict(zip(cols, r)) for r in rows],
+            }
+
+            _price_anomalies_cache[cache_key] = {"ts": _time.time(), "data": result}
+            return result
+
+    except Exception as e:
+        logger.error(f"price-anomalies error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@router.get("/price-sector-baselines")
+def get_price_sector_baselines(sector_id: Optional[int] = Query(None, ge=1, le=12)):
+    """Return sector price baseline statistics (percentiles, fences)."""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            if sector_id:
+                cursor.execute(
+                    "SELECT * FROM sector_price_baselines WHERE sector_id = ?",
+                    (sector_id,)
+                )
+            else:
+                cursor.execute("SELECT * FROM sector_price_baselines ORDER BY sector_id")
+            rows = cursor.fetchall()
+            cols = [d[0] for d in cursor.description]
+            return {"data": [dict(zip(cols, r)) for r in rows]}
+    except Exception as e:
+        logger.error(f"price-sector-baselines error: {e}")
+        raise HTTPException(status_code=500, detail=str(e))

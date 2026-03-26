@@ -926,7 +926,7 @@ def get_institution_top_categories(
                 AVG(COALESCE(c.risk_score, 0)) as avg_risk_score,
                 ROUND(100.0 * SUM(CASE WHEN c.is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 1) as direct_award_pct
             FROM contracts c
-            LEFT JOIN partida_codes pc ON c.partida_code = pc.code
+            LEFT JOIN partida_codes pc ON c.partida_especifica = pc.code
             WHERE {where_clause}
             GROUP BY pc.id, pc.name_es, pc.name_en, pc.code
             HAVING COUNT(*) > 0

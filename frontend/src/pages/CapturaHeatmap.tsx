@@ -5,7 +5,7 @@
  * concentration: rows = top institutions, columns = top vendors, cells = value.
  * High concentration = "captura institucional" (institutional capture).
  */
-import { useEffect, useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -430,10 +430,9 @@ export default function CapturaHeatmap() {
 
             {/* Data rows */}
             {institutions.map((inst) => (
-              <>
+              <React.Fragment key={inst}>
                 {/* Row header: institution name */}
                 <div
-                  key={`label-${inst}`}
                   role="rowheader"
                   className="text-[11px] text-text-primary/80 font-medium truncate flex items-center pr-2"
                   title={inst}
@@ -486,7 +485,7 @@ export default function CapturaHeatmap() {
                     </div>
                   )
                 })}
-              </>
+              </React.Fragment>
             ))}
           </div>
         </motion.div>

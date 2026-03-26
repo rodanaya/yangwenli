@@ -103,14 +103,14 @@ function getIpsColor(ips: number): string {
 // All known patterns for filter
 const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
 
-// Pattern summary data (known counts from ARIA)
-const PATTERN_SUMMARY = [
-  { code: 'P1', name: 'Monopolio', desc: 'Dominio de mercado exclusivo', vendors: '26', value: '$703B', borderColor: 'border-red-500' },
-  { code: 'P2', name: 'Fantasma', desc: 'Empresas sin operaciones reales', vendors: '3.3K', value: '-', borderColor: 'border-amber-500' },
-  { code: 'P3', name: 'Intermediario', desc: 'Intermediarios de papel', vendors: '3.3K', value: '-', borderColor: 'border-orange-400' },
-  { code: 'P6', name: 'Captura', desc: 'Captura de instituciones', vendors: '15.8K', value: '$922B', borderColor: 'border-rose-600' },
-  { code: 'P7', name: 'Riesgo Extremo', desc: 'Patrones de riesgo extremo', vendors: '108', value: '$374B', borderColor: 'border-yellow-500' },
-]
+// Static metadata per pattern (labels, colors — counts come from live ARIA stats)
+const PATTERN_META: Record<string, { name: string; desc: string; borderColor: string }> = {
+  P1: { name: 'Monopolio', desc: 'Dominio de mercado exclusivo', borderColor: 'border-red-500' },
+  P2: { name: 'Fantasma', desc: 'Empresas sin operaciones reales', borderColor: 'border-amber-500' },
+  P3: { name: 'Intermediario', desc: 'Intermediarios de papel', borderColor: 'border-orange-400' },
+  P6: { name: 'Captura', desc: 'Captura de instituciones', borderColor: 'border-rose-600' },
+  P7: { name: 'Riesgo Extremo', desc: 'Patrones de riesgo extremo', borderColor: 'border-yellow-500' },
+}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -211,26 +211,34 @@ export default function RedesKnownDossier() {
         )}
       </div>
 
-      {/* Pattern summary grid */}
+      {/* Pattern summary grid — live counts from ARIA stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {PATTERN_SUMMARY.map((p) => (
-          <button
-            key={p.code}
-            onClick={() => setPatternFilter(patternFilter === p.code ? '' : p.code)}
-            className={cn(
-              'border-l-4 pl-3 py-2 rounded-r text-left transition-all',
-              p.borderColor,
-              patternFilter === p.code
-                ? 'bg-white/10 ring-1 ring-white/20'
-                : 'bg-background-elevated hover:bg-white/5',
-            )}
-          >
-            <div className="text-xs font-mono font-bold text-text-primary">{p.code}</div>
-            <div className="text-xs text-text-muted">{p.name}</div>
-            <div className="text-sm font-semibold text-text-primary mt-1">{p.vendors} proveedores</div>
-            <div className="text-xs text-text-muted">{p.value}</div>
-          </button>
-        ))}
+        {ALL_PATTERNS.map((code) => {
+          const meta = PATTERN_META[code]
+          const liveCount = statsData?.pattern_counts?.[code]
+          const countLabel = liveCount !== undefined
+            ? liveCount >= 1000 ? `${(liveCount / 1000).toFixed(1)}K` : String(liveCount)
+            : '—'
+          return (
+            <button
+              key={code}
+              onClick={() => setPatternFilter(patternFilter === code ? '' : code)}
+              className={cn(
+                'border-l-4 pl-3 py-2 rounded-r text-left transition-all',
+                meta.borderColor,
+                patternFilter === code
+                  ? 'bg-white/10 ring-1 ring-white/20'
+                  : 'bg-background-elevated hover:bg-white/5',
+              )}
+              aria-pressed={patternFilter === code}
+            >
+              <div className="text-xs font-mono font-bold text-text-primary">{code}</div>
+              <div className="text-xs text-text-muted">{meta.name}</div>
+              <div className="text-sm font-semibold text-text-primary mt-1">{countLabel} proveedores</div>
+              <div className="text-xs text-text-muted/60">{meta.desc}</div>
+            </button>
+          )
+        })}
       </div>
 
       {/* Filters — search + pattern pills */}

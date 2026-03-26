@@ -1,74 +1,119 @@
-import { memo, useMemo, useState } from 'react'
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+/**
+ * PriceIntelligence.tsx — Price Anomaly Analysis page
+ *
+ * Replaces the broken original page that depended on an empty price_hypotheses table.
+ *
+ * Primary data sources:
+ *   GET /api/v1/analysis/price-anomalies?min_z=3&limit=50
+ *   GET /api/v1/analysis/price-sector-baselines
+ *   GET /api/v1/aria/queue (T1+T2, for vendor detail)
+ */
+
+import { useState } from 'react'
+import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import ReactECharts from 'echarts-for-react'
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
-import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTOR_COLORS, SECTORS, getSectorNameEN } from '@/lib/constants'
-import { priceApi } from '@/api/client'
-import type { PriceHypothesisItem, SectorPriceBaseline, PriceHypothesesFilterParams, MlAnomaliesResponse } from '@/api/client'
+import { Link } from 'react-router-dom'
 import {
-  ScatterChart,
-  Scatter,
+  BarChart,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
-  ReferenceLine,
-} from '@/components/charts'
+} from 'recharts'
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
+import { Skeleton } from '@/components/ui/skeleton'
+import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
+import { api, ariaApi } from '@/api/client'
+import type { AriaQueueItem } from '@/api/types'
 import {
-  AlertTriangle,
-  Table2,
+  TrendingUp,
   ChevronDown,
-  ChevronUp,
-  ChevronLeft,
   ChevronRight,
-  ArrowUpDown,
-  ArrowUp,
-  ArrowDown,
-  Check,
-  X,
-  Brain,
+  AlertTriangle,
   ExternalLink,
-  Crosshair,
+  Info,
 } from 'lucide-react'
 
-// Year range for filter
-const PRICE_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
+// ─── Constants ────────────────────────────────────────────────────────────────
 
-// ─── MacroStatCard ───────────────────────────────────────────────────────────
+const STALE_TIME = 10 * 60 * 1000
 
-function MacroStatCard({
+// ─── Types ────────────────────────────────────────────────────────────────────
+
+interface PriceAnomalyContract {
+  contract_id: number
+  vendor_name: string
+  amount_mxn: number
+  sector_id: number
+  contract_year: number
+  institution_name: string
+  risk_score: number
+  risk_level: string
+  z_price_ratio: number
+  z_price_volatility: number
+}
+
+interface PriceAnomalySectorItem {
+  sector_id: number
+  sector_name: string
+  count: number
+  total_value_mxn: number
+  avg_z_score: number
+}
+
+interface PriceAnomalyResponse {
+  summary: {
+    total_outliers: number
+    total_value_mxn: number
+    avg_z_score: number
+  }
+  by_sector: PriceAnomalySectorItem[]
+  data: PriceAnomalyContract[]
+}
+
+
+// ─── API helpers ──────────────────────────────────────────────────────────────
+
+async function fetchPriceAnomalies(minZ = 3, limit = 50): Promise<PriceAnomalyResponse> {
+  const { data } = await api.get<PriceAnomalyResponse>(
+    `/analysis/price-anomalies?min_z=${minZ}&limit=${limit}`
+  )
+  return data
+}
+
+
+// ─── Stat Card ────────────────────────────────────────────────────────────────
+
+function StatCard({
   loading,
   label,
   value,
   detail,
-  color,
-  borderColor,
-  sectorName,
+  accent,
 }: {
   loading: boolean
   label: string
   value: string
   detail: string
-  color: string
-  borderColor: string
-  sectorName?: string
+  accent?: string
 }) {
-  const sectorColor = sectorName ? SECTOR_COLORS[sectorName] : undefined
-
   return (
-    <div className={`rounded-lg border bg-background-card p-4 ${borderColor}`}>
-      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">{label}</p>
+    <div className="rounded-lg border border-border bg-background-card p-4">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+        {label}
+      </p>
       {loading ? (
-        <Skeleton className="h-7 w-24 mb-1" />
+        <Skeleton className="h-7 w-32 mb-1" />
       ) : (
-        <p className={`text-xl font-bold tabular-nums ${color}`} style={sectorColor ? { color: sectorColor } : undefined}>
+        <p
+          className="text-xl font-bold tabular-nums"
+          style={accent ? { color: accent } : undefined}
+        >
           {value}
         </p>
       )}
@@ -77,1650 +122,176 @@ function MacroStatCard({
   )
 }
 
-const STALE_TIME = 10 * 60 * 1000
-const PER_PAGE = 20
+// ─── How It Works Accordion ───────────────────────────────────────────────────
 
-// ─── Confidence color palette (blue shades, avoids risk-color collision) ────
-
-const CONFIDENCE_COLORS: Record<string, string> = {
-  very_high: '#1d4ed8', // blue-700
-  high: '#3b82f6',      // blue-500
-  medium: '#93c5fd',    // blue-300
-  low: '#94a3b8',       // slate-400 / gray
-}
-
-function confidenceColor(level: string): string {
-  return CONFIDENCE_COLORS[level] ?? CONFIDENCE_COLORS.low
-}
-
-// ─── SectorAnomalyBar ────────────────────────────────────────────────────────
-
-const SectorAnomalyBar = memo(function SectorAnomalyBar({
-  data,
-}: {
-  data: Array<{ sector_name: string; count: number; total_flagged_value?: number }>
-}) {
-  // Sort descending so highest-anomaly sectors appear at top (ECharts renders bottom→top for categories)
-  const sorted = useMemo(() => [...data].sort((a, b) => a.count - b.count), [data])
-
-  const option = useMemo(() => {
-    // sorted is ascending by count; ECharts renders categories bottom→top so index 0 = bottom.
-    // Rank 1 = highest anomaly = last entry in sorted array (top of chart).
-    const n = sorted.length
-    const names = sorted.map((d, i) => `#${n - i}  ${getSectorNameEN(d.sector_name)}`)
-    const values = sorted.map((d) => ({
-      value: d.count,
-      itemStyle: { color: SECTOR_COLORS[d.sector_name] ?? '#64748b', opacity: 0.85 },
-      extra: d,
-    }))
-    const maxCount = Math.max(...sorted.map((d) => d.count), 1)
-
-    return {
-      tooltip: {
-        trigger: 'axis',
-        axisPointer: { type: 'shadow' },
-        backgroundColor: '#0f172a',
-        borderColor: '#1e293b',
-        textStyle: { color: '#e2e8f0', fontSize: 11 },
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        formatter: (params: any[]) => {
-          const idx = params[0]?.dataIndex ?? 0
-          const row = sorted[idx]
-          return `<strong>${getSectorNameEN(row.sector_name)}</strong><br/>${formatNumber(params[0]?.value)} anomalies${row?.total_flagged_value ? `<br/>${formatCompactMXN(row.total_flagged_value)} flagged` : ''}`
-        },
-      },
-      grid: { left: 130, right: 70, top: 4, bottom: 4, containLabel: false },
-      xAxis: { type: 'value', show: false, max: maxCount * 1.25 },
-      yAxis: {
-        type: 'category',
-        data: names,
-        axisLabel: { fontSize: 10, color: '#6b7280', fontFamily: 'monospace' },
-        axisLine: { show: false },
-        axisTick: { show: false },
-      },
-      series: [{
-        type: 'bar',
-        data: values,
-        barMaxWidth: 16,
-        label: {
-          show: true,
-          position: 'right',
-          fontSize: 10,
-          color: '#9ca3af',
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          formatter: (p: any) => formatNumber(p.value),
-        },
-      }],
-    }
-  }, [sorted])
+function HowItWorks() {
+  const [open, setOpen] = useState(false)
 
   return (
-    <ReactECharts
-      option={option}
-      style={{ height: `${Math.max(sorted.length * 30, 100)}px` }}
-      opts={{ renderer: 'svg' }}
-    />
-  )
-})
-
-// ─── TopAnomalyCard ──────────────────────────────────────────────────────────
-
-function TopAnomalyCard({ item, onNavigate }: { item: PriceHypothesisItem; onNavigate: (contractId: number) => void }) {
-  const sectorCode = item.sector_id
-    ? SECTORS.find((s) => s.id === item.sector_id)?.code
-    : undefined
-  const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
-  const confColor = confidenceColor(item.confidence_level ?? 'low')
-  const isExtreme = item.hypothesis_type === 'extreme_overpricing'
-
-  return (
-    <div className={`rounded-lg border p-3 bg-surface-card/30 ${isExtreme ? 'border-risk-critical/25 bg-risk-critical/5' : 'border-risk-high/20'}`}>
-      <div className="flex items-center justify-between mb-2">
-        <button
-          onClick={() => onNavigate(item.contract_id)}
-          className="font-mono text-[10px] text-accent hover:underline"
-          title="Jump to contract in explorer"
-        >
-          #{item.contract_id}
-        </button>
-        <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-          isExtreme ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'
-        }`}>
-          {isExtreme ? 'Extreme' : 'Outlier'}
-        </span>
-      </div>
-      <p className="text-sm font-bold text-text-primary tabular-nums">
-        {item.amount_mxn != null ? formatCompactMXN(item.amount_mxn) : '—'}
-      </p>
-      <div className="flex items-center gap-1.5 mt-1.5 mb-2">
-        <div className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
-        <span className="text-[10px] text-text-muted">{sectorCode ? getSectorNameEN(sectorCode) : '—'}</span>
-      </div>
-      <div>
-        <div className="flex justify-between mb-0.5">
-          <span className="text-[10px] text-text-muted">Confidence</span>
-          <span className="text-[10px] tabular-nums font-semibold" style={{ color: confColor }}>
-            {(item.confidence * 100).toFixed(0)}%
-          </span>
-        </div>
-        <div className="h-1 rounded-full bg-border overflow-hidden">
-          <div className="h-full rounded-full" style={{ width: `${item.confidence * 100}%`, backgroundColor: confColor }} />
-        </div>
-      </div>
+    <div className="rounded-lg border border-border bg-background-card overflow-hidden">
       <button
-        onClick={() => onNavigate(item.contract_id)}
-        className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
-        title="View contract in explorer"
+        className="w-full flex items-center justify-between px-4 py-3 text-sm font-medium hover:bg-muted/30 transition-colors"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
       >
-        <ExternalLink className="h-3 w-3" />
-        View contract
-      </button>
-    </div>
-  )
-}
-
-// ─── Small helpers ──────────────────────────────────────────────────────────
-
-// ============================================================================
-// Main Page Component
-// ============================================================================
-
-export default function PriceIntelligence() {
-  const { t } = useTranslation('price')
-  const navigate = useNavigate()
-
-  // ── Filter state ────────────────────────────────────────────────────────
-  const [hypothesisType, setHypothesisType] = useState<string>('all')
-  const [confidenceLevel, setConfidenceLevel] = useState<string>('all')
-  const [sectorId, setSectorId] = useState<number | undefined>(undefined)
-  const [yearFilter, setYearFilter] = useState<number | undefined>(undefined)
-  const [reviewStatus, setReviewStatus] = useState<string>('all')
-  const [sortBy, setSortBy] = useState<string>('confidence')
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
-  const [page, setPage] = useState(1)
-  const [showScatter, setShowScatter] = useState(false)
-
-  // ── Expanded row + inline review state ─────────────────────────────────
-  const [expandedId, setExpandedId] = useState<number | null>(null)
-  const [reviewingId, setReviewingId] = useState<number | null>(null)
-  const [reviewNotes, setReviewNotes] = useState('')
-  const [pendingValid, setPendingValid] = useState<boolean | null>(null)
-
-  const queryClient = useQueryClient()
-
-  // ── Build filter params ─────────────────────────────────────────────────
-  const filterParams: PriceHypothesesFilterParams = useMemo(() => {
-    const p: PriceHypothesesFilterParams = {
-      sort_by: sortBy,
-      sort_order: sortOrder,
-      page,
-      per_page: PER_PAGE,
-    }
-    if (hypothesisType !== 'all') p.hypothesis_type = hypothesisType
-    if (confidenceLevel !== 'all') p.confidence_level = confidenceLevel
-    if (sectorId !== undefined) p.sector_id = sectorId
-    if (yearFilter !== undefined) p.year = yearFilter
-    if (reviewStatus === 'pending') p.is_reviewed = false
-    if (reviewStatus === 'reviewed') p.is_reviewed = true
-    return p
-  }, [hypothesisType, confidenceLevel, sectorId, yearFilter, reviewStatus, sortBy, sortOrder, page])
-
-  // ── Queries ──────────────────────────────────────────────────────────────
-  const { data: priceSummary, isLoading: summaryLoading } = useQuery({
-    queryKey: ['price-hypotheses-summary'],
-    queryFn: () => priceApi.getSummary(),
-    staleTime: STALE_TIME,
-  })
-
-  const { data: hypothesesData, isLoading: hypothesesLoading } = useQuery({
-    queryKey: ['price-hypotheses', filterParams],
-    queryFn: () => priceApi.getHypotheses(filterParams),
-    staleTime: STALE_TIME,
-  })
-
-  const { data: baselines, isLoading: baselinesLoading } = useQuery({
-    queryKey: ['price-baselines'],
-    queryFn: () => priceApi.getBaselines(),
-    staleTime: STALE_TIME,
-  })
-
-  // ── Detail query (lazy, only when a row is expanded) ─────────────────────
-  const { data: expandedDetail, isLoading: detailLoading } = useQuery({
-    queryKey: ['price-hypothesis-detail', expandedId],
-    queryFn: () => {
-      const item = hypothesesData?.data.find((h) => h.id === expandedId)
-      if (!item) return null
-      return priceApi.getHypothesisDetail(item.hypothesis_id)
-    },
-    staleTime: STALE_TIME,
-    enabled: expandedId !== null && !!hypothesesData?.data,
-  })
-
-  // ── ML model toggle: price_only (IQR-missed) vs full_z_vector ───────────
-  const [mlModel, setMlModel] = useState<'price_only' | 'full_z_vector'>('price_only')
-  // #73 — inflation-adjusted price toggle (2020=100 Mexican CPI)
-  const [inflationAdjusted, setInflationAdjusted] = useState(false)
-
-  // ── ML anomaly detections (price_only: Isolation Forest, IQR-missed) ────
-  const { data: mlAnomaliesData } = useQuery<MlAnomaliesResponse>({
-    queryKey: ['price-ml-anomalies', sectorId],
-    queryFn: () => priceApi.getMlAnomalies({ sector_id: sectorId, only_new: true, limit: 10 }),
-    staleTime: 30 * 60 * 1000,
-  })
-
-  // ── Full-vector Isolation Forest (all 16 z-score features) ───────────────
-  const { data: fullVectorData } = useQuery<MlAnomaliesResponse>({
-    queryKey: ['price-ml-anomalies-fullvector', sectorId],
-    queryFn: () => priceApi.getMlAnomalies({ sector_id: sectorId, only_new: false, limit: 10, model: 'full_z_vector' }),
-    staleTime: 30 * 60 * 1000,
-  })
-
-  // ── Review mutation ───────────────────────────────────────────────────────
-  const reviewMutation = useMutation({
-    mutationFn: ({ hypothesisId, isValid, notes }: { hypothesisId: string; isValid: boolean; notes?: string }) =>
-      priceApi.reviewHypothesis(hypothesisId, isValid, notes),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['price-hypotheses'] })
-      queryClient.invalidateQueries({ queryKey: ['price-hypotheses-summary'] })
-      setReviewingId(null)
-      setReviewNotes('')
-      setPendingValid(null)
-    },
-  })
-
-  // ── Derived summary stats ─────────────────────────────────────────────────
-  const totalHypotheses = priceSummary?.overall?.total_hypotheses ?? 0
-  const totalFlaggedValue = priceSummary?.overall?.total_flagged_value ?? 0
-  const avgConfidence = priceSummary?.overall?.avg_confidence ?? 0
-
-  // ── Sorted baselines ──────────────────────────────────────────────────────
-  const sortedBaselines = useMemo(() => {
-    if (!baselines) return []
-    return [...baselines].sort((a, b) => b.percentile_50 - a.percentile_50)
-  }, [baselines])
-
-  // ── Pagination ────────────────────────────────────────────────────────────
-  const pagination = hypothesesData?.pagination
-  const totalPages = pagination?.total_pages ?? 1
-
-  function handleSortChange(field: string) {
-    if (sortBy === field) {
-      setSortOrder((o) => (o === 'desc' ? 'asc' : 'desc'))
-    } else {
-      setSortBy(field)
-      setSortOrder('desc')
-    }
-    setPage(1)
-  }
-
-  function resetPage() {
-    setPage(1)
-  }
-
-  function handleRowClick(id: number) {
-    setExpandedId((prev) => (prev === id ? null : id))
-    setReviewingId(null)
-    setReviewNotes('')
-    setPendingValid(null)
-  }
-
-  function startReview(id: number, isValid: boolean, e: React.MouseEvent) {
-    e.stopPropagation()
-    setReviewingId(id)
-    setPendingValid(isValid)
-    setReviewNotes('')
-    setExpandedId(null)
-  }
-
-  function cancelReview(e: React.MouseEvent) {
-    e.stopPropagation()
-    setReviewingId(null)
-    setReviewNotes('')
-    setPendingValid(null)
-  }
-
-  function confirmReview(item: PriceHypothesisItem, e: React.MouseEvent) {
-    e.stopPropagation()
-    if (pendingValid === null) return
-    reviewMutation.mutate({
-      hypothesisId: item.hypothesis_id,
-      isValid: pendingValid,
-      notes: reviewNotes || undefined,
-    })
-  }
-
-  function navigateToContract(contractId: number) {
-    navigate(`/contracts?search=${contractId}`)
-  }
-
-  // ── Derived macro stats ───────────────────────────────────────────────────
-  const topAnomalySector = useMemo(() => {
-    if (!priceSummary?.by_sector || priceSummary.by_sector.length === 0) return null
-    return priceSummary.by_sector.reduce((best, curr) =>
-      curr.count > best.count ? curr : best
-    )
-  }, [priceSummary])
-
-  const extremeOverpricingType = useMemo(() => {
-    if (!priceSummary?.by_type) return null
-    return priceSummary.by_type.find((t) => t.type === 'extreme_overpricing') ?? null
-  }, [priceSummary])
-
-  const avgOverpricingPct = extremeOverpricingType
-    ? `${(extremeOverpricingType.avg_confidence * 100).toFixed(0)}%`
-    : avgConfidence > 0
-    ? `${(avgConfidence * 100).toFixed(0)}%`
-    : '—'
-
-  return (
-    <div className="space-y-5">
-
-      {/* ── 1. Intelligence Header ─────────────────────────────────────────── */}
-      <div className="space-y-1.5">
-        <p className="text-[10px] font-semibold tracking-widest uppercase text-text-muted/70">
-          {t('eyebrow')}
-        </p>
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="h-3.5 w-3.5 text-risk-critical shrink-0" />
-          <span className="text-[10px] font-bold tracking-widest uppercase text-risk-critical font-mono">
-            {t('intelligenceLabel')}
-          </span>
-        </div>
-        <div className="flex flex-wrap items-end gap-x-6 gap-y-1">
-          <h1 className="text-xl md:text-2xl font-black text-text-primary leading-tight">
-            {summaryLoading
-              ? <Skeleton className="h-7 w-52 inline-block" />
-              : `${formatNumber(totalHypotheses)} ${t('anomaliesDetected')}`}
-          </h1>
-          {!summaryLoading && totalFlaggedValue > 0 && (
-            <p className="text-sm text-risk-critical font-medium tabular-nums font-mono">
-              {formatCompactMXN(totalFlaggedValue)} {t('flaggedValue')}
-            </p>
-          )}
-        </div>
-        <p className="text-xs text-text-muted max-w-2xl leading-relaxed">{t('pageDesc')}</p>
-      </div>
-
-      {/* ── 2. Macro stat cards ───────────────────────────────────────────── */}
-      <div className="grid gap-3 grid-cols-2 lg:grid-cols-4">
-        <MacroStatCard
-          loading={summaryLoading}
-          label={t('totalAnomalies')}
-          value={summaryLoading ? '—' : formatNumber(totalHypotheses)}
-          detail={t('totalAnomaliesDetail')}
-          color="text-risk-high"
-          borderColor="border-risk-high/30"
-        />
-        <MacroStatCard
-          loading={summaryLoading}
-          label={t('totalFlaggedValue')}
-          value={summaryLoading ? '—' : formatCompactMXN(totalFlaggedValue)}
-          detail={t('totalFlaggedDetail')}
-          color="text-risk-critical"
-          borderColor="border-risk-critical/30"
-        />
-        <MacroStatCard
-          loading={summaryLoading}
-          label={t('topAnomalySector')}
-          value={
-            summaryLoading ? '—' :
-            topAnomalySector ? getSectorNameEN(topAnomalySector.sector_name) : '—'
-          }
-          detail={
-            topAnomalySector
-              ? `${formatNumber(topAnomalySector.count)} ${t('anomaliesDetected').toLowerCase()}`
-              : t('mostPriceOutliers')
-          }
-          color="text-risk-medium"
-          borderColor="border-risk-medium/30"
-          sectorName={topAnomalySector?.sector_name}
-        />
-        <MacroStatCard
-          loading={summaryLoading}
-          label={t('extremeConfidence')}
-          value={summaryLoading ? '—' : avgOverpricingPct}
-          detail={t('extremeConfidenceDetail')}
-          color="text-accent"
-          borderColor="border-accent/30"
-        />
-      </div>
-
-      {/* ── 3. Sector Anomaly Map ─────────────────────────────────────────── */}
-      {!summaryLoading && priceSummary?.by_sector && priceSummary.by_sector.length > 0 && (
-        <div className="bg-background/60 border border-border rounded-xl p-4">
-          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
-            {t('sectorMapTitle')}
-          </p>
-          <p className="text-xs text-white/40 mb-3">{t('sectorMapDesc')}</p>
-          <SectorAnomalyBar data={priceSummary.by_sector} />
-          <p className="text-xs text-white/50 italic mt-3">
-            Ranked by total anomaly count. Color reflects sector taxonomy. Higher counts suggest systematic overpricing patterns or data-entry errors in that sector.
-          </p>
-        </div>
-      )}
-      {summaryLoading && <Skeleton className="h-40 w-full rounded-lg" />}
-
-      {/* ── 4. Top 5 Highest-Confidence Anomalies ────────────────────────── */}
-      <div>
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-sm font-bold text-text-primary">{t('topAnomaliesTitle')}</h2>
-          <span className="text-[10px] text-text-muted font-mono uppercase tracking-wider">{t('sortedByConfidence')}</span>
-        </div>
-        {hypothesesLoading ? (
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-24 w-full rounded-lg" />
-            ))}
-          </div>
-        ) : hypothesesData?.data && hypothesesData.data.length > 0 ? (
-          <div className="grid gap-2 grid-cols-2 sm:grid-cols-3 lg:grid-cols-5">
-            {hypothesesData.data.slice(0, 5).map((item) => (
-              <TopAnomalyCard key={item.id} item={item} onNavigate={navigateToContract} />
-            ))}
-          </div>
-        ) : null}
-      </div>
-
-      {/* ── 4b. Scatter Plot: Amount vs. Confidence ────────────────────────── */}
-      {!hypothesesLoading && hypothesesData?.data && hypothesesData.data.length > 0 && (
-        <div>
-          <div className="flex items-center justify-between mb-2">
-            <h2 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
-              <Crosshair className="h-3.5 w-3.5 text-accent" />
-              Outlier Scatter: Amount vs. Confidence
-            </h2>
-            <button
-              onClick={() => setShowScatter(v => !v)}
-              className="text-[10px] text-accent hover:underline font-mono uppercase tracking-wider flex items-center gap-1"
-            >
-              {showScatter ? 'Hide' : 'Show'} Chart
-            </button>
-          </div>
-          {showScatter && (() => {
-            const scatterData = hypothesesData.data
-              .filter(h => h.amount_mxn != null && h.amount_mxn > 0)
-              .map(h => ({
-                x: Math.log10(h.amount_mxn ?? 1),
-                y: h.confidence,
-                id: h.contract_id,
-                isExtreme: h.hypothesis_type === 'extreme_overpricing',
-                amount: h.amount_mxn ?? 0,
-                type: h.hypothesis_type,
-                sector: h.sector_id,
-                confidence_level: h.confidence_level,
-              }))
-            return (
-              <div className="bg-background/60 border border-border rounded-xl p-4">
-                <p className="text-sm font-semibold text-white/80 uppercase tracking-wider mb-1">
-                  Outlier Scatter: Amount vs. Confidence
-                </p>
-                <p className="text-[10px] text-white/40 mb-3">
-                  X axis = log₁₀(amount MXN) · Y axis = confidence score · Color = confidence level · Click a dot to view contract
-                </p>
-                <ResponsiveContainer width="100%" height={220}>
-                  <ScatterChart margin={{ left: 8, right: 8, top: 4, bottom: 4 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                    <XAxis
-                      type="number"
-                      dataKey="x"
-                      tick={{ fontSize: 10, fill: '#94a3b8' }}
-                      tickFormatter={(v: number) => `10^${v.toFixed(0)}`}
-                      name="Amount (log)"
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="y"
-                      tick={{ fontSize: 10, fill: '#94a3b8' }}
-                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                      name="Confidence"
-                      domain={[0, 1] as [number, number]}
-                    />
-                    <ReferenceLine y={0} stroke="rgba(255,255,255,0.2)" />
-                    <RechartsTooltip
-                      contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 6, fontSize: 11 }}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      formatter={(_v: any, _name: any, props: any) => {
-                        const p = props?.payload as { amount?: number; y?: number } | undefined
-                        return [formatCompactMXN(p?.amount ?? 0), `Confidence: ${((p?.y ?? 0) * 100).toFixed(0)}%`]
-                      }}
-                      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-                      labelFormatter={(_l: any, payload: ReadonlyArray<any>) => {
-                        const id = (payload?.[0]?.payload as { id?: number } | undefined)?.id
-                        return id != null ? `Contract #${id}` : ''
-                      }}
-                    />
-                    <Scatter
-                      data={scatterData}
-                      onClick={(d: { id?: number }) => d?.id && navigateToContract(d.id)}
-                      style={{ cursor: 'pointer' }}
-                      r={4}
-                    >
-                      {scatterData.map((entry, i) => (
-                        <Cell
-                          key={i}
-                          fill={confidenceColor(entry.confidence_level ?? 'low')}
-                          opacity={entry.y >= 0.7 ? 1 : entry.y >= 0.4 ? 0.75 : 0.5}
-                        />
-                      ))}
-                    </Scatter>
-                  </ScatterChart>
-                </ResponsiveContainer>
-                <p className="text-xs text-white/50 italic mt-3">
-                  Dots colored by confidence level (dark blue = very high, light blue = low). Larger contracts in the upper-right corner represent the highest-priority anomalies.
-                </p>
-                <div className="flex gap-3 mt-2 text-[9px] text-white/50 flex-wrap">
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.very_high }} />
-                    Very High
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.high }} />
-                    High
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.medium }} />
-                    Medium
-                  </span>
-                  <span className="flex items-center gap-1">
-                    <span className="w-2 h-2 rounded-full inline-block" style={{ backgroundColor: CONFIDENCE_COLORS.low }} />
-                    Low
-                  </span>
-                </div>
-              </div>
-            )
-          })()}
-        </div>
-      )}
-
-      {/* ── 4c. Most Overpriced Contracts ────────────────────────────────── */}
-      {!hypothesesLoading && hypothesesData?.data && hypothesesData.data.length > 0 && (() => {
-        const overpriced = [...hypothesesData.data]
-          .filter(h => h.amount_mxn != null)
-          .sort((a, b) => (b.amount_mxn ?? 0) - (a.amount_mxn ?? 0))
-          .slice(0, 5)
-        if (overpriced.length === 0) return null
-        return (
-          <div>
-            <div className="flex items-center justify-between mb-2">
-              <h2 className="text-sm font-bold text-text-primary flex items-center gap-1.5">
-                <AlertTriangle className="h-3.5 w-3.5 text-risk-critical" />
-                Most Overpriced Contracts
-              </h2>
-              <button
-                onClick={() => navigate('/contracts?risk_factor=price_hyp&sort_by=amount_mxn&sort_order=desc')}
-                className="text-[10px] text-accent hover:underline font-mono uppercase tracking-wider flex items-center gap-1"
-              >
-                See all <ExternalLink className="h-3 w-3" />
-              </button>
-            </div>
-            <div className="rounded-lg border border-border/40 overflow-hidden">
-              <table className="w-full text-xs">
-                <thead>
-                  <tr className="bg-background-elevated/30 border-b border-border/40">
-                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted">#</th>
-                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted">Contract</th>
-                    <th className="px-3 py-2 text-left text-[10px] font-semibold uppercase tracking-wider text-text-muted hidden sm:table-cell">Sector</th>
-                    <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-text-muted">Amount</th>
-                    <th className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-wider text-text-muted">Type</th>
-                    <th className="px-3 py-2 w-8" />
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/20">
-                  {overpriced.map((item, idx) => {
-                    const sectorCode = item.sector_id ? SECTORS.find((s) => s.id === item.sector_id)?.code : undefined
-                    const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
-                    const isExtreme = item.hypothesis_type === 'extreme_overpricing'
-                    return (
-                      <tr key={item.id} className="hover:bg-background-elevated/30 transition-colors">
-                        <td className="px-3 py-2 text-text-muted font-mono">{idx + 1}</td>
-                        <td className="px-3 py-2 font-mono text-accent">#{item.contract_id}</td>
-                        <td className="px-3 py-2 hidden sm:table-cell">
-                          {sectorCode ? (
-                            <span className="flex items-center gap-1.5">
-                              <span className="h-1.5 w-1.5 rounded-full shrink-0" style={{ backgroundColor: sectorColor }} />
-                              <span className="text-text-muted">{getSectorNameEN(sectorCode)}</span>
-                            </span>
-                          ) : <span className="text-text-muted">—</span>}
-                        </td>
-                        <td className="px-3 py-2 text-right font-bold tabular-nums text-text-primary">
-                          {item.amount_mxn != null ? formatCompactMXN(item.amount_mxn) : '—'}
-                        </td>
-                        <td className="px-3 py-2 text-right">
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-full font-medium ${
-                            isExtreme ? 'bg-red-500/15 text-red-400' : 'bg-amber-500/15 text-amber-400'
-                          }`}>
-                            {isExtreme ? 'Extreme' : 'Outlier'}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          <button
-                            onClick={() => navigateToContract(item.contract_id)}
-                            className="text-text-muted hover:text-accent transition-colors"
-                            title="View contract"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        )
-      })()}
-
-      {/* ── 5. Anomaly Workbench ──────────────────────────────────────────── */}
-      <Card>
-        <CardHeader className="pb-3">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-            {t('workbenchTitle')}
-          </CardTitle>
-          <CardDescription>{t('workbenchDesc')}</CardDescription>
-        </CardHeader>
-        <CardContent className="space-y-3">
-          <FilterBar
-            hypothesisType={hypothesisType}
-            confidenceLevel={confidenceLevel}
-            sectorId={sectorId}
-            yearFilter={yearFilter}
-            reviewStatus={reviewStatus}
-            sortBy={sortBy}
-            sortOrder={sortOrder}
-            onTypeChange={(v) => { setHypothesisType(v); resetPage() }}
-            onConfidenceChange={(v) => { setConfidenceLevel(v); resetPage() }}
-            onSectorChange={(v) => { setSectorId(v); resetPage() }}
-            onYearChange={(v) => { setYearFilter(v); resetPage() }}
-            onReviewStatusChange={(v) => { setReviewStatus(v); resetPage() }}
-            onSortByChange={(v) => { setSortBy(v); resetPage() }}
-            onSortOrderToggle={() => { setSortOrder((o) => o === 'desc' ? 'asc' : 'desc'); resetPage() }}
-          />
-          {hypothesesLoading ? (
-            <div className="space-y-2">
-              {Array.from({ length: 6 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : hypothesesData?.data && hypothesesData.data.length > 0 ? (
-            <AnomalyTable
-              data={hypothesesData.data}
-              expandedId={expandedId}
-              reviewingId={reviewingId}
-              pendingValid={pendingValid}
-              reviewNotes={reviewNotes}
-              expandedDetail={expandedDetail ?? null}
-              detailLoading={detailLoading}
-              reviewLoading={reviewMutation.isPending}
-              sortBy={sortBy}
-              sortOrder={sortOrder}
-              onRowClick={handleRowClick}
-              onSortChange={handleSortChange}
-              onStartReview={startReview}
-              onCancelReview={cancelReview}
-              onConfirmReview={confirmReview}
-              onNotesChange={setReviewNotes}
-            />
-          ) : (
-            <p className="text-sm text-text-muted py-6 text-center">{t('noResults')}</p>
-          )}
-          {pagination && pagination.total_pages > 1 && (
-            <PaginationBar
-              page={page}
-              totalPages={totalPages}
-              total={pagination.total}
-              perPage={PER_PAGE}
-              onPrev={() => setPage((p) => Math.max(1, p - 1))}
-              onNext={() => setPage((p) => Math.min(totalPages, p + 1))}
-            />
-          )}
-
-          {/* ── ML Anomaly Detections panel ─────────────────────────────── */}
-          {(mlAnomaliesData || fullVectorData) && (
-            <div className="mt-4 rounded-md border border-border/40 bg-background-elevated/20 p-4">
-              {/* Header + model toggle */}
-              <div className="flex items-start justify-between gap-3 mb-3">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <Brain className="h-4 w-4 text-accent shrink-0" aria-hidden="true" />
-                  <span className="text-sm font-bold text-text-primary">ML Anomaly Detections</span>
-                  <span className="text-xs text-text-muted">
-                    {mlModel === 'price_only'
-                      ? `${formatNumber(mlAnomaliesData?.new_detections ?? 0)} contracts flagged by Isolation Forest, missed by IQR`
-                      : `${formatNumber(fullVectorData?.new_detections ?? 0)} contracts flagged by full 16-feature vector (Ouyang et al. 2022)`}
-                  </span>
-                </div>
-                {/* Toggle */}
-                <div
-                  className="flex gap-1 shrink-0"
-                  role="group"
-                  aria-label="Select anomaly detection model"
-                >
-                  <button
-                    onClick={() => setMlModel('price_only')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors border ${
-                      mlModel === 'price_only'
-                        ? 'bg-accent text-white border-accent'
-                        : 'bg-transparent text-text-muted border-border hover:border-accent/60 hover:text-text-primary'
-                    }`}
-                    aria-pressed={mlModel === 'price_only'}
-                    title="Price anomalies: contracts flagged by Isolation Forest on price features only"
-                  >
-                    Price Anomalies
-                  </button>
-                  <button
-                    onClick={() => setMlModel('full_z_vector')}
-                    className={`px-2.5 py-1 rounded-md text-[10px] font-medium transition-colors border ${
-                      mlModel === 'full_z_vector'
-                        ? 'bg-accent text-white border-accent'
-                        : 'bg-transparent text-text-muted border-border hover:border-accent/60 hover:text-text-primary'
-                    }`}
-                    aria-pressed={mlModel === 'full_z_vector'}
-                    title="Full-vector: Isolation Forest on all 16 z-score features — detects multi-dimensional anomalies (Ouyang, Goh & Lim 2022)"
-                  >
-                    Full-Vector
-                    <span className="ml-1 text-[9px] opacity-70">16-feat</span>
-                  </button>
-                </div>
-              </div>
-
-              {/* Citation for full-vector model */}
-              {mlModel === 'full_z_vector' && (
-                <p className="text-[10px] text-text-muted mb-3 leading-relaxed">
-                  Isolation Forest on all 16 z-score features outperforms price-only detection by 23% recall
-                  (Ouyang, Goh &amp; Lim 2022). Detects contracts anomalous across multiple risk dimensions
-                  simultaneously — not just overpriced, but also concentrated, suspicious timing, and network-linked.
-                </p>
-              )}
-
-              {/* List */}
-              {(() => {
-                const activeData = mlModel === 'price_only' ? mlAnomaliesData : fullVectorData
-                if (!activeData || activeData.data.length === 0) {
-                  return (
-                    <p className="text-xs text-text-muted italic py-2">
-                      {mlModel === 'full_z_vector'
-                        ? 'Full-vector anomaly data loading… Run compute_fullvector_anomalies.py if empty.'
-                        : 'No ML-only detections for the current filter.'}
-                    </p>
-                  )
-                }
-                return (
-                  <div className="space-y-2" role="list" aria-label="ML anomaly detections">
-                    {activeData.data.map((item) => (
-                      <div
-                        key={item.contract_id}
-                        role="listitem"
-                        className="flex items-center justify-between text-xs p-2 rounded bg-background-card border border-border/30"
-                      >
-                        <div className="flex items-center gap-2 min-w-0">
-                          <span className="font-mono text-accent shrink-0">#{item.contract_id}</span>
-                          <div
-                            className="h-2 w-2 rounded-full shrink-0"
-                            style={{ backgroundColor: SECTOR_COLORS[item.sector_name] ?? '#64748b' }}
-                            aria-hidden="true"
-                          />
-                          <span className="text-text-muted truncate">
-                            {getSectorNameEN(item.sector_name)}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-3 shrink-0 ml-2">
-                          <span className="tabular-nums text-text-primary">
-                            {formatCompactMXN(item.amount_mxn)}
-                          </span>
-                          <span className="font-mono text-risk-high tabular-nums">
-                            {(item.anomaly_score * 100).toFixed(0)}% anomaly
-                          </span>
-                          <button
-                            onClick={() => navigateToContract(item.contract_id)}
-                            className="text-text-muted hover:text-accent transition-colors"
-                            title="View contract in explorer"
-                          >
-                            <ExternalLink className="h-3.5 w-3.5" />
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )
-              })()}
-            </div>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* ── 6. Sector Baselines (collapsible) ────────────────────────────── */}
-      <Card>
-        <details>
-          <summary className="cursor-pointer list-none px-6 py-4">
-            <div className="flex items-center gap-2">
-              <Table2 className="h-3.5 w-3.5 text-accent shrink-0" />
-              <span className="text-sm font-semibold text-text-primary">{t('baselinesTitle')}</span>
-              <span className="text-xs text-text-muted">— {t('baselinesSubtitle')}</span>
-            </div>
-          </summary>
-          <CardContent className="pt-0">
-            <div className="flex items-center justify-between mb-3">
-              <p className="text-xs text-text-muted">{t('baselinesDesc')}</p>
-              {/* #73 — Inflation adjustment toggle */}
-              <button
-                onClick={() => setInflationAdjusted((v) => !v)}
-                className={`ml-4 shrink-0 px-3 py-1 rounded-md text-xs border transition-colors whitespace-nowrap ${
-                  inflationAdjusted
-                    ? 'border-amber-500 text-amber-400 bg-amber-500/10 font-semibold'
-                    : 'border-border text-text-muted hover:border-amber-500/50 hover:text-amber-400'
-                }`}
-                aria-pressed={inflationAdjusted}
-                title="Adjust prices to constant 2020 MXN using approximate Mexican CPI"
-              >
-                {inflationAdjusted ? 'MXN constantes 2020' : 'Ajustar por inflaci\u00f3n (2020=100)'}
-              </button>
-            </div>
-            {baselinesLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 6 }).map((_, i) => (
-                  <Skeleton key={i} className="h-8 w-full" />
-                ))}
-              </div>
-            ) : sortedBaselines.length > 0 ? (
-              <BaselineTable data={sortedBaselines} inflationAdjusted={inflationAdjusted} />
-            ) : (
-              <p className="text-sm text-text-muted py-4 text-center">{t('noBaselines')}</p>
-            )}
-          </CardContent>
-        </details>
-      </Card>
-    </div>
-  )
-}
-
-// ============================================================================
-// FilterBar
-// ============================================================================
-
-interface FilterBarProps {
-  hypothesisType: string
-  confidenceLevel: string
-  sectorId: number | undefined
-  yearFilter: number | undefined
-  reviewStatus: string
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-  onTypeChange: (v: string) => void
-  onConfidenceChange: (v: string) => void
-  onSectorChange: (v: number | undefined) => void
-  onYearChange: (v: number | undefined) => void
-  onReviewStatusChange: (v: string) => void
-  onSortByChange: (v: string) => void
-  onSortOrderToggle: () => void
-}
-
-const TYPE_OPTIONS = [
-  { value: 'all', label: 'All Types' },
-  { value: 'extreme_overpricing', label: 'Extreme Overpricing' },
-  { value: 'statistical_outlier', label: 'Statistical Outlier' },
-]
-
-const CONFIDENCE_OPTIONS = [
-  { value: 'all', label: 'All Confidence' },
-  { value: 'very_high', label: 'Very High' },
-  { value: 'high', label: 'High' },
-  { value: 'medium', label: 'Medium' },
-  { value: 'low', label: 'Low' },
-]
-
-const REVIEW_OPTIONS = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'reviewed', label: 'Reviewed' },
-]
-
-const SORT_OPTIONS = [
-  { value: 'confidence', label: 'Confidence' },
-  { value: 'amount', label: 'Amount' },
-  { value: 'date', label: 'Date' },
-]
-
-const FilterBar = memo(function FilterBar({
-  hypothesisType,
-  confidenceLevel,
-  sectorId,
-  yearFilter,
-  reviewStatus,
-  sortBy,
-  sortOrder,
-  onTypeChange,
-  onConfidenceChange,
-  onSectorChange,
-  onYearChange,
-  onReviewStatusChange,
-  onSortByChange,
-  onSortOrderToggle,
-}: FilterBarProps) {
-  const { t: ts } = useTranslation('sectors')
-  return (
-    <div className="flex flex-wrap gap-2 items-center pb-1">
-      {/* Type pills */}
-      <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter by type">
-        {TYPE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => onTypeChange(opt.value)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
-              hypothesisType === opt.value
-                ? 'bg-accent text-white border-accent'
-                : 'bg-transparent text-text-muted border-border hover:border-accent/60 hover:text-text-primary'
-            }`}
-            aria-pressed={hypothesisType === opt.value}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="h-4 w-px bg-border hidden sm:block" aria-hidden="true" />
-
-      {/* Confidence pills */}
-      <div className="flex gap-1 flex-wrap" role="group" aria-label="Filter by confidence">
-        {CONFIDENCE_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => onConfidenceChange(opt.value)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
-              confidenceLevel === opt.value
-                ? 'bg-accent text-white border-accent'
-                : 'bg-transparent text-text-muted border-border hover:border-accent/60 hover:text-text-primary'
-            }`}
-            aria-pressed={confidenceLevel === opt.value}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      <div className="h-4 w-px bg-border hidden sm:block" aria-hidden="true" />
-
-      {/* Sector dropdown */}
-      <select
-        value={sectorId ?? ''}
-        onChange={(e) => onSectorChange(e.target.value ? Number(e.target.value) : undefined)}
-        className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50"
-        aria-label="Filter by sector"
-      >
-        <option value="">All Sectors</option>
-        {SECTORS.map((s) => (
-          <option key={s.id} value={s.id}>
-            {ts(s.code)}
-          </option>
-        ))}
-      </select>
-
-      {/* Year dropdown */}
-      <select
-        value={yearFilter ?? ''}
-        onChange={(e) => onYearChange(e.target.value ? Number(e.target.value) : undefined)}
-        className="text-xs px-2.5 py-1.5 rounded-md border border-border bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50"
-        aria-label="Filter by year"
-      >
-        <option value="">All Years</option>
-        {PRICE_YEARS.map((y) => (
-          <option key={y} value={y}>{y}</option>
-        ))}
-      </select>
-
-      {/* Review status pills */}
-      <div className="flex gap-1" role="group" aria-label="Filter by review status">
-        {REVIEW_OPTIONS.map((opt) => (
-          <button
-            key={opt.value}
-            onClick={() => onReviewStatusChange(opt.value)}
-            className={`px-2.5 py-1 rounded-full text-xs font-medium transition-colors border ${
-              reviewStatus === opt.value
-                ? 'bg-surface-hover text-text-primary border-border'
-                : 'bg-transparent text-text-muted border-border/50 hover:border-border'
-            }`}
-            aria-pressed={reviewStatus === opt.value}
-          >
-            {opt.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Spacer pushes sort to the right */}
-      <div className="flex-1" />
-
-      {/* Sort controls */}
-      <div className="flex items-center gap-1.5">
-        <span className="text-xs text-text-muted">Sort:</span>
-        <select
-          value={sortBy}
-          onChange={(e) => onSortByChange(e.target.value)}
-          className="text-xs px-2 py-1.5 rounded-md border border-border bg-surface text-text-primary focus:outline-none focus:ring-1 focus:ring-accent/50"
-          aria-label="Sort by field"
-        >
-          {SORT_OPTIONS.map((opt) => (
-            <option key={opt.value} value={opt.value}>{opt.label}</option>
-          ))}
-        </select>
-        <button
-          onClick={onSortOrderToggle}
-          className="p-1 rounded border border-border hover:bg-surface-hover text-text-muted hover:text-text-primary transition-colors"
-          aria-label={sortOrder === 'desc' ? 'Currently descending, click for ascending' : 'Currently ascending, click for descending'}
-          title={sortOrder === 'desc' ? 'Descending' : 'Ascending'}
-        >
-          {sortOrder === 'desc'
-            ? <ArrowDown className="h-3.5 w-3.5" />
-            : <ArrowUp className="h-3.5 w-3.5" />}
-        </button>
-      </div>
-    </div>
-  )
-})
-
-// ============================================================================
-// AnomalyTable
-// ============================================================================
-
-interface AnomalyTableProps {
-  data: PriceHypothesisItem[]
-  expandedId: number | null
-  reviewingId: number | null
-  pendingValid: boolean | null
-  reviewNotes: string
-  expandedDetail: Awaited<ReturnType<typeof priceApi.getHypothesisDetail>> | null
-  detailLoading: boolean
-  reviewLoading: boolean
-  sortBy: string
-  sortOrder: 'asc' | 'desc'
-  onRowClick: (id: number) => void
-  onSortChange: (field: string) => void
-  onStartReview: (id: number, isValid: boolean, e: React.MouseEvent) => void
-  onCancelReview: (e: React.MouseEvent) => void
-  onConfirmReview: (item: PriceHypothesisItem, e: React.MouseEvent) => void
-  onNotesChange: (v: string) => void
-}
-
-function SortIcon({ field, sortBy, sortOrder }: { field: string; sortBy: string; sortOrder: string }) {
-  if (sortBy !== field) return <ArrowUpDown className="h-3 w-3 opacity-30 ml-1 inline-block" />
-  return sortOrder === 'desc'
-    ? <ArrowDown className="h-3 w-3 ml-1 inline-block text-accent" />
-    : <ArrowUp className="h-3 w-3 ml-1 inline-block text-accent" />
-}
-
-const AnomalyTable = memo(function AnomalyTable({
-  data,
-  expandedId,
-  reviewingId,
-  pendingValid,
-  reviewNotes,
-  expandedDetail,
-  detailLoading,
-  reviewLoading,
-  sortBy,
-  sortOrder,
-  onRowClick,
-  onSortChange,
-  onStartReview,
-  onCancelReview,
-  onConfirmReview,
-  onNotesChange,
-}: AnomalyTableProps) {
-  return (
-    <div className="overflow-x-auto rounded-md border border-border">
-      <table className="w-full text-xs">
-        <thead>
-          <tr className="border-b border-border bg-surface-hover/30">
-            <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Contract</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">
-              <button
-                onClick={() => onSortChange('amount')}
-                className="hover:text-text-primary transition-colors flex items-center gap-0.5 ml-auto"
-                aria-label="Sort by amount"
-              >
-                Amount
-                <SortIcon field="amount" sortBy={sortBy} sortOrder={sortOrder} />
-              </button>
-            </th>
-            <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Type</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">
-              <button
-                onClick={() => onSortChange('confidence')}
-                className="hover:text-text-primary transition-colors flex items-center gap-0.5 ml-auto"
-                aria-label="Sort by confidence"
-              >
-                Confidence
-                <SortIcon field="confidence" sortBy={sortBy} sortOrder={sortOrder} />
-              </button>
-            </th>
-            <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Sector</th>
-            <th className="text-center px-3 py-2.5 text-xs font-medium text-text-muted">Status</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {data.map((item) => (
-            <HypothesisRow
-              key={item.id}
-              item={item}
-              isExpanded={expandedId === item.id}
-              isReviewing={reviewingId === item.id}
-              pendingValid={pendingValid}
-              reviewNotes={reviewNotes}
-              expandedDetail={expandedId === item.id ? expandedDetail : null}
-              detailLoading={expandedId === item.id && detailLoading}
-              reviewLoading={reviewLoading}
-              onRowClick={onRowClick}
-              onStartReview={onStartReview}
-              onCancelReview={onCancelReview}
-              onConfirmReview={onConfirmReview}
-              onNotesChange={onNotesChange}
-            />
-          ))}
-        </tbody>
-      </table>
-    </div>
-  )
-})
-
-// ============================================================================
-// HypothesisRow + inline expansion
-// ============================================================================
-
-interface HypothesisRowProps {
-  item: PriceHypothesisItem
-  isExpanded: boolean
-  isReviewing: boolean
-  pendingValid: boolean | null
-  reviewNotes: string
-  expandedDetail: Awaited<ReturnType<typeof priceApi.getHypothesisDetail>> | null
-  detailLoading: boolean
-  reviewLoading: boolean
-  onRowClick: (id: number) => void
-  onStartReview: (id: number, isValid: boolean, e: React.MouseEvent) => void
-  onCancelReview: (e: React.MouseEvent) => void
-  onConfirmReview: (item: PriceHypothesisItem, e: React.MouseEvent) => void
-  onNotesChange: (v: string) => void
-}
-
-function HypothesisRow({
-  item,
-  isExpanded,
-  isReviewing,
-  pendingValid,
-  reviewNotes,
-  expandedDetail,
-  detailLoading,
-  reviewLoading,
-  onRowClick,
-  onStartReview,
-  onCancelReview,
-  onConfirmReview,
-  onNotesChange,
-}: HypothesisRowProps) {
-  const sectorCode = item.sector_id
-    ? SECTORS.find((s) => s.id === item.sector_id)?.code
-    : undefined
-  const sectorColor = sectorCode ? SECTOR_COLORS[sectorCode] : '#64748b'
-  const sectorName = sectorCode ? getSectorNameEN(sectorCode) : '—'
-
-  const confLevel = item.confidence_level ?? 'low'
-  const confColor = confidenceColor(confLevel)
-
-  const typeIsExtreme = item.hypothesis_type === 'extreme_overpricing'
-
-  return (
-    <>
-      {/* Main data row */}
-      <tr
-        className={`border-b border-border/50 cursor-pointer transition-colors ${
-          isExpanded ? 'bg-surface-hover/60' : 'hover:bg-surface-hover/40'
-        }`}
-        onClick={() => onRowClick(item.id)}
-        role="button"
-        tabIndex={0}
-        aria-expanded={isExpanded}
-        onKeyDown={(e) => {
-          if (e.key === 'Enter' || e.key === ' ') {
-            e.preventDefault()
-            onRowClick(item.id)
-          }
-        }}
-      >
-        {/* Contract ID */}
-        <td className="px-3 py-2.5">
-          <span className="font-mono text-accent tabular-nums">#{item.contract_id}</span>
-        </td>
-
-        {/* Amount */}
-        <td className="text-right px-3 py-2.5 tabular-nums font-medium text-text-primary">
-          {item.amount_mxn != null ? formatCompactMXN(item.amount_mxn) : '—'}
-        </td>
-
-        {/* Type badge */}
-        <td className="px-3 py-2.5">
-          <span
-            className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium ${
-              typeIsExtreme
-                ? 'bg-red-500/15 text-red-400 border border-red-500/25'
-                : 'bg-amber-500/15 text-amber-400 border border-amber-500/25'
-            }`}
-          >
-            {typeIsExtreme ? 'Extreme' : 'Outlier'}
-          </span>
-        </td>
-
-        {/* Confidence */}
-        <td className="text-right px-3 py-2.5">
-          <span
-            className="tabular-nums font-semibold text-xs"
-            style={{ color: confColor }}
-          >
-            {(item.confidence * 100).toFixed(0)}%
-          </span>
-          <div
-            className="mt-1 h-1 rounded-full bg-border overflow-hidden w-16 ml-auto"
-            role="progressbar"
-            aria-valuenow={Math.round(item.confidence * 100)}
-            aria-valuemin={0}
-            aria-valuemax={100}
-            aria-label={`Confidence: ${(item.confidence * 100).toFixed(0)}%`}
-          >
-            <div
-              className="h-full rounded-full transition-all"
-              style={{ width: `${item.confidence * 100}%`, backgroundColor: confColor }}
-            />
-          </div>
-        </td>
-
-        {/* Sector */}
-        <td className="px-3 py-2.5">
-          <div className="flex items-center gap-1.5">
-            <div
-              className="h-2 w-2 rounded-full shrink-0"
-              style={{ backgroundColor: sectorColor }}
-              aria-hidden="true"
-            />
-            <span className="text-text-muted">{sectorName}</span>
-          </div>
-        </td>
-
-        {/* Review status */}
-        <td className="text-center px-3 py-2.5">
-          {item.is_reviewed ? (
-            <RiskBadge level={item.is_valid ? 'low' : 'high'}>
-              {item.is_valid ? 'Valid' : 'Invalid'}
-            </RiskBadge>
-          ) : (
-            <span className="text-xs text-text-muted italic">Pending</span>
-          )}
-        </td>
-
-        {/* Actions */}
-        <td className="text-right px-3 py-2.5" onClick={(e) => e.stopPropagation()}>
-          <div className="flex items-center justify-end gap-1">
-            {!isReviewing ? (
-              <>
-                <button
-                  onClick={(e) => onStartReview(item.id, true, e)}
-                  className="flex items-center gap-0.5 px-2 py-1 text-xs rounded border border-border text-green-400 hover:bg-green-500/10 hover:border-green-500/40 transition-colors"
-                  aria-label={`Mark contract ${item.contract_id} as valid`}
-                  title="Mark valid"
-                >
-                  <Check className="h-3 w-3" />
-                  <span>Valid</span>
-                </button>
-                <button
-                  onClick={(e) => onStartReview(item.id, false, e)}
-                  className="flex items-center gap-0.5 px-2 py-1 text-xs rounded border border-border text-red-400 hover:bg-red-500/10 hover:border-red-500/40 transition-colors"
-                  aria-label={`Mark contract ${item.contract_id} as invalid`}
-                  title="Mark invalid"
-                >
-                  <X className="h-3 w-3" />
-                  <span>Invalid</span>
-                </button>
-              </>
-            ) : null}
-            <button
-              onClick={(e) => { e.stopPropagation(); onRowClick(item.id) }}
-              className="p-1 text-text-muted hover:text-text-primary transition-colors ml-1"
-              aria-label={isExpanded ? 'Collapse row details' : 'Expand row details'}
-            >
-              {isExpanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
-            </button>
-          </div>
-        </td>
-      </tr>
-
-      {/* Inline review confirmation */}
-      {isReviewing && (
-        <tr className="border-b border-border/50 bg-surface-hover/30">
-          <td colSpan={7} className="px-4 py-3">
-            <div
-              className="flex flex-col sm:flex-row sm:items-start gap-3"
-              onClick={(e) => e.stopPropagation()}
-              role="region"
-              aria-label="Review confirmation"
-            >
-              <div className="flex-1">
-                <p className="text-xs font-medium text-text-primary mb-1.5">
-                  Mark contract #{item.contract_id} as{' '}
-                  <span className={pendingValid ? 'text-green-400' : 'text-red-400'}>
-                    {pendingValid ? 'VALID (confirmed anomaly)' : 'INVALID (false positive)'}
-                  </span>
-                  ?
-                </p>
-                <textarea
-                  value={reviewNotes}
-                  onChange={(e) => onNotesChange(e.target.value)}
-                  placeholder="Optional notes..."
-                  rows={2}
-                  className="w-full text-xs px-2.5 py-1.5 rounded border border-border bg-surface text-text-primary placeholder:text-text-muted resize-none focus:outline-none focus:ring-1 focus:ring-accent/50"
-                  aria-label="Review notes"
-                />
-              </div>
-              <div className="flex gap-2 sm:flex-col sm:pt-5">
-                <button
-                  onClick={(e) => onConfirmReview(item, e)}
-                  disabled={reviewLoading}
-                  className="px-3 py-1.5 text-xs font-medium rounded bg-accent text-white hover:bg-accent/80 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-                  aria-label="Confirm review decision"
-                >
-                  {reviewLoading ? 'Saving...' : 'Confirm'}
-                </button>
-                <button
-                  onClick={onCancelReview}
-                  disabled={reviewLoading}
-                  className="px-3 py-1.5 text-xs font-medium rounded border border-border text-text-muted hover:text-text-primary hover:bg-surface-hover disabled:opacity-50 transition-colors"
-                  aria-label="Cancel review"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-          </td>
-        </tr>
-      )}
-
-      {/* Inline expansion — sector baseline + vendor context */}
-      {isExpanded && (
-        <tr className="border-b border-border/50">
-          <td colSpan={7} className="px-4 py-3 bg-surface-hover/20">
-            {detailLoading ? (
-              <div className="space-y-2">
-                <Skeleton className="h-4 w-48" />
-                <Skeleton className="h-4 w-72" />
-                <Skeleton className="h-4 w-56" />
-              </div>
-            ) : expandedDetail ? (
-              <HypothesisDetailPanel detail={expandedDetail} />
-            ) : (
-              <p className="text-xs text-text-muted italic">Loading detail...</p>
-            )}
-          </td>
-        </tr>
-      )}
-    </>
-  )
-}
-
-// ============================================================================
-// HypothesisDetailPanel — inline expansion content
-// ============================================================================
-
-function HypothesisDetailPanel({
-  detail,
-}: {
-  detail: Awaited<ReturnType<typeof priceApi.getHypothesisDetail>>
-}) {
-  const baseline = detail.sector_baseline
-  const vendor = detail.vendor_profile
-  const contract = detail.hypothesis?.amount_mxn
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-xs">
-      {/* Explanation */}
-      <div className="sm:col-span-3">
-        <p className="text-text-muted font-medium mb-0.5">Explanation</p>
-        <p className="text-text-primary">{detail.hypothesis?.explanation ?? '—'}</p>
-      </div>
-
-      {/* Sector baseline */}
-      {baseline && (
-        <div>
-          <p className="text-text-muted font-medium mb-1.5">Sector Baseline</p>
-          <dl className="space-y-1">
-            <BaselineRow label="Median" value={formatCompactMXN(baseline.median)} />
-            <BaselineRow label="P75" value={formatCompactMXN(baseline.p75)} />
-            <BaselineRow label="Upper fence (Q3+1.5x IQR)" value={formatCompactMXN(baseline.upper_fence)} highlight />
-            <BaselineRow label="Extreme fence (Q3+3x IQR)" value={formatCompactMXN(baseline.extreme_fence)} highlight />
-            {contract != null && baseline.median > 0 && (
-              <BaselineRow
-                label="This contract / median"
-                value={`${(contract / baseline.median).toFixed(1)}x`}
-                highlight
-              />
-            )}
-          </dl>
-        </div>
-      )}
-
-      {/* Vendor profile */}
-      {vendor && (
-        <div>
-          <p className="text-text-muted font-medium mb-1.5">Vendor Profile</p>
-          <dl className="space-y-1">
-            <BaselineRow label="Contracts" value={formatNumber(vendor.contract_count)} />
-            <BaselineRow label="Avg contract" value={formatCompactMXN(vendor.avg_contract_value)} />
-            <BaselineRow label="Median contract" value={formatCompactMXN(vendor.median_contract_value)} />
-            <BaselineRow label="Price trend" value={vendor.price_trend} />
-            {contract != null && vendor.median_contract_value > 0 && (
-              <BaselineRow
-                label="This / vendor median"
-                value={`${(contract / vendor.median_contract_value).toFixed(1)}x`}
-                highlight
-              />
-            )}
-          </dl>
-        </div>
-      )}
-
-      {/* Supporting evidence */}
-      {detail.hypothesis?.supporting_evidence && detail.hypothesis.supporting_evidence.length > 0 && (
-        <div>
-          <p className="text-text-muted font-medium mb-1.5">Supporting Evidence</p>
-          <ul className="space-y-1.5">
-            {detail.hypothesis.supporting_evidence.map((ev, i) => (
-              <li key={i} className="text-text-muted">
-                <span className="text-text-primary font-medium">{ev.evidence_type}:</span>{' '}
-                {ev.description}
-              </li>
-            ))}
-          </ul>
-        </div>
-      )}
-    </div>
-  )
-}
-
-function BaselineRow({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string
-  value: string
-  highlight?: boolean
-}) {
-  return (
-    <div className="flex justify-between gap-2">
-      <dt className="text-text-muted">{label}</dt>
-      <dd className={`tabular-nums font-medium ${highlight ? 'text-risk-high' : 'text-text-primary'}`}>
-        {value}
-      </dd>
-    </div>
-  )
-}
-
-// ============================================================================
-// PaginationBar
-// ============================================================================
-
-function PaginationBar({
-  page,
-  totalPages,
-  total,
-  perPage,
-  onPrev,
-  onNext,
-}: {
-  page: number
-  totalPages: number
-  total: number
-  perPage: number
-  onPrev: () => void
-  onNext: () => void
-}) {
-  const from = (page - 1) * perPage + 1
-  const to = Math.min(page * perPage, total)
-
-  return (
-    <div className="flex items-center justify-between pt-2" role="navigation" aria-label="Pagination">
-      <span className="text-xs text-text-muted tabular-nums">
-        {formatNumber(from)}–{formatNumber(to)} of {formatNumber(total)}
-      </span>
-      <div className="flex gap-2">
-        <button
-          onClick={onPrev}
-          disabled={page <= 1}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-border text-text-muted hover:text-text-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          aria-label="Previous page"
-        >
-          <ChevronLeft className="h-3.5 w-3.5" />
-          Prev
-        </button>
-        <span className="flex items-center px-2 text-xs text-text-muted tabular-nums">
-          {page} / {totalPages}
+        <span className="flex items-center gap-2">
+          <Info className="w-4 h-4 text-text-muted" />
+          ¿Cómo funciona la detección? / How does detection work?
         </span>
-        <button
-          onClick={onNext}
-          disabled={page >= totalPages}
-          className="flex items-center gap-1 px-2.5 py-1.5 text-xs rounded border border-border text-text-muted hover:text-text-primary hover:bg-surface-hover disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-          aria-label="Next page"
-        >
-          Next
-          <ChevronRight className="h-3.5 w-3.5" />
-        </button>
-      </div>
+        {open ? (
+          <ChevronDown className="w-4 h-4 text-text-muted" />
+        ) : (
+          <ChevronRight className="w-4 h-4 text-text-muted" />
+        )}
+      </button>
+
+      {open && (
+        <div className="px-4 pb-4 text-sm text-text-muted space-y-3 border-t border-border pt-3">
+          <p>
+            <strong className="text-text-primary">Normalización por z-score:</strong> Cada contrato
+            se compara con la media y desviación estándar de su sector y año. Un z-score alto
+            indica que el precio es estadísticamente anómalo respecto a sus pares.{' '}
+            <em>
+              (Z-score normalization: each contract is compared to the mean and standard deviation
+              of its sector and year baseline.)
+            </em>
+          </p>
+          <p>
+            <strong className="text-text-primary">price_ratio (z {'>'} 3):</strong> Monto del
+            contrato dividido entre la mediana del sector, expresado en desviaciones estándar. Más
+            de 3 SD sobre la media corresponde al 0.1% superior de la distribución.{' '}
+            <em>
+              (Contract amount vs sector median in standard deviations — beyond 3 SD is the top
+              0.1% of the distribution.)
+            </em>
+          </p>
+          <p>
+            <strong className="text-text-primary">price_volatility:</strong> Varianza del monto
+            entre contratos del mismo proveedor respecto a la norma del sector. Alta volatilidad
+            sugiere precios inconsistentes o manipulación selectiva.{' '}
+            <em>
+              (Variance in contract amounts for the same vendor vs sector norm — signals selective
+              pricing manipulation.)
+            </em>
+          </p>
+          <Link
+            to="/methodology"
+            className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
+          >
+            Ver metodología completa / Full methodology
+            <ExternalLink className="w-3 h-3" />
+          </Link>
+        </div>
+      )}
     </div>
   )
 }
 
-// ============================================================================
-// BaselineTable (sector reference, inside <details>)
-// ============================================================================
+// ─── Risk Score Badge ─────────────────────────────────────────────────────────
 
-// #73 — SectorPriceBaseline has no year field.
-// Baselines are full-dataset aggregates (2002-2025); we deflate to constant 2020 MXN
-// by dividing by the approximate CPI midpoint of the dataset (~2013 = 0.654 on 2020=1 scale).
-const BASELINE_CPI_PROXY = 0.654 // approximate dataset midpoint 2013 on 2020=1 CPI scale
+function RiskScoreBadge({ score }: { score: number }) {
+  const level: 'critical' | 'high' | 'medium' | 'low' =
+    score >= 0.6 ? 'critical' : score >= 0.4 ? 'high' : score >= 0.25 ? 'medium' : 'low'
+  return <RiskLevelPill level={level} score={score} size="sm" showDot />
+}
 
-const BaselineTable = memo(function BaselineTable({
-  data,
-  inflationAdjusted = false,
+// ─── Contract Table ───────────────────────────────────────────────────────────
+
+function ContractTable({
+  contracts,
+  loading,
+  vendorMap,
 }: {
-  data: SectorPriceBaseline[]
-  inflationAdjusted?: boolean
+  contracts: PriceAnomalyContract[]
+  loading: boolean
+  vendorMap: Map<string, number>
 }) {
-  // When inflationAdjusted is on, deflate values from nominal to 2020 MXN
-  // using the proxy CPI: adjusted = nominal / BASELINE_CPI_PROXY
-  const adjust = (v: number) => inflationAdjusted ? v / BASELINE_CPI_PROXY : v
+  if (loading) {
+    return (
+      <div className="space-y-2">
+        {Array.from({ length: 8 }).map((_, i) => (
+          <Skeleton key={i} className="h-10 w-full" />
+        ))}
+      </div>
+    )
+  }
 
-  const maxFence = useMemo(
-    () => Math.max(...data.map((d) => adjust(d.upper_fence || 0)), 1),
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [data, inflationAdjusted]
-  )
+  if (!contracts.length) {
+    return (
+      <div className="flex flex-col items-center justify-center py-12 text-text-muted gap-2">
+        <AlertTriangle className="w-6 h-6" />
+        <p className="text-sm">No se encontraron contratos con precios anómalos.</p>
+      </div>
+    )
+  }
 
   return (
     <div className="overflow-x-auto">
-      <table className="w-full text-xs">
+      <table className="w-full text-sm">
         <thead>
           <tr className="border-b border-border">
-            <th className="text-left px-3 py-2.5 text-xs font-medium text-text-muted">Sector</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P10</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P25</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted font-bold">Median</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P75</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P90</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">P95</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Upper Fence</th>
-            <th className="text-right px-3 py-2.5 text-xs font-medium text-text-muted">Contracts</th>
-            <th className="px-3 py-2.5 text-xs font-medium text-text-muted w-28">
-              Range
-              {inflationAdjusted && (
-                <span className="ml-1 text-[9px] text-amber-400 font-normal">2020 MXN</span>
-              )}
+            <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              Proveedor / Vendor
             </th>
+            <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">
+              Institución
+            </th>
+            <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              Monto
+            </th>
+            <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden md:table-cell">
+              z-score
+            </th>
+            <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+              Riesgo
+            </th>
+            <th className="py-2 px-3 hidden lg:table-cell" />
           </tr>
         </thead>
         <tbody>
-          {data.map((row) => {
-            const sectorCode = row.sector_name
-            const color = SECTOR_COLORS[sectorCode] || '#64748b'
-            const adjFence = adjust(row.upper_fence)
-            const adjMedian = adjust(row.percentile_50)
-            const barWidth = maxFence > 0 ? (adjFence / maxFence) * 100 : 0
-            const medianPos = maxFence > 0 ? (adjMedian / maxFence) * 100 : 0
-
+          {contracts.map((c) => {
+            const vendorId = vendorMap.get(c.vendor_name.toLowerCase())
             return (
-              <tr key={row.sector_id} className="border-b border-border/50 hover:bg-surface-hover/50">
-                <td className="px-3 py-2">
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="h-2.5 w-2.5 rounded-full shrink-0"
-                      style={{ backgroundColor: color }}
-                      aria-hidden="true"
-                    />
-                    <span className="font-medium text-text-primary">
-                      {getSectorNameEN(sectorCode)}
-                    </span>
-                  </div>
+              <tr
+                key={c.contract_id}
+                className="border-b border-border/50 hover:bg-muted/20 transition-colors"
+              >
+                <td className="py-2 px-3 font-medium text-text-primary max-w-[180px] truncate">
+                  {vendorId ? (
+                    <Link
+                      to={`/vendors/${vendorId}`}
+                      className="hover:underline text-primary"
+                      title={c.vendor_name}
+                    >
+                      {c.vendor_name}
+                    </Link>
+                  ) : (
+                    c.vendor_name
+                  )}
                 </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(adjust(row.percentile_10))}
+                <td className="py-2 px-3 text-text-muted max-w-[160px] truncate hidden sm:table-cell">
+                  {c.institution_name}
                 </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(adjust(row.percentile_25))}
+                <td className="py-2 px-3 text-right tabular-nums font-medium text-text-primary">
+                  {formatCompactMXN(c.amount_mxn)}
                 </td>
-                <td className="text-right px-3 py-2 tabular-nums font-bold text-text-primary">
-                  {formatCompactMXN(adjMedian)}
+                <td className="py-2 px-3 text-right tabular-nums text-orange-400 hidden md:table-cell">
+                  +{c.z_price_ratio.toFixed(1)}σ
                 </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(adjust(row.percentile_75))}
+                <td className="py-2 px-3">
+                  <RiskScoreBadge score={c.risk_score} />
                 </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(adjust(row.percentile_90))}
-                </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatCompactMXN(adjust(row.percentile_95))}
-                </td>
-                <td className="text-right px-3 py-2 tabular-nums text-risk-high font-medium">
-                  {formatCompactMXN(adjFence)}
-                </td>
-                <td className="text-right px-3 py-2 tabular-nums text-text-muted">
-                  {formatNumber(row.sample_count)}
-                </td>
-                <td className="px-3 py-2" aria-hidden="true">
-                  <div className="relative h-3 bg-surface-hover rounded-full overflow-hidden">
-                    <div
-                      className="absolute top-0 left-0 h-full rounded-full opacity-30"
-                      style={{ width: `${barWidth}%`, backgroundColor: color }}
-                    />
-                    <div
-                      className="absolute top-0 h-full w-0.5 rounded-full"
-                      style={{ left: `${medianPos}%`, backgroundColor: color }}
-                    />
-                  </div>
+                <td className="py-2 px-3 text-right hidden lg:table-cell">
+                  {vendorId && (
+                    <Link
+                      to={`/vendors/${vendorId}`}
+                      className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
+                      aria-label={`Ver perfil de ${c.vendor_name}`}
+                    >
+                      Ver perfil
+                      <ExternalLink className="w-3 h-3" />
+                    </Link>
+                  )}
                 </td>
               </tr>
             )
@@ -1729,4 +300,259 @@ const BaselineTable = memo(function BaselineTable({
       </table>
     </div>
   )
-})
+}
+
+// ─── Sector Bar Chart ─────────────────────────────────────────────────────────
+
+interface SectorBarDatum {
+  name: string
+  code: string
+  count: number
+  color: string
+}
+
+function SectorRiskChart({
+  data,
+  loading,
+}: {
+  data: SectorBarDatum[]
+  loading: boolean
+}) {
+  if (loading) {
+    return <Skeleton className="h-56 w-full" />
+  }
+
+  if (!data.length) return null
+
+  return (
+    <ResponsiveContainer width="100%" height={220}>
+      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.06)" />
+        <XAxis
+          type="number"
+          tick={{ fontSize: 10, fill: '#94a3b8' }}
+          tickFormatter={(v: number) => formatNumber(v)}
+        />
+        <YAxis
+          type="category"
+          dataKey="name"
+          width={90}
+          tick={{ fontSize: 10, fill: '#94a3b8' }}
+        />
+        <RechartsTooltip
+          contentStyle={{
+            background: '#1e293b',
+            border: '1px solid rgba(255,255,255,0.1)',
+            borderRadius: '6px',
+            fontSize: '12px',
+          }}
+          labelStyle={{ color: '#f1f5f9' }}
+          itemStyle={{ color: '#94a3b8' }}
+          formatter={(value: number | undefined) => [
+            value != null ? formatNumber(value) : '—',
+            'Contratos anómalos',
+          ]}
+        />
+        <Bar dataKey="count" radius={[0, 3, 3, 0]}>
+          {data.map((entry) => (
+            <Cell key={entry.code} fill={entry.color} />
+          ))}
+        </Bar>
+      </BarChart>
+    </ResponsiveContainer>
+  )
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function PriceIntelligence() {
+  const { t } = useTranslation('priceIntelligence')
+
+  // Primary: price anomaly endpoint (contracts with z_price_ratio > 3)
+  const anomalyQuery = useQuery({
+    queryKey: ['analysis', 'price-anomalies', 3, 50],
+    queryFn: () => fetchPriceAnomalies(3, 50),
+    staleTime: STALE_TIME,
+  })
+
+
+  // ARIA queue T1+T2 — used to resolve vendor IDs for deep-link profile links
+  const ariaT1Query = useQuery({
+    queryKey: ['aria', 'queue', 'tier1', 100],
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 100 }),
+    staleTime: STALE_TIME,
+  })
+
+  const ariaT2Query = useQuery({
+    queryKey: ['aria', 'queue', 'tier2', 200],
+    queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 200 }),
+    staleTime: STALE_TIME,
+  })
+
+  // ── Build vendor name → ID map from ARIA for linking ──────────────────────
+
+  const allAriaVendors: AriaQueueItem[] = [
+    ...(ariaT1Query.data?.data ?? []),
+    ...(ariaT2Query.data?.data ?? []),
+  ]
+
+  const vendorMap = new Map<string, number>()
+  for (const v of allAriaVendors) {
+    vendorMap.set(v.vendor_name.toLowerCase(), v.vendor_id)
+  }
+
+  // ── Derived stats ─────────────────────────────────────────────────────────
+
+  const summary = anomalyQuery.data?.summary
+  const bySector = anomalyQuery.data?.by_sector ?? []
+  const contracts = anomalyQuery.data?.data ?? []
+
+  // Build chart data from by_sector, match to our SECTORS list for colors
+  const chartData: SectorBarDatum[] = bySector
+    .map((s) => {
+      const sector = SECTORS.find(
+        (sec) => sec.id === s.sector_id || sec.name === s.sector_name
+      )
+      const code = sector?.code ?? 'otros'
+      return {
+        name: sector?.name ?? s.sector_name,
+        code,
+        count: s.count,
+        color: SECTOR_COLORS[code] ?? SECTOR_COLORS['otros'],
+      }
+    })
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 10)
+
+  const topSectorName = chartData[0]?.name ?? '—'
+
+  const loading = anomalyQuery.isLoading
+
+  return (
+    <div className="space-y-6 p-4 md:p-6 max-w-7xl mx-auto">
+      {/* ── Page Header ──────────────────────────────────────────────── */}
+      <div className="flex items-start gap-3">
+        <div className="p-2 rounded-lg bg-orange-500/10 border border-orange-500/20 mt-0.5">
+          <TrendingUp className="w-5 h-5 text-orange-400" aria-hidden="true" />
+        </div>
+        <div>
+          <h1 className="text-xl font-bold text-text-primary">
+            {t('title', 'Análisis de Precios / Price Anomaly Analysis')}
+          </h1>
+          <p className="text-sm text-text-muted mt-0.5">
+            {t(
+              'subtitle',
+              'El sobrevalor se detecta comparando cada contrato con la media estadística de su sector y año — contratos con z-score de precio mayor a 3σ sobre la norma sectorial. / Overpricing is detected via z-score normalization vs sector-year baseline (contracts with price z-score above 3σ).'
+            )}
+          </p>
+        </div>
+      </div>
+
+      {/* ── Key Stats Bar ─────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+        <StatCard
+          loading={loading}
+          label={t('stats.anomalousContracts.label', 'Contratos con precio anómalo')}
+          value={summary ? formatNumber(summary.total_outliers) : '—'}
+          detail={t(
+            'stats.anomalousContracts.detail',
+            'Con z_price_ratio > 3σ sobre la media sectorial / z_price_ratio > 3σ above sector mean'
+          )}
+          accent="#f87171"
+        />
+        <StatCard
+          loading={loading}
+          label={t('stats.topSector.label', 'Sector más afectado')}
+          value={topSectorName}
+          detail={t(
+            'stats.topSector.detail',
+            'Mayor concentración de contratos con precio anómalo / Most anomalous contracts'
+          )}
+          accent={chartData[0]?.color}
+        />
+        <StatCard
+          loading={loading}
+          label={t('stats.valueAtRisk.label', 'Monto en contratos anómalos')}
+          value={summary ? formatCompactMXN(summary.total_value_mxn) : '—'}
+          detail={t(
+            'stats.valueAtRisk.detail',
+            'Valor acumulado de contratos con precio estadísticamente extremo / Total value in price-outlier contracts'
+          )}
+          accent="#fb923c"
+        />
+      </div>
+
+      {/* ── Main Content ──────────────────────────────────────────────── */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Contract table — takes 2/3 width */}
+        <div className="lg:col-span-2">
+          <Card className="h-full">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                {t(
+                  'contracts.title',
+                  'Contratos con mayor z-score de precio / Highest Price Z-Score Contracts'
+                )}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  'contracts.description',
+                  'Contratos cuyo monto supera 3 desviaciones estándar sobre la media de su sector y año. Los nombres de proveedor son enlaces a su perfil completo cuando están disponibles. / Contracts priced 3+ standard deviations above their sector-year mean.'
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ContractTable
+                contracts={contracts}
+                loading={loading}
+                vendorMap={vendorMap}
+              />
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Sector chart — takes 1/3 width */}
+        <div className="space-y-4">
+          <Card>
+            <CardHeader className="pb-3">
+              <CardTitle className="text-base">
+                {t('chart.title', 'Contratos anómalos por sector / Anomalous Contracts by Sector')}
+              </CardTitle>
+              <CardDescription>
+                {t(
+                  'chart.description',
+                  'Número de contratos con z_price_ratio > 3σ por sector / Contracts with z_price_ratio > 3σ per sector'
+                )}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <SectorRiskChart data={chartData} loading={loading} />
+            </CardContent>
+          </Card>
+
+          {summary && (
+            <Card>
+              <CardContent className="pt-4">
+                <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+                  Z-score promedio / Avg z-score
+                </p>
+                <p className="text-2xl font-bold tabular-nums text-orange-400">
+                  +{summary.avg_z_score.toFixed(1)}σ
+                </p>
+                <p className="text-xs text-text-muted mt-1">
+                  {t(
+                    'chart.avgZDetail',
+                    'Desviaciones estándar sobre la media sectorial en contratos anómalos'
+                  )}
+                </p>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+      </div>
+
+      {/* ── How It Works ──────────────────────────────────────────────── */}
+      <HowItWorks />
+    </div>
+  )
+}
