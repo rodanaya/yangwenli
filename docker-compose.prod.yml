@@ -143,14 +143,10 @@ services:
         # Install wget (busybox wget is built-in to alpine, no extra install needed)
         echo "ARIA cron scheduler started — will trigger daily at 03:00 UTC via HTTP"
         while true; do
-          # Calculate seconds until next 03:00 UTC
+          # Calculate seconds until next 03:00 UTC (pure awk — works on BusyBox/Alpine)
           now=$$(date -u +%s)
-          tomorrow=$$(date -u -d "tomorrow 03:00" +%s 2>/dev/null || \
-            awk 'BEGIN{print systime() + 86400 - (systime() % 86400) + 10800}')
-          if [ "$$tomorrow" -le "$$now" ]; then
-            tomorrow=$$(( $$tomorrow + 86400 ))
-          fi
-          wait_secs=$$(( $$tomorrow - $$now ))
+          next=$$(awk 'BEGIN{t=systime(); m=t-(t%86400); r=m+10800; if(r<=t)r+=86400; print r}')
+          wait_secs=$$(( $$next - $$now ))
           echo "Next ARIA run in $${wait_secs}s"
           sleep $$wait_secs
           echo "$$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Triggering ARIA daily pipeline via HTTP"
@@ -189,10 +185,7 @@ services:
         echo "Backup cron started — daily at 02:00 UTC"
         while true; do
           now=$$(date -u +%s)
-          target=$$(date -u -d "tomorrow 02:00" +%s 2>/dev/null || \
-            python3 -c "import datetime,calendar; t=datetime.datetime.utcnow().replace(hour=2,minute=0,second=0,microsecond=0)+datetime.timedelta(days=1); print(int(calendar.timegm(t.timetuple())))" 2>/dev/null || \
-            echo $$(( now + 86400 )) )
-          if [ "$$target" -le "$$now" ]; then target=$$(( $$target + 86400 )); fi
+          target=$$(awk 'BEGIN{t=systime(); m=t-(t%86400); r=m+7200; if(r<=t)r+=86400; print r}')
           wait_secs=$$(( $$target - $$now ))
           echo "Next backup in $${wait_secs}s"
           sleep $$wait_secs
