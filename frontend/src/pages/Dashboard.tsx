@@ -1528,7 +1528,7 @@ export function Dashboard() {
   }, [sectors, phiGradeMap])
 
   const riskTrajectory = useMemo(() => {
-    const yearlyTrends = fastDashboard?.yearly_trends ?? (riskOverviewFallback?.yearly_trends as typeof fastDashboard.yearly_trends | undefined)
+    const yearlyTrends = fastDashboard?.yearly_trends ?? (riskOverviewFallback?.yearly_trends as FastDashboardData['yearly_trends'] | undefined)
     if (!yearlyTrends) return []
     return yearlyTrends
       .filter((d) => d.year >= 2010)
@@ -1539,7 +1539,7 @@ export function Dashboard() {
         contracts: d.contracts,
         directAwardPct: d.direct_award_pct ?? undefined,
       }))
-  }, [fastDashboard])
+  }, [fastDashboard, riskOverviewFallback])
 
   const corruptionCases = useMemo(() => {
     if (!execData?.ground_truth?.case_details) return []
