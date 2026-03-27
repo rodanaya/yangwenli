@@ -22,6 +22,7 @@ import {
   FlaskConical,
   MessageSquarePlus,
   Shield,
+  Search,
   ClipboardCheck,
   DollarSign,
   Newspaper,
@@ -81,6 +82,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigar',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },

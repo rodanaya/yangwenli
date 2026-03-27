@@ -2,7 +2,7 @@ import { useEffect, useRef, useState, useCallback, useMemo, memo, forwardRef } f
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
-import { motion, AnimatePresence, useInView, useMotionValue, animate as fmAnimate } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning } from 'lucide-react'
 import { analysisApi, phiApi } from '@/api/client'
 import type { FastDashboardData } from '@/api/types'
@@ -279,102 +279,6 @@ function SplitTextHero({ text, className, style }: { text: string; className?: s
     </span>
   )
 }
-
-// ---------------------------------------------------------------------------
-// ManifestoCounters -- 3 giant count-up numbers triggered by scroll
-// ---------------------------------------------------------------------------
-function ManifestoCounterItem({ target, prefix, suffix, label }: {
-  target: number
-  prefix?: string
-  suffix?: string
-  label: string
-}) {
-  const ref = useRef<HTMLDivElement>(null)
-  const isInView = useInView(ref, { once: true, margin: '-80px' })
-  const motionVal = useMotionValue(0)
-  const [display, setDisplay] = useState('0')
-
-  useEffect(() => {
-    if (!isInView) return
-    const ctrl = fmAnimate(motionVal, target, {
-      duration: 2.5,
-      ease: [0.16, 1, 0.3, 1],
-    })
-    return () => ctrl.stop()
-  }, [isInView, target, motionVal])
-
-  useEffect(() => {
-    const unsub = motionVal.on('change', (v) => {
-      if (target >= 1000) {
-        setDisplay(Math.round(v).toLocaleString())
-      } else if (target >= 10) {
-        setDisplay(v.toFixed(1))
-      } else {
-        setDisplay(v.toFixed(1))
-      }
-    })
-    return unsub
-  }, [motionVal, target])
-
-  return (
-    <div ref={ref} className="flex flex-col items-center gap-3">
-      <span
-        className="font-black tabular-nums font-mono leading-none"
-        style={{
-          fontSize: 'clamp(3rem, 8vw, 7rem)',
-          color: '#f0ede8',
-          letterSpacing: '-0.04em',
-        }}
-      >
-        {prefix}{display}{suffix}
-      </span>
-      <span
-        className="text-sm sm:text-base font-medium tracking-wide uppercase"
-        style={{ color: 'rgba(255,255,255,0.45)', letterSpacing: '0.1em' }}
-      >
-        {label}
-      </span>
-    </div>
-  )
-}
-
-const ManifestoCounters = memo(function ManifestoCounters({ isEn, highRiskPct }: { isEn: boolean; highRiskPct: number }) {
-  return (
-    <section
-      className="relative px-6 sm:px-12 lg:px-24 py-20 sm:py-28 overflow-hidden"
-      style={{ background: '#0a0c0b' }}
-      aria-label={isEn ? 'Key statistics' : 'Estadísticas clave'}
-    >
-      {/* Subtle crimson grid pattern */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        style={{
-          backgroundImage:
-            'linear-gradient(rgba(196,30,58,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(196,30,58,0.06) 1px, transparent 1px)',
-          backgroundSize: '80px 80px',
-        }}
-        aria-hidden="true"
-      />
-      <div className="relative z-10 max-w-5xl mx-auto grid grid-cols-1 sm:grid-cols-3 gap-12 sm:gap-8">
-        <ManifestoCounterItem
-          target={3051294}
-          label={isEn ? 'Contracts analyzed' : 'Contratos analizados'}
-        />
-        <ManifestoCounterItem
-          target={9.9}
-          prefix="MX$"
-          suffix="T"
-          label={isEn ? 'Total value evaluated' : 'Valor total evaluado'}
-        />
-        <ManifestoCounterItem
-          target={highRiskPct}
-          suffix="%"
-          label={isEn ? 'Flagged high-risk' : 'Marcados alto riesgo'}
-        />
-      </div>
-    </section>
-  )
-})
 
 // ---------------------------------------------------------------------------
 // CaseMarquee -- infinite horizontal scrolling corruption case names
@@ -1020,7 +924,6 @@ export default function Intro() {
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_051_294
   const totalValueMxn = overview?.total_value_mxn ?? 9_900_000_000_000
-  const highRiskPct = overview?.high_risk_pct ?? 13.49
   const yearlyTrends = fastDashboard?.yearly_trends ?? []
   const phiSectors = phiSectorsData?.sectors ?? []
 
