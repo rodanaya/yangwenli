@@ -150,8 +150,8 @@ export default function Telescope() {
             <div>${t('tooltip.contracts')}: <b>${formatNumber(contracts)}</b></div>
             <div>${t('tooltip.value')}: <b>${formatCompactMXN(value)}</b></div>
             <div>${t('tooltip.avgRisk')}: <b>${(avgRisk * 100).toFixed(1)}%</b></div>
-            <div>${t('tooltip.highRisk')}: <b>${(highRiskPct * 100).toFixed(1)}%</b></div>
-            <div>${t('tooltip.directAward')}: <b>${(directPct * 100).toFixed(1)}%</b></div>
+            <div>${t('tooltip.highRisk')}: <b>${highRiskPct.toFixed(1)}%</b></div>
+            <div>${t('tooltip.directAward')}: <b>${directPct.toFixed(1)}%</b></div>
           </div>
         `
       },
@@ -442,10 +442,10 @@ export default function Telescope() {
                       {(d.avg_risk * 100).toFixed(1)}%
                     </td>
                     <td className="px-3 py-2 text-right text-slate-300">
-                      {(d.high_risk_pct * 100).toFixed(1)}%
+                      {d.high_risk_pct.toFixed(1)}%
                     </td>
                     <td className="px-3 py-2 text-right text-slate-300">
-                      {(d.direct_award_pct * 100).toFixed(1)}%
+                      {d.direct_award_pct.toFixed(1)}%
                     </td>
                   </tr>
                 )

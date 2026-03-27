@@ -428,6 +428,13 @@ export default function InstitutionHealth() {
     staleTime: 10 * 60 * 1000,
   })
 
+  // All hooks MUST be called before any early returns (Rules of Hooks)
+  const items = data?.data ?? []
+  const capturedTop3 = useMemo(
+    () => [...items].sort((a, b) => b.hhi - a.hhi).slice(0, 3),
+    [items]
+  )
+
   if (isLoading) return <PageSkeleton />
 
   if (error || !data) {
@@ -439,7 +446,6 @@ export default function InstitutionHealth() {
     )
   }
 
-  const items = data.data
   const totalInstitutions = data.total_institutions ?? items.length
 
   // Summary stats derived from data
@@ -451,12 +457,6 @@ export default function InstitutionHealth() {
   const capturedSpendPct = totalSpend > 0
     ? ((capturedSpend / totalSpend) * 100).toFixed(1)
     : '0'
-
-  // Top 3 by HHI for the capture spotlight
-  const capturedTop3 = useMemo(
-    () => [...items].sort((a, b) => b.hhi - a.hhi).slice(0, 3),
-    [items]
-  )
 
   return (
     <motion.article
