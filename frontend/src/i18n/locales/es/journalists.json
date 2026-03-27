@@ -1,8 +1,8 @@
 {
   "masthead": {
-    "section": "PARA PERIODISTAS",
-    "headline": "Herramientas de Investigación",
-    "subtitle": "Datos, metodología y guías para periodistas de investigación",
+    "section": "SALA DE DATOS",
+    "headline": "Investigaciones",
+    "subtitle": "Análisis de datos e investigación periodística sobre 23 años de contratación pública federal",
     "lastUpdated": "Última actualización de datos: marzo 2026",
     "compranetLabel": "contratos",
     "satEfosLabel": "empresas fantasma"
@@ -33,7 +33,7 @@
   },
   "methodology": {
     "title": "Metodología y Datos",
-    "description": "RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML entrenado con 748 casos documentados de corrupción. Código abierto, datos verificables.",
+    "description": "Todas las investigaciones se basan en 3,051,294 contratos federales (2002–2025) de COMPRANET. El modelo de riesgo usa regresión logística entrenada con 748 casos documentados de corrupción. Los datos, la metodología y el código son de acceso abierto.",
     "viewMethodology": "Ver metodología",
     "downloadData": "Descargar datos",
     "tooltipTitle": "Modelo de riesgo v6.5",

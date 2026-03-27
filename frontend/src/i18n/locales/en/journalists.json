@@ -1,8 +1,8 @@
 {
   "masthead": {
-    "section": "FOR JOURNALISTS",
-    "headline": "Investigation Tools",
-    "subtitle": "Data, methodology and guides for investigative journalists",
+    "section": "SALA DE DATOS",
+    "headline": "Investigaciones",
+    "subtitle": "Data analysis and investigative reporting on 23 years of Mexican federal procurement",
     "lastUpdated": "Last data update: March 2026",
     "compranetLabel": "contracts",
     "satEfosLabel": "shell companies"
@@ -33,7 +33,7 @@
   },
   "methodology": {
     "title": "Methodology & Data",
-    "description": "RUBLI analyzes 3 million federal contracts (2002-2025) with an ML model trained on 748 documented corruption cases. Open source, verifiable data.",
+    "description": "All investigations are based on 3,051,294 federal contracts (2002–2025) from COMPRANET. Risk scoring uses logistic regression trained on 748 documented corruption cases. All data, methodology and code are open source.",
     "viewMethodology": "View methodology",
     "downloadData": "Download data",
     "tooltipTitle": "Risk model v6.5",
