@@ -169,7 +169,7 @@ function ExtremeCaseCard({
   vendorId: number | undefined
   sectorName: string
 }) {
-  const overpricingFactor = contract.z_price_ratio.toFixed(1)
+  const overpricingFactor = (contract.z_price_ratio ?? 0).toFixed(1)
 
   return (
     <article
@@ -583,7 +583,7 @@ export default function PriceIntelligence() {
                         {formatCompactMXN(s.totalValue)}
                       </td>
                       <td className="py-2 px-3 text-right tabular-nums text-orange-400">
-                        +{s.avgZ.toFixed(1)}&sigma;
+                        +{(s.avgZ ?? 0).toFixed(1)}&sigma;
                       </td>
                     </tr>
                   ))}
@@ -620,7 +620,7 @@ export default function PriceIntelligence() {
               Z-score promedio
             </p>
             <p className="text-3xl font-bold tabular-nums text-orange-400">
-              +{summary.avg_z_score.toFixed(1)}&sigma;
+              +{(summary.avg_z_score ?? 0).toFixed(1)}&sigma;
             </p>
           </div>
           <p className="text-xs text-text-muted leading-relaxed">

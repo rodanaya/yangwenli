@@ -77,9 +77,9 @@ function HHIChart({ institutions, lang, onSelect }: HHIChartProps) {
         return `
           <div style="min-width:200px">
             <div style="font-weight:600;margin-bottom:4px">${shortName(d.institution_name)}</div>
-            <div>HHI: <b>${d.hhi.toFixed(3)}</b></div>
-            <div>${lang === 'es' ? 'Top vendor share' : 'Top vendor share'}: <b>${(d.top_vendor_share * 100).toFixed(1)}%</b></div>
-            <div>${lang === 'es' ? 'Adj. directa' : 'Direct award'}: <b>${(d.direct_award_pct * 100).toFixed(1)}%</b></div>
+            <div>HHI: <b>${(d.hhi ?? 0).toFixed(3)}</b></div>
+            <div>${lang === 'es' ? 'Top vendor share' : 'Top vendor share'}: <b>${((d.top_vendor_share ?? 0) * 100).toFixed(1)}%</b></div>
+            <div>${lang === 'es' ? 'Adj. directa' : 'Direct award'}: <b>${((d.direct_award_pct ?? 0) * 100).toFixed(1)}%</b></div>
             <div>${lang === 'es' ? 'Contratos' : 'Contracts'}: <b>${formatNumber(d.total_contracts)}</b></div>
           </div>
         `
@@ -90,7 +90,7 @@ function HHIChart({ institutions, lang, onSelect }: HHIChartProps) {
       name: 'HHI',
       nameLocation: 'middle',
       nameGap: 25,
-      axisLabel: { color: '#94a3b8', formatter: (v: number) => v.toFixed(2) },
+      axisLabel: { color: '#94a3b8', formatter: (v: number) => (v ?? 0).toFixed(2) },
       axisLine: { lineStyle: { color: '#334155' } },
       splitLine: { lineStyle: { color: '#1e293b' } },
     },
@@ -508,7 +508,7 @@ export default function InstitutionHeatmap() {
                     className="w-1.5 h-1.5 rounded-full"
                     style={{ backgroundColor: badgeColor }}
                   />
-                  {riskLabel(inst.avg_risk_score)} {(inst.avg_risk_score * 100).toFixed(0)}%
+                  {riskLabel(inst.avg_risk_score ?? 0)} {((inst.avg_risk_score ?? 0) * 100).toFixed(0)}%
                 </span>
 
                 {/* Arrow */}
