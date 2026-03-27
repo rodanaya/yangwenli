@@ -155,14 +155,6 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
               Memo no disponible para{' '}
               <span className="font-semibold text-text-secondary">{vendorName}</span>
             </p>
-            <button
-              className="text-xs text-accent hover:text-accent-hover transition-colors mt-1"
-              onClick={() => {
-                // Navigate to ARIA queue — non-functional placeholder
-              }}
-            >
-              Solicitar análisis
-            </button>
           </div>
         )}
       </div>

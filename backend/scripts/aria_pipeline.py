@@ -1098,6 +1098,9 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
             primary_sector_id, primary_sector_name = get_primary_sector(vid, conn)
             ips_final = round(max(0.0, ips_raw - fp["penalty"]), 6)
             tier = assign_tier(ips_final)
+            # EFOS definitivo vendors are SAT-confirmed ghost companies — guarantee T2 minimum
+            if is_efos and tier > 2:
+                tier = 2
             tier_counts[tier - 1] += 1
 
             results.append({

@@ -363,6 +363,83 @@ def patch_aria_review(
 
 
 # ---------------------------------------------------------------------------
+# POST /aria/queue/{vendor_id}/promote-gt
+# ---------------------------------------------------------------------------
+
+class PromoteGTRequest(BaseModel):
+    case_name: Optional[str] = None
+    case_type: str = "procurement_fraud"
+    confidence_level: str = "medium"
+    notes: Optional[str] = None
+    reviewer_name: Optional[str] = None
+
+
+@router.post("/queue/{vendor_id}/promote-gt")
+def promote_to_ground_truth(
+    vendor_id: int,
+    body: PromoteGTRequest,
+    conn: sqlite3.Connection = Depends(get_db_dep),
+    _: None = Depends(require_write_key),
+):
+    """Promote a confirmed ARIA lead to the ground truth corpus."""
+    if not _table_exists(conn, "aria_queue"):
+        raise HTTPException(status_code=404, detail="ARIA pipeline has not been run yet.")
+
+    vendor_row = conn.execute(
+        "SELECT vendor_id, vendor_name, in_ground_truth FROM aria_queue WHERE vendor_id = ?",
+        (vendor_id,),
+    ).fetchone()
+    if vendor_row is None:
+        raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found in ARIA queue.")
+
+    if vendor_row["in_ground_truth"]:
+        raise HTTPException(status_code=409, detail="Vendor is already in ground truth.")
+
+    vendor_name = vendor_row["vendor_name"] or f"vendor_{vendor_id}"
+    case_name = body.case_name or f"ARIA-Confirmed: {vendor_name}"
+
+    # Find next available case id
+    max_id_row = conn.execute("SELECT MAX(id) FROM ground_truth_cases").fetchone()
+    next_id = (max_id_row[0] or 0) + 1
+    case_id_str = f"CASE-{next_id}"
+
+    conn.execute(
+        """
+        INSERT INTO ground_truth_cases
+            (id, case_id, case_name, case_type, confidence_level, notes)
+        VALUES (?, ?, ?, ?, ?, ?)
+        """,
+        (next_id, case_id_str, case_name, body.case_type, body.confidence_level, body.notes),
+    )
+    conn.execute(
+        """
+        INSERT INTO ground_truth_vendors
+            (case_id, vendor_id, vendor_name_source, evidence_strength, match_method)
+        VALUES (?, ?, ?, ?, ?)
+        """,
+        (case_id_str, vendor_id, vendor_name, body.confidence_level, "aria_confirmed"),
+    )
+    conn.execute(
+        "UPDATE aria_queue SET in_ground_truth = 1, review_status = 'confirmed' WHERE vendor_id = ?",
+        (vendor_id,),
+    )
+    if body.reviewer_name:
+        conn.execute(
+            "UPDATE aria_queue SET reviewer_name = ?, reviewed_at = CURRENT_TIMESTAMP WHERE vendor_id = ?",
+            (body.reviewer_name, vendor_id),
+        )
+    conn.commit()
+    app_cache.invalidate("aria", _STATS_CACHE_KEY)
+
+    return {
+        "vendor_id": vendor_id,
+        "case_id": case_id_str,
+        "case_name": case_name,
+        "message": f"Vendor {vendor_id} promoted to ground truth as {case_id_str}",
+    }
+
+
+# ---------------------------------------------------------------------------
 # GET /aria/stats
 # ---------------------------------------------------------------------------
 

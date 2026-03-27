@@ -2504,6 +2504,7 @@ export const ariaApi = {
     search?: string
     efos_only?: boolean
     new_vendor_only?: boolean
+    novel_only?: boolean
     status?: string
     page?: number
     per_page?: number
@@ -2553,6 +2554,17 @@ export const ariaApi = {
    */
   async getStats(): Promise<AriaStatsResponse> {
     const { data } = await api.get<AriaStatsResponse>('/aria/stats')
+    return data
+  },
+
+  /**
+   * Promote a confirmed ARIA lead to the ground truth corpus
+   */
+  async promoteToGroundTruth(
+    vendorId: number,
+    body: { case_name?: string; case_type?: string; confidence_level?: string; notes?: string; reviewer_name?: string }
+  ): Promise<{ vendor_id: number; case_id: string; case_name: string; message: string }> {
+    const { data } = await api.post(`/aria/queue/${vendorId}/promote-gt`, body)
     return data
   },
 

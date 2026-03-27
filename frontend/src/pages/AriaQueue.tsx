@@ -68,10 +68,10 @@ const IPS_TEXT_COLOR = (score: number) => {
 }
 
 const TIER_CONFIG = [
-  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', color: 'border-red-600',    bg: 'bg-red-950/40',    textColor: 'text-red-400',    dotColor: 'bg-red-500',    count: 285,    descKey: 'tier1.description' },
-  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', color: 'border-orange-600', bg: 'bg-orange-950/30', textColor: 'text-orange-400', dotColor: 'bg-orange-500', count: 894,    descKey: 'tier2.description' },
-  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', color: 'border-yellow-600', bg: 'bg-yellow-950/20', textColor: 'text-yellow-400', dotColor: 'bg-yellow-500', count: 5151,   descKey: 'tier3.description' },
-  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', color: 'border-blue-800',   bg: 'bg-blue-950/15',   textColor: 'text-blue-400',   dotColor: 'bg-blue-500',   count: 191708, descKey: 'tier4.description' },
+  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', color: 'border-red-600',    bg: 'bg-red-950/40',    textColor: 'text-red-400',    dotColor: 'bg-red-500',    descKey: 'tier1.description' },
+  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', color: 'border-orange-600', bg: 'bg-orange-950/30', textColor: 'text-orange-400', dotColor: 'bg-orange-500', descKey: 'tier2.description' },
+  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', color: 'border-yellow-600', bg: 'bg-yellow-950/20', textColor: 'text-yellow-400', dotColor: 'bg-yellow-500', descKey: 'tier3.description' },
+  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', color: 'border-blue-800',   bg: 'bg-blue-950/15',   textColor: 'text-blue-400',   dotColor: 'bg-blue-500',   descKey: 'tier4.description' },
 ] as const
 
 // ============================================================================
@@ -282,10 +282,12 @@ function ReviewStatusBadge({ status }: { status: ReviewStatus | null | undefined
 function ReviewPopover({
   vendorId,
   currentStatus,
+  inGroundTruth,
   onClose,
 }: {
   vendorId: number
   currentStatus: ReviewStatus | null | undefined
+  inGroundTruth?: boolean
   onClose: () => void
 }) {
   const { t } = useTranslation('aria')
@@ -310,6 +312,16 @@ function ReviewPopover({
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['aria-queue-leads'] })
       queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
+      onClose()
+    },
+  })
+
+  const promoteMutation = useMutation({
+    mutationFn: () => ariaApi.promoteToGroundTruth(vendorId, { confidence_level: 'medium' }),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['aria-queue-leads'] })
+      queryClient.invalidateQueries({ queryKey: ['aria-queue'] })
+      queryClient.invalidateQueries({ queryKey: ['aria-stats'] })
       onClose()
     },
   })
@@ -361,7 +373,19 @@ function ReviewPopover({
           <XIcon className="h-3.5 w-3.5" />
         </button>
       </div>
-      {mutation.isError && (
+      {status === 'confirmed' && !inGroundTruth && (
+        <button
+          onClick={() => promoteMutation.mutate()}
+          disabled={promoteMutation.isPending || promoteMutation.isSuccess}
+          className="w-full py-1.5 rounded text-xs font-medium border border-green-700 text-green-400 hover:bg-green-950/40 disabled:opacity-50 transition-colors"
+        >
+          {promoteMutation.isPending ? 'Promoviendo...' : promoteMutation.isSuccess ? '✓ Añadido a GT' : '↑ Añadir a Ground Truth'}
+        </button>
+      )}
+      {inGroundTruth && (
+        <p className="text-[10px] text-green-500/70 text-center">Ya en Ground Truth</p>
+      )}
+      {(mutation.isError || promoteMutation.isError) && (
         <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
       )}
     </div>
@@ -374,7 +398,7 @@ function ReviewPopover({
 
 function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[number]; actualCount?: number }) {
   const { t } = useTranslation('aria')
-  const count = actualCount ?? config.count
+  const count = actualCount ?? 0
   return (
     <div className={cn(
       'relative border-l-4 rounded-r-lg p-4',
@@ -712,6 +736,7 @@ function LeadRow({
               <ReviewPopover
                 vendorId={item.vendor_id}
                 currentStatus={item.review_status as ReviewStatus | undefined}
+                inGroundTruth={!!item.in_ground_truth}
                 onClose={() => setReviewOpen(false)}
               />
             )}
@@ -788,14 +813,14 @@ export default function AriaPage() {
 
   // Tier 1 spotlight
   const { data: tier1Data, isLoading: tier1Loading } = useQuery({
-    queryKey: ['aria-queue', { tier: 1 }],
-    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 12 }),
+    queryKey: ['aria-queue', { tier: 1, novelOnly }],
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 12, novel_only: novelOnly || undefined }),
     staleTime: 5 * 60_000,
   })
 
   // Full leads table
   const { data: leadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, newVendorOnly, reviewStatusFilter }],
+    queryKey: ['aria-queue-leads', { page, search, patternFilter, newVendorOnly, novelOnly, reviewStatusFilter }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
@@ -803,6 +828,7 @@ export default function AriaPage() {
         search: search || undefined,
         pattern: patternFilter ?? undefined,
         new_vendor_only: newVendorOnly || undefined,
+        novel_only: novelOnly || undefined,
         status: reviewStatusFilter ?? undefined,
         tier: patternFilter || newVendorOnly || search || reviewStatusFilter ? undefined : 2,
       }),
@@ -817,10 +843,7 @@ export default function AriaPage() {
   const elevatedValue = stats?.elevated_value_mxn ?? 0
 
   const tier1Items: AriaQueueItem[] = tier1Data?.data ?? []
-  const leadsItemsRaw: AriaQueueItem[] = leadsData?.data ?? []
-  const leadsItems: AriaQueueItem[] = novelOnly
-    ? leadsItemsRaw.filter((item) => !item.in_ground_truth)
-    : leadsItemsRaw
+  const leadsItems: AriaQueueItem[] = leadsData?.data ?? []
 
   const locale = i18n.language === 'es' ? 'es-MX' : 'en-US'
   const lastRunAt = stats?.latest_run?.completed_at
@@ -996,6 +1019,10 @@ export default function AriaPage() {
             >
               {TIER_CONFIG.map((cfg) => {
                 const isCollapsed = collapsedTiers.has(cfg.tier)
+                const liveCount = cfg.tier === 1 ? (stats?.latest_run?.tier1_count ?? 0)
+                  : cfg.tier === 2 ? (stats?.latest_run?.tier2_count ?? 0)
+                  : cfg.tier === 3 ? (stats?.latest_run?.tier3_count ?? 0)
+                  : (stats?.latest_run?.tier4_count ?? 0)
                 return (
                   <motion.div key={cfg.tier} variants={staggerItem}>
                     {isCollapsed ? (
@@ -1015,18 +1042,18 @@ export default function AriaPage() {
                           <div>
                             <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">{t(cfg.labelKey)}</span>
                             <div className={cn('text-lg font-bold font-mono', cfg.textColor)}>
-                              {formatNumber(cfg.count)}
+                              {formatNumber(liveCount)}
                             </div>
                           </div>
                           <ChevronDown className="h-4 w-4 text-text-muted" />
                         </div>
                         <div className="text-[10px] text-text-muted/60 mt-1">
-                          {t('tierCollapse.show', { count: cfg.count })}
+                          {t('tierCollapse.show', { count: liveCount })}
                         </div>
                       </button>
                     ) : (
                       <div className="relative">
-                        <ThreatLevelCard config={cfg} />
+                        <ThreatLevelCard config={cfg} actualCount={liveCount} />
                         {cfg.tier >= 3 && (
                           <button
                             onClick={() => {
