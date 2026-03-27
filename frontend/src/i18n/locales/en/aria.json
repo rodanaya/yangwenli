@@ -223,5 +223,9 @@
     "notes": "Notes",
     "reviewedAt": "Reviewed",
     "noReview": "No review yet"
+  },
+  "actions": {
+    "vendorProfile": "Vendor Profile",
+    "redThread": "Red Thread Investigation"
   }
 }

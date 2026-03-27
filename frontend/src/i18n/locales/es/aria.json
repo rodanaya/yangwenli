@@ -223,5 +223,9 @@
     "notes": "Notas",
     "reviewedAt": "Revisado",
     "noReview": "Sin revisión"
+  },
+  "actions": {
+    "vendorProfile": "Perfil del Proveedor",
+    "redThread": "Investigación Hilo Rojo"
   }
 }

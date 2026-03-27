@@ -693,9 +693,18 @@ function LeadRow({
               <ClipboardEdit className="h-3.5 w-3.5" />
             </button>
             <button
+              onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${item.vendor_id}`) }}
+              className="text-text-muted hover:text-accent p-1 rounded hover:bg-accent/10 transition-colors"
+              aria-label={t('actions.vendorProfile')}
+              title={t('actions.vendorProfile')}
+            >
+              <Eye className="h-3.5 w-3.5" />
+            </button>
+            <button
               onClick={(e) => { e.stopPropagation(); navigate(`/thread/${item.vendor_id}`) }}
               className="text-accent hover:text-accent/80 p-1 rounded hover:bg-accent/10 transition-colors"
-              aria-label="Red Thread investigation"
+              aria-label={t('actions.redThread')}
+              title={t('actions.redThread')}
             >
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
@@ -888,7 +897,7 @@ export default function AriaPage() {
 
         {/* Data source attribution */}
         <div className="flex flex-wrap items-center gap-3">
-          <FuentePill source="COMPRANET" count={3051294} verified={true} />
+          <FuentePill source="COMPRANET" verified={true} />
           <FuentePill source="SAT EFOS" count={13960} />
           <MetodologiaTooltip
             title={t('methodology.title')}
