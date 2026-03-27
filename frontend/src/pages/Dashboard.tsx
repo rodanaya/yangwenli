@@ -1391,13 +1391,14 @@ export function Dashboard() {
     retry: 1,
   })
 
-  // Fallback when fastDashboard fails — risk-overview reads same precomputed_stats keys
-  // and is always available, ensuring KPI cards show real data instead of zeros
-  const { data: riskOverviewFallback } = useQuery({
+  // Fallback when fastDashboard fails or returns without overview data.
+  // Uses the risk-overview endpoint which reads the same precomputed_stats table.
+  const fastFailed = !dashLoading && (!fastDashboard || !fastDashboard.overview)
+  const { data: riskOverviewFallback, isLoading: fallbackLoading } = useQuery({
     queryKey: ['analysis', 'risk-overview-fallback'],
     queryFn: () => analysisApi.getRiskOverview(),
     staleTime: 5 * 60 * 1000,
-    enabled: !dashLoading && !fastDashboard,
+    enabled: fastFailed,
     retry: 1,
   })
 
@@ -1563,9 +1564,11 @@ export function Dashboard() {
       })
     : null
 
-  // True while we have no real data — covers both "pending" and "error with no fallback".
-  // Prevents KPI cards from rendering misleading zeros/MX$0 when the backend is unreachable.
-  const kpiLoading = dashLoading || !overview
+  // True only while queries are still in-flight with no data yet.
+  // Once both queries have settled (success or error), stop showing loading state
+  // so the error banner is visible rather than an infinite "--" spinner.
+  const bothSettled = !dashLoading && (!fastFailed || !fallbackLoading)
+  const kpiLoading = !bothSettled || !overview
 
   // Sector trajectory selector
   const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
@@ -1644,7 +1647,7 @@ export function Dashboard() {
             className="text-[10px] font-mono text-text-muted/70 cursor-help"
             title={t('aucExplanation')}
           >
-            {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.840'}
+            {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.828'}
           </span>
         </div>
       </div>
