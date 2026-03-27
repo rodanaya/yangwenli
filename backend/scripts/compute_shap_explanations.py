@@ -323,6 +323,8 @@ def process_sector(conn: sqlite3.Connection, sector_id: int,
         _flush_inserts(cursor, inserts)
         conn.commit()
 
+    read_conn.close()
+
     print(f"  Sector {sector_id}: {n_vendors} vendors, bg_risk={bg_risk:.4f}")
     return n_vendors, coef_vector, z_bg_mean
 
