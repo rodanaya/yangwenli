@@ -15,7 +15,7 @@ interface Props {
 }
 
 async function fetchRiskExplanation(contractId: number): Promise<RiskExplanation> {
-  const { data } = await api.get<RiskExplanation>(`/contracts/${contractId}/risk-explanation`)
+  const { data } = await api.get<RiskExplanation>(`/contracts/${contractId}/risk-explain`)
   return data
 }
 

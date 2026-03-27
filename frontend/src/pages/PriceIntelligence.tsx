@@ -335,7 +335,7 @@ export default function PriceIntelligence() {
 
   const ariaT2Query = useQuery({
     queryKey: ['aria', 'queue', 'tier2', 200],
-    queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 200 }),
+    queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 100 }),
     staleTime: STALE_TIME,
   })
 

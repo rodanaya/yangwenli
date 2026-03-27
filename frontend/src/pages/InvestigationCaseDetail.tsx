@@ -394,9 +394,20 @@ export function InvestigationCaseDetail() {
               <p className="text-sm font-bold text-text-primary">{t('caseDetail.narrative')}</p>
             </div>
             {detail.narrative && (
-              <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
-                {detail.narrative}
-              </p>
+              <div className="text-sm text-text-secondary leading-relaxed space-y-1.5">
+                {detail.narrative.split('\n').map((line, i) => {
+                  if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>
+                  if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>
+                  if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>
+                  if (line.trim() === '') return <div key={i} className="h-1" />
+                  const parts = line.split(/\*\*(.+?)\*\*/g)
+                  return (
+                    <p key={i}>
+                      {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
+                    </p>
+                  )
+                })}
+              </div>
             )}
             {detail.summary && detail.summary !== detail.narrative && (
               <p className="text-xs text-text-muted leading-relaxed mt-3 pt-3 border-t border-border/20">

@@ -48,7 +48,7 @@ export default defineConfig({
     strictPort: true,
     host: true, // Allow external connections (needed for Docker)
     proxy: {
-      '/api': {
+      '/api/': {
         target: API_TARGET,
         changeOrigin: true,
       },

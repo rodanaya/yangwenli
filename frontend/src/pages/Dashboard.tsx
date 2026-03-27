@@ -1563,6 +1563,10 @@ export function Dashboard() {
       })
     : null
 
+  // True while we have no real data — covers both "pending" and "error with no fallback".
+  // Prevents KPI cards from rendering misleading zeros/MX$0 when the backend is unreachable.
+  const kpiLoading = dashLoading || !overview
+
   // Sector trajectory selector
   const [selectedTrajectorySectorId, setSelectedTrajectorySectorId] = useState<number | null>(null)
 
@@ -1605,9 +1609,9 @@ export function Dashboard() {
       {/* ================================================================ */}
       <HeroStatBar
         value={formatCompactMXN(criticalHighValue || overview?.total_value_mxn || 0)}
-        loading={dashLoading}
+        loading={kpiLoading}
       />
-      {!dashLoading && criticalHighValue > 0 && (
+      {!kpiLoading && criticalHighValue > 0 && (
         <p className="px-6 text-[10px] font-mono text-text-muted/70 -mt-2">
           {t('budgetContext', { pct: '56' })}
         </p>
@@ -1620,7 +1624,7 @@ export function Dashboard() {
         overview={overview}
         criticalHighContractPct={criticalHighContractPct}
         criticalCount={criticalCount}
-        loading={dashLoading}
+        loading={dashLoading || !overview}
       />
 
       {/* Section divider — "NATIONAL OVERVIEW" label + live-data badges */}
@@ -1713,10 +1717,10 @@ export function Dashboard() {
         <ScrollReveal delay={0}>
           <KPICard
             label={t('contractsShowingRisk')}
-            value={dashLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
-            sublabel={dashLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
+            value={kpiLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
+            sublabel={kpiLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
             color="#f87171"
-            loading={dashLoading}
+            loading={kpiLoading}
             icon={Gauge}
             onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')}
             sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
@@ -1726,10 +1730,10 @@ export function Dashboard() {
         <ScrollReveal delay={100}>
           <KPICard
             label={t('criticalContracts')}
-            value={dashLoading ? '--' : formatNumber(criticalCount)}
+            value={kpiLoading ? '--' : formatNumber(criticalCount)}
             sublabel={t('oecdHighRisk')}
             color="#ef4444"
-            loading={dashLoading}
+            loading={kpiLoading}
             icon={AlertTriangle}
             onClick={() => navigate('/contracts?risk_level=critical')}
           />
@@ -1737,10 +1741,10 @@ export function Dashboard() {
         <ScrollReveal delay={200}>
           <KPICard
             label={t('valueFlagged')}
-            value={dashLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
-            sublabel={dashLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
+            value={kpiLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
+            sublabel={kpiLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
             color="#fb923c"
-            loading={dashLoading}
+            loading={kpiLoading}
             icon={DollarSign}
             onClick={() => navigate('/categories')}
           />
@@ -1748,10 +1752,10 @@ export function Dashboard() {
         <ScrollReveal delay={300}>
           <KPICard
             label={t('topVendors')}
-            value={dashLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
-            sublabel={`${formatNumber(overview?.total_contracts ?? 0)} ${tc('contracts').toLowerCase()} | 2002-2025`}
+            value={kpiLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
+            sublabel={kpiLoading ? '' : `${formatNumber(overview?.total_contracts ?? 0)} ${tc('contracts').toLowerCase()} | 2002-2025`}
             color="#818cf8"
-            loading={dashLoading}
+            loading={kpiLoading}
             icon={Users}
             onClick={() => navigate('/network')}
           />
