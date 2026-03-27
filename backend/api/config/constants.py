@@ -28,15 +28,14 @@ RISK_THRESHOLDS_V4 = {
     'low': 0.0,
 }
 
-# v6.0 thresholds — recalibrated for PU-corrected scores (c=0.448)
-# PU correction amplifies raw probabilities ~2x vs v5.1 (c=0.882)
-# Thresholds raised proportionally to maintain OECD 2-15% benchmark
-# High+ rate: ~13.4% (within OECD benchmark)
-# GT detection: 68.2% high+, 86.0% medium+
+# v6.5 thresholds — recalibrated for PU-corrected scores (c=0.300)
+# PU correction: Elkan & Noto floor c=0.300
+# HR=13.49% OECD compliant (within 2-15% benchmark)
+# GT detection: vendor-stratified test AUC=0.828
 RISK_THRESHOLDS_V6 = {
     'critical': 0.60,   # Strongest similarity to known corruption patterns
     'high': 0.40,       # Strong similarity
-    'medium': 0.15,     # Moderate similarity
+    'medium': 0.25,     # Moderate similarity
     'low': 0.0,         # Low similarity
 }
 
@@ -44,8 +43,8 @@ RISK_THRESHOLDS_V6 = {
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V6
 
 # Active model version
-# v6.0: vendor-stratified split, test AUC 0.849 (vendor-stratified)
-CURRENT_MODEL_VERSION = 'v6.0'
+# v6.5: institution-scoped GT labels, structural FP exclusions, test AUC 0.828 (vendor-stratified)
+CURRENT_MODEL_VERSION = 'v6.5'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

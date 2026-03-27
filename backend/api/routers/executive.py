@@ -363,8 +363,8 @@ def _build_summary(conn) -> dict:
         "contracts": gt_contracts,
         "detection_rate": detection_rate,
         "high_plus_rate": high_plus_rate,
-        "auc": 0.840,
-        "train_auc": 0.880,
+        "auc": 0.828,
+        "train_auc": 0.798,
         "case_details": case_details,
     }
 
@@ -407,25 +407,25 @@ def _build_summary(conn) -> dict:
             test_auc_val = cal_row["test_auc"]
         except (IndexError, KeyError):
             pass
-        is_v6 = cal_row["model_version"] == 'v6.0'
+        is_v6 = cal_row["model_version"] >= 'v6.0'
         model = {
             "version": cal_row["model_version"],
-            "features": 16,
-            "sub_models": 1 if is_v6 else 13,
-            "auc": round(test_auc_val, 3) if test_auc_val else 0.849,
-            "train_auc": round(train_auc, 3) if train_auc else 0.858,
+            "features": 9,
+            "sub_models": 13,
+            "auc": round(test_auc_val, 3) if test_auc_val else 0.828,
+            "train_auc": round(train_auc, 3) if train_auc else 0.798,
             "brier": round(cal_row["brier_score"], 3) if cal_row["brier_score"] else None,
             "pu_correction": round(cal_row["pu_correction_factor"], 3) if cal_row["pu_correction_factor"] else None,
         }
     else:
         model = {
-            "version": "v6.0",
-            "features": 16,
-            "sub_models": 1,
-            "auc": 0.840,
-            "train_auc": 0.880,
+            "version": "v6.5",
+            "features": 9,
+            "sub_models": 13,
+            "auc": 0.828,
+            "train_auc": 0.798,
             "brier": 0.090,
-            "pu_correction": 0.448,
+            "pu_correction": 0.300,
         }
 
     # Lift from v4.0 comparison report (stable between retrainings)
