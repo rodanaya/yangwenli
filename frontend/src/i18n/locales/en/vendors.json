@@ -83,7 +83,9 @@
     "riskFactorContributionFallback": "Risk Factor Contribution (v6.5 Model)",
     "riskFactorDetails": "Risk Factor Details",
     "noRiskFactorData": "No risk factor data available",
-    "noRiskFactors": "No risk factors available"
+    "noRiskFactors": "No risk factors available",
+    "sortByRisk": "Sort by risk and go to highest",
+    "viewMostRisky": "View riskiest contract"
   },
   "history": {
     "activityCalendar": "Contract Activity Calendar",

@@ -1157,7 +1157,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
       </div>
 
       <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', lineHeight: 1.15, marginBottom: '16px', maxWidth: '700px' }}>
-        {loading ? '\u2014' : `${(overview?.total_contracts ?? 3051294).toLocaleString('en-US')} ${t('heroContracts')}`}
+        {loading || !overview?.total_contracts ? '\u2014' : `${overview.total_contracts.toLocaleString('en-US')} ${t('heroContracts')}`}
         <br/>
         <span style={{ color: 'var(--color-accent)' }}>{t('heroUnderSurveillance')}</span>
       </h1>
@@ -1549,7 +1549,7 @@ export function Dashboard() {
   }, [execData])
 
   const groundTruth = execData?.ground_truth
-  const modelAuc = execData?.model?.auc ?? 0.840
+  const modelAuc = execData?.model?.auc ?? 0.828
 
   const topFlows = useMemo(() => {
     if (!moneyFlowData?.flows) return []

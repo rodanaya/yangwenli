@@ -57,7 +57,9 @@
     "procedure": "Procedimiento",
     "isDirectAward": "Adj. Directa",
     "isSingleBid": "Licitación Única",
-    "anomalyScore": "Anomalía D²"
+    "anomalyScore": "Anomalía D²",
+    "riskScoreTooltipTitle": "Sobre el score de riesgo",
+    "riskScoreTooltipBody": "El score de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación."
   },
   "detail": {
     "title": "Detalle del Contrato",

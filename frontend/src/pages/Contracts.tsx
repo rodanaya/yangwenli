@@ -1064,8 +1064,8 @@ export function Contracts() {
                         {t(col.labelKey)}
                         {col.key === 'risk' && (
                           <MetodologiaTooltip
-                            title="Sobre el score de riesgo"
-                            body="El score de riesgo (0-1) mide similitud con patrones de corrupci&oacute;n documentados. No es prueba de irregularidad — es una se&ntilde;al de investigaci&oacute;n."
+                            title={t('table.riskScoreTooltipTitle')}
+                            body={t('table.riskScoreTooltipBody')}
                             link="/methodology"
                           />
                         )}

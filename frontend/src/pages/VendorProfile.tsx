@@ -3011,10 +3011,10 @@ export function VendorProfile() {
                           setContractPage(1)
                         }}
                         className="ml-auto flex items-center gap-1.5 px-2.5 py-1 text-xs rounded border border-risk-critical/30 bg-risk-critical/10 text-risk-critical hover:bg-risk-critical/20 transition-colors"
-                        title="Ordena por riesgo y va al inicio de la lista"
+                        title={t('risk.sortByRisk')}
                       >
                         <Target className="h-3 w-3" />
-                        Ver contrato más riesgoso
+                        {t('risk.viewMostRisky')}
                       </button>
                     )}
                   </div>

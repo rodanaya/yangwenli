@@ -83,7 +83,9 @@
     "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v6.5)",
     "riskFactorDetails": "Detalles de Factores de Riesgo",
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
-    "noRiskFactors": "No hay factores de riesgo disponibles"
+    "noRiskFactors": "No hay factores de riesgo disponibles",
+    "sortByRisk": "Ordena por riesgo y va al inicio de la lista",
+    "viewMostRisky": "Ver contrato más riesgoso"
   },
   "history": {
     "activityCalendar": "Calendario de Actividad de Contratos",

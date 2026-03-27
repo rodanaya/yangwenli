@@ -57,7 +57,9 @@
     "procedure": "Procedure",
     "isDirectAward": "Direct Award",
     "isSingleBid": "Single Bid",
-    "anomalyScore": "Anomaly D²"
+    "anomalyScore": "Anomaly D²",
+    "riskScoreTooltipTitle": "About the risk score",
+    "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal."
   },
   "detail": {
     "title": "Contract Detail",
