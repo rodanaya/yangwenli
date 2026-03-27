@@ -152,7 +152,7 @@
     },
     "atlas-del-riesgo": {
       "headline": "Risk Atlas: The Sectors Where Corruption Leaves the Most Traces",
-      "subheadline": "RUBLI's model identifies 118,061 contracts with critical-level risk signals. Health and agriculture lead in risk rate; infrastructure leads in amount.",
+      "subheadline": "RUBLI's model identifies 184,031 contracts with critical-level risk signals. Health and agriculture lead in risk rate; infrastructure leads in amount.",
       "statLabel": "contracts at critical risk level (v6.5, threshold ≥0.60)"
     },
     "la-herencia-envenenada": {

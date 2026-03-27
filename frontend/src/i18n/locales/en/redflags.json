@@ -2,7 +2,7 @@
   "trackingLabel": "RED FLAG ANATOMY",
   "heroSubtitle": "Contracts with risk factors -- how corruption signals distribute",
   "errorMessage": "Failed to load risk factor analysis.",
-  "errorHint": "Please check that the backend is running on port 8001.",
+  "errorHint": "Please check your connection and try again.",
   "filters": {
     "sector": "Sector",
     "allSectors": "All Sectors",

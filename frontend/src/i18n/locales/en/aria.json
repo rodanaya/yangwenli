@@ -35,7 +35,7 @@
     "description": "Require immediate investigation",
     "label": "TIER 1",
     "name": "CRITICAL",
-    "objective": "TARGET #{{number}}"
+    "objective": "LEAD #{{number}}"
   },
   "tier2": {
     "description": "Priority review",
@@ -116,7 +116,7 @@
     "efos": "EFOS"
   },
   "primer": {
-    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 198,000 vendors across 4 threat tiers \u2014 start with Tier 1 for the highest-priority cases.",
+    "text": "ARIA is RUBLI's automated risk investigation algorithm. It analyzes 318,441 vendors across 4 priority tiers — start with Tier 1 for the highest-priority cases.",
     "cta": "Start here",
     "dismiss": "Dismiss"
   },
@@ -133,7 +133,7 @@
     "title": "Detected Risk Patterns"
   },
   "tierSection": {
-    "objectives": "Priority Objectives \u2014 Tier 1"
+    "objectives": "Priority Leads — Tier 1"
   },
   "queueSection": {
     "title": "Investigation Queue"
@@ -159,7 +159,7 @@
   "header": {
     "systemLabel": "ARIA System \u00b7 Procurement Intelligence",
     "live": "LIVE",
-    "title": "The War Room",
+    "title": "Intelligence Center",
     "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting.",
     "statusActive": "Active",
     "t1Require": "T1 vendors require immediate investigation",

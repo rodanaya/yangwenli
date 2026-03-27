@@ -748,7 +748,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const by = ch - 50
       ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
       ctx.fillText('MONTO TOTAL: ~$9.9T MXN', bx, by + 16)
-      ctx.fillText('ALTO RIESGO: ~9.2%', bx, by + 32)
+      ctx.fillText('ALTO RIESGO: ~13.5%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
     }

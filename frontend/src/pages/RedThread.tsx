@@ -629,7 +629,7 @@ function ChapterMoney({ timeline }: {
             </ResponsiveContainer>
           </div>
           <AnnotationNote>
-            Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥15%. OECD benchmark: 2–15% high-risk.
+            Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. OECD benchmark: 2–15% high-risk.
           </AnnotationNote>
         </div>
       )}

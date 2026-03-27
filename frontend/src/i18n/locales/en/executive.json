@@ -22,7 +22,7 @@
   "header": {
     "badge": "EXECUTIVE SUMMARY",
     "dateline": "March 2026  |  RUBLI Intelligence Platform",
-    "title": "9.6 Trillion Pesos Under the Microscope",
+    "title": "9.9 Trillion Pesos Under the Microscope",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
     "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 9-feature per-sector risk model validated against ~748 documented corruption cases (~603 vendors), we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
     "contracts": "Contracts",

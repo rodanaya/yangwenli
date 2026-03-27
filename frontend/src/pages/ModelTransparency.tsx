@@ -69,16 +69,16 @@ interface Coefficient {
 }
 
 const MODEL_COEFFICIENTS: Coefficient[] = [
-  { factor: 'price_volatility', beta: 1.857, raw_beta: 1.857, ci_lower: 1.780, ci_upper: 1.930, direction: 'positive', note: 'Strongest predictor' },
-  { factor: 'institution_diversity', beta: -0.468, raw_beta: -0.468, ci_lower: -0.490, ci_upper: -0.446, direction: 'negative', note: 'Serves many institutions = less risky' },
-  { factor: 'price_ratio', beta: 0.391, raw_beta: 0.391, ci_lower: 0.365, ci_upper: 0.415, direction: 'positive' },
-  { factor: 'vendor_concentration', beta: 0.238, raw_beta: 0.238, ci_lower: 0.215, ci_upper: 0.260, direction: 'positive' },
-  { factor: 'network_member_count', beta: 0.187, raw_beta: 0.187, ci_lower: 0.178, ci_upper: 0.196, direction: 'positive' },
-  { factor: 'same_day_count', beta: 0.111, raw_beta: 0.111, ci_lower: 0.101, ci_upper: 0.121, direction: 'positive' },
-  { factor: 'single_bid', beta: 0.098, raw_beta: 0.098, ci_lower: 0.078, ci_upper: 0.118, direction: 'positive', note: 'Now active with C=0.01' },
-  { factor: 'ad_period_days', beta: 0.042, raw_beta: 0.042, ci_lower: 0.025, ci_upper: 0.059, direction: 'positive', note: 'Now active with C=0.01' },
-  { factor: 'win_rate', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
-  { factor: 'direct_award', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
+  { factor: 'price_volatility', beta: 0.5343, raw_beta: 0.5343, ci_lower: 0.480, ci_upper: 0.589, direction: 'positive', note: 'Strongest predictor' },
+  { factor: 'vendor_concentration', beta: 0.3749, raw_beta: 0.3749, ci_lower: 0.340, ci_upper: 0.410, direction: 'positive' },
+  { factor: 'institution_diversity', beta: -0.3821, raw_beta: -0.3821, ci_lower: -0.415, ci_upper: -0.349, direction: 'negative', note: 'Serves many institutions = less risky' },
+  { factor: 'price_ratio', beta: 0.2345, raw_beta: 0.2345, ci_lower: 0.210, ci_upper: 0.259, direction: 'positive' },
+  { factor: 'network_member_count', beta: 0.1811, raw_beta: 0.1811, ci_lower: 0.165, ci_upper: 0.197, direction: 'positive' },
+  { factor: 'same_day_count', beta: 0.0945, raw_beta: 0.0945, ci_lower: 0.082, ci_upper: 0.107, direction: 'positive' },
+  { factor: 'win_rate', beta: 0.0488, raw_beta: 0.0488, ci_lower: 0.038, ci_upper: 0.060, direction: 'positive', note: 'Active in v6.5' },
+  { factor: 'ad_period_days', beta: 0.0423, raw_beta: 0.0423, ci_lower: 0.030, ci_upper: 0.055, direction: 'positive', note: 'Active in v6.5' },
+  { factor: 'direct_award', beta: 0.0306, raw_beta: 0.0306, ci_lower: 0.020, ci_upper: 0.041, direction: 'positive', note: 'Active in v6.5' },
+  { factor: 'single_bid', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
   { factor: 'sector_spread', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
   { factor: 'industry_mismatch', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
   { factor: 'year_end', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
@@ -88,16 +88,16 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
 ]
 
 const VALIDATION_METRICS = {
-  auc_train: 0.880,
-  auc_roc: 0.840,
+  auc_train: 0.7984,
+  auc_roc: 0.8279,
   brier_score: 0.107,
   detection_rate_medium_plus: 1.000,
   detection_rate_high_plus: 0.674,
-  high_risk_rate: 0.092,
-  pu_correction: 0.3432,
+  high_risk_rate: 0.1349,
+  pu_correction: 0.3000,
   ground_truth_cases: 748,
   ground_truth_vendors: 603,
-  ground_truth_contracts: 252072,
+  ground_truth_contracts: 288000,
 } as const
 
 interface CaseDetection {
@@ -860,17 +860,17 @@ function RiskDistributionStrip() {
       <div className="space-y-1" style={{ maxWidth: 600 }}>
         <div className="flex items-center justify-between text-[10px] text-text-muted">
           <span>High-risk rate (HR%)</span>
-          <span className="tabular-nums font-medium text-text-primary">9.2%</span>
+          <span className="tabular-nums font-medium text-text-primary">13.49%</span>
         </div>
         <div className="relative h-4 rounded-full overflow-hidden" style={{ backgroundColor: '#1e293b' }}>
           <div
             className="h-full rounded-full"
-            style={{ width: '9.2%', backgroundColor: '#ea580c' }}
+            style={{ width: '13.49%', backgroundColor: '#ea580c' }}
             role="meter"
-            aria-valuenow={9.2}
+            aria-valuenow={13.49}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label="High-risk rate 9.2%"
+            aria-label="High-risk rate 13.49%"
           />
           {/* OECD min marker at 2% */}
           <div
@@ -892,7 +892,7 @@ function RiskDistributionStrip() {
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-2 h-2 rounded-sm" style={{ backgroundColor: '#ea580c' }} />
-            HR actual 9.2%
+            HR actual 13.49%
           </span>
           <span className="flex items-center gap-1">
             <span className="inline-block w-px h-2.5" style={{ backgroundColor: '#16a34a' }} />
@@ -900,7 +900,7 @@ function RiskDistributionStrip() {
           </span>
         </div>
         <p className="text-[10px] text-text-muted">
-          3,051,294 contratos analizados — HR 9.2% cumple rango OECD (2–15%)
+          3,051,294 contratos analizados — HR 13.49% cumple rango OECD (2–15%)
         </p>
       </div>
     </div>
@@ -2045,13 +2045,13 @@ export default function ModelTransparency() {
               <p className="text-xs text-text-muted uppercase tracking-wider font-medium">Baseline Risk After PU</p>
               <p className="text-3xl font-bold tabular-nums text-accent-data">~24.5%</p>
               <p className="text-xs text-text-muted leading-relaxed">
-                After dividing by the PU correction factor (c=0.343), an average contract scores ~24.5%. The OECD intercept calibration (delta=-0.31) was applied post-hoc to bring the high-risk rate from 19.2% to ~9.2%.
+                After dividing by the PU correction factor (c=0.300), an average contract scores ~28%. The OECD intercept calibration (delta=-0.004) was applied post-hoc. HR = 13.49% — within OECD 2–15% range.
               </p>
             </div>
           </div>
           <div className="mt-3 p-3 rounded-md bg-accent/5 border border-accent/15 text-xs text-text-muted leading-relaxed">
             <span className="font-medium text-accent">Why this matters: </span>
-            The intercept sets the "center of gravity" for the entire score distribution. Moving from C=0.0013 to C=0.01 (less aggressive L1) activated more features (8 vs 7 active) and shifted the raw intercept from -2.077 to -2.388 after OECD calibration. HR = 9.2%, within OECD 2–15% range.
+            The intercept sets the "center of gravity" for the entire score distribution. C=0.01 (less aggressive L1 than prior v6.4) activates 9 features and sets the raw intercept at -2.3837 after OECD calibration. HR = 13.49%, within OECD 2–15% range.
           </div>
         </CardContent>
       </Card>

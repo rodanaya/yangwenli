@@ -73,8 +73,8 @@
   "verified": "verificado",
   "readMethodology": "Leer metodología →",
   "story": {
-    "statusLabel": "Estado de la investigacion",
-    "statusSoloDatos": "Solo datos — pista sin reportear",
+    "statusLabel": "Estado de la investigación",
+    "statusSoloDatos": "Solo datos — pista sin reportar",
     "statusReporteado": "Reporteado por medios",
     "statusAuditado": "Auditado por ASF / SFP",
     "statusProcesado": "Proceso penal abierto",
@@ -90,15 +90,15 @@
     "viewOnPlatform": "Ver en la plataforma",
     "allStories": "Todas las historias",
     "investigations": "RUBLI Investigaciones",
-    "shareInvestigation": "Compartir esta investigacion",
-    "ariaIntelligence": "ARIA Intelligence Briefing",
-    "ariaDesc": "Colas de investigacion automatizada",
+    "shareInvestigation": "Compartir esta investigación",
+    "ariaIntelligence": "Informe de Inteligencia ARIA",
+    "ariaDesc": "Colas de investigación automatizada",
     "documentedCases": "Casos documentados",
     "documentedCasesDesc": "Biblioteca de ground truth",
     "exploreContracts": "Explorar contratos",
     "exploreContractsDesc": "Buscar en 3M+ contratos",
     "sectorAgricultura": "Sector Agricultura",
-    "sectorAgriculturaDesc": "93.4% adjudicacion directa"
+    "sectorAgriculturaDesc": "93.4% adjudicación directa"
   },
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
@@ -137,9 +137,9 @@
   },
   "era": {
     "fox": "Fox (2000-2006)",
-    "calderon": "Calderon (2006-2012)",
-    "pena": "Pena Nieto (2012-2018)",
-    "amlo": "Lopez Obrador (2018-2024)",
+    "calderon": "Calderón (2006-2012)",
+    "pena": "Peña Nieto (2012-2018)",
+    "amlo": "López Obrador (2018-2024)",
     "sheinbaum": "Sheinbaum (2024-)",
     "cross": "Multi-sexenio"
   }

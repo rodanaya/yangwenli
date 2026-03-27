@@ -319,7 +319,7 @@
       "tableColDistribution": "Distribution",
       "tableColCount": "Count",
       "highRiskSummaryStart": "High-risk rate: ",
-      "highRiskSummaryValue": "25.3%",
+      "highRiskSummaryValue": "13.49%",
       "highRiskSummaryEnd": " (critical + high). Thresholds calibrated against ~748 documented cases to yield a rate consistent with international procurement risk ranges. v6.5 is the active model (Mar 25, 2026), using vendor-stratified validation."
     },
     "features": {

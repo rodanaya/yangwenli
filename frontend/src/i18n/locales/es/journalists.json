@@ -152,7 +152,7 @@
     },
     "atlas-del-riesgo": {
       "headline": "Atlas del Riesgo",
-      "subheadline": "El modelo RUBLI identifica 118,061 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto.",
+      "subheadline": "El modelo RUBLI identifica 184,031 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto.",
       "statLabel": "contratos en nivel crítico de riesgo (v6.5, umbral >= 0.60)"
     },
     "la-herencia-envenenada": {

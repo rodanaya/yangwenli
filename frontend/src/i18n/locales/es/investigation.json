@@ -260,29 +260,29 @@
   },
   "entryTiles": {
     "bySector": "Por Sector",
-    "bySectorSub": "Riesgo de contratacion en 12 sectores",
+    "bySectorSub": "Riesgo de contratación en 12 sectores",
     "byAdmin": "Por Administración",
-    "byAdminSub": "Gasto por regimen, 2000-2024",
+    "byAdminSub": "Gasto por régimen, 2000-2024",
     "networks": "Redes de Proveedores",
-    "networksSub": "Co-licitacion y empresas fantasma",
+    "networksSub": "Co-licitación y empresas fantasma",
     "capture": "Patrones de Captura",
     "captureSub": "Patrones de control institucional"
   },
   "search": {
-    "placeholder": "Buscar por proveedor, institucion, sector, tipo de fraude..."
+    "placeholder": "Buscar por proveedor, institución, sector, tipo de fraude..."
   },
   "angles": {
     "bySector": "Por Sector",
     "byAdmin": "Por Administración",
     "byNetwork": "Por Red",
-    "byPattern": "Por Patron"
+    "byPattern": "Por Patrón"
   },
   "entrySearch": "Buscar contratos, proveedores o casos...",
   "headerTracking": "Sistema ARIA · Investigaciones Activas · Generado por ML",
   "headerTitle": "El Archivo",
-  "headerDesc": "Investigaciones generadas por algoritmo. Cada caso representa un patron estadistico de riesgo que requiere corroboracion periodistica.",
-  "headerPipeline": "En curso: deteccion automatizada \u2192 investigacion \u2192 corroboracion \u2192 archivo definitivo",
-  "filterHeader": "Filtros de investigacion",
+  "headerDesc": "Investigaciones generadas por algoritmo. Cada caso representa un patrón estadístico de riesgo que requiere corroboración periodística.",
+  "headerPipeline": "En curso: detección automatizada → investigación → corroboración → archivo definitivo",
+  "filterHeader": "Filtros de investigación",
   "searchPlaceholder": "Buscar caso, proveedor, sector...",
   "tableHeader": "Registro de investigaciones",
   "asfLookup": {

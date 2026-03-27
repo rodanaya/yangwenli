@@ -35,7 +35,7 @@
     "description": "Requieren investigación inmediata",
     "label": "NIVEL 1",
     "name": "CRÍTICO",
-    "objective": "OBJETIVO #{{number}}"
+    "objective": "PISTA #{{number}}"
   },
   "tier2": {
     "description": "Revisión prioritaria",
@@ -116,7 +116,7 @@
     "efos": "EFOS"
   },
   "primer": {
-    "text": "ARIA es el algoritmo automatizado de investigación de riesgo de RUBLI. Analiza 198,000 proveedores en 4 niveles de amenaza — comienza con el Nivel 1 para los casos de mayor prioridad.",
+    "text": "ARIA es el algoritmo automatizado de investigación de riesgo de RUBLI. Analiza 318,441 proveedores en 4 niveles de prioridad — comienza con el Nivel 1 para los casos de mayor prioridad.",
     "cta": "Comenzar aquí",
     "dismiss": "Descartar"
   },
@@ -133,7 +133,7 @@
     "title": "Patrones de Riesgo Detectados"
   },
   "tierSection": {
-    "objectives": "Objetivos Prioritarios - Tier 1"
+    "objectives": "Pistas Prioritarias — Nivel 1"
   },
   "queueSection": {
     "title": "Cola de Investigación"
@@ -159,7 +159,7 @@
   "header": {
     "systemLabel": "Sistema ARIA · Inteligencia de Adquisiciones",
     "live": "EN VIVO",
-    "title": "El Cuarto de Guerra",
+    "title": "Centro de Inteligencia",
     "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de detección de riesgo en contratación pública federal.",
     "statusActive": "Activo",
     "t1Require": "proveedores T1 requieren investigación inmediata",

@@ -16,7 +16,7 @@
     "totalContracts": "Total de Contratos",
     "totalValue": "Valor Total",
     "institutions": "Instituciones",
-    "uniqueAgencies": "Agencias únicas",
+    "uniqueAgencies": "Dependencias únicas",
     "highRisk": "Alto Riesgo"
   },
   "coBidding": {
@@ -63,7 +63,7 @@
     "topInstitutions": "Principales Instituciones",
     "noInstitutionsFound": "No se encontraron instituciones",
     "institutionalRelationships": "Relaciones Institucionales",
-    "institutionalRelationshipsNote": "Las relaciones prolongadas con proveedores se correlaciónan con mayores tasas de licitación única y precios (Coviello & Gagliarducci 2017)",
+    "institutionalRelationshipsNote": "Las relaciones prolongadas con proveedores se correlacionan con mayores tasas de licitación única y precios (Coviello & Gagliarducci 2017)",
     "procurementFootprint": "Huella de Contratación",
     "procurementFootprintNote": "Relaciones sector × institución, dimensionadas por valor total",
     "footprintLegend": "Color = sector · insignia = puntuación de riesgo promedio · ordenado por valor total",
