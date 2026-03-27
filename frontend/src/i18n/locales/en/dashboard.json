@@ -150,7 +150,7 @@
   "compranetContextDate1": "CompraNet abolished · April 2025",
   "compranetContextDate2": "INAI eliminated · December 2024",
   "compranetContextLink": "See platform limitations",
-  "aucExplanation": "AUC 0.84: if given one contract from a confirmed corruption case and one random contract, the model correctly identifies the corrupt one 84 times out of 100.",
+  "aucExplanation": "AUC 0.828: if given one contract from a confirmed corruption case and one random contract, the model correctly identifies the corrupt one 82.8 times out of 100.",
   "heroHighRiskLabel": "IN HIGH-RISK CONTRACTS",
   "heroSurveillanceLabel": "PROCUREMENT INTELLIGENCE",
   "heroSurveillanceActive": "ACTIVE",

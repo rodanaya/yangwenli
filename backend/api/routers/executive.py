@@ -328,7 +328,7 @@ def _build_summary(conn) -> dict:
             high_plus_rate = round(gt_high / gt_contracts * 100, 1) if gt_contracts else 0
     except Exception as e:
         logger.warning("Ground truth query failed, using hardcoded fallback: %s", e)
-        gt_cases, gt_vendors, gt_contracts = 748, 603, 225559
+        gt_cases, gt_vendors, gt_contracts = 1363, 911, 288000
         detection_rate, high_plus_rate = 99.8, 93.0
 
     # Per-case detection stats — uses precomputed vendor_stats to avoid 3.1M scan
@@ -431,22 +431,22 @@ def _build_summary(conn) -> dict:
     # Lift from v4.0 comparison report (stable between retrainings)
     model["lift"] = 4.04
 
-    # Static model interpretation (stable between retrainings)
+    # Static model interpretation (v6.5 coefficients — 9 active features)
     model["top_predictors"] = [
-        {"name": "price_volatility", "beta": 1.219, "direction": "positive"},
-        {"name": "institution_diversity", "beta": -0.848, "direction": "negative"},
-        {"name": "win_rate", "beta": 0.727, "direction": "positive"},
-        {"name": "vendor_concentration", "beta": 0.428, "direction": "positive"},
-        {"name": "sector_spread", "beta": -0.374, "direction": "negative"},
-        {"name": "industry_mismatch", "beta": 0.305, "direction": "positive"},
-        {"name": "same_day_count", "beta": 0.222, "direction": "positive"},
-        {"name": "direct_award", "beta": 0.182, "direction": "positive"},
-        {"name": "ad_period_days", "beta": -0.104, "direction": "negative"},
+        {"name": "price_volatility", "beta": 0.534, "direction": "positive"},
+        {"name": "institution_diversity", "beta": -0.382, "direction": "negative"},
+        {"name": "vendor_concentration", "beta": 0.375, "direction": "positive"},
+        {"name": "price_ratio", "beta": 0.235, "direction": "positive"},
+        {"name": "network_member_count", "beta": 0.181, "direction": "positive"},
+        {"name": "same_day_count", "beta": 0.095, "direction": "positive"},
+        {"name": "win_rate", "beta": 0.049, "direction": "positive"},
+        {"name": "ad_period_days", "beta": 0.042, "direction": "positive"},
+        {"name": "direct_award", "beta": 0.031, "direction": "positive"},
     ]
     model["counterintuitive"] = [
         "Institution diversity is protective — vendors serving many institutions are less suspicious.",
-        "Sector spread reduces risk — genuinely diversified vendors operate across sectors.",
         "Price volatility is the #1 predictor — vendors with wildly varying contract sizes are most suspicious.",
+        "Direct award and ad period have near-zero coefficients — concentration dominates the signal.",
     ]
 
     return {
