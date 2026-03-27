@@ -193,8 +193,19 @@ export const api: AxiosInstance = axios.create({
   },
 })
 
-// Attach write key to all mutating requests if configured
-const WRITE_KEY = import.meta.env.VITE_RUBLI_WRITE_KEY as string | undefined
+// Attach write key to all mutating requests if configured.
+// The key is injected at nginx startup (docker-entrypoint.sh → window.__RUBLI_CONFIG__)
+// rather than baked into the JS bundle via Vite env vars — the latter would expose it
+// to anyone who inspects the bundle with browser devtools.
+// In local development, fall back to VITE_RUBLI_WRITE_KEY if set (not committed to git).
+declare global {
+  interface Window {
+    __RUBLI_CONFIG__?: { writeKey?: string }
+  }
+}
+const WRITE_KEY: string | undefined =
+  window.__RUBLI_CONFIG__?.writeKey ||
+  (import.meta.env.VITE_RUBLI_WRITE_KEY as string | undefined)
 if (WRITE_KEY) {
   api.interceptors.request.use((config) => {
     const method = (config.method ?? '').toUpperCase()

@@ -20,8 +20,10 @@ services:
     environment:
       - PYTHONPATH=/app
       - DATABASE_PATH=/app/RUBLI_DEPLOY.db
-      # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site)
-      - CORS_ORIGINS=${CORS_ORIGINS:-http://localhost}
+      # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site,http://37.60.232.109)
+      # IMPORTANT: if CORS_ORIGINS is unset the backend Python fallback applies
+      # (localhost:3009 only).  Always set this in .env.prod for production.
+      - CORS_ORIGINS=${CORS_ORIGINS}
       - RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8001/health"]
@@ -47,8 +49,12 @@ services:
     build:
       context: ./frontend
       dockerfile: Dockerfile
-      args:
-        - VITE_RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
+      # SECURITY: Write key is NOT passed as a build arg — Vite bakes build args into the
+      # JS bundle where any visitor can read them with browser devtools.  Instead, the key
+      # is injected at container startup via an entrypoint script (see frontend/Dockerfile).
+    environment:
+      # Injected at nginx startup — never baked into the JS bundle.
+      - RUBLI_WRITE_KEY=${RUBLI_WRITE_KEY:-}
     container_name: rubli-frontend
     # No host port binding — Caddy proxies to this container internally
     depends_on:

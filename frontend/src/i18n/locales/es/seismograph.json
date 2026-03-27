@@ -2,9 +2,9 @@
   "eyebrow": "INTELIGENCIA VISUAL · MONITOR TEMPORAL DE RIESGO",
   "description": "Oscilaciones de riesgo en 7 sectores clave de 2010 a 2025. Los marcadores verticales señalan escándalos de corrupción documentados — úsalos como puntos de referencia al leer las formas de onda.",
   "title": "EL SISMOGRAFO",
-  "subtitle": "Monitoreo de anomalias en contratacion publica",
+  "subtitle": "Monitoreo de anomalías en contratación pública",
   "dateRange": "2010-2025",
-  "system": "Sistema de deteccion temporal de riesgo RUBLI",
+  "system": "Sistema de detección temporal de riesgo RUBLI",
   "loading": "Cargando datos sismicos...",
   "error": "Error al cargar datos",
   "legend": {
@@ -13,14 +13,14 @@
   "tooltip": {
     "totalContracts": "Total contratos"
   },
-  "footer": "Cada canal muestra la desviacion del porcentaje de contratos de alto riesgo respecto a la media historica del sector. Oscilaciones ascendentes indican periodos con anomalias por encima del promedio.",
+  "footer": "Cada canal muestra la desviación del porcentaje de contratos de alto riesgo respecto a la media histórica del sector. Oscilaciones ascendentes indican períodos con anomalías por encima del promedio.",
   "scandalEvents": {
     "laEstafaMaestra": "La Estafa\nMaestra",
     "casoLozoya": "Caso Lozoya\nOdebrecht",
     "comprasCovid": "Compras\nCOVID-19",
-    "segalmexEscandalo": "Segalmex\nEscandalo"
+    "segalmexEscandalo": "Segalmex\nEscándalo"
   },
   "aria": {
-    "chartLabel": "Visualizacion sismografica de anomalias de riesgo en contratacion publica por sector, de 2010 a 2025"
+    "chartLabel": "Visualización sismográfica de anomalías de riesgo en contratación pública por sector, de 2010 a 2025"
   }
 }

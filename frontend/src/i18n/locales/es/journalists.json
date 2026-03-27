@@ -36,8 +36,8 @@
     "description": "RUBLI analiza 3 millones de contratos federales (2002-2025) con un modelo de ML entrenado con 748 casos documentados de corrupción. Código abierto, datos verificables.",
     "viewMethodology": "Ver metodología",
     "downloadData": "Descargar datos",
-    "tooltipTitle": "Modelo de riesgo v6.4",
-    "tooltipBody": "Regresión logística con 16 z-scores, 13 sub-modelos sectoriales, AUC=0.840. Entrenado con 748 casos documentados de corrupción. PU-learning (Elkan & Noto 2008)."
+    "tooltipTitle": "Modelo de riesgo v6.5",
+    "tooltipBody": "Regresión logística con 9 características activas, 13 sub-modelos sectoriales, AUC=0.828. Entrenado con 748 casos documentados de corrupción. PU-learning (Elkan & Noto 2008)."
   },
   "stories": {
     "la-cuarta-adjudicacion": {
@@ -153,7 +153,7 @@
     "atlas-del-riesgo": {
       "headline": "Atlas del Riesgo",
       "subheadline": "El modelo RUBLI identifica 118,061 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto.",
-      "statLabel": "contratos en nivel crítico de riesgo (v6.4, umbral >= 0.60)"
+      "statLabel": "contratos en nivel crítico de riesgo (v6.5, umbral >= 0.60)"
     },
     "la-herencia-envenenada": {
       "headline": "La Herencia Envenenada",
