@@ -346,7 +346,8 @@ function ChapterPattern({ waterfall, ariaPattern }: {
   const meta = ariaPattern ? PATTERN_META[ariaPattern] : null
 
   // Sort: positive contributions first (drivers), then protective factors
-  const sorted = [...waterfall]
+  const safeWaterfall = Array.isArray(waterfall) ? waterfall : []
+  const sorted = [...safeWaterfall]
     .filter((f) => Math.abs(f.contribution) > 0.001)
     .sort((a, b) => Math.abs(b.contribution) - Math.abs(a.contribution))
     .slice(0, 10)
@@ -430,7 +431,7 @@ function ChapterPattern({ waterfall, ariaPattern }: {
         })}
       </div>
 
-      {waterfall.length === 0 && (
+      {safeWaterfall.length === 0 && (
         <div className="text-text-secondary text-sm italic">Feature attribution data not available for this vendor.</div>
       )}
 

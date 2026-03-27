@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
   Dialog,
@@ -169,7 +169,6 @@ function WorkflowDemo({ t }: { t: (key: string) => string }) {
 export function WelcomeModal() {
   const [open, setOpen] = useState(false)
   const [step, setStep] = useState(0)
-  const navigate = useNavigate()
   const location = useLocation()
   const { t } = useTranslation('common')
 
@@ -189,7 +188,6 @@ export function WelcomeModal() {
   const handleGetStarted = () => {
     localStorage.setItem(STORAGE_KEY, 'true')
     setOpen(false)
-    navigate('/executive')
   }
 
   const currentStep = STEPS[step]

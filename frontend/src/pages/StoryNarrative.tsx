@@ -573,20 +573,26 @@ export default function StoryNarrative() {
 
   const story = slug ? getStoryBySlug(slug) : undefined
 
-  // Redirect to /journalists if story not found
-  useEffect(() => {
-    if (slug && !story) {
-      navigate('/journalists', { replace: true })
-    }
-  }, [slug, story, navigate])
-
   // Scroll to top on slug change
   useEffect(() => {
     window.scrollTo({ top: 0 })
   }, [slug])
 
   if (!story) {
-    return null
+    return (
+      <div className="max-w-3xl mx-auto py-24 px-6 text-center">
+        <h1 className="text-2xl font-bold text-text-primary mb-4">Story not found</h1>
+        <p className="text-text-secondary mb-6">
+          The story &quot;{slug}&quot; could not be found.
+        </p>
+        <button
+          onClick={() => navigate('/journalists')}
+          className="text-sm text-accent hover:underline underline-offset-4"
+        >
+          Browse all stories
+        </button>
+      </div>
+    )
   }
 
   const accentColor = OUTLET_ACCENT[story.outlet] || '#dc2626'

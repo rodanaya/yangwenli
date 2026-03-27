@@ -511,8 +511,12 @@ export const vendorApi = {
   },
 
   async getRiskWaterfall(vendorId: number): Promise<VendorWaterfallContribution[]> {
-    const { data } = await api.get<VendorWaterfallContribution[]>(`/vendors/${vendorId}/risk-waterfall`)
-    return data
+    const { data } = await api.get<{ items: VendorWaterfallContribution[] } | VendorWaterfallContribution[]>(`/vendors/${vendorId}/risk-waterfall`)
+    // Backend returns { vendor_id, items, total_contracts } — extract the array
+    if (data && !Array.isArray(data) && Array.isArray((data as { items: VendorWaterfallContribution[] }).items)) {
+      return (data as { items: VendorWaterfallContribution[] }).items
+    }
+    return Array.isArray(data) ? data : []
   },
 
   async getPeerComparison(vendorId: number): Promise<unknown> {

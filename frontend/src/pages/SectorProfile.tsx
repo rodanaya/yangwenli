@@ -232,19 +232,19 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Per-sector model coefficients
+  // Per-sector model coefficients — endpoint not yet implemented; disabled to avoid blocking render
   const { data: modelCoefficients } = useQuery({
     queryKey: ['sector', sectorId, 'model-coefficients'],
     queryFn: () => sectorApi.getModelCoefficients(sectorId),
-    enabled: !!sectorId,
+    enabled: false,
     staleTime: 60 * 60 * 1000,
   })
 
-  // Temporal anomaly
+  // Temporal anomaly — endpoint not yet implemented; disabled to avoid blocking render
   const { data: temporalAnomaly } = useQuery({
     queryKey: ['sector', sectorId, 'temporal-anomaly'],
     queryFn: () => sectorApi.getTemporalAnomaly(sectorId),
-    enabled: !!sectorId,
+    enabled: false,
     staleTime: 30 * 60 * 1000,
   })
 
