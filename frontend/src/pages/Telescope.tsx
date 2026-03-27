@@ -175,7 +175,7 @@ export default function Telescope() {
       min: 0,
       axisLabel: {
         color: '#94a3b8',
-        formatter: (v: number) => yMetric === 'avg_risk' ? v.toFixed(2) : `${(v * 100).toFixed(0)}%`,
+        formatter: (v: number) => yMetric === 'avg_risk' ? `${(v * 100).toFixed(0)}%` : `${v.toFixed(0)}%`,
       },
       axisLine: { lineStyle: { color: '#334155' } },
       splitLine: { lineStyle: { color: '#1e293b' } },

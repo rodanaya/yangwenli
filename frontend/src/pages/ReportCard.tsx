@@ -2533,7 +2533,7 @@ function LedeBanner({ national }: { national: PHINational }) {
           <span style={{ color: '#dc2626' }}>Critical or High risk</span>
         </p>
         <p className="text-xs mt-1.5" style={{ color: 'var(--color-text-muted)' }}>
-          {critPct.toFixed(0)}% Critical · {highPct.toFixed(0)}% High · RUBLI v6.4 model · {national.total_contracts.toLocaleString()} contracts analyzed
+          {critPct.toFixed(0)}% Critical · {highPct.toFixed(0)}% High · RUBLI v6.5 model · {national.total_contracts.toLocaleString()} contracts analyzed
         </p>
       </div>
     </div>

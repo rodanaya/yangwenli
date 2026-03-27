@@ -1239,7 +1239,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
 
       <p className="text-[10px] font-mono text-text-muted mt-3">
-        Source: COMPRANET 2002–2025 · RUBLI v6.4 · OECD benchmark: 2–15%
+        Source: COMPRANET 2002–2025 · RUBLI v6.5 · OECD benchmark: 2–15%
       </p>
     </div>
   )

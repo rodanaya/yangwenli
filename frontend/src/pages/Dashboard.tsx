@@ -1153,7 +1153,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
       }} />
 
       <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
-        {t('heroSurveillanceLabel')} &middot; RUBLI v6.4 &middot; {t('heroSurveillanceActive')}
+        {t('heroSurveillanceLabel')} &middot; RUBLI v6.5 &middot; {t('heroSurveillanceActive')}
       </div>
 
       <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', lineHeight: 1.15, marginBottom: '16px', maxWidth: '700px' }}>

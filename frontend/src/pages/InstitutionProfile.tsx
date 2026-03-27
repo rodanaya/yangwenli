@@ -220,10 +220,10 @@ export function InstitutionProfile() {
   const [officialSortKey, setOfficialSortKey] = useState<keyof OfficialProfile>('total_contracts')
   const [officialSortDesc, setOfficialSortDesc] = useState(true)
 
-  const { data: institution, isLoading: institutionLoading, error: institutionError } = useQuery({
+  const { data: institution, isLoading: institutionLoading, isPending: institutionPending, error: institutionError } = useQuery({
     queryKey: ['institution', institutionId],
     queryFn: () => institutionApi.getById(institutionId),
-    enabled: !!institutionId,
+    enabled: !!(institutionId && Number.isFinite(institutionId)),
     staleTime: 5 * 60 * 1000,
   })
 
@@ -453,8 +453,12 @@ export function InstitutionProfile() {
   }, [institution?.supplier_diversity?.history])
 
   // ---- Loading / error states ----
-
-  if (institutionLoading) return <InstitutionProfileSkeleton />
+  // Guard: if institutionId is invalid, skip straight to error state
+  const isValidId = Number.isFinite(institutionId) && institutionId > 0
+  // Use isPending (no data yet) OR isLoading (first fetch in progress) to cover
+  // all initial-mount scenarios in TanStack Query v5.  Only show skeleton when
+  // the query is actually enabled (valid ID) — otherwise fall through to error.
+  if (isValidId && (institutionLoading || (institutionPending && !institutionError))) return <InstitutionProfileSkeleton />
 
   if (institutionError || !institution) {
     return (
@@ -464,7 +468,10 @@ export function InstitutionProfile() {
         </div>
         <h2 className="text-lg font-semibold mb-2">Institucion no encontrada</h2>
         <p className="text-sm text-text-muted mb-6 max-w-sm">
-          La institucion con ID <span className="font-mono text-accent">{institutionId}</span> no pudo ser localizada.
+          {institutionError
+            ? `Error al cargar la institucion: ${(institutionError as Error).message ?? 'Error desconocido'}`
+            : <>La institucion con ID <span className="font-mono text-accent">{institutionId || id}</span> no pudo ser localizada.</>
+          }
         </p>
         <Link to="/institutions/health">
           <Button variant="outline">

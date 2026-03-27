@@ -905,7 +905,7 @@ export default function AriaPage() {
               <AlertTriangle className="h-4 w-4 text-orange-400" />
               <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
                 {t('patternSection.title')}
-              </h2>
+              </p>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-3">
               {Object.entries(patternCounts).map(([pattern, count]) => (
@@ -968,7 +968,7 @@ export default function AriaPage() {
             <Crosshair className="h-4 w-4 text-red-400" />
             <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
               {t('threatLevels')}
-            </h2>
+            </p>
           </div>
 
           {statsLoading ? (
@@ -1062,7 +1062,7 @@ export default function AriaPage() {
                   <TrendingUp className="h-4 w-4 text-red-400" />
                   <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-red-400 font-bold">
                     {t('tierSection.objectives')}
-                  </h2>
+                  </p>
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
                 </div>
                 <p className="text-xs text-text-muted">
@@ -1109,7 +1109,7 @@ export default function AriaPage() {
                 <Users className="h-4 w-4 text-text-muted" />
                 <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
                   {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : t('queueSection.title')}
-                </h2>
+                </p>
               </div>
               {totalLeads > 0 && (
                 <p className="text-xs text-text-muted font-mono">{formatNumber(totalLeads)} {t('leads.vendorCount')}</p>

@@ -1235,7 +1235,7 @@ export default function ModelTransparency() {
       <div className="flex flex-wrap items-start gap-3 rounded-md border border-border/40 bg-background-elevated/30 px-4 py-3 text-xs">
         <div className="flex items-center gap-2 shrink-0">
           <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-          <span className="font-semibold text-text-primary font-mono">v6.4 (C=0.01)</span>
+          <span className="font-semibold text-text-primary font-mono">v6.5 (C=0.01)</span>
         </div>
         <span className="text-text-muted/40">|</span>
         <div className="flex items-center gap-1.5 min-w-0">
@@ -1988,7 +1988,7 @@ export default function ModelTransparency() {
               { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
               { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
               { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
-              { version: 'v6.4', date: 'Mar 2026', auc: '0.840', label: 'Curriculum Learning (Active)', desc: '347 GT cases, 507 vendors. Near-L1 regularization (C=0.01), 8 active features. OECD HR ~10%.', color: 'var(--color-accent)', active: true },
+              { version: 'v6.5', date: 'Mar 2026', auc: '0.828', label: 'Curriculum Learning (Active)', desc: '748 GT cases, 603 vendors. Institution-scoped labels, FP exclusions. HR=13.49% OECD compliant.', color: 'var(--color-accent)', active: true },
             ].map((item) => (
               <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
                 <div

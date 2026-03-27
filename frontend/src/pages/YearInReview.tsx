@@ -471,7 +471,7 @@ export default function YearInReview() {
       <motion.div variants={fadeIn} initial="initial" animate="animate">
         <EditorialHeadline
           section={`INFORME ANUAL ${validYear}`}
-          headline={`${validYear}: El Ano en Contratos`}
+          headline={`${validYear}: El Año en Contratos`}
           subtitle={dynamicSubtitle}
         />
       </motion.div>
