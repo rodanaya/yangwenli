@@ -595,7 +595,9 @@ def precompute_stats():
             ROUND(100.0 * SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) / COUNT(*), 2) as direct_award_pct,
             ROUND(100.0 * SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END)
                 / NULLIF(SUM(CASE WHEN is_direct_award = 0 THEN 1 ELSE 0 END), 0), 2) as single_bid_pct,
-            ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct
+            ROUND(100.0 * SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) / COUNT(*), 2) as high_risk_pct,
+            COUNT(DISTINCT vendor_id) as vendor_count,
+            COUNT(DISTINCT institution_id) as institution_count
         FROM contracts
         WHERE contract_year IS NOT NULL
         GROUP BY contract_year
@@ -612,6 +614,8 @@ def precompute_stats():
             'direct_award_pct': round(row['direct_award_pct'] or 0, 2),
             'single_bid_pct': round(row['single_bid_pct'] or 0, 2),
             'high_risk_pct': round(row['high_risk_pct'] or 0, 2),
+            'vendor_count': row['vendor_count'] or 0,
+            'institution_count': row['institution_count'] or 0,
         })
     stats['yearly_trends'] = yearly
     print(f"   Done ({time.time() - start:.1f}s)")

@@ -1020,7 +1020,7 @@ export default function Intro() {
   const overview = fastDashboard?.overview
   const totalContracts = overview?.total_contracts ?? 3_051_294
   const totalValueMxn = overview?.total_value_mxn ?? 9_900_000_000_000
-  const highRiskPct = overview?.high_risk_pct ?? 9.2
+  const highRiskPct = overview?.high_risk_pct ?? 13.49
   const yearlyTrends = fastDashboard?.yearly_trends ?? []
   const phiSectors = phiSectorsData?.sectors ?? []
 

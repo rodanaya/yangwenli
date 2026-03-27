@@ -40,6 +40,9 @@ tqdm>=4.65.0               # Progress bars
 structlog>=24.0.0          # Structured JSON logging
 cachetools>=5.3.0          # Thread-safe TTL caches
 
+# Change-point detection
+ruptures>=1.1.0            # Structural break detection for temporal analysis
+
 # Testing
 pytest>=7.4.0              # Test framework
 pytest-asyncio>=0.21.0     # Async test support
