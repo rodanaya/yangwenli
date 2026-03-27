@@ -64,6 +64,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1', isHero: true, heroColor: '#c41e3a' },
       { i18nKey: 'explore', href: '/explore', icon: Search },
+      { i18nKey: 'journalists', href: '/journalists', icon: FileSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
@@ -81,6 +82,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
   {
     sectionKey: 'sections.plataforma',
     items: [
+      { i18nKey: 'reportCard', href: '/report-card', icon: Award },
       { i18nKey: 'model', href: '/model', icon: FlaskConical },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
       { i18nKey: 'settings', href: '/settings', icon: Settings },
