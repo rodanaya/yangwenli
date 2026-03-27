@@ -21,6 +21,8 @@ import {
   Search,
   Activity,
   Telescope,
+  FileSearch,
+  Award,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
