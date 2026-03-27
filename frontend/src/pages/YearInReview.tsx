@@ -1,101 +1,243 @@
 /**
- * Year in Review — Comprehensive annual procurement summary
+ * Year in Review — Editorial annual procurement report
  *
- * Shows hero stats, top vendors/institutions, sector growth ranking,
- * risk level breakdown, and administration context for a selected year.
+ * NYT Year-in-Review aesthetic with editorial components,
+ * year pills, sparklines, and sexenio context.
  */
 
-import { useMemo, type CSSProperties } from 'react'
+import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
-import { StatCard } from '@/components/ui/StatCard'
-import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
-import { analysisApi, vendorApi, institutionApi } from '@/api/client'
-import type { YearOverYearChange, SectorYearItem } from '@/api/types'
+import { SECTORS } from '@/lib/constants'
+import { analysisApi, vendorApi } from '@/api/client'
+import type { YearOverYearChange, SectorYearItem, VendorTopItem } from '@/api/types'
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-} from '@/components/charts'
-import {
-  Calendar,
+  AlertTriangle,
   TrendingUp,
   TrendingDown,
-  Minus,
-  FileText,
-  Landmark,
-  BarChart3,
-  AlertTriangle,
 } from 'lucide-react'
-import { SeasonalityCalendar } from '@/components/charts/SeasonalityCalendar'
-import { RacingBarChart } from '@/components/charts/RacingBarChart'
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i) // 2025 down to 2002
-
-const SECTOR_YOY_DATA = [
-  { year: 2010, salud: 35670, infraestructura: 23377, energia: 52351, educacion: 19930, hacienda: 8730, otros: 15000 },
-  { year: 2012, salud: 13872, infraestructura: 11149, energia: 15282, educacion: 7179, hacienda: 3195, otros: 8000 },
-  { year: 2014, salud: 36049, infraestructura: 28626, energia: 39268, educacion: 19215, hacienda: 9953, otros: 12000 },
-  { year: 2016, salud: 65667, infraestructura: 28202, energia: 26601, educacion: 27490, hacienda: 14686, otros: 18000 },
-  { year: 2018, salud: 63058, infraestructura: 25256, energia: 3192, educacion: 26486, hacienda: 10440, otros: 15000 },
-  { year: 2020, salud: 75371, infraestructura: 11963, energia: 2565, educacion: 16806, hacienda: 7007, otros: 9000 },
-  { year: 2022, salud: 107031, infraestructura: 10335, energia: 3139, educacion: 22026, hacienda: 7114, otros: 11000 },
-  { year: 2024, salud: 62117, infraestructura: 8452, energia: 1908, educacion: 20217, hacienda: 6936, otros: 8000 },
-]
-
-const SECTOR_AREA_KEYS = ['salud', 'infraestructura', 'energia', 'educacion', 'hacienda', 'otros'] as const
-
+const FEATURED_YEARS = [2024, 2023, 2022, 2021, 2020] as const
+const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
 const DEFAULT_YEAR = 2024
 
-interface AdminMeta {
-  key: string
+interface SexenioInfo {
+  president: string
+  party: string
+  period: string
   color: string
   partyColor: string
+  yearInSexenio: number
+  totalYears: number
 }
 
-function getAdminForYear(year: number): AdminMeta {
-  if (year <= 2006) return { key: 'Fox', color: '#3b82f6', partyColor: '#002395' }
-  if (year <= 2012) return { key: 'Calderon', color: '#fb923c', partyColor: '#002395' }
-  if (year <= 2018) return { key: 'PenaNieto', color: '#f87171', partyColor: '#008000' }
-  if (year <= 2024) return { key: 'AMLO', color: '#4ade80', partyColor: '#8B0000' }
-  return { key: 'Sheinbaum', color: '#60a5fa', partyColor: '#8B0000' }
+function getSexenioInfo(year: number): SexenioInfo {
+  if (year <= 2000) return { president: 'Ernesto Zedillo', party: 'PRI', period: '1994-2000', color: '#16a34a', partyColor: '#008000', yearInSexenio: year - 1994 + 1, totalYears: 6 }
+  if (year <= 2006) return { president: 'Vicente Fox', party: 'PAN', period: '2000-2006', color: '#3b82f6', partyColor: '#002395', yearInSexenio: year - 2000 + 1, totalYears: 6 }
+  if (year <= 2012) return { president: 'Felipe Calderon', party: 'PAN', period: '2006-2012', color: '#fb923c', partyColor: '#002395', yearInSexenio: year - 2006 + 1, totalYears: 6 }
+  if (year <= 2018) return { president: 'Enrique Pena Nieto', party: 'PRI', period: '2012-2018', color: '#f87171', partyColor: '#008000', yearInSexenio: year - 2012 + 1, totalYears: 6 }
+  if (year <= 2024) return { president: 'Andres Manuel Lopez Obrador', party: 'MORENA', period: '2018-2024', color: '#4ade80', partyColor: '#8B0000', yearInSexenio: year - 2018 + 1, totalYears: 6 }
+  return { president: 'Claudia Sheinbaum', party: 'MORENA', period: '2024-2030', color: '#60a5fa', partyColor: '#8B0000', yearInSexenio: year - 2024 + 1, totalYears: 6 }
+}
+
+function getRiskLevelColor(level: string): string {
+  switch (level) {
+    case 'critical': return '#f87171'
+    case 'high': return '#fb923c'
+    case 'medium': return '#fbbf24'
+    default: return '#4ade80'
+  }
+}
+
+function getRiskLevel(score: number): string {
+  if (score >= 0.60) return 'critical'
+  if (score >= 0.40) return 'high'
+  if (score >= 0.25) return 'medium'
+  return 'low'
 }
 
 // =============================================================================
-// Helper components
+// Sub-components
 // =============================================================================
 
-function YoyBadge({ pct }: { pct: number | null | undefined }) {
-  if (pct == null) return <span className="text-text-muted text-xs">—</span>
-  const isUp = pct > 0.5
-  const isDown = pct < -0.5
-  const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus
-  const color = isUp
-    ? 'text-risk-critical'
-    : isDown
-    ? 'text-risk-low'
-    : 'text-text-muted'
+/** Month-by-month sparkline for contract volume */
+function MonthlySparkline({
+  data,
+  year,
+}: {
+  data: SectorYearItem[]
+  year: number
+}) {
+  const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
+
+  // We don't have monthly data from the sector-year breakdown API,
+  // so we show sector contribution as a horizontal bar chart instead
+  const sectorData = useMemo(() => {
+    const yearRows = data.filter((r) => r.year === year)
+    if (!yearRows.length) return []
+    const total = yearRows.reduce((s, r) => s + r.total_value, 0)
+    return SECTORS
+      .map((sector) => {
+        const row = yearRows.find((r) => r.sector_id === sector.id)
+        if (!row || row.total_value <= 0) return null
+        return {
+          id: sector.id,
+          code: sector.code,
+          name: sector.name,
+          color: sector.color,
+          value: row.total_value,
+          contracts: row.contracts,
+          pct: total > 0 ? (row.total_value / total) * 100 : 0,
+          avgRisk: row.avg_risk,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.value - a!.value) as {
+        id: number; code: string; name: string; color: string
+        value: number; contracts: number; pct: number; avgRisk: number
+      }[]
+  }, [data, year])
+
+  if (!sectorData.length) {
+    return (
+      <div className="py-8 text-center text-sm text-text-muted italic">
+        Sin datos sectoriales para {year}.
+      </div>
+    )
+  }
+
+  const maxPct = Math.max(...sectorData.map((s) => s.pct))
+
   return (
-    <span className={cn('inline-flex items-center gap-0.5 text-xs font-mono', color)}>
-      <Icon className="h-3 w-3" />
-      {pct > 0 ? '+' : ''}
-      {pct.toFixed(1)}%
-    </span>
+    <div className="space-y-2">
+      {sectorData.map((s, i) => {
+        const barWidth = maxPct > 0 ? (s.pct / maxPct) * 100 : 0
+        const isHovered = hoveredIdx === i
+        return (
+          <div
+            key={s.id}
+            className="group flex items-center gap-3 cursor-default"
+            onMouseEnter={() => setHoveredIdx(i)}
+            onMouseLeave={() => setHoveredIdx(null)}
+          >
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{ backgroundColor: s.color }}
+            />
+            <span className="text-xs text-text-secondary w-32 truncate flex-shrink-0">
+              {s.name}
+            </span>
+            <div className="flex-1 relative h-5 rounded overflow-hidden bg-background-elevated/20">
+              <div
+                className="absolute inset-y-0 left-0 rounded transition-all duration-300"
+                style={{
+                  width: `${barWidth}%`,
+                  backgroundColor: s.color,
+                  opacity: isHovered ? 0.7 : 0.4,
+                }}
+              />
+              {isHovered && (
+                <div className="absolute inset-0 flex items-center px-2">
+                  <span className="text-[10px] font-mono text-text-primary">
+                    {formatCompactMXN(s.value)} / {formatNumber(s.contracts)} contratos / riesgo {(s.avgRisk * 100).toFixed(0)}%
+                  </span>
+                </div>
+              )}
+            </div>
+            <span className="text-xs font-mono text-text-muted w-12 text-right flex-shrink-0 tabular-nums">
+              {s.pct.toFixed(1)}%
+            </span>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+/** Single vendor card for Top 5 editorial list */
+function VendorRankCard({
+  vendor,
+  rank,
+  onClick,
+}: {
+  vendor: VendorTopItem
+  rank: number
+  onClick: () => void
+}) {
+  const score = vendor.avg_risk_score ?? 0
+  const riskLevel = getRiskLevel(score)
+  const riskColor = getRiskLevelColor(riskLevel)
+
+  return (
+    <button
+      onClick={onClick}
+      className={cn(
+        'w-full text-left rounded-lg border p-4 transition-all',
+        'hover:border-accent/40 hover:bg-card-hover/30',
+        'border-border/30 bg-card/50',
+        rank === 1 && 'border-l-[3px]'
+      )}
+      style={rank === 1 ? { borderLeftColor: '#dc2626' } : undefined}
+    >
+      <div className="flex items-start gap-3">
+        {/* Rank badge */}
+        <div
+          className={cn(
+            'flex items-center justify-center w-8 h-8 rounded-full flex-shrink-0 text-sm font-bold',
+            rank === 1 ? 'bg-red-500/20 text-red-400' :
+            rank === 2 ? 'bg-orange-500/15 text-orange-400' :
+            rank === 3 ? 'bg-amber-500/15 text-amber-400' :
+            'bg-zinc-700/30 text-zinc-400'
+          )}
+          style={{ fontFamily: "var(--font-family-serif)" }}
+        >
+          {rank}
+        </div>
+
+        <div className="flex-1 min-w-0">
+          <p className="text-sm text-text-primary font-semibold truncate">
+            {vendor.vendor_name}
+          </p>
+          <div className="flex items-center gap-3 mt-1">
+            <span className="text-xs font-mono text-text-muted">
+              {formatCompactMXN(vendor.metric_value)}
+            </span>
+            <span className="text-xs text-text-muted">
+              {formatNumber(vendor.total_contracts)} contratos
+            </span>
+          </div>
+        </div>
+
+        {/* Risk badge */}
+        {score > 0 && (
+          <span
+            className="inline-flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full border flex-shrink-0"
+            style={{
+              color: riskColor,
+              backgroundColor: `${riskColor}15`,
+              borderColor: `${riskColor}30`,
+            }}
+          >
+            <span
+              className="w-1.5 h-1.5 rounded-full"
+              style={{ backgroundColor: riskColor }}
+            />
+            {score.toFixed(2)}
+          </span>
+        )}
+      </div>
+    </button>
   )
 }
 
@@ -104,8 +246,6 @@ function YoyBadge({ pct }: { pct: number | null | undefined }) {
 // =============================================================================
 
 export default function YearInReview() {
-  const { t } = useTranslation('yearinreview')
-  const { t: ts } = useTranslation('sectors')
   const { year: yearParam } = useParams<{ year?: string }>()
   const navigate = useNavigate()
 
@@ -116,7 +256,7 @@ export default function YearInReview() {
     navigate(`/year-in-review/${y}`, { replace: false })
   }
 
-  // -- Data queries --
+  // -- Data queries (preserved from original) --
 
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
     queryKey: ['analysis', 'year-over-year'],
@@ -130,20 +270,12 @@ export default function YearInReview() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Top vendors and institutions — filtered by selected year
   const { data: vendorsResp, isLoading: vendorsLoading } = useQuery({
     queryKey: ['vendors', 'top', 'value', 10, validYear],
     queryFn: () => vendorApi.getTop('value', 10, { year: validYear }),
     staleTime: 5 * 60 * 1000,
   })
 
-  const { data: institutionsResp, isLoading: instsLoading } = useQuery({
-    queryKey: ['institutions', 'top', 'spending', 10, validYear],
-    queryFn: () => institutionApi.getTop('spending', 10, validYear),
-    staleTime: 5 * 60 * 1000,
-  })
-
-  // Top vendors by risk for selected year
   const { data: riskVendorsResp } = useQuery({
     queryKey: ['vendors', 'top', 'risk', 10, validYear],
     queryFn: () => vendorApi.getTop('risk', 10, { year: validYear }),
@@ -153,7 +285,7 @@ export default function YearInReview() {
   const yoyData: YearOverYearChange[] = yoyResp?.data ?? []
   const sectorYearData: SectorYearItem[] = sectorYearResp?.data ?? []
 
-  // -- Derived data for selected year --
+  // -- Derived data --
 
   const yearRow = useMemo(
     () => yoyData.find((y) => y.year === validYear),
@@ -170,7 +302,17 @@ export default function YearInReview() {
     return ((yearRow.total_value - priorRow.total_value) / priorRow.total_value) * 100
   }, [yearRow, priorRow])
 
-  // Sector growth: compare current vs prior year for each sector
+  // Find top sector for the year
+  const topSector = useMemo(() => {
+    const yearSectors = sectorYearData.filter((r) => r.year === validYear)
+    if (!yearSectors.length) return null
+    const top = yearSectors.reduce((best, r) => r.total_value > best.total_value ? r : best, yearSectors[0])
+    const sectorInfo = SECTORS.find((s) => s.id === top.sector_id)
+    return sectorInfo ? { ...sectorInfo, value: top.total_value, contracts: top.contracts } : null
+  }, [sectorYearData, validYear])
+
+
+  // Sector growth ranking
   const sectorGrowth = useMemo(() => {
     const currentRows = sectorYearData.filter((r) => r.year === validYear)
     const priorRows = sectorYearData.filter((r) => r.year === validYear - 1)
@@ -183,663 +325,640 @@ export default function YearInReview() {
       const growthPct = prevVal > 0 ? ((curVal - prevVal) / prevVal) * 100 : null
       return {
         id: sector.id,
-        name: ts(sector.code),
+        name: sector.name,
         code: sector.code,
         color: sector.color,
         curVal,
-        prevVal,
         growthPct,
       }
     })
       .filter((s) => s.curVal > 0)
       .sort((a, b) => {
-        // Sort by growthPct descending; nulls last
         if (a.growthPct == null) return 1
         if (b.growthPct == null) return -1
         return b.growthPct - a.growthPct
       })
-  }, [sectorYearData, validYear, ts])
+  }, [sectorYearData, validYear])
 
-  const hasPriorSectorData = priorRow != null && sectorYearData.some((r) => r.year === validYear - 1)
+  // Top hallazgos / anomalies for the year
+  const hallazgos = useMemo(() => {
+    if (!yearRow) return []
+    const findings: { text: string; severity: 'high' | 'medium' }[] = []
 
-  // Risk breakdown derived from yoyData — use yearRow directly
-  const riskBreakdownRows = useMemo(() => {
-    if (!yearRow) return null
-    const total = yearRow.contracts
-    if (total === 0) return null
-    // yoyData only has high_risk_pct (critical+high combined into high_risk), no granular split
-    // We'll show what's available: high+critical % from high_risk_pct
-    const highRiskCount = Math.round((yearRow.high_risk_pct / 100) * total)
-    const lowCount = total - highRiskCount
-    return [
-      { level: 'high' as const, label: t('riskBreakdown.high'), count: highRiskCount, pct: yearRow.high_risk_pct },
-      { level: 'low' as const, label: t('riskBreakdown.low'), count: lowCount, pct: 100 - yearRow.high_risk_pct },
-    ]
-  }, [yearRow, t])
+    if (yearRow.high_risk_pct > 15) {
+      findings.push({
+        text: `Tasa de alto riesgo del ${yearRow.high_risk_pct.toFixed(1)}% -- por encima del umbral OCDE del 15%`,
+        severity: 'high',
+      })
+    }
 
-  const adminMeta = getAdminForYear(validYear)
+    if (yearRow.direct_award_pct > 75) {
+      findings.push({
+        text: `${yearRow.direct_award_pct.toFixed(1)}% de contratos por adjudicacion directa -- concentracion de poder discrecional`,
+        severity: 'high',
+      })
+    }
+
+    if (yearRow.single_bid_pct > 30) {
+      findings.push({
+        text: `${yearRow.single_bid_pct.toFixed(1)}% de procedimientos competitivos con un solo licitante`,
+        severity: 'medium',
+      })
+    }
+
+    // YoY spending spike
+    if (spendingChangePct != null && spendingChangePct > 30) {
+      findings.push({
+        text: `Incremento del ${spendingChangePct.toFixed(0)}% en gasto respecto al ano anterior`,
+        severity: 'medium',
+      })
+    }
+
+    // YoY spending drop
+    if (spendingChangePct != null && spendingChangePct < -25) {
+      findings.push({
+        text: `Caida del ${Math.abs(spendingChangePct).toFixed(0)}% en gasto respecto al ano anterior`,
+        severity: 'medium',
+      })
+    }
+
+    return findings
+  }, [yearRow, spendingChangePct])
+
+  const sexenio = getSexenioInfo(validYear)
   const isLoading = yoyLoading || syLoading
+
+  // Generate dynamic subtitle
+  const dynamicSubtitle = useMemo(() => {
+    if (!yearRow) return 'Cargando datos del ano...'
+    const parts: string[] = []
+    parts.push(`${formatNumber(yearRow.contracts)} contratos`)
+    parts.push(`${formatCompactMXN(yearRow.total_value)} en gasto federal`)
+    parts.push(`${yearRow.high_risk_pct.toFixed(1)}% de alto riesgo`)
+    return parts.join(' | ')
+  }, [yearRow])
+
+  // Generate narrative lede text
+  const ledeText = useMemo(() => {
+    if (!yearRow) return ''
+    const yrStr = String(validYear)
+
+    if (validYear === 2020 || validYear === 2021) {
+      return `${yrStr} estuvo marcado por la emergencia sanitaria. Con ${formatNumber(yearRow.contracts)} contratos y un ${yearRow.direct_award_pct.toFixed(0)}% de adjudicacion directa, el gasto de emergencia redefinio los patrones de contratacion publica.`
+    }
+    if (validYear === 2024) {
+      return `${yrStr} fue un ano de transicion presidencial. ${formatNumber(yearRow.contracts)} contratos por ${formatCompactMXN(yearRow.total_value)} reflejan el cierre de una administracion y el inicio de otra.`
+    }
+    if (yearRow.high_risk_pct > 15) {
+      return `${yrStr} registro una tasa de alto riesgo del ${yearRow.high_risk_pct.toFixed(1)}%, significativamente por encima del umbral recomendado por la OCDE. ${formatNumber(yearRow.contracts)} contratos por ${formatCompactMXN(yearRow.total_value)} requieren atencion.`
+    }
+    return `En ${yrStr}, el gobierno federal proceso ${formatNumber(yearRow.contracts)} contratos por un total de ${formatCompactMXN(yearRow.total_value)}. La tasa de adjudicacion directa fue del ${yearRow.direct_award_pct.toFixed(0)}%.`
+  }, [yearRow, validYear])
+
+  // Top vendor by value (for "Momento Mas Destacado")
+  const topVendor = (vendorsResp?.data ?? [])[0] ?? null
 
   // =============================================================================
   // Render
   // =============================================================================
 
   return (
-    <div className="space-y-6 p-6 max-w-[1400px] mx-auto">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-        <div>
-          <h1 className="text-xl font-bold text-text-primary font-mono tracking-tight flex items-center gap-2">
-            <Calendar className="h-5 w-5 text-accent" aria-hidden="true" />
-            {t('title')}
-          </h1>
-          <p className="text-sm text-text-muted mt-1">{t('subtitle')}</p>
-        </div>
+    <div className="max-w-[900px] mx-auto px-4 py-8 space-y-8">
 
-        {/* Year selector */}
-        <div className="flex items-center gap-2 flex-shrink-0">
-          <span className="text-xs text-text-muted font-mono">{t('yearSelector')}</span>
+      {/* ------------------------------------------------------------------ */}
+      {/* 1. Year Selector Pills — newspaper edition style                    */}
+      {/* ------------------------------------------------------------------ */}
+      <div className="text-center">
+        <p className="text-[10px] uppercase tracking-[0.3em] text-text-muted mb-3">
+          EDICION ANUAL
+        </p>
+        <div className="flex items-center justify-center gap-2 flex-wrap">
+          {FEATURED_YEARS.map((y) => (
+            <button
+              key={y}
+              onClick={() => handleYearChange(y)}
+              className={cn(
+                'px-5 py-2.5 text-lg font-bold transition-all rounded-sm',
+                y === validYear
+                  ? 'bg-text-primary text-background shadow-lg'
+                  : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border'
+              )}
+              style={{ fontFamily: "var(--font-family-serif)" }}
+              aria-current={y === validYear ? 'page' : undefined}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
+        {/* Full year selector for other years */}
+        <div className="mt-3">
           <select
             value={validYear}
             onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
-            className={cn(
-              'rounded-md border border-border/50 bg-background-elevated px-3 py-1.5',
-              'text-sm font-mono text-text-primary',
-              'focus:outline-none focus:ring-1 focus:ring-accent',
-              'cursor-pointer'
-            )}
-            aria-label={t('yearSelector')}
+            className="text-xs text-text-muted bg-transparent border-b border-border/30 py-1 px-2 cursor-pointer focus:outline-none"
+            aria-label="Seleccionar otro ano"
           >
             {ALL_YEARS.map((y) => (
-              <option key={y} value={y}>
-                {y} ({getAdminForYear(y).key})
-              </option>
+              <option key={y} value={y}>{y}</option>
             ))}
           </select>
         </div>
       </div>
 
-      {/* Administration context banner */}
-      <motion.div
-        className="flex items-center gap-3 rounded-lg border px-4 py-3"
-        style={{
-          borderColor: `${adminMeta.partyColor}40`,
-          backgroundColor: `${adminMeta.partyColor}0a`,
-        }}
-        variants={fadeIn}
-        initial="initial"
-        animate="animate"
-      >
-        <Landmark className="h-4 w-4 flex-shrink-0" style={{ color: adminMeta.color }} aria-hidden="true" />
-        <div>
-          <span className="text-xs font-bold uppercase tracking-wider font-mono" style={{ color: adminMeta.color }}>
-            {t('administrationBanner.title')}
-          </span>
-          <span className="mx-2 text-border">·</span>
-          <span className="text-sm text-text-secondary">
-            {t(`administrationBanner.${adminMeta.key}`)}
-          </span>
-        </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* 2. Editorial Headline                                               */}
+      {/* ------------------------------------------------------------------ */}
+      <motion.div variants={fadeIn} initial="initial" animate="animate">
+        <EditorialHeadline
+          section={`INFORME ANUAL ${validYear}`}
+          headline={`${validYear}: El Ano en Contratos`}
+          subtitle={dynamicSubtitle}
+        />
       </motion.div>
 
-      {/* Year-over-Year delta banner */}
-      {yearRow && priorRow && (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          {/* Contracts delta */}
-          {(() => {
-            const delta = priorRow.contracts > 0
-              ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100
-              : null
-            const isUp = delta != null && delta > 0
-            const Icon = isUp ? TrendingUp : TrendingDown
-            const color = isUp ? '#4ade80' : '#f87171'
-            return (
-              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{t('heroStats.totalContracts')}</p>
-                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.contracts.toLocaleString()}</p>
-                </div>
-                {delta != null && (
-                  <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
-                    <Icon className="h-3 w-3" />
-                    {delta > 0 ? '+' : ''}{delta.toFixed(1)}%
-                  </span>
-                )}
-              </div>
-            )
-          })()}
-
-          {/* High-risk rate delta */}
-          {(() => {
-            const delta = yearRow.high_risk_pct - priorRow.high_risk_pct
-            const isWorse = delta > 0
-            const color = isWorse ? '#f87171' : '#4ade80'
-            const Icon = isWorse ? TrendingUp : TrendingDown
-            return (
-              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{t('heroStats.highRiskRate')}</p>
-                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.high_risk_pct.toFixed(1)}%</p>
-                </div>
-                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
-                  <Icon className="h-3 w-3" />
-                  {delta > 0 ? '+' : ''}{delta.toFixed(1)}pp
-                </span>
-              </div>
-            )
-          })()}
-
-          {/* Direct award rate delta */}
-          {(() => {
-            const delta = yearRow.direct_award_pct - priorRow.direct_award_pct
-            const isWorse = delta > 0
-            const color = isWorse ? '#f87171' : '#4ade80'
-            const Icon = isWorse ? TrendingUp : TrendingDown
-            return (
-              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">Adjudicación Directa</p>
-                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.direct_award_pct.toFixed(1)}%</p>
-                </div>
-                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
-                  <Icon className="h-3 w-3" />
-                  {delta > 0 ? '+' : ''}{delta.toFixed(1)}pp
-                </span>
-              </div>
-            )
-          })()}
-
-          {/* Avg risk delta */}
-          {(() => {
-            const delta = yearRow.avg_risk - priorRow.avg_risk
-            const isWorse = delta > 0
-            const color = isWorse ? '#f87171' : '#4ade80'
-            const Icon = isWorse ? TrendingUp : TrendingDown
-            return (
-              <div className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2">
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">Riesgo Promedio</p>
-                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{yearRow.avg_risk.toFixed(3)}</p>
-                </div>
-                <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
-                  <Icon className="h-3 w-3" />
-                  {delta > 0 ? '+' : ''}{(delta * 100).toFixed(1)}pp
-                </span>
-              </div>
-            )
-          })()}
-        </div>
+      {/* ------------------------------------------------------------------ */}
+      {/* 3. Narrative Lede                                                   */}
+      {/* ------------------------------------------------------------------ */}
+      {yearRow && (
+        <motion.div variants={fadeIn} initial="initial" animate="animate">
+          <div className="border-l-[3px] border-text-muted/30 pl-5 py-2">
+            <p
+              className="text-base text-text-secondary leading-relaxed"
+              style={{ fontFamily: "var(--font-family-serif)" }}
+            >
+              {ledeText}
+            </p>
+          </div>
+        </motion.div>
       )}
 
-      {/* Hero stats */}
+      {/* ------------------------------------------------------------------ */}
+      {/* 4. Big 5 HallazgoStats                                              */}
+      {/* ------------------------------------------------------------------ */}
       {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+          {Array.from({ length: 5 }).map((_, i) => (
             <Skeleton key={i} className="h-24" />
           ))}
         </div>
-      ) : (
+      ) : yearRow ? (
         <motion.div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-4"
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6"
           variants={staggerContainer}
           initial="initial"
           animate="animate"
         >
           <motion.div variants={staggerItem}>
-            <StatCard
-              title={t('heroStats.totalContracts')}
-              value={yearRow ? formatNumber(yearRow.contracts) : '—'}
-              icon={FileText}
-              accentColor={adminMeta.color}
-              className="border-l-4 border-l-blue-500"
+            <HallazgoStat
+              value={formatNumber(yearRow.contracts)}
+              label="Contratos"
+              color="border-blue-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
-            <StatCard
-              title={t('heroStats.totalSpending')}
-              value={yearRow ? formatCompactMXN(yearRow.total_value) : '—'}
-              icon={BarChart3}
-              accentColor={adminMeta.color}
-              className="border-l-4 border-l-violet-500"
+            <HallazgoStat
+              value={formatCompactMXN(yearRow.total_value)}
+              label="Gasto Total"
+              color="border-violet-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
-            <StatCard
-              title={t('heroStats.highRiskRate')}
-              value={yearRow ? `${yearRow.high_risk_pct.toFixed(1)}%` : '—'}
-              icon={AlertTriangle}
-              accentColor={
-                yearRow
-                  ? yearRow.high_risk_pct >= 15
-                    ? '#f87171'
-                    : yearRow.high_risk_pct >= 8
-                    ? '#fb923c'
-                    : '#4ade80'
-                  : adminMeta.color
-              }
-              subtitle={yearRow ? `${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} contracts` : undefined}
-              className="border-l-4 border-l-orange-500"
+            <HallazgoStat
+              value={`${yearRow.high_risk_pct.toFixed(1)}%`}
+              label="Alto Riesgo"
+              annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} contratos`}
+              color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
             />
           </motion.div>
           <motion.div variants={staggerItem}>
-            <StatCard
-              title={t('heroStats.yoyChange')}
+            <HallazgoStat
+              value={topSector?.name ?? '--'}
+              label="Sector Lider"
+              annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
+              color={`border-[${topSector?.color ?? '#64748b'}]`}
+              className="[&>div:first-child]:text-2xl"
+            />
+          </motion.div>
+          <motion.div variants={staggerItem}>
+            <HallazgoStat
               value={
                 spendingChangePct != null
-                  ? `${spendingChangePct > 0 ? '+' : ''}${spendingChangePct.toFixed(1)}%`
-                  : '—'
+                  ? `${spendingChangePct > 0 ? '+' : ''}${spendingChangePct.toFixed(0)}%`
+                  : '--'
               }
-              icon={spendingChangePct != null && spendingChangePct >= 0 ? TrendingUp : TrendingDown}
-              accentColor={
-                spendingChangePct == null
-                  ? adminMeta.color
-                  : spendingChangePct >= 0
-                  ? '#4ade80'
-                  : '#f87171'
+              label="vs Ano Anterior"
+              annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
+              color={
+                spendingChangePct == null ? 'border-zinc-500'
+                : spendingChangePct > 0 ? 'border-emerald-500'
+                : 'border-red-500'
               }
-              subtitle={t('vsLastYear')}
-              className={cn(
-                'border-l-4',
-                spendingChangePct == null
-                  ? 'border-l-slate-500'
-                  : spendingChangePct >= 0
-                  ? 'border-l-emerald-500'
-                  : 'border-l-red-500'
-              )}
             />
           </motion.div>
         </motion.div>
+      ) : null}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 5. Sexenio Context                                                  */}
+      {/* ------------------------------------------------------------------ */}
+      <motion.div
+        className="rounded-lg border px-5 py-4"
+        style={{
+          borderColor: `${sexenio.partyColor}30`,
+          backgroundColor: `${sexenio.partyColor}08`,
+        }}
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+      >
+        <div className="flex items-center gap-3 mb-3">
+          <span
+            className="text-[10px] font-bold uppercase tracking-[0.2em]"
+            style={{ color: sexenio.color }}
+          >
+            ADMINISTRACION PRESIDENCIAL
+          </span>
+        </div>
+        <p className="text-sm text-text-secondary">
+          <span className="font-semibold text-text-primary">{sexenio.president}</span>
+          {' '}({sexenio.party}) &middot; {sexenio.period}
+        </p>
+        {/* Sexenio progress bar */}
+        <div className="mt-3 flex items-center gap-2">
+          <div className="flex gap-1 flex-1">
+            {Array.from({ length: sexenio.totalYears }).map((_, i) => (
+              <div
+                key={i}
+                className="h-2 flex-1 rounded-sm transition-colors"
+                style={{
+                  backgroundColor: i < sexenio.yearInSexenio
+                    ? sexenio.color
+                    : 'rgba(255,255,255,0.08)',
+                }}
+              />
+            ))}
+          </div>
+          <span className="text-[10px] font-mono text-text-muted flex-shrink-0">
+            Ano {sexenio.yearInSexenio}/{sexenio.totalYears}
+          </span>
+        </div>
+      </motion.div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 6. "Momento Mas Destacado" — Spotlight on top vendor                */}
+      {/* ------------------------------------------------------------------ */}
+      {topVendor && !vendorsLoading && (
+        <motion.div variants={fadeIn} initial="initial" animate="animate">
+          <div className="h-px bg-border mb-4" />
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-3">
+            MOMENTO MAS DESTACADO
+          </p>
+          <div
+            className="rounded-lg border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
+            onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`) }}
+          >
+            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+              PROVEEDOR CON MAYOR GASTO EN {validYear}
+            </p>
+            <h3
+              className="text-xl font-bold text-text-primary"
+              style={{ fontFamily: "var(--font-family-serif)" }}
+            >
+              {topVendor.vendor_name}
+            </h3>
+            <div className="flex items-center gap-4 mt-2">
+              <span className="text-sm font-mono text-text-secondary">
+                {formatCompactMXN(topVendor.metric_value)}
+              </span>
+              <span className="text-sm text-text-muted">
+                {formatNumber(topVendor.total_contracts)} contratos
+              </span>
+              {(topVendor.avg_risk_score ?? 0) > 0 && (() => {
+                const score = topVendor.avg_risk_score ?? 0
+                const riskColor = getRiskLevelColor(getRiskLevel(score))
+                return (
+                  <span
+                    className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border"
+                    style={{
+                      color: riskColor,
+                      backgroundColor: `${riskColor}15`,
+                      borderColor: `${riskColor}30`,
+                    }}
+                  >
+                    Riesgo {score.toFixed(2)}
+                  </span>
+                )
+              })()}
+            </div>
+            <ImpactoHumano amountMxn={topVendor.metric_value} className="mt-3" />
+          </div>
+        </motion.div>
       )}
 
-      {/* Top vendors + Top institutions */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Top 5 Vendors */}
-        <Card className="bg-card border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('topVendors.title')}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('topVendors.subtitle')} · {validYear}</p>
-          </CardHeader>
-          <CardContent>
-            {vendorsLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}
+      {/* ------------------------------------------------------------------ */}
+      {/* 7. Key YoY Deltas — compact strip                                   */}
+      {/* ------------------------------------------------------------------ */}
+      {yearRow && priorRow && (
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+          variants={fadeIn}
+          initial="initial"
+          animate="animate"
+        >
+          {[
+            {
+              label: 'Contratos',
+              val: formatNumber(yearRow.contracts),
+              delta: priorRow.contracts > 0 ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100 : null,
+              suffix: '%',
+              invertColor: false,
+            },
+            {
+              label: 'Tasa Alto Riesgo',
+              val: `${yearRow.high_risk_pct.toFixed(1)}%`,
+              delta: yearRow.high_risk_pct - priorRow.high_risk_pct,
+              suffix: 'pp',
+              invertColor: true,
+            },
+            {
+              label: 'Adjudicacion Directa',
+              val: `${yearRow.direct_award_pct.toFixed(1)}%`,
+              delta: yearRow.direct_award_pct - priorRow.direct_award_pct,
+              suffix: 'pp',
+              invertColor: true,
+            },
+            {
+              label: 'Riesgo Promedio',
+              val: yearRow.avg_risk.toFixed(3),
+              delta: (yearRow.avg_risk - priorRow.avg_risk) * 100,
+              suffix: 'pp',
+              invertColor: true,
+            },
+          ].map((item) => {
+            const isUp = item.delta != null && item.delta > 0
+            const color = item.delta == null
+              ? '#a1a1aa'
+              : item.invertColor
+                ? (isUp ? '#f87171' : '#4ade80')
+                : (isUp ? '#4ade80' : '#f87171')
+            const Icon = isUp ? TrendingUp : TrendingDown
+            return (
+              <div
+                key={item.label}
+                className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
+              >
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>
+                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{item.val}</p>
+                </div>
+                {item.delta != null && (
+                  <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
+                    <Icon className="h-3 w-3" />
+                    {item.delta > 0 ? '+' : ''}{item.delta.toFixed(1)}{item.suffix}
+                  </span>
+                )}
               </div>
-            ) : (vendorsResp?.data ?? []).length === 0 ? (
-              <div className="py-8 text-center text-text-muted text-sm">{t('noData')}</div>
-            ) : (
-              <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-1.5 pr-2 text-xs text-text-muted font-normal w-8">{t('topVendors.rank')}</th>
-                    <th className="text-left py-1.5 text-xs text-text-muted font-normal">{t('topVendors.vendor')}</th>
-                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">{t('topVendors.value')}</th>
-                    <th className="text-right py-1.5 text-xs text-text-muted font-normal">{t('topVendors.contracts')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(vendorsResp?.data ?? []).map((v) => (
-                    <tr key={v.vendor_id} className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer" onClick={() => navigate(`/vendors/${v.vendor_id}`)}>
-                      <td className="py-2 pr-2 text-xs font-mono text-text-muted">{v.rank}</td>
-                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px] hover:text-accent transition-colors">
-                        {v.vendor_name}
-                      </td>
-                      <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
-                        {formatCompactMXN(v.metric_value)}
-                      </td>
-                      <td className="py-2 text-right text-xs font-mono text-text-muted">
-                        {formatNumber(v.total_contracts)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+            )
+          })}
+        </motion.div>
+      )}
 
-        {/* Top 5 Institutions */}
-        <Card className="bg-card border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('topInstitutions.title')}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('topInstitutions.subtitle')} · {validYear}</p>
-          </CardHeader>
-          <CardContent>
-            {instsLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-10" />)}
-              </div>
-            ) : (institutionsResp?.data ?? []).length === 0 ? (
-              <div className="py-8 text-center text-text-muted text-sm">{t('noData')}</div>
-            ) : (
-              <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-1.5 pr-2 text-xs text-text-muted font-normal w-8">{t('topInstitutions.rank')}</th>
-                    <th className="text-left py-1.5 text-xs text-text-muted font-normal">{t('topInstitutions.institution')}</th>
-                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">{t('topInstitutions.value')}</th>
-                    <th className="text-right py-1.5 text-xs text-text-muted font-normal">{t('topInstitutions.contracts')}</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(institutionsResp?.data ?? []).slice(0, 10).map((inst) => (
-                    <tr key={inst.institution_id} className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer" onClick={() => navigate(`/institutions/${inst.institution_id}`)}>
-                      <td className="py-2 pr-2 text-xs font-mono text-text-muted">{inst.rank}</td>
-                      <td className="py-2 text-xs text-text-secondary truncate max-w-[180px] hover:text-accent transition-colors">
-                        {inst.institution_name}
-                      </td>
-                      <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
-                        {formatCompactMXN(inst.metric_value)}
-                      </td>
-                      <td className="py-2 text-right text-xs font-mono text-text-muted">
-                        {formatNumber(inst.total_contracts)}
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* ------------------------------------------------------------------ */}
+      {/* 8. Top 5 Vendors of the Year — editorial cards                      */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <div className="h-px bg-border mb-4" />
+        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+          LOS 5 MAYORES PROVEEDORES
+        </p>
+        <p
+          className="text-lg font-bold text-text-primary mb-4"
+          style={{ fontFamily: "var(--font-family-serif)" }}
+        >
+          Quienes recibieron mas dinero en {validYear}
+        </p>
+
+        {vendorsLoading ? (
+          <div className="space-y-3">
+            {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
+          </div>
+        ) : (vendorsResp?.data ?? []).length === 0 ? (
+          <div className="py-8 text-center text-text-muted text-sm italic">
+            Sin datos de proveedores para {validYear}.
+          </div>
+        ) : (
+          <motion.div
+            className="space-y-2"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {(vendorsResp?.data ?? []).slice(0, 5).map((v, i) => (
+              <motion.div key={v.vendor_id} variants={staggerItem}>
+                <VendorRankCard
+                  vendor={v}
+                  rank={i + 1}
+                  onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        )}
       </div>
 
-      {/* Top risk vendors for the year */}
+      {/* ------------------------------------------------------------------ */}
+      {/* 9. Top 5 Risk Vendors                                               */}
+      {/* ------------------------------------------------------------------ */}
       {(riskVendorsResp?.data ?? []).length > 0 && (
-        <Card className="bg-card border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
-              <AlertTriangle className="h-4 w-4 text-[#f87171]" aria-hidden="true" />
-              {t('topRiskVendors.title')} · {validYear}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('topRiskVendors.subtitle')}</p>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm min-w-[500px]">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="text-left py-1.5 pr-2 text-xs text-text-muted font-normal w-8">#</th>
-                    <th className="text-left py-1.5 text-xs text-text-muted font-normal">Vendor</th>
-                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">Avg Risk</th>
-                    <th className="text-right py-1.5 px-2 text-xs text-text-muted font-normal">Value</th>
-                    <th className="text-right py-1.5 text-xs text-text-muted font-normal">Contracts</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {(riskVendorsResp?.data ?? []).map((v, i) => {
-                    const score = v.avg_risk_score ?? 0
-                    const riskColor = score >= 0.5 ? '#f87171' : score >= 0.3 ? '#fb923c' : '#fbbf24'
-                    // Top-3 rank highlight borders
-                    const rankBorderStyle: CSSProperties =
-                      i === 0 ? { borderLeft: '3px solid #dc2626', backgroundColor: 'rgba(220,38,38,0.06)' }
-                      : i === 1 ? { borderLeft: '3px solid #ea580c' }
-                      : i === 2 ? { borderLeft: '3px solid #eab308' }
-                      : {}
-                    return (
-                      <tr
-                        key={v.vendor_id}
-                        className="border-b border-border/10 hover:bg-card-hover/30 cursor-pointer"
-                        style={rankBorderStyle}
-                        onClick={() => navigate(`/vendors/${v.vendor_id}`)}
-                      >
-                        <td className="py-2 pr-2 text-xs font-mono text-text-muted pl-2">
-                          {i === 0 ? (
-                            <span className="inline-flex items-center gap-1">
-                              <span>{i + 1}</span>
-                              <span
-                                className="text-[9px] font-bold px-1 py-0.5 rounded uppercase tracking-wide"
-                                style={{ backgroundColor: 'rgba(220,38,38,0.15)', color: '#f87171' }}
-                                title="Más riesgoso del año"
-                              >
-                                🏴
-                              </span>
-                            </span>
-                          ) : (
-                            i + 1
-                          )}
-                        </td>
-                        <td className="py-2 text-xs text-text-secondary truncate max-w-[200px] hover:text-accent transition-colors">
-                          {v.vendor_name}
-                        </td>
-                        <td className="py-2 px-2 text-right">
-                          <span
-                            className="inline-block text-[10px] font-bold font-mono px-1.5 py-0.5 rounded"
-                            style={{ backgroundColor: `${riskColor}20`, color: riskColor }}
-                          >
-                            {score.toFixed(3)}
-                          </span>
-                        </td>
-                        <td className="py-2 px-2 text-right text-xs font-mono text-text-primary">
-                          {formatCompactMXN(v.metric_value)}
-                        </td>
-                        <td className="py-2 text-right text-xs font-mono text-text-muted">
-                          {formatNumber(v.total_contracts)}
-                        </td>
-                      </tr>
-                    )
-                  })}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+        <div>
+          <div className="h-px bg-border mb-4" />
+          <div className="flex items-center gap-2 mb-1">
+            <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
+              PROVEEDORES DE MAYOR RIESGO
+            </p>
+          </div>
+          <p
+            className="text-lg font-bold text-text-primary mb-4"
+            style={{ fontFamily: "var(--font-family-serif)" }}
+          >
+            Banderas rojas de {validYear}
+          </p>
+          <motion.div
+            className="space-y-2"
+            variants={staggerContainer}
+            initial="initial"
+            animate="animate"
+          >
+            {(riskVendorsResp?.data ?? []).slice(0, 5).map((v, i) => (
+              <motion.div key={v.vendor_id} variants={staggerItem}>
+                <VendorRankCard
+                  vendor={v}
+                  rank={i + 1}
+                  onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                />
+              </motion.div>
+            ))}
+          </motion.div>
+        </div>
       )}
 
-      {/* Sector growth + Risk breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        {/* Sector Growth Ranking */}
-        <Card className="bg-card border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('sectorGrowth.title')}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('sectorGrowth.subtitle')}</p>
-          </CardHeader>
-          <CardContent>
-            {syLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-7" />)}
-              </div>
-            ) : sectorGrowth.length === 0 ? (
-              <div className="py-8 text-center text-text-muted text-sm">{t('noData')}</div>
-            ) : !hasPriorSectorData ? (
-              <div className="space-y-2">
-                {sectorGrowth.map((s) => (
-                  <div key={s.id} className="flex items-center gap-2">
-                    <span
-                      className="h-2 w-2 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: s.color }}
-                    />
-                    <span className="text-xs text-text-secondary flex-1 truncate">{s.name}</span>
-                    <span className="text-xs font-mono text-text-primary">{formatCompactMXN(s.curVal)}</span>
-                    <span className="text-xs text-text-muted">—</span>
-                  </div>
-                ))}
-                <p className="text-[10px] text-text-muted/60 italic mt-1">{t('sectorGrowth.noComparison')}</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {sectorGrowth.map((s) => {
-                  const isPos = s.growthPct != null && s.growthPct > 0
-                  const isNeg = s.growthPct != null && s.growthPct < 0
-                  // Bar width proportional to absolute growth, capped at full width
-                  const maxAbsGrowth = Math.max(...sectorGrowth.map((x) => Math.abs(x.growthPct ?? 0)), 1)
-                  const barWidth = s.growthPct != null
-                    ? Math.min(100, (Math.abs(s.growthPct) / maxAbsGrowth) * 100)
-                    : 0
-                  return (
-                    <div key={s.id} className="flex items-center gap-2">
-                      <span
-                        className="h-2 w-2 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: s.color }}
-                      />
-                      <span className="text-xs text-text-secondary w-28 truncate flex-shrink-0">
-                        {s.name}
-                      </span>
-                      <div className="flex-1 relative h-4 rounded overflow-hidden bg-background-elevated/30">
-                        <div
-                          className={cn(
-                            'absolute top-0 bottom-0 rounded transition-all',
-                            isPos ? 'bg-emerald-500/30 left-0' : isNeg ? 'bg-red-500/30 left-0' : 'bg-border/30 left-0'
-                          )}
-                          style={{ width: `${barWidth}%` }}
-                        />
-                      </div>
-                      <YoyBadge pct={s.growthPct} />
-                    </div>
-                  )
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+      {/* ------------------------------------------------------------------ */}
+      {/* 10. Sector Breakdown                                                */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <div className="h-px bg-border mb-4" />
+        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+          DISTRIBUCION SECTORIAL
+        </p>
+        <p
+          className="text-lg font-bold text-text-primary mb-4"
+          style={{ fontFamily: "var(--font-family-serif)" }}
+        >
+          Como se repartio el gasto en {validYear}
+        </p>
 
-        {/* Risk Level Breakdown */}
-        <Card className="bg-card border-border/40">
-          <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('riskBreakdown.title')}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-0.5">{t('riskBreakdown.subtitle')}</p>
-          </CardHeader>
-          <CardContent>
-            {yoyLoading ? (
-              <div className="space-y-3">
-                {Array.from({ length: 4 }).map((_, i) => <Skeleton key={i} className="h-10" />)}
-              </div>
-            ) : !yearRow ? (
-              <div className="py-8 text-center text-text-muted text-sm">{t('noData')}</div>
-            ) : !riskBreakdownRows ? (
-              <div className="py-8 text-center text-text-muted text-sm">{t('riskBreakdown.noData')}</div>
-            ) : (
-              <div className="space-y-3">
-                {/* Simplified risk breakdown — yoy data only provides high_risk_pct aggregate */}
-                {riskBreakdownRows.map((row) => (
-                  <div key={row.level} className="flex items-center gap-3">
-                    <RiskLevelPill level={row.level} />
-                    <div className="flex-1 relative h-5 rounded overflow-hidden bg-background-elevated/30">
-                      <div
-                        className={cn(
-                          'absolute inset-y-0 left-0 rounded',
-                          row.level === 'high' ? 'bg-orange-500/30' : 'bg-emerald-500/20'
-                        )}
-                        style={{ width: `${Math.max(1, row.pct)}%` }}
-                      />
-                    </div>
-                    <div className="flex items-center gap-2 flex-shrink-0 min-w-[100px] justify-end">
-                      <span className="text-xs font-mono text-text-primary">{row.pct.toFixed(1)}%</span>
-                      <span className="text-xs text-text-muted">({formatNumber(row.count)})</span>
-                    </div>
+        {syLoading ? (
+          <div className="space-y-2">
+            {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-7" />)}
+          </div>
+        ) : (
+          <MonthlySparkline data={sectorYearData} year={validYear} />
+        )}
+      </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 11. Sector Growth Ranking (if prior year data exists)               */}
+      {/* ------------------------------------------------------------------ */}
+      {sectorGrowth.length > 0 && priorRow && (
+        <div>
+          <div className="h-px bg-border mb-4" />
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            CRECIMIENTO SECTORIAL
+          </p>
+          <p
+            className="text-lg font-bold text-text-primary mb-4"
+            style={{ fontFamily: "var(--font-family-serif)" }}
+          >
+            Que sectores crecieron y cuales se contrajeron
+          </p>
+
+          <div className="space-y-2">
+            {sectorGrowth.map((s) => {
+              const maxAbsGrowth = Math.max(...sectorGrowth.map((x) => Math.abs(x.growthPct ?? 0)), 1)
+              const barWidth = s.growthPct != null
+                ? Math.min(100, (Math.abs(s.growthPct) / maxAbsGrowth) * 100)
+                : 0
+              const isPos = s.growthPct != null && s.growthPct > 0
+              const isNeg = s.growthPct != null && s.growthPct < 0
+              return (
+                <div key={s.id} className="flex items-center gap-3">
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{ backgroundColor: s.color }}
+                  />
+                  <span className="text-xs text-text-secondary w-32 truncate flex-shrink-0">
+                    {s.name}
+                  </span>
+                  <div className="flex-1 relative h-4 rounded overflow-hidden bg-background-elevated/20">
+                    <div
+                      className={cn(
+                        'absolute top-0 bottom-0 rounded transition-all',
+                        isPos ? 'bg-emerald-500/30 left-0' : isNeg ? 'bg-red-500/30 left-0' : 'bg-border/30 left-0'
+                      )}
+                      style={{ width: `${barWidth}%` }}
+                    />
                   </div>
-                ))}
-                <p className="text-[10px] text-text-muted/50 italic mt-2">
-                  Note: yearly data provides high-risk aggregate (critical + high combined).
-                  Full four-level breakdown available in the Explore and Contracts pages.
+                  <span className={cn(
+                    'text-xs font-mono w-16 text-right flex-shrink-0 tabular-nums',
+                    isPos ? 'text-emerald-400' : isNeg ? 'text-red-400' : 'text-text-muted'
+                  )}>
+                    {s.growthPct != null
+                      ? `${s.growthPct > 0 ? '+' : ''}${s.growthPct.toFixed(1)}%`
+                      : '--'
+                    }
+                  </span>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 12. Hallazgos del Ano                                               */}
+      {/* ------------------------------------------------------------------ */}
+      {hallazgos.length > 0 && (
+        <div>
+          <div className="h-px bg-border mb-4" />
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            HALLAZGOS DEL ANO
+          </p>
+          <p
+            className="text-lg font-bold text-text-primary mb-4"
+            style={{ fontFamily: "var(--font-family-serif)" }}
+          >
+            Anomalias estadisticas detectadas en {validYear}
+          </p>
+          <div className="space-y-3">
+            {hallazgos.map((h, i) => (
+              <div
+                key={i}
+                className={cn(
+                  'flex items-start gap-3 rounded-lg border px-4 py-3',
+                  h.severity === 'high'
+                    ? 'border-red-500/30 bg-red-500/5'
+                    : 'border-amber-500/30 bg-amber-500/5'
+                )}
+              >
+                <AlertTriangle
+                  className={cn(
+                    'h-4 w-4 flex-shrink-0 mt-0.5',
+                    h.severity === 'high' ? 'text-red-400' : 'text-amber-400'
+                  )}
+                  aria-hidden="true"
+                />
+                <p className="text-sm text-text-secondary leading-relaxed">
+                  {h.text}
                 </p>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 13. Full year navigation pills at bottom                            */}
+      {/* ------------------------------------------------------------------ */}
+      <div>
+        <div className="h-px bg-border mb-4" />
+        <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted mb-3">
+          TODOS LOS ANOS
+        </p>
+        <div className="flex flex-wrap gap-1.5" role="navigation" aria-label="Navegacion por ano">
+          {ALL_YEARS.map((y) => (
+            <button
+              key={y}
+              onClick={() => handleYearChange(y)}
+              className={cn(
+                'px-2.5 py-1 rounded-sm text-xs font-mono transition-colors',
+                y === validYear
+                  ? 'bg-text-primary text-background font-bold'
+                  : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent'
+              )}
+              aria-current={y === validYear ? 'page' : undefined}
+            >
+              {y}
+            </button>
+          ))}
+        </div>
       </div>
 
-      {/* Sector Spending Race — animated bar chart 2002→2025 */}
-      <Card className="bg-card border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
-            <BarChart3 className="h-4 w-4 text-accent" aria-hidden="true" />
-            {t('racingChart.title')}
-          </CardTitle>
-          <p className="text-xs text-text-muted mt-0.5">
-            {t('racingChart.subtitle')}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <RacingBarChart />
-        </CardContent>
-      </Card>
-
-      {/* December Effect — seasonal radial chart */}
-      <Card className="bg-card border-border/40">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
-            <AlertTriangle className="h-4 w-4 text-[#f87171]" aria-hidden="true" />
-            {t('decemberEffect.title')}
-          </CardTitle>
-          <p className="text-xs text-text-muted mt-0.5">
-            {t('decemberEffect.subtitle')}
-          </p>
-        </CardHeader>
-        <CardContent>
-          <SeasonalityCalendar />
-        </CardContent>
-      </Card>
-
-      {/* Sector contribution stacked area chart */}
-      <Card className="bg-background/60 border border-border rounded-xl">
-        <CardHeader className="pb-2">
-          <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">{t('areaChart.title')}</p>
-          <p className="text-xs text-text-muted mt-0.5">{t('areaChart.subtitle')}</p>
-        </CardHeader>
-        <CardContent>
-          <ResponsiveContainer width="100%" height={260}>
-            <AreaChart data={SECTOR_YOY_DATA} margin={{ top: 8, right: 16, bottom: 0, left: 8 }}>
-              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-              <XAxis dataKey="year" tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 11 }} />
-              <YAxis tick={{ fill: 'rgba(255,255,255,0.5)', fontSize: 10 }} tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}B`} />
-              <RechartsTooltip
-                contentStyle={{
-                  backgroundColor: 'rgba(15,23,42,0.95)',
-                  border: '1px solid rgba(255,255,255,0.1)',
-                  borderRadius: 8,
-                  fontSize: 11,
-                }}
-                formatter={(value: number | undefined, name: string | undefined) => [`${((value ?? 0) / 1000).toFixed(1)}B MXN`, name ?? '']}
-              />
-              {SECTOR_AREA_KEYS.map((key) => (
-                <Area
-                  key={key}
-                  type="monotone"
-                  dataKey={key}
-                  stackId="1"
-                  stroke={SECTOR_COLORS[key] || '#64748b'}
-                  fill={SECTOR_COLORS[key] || '#64748b'}
-                  fillOpacity={0.6}
-                  strokeWidth={1}
-                />
-              ))}
-            </AreaChart>
-          </ResponsiveContainer>
-          <p className="text-xs text-white/50 italic mt-2">
-            {t('areaChart.note')}
-          </p>
-        </CardContent>
-      </Card>
-
-      {/* Year navigation pills */}
-      <div className="flex flex-wrap gap-1.5" role="navigation" aria-label="Year navigation">
-        {ALL_YEARS.map((y) => (
-          <button
-            key={y}
-            onClick={() => handleYearChange(y)}
-            className={cn(
-              'px-2.5 py-1 rounded-md text-xs font-mono transition-colors',
-              y === validYear
-                ? 'bg-accent/20 text-accent border border-accent/30'
-                : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent'
-            )}
-            aria-current={y === validYear ? 'page' : undefined}
-          >
-            {y}
-          </button>
-        ))}
-      </div>
+      {/* Bottom margin */}
+      <div className="h-8" />
     </div>
   )
 }

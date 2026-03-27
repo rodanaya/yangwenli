@@ -5,15 +5,19 @@ import { useQuery } from '@tanstack/react-query'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge } from '@/components/ui/badge'
 import { cn, formatCompactMXN, formatCompactUSD, formatNumber, formatPercentSafe, toTitleCase } from '@/lib/utils'
 import { sectorApi, vendorApi, analysisApi, priceApi, investigationApi, caseLibraryApi, institutionApi } from '@/api/client'
 import { SECTOR_COLORS, RISK_COLORS, SECTORS } from '@/lib/constants'
+import { getSectorDescription } from '@/lib/sector-descriptions'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
+import { FuentePill } from '@/components/ui/FuentePill'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { motion } from 'framer-motion'
-import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
+import { slideUp, staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import {
   BarChart3,
   Building2,
@@ -23,10 +27,7 @@ import {
   ArrowLeft,
   ArrowRight,
   ExternalLink,
-  DollarSign,
   TrendingUp,
-  Calendar,
-  Crosshair,
   Zap,
   Activity,
   Shield,
@@ -34,6 +35,7 @@ import {
   FlaskConical,
   Info,
   ShieldAlert,
+  ChevronLeft,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -51,15 +53,14 @@ import {
   ReferenceLine,
 } from '@/components/charts'
 
-// ─── pagination constants ─────────────────────────────────────────────────────
+// ── pagination constants ──────────────────────────────────────────────────────
 
 const VENDOR_LIST_PER_PAGE = 20
 const INSTITUTION_LIST_PER_PAGE = 15
 
-// ─── helpers ─────────────────────────────────────────────────────────────────
+// ── helpers ───────────────────────────────────────────────────────────────────
 
 function hex(color: string, alpha: number) {
-  // converts e.g. '#dc2626' → 'rgba(220,38,38,α)'
   const r = parseInt(color.slice(1, 3), 16)
   const g = parseInt(color.slice(3, 5), 16)
   const b = parseInt(color.slice(5, 7), 16)
@@ -91,24 +92,40 @@ const FACTOR_LABELS: Record<string, string> = {
 const FACTOR_DESC: Record<string, string> = {
   direct_award: 'Contract awarded without competitive bidding',
   single_bid: 'Competitive procedure received only one offer',
-  price_anomaly: 'Contract value is 3× above sector median',
+  price_anomaly: 'Contract value is 3x above sector median',
   short_ad_period: 'Advertisement window too short for real competition',
   'short_ad_<5d': 'Under 5 days between publication and award',
   'short_ad_<15d': 'Under 15 days between publication and award',
   'short_ad_<30d': 'Under 30 days between publication and award',
-  year_end: 'Awarded in December — budget-dump pattern',
+  year_end: 'Awarded in December -- budget-dump pattern',
   vendor_concentration: 'One vendor controls >30% of sector contracts',
   threshold_splitting: 'Multiple same-day contracts to avoid oversight thresholds',
   network_risk: 'Vendor belongs to a connected group of related companies',
   industry_mismatch: "Vendor's primary industry doesn't match contract scope",
   co_bid_high: 'Vendor co-bids in >80% of procedures with a partner',
-  co_bid_med: 'Vendor co-bids in 50–80% of procedures with a partner',
+  co_bid_med: 'Vendor co-bids in 50-80% of procedures with a partner',
   price_hyp: 'Statistical outlier flagged by IQR price model',
   co_sid_high: 'Vendor co-bids in >80% of procedures with a partner',
-  co_sid_med: 'Vendor co-bids in 50–80% of procedures with a partner',
+  co_sid_med: 'Vendor co-bids in 50-80% of procedures with a partner',
 }
 
-// ─── page ────────────────────────────────────────────────────────────────────
+/** Sector-specific human impact context for ImpactoHumano callout */
+const SECTOR_IMPACT_CONTEXT: Record<string, string> = {
+  salud: 'In the health sector, misspent funds translate directly into patients without medicines, hospitals without equipment, and communities without healthcare access.',
+  educacion: 'In education, every diverted peso means fewer textbooks, classrooms without maintenance, and students without access to technology.',
+  infraestructura: 'Infrastructure spending affects roads, bridges, water systems, and housing that millions of Mexicans depend on daily.',
+  energia: 'Energy procurement failures impact electricity reliability for households and industrial competitiveness for the national economy.',
+  defensa: 'Defense spending directly affects national security capabilities and the welfare of military personnel and their families.',
+  tecnologia: 'Technology procurement inefficiencies slow down government digitalization and leave citizens with outdated public services.',
+  hacienda: 'Treasury sector waste undermines the fiscal infrastructure that funds all other government services.',
+  gobernacion: 'Governance procurement affects the administrative backbone of the federal government and its ability to serve citizens.',
+  agricultura: 'Agricultural procurement directly impacts food security, rural livelihoods, and the 27 million Mexicans who depend on farming.',
+  ambiente: 'Environmental spending protects natural resources, water quality, and the ecological systems that sustain communities.',
+  trabajo: 'Labor sector procurement affects workplace safety, job training, and social security for millions of workers.',
+  otros: 'Miscellaneous government procurement covers diverse agencies whose spending affects public services across the country.',
+}
+
+// ── page ──────────────────────────────────────────────────────────────────────
 
 export function SectorProfile() {
   const { id } = useParams<{ id: string }>()
@@ -207,7 +224,7 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Top vendor by risk score — the "worst" vendor
+  // Top vendor by risk score
   const { data: topRiskVendors } = useQuery({
     queryKey: ['vendors', 'top', 'risk', { sector_id: sectorId, per_page: 1 }],
     queryFn: () => vendorApi.getTop('risk', 1, { sector_id: sectorId }),
@@ -215,15 +232,15 @@ export function SectorProfile() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // P2 #47: Per-sector model coefficients
+  // Per-sector model coefficients
   const { data: modelCoefficients } = useQuery({
     queryKey: ['sector', sectorId, 'model-coefficients'],
     queryFn: () => sectorApi.getModelCoefficients(sectorId),
     enabled: !!sectorId,
-    staleTime: 60 * 60 * 1000, // model rarely changes
+    staleTime: 60 * 60 * 1000,
   })
 
-  // P2 #50: Temporal anomaly
+  // Temporal anomaly
   const { data: temporalAnomaly } = useQuery({
     queryKey: ['sector', sectorId, 'temporal-anomaly'],
     queryFn: () => sectorApi.getTemporalAnomaly(sectorId),
@@ -231,8 +248,7 @@ export function SectorProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // ── SECTOR INTELLIGENCE insights ─────────────────────────────────────────
-  // Must be declared before early returns (Rules of Hooks)
+  // ── SECTOR INTELLIGENCE insights ──────────────────────────────────────────
   const insights = useMemo(() => {
     const result: Array<{
       type: 'warning' | 'info' | 'critical' | 'positive'
@@ -244,13 +260,10 @@ export function SectorProfile() {
     const stats = sector?.statistics
     if (!stats) return result
 
-    // High-risk rate — compare against platform-wide 9.0% baseline (v6.4)
-    // Note: OECD 2-15% is a single-bid rate benchmark, not an ML output benchmark.
-    // We use deviation from the platform-wide rate as the reference.
     const highRiskRate = stats.total_contracts > 0
       ? (stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts
       : 0
-    const platformBaseline = 0.090 // v6.4 platform-wide high-risk rate
+    const platformBaseline = 0.090
     if (highRiskRate > platformBaseline * 1.5) {
       result.push({
         type: 'critical',
@@ -262,12 +275,11 @@ export function SectorProfile() {
       result.push({
         type: 'positive',
         title: 'Low Model Risk Signal',
-        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is unusually low — may reflect data quality gaps or structural sector characteristics.`,
+        body: `${(highRiskRate * 100).toFixed(1)}% high-risk rate is unusually low -- may reflect data quality gaps or structural sector characteristics.`,
         icon: 'Info',
       })
     }
 
-    // Direct award rate (field is 0–100)
     if (stats.direct_award_pct > 70) {
       result.push({
         type: 'warning',
@@ -277,9 +289,6 @@ export function SectorProfile() {
       })
     }
 
-    // Top vendor share derived from topVendors list vs sector total
-    // Note: Energía and Defensa have structural reasons for concentration (regulation,
-    // clearance requirements, regulated monopolies). Treat this signal with more caution in those sectors.
     const topVendorValue = topVendors?.data?.[0]?.total_value_mxn
     if (topVendorValue && stats.total_value_mxn > 0) {
       const topShare = topVendorValue / stats.total_value_mxn
@@ -292,13 +301,12 @@ export function SectorProfile() {
           title: 'Vendor Concentration',
           body: hasStructuralConcentration
             ? `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector value. Note: this sector may have structural concentration due to regulatory requirements or certified supplier limits.`
-            : `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value — a key risk indicator in the v6.0 model.`,
+            : `${vendorName} holds ${(topShare * 100).toFixed(1)}% of sector contract value -- a key risk indicator in the v6.0 model.`,
           icon: 'TrendingUp',
         })
       }
     }
 
-    // Single bid rate
     if (stats.single_bid_pct > 25) {
       result.push({
         type: 'warning',
@@ -309,9 +317,9 @@ export function SectorProfile() {
     }
 
     return result
-  }, [sector?.statistics, topVendors])
+  }, [sector?.statistics, sector?.code, topVendors])
 
-  // Top risk signal from factor_frequencies — must be before early returns
+  // Top risk signal from factor_frequencies
   const topRiskSignal = useMemo(() => {
     const freqs = riskFactors?.factor_frequencies
     if (!freqs?.length) return null
@@ -334,6 +342,24 @@ export function SectorProfile() {
     return { factor: top.factor, label, percentage: top.percentage, avgRisk: top.avg_risk_score }
   }, [riskFactors])
 
+  // Generate editorial lede text
+  const ledeText = useMemo(() => {
+    const stats = sector?.statistics
+    if (!stats) return null
+    const sectorCode = sector?.code ?? ''
+    const desc = getSectorDescription(sectorCode)
+    const highRiskRate = stats.total_contracts > 0
+      ? ((stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts * 100).toFixed(1)
+      : '0'
+    const riskContext = parseFloat(highRiskRate) > 13.5
+      ? `With ${highRiskRate}% of contracts flagged as high-risk, this sector demands heightened scrutiny.`
+      : parseFloat(highRiskRate) > 5
+      ? `${highRiskRate}% of contracts carry elevated risk indicators, within the OECD benchmark range.`
+      : `Only ${highRiskRate}% of contracts show elevated risk signals, though data quality limitations may suppress detection.`
+
+    return `${desc.short} ${riskContext}`
+  }, [sector?.statistics, sector?.code])
+
   if (sectorLoading) return <SectorProfileSkeleton />
 
   if (sectorError || !sector) {
@@ -350,122 +376,184 @@ export function SectorProfile() {
   const stats = sector.statistics
   const priceBaseline = priceBaselines?.[0]
   const caseData = (topCases?.data ?? []) as Record<string, unknown>[]
+  const highRiskPct = stats && stats.total_contracts > 0
+    ? ((stats.high_risk_count + stats.critical_risk_count) / stats.total_contracts * 100).toFixed(1)
+    : '0'
 
   return (
-    <div className="space-y-6">
+    <article className="max-w-6xl mx-auto space-y-8 pb-12">
 
-      {/* ── HERO HEADER ─────────────────────────────────────────────────── */}
-      <motion.div
-        className="card relative overflow-hidden p-6"
-        style={{ background: `linear-gradient(135deg, ${hex(sectorColor, 0.12)} 0%, var(--bg-surface) 60%)` }}
+      {/* ── EDITORIAL BREADCRUMB ──────────────────────────────────────────── */}
+      <motion.nav
+        className="flex items-center justify-between pt-2"
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+        aria-label="Sector navigation"
+      >
+        <Link
+          to="/sectors"
+          className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-text-muted hover:text-text-primary transition-colors font-semibold"
+        >
+          <ChevronLeft className="h-3.5 w-3.5" />
+          All Sectors
+        </Link>
+        <div className="flex items-center gap-2">
+          {prevSector && (
+            <button
+              onClick={() => navigate(`/sectors/${prevSector.id}`)}
+              className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-primary transition-colors"
+              aria-label={`Previous: ${ts(prevSector.code)}`}
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {ts(prevSector.code)}
+            </button>
+          )}
+          {prevSector && nextSector && <span className="text-border">|</span>}
+          {nextSector && (
+            <button
+              onClick={() => navigate(`/sectors/${nextSector.id}`)}
+              className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-text-primary transition-colors"
+              aria-label={`Next: ${ts(nextSector.code)}`}
+            >
+              {ts(nextSector.code)}
+              <ArrowRight className="h-3 w-3" />
+            </button>
+          )}
+        </div>
+      </motion.nav>
+
+      {/* ── HERO WITH SECTOR COLOR BAR ────────────────────────────────────── */}
+      <motion.header
+        className="relative flex gap-0"
         variants={slideUp}
         initial="initial"
         animate="animate"
       >
-        {/* decorative glow */}
+        {/* Left color bar */}
         <div
-          className="pointer-events-none absolute -top-16 -right-16 h-48 w-48 rounded-full blur-3xl opacity-20"
-          style={{ background: sectorColor }}
+          className="w-1.5 flex-shrink-0 rounded-l-lg"
+          style={{ backgroundColor: sectorColor }}
         />
-        <div className="relative flex items-start justify-between">
-          <div className="flex items-center gap-4">
-            <div className="flex flex-col gap-1">
-              <Link to="/sectors">
-                <Button variant="ghost" size="sm" className="text-text-muted hover:text-text-primary">
-                  <ArrowLeft className="h-4 w-4" />
-                </Button>
-              </Link>
-              {/* Prev/Next navigation */}
-              <div className="flex gap-1">
-                <button
-                  onClick={() => prevSector && navigate(`/sectors/${prevSector.id}`)}
-                  disabled={!prevSector}
-                  className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  aria-label={prevSector ? `Previous: ${ts(prevSector.code)}` : 'No previous sector'}
-                  title={prevSector ? ts(prevSector.code) : undefined}
+
+        <div className="flex-1 rounded-r-lg border border-l-0 border-border/40 bg-zinc-900/50 p-6 md:p-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div className="flex items-start gap-4">
+              {/* Sector icon */}
+              <div
+                className="flex h-14 w-14 items-center justify-center rounded-xl shadow-lg flex-shrink-0"
+                style={{ backgroundColor: hex(sectorColor, 0.15), border: `1px solid ${hex(sectorColor, 0.3)}` }}
+              >
+                <BarChart3 className="h-7 w-7" style={{ color: sectorColor }} />
+              </div>
+              <div>
+                <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+                  Perfil Sectorial
+                </p>
+                <h1
+                  className="text-3xl md:text-4xl font-bold text-text-primary leading-tight capitalize"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
-                  <ArrowLeft className="h-3 w-3" />
-                </button>
-                <button
-                  onClick={() => nextSector && navigate(`/sectors/${nextSector.id}`)}
-                  disabled={!nextSector}
-                  className="flex h-6 w-6 items-center justify-center rounded border border-border/40 text-text-muted hover:border-border hover:text-text-primary disabled:opacity-30 disabled:cursor-not-allowed transition-all"
-                  aria-label={nextSector ? `Next: ${ts(nextSector.code)}` : 'No next sector'}
-                  title={nextSector ? ts(nextSector.code) : undefined}
-                >
-                  <ArrowRight className="h-3 w-3" />
-                </button>
+                  {sector.name}
+                </h1>
+                <p className="text-sm text-text-secondary mt-1.5 max-w-xl leading-relaxed">
+                  {getSectorDescription(sector.code).short}
+                </p>
               </div>
             </div>
-            <div
-              className="flex h-14 w-14 items-center justify-center rounded-xl shadow-lg"
-              style={{ backgroundColor: hex(sectorColor, 0.2), border: `1px solid ${hex(sectorColor, 0.4)}` }}
-            >
-              <BarChart3 className="h-7 w-7" style={{ color: sectorColor }} />
+
+            <div className="flex items-center gap-3 flex-shrink-0">
+              {stats && (
+                <div className="text-right">
+                  <p className="text-3xl font-black tabular-nums text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                    {formatCompactMXN(stats.total_value_mxn)}
+                  </p>
+                  <p className="text-xs text-text-muted">total procurement value</p>
+                </div>
+              )}
+              <GenerateReportButton reportType="sector" entityId={sectorId} entityName={sector.name} variant="outline" />
             </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-2xl font-black tracking-tight capitalize text-gradient">{sector.name}</h1>
-                {stats && <RiskBadge score={stats.avg_risk_score} className="text-sm px-2.5 py-0.5" />}
-              </div>
-              <div className="flex items-center gap-3 mt-0.5">
-                <p className="text-xs text-text-muted font-mono uppercase tracking-widest">Sector · {sector.code}</p>
-                {prevSector && (
-                  <Link to={`/sectors/${prevSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
-                    ← {ts(prevSector.code)}
-                  </Link>
-                )}
-                {nextSector && (
-                  <Link to={`/sectors/${nextSector.id}`} className="text-[10px] text-text-muted hover:text-accent font-mono transition-colors">
-                    {ts(nextSector.code)} →
-                  </Link>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="hidden md:flex items-center gap-4">
-            {stats && (
-              <div className="text-right">
-                <p className="text-3xl font-black tabular-nums text-text-primary">{formatCompactMXN(stats.total_value_mxn)}</p>
-                <p className="text-xs text-text-muted">total procurement value</p>
-              </div>
-            )}
-            <GenerateReportButton reportType="sector" entityId={sectorId} entityName={sector.name} variant="outline" />
           </div>
         </div>
-      </motion.div>
+      </motion.header>
 
-      {/* ── KPI STRIP ───────────────────────────────────────────────────── */}
+      {/* ── HALLAZGO STAT ROW ─────────────────────────────────────────────── */}
       <motion.div
-        className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4"
         variants={staggerContainer}
         initial="initial"
         whileInView="animate"
         viewport={{ once: true }}
       >
         <motion.div variants={staggerItem}>
-          <KPICard title="Contracts" value={stats?.total_contracts} icon={FileText} color={sectorColor} />
+          <HallazgoStat
+            value={stats ? formatNumber(stats.total_contracts) : '-'}
+            label="contracts in COMPRANET"
+            annotation="2002-2025"
+            style={{ borderLeftColor: sectorColor }}
+          />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <KPICard title="Total Value" value={stats?.total_value_mxn} icon={DollarSign} format="currency" color={sectorColor} />
+          <HallazgoStat
+            value={stats ? formatCompactMXN(stats.total_value_mxn) : '-'}
+            label="total procurement spend"
+            annotation={stats ? formatCompactUSD(stats.total_value_mxn) : undefined}
+            style={{ borderLeftColor: sectorColor }}
+          />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <KPICard title="Vendors" value={stats?.total_vendors} icon={Users} color={sectorColor} />
+          <HallazgoStat
+            value={stats ? `${(stats.avg_risk_score * 100).toFixed(1)}%` : '-'}
+            label="average risk score"
+            annotation="v6.5 model"
+            style={{ borderLeftColor: sectorColor }}
+          />
         </motion.div>
         <motion.div variants={staggerItem}>
-          <KPICard title="High + Critical" value={(stats?.high_risk_count ?? 0) + (stats?.critical_risk_count ?? 0)} icon={AlertTriangle} color="#f87171" />
+          <HallazgoStat
+            value={`${highRiskPct}%`}
+            label="high + critical risk"
+            annotation={stats ? `${formatNumber(stats.high_risk_count + stats.critical_risk_count)} contracts` : undefined}
+            color="border-red-500"
+          />
         </motion.div>
       </motion.div>
 
-      {/* ── SECTOR INTELLIGENCE ─────────────────────────────────────────── */}
+      {/* ── INVESTIGATION LEDE ────────────────────────────────────────────── */}
+      {ledeText && (
+        <motion.div
+          className="border-t border-b border-border py-5"
+          variants={fadeIn}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true }}
+        >
+          <p
+            className="text-lg text-text-secondary leading-relaxed max-w-3xl"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {ledeText}
+          </p>
+          <div className="mt-3 flex items-center gap-3">
+            <FuentePill source="COMPRANET" count={stats?.total_contracts} />
+            <FuentePill source="v6.5 Model" verified />
+          </div>
+        </motion.div>
+      )}
+
+      {/* ── SECTOR INTELLIGENCE ───────────────────────────────────────────── */}
       {(insights.length > 0 || topRiskSignal) && (
-        <div>
+        <section>
           <div className="flex items-center gap-2 mb-3">
             <Brain className="h-4 w-4 text-text-muted" />
-            <h2 className="text-sm font-semibold text-text-secondary uppercase tracking-wider">Sector Intelligence</h2>
+            <h2
+              className="text-sm font-semibold text-text-secondary uppercase tracking-wider"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              Sector Intelligence
+            </h2>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Top Risk Signal — always first */}
             {topRiskSignal && (
               <div className="rounded-lg border border-violet-500/30 bg-violet-500/5 p-4">
                 <div className="flex items-center gap-1.5 text-sm font-semibold mb-1 text-violet-400">
@@ -473,7 +561,7 @@ export function SectorProfile() {
                   Top Risk Signal
                 </div>
                 <div className="text-xs text-text-muted leading-relaxed">
-                  <span className="font-bold text-text-primary">{topRiskSignal.label}</span> is the #1 red flag —
+                  <span className="font-bold text-text-primary">{topRiskSignal.label}</span> is the #1 red flag --
                   appears in {topRiskSignal.percentage.toFixed(1)}% of contracts with avg risk{' '}
                   <span className="font-bold" style={{ color: topRiskSignal.avgRisk >= 0.5 ? '#f87171' : topRiskSignal.avgRisk >= 0.3 ? '#fb923c' : '#fbbf24' }}>
                     {(topRiskSignal.avgRisk * 100).toFixed(0)}%
@@ -509,25 +597,23 @@ export function SectorProfile() {
               )
             })}
           </div>
-        </div>
+        </section>
       )}
 
-      {/* ── MAIN GRID ───────────────────────────────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-3">
+      {/* ── MAIN CONTENT GRID ─────────────────────────────────────────────── */}
+      <div className="grid gap-8 lg:grid-cols-3">
 
         {/* ── LEFT COLUMN ──────────────────────────────────────────────── */}
         <div className="space-y-6">
 
-          {/* RISK DONUT */}
-          <div className="card-elevated overflow-hidden">
-            <div className="h-1 w-full" style={{ background: `linear-gradient(90deg, ${RISK_COLORS.critical}, ${RISK_COLORS.high}, ${RISK_COLORS.medium}, ${RISK_COLORS.low})` }} />
-            <CardHeader className="pb-0">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <Shield className="h-4 w-4" style={{ color: sectorColor }} />
-                Risk Intelligence
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="pt-2">
+          {/* RISK DISTRIBUTION DONUT */}
+          <section>
+            <EditorialHeadline
+              section="Risk Intelligence"
+              headline="Risk Distribution"
+              subtitle="How contracts in this sector score across risk levels"
+            />
+            <div className="mt-4">
               {riskLoading ? (
                 <Skeleton className="h-56 w-full rounded-xl" />
               ) : riskDistError ? (
@@ -535,11 +621,11 @@ export function SectorProfile() {
               ) : riskDist?.data ? (
                 <RiskDonut data={riskDist.data} color={sectorColor} />
               ) : null}
-            </CardContent>
-          </div>
+            </div>
+          </section>
 
-          {/* RISK SIGNATURE — ranked bars */}
-          <div className="card-elevated">
+          {/* RISK SIGNATURE */}
+          <section className="card-elevated">
             <CardHeader className="pb-0">
               <CardTitle className="flex items-center gap-2 text-sm">
                 <Activity className="h-4 w-4" style={{ color: sectorColor }} />
@@ -558,7 +644,7 @@ export function SectorProfile() {
                 <p className="text-xs text-text-muted py-4 text-center">No factor data</p>
               )}
             </CardContent>
-          </div>
+          </section>
 
           {/* HIGHEST-RISK VENDOR CALLOUT */}
           {topRiskVendors?.data?.[0] && (() => {
@@ -569,52 +655,54 @@ export function SectorProfile() {
               riskScore >= 0.3 ? RISK_COLORS.high :
               riskScore >= 0.1 ? RISK_COLORS.medium : RISK_COLORS.low
             return (
-              <div className="card-elevated" style={{ borderColor: `${riskColor}40` }}>
-                <div className="h-0.5 w-full" style={{ background: riskColor }} />
-                <CardHeader className="pb-2">
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <AlertTriangle className="h-4 w-4" style={{ color: riskColor }} />
-                    Highest-Risk Vendor
-                  </CardTitle>
-                  <p className="text-xs text-text-muted">Vendor with highest avg risk score in this sector</p>
-                </CardHeader>
-                <CardContent className="pt-0">
-                  <Link
-                    to={`/vendors/${worstVendor.vendor_id}`}
-                    className="group block rounded-lg border border-border/30 p-3 hover:border-accent/40 hover:bg-accent/3 transition-all"
+              <section
+                className="rounded-lg border bg-zinc-900/40 p-4"
+                style={{ borderColor: `${riskColor}40`, borderTopWidth: '3px', borderTopColor: riskColor }}
+              >
+                <div className="flex items-center gap-2 mb-3">
+                  <AlertTriangle className="h-4 w-4" style={{ color: riskColor }} />
+                  <h3
+                    className="text-sm font-bold text-text-primary"
+                    style={{ fontFamily: 'var(--font-family-serif)' }}
                   >
-                    <div className="flex items-start justify-between gap-2">
-                      <p className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors truncate">
-                        {toTitleCase(worstVendor.vendor_name ?? 'Unknown')}
-                      </p>
-                      <span
-                        className="text-sm font-black tabular-nums font-mono rounded px-2 py-0.5 flex-shrink-0"
-                        style={{ color: riskColor, background: `${riskColor}20` }}
-                      >
-                        {(riskScore * 100).toFixed(0)}% risk
-                      </span>
-                    </div>
-                    <div className="mt-2 h-1.5 bg-background-elevated rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${Math.min(100, riskScore * 200)}%`, background: riskColor }}
-                      />
-                    </div>
-                    <p className="mt-1.5 text-xs text-text-muted">
-                      {worstVendor.total_contracts ? `${worstVendor.total_contracts.toLocaleString()} contracts` : ''}
-                      {worstVendor.total_value_mxn ? ` · ${formatCompactMXN(worstVendor.total_value_mxn)}` : ''}
+                    Highest-Risk Vendor
+                  </h3>
+                </div>
+                <Link
+                  to={`/vendors/${worstVendor.vendor_id}`}
+                  className="group block rounded-lg border border-border/30 p-3 hover:border-accent/40 hover:bg-accent/3 transition-all"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <p className="text-sm font-semibold text-text-primary group-hover:text-accent transition-colors truncate">
+                      {toTitleCase(worstVendor.vendor_name ?? 'Unknown')}
                     </p>
-                    <p className="text-[10px] text-accent mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                      Investigate vendor →
-                    </p>
-                  </Link>
-                </CardContent>
-              </div>
+                    <span
+                      className="text-sm font-black tabular-nums font-mono rounded px-2 py-0.5 flex-shrink-0"
+                      style={{ color: riskColor, background: `${riskColor}20` }}
+                    >
+                      {(riskScore * 100).toFixed(0)}% risk
+                    </span>
+                  </div>
+                  <div className="mt-2 h-1.5 bg-background-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{ width: `${Math.min(100, riskScore * 200)}%`, background: riskColor }}
+                    />
+                  </div>
+                  <p className="mt-1.5 text-xs text-text-muted">
+                    {worstVendor.total_contracts ? `${worstVendor.total_contracts.toLocaleString()} contracts` : ''}
+                    {worstVendor.total_value_mxn ? ` -- ${formatCompactMXN(worstVendor.total_value_mxn)}` : ''}
+                  </p>
+                  <p className="text-[10px] text-accent mt-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                    Investigate vendor &rarr;
+                  </p>
+                </Link>
+              </section>
             )
           })()}
 
           {/* PROCUREMENT STATS */}
-          <div className="card-elevated">
+          <section className="card-elevated">
             <CardHeader className="pb-2">
               <CardTitle className="text-sm">Procurement Patterns</CardTitle>
             </CardHeader>
@@ -624,16 +712,16 @@ export function SectorProfile() {
               <StatRow label="Avg Risk Score" value={formatPercentSafe(stats?.avg_risk_score, true) || '-'} />
               <StatRow label="High Risk Count" value={formatNumber((stats?.high_risk_count || 0) + (stats?.critical_risk_count || 0))} />
             </CardContent>
-          </div>
+          </section>
 
-          {/* P2 #47: MODEL COEFFICIENTS */}
+          {/* MODEL COEFFICIENTS */}
           {modelCoefficients && (
-            <div className="card-elevated">
+            <section className="card-elevated">
               <details>
                 <summary className="cursor-pointer px-4 py-3 flex items-center gap-2 text-sm font-medium text-text-secondary hover:text-text-primary transition-colors select-none">
                   <Brain className="h-4 w-4 text-purple-400 flex-shrink-0" />
                   <span>
-                    Modelo v6.4
+                    Modelo v6.5
                     <span className="ml-2 text-[10px] font-mono text-text-muted">
                       ({modelCoefficients.model_used === 'sector' ? 'sector-specific' : 'global fallback'})
                     </span>
@@ -673,16 +761,16 @@ export function SectorProfile() {
                   )}
                 </div>
               </details>
-            </div>
+            </section>
           )}
 
-          {/* P2 #50: TEMPORAL ANOMALY */}
+          {/* TEMPORAL ANOMALY */}
           {temporalAnomaly && (temporalAnomaly.anomalies?.length ?? 0) > 0 && (
-            <div className="card-elevated border border-amber-500/20">
+            <section className="card-elevated border border-amber-500/20">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Activity className="h-4 w-4 text-amber-400" />
-                  Anomalías {temporalAnomaly.current_year}
+                  Anomalias {temporalAnomaly.current_year}
                   <span className="ml-1 text-[10px] font-mono text-text-muted">
                     ({temporalAnomaly.contract_count?.toLocaleString()} contratos)
                   </span>
@@ -698,18 +786,18 @@ export function SectorProfile() {
                     <div className="flex-1 min-w-0">
                       <span className="text-text-secondary">{a.label}</span>
                       <span className="ml-1.5 font-mono text-text-muted">
-                        {a.direction === 'above' ? '↑' : '↓'} {Math.abs(a.z_score).toFixed(1)}σ
+                        {a.direction === 'above' ? '\u2191' : '\u2193'} {Math.abs(a.z_score).toFixed(1)}\u03C3
                       </span>
                     </div>
                   </div>
                 ))}
               </CardContent>
-            </div>
+            </section>
           )}
 
           {/* PRICE INTELLIGENCE */}
           {(priceLoading || priceBaseline || priceBaselinesError) && (
-            <div className="card-elevated">
+            <section className="card-elevated">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Zap className="h-4 w-4 text-amber-400" />
@@ -725,12 +813,12 @@ export function SectorProfile() {
                   <PriceDistribution baseline={priceBaseline} color={sectorColor} />
                 ) : null}
               </CardContent>
-            </div>
+            </section>
           )}
 
           {/* DOCUMENTED CASES */}
           {(sectorCasesError || (sectorCases && sectorCases.length > 0)) && (
-            <div className="card-elevated">
+            <section className="card-elevated">
               <CardHeader className="pb-2">
                 <CardTitle className="flex items-center gap-2 text-sm">
                   <Shield className="h-4 w-4 text-risk-critical" />
@@ -764,28 +852,27 @@ export function SectorProfile() {
                   to={`/cases?sector_id=${sectorId}`}
                   className="text-xs text-text-muted hover:text-accent mt-2 block pt-1 transition-colors"
                 >
-                  View all →
+                  View all &rarr;
                 </Link>
               </CardContent>
-            </div>
+            </section>
           )}
         </div>
 
         {/* ── RIGHT COLUMN ─────────────────────────────────────────────── */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
 
-          {/* TREND AREA */}
-          <div className="card-elevated overflow-hidden">
-            <CardHeader>
-              <div className="flex items-center justify-between gap-2">
-                <CardTitle className="flex items-center gap-2">
-                  <TrendingUp className="h-4 w-4" style={{ color: sectorColor }} />
-                  Contract Value — 2010 to {currentYear}
-                </CardTitle>
+          {/* SPENDING TREND */}
+          <section>
+            <EditorialHeadline
+              section="Spending Trend"
+              headline={`Contract Value -- 2010 to ${currentYear}`}
+              subtitle="Year-over-year procurement spending in this sector"
+            />
+            <div className="mt-4 card-elevated overflow-hidden p-4">
+              <div className="flex justify-end mb-2">
                 <ChartDownloadButton targetRef={trendChartRef} filename={`rubli-sector-${sector.code}-spend`} />
               </div>
-            </CardHeader>
-            <CardContent className="-mx-2">
               <div ref={trendChartRef}>
                 {sector.trends?.length ? (
                   <TrendArea data={sector.trends} color={sectorColor} />
@@ -793,56 +880,49 @@ export function SectorProfile() {
                   <p className="text-sm text-text-muted px-4 py-8 text-center">No trend data available for this sector</p>
                 )}
               </div>
-            </CardContent>
-          </div>
+            </div>
+          </section>
 
           {/* MONTHLY DEVIATION */}
-          <div className="card-elevated">
-            <CardHeader>
-              <div className="flex items-start justify-between gap-3">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Calendar className="h-4 w-4" style={{ color: sectorColor }} />
-                    Month vs. Average — {selectedYear}
-                  </CardTitle>
-                  <p className="text-xs text-text-muted mt-0.5">How each month deviates from the sector's own monthly average</p>
-                </div>
-                {/* year selector + chart download */}
-                <div className="flex flex-col items-end gap-1">
-                  <ChartDownloadButton targetRef={monthlyChartRef} filename={`rubli-sector-${sector.code}-monthly-${selectedYear}`} />
-                  <div className="flex flex-wrap gap-1 justify-end">
-                    {yearOptions.slice(0, 8).map((y) => (
-                      <button
-                        key={y}
-                        onClick={() => setSelectedYear(y)}
-                        className={cn(
-                          'rounded px-2 py-0.5 text-xs font-mono tabular-nums transition-all',
-                          y === selectedYear
-                            ? 'font-bold text-background'
-                            : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
-                        )}
-                        style={y === selectedYear ? { background: sectorColor } : undefined}
-                      >
-                        {y}
-                      </button>
-                    ))}
-                    {yearOptions.length > 8 && (
-                      <select
-                        value={yearOptions.indexOf(selectedYear) >= 8 ? selectedYear : ''}
-                        onChange={(e) => e.target.value && setSelectedYear(Number(e.target.value))}
-                        className="rounded px-1.5 py-0.5 text-xs text-text-muted bg-background-elevated border border-border/40 hover:border-border cursor-pointer"
-                      >
-                        <option value="">older…</option>
-                        {yearOptions.slice(8).map((y) => (
-                          <option key={y} value={y}>{y}</option>
-                        ))}
-                      </select>
-                    )}
-                  </div>
+          <section>
+            <EditorialHeadline
+              section="Monthly Analysis"
+              headline={`Month vs. Average -- ${selectedYear}`}
+              subtitle="How each month deviates from the sector's own monthly average"
+            />
+            <div className="mt-4 card-elevated p-4">
+              <div className="flex justify-end gap-2 mb-3">
+                <ChartDownloadButton targetRef={monthlyChartRef} filename={`rubli-sector-${sector.code}-monthly-${selectedYear}`} />
+                <div className="flex flex-wrap gap-1 justify-end">
+                  {yearOptions.slice(0, 8).map((y) => (
+                    <button
+                      key={y}
+                      onClick={() => setSelectedYear(y)}
+                      className={cn(
+                        'rounded px-2 py-0.5 text-xs font-mono tabular-nums transition-all',
+                        y === selectedYear
+                          ? 'font-bold text-background'
+                          : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
+                      )}
+                      style={y === selectedYear ? { background: sectorColor } : undefined}
+                    >
+                      {y}
+                    </button>
+                  ))}
+                  {yearOptions.length > 8 && (
+                    <select
+                      value={yearOptions.indexOf(selectedYear) >= 8 ? selectedYear : ''}
+                      onChange={(e) => e.target.value && setSelectedYear(Number(e.target.value))}
+                      className="rounded px-1.5 py-0.5 text-xs text-text-muted bg-background-elevated border border-border/40 hover:border-border cursor-pointer"
+                    >
+                      <option value="">older...</option>
+                      {yearOptions.slice(8).map((y) => (
+                        <option key={y} value={y}>{y}</option>
+                      ))}
+                    </select>
+                  )}
                 </div>
               </div>
-            </CardHeader>
-            <CardContent>
               <div ref={monthlyChartRef}>
                 {monthlyLoading ? (
                   <Skeleton className="h-72 w-full" />
@@ -858,17 +938,18 @@ export function SectorProfile() {
                   <p className="text-sm text-text-muted py-8 text-center">No monthly data available for this sector</p>
                 )}
               </div>
-            </CardContent>
-          </div>
+            </div>
+          </section>
 
-          {/* TOP VENDORS */}
-          <div className="card-elevated">
-            <CardHeader className="flex flex-row items-center justify-between">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="h-4 w-4" style={{ color: sectorColor }} />
-                Top Vendors
-              </CardTitle>
-              <div className="flex items-center gap-1">
+          {/* TOP VENDORS -- EDITORIAL CARDS */}
+          <section>
+            <EditorialHeadline
+              section="Top Vendors"
+              headline="Dominant Suppliers"
+              subtitle="Ranked by total procurement value in this sector"
+            />
+            <div className="mt-4">
+              <div className="flex items-center justify-end gap-1 mb-3">
                 <TableExportButton
                   data={(topVendors?.data ?? []).map((v: { vendor_id?: number; vendor_name?: string; name?: string; total_value_mxn?: number; contract_count?: number; avg_risk_score?: number }) => ({
                     vendor_id: v.vendor_id ?? '',
@@ -884,8 +965,6 @@ export function SectorProfile() {
                   <Button variant="ghost" size="sm" className="text-xs">All <ExternalLink className="ml-1 h-3 w-3" /></Button>
                 </Link>
               </div>
-            </CardHeader>
-            <CardContent>
               <div ref={vendorChartRef}>
                 {vendorsLoading ? (
                   <div className="space-y-2">{[...Array(5)].map((_,i) => <Skeleton key={i} className="h-12" />)}</div>
@@ -897,44 +976,69 @@ export function SectorProfile() {
                   <p className="text-sm text-text-muted py-8 text-center">No vendor data available for this sector</p>
                 )}
               </div>
-            </CardContent>
-          </div>
+            </div>
+          </section>
 
-          {/* KNOWN CASES */}
+          {/* HUMAN IMPACT CALLOUT */}
+          {stats && stats.total_value_mxn > 0 && (
+            <motion.section
+              className="space-y-3"
+              variants={fadeIn}
+              initial="initial"
+              whileInView="animate"
+              viewport={{ once: true }}
+            >
+              <div className="h-px bg-border" />
+              <div className="flex items-start gap-4">
+                <div className="flex-1">
+                  <p
+                    className="text-sm text-text-secondary leading-relaxed italic"
+                    style={{ fontFamily: 'var(--font-family-serif)' }}
+                  >
+                    {SECTOR_IMPACT_CONTEXT[sector.code] || SECTOR_IMPACT_CONTEXT.otros}
+                  </p>
+                </div>
+                <div className="flex-shrink-0 w-64">
+                  <ImpactoHumano amountMxn={stats.total_value_mxn * (parseFloat(highRiskPct) / 100)} />
+                </div>
+              </div>
+              <div className="h-px bg-border" />
+            </motion.section>
+          )}
+
+          {/* KNOWN INVESTIGATION CASES */}
           {(topCasesError || caseData.length > 0) && (
-            <div className="card-elevated border-risk-high/30 bg-risk-critical/3 overflow-hidden">
-              <div className="h-1 w-full bg-gradient-to-r from-risk-critical to-risk-high" />
-              <CardHeader className="flex flex-row items-center justify-between pb-3">
-                <CardTitle className="flex items-center gap-2 text-sm">
-                  <Crosshair className="h-4 w-4 text-risk-high" />
-                  Known Investigation Cases
-                </CardTitle>
-                <Link to={`/investigation?sector_id=${sectorId}`}>
-                  <Button variant="ghost" size="sm" className="text-xs text-risk-high">
-                    Investigate <ExternalLink className="ml-1 h-3 w-3" />
-                  </Button>
-                </Link>
-              </CardHeader>
-              <CardContent>
+            <section>
+              <EditorialHeadline
+                section="Documented Corruption"
+                headline="Known Investigation Cases"
+                subtitle="Cases with documented evidence in this sector"
+              />
+              <div className="mt-4 rounded-lg border border-risk-high/30 bg-risk-critical/3 overflow-hidden p-4">
+                <div className="flex items-center justify-end mb-3">
+                  <Link to={`/investigation?sector_id=${sectorId}`}>
+                    <Button variant="ghost" size="sm" className="text-xs text-risk-high">
+                      Investigate <ExternalLink className="ml-1 h-3 w-3" />
+                    </Button>
+                  </Link>
+                </div>
                 {topCasesError ? (
                   <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load investigation cases.</p>
                 ) : (
                   <InvestigationCases data={caseData} />
                 )}
-              </CardContent>
-            </div>
+              </div>
+            </section>
           )}
 
-          {/* MONEY FLOW */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2 text-sm">
-                <ArrowRight className="h-4 w-4" style={{ color: sectorColor }} />
-                Spending by Institution
-              </CardTitle>
-              <p className="text-xs text-text-muted">Which institutions drive this sector's procurement</p>
-            </CardHeader>
-            <CardContent>
+          {/* SPENDING BY INSTITUTION */}
+          <section>
+            <EditorialHeadline
+              section="Institutional Breakdown"
+              headline="Spending by Institution"
+              subtitle="Which institutions drive this sector's procurement"
+            />
+            <div className="mt-4 card-elevated p-4">
               {moneyFlowError ? (
                 <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load money flow data.</p>
               ) : moneyFlowLoading ? (
@@ -944,43 +1048,39 @@ export function SectorProfile() {
               ) : (
                 <p className="text-xs text-text-muted py-4 text-center">No flow data</p>
               )}
-            </CardContent>
-          </div>
+            </div>
+          </section>
 
           {/* AI PRICE ANOMALIES */}
-          <div className="card-elevated">
-            <CardHeader className="pb-2">
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2 text-sm">
-                    <FlaskConical className="h-4 w-4 text-amber-400" />
-                    AI Price Anomalies
-                  </CardTitle>
-                  <p className="text-xs text-text-muted mt-0.5">Contracts statistically flagged as overpriced</p>
+          <section className="card-elevated p-4">
+            <div className="flex items-center justify-between mb-3">
+              <div>
+                <div className="flex items-center gap-2">
+                  <FlaskConical className="h-4 w-4 text-amber-400" />
+                  <h3 className="text-sm font-bold text-text-primary">AI Price Anomalies</h3>
                 </div>
-                <Link to={`/price-analysis?sector_id=${sectorId}`}>
-                  <Button variant="ghost" size="sm" className="text-xs">All <ExternalLink className="ml-1 h-3 w-3" /></Button>
-                </Link>
+                <p className="text-xs text-text-muted mt-0.5">Contracts statistically flagged as overpriced</p>
               </div>
-            </CardHeader>
-            <CardContent>
-              {priceAnomaliesError ? (
-                <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load price anomalies.</p>
-              ) : priceAnomaliesLoading ? (
-                <div className="space-y-2">{[...Array(4)].map((_,i) => <Skeleton key={i} className="h-10" />)}</div>
-              ) : priceAnomalies?.data?.length ? (
-                <PriceAnomalyList data={priceAnomalies.data as any} color={sectorColor} />
-              ) : (
-                <div className="flex flex-col items-center py-6 gap-2">
-                  <Brain className="h-8 w-8 text-text-muted opacity-40" />
-                  <p className="text-xs text-text-muted">No price anomalies detected</p>
-                </div>
-              )}
-            </CardContent>
-          </div>
+              <Link to={`/price-analysis?sector_id=${sectorId}`}>
+                <Button variant="ghost" size="sm" className="text-xs">All <ExternalLink className="ml-1 h-3 w-3" /></Button>
+              </Link>
+            </div>
+            {priceAnomaliesError ? (
+              <p className="text-xs text-rose-400/80 py-4 text-center">Failed to load price anomalies.</p>
+            ) : priceAnomaliesLoading ? (
+              <div className="space-y-2">{[...Array(4)].map((_,i) => <Skeleton key={i} className="h-10" />)}</div>
+            ) : priceAnomalies?.data?.length ? (
+              <PriceAnomalyList data={priceAnomalies.data as PriceAnomalyItem[]} color={sectorColor} />
+            ) : (
+              <div className="flex flex-col items-center py-6 gap-2">
+                <Brain className="h-8 w-8 text-text-muted opacity-40" />
+                <p className="text-xs text-text-muted">No price anomalies detected</p>
+              </div>
+            )}
+          </section>
 
-          {/* INSTITUTIONS IN SECTOR — drill-down table */}
-          <div className="card-elevated">
+          {/* INSTITUTIONS TABLE */}
+          <section className="card-elevated">
             <CardContent className="pt-5 pb-4">
               <div className="flex items-center justify-between mb-3">
                 <div className="flex items-center gap-2">
@@ -1009,7 +1109,6 @@ export function SectorProfile() {
               {sectorInstitutionsError ? (
                 <p className="text-xs text-rose-400/80 py-6 text-center">Failed to load institutions data.</p>
               ) : !sectorInstitutions ? (
-                /* Loading skeleton */
                 <div className="space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-9 w-full" />
@@ -1061,14 +1160,14 @@ export function SectorProfile() {
                             <td className="data-cell text-text-muted hidden sm:table-cell">
                               {inst.institution_type
                                 ? <span className="px-1.5 py-0.5 rounded bg-background-elevated/50 border border-border/30 font-mono text-[10px]">{inst.institution_type}</span>
-                                : <span className="text-text-muted/40">—</span>
+                                : <span className="text-text-muted/40">&mdash;</span>
                               }
                             </td>
                             <td className="data-cell text-right font-mono tabular-nums text-text-primary">
                               {formatNumber(inst.total_contracts ?? 0)}
                             </td>
                             <td className="data-cell text-right font-mono tabular-nums text-text-primary hidden md:table-cell">
-                              {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '—'}
+                              {inst.total_amount_mxn != null ? formatCompactMXN(inst.total_amount_mxn) : '&mdash;'}
                             </td>
                             <td className="data-cell text-center">
                               {inst.avg_risk_score != null ? (
@@ -1076,7 +1175,7 @@ export function SectorProfile() {
                                   {(inst.avg_risk_score * 100).toFixed(1)}%
                                 </span>
                               ) : (
-                                <span className="text-text-muted/40">—</span>
+                                <span className="text-text-muted/40">&mdash;</span>
                               )}
                             </td>
                             <td className="data-cell text-right font-mono tabular-nums hidden lg:table-cell">
@@ -1085,7 +1184,7 @@ export function SectorProfile() {
                                   {formatPercentSafe(inst.direct_award_pct)}
                                 </span>
                               ) : (
-                                <span className="text-text-muted/40">—</span>
+                                <span className="text-text-muted/40">&mdash;</span>
                               )}
                             </td>
                           </tr>
@@ -1102,7 +1201,7 @@ export function SectorProfile() {
                 </div>
               )}
             </CardContent>
-          </div>
+          </section>
 
           {/* QUICK ACTIONS */}
           <div className="grid gap-3 md:grid-cols-3">
@@ -1136,11 +1235,11 @@ export function SectorProfile() {
           </div>
         </div>
       </div>
-    </div>
+    </article>
   )
 }
 
-// ─── RISK DONUT ───────────────────────────────────────────────────────────────
+// ── RISK DONUT ────────────────────────────────────────────────────────────────
 
 function RiskDonut({
   data,
@@ -1205,13 +1304,11 @@ function RiskDonut({
             />
           </PieChart>
         </ResponsiveContainer>
-        {/* center label */}
         <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-2xl font-black tabular-nums text-text-primary">{highPlusPct}%</span>
           <span className="text-xs text-text-muted font-mono uppercase">high+</span>
         </div>
       </div>
-      {/* legend */}
       <div className="flex-1 space-y-3">
         {sorted.map((d) => (
           <div key={d.level} className="space-y-0.5">
@@ -1235,7 +1332,7 @@ function RiskDonut({
   )
 }
 
-// ─── FACTOR RANK LIST ────────────────────────────────────────────────────────
+// ── FACTOR RANK LIST ──────────────────────────────────────────────────────────
 
 function FactorRankList({
   data,
@@ -1293,9 +1390,7 @@ function FactorRankList({
   )
 }
 
-// ─── INSTITUTION SPENDING LIST ───────────────────────────────────────────────
-// The money-flow endpoint with sector_id filter returns institution → sector rows.
-// We display it as a ranked breakdown of which institutions drive this sector's spend.
+// ── INSTITUTION SPENDING LIST ─────────────────────────────────────────────────
 
 function MoneyFlowList({
   flows,
@@ -1350,7 +1445,7 @@ function MoneyFlowList({
             <p className="ml-6 mt-0.5 text-[10px] text-text-muted font-mono">
               {formatNumber(f.contracts)} contracts
               {f.high_risk_pct != null && f.high_risk_pct > 5 && (
-                <span style={{ color: riskColor }}> · {f.high_risk_pct.toFixed(1)}% high risk</span>
+                <span style={{ color: riskColor }}> -- {f.high_risk_pct.toFixed(1)}% high risk</span>
               )}
             </p>
           </Link>
@@ -1360,7 +1455,7 @@ function MoneyFlowList({
   )
 }
 
-// ─── PRICE ANOMALY LIST ───────────────────────────────────────────────────────
+// ── PRICE ANOMALY LIST ────────────────────────────────────────────────────────
 
 const HYPOTHESIS_LABELS: Record<string, { label: string; color: string }> = {
   extreme_overpricing: { label: 'Extreme Overpricing', color: RISK_COLORS.critical },
@@ -1369,15 +1464,22 @@ const HYPOTHESIS_LABELS: Record<string, { label: string; color: string }> = {
   sector_anomaly: { label: 'Sector Anomaly', color: RISK_COLORS.medium },
 }
 
+interface PriceAnomalyItem {
+  hypothesis_id: string
+  hypothesis_type: string
+  contract_id: number
+  confidence: number
+  confidence_level?: string
+  amount_mxn: number
+  explanation?: string
+  recommended_action?: string
+}
+
 function PriceAnomalyList({
   data,
   color: _color,
 }: {
-  data: Array<{
-    hypothesis_id: string; hypothesis_type: string; contract_id: number;
-    confidence: number; confidence_level?: string; amount_mxn: number;
-    explanation?: string; recommended_action?: string
-  }>
+  data: PriceAnomalyItem[]
   color: string
 }) {
   return (
@@ -1421,7 +1523,7 @@ function PriceAnomalyList({
               <p className="text-[10px] text-text-muted leading-relaxed">{shortExplanation}</p>
             )}
             {d.recommended_action && (
-              <p className="text-[10px] text-accent mt-0.5 leading-relaxed">→ {d.recommended_action}</p>
+              <p className="text-[10px] text-accent mt-0.5 leading-relaxed">&rarr; {d.recommended_action}</p>
             )}
           </Link>
         )
@@ -1430,7 +1532,7 @@ function PriceAnomalyList({
   )
 }
 
-// ─── TREND AREA ──────────────────────────────────────────────────────────────
+// ── TREND AREA ────────────────────────────────────────────────────────────────
 
 function TrendArea({
   data,
@@ -1492,7 +1594,7 @@ function TrendArea({
   )
 }
 
-// ─── MONTHLY DEVIATION ───────────────────────────────────────────────────────
+// ── MONTHLY DEVIATION ─────────────────────────────────────────────────────────
 
 function MonthlyDeviation({
   data,
@@ -1521,19 +1623,17 @@ function MonthlyDeviation({
     }
   })
 
-  // find the peak non-december month
   const nonDecPeak = [...chartData]
     .filter((d) => !d.isDecember)
     .sort((a, b) => b.dev - a.dev)[0]
 
   return (
     <div className="space-y-3">
-      {/* summary chips */}
       <div className="flex flex-wrap gap-2 text-xs">
         {decemberSpike !== null && decemberSpike > 1.3 && (
           <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/40 bg-risk-critical/8 px-2.5 py-1">
-            <span className="font-black text-risk-critical">{decemberSpike.toFixed(1)}×</span>
-            <span className="text-text-muted">December vs avg — year-end dump</span>
+            <span className="font-black text-risk-critical">{decemberSpike.toFixed(1)}x</span>
+            <span className="text-text-muted">December vs avg -- year-end dump</span>
           </div>
         )}
         {nonDecPeak && nonDecPeak.dev > 20 && (
@@ -1548,13 +1648,12 @@ function MonthlyDeviation({
         </div>
       </div>
 
-      {/* diverging chart */}
       <div
         className="h-72"
         role="img"
         aria-label="Horizontal bar chart comparing this sector's metrics against the national average"
       >
-        <span className="sr-only">Horizontal diverging bar chart comparing this sector's contract value, single bid rate, and direct award rate relative to the national average.</span>
+        <span className="sr-only">Horizontal diverging bar chart comparing this sector's contract value by month relative to the monthly average.</span>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={chartData}
@@ -1630,7 +1729,6 @@ function MonthlyDeviation({
         </ResponsiveContainer>
       </div>
 
-      {/* risk row */}
       <div className="grid grid-cols-12 gap-px pt-1">
         {chartData.map((d) => {
           const riskColor =
@@ -1648,14 +1746,14 @@ function MonthlyDeviation({
           )
         })}
       </div>
-      <p className="text-xs text-text-muted text-center">↑ avg risk score per month (green=low · red=critical)</p>
+      <p className="text-xs text-text-muted text-center">{'\u2191'} avg risk score per month (green=low, red=critical)</p>
     </div>
   )
 }
 
-// ─── VENDOR BARS ─────────────────────────────────────────────────────────────
+// ── VENDOR BARS ───────────────────────────────────────────────────────────────
 
-function VendorBars({ data, color }: { data: any[]; color: string }) {
+function VendorBars({ data, color }: { data: Array<{ vendor_id: number; vendor_name: string; total_value_mxn: number; total_contracts: number; avg_risk_score?: number }>; color: string }) {
   const top = data.slice(0, 8)
   const maxVal = Math.max(...top.map((v) => v.total_value_mxn), 1)
 
@@ -1671,7 +1769,6 @@ function VendorBars({ data, color }: { data: any[]; color: string }) {
 
         return (
           <div key={vendor.vendor_id} className="group relative">
-            {/* background bar */}
             <div
               className="absolute inset-0 rounded-md opacity-0 group-hover:opacity-100 transition-opacity"
               style={{ background: hex(color, 0.06) }}
@@ -1698,14 +1795,13 @@ function VendorBars({ data, color }: { data: any[]; color: string }) {
                     )}
                   </div>
                 </div>
-                {/* value bar */}
                 <div className="h-1 bg-background-elevated rounded-full overflow-hidden">
                   <div
                     className="h-full rounded-full transition-all"
                     style={{ width: `${barPct}%`, background: `linear-gradient(90deg, ${color}, ${hex(color, 0.5)})` }}
                   />
                 </div>
-                <p className="text-xs text-text-muted">{formatNumber(vendor.total_contracts)} contracts · {formatCompactUSD(vendor.total_value_mxn)}</p>
+                <p className="text-xs text-text-muted">{formatNumber(vendor.total_contracts)} contracts -- {formatCompactUSD(vendor.total_value_mxn)}</p>
               </div>
             </div>
           </div>
@@ -1715,7 +1811,7 @@ function VendorBars({ data, color }: { data: any[]; color: string }) {
   )
 }
 
-// ─── PRICE DISTRIBUTION ──────────────────────────────────────────────────────
+// ── PRICE DISTRIBUTION ────────────────────────────────────────────────────────
 
 function PriceDistribution({
   baseline,
@@ -1724,21 +1820,19 @@ function PriceDistribution({
   baseline: { percentile_10: number; percentile_25: number; percentile_50: number; percentile_75: number; percentile_90: number; percentile_95: number; upper_fence: number; extreme_fence: number; sample_count: number }
   color: string
 }) {
-  // Visual quartile range bar
   const min = baseline.percentile_10
   const max = baseline.extreme_fence
   const range = max - min || 1
 
   const segments = [
-    { from: baseline.percentile_10, to: baseline.percentile_25, color: RISK_COLORS.low, label: 'P10–P25' },
-    { from: baseline.percentile_25, to: baseline.percentile_50, color: RISK_COLORS.medium, label: 'P25–P50' },
-    { from: baseline.percentile_50, to: baseline.percentile_75, color: RISK_COLORS.high, label: 'P50–P75' },
-    { from: baseline.percentile_75, to: baseline.extreme_fence, color: RISK_COLORS.critical, label: 'P75–Extreme' },
+    { from: baseline.percentile_10, to: baseline.percentile_25, color: RISK_COLORS.low, label: 'P10-P25' },
+    { from: baseline.percentile_25, to: baseline.percentile_50, color: RISK_COLORS.medium, label: 'P25-P50' },
+    { from: baseline.percentile_50, to: baseline.percentile_75, color: RISK_COLORS.high, label: 'P50-P75' },
+    { from: baseline.percentile_75, to: baseline.extreme_fence, color: RISK_COLORS.critical, label: 'P75-Extreme' },
   ]
 
   return (
     <div className="space-y-4">
-      {/* visual bar */}
       <div>
         <div className="flex h-3 rounded-full overflow-hidden gap-px">
           {segments.map((s) => (
@@ -1746,7 +1840,7 @@ function PriceDistribution({
               key={s.label}
               className="h-full"
               style={{ width: `${((s.to - s.from) / range) * 100}%`, backgroundColor: s.color, opacity: 0.85 }}
-              title={`${s.label}: ${formatCompactMXN(s.from)} – ${formatCompactMXN(s.to)}`}
+              title={`${s.label}: ${formatCompactMXN(s.from)} - ${formatCompactMXN(s.to)}`}
             />
           ))}
         </div>
@@ -1767,7 +1861,7 @@ function PriceDistribution({
   )
 }
 
-// ─── INVESTIGATION CASES ─────────────────────────────────────────────────────
+// ── INVESTIGATION CASES ───────────────────────────────────────────────────────
 
 const CASE_TYPE_LABELS: Record<string, string> = {
   single_vendor: 'Single Vendor',
@@ -1853,41 +1947,7 @@ function InvestigationCases({ data }: { data: Array<Record<string, unknown>> }) 
   )
 }
 
-// ─── PRIMITIVES ──────────────────────────────────────────────────────────────
-
-function KPICard({
-  title, value, icon: Icon, format = 'number', color = '#3b82f6',
-}: {
-  title: string; value?: number; icon: React.ElementType; format?: 'number' | 'currency' | 'percent'; color?: string
-}) {
-  const formatted =
-    value === undefined ? '-' :
-    format === 'currency' ? formatCompactMXN(value) :
-    format === 'percent' ? formatPercentSafe(value, true) :
-    formatNumber(value)
-  const sub = format === 'currency' && value !== undefined ? formatCompactUSD(value) : undefined
-
-  return (
-    <div className="card-elevated overflow-hidden">
-      <div className="h-0.5 w-full" style={{ background: color }} />
-      <CardContent className="p-4">
-        <div className="flex items-start justify-between">
-          <div>
-            <p className="text-xs text-text-muted">{title}</p>
-            <p className="text-2xl font-black tabular-nums text-text-primary mt-0.5">{formatted}</p>
-            {sub && <p className="text-xs text-text-muted tabular-nums">{sub}</p>}
-          </div>
-          <div
-            className="flex h-9 w-9 items-center justify-center rounded-lg"
-            style={{ backgroundColor: hex(color, 0.15), color }}
-          >
-            <Icon className="h-4 w-4" />
-          </div>
-        </div>
-      </CardContent>
-    </div>
-  )
-}
+// ── PRIMITIVES ────────────────────────────────────────────────────────────────
 
 function StatRow({ label, value, accent }: { label: string; value: string; accent?: boolean }) {
   return (
@@ -1900,18 +1960,20 @@ function StatRow({ label, value, accent }: { label: string; value: string; accen
 
 function SectorProfileSkeleton() {
   return (
-    <div className="space-y-6">
-      <Skeleton className="h-28 w-full rounded-xl" />
-      <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+    <div className="max-w-6xl mx-auto space-y-8 pb-12">
+      <Skeleton className="h-6 w-32" />
+      <Skeleton className="h-36 w-full rounded-xl" />
+      <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
         {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
       </div>
-      <div className="grid gap-6 lg:grid-cols-3">
+      <Skeleton className="h-20 w-full" />
+      <div className="grid gap-8 lg:grid-cols-3">
         <div className="space-y-6">
           <Skeleton className="h-72" />
           <Skeleton className="h-64" />
           <Skeleton className="h-40" />
         </div>
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 space-y-8">
           <Skeleton className="h-80" />
           <Skeleton className="h-80" />
           <Skeleton className="h-72" />

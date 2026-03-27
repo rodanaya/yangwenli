@@ -1,9 +1,9 @@
 /**
- * Spending Categories — Investigation Workbench
+ * Spending Categories — Editorial Redesign
  *
- * Section 1: Filter bar (year range, sector, view toggle)
- * Section 2: Sortable table (by Partida or by Sector view)
- * Section 3: Charts (treemap, trend lines) — collapsed in <details>
+ * NYT/WaPo investigative journalism aesthetic.
+ * Sections: Editorial headline, HallazgoStats, Lede, Category table,
+ * Banderas Rojas, Charts, ImpactoHumano, drill-down panels.
  */
 
 import { useMemo, useState, useRef } from 'react'
@@ -16,7 +16,6 @@ import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
-import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
 import {
   XAxis,
   YAxis,
@@ -28,31 +27,28 @@ import {
   LineChart,
   Line,
   Legend,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-  ReferenceLine,
   Cell,
   LabelList,
 } from '@/components/charts'
 import {
-  ShoppingCart,
   TrendingUp,
   ArrowUpRight,
   SlidersHorizontal,
   AlertTriangle,
-  Brain,
   BarChart3,
   ExternalLink,
   X,
   Building2,
   User,
+  Flag,
+  Search,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { getSectorNameEN, SECTORS } from '@/lib/constants'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
-import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -91,7 +87,6 @@ interface TrendItem {
 
 type SortField = 'total_contracts' | 'total_value' | 'avg_risk' | 'direct_award_pct'
 type SortDir = 'asc' | 'desc'
-type ViewMode = 'partida' | 'sector'
 
 // =============================================================================
 // Helpers
@@ -112,217 +107,8 @@ function getRiskLabel(score: number): string {
 }
 
 function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
-  if (field !== sortField) return <span className="text-text-muted/40 ml-1">↕</span>
-  return <span className="text-accent ml-1">{sortDir === 'desc' ? '▼' : '▲'}</span>
-}
-
-/** Interpolates green→red based on risk score (0→#4ade80, critical→#f87171) */
-function riskToColor(score: number): string {
-  const clamped = Math.min(1, score / RISK_THRESHOLDS.critical)
-  const r = Math.round(74  + (248 - 74)  * clamped)
-  const g = Math.round(222 + (113 - 222) * clamped)
-  const b = Math.round(128 + (113 - 128) * clamped)
-  return `rgb(${r},${g},${b})`
-}
-
-// =============================================================================
-// Scatter plot tooltip
-// =============================================================================
-
-interface ScatterPayloadItem {
-  payload: ScatterDatum
-}
-
-interface ScatterTooltipProps {
-  active?: boolean
-  payload?: ScatterPayloadItem[]
-}
-
-function CustomScatterTooltip({ active, payload }: ScatterTooltipProps) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  return (
-    <div
-      className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-      style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
-    >
-      <p className="font-bold text-text-primary mb-1.5 max-w-[200px] whitespace-normal text-[11px]">{d.name}</p>
-      <p style={{ color: riskToColor(d.risk) }}>Risk: {(d.risk * 100).toFixed(1)}% ({d.riskLabel})</p>
-      <p className="text-text-secondary">Value: {formatCompactMXN(d.value)}</p>
-      <p className="text-text-muted">Contracts: {formatNumber(d.contracts)}</p>
-      {d.sectorCode && (
-        <p className="text-text-muted capitalize">Sector: {d.sectorCode}</p>
-      )}
-    </div>
-  )
-}
-
-// =============================================================================
-// Scatter plot data type
-// =============================================================================
-
-interface ScatterDatum {
-  x: number       // log10 of total_value_mxn
-  y: number       // avg_risk_score
-  z: number       // sqrt of contracts (for bubble size)
-  name: string
-  value: number
-  risk: number
-  contracts: number
-  riskLabel: string
-  sectorCode: string | null
-  fill: string
-}
-
-// =============================================================================
-// Risk × Value Scatter Chart
-// =============================================================================
-
-function RiskValueScatter({ categories }: { categories: CategoryStat[] }) {
-  const data: ScatterDatum[] = categories
-    .filter(c => c.total_value > 0 && c.avg_risk > 0)
-    .map(c => ({
-      x: Math.log10(c.total_value),
-      y: c.avg_risk,
-      z: Math.sqrt(c.total_contracts || 1),
-      name: c.name_en || c.name_es,
-      value: c.total_value,
-      risk: c.avg_risk,
-      contracts: c.total_contracts,
-      riskLabel: getRiskLabel(c.avg_risk),
-      sectorCode: c.sector_code,
-      fill: c.avg_risk >= RISK_THRESHOLDS.critical ? '#f87171'
-          : c.avg_risk >= RISK_THRESHOLDS.high ? '#fb923c'
-          : c.avg_risk >= RISK_THRESHOLDS.medium ? '#fbbf24'
-          : '#4ade80',
-    }))
-
-  if (data.length === 0) return null
-
-  const xValues = data.map(d => d.x)
-  const medianX = xValues.sort((a, b) => a - b)[Math.floor(xValues.length / 2)]
-  const avgY = data.reduce((s, d) => s + d.y, 0) / data.length
-
-  // Quadrant labels styled via manual annotation — we use 4 reference areas
-  const xMin = Math.min(...xValues) - 0.2
-  const xMax = Math.max(...xValues) + 0.2
-
-  return (
-    <Card className="bg-card border-border/40">
-      <CardHeader className="pb-2">
-        <CardTitle className="text-sm font-mono text-text-primary flex items-center gap-2">
-          <TrendingUp className="h-3.5 w-3.5 text-text-muted" />
-          Risk vs. Value — Category Landscape
-        </CardTitle>
-        <p className="text-[11px] text-text-muted mt-0.5">
-          Each dot = one spending category. Size = contract count. Quadrant = investigation priority.
-        </p>
-      </CardHeader>
-      <CardContent>
-        <ResponsiveContainer width="100%" height={420}>
-          <ScatterChart margin={{ top: 30, right: 60, bottom: 50, left: 50 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-            <XAxis
-              type="number"
-              dataKey="x"
-              name="Value (log scale)"
-              domain={[xMin, xMax]}
-              tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-              label={{
-                value: 'Contract Value (log scale MXN) →',
-                position: 'insideBottom',
-                offset: -15,
-                fill: '#8b949e',
-                fontSize: 10,
-              }}
-              tickFormatter={(v: number) => {
-                const val = Math.pow(10, v)
-                if (val >= 1e12) return `${(val / 1e12).toFixed(0)}T`
-                if (val >= 1e9) return `${(val / 1e9).toFixed(0)}B`
-                if (val >= 1e6) return `${(val / 1e6).toFixed(0)}M`
-                return `${val.toFixed(0)}`
-              }}
-            />
-            <YAxis
-              type="number"
-              dataKey="y"
-              name="Risk Score"
-              domain={[0, 1]}
-              tick={{ fill: '#8b949e', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-              tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-              label={{
-                value: 'Avg Risk Score →',
-                angle: -90,
-                position: 'insideLeft',
-                offset: 10,
-                fill: '#8b949e',
-                fontSize: 10,
-              }}
-            />
-            <ZAxis type="number" dataKey="z" range={[20, 280]} />
-            <RechartsTooltip content={<CustomScatterTooltip />} />
-            {/* Quadrant dividers */}
-            <ReferenceLine
-              x={medianX}
-              stroke="rgba(255,255,255,0.12)"
-              strokeDasharray="4 4"
-            />
-            <ReferenceLine
-              y={avgY}
-              stroke="rgba(255,255,255,0.12)"
-              strokeDasharray="4 4"
-            />
-            {/* Quadrant labels via CustomLabel */}
-            <ReferenceLine
-              x={xMax - 0.05}
-              stroke="transparent"
-              label={{
-                value: 'INVESTIGATE NOW',
-                position: 'insideTopRight',
-                fill: '#f87171',
-                fontSize: 9,
-                fontFamily: 'var(--font-family-mono)',
-              }}
-            />
-            <ReferenceLine
-              x={xMin + 0.05}
-              stroke="transparent"
-              label={{
-                value: 'WATCH',
-                position: 'insideTopLeft',
-                fill: '#fbbf24',
-                fontSize: 9,
-                fontFamily: 'var(--font-family-mono)',
-              }}
-            />
-            <Scatter
-              data={data}
-              isAnimationActive={false}
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.75} />
-              ))}
-            </Scatter>
-          </ScatterChart>
-        </ResponsiveContainer>
-        {/* Legend */}
-        <div className="flex items-center gap-4 mt-2 flex-wrap">
-          {[
-            { color: '#f87171', label: 'Critical (≥50%)' },
-            { color: '#fb923c', label: 'High (≥30%)' },
-            { color: '#fbbf24', label: 'Medium (≥10%)' },
-            { color: '#4ade80', label: 'Low (<10%)' },
-          ].map(item => (
-            <div key={item.label} className="flex items-center gap-1.5">
-              <span className="h-2.5 w-2.5 rounded-full" style={{ backgroundColor: item.color }} />
-              <span className="text-[10px] text-text-muted font-mono">{item.label}</span>
-            </div>
-          ))}
-          <span className="text-[10px] text-text-muted font-mono ml-auto">Bubble size = contract count</span>
-        </div>
-      </CardContent>
-    </Card>
-  )
+  if (field !== sortField) return <span className="text-text-muted/40 ml-1">&#8597;</span>
+  return <span className="text-accent ml-1">{sortDir === 'desc' ? '\u25BC' : '\u25B2'}</span>
 }
 
 // =============================================================================
@@ -338,10 +124,10 @@ interface MiniSparklineProps {
 
 function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: MiniSparklineProps) {
   if (!values.length || values.every(v => v === 0)) {
-    return <span className="text-[9px] text-text-muted font-mono">—</span>
+    return <span className="text-[9px] text-text-muted font-mono">&mdash;</span>
   }
   const max = Math.max(...values)
-  if (max === 0) return <span className="text-[9px] text-text-muted font-mono">—</span>
+  if (max === 0) return <span className="text-[9px] text-text-muted font-mono">&mdash;</span>
 
   const pts = values.map((v, i) => {
     const x = (i / (values.length - 1)) * (width - 2) + 1
@@ -371,7 +157,6 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
         strokeLinecap="round"
         opacity={0.8}
       />
-      {/* Last point dot */}
       {values.length > 0 && (() => {
         const lastX = width - 1
         const lastY = height - 2 - ((lastVal / max) * (height - 4)) + 1
@@ -390,64 +175,23 @@ const MAX_YEAR = 2025
 
 // Sector options for filter dropdown
 const SECTOR_OPTIONS = [
-  { code: '', label: 'All Sectors' },
-  { code: 'salud', label: 'Health' },
-  { code: 'educacion', label: 'Education' },
-  { code: 'infraestructura', label: 'Infrastructure' },
-  { code: 'energia', label: 'Energy' },
-  { code: 'defensa', label: 'Defense' },
-  { code: 'tecnologia', label: 'Technology' },
-  { code: 'hacienda', label: 'Treasury' },
-  { code: 'gobernacion', label: 'Governance' },
-  { code: 'agricultura', label: 'Agriculture' },
-  { code: 'ambiente', label: 'Environment' },
-  { code: 'trabajo', label: 'Labor' },
-  { code: 'otros', label: 'Other' },
+  { code: '', label: 'Todos los Sectores' },
+  { code: 'salud', label: 'Salud' },
+  { code: 'educacion', label: 'Educaci\u00f3n' },
+  { code: 'infraestructura', label: 'Infraestructura' },
+  { code: 'energia', label: 'Energ\u00eda' },
+  { code: 'defensa', label: 'Defensa' },
+  { code: 'tecnologia', label: 'Tecnolog\u00eda' },
+  { code: 'hacienda', label: 'Hacienda' },
+  { code: 'gobernacion', label: 'Gobernaci\u00f3n' },
+  { code: 'agricultura', label: 'Agricultura' },
+  { code: 'ambiente', label: 'Medio Ambiente' },
+  { code: 'trabajo', label: 'Trabajo' },
+  { code: 'otros', label: 'Otros' },
 ]
 
-// (TreemapContent removed — replaced by horizontal BarChart)
-
 // =============================================================================
-// Sector aggregation (for "by sector" view)
-// =============================================================================
-
-interface SectorAggregate {
-  sector_code: string
-  total_contracts: number
-  total_value: number
-  avg_risk: number
-  high_risk_count: number
-}
-
-function aggregateBySector(categories: CategoryStat[]): SectorAggregate[] {
-  const map = new Map<string, SectorAggregate>()
-  for (const cat of categories) {
-    const code = cat.sector_code || 'otros'
-    const existing = map.get(code)
-    if (!existing) {
-      map.set(code, {
-        sector_code: code,
-        total_contracts: cat.total_contracts,
-        total_value: cat.total_value,
-        avg_risk: cat.avg_risk * cat.total_contracts,
-        high_risk_count: cat.avg_risk >= RISK_THRESHOLDS.high ? cat.total_contracts : 0,
-      })
-    } else {
-      existing.total_contracts += cat.total_contracts
-      existing.total_value += cat.total_value
-      existing.avg_risk += cat.avg_risk * cat.total_contracts
-      existing.high_risk_count += cat.avg_risk >= RISK_THRESHOLDS.high ? cat.total_contracts : 0
-    }
-  }
-  // Normalize avg_risk
-  for (const agg of map.values()) {
-    agg.avg_risk = agg.total_contracts > 0 ? agg.avg_risk / agg.total_contracts : 0
-  }
-  return Array.from(map.values())
-}
-
-// =============================================================================
-// Vendor × Institution Panel
+// Vendor x Institution Panel
 // =============================================================================
 
 interface VendorInstPair {
@@ -489,7 +233,7 @@ function CategoryDetailPanel({
           <div className="min-w-0">
             <CardTitle className="text-sm font-bold text-text-primary truncate">{categoryName}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              Top vendor × institution relationships by contract value
+              Principales relaciones proveedor-instituci\u00f3n por monto
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -498,22 +242,22 @@ function CategoryDetailPanel({
               className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded"
             >
               <ExternalLink className="h-3 w-3" />
-              All contracts
+              Ver contratos
             </button>
             {sectorId && (
               <button
                 onClick={() => onNavigate(`/investigation?sector_id=${sectorId}`)}
                 className="flex items-center gap-1 text-xs text-[#f87171] hover:text-[#fca5a5] transition-colors border border-[#f87171]/30 px-2 py-1 rounded"
-                title="View investigation cases in this sector"
+                title="Ver casos de investigaci\u00f3n en este sector"
               >
                 <ExternalLink className="h-3 w-3" />
-                Cases
+                Casos
               </button>
             )}
             <button
               onClick={onClose}
               className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Close panel"
+              aria-label="Cerrar panel"
             >
               <X className="h-4 w-4" />
             </button>
@@ -527,26 +271,24 @@ function CategoryDetailPanel({
           </div>
         ) : pairs.length === 0 ? (
           <p className="text-xs text-text-muted text-center py-8 px-4">
-            No vendor-institution data available for this category.
+            No hay datos de proveedor-instituci\u00f3n disponibles para esta categor\u00eda.
           </p>
         ) : (
           <>
-            {/* Column headers */}
             <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
               <span className="w-4 flex-shrink-0">#</span>
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <User className="h-3 w-3 flex-shrink-0" />
-                <span>Vendor</span>
-                <span className="text-text-muted/30">→</span>
+                <span>Proveedor</span>
+                <span className="text-text-muted/30">&rarr;</span>
                 <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span>Institution</span>
+                <span>Instituci\u00f3n</span>
               </div>
-              <span className="w-20 text-right flex-shrink-0">Value</span>
-              <span className="w-14 text-right flex-shrink-0 hidden md:block">Contracts</span>
-              <span className="w-12 text-right flex-shrink-0 hidden lg:block">Risk</span>
-              <span className="w-12 text-right flex-shrink-0 hidden xl:block">DA%</span>
+              <span className="w-20 text-right flex-shrink-0">Monto</span>
+              <span className="w-14 text-right flex-shrink-0 hidden md:block">Contratos</span>
+              <span className="w-12 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
+              <span className="w-12 text-right flex-shrink-0 hidden xl:block">AD%</span>
             </div>
-
             <div className="divide-y divide-border/10">
               {pairs.map((pair, idx) => (
                 <div
@@ -556,9 +298,7 @@ function CategoryDetailPanel({
                   <span className="text-[11px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">
                     {idx + 1}
                   </span>
-
                   <div className="flex-1 min-w-0">
-                    {/* Names row */}
                     <div className="flex items-center gap-1.5 mb-1.5">
                       <button
                         onClick={() => onNavigate(`/vendors/${pair.vendor_id}`)}
@@ -566,12 +306,11 @@ function CategoryDetailPanel({
                       >
                         {truncate(pair.vendor_name, 30)}
                       </button>
-                      <span className="text-text-muted/30 text-xs flex-shrink-0">→</span>
+                      <span className="text-text-muted/30 text-xs flex-shrink-0">&rarr;</span>
                       <span className="text-xs text-text-secondary truncate max-w-[160px]">
                         {truncate(pair.institution_name, 28)}
                       </span>
                     </div>
-                    {/* Value bar */}
                     <div className="h-0.5 bg-border/20 rounded-full overflow-hidden">
                       <div
                         className="h-full rounded-full transition-all duration-500"
@@ -583,8 +322,6 @@ function CategoryDetailPanel({
                       />
                     </div>
                   </div>
-
-                  {/* Stats */}
                   <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
                     {formatCompactMXN(pair.total_value)}
                   </span>
@@ -664,7 +401,6 @@ function SubcategoryPanel({
 
   const maxValue = items.filter(i => !i.is_catch_all).reduce((m, i) => Math.max(m, i.total_value), 1)
 
-  // Coverage: sum of named subcategory pcts (excluding catch-all)
   const classifiedPct = useMemo(
     () => items.filter(i => !i.is_catch_all).reduce((s, i) => s + i.pct_of_category, 0),
     [items],
@@ -677,7 +413,7 @@ function SubcategoryPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-            What Was Purchased — {categoryName}
+            Qu\u00e9 se compr\u00f3 &mdash; {categoryName}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -693,10 +429,10 @@ function SubcategoryPanel({
 
   const namedCount = sorted.filter(i => !i.is_catch_all).length
   const SORT_OPTS: { key: SubSort; label: string }[] = [
-    { key: 'value', label: 'Value' },
-    { key: 'risk',  label: 'Risk' },
-    { key: 'da',    label: 'DA%' },
-    { key: 'sb',    label: 'SB%' },
+    { key: 'value', label: 'Monto' },
+    { key: 'risk',  label: 'Riesgo' },
+    { key: 'da',    label: 'AD%' },
+    { key: 'sb',    label: 'LU%' },
   ]
 
   return (
@@ -706,15 +442,14 @@ function SubcategoryPanel({
           <div>
             <CardTitle className="text-sm flex items-center gap-2">
               <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-              What Was Purchased
+              Qu\u00e9 se compr\u00f3
             </CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              {namedCount} subcategories · {categoryName} · click a row to expand
+              {namedCount} subcategor\u00edas &middot; {categoryName} &middot; haga clic en una fila para expandir
             </CardDescription>
           </div>
-          {/* Sort tabs */}
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <span className="text-[9px] text-text-muted/50 font-mono uppercase mr-1.5">Sort</span>
+            <span className="text-[9px] text-text-muted/50 font-mono uppercase mr-1.5">Ordenar</span>
             {SORT_OPTS.map(opt => (
               <button
                 key={opt.key}
@@ -731,12 +466,10 @@ function SubcategoryPanel({
             ))}
           </div>
         </div>
-
-        {/* Coverage bar */}
         <div className="mt-2.5">
           <div className="flex items-center justify-between text-[10px] font-mono text-text-muted/60 mb-1">
-            <span>{classifiedPct.toFixed(0)}% of category spend classified into named subcategories</span>
-            <span className="text-text-muted/40">{catchAllPct.toFixed(0)}% unclassified</span>
+            <span>{classifiedPct.toFixed(0)}% del gasto categorizado en subcategor\u00edas</span>
+            <span className="text-text-muted/40">{catchAllPct.toFixed(0)}% sin clasificar</span>
           </div>
           <div className="h-1.5 bg-border/20 rounded-full overflow-hidden flex">
             <div
@@ -752,13 +485,12 @@ function SubcategoryPanel({
       </CardHeader>
 
       <CardContent className="p-0">
-        {/* Column headers */}
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
-          <div className="flex-1 min-w-0">Subcategory</div>
-          <span className="w-20 text-right flex-shrink-0">Value</span>
-          <span className="w-12 text-right flex-shrink-0">Share</span>
-          <span className="w-10 text-right flex-shrink-0 hidden lg:block">Risk</span>
-          <span className="w-10 text-right flex-shrink-0 hidden xl:block">DA%</span>
+          <div className="flex-1 min-w-0">Subcategor\u00eda</div>
+          <span className="w-20 text-right flex-shrink-0">Monto</span>
+          <span className="w-12 text-right flex-shrink-0">%</span>
+          <span className="w-10 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
+          <span className="w-10 text-right flex-shrink-0 hidden xl:block">AD%</span>
           <span className="w-4 flex-shrink-0" />
         </div>
 
@@ -770,7 +502,6 @@ function SubcategoryPanel({
             const barWidth = sub.is_catch_all
               ? Math.min(sub.pct_of_category, 100)
               : Math.min((sub.total_value / maxValue) * 100, 100)
-            // DA portion of bar (competitive vs direct-award split)
             const daBarWidth = barWidth * (sub.direct_award_pct / 100)
 
             return (
@@ -789,11 +520,11 @@ function SubcategoryPanel({
                     <div className="text-xs font-medium text-text-primary mb-1.5 flex items-center gap-1.5">
                       {sub.is_catch_all && (
                         <span className="text-[9px] font-mono bg-background-elevated px-1 py-0.5 rounded text-text-muted/50 uppercase tracking-wider flex-shrink-0">
-                          other
+                          otros
                         </span>
                       )}
                       {isFlagged && (
-                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% direct award` : ''}${isHighDA && isHighSB ? ' · ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% single bid` : ''}`}>
+                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% adjudicaci\u00f3n directa` : ''}${isHighDA && isHighSB ? ' \u00b7 ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% licitaci\u00f3n \u00fanica` : ''}`}>
                           <AlertTriangle className="h-2.5 w-2.5 text-amber-400 flex-shrink-0" />
                         </span>
                       )}
@@ -802,10 +533,7 @@ function SubcategoryPanel({
                         {formatNumber(sub.total_contracts)}
                       </span>
                     </div>
-
-                    {/* Stacked bar: risk-colored fill with DA overlay */}
                     <div className="h-1 bg-border/20 rounded-full overflow-hidden relative">
-                      {/* Full bar colored by risk */}
                       <div
                         className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
                         style={{
@@ -814,7 +542,6 @@ function SubcategoryPanel({
                           opacity: 0.55,
                         }}
                       />
-                      {/* DA overlay (darker segment at start of bar) */}
                       {!sub.is_catch_all && daBarWidth > 0 && (
                         <div
                           className="absolute inset-y-0 left-0 rounded-l-full transition-all duration-700"
@@ -826,21 +553,7 @@ function SubcategoryPanel({
                         />
                       )}
                     </div>
-                    {/* Bar legend hint */}
-                    {!sub.is_catch_all && sub.direct_award_pct > 0 && sub.direct_award_pct < 100 && (
-                      <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-[8px] font-mono text-text-muted/30">
-                          <span className="inline-block w-1.5 h-1.5 rounded-sm mr-0.5" style={{ backgroundColor: getRiskColor(sub.avg_risk), opacity: 0.9 }} />
-                          DA {sub.direct_award_pct.toFixed(0)}%
-                        </span>
-                        <span className="text-[8px] font-mono text-text-muted/30">
-                          <span className="inline-block w-1.5 h-1.5 rounded-sm mr-0.5" style={{ backgroundColor: getRiskColor(sub.avg_risk), opacity: 0.4 }} />
-                          Competitive {(100 - sub.direct_award_pct).toFixed(0)}%
-                        </span>
-                      </div>
-                    )}
                   </div>
-
                   <span className="w-20 text-right text-xs font-mono font-bold text-text-primary tabular-nums flex-shrink-0">
                     {formatCompactMXN(sub.total_value)}
                   </span>
@@ -851,70 +564,66 @@ function SubcategoryPanel({
                     className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden lg:block"
                     style={{ color: sub.avg_risk > 0 ? getRiskColor(sub.avg_risk) : undefined }}
                   >
-                    {sub.avg_risk > 0 ? `${(sub.avg_risk * 100).toFixed(0)}%` : '—'}
+                    {sub.avg_risk > 0 ? `${(sub.avg_risk * 100).toFixed(0)}%` : '\u2014'}
                   </span>
                   <span
                     className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden xl:block"
                     style={{ color: isHighDA ? '#fb923c' : undefined }}
                   >
-                    {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
+                    {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '\u2014'}
                   </span>
                   <span className="w-4 text-right text-text-muted/40 text-[10px] flex-shrink-0 select-none">
-                    {expandedId === sub.subcategory_id ? '▲' : '▼'}
+                    {expandedId === sub.subcategory_id ? '\u25B2' : '\u25BC'}
                   </span>
                 </button>
 
-                {/* Expanded detail */}
                 {expandedId === sub.subcategory_id && sub.total_contracts > 0 && (
                   <div className="px-4 pb-4 pt-3 bg-background-elevated/20 border-t border-border/10">
-                    {/* Flag alerts */}
                     {isFlagged && (
                       <div className="flex items-center gap-1.5 mb-3 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
                         <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
                         <span className="text-[11px] text-amber-300/80">
                           {[
-                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% direct award (low competition)`,
-                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% single-bid procedures`,
-                            sub.avg_risk >= RISK_THRESHOLDS.high && `avg risk ${(sub.avg_risk * 100).toFixed(0)}%`,
-                          ].filter(Boolean).join(' · ')}
+                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% adjudicaci\u00f3n directa (baja competencia)`,
+                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% licitaci\u00f3n \u00fanica`,
+                            sub.avg_risk >= RISK_THRESHOLDS.high && `riesgo promedio ${(sub.avg_risk * 100).toFixed(0)}%`,
+                          ].filter(Boolean).join(' \u00b7 ')}
                         </span>
                       </div>
                     )}
-
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Contracts</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Contratos</p>
                         <p className="text-sm font-mono font-bold text-text-primary">{formatNumber(sub.total_contracts)}</p>
                       </div>
                       {sub.year_min != null && sub.year_max != null && (
                         <div>
-                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Active Years</p>
-                          <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}–{sub.year_max}</p>
+                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">A\u00f1os activo</p>
+                          <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}\u2013{sub.year_max}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Direct Award</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Adj. Directa</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
                         >
-                          {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
+                          {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '\u2014'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Single Bid</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Licit. \u00danica</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighSB ? '#fb923c' : 'var(--color-text-primary)' }}
                         >
-                          {sub.single_bid_pct > 0 ? `${sub.single_bid_pct.toFixed(0)}%` : '—'}
+                          {sub.single_bid_pct > 0 ? `${sub.single_bid_pct.toFixed(0)}%` : '\u2014'}
                         </p>
                       </div>
                     </div>
-
                     {sub.top_vendor_name && (
                       <div className="mb-3 flex items-center gap-2">
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">Top Vendor</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">Principal proveedor</p>
                         {sub.top_vendor_id ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); onNavigate(`/vendors/${sub.top_vendor_id}`) }}
@@ -928,11 +637,10 @@ function SubcategoryPanel({
                         )}
                       </div>
                     )}
-
                     {sub.example_titles.length > 0 && (
                       <div>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-1.5">
-                          Example Contract Titles
+                          T\u00edtulos de contratos ejemplo
                         </p>
                         <div className="space-y-1.5">
                           {sub.example_titles.slice(0, 4).map((title, i) => (
@@ -961,7 +669,6 @@ function SubcategoryPanel({
 export default function SpendingCategories() {
   const navigate = useNavigate()
   const { t } = useTranslation('spending')
-  const [viewMode, setViewMode] = useState<ViewMode>('partida')
   const [sectorFilter, setSectorFilter] = useState<string>('')
   const [yearFrom, setYearFrom] = useState(2010)
   const [yearTo, setYearTo] = useState(2025)
@@ -969,6 +676,7 @@ export default function SpendingCategories() {
   const [sortDir, setSortDir] = useState<SortDir>('desc')
   const [trendCount, setTrendCount] = useState<number | null>(10)
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
+  const [searchQuery, setSearchQuery] = useState('')
   const trendChartRef = useRef<HTMLDivElement>(null)
 
   const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useQuery({
@@ -999,13 +707,23 @@ export default function SpendingCategories() {
 
   const allCategories: CategoryStat[] = summaryData?.data ?? []
 
-  // Apply sector filter
+  // Apply sector + search filter
   const filteredCategories = useMemo(() => {
-    if (!sectorFilter) return allCategories
-    return allCategories.filter(c => c.sector_code === sectorFilter)
-  }, [allCategories, sectorFilter])
+    let cats = allCategories
+    if (sectorFilter) {
+      cats = cats.filter(c => c.sector_code === sectorFilter)
+    }
+    if (searchQuery.trim()) {
+      const q = searchQuery.trim().toLowerCase()
+      cats = cats.filter(c =>
+        (c.name_en || '').toLowerCase().includes(q) ||
+        (c.name_es || '').toLowerCase().includes(q)
+      )
+    }
+    return cats
+  }, [allCategories, sectorFilter, searchQuery])
 
-  // Derived stats from filtered categories
+  // Derived stats
   const stats = useMemo(() => {
     if (!filteredCategories.length) return null
     const totalValue = filteredCategories.reduce((s, c) => s + c.total_value, 0)
@@ -1038,40 +756,28 @@ export default function SpendingCategories() {
     return sorted
   }, [filteredCategories, sortField, sortDir])
 
-  // Top risk categories for the AI-Flagged strip
-  const topRiskCategories = useMemo(() => {
-    return [...filteredCategories]
-      .filter(c => c.avg_risk > 0)
+  // Top 5 risk categories for Banderas Rojas
+  const banderasRojas = useMemo(() => {
+    return [...allCategories]
+      .filter(c => c.avg_risk > 0 && c.total_contracts >= 10)
       .sort((a, b) => b.avg_risk - a.avg_risk)
-      .slice(0, 8)
-  }, [filteredCategories])
+      .slice(0, 5)
+  }, [allCategories])
 
-  // Sector aggregation view
-  const sectorAggregates = useMemo(() => {
-    const aggs = aggregateBySector(filteredCategories)
-    return aggs.sort((a, b) => {
-      if (sortField === 'total_contracts') return sortDir === 'desc' ? b.total_contracts - a.total_contracts : a.total_contracts - b.total_contracts
-      if (sortField === 'avg_risk') return sortDir === 'desc' ? b.avg_risk - a.avg_risk : a.avg_risk - b.avg_risk
-      return sortDir === 'desc' ? b.total_value - a.total_value : a.total_value - b.total_value
-    })
-  }, [filteredCategories, sortField, sortDir])
+  // Highest risk category (for HallazgoStat)
+  const highestRiskCat = useMemo(() => {
+    if (!allCategories.length) return null
+    return [...allCategories]
+      .filter(c => c.avg_risk > 0 && c.total_contracts >= 10)
+      .sort((a, b) => b.avg_risk - a.avg_risk)[0] ?? null
+  }, [allCategories])
 
-  // Treemap data — include category_id for click-to-drill
-  const treemapData = useMemo(() => {
-    return filteredCategories
-      .filter(c => c.total_value > 0)
-      .slice(0, 30)
-      .map(c => ({
-        name: c.name_en || c.name_es,
-        value: c.total_value,
-        category_id: c.category_id,
-        fill: selectedCategoryId === c.category_id
-          ? '#f59e0b'  // highlight selected in amber
-          : c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
-      }))
-  }, [filteredCategories, selectedCategoryId])
+  // Top category by spend
+  const topSpendCat = useMemo(() => {
+    if (!allCategories.length) return null
+    return [...allCategories].sort((a, b) => b.total_value - a.total_value)[0] ?? null
+  }, [allCategories])
 
-  // Selected category name (for the filter chip label)
   const selectedCategoryName = useMemo(() => {
     if (!selectedCategoryId) return null
     const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
@@ -1084,7 +790,22 @@ export default function SpendingCategories() {
     return cat ? getSectorId(cat.sector_code) : null
   }, [selectedCategoryId, filteredCategories])
 
-  // Trend chart — filtered by selected treemap cell, or top N by value
+  // Treemap data
+  const treemapData = useMemo(() => {
+    return filteredCategories
+      .filter(c => c.total_value > 0)
+      .slice(0, 30)
+      .map(c => ({
+        name: c.name_en || c.name_es,
+        value: c.total_value,
+        category_id: c.category_id,
+        fill: selectedCategoryId === c.category_id
+          ? '#f59e0b'
+          : c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
+      }))
+  }, [filteredCategories, selectedCategoryId])
+
+  // Trend chart data
   const trendChartData = useMemo(() => {
     if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
@@ -1101,7 +822,10 @@ export default function SpendingCategories() {
       if (!seriesMap.has(item.category_id)) {
         seriesMap.set(item.category_id, { name: item.name_en || item.name_es, data: {} })
       }
-      seriesMap.get(item.category_id)!.data[item.year] = item.value
+      const entry = seriesMap.get(item.category_id)
+      if (entry) {
+        entry.data[item.year] = item.value
+      }
     }
 
     return { years: Array.from(yearSet).sort(), series: Array.from(seriesMap.values()) }
@@ -1109,14 +833,17 @@ export default function SpendingCategories() {
 
   const TREND_COLORS = ['#3b82f6', '#f97316', '#8b5cf6', '#16a34a', '#dc2626']
 
-  // Build per-category sparkline data from trend items (last 5 available years)
+  // Sparkline data
   const categorySparklines = useMemo(() => {
     if (!trendsData?.data) return new Map<number, number[]>()
     const items: TrendItem[] = trendsData.data
     const map = new Map<number, Map<number, number>>()
     for (const item of items) {
       if (!map.has(item.category_id)) map.set(item.category_id, new Map())
-      map.get(item.category_id)!.set(item.year, item.value)
+      const yearMap = map.get(item.category_id)
+      if (yearMap) {
+        yearMap.set(item.year, item.value)
+      }
     }
     const result = new Map<number, number[]>()
     const recentYears = Array.from({ length: 5 }, (_, i) => yearTo - 4 + i)
@@ -1126,541 +853,438 @@ export default function SpendingCategories() {
     return result
   }, [trendsData, yearTo])
 
-  // Year range options
   const yearOptions = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i)
 
-  // Macro stats from all categories (not filtered)
-  const macroStats = useMemo(() => {
-    if (!allCategories.length) return null
-    const totalValue = allCategories.reduce((s, c) => s + c.total_value, 0)
-    const totalContracts = allCategories.reduce((s, c) => s + c.total_contracts, 0)
-    const avgRisk = totalContracts > 0
-      ? allCategories.reduce((s, c) => s + c.avg_risk * c.total_contracts, 0) / totalContracts
-      : 0
-    const topCategory = [...allCategories].sort((a, b) => b.total_value - a.total_value)[0]
-    return { totalValue, totalContracts, avgRisk, topCategory }
+  // Estimate health-related category spend for ImpactoHumano
+  const healthCategorySpend = useMemo(() => {
+    return allCategories
+      .filter(c => c.sector_code === 'salud')
+      .reduce((s, c) => s + c.total_value, 0)
   }, [allCategories])
 
-  // Loading skeleton for initial load
+  // Loading skeleton
   if (summaryLoading && !summaryData) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {Array.from({ length: 4 }).map((_, i) => (
+        <Skeleton className="h-32 w-full" />
+        <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+          {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-24 rounded-lg" />
           ))}
         </div>
-        {Array.from({ length: 3 }).map((_, i) => (
-          <Skeleton key={i} className="h-16 w-full" />
+        {Array.from({ length: 5 }).map((_, i) => (
+          <Skeleton key={i} className="h-14 w-full" />
         ))}
       </div>
     )
   }
 
-  // Error state if summary fetch failed
+  // Error state
   if (summaryError) {
     return (
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
         <div>
-          <p className="text-sm font-medium text-text-primary">Failed to load spending categories</p>
-          <p className="text-xs text-text-muted mt-1">Check your connection and try refreshing.</p>
+          <p className="text-sm font-medium text-text-primary">Error al cargar las categor\u00edas de gasto</p>
+          <p className="text-xs text-text-muted mt-1">Verifique su conexi\u00f3n e intente de nuevo.</p>
         </div>
       </div>
     )
   }
 
+  const highestRiskPct = highestRiskCat ? (highestRiskCat.avg_risk * 100).toFixed(0) : '0'
+
   return (
-    <div className="space-y-6">
-      {/* Editorial masthead */}
+    <div className="space-y-8">
+      {/* ================================================================= */}
+      {/* 1. Editorial Headline                                             */}
+      {/* ================================================================= */}
       <EditorialHeadline
-        section="AN&Aacute;LISIS SECTORIAL"
-        headline="Sectores Federales"
-        subtitle="Gasto por sector en contrataciones 2002–2025"
+        section="PARTIDAS PRESUPUESTARIAS"
+        headline="En Qu\u00e9 Gasta el Gobierno: Un Desglose por Categor\u00eda"
+        subtitle="An\u00e1lisis de los c\u00f3digos Partida que revelan d\u00f3nde se concentra el gasto p\u00fablico y el riesgo de corrupci\u00f3n"
       />
 
-      {/* Page Hero */}
-      <div className="pb-1">
-        <div className="flex items-center gap-2 mb-1">
-          <BarChart3 className="h-4 w-4 text-accent" />
-          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-            SPENDING INTELLIGENCE
-          </span>
-        </div>
-        <h1 className="text-3xl font-black text-text-primary tracking-tight">Where the Money Goes</h1>
-        <p className="text-sm text-text-muted mt-1 flex items-center gap-2">
-          <span>Drill into procurement spending by category, sector, and year — with AI risk scores on every line.</span>
-          <FuentePill source="COMPRANET" verified={true} />
+      {/* ================================================================= */}
+      {/* 2. Three HallazgoStat cards                                       */}
+      {/* ================================================================= */}
+      <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
+        <HallazgoStat
+          value={allCategories.length > 0 ? String(allCategories.length) : '\u2014'}
+          label="Categor\u00edas de gasto rastreadas"
+          annotation="C\u00f3digos Partida presupuestal, 2002\u20132025"
+          color="border-blue-500"
+        />
+        <HallazgoStat
+          value={`${highestRiskPct}%`}
+          label={highestRiskCat
+            ? `Riesgo promedio m\u00e1s alto: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
+            : 'Categor\u00eda de mayor riesgo'
+          }
+          annotation={highestRiskCat ? `${formatNumber(highestRiskCat.total_contracts)} contratos` : undefined}
+          color="border-red-500"
+        />
+        <HallazgoStat
+          value={topSpendCat ? formatCompactMXN(topSpendCat.total_value) : '\u2014'}
+          label={topSpendCat
+            ? `Mayor gasto: ${truncate(topSpendCat.name_es || topSpendCat.name_en, 35)}`
+            : 'Categor\u00eda l\u00edder en gasto'
+          }
+          annotation={topSpendCat ? `${formatNumber(topSpendCat.total_contracts)} contratos` : undefined}
+          color="border-amber-500"
+        />
+      </div>
+
+      {/* ================================================================= */}
+      {/* 3. Journalistic Lede                                              */}
+      {/* ================================================================= */}
+      <div className="border-l-[3px] border-red-600 pl-5 py-2">
+        <p
+          className="text-lg text-text-primary leading-relaxed"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          {allCategories.length > 0 ? (
+            <>
+              De las {allCategories.length} categor\u00edas presupuestarias del gobierno federal,
+              {' '}{banderasRojas.length > 0 && (
+                <>
+                  las de mayor riesgo muestran indicadores de corrupci\u00f3n
+                  hasta {highestRiskPct}% por encima del promedio.{' '}
+                </>
+              )}
+              El desglose por c\u00f3digo Partida revela d\u00f3nde se concentra el gasto
+              y qu\u00e9 tipos de bienes y servicios presentan los patrones m\u00e1s sospechosos.
+            </>
+          ) : (
+            'Cargando an\u00e1lisis de categor\u00edas de gasto\u2026'
+          )}
         </p>
-      </div>
-
-      {/* Header */}
-      <div>
-        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2">
-          <ShoppingCart className="h-4 w-4 text-accent" />
-          Spending Categories
-        </h2>
-        <p className="text-xs text-text-muted mt-0.5">
-          {/* HARDCODED: "3.1M contracts" — replace with macroStats.totalContracts when reliably loaded */}
-          What Mexico buys — {allCategories.length} categories covering all 3.1M contracts
-        </p>
-      </div>
-
-      {/* Macro Intelligence Banner */}
-      <div className="flex items-start gap-3 rounded-lg border border-accent/20 bg-accent/5 px-4 py-3">
-        <Brain className="h-4 w-4 text-accent mt-0.5 flex-shrink-0" />
-        <div>
-          <span className="text-xs font-semibold text-accent uppercase tracking-wider mr-2">AI Analysis</span>
-          <span className="text-sm text-text-secondary leading-relaxed">
-            {summaryLoading ? 'Loading analysis...' : macroStats
-              ? `${allCategories.length} spending categories tracked across ${formatCompactMXN(macroStats.totalValue)} in validated federal procurement (2002–2025). Top category by value: ${macroStats.topCategory ? (macroStats.topCategory.name_en || macroStats.topCategory.name_es) : '—'}. Portfolio-wide avg risk: ${(macroStats.avgRisk * 100).toFixed(1)}%.`
-              : 'Analyzing spending categories across Mexican federal procurement (2002–2025).'
-            }
-          </span>
+        <div className="mt-2">
+          <FuentePill source="COMPRANET" count={allCategories.reduce((s, c) => s + c.total_contracts, 0)} countLabel="contratos" verified={true} />
         </div>
       </div>
 
-      {/* Macro Stat Cards — all categories, unfiltered */}
-      <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-        <SharedStatCard
-          label="TOTAL TRACKED SPEND"
-          value={macroStats ? formatCompactMXN(macroStats.totalValue) : '—'}
-          detail={`${allCategories.length} categories · 2002–2025`}
-          borderColor="border-accent/30"
-          loading={summaryLoading}
-        />
-        <SharedStatCard
-          label="CATEGORIES TRACKED"
-          value={allCategories.length > 0 ? formatNumber(allCategories.length) : '—'}
-          detail="Partida presupuestal items"
-          borderColor="border-blue-500/30"
-          loading={summaryLoading}
-        />
-        <SharedStatCard
-          label="TOP CATEGORY"
-          value={macroStats?.topCategory ? formatCompactMXN(macroStats.topCategory.total_value) : '—'}
-          detail={macroStats?.topCategory ? (macroStats.topCategory.name_en || macroStats.topCategory.name_es) : 'Loading...'}
-          borderColor="border-amber-500/30"
-          loading={summaryLoading}
-        />
-        <div className="relative">
-          <SharedStatCard
-            label="AVG RISK SCORE"
-            value={macroStats ? `${(macroStats.avgRisk * 100).toFixed(1)}%` : '—'}
-            detail="Weighted by contract count"
-            borderColor="border-red-500/30"
-            color={macroStats && macroStats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
-            loading={summaryLoading}
-          />
-          <span className="absolute top-2 right-2">
-            <MetodologiaTooltip
-              title="Sobre la concentraci&oacute;n"
-              body="Alta concentraci&oacute;n (un proveedor con >30% del gasto sectorial) es indicador de riesgo per directrices OCDE 2023."
-            />
-          </span>
-        </div>
-      </div>
-
-      {/* Section 1: Filter Bar */}
-      <div className="flex items-center gap-3 flex-wrap bg-background-elevated/30 border border-border/50 rounded-lg px-4 py-2.5">
-        <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-
-        {/* Year range */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">Year</label>
-          <select
-            id="year-from"
-            value={yearFrom}
-            onChange={e => setYearFrom(Math.min(Number(e.target.value), yearTo))}
-            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-          <span className="text-xs text-text-muted">to</span>
-          <select
-            id="year-to"
-            value={yearTo}
-            onChange={e => setYearTo(Math.max(Number(e.target.value), yearFrom))}
-            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
-          </select>
-        </div>
-
-        {/* Sector filter */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="sector-filter" className="text-xs text-text-muted whitespace-nowrap">Sector</label>
-          <select
-            id="sector-filter"
-            value={sectorFilter}
-            onChange={e => setSectorFilter(e.target.value)}
-            className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
-          >
-            {SECTOR_OPTIONS.map(opt => (
-              <option key={opt.code} value={opt.code}>{opt.label}</option>
-            ))}
-          </select>
-        </div>
-
-        {/* View toggle */}
-        <div className="flex items-center gap-1 ml-auto">
-          <button
-            onClick={() => setViewMode('partida')}
-            className={cn(
-              'px-3 py-1 rounded text-xs font-medium transition-colors',
-              viewMode === 'partida'
-                ? 'bg-accent/20 text-accent'
-                : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
-            )}
-          >
-            By Category
-          </button>
-          <button
-            onClick={() => setViewMode('sector')}
-            className={cn(
-              'px-3 py-1 rounded text-xs font-medium transition-colors',
-              viewMode === 'sector'
-                ? 'bg-accent/20 text-accent'
-                : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
-            )}
-          >
-            By Sector
-          </button>
-        </div>
-      </div>
-
-      {/* Filtered Stat Cards — reflect current sector/view selection */}
-      {sectorFilter && (
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          <SharedStatCard
-            label="FILTERED CATEGORIES"
-            value={filteredCategories.length > 0 ? formatNumber(filteredCategories.length) : '—'}
-            detail={`In ${getSectorNameEN(sectorFilter)}`}
-            borderColor="border-accent/30"
-            loading={summaryLoading}
-          />
-          <SharedStatCard
-            label="FILTERED CONTRACTS"
-            value={stats ? formatNumber(stats.totalContracts) : '—'}
-            detail={`${getSectorNameEN(sectorFilter)} sector`}
-            borderColor="border-blue-500/30"
-            loading={summaryLoading}
-          />
-          <SharedStatCard
-            label="FILTERED AVG RISK"
-            value={stats ? `${(stats.avgRisk * 100).toFixed(1)}%` : '—'}
-            detail="Weighted by contract count"
-            borderColor="border-amber-500/30"
-            color={stats && stats.avgRisk >= RISK_THRESHOLDS.high ? 'text-risk-high' : 'text-text-primary'}
-            loading={summaryLoading}
-          />
-          <SharedStatCard
-            label="HIGH-RISK CATEGORIES"
-            value={stats ? String(stats.highRiskCategories) : '—'}
-            detail="Risk score >= 30%"
-            borderColor="border-red-500/30"
-            color={stats && stats.highRiskCategories > 0 ? 'text-risk-critical' : 'text-text-primary'}
-            loading={summaryLoading}
-          />
-        </div>
-      )}
-
-      {/* AI-Flagged Categories Strip */}
-      {topRiskCategories.length > 0 && (
-        <div>
-          <div className="flex items-center gap-2 mb-2">
-            <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-            <span className="text-xs font-semibold text-text-muted uppercase tracking-wider">
-              AI-Flagged: Highest Risk Categories
+      {/* ================================================================= */}
+      {/* 4. Banderas Rojas — Top 5 by risk                                 */}
+      {/* ================================================================= */}
+      {banderasRojas.length > 0 && (
+        <section aria-labelledby="banderas-rojas-heading">
+          <div className="flex items-center gap-2 mb-4">
+            <Flag className="h-4 w-4 text-red-500" />
+            <h2
+              id="banderas-rojas-heading"
+              className="text-lg font-bold text-text-primary tracking-tight"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              Banderas Rojas
+            </h2>
+            <span className="text-xs text-text-muted ml-2">
+              Las 5 categor\u00edas con mayor riesgo promedio (min. 10 contratos)
             </span>
           </div>
-          <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-thin">
-            {topRiskCategories.map((cat) => (
-              <div
-                key={cat.category_id}
-                className="flex-shrink-0 rounded-lg border border-border/50 bg-background-card px-3 py-2 min-w-[150px] max-w-[190px]"
-              >
-                <div className="flex items-center gap-1.5 mb-1.5">
-                  {cat.sector_code && (
-                    <span
-                      className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                      style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
-                    />
-                  )}
-                  <span className="text-xs font-medium text-text-primary truncate">
-                    {cat.name_en || cat.name_es}
-                  </span>
-                </div>
-                <div className="flex items-center justify-between gap-2">
-                  <span className="text-xs text-text-muted font-mono">{formatCompactMXN(cat.total_value)}</span>
-                  <span
-                    className="text-xs font-mono font-bold px-1.5 py-0.5 rounded flex-shrink-0"
-                    style={{
-                      color: getRiskColor(cat.avg_risk),
-                      backgroundColor: `${getRiskColor(cat.avg_risk)}20`,
-                    }}
-                  >
-                    {(cat.avg_risk * 100).toFixed(0)}%
-                  </span>
-                </div>
-                <button
-                  onClick={() => { const sid = getSectorId(cat.sector_code); navigate(`/contracts${sid ? `?sector_id=${sid}` : ''}&sort_by=risk_score&sort_order=desc`) }}
-                  className="mt-2 w-full flex items-center justify-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors"
-                  aria-label={`See contracts in ${cat.name_en || cat.name_es}`}
+
+          <div className="space-y-1">
+            {banderasRojas.map((cat, idx) => {
+              const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+              const riskColor = RISK_COLORS[riskLevel]
+              return (
+                <div
+                  key={cat.category_id}
+                  className="flex items-center gap-4 px-4 py-3 rounded-lg border border-border/30 bg-background-card hover:bg-background-elevated/50 transition-colors cursor-pointer group"
+                  onClick={() => {
+                    setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id)
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => { if (e.key === 'Enter') setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id) }}
                 >
-                  <ExternalLink className="h-3 w-3" />
-                  See contracts
-                </button>
-              </div>
-            ))}
+                  {/* Rank */}
+                  <span
+                    className="flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold"
+                    style={{ backgroundColor: `${riskColor}20`, color: riskColor }}
+                  >
+                    {idx + 1}
+                  </span>
+
+                  {/* Name + sector */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2">
+                      {cat.sector_code && (
+                        <span
+                          className="h-2 w-2 rounded-full flex-shrink-0"
+                          style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
+                        />
+                      )}
+                      <span className="text-sm font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
+                        {cat.name_es || cat.name_en}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 mt-0.5 text-xs text-text-muted">
+                      <span>{formatCompactMXN(cat.total_value)}</span>
+                      <span>&middot;</span>
+                      <span>{formatNumber(cat.total_contracts)} contratos</span>
+                      {cat.sector_code && (
+                        <>
+                          <span>&middot;</span>
+                          <span className="capitalize">{cat.sector_code}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Risk badge */}
+                  <div className="flex-shrink-0 text-right">
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-sm font-bold font-mono"
+                      style={{
+                        color: riskColor,
+                        backgroundColor: `${riskColor}15`,
+                        borderLeft: `3px solid ${riskColor}`,
+                      }}
+                    >
+                      {(cat.avg_risk * 100).toFixed(1)}%
+                    </span>
+                    <p className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-mono">
+                      {getRiskLabel(cat.avg_risk)}
+                    </p>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {/* ================================================================= */}
+      {/* 5. Search / Filter Bar                                            */}
+      {/* ================================================================= */}
+      <div className="space-y-3">
+        <div className="h-px bg-border" />
+        <div className="flex items-center gap-3 flex-wrap">
+          <SlidersHorizontal className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+
+          {/* Search */}
+          <div className="relative flex-1 min-w-[200px] max-w-[320px]">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={e => setSearchQuery(e.target.value)}
+              placeholder="Buscar categor\u00eda\u2026"
+              className="w-full h-8 pl-8 pr-3 rounded border border-border bg-background-card text-xs text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent"
+              aria-label="Buscar categor\u00edas de gasto"
+            />
+          </div>
+
+          {/* Year range */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">A\u00f1o</label>
+            <select
+              id="year-from"
+              value={yearFrom}
+              onChange={e => setYearFrom(Math.min(Number(e.target.value), yearTo))}
+              className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+            <span className="text-xs text-text-muted">a</span>
+            <select
+              id="year-to"
+              value={yearTo}
+              onChange={e => setYearTo(Math.max(Number(e.target.value), yearFrom))}
+              className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              {yearOptions.map(y => <option key={y} value={y}>{y}</option>)}
+            </select>
+          </div>
+
+          {/* Sector filter */}
+          <div className="flex items-center gap-2">
+            <label htmlFor="sector-filter" className="text-xs text-text-muted whitespace-nowrap">Sector</label>
+            <select
+              id="sector-filter"
+              value={sectorFilter}
+              onChange={e => setSectorFilter(e.target.value)}
+              className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
+            >
+              {SECTOR_OPTIONS.map(opt => (
+                <option key={opt.code} value={opt.code}>{opt.label}</option>
+              ))}
+            </select>
           </div>
         </div>
-      )}
+        <div className="h-px bg-border" />
+      </div>
 
-      {/* Risk × Value Scatter Chart */}
-      {!summaryLoading && filteredCategories.length > 0 && (
-        <RiskValueScatter categories={filteredCategories} />
-      )}
-
-      {/* Section 2: Table */}
-      <Card className="overflow-hidden">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <TrendingUp className="h-3.5 w-3.5 text-text-muted" />
-            {viewMode === 'partida' ? 'Spending Categories' : 'By Government Sector'}
-          </CardTitle>
-          <CardDescription className="text-xs">
-            {viewMode === 'partida'
-              ? `${sortedCategories.length} categories. Click column headers to sort · click any row to see subcategories below.`
-              : `${sectorAggregates.length} sectors. Click column headers to sort.`}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="p-0">
-          {summaryLoading ? (
-            <div className="space-y-3 p-4">
-              {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-10 w-full" />
-              ))}
-            </div>
-          ) : viewMode === 'partida' ? (
-            /* ---- Partida view ---- */
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[700px] text-xs" role="table">
-                <thead>
-                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
-                    <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
-                    <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Category</th>
-                    <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">Sector</th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('total_contracts')}
-                    >
-                      Contracts
-                      <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('total_value')}
-                    >
-                      Total Value (MXN)
-                      <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('avg_risk')}
-                    >
-                      Avg Risk
-                      <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap hidden lg:table-cell"
-                      onClick={() => handleSort('direct_award_pct')}
-                    >
-                      Direct Award %
-                      <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th className="px-3 py-2.5 text-left font-medium hidden lg:table-cell">Top Vendor</th>
-                    <th className="px-3 py-2.5 text-right font-medium hidden xl:table-cell whitespace-nowrap">
-                      5yr Trend
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sortedCategories.slice(0, 50).map((cat, idx) => (
-                    <tr
-                      key={cat.category_id}
-                      className={cn(
-                        'border-b border-border/10 hover:bg-background-elevated/50 transition-colors cursor-pointer',
-                        selectedCategoryId === cat.category_id && 'bg-accent/5 border-l-2 border-l-accent',
-                      )}
-                      onClick={() => setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id)}
-                    >
-                      <td className="px-3 py-2 text-text-muted tabular-nums">{idx + 1}</td>
-                      <td className="px-3 py-2">
-                        <div className="flex items-center gap-2">
-                          {cat.sector_code && (
-                            <div
-                              className="w-2 h-2 rounded-full flex-shrink-0"
-                              style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
-                              aria-hidden="true"
-                            />
-                          )}
-                          <span className="text-text-primary font-medium truncate max-w-[280px]">
-                            {cat.name_en || cat.name_es}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2 text-text-muted hidden md:table-cell">
-                        {cat.sector_code ? getSectorNameEN(cat.sector_code) : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
-                        {formatNumber(cat.total_contracts)}
-                      </td>
-                      <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
-                        {formatCompactMXN(cat.total_value)}
-                      </td>
-                      <td className="px-3 py-2 text-right">
-                        <span
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono tabular-nums"
-                          style={{
-                            color: getRiskColor(cat.avg_risk),
-                            backgroundColor: `${getRiskColor(cat.avg_risk)}15`,
-                          }}
-                          title={getRiskLabel(cat.avg_risk)}
-                        >
-                          {(cat.avg_risk * 100).toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-2 text-right text-text-muted tabular-nums font-mono hidden lg:table-cell">
-                        {cat.direct_award_pct != null ? `${cat.direct_award_pct.toFixed(0)}%` : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-text-muted text-xs truncate max-w-[200px] hidden lg:table-cell">
-                        {cat.top_vendor ? (
-                          <button
-                            onClick={() => navigate(`/vendors/${cat.top_vendor!.id}`)}
-                            className="hover:text-accent transition-colors flex items-center gap-1"
-                          >
-                            {truncate(cat.top_vendor.name, 28)}
-                            <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
-                          </button>
-                        ) : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right hidden xl:table-cell">
-                        <div className="flex items-center justify-end">
-                          <MiniSparkline
-                            values={categorySparklines.get(cat.category_id) ?? []}
-                            color={getRiskColor(cat.avg_risk)}
-                          />
-                        </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-              {sortedCategories.length === 0 && (
-                <div className="flex items-center justify-center py-12 text-text-muted text-sm">
-                  No categories match the current filters.
-                </div>
-              )}
-            </div>
-          ) : (
-            /* ---- By Sector view ---- */
-            <div className="overflow-x-auto">
-              <table className="w-full min-w-[600px] text-xs" role="table">
-                <thead>
-                  <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
-                    <th className="px-3 py-2.5 text-left font-medium">Sector</th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('total_contracts')}
-                    >
-                      Contracts
-                      <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('total_value')}
-                    >
-                      Total Value (MXN)
-                      <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th
-                      className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
-                      onClick={() => handleSort('avg_risk')}
-                    >
-                      Avg Risk
-                      <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
-                    </th>
-                    <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">High-Risk Contracts</th>
-                    <th className="px-3 py-2.5 text-right font-medium whitespace-nowrap">Investigate</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {sectorAggregates.map((agg) => (
-                    <tr
-                      key={agg.sector_code}
-                      className="border-b border-border/10 hover:bg-background-elevated/50 transition-colors cursor-pointer"
-                      onClick={() => setSectorFilter(agg.sector_code)}
-                    >
-                      <td className="px-3 py-2.5">
-                        <div className="flex items-center gap-2">
-                          <div
-                            className="w-2.5 h-2.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: SECTOR_COLORS[agg.sector_code] || '#64748b' }}
-                            aria-hidden="true"
-                          />
-                          <span className="font-medium text-text-primary">
-                            {getSectorNameEN(agg.sector_code)}
-                          </span>
-                        </div>
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatNumber(agg.total_contracts)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatCompactMXN(agg.total_value)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
-                        <span
-                          className="inline-flex items-center px-1.5 py-0.5 rounded text-xs font-mono tabular-nums"
-                          style={{
-                            color: getRiskColor(agg.avg_risk),
-                            backgroundColor: `${getRiskColor(agg.avg_risk)}15`,
-                          }}
-                        >
-                          {(agg.avg_risk * 100).toFixed(1)}%
-                        </span>
-                      </td>
-                      <td className="px-3 py-2.5 text-right font-mono text-text-secondary tabular-nums">
-                        {formatNumber(agg.high_risk_count)}
-                      </td>
-                      <td className="px-3 py-2.5 text-right">
-                        <button
-                          onClick={(e) => {
-                            e.stopPropagation()
-                            navigate(`/contracts?sector_id=${getSectorId(agg.sector_code) ?? ''}&risk_level=high&sort_by=risk_score&sort_order=desc`)
-                          }}
-                          className="inline-flex items-center gap-1 text-[11px] text-accent hover:text-accent/80 transition-colors"
-                          aria-label={`Investigate high-risk contracts in ${getSectorNameEN(agg.sector_code)}`}
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                          High risk
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+      {/* ================================================================= */}
+      {/* 6. Category Cards / Table                                         */}
+      {/* ================================================================= */}
+      <section aria-labelledby="categories-table-heading">
+        <div className="flex items-center justify-between mb-3">
+          <h2
+            id="categories-table-heading"
+            className="text-base font-bold text-text-primary"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {filteredCategories.length} Categor\u00edas{sectorFilter ? ` en ${getSectorNameEN(sectorFilter)}` : ''}
+          </h2>
+          {stats && (
+            <span className="text-xs text-text-muted">
+              {formatCompactMXN(stats.totalValue)} total &middot; riesgo prom. {(stats.avgRisk * 100).toFixed(1)}%
+            </span>
           )}
-        </CardContent>
-      </Card>
+        </div>
 
-      {/* Subcategory Drill-Down Panel */}
-      {selectedCategoryId === null && viewMode === 'partida' && sortedCategories.length > 0 && (
+        <Card className="overflow-hidden">
+          <CardContent className="p-0">
+            {summaryLoading ? (
+              <div className="space-y-3 p-4">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-10 w-full" />
+                ))}
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[700px] text-xs" role="table">
+                  <thead>
+                    <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
+                      <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
+                      <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Categor\u00eda</th>
+                      <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">Sector</th>
+                      <th
+                        className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                        onClick={() => handleSort('total_contracts')}
+                      >
+                        Contratos
+                        <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
+                      </th>
+                      <th
+                        className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                        onClick={() => handleSort('total_value')}
+                      >
+                        Monto (MXN)
+                        <SortIndicator field="total_value" sortField={sortField} sortDir={sortDir} />
+                      </th>
+                      <th
+                        className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
+                        onClick={() => handleSort('avg_risk')}
+                      >
+                        Riesgo
+                        <SortIndicator field="avg_risk" sortField={sortField} sortDir={sortDir} />
+                      </th>
+                      <th
+                        className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap hidden lg:table-cell"
+                        onClick={() => handleSort('direct_award_pct')}
+                      >
+                        AD%
+                        <SortIndicator field="direct_award_pct" sortField={sortField} sortDir={sortDir} />
+                      </th>
+                      <th className="px-3 py-2.5 text-left font-medium hidden lg:table-cell">Principal Proveedor</th>
+                      <th className="px-3 py-2.5 text-right font-medium hidden xl:table-cell whitespace-nowrap">
+                        Tendencia
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {sortedCategories.slice(0, 50).map((cat, idx) => {
+                      const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+                      return (
+                        <tr
+                          key={cat.category_id}
+                          className={cn(
+                            'border-b border-border/10 hover:bg-background-elevated/50 transition-colors cursor-pointer',
+                            selectedCategoryId === cat.category_id && 'bg-accent/5 border-l-2 border-l-accent',
+                          )}
+                          onClick={() => setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id)}
+                        >
+                          <td className="px-3 py-2 text-text-muted tabular-nums">{idx + 1}</td>
+                          <td className="px-3 py-2">
+                            <div className="flex items-center gap-2">
+                              {cat.sector_code && (
+                                <div
+                                  className="w-2 h-2 rounded-full flex-shrink-0"
+                                  style={{ backgroundColor: SECTOR_COLORS[cat.sector_code] || '#64748b' }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                              <span className="text-text-primary font-medium truncate max-w-[280px]">
+                                {cat.name_es || cat.name_en}
+                              </span>
+                            </div>
+                          </td>
+                          <td className="px-3 py-2 text-text-muted hidden md:table-cell capitalize">
+                            {cat.sector_code ?? '\u2014'}
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
+                            {formatNumber(cat.total_contracts)}
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
+                            {formatCompactMXN(cat.total_value)}
+                          </td>
+                          <td className="px-3 py-2 text-right">
+                            <span
+                              className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-mono tabular-nums"
+                              style={{
+                                color: getRiskColor(cat.avg_risk),
+                                backgroundColor: `${getRiskColor(cat.avg_risk)}15`,
+                              }}
+                              title={getRiskLabel(cat.avg_risk)}
+                            >
+                              <span
+                                className="w-1.5 h-1.5 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: getRiskColor(cat.avg_risk) }}
+                              />
+                              {(cat.avg_risk * 100).toFixed(1)}%
+                            </span>
+                            <span className="block text-[9px] text-text-muted/60 mt-0.5 uppercase font-mono">
+                              {riskLevel}
+                            </span>
+                          </td>
+                          <td className="px-3 py-2 text-right text-text-muted tabular-nums font-mono hidden lg:table-cell">
+                            {cat.direct_award_pct != null ? `${cat.direct_award_pct.toFixed(0)}%` : '\u2014'}
+                          </td>
+                          <td className="px-3 py-2 text-text-muted text-xs truncate max-w-[200px] hidden lg:table-cell">
+                            {cat.top_vendor ? (
+                              <button
+                                onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${cat.top_vendor!.id}`) }}
+                                className="hover:text-accent transition-colors flex items-center gap-1"
+                              >
+                                {truncate(cat.top_vendor.name, 28)}
+                                <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+                              </button>
+                            ) : '\u2014'}
+                          </td>
+                          <td className="px-3 py-2 text-right hidden xl:table-cell">
+                            <div className="flex items-center justify-end">
+                              <MiniSparkline
+                                values={categorySparklines.get(cat.category_id) ?? []}
+                                color={getRiskColor(cat.avg_risk)}
+                              />
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
+                  </tbody>
+                </table>
+                {sortedCategories.length === 0 && (
+                  <div className="flex items-center justify-center py-12 text-text-muted text-sm">
+                    No se encontraron categor\u00edas con los filtros actuales.
+                  </div>
+                )}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </section>
+
+      {/* ================================================================= */}
+      {/* 7. Subcategory + Vendor Drill-Down Panels                         */}
+      {/* ================================================================= */}
+      {selectedCategoryId === null && sortedCategories.length > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
           <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-          <span>Click any category row above to reveal <span className="font-semibold text-text-secondary">subcategories</span>, top vendors, and institution breakdowns.</span>
+          <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategor\u00edas</span>, principales proveedores y desgloses institucionales.</span>
         </div>
       )}
       {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
@@ -1671,8 +1295,6 @@ export default function SpendingCategories() {
           onNavigate={navigate}
         />
       )}
-
-      {/* Vendor × Institution Drill-Down Panel */}
       {selectedCategoryId !== null && (
         <CategoryDetailPanel
           categoryId={selectedCategoryId}
@@ -1685,131 +1307,135 @@ export default function SpendingCategories() {
         />
       )}
 
-      {/* Section 3: Charts */}
+      {/* ================================================================= */}
+      {/* 8. Charts Section                                                 */}
+      {/* ================================================================= */}
       <div className="space-y-5">
-          {/* Top Categories — Horizontal Bar Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <CardTitle className="flex items-center gap-2">
-                <ShoppingCart className="h-4 w-4 text-text-muted" />
-                {t('treemap.title')}
-              </CardTitle>
-              <CardDescription>
-                Top 30 spending categories by total value. Color = sector. Click a bar to drill down.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {selectedCategoryName && (
-                <div className="flex items-center gap-2 mb-2">
-                  <span className="text-xs text-text-muted">Trend filtered by:</span>
-                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                    {selectedCategoryName}
-                    <button
-                      onClick={() => setSelectedCategoryId(null)}
-                      className="ml-0.5 hover:text-amber-200"
-                      aria-label="Clear filter"
-                    >
-                      ×
-                    </button>
-                  </span>
-                </div>
-              )}
-              {summaryLoading ? (
-                <ChartSkeleton height={500} />
-              ) : treemapData.length > 0 ? (
-                <div style={{ height: Math.max(380, treemapData.length * 22 + 60) }}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      layout="vertical"
-                      data={treemapData}
-                      margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
-                      style={{ cursor: 'pointer' }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
-                      <XAxis
-                        type="number"
-                        dataKey="value"
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                        tickFormatter={(v: number) => formatCompactMXN(v)}
-                        axisLine={{ stroke: 'var(--color-border)' }}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        width={200}
-                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
-                        tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '…' : v}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <RechartsTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null
-                          const d = payload[0].payload as { name: string; value: number; fill: string; category_id: number }
-                          return (
-                            <div
-                              className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-                              style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
-                            >
-                              <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
-                              <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
-                              {selectedCategoryId === d.category_id && (
-                                <p className="text-amber-400 mt-1">Selected — click to deselect</p>
-                              )}
-                            </div>
-                          )
-                        }}
-                      />
-                      <Bar
-                        dataKey="value"
-                        radius={[0, 3, 3, 0]}
-                        maxBarSize={18}
-                        onClick={(barData) => {
-                          const d = barData as { category_id?: number } | null
-                          const cid = d?.category_id
-                          if (cid != null) {
-                            setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
-                          }
-                        }}
-                      >
-                        {treemapData.map((entry, index) => (
-                          <Cell
-                            key={`bar-cell-${index}`}
-                            fill={entry.fill}
-                            fillOpacity={selectedCategoryId === null || selectedCategoryId === entry.category_id ? 0.85 : 0.35}
-                            stroke={selectedCategoryId === entry.category_id ? '#f59e0b' : 'transparent'}
-                            strokeWidth={selectedCategoryId === entry.category_id ? 1.5 : 0}
-                          />
-                        ))}
-                        <LabelList
-                          dataKey="value"
-                          position="right"
-                          formatter={(v: unknown) => formatCompactMXN(Number(v))}
-                          style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                        />
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-                  {t('treemap.empty')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+        <div className="h-px bg-border" />
 
-          {/* Trend Chart */}
-          <Card>
-            <CardHeader className="pb-2">
-              <div className="flex items-start justify-between gap-2">
-              <CardTitle className="flex items-center gap-2 flex-1">
+        {/* Top Categories Bar Chart */}
+        <Card>
+          <CardHeader className="pb-2">
+            <CardTitle className="flex items-center gap-2 text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
+              <BarChart3 className="h-4 w-4 text-text-muted" />
+              {t('treemap.title')}
+            </CardTitle>
+            <CardDescription>
+              Top 30 categor\u00edas de gasto por monto total. Color = sector. Clic en una barra para detalle.
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {selectedCategoryName && (
+              <div className="flex items-center gap-2 mb-2">
+                <span className="text-xs text-text-muted">Tendencia filtrada por:</span>
+                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                  {selectedCategoryName}
+                  <button
+                    onClick={() => setSelectedCategoryId(null)}
+                    className="ml-0.5 hover:text-amber-200"
+                    aria-label="Limpiar filtro"
+                  >
+                    &times;
+                  </button>
+                </span>
+              </div>
+            )}
+            {summaryLoading ? (
+              <ChartSkeleton height={500} />
+            ) : treemapData.length > 0 ? (
+              <div style={{ height: Math.max(380, treemapData.length * 22 + 60) }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    layout="vertical"
+                    data={treemapData}
+                    margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
+                    style={{ cursor: 'pointer' }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                    <XAxis
+                      type="number"
+                      dataKey="value"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      tickFormatter={(v: number) => formatCompactMXN(v)}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      width={200}
+                      tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
+                      tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '\u2026' : v}
+                      axisLine={false}
+                      tickLine={false}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null
+                        const d = payload[0].payload as { name: string; value: number; category_id: number }
+                        return (
+                          <div
+                            className="rounded-lg border p-3 text-xs font-mono shadow-lg"
+                            style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                          >
+                            <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
+                            <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
+                            {selectedCategoryId === d.category_id && (
+                              <p className="text-amber-400 mt-1">Seleccionado &mdash; clic para deseleccionar</p>
+                            )}
+                          </div>
+                        )
+                      }}
+                    />
+                    <Bar
+                      dataKey="value"
+                      radius={[0, 3, 3, 0]}
+                      maxBarSize={18}
+                      onClick={(barData) => {
+                        const d = barData as { category_id?: number } | null
+                        const cid = d?.category_id
+                        if (cid != null) {
+                          setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
+                        }
+                      }}
+                    >
+                      {treemapData.map((entry, index) => (
+                        <Cell
+                          key={`bar-cell-${index}`}
+                          fill={entry.fill}
+                          fillOpacity={selectedCategoryId === null || selectedCategoryId === entry.category_id ? 0.85 : 0.35}
+                          stroke={selectedCategoryId === entry.category_id ? '#f59e0b' : 'transparent'}
+                          strokeWidth={selectedCategoryId === entry.category_id ? 1.5 : 0}
+                        />
+                      ))}
+                      <LabelList
+                        dataKey="value"
+                        position="right"
+                        formatter={(v: unknown) => formatCompactMXN(Number(v))}
+                        style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      />
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                {t('treemap.empty')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+
+        {/* Trend Chart */}
+        <Card>
+          <CardHeader className="pb-2">
+            <div className="flex items-start justify-between gap-2">
+              <CardTitle className="flex items-center gap-2 flex-1 text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
                 <TrendingUp className="h-4 w-4 text-text-muted" />
                 {t('trends.title')}
                 {selectedCategoryName ? (
                   <span className="ml-auto text-xs text-amber-400 font-normal">
-                    Showing: {selectedCategoryName}
+                    Mostrando: {selectedCategoryName}
                   </span>
                 ) : (
                   <div className="ml-auto flex items-center gap-1">
@@ -1836,99 +1462,117 @@ export default function SpendingCategories() {
                           : 'border-border/50 text-text-muted hover:border-accent/40 hover:text-text-primary'
                       )}
                     >
-                      All
+                      Todos
                     </button>
                   </div>
                 )}
               </CardTitle>
               <ChartDownloadButton targetRef={trendChartRef} filename="spending-category-trends" />
+            </div>
+            <CardDescription>
+              {t('trends.description')}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            {trendsLoading ? (
+              <ChartSkeleton height={320} type="area" />
+            ) : trendChartData.years.length > 0 ? (
+              <div style={{ height: 320 }} ref={trendChartRef}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                    <XAxis
+                      dataKey="year"
+                      type="number"
+                      domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
+                      ticks={trendChartData.years}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                      interval={trendChartData.years.length > 10 ? 2 : 0}
+                    />
+                    <YAxis
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                      tickFormatter={(v: number) => formatCompactMXN(v)}
+                      width={72}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null
+                        return (
+                          <div
+                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
+                            style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                          >
+                            <p className="font-bold text-text-primary text-[11px]">{label}</p>
+                            {payload.map((p, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color ?? '#888' }} />
+                                <span className="text-text-muted/80 truncate max-w-[180px]">{truncate(String(p.name), 30)}</span>
+                                <span className="ml-auto font-semibold tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
+                                  {formatCompactMXN(p.value as number)}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={48}
+                      wrapperStyle={{ paddingTop: 8 }}
+                      formatter={(value: string) => (
+                        <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
+                          {truncate(value, 28)}
+                        </span>
+                      )}
+                    />
+                    {trendChartData.series.map((series, idx) => (
+                      <Line
+                        key={series.name}
+                        type="monotone"
+                        data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
+                        dataKey="value"
+                        name={series.name}
+                        stroke={TREND_COLORS[idx % TREND_COLORS.length]}
+                        strokeWidth={2.5}
+                        dot={{ r: 3, fill: TREND_COLORS[idx % TREND_COLORS.length], strokeWidth: 0 }}
+                        activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
+                        connectNulls={false}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
               </div>
-              <CardDescription>
-                {t('trends.description')}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              {trendsLoading ? (
-                <ChartSkeleton height={320} type="area" />
-              ) : trendChartData.years.length > 0 ? (
-                <div style={{ height: 320 }} ref={trendChartRef}>
-                  <ResponsiveContainer width="100%" height="100%">
-                    <LineChart margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
-                      <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                      <XAxis
-                        dataKey="year"
-                        type="number"
-                        domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
-                        ticks={trendChartData.years}
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                        axisLine={{ stroke: 'var(--color-border)' }}
-                        tickLine={false}
-                        interval={trendChartData.years.length > 10 ? 2 : 0}
-                      />
-                      <YAxis
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                        axisLine={{ stroke: 'var(--color-border)' }}
-                        tickLine={false}
-                        tickFormatter={(v: number) => formatCompactMXN(v)}
-                        width={72}
-                      />
-                      <RechartsTooltip
-                        content={({ active, payload, label }) => {
-                          if (!active || !payload?.length) return null
-                          return (
-                            <div
-                              className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
-                              style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
-                            >
-                              <p className="font-bold text-text-primary text-[11px]">{label}</p>
-                              {payload.map((p, i) => (
-                                <div key={i} className="flex items-center gap-2">
-                                  <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color ?? '#888' }} />
-                                  <span className="text-text-muted/80 truncate max-w-[180px]">{truncate(String(p.name), 30)}</span>
-                                  <span className="ml-auto font-semibold tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
-                                    {formatCompactMXN(p.value as number)}
-                                  </span>
-                                </div>
-                              ))}
-                            </div>
-                          )
-                        }}
-                      />
-                      <Legend
-                        verticalAlign="bottom"
-                        height={48}
-                        wrapperStyle={{ paddingTop: 8 }}
-                        formatter={(value: string) => (
-                          <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                            {truncate(value, 28)}
-                          </span>
-                        )}
-                      />
-                      {trendChartData.series.map((series, idx) => (
-                        <Line
-                          key={series.name}
-                          type="monotone"
-                          data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
-                          dataKey="value"
-                          name={series.name}
-                          stroke={TREND_COLORS[idx % TREND_COLORS.length]}
-                          strokeWidth={2.5}
-                          dot={{ r: 3, fill: TREND_COLORS[idx % TREND_COLORS.length], strokeWidth: 0 }}
-                          activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
-                          connectNulls={false}
-                        />
-                      ))}
-                    </LineChart>
-                  </ResponsiveContainer>
-                </div>
-              ) : (
-                <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-                  {t('trends.empty')}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-        </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                {t('trends.empty')}
+              </div>
+            )}
+          </CardContent>
+        </Card>
       </div>
+
+      {/* ================================================================= */}
+      {/* 9. ImpactoHumano                                                  */}
+      {/* ================================================================= */}
+      {healthCategorySpend > 0 && (
+        <section>
+          <div className="h-px bg-border mb-6" />
+          <div className="max-w-2xl">
+            <p
+              className="text-sm text-text-secondary leading-relaxed mb-3"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              Las categor\u00edas de medicamentos y equipo m\u00e9dico representan una parte sustancial del gasto en salud &mdash; y presentan indicadores de riesgo elevados.
+            </p>
+            <ImpactoHumano amountMxn={healthCategorySpend} />
+          </div>
+        </section>
+      )}
+    </div>
   )
 }

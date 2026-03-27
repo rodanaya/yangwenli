@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import type { CSSProperties } from 'react'
 
 interface HallazgoStatProps {
   value: string
@@ -6,6 +7,7 @@ interface HallazgoStatProps {
   annotation?: string
   color?: string
   className?: string
+  style?: CSSProperties
 }
 
 export function HallazgoStat({
@@ -14,6 +16,7 @@ export function HallazgoStat({
   annotation,
   color = 'border-red-500',
   className,
+  style,
 }: HallazgoStatProps) {
   return (
     <div
@@ -22,6 +25,7 @@ export function HallazgoStat({
         color,
         className
       )}
+      style={style}
     >
       <div
         className="text-5xl font-bold text-text-primary leading-none"

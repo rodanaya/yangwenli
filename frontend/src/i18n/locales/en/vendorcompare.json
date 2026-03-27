@@ -6,23 +6,23 @@
   "errorTitle": "Could not load vendor data",
   "errorBody": "One or both vendor IDs may be invalid. Please check the IDs and try again.",
   "viewProfile": "View full profile",
-  "radarTitle": "Z-Score Radar Comparison",
+  "radarTitle": "Multidimensional Risk Profile",
   "radarSubtitle": "Solid line = Vendor A. Dashed line = Vendor B. Values toward edge = higher deviation from sector norms.",
   "noRadarData": "No z-score data available for radar comparison.",
-  "metricTitle": "Metric Comparison",
-  "metricSubtitle": "The \"B vs A\" column shows how Vendor B differs. Red = worse risk; green = better.",
+  "metricTitle": "Contracting Metrics",
+  "metricSubtitle": "The \"Delta\" column shows how Vendor B differs. Red = worse risk; green = better.",
   "metricColLabel": "Metric",
-  "metricColDelta": "B vs A",
+  "metricColDelta": "Delta",
   "deltaEqual": "equal",
   "vendorA": "Vendor A",
   "vendorB": "Vendor B",
   "picker": {
     "title": "Compare Two Vendors",
-    "description": "Enter two vendor IDs to compare their risk profiles, procurement metrics, and z-score radar charts side-by-side.",
-    "labelA": "Vendor A \u2014 ID",
-    "labelB": "Vendor B \u2014 ID",
-    "placeholderA": "e.g. 12345",
-    "placeholderB": "e.g. 67890",
+    "description": "Search by name or enter vendor IDs to reveal differences in contracting patterns and risk.",
+    "labelA": "Vendor A",
+    "labelB": "Vendor B",
+    "placeholderA": "Search vendor...",
+    "placeholderB": "Search vendor...",
     "compare": "Compare",
     "hint": "You can also navigate here from any vendor\u2019s profile page using the \u201cCompare\u201d button."
   },
@@ -43,5 +43,22 @@
     "directAward": "Direct Award",
     "sectorMismatch": "Sector Mismatch",
     "singleBid": "Single Bid"
+  },
+  "verdict": {
+    "section": "VERDICT",
+    "title": "Which vendor is riskier?",
+    "narrative": "{{winner}} has a risk score {{pct}}% higher than {{loser}}",
+    "tiedMessage": "Both vendors present similar risk profiles.",
+    "higherRisk": "Higher risk",
+    "lowerRisk": "Lower risk",
+    "vs": "vs"
+  },
+  "searchResults": "results",
+  "noResults": "No results",
+  "searching": "Searching...",
+  "headline": {
+    "section": "VENDOR COMPARISON",
+    "title": "Face to Face: Comparative Analysis",
+    "subtitle": "Select two vendors to reveal their differences in contracting patterns and risk"
   }
 }

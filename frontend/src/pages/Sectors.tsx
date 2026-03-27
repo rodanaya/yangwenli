@@ -1,14 +1,14 @@
 /**
- * El Diagnostico Nacional — Sector Health Assessment
+ * Los 12 Sectores Bajo La Lupa — Editorial Sector Analysis
  *
- * A medical diagnostic report on the health of each sector in Mexico's
- * procurement system. Each sector is a "patient" with test results.
- * Reads top-to-bottom: overview → vital signs → detailed breakdown → diagnosis.
+ * A WSJ/NYT-style investigative data report on the health of each sector
+ * in Mexico's federal procurement system. Each sector is a "patient"
+ * diagnosed through statistical risk indicators.
  *
- * Section 1: Diagnostic header + Hallazgo Principal callout
- * Section 2: 4 StatCards (vital signs)
- * Section 3: Sortable sector comparison table (primary diagnostic panel)
- * Section 4: Charts gallery (detailed test results)
+ * Section 1: Editorial headline + HallazgoStat row + InvestigationLede
+ * Section 2: Sector diagnosis cards (12-grid) + ImpactoHumano callout
+ * Section 3: Sortable comparison table ("El Panel de Diagnostico")
+ * Section 4: Charts gallery (heatmap, slope, bar, scatter, treemap)
  */
 
 import { memo, useMemo, useState, useRef } from 'react'
@@ -29,12 +29,14 @@ import { Heatmap } from '@/components/charts/Heatmap'
 import { SectorSlopeChart } from '@/components/charts/SectorSlopeChart'
 import { AnnotatedAreaChart } from '@/components/charts/AnnotatedAreaChart'
 import type { SectorStatistics } from '@/api/types'
-import { AlertTriangle, BarChart3, Info, Layers, X } from 'lucide-react'
+import { AlertTriangle, BarChart3, Info, Layers, X, ArrowRight } from 'lucide-react'
 
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { ScrollReveal } from '@/hooks/useAnimations'
-import { StatCard as SharedStatCard } from '@/components/DashboardWidgets'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import {
   ResponsiveContainer,
   BarChart,
@@ -82,7 +84,7 @@ const SECTOR_TOP_RAMO: Record<string, string> = {
   agricultura: '08',
   ambiente: '16',
   trabajo: '14',
-  otros: '—',
+  otros: '---',
 }
 
 // ============================================================================
@@ -103,20 +105,57 @@ const GRADE_DOT_COLORS: Record<string, { text: string; bg: string; border: strin
 }
 
 // ============================================================================
+// Sector short descriptions for diagnosis cards
+// ============================================================================
+
+const SECTOR_DIAGNOSES: Record<string, { esLabel: string; riskSignal: string }> = {
+  salud:            { esLabel: 'Salud',            riskSignal: 'Concentracion de proveedores' },
+  educacion:        { esLabel: 'Educacion',        riskSignal: 'Monopolios IT en universidades' },
+  infraestructura:  { esLabel: 'Infraestructura',  riskSignal: 'Redes de proveedores' },
+  energia:          { esLabel: 'Energia',          riskSignal: 'Proveedores fuera de giro' },
+  defensa:          { esLabel: 'Defensa',          riskSignal: 'Restriccion por seguridad' },
+  tecnologia:       { esLabel: 'Tecnologia',       riskSignal: 'Sobre-precios detectados' },
+  hacienda:         { esLabel: 'Hacienda',         riskSignal: 'Manipulacion de licitaciones' },
+  gobernacion:      { esLabel: 'Gobernacion',      riskSignal: 'Captura institucional' },
+  agricultura:      { esLabel: 'Agricultura',      riskSignal: 'Monopolio Segalmex' },
+  ambiente:         { esLabel: 'Ambiente',          riskSignal: 'Empresas fantasma' },
+  trabajo:          { esLabel: 'Trabajo',           riskSignal: 'Sobre-precios en servicios' },
+  otros:            { esLabel: 'Otros',             riskSignal: 'Patron diverso' },
+}
+
+// ============================================================================
 // Helpers
 // ============================================================================
 
 function SortIndicator({ field, sortField, sortDir }: { field: SortField; sortField: SortField; sortDir: SortDir }) {
-  if (field !== sortField) return <span className="text-text-muted/40 ml-1">↕</span>
-  return <span className="text-accent ml-1">{sortDir === 'desc' ? '▼' : '▲'}</span>
+  if (field !== sortField) return <span className="text-text-muted/40 ml-1">&#8597;</span>
+  return <span className="text-accent ml-1">{sortDir === 'desc' ? '\u25BC' : '\u25B2'}</span>
 }
 
 function getTopRamo(sectorCode: string): string {
-  return SECTOR_TOP_RAMO[sectorCode] ?? '—'
+  return SECTOR_TOP_RAMO[sectorCode] ?? '---'
 }
 
 // ============================================================================
-// SECTOR RANKING STRIP — Compact horizontal ranking by avg_risk_score
+// EDITORIAL SECTION HEADER — serif headline with rule
+// ============================================================================
+
+function SectionHeader({ label, className }: { label: string; className?: string }) {
+  return (
+    <div className={cn('mb-4', className)}>
+      <div className="h-px bg-border/60" />
+      <h2
+        className="mt-3 text-lg font-bold text-text-primary tracking-tight"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        {label}
+      </h2>
+    </div>
+  )
+}
+
+// ============================================================================
+// SECTOR RANKING STRIP -- Compact horizontal ranking by avg_risk_score
 // ============================================================================
 
 interface SectorRankingStripProps {
@@ -219,7 +258,7 @@ const SectorRankingStrip = memo(function SectorRankingStrip({
 })
 
 // ============================================================================
-// SECTOR RADAR — Spider chart showing 6 risk dimensions for a sector
+// SECTOR RADAR -- Spider chart showing 6 risk dimensions for a sector
 // ============================================================================
 
 interface SectorRadarProps {
@@ -284,24 +323,24 @@ const SectorRadar = memo(function SectorRadar({ sector, allSectors, compareSecto
       </RadarChart>
       <p className="text-[10px] text-white/50 font-mono text-center -mt-2">
         {compareSector
-          ? `${getSectorNameEN(sector.sector_code)} vs ${getSectorNameEN(compareSector.sector_code)} · all axes 0–100`
-          : `Risk dimensions for ${getSectorNameEN(sector.sector_code)} · all axes 0–100`}
+          ? `${getSectorNameEN(sector.sector_code)} vs ${getSectorNameEN(compareSector.sector_code)} -- all axes 0-100`
+          : `Risk dimensions for ${getSectorNameEN(sector.sector_code)} -- all axes 0-100`}
       </p>
       <p className="text-xs text-white/50 italic mt-2 text-center">
         {compareSector
-          ? 'Solid fill = primary sector · Dashed = comparison sector'
-          : 'Each axis shows relative position 0–100 vs all sectors'}
+          ? 'Solid fill = primary sector -- Dashed = comparison sector'
+          : 'Each axis shows relative position 0-100 vs all sectors'}
       </p>
     </div>
   )
 })
 
 // ============================================================================
-// MINI SPARKLINE — SVG polyline for risk trend
+// MINI SPARKLINE -- SVG polyline for risk trend
 // ============================================================================
 
 function MiniSparkline({ points, color = '#06b6d4' }: { points: number[]; color?: string }) {
-  if (points.length < 2) return <span className="text-text-muted text-xs font-mono">—</span>
+  if (points.length < 2) return <span className="text-text-muted text-xs font-mono">---</span>
   const max = Math.max(...points)
   const min = Math.min(...points)
   const range = max - min || 1
@@ -332,14 +371,14 @@ function MiniSparkline({ points, color = '#06b6d4' }: { points: number[]; color?
         })()}
       </svg>
       <span className="text-[9px] font-mono" style={{ color: trendColor }}>
-        {trend > 0 ? '▲' : trend < 0 ? '▼' : '—'}
+        {trend > 0 ? '\u25B2' : trend < 0 ? '\u25BC' : '---'}
       </span>
     </div>
   )
 }
 
 // ============================================================================
-// RISK STACK BAR — Stacked bar showing % contracts at each risk level
+// RISK STACK BAR -- Stacked bar showing % contracts at each risk level
 // ============================================================================
 
 interface RiskStackBarProps {
@@ -359,7 +398,7 @@ function RiskStackBar({ criticalPct, highPct, mediumPct, lowPct }: RiskStackBarP
   const title = segments
     .filter(s => s.pct > 0)
     .map(s => `${s.label}: ${s.pct.toFixed(1)}%`)
-    .join(' · ')
+    .join(' -- ')
   return (
     <div
       className="flex h-2 w-full rounded-full overflow-hidden gap-px"
@@ -381,7 +420,7 @@ function RiskStackBar({ criticalPct, highPct, mediumPct, lowPct }: RiskStackBarP
 }
 
 // ============================================================================
-// SECTOR TREEMAP — contract value by sector, colored by sector color
+// SECTOR TREEMAP -- contract value by sector, colored by sector color
 // ============================================================================
 
 interface TreemapContentProps {
@@ -442,7 +481,7 @@ function SectorTreemapContent(props: TreemapContentProps) {
             pointerEvents: 'none',
           }}
         >
-          {formatCompactMXN(value)} · {riskPct}%
+          {formatCompactMXN(value)} -- {riskPct}%
         </text>
       )}
     </g>
@@ -450,7 +489,7 @@ function SectorTreemapContent(props: TreemapContentProps) {
 }
 
 // ============================================================================
-// INDUSTRY RISK HEATMAP — Treemap: cell size = total value, color = avg risk
+// INDUSTRY RISK HEATMAP -- Treemap: cell size = total value, color = avg risk
 // ============================================================================
 
 /** Linearly interpolate between two hex colors */
@@ -480,12 +519,10 @@ function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
   if (width < 20 || height < 20) return null
   const showLabel = width > 55 && height > 32
   const showVendors = width > 80 && height > 52
-  // Continuous gradient: lerp from dark-teal (#134e4a) at risk=0 to bright-red (#ef4444) at risk>=0.3
-  // This gives much better visual contrast than categorical colors for low-risk clustering
   const t = Math.min(avg_risk_score / RISK_THRESHOLDS.critical, 1)
   const fillColor = t < 0.5
-    ? lerpColor('#134e4a', '#eab308', t * 2)    // teal → amber
-    : lerpColor('#eab308', '#ef4444', (t - 0.5) * 2) // amber → red
+    ? lerpColor('#134e4a', '#eab308', t * 2)
+    : lerpColor('#eab308', '#ef4444', (t - 0.5) * 2)
   const riskPct = (avg_risk_score * 100).toFixed(1)
 
   return (
@@ -529,7 +566,7 @@ function IndustryHeatmapContent(props: IndustryHeatmapContentProps) {
             pointerEvents: 'none',
           }}
         >
-          {vendor_count} vendors · {riskPct}%
+          {vendor_count} vendors -- {riskPct}%
         </text>
       )}
     </g>
@@ -614,7 +651,7 @@ const IndustryRiskHeatmap = memo(function IndustryRiskHeatmap({ items }: Industr
                       {d.top_vendor_value != null && (
                         <span className="block text-[10px]">
                           {formatCompactMXN(d.top_vendor_value)}
-                          {d.top_vendor_risk != null && ` · risk ${(d.top_vendor_risk * 100).toFixed(1)}%`}
+                          {d.top_vendor_risk != null && ` -- risk ${(d.top_vendor_risk * 100).toFixed(1)}%`}
                         </span>
                       )}
                     </p>
@@ -628,6 +665,98 @@ const IndustryRiskHeatmap = memo(function IndustryRiskHeatmap({ items }: Industr
     </ResponsiveContainer>
   )
 })
+
+// ============================================================================
+// SECTOR DIAGNOSIS CARD -- Editorial card for each sector
+// ============================================================================
+
+interface SectorDiagnosisCardProps {
+  sector: SectorStatistics
+  rank: number
+}
+
+function SectorDiagnosisCard({ sector, rank }: SectorDiagnosisCardProps) {
+  const navigate = useNavigate()
+  const color = SECTOR_COLORS[sector.sector_code] || '#64748b'
+  const diagnosis = SECTOR_DIAGNOSES[sector.sector_code]
+  const riskLevel = getRiskLevelFromScore(sector.avg_risk_score)
+  const highPlusPct = ((sector.critical_risk_count + sector.high_risk_count) / Math.max(sector.total_contracts, 1)) * 100
+
+  return (
+    <motion.div
+      variants={staggerItem}
+      className="group relative rounded-lg border border-border/40 bg-background-elevated/20 hover:bg-background-elevated/50 transition-all cursor-pointer overflow-hidden"
+      style={{ borderTopWidth: '3px', borderTopColor: color }}
+      onClick={() => navigate(`/sectors/${sector.sector_id}`)}
+      role="article"
+      aria-label={`${getSectorNameEN(sector.sector_code)} sector analysis`}
+    >
+      <div className="p-4">
+        {/* Rank + Sector name */}
+        <div className="flex items-start justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+            <h3
+              className="text-sm font-bold text-text-primary leading-tight"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {diagnosis?.esLabel ?? getSectorNameEN(sector.sector_code)}
+            </h3>
+          </div>
+          <span className="text-[9px] font-mono text-text-muted font-bold">#{rank}</span>
+        </div>
+
+        {/* Risk signal */}
+        <p className="text-[11px] text-text-muted leading-snug mb-3">
+          {diagnosis?.riskSignal ?? 'Sin patron dominante'}
+        </p>
+
+        {/* Key metrics */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-text-muted font-mono">Contratos</span>
+            <span className="text-[11px] font-bold tabular-nums font-mono text-text-primary">
+              {formatNumber(sector.total_contracts)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-text-muted font-mono">Valor</span>
+            <span className="text-[11px] font-bold tabular-nums font-mono text-text-primary">
+              {formatCompactMXN(sector.total_value_mxn)}
+            </span>
+          </div>
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] text-text-muted font-mono">Alto riesgo</span>
+            <span
+              className="text-[11px] font-bold tabular-nums font-mono"
+              style={{ color: RISK_COLORS[riskLevel] }}
+            >
+              {highPlusPct.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Risk distribution bar */}
+        <div className="mt-3">
+          <RiskStackBar
+            criticalPct={sector.critical_risk_count / Math.max(sector.total_contracts, 1) * 100}
+            highPct={sector.high_risk_count / Math.max(sector.total_contracts, 1) * 100}
+            mediumPct={sector.medium_risk_count / Math.max(sector.total_contracts, 1) * 100}
+            lowPct={sector.low_risk_count / Math.max(sector.total_contracts, 1) * 100}
+          />
+        </div>
+
+        {/* Risk badge */}
+        <div className="mt-3 flex items-center justify-between">
+          <RiskBadge score={sector.avg_risk_score} className="text-[10px] px-1.5 py-0" />
+          <span className="text-[10px] text-text-muted group-hover:text-accent transition-colors flex items-center gap-0.5">
+            Ver perfil <ArrowRight className="h-3 w-3" />
+          </span>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
 // ============================================================================
 // Main Component
@@ -668,7 +797,7 @@ export function Sectors() {
     staleTime: 60 * 60 * 1000,
   })
 
-  // Derived: sector object for the selected code — must be before queries that depend on it
+  // Derived: sector object for the selected code -- must be before queries that depend on it
   const selectedSector = useMemo(() => {
     if (!selectedSectorCode || !data?.data) return null
     return data.data.find((s) => s.sector_code === selectedSectorCode) ?? null
@@ -707,12 +836,11 @@ export function Sectors() {
       if (!map.has(d.sector_id)) map.set(d.sector_id, [])
       map.get(d.sector_id)!.push({ year: d.year, avg_risk: d.avg_risk })
     })
-    // Sort each sector's data by year
     map.forEach((arr) => arr.sort((a, b) => a.year - b.year))
     return map
   }, [sectorYearResp])
 
-  // ---- PHI grade map: sector_name.toLowerCase() → grade ----
+  // ---- PHI grade map: sector_name.toLowerCase() -> grade ----
   const phiGradeMap = useMemo(() => {
     const map: Record<string, string> = {}
     const sectors = (phiSectorsData as { sectors?: { name?: string; name_en?: string; grade?: string }[] })?.sectors ?? []
@@ -744,6 +872,11 @@ export function Sectors() {
       return sortDir === 'desc' ? bVal - aVal : aVal - bVal
     })
   }, [data, sortField, sortDir])
+
+  // ---- Sectors sorted by risk for diagnosis cards ----
+  const riskSortedSectors = useMemo(() => {
+    return [...(data?.data ?? [])].sort((a, b) => b.avg_risk_score - a.avg_risk_score)
+  }, [data])
 
   // ---- Heatmap data ----
   const sectorHeatmapData = useMemo(() => {
@@ -815,11 +948,18 @@ export function Sectors() {
     }))
   }, [data])
 
+  // ---- Find worst sector for the ImpactoHumano callout ----
+  const worstSector = useMemo(() => {
+    if (!data?.data?.length) return null
+    return [...data.data].sort((a, b) => b.high_risk_pct - a.high_risk_pct)[0]
+  }, [data])
+
   if (isLoading) {
     return (
       <div className="space-y-6">
-        <div className="grid gap-4 grid-cols-2 lg:grid-cols-4">
-          {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+        <Skeleton className="h-32" />
+        <div className="grid gap-4 grid-cols-3">
+          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}
         </div>
         <Skeleton className="h-[400px]" />
       </div>
@@ -840,77 +980,170 @@ export function Sectors() {
   const topSector = chartSectors[0]
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 max-w-6xl mx-auto">
+
       {/* ================================================================ */}
-      {/* DIAGNOSTIC HEADER — "El Diagnostico Nacional"                  */}
+      {/* EDITORIAL HEADLINE                                               */}
       {/* ================================================================ */}
       <motion.div
-        className="border-b border-border pb-6 mb-8"
         initial={{ opacity: 0, y: -8 }}
         animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
+        transition={{ duration: 0.5, ease: [0.25, 0.46, 0.45, 0.94] }}
       >
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          {t('diagnostico.reportLabel')}
-        </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
-          {t('diagnostico.title')}
-        </h1>
-        <p className="text-sm text-text-secondary max-w-2xl">
-          {aggregates
-            ? t('diagnostico.subtitleDynamic', { count: aggregates.sectorCount, contracts: formatNumber(aggregates.totalContracts) })
-            : t('diagnostico.subtitleFallback')}
-        </p>
+        <EditorialHeadline
+          section="ANALISIS SECTORIAL"
+          headline="Los 12 Sectores Bajo La Lupa"
+          subtitle={aggregates
+            ? `Diagnostico de ${formatNumber(aggregates.totalContracts)} contratos con un gasto validado de ${formatCompactMXN(aggregates.totalValue)} en adquisiciones federales (2002-2025). Modelo de riesgo v6.5, calibrado OCDE.`
+            : 'Diagnostico sectorial del sistema de contrataciones publicas de Mexico.'}
+        />
       </motion.div>
 
       {/* ================================================================ */}
-      {/* HALLAZGO PRINCIPAL — Editorial callout                          */}
+      {/* HALLAZGO STAT ROW -- 3 big numbers                               */}
       {/* ================================================================ */}
-      <motion.div
-        className="border-l-4 border-accent pl-4 py-2 mb-6 bg-accent-glow rounded-r"
-        initial={{ opacity: 0, x: -12 }}
-        animate={{ opacity: 1, x: 0 }}
-        transition={{ duration: 0.45, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <div className="text-xs uppercase tracking-wide text-accent font-semibold mb-1">{t('diagnostico.hallazgoLabel')}</div>
-        <p className="text-sm text-text-primary" dangerouslySetInnerHTML={{ __html: t('diagnostico.hallazgoText') }} />
-      </motion.div>
-
-      {/* Summary stat pills — vital signs */}
       {aggregates && (
         <motion.div
-          className="flex flex-wrap gap-3"
-          initial={{ opacity: 0, y: 10 }}
+          className="grid grid-cols-1 sm:grid-cols-3 gap-6 py-4"
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4, delay: 0.15, ease: [0.25, 0.46, 0.45, 0.94] }}
+          transition={{ duration: 0.5, delay: 0.1, ease: [0.25, 0.46, 0.45, 0.94] }}
         >
-          <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.gastoTotal')}</span>
-            <span className="pull-stat !text-base">{formatCompactMXN(aggregates.totalValue)}</span>
-          </div>
-          <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-            <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.riesgoPromedio')}</span>
-            <span className={cn(
-              'pull-stat !text-base',
-              aggregates.avgRisk >= RISK_THRESHOLDS.critical ? 'text-risk-critical' : aggregates.avgRisk >= RISK_THRESHOLDS.medium ? 'text-risk-high' : 'text-text-primary'
-            )}>
-              {(aggregates.avgRisk * 100).toFixed(1)}%
-            </span>
-          </div>
-          {topSector && (
-            <div className="fern-card inline-flex items-center gap-2 px-4 py-2">
-              <span className="text-[10px] uppercase tracking-wider text-text-muted">{t('diagnostico.mayorGasto')}</span>
-              <div className="flex items-center gap-1.5">
-                <div className="w-2 h-2 rounded-full" style={{ backgroundColor: SECTOR_COLORS[topSector.sector_code] || '#64748b' }} />
-                <span className="pull-stat !text-base">{getSectorNameEN(topSector.sector_code)}</span>
-              </div>
-            </div>
-          )}
+          <HallazgoStat
+            value={formatNumber(aggregates.totalContracts)}
+            label="Contratos analizados"
+            annotation="COMPRANET 2002-2025"
+            color="border-blue-500"
+          />
+          <HallazgoStat
+            value={formatCompactMXN(aggregates.totalValue)}
+            label="Gasto validado total"
+            annotation="Excluyendo valores >100B MXN"
+            color="border-amber-500"
+          />
+          <HallazgoStat
+            value="13.49%"
+            label="Tasa de alto riesgo (critico + alto)"
+            annotation="Dentro del rango OCDE 2-15%"
+            color="border-red-500"
+          />
         </motion.div>
       )}
 
       {/* ================================================================ */}
-      {/* SECTOR RANKING STRIP — All 12 sectors by avg risk, clickable  */}
+      {/* INVESTIGATION LEDE -- journalistic opening paragraph              */}
+      {/* ================================================================ */}
+      <motion.div
+        className="max-w-3xl"
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        transition={{ duration: 0.6, delay: 0.2 }}
+      >
+        <p
+          className="text-base text-text-secondary leading-relaxed"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          El analisis de 12 sectores del gasto federal revela patrones de riesgo diferenciados.
+          Mientras sectores como Salud y Agricultura concentran proveedores dominantes con
+          contratos de alto valor, otros como Energia muestran proveedores fuera de su giro
+          industrial ganando licitaciones. Este diagnostico compara tasas de adjudicacion directa,
+          concentracion de proveedores y patrones de riesgo por sector, identificando donde
+          el sistema de contrataciones presenta las mayores anomalias estadisticas.
+        </p>
+      </motion.div>
+
+      {/* ================================================================ */}
+      {/* INTELLIGENCE CHIPS -- pattern counts                              */}
+      {/* ================================================================ */}
+      {patternCounts && (
+        <div className="flex flex-wrap gap-2">
+          <ScrollReveal delay={0} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
+              <span className="text-xs font-mono font-medium text-risk-critical">
+                {formatNumber(patternCounts.counts.critical)} {t('chips.criticalRisk')}
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={60} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
+              <span className="text-xs font-mono font-medium text-amber-500">
+                {formatNumber(patternCounts.counts.december_rush)} {t('chips.decemberRush')}
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={120} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+              <span className="text-xs font-mono font-medium text-text-secondary">
+                {formatNumber(patternCounts.counts.co_bidding)} {t('chips.coBiddingFlags')}
+              </span>
+            </div>
+          </ScrollReveal>
+          <ScrollReveal delay={180} direction="up">
+            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
+              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
+              <span className="text-xs font-mono font-medium text-text-secondary">
+                {formatNumber(patternCounts.counts.price_outliers)} {t('chips.priceOutliers')}
+              </span>
+            </div>
+          </ScrollReveal>
+        </div>
+      )}
+
+      {/* ================================================================ */}
+      {/* SECTOR DIAGNOSIS CARDS -- 12-grid of editorial cards              */}
+      {/* ================================================================ */}
+      <SectionHeader label="Diagnostico por Sector" />
+
+      {data?.data && data.data.length > 0 && (
+        <motion.div
+          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3"
+          variants={staggerContainer}
+          initial="initial"
+          whileInView="animate"
+          viewport={{ once: true, margin: '-40px' }}
+        >
+          {riskSortedSectors.map((sector, i) => (
+            <SectorDiagnosisCard key={sector.sector_id} sector={sector} rank={i + 1} />
+          ))}
+        </motion.div>
+      )}
+
+      {/* ================================================================ */}
+      {/* IMPACTO HUMANO -- Editorial callout on worst sector               */}
+      {/* ================================================================ */}
+      {worstSector && (
+        <ScrollReveal direction="fade">
+          <div className="max-w-2xl">
+            <div
+              className="rounded-lg p-4 bg-red-950/20 border border-red-800/30"
+            >
+              <div className="text-xs uppercase tracking-[0.15em] text-red-400 font-semibold mb-2">
+                Contexto: Impacto del riesgo en {getSectorNameEN(worstSector.sector_code)}
+              </div>
+              <p
+                className="text-sm text-text-secondary leading-relaxed mb-3"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                En {getSectorNameEN(worstSector.sector_code).toLowerCase()}, el sector con mayor
+                concentracion de riesgo, {formatNumber(worstSector.critical_risk_count + worstSector.high_risk_count)} contratos
+                son clasificados como criticos o de alto riesgo ---
+                el {((worstSector.critical_risk_count + worstSector.high_risk_count) / Math.max(worstSector.total_contracts, 1) * 100).toFixed(1)}%
+                del total sectorial. El valor acumulado de estos contratos tiene un costo de oportunidad real.
+              </p>
+              <ImpactoHumano
+                amountMxn={worstSector.total_value_mxn * (worstSector.high_risk_pct / 100)}
+                className="mt-2"
+              />
+            </div>
+          </div>
+        </ScrollReveal>
+      )}
+
+      {/* ================================================================ */}
+      {/* SECTOR RANKING STRIP -- All 12 sectors by avg risk, clickable    */}
       {/* ================================================================ */}
       {data?.data && data.data.length > 0 && (
         <div>
@@ -953,7 +1186,7 @@ export function Sectors() {
       )}
 
       {/* ================================================================ */}
-      {/* SECTOR RADAR — Spider chart for the selected sector            */}
+      {/* SECTOR RADAR -- Spider chart for the selected sector             */}
       {/* ================================================================ */}
       {selectedSector && data?.data && (
         <Card className="border-accent/20 bg-accent/3">
@@ -965,11 +1198,10 @@ export function Sectors() {
                   style={{ backgroundColor: SECTOR_COLORS[selectedSector.sector_code] || '#64748b' }}
                 />
                 <h3 className="text-sm font-bold text-text-primary">
-                  {getSectorNameEN(selectedSector.sector_code)} — Risk Profile
+                  {getSectorNameEN(selectedSector.sector_code)} --- Risk Profile
                 </h3>
               </div>
               <div className="flex items-center gap-3">
-                {/* Compare dropdown */}
                 <select
                   value={compareSectorCode ?? ''}
                   onChange={(e) => setCompareSectorCode(e.target.value || null)}
@@ -1001,24 +1233,21 @@ export function Sectors() {
               </div>
             </div>
             <div className="grid gap-4 md:grid-cols-2 items-center">
-              {/* Radar chart */}
               <SectorRadar sector={selectedSector} allSectors={data.data} compareSector={compareSector} />
-              {/* Key stats sidebar */}
               <div className="space-y-2.5">
                 {[
-                  { label: t('table.totalContracts'), value: formatNumber(selectedSector.total_contracts), mono: true },
-                  { label: t('table.totalValueMxn'), value: formatCompactMXN(selectedSector.total_value_mxn), mono: true },
-                  { label: t('table.avgRiskScore'), value: `${(selectedSector.avg_risk_score * 100).toFixed(1)}%`, mono: true },
-                  { label: t('table.highRiskPct'), value: formatPercentSafe(selectedSector.high_risk_pct, false), mono: true },
-                  { label: t('table.directAwardPct'), value: formatPercentSafe(selectedSector.direct_award_pct, false), mono: true },
-                  { label: t('heatmap.singleBid'), value: formatPercentSafe(selectedSector.single_bid_pct, false), mono: true },
+                  { label: t('table.totalContracts'), value: formatNumber(selectedSector.total_contracts) },
+                  { label: t('table.totalValueMxn'), value: formatCompactMXN(selectedSector.total_value_mxn) },
+                  { label: t('table.avgRiskScore'), value: `${(selectedSector.avg_risk_score * 100).toFixed(1)}%` },
+                  { label: t('table.highRiskPct'), value: formatPercentSafe(selectedSector.high_risk_pct, false) },
+                  { label: t('table.directAwardPct'), value: formatPercentSafe(selectedSector.direct_award_pct, false) },
+                  { label: t('heatmap.singleBid'), value: formatPercentSafe(selectedSector.single_bid_pct, false) },
                 ].map(({ label, value }) => (
                   <div key={label} className="flex items-center justify-between gap-2 py-1.5 border-b border-border/20">
                     <span className="text-xs text-text-muted">{label}</span>
                     <span className="text-xs font-bold tabular-nums font-mono text-text-primary">{value}</span>
                   </div>
                 ))}
-                {/* Risk level breakdown bar */}
                 <div className="pt-1">
                   <p className="text-[10px] text-text-muted font-mono mb-1.5">Risk distribution</p>
                   <RiskStackBar
@@ -1034,19 +1263,18 @@ export function Sectors() {
                     <span className="text-[#4ade80]">{(selectedSector.low_risk_count / Math.max(selectedSector.total_contracts, 1) * 100).toFixed(1)}% low</span>
                   </div>
                 </div>
-                {/* Quick CTAs */}
                 <div className="flex gap-2 pt-2">
                   <Link
                     to={`/contracts?sector_id=${selectedSector.sector_id}`}
                     className="flex-1 text-center text-[10px] font-mono font-bold rounded border border-border/50 px-2 py-1.5 hover:border-accent/60 hover:bg-accent/5 transition-all text-text-muted hover:text-accent"
                   >
-                    All Contracts →
+                    All Contracts
                   </Link>
                   <Link
                     to={`/contracts?sector_id=${selectedSector.sector_id}&risk_level=high`}
                     className="flex-1 text-center text-[10px] font-mono font-bold rounded border border-risk-high/30 px-2 py-1.5 hover:border-risk-high/60 hover:bg-risk-high/5 transition-all text-risk-high"
                   >
-                    High Risk →
+                    High Risk
                   </Link>
                 </div>
               </div>
@@ -1060,7 +1288,7 @@ export function Sectors() {
           <CardHeader className="pb-2">
             <CardTitle className="flex items-center gap-2 text-sm font-medium">
               <AlertTriangle className="h-4 w-4 text-amber-500" />
-              ASF Audit History · {sectorASF.sector_name}
+              ASF Audit History -- {sectorASF.sector_name}
             </CardTitle>
           </CardHeader>
           <CardContent>
@@ -1085,7 +1313,7 @@ export function Sectors() {
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.4} />
                 <XAxis dataKey="year" tick={{ fontSize: 10 }} />
                 <YAxis tickFormatter={(v: number) => `${(v / 1e9).toFixed(0)}B`} tick={{ fontSize: 10 }} />
-                <RechartsTooltip formatter={(value: any) => [formatCompactMXN(value as number), 'Questioned']} />
+                <RechartsTooltip formatter={(value: unknown) => [formatCompactMXN(value as number), 'Questioned']} />
                 <Bar dataKey="total_amount_mxn" fill="#f87171" opacity={0.5} />
                 <Bar
                   dataKey="total_amount_mxn"
@@ -1104,97 +1332,10 @@ export function Sectors() {
         </Card>
       )}
 
-      {/* Section 1: Stat Cards — Vital Signs */}
-      <div className="editorial-rule mb-3">
-        <span className="editorial-label">{t('diagnostico.signosVitales')}</span>
-      </div>
-      <motion.div
-        className="grid gap-4 grid-cols-2 lg:grid-cols-4"
-        variants={{ hidden: { opacity: 0 }, show: { opacity: 1, transition: { staggerChildren: 0.06, delayChildren: 0.1 } } }}
-        initial="hidden"
-        animate="show"
-      >
-        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
-          <SharedStatCard
-            label={t('statCards.sectorsTracked')}
-            value={aggregates ? String(aggregates.sectorCount) : '---'}
-            detail={t('statCards.sectorsTrackedDetail')}
-            borderColor="border-accent/30"
-            loading={isLoading}
-          />
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
-          <SharedStatCard
-            label={t('statCards.totalContracts')}
-            value={aggregates ? formatNumber(aggregates.totalContracts) : '---'}
-            detail={t('statCards.totalContractsDetail')}
-            borderColor="border-blue-500/30"
-            loading={isLoading}
-          />
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
-          <SharedStatCard
-            label={t('statCards.totalValue')}
-            value={aggregates ? formatCompactMXN(aggregates.totalValue) : '---'}
-            detail={t('statCards.totalValueDetail')}
-            borderColor="border-amber-500/30"
-            loading={isLoading}
-          />
-        </motion.div>
-        <motion.div variants={{ hidden: { opacity: 0, y: 16 }, show: { opacity: 1, y: 0, transition: { duration: 0.35, ease: [0.25, 0.46, 0.45, 0.94] } } }}>
-          <SharedStatCard
-            label={t('statCards.avgRiskScore')}
-            value={aggregates ? `${(aggregates.avgRisk * 100).toFixed(1)}%` : '---'}
-            detail={t('statCards.avgRiskScoreDetail')}
-            borderColor="border-red-500/30"
-            color={aggregates && aggregates.avgRisk >= 0.3 ? 'text-risk-high' : 'text-text-primary'}
-            loading={isLoading}
-          />
-        </motion.div>
-      </motion.div>
-
-      {/* System Intelligence Chips */}
-      {patternCounts && (
-        <div className="flex flex-wrap gap-2">
-          <ScrollReveal delay={0} direction="up">
-            <div className="flex items-center gap-1.5 rounded-md border border-risk-critical/20 bg-risk-critical/5 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-risk-critical" />
-              <span className="text-xs font-mono font-medium text-risk-critical">
-                {formatNumber(patternCounts.counts.critical)} {t('chips.criticalRisk')}
-              </span>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal delay={60} direction="up">
-            <div className="flex items-center gap-1.5 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
-              <span className="text-xs font-mono font-medium text-amber-500">
-                {formatNumber(patternCounts.counts.december_rush)} {t('chips.decemberRush')}
-              </span>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal delay={120} direction="up">
-            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
-              <span className="text-xs font-mono font-medium text-text-secondary">
-                {formatNumber(patternCounts.counts.co_bidding)} {t('chips.coBiddingFlags')}
-              </span>
-            </div>
-          </ScrollReveal>
-          <ScrollReveal delay={180} direction="up">
-            <div className="flex items-center gap-1.5 rounded-md border border-border/50 bg-background-elevated/30 px-3 py-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-text-muted" />
-              <span className="text-xs font-mono font-medium text-text-secondary">
-                {formatNumber(patternCounts.counts.price_outliers)} {t('chips.priceOutliers')}
-              </span>
-            </div>
-          </ScrollReveal>
-        </div>
-      )}
-
-      {/* Section 2a: Sector Risk Heatmap — strongest signal, visible by default */}
-      <div className="editorial-rule mb-3">
-        <span className="editorial-label">{t('diagnostico.matrizRiesgo')}</span>
-      </div>
+      {/* ================================================================ */}
+      {/* SECTION: Matriz de Riesgo -- Heatmap                             */}
+      {/* ================================================================ */}
+      <SectionHeader label="Matriz de Riesgo Sectorial" />
       <ScrollReveal direction="fade">
         <Card className="fern-card">
           <CardHeader>
@@ -1210,7 +1351,6 @@ export function Sectors() {
             {isLoading ? (
               <Skeleton className="h-[450px]" />
             ) : (() => {
-                // Shorten column labels so x-axis text doesn't overlap bar fills
                 const colAbbrevMap: Record<string, string> = {
                   'Direct Award %': 'DA %',
                   'Single Bid %': 'SB %',
@@ -1230,7 +1370,6 @@ export function Sectors() {
                     height={450}
                     colorRange={['#1e3a8a', '#4b5563', '#dc2626']}
                     valueFormatter={(v, row, col) => {
-                      // Reverse-map short col name back to full name for lookup
                       const fullCol = Object.entries(colAbbrevMap).find(([, abbr]) => abbr === col)?.[0] ?? col
                       const cell = sectorHeatmapData.data.find((d) => d.row === row && d.col === fullCol)
                       const rawValue = (cell as { rawValue?: number })?.rawValue ?? v
@@ -1249,24 +1388,26 @@ export function Sectors() {
       </ScrollReveal>
 
       {/* ================================================================ */}
-      {/* CRI SCATTER — Institution Risk Landscape (Fazekas-style)         */}
+      {/* CRI SCATTER -- Institution Risk Landscape (Fazekas-style)        */}
       {/* ================================================================ */}
       {criScatterData && criScatterData.data.length > 0 && (
         <>
-        <div className="editorial-rule mb-3">
-          <span className="editorial-label">{t('diagnostico.paisajeInstitucional')}</span>
-        </div>
+        <SectionHeader label="Paisaje Institucional de Riesgo" />
         <ScrollReveal direction="fade">
           <Card className="fern-card">
             <CardHeader className="pb-2">
               <div className="flex items-start justify-between gap-3 flex-wrap">
                 <div>
-                  <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">Institution Risk Landscape</p>
+                  <p
+                    className="text-sm font-bold text-text-primary"
+                    style={{ fontFamily: 'var(--font-family-serif)' }}
+                  >
+                    Institution Risk Landscape
+                  </p>
                   <CardDescription className="text-xs text-text-muted mt-0.5">
                     Each bubble = one institution. X: direct award rate. Y: avg risk score. Size: contract volume. Top-right = highest concern.
                   </CardDescription>
                 </div>
-                {/* Sector filter */}
                 <select
                   value={criSectorFilter}
                   onChange={e => setCriSectorFilter(e.target.value)}
@@ -1350,10 +1491,7 @@ export function Sectors() {
                 </ScatterChart>
               </ResponsiveContainer>
               <p className="mt-2 text-[10px] text-text-muted font-mono">
-                Dashed amber line = 70% direct award threshold · Dashed red line = 30% high-risk threshold · Bubble color = sector · Size = contract volume
-              </p>
-              <p className="text-xs text-white/50 italic mt-2">
-                Institutions in the top-right quadrant (high direct award + high risk) warrant priority investigation.
+                Dashed amber line = 70% direct award threshold -- Dashed red line = 30% high-risk threshold -- Bubble color = sector -- Size = contract volume
               </p>
               <p className="mt-2 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
                 {t('diagnostico.sourceFootnote')}
@@ -1364,16 +1502,17 @@ export function Sectors() {
         </>
       )}
 
-      {/* Section 2b: Sortable Comparison Table */}
+      {/* ================================================================ */}
+      {/* EL PANEL DE DIAGNOSTICO -- Sortable Comparison Table              */}
+      {/* ================================================================ */}
+      <SectionHeader label="El Panel de Diagnostico" />
+
       <style>{`
         @keyframes fadeInUp {
           from { opacity: 0; transform: translateY(12px); }
           to { opacity: 1; transform: translateY(0); }
         }
       `}</style>
-      <div className="editorial-rule mb-3">
-        <span className="editorial-label">{t('table.title')}</span>
-      </div>
       <motion.div
         variants={fadeIn}
         initial="initial"
@@ -1387,7 +1526,6 @@ export function Sectors() {
               <BarChart3 className="h-3.5 w-3.5 text-accent" />
               {t('table.title')}
             </CardTitle>
-            {/* View toggle: List | Treemap */}
             <div
               className="flex items-center rounded-md border border-border/50 overflow-hidden text-[11px] font-mono select-none"
               role="group"
@@ -1421,13 +1559,12 @@ export function Sectors() {
           </div>
           <CardDescription className="text-xs">
             {tableViewMode === 'treemap'
-              ? 'Sectors sized by total contract value — color = sector, label shows value and avg risk score'
+              ? 'Sectors sized by total contract value --- color = sector, label shows value and avg risk score'
               : t('table.subtitle')}
           </CardDescription>
         </CardHeader>
         <CardContent className="p-0">
           {tableViewMode === 'treemap' ? (
-            /* ---- TREEMAP VIEW ---- */
             <div className="p-4">
               <ResponsiveContainer width="100%" height={420}>
                 <Treemap
@@ -1481,11 +1618,10 @@ export function Sectors() {
                 </Treemap>
               </ResponsiveContainer>
               <p className="mt-2 text-[10px] text-text-muted font-mono text-center">
-                Rectangle area ∝ total contract value · Color = sector · Value shown when space permits
+                Rectangle area = total contract value -- Color = sector -- Value shown when space permits
               </p>
             </div>
           ) : (
-            /* ---- LIST VIEW ---- */
             <div className="overflow-x-auto">
               <table className="w-full min-w-[820px] text-xs" role="table">
                 <thead>
@@ -1533,10 +1669,10 @@ export function Sectors() {
                     </th>
                     <th
                       className="data-cell-header text-right whitespace-nowrap hidden lg:table-cell"
-                      title="% of contracts via competitive procedure (not direct award). OECD recommends ≥70%."
+                      title="% of contracts via competitive procedure (not direct award). OECD recommends >= 70%."
                     >
                       Competitivo
-                      <span className="ml-1 text-text-muted/50 font-normal text-[10px]">≥70%</span>
+                      <span className="ml-1 text-text-muted/50 font-normal text-[10px]">{'>'}=70%</span>
                     </th>
                     <th className="data-cell-header text-center whitespace-nowrap">
                       PHI Grade
@@ -1617,7 +1753,7 @@ export function Sectors() {
                         </td>
                         <td
                           className="data-cell text-right font-mono tabular-nums hidden lg:table-cell"
-                          title="Competitive procedure rate (OECD benchmark ≥70%)"
+                          title="Competitive procedure rate (OECD benchmark >= 70%)"
                         >
                           {(() => {
                             const compPct = (sector as any).competitive_pct != null
@@ -1625,11 +1761,11 @@ export function Sectors() {
                               : sector.direct_award_pct != null
                                 ? Math.round(100 - sector.direct_award_pct)
                                 : null
-                            if (compPct == null) return <span className="text-text-muted/40">—</span>
-                            const color = compPct >= 70 ? 'var(--color-risk-low)'
+                            if (compPct == null) return <span className="text-text-muted/40">---</span>
+                            const compColor = compPct >= 70 ? 'var(--color-risk-low)'
                               : compPct >= 50 ? 'var(--color-risk-medium)'
                               : 'var(--color-risk-critical)'
-                            return <span style={{ color, fontWeight: compPct < 50 ? 700 : 400 }}>{compPct.toFixed(1)}%</span>
+                            return <span style={{ color: compColor, fontWeight: compPct < 50 ? 700 : 400 }}>{compPct.toFixed(1)}%</span>
                           })()}
                         </td>
                         <td className="data-cell text-center">
@@ -1637,7 +1773,7 @@ export function Sectors() {
                             const sectorEN = getSectorNameEN(sector.sector_code).toLowerCase()
                             const grade = phiGradeMap[sectorEN]
                             const gc = grade ? GRADE_DOT_COLORS[grade] : null
-                            if (!grade || !gc) return <span className="text-text-muted/40 font-mono text-[10px]">—</span>
+                            if (!grade || !gc) return <span className="text-text-muted/40 font-mono text-[10px]">---</span>
                             return (
                               <span
                                 className="inline-block text-[11px] font-black rounded px-1.5 py-0.5 font-mono border"
@@ -1674,17 +1810,18 @@ export function Sectors() {
       </motion.div>
 
       {/* ================================================================ */}
-      {/* SLOPE CHART — High-risk rate change by sector, 2018-2020 vs 2022-2024 */}
+      {/* EVOLUCION DEL RIESGO -- Slope + Annotated Area charts             */}
       {/* ================================================================ */}
       {sectorYearResp && sectorYearResp.data.length > 0 && (
         <>
-        <div className="editorial-rule mb-3">
-          <span className="editorial-label">EVOLUCION DEL RIESGO</span>
-        </div>
+        <SectionHeader label="Evolucion del Riesgo" />
         <ScrollReveal direction="fade">
           <Card className="fern-card">
             <CardHeader className="pb-2">
-              <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+              <p
+                className="text-sm font-bold text-text-primary"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
                 Slope Chart: High-Risk Rate by Sector
               </p>
               <CardDescription className="text-xs text-text-muted">
@@ -1698,11 +1835,13 @@ export function Sectors() {
           </Card>
         </ScrollReveal>
 
-        {/* ANNOTATED AREA CHART — Temporal high-risk trend */}
         <ScrollReveal direction="fade">
           <Card className="fern-card mt-5">
             <CardHeader className="pb-2">
-              <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+              <p
+                className="text-sm font-bold text-text-primary"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
                 High-Risk Rate Over Time
               </p>
               <CardDescription className="text-xs text-text-muted">
@@ -1722,24 +1861,26 @@ export function Sectors() {
         </>
       )}
 
-      {/* Section 3: Contract Value by Sector */}
-      <div className="editorial-rule mb-3">
-        <span className="editorial-label">DISTRIBUCIÓN DE GASTO</span>
-      </div>
+      {/* ================================================================ */}
+      {/* DISTRIBUCION DE GASTO -- Contract Value by Sector                 */}
+      {/* ================================================================ */}
+      <SectionHeader label="Distribucion de Gasto" />
       <ScrollReveal direction="fade">
         <div>
-          {/* Contract Value by Sector */}
           <Card className="fern-card">
             <CardHeader className="pb-2">
               <div className="flex items-center justify-between">
-                <p className="text-sm font-semibold text-white/80 uppercase tracking-wider">
+                <p
+                  className="text-sm font-bold text-text-primary"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
                   {t('valueChart.title')}
                 </p>
                 <ChartDownloadButton targetRef={sectorValueChartRef} filename="sectors-contract-value" />
               </div>
               {topSector && (
                 <CardDescription className="text-xs">
-                  {getSectorNameEN(topSector.sector_code)} leads with {formatCompactMXN(topSector.total_value_mxn)} — {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of all procurement
+                  {getSectorNameEN(topSector.sector_code)} leads with {formatCompactMXN(topSector.total_value_mxn)} --- {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of all procurement
                 </CardDescription>
               )}
             </CardHeader>
@@ -1794,32 +1935,35 @@ export function Sectors() {
                 </ResponsiveContainer>
               </div>
               {topSector && (
-                <p className="text-xs text-white/50 italic mt-2">
-                  {getSectorNameEN(topSector.sector_code)} accounts for {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of total procurement value — concentration in a single sector warrants close monitoring.
+                <p
+                  className="text-xs text-text-muted italic mt-2"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  {getSectorNameEN(topSector.sector_code)} accounts for {((topSector.total_value_mxn / (data?.total_value_mxn || 1)) * 100).toFixed(0)}% of total procurement value --- concentration in a single sector warrants close monitoring.
                 </p>
               )}
               <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
-                Fuente: COMPRANET 2002-2025 &middot; Valores en pesos mexicanos nominales &middot; Clasificación por taxonomía de 12 sectores RUBLI
+                Fuente: COMPRANET 2002-2025 -- Valores en pesos mexicanos nominales -- Clasificacion por taxonomia de 12 sectores RUBLI
               </p>
             </CardContent>
           </Card>
-
         </div>
       </ScrollReveal>
 
       {/* ================================================================ */}
-      {/* MARKET HEALTH — Supplier Diversity (HHI)                        */}
+      {/* SALUD DEL MERCADO -- Supplier Diversity (HHI)                    */}
       {/* ================================================================ */}
       {concentrationData && concentrationData.most_concentrated.length > 0 && (
         <>
-        <div className="editorial-rule mb-3">
-          <span className="editorial-label">SALUD DEL MERCADO</span>
-        </div>
+        <SectionHeader label="Salud del Mercado" />
         <ScrollReveal direction="fade">
           <Card className="bg-card border-border/40">
             <CardHeader className="pb-2">
-              <CardTitle className="text-sm font-mono text-text-primary">
-                Market Health — Supplier Diversity (HHI)
+              <CardTitle
+                className="text-sm text-text-primary"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                Market Health --- Supplier Diversity (HHI)
               </CardTitle>
               <CardDescription className="text-xs text-text-muted">
                 Herfindahl-Hirschman Index per institution ({concentrationData.year}). HHI &gt;2,500 = highly concentrated; &lt;1,000 = competitive.
@@ -1828,7 +1972,7 @@ export function Sectors() {
             </CardHeader>
             <CardContent>
               <div className="text-[10px] text-text-muted font-mono mb-3 p-2 bg-muted/20 rounded border border-border/30">
-                HHI = sum of squared market shares (0–10,000 scale). EU antitrust challenges mergers creating HHI &gt;2,500.
+                HHI = sum of squared market shares (0-10,000 scale). EU antitrust challenges mergers creating HHI &gt;2,500.
                 In procurement, high HHI indicates limited effective competition.
               </div>
               <div className="overflow-x-auto">
@@ -1878,25 +2022,26 @@ export function Sectors() {
       )}
 
       {/* ================================================================ */}
-      {/* INDUSTRY RISK CONCENTRATION — Treemap by total value             */}
+      {/* CONCENTRACION DE RIESGO -- Industry Risk Treemap                  */}
       {/* ================================================================ */}
-      <div className="editorial-rule mb-3">
-        <span className="editorial-label">CONCENTRACION DE RIESGO</span>
-      </div>
+      <SectionHeader label="Concentracion de Riesgo por Industria" />
       <ScrollReveal direction="fade">
         <Card className="fern-card">
           <CardHeader className="pb-2">
-            <p className="text-sm font-semibold text-white/80 uppercase tracking-wider flex items-center gap-2">
+            <p
+              className="text-sm font-bold text-text-primary flex items-center gap-2"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
               <Layers className="h-3.5 w-3.5 text-accent" />
               Industry Risk Concentration
             </p>
             <CardDescription className="text-xs text-text-muted">
-              Cell size = total contract value · Color = avg risk score (
-              <span className="text-risk-critical font-semibold">critical</span> ≥50% ·{' '}
-              <span className="text-risk-high font-semibold">high</span> ≥30% ·{' '}
-              <span className="text-risk-medium font-semibold">medium</span> ≥10% ·{' '}
+              Cell size = total contract value -- Color = avg risk score (
+              <span className="text-risk-critical font-semibold">critical</span> {'>'}=50% --{' '}
+              <span className="text-risk-high font-semibold">high</span> {'>'}=30% --{' '}
+              <span className="text-risk-medium font-semibold">medium</span> {'>'}=10% --{' '}
               <span className="text-risk-low font-semibold">low</span> &lt;10%
-              ) · Min 100 contracts/vendor
+              ) -- Min 100 contracts/vendor
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1913,27 +2058,32 @@ export function Sectors() {
                 <p className="text-xs text-text-muted font-mono">No cluster data available</p>
               </div>
             )}
-            <p className="text-xs text-white/50 italic mt-2">
-              Red cells indicate industries where vendors similar to known corruption cases concentrate — these warrant cross-referencing with network analysis.
+            <p
+              className="text-xs text-text-muted italic mt-2"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              Red cells indicate industries where vendors similar to known corruption cases concentrate --- these warrant cross-referencing with network analysis.
             </p>
             <p className="mt-3 text-[10px] text-text-muted/60 font-mono border-t border-border/20 pt-2">
-              Fuente: COMPRANET &middot; Agrupacion por industria (min. 100 contratos/proveedor) &middot; Color = riesgo promedio v6.4
+              Fuente: COMPRANET -- Agrupacion por industria (min. 100 contratos/proveedor) -- Color = riesgo promedio v6.5
             </p>
           </CardContent>
         </Card>
       </ScrollReveal>
 
-      {/* Data freshness timestamp */}
-      <div className="flex justify-end pt-2 pb-1">
+      {/* ================================================================ */}
+      {/* SOURCE FOOTNOTE                                                   */}
+      {/* ================================================================ */}
+      <div className="border-t border-border/40 pt-3 pb-2">
         <p className="text-[10px] text-text-muted/50 font-mono">
           {(() => {
             const raw = (data as any)?.cached_at ?? (data as any)?.updated_at
             if (raw) {
               const d = new Date(raw)
               const formatted = d.toLocaleDateString('es-MX', { year: 'numeric', month: 'short', day: 'numeric' })
-              return `Datos actualizados: ${formatted}`
+              return `Datos actualizados: ${formatted} -- Modelo de riesgo v6.5 -- COMPRANET 2002-2025`
             }
-            return 'Datos actualizados: Mar 2026'
+            return 'Datos actualizados: Mar 2026 -- Modelo de riesgo v6.5 -- COMPRANET 2002-2025'
           })()}
         </p>
       </div>
@@ -1942,7 +2092,7 @@ export function Sectors() {
 }
 
 // ============================================================================
-// Legacy SectorRiskTable — kept for potential reuse, not rendered in main flow
+// Legacy SectorRiskTable -- kept for potential reuse, not rendered in main flow
 // ============================================================================
 
 interface SectorRiskTableProps {
@@ -2029,7 +2179,7 @@ const SectorRiskTable = memo(function SectorRiskTable({
   )
 })
 
-// Suppress unused warning — kept for potential reuse
+// Suppress unused warning -- kept for potential reuse
 void SectorRiskTable
 
 export default Sectors

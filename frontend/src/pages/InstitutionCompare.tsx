@@ -1,9 +1,12 @@
 /**
- * InstitutionCompare — side-by-side institution comparison with radar overlay
+ * InstitutionCompare — editorial side-by-side institution comparison
  * Route: /institutions/compare?a=INSTITUTION_ID&b=INSTITUTION_ID
+ *
+ * NYT/WaPo investigative journalism aesthetic with radar overlay,
+ * metric table, top-vendor comparison, and risk distribution.
  */
 import { useState, useMemo } from 'react'
-import { useSearchParams, useNavigate, Link } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
   RadarChart,
@@ -12,34 +15,63 @@ import {
   Radar,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
 } from '@/components/charts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { institutionApi } from '@/api/client'
-import type { InstitutionDetailResponse } from '@/api/types'
-import { getRiskLevelFromScore } from '@/lib/constants'
+import type { InstitutionDetailResponse, InstitutionVendorItem } from '@/api/types'
+import { getRiskLevelFromScore, RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatPercentSafe, formatNumber, toTitleCase, cn } from '@/lib/utils'
-import { ArrowLeft, AlertCircle, Scale, Search, Building2 } from 'lucide-react'
+import { ArrowLeft, AlertCircle, Search, TrendingUp, TrendingDown, Minus, Scale } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
 
 // ============================================================================
+// Constants
+// ============================================================================
+
+const COLOR_A = '#06b6d4' // cyan
+const COLOR_B = '#a78bfa' // violet
+
+const HHI_LABELS: Record<string, { label: string; color: string }> = {
+  captura: { label: 'Captura', color: '#dc2626' },
+  high: { label: 'Concentrado', color: '#f97316' },
+  medium: { label: 'Moderado', color: '#eab308' },
+  low: { label: 'Competitivo', color: '#22c55e' },
+}
+
+function getHHILevel(hhi: number): string {
+  if (hhi >= 2500) return 'captura'
+  if (hhi >= 1500) return 'high'
+  if (hhi >= 1000) return 'medium'
+  return 'low'
+}
+
+// ============================================================================
 // Radar axis definitions — 6 key procurement dimensions
 // ============================================================================
+
 interface RadarMetric {
   key: keyof InstitutionDetailResponse
   label: string
+  labelEs: string
   higherIsBad: boolean
 }
 
 const RADAR_METRICS: RadarMetric[] = [
-  { key: 'total_contracts', label: 'Contracts', higherIsBad: false },
-  { key: 'total_amount_mxn', label: 'Total Value', higherIsBad: false },
-  { key: 'avg_risk_score', label: 'Avg Risk Score', higherIsBad: true },
-  { key: 'direct_award_pct', label: 'Direct Award %', higherIsBad: true },
-  { key: 'single_bid_pct', label: 'Single Bid %', higherIsBad: true },
-  { key: 'high_risk_pct', label: 'High Risk %', higherIsBad: true },
+  { key: 'total_contracts', label: 'Contracts', labelEs: 'Contratos', higherIsBad: false },
+  { key: 'total_amount_mxn', label: 'Total Value', labelEs: 'Valor Total', higherIsBad: false },
+  { key: 'avg_risk_score', label: 'Avg Risk Score', labelEs: 'Riesgo Prom.', higherIsBad: true },
+  { key: 'direct_award_pct', label: 'Direct Award %', labelEs: 'Adj. Directa', higherIsBad: true },
+  { key: 'single_bid_pct', label: 'Single Bid %', labelEs: 'Licitante Unico', higherIsBad: true },
+  { key: 'high_risk_pct', label: 'High Risk %', labelEs: 'Alto Riesgo', higherIsBad: true },
 ]
 
 function normalizeRelative(a: number, b: number): [number, number] {
@@ -54,7 +86,7 @@ function buildRadarData(instA: InstitutionDetailResponse, instB: InstitutionDeta
     const rawB = (instB[m.key] as number | undefined) ?? 0
     const [normA, normB] = normalizeRelative(rawA, rawB)
     return {
-      factor: m.label,
+      factor: m.labelEs,
       instA: Math.round(normA * 100) / 100,
       instB: Math.round(normB * 100) / 100,
     }
@@ -62,8 +94,9 @@ function buildRadarData(instA: InstitutionDetailResponse, instB: InstitutionDeta
 }
 
 // ============================================================================
-// Metric comparison table
+// Metric comparison definitions
 // ============================================================================
+
 interface MetricDef {
   label: string
   getValue: (i: InstitutionDetailResponse) => number | null
@@ -73,46 +106,52 @@ interface MetricDef {
 
 const METRICS: MetricDef[] = [
   {
-    label: 'Total Contracts',
+    label: 'Total de contratos',
     getValue: (i) => i.total_contracts ?? null,
     format: (n) => formatNumber(n),
     higherIsBad: false,
   },
   {
-    label: 'Total Value',
+    label: 'Gasto total',
     getValue: (i) => i.total_amount_mxn ?? null,
     format: (n) => formatCompactMXN(n),
     higherIsBad: false,
   },
   {
-    label: 'Avg Risk Score',
-    getValue: (i) => i.avg_risk_score ?? null,
-    format: (n) => `${(n * 100).toFixed(1)}%`,
-    higherIsBad: true,
-  },
-  {
-    label: 'Direct Award %',
+    label: 'Adjudicacion directa',
     getValue: (i) => i.direct_award_pct ?? null,
     format: (n) => formatPercentSafe(n),
     higherIsBad: true,
   },
   {
-    label: 'Single Bid %',
-    getValue: (i) => i.single_bid_pct ?? null,
-    format: (n) => formatPercentSafe(n),
+    label: 'Riesgo promedio',
+    getValue: (i) => i.avg_risk_score ?? null,
+    format: (n) => `${(n * 100).toFixed(1)}%`,
     higherIsBad: true,
   },
   {
-    label: 'High Risk %',
+    label: 'Contratos alto riesgo',
     getValue: (i) => i.high_risk_pct ?? null,
     format: (n) => formatPercentSafe(n),
     higherIsBad: true,
   },
   {
-    label: 'Vendor Count',
+    label: 'Licitante unico',
+    getValue: (i) => i.single_bid_pct ?? null,
+    format: (n) => formatPercentSafe(n),
+    higherIsBad: true,
+  },
+  {
+    label: 'Proveedores unicos',
     getValue: (i) => i.vendor_count ?? null,
     format: (n) => formatNumber(n),
     higherIsBad: false,
+  },
+  {
+    label: 'Indice HHI',
+    getValue: (i) => i.supplier_diversity?.hhi_current_year ?? null,
+    format: (n) => formatNumber(Math.round(n)),
+    higherIsBad: true,
   },
 ]
 
@@ -120,385 +159,732 @@ const METRICS: MetricDef[] = [
 // Subcomponents
 // ============================================================================
 
-function InstitutionCard({
-  institution,
-  color,
-  label,
-}: {
-  institution: InstitutionDetailResponse
-  color: string
-  label: string
-}) {
-  const riskScore = institution.avg_risk_score ?? institution.risk_baseline ?? 0
-  const riskLevel = getRiskLevelFromScore(riskScore)
-
+/** Sector color tag for institution preview cards */
+function SectorTag({ sectorId }: { sectorId?: number }) {
+  const sectorNames: Record<number, { code: string; name: string }> = {
+    1: { code: 'salud', name: 'Salud' },
+    2: { code: 'educacion', name: 'Educacion' },
+    3: { code: 'infraestructura', name: 'Infraestructura' },
+    4: { code: 'energia', name: 'Energia' },
+    5: { code: 'defensa', name: 'Defensa' },
+    6: { code: 'tecnologia', name: 'Tecnologia' },
+    7: { code: 'hacienda', name: 'Hacienda' },
+    8: { code: 'gobernacion', name: 'Gobernacion' },
+    9: { code: 'agricultura', name: 'Agricultura' },
+    10: { code: 'ambiente', name: 'Ambiente' },
+    11: { code: 'trabajo', name: 'Trabajo' },
+    12: { code: 'otros', name: 'Otros' },
+  }
+  if (!sectorId || !sectorNames[sectorId]) return null
+  const s = sectorNames[sectorId]
+  const color = SECTOR_COLORS[s.code] ?? '#64748b'
   return (
-    <Card className="flex-1">
-      <CardHeader className="pb-3">
-        <div className="flex items-start justify-between gap-2">
-          <div className="min-w-0">
-            <span
-              className="text-[10px] font-bold tracking-widest uppercase font-mono mb-1 block"
-              style={{ color }}
-            >
-              {label}
-            </span>
-            <InstitutionLogoBanner name={institution.name} height={28} className="mb-1" />
-            <CardTitle className="text-base leading-snug">
-              {toTitleCase(institution.name)}
-            </CardTitle>
-            {institution.siglas && (
-              <p className="text-xs text-text-muted font-mono mt-0.5">{institution.siglas}</p>
-            )}
-            {institution.institution_type && (
-              <p className="text-xs text-text-muted mt-0.5 capitalize">
-                {institution.institution_type.replace(/_/g, ' ')}
-              </p>
-            )}
-          </div>
-          <RiskLevelPill level={riskLevel} score={riskScore} />
-        </div>
-      </CardHeader>
-      <CardContent className="pt-0">
-        <div className="grid grid-cols-2 gap-2 text-xs mb-3">
-          <div>
-            <p className="text-text-muted font-mono">Contracts</p>
-            <p className="font-bold text-text-primary">
-              {formatNumber(institution.total_contracts ?? 0)}
-            </p>
-          </div>
-          <div>
-            <p className="text-text-muted font-mono">Total Value</p>
-            <p className="font-bold text-text-primary">
-              {formatCompactMXN(institution.total_amount_mxn ?? 0)}
-            </p>
-          </div>
-          {institution.direct_award_pct != null && (
-            <div>
-              <p className="text-text-muted font-mono">Direct Award</p>
-              <p className="font-bold text-text-primary">{formatPercentSafe(institution.direct_award_pct)}</p>
-            </div>
-          )}
-          {institution.single_bid_pct != null && (
-            <div>
-              <p className="text-text-muted font-mono">Single Bid</p>
-              <p className="font-bold text-text-primary">{formatPercentSafe(institution.single_bid_pct)}</p>
-            </div>
-          )}
-        </div>
-        <Link
-          to={`/institutions/${institution.id}`}
-          className="text-xs text-accent hover:underline flex items-center gap-1"
-          aria-label={`View full profile for ${institution.name}`}
-        >
-          View full profile
-        </Link>
-      </CardContent>
-    </Card>
+    <span
+      className="inline-flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full"
+      style={{ color, backgroundColor: `${color}15`, border: `1px solid ${color}30` }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+      {s.name}
+    </span>
   )
 }
 
+/** Institution preview card shown in the selector */
+function InstitutionPreviewCard({
+  institution,
+  accentColor,
+  side,
+}: {
+  institution: InstitutionDetailResponse
+  accentColor: string
+  side: string
+}) {
+  const riskScore = institution.avg_risk_score ?? 0
+  const riskLevel = getRiskLevelFromScore(riskScore)
+
+  return (
+    <div
+      className="rounded-lg border border-border/60 bg-zinc-900/40 p-4 mt-3"
+      style={{ borderTopWidth: '3px', borderTopColor: accentColor }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="min-w-0 flex-1">
+          <span
+            className="text-[10px] font-bold tracking-widest uppercase font-mono mb-1 block"
+            style={{ color: accentColor }}
+          >
+            {side}
+          </span>
+          <InstitutionLogoBanner name={institution.name} height={24} className="mb-1" />
+          <h3
+            className="text-lg font-bold text-text-primary leading-snug"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {toTitleCase(institution.name)}
+          </h3>
+          {institution.siglas && (
+            <p className="text-xs text-text-muted font-mono mt-0.5">{institution.siglas}</p>
+          )}
+          <div className="flex items-center gap-2 mt-2">
+            <SectorTag sectorId={institution.sector_id} />
+            <RiskLevelPill level={riskLevel} score={riskScore} />
+          </div>
+        </div>
+      </div>
+      <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/30">
+        <div>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">Contratos</p>
+          <p className="text-sm font-bold text-text-primary tabular-nums">
+            {formatNumber(institution.total_contracts ?? 0)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">Valor</p>
+          <p className="text-sm font-bold text-text-primary tabular-nums">
+            {formatCompactMXN(institution.total_amount_mxn ?? 0)}
+          </p>
+        </div>
+        <div>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">Adj. Directa</p>
+          <p className="text-sm font-bold text-text-primary tabular-nums">
+            {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct) : '--'}
+          </p>
+        </div>
+      </div>
+      <Link
+        to={`/institutions/${institution.id}`}
+        className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
+        aria-label={`Ver perfil completo de ${institution.name}`}
+      >
+        Ver perfil completo
+      </Link>
+    </div>
+  )
+}
+
+/** Veredicto header shown when both institutions are loaded */
+function VeredictoHeader({
+  instA,
+  instB,
+}: {
+  instA: InstitutionDetailResponse
+  instB: InstitutionDetailResponse
+}) {
+  const hhiA = instA.supplier_diversity?.hhi_current_year ?? 0
+  const hhiB = instB.supplier_diversity?.hhi_current_year ?? 0
+  const levelA = getHHILevel(hhiA)
+  const levelB = getHHILevel(hhiB)
+  const infoA = HHI_LABELS[levelA]
+  const infoB = HHI_LABELS[levelB]
+
+  // Narrative
+  const ratio = hhiB > 0 ? hhiA / hhiB : 0
+  let narrative = ''
+  if (hhiA > 0 && hhiB > 0) {
+    if (ratio > 1.2) {
+      const rStr = ratio.toFixed(1)
+      narrative = `${toTitleCase(instA.siglas || instA.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instB.siglas || instB.name)}`
+    } else if (ratio < 0.8) {
+      const rStr = (1 / ratio).toFixed(1)
+      narrative = `${toTitleCase(instB.siglas || instB.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instA.siglas || instA.name)}`
+    } else {
+      narrative = 'Ambas instituciones presentan niveles de concentracion similares'
+    }
+  }
+
+  return (
+    <div className="py-6 mb-8">
+      <div className="h-px bg-border mb-6" />
+
+      {/* Institution names in large serif */}
+      <div className="flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4 mb-6">
+        <h2
+          className="text-2xl md:text-3xl font-bold text-text-primary leading-tight"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          <span style={{ color: COLOR_A }}>{toTitleCase(instA.siglas || instA.name)}</span>
+          <span className="text-text-muted mx-3 text-lg">vs</span>
+          <span style={{ color: COLOR_B }}>{toTitleCase(instB.siglas || instB.name)}</span>
+        </h2>
+      </div>
+
+      {/* HHI side by side */}
+      <div className="flex flex-col sm:flex-row items-start gap-6 mb-4">
+        <div className="flex items-center gap-3">
+          <HallazgoStat
+            value={formatNumber(Math.round(hhiA))}
+            label={`HHI ${toTitleCase(instA.siglas || instA.name).slice(0, 20)}`}
+            color={`border-[${infoA.color}]`}
+            className="min-w-[140px]"
+          />
+          <span
+            className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+            style={{
+              color: infoA.color,
+              backgroundColor: `${infoA.color}15`,
+              border: `1px solid ${infoA.color}40`,
+            }}
+          >
+            {infoA.label}
+          </span>
+        </div>
+        <div className="hidden sm:flex items-center text-text-muted text-lg">
+          <Scale className="h-5 w-5" />
+        </div>
+        <div className="flex items-center gap-3">
+          <HallazgoStat
+            value={formatNumber(Math.round(hhiB))}
+            label={`HHI ${toTitleCase(instB.siglas || instB.name).slice(0, 20)}`}
+            color={`border-[${infoB.color}]`}
+            className="min-w-[140px]"
+          />
+          <span
+            className="inline-flex items-center text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full"
+            style={{
+              color: infoB.color,
+              backgroundColor: `${infoB.color}15`,
+              border: `1px solid ${infoB.color}40`,
+            }}
+          >
+            {infoB.label}
+          </span>
+        </div>
+      </div>
+
+      {/* Narrative */}
+      {narrative && (
+        <p
+          className="text-sm text-text-secondary italic leading-relaxed max-w-2xl"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          {narrative}
+        </p>
+      )}
+
+      <div className="h-px bg-border mt-6" />
+    </div>
+  )
+}
+
+/** Side-by-side metric comparison table */
+function MetricTable({
+  instA,
+  instB,
+}: {
+  instA: InstitutionDetailResponse
+  instB: InstitutionDetailResponse
+}) {
+  const nameA = toTitleCase(instA.siglas || instA.name).slice(0, 25)
+  const nameB = toTitleCase(instB.siglas || instB.name).slice(0, 25)
+
+  return (
+    <section className="mb-10" aria-label="Comparacion de metricas">
+      <h3
+        className="text-lg font-bold text-text-primary mb-1"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        Metricas Clave
+      </h3>
+      <p className="text-xs text-text-muted mb-4">
+        Valores resaltados en rojo indican la institucion con peor desempeno en esa metrica.
+      </p>
+      <div className="overflow-x-auto rounded-lg border border-border/60">
+        <table className="w-full text-sm" aria-label="Comparacion de metricas institucionales">
+          <thead>
+            <tr className="border-b border-border bg-zinc-900/40">
+              <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
+                Metrica
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
+                {nameA}
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_B }}>
+                {nameB}
+              </th>
+              <th className="px-4 py-3 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
+                Delta
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {METRICS.map((m) => {
+              const vA = m.getValue(instA)
+              const vB = m.getValue(instB)
+              const aIsWorse = vA !== null && vB !== null && (m.higherIsBad ? vA > vB : vA < vB)
+              const bIsWorse = vA !== null && vB !== null && (m.higherIsBad ? vB > vA : vB < vA)
+
+              // Delta
+              let deltaEl = <td className="px-4 py-3 text-center text-xs text-text-muted">--</td>
+              if (vA !== null && vB !== null) {
+                const d = vB - vA
+                if (Math.abs(d) < 0.0001 && Math.abs(d) < 1) {
+                  deltaEl = <td className="px-4 py-3 text-center text-xs text-text-muted font-mono">Igual</td>
+                } else {
+                  const worse = m.higherIsBad ? d > 0 : d < 0
+                  const sign = d > 0 ? '+' : ''
+                  const pctStr = vA !== 0 ? ` (${sign}${((d / Math.abs(vA)) * 100).toFixed(0)}%)` : ''
+                  const DeltaIcon = d > 0 ? TrendingUp : d < 0 ? TrendingDown : Minus
+                  deltaEl = (
+                    <td className={cn('px-4 py-3 text-center text-xs font-mono', worse ? 'text-red-400' : 'text-emerald-400')}>
+                      <span className="inline-flex items-center gap-1">
+                        <DeltaIcon className="h-3 w-3" />
+                        {Math.abs(d) >= 1000 ? formatCompactMXN(d) : `${sign}${d.toFixed(1)}`}
+                        {pctStr && <span className="opacity-60">{pctStr}</span>}
+                      </span>
+                    </td>
+                  )
+                }
+              }
+
+              return (
+                <tr
+                  key={m.label}
+                  className="border-b border-border/20 hover:bg-zinc-800/20 transition-colors"
+                >
+                  <td className="px-4 py-3 text-xs text-text-secondary font-medium">{m.label}</td>
+                  <td className={cn(
+                    'px-4 py-3 text-center text-xs font-mono tabular-nums',
+                    aIsWorse ? 'text-red-400 font-semibold' : 'text-text-primary',
+                  )}>
+                    {vA !== null ? m.format(vA) : '--'}
+                  </td>
+                  <td className={cn(
+                    'px-4 py-3 text-center text-xs font-mono tabular-nums',
+                    bIsWorse ? 'text-red-400 font-semibold' : 'text-text-primary',
+                  )}>
+                    {vB !== null ? m.format(vB) : '--'}
+                  </td>
+                  {deltaEl}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+/** Top vendors comparison — two columns */
+function TopVendorsComparison({
+  vendorsA,
+  vendorsB,
+  nameA,
+  nameB,
+  totalA,
+  totalB,
+}: {
+  vendorsA: InstitutionVendorItem[]
+  vendorsB: InstitutionVendorItem[]
+  nameA: string
+  nameB: string
+  totalA: number
+  totalB: number
+}) {
+  const top5A = vendorsA.slice(0, 5)
+  const top5B = vendorsB.slice(0, 5)
+
+  function VendorColumn({
+    vendors,
+    accentColor,
+    instName,
+    total,
+  }: {
+    vendors: InstitutionVendorItem[]
+    accentColor: string
+    instName: string
+    total: number
+  }) {
+    return (
+      <div className="flex-1 min-w-0">
+        <h4
+          className="text-xs font-bold uppercase tracking-wider mb-3"
+          style={{ color: accentColor }}
+        >
+          {instName}
+        </h4>
+        {vendors.length === 0 ? (
+          <p className="text-xs text-text-muted italic">Sin datos de proveedores</p>
+        ) : (
+          <div className="space-y-2">
+            {vendors.map((v, idx) => {
+              const share = total > 0 ? (v.total_value_mxn / total) * 100 : 0
+              const riskLevel = v.avg_risk_score != null ? getRiskLevelFromScore(v.avg_risk_score) : null
+              const riskColor = riskLevel ? RISK_COLORS[riskLevel] : undefined
+
+              return (
+                <div
+                  key={v.vendor_id}
+                  className="rounded border border-border/30 bg-zinc-900/30 px-3 py-2"
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="flex items-center gap-1.5">
+                        <span className="text-[10px] text-text-muted font-mono">#{idx + 1}</span>
+                        <Link
+                          to={`/vendors/${v.vendor_id}`}
+                          className="text-xs font-medium text-text-primary hover:text-accent truncate"
+                        >
+                          {toTitleCase(v.vendor_name)}
+                        </Link>
+                      </div>
+                      <div className="flex items-center gap-3 mt-1">
+                        <span className="text-xs text-text-muted tabular-nums">
+                          {formatCompactMXN(v.total_value_mxn)}
+                        </span>
+                        <span className="text-xs text-text-muted tabular-nums">
+                          {v.contract_count.toLocaleString()} contr.
+                        </span>
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <span className="text-sm font-bold tabular-nums" style={{ color: accentColor }}>
+                        {share.toFixed(1)}%
+                      </span>
+                      {riskColor && (
+                        <div className="mt-0.5">
+                          <span
+                            className="inline-block w-2 h-2 rounded-full"
+                            style={{ backgroundColor: riskColor }}
+                            title={`Riesgo: ${riskLevel}`}
+                          />
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                  {/* Share bar */}
+                  <div className="mt-1.5 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all"
+                      style={{ width: `${Math.min(share, 100)}%`, backgroundColor: accentColor }}
+                    />
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        )}
+      </div>
+    )
+  }
+
+  return (
+    <section className="mb-10" aria-label="Comparacion de proveedores principales">
+      <h3
+        className="text-lg font-bold text-text-primary mb-1"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        Principales Proveedores
+      </h3>
+      <p className="text-xs text-text-muted mb-4">
+        Top 5 proveedores por valor contratado. El porcentaje indica la participacion del proveedor en el gasto total de la institucion.
+      </p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} />
+        <VendorColumn vendors={top5B} accentColor={COLOR_B} instName={nameB} total={totalB} />
+      </div>
+    </section>
+  )
+}
+
+/** Risk distribution comparison — grouped bar chart */
+function RiskDistribution({
+  instA,
+  instB,
+  nameA,
+  nameB,
+}: {
+  instA: InstitutionDetailResponse
+  instB: InstitutionDetailResponse
+  nameA: string
+  nameB: string
+}) {
+  // Approximate risk distribution from available data
+  const totalA = instA.total_contracts ?? 0
+  const totalB = instB.total_contracts ?? 0
+  const highPctA = instA.high_risk_pct ?? 0
+  const highPctB = instB.high_risk_pct ?? 0
+
+  // We have high_risk_pct which combines critical+high. Estimate breakdown.
+  const riskScoreA = instA.avg_risk_score ?? 0
+  const riskScoreB = instB.avg_risk_score ?? 0
+
+  // Estimate distribution based on available metrics
+  const critPctA = riskScoreA >= 0.3 ? highPctA * 0.4 : highPctA * 0.2
+  const highOnlyPctA = highPctA - critPctA
+  const medPctA = Math.max(0, Math.min(100 - highPctA, riskScoreA * 100))
+  const lowPctA = Math.max(0, 100 - highPctA - medPctA)
+
+  const critPctB = riskScoreB >= 0.3 ? highPctB * 0.4 : highPctB * 0.2
+  const highOnlyPctB = highPctB - critPctB
+  const medPctB = Math.max(0, Math.min(100 - highPctB, riskScoreB * 100))
+  const lowPctB = Math.max(0, 100 - highPctB - medPctB)
+
+  const chartData = [
+    { level: 'Critico', a: critPctA, b: critPctB, color: RISK_COLORS.critical },
+    { level: 'Alto', a: highOnlyPctA, b: highOnlyPctB, color: RISK_COLORS.high },
+    { level: 'Medio', a: medPctA, b: medPctB, color: RISK_COLORS.medium },
+    { level: 'Bajo', a: lowPctA, b: lowPctB, color: RISK_COLORS.low },
+  ]
+
+  return (
+    <section className="mb-10" aria-label="Distribucion de riesgo">
+      <h3
+        className="text-lg font-bold text-text-primary mb-1"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        Distribucion de Riesgo
+      </h3>
+      <p className="text-xs text-text-muted mb-4">
+        Porcentaje estimado de contratos por nivel de riesgo.
+        {totalA > 0 && totalB > 0 && (
+          <span> Base: {formatNumber(totalA)} vs {formatNumber(totalB)} contratos.</span>
+        )}
+      </p>
+      <div className="h-[260px] rounded-lg border border-border/40 bg-zinc-900/30 p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <BarChart data={chartData} barGap={2} barCategoryGap="20%">
+            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
+            <XAxis
+              dataKey="level"
+              tick={{ fontSize: 11, fill: '#94a3b8' }}
+              axisLine={{ stroke: '#3f3f46' }}
+              tickLine={false}
+            />
+            <YAxis
+              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              axisLine={false}
+              tickLine={false}
+              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+            />
+            <RechartsTooltip
+              content={({ active, payload, label }) => {
+                if (!active || !payload?.length) return null
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                    <p className="font-semibold text-text-primary mb-1">{label}</p>
+                    {payload.map((p) => (
+                      <p key={p.dataKey as string} style={{ color: p.color as string }}>
+                        {p.name}: {(p.value as number).toFixed(1)}%
+                      </p>
+                    ))}
+                  </div>
+                )
+              }}
+            />
+            <Bar dataKey="a" name={nameA} fill={COLOR_A} radius={[2, 2, 0, 0]} />
+            <Bar dataKey="b" name={nameB} fill={COLOR_B} radius={[2, 2, 0, 0]} />
+          </BarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 mt-3">
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: COLOR_A }} />
+          <span className="text-xs text-text-muted">{nameA}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: COLOR_B }} />
+          <span className="text-xs text-text-muted">{nameB}</span>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/** Radar comparison chart */
 function ComparisonRadar({
   radarData,
   aName,
   bName,
-  aColor,
-  bColor,
 }: {
   radarData: ReturnType<typeof buildRadarData>
   aName: string
   bName: string
-  aColor: string
-  bColor: string
 }) {
   return (
-    <div className="h-[300px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={radarData} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-          <PolarGrid stroke="#1e293b" />
-          <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.[0]) return null
-              const d = payload[0].payload as (typeof radarData)[0]
-              return (
-                <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                  <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
-                  <p style={{ color: aColor }}>
-                    {aName.slice(0, 22)}: {(d.instA * 100).toFixed(0)}%
-                  </p>
-                  <p style={{ color: bColor }}>
-                    {bName.slice(0, 22)}: {(d.instB * 100).toFixed(0)}%
-                  </p>
-                  <p className="text-text-muted mt-1 text-[10px]">Normalized relative to each other</p>
-                </div>
-              )
-            }}
-          />
-          <Radar
-            dataKey="instA"
-            name={aName}
-            stroke={aColor}
-            fill={aColor}
-            fillOpacity={0.15}
-            strokeWidth={2}
-          />
-          <Radar
-            dataKey="instB"
-            name={bName}
-            stroke={bColor}
-            fill={bColor}
-            fillOpacity={0.10}
-            strokeWidth={2}
-            strokeDasharray="5 3"
-          />
-        </RadarChart>
-      </ResponsiveContainer>
-    </div>
-  )
-}
-
-function DeltaCell({
-  valueA,
-  valueB,
-  higherIsBad,
-}: {
-  valueA: number | null
-  valueB: number | null
-  higherIsBad: boolean
-}) {
-  if (valueA === null || valueB === null) {
-    return <td className="px-3 py-2 text-center text-text-muted text-xs">—</td>
-  }
-  const delta = valueB - valueA
-  if (Math.abs(delta) < 0.001 && Math.abs(delta) < 1) {
-    return <td className="px-3 py-2 text-center text-text-muted text-xs">Equal</td>
-  }
-  const bIsWorse = higherIsBad ? delta > 0 : delta < 0
-  const sign = delta > 0 ? '+' : ''
-  const pct = valueA !== 0 ? `(${sign}${((delta / Math.abs(valueA)) * 100).toFixed(0)}%)` : ''
-
-  return (
-    <td
-      className={cn(
-        'px-3 py-2 text-center text-xs font-mono',
-        bIsWorse ? 'text-red-400' : 'text-emerald-400',
-      )}
-      aria-label={`Delta: ${sign}${delta.toFixed(1)} ${pct}`}
-    >
-      {sign}
-      {Math.abs(delta) >= 1000 ? formatCompactMXN(delta) : delta.toFixed(1)}
-      {pct && <span className="ml-1 opacity-60">{pct}</span>}
-    </td>
-  )
-}
-
-function MetricTable({
-  instA,
-  instB,
-  aName,
-  bName,
-}: {
-  instA: InstitutionDetailResponse
-  instB: InstitutionDetailResponse
-  aName: string
-  bName: string
-}) {
-  return (
-    <div className="overflow-x-auto rounded-md border border-border">
-      <table className="w-full text-sm" aria-label="Institution metric comparison">
-        <thead>
-          <tr className="border-b border-border bg-background-card">
-            <th className="px-3 py-2 text-left text-xs font-semibold text-text-muted">Metric</th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-cyan-400">
-              {aName.slice(0, 22)}
-            </th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-violet-400">
-              {bName.slice(0, 22)}
-            </th>
-            <th className="px-3 py-2 text-center text-xs font-semibold text-text-muted">Delta</th>
-          </tr>
-        </thead>
-        <tbody>
-          {METRICS.map((m) => {
-            const vA = m.getValue(instA)
-            const vB = m.getValue(instB)
-            return (
-              <tr
-                key={m.label}
-                className="border-b border-border/40 hover:bg-sidebar-hover/30 transition-colors"
-              >
-                <td className="px-3 py-2 text-xs text-text-secondary font-medium">{m.label}</td>
-                <td className="px-3 py-2 text-center text-xs font-mono text-text-primary">
-                  {vA !== null ? m.format(vA) : '—'}
-                </td>
-                <td className="px-3 py-2 text-center text-xs font-mono text-text-primary">
-                  {vB !== null ? m.format(vB) : '—'}
-                </td>
-                <DeltaCell valueA={vA} valueB={vB} higherIsBad={m.higherIsBad} />
-              </tr>
-            )
-          })}
-        </tbody>
-      </table>
-    </div>
+    <section className="mb-10" aria-label="Radar de comportamiento">
+      <h3
+        className="text-lg font-bold text-text-primary mb-1"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        Radar de Contratacion
+      </h3>
+      <p className="text-xs text-text-muted mb-4">
+        Comparacion normalizada de 6 dimensiones de contratacion. 100% corresponde al valor mas alto entre ambas instituciones.
+      </p>
+      <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4">
+        <ResponsiveContainer width="100%" height="100%">
+          <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
+            <PolarGrid stroke="#27272a" />
+            <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
+            <RechartsTooltip
+              content={({ active, payload }) => {
+                if (!active || !payload?.[0]) return null
+                const d = payload[0].payload as (typeof radarData)[0]
+                return (
+                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
+                    <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
+                    <p style={{ color: COLOR_A }}>
+                      {aName.slice(0, 22)}: {(d.instA * 100).toFixed(0)}%
+                    </p>
+                    <p style={{ color: COLOR_B }}>
+                      {bName.slice(0, 22)}: {(d.instB * 100).toFixed(0)}%
+                    </p>
+                    <p className="text-text-muted mt-1 text-[10px]">Normalizado uno respecto al otro</p>
+                  </div>
+                )
+              }}
+            />
+            <Radar
+              dataKey="instA"
+              name={aName}
+              stroke={COLOR_A}
+              fill={COLOR_A}
+              fillOpacity={0.15}
+              strokeWidth={2}
+            />
+            <Radar
+              dataKey="instB"
+              name={bName}
+              stroke={COLOR_B}
+              fill={COLOR_B}
+              fillOpacity={0.10}
+              strokeWidth={2}
+              strokeDasharray="5 3"
+            />
+          </RadarChart>
+        </ResponsiveContainer>
+      </div>
+      {/* Legend */}
+      <div className="flex items-center justify-center gap-6 mt-3">
+        <div className="flex items-center gap-1.5">
+          <span className="h-px w-6 inline-block" style={{ backgroundColor: COLOR_A }} />
+          <span className="text-xs text-text-muted">{aName.slice(0, 25)}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="h-px w-6 border-t-2 border-dashed inline-block" style={{ borderColor: COLOR_B }} />
+          <span className="text-xs text-text-muted">{bName.slice(0, 25)}</span>
+        </div>
+      </div>
+    </section>
   )
 }
 
 // ============================================================================
 // Institution picker — shown when no institutions are selected
 // ============================================================================
-function InstitutionPicker() {
-  const [queryA, setQueryA] = useState('')
-  const [queryB, setQueryB] = useState('')
-  const navigate = useNavigate()
 
-  const { data: resultsA } = useQuery({
-    queryKey: ['institution-search', queryA],
-    queryFn: () => institutionApi.search(queryA, 5),
-    enabled: queryA.length >= 2,
+function InstitutionSearchInput({
+  id,
+  label,
+  query,
+  setQuery,
+  selectedId,
+  setSelectedId,
+  accentColor,
+  selectedInstitution,
+}: {
+  id: string
+  label: string
+  query: string
+  setQuery: (v: string) => void
+  selectedId: number | null
+  setSelectedId: (v: number | null) => void
+  accentColor: string
+  selectedInstitution?: InstitutionDetailResponse | null
+}) {
+  const { data: results } = useQuery({
+    queryKey: ['institution-search', query],
+    queryFn: () => institutionApi.search(query, 5),
+    enabled: query.length >= 2,
     staleTime: 30 * 1000,
   })
-
-  const { data: resultsB } = useQuery({
-    queryKey: ['institution-search', queryB],
-    queryFn: () => institutionApi.search(queryB, 5),
-    enabled: queryB.length >= 2,
-    staleTime: 30 * 1000,
-  })
-
-  const [selectedA, setSelectedA] = useState<number | null>(null)
-  const [selectedB, setSelectedB] = useState<number | null>(null)
-
-  const handleCompare = () => {
-    if (selectedA && selectedB && selectedA !== selectedB) {
-      navigate(`/institutions/compare?a=${selectedA}&b=${selectedB}`)
-    }
-  }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-[60vh] gap-8">
-      <div className="text-center">
-        <Scale className="h-12 w-12 mx-auto text-accent/40 mb-4" />
-        <h2 className="text-xl font-semibold text-text-primary mb-2">Compare Institutions</h2>
-        <p className="text-sm text-text-muted max-w-sm">
-          Select two institutions to compare their procurement profiles, risk scores, and spending
-          patterns side by side.
-        </p>
-      </div>
-      <div className="flex flex-col sm:flex-row items-start sm:items-start gap-4 w-full max-w-2xl">
-        {/* Institution A picker */}
-        <div className="flex-1 relative">
-          <label htmlFor="inst-a-search" className="block text-xs font-medium text-text-muted mb-1">
-            Institution A
-          </label>
-          <div className="flex items-center gap-2 border border-border rounded-md bg-background-card px-3 py-2">
-            <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-            <input
-              id="inst-a-search"
-              type="text"
-              placeholder="Search by name..."
-              value={queryA}
-              onChange={(e) => {
-                setQueryA(e.target.value)
-                setSelectedA(null)
-              }}
-              className="bg-transparent text-sm text-text-primary placeholder:text-text-muted/50 outline-none w-full"
-              aria-label="Search institution A"
-              autoComplete="off"
-            />
-          </div>
-          {resultsA && resultsA.data.length > 0 && !selectedA && queryA.length >= 2 && (
-            <ul className="absolute z-10 mt-1 w-full rounded-md border border-border bg-background-card shadow-lg max-h-48 overflow-y-auto">
-              {resultsA.data.map((inst) => (
-                <li key={inst.id}>
-                  <button
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-sidebar-hover/50 transition-colors"
-                    onClick={() => {
-                      setQueryA(toTitleCase(inst.name))
-                      setSelectedA(inst.id)
-                    }}
-                  >
-                    <span className="font-medium text-text-primary">{toTitleCase(inst.name)}</span>
-                    {inst.siglas && (
-                      <span className="ml-2 text-text-muted font-mono">{inst.siglas}</span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {selectedA && (
-            <p className="text-xs text-accent mt-1 flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
-              ID {selectedA} selected
-            </p>
-          )}
-        </div>
-
-        {/* Institution B picker */}
-        <div className="flex-1 relative">
-          <label htmlFor="inst-b-search" className="block text-xs font-medium text-text-muted mb-1">
-            Institution B
-          </label>
-          <div className="flex items-center gap-2 border border-border rounded-md bg-background-card px-3 py-2">
-            <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
-            <input
-              id="inst-b-search"
-              type="text"
-              placeholder="Search by name..."
-              value={queryB}
-              onChange={(e) => {
-                setQueryB(e.target.value)
-                setSelectedB(null)
-              }}
-              className="bg-transparent text-sm text-text-primary placeholder:text-text-muted/50 outline-none w-full"
-              aria-label="Search institution B"
-              autoComplete="off"
-            />
-          </div>
-          {resultsB && resultsB.data.length > 0 && !selectedB && queryB.length >= 2 && (
-            <ul className="absolute z-10 mt-1 w-full rounded-md border border-border bg-background-card shadow-lg max-h-48 overflow-y-auto">
-              {resultsB.data.map((inst) => (
-                <li key={inst.id}>
-                  <button
-                    className="w-full text-left px-3 py-2 text-xs hover:bg-sidebar-hover/50 transition-colors"
-                    onClick={() => {
-                      setQueryB(toTitleCase(inst.name))
-                      setSelectedB(inst.id)
-                    }}
-                  >
-                    <span className="font-medium text-text-primary">{toTitleCase(inst.name)}</span>
-                    {inst.siglas && (
-                      <span className="ml-2 text-text-muted font-mono">{inst.siglas}</span>
-                    )}
-                  </button>
-                </li>
-              ))}
-            </ul>
-          )}
-          {selectedB && (
-            <p className="text-xs text-accent mt-1 flex items-center gap-1">
-              <Building2 className="h-3 w-3" />
-              ID {selectedB} selected
-            </p>
-          )}
-        </div>
-
-        <div className="sm:mt-5">
-          <Button
-            onClick={handleCompare}
-            disabled={!selectedA || !selectedB || selectedA === selectedB}
-            className="w-full sm:w-auto"
-            aria-label="Compare institutions"
+    <div className="flex-1 relative">
+      <label htmlFor={id} className="block text-[10px] font-bold text-text-muted mb-1.5 uppercase tracking-wider">
+        {label}
+      </label>
+      <div
+        className="flex items-center gap-2 border rounded-lg px-3 py-2.5 transition-colors"
+        style={{
+          borderColor: selectedId ? `${accentColor}60` : undefined,
+          backgroundColor: selectedId ? `${accentColor}08` : undefined,
+        }}
+      >
+        <Search className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
+        <input
+          id={id}
+          type="text"
+          placeholder="Buscar por nombre..."
+          value={query}
+          onChange={(e) => {
+            setQuery(e.target.value)
+            setSelectedId(null)
+          }}
+          className="bg-transparent text-sm text-text-primary placeholder:text-text-muted/50 outline-none w-full"
+          aria-label={`Buscar ${label}`}
+          autoComplete="off"
+        />
+        {selectedId && (
+          <button
+            onClick={() => { setQuery(''); setSelectedId(null) }}
+            className="text-text-muted hover:text-text-primary text-xs"
+            aria-label="Limpiar seleccion"
           >
-            Compare
-          </Button>
-        </div>
+            x
+          </button>
+        )}
       </div>
-      <p className="text-xs text-text-muted/60">
-        Or navigate to an institution profile and click "Compare"
-      </p>
+
+      {/* Dropdown results */}
+      {results && results.data.length > 0 && !selectedId && query.length >= 2 && (
+        <ul className="absolute z-20 mt-1 w-full rounded-lg border border-border bg-background-card shadow-xl max-h-56 overflow-y-auto">
+          {results.data.map((inst) => (
+            <li key={inst.id}>
+              <button
+                className="w-full text-left px-3 py-2.5 text-xs hover:bg-sidebar-hover/50 transition-colors border-b border-border/20 last:border-0"
+                onClick={() => {
+                  setQuery(toTitleCase(inst.name))
+                  setSelectedId(inst.id)
+                }}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <div className="min-w-0">
+                    <span className="font-medium text-text-primary block truncate">
+                      {toTitleCase(inst.name)}
+                    </span>
+                    {inst.siglas && (
+                      <span className="text-text-muted font-mono">{inst.siglas}</span>
+                    )}
+                  </div>
+                  {inst.total_contracts != null && (
+                    <span className="text-[10px] text-text-muted flex-shrink-0">
+                      {formatNumber(inst.total_contracts)} contr.
+                    </span>
+                  )}
+                </div>
+              </button>
+            </li>
+          ))}
+        </ul>
+      )}
+
+      {/* Preview card when institution is selected and data is loaded */}
+      {selectedId && selectedInstitution && (
+        <InstitutionPreviewCard
+          institution={selectedInstitution}
+          accentColor={accentColor}
+          side={label}
+        />
+      )}
+
+      {selectedId && !selectedInstitution && (
+        <div className="mt-3">
+          <Skeleton className="h-32 w-full rounded-lg" />
+        </div>
+      )}
     </div>
   )
 }
@@ -506,8 +892,9 @@ function InstitutionPicker() {
 // ============================================================================
 // Main page component
 // ============================================================================
+
 export default function InstitutionCompare() {
-  const [searchParams] = useSearchParams()
+  const [searchParams, setSearchParams] = useSearchParams()
   const idA = searchParams.get('a')
   const idB = searchParams.get('b')
 
@@ -515,14 +902,24 @@ export default function InstitutionCompare() {
   const numB = idB ? parseInt(idB, 10) : null
   const hasIds = numA !== null && !isNaN(numA) && numB !== null && !isNaN(numB)
 
+  // Picker state (used when no IDs in URL yet)
+  const [queryA, setQueryA] = useState('')
+  const [queryB, setQueryB] = useState('')
+  const [selectedA, setSelectedA] = useState<number | null>(numA)
+  const [selectedB, setSelectedB] = useState<number | null>(numB)
+
+  // Institution detail queries
+  const effectiveA = hasIds ? numA : selectedA
+  const effectiveB = hasIds ? numB : selectedB
+
   const {
     data: instA,
     isLoading: loadingA,
     error: errorA,
   } = useQuery({
-    queryKey: ['institution', numA],
-    queryFn: () => institutionApi.getById(numA!),
-    enabled: hasIds,
+    queryKey: ['institution', effectiveA],
+    queryFn: () => institutionApi.getById(effectiveA!),
+    enabled: effectiveA !== null,
   })
 
   const {
@@ -530,9 +927,22 @@ export default function InstitutionCompare() {
     isLoading: loadingB,
     error: errorB,
   } = useQuery({
-    queryKey: ['institution', numB],
-    queryFn: () => institutionApi.getById(numB!),
-    enabled: hasIds,
+    queryKey: ['institution', effectiveB],
+    queryFn: () => institutionApi.getById(effectiveB!),
+    enabled: effectiveB !== null,
+  })
+
+  // Top vendors for each institution
+  const { data: vendorsAResp } = useQuery({
+    queryKey: ['institution-vendors', effectiveA],
+    queryFn: () => institutionApi.getVendors(effectiveA!, 10),
+    enabled: effectiveA !== null && instA !== undefined,
+  })
+
+  const { data: vendorsBResp } = useQuery({
+    queryKey: ['institution-vendors', effectiveB],
+    queryFn: () => institutionApi.getVendors(effectiveB!, 10),
+    enabled: effectiveB !== null && instB !== undefined,
   })
 
   const radarData = useMemo(
@@ -543,127 +953,157 @@ export default function InstitutionCompare() {
   const isLoading = loadingA || loadingB
   const hasError = errorA || errorB
 
-  if (!hasIds) {
-    return (
-      <div className="container mx-auto px-4 py-8 max-w-5xl">
-        <div className="mb-6">
-          <Link
-            to="/institutions/health"
-            className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Back to Institutions"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            Back to Institutions
-          </Link>
-          <h1 className="text-2xl font-bold text-text-primary mt-2">Compare Institutions</h1>
-          <p className="text-sm text-text-muted mt-1">
-            Select two institutions to compare their procurement risk profiles
-          </p>
-        </div>
-        <InstitutionPicker />
-      </div>
-    )
+  const handleCompare = () => {
+    if (selectedA && selectedB && selectedA !== selectedB) {
+      setSearchParams({ a: String(selectedA), b: String(selectedB) })
+    }
   }
 
+  // Derived names
+  const nameA = instA ? toTitleCase(instA.siglas || instA.name).slice(0, 25) : ''
+  const nameB = instB ? toTitleCase(instB.siglas || instB.name).slice(0, 25) : ''
+
   return (
-    <div className="container mx-auto px-4 py-8 max-w-6xl">
-      {/* Header */}
+    <div className="container mx-auto px-4 py-8 max-w-5xl">
+      {/* Navigation */}
       <div className="mb-6">
         <Link
           to="/institutions/health"
-          className="inline-flex items-center gap-1.5 text-sm text-text-muted hover:text-text-primary transition-colors"
-          aria-label="Back to Institutions"
+          className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide"
+          aria-label="Regresar a Instituciones"
         >
-          <ArrowLeft className="h-3.5 w-3.5" />
-          Back to Institutions
+          <ArrowLeft className="h-3 w-3" />
+          Instituciones
         </Link>
-        <h1 className="text-2xl font-bold text-text-primary mt-2">Compare Institutions</h1>
-        <p className="text-sm text-text-muted mt-1">
-          Side-by-side procurement risk comparison
-        </p>
       </div>
+
+      {/* Editorial headline */}
+      <EditorialHeadline
+        section="COMPARATIVA INSTITUCIONAL"
+        headline="Dos Instituciones, Una Radiografia"
+        subtitle="Compara el patron de contratacion, concentracion y riesgo de dos dependencias federales"
+        className="mb-8"
+      />
+
+      {/* Institution selectors — always visible */}
+      {!hasIds && (
+        <div className="mb-10">
+          <div className="flex flex-col md:flex-row items-stretch gap-6 mb-6">
+            <InstitutionSearchInput
+              id="inst-a-search"
+              label="Institucion A"
+              query={queryA}
+              setQuery={setQueryA}
+              selectedId={selectedA}
+              setSelectedId={setSelectedA}
+              accentColor={COLOR_A}
+              selectedInstitution={selectedA === effectiveA ? instA : undefined}
+            />
+            <InstitutionSearchInput
+              id="inst-b-search"
+              label="Institucion B"
+              query={queryB}
+              setQuery={setQueryB}
+              selectedId={selectedB}
+              setSelectedId={setSelectedB}
+              accentColor={COLOR_B}
+              selectedInstitution={selectedB === effectiveB ? instB : undefined}
+            />
+          </div>
+          <div className="flex justify-center">
+            <Button
+              onClick={handleCompare}
+              disabled={!selectedA || !selectedB || selectedA === selectedB}
+              className="px-8"
+              aria-label="Comparar instituciones"
+            >
+              <Scale className="h-4 w-4 mr-2" />
+              Comparar
+            </Button>
+          </div>
+          {selectedA && selectedB && selectedA === selectedB && (
+            <p className="text-xs text-red-400 text-center mt-2">
+              Selecciona dos instituciones diferentes para comparar.
+            </p>
+          )}
+        </div>
+      )}
 
       {/* Error state */}
       {hasError && (
-        <div className="rounded-md border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2 mb-6">
+        <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2 mb-6">
           <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">Failed to load institutions</p>
+            <p className="text-sm font-medium text-red-400">Error al cargar instituciones</p>
             <p className="text-xs text-text-muted mt-0.5">
-              Check the institution IDs and try again.
+              Verifica los IDs de las instituciones e intenta de nuevo.
             </p>
           </div>
         </div>
       )}
 
       {/* Loading state */}
-      {isLoading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <Skeleton className="h-48 w-full rounded-lg" />
-          <Skeleton className="h-48 w-full rounded-lg" />
-        </div>
-      ) : instA && instB ? (
-        <>
-          {/* Institution Cards */}
-          <div
-            className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8"
-            role="region"
-            aria-label="Institution summary cards"
-          >
-            <InstitutionCard institution={instA} color="#06b6d4" label="Institution A" />
-            <InstitutionCard institution={instB} color="#a78bfa" label="Institution B" />
+      {hasIds && isLoading && (
+        <div className="space-y-6">
+          <Skeleton className="h-40 w-full rounded-lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <Skeleton className="h-60 w-full rounded-lg" />
+            <Skeleton className="h-60 w-full rounded-lg" />
           </div>
+        </div>
+      )}
 
-          {/* Radar Comparison */}
-          <Card className="mb-8">
-            <CardHeader>
-              <CardTitle className="text-sm">Risk Profile Comparison</CardTitle>
-              <p className="text-xs text-text-muted">
-                6-axis normalized comparison. Values are relative — 100% means the higher of the two.
-                For risk metrics (direct award, single bid), higher is worse.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <ComparisonRadar
-                radarData={radarData}
-                aName={toTitleCase(instA.name)}
-                bName={toTitleCase(instB.name)}
-                aColor="#06b6d4"
-                bColor="#a78bfa"
-              />
-              {/* Legend */}
-              <div className="flex items-center justify-center gap-6 mt-3">
-                <div className="flex items-center gap-1.5">
-                  <span className="h-px w-6 bg-cyan-400 inline-block" />
-                  <span className="text-xs text-text-muted">{toTitleCase(instA.name).slice(0, 25)}</span>
-                </div>
-                <div className="flex items-center gap-1.5">
-                  <span className="h-px w-6 border-t-2 border-dashed border-violet-400 inline-block" />
-                  <span className="text-xs text-text-muted">{toTitleCase(instB.name).slice(0, 25)}</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
+      {/* Comparison content */}
+      {hasIds && instA && instB && (
+        <>
+          {/* Veredicto header */}
+          <VeredictoHeader instA={instA} instB={instB} />
 
-          {/* Metric Comparison Table */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-sm">Metric Breakdown</CardTitle>
-              <p className="text-xs text-text-muted">
-                Delta column shows difference from A to B. Red = B is riskier; green = B is safer.
-              </p>
-            </CardHeader>
-            <CardContent>
-              <MetricTable
-                instA={instA}
-                instB={instB}
-                aName={toTitleCase(instA.name)}
-                bName={toTitleCase(instB.name)}
-              />
-            </CardContent>
-          </Card>
+          {/* Metric comparison table */}
+          <MetricTable instA={instA} instB={instB} />
+
+          {/* Top vendors comparison */}
+          <TopVendorsComparison
+            vendorsA={vendorsAResp?.data ?? []}
+            vendorsB={vendorsBResp?.data ?? []}
+            nameA={nameA}
+            nameB={nameB}
+            totalA={instA.total_amount_mxn ?? 0}
+            totalB={instB.total_amount_mxn ?? 0}
+          />
+
+          {/* Risk distribution */}
+          <RiskDistribution
+            instA={instA}
+            instB={instB}
+            nameA={nameA}
+            nameB={nameB}
+          />
+
+          {/* Radar comparison */}
+          <ComparisonRadar
+            radarData={radarData}
+            aName={nameA}
+            bName={nameB}
+          />
+
+          {/* Change comparison link */}
+          <div className="text-center py-6 border-t border-border/40">
+            <button
+              onClick={() => {
+                setSearchParams({})
+                setSelectedA(null)
+                setSelectedB(null)
+                setQueryA('')
+                setQueryB('')
+              }}
+              className="text-xs text-accent hover:underline"
+            >
+              Cambiar instituciones
+            </button>
+          </div>
         </>
-      ) : null}
+      )}
     </div>
   )
 }
