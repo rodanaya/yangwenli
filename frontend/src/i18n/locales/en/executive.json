@@ -20,7 +20,7 @@
   "seeFullBreakdown": "See full breakdown",
   "hideBreakdown": "Hide breakdown",
   "header": {
-    "badge": "EXECUTIVE INTELLIGENCE SUMMARY",
+    "badge": "EXECUTIVE SUMMARY",
     "dateline": "March 2026  |  RUBLI Intelligence Platform",
     "title": "9.6 Trillion Pesos Under the Microscope",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
@@ -317,12 +317,12 @@
       "examples": "IMSS Ghost Network · COVID-19 Procurement"
     },
     "s2": {
-      "signal": "Abnormal Win Rate",
+      "signal": "Vendor Concentration",
       "detail": "Vendor value share within a sector far above baseline (β = +0.375). Legitimate companies win some tenders; captured institutions award the same vendors repeatedly.",
       "examples": "Toka IT Monopoly · Edenred Voucher Monopoly"
     },
     "s3": {
-      "signal": "Vendor Concentration",
+      "signal": "Price Ratio",
       "detail": "Contract amount relative to the sector median (β = +0.235). Prices far above what peers pay for comparable goods signal manipulation or overpricing.",
       "examples": "Segalmex · PEMEX-Cotemar"
     }

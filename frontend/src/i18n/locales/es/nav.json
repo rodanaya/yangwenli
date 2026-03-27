@@ -1,8 +1,8 @@
 {
   "sections": {
     "overview": "RESUMEN",
-    "investigation": "INVESTIGACION",
-    "analysis": "ANALISIS",
+    "investigation": "INVESTIGACIÓN",
+    "analysis": "ANÁLISIS",
     "platform": "PLATAFORMA",
     "analyze": "ANALIZAR",
     "investigate": "INVESTIGAR",
@@ -38,9 +38,9 @@
   "workspace": "Espacio de Trabajo",
   "investigation": "Investigación",
   "caseLibrary": "Casos",
-  "ariaQueue": "Briefing de Inteligencia",
+  "ariaQueue": "Alertas de inteligencia",
   "sectors": "Sectores",
-  "groundTruth": "Verdad Base",
+  "groundTruth": "Casos documentados",
   "model": "Transparencia del Modelo",
   "methodology": "Metodología",
   "limitations": "Limitaciones",
@@ -60,7 +60,7 @@
   "collapseSidebar": "Contraer barra lateral",
   "openMenu": "Abrir menú",
   "closeMenu": "Cerrar menú",
-  "tagline": "Transparencia Procuratoria",
+  "tagline": "Transparencia en Contrataciones",
   "contractsIndexed": "3.1M contratos indexados",
   "contractsIndexedShort": "3.1M indexados",
   "reportIssue": "Reportar un problema"

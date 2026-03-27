@@ -5,7 +5,7 @@
   },
   "riskLevel": {
     "title": "Nivel de Riesgo",
-    "description": "Categorización basada en la puntuación: Crítico (>=50%), Alto (>=30%), Medio (>=10%), Bajo (<10%). Estos umbrales están alineados con las referencias de contratación de la OCDE."
+    "description": "Categorización basada en la puntuación: Crítico (>=60%), Alto (>=40%), Medio (>=25%), Bajo (<25%). Estos umbrales están alineados con las referencias de contratación de la OCDE."
   },
   "singleBid": {
     "title": "Licitante Único",

@@ -432,7 +432,7 @@ export default function CaseDetail() {
       {/* ── Impact Metrics Grid ─────────────────────────────────────────────── */}
       {(data.amount_mxn_low || data.amount_mxn_high || hasRealVendorScores) && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Impact Metrics</h2>
+          <p className="text-sm font-bold font-mono text-text-primary mb-3">Impact Metrics</p>
           <motion.div
             className="grid grid-cols-2 sm:grid-cols-3 gap-3"
             variants={staggerContainer}
@@ -674,7 +674,7 @@ export default function CaseDetail() {
       {/* ── Case Timeline ───────────────────────────────────────────────────── */}
       {timelineEvents.length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Case Timeline</h2>
+          <p className="text-sm font-bold font-mono text-text-primary mb-3">Case Timeline</p>
           <div className="bg-card border border-border/50 rounded-lg p-4">
             <div className="relative space-y-0">
               {/* Vertical connector line */}
@@ -758,10 +758,10 @@ export default function CaseDetail() {
       {/* ── Connected Vendors (real data from ground truth) ─────────────────── */}
       {hasRealVendorScores ? (
         <section className="mb-6">
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">
+          <p className="text-sm font-bold font-mono text-text-primary mb-3">
             Linked Vendors
             <span className="text-text-muted font-normal ml-2">({linkedVendors.length} matched in COMPRANET)</span>
-          </h2>
+          </p>
           <div className="space-y-2">
             {linkedVendors.map((vendor, i) => (
               <div key={i} className="bg-card border border-border/40 rounded-lg p-3 flex flex-col gap-1.5">
@@ -836,7 +836,7 @@ export default function CaseDetail() {
       ) : (data.key_actors ?? []).filter(a => a.role === 'vendor').length > 0 ? (
         /* Fallback: key actors vendors when no ground truth linked vendors */
         <section className="mb-6">
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">Connected Vendors</h2>
+          <p className="text-sm font-bold font-mono text-text-primary mb-3">Connected Vendors</p>
           <div className="space-y-2">
             {(data.key_actors ?? [])
               .filter(a => a.role === 'vendor')
@@ -869,7 +869,7 @@ export default function CaseDetail() {
       {/* ── Key Actors (non-vendor) ─────────────────────────────────────────── */}
       {(data.key_actors ?? []).filter(a => a.role !== 'vendor').length > 0 && (
         <section className="mb-6">
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.keyActors')}</h2>
+          <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.keyActors')}</p>
           <div className="space-y-2">
             {(data.key_actors ?? [])
               .filter(a => a.role !== 'vendor')
@@ -898,7 +898,7 @@ export default function CaseDetail() {
 
       {/* ── Sources ─────────────────────────────────────────────────────────── */}
       <section className="mb-6">
-        <h2 className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.sources')}</h2>
+        <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.sources')}</p>
         {(data.sources ?? []).length === 0 ? (
           <p className="text-xs text-text-muted">{t('detail.noSources')}</p>
         ) : (
@@ -936,13 +936,13 @@ export default function CaseDetail() {
       {/* ── Similar Cases ────────────────────────────────────────────────────── */}
       {similarCases.length > 0 && (
         <section>
-          <h2 className="text-sm font-bold font-mono text-text-primary mb-3 flex items-center gap-2">
+          <p className="text-sm font-bold font-mono text-text-primary mb-3 flex items-center gap-2">
             <FileText className="h-4 w-4 text-text-muted" />
             Similar Cases
             <span className="text-text-muted font-normal text-xs">
               — other {t(`fraudTypes.${data.fraud_type}`)} cases
             </span>
-          </h2>
+          </p>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
             {similarCases.map((cas) => (
               <SimilarCaseCard

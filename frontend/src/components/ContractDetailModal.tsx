@@ -88,7 +88,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Section 1: Overview */}
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.overview')}</h3>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.overview')}</p>
               <div className="space-y-3">
                 <p className="text-sm font-medium leading-snug">
                   {toTitleCase(contract.title || 'Untitled Contract')}
@@ -149,7 +149,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Section 2: Risk Assessment */}
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.riskAssessment')}</h3>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{t('detail.riskAssessment')}</p>
               <div className="space-y-3">
                 <div className="flex items-center gap-3">
                   {contract.risk_score !== undefined && contract.risk_score !== null ? (
@@ -269,7 +269,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Section 3: Procurement Details */}
             <section>
-              <h3 className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Procurement</h3>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Procurement</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
                 <DetailRow label="Procedure" value={contract.procedure_type_normalized || contract.procedure_type} />
                 <DetailRow label="Contract Type" value={contract.contract_type_normalized || contract.contract_type} />

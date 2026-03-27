@@ -5,7 +5,7 @@
   },
   "riskLevel": {
     "title": "Risk Level",
-    "description": "Categorization based on risk score: Critical (>=0.50), High (>=0.30), Medium (>=0.10), Low (<0.10). These thresholds are aligned with OECD procurement benchmarks."
+    "description": "Categorization based on risk score: Critical (>=0.60), High (>=0.40), Medium (>=0.25), Low (<0.25). These thresholds are aligned with OECD procurement benchmarks."
   },
   "singleBid": {
     "title": "Single Bid",

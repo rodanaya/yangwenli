@@ -391,7 +391,7 @@ export function InvestigationCaseDetail() {
           <CardContent className="pt-5 pb-5">
             <div className="flex items-center gap-2 mb-3">
               <FileText className="h-4 w-4 text-accent opacity-70" />
-              <h2 className="text-sm font-bold text-text-primary">{t('caseDetail.narrative')}</h2>
+              <p className="text-sm font-bold text-text-primary">{t('caseDetail.narrative')}</p>
             </div>
             {detail.narrative && (
               <p className="text-sm text-text-secondary leading-relaxed whitespace-pre-line">
@@ -426,7 +426,7 @@ export function InvestigationCaseDetail() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-3">
               <Users className="h-4 w-4 text-accent opacity-70" />
-              <h2 className="text-sm font-bold text-text-primary">{t('caseDetail.vendors')}</h2>
+              <p className="text-sm font-bold text-text-primary">{t('caseDetail.vendors')}</p>
               <span className="text-xs text-text-muted">({detail.vendors.length})</span>
             </div>
             <div className="overflow-x-auto">
@@ -537,7 +537,7 @@ export function InvestigationCaseDetail() {
           <CardContent className="pt-5 pb-4">
             <div className="flex items-center gap-2 mb-3">
               <HelpCircle className="h-4 w-4 text-accent opacity-70" />
-              <h2 className="text-sm font-bold text-text-primary">{t('caseDetail.questions')}</h2>
+              <p className="text-sm font-bold text-text-primary">{t('caseDetail.questions')}</p>
               <span className="text-xs text-text-muted">({detail.questions.length})</span>
             </div>
             <div className="space-y-2">
@@ -568,7 +568,7 @@ export function InvestigationCaseDetail() {
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4 text-accent opacity-70" />
-              <h2 className="text-sm font-bold text-text-primary">{t('caseDetail.evidence')}</h2>
+              <p className="text-sm font-bold text-text-primary">{t('caseDetail.evidence')}</p>
               {parsedEvidence.length > 0 && (
                 <span className="text-xs text-text-muted">({parsedEvidence.length})</span>
               )}
@@ -699,7 +699,7 @@ export function InvestigationCaseDetail() {
       {/* SECTION 6 — REVIEW ACTIONS */}
       <Card>
         <CardContent className="pt-5 pb-4">
-          <h2 className="text-sm font-bold text-text-primary mb-3">{t('review')}</h2>
+          <p className="text-sm font-bold text-text-primary mb-3">{t('review')}</p>
           <div className="flex flex-wrap items-center gap-2">
             <Button
               size="sm"
