@@ -257,11 +257,11 @@ function PatternConfidenceRow({ confidences, primaryPattern }: { confidences: Re
 
 type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
 
-const REVIEW_STATUS_META: Record<ReviewStatus, { label: string; className: string }> = {
-  pending:   { label: 'Pendiente',  className: 'bg-stone-800/60 text-stone-400 border-stone-700' },
-  reviewing: { label: 'En revisión', className: 'bg-orange-950/60 text-orange-400 border-orange-800' },
-  confirmed: { label: 'Confirmado', className: 'bg-green-950/60 text-green-400 border-green-800' },
-  dismissed: { label: 'Descartado', className: 'bg-stone-900/60 text-stone-500 border-stone-800' },
+const REVIEW_STATUS_META: Record<ReviewStatus, { className: string }> = {
+  pending:   { className: 'bg-stone-800/60 text-stone-400 border-stone-700' },
+  reviewing: { className: 'bg-orange-950/60 text-orange-400 border-orange-800' },
+  confirmed: { className: 'bg-green-950/60 text-green-400 border-green-800' },
+  dismissed: { className: 'bg-stone-900/60 text-stone-500 border-stone-800' },
 }
 
 function ReviewStatusBadge({ status }: { status: ReviewStatus | null | undefined }) {
@@ -786,7 +786,7 @@ export default function AriaPage() {
 
   // Full leads table
   const { data: leadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, newVendorOnly }],
+    queryKey: ['aria-queue-leads', { page, search, patternFilter, newVendorOnly, reviewStatusFilter }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
@@ -794,7 +794,8 @@ export default function AriaPage() {
         search: search || undefined,
         pattern: patternFilter ?? undefined,
         new_vendor_only: newVendorOnly || undefined,
-        tier: patternFilter || newVendorOnly || search ? undefined : 2,
+        status: reviewStatusFilter ?? undefined,
+        tier: patternFilter || newVendorOnly || search || reviewStatusFilter ? undefined : 2,
       }),
     staleTime: 2 * 60_000,
   })

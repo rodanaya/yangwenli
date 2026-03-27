@@ -520,6 +520,8 @@ export function EntityProfileDrawer() {
         role="dialog"
         aria-modal="true"
         aria-label="Entity profile"
+        aria-hidden={!isOpen}
+        inert={!isOpen || undefined}
         className="fixed top-0 right-0 h-full z-50 bg-background-card border-l border-border shadow-2xl flex flex-col"
         style={{
           width: 420,

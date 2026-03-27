@@ -2504,6 +2504,7 @@ export const ariaApi = {
     search?: string
     efos_only?: boolean
     new_vendor_only?: boolean
+    status?: string
     page?: number
     per_page?: number
   }): Promise<AriaQueueResponse> {
