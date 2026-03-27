@@ -1899,7 +1899,7 @@ export function Dashboard() {
                       {(amlo.avg_risk * 100).toFixed(2)}%
                     </p>
                     <p className="text-[10px] text-text-muted mt-1">
-                      {formatNumber(amlo.contract_count)} contratos &middot; {amlo.high_risk_pct.toFixed(1)}% alto riesgo
+                      {formatNumber(amlo.contract_count ?? amlo.contracts ?? 0)} contratos &middot; {(amlo.high_risk_pct ?? 0).toFixed(1)}% alto riesgo
                     </p>
                   </div>
                   {/* Sheinbaum */}
@@ -1909,7 +1909,7 @@ export function Dashboard() {
                       {(sheinbaum.avg_risk * 100).toFixed(2)}%
                     </p>
                     <p className="text-[10px] text-text-muted mt-1">
-                      {formatNumber(sheinbaum.contract_count)} contratos &middot; {sheinbaum.high_risk_pct.toFixed(1)}% alto riesgo
+                      {formatNumber(sheinbaum.contract_count ?? sheinbaum.contracts ?? 0)} contratos &middot; {(sheinbaum.high_risk_pct ?? 0).toFixed(1)}% alto riesgo
                     </p>
                   </div>
                 </div>

@@ -608,8 +608,8 @@ export interface FastDashboardData {
   grade_b_pct?: number | null
   direct_award_pct?: number | null
   sexenio_comparison?: {
-    amlo?: { avg_risk: number; contract_count: number; high_risk_pct: number }
-    sheinbaum?: { avg_risk: number; contract_count: number; high_risk_pct: number }
+    amlo?: { avg_risk: number; contract_count?: number; contracts?: number; high_risk_pct?: number }
+    sheinbaum?: { avg_risk: number; contract_count?: number; contracts?: number; high_risk_pct?: number }
   } | null
 }
 

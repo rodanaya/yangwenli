@@ -1033,10 +1033,11 @@ def precompute_stats():
                     WHEN contract_year >= 2018 AND contract_year <= 2024 THEN 'amlo'
                     ELSE NULL
                 END AS era,
-                COUNT(*) as contracts,
+                COUNT(*) as contract_count,
                 AVG(risk_score) as avg_risk,
                 AVG(CAST(is_direct_award AS REAL)) * 100.0 as direct_award_pct,
-                SUM(amount_mxn) as total_value_mxn
+                SUM(amount_mxn) as total_value_mxn,
+                SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) * 100.0 / COUNT(*) as high_risk_pct
             FROM contracts
             WHERE contract_year >= 2018
             GROUP BY era
@@ -1047,10 +1048,11 @@ def precompute_stats():
             for sx in sx_rows:
                 era = sx["era"]
                 sexenio_map[era] = {
-                    "contracts": sx["contracts"],
+                    "contract_count": sx["contract_count"],
                     "avg_risk": round(sx["avg_risk"], 4) if sx["avg_risk"] is not None else None,
                     "direct_award_pct": round(sx["direct_award_pct"], 1) if sx["direct_award_pct"] is not None else None,
                     "total_value_mxn": sx["total_value_mxn"],
+                    "high_risk_pct": round(sx["high_risk_pct"], 2) if sx["high_risk_pct"] is not None else None,
                 }
             stats['sexenio_comparison'] = sexenio_map
             print(f"   sexenio_comparison: {list(sexenio_map.keys())}")
