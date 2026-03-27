@@ -4171,3 +4171,40 @@ def get_price_sector_baselines(sector_id: Optional[int] = Query(None, ge=1, le=1
     except Exception as exc:
         logger.error("price-sector-baselines error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch price sector baselines")
+
+
+@router.get("/calendar-heatmap")
+def get_calendar_heatmap(year: int = Query(2024, ge=2002, le=2025)):
+    """Return daily contract risk counts for a calendar heatmap view."""
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                SELECT
+                    DATE(contract_date) AS date,
+                    COUNT(*) AS total_contracts,
+                    SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) AS high_risk_contracts,
+                    CAST(SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) AS REAL)
+                        / NULLIF(COUNT(*), 0) AS risk_rate
+                FROM contracts
+                WHERE contract_date >= ? AND contract_date < ?
+                    AND contract_date IS NOT NULL
+                GROUP BY DATE(contract_date)
+                ORDER BY date
+                """,
+                (f"{year}-01-01", f"{year + 1}-01-01"),
+            )
+            rows = cursor.fetchall()
+            return [
+                {
+                    "date": r[0],
+                    "total_contracts": r[1],
+                    "high_risk_contracts": r[2],
+                    "risk_rate": round(r[3] or 0, 4),
+                }
+                for r in rows
+            ]
+    except Exception as exc:
+        logger.error("calendar-heatmap error: %s", exc)
+        raise HTTPException(status_code=500, detail="Failed to fetch calendar heatmap")

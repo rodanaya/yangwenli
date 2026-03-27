@@ -12,25 +12,15 @@ import {
   Settings,
   ChevronLeft,
   ChevronRight,
-  Network,
-  Crosshair,
   Library,
   Briefcase,
   X,
-  History,
-  Info,
   FlaskConical,
   MessageSquarePlus,
   Shield,
   Search,
-  ClipboardCheck,
-  DollarSign,
-  Newspaper,
   Activity,
   Telescope,
-  LayoutGrid,
-  TrendingUp,
-  CalendarDays,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -67,53 +57,32 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
-// 5 sections -- editorial layout
+// Focused analyst workflow — 10 core items
 const NAV_SECTIONS: NavSectionDef[] = [
-  {
-    sectionKey: 'sections.portada',
-    items: [
-      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { i18nKey: 'reportCard', href: '/report-card', icon: ClipboardCheck, isHero: true, heroColor: '#c41e3a' },
-      { i18nKey: 'executive', href: '/executive-summary', icon: FileText },
-      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
-    ],
-  },
   {
     sectionKey: 'sections.investigar',
     items: [
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1', isHero: true, heroColor: '#c41e3a' },
       { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
-      { i18nKey: 'investigation', href: '/investigation', icon: Crosshair },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
   {
     sectionKey: 'sections.datos',
     items: [
+      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-      { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'network', href: '/network', icon: Network },
-      { i18nKey: 'moneyFlow', href: '/money-flow', icon: DollarSign },
-    ],
-  },
-  {
-    sectionKey: 'sections.visual',
-    items: [
       { i18nKey: 'seismograph', href: '/seismograph', icon: Activity },
       { i18nKey: 'telescope', href: '/telescope', icon: Telescope },
-      { i18nKey: 'institutionHeatmap', href: '/heatmap', icon: LayoutGrid },
-      { i18nKey: 'priceIntelligence', href: '/price-analysis', icon: TrendingUp },
-      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
     ],
   },
   {
     sectionKey: 'sections.plataforma',
     items: [
-      { i18nKey: 'model', href: '/model', icon: FlaskConical, isHero: true, heroColor: '#2563eb' },
+      { i18nKey: 'model', href: '/model', icon: FlaskConical },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-      { i18nKey: 'limitations', href: '/limitations', icon: Info },
       { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },

@@ -395,59 +395,61 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
     confirmed_count = 0
     dismissed_count = 0
     t1_reviewed_count = 0
+    pattern_counts: dict = {}
+    external_counts: dict = {"efos": 0, "sfp": 0}
+    elevated_value = 0.0
 
     if _table_exists(conn, "aria_queue"):
-        queue_total_row = conn.execute("SELECT COUNT(*) FROM aria_queue").fetchone()
-        queue_total = queue_total_row[0] if queue_total_row else 0
-
-        status_rows = conn.execute(
-            """
-            SELECT review_status, COUNT(*) as cnt
-            FROM aria_queue
-            GROUP BY review_status
-            """
-        ).fetchall()
-        for sr in status_rows:
-            s = sr["review_status"] or "pending"
-            if s in review_stats:
-                review_stats[s] = sr["cnt"]
-
+        # Single consolidated aggregation — replaces 10 sequential full-table scans
         try:
-            nv_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE new_vendor_risk = 1"
+            agg = conn.execute(
+                """
+                SELECT
+                    COUNT(*) AS total,
+                    SUM(CASE WHEN new_vendor_risk = 1 THEN 1 ELSE 0 END) AS new_vendor_count,
+                    SUM(CASE WHEN review_status NOT IN ('pending') AND review_status IS NOT NULL
+                             THEN 1 ELSE 0 END) AS reviewed_count,
+                    SUM(CASE WHEN review_status = 'pending' OR review_status IS NULL
+                             THEN 1 ELSE 0 END) AS pending_count,
+                    SUM(CASE WHEN review_status = 'confirmed' THEN 1 ELSE 0 END) AS confirmed_count,
+                    SUM(CASE WHEN review_status = 'dismissed' THEN 1 ELSE 0 END) AS dismissed_count,
+                    SUM(CASE WHEN review_status = 'reviewing' THEN 1 ELSE 0 END) AS reviewing_count,
+                    SUM(CASE WHEN ips_tier = 1
+                             AND review_status NOT IN ('pending') AND review_status IS NOT NULL
+                             THEN 1 ELSE 0 END) AS t1_reviewed_count,
+                    SUM(CASE WHEN is_efos_definitivo = 1 THEN 1 ELSE 0 END) AS efos_count,
+                    SUM(CASE WHEN is_sfp_sanctioned = 1 THEN 1 ELSE 0 END) AS sfp_count,
+                    SUM(CASE WHEN ips_tier IN (1, 2) THEN COALESCE(total_value_mxn, 0) ELSE 0 END)
+                        AS elevated_value
+                FROM aria_queue
+                """
             ).fetchone()
-            new_vendor_count = nv_row[0] if nv_row else 0
-        except Exception:
-            new_vendor_count = 0
-
-        # Review efficiency metrics (#64)
-        try:
-            rev_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE review_status != 'pending' AND review_status IS NOT NULL"
-            ).fetchone()
-            reviewed_count = rev_row[0] if rev_row else 0
-            conf_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE review_status = 'confirmed'"
-            ).fetchone()
-            confirmed_count = conf_row[0] if conf_row else 0
-            dism_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE review_status = 'dismissed'"
-            ).fetchone()
-            dismissed_count = dism_row[0] if dism_row else 0
-            t1_rev_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE ips_tier = 1 AND review_status != 'pending' AND review_status IS NOT NULL"
-            ).fetchone()
-            t1_reviewed_count = t1_rev_row[0] if t1_rev_row else 0
+            if agg:
+                queue_total = agg["total"] or 0
+                new_vendor_count = agg["new_vendor_count"] or 0
+                reviewed_count = agg["reviewed_count"] or 0
+                confirmed_count = agg["confirmed_count"] or 0
+                dismissed_count = agg["dismissed_count"] or 0
+                t1_reviewed_count = agg["t1_reviewed_count"] or 0
+                elevated_value = float(agg["elevated_value"] or 0)
+                review_stats = {
+                    "pending": agg["pending_count"] or 0,
+                    "confirmed": confirmed_count,
+                    "dismissed": dismissed_count,
+                    "reviewing": agg["reviewing_count"] or 0,
+                }
+                external_counts = {
+                    "efos": agg["efos_count"] or 0,
+                    "sfp": agg["sfp_count"] or 0,
+                }
         except Exception:
             pass
 
-        # Pattern counts and external flag counts
-        pattern_counts: dict = {}
-        external_counts: dict = {"efos": 0, "sfp": 0}
+        # Pattern breakdown — separate GROUP BY, still one query
         try:
             pattern_rows = conn.execute(
                 """
-                SELECT primary_pattern, COUNT(*) as cnt
+                SELECT primary_pattern, COUNT(*) AS cnt
                 FROM aria_queue
                 WHERE primary_pattern IS NOT NULL
                 GROUP BY primary_pattern
@@ -457,31 +459,8 @@ def get_aria_stats(conn: sqlite3.Connection = Depends(get_db_dep)):
             for pr in pattern_rows:
                 if pr["primary_pattern"]:
                     pattern_counts[pr["primary_pattern"]] = pr["cnt"]
-            efos_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE is_efos_definitivo = 1"
-            ).fetchone()
-            sfp_row = conn.execute(
-                "SELECT COUNT(*) FROM aria_queue WHERE is_sfp_sanctioned = 1"
-            ).fetchone()
-            external_counts["efos"] = efos_row[0] if efos_row else 0
-            external_counts["sfp"] = sfp_row[0] if sfp_row else 0
         except Exception:
             pass
-
-        # Total value at elevated risk (T1+T2)
-        elevated_value = 0.0
-        try:
-            ev_row = conn.execute(
-                "SELECT SUM(total_value_mxn) FROM aria_queue WHERE ips_tier IN (1, 2)"
-            ).fetchone()
-            elevated_value = float(ev_row[0] or 0)
-        except Exception:
-            pass
-
-    else:
-        pattern_counts = {}
-        external_counts = {"efos": 0, "sfp": 0}
-        elevated_value = 0.0
 
     result = {
         "latest_run": latest_run,

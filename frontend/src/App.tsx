@@ -62,11 +62,11 @@ const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const Telescope = lazy(() => import('@/pages/Telescope'))
 const Seismograph = lazy(() => import('@/pages/Seismograph'))
 
-// First-visit routing: redirect "/" to Intro for new users, Dashboard for returning users
+// First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
 function FirstVisitRedirect() {
   const seen = localStorage.getItem('rubli_seen_intro')
   if (!seen) return <Navigate to="/intro" replace />
-  return <Navigate to="/dashboard" replace />
+  return <Navigate to="/aria" replace />
 }
 
 // Enhanced QueryClient configuration for better caching and UX

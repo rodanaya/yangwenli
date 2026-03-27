@@ -19,7 +19,7 @@ export function RiskCalendarHeatmap({ year = new Date().getFullYear(), onDayClic
     queryKey: ['calendar-heatmap', year],
     queryFn: async () => {
       try {
-        const res = await api.get(`/api/v1/analysis/calendar-heatmap?year=${year}`)
+        const res = await api.get(`/analysis/calendar-heatmap?year=${year}`)
         return res.data as HeatmapDay[]
       } catch {
         return [] as HeatmapDay[]
