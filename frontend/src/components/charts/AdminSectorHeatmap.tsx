@@ -23,7 +23,6 @@ interface Administration {
 }
 
 const ADMINS: Administration[] = [
-  { name: 'Zedillo',     fullName: 'Ernesto Zedillo',     start: 1994, end: 2000, dataStart: 2002, party: 'PRI' },
   { name: 'Fox',         fullName: 'Vicente Fox',         start: 2000, end: 2006, dataStart: 2002, party: 'PAN' },
   { name: 'Calderon',    fullName: 'Felipe Calderon',     start: 2006, end: 2012, dataStart: 2006, party: 'PAN' },
   { name: 'Pena Nieto',  fullName: 'Enrique Pena Nieto',  start: 2012, end: 2018, dataStart: 2012, party: 'PRI' },

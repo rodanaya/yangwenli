@@ -21,7 +21,7 @@ const ADMIN_DATA = [
     contracts: 207659,
     avgRisk: 0.1272,
     hrPct: 10.85,
-    directAwardPct: 0.01,
+    directAwardPct: 40.19,
     totalBillions: 938.9,
     color: '#6366f1',
   },

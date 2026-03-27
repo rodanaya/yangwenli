@@ -105,6 +105,7 @@ import type {
   VendorSimilarCasesResponse,
   VendorNarrativeResponse,
   ContractHistogramResponse,
+  AdminBreakdownResponse,
 } from './types'
 
 // Re-export types that were moved from client.ts to types.ts for backward compatibility
@@ -891,6 +892,11 @@ export const analysisApi = {
    */
   async getYearOverYear(): Promise<{ data: YearOverYearChange[] }> {
     const { data } = await api.get('/analysis/year-over-year')
+    return data
+  },
+
+  async getAdminBreakdown(): Promise<AdminBreakdownResponse> {
+    const { data } = await api.get('/analysis/admin-breakdown')
     return data
   },
 

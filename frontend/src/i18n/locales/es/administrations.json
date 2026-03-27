@@ -70,5 +70,48 @@
     "insight_lowest_risk": "Era de Menor Riesgo",
     "insight_highest_da": "Mayor Adjudicación Directa",
     "insight_biggest_spender": "Mayor Gasto"
+  },
+  "editorial": {
+    "sectionTitle": "Perfil Investigativo",
+    "sectionSubtitle": "Patrones de riesgo identificados en 23 años de datos de contratación pública",
+    "fox": {
+      "headline": "Era Fox: Se establece la línea base — adjudicaciones directas al 65%",
+      "findings": "La administración de Fox (2002–2005) marca el inicio del registro sistemático de adquisiciones en COMPRANET. Con aproximadamente 550,000 contratos por un valor de 2.3 billones de pesos, la tasa de adjudicaciones directas promedió el 65%, estableciendo el parámetro del que se alejarían las administraciones posteriores. La calidad de los datos de este período es muy limitada (0.1% de cobertura RFC), lo que impide rastrear con precisión la identidad de proveedores y las redes de relacionamiento.",
+      "keyRisk": "Opacidad estructural: la casi total ausencia de RFC impide que el análisis de colusión y concentración sea confiable para la mayoría de los contratos de este período.",
+      "legacy": "La puntuación de riesgo promedio más baja de cualquier administración (0.25), aunque refleja tanto las limitaciones de los datos como el cumplimiento real — la línea base 2002–2010 debe leerse como estimación mínima, no como historial limpio."
+    },
+    "calderon": {
+      "headline": "Calderón: Contratación de seguridad se dispara en plena guerra contra el narco",
+      "findings": "La administración de Calderón (2006–2011) generó aproximadamente 620,000 contratos por un total de 3.1 billones de pesos, un incremento del 35% en gasto respecto a la era Fox. La contratación en seguridad y defensa se expandió considerablemente conforme el gobierno escaló los operativos militares contra los cárteles, concentrando contratos de gran escala en los sectores de Defensa y Gobernación, donde la competencia está estructuralmente limitada por requisitos de habilitación de seguridad. El riesgo promedio subió a 0.27.",
+      "keyRisk": "La contratación impulsada por razones de seguridad generó cobertura legítima para reducir la competencia: las tasas de adjudicación directa en el sector Defensa superaron el 80%, haciendo prácticamente imposible distinguir la confidencialidad necesaria de la irregularidad en la contratación.",
+      "legacy": "El gasto de 3.1 billones de pesos estableció un récord para la década de 2000, y el impulso presupuestal de la guerra contra el narco consolidó patrones institucionales —proveedores concentrados, altas tasas de adjudicación directa en defensa— que resultaron duraderos en administraciones posteriores."
+    },
+    "penaNieto": {
+      "headline": "Peña Nieto: La Estafa Maestra y la era de las empresas fantasma",
+      "findings": "La administración de Peña Nieto (2012–2017) supervisó aproximadamente 680,000 contratos por 2.8 billones de pesos, con un riesgo promedio de 0.30, el más alto de cualquier administración previa a AMLO. Este período vio emerger \"La Estafa Maestra\": una red de empresas fantasma que canalizó recursos públicos a través de universidades y dependencias estatales, desviando un estimado de 7,700 millones de pesos. El escándalo de la Casa Blanca vinculó directamente a familiares del presidente con contratistas gubernamentales como Grupo Higa y Constructora Teya.",
+      "keyRisk": "Infraestructura de empresas fantasma: la contratación se enrutó sistemáticamente a través de entidades sin operaciones reales, explotando vacíos regulatorios en la supervisión de subcontratación que los datos de COMPRANET por sí solos no alcanzan a exponer.",
+      "legacy": "La era Peña Nieto estableció el arquetipo moderno del fraude institucional en la contratación pública mexicana: no mediante robo burdo, sino a través de esquemas de subcontratación en capas que tomaron años de auditorías de la ASF y periodismo de investigación para desmantelar parcialmente."
+    },
+    "amlo": {
+      "headline": "AMLO: 78.9% de adjudicaciones directas — el máximo histórico en el registro moderno",
+      "findings": "La administración de AMLO (2018–2024) generó el mayor volumen de contratación de cualquier presidencia: aproximadamente 1.24 millones de contratos por 3.2 billones de pesos. La tasa de adjudicaciones directas alcanzó el 78.9%, la más alta registrada en todas las administraciones y muy por encima del criterio orientador de la OCDE del 30%. La contratación de emergencia por COVID-19 en 2020–2021 presentó irregularidades significativas en contratos del sector salud, con proveedores como Bruluart y DIMM recibiendo adjudicaciones de miles de millones de pesos mediante procesos expeditos con mínimo escrutinio competitivo. El riesgo promedio llegó a 0.31.",
+      "keyRisk": "La elusión sistemática de la licitación competitiva —justificada alternativamente como poderes de emergencia, austeridad o anticorrupción— creó paradójicamente las condiciones que los marcos de la OCDE identifican como patrones de contratación de mayor riesgo.",
+      "legacy": "Con 1.24 millones de contratos, el sexenio de AMLO representa aproximadamente el 40% de todos los registros de contratación en la base de datos RUBLI; la tasa excepcionalmente alta de adjudicaciones directas implica que una proporción desproporcionada de esos contratos carece de documentación competitiva suficiente para reconstruir la lógica de precios o detectar sobreprecio con posterioridad."
+    },
+    "sheinbaum": {
+      "headline": "Sheinbaum: Datos tempranos muestran un descenso en adjudicaciones directas",
+      "findings": "La administración de Sheinbaum (octubre de 2024 a la fecha) ha generado aproximadamente 92,000 contratos por 718,000 millones de pesos en su primer año parcial — un dato todavía prematuro para análisis de tendencias, pero notable por una tasa de adjudicaciones directas del 68.3%, considerablemente por debajo del pico de la era AMLO. La administración heredó las estructuras institucionales de contratación, las relaciones con proveedores y los perfiles de riesgo precomputados construidos bajo el gobierno anterior; cómo evolucionen a lo largo de un sexenio completo determinará si la reducción refleja una reforma estructural o un artefacto estadístico de los primeros meses del período.",
+      "keyRisk": "Riesgo de continuidad: el gabinete de Sheinbaum mantiene un traslape institucional significativo con la administración de AMLO, y los proveedores, dependencias y normas procedimentales consolidados durante seis años no se reinician con la toma de protesta.",
+      "legacy": "Aún pronto para evaluar de forma definitiva — pero con 68.3% de adjudicaciones directas frente al 78.9% de AMLO, los primeros meses representan la tasa más baja desde la era Calderón y el primer descenso estadísticamente significativo en una década."
+    }
+  },
+  "vendorSection": {
+    "title": "Principales Proveedores por Administración",
+    "subtitle": "Mayores receptores de contratos federales, por sexenio",
+    "marketShare": "del gasto de la era",
+    "noData": "Datos insuficientes para este período",
+    "contracts": "contratos",
+    "riskScore": "riesgo prom.",
+    "gtWarning": "Señalado en casos verificados"
   }
 }

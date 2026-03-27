@@ -2383,3 +2383,7 @@ export interface VendorNarrativeResponse {
   total_value_mxn: number
   years: VendorNarrativeYear[]
 }
+
+export interface AdminVendorEntry { vendor_name: string; total_mxn: number; contracts: number; avg_risk: number | null }
+export interface AdminEraStats { era: string; year_start: number; year_end: number; top_vendors: AdminVendorEntry[]; gt_case_count: number; est_fraud_mxn: number; hhi: number; dec_spike_pct: number }
+export interface AdminBreakdownResponse { eras: AdminEraStats[]; cached_at: string | null }

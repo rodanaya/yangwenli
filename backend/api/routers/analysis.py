@@ -11,7 +11,7 @@ import json
 import threading
 import time as _time
 from typing import Optional, List, Dict, Any, Tuple
-from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request
+from fastapi import APIRouter, Depends, HTTPException, Query, Path, Request, Response
 from pydantic import BaseModel, Field
 from datetime import datetime, timedelta
 
@@ -3962,6 +3962,182 @@ def get_price_anomalies(
     except Exception as exc:
         logger.error("price-anomalies error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch price anomalies")
+
+
+class AdminVendorEntry(BaseModel):
+    vendor_name: str
+    total_mxn: float
+    contracts: int
+    avg_risk: Optional[float] = None
+
+
+class AdminEraStats(BaseModel):
+    era: str
+    year_start: int
+    year_end: int
+    top_vendors: List[AdminVendorEntry]
+    gt_case_count: int
+    est_fraud_mxn: float
+    hhi: float
+    dec_spike_pct: float
+
+
+class AdminBreakdownResponse(BaseModel):
+    eras: List[AdminEraStats]
+    cached_at: Optional[str] = None
+
+
+_ADMIN_ERAS = [
+    ("fox",         2002, 2005),
+    ("calderon",    2006, 2011),
+    ("pena_nieto",  2012, 2017),
+    ("amlo",        2018, 2024),
+    ("sheinbaum",   2025, 2030),
+]
+
+_admin_breakdown_cache = SimpleCache()
+
+
+@router.get("/admin-breakdown", response_model=AdminBreakdownResponse)
+def get_admin_breakdown(response: Response):
+    """Per-administration vendor concentration and corruption statistics."""
+    cache_key = "admin_breakdown"
+
+    # Check in-memory cache first
+    cached = _admin_breakdown_cache.get(cache_key)
+    if cached is not None:
+        response.headers["Cache-Control"] = "public, max-age=3600"
+        return cached
+
+    with get_db() as conn:
+        # Check precomputed_stats table
+        try:
+            row = conn.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = ?",
+                (cache_key,)
+            ).fetchone()
+            if row:
+                payload = json.loads(row["stat_value"])
+                result = AdminBreakdownResponse(**payload)
+                _admin_breakdown_cache.set(cache_key, result, ttl_seconds=3600)
+                response.headers["Cache-Control"] = "public, max-age=3600"
+                return result
+        except Exception as pc_err:
+            logger.debug("admin_breakdown precomputed_stats skip: %s", pc_err)
+
+        # Live computation
+        eras_out: List[AdminEraStats] = []
+        for era_name, yr_start, yr_end in _ADMIN_ERAS:
+            # Top 6 vendors by spend (exclude >100B outliers)
+            vendor_rows = conn.execute(
+                """
+                SELECT
+                    v.vendor_name,
+                    SUM(c.amount_mxn) AS total_mxn,
+                    COUNT(*) AS contracts,
+                    AVG(c.risk_score) AS avg_risk
+                FROM contracts c
+                JOIN vendors v ON c.vendor_id = v.id
+                WHERE c.contract_year BETWEEN ? AND ?
+                  AND c.amount_mxn > 0
+                  AND c.amount_mxn <= 100000000000
+                GROUP BY c.vendor_id
+                ORDER BY total_mxn DESC
+                LIMIT 6
+                """,
+                (yr_start, yr_end)
+            ).fetchall()
+
+            top_vendors = [
+                AdminVendorEntry(
+                    vendor_name=r["vendor_name"],
+                    total_mxn=float(r["total_mxn"]),
+                    contracts=int(r["contracts"]),
+                    avg_risk=float(r["avg_risk"]) if r["avg_risk"] is not None else None,
+                )
+                for r in vendor_rows
+            ]
+
+            # HHI: sum of (vendor_share)^2 across all vendors in era
+            hhi_row = conn.execute(
+                """
+                WITH era_total AS (
+                    SELECT SUM(amount_mxn) AS total
+                    FROM contracts
+                    WHERE contract_year BETWEEN ? AND ?
+                      AND amount_mxn > 0 AND amount_mxn <= 100000000000
+                ),
+                vendor_shares AS (
+                    SELECT
+                        vendor_id,
+                        SUM(amount_mxn) * 1.0 / NULLIF((SELECT total FROM era_total), 0) AS share
+                    FROM contracts
+                    WHERE contract_year BETWEEN ? AND ?
+                      AND amount_mxn > 0 AND amount_mxn <= 100000000000
+                    GROUP BY vendor_id
+                )
+                SELECT COALESCE(SUM(share * share), 0) AS hhi
+                FROM vendor_shares
+                """,
+                (yr_start, yr_end, yr_start, yr_end)
+            ).fetchone()
+            hhi = float(hhi_row["hhi"]) if hhi_row else 0.0
+
+            # December spike percentage
+            dec_row = conn.execute(
+                """
+                SELECT
+                    COALESCE(SUM(CASE WHEN strftime('%m', contract_date) = '12'
+                                     THEN amount_mxn ELSE 0 END), 0) AS dec_total,
+                    COALESCE(SUM(amount_mxn), 0) AS era_total
+                FROM contracts
+                WHERE contract_year BETWEEN ? AND ?
+                  AND amount_mxn > 0 AND amount_mxn <= 100000000000
+                """,
+                (yr_start, yr_end)
+            ).fetchone()
+            dec_spike_pct = 0.0
+            if dec_row and dec_row["era_total"]:
+                dec_spike_pct = float(dec_row["dec_total"]) / float(dec_row["era_total"]) * 100
+
+            # GT case count
+            gt_case_count = 0
+            est_fraud_mxn = 0.0
+            try:
+                gt_row = conn.execute(
+                    """
+                    SELECT
+                        COUNT(*) AS case_count,
+                        COALESCE(SUM(estimated_fraud_mxn), 0) AS fraud_sum
+                    FROM ground_truth_cases
+                    WHERE year_start BETWEEN ? AND ?
+                    """,
+                    (yr_start, yr_end)
+                ).fetchone()
+                if gt_row:
+                    gt_case_count = int(gt_row["case_count"])
+                    est_fraud_mxn = float(gt_row["fraud_sum"])
+            except Exception:
+                pass  # Table may not exist
+
+            eras_out.append(AdminEraStats(
+                era=era_name,
+                year_start=yr_start,
+                year_end=yr_end,
+                top_vendors=top_vendors,
+                gt_case_count=gt_case_count,
+                est_fraud_mxn=est_fraud_mxn,
+                hhi=round(hhi, 6),
+                dec_spike_pct=round(dec_spike_pct, 2),
+            ))
+
+    result = AdminBreakdownResponse(
+        eras=eras_out,
+        cached_at=datetime.utcnow().isoformat(),
+    )
+    _admin_breakdown_cache.set(cache_key, result, ttl_seconds=3600)
+    response.headers["Cache-Control"] = "public, max-age=3600"
+    return result
 
 
 @router.get("/price-sector-baselines")

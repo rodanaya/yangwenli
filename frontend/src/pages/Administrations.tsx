@@ -57,6 +57,8 @@ import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
 import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
+import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
+import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
 
 // =============================================================================
 // Constants
@@ -69,6 +71,24 @@ const ADMINISTRATIONS = [
   { name: 'AMLO',      fullName: 'Andres Manuel Lopez Obrador',   start: 2018, end: 2024, dataStart: 2018, color: '#4ade80', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
   { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum',             start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
 ] as const
+
+// Map AdminName to backend era key
+const ERA_KEYS: Record<string, string> = {
+  Fox: 'fox',
+  Calderon: 'calderon',
+  'Pena Nieto': 'pena_nieto',
+  AMLO: 'amlo',
+  Sheinbaum: 'sheinbaum',
+}
+
+// Map AdminName to i18n editorial key
+const ERA_EDITORIAL_KEYS: Record<string, string> = {
+  Fox: 'fox',
+  Calderon: 'calderon',
+  'Pena Nieto': 'penaNieto',
+  AMLO: 'amlo',
+  Sheinbaum: 'sheinbaum',
+}
 
 // Party color mapping for badge/stripe
 const PARTY_COLORS: Record<string, string> = {
@@ -103,14 +123,6 @@ const MATRIX_SECTORS = [
 ]
 
 type AdminName = typeof ADMINISTRATIONS[number]['name']
-
-const ADMIN_NARRATIVES: Record<AdminName, string> = {
-  Fox: "Vicente Fox's term (2000–2006) marked the PAN's first presidential win after 71 years of PRI rule and the transition to COMPRANET digital procurement records. Data quality improves significantly from 2003 onward. Technology sector procurement expanded notably as e-government initiatives launched.",
-  Calderon: "The Calderón administration (2006–2012) saw significant infrastructure and security procurement driven by the drug war. Single-bid rates remained elevated across defense-adjacent sectors. PEMEX expanded its contractor base during this period; several of these contractor relationships continued into the Peña Nieto era, where major corruption investigations (including Odebrecht bribery payments to PEMEX officials) were later documented.",
-  'Pena Nieto': "Enrique Peña Nieto's administration (2012–2018) is the best-documented period for corruption cases in this dataset. IMSS ghost company networks, La Estafa Maestra, and the Casa Blanca conflict of interest all originate here. The PRI's return to power coincided with record-high vendor concentration in health and agriculture.",
-  AMLO: "Under López Obrador (2018–2024), direct award contracts reached historic highs as austerity policies consolidated procurement through fewer channels. Health and energy sectors showed elevated risk patterns, particularly in COVID-19 emergency spending and agricultural distribution (Segalmex fraud). Note: improved COMPRANET data quality in this era (higher RFC coverage) may also contribute to more complete risk detection compared to earlier periods.",
-  Sheinbaum: "Claudia Sheinbaum took office in October 2024. COMPRANET data for this administration is currently limited to a partial year. Risk patterns are preliminary and should not be compared to full six-year terms. Trends will become meaningful as the dataset expands through 2025–2030.",
-}
 
 // Comparison table metric definitions — use fields from AdminAgg
 const ADMIN_METRIC_KEYS = [
@@ -291,6 +303,7 @@ export default function Administrations() {
   const [selectedAdmin, setSelectedAdmin] = useState<AdminName>('AMLO')
   const [activeTab, setActiveTab] = useState<'overview' | 'patterns' | 'political' | 'compare'>('overview')
   const [matrixMetric, setMatrixMetric] = useState<MatrixMetric>('risk')
+  const [trajectoryMetric, setTrajectoryMetric] = useState<'avg_risk' | 'direct_award_pct' | 'high_risk_pct'>('avg_risk')
 
   // Data queries
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
@@ -317,6 +330,12 @@ export default function Administrations() {
     staleTime: 30 * 60 * 1000,
   })
 
+  const { data: breakdownResp, isLoading: breakdownLoading } = useQuery({
+    queryKey: ['analysis', 'admin-breakdown'],
+    queryFn: () => analysisApi.getAdminBreakdown(),
+    staleTime: 60 * 60 * 1000,
+  })
+
   const yoyData = yoyResp?.data ?? []
   const sectorYearData = sectorYearResp?.data ?? []
   const events = eventsResp?.events ?? []
@@ -336,6 +355,38 @@ export default function Administrations() {
 
   const selectedAgg = adminAggs.find((a) => a.name === selectedAdmin)
   const selectedMeta = ADMINISTRATIONS.find((a) => a.name === selectedAdmin) ?? ADMINISTRATIONS[0]
+
+  // Build AdminRiskTrajectory lines — one per administration, aligned to term year
+  const adminTrajectoryLines = useMemo(() =>
+    ADMINISTRATIONS.map((a) => {
+      const agg = adminAggs.find((x) => x.name === a.name)
+      return {
+        name: a.name,
+        color: a.color,
+        startYear: a.dataStart,
+        points: (agg?.years ?? []).map((y) => ({
+          year: y.year,
+          avg_risk: y.avg_risk,
+          direct_award_pct: y.direct_award_pct,
+          high_risk_pct: y.high_risk_pct,
+          contracts: y.contracts,
+        })),
+      }
+    }),
+    [adminAggs],
+  )
+
+  // Selected admin top vendors from breakdown endpoint
+  const selectedVendors = useMemo(() => {
+    const eraKey = ERA_KEYS[selectedAdmin]
+    const era = breakdownResp?.eras.find((e) => e.era === eraKey)
+    return (era?.top_vendors ?? []).map((v) => ({
+      name: v.vendor_name,
+      total_mxn: v.total_mxn,
+      contracts: v.contracts,
+      risk_pct: (v.avg_risk ?? 0) * 100,
+    }))
+  }, [breakdownResp, selectedAdmin])
 
   // Sector heatmap data for selected admin
   const sectorHeatmap = useMemo(() => {
@@ -605,7 +656,47 @@ export default function Administrations() {
       </div>
 
       {activeTab === 'patterns' && (
-        <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
+        <>
+          <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
+
+          {/* Risk Trajectory by Term Year — all 5 administrations overlaid */}
+          <div className="card mt-6">
+            <CardHeader className="pb-2">
+              <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
+                Comparación · Trayectoria de Riesgo
+              </div>
+              <CardTitle className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
+                Risk Trajectory by Term Year — All Administrations
+                <div className="flex gap-1">
+                  {(['avg_risk', 'direct_award_pct', 'high_risk_pct'] as const).map((m) => (
+                    <button
+                      key={m}
+                      onClick={() => setTrajectoryMetric(m)}
+                      className={cn(
+                        'text-[10px] px-2 py-0.5 rounded border font-mono transition-colors',
+                        trajectoryMetric === m
+                          ? 'border-accent bg-accent/10 text-accent'
+                          : 'border-border text-text-muted hover:border-accent/50',
+                      )}
+                    >
+                      {m === 'avg_risk' ? 'Risk' : m === 'direct_award_pct' ? 'Direct Award' : 'High Risk'}
+                    </button>
+                  ))}
+                </div>
+              </CardTitle>
+              <p className="text-xs text-text-muted mt-1">
+                Each line traces one administration's metric across term years 1–6. Dashed = partial term data.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <AdminRiskTrajectory
+                administrations={adminTrajectoryLines}
+                metric={trajectoryMetric}
+                loading={yoyLoading}
+              />
+            </CardContent>
+          </div>
+        </>
       )}
 
       {activeTab === 'political' && <PoliticalCycleView />}
@@ -778,18 +869,35 @@ export default function Administrations() {
 
       {/* Editorial Narrative — INVESTIGACION */}
       <motion.div
-        className="relative border-l-4 border-accent bg-background-card rounded-r-lg px-5 py-4"
+        className="relative border-l-4 border-accent bg-background-card rounded-r-lg px-5 py-4 space-y-2"
         variants={fadeIn}
         initial="initial"
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
       >
-        <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-2">
-          Investigación
+        <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent">
+          {t('editorial.sectionTitle')}
         </div>
-        <p style={{ fontFamily: 'var(--font-family-serif)' }} className="text-sm text-text-secondary leading-relaxed">
-          {ADMIN_NARRATIVES[selectedAdmin]}
+        <p className="text-xs font-mono font-semibold text-text-primary">
+          {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.headline`)}
         </p>
+        <p style={{ fontFamily: 'var(--font-family-serif)' }} className="text-sm text-text-secondary leading-relaxed">
+          {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.findings`)}
+        </p>
+        <div className="pt-1 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-risk-high mb-1">Key Risk</p>
+            <p className="text-xs text-text-muted leading-relaxed">
+              {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.keyRisk`)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted mb-1">Legacy</p>
+            <p className="text-xs text-text-muted leading-relaxed">
+              {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.legacy`)}
+            </p>
+          </div>
+        </div>
       </motion.div>
 
       {/* Incomplete data warning for Sheinbaum */}
@@ -1293,6 +1401,25 @@ export default function Administrations() {
               <HardcodedEventsTimeline adminName={selectedAdmin} />
             </div>
           </div>
+        </CardContent>
+      </div>
+
+      {/* Top Vendors by Administration */}
+      <div className="card">
+        <CardHeader className="pb-2">
+          <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
+            {t('vendorSection.title')}
+          </div>
+          <CardTitle className="text-sm font-mono text-text-primary">
+            {t('vendorSection.subtitle')}
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <AdminVendorBreakdown
+            vendors={selectedVendors}
+            eraColor={selectedMeta.color}
+            loading={breakdownLoading}
+          />
         </CardContent>
       </div>
 

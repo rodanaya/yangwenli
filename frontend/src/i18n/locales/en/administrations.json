@@ -70,5 +70,48 @@
     "insight_lowest_risk": "Lowest Risk Era",
     "insight_highest_da": "Highest Direct Awards",
     "insight_biggest_spender": "Biggest Spender"
+  },
+  "editorial": {
+    "sectionTitle": "Investigative Profile",
+    "sectionSubtitle": "Risk patterns identified across 23 years of procurement data",
+    "fox": {
+      "headline": "Fox Era: Baseline Established — Direct Awards at 65%",
+      "findings": "The Fox administration (2002–2005) marks the beginning of COMPRANET's systematic procurement records. With approximately 550,000 contracts worth 2.3 trillion MXN, direct award rates averaged 65% — establishing the benchmark from which later administrations would diverge. Data quality for this period is severely limited (0.1% RFC coverage), meaning many vendor identities and network relationships cannot be fully traced.",
+      "keyRisk": "Structural opacity: the near-total absence of RFC identifiers makes collusion and concentration analysis unreliable for the majority of this period's contracts.",
+      "legacy": "The lowest average risk score of any administration (0.25), though this reflects data incompleteness as much as genuine compliance — the 2002–2010 baseline should be read as a floor estimate, not a clean bill of health."
+    },
+    "calderon": {
+      "headline": "Calderón: Defense Procurement Surge Amid the Drug War",
+      "findings": "The Calderón administration (2006–2011) produced approximately 620,000 contracts totaling 3.1 trillion MXN — a 35% increase in total spend over the Fox era. Security and defense procurement expanded sharply as the government escalated military deployments against drug cartels, concentrating large contracts in Defensa and Gobernación sectors where competition is structurally limited by security clearance requirements. Average risk scores edged upward to 0.27.",
+      "keyRisk": "Security-driven procurement created legitimate cover for reduced competition: Defensa sector direct award rates exceeded 80%, making it structurally difficult to distinguish necessary secrecy from procurement irregularity.",
+      "legacy": "The 3.1 trillion MXN spend set a single-term record for the 2000s, with the drug war funding surge creating institutional patterns — concentrated vendors, high direct award rates in defense — that proved durable across subsequent administrations."
+    },
+    "penaNieto": {
+      "headline": "Peña Nieto: La Estafa Maestra and the Ghost Company Era",
+      "findings": "The Peña Nieto administration (2012–2017) oversaw approximately 680,000 contracts worth 2.8 trillion MXN, with an average risk score of 0.30 — the highest of any pre-AMLO administration. This period saw the emergence of \"La Estafa Maestra\": a network of shell companies funneling public funds through universities and state agencies, ultimately diverting an estimated 7.7 billion MXN. The Casa Blanca conflict-of-interest scandal linked presidential family members directly to government contractors Grupo Higa and Constructora Teya.",
+      "keyRisk": "Ghost company infrastructure: procurement was systematically routed through entities with no real operations, exploiting regulatory gaps in subcontracting oversight that COMPRANET data alone cannot fully expose.",
+      "legacy": "The Peña Nieto era established the modern archetype of institutional procurement fraud in Mexico — not through crude theft, but through layered subcontracting schemes that took years of auditing by the ASF and investigative journalists to partially unravel."
+    },
+    "amlo": {
+      "headline": "AMLO: 78.9% Direct Awards — Highest in the Modern Record",
+      "findings": "The AMLO administration (2018–2024) generated the largest procurement volume of any presidency: approximately 1.24 million contracts worth 3.2 trillion MXN. The direct award rate reached 78.9% — the highest recorded across all five administrations and well above the OECD guideline of 30%. Emergency COVID-19 procurement in 2020–2021 flagged significant irregularities in health-sector contracts, with vendors such as Bruluart and DIMM receiving multi-billion-peso awards through expedited processes with minimal competitive scrutiny. Average risk score reached 0.31.",
+      "keyRisk": "The systematic bypassing of competitive tendering — justified variously as emergency powers, austerity, or anti-corruption — paradoxically created conditions that OECD frameworks identify as among the highest-risk procurement patterns.",
+      "legacy": "With 1.24 million contracts, AMLO's term accounts for roughly 40% of all procurement records in the RUBLI dataset; the exceptionally high direct award rate means a disproportionate share of those contracts lack the competitive documentation needed to reconstruct pricing rationale or detect overpricing after the fact."
+    },
+    "sheinbaum": {
+      "headline": "Sheinbaum: Early Data Shows a Declining Direct Award Rate",
+      "findings": "The Sheinbaum administration (October 2024–present) has generated approximately 92,000 contracts worth 718 billion MXN in its first partial year — a data point too early for trend analysis but notable for a direct award rate of 68.3%, meaningfully below the AMLO-era peak. The administration inherited procurement institutional structures, vendor relationships, and precomputed risk profiles built under the prior government; how these evolve over a full term will determine whether the rate reduction reflects structural reform or statistical artifact of the term's early months.",
+      "keyRisk": "Continuity risk: the Sheinbaum cabinet carries over significant institutional overlap with the AMLO administration, and the vendors, agencies, and procedural norms established over six years do not reset at inauguration.",
+      "legacy": "Too early to assess definitively — but with 68.3% direct awards versus AMLO's 78.9%, the opening months represent the lowest direct award rate since the Calderón era and the first statistically meaningful decline in a decade."
+    }
+  },
+  "vendorSection": {
+    "title": "Top Vendors by Administration",
+    "subtitle": "Largest recipients of federal contracts, by presidential term",
+    "marketShare": "of era spend",
+    "noData": "Insufficient data for this period",
+    "contracts": "contracts",
+    "riskScore": "avg. risk",
+    "gtWarning": "Flagged in ground truth"
   }
 }
