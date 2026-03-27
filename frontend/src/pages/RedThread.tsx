@@ -678,7 +678,7 @@ function ChapterVerdict({
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="editorial-label text-text-muted mb-2">Risk Indicator Score</p>
-            <p className="font-serif text-7xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
+            <p className="font-serif text-4xl sm:text-5xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
               {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
             </p>
             <p className="text-text-muted text-sm mt-1">out of 100</p>

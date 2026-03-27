@@ -532,7 +532,7 @@ export default function Journalists() {
 
               <div className="text-right lg:text-left flex-shrink-0">
                 <div
-                  className="text-6xl sm:text-7xl lg:text-8xl font-black leading-none"
+                  className="text-4xl sm:text-5xl lg:text-6xl font-black leading-none"
                   style={{ color: '#dc2626' }}
                 >
                   <AnimatedNumber value={81.9} decimals={1} suffix="%" duration={2000} />

@@ -277,7 +277,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
           className="mb-8"
         >
-          <div className={cn('text-6xl sm:text-7xl xl:text-8xl font-black tracking-tight', story.leadStat.color)}>
+          <div className={cn('text-4xl sm:text-5xl xl:text-6xl font-black tracking-tight', story.leadStat.color)}>
             {parsed ? (
               <AnimatedNumber
                 value={parsed.numeric}
@@ -581,7 +581,7 @@ export default function StoryNarrative() {
   if (!story) {
     return (
       <div className="max-w-3xl mx-auto py-24 px-6 text-center">
-        <h1 className="text-2xl font-bold text-text-primary mb-4">Story not found</h1>
+        <p className="text-2xl font-bold text-text-primary mb-4">Story not found</p>
         <p className="text-text-secondary mb-6">
           The story &quot;{slug}&quot; could not be found.
         </p>

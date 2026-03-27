@@ -6,7 +6,6 @@ import { RISK_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 interface InvestigationLedeProps {
-  vendorName: string
   riskLevel: 'critical' | 'high' | 'medium' | 'low'
   topFinding: string
   sector: string
@@ -24,7 +23,6 @@ const RISK_LABELS: Record<string, string> = {
 }
 
 export default function InvestigationLede({
-  vendorName,
   riskLevel,
   topFinding,
   sector,
@@ -50,14 +48,6 @@ export default function InvestigationLede({
         {sector && <> &middot; {sector.toUpperCase()}</>}
         {yearsActive && <> &middot; {yearsActive}</>}
       </p>
-
-      {/* Vendor name — serif */}
-      <h2
-        className="text-2xl font-bold text-white leading-tight"
-        style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
-      >
-        {vendorName}
-      </h2>
 
       {/* Lede sentence */}
       <p className="text-sm text-zinc-300 mt-1 leading-relaxed">

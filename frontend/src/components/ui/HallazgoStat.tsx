@@ -28,7 +28,7 @@ export function HallazgoStat({
       style={style}
     >
       <div
-        className="text-5xl font-bold text-text-primary leading-none"
+        className="text-3xl sm:text-4xl font-bold text-text-primary leading-none"
         style={{ fontFamily: "var(--font-family-serif)" }}
       >
         {value}

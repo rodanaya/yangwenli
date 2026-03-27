@@ -1835,7 +1835,7 @@ export default function Intro() {
       >
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <h2
-            className="gsap-reveal text-3xl sm:text-4xl lg:text-5xl font-black mb-6 leading-tight"
+            className="gsap-reveal text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em' }}
           >
             {isEn ? 'Start investigating' : 'Empieza a investigar'}

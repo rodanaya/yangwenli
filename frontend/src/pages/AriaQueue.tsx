@@ -903,7 +903,7 @@ export default function AriaPage() {
           <section>
             <div className="flex items-center gap-2 mb-4">
               <AlertTriangle className="h-4 w-4 text-orange-400" />
-              <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
+              <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
                 {t('patternSection.title')}
               </h2>
             </div>
@@ -966,7 +966,7 @@ export default function AriaPage() {
         <section>
           <div className="flex items-center gap-2 mb-4">
             <Crosshair className="h-4 w-4 text-red-400" />
-            <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
+            <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
               {t('threatLevels')}
             </h2>
           </div>
@@ -1060,7 +1060,7 @@ export default function AriaPage() {
               <div>
                 <div className="flex items-center gap-2 mb-1">
                   <TrendingUp className="h-4 w-4 text-red-400" />
-                  <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-red-400 font-bold">
+                  <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-red-400 font-bold">
                     {t('tierSection.objectives')}
                   </h2>
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
@@ -1107,7 +1107,7 @@ export default function AriaPage() {
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-4 w-4 text-text-muted" />
-                <h2 className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
+                <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
                   {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : t('queueSection.title')}
                 </h2>
               </div>

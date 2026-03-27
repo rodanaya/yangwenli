@@ -1209,7 +1209,7 @@ export default function ModelTransparency() {
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <div className="flex items-center gap-4">
-            <h1 className="text-xl font-bold text-text-primary">{t('modelTransparency.pageTitle')}</h1>
+            <h2 className="text-xl font-bold text-text-primary">{t('modelTransparency.pageTitle')}</h2>
             <Badge variant="outline" className="text-xs tabular-nums gap-1 border-risk-low/30">
               <Brain className="h-3 w-3 text-risk-low" aria-hidden="true" />
               {modelMeta

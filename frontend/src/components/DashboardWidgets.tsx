@@ -168,9 +168,9 @@ export const PageHero = memo(function PageHero({
         <Skeleton className="h-14 w-96" />
       ) : (
         <div>
-          <h1 className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
+          <p className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
             {headline}
-          </h1>
+          </p>
           <p className="text-lg text-text-muted mt-1 font-medium">{subtitle}</p>
         </div>
       )}

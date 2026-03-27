@@ -1319,13 +1319,12 @@ export function VendorProfile() {
 
       {/* Investigation Lede — newspaper-style opener */}
       <InvestigationLede
-        vendorName={toTitleCase(vendor.name)}
         riskLevel={riskLevel}
         topFinding={
           (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50
-            ? `${(vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0)}% adjudicacion directa`
+            ? `${(vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0)}% adjudicación directa`
             : riskLevel === 'critical' || riskLevel === 'high'
-              ? `Riesgo ${riskLevel} detectado por modelo v6.0`
+              ? `Riesgo ${riskLevel} detectado por modelo v6.5`
               : `${vendor.total_contracts.toLocaleString()} contratos analizados`
         }
         sector={vendor.primary_sector_name ?? ''}
