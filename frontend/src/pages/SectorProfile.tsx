@@ -451,7 +451,7 @@ export function SectorProfile() {
                   Perfil Sectorial
                 </p>
                 <h1
-                  className="text-3xl md:text-4xl font-bold text-text-primary leading-tight capitalize"
+                  className="text-2xl font-bold text-text-primary leading-tight capitalize"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {sector.name}

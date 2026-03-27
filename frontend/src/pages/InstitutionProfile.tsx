@@ -543,7 +543,7 @@ export function InstitutionProfile() {
 
         {/* Large serif name */}
         <h1
-          className="text-4xl sm:text-5xl font-bold text-text-primary leading-[1.1] tracking-tight mb-1"
+          className="text-2xl font-bold text-text-primary leading-[1.1] tracking-tight mb-1"
           style={{ fontFamily: "var(--font-family-serif)" }}
         >
           {toTitleCase(institution.name)}

@@ -123,7 +123,7 @@
     "title": "Cómo Usar Este Flujo de Trabajo",
     "step1": {
       "label": "Revisar",
-      "desc": "Lee el resumen del caso y examina los contratos vinculados. Revisa la distribución de puntuaciones de riesgo."
+      "desc": "Lea el resumen del caso y examine los contratos vinculados. Revise la distribución de puntuaciones de riesgo."
     },
     "step2": {
       "label": "Corroborar",
@@ -301,10 +301,10 @@
   "verify": {
     "heading": "Cómo verificar esta pista",
     "toggle": "▸ Cómo verificar",
-    "step1": "Busca en COMPRANET (compranet.hacienda.gob.mx) el RFC o nombre completo del proveedor para acceder a los registros de contratos originales",
-    "step2": "Verifica en la lista SAT EFOS (sat.gob.mx) si el proveedor está clasificado como empresa fantasma",
-    "step3": "Revisa los informes de auditoría de la ASF (asf.gob.mx) para la institución contratante en el año correspondiente",
-    "step4": "Solicita documentos a través de la Plataforma Nacional de Transparencia (infomex.gob.mx) bajo los artículos 70-73 de la LGTAIP",
+    "step1": "Busque en COMPRANET (compranet.hacienda.gob.mx) el RFC o nombre completo del proveedor para acceder a los registros de contratos originales",
+    "step2": "Verifique en la lista SAT EFOS (sat.gob.mx) si el proveedor está clasificado como empresa fantasma",
+    "step3": "Revise los informes de auditoría de la ASF (asf.gob.mx) para la institución contratante en el año correspondiente",
+    "step4": "Solicite documentos a través de la Plataforma Nacional de Transparencia (infomex.gob.mx) bajo los artículos 70-73 de la LGTAIP",
     "editorial": "Cita sugerida: 'De acuerdo con el análisis de contrataciones de RUBLI, los contratos adjudicados a [proveedor] muestran patrones de compra estadísticamente similares a casos documentados de corrupción (indicador de riesgo: [X]/1.0). Esto no constituye prueba de irregularidades y requiere corroboración periodística.'",
     "disclaimer": "Los indicadores de riesgo son estadísticos, no determinaciones legales. Las puntuaciones altas indican similitud con patrones de corrupción documentada y requieren verificación independiente antes de su publicación."
   },

@@ -125,7 +125,7 @@ function ChapterSubject({ vendor, aria }: {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="font-serif text-5xl md:text-7xl font-bold text-white leading-tight mb-8"
+        className="font-serif text-2xl md:text-3xl font-bold text-white leading-tight mb-8"
         style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
       >
         {vendor.name}
@@ -252,7 +252,7 @@ function ChapterTimeline({ contracts }: {
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
       <ChapterLabel>Chapter II · The Timeline</ChapterLabel>
-      <h2 className="font-serif text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         {formatNumber(contracts.length)} Contracts, {minYear}–{maxYear}
       </h2>
       <p className="text-text-muted mb-12 max-w-xl">
@@ -357,7 +357,7 @@ function ChapterPattern({ waterfall, ariaPattern }: {
   return (
     <section id="chapter-pattern" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>Chapter III · The Pattern</ChapterLabel>
-      <h2 className="font-serif text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         What the Algorithm Found
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -452,7 +452,7 @@ function ChapterNetwork({ vendorId, vendor }: {
   return (
     <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>Chapter IV · The Network</ChapterLabel>
-      <h2 className="font-serif text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         Connections & Relationships
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -463,7 +463,7 @@ function ChapterNetwork({ vendorId, vendor }: {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-background border border-border rounded-xl p-6">
           <p className="editorial-label text-text-muted mb-2">Institutions Served</p>
-          <p className="text-4xl font-black text-white tabular-nums">{formatNumber(vendor.total_institutions)}</p>
+          <p className="text-2xl font-bold text-white tabular-nums">{formatNumber(vendor.total_institutions)}</p>
           <AnnotationNote>
             {vendor.total_institutions <= 3
               ? 'Very few institutions — possible institutional capture.'
@@ -475,7 +475,7 @@ function ChapterNetwork({ vendorId, vendor }: {
 
         <div className="bg-background border border-border rounded-xl p-6">
           <p className="editorial-label text-text-muted mb-2">Sectors Active</p>
-          <p className="text-4xl font-black text-white tabular-nums">{vendor.sectors_count}</p>
+          <p className="text-2xl font-bold text-white tabular-nums">{vendor.sectors_count}</p>
           <AnnotationNote>
             {vendor.sectors_count <= 1
               ? 'Single-sector presence — typical for specialists.'
@@ -545,7 +545,7 @@ function ChapterMoney({ timeline }: {
   return (
     <section id="chapter-money" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>Chapter V · The Money</ChapterLabel>
-      <h2 className="font-serif text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         {formatCompactMXN(totalValue)} Over Time
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -665,7 +665,7 @@ function ChapterVerdict({
   return (
     <section id="chapter-verdict" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>Chapter VI · The Verdict</ChapterLabel>
-      <h2 className="font-serif text-4xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
         Investigation Summary
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -678,7 +678,7 @@ function ChapterVerdict({
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="editorial-label text-text-muted mb-2">Risk Indicator Score</p>
-            <p className="font-serif text-4xl sm:text-5xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
+            <p className="font-serif text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
               {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
             </p>
             <p className="text-text-muted text-sm mt-1">out of 100</p>

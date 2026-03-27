@@ -239,7 +239,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={slideUp}
           initial="initial"
           animate="animate"
-          className="text-4xl sm:text-5xl xl:text-7xl font-bold text-white leading-[1.08] mb-5"
+          className="text-2xl sm:text-3xl font-bold text-white leading-[1.08] mb-5"
           style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
         >
           {story.headline}
@@ -277,7 +277,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
           className="mb-8"
         >
-          <div className={cn('text-4xl sm:text-5xl xl:text-6xl font-black tracking-tight', story.leadStat.color)}>
+          <div className={cn('text-2xl sm:text-3xl font-bold tracking-tight', story.leadStat.color)}>
             {parsed ? (
               <AnimatedNumber
                 value={parsed.numeric}

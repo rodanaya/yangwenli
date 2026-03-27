@@ -21,7 +21,7 @@
   },
   "errors": {
     "notRun": "Pipeline hasn't run yet",
-    "notRunDesc": "Run the ARIA pipeline to generate investigation leads and editorial memos."
+    "notRunDesc": "Run the ARIA pipeline from the backend to populate investigation leads."
   },
   "filters": {
     "byPattern": "Filter by Pattern",

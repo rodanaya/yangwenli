@@ -579,7 +579,7 @@ export default function Administrations() {
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
           Informe Clasificado · RUBLI · Sistema Nacional de Transparencia
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl md:text-5xl font-bold text-text-primary leading-tight mb-2">
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
           Los Sexenios de la Sombra
         </h1>
         <p className="text-base text-text-secondary leading-relaxed max-w-2xl">

@@ -210,7 +210,7 @@ export default function CapturaHeatmap() {
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
           Captura Institucional &middot; {t('trackingLabel', 'An\u00e1lisis de Concentraci\u00f3n')}
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
           Territorios Ocupados
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">

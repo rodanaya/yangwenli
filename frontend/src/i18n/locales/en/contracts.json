@@ -81,6 +81,7 @@
     "errorLoading": "Failed to load contract details"
   },
   "filters": {
+    "heading": "Filters",
     "sector": "Sector",
     "allSectors": "All Sectors",
     "year": "Year",

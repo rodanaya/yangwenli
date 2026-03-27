@@ -263,7 +263,7 @@ function FiveKeyFindings({
             {/* Finding number */}
             <div className="flex-shrink-0 mt-0.5">
               <span
-                className="font-black font-mono text-3xl leading-none tabular-nums"
+                className="font-black font-mono text-xs leading-none tabular-nums"
                 style={{ color: f.color, opacity: 0.35 }}
               >
                 {f.num}
@@ -273,14 +273,14 @@ function FiveKeyFindings({
             <div className="flex-1 min-w-0">
               {/* Headline */}
               <div className="flex items-baseline gap-2 flex-wrap mb-2">
-                <h3 className="text-sm font-bold text-text-primary">{f.headline}</h3>
+                <h3 className="text-base font-semibold text-text-primary">{f.headline}</h3>
                 <span className="text-[11px] text-text-muted italic">{f.headlineEn}</span>
               </div>
 
               {/* Stat */}
               <div className="flex items-baseline gap-2 mb-2 flex-wrap">
                 <span
-                  className="font-black font-mono text-2xl sm:text-3xl tabular-nums leading-none"
+                  className="font-black font-mono text-xl sm:text-2xl tabular-nums leading-none"
                   style={{ color: f.color }}
                 >
                   {f.stat}

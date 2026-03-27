@@ -21,7 +21,7 @@
   },
   "errors": {
     "notRun": "El pipeline aún no se ha ejecutado",
-    "notRunDesc": "Ejecuta el pipeline de ARIA para generar pistas de investigación y notas editoriales."
+    "notRunDesc": "Ejecute el pipeline de ARIA desde el backend para poblar las pistas de investigación."
   },
   "filters": {
     "byPattern": "Filtrar por Patrón",

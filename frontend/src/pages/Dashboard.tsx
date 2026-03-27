@@ -1988,7 +1988,7 @@ export function Dashboard() {
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-amber-400 transition-colors">
                 El Fenómeno de Diciembre
               </h3>
-              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#d97706', fontFamily: 'var(--font-family-mono)' }}>
+              <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#d97706', fontFamily: 'var(--font-family-mono)' }}>
                 +47%
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
@@ -2010,7 +2010,7 @@ export function Dashboard() {
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-red-400 transition-colors">
                 CFE acapara Hacienda 2021
               </h3>
-              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#ef4444', fontFamily: 'var(--font-family-mono)' }}>
+              <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#ef4444', fontFamily: 'var(--font-family-mono)' }}>
                 18.9%
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
@@ -2032,7 +2032,7 @@ export function Dashboard() {
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-blue-400 transition-colors">
                 Adjudicaciones directas: auge histórico
               </h3>
-              <p className="text-3xl font-black tabular-nums mb-1" style={{ color: '#3b82f6', fontFamily: 'var(--font-family-mono)' }}>
+              <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#3b82f6', fontFamily: 'var(--font-family-mono)' }}>
                 82.2%
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
@@ -2542,7 +2542,7 @@ export const _StatCard = memo(function _StatCard({ loading, label, value, detail
         {loading ? (
           <Skeleton className="h-8 w-20 mb-1" />
         ) : (
-          <p className={cn('text-2xl md:text-3xl font-black tabular-nums tracking-tight leading-none', color)}>{value}</p>
+          <p className={cn('text-xl md:text-2xl font-bold tabular-nums tracking-tight leading-none', color)}>{value}</p>
         )}
         <p className="text-xs text-text-muted mt-1.5">{detail}</p>
         {sublabel && (

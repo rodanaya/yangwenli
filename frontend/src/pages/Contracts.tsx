@@ -561,7 +561,7 @@ export function Contracts() {
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
           Registro Nacional de Contratos Federales &middot; 2001–2025
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-4xl font-bold text-text-primary mb-2">
+        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
           El Registro Negro
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
@@ -578,7 +578,7 @@ export function Contracts() {
         <p className="text-xs text-text-muted flex items-center gap-2" aria-live="polite">
           <FileText className="h-3.5 w-3.5 text-accent" />
           <span>
-            {data ? `${formatNumber(data?.pagination?.total ?? 0)} resultados` : 'Cargando...'}
+            {data ? `${formatNumber(data?.pagination?.total ?? 0)} ${t('common:results', 'resultados')}` : t('common:loading', 'Cargando...')}
             {isFetching && !isLoading && (
               <Loader2 className="inline h-3 w-3 ml-1.5 animate-spin text-accent" />
             )}
@@ -666,7 +666,7 @@ export function Contracts() {
       {/* Filter bar */}
       <div className="bg-background-elevated border border-border rounded-lg p-4 mb-2">
         <div className="text-[10px] uppercase tracking-wide text-text-muted mb-3 font-semibold">
-          Filtros de B&uacute;squeda
+          {t('filters.heading')}
         </div>
       <div className="flex items-center gap-2 flex-wrap">
         {/* Risk level chips — Fix 2: labels via t() */}
@@ -817,7 +817,7 @@ export function Contracts() {
           aria-pressed={showAnomalyScore}
           title="Toggle PyOD ensemble anomaly score column"
         >
-          Puntuaci&oacute;n anomal&iacute;a
+          {t('columns.anomalyScore')}
         </button>
 
         {/* Per page — Fix 6: value always from filters.per_page */}

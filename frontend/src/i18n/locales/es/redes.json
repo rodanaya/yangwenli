@@ -1,35 +1,35 @@
 {
-  "trackingLabel": "UNIDADES DE INVESTIGACION IDENTIFICADAS",
+  "trackingLabel": "UNIDADES DE INVESTIGACIÓN IDENTIFICADAS",
   "title": "Redes Conocidas",
-  "subtitle": "Unidades de investigacion identificadas en la contratacion federal 2002-2025",
+  "subtitle": "Unidades de investigación identificadas en la contratación federal 2002-2025",
   "sourceAttribution": "Basado en {{count}} casos documentados",
   "sourceRegistries": "COMPRANET / EFOS SAT / SFP",
-  "loading": "Cargando expedientes de investigacion...",
+  "loading": "Cargando expedientes de investigación...",
   "errorTitle": "Redes Conocidas",
-  "errorMessage": "Error al cargar datos de investigacion",
-  "errorHint": "Verifique que el servidor este en funcionamiento e intente de nuevo.",
-  "emptyTitle": "Sin Expedientes de Investigacion",
-  "emptyMessage": "Sin objetivos de investigacion de alta prioridad encontrados",
-  "emptyHint": "Puede ser necesario ejecutar el pipeline ARIA primero para poblar la cola de investigacion.",
+  "errorMessage": "Error al cargar datos de investigación",
+  "errorHint": "Verifique que el servidor esté en funcionamiento e intente de nuevo.",
+  "emptyTitle": "Sin Expedientes de Investigación",
+  "emptyMessage": "Sin objetivos de investigación de alta prioridad encontrados",
+  "emptyHint": "Puede ser necesario ejecutar el pipeline ARIA primero para poblar la cola de investigación.",
   "filters": {
     "allPatterns": "Todos los Patrones",
-    "byPattern": "Tipo de Patron"
+    "byPattern": "Tipo de Patrón"
   },
   "patterns": {
-    "P1": "Concentracion monopolica: un proveedor domina las licitaciones del sector",
-    "P2": "Empresa presuntamente fantasma: sin operaciones reales detectadas",
+    "P1": "Monopolio de mercado: un proveedor domina las licitaciones del sector",
+    "P2": "Empresa fantasma",
     "P3": "Posible intermediario: revendedor entre gobierno y proveedor real",
-    "P6": "Captura institucional: proveedor con acceso privilegiado a institucion",
-    "P7": "Anomalia temporal: rafaga de actividad sospechosa detectada",
-    "default": "Patron de irregularidad detectado por modelo de riesgo"
+    "P6": "Captura institucional: proveedor con acceso privilegiado a institución",
+    "P7": "Anomalía temporal: ráfaga de actividad sospechosa detectada",
+    "default": "Patrón de irregularidad detectado por modelo de riesgo"
   },
   "patternLabels": {
     "P1": "Monopolio",
     "P2": "Empresa Fantasma",
     "P3": "Intermediario",
     "P6": "Captura",
-    "P7": "Anomalia Temporal",
-    "default": "Patron de Riesgo"
+    "P7": "Anomalía Temporal",
+    "default": "Patrón de Riesgo"
   },
   "card": {
     "linkedVendors": "proveedores vinculados",
@@ -43,8 +43,8 @@
     "riskScore": "Riesgo"
   },
   "stats": {
-    "totalDossiers": "OBJETIVOS DE INVESTIGACION",
-    "tier1": "NIVEL 1 (CRITICO)",
+    "totalDossiers": "OBJETIVOS DE INVESTIGACIÓN",
+    "tier1": "NIVEL 1 (CRÍTICO)",
     "tier2": "NIVEL 2 (ALTO)",
     "patternsDetected": "PATRONES DETECTADOS"
   }

@@ -4331,7 +4331,7 @@ function PeriodistaPanel({
       {/* 1. Narrativa del proveedor */}
       <div>
         <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-          Narrativa del proveedor
+          Narrativa
         </h3>
 
         {narrativeLoading ? (
@@ -4410,7 +4410,7 @@ function PeriodistaPanel({
             )}
           </div>
         ) : (
-          <p className="text-sm text-text-muted">No se pudo obtener la narrativa del proveedor.</p>
+          <p className="text-sm text-text-muted">No se pudo obtener la narrativa.</p>
         )}
       </div>
 

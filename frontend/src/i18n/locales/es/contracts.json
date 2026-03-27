@@ -81,6 +81,7 @@
     "errorLoading": "Error al cargar los detalles del contrato"
   },
   "filters": {
+    "heading": "Filtros",
     "sector": "Sector",
     "allSectors": "Todos los Sectores",
     "year": "Año",

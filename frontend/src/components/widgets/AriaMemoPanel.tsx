@@ -144,7 +144,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
                 )}
               </button>
               <span className="text-[10px] text-text-muted italic">
-                Generado automaticamente — requiere verificacion periodistica
+                Generado automáticamente — requiere verificación periodística
               </span>
             </div>
           </>

@@ -368,7 +368,7 @@ export default function CaseLibrary() {
             </div>
             <h1
               style={{ fontFamily: 'var(--font-family-serif)' }}
-              className="text-4xl font-bold text-text-primary mb-2"
+              className="text-2xl font-bold text-text-primary mb-2"
             >
               {t('pageTitle')}
             </h1>

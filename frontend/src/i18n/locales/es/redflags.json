@@ -12,7 +12,7 @@
   },
   "dangerZone": {
     "title": "Combinaciones Más Peligrosas",
-    "description": "Estos pares de factores co-ocurren mucho más de lo esperado por azar. Cada uno es una posible firma de corrupcion.",
+    "description": "Estos pares de factores co-ocurren mucho más de lo esperado por azar. Cada uno es una posible firma de corrupción.",
     "label": "#{{rank}} COMBINACIÓN PELIGROSA",
     "liftLabel": "{{value}}x elevación",
     "contractsLabel": "{{count}} contratos",
@@ -42,7 +42,7 @@
   },
   "factorRiskScatter": {
     "title": "Correlación Factor-Riesgo",
-    "description": "Cada burbuja es un factor de riesgo. Eje X = frecuencia (qué tan común); Eje Y = riesgo promedio. Superior derecha = comun Y de alto riesgo (investigación prioritaria). Superior izquierda = raro pero peligroso. Tamaño de burbuja = numero de contratos. Haga clic en cualquier burbuja para investigar.",
+    "description": "Cada burbuja es un factor de riesgo. Eje X = frecuencia (qué tan común); Eje Y = riesgo promedio. Superior derecha = común Y de alto riesgo (investigación prioritaria). Superior izquierda = raro pero peligroso. Tamaño de burbuja = número de contratos. Haga clic en cualquier burbuja para investigar.",
     "empty": "Sin datos disponibles para los filtros seleccionados.",
     "xAxisLabel": "Frecuencia (%)",
     "yAxisLabel": "Puntuación de Riesgo Prom.",
@@ -58,7 +58,7 @@
     "content": "Los factores de riesgo se extraen de la columna risk_factors de cada contrato. La elevación de co-ocurrencia se calcula como P(A y B) / (P(A) * P(B)), donde una elevación de 1.0 significa que los factores co-ocurren exactamente con la frecuencia esperada por azar. Valores superiores a 2.0 indican una asociación no aleatoria fuerte que puede sugerir irregularidades coordinadas en contratación."
   },
   "factors": {
-    "single_bid": "Licitación Unica",
+    "single_bid": "Licitante Único",
     "non_open": "Adj. Directa",
     "direct_award": "Adj. Directa",
     "restricted_procedure": "Proc. Restringido",
@@ -84,7 +84,7 @@
     "network_5plus": "Red Grande",
     "co_bid_high": "Co-licitan (Alto)",
     "co_bid_med": "Co-licitan (Med.)",
-    "price_hyp": "Precio Atipico",
+    "price_hyp": "Precio Atípico",
     "inst_risk": "Inst. Alto Riesgo",
     "industry_mismatch": "Giro Distinto",
     "interaction": "Múltiples Alertas",
@@ -94,7 +94,7 @@
   "playbook": {
     "title": "Manual de Investigación",
     "singleBidShortAd": {
-      "combo": "Licitación Única + Período de Publicación Corto",
+      "combo": "Licitante Único + Período de Publicación Corto",
       "action": "Solicita las bases de la licitación en la Plataforma Nacional de Transparencia (PNT). Busca especificaciones técnicas pre-diseñadas para favorecer a un proveedor."
     },
     "priceConcentration": {

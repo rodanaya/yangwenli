@@ -463,12 +463,12 @@ export default function Journalists() {
               <AnimatedNumber
                 value={totalContracts}
                 duration={2000}
-                className="text-3xl sm:text-4xl font-black text-white tabular-nums"
+                className="text-xl sm:text-2xl font-black text-white tabular-nums"
               />
               <p className="text-sm text-zinc-500 mt-1">{t('hero.contractsLabel')}</p>
             </div>
             <div>
-              <span className="text-3xl sm:text-4xl font-black text-white tabular-nums">
+              <span className="text-xl sm:text-2xl font-black text-white tabular-nums">
                 <AnimatedNumber value={totalValueBillions} decimals={2} prefix="$" suffix="T" duration={1800} />
               </span>
               <p className="text-sm text-zinc-500 mt-1">{t('hero.valueLabel')}</p>
@@ -477,7 +477,7 @@ export default function Journalists() {
               <AnimatedNumber
                 value={totalCases}
                 duration={1600}
-                className="text-3xl sm:text-4xl font-black text-white tabular-nums"
+                className="text-xl sm:text-2xl font-black text-white tabular-nums"
               />
               <p className="text-sm text-zinc-500 mt-1">{t('hero.casesLabel')}</p>
             </div>
@@ -514,7 +514,7 @@ export default function Journalists() {
                   </span>
                 </div>
                 <h2
-                  className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight mb-4"
+                  className="text-xl sm:text-2xl font-black text-white leading-tight mb-4"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   {featured.headline}
@@ -532,7 +532,7 @@ export default function Journalists() {
 
               <div className="text-right lg:text-left flex-shrink-0">
                 <div
-                  className="text-4xl sm:text-5xl lg:text-6xl font-black leading-none"
+                  className="text-2xl sm:text-3xl font-black leading-none"
                   style={{ color: '#dc2626' }}
                 >
                   <AnimatedNumber value={81.9} decimals={1} suffix="%" duration={2000} />
