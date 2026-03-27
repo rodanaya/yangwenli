@@ -116,16 +116,16 @@ function ScrollSection({ children, delay = 0 }: { children: React.ReactNode; del
 // mean that HIGHER values of those features REDUCE risk.
 // ============================================================================
 const MODEL_COEFFICIENTS: Record<string, number> = {
-  price_volatility:     1.857,
-  institution_diversity: -0.468,
-  price_ratio:          0.391,
-  vendor_concentration: 0.238,
-  network_member_count: 0.187,
-  same_day_count:       0.111,
-  single_bid:           0.098,
-  ad_period_days:       0.042,
-  win_rate:             0.000,
-  direct_award:         0.000,
+  price_volatility:     0.5343,
+  institution_diversity: -0.3821,
+  price_ratio:          0.2345,
+  vendor_concentration: 0.3749,
+  network_member_count: 0.1811,
+  same_day_count:       0.0945,
+  win_rate:             0.0488,
+  ad_period_days:       0.0423,
+  direct_award:         0.0306,
+  single_bid:           0.000,
   sector_spread:        0.000,
   industry_mismatch:    0.000,
   year_end:             0.000,
@@ -605,8 +605,8 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
 // Shows estimated score if each top factor were at sector average (z=0)
 // Math: sigmoid(logit_current - beta_i * z_i) / PU_c
 // ============================================================================
-const PU_C = 0.3432
-const INTERCEPT = -2.3880
+const PU_C = 0.3000
+const INTERCEPT = -2.3837
 
 function sigmoid(x: number): number {
   return 1 / (1 + Math.exp(-x))
@@ -677,7 +677,7 @@ function CounterfactualPanel({
         )
       })}
       <p className="text-[9px] text-text-muted/50 pt-1 border-t border-border/20">
-        Simulacion basada en modelo v6.4 (PU c={PU_C}, intercept={INTERCEPT})
+        Simulacion basada en modelo v6.5 (PU c={PU_C}, intercept={INTERCEPT})
       </p>
     </div>
   )
@@ -2526,7 +2526,7 @@ export function VendorProfile() {
                         { key: 'v3', label: 'v3.3' },
                         { key: 'v4', label: 'v4.0' },
                         { key: 'v5', label: 'v5.1' },
-                        { key: 'v6', label: 'v6.4' },
+                        { key: 'v6', label: 'v6.5' },
                       ].map((model, idx, arr) => {
                         const rawVal = trajectoryData.scores[model.key]
                         const score = rawVal != null ? rawVal : null
@@ -3567,7 +3567,7 @@ export function VendorProfile() {
                       </div>
                       {ariaData.new_vendor_risk_score != null && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-text-muted">Risk Score (v6.4)</span>
+                          <span className="text-text-muted">Risk Score (v6.5)</span>
                           <span className="font-mono tabular-nums" style={{ color: RISK_COLORS[getRiskLevel(ariaData.new_vendor_risk_score)] }}>
                             {(ariaData.new_vendor_risk_score * 100).toFixed(1)}
                           </span>

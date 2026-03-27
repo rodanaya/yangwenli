@@ -1429,11 +1429,6 @@ export default function Intro() {
         </div>
       </section>
 
-      {/* ================================================================= */}
-      {/* MANIFESTO COUNTERS -- giant count-up stats */}
-      {/* ================================================================= */}
-      <ManifestoCounters isEn={isEn} highRiskPct={highRiskPct} />
-
       {/* Risk score disclaimer */}
       <div
         className="w-full text-center py-3 px-6"
