@@ -37,7 +37,7 @@
   },
   "aucRoc": {
     "title": "AUC-ROC",
-    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v6.0 alcanza 0.840 (AUC de prueba, estratificado por proveedor)."
+    "description": "Área Bajo la Curva ROC — mide qué tan bien el modelo distingue contratos corruptos de limpios. 0.5 = adivinanza aleatoria, 1.0 = perfecto. Nuestro modelo v6.5 alcanza 0.828 (AUC de prueba, estratificado por proveedor)."
   },
   "industryMismatch": {
     "title": "Discrepancia de Industria",
@@ -81,7 +81,7 @@
   },
   "groundTruth": {
     "title": "Verdad Base",
-    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos ~390 casos con ~725 proveedores y ~320,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
+    "description": "Casos documentados y verificados de corrupción usados para entrenar y validar el modelo. Usamos ~748 casos con ~603 proveedores y ~288,000 contratos en los 12 sectores, incluyendo IMSS, Segalmex, Odebrecht, y más."
   },
   "adPeriod": {
     "title": "Período de Publicación",
@@ -134,7 +134,7 @@
     "price_volatility": {
       "label": "Volatilidad de Precio",
       "coefficient": "+1.219",
-      "validation_strength": "Fuerte (predictor principal v6.0)",
+      "validation_strength": "Fuerte (predictor principal v6.5)",
       "key_citation": "Porter & Zona (1993): La manipulación de precios es detectable",
       "mexico_note": "Nuevo en v5.0. Proveedores con montos de contrato muy variables respecto a la norma del sector."
     },

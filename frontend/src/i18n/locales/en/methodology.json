@@ -1,10 +1,10 @@
 {
   "pageTitle": "Risk Scoring Methodology",
-  "pageSubtitle": "v6.5 Vendor-Stratified Model — 16 features, Optuna TPE, honest generalization",
+  "pageSubtitle": "v6.5 Vendor-Stratified Model — 9 active features, Optuna TPE, honest generalization",
   "contents": "CONTENTS",
   "sections": {
     "overview": "Model Overview",
-    "features": "The 16 Features",
+    "features": "The Features (9 Active)",
     "findings": "Key Findings",
     "validation": "Ground Truth Validation",
     "methods": "Statistical Methods",
@@ -32,7 +32,7 @@
   },
   "coefficients": {
     "title": "v6.5 Global Model Coefficients",
-    "subtitle": "16 z-score features ranked by absolute coefficient magnitude. Positive = increases risk; negative = decreases risk."
+    "subtitle": "16 z-score features (9 active in v6.5) ranked by absolute coefficient magnitude. Positive = increases risk; negative = decreases risk."
   },
   "keyFindings": {
     "title": "What the Model Learned",
@@ -127,7 +127,7 @@
   },
   "sectionLabels": {
     "overview": "Model Overview (v6.5)",
-    "features": "The 16 Features",
+    "features": "The Features (9 Active)",
     "risk-evidence": "Risk Factor Evidence Base",
     "findings": "Key Findings",
     "validation": "Ground Truth Validation",

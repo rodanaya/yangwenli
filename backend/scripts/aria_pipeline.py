@@ -445,6 +445,44 @@ def load_external_crossref(conn: sqlite3.Connection) -> dict:
             "rfc_age_years": None,
         }
 
+    # Name-based fallback: match vendors without RFC using UPPER(name) against registries.
+    # ~85% of vendors have no RFC (only 45,996 / 320K have one), so RFC-only join misses
+    # the majority of potential EFOS/SFP matches.
+    efos_name_rows = conn.execute(
+        f"SELECT UPPER(TRIM(company_name)), {efos_rfc_col} FROM sat_efos_vendors WHERE stage='definitivo' AND company_name IS NOT NULL"
+    ).fetchall()
+    efos_name_map: dict = {r[0]: r[1] for r in efos_name_rows if r[0]}
+
+    sfp_name_rows = conn.execute(
+        f"SELECT UPPER(TRIM(company_name)), {sfp_type_col} FROM sfp_sanctions WHERE company_name IS NOT NULL"
+    ).fetchall()
+    sfp_name_map: dict = {}
+    for nm, stype in sfp_name_rows:
+        if nm and nm not in sfp_name_map:
+            sfp_name_map[nm] = stype
+
+    vendor_names = conn.execute("SELECT id, UPPER(TRIM(name)) FROM vendors WHERE name IS NOT NULL").fetchall()
+    name_efos_added = name_sfp_added = 0
+    for vid, uname in vendor_names:
+        if vid not in result:
+            result[vid] = {"is_efos": 0, "efos_rfc": None, "is_sfp": 0, "sfp_type": None,
+                           "in_gt": 0, "shell_score": 0, "rfc_age_years": None}
+        entry = result[vid]
+        # EFOS name match (only if not already matched by RFC)
+        if not entry["is_efos"] and uname in efos_name_map:
+            entry["is_efos"] = 1
+            entry["efos_rfc"] = efos_name_map[uname]
+            name_efos_added += 1
+        # SFP name match (only if not already matched by RFC)
+        if not entry["is_sfp"] and uname in sfp_name_map:
+            entry["is_sfp"] = 1
+            entry["sfp_type"] = sfp_name_map[uname]
+            name_sfp_added += 1
+    logger.info(
+        "  External cross-ref name fallback: +%d EFOS, +%d SFP (beyond RFC matches)",
+        name_efos_added, name_sfp_added,
+    )
+
     # Enrich with CENTINELA company_registry data (shell_score, RFC age)
     tables = {r[0] for r in conn.execute(
         "SELECT name FROM sqlite_master WHERE type='table'"

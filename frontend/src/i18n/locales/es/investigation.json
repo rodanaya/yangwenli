@@ -137,7 +137,7 @@
       "label": "Inconcluso",
       "desc": "El patrón está marcado pero aún no encontraste evidencia externa. Déjalo en seguimiento o pásalo a otro investigador."
     },
-    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v6.0, mejorando la detección futura."
+    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v6.5, mejorando la detección futura."
   },
   "vendorReport": {
     "title": "Reporte de Proveedor",

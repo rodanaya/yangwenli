@@ -70,6 +70,6 @@
   },
   "methodology": {
     "title": "Methodology",
-    "content": "Fund flows are aggregated from 3.1M procurement contracts (2002-2025). Bar colors reflect the average v6.0 risk score for each flow: green (<10%), amber (10-30%), orange (30-50%), and red (>=50%). High-risk flow value sums all flows where average risk exceeds 30%. Use year and sector filters to narrow the analysis. Clicking a row in the high-risk table navigates to the contracts page filtered by that institution-vendor relationship."
+    "content": "Fund flows are aggregated from 3.1M procurement contracts (2002-2025). Bar colors reflect the average v6.5 risk score for each flow: green (<10%), amber (10-30%), orange (30-50%), and red (>=50%). High-risk flow value sums all flows where average risk exceeds 30%. Use year and sector filters to narrow the analysis. Clicking a row in the high-risk table navigates to the contracts page filtered by that institution-vendor relationship."
   }
 }

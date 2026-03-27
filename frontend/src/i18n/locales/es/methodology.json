@@ -1,10 +1,10 @@
 {
   "pageTitle": "Metodología de Puntuación de Riesgo",
-  "pageSubtitle": "Modelo Estratificado por Proveedor v6.5 — 16 características, Optuna TPE, generalización honesta",
+  "pageSubtitle": "Modelo Estratificado por Proveedor v6.5 — 9 características activas, Optuna TPE, generalización honesta",
   "contents": "CONTENIDO",
   "sections": {
     "overview": "Descripción del Modelo",
-    "features": "Las 16 Características",
+    "features": "Las Características (9 Activas)",
     "findings": "Hallazgos Clave",
     "validation": "Validación de Verdad Fundamental",
     "methods": "Métodos Estadísticos",
@@ -32,7 +32,7 @@
   },
   "coefficients": {
     "title": "Coeficientes del Modelo Global v6.5",
-    "subtitle": "16 características z-score ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
+    "subtitle": "16 características z-score (9 activas en v6.5) ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
   },
   "keyFindings": {
     "title": "Lo Que Aprendió el Modelo",
@@ -263,7 +263,7 @@
   },
   "sectionLabels": {
     "overview": "Descripción del Modelo (v6.5)",
-    "features": "Las 16 Características",
+    "features": "Las Características (9 Activas)",
     "risk-evidence": "Base de Evidencia de Factores de Riesgo",
     "findings": "Hallazgos Clave",
     "validation": "Validación de Verdad Fundamental",

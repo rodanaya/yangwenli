@@ -137,7 +137,7 @@
       "label": "Inconclusive",
       "desc": "The pattern is flagged but you found no external evidence yet. Leave for monitoring or pass to another investigator."
     },
-    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v6.0 model retraining, improving future detection."
+    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v6.5 model retraining, improving future detection."
   },
   "vendorReport": {
     "title": "Vendor Report",

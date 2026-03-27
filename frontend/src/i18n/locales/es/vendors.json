@@ -79,8 +79,8 @@
     "maxD2": "D² Máximo",
     "anomalousContracts": "Contratos Anómalos",
     "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
-    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v6.0)",
-    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v6.0)",
+    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v6.5)",
+    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v6.5)",
     "riskFactorDetails": "Detalles de Factores de Riesgo",
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
     "noRiskFactors": "No hay factores de riesgo disponibles"
@@ -108,7 +108,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
     "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
-    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v6.0, que asigna co_bid_rate un coeficiente de 0.000)",
+    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v6.5, que asigna co_bid_rate un coeficiente de 0.000)",
     "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
     "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)"
   },
@@ -125,7 +125,7 @@
   "priceVolatility": {
     "title": "Volatilidad de Precios",
     "zscore": "z-score vs. sector",
-    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v6.4."
+    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v6.5."
   },
   "ghostRisk": {
     "title": "Riesgo de Empresa Fantasma",

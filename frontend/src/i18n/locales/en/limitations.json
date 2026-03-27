@@ -33,8 +33,8 @@
     },
     "trainingBias": {
       "title": "Training Data Bias — Three Cases Dominate",
-      "summary": "The risk model was trained on ~390 documented corruption cases (~725 vendors), but 79% of training contracts come from just three mega-cases in health and agriculture.",
-      "body1": "The v6.0 model improved significantly over v5.1 by expanding to ~390 documented corruption cases (~725 vendors) across all 12 sectors, with per-vendor capping and vendor-stratified validation. However, the training signal is still concentrated:",
+      "summary": "The risk model was trained on ~748 documented corruption cases (~603 vendors), but training contracts are still concentrated in a few large health and agriculture cases.",
+      "body1": "The v6.5 model improved significantly over v5.1 by expanding to ~748 documented corruption cases (~603 vendors) across all 12 sectors, with per-vendor capping (100 contracts max) and vendor-stratified validation. However, the training signal is still concentrated:",
       "body2": "IMSS Ghost Companies (9,366 contracts) + Segalmex (6,326) + COVID-19 Procurement (5,371) = ~21,000 of ~27,000 labeled contracts. These three cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.",
       "body3": "Corruption that doesn't match this pattern is systematically underdetected. A local official awarding contracts to a family member's new shell company — few contracts, small amounts, not concentrated — may score low because it doesn't resemble IMSS Pisa.",
       "workaround": "When investigating specific institutions or officials, do not rely on risk scores alone. Use the Contracts filter to find direct awards and single-bid contracts regardless of score."
@@ -109,7 +109,7 @@
     "temporal": {
       "title": "Temporal Stationarity — Model May Become Stale",
       "summary": "The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.",
-      "body1": "The v6.0 model uses a vendor-stratified train/test split (no vendor appears in both sets). The test AUC of 0.840 is an honest estimate of generalization to unseen vendors.",
+      "body1": "The v6.5 model uses a vendor-stratified train/test split (no vendor appears in both sets). The test AUC of 0.828 is an honest estimate of generalization to unseen vendors.",
       "body2": "However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.",
       "body3": "Recalibration with new ground truth cases should occur when major new corruption cases are documented.",
       "workaround": "Monitor the Ground Truth page for newly added cases. After major scandals are documented, the model should be retrained to incorporate the new patterns."

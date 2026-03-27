@@ -269,10 +269,18 @@ def process_sector(conn: sqlite3.Connection, sector_id: int,
     bg_risk = float(sigmoid(bg_logit)) / pu_c
 
     # Process vendors in batches
+    # Use a separate read connection so the streaming read cursor does not block
+    # writes on the write connection (WAL mode: separate connections can read+write
+    # concurrently, but a single connection cannot interleave read and write txns).
+    read_conn = sqlite3.connect(str(DB_PATH), timeout=300)
+    read_conn.execute("PRAGMA journal_mode=WAL")
+    read_conn.execute("PRAGMA busy_timeout=300000")
+    read_conn.execute("PRAGMA query_only=ON")
+
     inserts = []
     n_vendors = 0
 
-    for vendor_id, n_contracts, z_vendor, risk_score in get_vendor_mean_z(conn, sector_id, batch_size):
+    for vendor_id, n_contracts, z_vendor, risk_score in get_vendor_mean_z(read_conn, sector_id, batch_size):
         # Exact linear SHAP
         shap_vals = compute_linear_shap(z_vendor, z_bg_mean, coef_vector)
 

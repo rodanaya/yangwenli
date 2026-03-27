@@ -37,7 +37,7 @@
   },
   "aucRoc": {
     "title": "AUC-ROC",
-    "description": "Area Under the Receiver Operating Curve — measures how well the model distinguishes corrupt from clean contracts. 0.5 = random guessing, 1.0 = perfect. Our v6.0 model achieves 0.840 (test AUC, vendor-stratified)."
+    "description": "Area Under the Receiver Operating Curve — measures how well the model distinguishes corrupt from clean contracts. 0.5 = random guessing, 1.0 = perfect. Our v6.5 model achieves 0.828 (test AUC, vendor-stratified)."
   },
   "industryMismatch": {
     "title": "Industry Mismatch",
@@ -81,7 +81,7 @@
   },
   "groundTruth": {
     "title": "Ground Truth",
-    "description": "Documented, verified corruption cases used to train and validate the model. We use ~390 cases with ~725 vendors and ~320,000 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
+    "description": "Documented, verified corruption cases used to train and validate the model. We use ~748 cases with ~603 vendors and ~288,000 contracts across all 12 sectors, including IMSS, Segalmex, Odebrecht, and more."
   },
   "adPeriod": {
     "title": "Ad Period",
@@ -134,7 +134,7 @@
     "price_volatility": {
       "label": "Price Volatility",
       "coefficient": "+1.219",
-      "validation_strength": "Strong (RUBLI v6.0 top predictor)",
+      "validation_strength": "Strong (RUBLI v6.5 top predictor)",
       "key_citation": "Porter & Zona (1993): Price manipulation detectable in bid distributions",
       "mexico_note": "New in v5.1. Vendors with wildly varying contract amounts relative to sector norms. The strongest predictor in the v5.1 global model."
     },

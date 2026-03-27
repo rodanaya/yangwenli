@@ -103,7 +103,7 @@
   "welcome": {
     "subtitle": "Red Unificada de Búsqueda de Licitaciones Irregulares — Detección de Corrupción con IA para Contrataciones del Gobierno de México",
     "step1Title": "Sigue el Dinero",
-    "step1Desc": "23 años de contrataciones federales mexicanas — 3.1 millones de contratos, más de 9 billones de MXN — todos calificados con indicadores de riesgo de corrupción usando un modelo validado contra ~390 casos documentados (~725 proveedores).",
+    "step1Desc": "23 años de contrataciones federales mexicanas — 3.1 millones de contratos, más de 9 billones de MXN — todos calificados con indicadores de riesgo de corrupción usando un modelo validado contra ~748 casos documentados (~603 proveedores).",
     "step2Title": "Qué Significan Realmente las Puntuaciones",
     "step2Desc": "Las puntuaciones son INDICADORES ESTADÍSTICOS (escala 0–1), no veredictos. Una puntuación de 0.68 significa que este contrato se asemeja a patrones encontrados en casos de fraude documentados — no que definitivamente sea corrupto. Correlación, no causalidad.",
     "step2ScoreLabel": "Ejemplo: Puntuación 0.68",
