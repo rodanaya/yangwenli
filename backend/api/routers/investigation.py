@@ -1101,25 +1101,34 @@ def get_vendor_explanation(
 
 @router.get("/feature-importance", response_model=List[FeatureImportanceItem])
 def get_feature_importance(
-    sector_id: int = Query(..., description="Sector ID"),
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Sector ID (1-12). Omit for global model."),
     method: str = Query("shap", description="Method: 'shap', 'permutation', or 'variance'"),
     limit: int = Query(21, ge=1, le=50, description="Number of features to return"),
 ):
     """
-    Get global feature importance for a sector.
+    Get global feature importance for a sector (or the global model if sector_id is omitted).
 
     Shows which features contribute most to anomaly detection across all vendors.
     """
     with get_db() as conn:
         cursor = conn.cursor()
 
-        cursor.execute("""
-            SELECT feature_name, importance, rank, method, calculated_at
-            FROM feature_importance
-            WHERE sector_id = ? AND method = ?
-            ORDER BY rank
-            LIMIT ?
-        """, (sector_id, method, limit))
+        if sector_id is None:
+            cursor.execute("""
+                SELECT feature_name, importance, rank, method, calculated_at
+                FROM feature_importance
+                WHERE sector_id IS NULL AND method = ?
+                ORDER BY rank
+                LIMIT ?
+            """, (method, limit))
+        else:
+            cursor.execute("""
+                SELECT feature_name, importance, rank, method, calculated_at
+                FROM feature_importance
+                WHERE sector_id = ? AND method = ?
+                ORDER BY rank
+                LIMIT ?
+            """, (sector_id, method, limit))
 
         results = [
             FeatureImportanceItem(
@@ -1133,9 +1142,10 @@ def get_feature_importance(
         ]
 
         if not results:
+            sector_label = f"sector {sector_id}" if sector_id else "global model"
             raise HTTPException(
                 status_code=404,
-                detail=f"No feature importance found for sector {sector_id} with method {method}. Run investigation_feature_importance.py first."
+                detail=f"No feature importance found for {sector_label} with method {method}. Run investigation_feature_importance.py first."
             )
 
         return results

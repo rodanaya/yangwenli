@@ -262,9 +262,10 @@ class TestInvestigationFeatureImportance:
                 assert "method" in item
 
     def test_feature_importance_missing_sector_id(self, client, base_url):
-        """Test feature importance without required sector_id."""
+        """Test feature importance without sector_id returns global model (optional now)."""
         response = client.get(f"{base_url}/investigation/feature-importance")
-        assert response.status_code == 422
+        # sector_id is now optional — returns 200 (global model data) or 404 (not computed)
+        assert response.status_code in [200, 404]
 
     def test_feature_importance_custom_method(self, client, base_url):
         """Test feature importance with a different method."""

@@ -2526,16 +2526,18 @@ def get_vendor_trajectory(
             if not vendor_row:
                 raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
+            # Check which preserved score columns actually exist in this DB
+            pragma = cursor.execute("PRAGMA table_info(contracts)").fetchall()
+            existing_cols = {r["name"] for r in pragma}
+
+            select_parts = [
+                "AVG(risk_score_v3) AS avg_v3" if "risk_score_v3" in existing_cols else "NULL AS avg_v3",
+                "AVG(risk_score_v4) AS avg_v4" if "risk_score_v4" in existing_cols else "NULL AS avg_v4",
+                "AVG(risk_score_v5) AS avg_v5" if "risk_score_v5" in existing_cols else "NULL AS avg_v5",
+                "AVG(risk_score) AS avg_v6",
+            ]
             cursor.execute(
-                """
-                SELECT
-                    AVG(risk_score_v3) AS avg_v3,
-                    AVG(risk_score_v4) AS avg_v4,
-                    AVG(risk_score_v5) AS avg_v5,
-                    AVG(risk_score) AS avg_v6
-                FROM contracts
-                WHERE vendor_id = ?
-                """,
+                f"SELECT {', '.join(select_parts)} FROM contracts WHERE vendor_id = ?",
                 (vendor_id,),
             )
             row = cursor.fetchone()

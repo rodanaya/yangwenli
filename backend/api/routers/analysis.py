@@ -359,9 +359,21 @@ def get_model_metadata():
                     pass
             if has_test_auc:
                 test_auc_val = row["test_auc"]
+            # Get total contract count from precomputed_stats (fast lookup)
+            n_contracts = None
+            try:
+                stats_row = cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'"
+                ).fetchone()
+                if stats_row:
+                    overview = json.loads(stats_row["stat_value"])
+                    n_contracts = overview.get("total_contracts")
+            except Exception:
+                pass
             return {
                 "version": row["model_version"],
                 "trained_at": row["created_at"],
+                "n_contracts": n_contracts,
                 "auc_test": test_auc_val or row["auc_roc"],
                 "auc_train": round(train_auc, 3) if train_auc else None,
                 "pu_correction": row["pu_correction_factor"],
