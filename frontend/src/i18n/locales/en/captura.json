@@ -34,7 +34,16 @@
     "bySector": "Filter by Sector",
     "period2018": "2018–2022",
     "period2023": "2023–2025",
-    "allYears": "All Years"
+    "allYears": "All Years",
+    "captureThreshold": "Minimum Capture",
+    "allCapture": "All",
+    "capture15": "≥15%",
+    "capture30": "≥30%",
+    "capture50": "≥50%",
+    "displayMode": "Display Mode",
+    "byValue": "By Value",
+    "byCount": "By Count",
+    "noResults": "No institutions meet the ≥{{pct}}% capture threshold for the current selection."
   },
   "heatmap": {
     "sectionLabel": "CONCENTRATION MAP",
@@ -52,6 +61,15 @@
     "high": "High Risk (30–50%)",
     "moderate": "Moderate (15–30%)",
     "low": "Low (<15%)"
+  },
+  "hero": {
+    "worstCapture": "Top institution capture"
+  },
+  "hhi": {
+    "label": "HHI",
+    "highCapture": "High Capture",
+    "moderate": "Moderate",
+    "low": "Low"
   },
   "methodology": {
     "title": "Methodology",
