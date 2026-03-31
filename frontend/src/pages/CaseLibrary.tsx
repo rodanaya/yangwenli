@@ -14,7 +14,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
-import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3 } from 'lucide-react'
+import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3, ArrowUpDown } from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
@@ -64,6 +64,16 @@ const FRAUD_TYPE_ACCENT: Record<string, string> = {
   emergency_fraud:     'border-l-cyan-500',
   tender_rigging:      'border-l-indigo-500',
 }
+
+// ── Confidence badge (from is_verified: 0=medium, 1=high, 2=confirmed) ───────
+const CONFIDENCE_CONFIG: Record<number, { key: string; cls: string }> = {
+  0: { key: 'confidence.medium',    cls: 'border-zinc-500/50 text-zinc-400' },
+  1: { key: 'confidence.high',      cls: 'border-blue-500/50 text-blue-400' },
+  2: { key: 'confidence.confirmed', cls: 'border-emerald-500/50 text-emerald-400' },
+}
+
+// ── Sort types ────────────────────────────────────────────────────────────────
+type SortMode = 'amount' | 'year' | 'severity'
 
 // ── COMPRANET visibility config ───────────────────────────────────────────────
 type CompranetVisibility = 'high' | 'partial' | 'invisible'
@@ -187,11 +197,19 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
           )}
         </div>
 
-        {/* Legal status pill */}
+        {/* Bottom pill row: legal status + confidence */}
         <div className="flex flex-wrap gap-1.5 items-center">
           <Badge variant="outline" className={`text-[10px] px-2 py-0.5 font-semibold ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
             {t(`legalStatuses.${cas.legal_status}`)}
           </Badge>
+          {(() => {
+            const conf = CONFIDENCE_CONFIG[cas.is_verified] ?? CONFIDENCE_CONFIG[0]
+            return (
+              <Badge variant="outline" className={`text-[10px] px-2 py-0.5 font-semibold ${conf.cls}`}>
+                {t(conf.key)}
+              </Badge>
+            )
+          })()}
         </div>
       </button>
 
@@ -310,7 +328,7 @@ function DossierHero() {
         {[
           { label: t('statsBar.totalCases'), value: totalCases, accent: true },
           { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '--', accent: true },
-          { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '--', accent: false },
+          { label: t('statsBar.vendorsIdentified'), value: data?.gt_linked_count != null ? `${data.gt_linked_count}+` : '--', accent: false },
           { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '--', accent: false },
         ].map(({ label, value, accent }, i) => (
           <motion.div
@@ -366,6 +384,7 @@ export default function CaseLibrary() {
   const navigate = useNavigate()
 
   const [filters, setFilters] = useState<CaseLibraryParams>({})
+  const [sortMode, setSortMode] = useState<SortMode>('amount')
   const { search, setSearch } = useUrlSearch()
 
   const queryParams: CaseLibraryParams = useMemo(
@@ -379,15 +398,22 @@ export default function CaseLibrary() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Sort by fraud value (default): amount_mxn_low descending,
-  // then severity descending, then ML-linked first as tiebreaker.
+  // Sort by selected mode; severity + ML-linked as tiebreakers.
   const data = useMemo(() => {
     if (!rawData) return rawData
     return [...rawData].sort((a, b) => {
-      // Primary: fraud value descending
-      const aAmt = a.amount_mxn_low ?? 0
-      const bAmt = b.amount_mxn_low ?? 0
-      if (bAmt !== aAmt) return bAmt - aAmt
+      // Primary key by sortMode
+      if (sortMode === 'amount') {
+        const aAmt = a.amount_mxn_low ?? 0
+        const bAmt = b.amount_mxn_low ?? 0
+        if (bAmt !== aAmt) return bAmt - aAmt
+      } else if (sortMode === 'year') {
+        const aYr = a.contract_year_start ?? 0
+        const bYr = b.contract_year_start ?? 0
+        if (bYr !== aYr) return bYr - aYr
+      } else if (sortMode === 'severity') {
+        if (b.severity !== a.severity) return b.severity - a.severity
+      }
       // Secondary: severity descending
       if (b.severity !== a.severity) return b.severity - a.severity
       // Tertiary: ML-linked first
@@ -395,7 +421,7 @@ export default function CaseLibrary() {
       const bLinked = b.ground_truth_case_id != null ? 1 : 0
       return bLinked - aLinked
     })
-  }, [rawData])
+  }, [rawData, sortMode])
 
   const hasFilters = Object.values(queryParams).some(Boolean)
 
@@ -509,6 +535,24 @@ export default function CaseLibrary() {
             </SelectContent>
           </Select>
 
+          {/* Sort selector */}
+          <div className="flex items-center gap-1.5 ml-auto">
+            <ArrowUpDown className="h-3 w-3 text-text-muted flex-shrink-0" />
+            <Select
+              value={sortMode}
+              onValueChange={(v) => setSortMode(v as SortMode)}
+            >
+              <SelectTrigger className="w-[150px] h-8 text-xs bg-card border-border/60">
+                <SelectValue placeholder={t('sortBy')} />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="amount">{t('sortOptions.amount')}</SelectItem>
+                <SelectItem value="year">{t('sortOptions.year')}</SelectItem>
+                <SelectItem value="severity">{t('sortOptions.severity')}</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
           {hasFilters && (
             <Button
               variant="ghost"
@@ -542,7 +586,7 @@ export default function CaseLibrary() {
         <>
           <div className="flex items-center justify-between mb-3">
             <p className="text-xs text-text-muted font-mono">
-              {t('resultCount', { count: data.length })} &middot; {t('sortedByImpact')}
+              {t('resultCount', { count: data.length })} &middot; {t('sortBy')}: {t(`sortOptions.${sortMode}`)}
             </p>
             <TableExportButton
               data={data.map((c) => ({

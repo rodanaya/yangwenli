@@ -692,11 +692,47 @@ export default function InstitutionHeatmap() {
                     </span>
                   </div>
                   {/* HHI sub-detail */}
-                  <div className="text-[10px] text-zinc-600 mt-0.5">
-                    HHI {(inst.hhi ?? 0).toFixed(3)}{' '}
-                    &middot;{' '}
-                    {lang === 'es' ? 'Top proveedor' : 'Top vendor'}{' '}
-                    {((inst.top_vendor_share ?? 0) * 100).toFixed(0)}%
+                  <div className="text-[10px] text-zinc-500 mt-0.5 flex items-center gap-2 flex-wrap">
+                    <span
+                      className="font-semibold"
+                      style={{
+                        color:
+                          (inst.hhi ?? 0) > 0.25
+                            ? '#f87171'
+                            : (inst.hhi ?? 0) > 0.15
+                            ? '#fb923c'
+                            : '#6b7280',
+                      }}
+                      title={
+                        lang === 'es'
+                          ? 'Índice Herfindahl-Hirschman: >0.25 = muy concentrado'
+                          : 'Herfindahl-Hirschman Index: >0.25 = highly concentrated'
+                      }
+                    >
+                      HHI {(inst.hhi ?? 0).toFixed(3)}
+                    </span>
+                    {(inst.hhi ?? 0) > 0.25 && (
+                      <span className="text-red-400 text-[9px] uppercase tracking-wide">
+                        {lang === 'es' ? 'alta captura' : 'high capture'}
+                      </span>
+                    )}
+                    <span className="text-zinc-600">&middot;</span>
+                    <span>
+                      {lang === 'es' ? 'Top proveedor' : 'Top vendor'}{' '}
+                      <span
+                        className="font-semibold"
+                        style={{
+                          color:
+                            (inst.top_vendor_share ?? 0) >= 50
+                              ? '#f87171'
+                              : (inst.top_vendor_share ?? 0) >= 30
+                              ? '#fb923c'
+                              : '#6b7280',
+                        }}
+                      >
+                        {(inst.top_vendor_share ?? 0).toFixed(0)}%
+                      </span>
+                    </span>
                   </div>
                 </div>
 
@@ -731,7 +767,128 @@ export default function InstitutionHeatmap() {
       </section>
 
       {/* ============================================================
-          6. Methodology Note
+          6. Top 5 Most Concentrated Institutions (by HHI)
+          ============================================================ */}
+      {institutions.length > 0 && (
+        <section aria-labelledby="top-hhi-heading">
+          <div className="h-px bg-zinc-700/60" />
+          <div className="pt-4 mb-4">
+            <span className="text-xs uppercase tracking-[0.2em] text-amber-400 font-semibold">
+              {lang === 'es' ? 'CONCENTRACIÓN HHI' : 'HHI CONCENTRATION'}
+            </span>
+            <h2
+              id="top-hhi-heading"
+              className="text-xl font-bold text-white mt-1"
+              style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+            >
+              {lang === 'es'
+                ? 'Las 5 Instituciones Más Concentradas'
+                : 'Top 5 Most Concentrated Institutions'}
+            </h2>
+            <p className="text-sm text-zinc-400 mt-1">
+              {lang === 'es'
+                ? 'Medido por el Índice Herfindahl-Hirschman (HHI). HHI > 0.25 indica que un solo proveedor domina el gasto de esa institución.'
+                : 'Measured by the Herfindahl-Hirschman Index (HHI). HHI > 0.25 indicates a single vendor dominates that institution\'s spending.'}
+            </p>
+          </div>
+
+          {/* HHI legend */}
+          <div className="flex flex-wrap gap-4 text-xs mb-4">
+            {[
+              { color: '#f87171', label: lang === 'es' ? 'Alta captura HHI > 0.25' : 'High capture HHI > 0.25' },
+              { color: '#fb923c', label: lang === 'es' ? 'Moderada 0.15–0.25' : 'Moderate 0.15–0.25' },
+              { color: '#fbbf24', label: lang === 'es' ? 'Baja 0.10–0.15' : 'Low 0.10–0.15' },
+              { color: '#4ade80', label: lang === 'es' ? 'Competitiva < 0.10' : 'Competitive < 0.10' },
+            ].map((item) => (
+              <div key={item.label} className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} aria-hidden="true" />
+                <span className="text-zinc-400">{item.label}</span>
+              </div>
+            ))}
+          </div>
+
+          <div className="space-y-2">
+            {[...institutions]
+              .sort((a, b) => b.hhi - a.hhi)
+              .slice(0, 5)
+              .map((inst, idx) => {
+                const hhiColor =
+                  inst.hhi > 0.25 ? '#f87171'
+                  : inst.hhi > 0.15 ? '#fb923c'
+                  : inst.hhi > 0.10 ? '#fbbf24'
+                  : '#4ade80'
+                const shareColor =
+                  (inst.top_vendor_share ?? 0) >= 50 ? '#f87171'
+                  : (inst.top_vendor_share ?? 0) >= 30 ? '#fb923c'
+                  : '#94a3b8'
+
+                return (
+                  <button
+                    key={inst.institution_id}
+                    onClick={() => navigate(`/institutions/${inst.institution_id}`)}
+                    className="w-full flex items-center gap-4 bg-zinc-900/60 border border-zinc-800/60 rounded-lg px-4 py-3 hover:bg-zinc-800/60 hover:border-zinc-700 transition-all group text-left"
+                    aria-label={`${shortName(inst.institution_name)} — HHI ${inst.hhi.toFixed(3)}`}
+                  >
+                    <span
+                      className="text-3xl font-bold text-zinc-600 w-10 text-right tabular-nums shrink-0"
+                      style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                      aria-hidden="true"
+                    >
+                      {idx + 1}
+                    </span>
+
+                    <div className="flex-1 min-w-0">
+                      <div className="text-white font-semibold text-sm truncate">
+                        {shortName(inst.institution_name)}
+                      </div>
+                      <div className="flex items-center gap-3 mt-0.5 text-xs text-zinc-500">
+                        <span>
+                          {formatNumber(inst.total_contracts)}{' '}
+                          {lang === 'es' ? 'contratos' : 'contracts'}
+                        </span>
+                        <span>&middot;</span>
+                        <span>{formatCompactMXN(inst.total_value)}</span>
+                      </div>
+                    </div>
+
+                    {/* HHI badge */}
+                    <div className="text-right shrink-0 mr-2">
+                      <div
+                        className="text-lg font-bold tabular-nums leading-tight"
+                        style={{ color: hhiColor }}
+                      >
+                        {inst.hhi.toFixed(3)}
+                      </div>
+                      <div className="text-[10px] text-zinc-500">HHI</div>
+                    </div>
+
+                    {/* Top vendor share badge */}
+                    <div className="text-right shrink-0 mr-2">
+                      <div
+                        className="text-base font-bold tabular-nums leading-tight"
+                        style={{ color: shareColor }}
+                      >
+                        {(inst.top_vendor_share ?? 0).toFixed(0)}%
+                      </div>
+                      <div className="text-[10px] text-zinc-500">
+                        {lang === 'es' ? 'top proveedor' : 'top vendor'}
+                      </div>
+                    </div>
+
+                    <ArrowRight
+                      size={16}
+                      className="text-zinc-600 group-hover:text-amber-400 transition-colors shrink-0"
+                      aria-hidden="true"
+                    />
+                  </button>
+                )
+              })}
+          </div>
+        </section>
+      )}
+
+      {/* ============================================================
+          7. Methodology Note
           ============================================================ */}
       <section>
         <div className="h-px bg-zinc-700/60" />

@@ -2,10 +2,10 @@
  * Sectors — 12 Sectors of Mexican Federal Procurement
  *
  * Full-width dark-header overview page with responsive sector card grid.
- * Each card: sector color accent, spend, contract count, risk badge,
- * risk distribution mini-bar, and a link to the full sector profile.
+ * Each card: sector color header strip, spend, contract count, risk badge,
+ * vendor count, mini sparkline risk profile, and a link to the full sector profile.
  *
- * Sort: total spend (default) | avg risk score | contract count
+ * Sort: total spend (default) | avg risk score | contract count | name
  */
 
 import { useMemo, useState } from 'react'
@@ -22,11 +22,11 @@ import {
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
-import { ArrowRight, ChevronDown } from 'lucide-react'
+import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-type SortKey = 'total_value_mxn' | 'avg_risk_score' | 'total_contracts'
+type SortKey = 'total_value_mxn' | 'avg_risk_score' | 'total_contracts' | 'name'
 
 function formatSpend(value: number): string {
   if (value >= 1_000_000_000_000) return `MX$${(value / 1_000_000_000_000).toFixed(1)}T`
@@ -80,6 +80,47 @@ function RiskBar({ sector }: RiskBarProps) {
   )
 }
 
+// ── MiniSparkline ─────────────────────────────────────────────────────────────
+// Renders the 4-bucket risk distribution as a tiny proportional column chart.
+// The list endpoint does not carry per-year trend data, so we show the current
+// risk profile (critical / high / medium / low) as a normalized mini-bar set.
+
+interface MiniSparklineProps {
+  sector: SectorStatistics
+  color: string
+}
+
+function MiniSparkline({ sector, color }: MiniSparklineProps) {
+  const total = sector.total_contracts || 1
+  const bars = [
+    { pct: ((sector.critical_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.critical, label: 'Crit' },
+    { pct: ((sector.high_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.high, label: 'High' },
+    { pct: ((sector.medium_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.medium, label: 'Med' },
+    { pct: ((sector.low_risk_count ?? 0) / total) * 100, barColor: color, label: 'Low' },
+  ]
+  const maxPct = Math.max(...bars.map((b) => b.pct), 1)
+
+  return (
+    <div
+      className="flex items-end gap-0.5 h-8 flex-shrink-0"
+      aria-hidden="true"
+      title="Risk profile: Critical / High / Medium / Low"
+    >
+      {bars.map((b) => (
+        <div
+          key={b.label}
+          className="w-3 rounded-sm transition-all duration-500"
+          style={{
+            height: `${Math.max((b.pct / maxPct) * 100, 8)}%`,
+            backgroundColor: b.barColor,
+            opacity: b.label === 'Low' ? 0.35 : 0.85,
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 // ── SectorCard ────────────────────────────────────────────────────────────────
 
 interface SectorCardProps {
@@ -96,19 +137,18 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   return (
     <Link
       to={`/sectors/${sector.sector_id}`}
-      className="group relative flex flex-col rounded-xl border border-white/8 bg-zinc-900/60 hover:bg-zinc-800/70 hover:border-white/15 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="group flex flex-col rounded-xl border border-white/8 bg-zinc-900/60 hover:bg-zinc-800/70 hover:border-white/15 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       aria-label={`${t(sector.sector_code)} — ${formatSpend(sector.total_value_mxn)}, ${riskLevel} risk`}
-      style={{ '--ring-color': color } as React.CSSProperties}
     >
-      {/* Left color accent bar */}
+      {/* Full-width color header strip */}
       <div
-        className="absolute inset-y-0 left-0 w-1 rounded-l-xl"
+        className="h-1.5 w-full flex-shrink-0"
         style={{ backgroundColor: color }}
         aria-hidden="true"
       />
 
-      <div className="pl-4 pr-4 pt-4 pb-3 flex flex-col gap-3 flex-1">
-        {/* Header row: rank + sector name */}
+      <div className="px-4 pt-3 pb-3 flex flex-col gap-3 flex-1">
+        {/* Header row: rank + sector name + risk badge */}
         <div className="flex items-start justify-between gap-2">
           <div>
             <span
@@ -124,16 +164,25 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           <RiskBadge level={riskLevel} />
         </div>
 
-        {/* Spend */}
-        <div>
-          <p
-            className="text-2xl font-black tabular-nums text-white leading-none"
-          >
-            {formatSpend(sector.total_value_mxn)}
-          </p>
-          <p className="text-[11px] text-zinc-400 mt-0.5">
-            {formatNumber(sector.total_contracts)} {t('card.contracts')}
-          </p>
+        {/* Spend + sparkline row */}
+        <div className="flex items-end justify-between gap-2">
+          <div>
+            <p className="text-2xl font-black tabular-nums text-white leading-none">
+              {formatSpend(sector.total_value_mxn)}
+            </p>
+            <p className="text-[11px] text-zinc-400 mt-0.5">
+              {formatNumber(sector.total_contracts)} {t('card.contracts')}
+            </p>
+          </div>
+          <MiniSparkline sector={sector} color={color} />
+        </div>
+
+        {/* Vendor count row */}
+        <div className="flex items-center gap-1 text-[11px] text-zinc-500">
+          <Building2 className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+          <span>
+            {formatNumber(sector.total_vendors)} {t('card.vendors')}
+          </span>
         </div>
 
         {/* Risk distribution bar */}
@@ -166,19 +215,30 @@ function SectorCard({ sector, rank }: SectorCardProps) {
 
 function SectorCardSkeleton() {
   return (
-    <div className="rounded-xl border border-white/8 bg-zinc-900/60 overflow-hidden p-4 space-y-3">
-      <div className="flex items-start justify-between">
-        <div className="space-y-1.5">
-          <Skeleton className="h-2.5 w-8" />
-          <Skeleton className="h-5 w-24" />
+    <div className="rounded-xl border border-white/8 bg-zinc-900/60 overflow-hidden">
+      <div className="h-1.5 w-full bg-zinc-800" />
+      <div className="p-4 space-y-3">
+        <div className="flex items-start justify-between">
+          <div className="space-y-1.5">
+            <Skeleton className="h-2.5 w-8" />
+            <Skeleton className="h-5 w-24" />
+          </div>
+          <Skeleton className="h-5 w-16 rounded-full" />
         </div>
-        <Skeleton className="h-5 w-16 rounded-full" />
-      </div>
-      <div className="space-y-1">
-        <Skeleton className="h-8 w-32" />
+        <div className="flex items-end justify-between gap-2">
+          <div className="space-y-1">
+            <Skeleton className="h-8 w-28" />
+            <Skeleton className="h-3 w-20" />
+          </div>
+          <div className="flex items-end gap-0.5 h-8">
+            {[0,1,2,3].map((i) => (
+              <Skeleton key={i} className="w-3" style={{ height: `${40 + i * 15}%` }} />
+            ))}
+          </div>
+        </div>
         <Skeleton className="h-3 w-24" />
+        <Skeleton className="h-1.5 w-full rounded-full" />
       </div>
-      <Skeleton className="h-1.5 w-full rounded-full" />
     </div>
   )
 }
@@ -197,6 +257,7 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
     { value: 'total_value_mxn', label: t('page.sortValue') },
     { value: 'avg_risk_score', label: t('page.sortRisk') },
     { value: 'total_contracts', label: t('page.sortContracts') },
+    { value: 'name', label: t('page.sortName') },
   ]
 
   return (
@@ -239,8 +300,17 @@ export function Sectors() {
   const sectors = data?.data ?? []
 
   const sorted = useMemo(() => {
-    return [...sectors].sort((a, b) => b[sortKey] - a[sortKey])
-  }, [sectors, sortKey])
+    if (sortKey === 'name') {
+      return [...sectors].sort((a, b) =>
+        (t(a.sector_code) as string).localeCompare(t(b.sector_code) as string)
+      )
+    }
+    return [...sectors].sort((a, b) => {
+      const aVal = a[sortKey] as number
+      const bVal = b[sortKey] as number
+      return bVal - aVal
+    })
+  }, [sectors, sortKey, t])
 
   const totalValue = data?.total_value_mxn ?? 0
   const totalContracts = data?.total_contracts ?? 0
@@ -289,33 +359,22 @@ export function Sectors() {
             {subtitleText}
           </p>
 
-          {/* Summary stat pills */}
-          {(isLoading || totalContracts > 0) && (
-            <div className="mt-6 flex flex-wrap gap-3">
-              {isLoading ? (
-                <>
-                  <Skeleton className="h-8 w-40 rounded-full" />
-                  <Skeleton className="h-8 w-32 rounded-full" />
-                  <Skeleton className="h-8 w-36 rounded-full" />
-                </>
-              ) : (
-                <>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-1.5 text-sm">
-                    <span className="font-black text-white tabular-nums">{formatNumber(totalContracts)}</span>
-                    <span className="text-zinc-400">{t('statCards.totalContracts').toLowerCase()}</span>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-1.5 text-sm">
-                    <span className="font-black text-white tabular-nums">{formatSpend(totalValue)}</span>
-                    <span className="text-zinc-400">{t('statCards.totalValue').toLowerCase()}</span>
-                  </div>
-                  <div className="inline-flex items-center gap-2 rounded-full bg-white/5 border border-white/10 px-4 py-1.5 text-sm">
-                    <span className="font-black text-white tabular-nums">12</span>
-                    <span className="text-zinc-400">{t('statCards.sectorsTracked').toLowerCase()}</span>
-                  </div>
-                </>
-              )}
-            </div>
-          )}
+          {/* Summary row: "12 sectors · 9.9T MXN · 3.1M contracts" */}
+          <div className="mt-5">
+            {isLoading ? (
+              <Skeleton className="h-6 w-64" />
+            ) : (
+              <p className="text-sm font-semibold text-zinc-300 tracking-wide">
+                <span className="text-white font-black">12</span>{' '}
+                <span className="text-zinc-500">{t('statCards.sectorsTracked').toLowerCase()}</span>
+                <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
+                <span className="text-white font-black tabular-nums">{formatSpend(totalValue)}</span>
+                <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
+                <span className="text-white font-black tabular-nums">{formatNumber(totalContracts)}</span>{' '}
+                <span className="text-zinc-500">{t('statCards.totalContracts').toLowerCase()}</span>
+              </p>
+            )}
+          </div>
         </div>
       </header>
 
@@ -328,7 +387,9 @@ export function Sectors() {
             {isLoading ? (
               <Skeleton className="h-4 w-32 inline-block" />
             ) : (
-              `${sorted.length} sectors`
+              <span>
+                {sorted.length} {t('statCards.sectorsTracked').toLowerCase()}
+              </span>
             )}
           </p>
           <SortDropdown value={sortKey} onChange={setSortKey} />

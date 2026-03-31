@@ -396,21 +396,36 @@ function ReviewPopover({
 // Threat Level Card
 // ============================================================================
 
-function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[number]; actualCount?: number }) {
+function ThreatLevelCard({
+  config,
+  actualCount,
+  avgRisk,
+  valueAtRisk,
+  isActive,
+  onClick,
+}: {
+  config: typeof TIER_CONFIG[number]
+  actualCount?: number
+  avgRisk?: number | null
+  valueAtRisk?: number | null
+  isActive?: boolean
+  onClick?: () => void
+}) {
   const { t } = useTranslation('aria')
   const count = actualCount ?? 0
-  return (
-    <div className={cn(
-      'relative border-l-4 rounded-r-lg p-4',
-      config.color,
-      config.bg,
-    )}>
+  const inner = (
+    <>
       <div className="flex items-center gap-2 mb-2">
         <span className="text-[10px] tracking-[0.2em] uppercase font-mono text-text-muted">
           {t(config.labelKey)}
         </span>
         {config.tier === 1 && (
           <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.dotColor)} />
+        )}
+        {isActive && (
+          <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-accent/80">
+            {t('tierCard.activeFilter')}
+          </span>
         )}
       </div>
       <div className={cn('text-2xl font-bold font-mono', config.textColor)}>
@@ -422,6 +437,57 @@ function ThreatLevelCard({ config, actualCount }: { config: typeof TIER_CONFIG[n
       <div className="text-xs text-text-muted/70 mt-1.5">
         {t(config.descKey)}
       </div>
+      {(avgRisk != null || valueAtRisk != null) && (
+        <div className="mt-2 pt-2 border-t border-white/5 grid grid-cols-2 gap-1.5 text-[10px]">
+          {avgRisk != null && (
+            <div>
+              <span className="text-text-muted">{t('tierCard.avgRisk')}</span>
+              <div className={cn('font-mono font-semibold', config.textColor)}>
+                {(avgRisk * 100).toFixed(0)}%
+              </div>
+            </div>
+          )}
+          {valueAtRisk != null && valueAtRisk > 0 && (
+            <div>
+              <span className="text-text-muted">{t('tierCard.valueAtRisk')}</span>
+              <div className="font-mono font-semibold text-text-secondary">
+                {formatCompactMXN(valueAtRisk)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+      {onClick && (
+        <div className="mt-2 text-[9px] font-mono text-text-muted/50 uppercase tracking-widest">
+          {isActive ? '' : t('tierCard.clickFilter')}
+        </div>
+      )}
+    </>
+  )
+
+  if (onClick) {
+    return (
+      <button
+        onClick={onClick}
+        className={cn(
+          'w-full text-left relative border-l-4 rounded-r-lg p-4 transition-all',
+          config.color,
+          config.bg,
+          isActive ? 'ring-1 ring-accent/60 opacity-100' : 'hover:brightness-110 opacity-90 hover:opacity-100',
+        )}
+      >
+        {inner}
+      </button>
+    )
+  }
+
+  return (
+    <div className={cn(
+      'relative border-l-4 rounded-r-lg p-4',
+      config.color,
+      config.bg,
+    )}>
+      {inner}
     </div>
   )
 }
@@ -613,13 +679,20 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             </div>
           )}
 
-          {/* Red Thread CTA */}
-          <div className="mt-auto pt-2 border-t border-border">
+          {/* Action buttons */}
+          <div className="mt-auto pt-2 border-t border-border flex items-center gap-2">
             <button
-              onClick={() => navigate(`/thread/${item.vendor_id}`)}
-              className="w-full flex items-center justify-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 py-1.5 rounded hover:bg-accent/10 transition-colors"
+              onClick={() => navigate(`/vendors/${item.vendor_id}`)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary py-1.5 rounded hover:bg-background-elevated transition-colors border border-border/50 hover:border-border"
+              title={t('actions.vendorProfile')}
             >
               <Eye className="h-3.5 w-3.5" />
+              {t('actions.vendorProfile')}
+            </button>
+            <button
+              onClick={() => navigate(`/thread/${item.vendor_id}`)}
+              className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-accent hover:text-accent/80 py-1.5 rounded hover:bg-accent/10 transition-colors"
+            >
               Red Thread
               <ArrowRight className="h-3 w-3 opacity-60" />
             </button>
@@ -795,6 +868,7 @@ export default function AriaPage() {
   const { t, i18n } = useTranslation('aria')
   const [search, setSearch] = useState('')
   const [patternFilter, setPatternFilter] = useState<string | null>(null)
+  const [tierFilter, setTierFilter] = useState<number | null>(null)
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [novelOnly, setNovelOnly] = useState(false)
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
@@ -820,7 +894,7 @@ export default function AriaPage() {
 
   // Full leads table
   const { data: leadsData, isLoading: leadsLoading } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, newVendorOnly, novelOnly, reviewStatusFilter }],
+    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, reviewStatusFilter }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
@@ -830,7 +904,7 @@ export default function AriaPage() {
         new_vendor_only: newVendorOnly || undefined,
         novel_only: novelOnly || undefined,
         status: reviewStatusFilter ?? undefined,
-        tier: patternFilter || newVendorOnly || search || reviewStatusFilter ? undefined : 2,
+        tier: tierFilter ?? (patternFilter || newVendorOnly || search || reviewStatusFilter ? undefined : 2),
       }),
     staleTime: 2 * 60_000,
   })
@@ -954,10 +1028,10 @@ export default function AriaPage() {
             {/* Additional filter toggles */}
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <button
-                onClick={() => { setPatternFilter(null); setNewVendorOnly(false); setNovelOnly(false); setSearch(''); setPage(1) }}
+                onClick={() => { setPatternFilter(null); setTierFilter(null); setNewVendorOnly(false); setNovelOnly(false); setSearch(''); setPage(1) }}
                 className={cn(
                   'px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors font-mono',
-                  !patternFilter && !newVendorOnly
+                  !patternFilter && !newVendorOnly && !tierFilter
                     ? 'bg-accent text-white border-accent'
                     : 'bg-background-elevated text-text-secondary border-border hover:border-accent/50'
                 )}
@@ -1023,6 +1097,25 @@ export default function AriaPage() {
                   : cfg.tier === 2 ? (stats?.latest_run?.tier2_count ?? 0)
                   : cfg.tier === 3 ? (stats?.latest_run?.tier3_count ?? 0)
                   : (stats?.latest_run?.tier4_count ?? 0)
+                // Compute avg risk from loaded tier1 items; for other tiers show elevated_value hint on T1
+                const avgRisk = cfg.tier === 1 && tier1Items.length > 0
+                  ? tier1Items.reduce((s, x) => s + (x.avg_risk_score ?? 0), 0) / tier1Items.length
+                  : null
+                const valueAtRisk = cfg.tier === 1 ? (stats?.elevated_value_mxn ?? null) : null
+                const isActiveTier = tierFilter === cfg.tier
+
+                const handleTierClick = () => {
+                  setTierFilter(isActiveTier ? null : cfg.tier)
+                  setPatternFilter(null)
+                  setNewVendorOnly(false)
+                  setSearch('')
+                  setPage(1)
+                  // Scroll the queue section into view
+                  setTimeout(() => {
+                    document.getElementById('aria-queue-section')?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+                  }, 100)
+                }
+
                 return (
                   <motion.div key={cfg.tier} variants={staggerItem}>
                     {isCollapsed ? (
@@ -1053,10 +1146,18 @@ export default function AriaPage() {
                       </button>
                     ) : (
                       <div className="relative">
-                        <ThreatLevelCard config={cfg} actualCount={liveCount} />
+                        <ThreatLevelCard
+                          config={cfg}
+                          actualCount={liveCount}
+                          avgRisk={avgRisk}
+                          valueAtRisk={valueAtRisk}
+                          isActive={isActiveTier}
+                          onClick={handleTierClick}
+                        />
                         {cfg.tier >= 3 && (
                           <button
-                            onClick={() => {
+                            onClick={(e) => {
+                              e.stopPropagation()
                               const next = new Set(collapsedTiers)
                               next.add(cfg.tier)
                               setCollapsedTiers(next)
@@ -1139,14 +1240,23 @@ export default function AriaPage() {
         {/* ================================================================ */}
         {/* FULL INTELLIGENCE QUEUE                                          */}
         {/* ================================================================ */}
-        <section>
+        <section id="aria-queue-section">
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-4 w-4 text-text-muted" />
                 <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-                  {patternFilter || newVendorOnly || search ? t('leads.filteredResults') : t('queueSection.title')}
+                  {patternFilter || newVendorOnly || search || tierFilter ? t('leads.filteredResults') : t('queueSection.title')}
                 </p>
+                {tierFilter != null && (
+                  <button
+                    onClick={() => { setTierFilter(null); setPage(1) }}
+                    className="flex items-center gap-1 text-[10px] text-accent/70 hover:text-accent transition-colors mt-0.5"
+                  >
+                    <XIcon className="h-3 w-3" />
+                    {TIER_CONFIG.find(c => c.tier === tierFilter) && t(TIER_CONFIG.find(c => c.tier === tierFilter)!.labelKey)} filter active
+                  </button>
+                )}
               </div>
               {totalLeads > 0 && (
                 <p className="text-xs text-text-muted font-mono">{formatNumber(totalLeads)} {t('leads.vendorCount')}</p>

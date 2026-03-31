@@ -4,13 +4,25 @@
   "pageSubhead": "Archivo de Corrupción — México 2001-2025",
   "pageDesc": "{{count}} casos documentados de corrupción en contratación pública federal. Cada expediente representa miles de millones de pesos desviados del erario.",
   "sortedByImpact": "ordenados por impacto",
+  "sortBy": "Ordenar por",
+  "sortOptions": {
+    "amount": "Monto del fraude",
+    "year": "Año",
+    "severity": "Gravedad"
+  },
+  "confidence": {
+    "confirmed": "Confirmado",
+    "high": "Alta confianza",
+    "medium": "Confianza media"
+  },
   "filterArchives": "FILTRAR ARCHIVOS",
   "subtitle": "43 casos de corrupción documentados — de la investigación a la condena",
   "statsBar": {
     "totalCases": "Casos documentados",
     "totalAmount": "Pérdidas estimadas",
     "gtLinked": "Vinculados a ML",
-    "compranetVisible": "Visibles en COMPRANET"
+    "compranetVisible": "Visibles en COMPRANET",
+    "vendorsIdentified": "Proveedores identificados"
   },
   "filters": {
     "all": "Todos los casos",
@@ -100,6 +112,14 @@
     },
     "noKeyActors": "Sin actores clave documentados",
     "noSources": "Sin fuentes registradas",
+    "institutionsAffected": "Instituciones Afectadas",
+    "noInstitutions": "Sin instituciones documentadas",
+    "evidenceTrail": "Rastro de Evidencias",
+    "evidenceTrailSubtitle": "Contratos de alto riesgo identificados en COMPRANET",
+    "evidenceContractCount_one": "{{count}} contrato",
+    "evidenceContractCount_other": "{{count}} contratos",
+    "viewAllContracts": "Ver todos los contratos →",
+    "vendorRiskScore": "Puntuación de riesgo",
     "impactMetrics": "Métricas de Impacto",
     "estimatedValue": "Valor Estimado",
     "upTo": "hasta {{amount}}",

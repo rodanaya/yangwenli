@@ -74,6 +74,216 @@ function getRiskLevel(score: number): string {
 // Sub-components
 // =============================================================================
 
+/** Dark hero banner with animated stat reveal — shown at very top of page */
+function HeroBannerStats({
+  year,
+  contracts,
+  totalValue,
+  avgRisk,
+  isLoading,
+}: {
+  year: number
+  contracts: number
+  totalValue: number
+  avgRisk: number
+  isLoading: boolean
+}) {
+  const { t } = useTranslation('yearinreview')
+  const riskLevel = getRiskLevel(avgRisk)
+  const riskColor = getRiskLevelColor(riskLevel)
+
+  const stats: { value: string; label: string; color: string }[] = [
+    {
+      value: isLoading ? '—' : formatNumber(contracts),
+      label: t('heroStats.totalContracts'),
+      color: '#60a5fa',
+    },
+    {
+      value: isLoading ? '—' : formatCompactMXN(totalValue),
+      label: t('heroStats.totalSpending'),
+      color: '#a78bfa',
+    },
+    {
+      value: isLoading ? '—' : avgRisk.toFixed(3),
+      label: t('heroStats.highRiskRate'),
+      color: riskColor,
+    },
+  ]
+
+  return (
+    <div
+      className="relative overflow-hidden rounded-xl"
+      style={{
+        background: 'linear-gradient(to bottom, #0f172a 0%, #0f172a 60%, transparent 100%)',
+      }}
+    >
+      {/* Subtle radial glow */}
+      <div
+        className="absolute inset-0 pointer-events-none"
+        aria-hidden="true"
+        style={{
+          background:
+            'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 70%)',
+        }}
+      />
+
+      <div className="relative z-10 px-6 pt-10 pb-8 text-center">
+        {/* Overline */}
+        <motion.p
+          className="text-[10px] uppercase tracking-[0.4em] text-slate-400 mb-3"
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.05 }}
+        >
+          {t('edition')}
+        </motion.p>
+
+        {/* Giant year */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.88 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
+        >
+          <span
+            className="block text-[96px] sm:text-[128px] font-black leading-none tabular-nums text-white"
+            style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.04em' }}
+          >
+            {year}
+          </span>
+        </motion.div>
+
+        {/* Subtitle */}
+        <motion.p
+          className="text-base sm:text-lg text-slate-300 mt-2 mb-8"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5, delay: 0.25 }}
+        >
+          {t('title')} &mdash; {t('subtitle')}
+        </motion.p>
+
+        {/* Three animated stats */}
+        <motion.div
+          className="grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto"
+          variants={staggerContainer}
+          initial="initial"
+          animate="animate"
+        >
+          {stats.map((s) => (
+            <motion.div
+              key={s.label}
+              variants={staggerItem}
+              className="flex flex-col items-center gap-1"
+            >
+              <span
+                className="text-2xl sm:text-3xl font-black tabular-nums leading-none"
+                style={{ color: s.color, fontFamily: 'var(--font-family-serif)' }}
+              >
+                {s.value}
+              </span>
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-slate-400 text-center leading-tight">
+                {s.label}
+              </span>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </div>
+  )
+}
+
+/** Sector race — horizontal bars sorted by total value, max 8 sectors */
+function SectorRaceBar({
+  data,
+  year,
+}: {
+  data: SectorYearItem[]
+  year: number
+}) {
+  const { t } = useTranslation('yearinreview')
+
+  const raceData = useMemo(() => {
+    const yearRows = data.filter((r) => r.year === year)
+    if (!yearRows.length) return []
+    return SECTORS
+      .map((sector) => {
+        const row = yearRows.find((r) => r.sector_id === sector.id)
+        if (!row || row.total_value <= 0) return null
+        return {
+          id: sector.id,
+          name: sector.name,
+          color: sector.color,
+          value: row.total_value,
+          contracts: row.contracts,
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b!.value - a!.value)
+      .slice(0, 8) as {
+        id: number; name: string; color: string; value: number; contracts: number
+      }[]
+  }, [data, year])
+
+  if (!raceData.length) return null
+
+  const maxValue = raceData[0]?.value ?? 1
+
+  return (
+    <motion.div
+      className="space-y-3"
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+    >
+      {raceData.map((s) => {
+        const barPct = maxValue > 0 ? (s.value / maxValue) * 100 : 0
+        return (
+          <motion.div
+            key={s.id}
+            variants={staggerItem}
+            className="flex items-center gap-3"
+          >
+            {/* Sector dot */}
+            <span
+              className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+              style={{ backgroundColor: s.color }}
+              aria-hidden="true"
+            />
+
+            {/* Name */}
+            <span className="text-xs text-text-secondary w-28 truncate flex-shrink-0">
+              {s.name}
+            </span>
+
+            {/* Bar track */}
+            <div className="flex-1 relative h-6 rounded overflow-hidden bg-background-elevated/20">
+              <motion.div
+                className="absolute inset-y-0 left-0 rounded"
+                style={{ backgroundColor: s.color }}
+                initial={{ width: '0%', opacity: 0.3 }}
+                animate={{ width: `${barPct}%`, opacity: 0.55 }}
+                transition={{ duration: 0.8, ease: [0.22, 1, 0.36, 1], delay: 0.1 }}
+              />
+              {/* Inline value label */}
+              <div className="absolute inset-0 flex items-center px-2 pointer-events-none">
+                <span className="text-[10px] font-mono text-text-primary">
+                  {formatCompactMXN(s.value)}
+                </span>
+              </div>
+            </div>
+
+            {/* Contract count */}
+            <span className="text-[10px] font-mono text-text-muted w-20 text-right flex-shrink-0 tabular-nums">
+              {formatNumber(s.contracts)} {t('contracts')}
+            </span>
+          </motion.div>
+        )
+      })}
+    </motion.div>
+  )
+}
+
 /** Sector spend distribution as horizontal bar chart */
 function SectorBreakdownChart({
   data,
@@ -451,6 +661,17 @@ export default function YearInReview() {
 
   return (
     <div className="max-w-[900px] mx-auto px-4 py-8 space-y-8">
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 0. Full-bleed Hero Banner with count-up stats                       */}
+      {/* ------------------------------------------------------------------ */}
+      <HeroBannerStats
+        year={validYear}
+        contracts={yearRow?.contracts ?? 0}
+        totalValue={yearRow?.total_value ?? 0}
+        avgRisk={yearRow?.avg_risk ?? 0}
+        isLoading={isLoading}
+      />
 
       {/* ------------------------------------------------------------------ */}
       {/* 1. Hero Banner — prominent year display                             */}
@@ -892,6 +1113,25 @@ export default function YearInReview() {
           <SectorBreakdownChart data={sectorYearData} year={validYear} />
         )}
       </div>
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 10b. Sector Race Bar — value-sorted animated bars                   */}
+      {/* ------------------------------------------------------------------ */}
+      {!syLoading && sectorYearData.length > 0 && (
+        <div>
+          <div className="h-px bg-border mb-4" />
+          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            {t('sectorBreakdown.sectionLabel')}
+          </p>
+          <p
+            className="text-lg font-bold text-text-primary mb-4"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {t('sectorBreakdown.headline', { year: validYear })}
+          </p>
+          <SectorRaceBar data={sectorYearData} year={validYear} />
+        </div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* 11. Sector Growth Ranking (if prior year data exists)               */}

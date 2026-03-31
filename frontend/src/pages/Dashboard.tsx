@@ -47,6 +47,8 @@ import {
   Area,
   AreaChart,
   Bar,
+  BarChart,
+  Cell,
   Line,
   ComposedChart,
   ReferenceLine,
@@ -278,6 +280,163 @@ function SectionDivider() {
 
 
 // DONUT_COLORS removed — distribution section removed
+
+// ============================================================================
+// SECTORS BY VALUE CHART — Horizontal bar chart, top 8 sectors by total value
+// ============================================================================
+
+interface SectorsByValueChartProps {
+  sectors: Array<{ name: string; code: string; totalValue: number }>
+  loading: boolean
+}
+
+function SectorsByValueChart({ sectors, loading }: SectorsByValueChartProps) {
+  const { t } = useTranslation('dashboard')
+
+  const chartData = useMemo(() => {
+    return [...sectors]
+      .sort((a, b) => b.totalValue - a.totalValue)
+      .slice(0, 8)
+      .map((s) => ({
+        name: s.name,
+        code: s.code,
+        value: s.totalValue,
+        fill: SECTOR_COLORS[s.code] ?? '#64748b',
+      }))
+  }, [sectors])
+
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-border/30 bg-background-card/60 p-4">
+        <Skeleton className="h-4 w-44 mb-4" />
+        <Skeleton className="h-[280px] w-full rounded-lg" />
+      </div>
+    )
+  }
+
+  if (chartData.length === 0) return null
+
+  return (
+    <div className="rounded-xl border border-border/30 bg-background-card/60 p-4">
+      <div className="flex items-center gap-2 mb-4">
+        <BarChart3 className="h-4 w-4 text-accent" />
+        <h2 className="text-sm font-bold text-text-primary uppercase tracking-wider font-mono">
+          {t('sectorsByValueTitle', 'Sectors by Contract Value')}
+        </h2>
+      </div>
+      <ResponsiveContainer width="100%" height={280}>
+        <BarChart
+          data={chartData}
+          layout="vertical"
+          margin={{ top: 0, right: 16, bottom: 0, left: 0 }}
+        >
+          <CartesianGrid
+            strokeDasharray="3 3"
+            stroke="rgba(255,255,255,0.05)"
+            horizontal={false}
+          />
+          <XAxis
+            type="number"
+            dataKey="value"
+            tickFormatter={(v: number) => formatCompactMXN(v)}
+            tick={{ fill: 'rgba(255,255,255,0.45)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <YAxis
+            type="category"
+            dataKey="name"
+            width={88}
+            tick={{ fill: 'rgba(255,255,255,0.65)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+            axisLine={false}
+            tickLine={false}
+          />
+          <RechartsTooltip
+            cursor={{ fill: 'rgba(255,255,255,0.04)' }}
+            contentStyle={{
+              background: 'rgba(15,15,20,0.97)',
+              border: '1px solid rgba(255,255,255,0.1)',
+              borderRadius: '8px',
+              fontSize: '11px',
+              fontFamily: 'var(--font-family-mono)',
+              color: '#e2e8f0',
+            }}
+            formatter={(v: number | undefined) => [v != null ? formatCompactMXN(v) : '—', 'Total Value']}
+          />
+          <Bar dataKey="value" radius={[0, 3, 3, 0]} isAnimationActive={false}>
+            {chartData.map((entry) => (
+              <Cell
+                key={entry.code}
+                fill={entry.fill}
+                fillOpacity={0.85}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ============================================================================
+// RISK FILTER CHIPS — Pill buttons to visually filter by risk level
+// ============================================================================
+
+const RISK_CHIP_LEVELS = [
+  { key: 'all', label: 'All' },
+  { key: 'critical', label: 'Critical' },
+  { key: 'high', label: 'High' },
+  { key: 'medium', label: 'Medium' },
+  { key: 'low', label: 'Low' },
+] as const
+
+type RiskChipLevel = (typeof RISK_CHIP_LEVELS)[number]['key']
+
+function RiskFilterChips() {
+  const [active, setActive] = useState<RiskChipLevel>('all')
+
+  return (
+    <div
+      className="flex flex-wrap gap-2"
+      role="group"
+      aria-label="Filter by risk level"
+    >
+      {RISK_CHIP_LEVELS.map(({ key, label }) => {
+        const isActive = active === key
+        const chipColor = key === 'all' ? '#818cf8' : (RISK_COLORS[key as keyof typeof RISK_COLORS] ?? '#818cf8')
+        return (
+          <button
+            key={key}
+            onClick={() => setActive(key)}
+            aria-pressed={isActive}
+            className="rounded-full px-3 py-1 text-[11px] font-bold font-mono tracking-wider uppercase transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
+            style={{
+              backgroundColor: isActive ? chipColor : 'transparent',
+              color: isActive ? '#0a0a0f' : chipColor,
+              border: `1.5px solid ${chipColor}`,
+              opacity: isActive ? 1 : 0.65,
+              focusRingColor: chipColor,
+            } as React.CSSProperties}
+            onMouseEnter={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.opacity = '0.9'
+                e.currentTarget.style.backgroundColor = `${chipColor}18`
+              }
+            }}
+            onMouseLeave={(e) => {
+              if (!isActive) {
+                e.currentTarget.style.opacity = '0.65'
+                e.currentTarget.style.backgroundColor = 'transparent'
+              }
+            }}
+          >
+            {label}
+          </button>
+        )
+      })}
+    </div>
+  )
+}
 
 // ============================================================================
 // MINI SPARKLINE — 120x24px area chart for KPI trend embedding
@@ -1762,6 +1921,11 @@ export function Dashboard() {
       </div>
 
       {/* ================================================================ */}
+      {/* RISK FILTER CHIPS — Quick risk-level filter pills                 */}
+      {/* ================================================================ */}
+      <RiskFilterChips />
+
+      {/* ================================================================ */}
       {/* P1 INSIGHT CARDS — Multivariate anomalies, election effect,      */}
       {/* new vendor risk, sexenio comparison                              */}
       {/* ================================================================ */}
@@ -2339,6 +2503,13 @@ export function Dashboard() {
       </DashboardSection>
 
       {/* P21: ANOMALY LEADS — removed (API 500 errors) */}
+
+      {/* ================================================================ */}
+      {/* SECTORS BY VALUE CHART — Horizontal bar, top 8 by total value    */}
+      {/* ================================================================ */}
+      <ErrorBoundary fallback={<SectionErrorFallback />}>
+        <SectorsByValueChart sectors={sectorData} loading={dashLoading} />
+      </ErrorBoundary>
 
       {/* ================================================================ */}
       {/* SECTOR GRID: 12 cards                                            */}

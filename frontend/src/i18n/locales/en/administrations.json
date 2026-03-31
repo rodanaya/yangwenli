@@ -19,6 +19,22 @@
       "highRisk": "High Risk",
       "vendors": "Active Vendors"
     },
+    "severityLabels": {
+      "critical": "CRIT",
+      "high": "HIGH",
+      "medium": "MED"
+    },
+    "keyFigures": "Key Figures",
+    "keyFiguresLabels": {
+      "highestRiskSector": "Highest Risk Sector",
+      "singleBidRate": "Single Bid Rate",
+      "directAwardRate": "Direct Award Rate",
+      "aboveAvg": "Above average",
+      "typical": "Typical range",
+      "critical": "Critical level",
+      "elevated": "Elevated",
+      "moderate": "Moderate"
+    },
     "scandals": {
       "casa_blanca": "Casa Blanca — Conflict of interest: presidential family linked to contractor Grupo Higa (EPN, 2014)",
       "estafa_maestra": "La Estafa Maestra — MXN 7.6B diverted through public universities using ghost companies (EPN, 2017)",

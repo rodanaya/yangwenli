@@ -3,9 +3,9 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning } from 'lucide-react'
-import { analysisApi, phiApi } from '@/api/client'
-import type { FastDashboardData } from '@/api/types'
+import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning, Map, Users, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
+import { analysisApi, phiApi, contractApi } from '@/api/client'
+import type { FastDashboardData, ContractListResponse } from '@/api/types'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -912,6 +912,13 @@ export default function Intro() {
     retry: 1,
   })
 
+  const { data: recentCriticalData } = useQuery<ContractListResponse>({
+    queryKey: ['contracts', 'recent-critical'],
+    queryFn: () => contractApi.getAll({ risk_level: 'critical', per_page: 3, sort_by: 'contract_date', sort_order: 'desc' }),
+    staleTime: 15 * 60 * 1000,
+    retry: 1,
+  })
+
   const goToApp = useCallback(
     (path = '/dashboard') => {
       localStorage.setItem('rubli_seen_intro', '1')
@@ -947,7 +954,6 @@ export default function Intro() {
   const heroTopBarRef = useRef<HTMLDivElement>(null)
 
   // GSAP hero stat counter state
-  const [heroContracts, setHeroContracts] = useState(0)
   const [heroValueT, setHeroValueT] = useState(0)
   const [heroRiskPct, setHeroRiskPct] = useState(0)
   const [heroCases, setHeroCases] = useState(0)
@@ -997,18 +1003,16 @@ export default function Intro() {
       tl.to(heroStatsRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
     }
 
-    // GSAP counter animation for hero stats
-    const counterObj = { contracts: 0, valueT: 0, risk: 0, cases: 0 }
+    // GSAP counter animation for hero stats (hardcoded targets, live data shown below fold)
+    const counterObj = { valueT: 0, risk: 0, cases: 0 }
     tl.to(counterObj, {
-      contracts: 3051294,
       valueT: 99,
-      risk: 920,
-      cases: 748,
+      risk: 1349,
+      cases: 25,
       duration: 2.5,
       ease: 'power2.out',
-      snap: { contracts: 1, valueT: 1, risk: 1, cases: 1 },
+      snap: { valueT: 1, risk: 1, cases: 1 },
       onUpdate: () => {
-        setHeroContracts(Math.round(counterObj.contracts))
         setHeroValueT(Math.round(counterObj.valueT))
         setHeroRiskPct(Math.round(counterObj.risk))
         setHeroCases(Math.round(counterObj.cases))
@@ -1221,12 +1225,12 @@ export default function Intro() {
               style={{ fontFamily: SERIF, letterSpacing: '-0.03em', color: CRIMSON }}
             />
             <h1
-              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05]"
+              className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1]"
               style={{ fontFamily: SERIF, letterSpacing: '-0.03em' }}
             >
-              <span style={{ color: CRIMSON }}>{heroContracts.toLocaleString()}</span>
+              <span style={{ color: '#fff' }}>{t('hero.storyHook1')}</span>
               <br />
-              <span style={{ color: '#fff' }}>{t('hero.contracts')}</span>
+              <span style={{ color: CRIMSON }}>{t('hero.storyHook2')}</span>
             </h1>
           </div>
 
@@ -1236,7 +1240,7 @@ export default function Intro() {
             className="text-lg sm:text-xl max-w-2xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.55)' }}
           >
-            {t('hero.heroSubtitle')}
+            {t('hero.storySubtitle')}
           </p>
 
           {/* Hero stats - GSAP animated counters */}
@@ -1250,7 +1254,7 @@ export default function Intro() {
             <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
             <div className="flex flex-col items-center gap-1">
               <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: CRIMSON }}>
-                {(heroRiskPct / 100).toFixed(2)}%
+                {(heroRiskPct / 100).toFixed(1)}%
               </span>
               <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
                 {t('hero.highRisk')}
@@ -1344,6 +1348,85 @@ export default function Intro() {
       {/* CASE MARQUEE -- scrolling corruption case names */}
       {/* ================================================================= */}
       <CaseMarquee />
+
+      {/* ================================================================= */}
+      {/* CTA PANELS -- Entry-point cards for key pages */}
+      {/* ================================================================= */}
+      <section
+        className="px-6 sm:px-12 lg:px-24 py-16 sm:py-20"
+        style={{ background: '#0d0f0e' }}
+        aria-label={t('ctaPanels.ariaLabel')}
+      >
+        <div className="max-w-5xl mx-auto">
+          <h2
+            className="text-2xl sm:text-3xl font-black mb-3 leading-tight"
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+          >
+            {t('ctaPanels.headline')}
+          </h2>
+          <p className="text-sm mb-10" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            {t('ctaPanels.sub')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {([
+              {
+                icon: AlertTriangle,
+                title: t('ctaPanels.cases.title'),
+                desc: t('ctaPanels.cases.desc'),
+                path: '/cases',
+                color: CRIMSON,
+                bg: 'rgba(196,30,58,0.08)',
+                border: 'rgba(196,30,58,0.25)',
+              },
+              {
+                icon: TrendingUp,
+                title: t('ctaPanels.administrations.title'),
+                desc: t('ctaPanels.administrations.desc'),
+                path: '/administrations',
+                color: '#eab308',
+                bg: 'rgba(234,179,8,0.08)',
+                border: 'rgba(234,179,8,0.25)',
+              },
+              {
+                icon: Users,
+                title: t('ctaPanels.vendors.title'),
+                desc: t('ctaPanels.vendors.desc'),
+                path: '/vendors',
+                color: '#8b5cf6',
+                bg: 'rgba(139,92,246,0.08)',
+                border: 'rgba(139,92,246,0.25)',
+              },
+              {
+                icon: Map,
+                title: t('ctaPanels.sectors.title'),
+                desc: t('ctaPanels.sectors.desc'),
+                path: '/sectors',
+                color: '#16a34a',
+                bg: 'rgba(22,163,74,0.08)',
+                border: 'rgba(22,163,74,0.25)',
+              },
+            ] as const).map((panel) => (
+              <button
+                key={panel.path}
+                onClick={() => goToApp(panel.path)}
+                className="flex flex-col items-start gap-3 rounded-xl p-5 text-left transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-white/20"
+                style={{ backgroundColor: panel.bg, border: `1px solid ${panel.border}` }}
+              >
+                <panel.icon className="h-6 w-6 flex-shrink-0" style={{ color: panel.color }} aria-hidden="true" />
+                <div>
+                  <span className="block text-sm font-bold mb-1" style={{ color: '#f0ede8' }}>
+                    {panel.title}
+                  </span>
+                  <span className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
+                    {panel.desc}
+                  </span>
+                </div>
+                <ArrowRight className="h-3.5 w-3.5 mt-auto" style={{ color: panel.color }} aria-hidden="true" />
+              </button>
+            ))}
+          </div>
+        </div>
+      </section>
 
       {/* ================================================================= */}
       {/* SECTION 2: THE SCALE - White bg, animated bar chart */}
@@ -1440,8 +1523,143 @@ export default function Intro() {
               </span>
             </div>
           </div>
+
+          {/* Sector risk rate teaser */}
+          {fastDashboard?.sectors && fastDashboard.sectors.length > 0 && (
+            <div className="gsap-reveal mt-16">
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-xs font-bold tracking-[0.15em] uppercase" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {t('sectorTeaser.label')}
+                </span>
+                <button
+                  onClick={() => goToApp('/sectors')}
+                  className="flex items-center gap-1 text-xs font-semibold transition-colors hover:brightness-125 focus:outline-none"
+                  style={{ color: CRIMSON }}
+                >
+                  {t('sectorTeaser.cta')}
+                  <ArrowRight className="h-3 w-3" aria-hidden="true" />
+                </button>
+              </div>
+              <div className="flex flex-col gap-2" role="list" aria-label={t('sectorTeaser.ariaLabel')}>
+                {[...fastDashboard.sectors]
+                  .sort((a, b) => b.avg_risk_score - a.avg_risk_score)
+                  .slice(0, 6)
+                  .map((sector) => {
+                    const key = sector.code?.toLowerCase() ?? sector.name?.toLowerCase().replace(/\s+/g, '') ?? ''
+                    const color = SECTOR_COLORS[key] ?? '#64748b'
+                    const highRiskCount = (sector.high_risk_count ?? 0) + (sector.critical_risk_count ?? 0)
+                    const riskRate = sector.total_contracts > 0
+                      ? (highRiskCount / sector.total_contracts) * 100
+                      : 0
+                    const displayName = SECTOR_DISPLAY[key]
+                    const name = displayName ? (isEn ? displayName.en : displayName.es) : (sector.name ?? key)
+                    return (
+                      <div key={sector.id} className="flex items-center gap-3" role="listitem">
+                        <span className="text-xs w-28 truncate flex-shrink-0" style={{ color: 'rgba(255,255,255,0.55)' }}>
+                          {name}
+                        </span>
+                        <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ backgroundColor: 'rgba(255,255,255,0.06)' }}>
+                          <motion.div
+                            className="h-full rounded-full"
+                            style={{ backgroundColor: color }}
+                            initial={{ width: 0 }}
+                            animate={s2InView ? { width: `${Math.min(riskRate * 3, 100)}%` } : { width: 0 }}
+                            transition={{ duration: 0.7, delay: 0.2, ease: 'easeOut' }}
+                          />
+                        </div>
+                        <span className="text-xs tabular-nums w-12 text-right flex-shrink-0" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                          {riskRate.toFixed(1)}%
+                        </span>
+                      </div>
+                    )
+                  })}
+              </div>
+            </div>
+          )}
         </div>
       </section>
+
+      {/* ================================================================= */}
+      {/* RECENT CRITICAL FLAGS */}
+      {/* ================================================================= */}
+      {recentCriticalData?.data && recentCriticalData.data.length > 0 && (
+        <section
+          className="px-6 sm:px-12 lg:px-24 py-16"
+          style={{ background: '#0a0c0b' }}
+          aria-label={t('recentFlags.ariaLabel')}
+        >
+          <div className="max-w-5xl mx-auto">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <span
+                  className="text-xs font-bold tracking-[0.2em] uppercase block mb-1"
+                  style={{ color: CRIMSON }}
+                >
+                  {t('recentFlags.label')}
+                </span>
+                <h2 className="text-xl font-black" style={{ fontFamily: SERIF, color: '#f0ede8' }}>
+                  {t('recentFlags.headline')}
+                </h2>
+              </div>
+              <button
+                onClick={() => goToApp('/contracts?risk_level=critical')}
+                className="hidden sm:flex items-center gap-1 text-xs font-semibold transition-colors hover:brightness-125 focus:outline-none"
+                style={{ color: CRIMSON }}
+              >
+                {t('recentFlags.viewAll')}
+                <ArrowRight className="h-3 w-3" aria-hidden="true" />
+              </button>
+            </div>
+            <div className="flex flex-col gap-3">
+              {recentCriticalData.data.map((contract) => {
+                const sectorKey = contract.sector_name?.toLowerCase().replace(/\s+/g, '') ?? 'otros'
+                const sectorColor = SECTOR_COLORS[sectorKey] ?? '#64748b'
+                const amountB = contract.amount_mxn >= 1_000_000_000
+                  ? `$${(contract.amount_mxn / 1_000_000_000).toFixed(1)}B`
+                  : `$${(contract.amount_mxn / 1_000_000).toFixed(0)}M`
+                return (
+                  <button
+                    key={contract.id}
+                    onClick={() => goToApp(`/contracts/${contract.id}`)}
+                    className="flex items-start gap-4 rounded-xl p-4 text-left transition-all duration-200 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-red-400/20"
+                    style={{ backgroundColor: 'rgba(196,30,58,0.06)', border: '1px solid rgba(196,30,58,0.2)' }}
+                    aria-label={`${t('recentFlags.ariaContract')}: ${contract.vendor_name ?? ''}`}
+                  >
+                    <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: CRIMSON }} aria-hidden="true" />
+                    <div className="flex-1 min-w-0">
+                      <span className="block text-sm font-semibold truncate" style={{ color: '#f0ede8' }}>
+                        {contract.vendor_name ?? t('recentFlags.unknownVendor')}
+                      </span>
+                      <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                        <span className="text-xs font-mono font-bold" style={{ color: CRIMSON }}>
+                          {amountB} MXN
+                        </span>
+                        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>&bull;</span>
+                        <span
+                          className="text-xs px-1.5 py-0.5 rounded font-medium"
+                          style={{ backgroundColor: `${sectorColor}20`, color: sectorColor }}
+                        >
+                          {contract.sector_name ?? t('recentFlags.unknownSector')}
+                        </span>
+                        {contract.contract_date && (
+                          <>
+                            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.3)' }}>&bull;</span>
+                            <span className="flex items-center gap-1 text-xs" style={{ color: 'rgba(255,255,255,0.35)' }}>
+                              <Clock className="h-3 w-3" aria-hidden="true" />
+                              {contract.contract_date.slice(0, 10)}
+                            </span>
+                          </>
+                        )}
+                      </div>
+                    </div>
+                    <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 self-center" style={{ color: 'rgba(196,30,58,0.5)' }} aria-hidden="true" />
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* ================================================================= */}
       {/* SECTION 3: FEATURED CASE - Dark bg, classified file feel */}

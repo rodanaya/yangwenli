@@ -17,7 +17,7 @@ import { SECTOR_COLORS } from '@/lib/constants'
 import { getRiskLevelFromScore } from '@/lib/constants'
 import {
   Search, Shield, ArrowRight, AlertTriangle, Ghost, Building, Users,
-  X, ExternalLink, Loader2, AlertCircle,
+  X, ExternalLink, Loader2, AlertCircle, LayoutGrid, List,
 } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
@@ -123,6 +123,7 @@ export default function RedesKnownDossier() {
   // Filters
   const [patternFilter, setPatternFilter] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   // Selected vendor for the detail panel
   const [selectedVendorId, setSelectedVendorId] = useState<number | null>(null)
@@ -181,6 +182,15 @@ export default function RedesKnownDossier() {
   }, [dossiers, patternFilter, searchTerm])
 
   const error = !isLoading && dossiers.length === 0 && !tier1Data && !tier2Data
+
+  // Stats bar computations derived from filtered results
+  const statsBar = useMemo(() => {
+    const t1 = filtered.filter((d) => d.ips_tier === 1).length
+    const t2 = filtered.filter((d) => d.ips_tier === 2).length
+    const totalAtRisk = filtered.reduce((sum, d) => sum + (d.total_value_mxn ?? 0), 0)
+    const sectors = new Set(filtered.map((d) => d.primary_sector_name).filter(Boolean)).size
+    return { t1, t2, totalAtRisk, sectors }
+  }, [filtered])
 
   // Dismiss the detail panel when clicking outside on mobile overlay
   const handleOverlayClick = () => setSelectedVendorId(null)
@@ -294,6 +304,65 @@ export default function RedesKnownDossier() {
         </div>
       </div>
 
+      {/* Stats bar + view toggle */}
+      {!isLoading && filtered.length > 0 && (
+        <div className="space-y-3">
+          {/* Stats bar */}
+          <div
+            className="grid grid-cols-4 gap-3 p-4 bg-slate-900/60 border border-slate-700/50 rounded-xl"
+            role="region"
+            aria-label="Summary statistics"
+          >
+            <div className="text-center">
+              <div className="text-lg font-mono font-bold text-red-400">{statsBar.t1}</div>
+              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T1 Vendors</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-mono font-bold text-orange-400">{statsBar.t2}</div>
+              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T2 Vendors</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-mono font-bold text-text-primary">{formatCompactMXN(statsBar.totalAtRisk)}</div>
+              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Total at Risk</div>
+            </div>
+            <div className="text-center">
+              <div className="text-lg font-mono font-bold text-text-primary">{statsBar.sectors}</div>
+              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Sectors</div>
+            </div>
+          </div>
+
+          {/* View mode toggle */}
+          <div className="flex items-center justify-end gap-1">
+            <button
+              onClick={() => setViewMode('grid')}
+              className={cn(
+                'p-1.5 rounded border transition-all',
+                viewMode === 'grid'
+                  ? 'bg-white/10 border-white/20 text-text-primary'
+                  : 'border-white/10 text-text-muted/40 hover:text-text-muted hover:border-white/15',
+              )}
+              aria-pressed={viewMode === 'grid'}
+              aria-label="Grid view"
+            >
+              <LayoutGrid className="w-4 h-4" aria-hidden="true" />
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={cn(
+                'p-1.5 rounded border transition-all',
+                viewMode === 'list'
+                  ? 'bg-white/10 border-white/20 text-text-primary'
+                  : 'border-white/10 text-text-muted/40 hover:text-text-muted hover:border-white/15',
+              )}
+              aria-pressed={viewMode === 'list'}
+              aria-label="List view"
+            >
+              <List className="w-4 h-4" aria-hidden="true" />
+            </button>
+          </div>
+        </div>
+      )}
+
       {/* Loading */}
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -334,20 +403,36 @@ export default function RedesKnownDossier() {
           variants={staggerContainer}
           initial="initial"
           animate="animate"
-          className="grid grid-cols-1 md:grid-cols-2 gap-4"
+          className={viewMode === 'grid'
+            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
+            : 'flex flex-col gap-2'
+          }
         >
-          {filtered.map((item) => (
-            <DossierCard
-              key={item.vendor_id}
-              item={item}
-              isSelected={selectedVendorId === item.vendor_id}
-              onSelect={() =>
-                setSelectedVendorId(
-                  selectedVendorId === item.vendor_id ? null : item.vendor_id
-                )
-              }
-            />
-          ))}
+          {filtered.map((item) =>
+            viewMode === 'list' ? (
+              <DossierListRow
+                key={item.vendor_id}
+                item={item}
+                isSelected={selectedVendorId === item.vendor_id}
+                onSelect={() =>
+                  setSelectedVendorId(
+                    selectedVendorId === item.vendor_id ? null : item.vendor_id
+                  )
+                }
+              />
+            ) : (
+              <DossierCard
+                key={item.vendor_id}
+                item={item}
+                isSelected={selectedVendorId === item.vendor_id}
+                onSelect={() =>
+                  setSelectedVendorId(
+                    selectedVendorId === item.vendor_id ? null : item.vendor_id
+                  )
+                }
+              />
+            )
+          )}
         </motion.div>
       )}
 
@@ -398,6 +483,104 @@ export default function RedesKnownDossier() {
         )}
       </AnimatePresence>
     </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Dossier List Row — compact horizontal layout for list view mode
+// ---------------------------------------------------------------------------
+
+interface DossierListRowProps {
+  item: AriaQueueItem
+  isSelected: boolean
+  onSelect: () => void
+}
+
+function DossierListRow({ item, isSelected, onSelect }: DossierListRowProps) {
+  const { t } = useTranslation('redes')
+  const pattern = item.primary_pattern || 'default'
+  const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
+  const borderClass = PATTERN_BORDER_COLORS[pattern] || 'border-l-zinc-500'
+  const sectorColor = item.primary_sector_name
+    ? SECTOR_COLORS[item.primary_sector_name.toLowerCase()] || '#64748b'
+    : '#64748b'
+
+  return (
+    <motion.div
+      variants={staggerItem}
+      className={cn(
+        'bg-surface-card border border-white/8 rounded-lg overflow-hidden',
+        'border-l-4',
+        borderClass,
+        'transition-colors cursor-pointer',
+        isSelected ? 'border-white/30 ring-1 ring-white/20' : 'hover:border-white/20',
+      )}
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect()}
+      aria-expanded={isSelected}
+      aria-label={`${item.vendor_name} — ${t('card.viewCase')}`}
+    >
+      <div className="px-4 py-2.5 flex items-center gap-4 flex-wrap">
+        {/* Pattern icon */}
+        <PatternIcon className="w-3.5 h-3.5 text-text-muted/50 shrink-0" aria-hidden="true" />
+
+        {/* Vendor name */}
+        <span className="text-sm font-semibold text-text-primary flex-1 min-w-0 truncate">
+          {item.vendor_name}
+        </span>
+
+        {/* Tier badge */}
+        <span className={cn('text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold shrink-0', getTierBadgeColor(item.ips_tier))}>
+          {t('detail.tier')} {item.ips_tier}
+        </span>
+
+        {/* IPS score */}
+        <span className={cn('text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0', getIpsColor(item.ips_final))}>
+          {item.ips_final.toFixed(2)}
+        </span>
+
+        {/* Risk score */}
+        <span className="text-[11px] text-text-muted/70 shrink-0">
+          {t('card.riskScore')}: {(item.avg_risk_score * 100).toFixed(0)}%
+        </span>
+
+        {/* Total value */}
+        <span className="text-[11px] font-semibold text-text-primary shrink-0">
+          {formatCompactMXN(item.total_value_mxn)}
+        </span>
+
+        {/* Sector chip */}
+        {item.primary_sector_name && (
+          <span className="flex items-center gap-1 text-[10px] text-text-muted/60 shrink-0">
+            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: sectorColor }} aria-hidden="true" />
+            {item.primary_sector_name}
+          </span>
+        )}
+
+        {/* External flags */}
+        {item.is_efos_definitivo && (
+          <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20 font-mono shrink-0">
+            EFOS
+          </span>
+        )}
+        {item.is_sfp_sanctioned && (
+          <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 font-mono shrink-0">
+            SFP
+          </span>
+        )}
+
+        {/* Action link */}
+        <Link
+          to={`/thread/${item.vendor_id}`}
+          className="shrink-0 inline-flex items-center gap-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-accent-primary hover:text-accent-primary/80 transition-colors"
+          onClick={(e) => e.stopPropagation()}
+        >
+          {t('card.viewCase')} <ArrowRight className="w-3 h-3" aria-hidden="true" />
+        </Link>
+      </div>
+    </motion.div>
   )
 }
 

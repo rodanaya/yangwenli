@@ -17,7 +17,9 @@
     "totalValue": "Valor Total",
     "institutions": "Instituciones",
     "uniqueAgencies": "Dependencias únicas",
-    "highRisk": "Alto Riesgo"
+    "highRisk": "Alto Riesgo",
+    "yearsActive": "Años Activo",
+    "yearsOfActivity": "Años de actividad"
   },
   "coBidding": {
     "title": "Patrón de Co-licitación Detectado",

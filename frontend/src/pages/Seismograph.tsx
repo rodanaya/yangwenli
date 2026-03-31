@@ -14,7 +14,8 @@ import { useState, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import ReactECharts from 'echarts-for-react'
-import { AlertTriangle, TrendingUp, ArrowUpRight, Info } from 'lucide-react'
+import { AlertTriangle, TrendingUp, ArrowUpRight, Info, Vote } from 'lucide-react'
+import { motion } from 'framer-motion'
 import { analysisApi } from '@/api/client'
 import type { YearOverYearChange } from '@/api/types'
 import { formatCompactMXN } from '@/lib/utils'
@@ -44,6 +45,12 @@ const ANNOTATION_EVENTS = [
 ]
 
 type MetricKey = 'avgRisk' | 'highRiskPct' | 'directAwardPct'
+
+// ---------------------------------------------------------------------------
+// Election year constants
+// ---------------------------------------------------------------------------
+
+const ELECTION_YEARS = [2000, 2006, 2012, 2018, 2024]
 
 // ---------------------------------------------------------------------------
 // Derived type for sexenio aggregates
@@ -289,6 +296,54 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
 }
 
 // ---------------------------------------------------------------------------
+// Animated BarRow — per-year risk bar
+// ---------------------------------------------------------------------------
+
+interface BarRowProps {
+  year: number
+  avgRisk: number
+  highRiskPct: number
+  index: number
+  isElectionYear: boolean
+}
+
+function BarRow({ year, avgRisk, highRiskPct, index, isElectionYear }: BarRowProps) {
+  const barColor = avgRisk >= 0.25
+    ? avgRisk >= 0.40 ? '#f87171' : '#fb923c'
+    : '#fbbf24'
+  const widthPct = Math.min(avgRisk * 300, 100) // scale 0–0.33 → 0–100%
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, x: -20 }}
+      animate={{ opacity: 1, x: 0 }}
+      transition={{ delay: index * 0.04, duration: 0.35 }}
+      className={`flex items-center gap-3 py-1 px-2 rounded-lg ${isElectionYear ? 'bg-blue-950/30 border border-blue-800/30' : ''}`}
+    >
+      <span className={`text-xs w-10 shrink-0 font-mono ${isElectionYear ? 'text-blue-300 font-bold' : 'text-slate-400'}`}>
+        {year}
+        {isElectionYear && <span className="ml-0.5 text-blue-400" aria-label="election year">*</span>}
+      </span>
+      <div className="flex-1 bg-slate-800 rounded-full h-2 overflow-hidden">
+        <motion.div
+          initial={{ width: 0 }}
+          animate={{ width: `${widthPct}%` }}
+          transition={{ delay: index * 0.04 + 0.1, duration: 0.5, ease: 'easeOut' }}
+          className="h-full rounded-full"
+          style={{ backgroundColor: barColor }}
+        />
+      </div>
+      <span className="text-xs text-slate-400 w-12 text-right font-mono shrink-0">
+        {(avgRisk * 100).toFixed(1)}%
+      </span>
+      <span className="text-xs text-slate-500 w-14 text-right font-mono shrink-0 hidden sm:block">
+        {(highRiskPct * 100).toFixed(1)}% hi
+      </span>
+    </motion.div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -297,6 +352,7 @@ export default function Seismograph() {
   const lang = i18n.language
 
   const [metric, setMetric] = useState<MetricKey>('avgRisk')
+  const [showElectionMarkers, setShowElectionMarkers] = useState(false)
 
   const { data: yoyData, isLoading, isError } = useQuery({
     queryKey: ['year-over-year'],
@@ -410,6 +466,67 @@ export default function Seismograph() {
         </div>
       </section>
 
+      {/* ── Animated AMLO-era metric row ─────────────────────────────────── */}
+      {amlo && (
+        <section aria-label="AMLO era key metrics">
+          <h2 className="text-base font-semibold text-slate-300 mb-3">
+            {lang === 'es' ? 'Métricas — Era AMLO (2019–2024)' : 'Metrics — AMLO Era (2019–2024)'}
+          </h2>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {[
+              {
+                label: lang === 'es' ? 'Adj. Directas' : 'Direct Award %',
+                value: `${(amlo.directAwardPct * 100).toFixed(0)}%`,
+                level: amlo.directAwardPct > 0.6 ? 'high' : amlo.directAwardPct > 0.4 ? 'medium' : 'low',
+                barPct: Math.min(amlo.directAwardPct * 100, 100),
+                color: '#60a5fa',
+              },
+              {
+                label: lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk Score',
+                value: `${(amlo.avgRisk * 100).toFixed(1)}%`,
+                level: amlo.avgRisk >= 0.25 ? 'high' : 'medium',
+                barPct: Math.min(amlo.avgRisk * 400, 100),
+                color: '#f87171',
+              },
+              {
+                label: lang === 'es' ? '% Alto Riesgo' : 'High Risk %',
+                value: `${(amlo.highRiskPct * 100).toFixed(1)}%`,
+                level: amlo.highRiskPct > 0.15 ? 'high' : 'medium',
+                barPct: Math.min(amlo.highRiskPct * 400, 100),
+                color: '#fb923c',
+              },
+              {
+                label: lang === 'es' ? 'Contratos' : 'Contracts',
+                value: amlo.contracts.toLocaleString('es-MX'),
+                level: 'neutral',
+                barPct: 65,
+                color: '#a78bfa',
+              },
+            ].map((stat, i) => (
+              <motion.div
+                key={stat.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.08, duration: 0.4 }}
+                className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 space-y-2"
+              >
+                <p className="text-xs text-slate-400 leading-snug">{stat.label}</p>
+                <p className="text-2xl font-bold text-white">{stat.value}</p>
+                <div className="h-1.5 bg-slate-800 rounded-full overflow-hidden">
+                  <motion.div
+                    initial={{ width: 0 }}
+                    animate={{ width: `${stat.barPct}%` }}
+                    transition={{ delay: i * 0.08 + 0.2, duration: 0.6, ease: 'easeOut' }}
+                    className="h-full rounded-full"
+                    style={{ backgroundColor: stat.color }}
+                  />
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </section>
+      )}
+
       {/* ── Key insight callouts ─────────────────────────────────────────── */}
       {amlo && calderon && fox && (
         <section aria-label={t('insights.ariaLabel')}>
@@ -492,6 +609,117 @@ export default function Seismograph() {
           <Info size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
           {t('timeline.footnote')}
         </p>
+
+        {/* Election year toggle */}
+        <div className="mt-4 flex items-center gap-3">
+          <button
+            onClick={() => setShowElectionMarkers(prev => !prev)}
+            aria-pressed={showElectionMarkers}
+            className={`flex items-center gap-2 px-3 py-1.5 text-xs rounded-full border transition-colors ${
+              showElectionMarkers
+                ? 'bg-blue-600 border-blue-500 text-white'
+                : 'border-slate-600 text-slate-400 hover:border-slate-400 hover:text-white'
+            }`}
+          >
+            <Vote size={12} aria-hidden="true" />
+            {lang === 'es' ? 'Mostrar años electorales' : 'Show Election Years'}
+          </button>
+          {showElectionMarkers && (
+            <span className="text-xs text-slate-500">
+              {lang === 'es'
+                ? `Elecciones presidenciales: ${ELECTION_YEARS.join(', ')}`
+                : `Presidential elections: ${ELECTION_YEARS.join(', ')}`}
+            </span>
+          )}
+        </div>
+
+        {/* Election year stats table */}
+        {showElectionMarkers && (
+          <motion.div
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.3 }}
+            className="mt-3 bg-slate-900/60 border border-blue-900/30 rounded-xl p-4 overflow-hidden"
+          >
+            <p className="text-xs text-blue-400 font-semibold uppercase tracking-wide mb-3 flex items-center gap-1.5">
+              <Vote size={11} aria-hidden="true" />
+              {lang === 'es' ? 'Riesgo en años electorales' : 'Risk in Election Years'}
+            </p>
+            <div className="space-y-1">
+              {ELECTION_YEARS.map((elYear, i) => {
+                const row = years.find(d => d.year === elYear)
+                if (!row) return (
+                  <div key={elYear} className="flex items-center gap-3 py-1 px-2 text-xs text-slate-500">
+                    <span className="font-mono w-10">{elYear}</span>
+                    <span>{lang === 'es' ? 'Sin datos' : 'No data'}</span>
+                  </div>
+                )
+                const riskColor = row.avg_risk >= 0.25 ? '#f87171' : row.avg_risk >= 0.15 ? '#fb923c' : '#fbbf24'
+                return (
+                  <motion.div
+                    key={elYear}
+                    initial={{ opacity: 0, x: -10 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    transition={{ delay: i * 0.06 }}
+                    className="grid grid-cols-4 gap-2 items-center py-1.5 px-2 rounded-lg bg-slate-800/40"
+                  >
+                    <span className="text-xs font-mono font-bold text-blue-300">{elYear}</span>
+                    <div className="col-span-2 flex items-center gap-2">
+                      <div className="flex-1 bg-slate-700 rounded-full h-1.5 overflow-hidden">
+                        <motion.div
+                          initial={{ width: 0 }}
+                          animate={{ width: `${Math.min(row.avg_risk * 400, 100)}%` }}
+                          transition={{ delay: i * 0.06 + 0.1, duration: 0.5, ease: 'easeOut' }}
+                          className="h-full rounded-full"
+                          style={{ backgroundColor: riskColor }}
+                        />
+                      </div>
+                      <span className="text-xs font-mono text-slate-300 w-10 shrink-0">
+                        {(row.avg_risk * 100).toFixed(1)}%
+                      </span>
+                    </div>
+                    <span className="text-xs text-slate-400 text-right font-mono">
+                      {(row.high_risk_pct * 100).toFixed(1)}%{' '}
+                      <span className="text-slate-600">{lang === 'es' ? 'alto' : 'hi'}</span>
+                    </span>
+                  </motion.div>
+                )
+              })}
+            </div>
+            <p className="text-xs text-slate-600 mt-3">
+              * {lang === 'es'
+                ? 'Elecciones presidenciales — julio del año indicado'
+                : 'Presidential election years — held in July'}
+            </p>
+          </motion.div>
+        )}
+
+        {/* Animated per-year BarRows */}
+        <div className="mt-4">
+          <p className="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
+            <TrendingUp size={11} aria-hidden="true" />
+            {lang === 'es' ? 'Riesgo promedio por año' : 'Average risk by year'}
+            {showElectionMarkers && (
+              <span className="ml-2 text-blue-400">* = {lang === 'es' ? 'año electoral' : 'election year'}</span>
+            )}
+          </p>
+          <div className="space-y-0.5">
+            {[...years]
+              .filter(d => d.year >= 2006)
+              .sort((a, b) => a.year - b.year)
+              .map((d, i) => (
+                <BarRow
+                  key={d.year}
+                  year={d.year}
+                  avgRisk={d.avg_risk}
+                  highRiskPct={d.high_risk_pct}
+                  index={i}
+                  isElectionYear={showElectionMarkers && ELECTION_YEARS.includes(d.year)}
+                />
+              ))}
+          </div>
+        </div>
       </section>
 
     </div>

@@ -22,7 +22,45 @@
     "discover": "Descubre",
     "heroSubtitle": "Datos de contrataciones federales de México analizados por aprendizaje automático para detectar patrones de corrupción en 12 sectores gubernamentales",
     "riskDisclaimer": "Los puntajes de riesgo indican similitud estadística con patrones de corrupción documentados — no constituyen prueba de irregularidades.",
-    "riskDisclaimerLink": "Ver Metodología"
+    "riskDisclaimerLink": "Ver Metodología",
+    "storyHook1": "23 años de contratos del gobierno mexicano.",
+    "storyHook2": "Una plataforma para investigarlos.",
+    "storySubtitle": "RUBLI analiza 3.1 millones de contratos de adquisiciones federales con aprendizaje automático para detectar corrupción, empresas fantasma y manipulación de mercado."
+  },
+  "ctaPanels": {
+    "ariaLabel": "Puntos de entrada de navegación",
+    "headline": "Comienza tu investigación",
+    "sub": "Elige por dónde empezar — cada punto lleva a evidencia.",
+    "cases": {
+      "title": "Investigar un caso",
+      "desc": "25 casos documentados de corrupción con contratos y proveedores vinculados"
+    },
+    "administrations": {
+      "title": "Explorar por administración",
+      "desc": "Compara patrones de riesgo entre sexenios de 2000 a la fecha"
+    },
+    "vendors": {
+      "title": "Buscar un proveedor",
+      "desc": "Busca entre 320K proveedores, consulta puntuaciones de riesgo y redes"
+    },
+    "sectors": {
+      "title": "Ver el mapa de riesgo",
+      "desc": "12 sectores clasificados por tasa de riesgo — de salud a defensa"
+    }
+  },
+  "sectorTeaser": {
+    "label": "Tasa de riesgo alto por sector",
+    "cta": "Explorar sectores",
+    "ariaLabel": "Gráfica de tasa de riesgo por sector"
+  },
+  "recentFlags": {
+    "label": "Inteligencia en vivo",
+    "headline": "Últimas alertas críticas",
+    "viewAll": "Ver todos los críticos",
+    "ariaLabel": "Contratos recientes de riesgo crítico",
+    "ariaContract": "Contrato crítico",
+    "unknownVendor": "Proveedor desconocido",
+    "unknownSector": "Sector desconocido"
   },
   "scale": {
     "title": "La Escala de las Adquisiciones Federales",

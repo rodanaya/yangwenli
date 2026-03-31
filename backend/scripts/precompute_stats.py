@@ -513,6 +513,17 @@ def precompute_stats():
     }
     print(f"   Done ({time.time() - start:.1f}s)")
 
+    # 1b. Standalone convenience keys derived from overview (no extra DB query)
+    ov = stats['overview']
+    high_only = max(0, (ov.get('high_risk_contracts') or 0) - (ov.get('critical_contracts') or 0))
+    stats['vendor_count']     = ov.get('total_vendors', 0)
+    stats['model_auc']        = 0.828  # v6.5 test AUC (vendor-stratified); update when model changes
+    stats['high_risk_rate']   = ov.get('high_risk_pct', 0.0)
+    stats['direct_award_pct'] = ov.get('direct_award_pct', 0.0)
+    stats['single_bid_pct']   = ov.get('single_bid_pct', 0.0)
+    stats['critical_count']   = ov.get('critical_contracts', 0)
+    stats['high_count']       = high_only
+
     # 2. Sector stats
     print("2. Computing sector stats...")
     start = time.time()

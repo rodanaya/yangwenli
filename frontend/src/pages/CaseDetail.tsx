@@ -858,13 +858,36 @@ export default function CaseDetail() {
         </section>
       ) : null}
 
-      {/* ── Key Actors (non-vendor) ─────────────────────────────────────────── */}
-      {(data.key_actors ?? []).filter(a => a.role !== 'vendor').length > 0 && (
+      {/* ── Institutions Affected ────────────────────────────────────────────── */}
+      {(() => {
+        const institutions = (data.key_actors ?? []).filter(a => a.role === 'institution')
+        if (institutions.length === 0) return null
+        return (
+          <section className="mb-6">
+            <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.institutionsAffected')}</p>
+            <div className="flex flex-wrap gap-2">
+              {institutions.map((actor, i) => (
+                <div key={i} className="flex items-center gap-2 bg-card border border-border/40 rounded-lg px-3 py-2">
+                  <InstitutionBadge name={actor.name} size={24} showTooltip={false} />
+                  <div>
+                    <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
+                    {actor.title && <div className="text-[10px] text-text-muted">{actor.title}</div>}
+                    {actor.note && <div className="text-[10px] text-text-secondary">{actor.note}</div>}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )
+      })()}
+
+      {/* ── Key Actors (officials + journalists, not institutions or vendors) ── */}
+      {(data.key_actors ?? []).filter(a => a.role !== 'vendor' && a.role !== 'institution').length > 0 && (
         <section className="mb-6">
           <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.keyActors')}</p>
           <div className="space-y-2">
             {(data.key_actors ?? [])
-              .filter(a => a.role !== 'vendor')
+              .filter(a => a.role !== 'vendor' && a.role !== 'institution')
               .map((actor, i) => (
                 <div key={i} className="flex gap-3 bg-card border border-border/40 rounded-lg p-3">
                   <div className="flex-shrink-0">
@@ -872,18 +895,87 @@ export default function CaseDetail() {
                       {t(`detail.roles.${actor.role}`)}
                     </Badge>
                   </div>
-                  <div className="flex items-start gap-2 min-w-0">
-                    {actor.role === 'institution' && (
-                      <InstitutionBadge name={actor.name} size={28} showTooltip={false} />
-                    )}
-                    <div>
-                      <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
-                      {actor.title && <div className="text-[11px] text-text-muted">{actor.title}</div>}
-                      {actor.note && <div className="text-[11px] text-text-secondary mt-0.5">{actor.note}</div>}
-                    </div>
+                  <div className="min-w-0">
+                    <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
+                    {actor.title && <div className="text-[11px] text-text-muted">{actor.title}</div>}
+                    {actor.note && <div className="text-[11px] text-text-secondary mt-0.5">{actor.note}</div>}
                   </div>
                 </div>
               ))}
+          </div>
+        </section>
+      )}
+
+      {/* ── Evidence Trail (linked vendors → contract deep-links) ────────────── */}
+      {linkedVendors.length > 0 && (
+        <section className="mb-6">
+          <p className="text-sm font-bold font-mono text-text-primary mb-1">
+            {t('detail.evidenceTrail')}
+          </p>
+          <p className="text-[11px] text-text-muted mb-3">{t('detail.evidenceTrailSubtitle')}</p>
+          <div className="rounded-lg border border-border/40 overflow-hidden">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="border-b border-border/40 bg-card/60">
+                  <th className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                    {t('detail.roles.vendor')}
+                  </th>
+                  <th className="text-right px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                    {t('detail.contractsAffected')}
+                  </th>
+                  <th className="text-right px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
+                    {t('detail.vendorRiskScore')}
+                  </th>
+                  <th className="px-3 py-2" />
+                </tr>
+              </thead>
+              <tbody>
+                {linkedVendors.map((vendor, i) => {
+                  const level = vendor.avg_risk_score != null ? getRiskLevelFromScore(vendor.avg_risk_score) : null
+                  const color = level ? RISK_COLORS[level] : undefined
+                  return (
+                    <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-card/40 transition-colors">
+                      <td className="px-3 py-2 font-medium text-text-primary">
+                        {vendor.vendor_id ? (
+                          <Link to={`/vendors/${vendor.vendor_id}`} className="hover:text-accent transition-colors">
+                            {vendor.vendor_name}
+                          </Link>
+                        ) : (
+                          vendor.vendor_name
+                        )}
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
+                        {vendor.contract_count > 0 ? (
+                          vendor.vendor_id ? (
+                            <Link
+                              to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
+                              className="hover:text-accent transition-colors"
+                            >
+                              {vendor.contract_count.toLocaleString()}
+                            </Link>
+                          ) : (
+                            vendor.contract_count.toLocaleString()
+                          )
+                        ) : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right font-mono font-bold" style={color ? { color } : undefined}>
+                        {vendor.avg_risk_score != null ? `${Math.round(vendor.avg_risk_score * 100)}%` : '—'}
+                      </td>
+                      <td className="px-3 py-2 text-right">
+                        {vendor.vendor_id && (
+                          <Link
+                            to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
+                            className="text-[10px] text-text-muted hover:text-accent transition-colors"
+                          >
+                            {t('detail.viewAllContracts')}
+                          </Link>
+                        )}
+                      </td>
+                    </tr>
+                  )
+                })}
+              </tbody>
+            </table>
           </div>
         </section>
       )}

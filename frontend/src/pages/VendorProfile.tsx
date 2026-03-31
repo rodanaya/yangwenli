@@ -51,6 +51,8 @@ import {
   ReferenceLine,
   ReferenceArea,
   Legend as RechartsLegend,
+  PieChart,
+  Pie,
 } from '@/components/charts'
 import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 import {
@@ -1426,7 +1428,7 @@ export function VendorProfile() {
 
       {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
       <motion.div
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-4"
+        className="grid gap-4 md:grid-cols-2 lg:grid-cols-5"
         initial={{ opacity: 0, y: -12 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
@@ -1485,6 +1487,20 @@ export function VendorProfile() {
                 const item = pc?.metrics?.find((p) => p.metric === 'risk_score')
                 return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
               })()}
+            />
+          </ScrollReveal>
+        </motion.div>
+        <motion.div variants={staggerItem}>
+          <ScrollReveal delay={320} direction="up">
+            <KPICard
+              title={t('kpi.yearsActive')}
+              value={vendor.years_active}
+              icon={Activity}
+              subtitle={
+                vendor.first_contract_year && vendor.last_contract_year
+                  ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
+                  : t('kpi.yearsOfActivity')
+              }
             />
           </ScrollReveal>
         </motion.div>
@@ -2117,10 +2133,100 @@ export function VendorProfile() {
                       ))}
                     </div>
                   ) : institutions?.data?.length ? (
-                    <InstitutionList
-                      data={institutions.data.slice(0, 5)}
-                      maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
-                    />
+                    <>
+                      <InstitutionList
+                        data={institutions.data.slice(0, 5)}
+                        maxValue={Math.max(...institutions.data.slice(0, 5).map((i: any) => i.total_value_mxn))}
+                      />
+                      {/* Institution breakdown pie chart — top 6 by value + "Others" */}
+                      {institutions.data.length >= 2 && (() => {
+                        const top6 = institutions.data.slice(0, 6)
+                        const othersValue = institutions.data.slice(6).reduce((s: number, i: any) => s + (i.total_value_mxn ?? 0), 0)
+                        const pieColors = [
+                          sectorColor,
+                          `${sectorColor}CC`,
+                          `${sectorColor}99`,
+                          `${sectorColor}77`,
+                          `${sectorColor}55`,
+                          `${sectorColor}33`,
+                        ]
+                        const pieData: Array<{ name: string; value: number; color: string }> = [
+                          ...top6.map((inst: any, idx: number) => ({
+                            name: inst.institution_name.length > 22
+                              ? inst.institution_name.slice(0, 22) + '…'
+                              : inst.institution_name,
+                            value: inst.total_value_mxn ?? 0,
+                            color: pieColors[idx] ?? sectorColor,
+                          })),
+                          ...(othersValue > 0
+                            ? [{ name: 'Others', value: othersValue, color: 'rgba(148,163,184,0.4)' }]
+                            : []),
+                        ]
+                        const totalPieValue = pieData.reduce((s, d) => s + d.value, 0)
+                        return (
+                          <div className="mt-4">
+                            <p className="text-xs text-text-muted mb-2">Value share by institution</p>
+                            <div
+                              className="h-[180px]"
+                              role="img"
+                              aria-label="Pie chart showing contract value share by institution"
+                            >
+                              <span className="sr-only">Pie chart showing contract value distribution across institutions for this vendor.</span>
+                              <ResponsiveContainer width="100%" height="100%">
+                                <PieChart>
+                                  <Pie
+                                    data={pieData}
+                                    dataKey="value"
+                                    nameKey="name"
+                                    cx="40%"
+                                    cy="50%"
+                                    innerRadius={44}
+                                    outerRadius={72}
+                                    paddingAngle={2}
+                                  >
+                                    {pieData.map((entry, idx) => (
+                                      <Cell key={idx} fill={entry.color} />
+                                    ))}
+                                  </Pie>
+                                  <RechartsTooltip
+                                    content={({ active, payload }) => {
+                                      if (active && payload?.[0]) {
+                                        const d = payload[0].payload as { name: string; value: number }
+                                        const pct = totalPieValue > 0 ? ((d.value / totalPieValue) * 100).toFixed(1) : '0'
+                                        return (
+                                          <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg max-w-[200px]">
+                                            <p className="font-semibold text-text-primary mb-0.5 break-words">{d.name}</p>
+                                            <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
+                                            <p className="text-text-muted">{pct}% of total</p>
+                                          </div>
+                                        )
+                                      }
+                                      return null
+                                    }}
+                                  />
+                                </PieChart>
+                              </ResponsiveContainer>
+                            </div>
+                            {/* Inline legend */}
+                            <div className="flex flex-col gap-0.5 mt-1">
+                              {pieData.map((entry, idx) => (
+                                <div key={idx} className="flex items-center gap-1.5 text-[10px] text-text-muted">
+                                  <span
+                                    className="w-2 h-2 rounded-sm flex-shrink-0"
+                                    style={{ backgroundColor: entry.color }}
+                                    aria-hidden="true"
+                                  />
+                                  <span className="truncate flex-1">{entry.name}</span>
+                                  <span className="font-mono tabular-nums flex-shrink-0">
+                                    {totalPieValue > 0 ? ((entry.value / totalPieValue) * 100).toFixed(0) : 0}%
+                                  </span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )
+                      })()}
+                    </>
                   ) : (
                     <p className="text-sm text-text-muted">{t('cards.noInstitutionsFound')}</p>
                   )}

@@ -127,7 +127,7 @@ export default function VendorsTab() {
   const filters: VendorFilterParams = useMemo(
     () => ({
       page: Number(searchParams.get('page')) || 1,
-      per_page: 100,
+      per_page: 25,
       search: debouncedSearch || undefined,
       risk_level: searchParams.get('risk_level') as VendorFilterParams['risk_level'],
       sector_id: searchParams.get('sector_id') ? Number(searchParams.get('sector_id')) : undefined,
@@ -889,6 +889,11 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
                   {vendor.first_contract_year === vendor.last_contract_year
                     ? vendor.first_contract_year
                     : `${vendor.first_contract_year}-${vendor.last_contract_year}`}
+                </span>
+              )}
+              {vendor.years_active != null && vendor.years_active > 0 && (
+                <span className="text-xs text-text-muted" title={`${vendor.years_active} years active`}>
+                  {vendor.years_active}yr
                 </span>
               )}
               {avgContractSize >= 100_000_000 && (

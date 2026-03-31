@@ -43,6 +43,12 @@
     "name": "CRÍTICO",
     "objective": "PISTA #{{number}}"
   },
+  "tierCard": {
+    "avgRisk": "Riesgo prom.",
+    "valueAtRisk": "Valor en riesgo",
+    "clickFilter": "Clic para filtrar cola",
+    "activeFilter": "Filtrado — clic para limpiar"
+  },
   "tier2": {
     "description": "Revisión prioritaria",
     "label": "NIVEL 2",

@@ -148,15 +148,40 @@ function SectorRiskChart({
             border: '1px solid rgba(255,255,255,0.1)',
             borderRadius: '6px',
             fontSize: '12px',
+            padding: '8px 12px',
           }}
-          labelStyle={{ color: '#f1f5f9' }}
+          labelStyle={{ color: '#f1f5f9', fontWeight: 600, marginBottom: 4 }}
           itemStyle={{ color: '#94a3b8' }}
-          formatter={(value: number | undefined) => [
-            value != null ? formatNumber(value) : '--',
-            'Contratos anomalos',
-          ]}
+          content={({ active, payload, label }) => {
+            if (!active || !payload?.length) return null
+            const d = payload[0]?.payload as SectorBarDatum | undefined
+            if (!d) return null
+            return (
+              <div
+                style={{
+                  background: '#1e293b',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '6px',
+                  fontSize: '12px',
+                  padding: '8px 12px',
+                  minWidth: 160,
+                }}
+              >
+                <p style={{ color: '#f1f5f9', fontWeight: 600, marginBottom: 4 }}>{label}</p>
+                <p style={{ color: '#94a3b8', margin: 0 }}>
+                  Contratos: <strong style={{ color: '#fb923c' }}>{formatNumber(d.count)}</strong>
+                </p>
+                <p style={{ color: '#94a3b8', margin: '2px 0 0' }}>
+                  Valor: <strong style={{ color: '#f1f5f9' }}>{formatCompactMXN(d.totalValue)}</strong>
+                </p>
+                <p style={{ color: '#94a3b8', margin: '2px 0 0' }}>
+                  Z-score prom: <strong style={{ color: '#fbbf24' }}>+{(d.avgZ ?? 0).toFixed(1)}&sigma;</strong>
+                </p>
+              </div>
+            )
+          }}
         />
-        <Bar dataKey="count" radius={[0, 3, 3, 0]}>
+        <Bar dataKey="count" radius={[0, 3, 3, 0]} isAnimationActive={true}>
           {data.map((entry) => (
             <Cell key={entry.code} fill={entry.color} />
           ))}
@@ -325,17 +350,28 @@ function MethodologySection() {
 export default function PriceIntelligence() {
   const { t } = useTranslation('price')
 
-  // Primary: price anomaly endpoint (contracts with z_price_ratio > 3)
+  // --- Z-score threshold slider state ---
+  const [zThreshold, setZThreshold] = useState(3.0)
+
+  // --- Sector filter chips state (null = all sectors) ---
+  const [activeSectorId, setActiveSectorId] = useState<number | null>(null)
+
+  // Primary: price anomaly endpoint — re-fetches when zThreshold changes
   const anomalyQuery = useQuery({
-    queryKey: ['analysis', 'price-anomalies', 3, 50],
-    queryFn: () => fetchPriceAnomalies(3, 50),
+    queryKey: ['analysis', 'price-anomalies', zThreshold, 50],
+    queryFn: () => fetchPriceAnomalies(zThreshold, 50),
     staleTime: STALE_TIME,
   })
 
   // Derived stats
   const summary = anomalyQuery.data?.summary
   const bySector = anomalyQuery.data?.by_sector ?? []
-  const contracts = anomalyQuery.data?.data ?? []
+  const allContracts = anomalyQuery.data?.data ?? []
+
+  // Apply sector filter chip
+  const contracts = activeSectorId != null
+    ? allContracts.filter((c) => c.sector_id === activeSectorId)
+    : allContracts
 
   // Build chart data from by_sector — using actual backend field names
   const chartData: SectorBarDatum[] = bySector
@@ -430,6 +466,94 @@ export default function PriceIntelligence() {
         </p>
       </div>
 
+      {/* === Filter Controls === */}
+      <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 space-y-4">
+        {/* Z-score threshold slider */}
+        <div>
+          <div className="flex items-center justify-between mb-1">
+            <label
+              htmlFor="z-threshold-slider"
+              className="text-xs font-semibold uppercase tracking-widest text-text-muted"
+            >
+              Min Z-Score:{' '}
+              <span className="text-orange-400 font-bold">{zThreshold.toFixed(1)}&sigma;</span>
+            </label>
+            <span className="text-xs text-text-muted">
+              Valores mas altos = solo los casos mas extremos
+            </span>
+          </div>
+          <input
+            id="z-threshold-slider"
+            type="range"
+            min={1.5}
+            max={5}
+            step={0.5}
+            value={zThreshold}
+            onChange={(e) => setZThreshold(parseFloat(e.target.value))}
+            className="w-full accent-orange-400 cursor-pointer"
+            aria-label={`Umbral minimo de Z-score: ${zThreshold} desviaciones estandar`}
+            aria-valuemin={1.5}
+            aria-valuemax={5}
+            aria-valuenow={zThreshold}
+          />
+          <div className="flex justify-between text-[10px] text-text-muted mt-0.5 select-none">
+            <span>1.5&sigma;</span>
+            <span>2.0&sigma;</span>
+            <span>2.5&sigma;</span>
+            <span>3.0&sigma;</span>
+            <span>3.5&sigma;</span>
+            <span>4.0&sigma;</span>
+            <span>4.5&sigma;</span>
+            <span>5.0&sigma;</span>
+          </div>
+        </div>
+
+        {/* Sector filter chips */}
+        <div>
+          <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
+            Filtrar por sector
+          </p>
+          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtro de sector">
+            <button
+              onClick={() => setActiveSectorId(null)}
+              className={[
+                'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+                activeSectorId === null
+                  ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
+                  : 'border-slate-600/50 text-text-muted hover:border-slate-500 hover:text-text-secondary',
+              ].join(' ')}
+              aria-pressed={activeSectorId === null}
+            >
+              Todos
+            </button>
+            {chartData.map((s) => (
+              <button
+                key={s.code}
+                onClick={() => {
+                  const sector = SECTORS.find((sec) => sec.code === s.code)
+                  if (!sector) return
+                  setActiveSectorId(activeSectorId === sector.id ? null : sector.id)
+                }}
+                className={[
+                  'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
+                  activeSectorId === (SECTORS.find((sec) => sec.code === s.code)?.id ?? -1)
+                    ? 'border-current text-white'
+                    : 'border-slate-600/50 text-text-muted hover:border-slate-500 hover:text-text-secondary',
+                ].join(' ')}
+                style={
+                  activeSectorId === (SECTORS.find((sec) => sec.code === s.code)?.id ?? -1)
+                    ? { borderColor: s.color, backgroundColor: `${s.color}22`, color: s.color }
+                    : {}
+                }
+                aria-pressed={activeSectorId === (SECTORS.find((sec) => sec.code === s.code)?.id ?? -1)}
+              >
+                {s.name}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
       {/* === 3 HallazgoStat stats === */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
         {loading ? (
@@ -517,6 +641,48 @@ export default function PriceIntelligence() {
           <p className="text-sm text-text-muted mb-4">
             {t('sectorMapDesc')}
           </p>
+          {/* Summary Stats Bar */}
+          {!loading && summary && (
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
+                  Total outliers
+                </p>
+                <p className="text-xl font-bold tabular-nums text-orange-400">
+                  {formatNumber(summary.total_outliers)}
+                </p>
+                <span className="inline-block mt-1 w-2 h-2 rounded-full bg-orange-500" aria-hidden="true" />
+              </div>
+              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
+                  Valor en riesgo
+                </p>
+                <p className="text-xl font-bold tabular-nums text-red-400">
+                  {formatCompactMXN(summary.total_value_mxn)}
+                </p>
+                <span className="inline-block mt-1 w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+              </div>
+              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
+                  Z-score prom.
+                </p>
+                <p className="text-xl font-bold tabular-nums text-amber-400">
+                  +{(summary.avg_z_score ?? 0).toFixed(1)}&sigma;
+                </p>
+                <span className="inline-block mt-1 w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
+              </div>
+              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+                <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
+                  Z-score max.
+                </p>
+                <p className="text-xl font-bold tabular-nums text-purple-400">
+                  +{(summary.max_z_score ?? 0).toFixed(1)}&sigma;
+                </p>
+                <span className="inline-block mt-1 w-2 h-2 rounded-full bg-purple-500" aria-hidden="true" />
+              </div>
+            </div>
+          )}
+
           <SectorRiskChart data={chartData} loading={loading} />
 
           {/* Sector detail table */}

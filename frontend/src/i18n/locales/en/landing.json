@@ -22,7 +22,45 @@
     "discover": "Discover",
     "heroSubtitle": "Mexican federal procurement data analyzed by machine learning to detect corruption patterns across 12 government sectors",
     "riskDisclaimer": "Risk scores indicate statistical similarity to documented corruption patterns — not proof of wrongdoing.",
-    "riskDisclaimerLink": "See Methodology"
+    "riskDisclaimerLink": "See Methodology",
+    "storyHook1": "23 years of Mexican government contracts.",
+    "storyHook2": "One platform to investigate them.",
+    "storySubtitle": "RUBLI analyzes 3.1 million federal procurement contracts using machine learning to surface corruption patterns, ghost companies, and market manipulation."
+  },
+  "ctaPanels": {
+    "ariaLabel": "Navigation entry points",
+    "headline": "Start your investigation",
+    "sub": "Choose where to begin — every entry point leads to evidence.",
+    "cases": {
+      "title": "Investigate a case",
+      "desc": "25 documented corruption cases with linked contracts and vendors"
+    },
+    "administrations": {
+      "title": "Explore by administration",
+      "desc": "Compare risk patterns across presidential terms from 2000 to today"
+    },
+    "vendors": {
+      "title": "Find a vendor",
+      "desc": "Search 320K vendors, see risk scores, SHAP explanations, and network ties"
+    },
+    "sectors": {
+      "title": "View the risk map",
+      "desc": "12 sectors ranked by risk rate — from health to defense"
+    }
+  },
+  "sectorTeaser": {
+    "label": "High-risk rate by sector",
+    "cta": "Explore sectors",
+    "ariaLabel": "Sector risk rate chart"
+  },
+  "recentFlags": {
+    "label": "Live intelligence",
+    "headline": "Latest critical flags",
+    "viewAll": "View all critical",
+    "ariaLabel": "Recent critical risk contracts",
+    "ariaContract": "Critical contract",
+    "unknownVendor": "Unknown vendor",
+    "unknownSector": "Unknown sector"
   },
   "scale": {
     "title": "The Scale of Federal Procurement",

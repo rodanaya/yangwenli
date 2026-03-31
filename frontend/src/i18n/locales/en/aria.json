@@ -43,6 +43,12 @@
     "name": "CRITICAL",
     "objective": "LEAD #{{number}}"
   },
+  "tierCard": {
+    "avgRisk": "Avg risk",
+    "valueAtRisk": "Value at risk",
+    "clickFilter": "Click to filter queue",
+    "activeFilter": "Filtered — click to clear"
+  },
   "tier2": {
     "description": "Priority review",
     "label": "TIER 2",

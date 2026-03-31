@@ -19,6 +19,22 @@
       "highRisk": "Alto Riesgo",
       "vendors": "Proveedores Activos"
     },
+    "severityLabels": {
+      "critical": "CRIT",
+      "high": "ALTO",
+      "medium": "MED"
+    },
+    "keyFigures": "Cifras Clave",
+    "keyFiguresLabels": {
+      "highestRiskSector": "Sector Mayor Riesgo",
+      "singleBidRate": "Tasa Lic. Unica",
+      "directAwardRate": "Tasa Adj. Directa",
+      "aboveAvg": "Sobre el promedio",
+      "typical": "Rango tipico",
+      "critical": "Nivel critico",
+      "elevated": "Elevado",
+      "moderate": "Moderado"
+    },
     "scandals": {
       "casa_blanca": "Casa Blanca — Conflicto de interés: familiares del presidente vinculados al contratista Grupo Higa (EPN, 2014)",
       "estafa_maestra": "La Estafa Maestra — 7,600 MDP desviados mediante empresas fantasma a través de universidades públicas (EPN, 2017)",

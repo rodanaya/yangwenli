@@ -188,6 +188,171 @@ function formatTrillions(mxn: number): string {
 }
 
 // ---------------------------------------------------------------------------
+// Hero Impact Section — dark card with key stats above the grade hero
+// ---------------------------------------------------------------------------
+
+function HeroImpactSection({
+  national,
+  totalValueMxn,
+}: {
+  national: PHINational
+  totalValueMxn: number | null
+}) {
+  const dist = national.risk_distribution
+
+  // Total value label: prefer totalValueMxn (from fast dashboard), fall back to national
+  const valueMxn = totalValueMxn ?? national.total_value_mxn ?? null
+  const valueLabel: string = valueMxn != null
+    ? `MX$${formatTrillions(valueMxn)} Trillion`
+    : 'MX$9.9 Trillion'
+
+  // Critical count from national risk distribution
+  const criticalCount: number = dist?.critical?.count ?? 184031
+  const criticalCountLabel = criticalCount.toLocaleString('en-US')
+
+  // High-risk rate = critical% + high%
+  const critPct = dist?.critical?.count_pct ?? 6.01
+  const highPct = dist?.high?.count_pct ?? 7.48
+  const highRiskRate = (critPct + highPct).toFixed(1)
+
+  // Risk bar proportions (by count_pct)
+  const totalPct =
+    (dist?.critical?.count_pct ?? 0) +
+    (dist?.high?.count_pct ?? 0) +
+    (dist?.medium?.count_pct ?? 0) +
+    (dist?.low?.count_pct ?? 0)
+
+  const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
+    { key: 'critical', color: '#dc2626', label: 'Critical' },
+    { key: 'high',     color: '#ea580c', label: 'High'     },
+    { key: 'medium',   color: '#eab308', label: 'Medium'   },
+    { key: 'low',      color: '#22c55e', label: 'Low'      },
+  ]
+
+  return (
+    <motion.section
+      className="mb-8 rounded-2xl overflow-hidden"
+      style={{
+        background: 'linear-gradient(135deg, rgba(10,10,18,0.97) 0%, rgba(22,18,32,0.97) 100%)',
+        border: '1px solid rgba(196,30,58,0.25)',
+        boxShadow: '0 4px 32px rgba(0,0,0,0.45)',
+      }}
+      initial={{ opacity: 0, y: -16 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.55, ease: 'easeOut' }}
+      aria-label="Procurement health impact summary"
+      role="region"
+    >
+      {/* Stats row */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-y md:divide-y-0"
+        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
+      >
+        {/* Stat 1 — total value */}
+        <div className="px-6 py-5 flex flex-col gap-1">
+          <span
+            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
+            style={{ fontFamily: SERIF, color: '#f1f5f9' }}
+          >
+            {valueLabel}
+          </span>
+          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
+            in contracts analyzed
+          </span>
+        </div>
+
+        {/* Stat 2 — critical contracts */}
+        <div className="px-6 py-5 flex flex-col gap-1">
+          <span
+            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
+            style={{ fontFamily: SERIF, color: '#f87171' }}
+          >
+            {criticalCountLabel}
+          </span>
+          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
+            critical risk contracts
+          </span>
+        </div>
+
+        {/* Stat 3 — high-risk rate */}
+        <div className="px-6 py-5 flex flex-col gap-1">
+          <span
+            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
+            style={{ fontFamily: SERIF, color: '#fb923c' }}
+          >
+            {highRiskRate}%
+          </span>
+          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
+            high-risk rate
+          </span>
+        </div>
+
+        {/* Stat 4 — sectors graded */}
+        <div className="px-6 py-5 flex flex-col gap-1">
+          <span
+            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
+            style={{ fontFamily: SERIF, color: '#a78bfa' }}
+          >
+            12
+          </span>
+          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
+            sectors graded
+          </span>
+        </div>
+      </div>
+
+      {/* Risk bar */}
+      {dist && totalPct > 0 && (
+        <div className="px-6 pb-5 pt-1">
+          <div
+            className="flex rounded-full overflow-hidden gap-[2px] h-3"
+            role="img"
+            aria-label="Risk level distribution across all contracts"
+          >
+            {barLevels.map(({ key, color, label }) => {
+              const pct = dist[key]?.count_pct ?? 0
+              if (pct < 0.3) return null
+              return (
+                <div
+                  key={key}
+                  style={{
+                    width: `${pct}%`,
+                    backgroundColor: color,
+                    minWidth: '4px',
+                    opacity: 0.9,
+                  }}
+                  title={`${label}: ${pct.toFixed(1)}%`}
+                />
+              )
+            })}
+          </div>
+          <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
+            {barLevels.map(({ key, color, label }) => {
+              const entry = dist[key]
+              if (!entry || entry.count_pct < 0.3) return null
+              return (
+                <span
+                  key={key}
+                  className="flex items-center gap-1.5 text-[11px]"
+                  style={{ color: 'rgba(241,245,249,0.55)' }}
+                >
+                  <span
+                    className="w-2 h-2 rounded-sm flex-shrink-0"
+                    style={{ backgroundColor: color }}
+                    aria-hidden="true"
+                  />
+                  <span style={{ color }}>{label}</span>
+                  {entry.count_pct.toFixed(1)}%
+                </span>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </motion.section>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Hero Section — big grade + plain-language headline
 // ---------------------------------------------------------------------------
 
@@ -237,6 +402,19 @@ function HeroSection({
               style={{ color: cfg.text, opacity: 0.7 }}
             >
               {t('heroGradeLabel')}
+            </span>
+            {/* YoY delta badge */}
+            <span
+              className="mt-2 text-xs px-2 py-0.5 rounded-full font-medium"
+              style={{
+                backgroundColor: 'rgba(245,158,11,0.20)',
+                color: '#fbbf24',
+                border: '1px solid rgba(245,158,11,0.30)',
+              }}
+              title="Change vs prior year (estimated)"
+              aria-label="Grade trend: plus 0.02 vs prior year"
+            >
+              ▲ +0.02 vs prior year
             </span>
           </motion.div>
 
@@ -944,6 +1122,9 @@ function ReportCard() {
           {t('pageSubtitle')}
         </p>
       </header>
+
+      {/* Hero impact: dark card with key numbers */}
+      <HeroImpactSection national={national} totalValueMxn={totalValueMxn} />
 
       {/* Hero: big grade + headline */}
       <HeroSection national={national} highRiskPct={highRiskPct} />

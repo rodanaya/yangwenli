@@ -503,26 +503,63 @@ function AdminDossierPanel({
               <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
                 {t('dossier.knownScandals')}
               </span>
+              {dossier.scandals.length > 0 && (
+                <span className="text-[9px] font-mono text-text-muted ml-auto">
+                  {dossier.scandals.length}
+                </span>
+              )}
             </div>
             {dossier.scandals.length === 0 ? (
-              <p className="text-xs text-text-muted italic leading-relaxed">
-                {t('dossier.noScandals')}
-              </p>
+              <div className="rounded-lg border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
+                <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" />
+                <p className="text-xs text-text-muted italic leading-relaxed">
+                  {t('dossier.noScandals')}
+                </p>
+              </div>
             ) : (
               <div className="space-y-2">
-                {dossier.scandals.map((scandal) => (
-                  <div
-                    key={scandal.key}
-                    className="flex items-start gap-2 rounded-md border-l-2 pl-2.5 py-1.5"
-                    style={{ borderLeftColor: SEVERITY_COLORS[scandal.severity] }}
-                  >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-xs text-text-secondary leading-snug">
-                        {t(`dossier.scandals.${scandal.key}`)}
-                      </p>
+                {dossier.scandals.map((scandal) => {
+                  const sevColor = SEVERITY_COLORS[scandal.severity]
+                  const sevLabel = scandal.severity === 'critical'
+                    ? t('dossier.severityLabels.critical')
+                    : scandal.severity === 'high'
+                    ? t('dossier.severityLabels.high')
+                    : t('dossier.severityLabels.medium')
+                  return (
+                    <div
+                      key={scandal.key}
+                      className="rounded-lg border bg-background-elevated/20 overflow-hidden transition-colors hover:bg-background-elevated/40"
+                      style={{ borderColor: `${sevColor}30`, borderLeftWidth: 3, borderLeftColor: sevColor }}
+                    >
+                      <div className="px-3 py-2">
+                        <div className="flex items-center gap-1.5 mb-1">
+                          <span
+                            className="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded-sm uppercase tracking-wider"
+                            style={{
+                              backgroundColor: `${sevColor}20`,
+                              color: sevColor,
+                              border: `1px solid ${sevColor}40`,
+                            }}
+                          >
+                            {sevLabel}
+                          </span>
+                          {scandal.caseId && (
+                            <Link
+                              to={`/cases/${scandal.caseId}`}
+                              className="text-[9px] text-accent hover:text-accent/80 font-mono transition-colors flex items-center gap-0.5 ml-auto"
+                            >
+                              <ExternalLink className="h-2.5 w-2.5" />
+                              {t('dossier.linkToCases')}
+                            </Link>
+                          )}
+                        </div>
+                        <p className="text-[11px] text-text-secondary leading-snug">
+                          {t(`dossier.scandals.${scandal.key}`)}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  )
+                })}
                 <Link
                   to="/cases"
                   className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 font-mono mt-1 transition-colors"
@@ -533,6 +570,61 @@ function AdminDossierPanel({
               </div>
             )}
           </div>
+
+          {/* Key Figures — most revealing stats for this admin */}
+          {agg && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Landmark className="h-3.5 w-3.5 text-accent" />
+                <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                  {t('dossier.keyFigures')}
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-1.5">
+                {(() => {
+                  const highestRiskSector = [...sectorData].filter(s => s.contracts > 100).sort((a, b) => b.risk - a.risk)[0]
+                  const figures = [
+                    {
+                      label: t('dossier.keyFiguresLabels.highestRiskSector'),
+                      value: highestRiskSector ? highestRiskSector.name : '--',
+                      sub: highestRiskSector ? `${(highestRiskSector.risk * 100).toFixed(1)}%` : '',
+                      color: highestRiskSector?.color || '#64748b',
+                    },
+                    {
+                      label: t('dossier.keyFiguresLabels.singleBidRate'),
+                      value: `${agg.singleBidPct.toFixed(1)}%`,
+                      sub: agg.singleBidPct > 20 ? t('dossier.keyFiguresLabels.aboveAvg') : t('dossier.keyFiguresLabels.typical'),
+                      color: agg.singleBidPct > 20 ? '#f87171' : '#fbbf24',
+                    },
+                    {
+                      label: t('dossier.keyFiguresLabels.directAwardRate'),
+                      value: `${agg.directAwardPct.toFixed(1)}%`,
+                      sub: agg.directAwardPct > 70 ? t('dossier.keyFiguresLabels.critical') : agg.directAwardPct > 50 ? t('dossier.keyFiguresLabels.elevated') : t('dossier.keyFiguresLabels.moderate'),
+                      color: agg.directAwardPct > 70 ? '#f87171' : agg.directAwardPct > 50 ? '#fb923c' : '#fbbf24',
+                    },
+                  ]
+                  return figures.map((fig) => (
+                    <div
+                      key={fig.label}
+                      className="rounded-md border border-border/20 bg-background-elevated/20 px-2 py-2 text-center"
+                    >
+                      <div className="text-[8px] text-text-muted uppercase tracking-wider font-mono mb-0.5 truncate">
+                        {fig.label}
+                      </div>
+                      <div className="text-sm font-bold font-mono" style={{ color: fig.color }}>
+                        {fig.value}
+                      </div>
+                      {fig.sub && (
+                        <div className="text-[9px] text-text-muted font-mono mt-0.5">
+                          {fig.sub}
+                        </div>
+                      )}
+                    </div>
+                  ))
+                })()}
+              </div>
+            </div>
+          )}
         </div>
 
         {/* Column 2: Procurement Fingerprint */}
@@ -1674,12 +1766,12 @@ export default function Administrations() {
                       : 'border-border/20 bg-card opacity-60'
                   )}
                 >
-                  <div className="flex items-center gap-2 mb-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tr.fromColor }} />
-                    <span className="text-xs font-semibold text-text-secondary">{tr.from}</span>
-                    <ArrowRight className="h-3 w-3 text-text-muted" />
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tr.toColor }} />
-                    <span className="text-xs font-semibold text-text-secondary">{tr.to}</span>
+                  <div className="flex items-center gap-2 mb-3 pb-2 border-b border-border/20">
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.fromColor, boxShadow: `0 0 6px ${tr.fromColor}40` }} />
+                    <span className="text-xs font-bold text-text-primary">{tr.from}</span>
+                    <ArrowRight className="h-3.5 w-3.5 text-accent" />
+                    <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} />
+                    <span className="text-xs font-bold text-text-primary">{tr.to}</span>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <TransitionMetric label={t('transitionMetrics.directAward')} delta={tr.dDA.value} unit=" pts" significance={sig?.da} />
@@ -1950,33 +2042,48 @@ function TransitionMetric({
   invertColor?: boolean
   significance?: number
 }) {
+  const isUp = d > 0.01
+  const isDown = d < -0.01
+  // For non-inverted: up = bad (red), down = good (green); inverted = opposite
+  const color = invertColor
+    ? (isUp ? 'text-risk-low' : isDown ? 'text-risk-critical' : 'text-text-muted')
+    : (isUp ? 'text-risk-critical' : isDown ? 'text-risk-low' : 'text-text-muted')
+  const bgColor = invertColor
+    ? (isUp ? 'bg-risk-low/8' : isDown ? 'bg-risk-critical/8' : 'bg-background-elevated/30')
+    : (isUp ? 'bg-risk-critical/8' : isDown ? 'bg-risk-low/8' : 'bg-background-elevated/30')
+  const Icon = isUp ? TrendingUp : isDown ? TrendingDown : Minus
+  const abs = Math.abs(d)
+
   return (
-    <div className="text-center">
-      <div className="flex items-center justify-center gap-0.5">
-        <div className="text-xs text-text-muted font-mono uppercase">{label}</div>
+    <div className={cn('text-center rounded-md border border-border/20 px-2 py-1.5', bgColor)}>
+      <div className="flex items-center justify-center gap-0.5 mb-1">
+        <div className="text-[9px] text-text-muted font-mono uppercase tracking-wider">{label}</div>
         {significance !== undefined && significance >= 1.8 && (
           <span
             className={cn(
-              'text-[9px] font-bold font-mono ml-0.5',
-              significance >= 2.5 ? 'text-risk-critical' : 'text-risk-medium'
+              'text-[8px] font-bold font-mono ml-0.5 px-1 py-0 rounded',
+              significance >= 2.5 ? 'text-risk-critical bg-risk-critical/10' : 'text-risk-medium bg-risk-medium/10'
             )}
-            title={`${significance.toFixed(1)}σ from historical norm`}
+            title={`${significance.toFixed(1)} from historical norm`}
           >
             {significance >= 2.5 ? '!!' : '!'}
           </span>
         )}
       </div>
-      <div className="mt-0.5">
-        {isCount ? (
-          <DeltaBadge
-            val={d}
-            unit=""
-            invertColor={invertColor}
-          />
-        ) : (
-          <DeltaBadge val={d} unit={unit} invertColor={invertColor} />
-        )}
+      <div className="flex items-center justify-center gap-1">
+        <Icon className={cn('h-3.5 w-3.5', color)} />
+        <span className={cn('text-sm font-bold font-mono', color)}>
+          {abs < 0.01 ? '--' : isCount
+            ? `${d > 0 ? '+' : ''}${formatNumber(Math.round(d))}`
+            : `${d > 0 ? '+' : ''}${abs.toFixed(1)}${unit}`
+          }
+        </span>
       </div>
+      {!isCount && abs >= 0.01 && (
+        <div className="text-[8px] text-text-muted font-mono mt-0.5">
+          {abs.toFixed(1)} pts
+        </div>
+      )}
     </div>
   )
 }

@@ -274,6 +274,7 @@ export interface VendorListItem {
   single_bid_pct: number
   first_contract_year?: number
   last_contract_year?: number
+  years_active?: number
   primary_sector_id?: number
   pct_anomalous?: number
 }

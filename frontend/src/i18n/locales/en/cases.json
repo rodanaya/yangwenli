@@ -4,13 +4,25 @@
   "pageSubhead": "Corruption Archive — Mexico 2001-2025",
   "pageDesc": "{{count}} documented cases of corruption in federal public procurement. Each file represents billions of pesos diverted from the public treasury.",
   "sortedByImpact": "sorted by impact",
+  "sortBy": "Sort by",
+  "sortOptions": {
+    "amount": "Fraud amount",
+    "year": "Year",
+    "severity": "Severity"
+  },
+  "confidence": {
+    "confirmed": "Confirmed",
+    "high": "High confidence",
+    "medium": "Medium confidence"
+  },
   "filterArchives": "FILTER ARCHIVES",
   "subtitle": "43 documented corruption cases — from investigation to conviction",
   "statsBar": {
     "totalCases": "Documented cases",
     "totalAmount": "Estimated losses",
     "gtLinked": "ML-linked",
-    "compranetVisible": "COMPRANET visible"
+    "compranetVisible": "COMPRANET visible",
+    "vendorsIdentified": "Vendors identified"
   },
   "filters": {
     "all": "All cases",
@@ -100,6 +112,14 @@
     },
     "noKeyActors": "No key actors documented",
     "noSources": "No sources on record",
+    "institutionsAffected": "Institutions Affected",
+    "noInstitutions": "No institutions documented",
+    "evidenceTrail": "Evidence Trail",
+    "evidenceTrailSubtitle": "High-risk contracts matched in COMPRANET",
+    "evidenceContractCount_one": "{{count}} contract",
+    "evidenceContractCount_other": "{{count}} contracts",
+    "viewAllContracts": "View all contracts →",
+    "vendorRiskScore": "Risk score",
     "impactMetrics": "Impact Metrics",
     "estimatedValue": "Estimated Value",
     "upTo": "up to {{amount}}",
