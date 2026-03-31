@@ -62,6 +62,7 @@ function TableSkeleton({ rows = 8 }: { rows?: number }) {
 // =============================================================================
 
 function AlertTicker() {
+  const { t, i18n } = useTranslation('procurement')
   const { data: yoyResp, isLoading } = useQuery({
     queryKey: ['analysis', 'year-over-year', 'pi-simple'],
     queryFn: () => analysisApi.getYearOverYear(),
@@ -86,6 +87,8 @@ function AlertTicker() {
     : null
   const delta = priorHighRiskCount != null ? highRiskCount - priorHighRiskCount : null
 
+  const dateLocale = i18n.language === 'es' ? 'es-MX' : 'en-US'
+
   return (
     <div
       className="flex items-center gap-3 px-4 py-3 rounded-lg border"
@@ -96,18 +99,18 @@ function AlertTicker() {
       <Activity className="h-4 w-4 shrink-0" style={{ color: RISK_COLORS.high }} aria-hidden="true" />
       <div className="flex-1 min-w-0 flex flex-wrap items-center gap-x-2 gap-y-0.5">
         <span className="text-xs font-bold uppercase tracking-wide font-mono" style={{ color: RISK_COLORS.high }}>
-          Risk Alert
+          {t('alertTicker.label')}
         </span>
         <span className="text-xs text-text-secondary">
           <span className="font-bold text-text-primary">{formatNumber(highRiskCount)}</span>
-          {' high-risk contracts in '}
+          {' '}{t('alertTicker.highRiskContracts')}{' '}
           <button
             onClick={() => navigate(`/year-in-review/${latest.year}`)}
             className="text-accent hover:underline font-semibold"
           >
             {latest.year}
           </button>
-          {` (${latest.high_risk_pct.toFixed(1)}% of all contracts)`}
+          {' '}{t('alertTicker.ofAllContracts', { pct: latest.high_risk_pct.toFixed(1) })}
         </span>
         {delta != null && (
           <span
@@ -124,12 +127,12 @@ function AlertTicker() {
               <Minus className="h-3 w-3" aria-hidden="true" />
             )}
             {delta > 0 ? '+' : ''}
-            {formatNumber(delta)} vs prior year
+            {formatNumber(delta)} {t('alertTicker.vsPriorYear')}
           </span>
         )}
       </div>
       <span className="text-[10px] text-text-muted font-mono shrink-0">
-        {new Date().toLocaleDateString('en-MX')}
+        {new Date().toLocaleDateString(dateLocale)}
       </span>
     </div>
   )
@@ -144,6 +147,7 @@ interface TopRiskVendorsProps {
 }
 
 function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
+  const { t } = useTranslation('procurement')
   const navigate = useNavigate()
 
   const { data, isLoading } = useQuery({
@@ -161,17 +165,17 @@ function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <AlertTriangle className="h-4 w-4 text-risk-critical" aria-hidden="true" />
-              <h2 className="text-base font-bold text-text-primary">Top Risk Vendors</h2>
+              <h2 className="text-base font-bold text-text-primary">{t('topRiskVendors.title')}</h2>
             </div>
             <p className="text-xs text-text-muted">
-              ARIA Tier 1 — highest investigation priority scores across all 318K monitored vendors.
+              {t('topRiskVendors.description')}
             </p>
           </div>
           <button
             onClick={() => navigate('/aria')}
             className="shrink-0 text-xs text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
           >
-            Full queue <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            {t('topRiskVendors.fullQueue')} <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </button>
         </div>
 
@@ -179,21 +183,21 @@ function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
           {isLoading ? (
             <TableSkeleton rows={10} />
           ) : vendors.length === 0 ? (
-            <p className="text-sm text-text-muted text-center py-8">No ARIA T1 vendors found</p>
+            <p className="text-sm text-text-muted text-center py-8">{t('topRiskVendors.empty')}</p>
           ) : (
             <table
               className="w-full text-xs border-separate border-spacing-y-0.5"
               role="grid"
-              aria-label="Top risk vendors"
+              aria-label={t('topRiskVendors.title')}
             >
               <thead>
                 <tr className="text-[10px] text-text-muted uppercase tracking-wide">
                   <th className="text-left pb-1.5 w-5">#</th>
-                  <th className="text-left pb-1.5">Vendor</th>
-                  <th className="text-right pb-1.5 w-20">IPS Score</th>
-                  <th className="text-right pb-1.5 w-20">Avg Risk</th>
-                  <th className="text-right pb-1.5 w-20">Value</th>
-                  <th className="text-left pb-1.5 w-24 pl-2">Pattern</th>
+                  <th className="text-left pb-1.5">{t('topRiskVendors.colVendor')}</th>
+                  <th className="text-right pb-1.5 w-20">{t('topRiskVendors.colIps')}</th>
+                  <th className="text-right pb-1.5 w-20">{t('topRiskVendors.colAvgRisk')}</th>
+                  <th className="text-right pb-1.5 w-20">{t('topRiskVendors.colValue')}</th>
+                  <th className="text-left pb-1.5 w-24 pl-2">{t('topRiskVendors.colPattern')}</th>
                   <th className="text-right pb-1.5 w-6" />
                 </tr>
               </thead>
@@ -219,8 +223,8 @@ function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
                               className="text-[9px] font-bold text-risk-critical shrink-0"
                               title={
                                 vendor.is_efos_definitivo
-                                  ? 'Listed on SAT EFOS registry'
-                                  : 'Sanctioned by SFP'
+                                  ? t('topRiskVendors.efosTitle')
+                                  : t('topRiskVendors.sfpTitle')
                               }
                             >
                               {vendor.is_efos_definitivo ? 'EFOS' : 'SFP'}
@@ -246,7 +250,7 @@ function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
                         <button
                           onClick={() => navigate(`/vendors/${vendor.vendor_id}`)}
                           className="text-text-muted hover:text-accent transition-colors opacity-0 group-hover:opacity-100"
-                          aria-label={`Open profile for ${toTitleCase(vendor.vendor_name)}`}
+                          aria-label={t('topRiskVendors.openProfile', { name: toTitleCase(vendor.vendor_name) })}
                         >
                           <ExternalLink className="h-3 w-3" aria-hidden="true" />
                         </button>
@@ -270,8 +274,9 @@ function TopRiskVendors({ onVendorClick }: TopRiskVendorsProps) {
 const HEATMAP_YEARS = [2020, 2021, 2022, 2023, 2024, 2025]
 
 function SectorHeatmap() {
-  const navigate = useNavigate()
+  const { t } = useTranslation('procurement')
   const { t: ts } = useTranslation('sectors')
+  const navigate = useNavigate()
 
   const { data: sectorYearResp, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown', 'pi-simple'],
@@ -294,16 +299,16 @@ function SectorHeatmap() {
       <CardContent className="pt-5 pb-4">
         <div className="flex items-center gap-2 mb-1">
           <Target className="h-4 w-4 text-accent" aria-hidden="true" />
-          <h2 className="text-base font-bold text-text-primary">Sector Risk Heatmap (2020–2025)</h2>
+          <h2 className="text-base font-bold text-text-primary">{t('sectorHeatmap.title')}</h2>
         </div>
         <p className="text-xs text-text-muted mb-4">
-          High-risk contract rate (%) per sector per year. Click any cell to view those contracts.
+          {t('sectorHeatmap.description')}
         </p>
 
         {isError ? (
           <div className="flex items-center gap-3 p-4 text-muted-foreground">
             <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
-            <span className="text-sm">No se pudo cargar la información. Intente de nuevo más tarde.</span>
+            <span className="text-sm">{t('sectorHeatmap.error')}</span>
           </div>
         ) : isLoading ? (
           <Skeleton className="h-48 w-full" />
@@ -312,12 +317,12 @@ function SectorHeatmap() {
             <table
               className="text-xs w-full"
               role="grid"
-              aria-label="Sector risk heatmap 2020–2025"
+              aria-label={t('sectorHeatmap.title')}
             >
               <thead>
                 <tr>
                   <th className="text-left py-1.5 pr-3 text-[10px] font-semibold text-text-muted uppercase tracking-wide min-w-[100px]">
-                    Sector
+                    {t('sectorHeatmap.colSector')}
                   </th>
                   {HEATMAP_YEARS.map(y => (
                     <th
@@ -368,8 +373,16 @@ function SectorHeatmap() {
                             }
                             className="w-10 h-7 rounded text-[10px] font-bold tabular-nums transition-opacity hover:opacity-80 flex items-center justify-center mx-auto"
                             style={{ backgroundColor: bg, color: textColor }}
-                            title={`${ts(sector.code)} ${cell.year}: ${cell.pct.toFixed(1)}% high-risk`}
-                            aria-label={`${ts(sector.code)} ${cell.year}: ${cell.pct.toFixed(1)}% high-risk contracts`}
+                            title={t('sectorHeatmap.cellTitle', {
+                              sector: ts(sector.code),
+                              year: cell.year,
+                              pct: cell.pct.toFixed(1),
+                            })}
+                            aria-label={t('sectorHeatmap.cellLabel', {
+                              sector: ts(sector.code),
+                              year: cell.year,
+                              pct: cell.pct.toFixed(1),
+                            })}
                           >
                             {cell.pct.toFixed(1)}
                           </button>
@@ -383,7 +396,7 @@ function SectorHeatmap() {
           </div>
         )}
         <p className="text-[9px] text-text-muted mt-2">
-          Values = % of contracts classified as high or critical risk. Click any cell to open the contracts list.
+          {t('sectorHeatmap.footer')}
         </p>
       </CardContent>
     </Card>
@@ -400,6 +413,7 @@ interface RecentContractsProps {
 }
 
 function RecentCriticalContracts({ onVendorClick, onInstitutionClick }: RecentContractsProps) {
+  const { t } = useTranslation('procurement')
   const navigate = useNavigate()
   const [showAll, setShowAll] = useState(false)
 
@@ -426,17 +440,17 @@ function RecentCriticalContracts({ onVendorClick, onInstitutionClick }: RecentCo
           <div>
             <div className="flex items-center gap-2 mb-0.5">
               <Zap className="h-4 w-4 text-risk-critical" aria-hidden="true" />
-              <h2 className="text-base font-bold text-text-primary">Recent Critical-Risk Contracts</h2>
+              <h2 className="text-base font-bold text-text-primary">{t('recentCritical.title')}</h2>
             </div>
             <p className="text-xs text-text-muted">
-              Most recent contracts scored critical (≥ 0.60) by the v6.5 risk model. Each is clickable.
+              {t('recentCritical.description')}
             </p>
           </div>
           <button
             onClick={() => navigate('/contracts?risk_level=critical')}
             className="shrink-0 text-xs text-accent hover:text-accent/80 transition-colors flex items-center gap-1"
           >
-            All critical <ArrowRight className="h-3 w-3" aria-hidden="true" />
+            {t('recentCritical.allCritical')} <ArrowRight className="h-3 w-3" aria-hidden="true" />
           </button>
         </div>
 
@@ -444,21 +458,21 @@ function RecentCriticalContracts({ onVendorClick, onInstitutionClick }: RecentCo
           {isLoading ? (
             <TableSkeleton rows={10} />
           ) : contracts.length === 0 ? (
-            <p className="text-sm text-text-muted text-center py-8">No critical contracts found</p>
+            <p className="text-sm text-text-muted text-center py-8">{t('recentCritical.empty')}</p>
           ) : (
             <>
               <table
                 className="w-full text-xs border-separate border-spacing-y-0.5"
                 role="grid"
-                aria-label="Recent critical-risk contracts"
+                aria-label={t('recentCritical.title')}
               >
                 <thead>
                   <tr className="text-[10px] text-text-muted uppercase tracking-wide">
-                    <th className="text-left pb-1.5">Date</th>
-                    <th className="text-left pb-1.5 pl-2">Vendor</th>
-                    <th className="text-left pb-1.5 pl-2 hidden sm:table-cell">Institution</th>
-                    <th className="text-right pb-1.5 w-24">Amount</th>
-                    <th className="text-right pb-1.5 w-16">Risk</th>
+                    <th className="text-left pb-1.5">{t('recentCritical.colDate')}</th>
+                    <th className="text-left pb-1.5 pl-2">{t('recentCritical.colVendor')}</th>
+                    <th className="text-left pb-1.5 pl-2 hidden sm:table-cell">{t('recentCritical.colInstitution')}</th>
+                    <th className="text-right pb-1.5 w-24">{t('recentCritical.colAmount')}</th>
+                    <th className="text-right pb-1.5 w-16">{t('recentCritical.colRisk')}</th>
                     <th className="text-right pb-1.5 w-6" />
                   </tr>
                 </thead>
@@ -526,7 +540,7 @@ function RecentCriticalContracts({ onVendorClick, onInstitutionClick }: RecentCo
                           <button
                             onClick={() => navigate(`/contracts/${contract.id}`)}
                             className="text-text-muted hover:text-accent transition-colors opacity-0 group-hover:opacity-100"
-                            aria-label="View contract detail"
+                            aria-label={t('recentCritical.viewDetail')}
                           >
                             <ExternalLink className="h-3 w-3" aria-hidden="true" />
                           </button>
@@ -542,7 +556,7 @@ function RecentCriticalContracts({ onVendorClick, onInstitutionClick }: RecentCo
                   onClick={() => setShowAll(true)}
                   className="mt-3 w-full text-xs text-accent hover:text-accent/80 py-1.5 border border-dashed border-accent/30 rounded transition-colors"
                 >
-                  Show all {contracts.length} contracts
+                  {t('recentCritical.showAll', { count: contracts.length })}
                 </button>
               )}
             </>

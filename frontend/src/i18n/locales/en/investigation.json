@@ -309,5 +309,22 @@
     "disclaimer": "Risk scores are statistical indicators, not legal determinations. High scores indicate similarity to documented corruption patterns and require independent verification before publication."
   },
   "riskScoreLabel": "Risk indicator",
-  "riskScoreTooltip": "Risk score = statistical similarity to known corruption patterns. Not proof of wrongdoing."
+  "riskScoreTooltip": "Risk score = statistical similarity to known corruption patterns. Not proof of wrongdoing.",
+  "loadingError": "Could not load information. Please try again later.",
+  "saving": "Saving...",
+  "vendorTableHeaders": {
+    "vendor": "Vendor",
+    "role": "Role",
+    "contracts": "Contracts",
+    "value": "Value",
+    "avgRisk": "Avg Risk"
+  },
+  "suspicionScore": "Suspicion Score",
+  "totalValue": "Total Value",
+  "credibility": {
+    "low": "Low credibility",
+    "medium": "Medium credibility",
+    "high": "High credibility"
+  },
+  "highPriority": "High Priority"
 }

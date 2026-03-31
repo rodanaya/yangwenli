@@ -2,6 +2,48 @@
   "title": "Procurement Risk Intelligence",
   "trackingLabel": "RISK INTELLIGENCE",
   "subtitle": "AI-detected anomalies, structural corruption patterns, and investigation signals",
+  "alertTicker": {
+    "label": "Risk Alert",
+    "highRiskContracts": "high-risk contracts in",
+    "ofAllContracts": "({{pct}}% of all contracts)",
+    "vsPriorYear": "vs prior year"
+  },
+  "topRiskVendors": {
+    "title": "Top Risk Vendors",
+    "description": "ARIA Tier 1 — highest investigation priority scores across all 318K monitored vendors.",
+    "fullQueue": "Full queue",
+    "empty": "No ARIA T1 vendors found",
+    "colVendor": "Vendor",
+    "colIps": "IPS Score",
+    "colAvgRisk": "Avg Risk",
+    "colValue": "Value",
+    "colPattern": "Pattern",
+    "efosTitle": "Listed on SAT EFOS registry",
+    "sfpTitle": "Sanctioned by SFP",
+    "openProfile": "Open profile for {{name}}"
+  },
+  "sectorHeatmap": {
+    "title": "Sector Risk Heatmap (2020–2025)",
+    "description": "High-risk contract rate (%) per sector per year. Click any cell to view those contracts.",
+    "colSector": "Sector",
+    "footer": "Values = % of contracts classified as high or critical risk. Click any cell to open the contracts list.",
+    "cellLabel": "{{sector}} {{year}}: {{pct}}% high-risk contracts",
+    "cellTitle": "{{sector}} {{year}}: {{pct}}% high-risk",
+    "error": "Could not load data. Please try again later."
+  },
+  "recentCritical": {
+    "title": "Recent Critical-Risk Contracts",
+    "description": "Most recent contracts scored critical (≥ 0.60) by the v6.5 risk model. Each is clickable.",
+    "allCritical": "All critical",
+    "empty": "No critical contracts found",
+    "showAll": "Show all {{count}} contracts",
+    "colDate": "Date",
+    "colVendor": "Vendor",
+    "colInstitution": "Institution",
+    "colAmount": "Amount",
+    "colRisk": "Risk",
+    "viewDetail": "View contract detail"
+  },
   "anomalies": {
     "title": "AI-Detected Anomalies",
     "subtitle": "Statistical outliers and structural irregularities flagged by the risk model",

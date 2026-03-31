@@ -887,7 +887,7 @@ function ProcessStep({
 // ===========================================================================
 export default function Intro() {
   const navigate = useNavigate()
-  const { i18n } = useTranslation()
+  const { i18n, t } = useTranslation('landing')
   const isEn = i18n.language.startsWith('en')
 
   // Redirect if already seen
@@ -1196,7 +1196,7 @@ export default function Intro() {
               className="hidden sm:flex items-center gap-1.5 px-4 py-2 rounded-lg text-sm font-semibold transition-all duration-200 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-red-400/40"
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
             >
-              {isEn ? 'Enter' : 'Entrar'}
+              {t('hero.enter')}
               <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
@@ -1210,7 +1210,7 @@ export default function Intro() {
             className="text-xs font-bold tracking-[0.25em] uppercase"
             style={{ color: CRIMSON }}
           >
-            RUBLI &bull; {isEn ? 'PROCUREMENT TRANSPARENCY' : 'TRANSPARENCIA PROCURATORIA'}
+            RUBLI &bull; {t('hero.transparency')}
           </span>
 
           {/* GSAP split-text hero title */}
@@ -1226,7 +1226,7 @@ export default function Intro() {
             >
               <span style={{ color: CRIMSON }}>{heroContracts.toLocaleString()}</span>
               <br />
-              <span style={{ color: '#fff' }}>{isEn ? 'contracts' : 'contratos'}</span>
+              <span style={{ color: '#fff' }}>{t('hero.contracts')}</span>
             </h1>
           </div>
 
@@ -1236,9 +1236,7 @@ export default function Intro() {
             className="text-lg sm:text-xl max-w-2xl leading-relaxed"
             style={{ color: 'rgba(255,255,255,0.55)' }}
           >
-            {isEn
-              ? 'Mexican federal procurement data analyzed by machine learning to detect corruption patterns across 12 government sectors'
-              : 'Datos de contrataciones federales de Mexico analizados por aprendizaje automatico para detectar patrones de corrupcion en 12 sectores gubernamentales'}
+            {t('hero.heroSubtitle')}
           </p>
 
           {/* Hero stats - GSAP animated counters */}
@@ -1255,7 +1253,7 @@ export default function Intro() {
                 {(heroRiskPct / 100).toFixed(2)}%
               </span>
               <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {isEn ? 'High risk' : 'Alto riesgo'}
+                {t('hero.highRisk')}
               </span>
             </div>
             <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
@@ -1264,7 +1262,7 @@ export default function Intro() {
                 {heroCases}+
               </span>
               <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {isEn ? 'Documented cases' : 'Casos documentados'}
+                {t('hero.documentedCases')}
               </span>
             </div>
             <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
@@ -1273,7 +1271,7 @@ export default function Intro() {
                 23
               </span>
               <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {isEn ? 'Years' : 'Anos'}
+                {t('hero.years')}
               </span>
             </div>
           </div>
@@ -1285,7 +1283,7 @@ export default function Intro() {
               className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
             >
-              {isEn ? 'See the Report' : 'Ver el Reporte'}
+              {t('hero.seeReport')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
@@ -1294,14 +1292,14 @@ export default function Intro() {
               style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
             >
               <Shield className="h-4 w-4" aria-hidden="true" />
-              {isEn ? 'ARIA Intelligence' : 'Inteligencia ARIA'}
+              {t('hero.ariaIntelligence')}
             </button>
             <button
               onClick={() => goToApp('/dashboard')}
               className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-background-elevated/30 focus:outline-none focus:ring-2 focus:ring-background-elevated"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
-              {isEn ? 'Explore' : 'Explorar'}
+              {t('hero.explore')}
             </button>
           </div>
 
@@ -1317,10 +1315,10 @@ export default function Intro() {
             onKeyDown={(e) => {
               if (e.key === 'Enter') document.getElementById('section-scale')?.scrollIntoView({ behavior: 'smooth' })
             }}
-            aria-label={isEn ? 'Scroll to learn more' : 'Desplaza para saber mas'}
+            aria-label={t('hero.scrollLabel')}
           >
             <span className="text-xs font-medium tracking-widest uppercase" style={{ color: 'rgba(255,255,255,0.35)' }}>
-              {isEn ? 'Discover' : 'Descubre'}
+              {t('hero.discover')}
             </span>
             <motion.div
               animate={{ y: [0, 6, 0] }}
@@ -1338,10 +1336,7 @@ export default function Intro() {
         style={{ background: '#0a0c0b' }}
       >
         <p className="text-xs text-stone-500 leading-relaxed">
-          ⚠ {isEn
-            ? <>Risk scores indicate statistical similarity to documented corruption patterns — not proof of wrongdoing. <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">See Methodology</a>.</>
-            : <>Los puntajes de riesgo indican similitud estadística con patrones de corrupción documentados — no constituyen prueba de irregularidades. <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">Ver Metodología</a>.</>
-          }
+          ⚠ {t('hero.riskDisclaimer')} <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">{t('hero.riskDisclaimerLink')}</a>.
         </p>
       </div>
 
@@ -1365,14 +1360,14 @@ export default function Intro() {
             className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
-            {isEn ? 'THE SCALE OF THE PROBLEM' : 'EL TAMANO DEL PROBLEMA'}
+            {t('scale.label')}
           </span>
 
           <h2
             className="gsap-reveal text-3xl sm:text-4xl font-black mb-12 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
-            {isEn ? '23 years of public spending data' : '23 anos de datos de gasto publico'}
+            {t('scale.headline')}
           </h2>
 
           {/* Animated bar chart - custom CSS bars */}
@@ -1393,7 +1388,7 @@ export default function Intro() {
                       initial={{ height: 0 }}
                       animate={s2InView ? { height: `${Math.max(bar.heightPct, 2)}%` } : { height: 0 }}
                       transition={{ duration: 0.6, delay: i * 0.03 + 0.4, ease: [0.25, 0.46, 0.45, 0.94] }}
-                      title={`${bar.year}: ${bar.contracts.toLocaleString()} ${isEn ? 'contracts' : 'contratos'}`}
+                      title={`${bar.year}: ${bar.contracts.toLocaleString()} ${t('scale.contractsTooltip')}`}
                     >
                       {/* Tooltip on hover */}
                       <div className="absolute -top-14 left-1/2 -translate-x-1/2 bg-background text-white text-xs px-2 py-1 rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-10">
@@ -1416,7 +1411,7 @@ export default function Intro() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 sm:gap-12">
             <StatCounter
               value={totalContracts}
-              label={isEn ? 'contracts analyzed' : 'contratos analizados'}
+              label={t('scale.contractsAnalyzed')}
               color="#f0ede8"
               labelColor="#6a6560"
               inView={s2InView}
@@ -1430,7 +1425,7 @@ export default function Intro() {
                 {yearsUp}
               </span>
               <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
-                {isEn ? 'years of data (2002-2025)' : 'anos de datos (2002-2025)'}
+                {t('scale.yearsOfData')}
               </span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
@@ -1441,7 +1436,7 @@ export default function Intro() {
                 ~{(valueTUp / 10).toFixed(1)}T
               </span>
               <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
-                {isEn ? 'MXN evaluated value' : 'MXN valor evaluado'}
+                {t('scale.mxnValue')}
               </span>
             </div>
           </div>
@@ -1454,7 +1449,6 @@ export default function Intro() {
       <FeaturedCase
         ref={s3Ref}
         inView={s3InView}
-        isEn={isEn}
         goToApp={goToApp}
       />
 
@@ -1471,48 +1465,40 @@ export default function Intro() {
             className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
-            {isEn ? 'HOW WE DETECT PATTERNS' : 'COMO DETECTAMOS PATRONES'}
+            {t('how.label')}
           </span>
 
           <h2
             className="gsap-reveal text-3xl sm:text-4xl font-black mb-14 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
-            {isEn ? 'From raw data to risk intelligence' : 'De datos crudos a inteligencia de riesgo'}
+            {t('how.headline')}
           </h2>
 
           <div className="gsap-reveal grid grid-cols-1 sm:grid-cols-4 gap-8">
             {[
               {
                 step: '01',
-                title: isEn ? 'Data' : 'Datos',
-                body: isEn
-                  ? '3.1M contracts from COMPRANET (2002-2025), cleaned and standardized'
-                  : '3.1M contratos de COMPRANET (2002-2025), limpiados y estandarizados',
+                title: t('how.step01Title'),
+                body: t('how.step01Body'),
                 color: '#2563eb',
               },
               {
                 step: '02',
-                title: isEn ? '16 Indicators' : '16 Indicadores',
-                body: isEn
-                  ? 'Vendor concentration, atypical prices, direct awards, network patterns...'
-                  : 'Concentracion de proveedores, precios atipicos, adjudicacion directa, redes...',
+                title: t('how.step02Title'),
+                body: t('how.step02Body'),
                 color: '#8b5cf6',
               },
               {
                 step: '03',
-                title: isEn ? 'ML Model' : 'Modelo ML',
-                body: isEn
-                  ? 'Compared against 289 documented corruption cases across all 12 sectors'
-                  : 'Comparamos contra 289 casos documentados de corrupcion en los 12 sectores',
+                title: t('how.step03Title'),
+                body: t('how.step03Body'),
                 color: CRIMSON,
               },
               {
                 step: '04',
-                title: isEn ? 'Report' : 'Reporte',
-                body: isEn
-                  ? 'We grade procurement health from A to F for every sector'
-                  : 'Calificamos la salud procuratoria de A a F para cada sector',
+                title: t('how.step04Title'),
+                body: t('how.step04Body'),
                 color: '#16a34a',
               },
             ].map((item, i) => (
@@ -1525,9 +1511,7 @@ export default function Intro() {
             className="gsap-reveal mt-14 rounded-xl border p-5 text-sm leading-relaxed"
             style={{ color: '#6a6560', background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
           >
-            {isEn
-              ? 'Scores are statistical risk indicators, not proof of corruption. A high score means the contract resembles documented corruption patterns.'
-              : 'Las puntuaciones son indicadores estadisticos de riesgo, no prueba de corrupcion. Una puntuacion alta significa que el contrato se parece a patrones documentados.'}
+            {t('how.disclaimer')}
           </div>
 
           <button
@@ -1535,7 +1519,7 @@ export default function Intro() {
             className="gsap-reveal mt-8 inline-flex items-center gap-2 text-base font-bold transition-colors duration-200 hover:underline focus:outline-none"
             style={{ color: CRIMSON }}
           >
-            {isEn ? 'See the full methodology' : 'Ver la metodologia completa'}
+            {t('how.seeMethodology')}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
@@ -1554,23 +1538,21 @@ export default function Intro() {
             className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
             style={{ color: CRIMSON }}
           >
-            {isEn ? 'OUR NATIONAL GRADE' : 'NUESTRA CALIFICACION NACIONAL'}
+            {t('reportCard.label')}
           </span>
 
           <h2
             className="gsap-reveal text-3xl sm:text-4xl font-black mb-10 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
           >
-            {isEn
-              ? 'How healthy is Mexican public procurement?'
-              : 'Que tan sana es la contratacion publica de Mexico?'}
+            {t('reportCard.headline')}
           </h2>
 
           {/* Grade slot machine */}
           <div className="gsap-reveal mb-12">
             <GradeSlotMachine grade={nationalGrade} trigger={s5InView} />
             <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
-              {isEn ? 'National average grade' : 'Calificacion promedio nacional'}
+              {t('reportCard.nationalGrade')}
             </p>
           </div>
 
@@ -1631,7 +1613,7 @@ export default function Intro() {
             className="inline-flex items-center gap-2 text-base font-bold transition-colors duration-200 hover:underline focus:outline-none"
             style={{ color: CRIMSON }}
           >
-            {isEn ? 'See the Full Report' : 'Ver el Reporte Completo'}
+            {t('reportCard.seeFullReport')}
             <ArrowRight className="h-4 w-4" aria-hidden="true" />
           </button>
         </div>
@@ -1652,18 +1634,16 @@ export default function Intro() {
                 className="text-xs font-bold tracking-[0.2em] uppercase block mb-4"
                 style={{ color: '#8b5cf6' }}
               >
-                {isEn ? 'AUTOMATED INVESTIGATION' : 'INVESTIGACIÓN AUTOMATIZADA'}
+                {t('aria.label')}
               </span>
               <h2
                 className="text-3xl sm:text-4xl font-black mb-6 leading-tight"
                 style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
               >
-                ARIA {isEn ? 'Intelligence Briefing' : 'Reporte de Inteligencia'}
+                ARIA {t('aria.headline')}
               </h2>
               <p className="text-base leading-relaxed mb-8" style={{ color: 'rgba(255,255,255,0.55)', maxWidth: '500px' }}>
-                {isEn
-                  ? 'Our 9-module Automated Risk Investigation Algorithm classifies 198K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.'
-                  : 'Nuestro algoritmo automatizado de investigación de riesgos de 9 módulos clasifica 198K proveedores en niveles de investigación, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.'}
+                {t('aria.body')}
               </p>
               <button
                 onClick={() => goToApp('/aria')}
@@ -1671,7 +1651,7 @@ export default function Intro() {
                 style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
               >
                 <Shield className="h-4 w-4" aria-hidden="true" />
-                {isEn ? 'Open ARIA Briefing' : 'Abrir Reporte ARIA'}
+                {t('aria.cta')}
                 <ArrowRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </div>
@@ -1682,25 +1662,25 @@ export default function Intro() {
                 {
                   icon: Search,
                   stat: '198K',
-                  label: isEn ? 'Vendors screened' : 'Proveedores evaluados',
+                  label: t('aria.vendorsScreened'),
                   color: '#8b5cf6',
                 },
                 {
                   icon: FileWarning,
                   stat: '16K+',
-                  label: isEn ? 'Capture patterns' : 'Patrones de captura',
+                  label: t('aria.capturePatterns'),
                   color: CRIMSON,
                 },
                 {
                   icon: Shield,
                   stat: '5',
-                  label: isEn ? 'External registries' : 'Registros externos',
+                  label: t('aria.externalRegistries'),
                   color: '#16a34a',
                 },
                 {
                   icon: BarChart3,
                   stat: '4',
-                  label: isEn ? 'Investigation tiers' : 'Niveles de investigación',
+                  label: t('aria.investigationTiers'),
                   color: '#2563eb',
                 },
               ].map((item, i) => (
@@ -1736,16 +1716,14 @@ export default function Intro() {
             className="gsap-reveal text-2xl sm:text-3xl lg:text-4xl font-bold mb-6 leading-tight"
             style={{ fontFamily: SERIF, letterSpacing: '-0.02em' }}
           >
-            {isEn ? 'Start investigating' : 'Empieza a investigar'}
+            {t('cta.headline')}
           </h2>
 
           <p
             className="gsap-reveal text-base sm:text-lg mb-10"
             style={{ color: 'rgba(255,255,255,0.5)' }}
           >
-            {isEn
-              ? 'Browse contracts, investigate vendors, and discover risk patterns.'
-              : 'Navega contratos, investiga proveedores y descubre patrones de riesgo.'}
+            {t('cta.body')}
           </p>
 
           <div className="gsap-reveal flex flex-wrap gap-4 justify-center">
@@ -1754,7 +1732,7 @@ export default function Intro() {
               className="flex items-center gap-2 px-8 py-4 rounded-xl font-bold text-base transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
             >
-              {isEn ? 'See the Report' : 'Ver el Reporte'}
+              {t('cta.seeReport')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
@@ -1763,14 +1741,14 @@ export default function Intro() {
               style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
             >
               <Shield className="h-4 w-4" aria-hidden="true" />
-              {isEn ? 'ARIA Intelligence' : 'Inteligencia ARIA'}
+              {t('cta.ariaIntelligence')}
             </button>
             <button
               onClick={() => goToApp('/dashboard')}
               className="flex items-center gap-2 px-8 py-4 rounded-xl font-semibold text-base transition-all duration-200 hover:bg-background-elevated/30 focus:outline-none focus:ring-2 focus:ring-background-elevated"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
-              {isEn ? 'Explore the platform' : 'Explorar la plataforma'}
+              {t('cta.explorePlatform')}
             </button>
           </div>
 
@@ -1781,9 +1759,7 @@ export default function Intro() {
             style={{ color: 'rgba(196,30,58,0.75)' }}
           >
             <span style={{ color: CRIMSON }}>&#9679;</span>
-            {isEn
-              ? 'Follow the investigation trail on Laboratorios Pisa'
-              : 'Sigue el hilo de investigación sobre Laboratorios Pisa'}
+            {t('cta.redThreadTeaser')}
             <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
 
@@ -1792,8 +1768,8 @@ export default function Intro() {
             className="gsap-reveal mt-14 text-xs"
             style={{ color: 'rgba(255,255,255,0.25)' }}
           >
-            {isEn ? 'Data' : 'Datos'}: COMPRANET &bull; {isEn ? 'Methodology' : 'Metodología'}: OECD, IMF CRI &bull;{' '}
-            {isEn ? 'Open-source procurement intelligence' : 'Inteligencia en contrataciones de código abierto'}
+            {t('footer.dataLabel')}: COMPRANET &bull; {t('footer.methodologyLabel')}: OECD, IMF CRI &bull;{' '}
+            {t('footer.openSourceLabel')}
           </p>
         </div>
       </section>
@@ -1842,16 +1818,17 @@ function useScoreCountUp(target: number, duration: number, enabled: boolean): st
 
 const FeaturedCase = forwardRef<
   HTMLDivElement,
-  { inView: boolean; isEn: boolean; goToApp: (path?: string) => void }
->(function FeaturedCase({ inView, isEn, goToApp }, ref) {
+  { inView: boolean; goToApp: (path?: string) => void }
+>(function FeaturedCase({ inView, goToApp }, ref) {
+  const { t } = useTranslation('landing')
   const fc = FEATURED_CASE
   const scoreDisplay = useScoreCountUp(fc.riskScore, 1500, inView)
   const barFillPct = inView ? fc.riskScore * 100 : 0
 
   const pills = [
-    `${fc.directAwardPct}% ${isEn ? 'direct award' : 'adjudicacion directa'}`,
-    `${fc.highRiskPct}% ${isEn ? 'critical contracts' : 'contratos criticos'}`,
-    `${fc.years} ${isEn ? 'years of contracts' : 'anos de contratos'}`,
+    `${fc.directAwardPct}% ${t('featuredCase.directAward')}`,
+    `${fc.highRiskPct}% ${t('featuredCase.criticalContracts')}`,
+    `${fc.years} ${t('featuredCase.yearsOfContracts')}`,
   ]
 
   return (
@@ -1859,7 +1836,7 @@ const FeaturedCase = forwardRef<
       ref={ref}
       className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
       style={{ background: '#1a1714', color: '#fff' }}
-      aria-label={isEn ? 'Featured documented case' : 'Caso documentado destacado'}
+      aria-label={t('featuredCase.ariaLabel')}
     >
       <div className="max-w-5xl mx-auto">
         <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-start">
@@ -1872,7 +1849,7 @@ const FeaturedCase = forwardRef<
                 fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
               }}
             >
-              {isEn ? 'DOCUMENTED CASE' : 'CASO DOCUMENTADO'}
+              {t('featuredCase.label')}
             </span>
 
             <h2
@@ -1892,16 +1869,14 @@ const FeaturedCase = forwardRef<
               className="gsap-reveal text-sm font-medium mb-6"
               style={{ color: 'rgba(255,255,255,0.45)' }}
             >
-              {fc.contracts.toLocaleString()} {isEn ? 'contracts' : 'contratos'} &middot; ${fc.totalValueB}B MXN &middot; {fc.yearStart}&ndash;{fc.yearEnd}
+              {fc.contracts.toLocaleString()} {t('featuredCase.contracts')} &middot; ${fc.totalValueB}B MXN &middot; {fc.yearStart}&ndash;{fc.yearEnd}
             </p>
 
             <p
               className="gsap-reveal text-base leading-relaxed mb-8"
               style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '480px' }}
             >
-              {isEn
-                ? `This pharmaceutical company received government contracts with ${fc.directAwardPct}% direct awards. The risk model assigns a score of ${fc.riskScore} \u2014 the highest possible \u2014 indicating its contracting pattern almost perfectly matches documented fraud cases.`
-                : `Esta empresa farmaceutica recibio contratos gubernamentales con un ${fc.directAwardPct}% de adjudicaciones directas. El modelo de riesgo asigna una puntuacion de ${fc.riskScore} \u2014 el mas alto posible \u2014 senalando que su patron de contratacion coincide casi perfectamente con casos documentados de fraude.`}
+              {t('featuredCase.description', { directAwardPct: fc.directAwardPct, riskScore: fc.riskScore })}
             </p>
 
             <button
@@ -1909,7 +1884,7 @@ const FeaturedCase = forwardRef<
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
               onClick={() => goToApp(`/vendor/${fc.vendorId}`)}
             >
-              {isEn ? 'See full investigation' : 'Ver investigación completa'}
+              {t('featuredCase.cta')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </div>
@@ -1930,7 +1905,7 @@ const FeaturedCase = forwardRef<
                 {inView ? scoreDisplay : '0.000'}
               </span>
               <span className="text-sm font-medium mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {isEn ? 'Risk Score' : 'Puntuacion de Riesgo'}
+                {t('featuredCase.riskScore')}
               </span>
             </div>
 

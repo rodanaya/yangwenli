@@ -1,34 +1,61 @@
 {
   "trackingLabel": "INSTITUTIONAL CAPTURE ANALYSIS",
-  "title": "Institutional Capture",
-  "subtitle": "Which institutions are captured by which vendors in Mexican federal procurement",
-  "sourcePill": "COMPRANET data analyzed",
+  "title": "Occupied Territories",
+  "subtitle": "Which government institutions are most dependent on a single vendor?",
+  "sourcePill": "contracts analyzed",
   "loading": "Building capture matrix...",
-  "errorTitle": "Institutional Capture",
-  "errorMessage": "Failed to load money flow data",
-  "errorHint": "Please check that the backend is running and try again.",
+  "errorTitle": "Failed to Load",
+  "errorMessage": "Could not load money flow data from the backend.",
+  "errorHint": "Check that the backend is running on port 8001 and try again.",
   "emptyTitle": "No Capture Data",
-  "emptyMessage": "No institution-vendor flow data available for the selected filters",
+  "emptyMessage": "No institution-vendor flow data available for the selected filters.",
   "emptyHint": "Try adjusting the sector or year range filter.",
+  "whatIsCapture": {
+    "label": "WHAT IS INSTITUTIONAL CAPTURE?",
+    "body": "Institutional capture occurs when a single vendor wins such a large share of an institution's contracts that it effectively controls the institution's purchasing decisions. According to OECD guidelines, when one vendor accounts for more than 30% of an institution's total procurement spend, it is a significant red flag. Above 50%, it represents near-total dependence — a pattern associated with bid rigging, ghost contracts, and systemic corruption.",
+    "thresholds": {
+      "total": "Total Capture — one vendor controls >50% of spend",
+      "high": "High Risk — one vendor holds 30–50% of spend",
+      "moderate": "Moderate — one vendor holds 15–30% of spend",
+      "low": "Low — vendor share below 15%"
+    }
+  },
+  "topCaptured": {
+    "label": "MOST CAPTURED INSTITUTIONS",
+    "sublabel": "Ranked by the dominant vendor's share of total institutional spend",
+    "topVendor": "Top Vendor",
+    "share": "share",
+    "contracts": "contracts",
+    "viewVendor": "View vendor profile",
+    "noData": "No capture data available."
+  },
   "filters": {
     "allSectors": "All Sectors",
-    "bySector": "Sector",
-    "period2018": "2018-2022",
-    "period2023": "2023-2025",
+    "bySector": "Filter by Sector",
+    "period2018": "2018–2022",
+    "period2023": "2023–2025",
     "allYears": "All Years"
   },
   "heatmap": {
+    "sectionLabel": "CONCENTRATION MAP",
     "institution": "Institution",
     "vendor": "Vendor",
     "value": "Value",
     "pctBudget": "of institution spend",
     "contracts": "contracts",
     "highCapture": "High Capture",
-    "lowCapture": "Low Capture"
+    "lowCapture": "Low Capture",
+    "mobileLabel": "Top Concentrations — List"
+  },
+  "legend": {
+    "total": "Total Capture (>50%)",
+    "high": "High Risk (30–50%)",
+    "moderate": "Moderate (15–30%)",
+    "low": "Low (<15%)"
   },
   "methodology": {
     "title": "Methodology",
-    "content": "Calculated from 3.1M procurement contracts (2002-2025) with amounts above 100K MXN. High concentration (>30% of an institution's budget going to a single vendor) is a risk indicator per OECD guidelines. Cell color intensity reflects the vendor's share of the institution's total procurement spend."
+    "content": "Calculated from 3.1M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a risk indicator per OECD procurement guidelines. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
   },
   "stats": {
     "topFlows": "TOP FLOWS ANALYZED",
@@ -36,5 +63,11 @@
     "dominantVendors": "VENDORS SHOWN",
     "highCaptureFlows": "HIGH CAPTURE",
     "highCaptureDesc": "Flows where vendor holds >30% of institution spend"
+  },
+  "riskLabels": {
+    "total": "Total Capture",
+    "high": "High Risk",
+    "moderate": "Moderate",
+    "low": "Low"
   }
 }

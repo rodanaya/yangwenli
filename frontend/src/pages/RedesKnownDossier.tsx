@@ -7,14 +7,18 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { motion, type Variants } from 'framer-motion'
+import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ariaApi } from '@/api/client'
-import type { AriaQueueItem } from '@/api/types'
+import { ariaApi, vendorApi, networkApi } from '@/api/client'
+import type { AriaQueueItem, VendorDetailResponse } from '@/api/types'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
-import { Search, Shield, ArrowRight, AlertTriangle, Ghost, Building, Users } from 'lucide-react'
+import { getRiskLevelFromScore } from '@/lib/constants'
+import {
+  Search, Shield, ArrowRight, AlertTriangle, Ghost, Building, Users,
+  X, ExternalLink, Loader2, AlertCircle,
+} from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Animation variants
@@ -32,6 +36,11 @@ const staggerItem: Variants = {
     scale: 1,
     transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
   },
+}
+const panelVariants: Variants = {
+  initial: { x: '100%', opacity: 0 },
+  animate: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 35 } },
+  exit: { x: '100%', opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } },
 }
 
 // ---------------------------------------------------------------------------
@@ -77,14 +86,6 @@ const PATTERN_PILL_COLORS: Record<string, { active: string; inactive: string }> 
   },
 }
 
-const PATTERN_PILL_LABELS: Record<string, string> = {
-  P1: 'P1 MONOPOLIO',
-  P2: 'P2 FANTASMA',
-  P3: 'P3 INTERMEDIARIO',
-  P6: 'P6 CAPTURA',
-  P7: 'P7 RIESGO EXTREMO',
-}
-
 function getTierBadgeColor(tier: number): string {
   switch (tier) {
     case 1: return 'bg-red-500/20 text-red-400 border-red-500/30'
@@ -100,17 +101,17 @@ function getIpsColor(ips: number): string {
   return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
 }
 
+function getRiskBadgeColor(level: string): string {
+  switch (level) {
+    case 'critical': return 'bg-red-500/20 text-red-300 border-red-500/30'
+    case 'high':     return 'bg-orange-500/20 text-orange-300 border-orange-500/30'
+    case 'medium':   return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+    default:         return 'bg-green-500/20 text-green-300 border-green-500/30'
+  }
+}
+
 // All known patterns for filter
 const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
-
-// Static metadata per pattern (labels, colors — counts come from live ARIA stats)
-const PATTERN_META: Record<string, { name: string; desc: string; borderColor: string }> = {
-  P1: { name: 'Monopolio', desc: 'Dominio de mercado exclusivo', borderColor: 'border-red-500' },
-  P2: { name: 'Fantasma', desc: 'Empresas sin operaciones reales', borderColor: 'border-amber-500' },
-  P3: { name: 'Intermediario', desc: 'Intermediarios de papel', borderColor: 'border-orange-400' },
-  P6: { name: 'Captura', desc: 'Captura de instituciones', borderColor: 'border-rose-600' },
-  P7: { name: 'Riesgo Extremo', desc: 'Patrones de riesgo extremo', borderColor: 'border-yellow-500' },
-}
 
 // ---------------------------------------------------------------------------
 // Component
@@ -122,6 +123,9 @@ export default function RedesKnownDossier() {
   // Filters
   const [patternFilter, setPatternFilter] = useState<string>('')
   const [searchTerm, setSearchTerm] = useState('')
+
+  // Selected vendor for the detail panel
+  const [selectedVendorId, setSelectedVendorId] = useState<number | null>(null)
 
   // Fetch Tier 1 + Tier 2 from ARIA queue
   const { data: tier1Data, isLoading: loading1 } = useQuery({
@@ -178,23 +182,25 @@ export default function RedesKnownDossier() {
 
   const error = !isLoading && dossiers.length === 0 && !tier1Data && !tier2Data
 
+  // Dismiss the detail panel when clicking outside on mobile overlay
+  const handleOverlayClick = () => setSelectedVendorId(null)
+
   // ---------------------------------------------------------------------------
   // Render
   // ---------------------------------------------------------------------------
 
   return (
-    <div className="space-y-6 max-w-6xl mx-auto">
-      {/* Editorial header — "LA RED INVISIBLE" */}
+    <div className="relative space-y-6 max-w-6xl mx-auto">
+      {/* Editorial header */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Análisis de Redes &middot; ARIA Tier 1 y Tier 2
+          {t('header.eyebrow')}
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
-          La Red Invisible
+          {t('header.title')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
-          Redes de corrupcion documentadas en contratacion publica federal.{' '}
-          285 proveedores en vigilancia maxima (Nivel 1). Patrones identificados por sistema ARIA.
+          {t('header.description')}
         </p>
       </div>
 
@@ -214,18 +220,26 @@ export default function RedesKnownDossier() {
       {/* Pattern summary grid — live counts from ARIA stats */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
         {ALL_PATTERNS.map((code) => {
-          const meta = PATTERN_META[code]
           const liveCount = statsData?.pattern_counts?.[code]
           const countLabel = liveCount !== undefined
             ? liveCount >= 1000 ? `${(liveCount / 1000).toFixed(1)}K` : String(liveCount)
             : '—'
+          const name = t(`patternGrid.${code}.name`)
+          const desc = t(`patternGrid.${code}.desc`)
+          const borderColorMap: Record<string, string> = {
+            P1: 'border-red-500',
+            P2: 'border-amber-500',
+            P3: 'border-orange-400',
+            P6: 'border-rose-600',
+            P7: 'border-yellow-500',
+          }
           return (
             <button
               key={code}
               onClick={() => setPatternFilter(patternFilter === code ? '' : code)}
               className={cn(
                 'border-l-4 pl-3 py-2 rounded-r text-left transition-all',
-                meta.borderColor,
+                borderColorMap[code] ?? 'border-zinc-500',
                 patternFilter === code
                   ? 'bg-white/10 ring-1 ring-white/20'
                   : 'bg-background-elevated hover:bg-white/5',
@@ -233,9 +247,11 @@ export default function RedesKnownDossier() {
               aria-pressed={patternFilter === code}
             >
               <div className="text-xs font-mono font-bold text-text-primary">{code}</div>
-              <div className="text-xs text-text-muted">{meta.name}</div>
-              <div className="text-sm font-semibold text-text-primary mt-1">{countLabel} proveedores</div>
-              <div className="text-xs text-text-muted/60">{meta.desc}</div>
+              <div className="text-xs text-text-muted">{name}</div>
+              <div className="text-sm font-semibold text-text-primary mt-1">
+                {countLabel} {t('patternGrid.vendors')}
+              </div>
+              <div className="text-xs text-text-muted/60">{desc}</div>
             </button>
           )
         })}
@@ -249,9 +265,9 @@ export default function RedesKnownDossier() {
             type="text"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder="Buscar proveedor..."
+            placeholder={t('filters.searchPlaceholder')}
             className="bg-surface-card border border-white/10 rounded-md pl-8 pr-3 py-1.5 text-sm text-text-primary w-64 placeholder:text-text-muted/30"
-            aria-label="Search vendors"
+            aria-label={t('filters.searchPlaceholder')}
           />
         </div>
 
@@ -259,6 +275,7 @@ export default function RedesKnownDossier() {
           {ALL_PATTERNS.map((p) => {
             const isActive = patternFilter === p
             const colors = PATTERN_PILL_COLORS[p]
+            const label = t(`patternLabels.${p}`)
             return (
               <button
                 key={p}
@@ -268,9 +285,9 @@ export default function RedesKnownDossier() {
                   isActive ? colors?.active : colors?.inactive,
                 )}
                 aria-pressed={isActive}
-                aria-label={`Filter by pattern ${p}`}
+                aria-label={`${t('filters.byPattern')}: ${p}`}
               >
-                {PATTERN_PILL_LABELS[p] || p}
+                {p} {label}
               </button>
             )
           })}
@@ -307,7 +324,7 @@ export default function RedesKnownDossier() {
       {/* Filter yields nothing */}
       {!isLoading && !error && filtered.length === 0 && dossiers.length > 0 && (
         <div className="bg-surface-card border border-white/10 rounded-xl p-6 text-center">
-          <p className="text-text-muted text-sm">No se encontraron expedientes con los filtros actuales.</p>
+          <p className="text-text-muted text-sm">{t('noFilterResults')}</p>
         </div>
       )}
 
@@ -320,7 +337,16 @@ export default function RedesKnownDossier() {
           className="grid grid-cols-1 md:grid-cols-2 gap-4"
         >
           {filtered.map((item) => (
-            <DossierCard key={item.vendor_id} item={item} />
+            <DossierCard
+              key={item.vendor_id}
+              item={item}
+              isSelected={selectedVendorId === item.vendor_id}
+              onSelect={() =>
+                setSelectedVendorId(
+                  selectedVendorId === item.vendor_id ? null : item.vendor_id
+                )
+              }
+            />
           ))}
         </motion.div>
       )}
@@ -328,9 +354,49 @@ export default function RedesKnownDossier() {
       {/* Count */}
       {!isLoading && filtered.length > 0 && (
         <p className="text-[11px] text-text-muted/40 text-center">
-          {filtered.length} / {dossiers.length} expedientes
+          {t('dossierCount', { filtered: filtered.length, total: dossiers.length })}
         </p>
       )}
+
+      {/* Mobile overlay backdrop */}
+      <AnimatePresence>
+        {selectedVendorId !== null && (
+          <motion.div
+            key="backdrop"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 bg-black/40 z-30 lg:hidden"
+            onClick={handleOverlayClick}
+            aria-hidden="true"
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Detail panel — slides in from the right */}
+      <AnimatePresence>
+        {selectedVendorId !== null && (
+          <motion.aside
+            key={`detail-${selectedVendorId}`}
+            variants={panelVariants}
+            initial="initial"
+            animate="animate"
+            exit="exit"
+            className={cn(
+              'fixed top-0 right-0 h-full w-full max-w-md z-40',
+              'bg-background border-l border-white/10 shadow-2xl',
+              'overflow-y-auto',
+            )}
+            aria-label="Vendor detail panel"
+          >
+            <VendorDetailPanel
+              vendorId={selectedVendorId}
+              ariaItem={dossiers.find((d) => d.vendor_id === selectedVendorId) ?? null}
+              onClose={() => setSelectedVendorId(null)}
+            />
+          </motion.aside>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -341,9 +407,12 @@ export default function RedesKnownDossier() {
 
 interface DossierCardProps {
   item: AriaQueueItem
+  isSelected: boolean
+  onSelect: () => void
 }
 
-function DossierCard({ item }: DossierCardProps) {
+function DossierCard({ item, isSelected, onSelect }: DossierCardProps) {
+  const { t } = useTranslation('redes')
   const pattern = item.primary_pattern || 'default'
   const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
   const borderClass = PATTERN_BORDER_COLORS[pattern] || 'border-l-zinc-500'
@@ -351,7 +420,7 @@ function DossierCard({ item }: DossierCardProps) {
     ? SECTOR_COLORS[item.primary_sector_name.toLowerCase()] || '#64748b'
     : '#64748b'
 
-  const patternLabel = PATTERN_PILL_LABELS[pattern] || pattern.toUpperCase()
+  const patternLabel = t(`patternLabels.${pattern}`, { defaultValue: pattern.toUpperCase() })
 
   return (
     <motion.div
@@ -360,16 +429,23 @@ function DossierCard({ item }: DossierCardProps) {
         'bg-surface-card border border-white/8 rounded-xl overflow-hidden',
         'border-l-4',
         borderClass,
-        'hover:border-white/20 transition-colors group',
+        'transition-colors group cursor-pointer',
+        isSelected ? 'border-white/30 ring-1 ring-white/20' : 'hover:border-white/20',
       )}
+      onClick={onSelect}
+      role="button"
+      tabIndex={0}
+      onKeyDown={(e) => e.key === 'Enter' && onSelect()}
+      aria-expanded={isSelected}
+      aria-label={`${item.vendor_name} — ${t('card.viewCase')}`}
     >
       <div className="p-5 space-y-3">
         {/* Top row: pattern badge + tier + flags */}
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
-            <PatternIcon className="w-3.5 h-3.5 text-text-muted/50" />
+            <PatternIcon className="w-3.5 h-3.5 text-text-muted/50" aria-hidden="true" />
             <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-text-muted/70">
-              {patternLabel}
+              {pattern} {patternLabel}
             </span>
           </div>
 
@@ -386,7 +462,7 @@ function DossierCard({ item }: DossierCardProps) {
             )}
             {item.new_vendor_risk && (
               <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/20 font-mono">
-                NUEVO
+                {t('card.newVendor')}
               </span>
             )}
             <span
@@ -395,7 +471,7 @@ function DossierCard({ item }: DossierCardProps) {
                 getTierBadgeColor(item.ips_tier),
               )}
             >
-              TIER {item.ips_tier}
+              {t('detail.tier')} {item.ips_tier}
             </span>
           </div>
         </div>
@@ -412,54 +488,380 @@ function DossierCard({ item }: DossierCardProps) {
         <div className="flex items-center gap-2 text-[11px] text-text-muted/60">
           {item.primary_sector_name && (
             <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full" style={{ background: sectorColor }} />
+              <span className="w-2 h-2 rounded-full" style={{ background: sectorColor }} aria-hidden="true" />
               {item.primary_sector_name}
             </span>
           )}
           {item.years_active !== undefined && item.years_active > 0 && (
             <span>
-              &middot; {item.years_active} {item.years_active === 1 ? 'anio' : 'anios'} activo
+              &middot; {t('card.yearsActive_other', { count: item.years_active })}
             </span>
           )}
         </div>
 
         {/* Key stats row — IPS prominent + contracts + value */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-3 flex-wrap">
           <span
             className={cn(
               'text-xs font-mono font-bold px-2 py-0.5 rounded border',
               getIpsColor(item.ips_final),
             )}
           >
-            IPS {item.ips_final.toFixed(2)}
+            {t('card.ipsScore')} {item.ips_final.toFixed(2)}
           </span>
           <span className="text-[11px] text-text-muted/70">
-            {formatNumber(item.total_contracts)} contratos
+            {formatNumber(item.total_contracts)} {t('card.contracts')}
           </span>
           <span className="text-[11px] font-semibold text-text-primary">
             {formatCompactMXN(item.total_value_mxn)}
           </span>
           <span className="text-[11px] text-text-muted/50">
-            Riesgo: {formatPercent(item.avg_risk_score, 0)}
+            {t('card.riskScore')}: {formatPercent(item.avg_risk_score, 0)}
           </span>
         </div>
 
-        {/* Action link */}
-        <div className="pt-1 flex items-center justify-between">
+        {/* Action links */}
+        <div className="pt-1 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
           <Link
             to={`/thread/${item.vendor_id}`}
             className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold uppercase tracking-wider text-accent-primary hover:text-accent-primary/80 transition-colors group-hover:underline"
           >
-            Abrir Expediente <ArrowRight className="w-3 h-3" />
+            {t('card.viewCase')} <ArrowRight className="w-3 h-3" aria-hidden="true" />
           </Link>
           <Link
             to={`/vendors/${item.vendor_id}`}
             className="text-[10px] text-text-muted/40 hover:text-text-muted/70 transition-colors"
           >
-            Perfil
+            {t('card.viewProfile')}
           </Link>
         </div>
       </div>
     </motion.div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Vendor Detail Panel — loads rich data for the selected vendor
+// ---------------------------------------------------------------------------
+
+interface VendorDetailPanelProps {
+  vendorId: number
+  ariaItem: AriaQueueItem | null
+  onClose: () => void
+}
+
+function VendorDetailPanel({ vendorId, ariaItem, onClose }: VendorDetailPanelProps) {
+  const { t } = useTranslation('redes')
+  const NA = t('detail.notAvailable')
+
+  // Vendor profile from /vendors/{id}
+  const {
+    data: vendor,
+    isLoading: vendorLoading,
+    isError: vendorError,
+  } = useQuery<VendorDetailResponse>({
+    queryKey: ['vendor-detail-redes', vendorId],
+    queryFn: () => vendorApi.getById(vendorId),
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
+  })
+
+  // Co-bidders from /network/co-bidders/{id}
+  const { data: coBiddersData, isLoading: coBiddersLoading } = useQuery({
+    queryKey: ['co-bidders-redes', vendorId],
+    queryFn: () => networkApi.getCoBidders(vendorId, 2, 5),
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
+  })
+
+  const riskLevel = vendor?.avg_risk_score != null
+    ? getRiskLevelFromScore(vendor.avg_risk_score)
+    : null
+
+  const pattern = ariaItem?.primary_pattern || 'default'
+  const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
+  const patternLabel = t(`patternLabels.${pattern}`, { defaultValue: pattern })
+
+  return (
+    <div className="flex flex-col h-full">
+      {/* Panel header */}
+      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-background sticky top-0 z-10">
+        <div className="flex items-center gap-2 min-w-0">
+          <PatternIcon className="w-4 h-4 text-text-muted/60 shrink-0" aria-hidden="true" />
+          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/70 truncate">
+            {pattern} · {patternLabel}
+          </span>
+        </div>
+        <button
+          onClick={onClose}
+          className="text-text-muted hover:text-text-primary transition-colors ml-3 shrink-0"
+          aria-label={t('detail.closePanel')}
+        >
+          <X className="w-4 h-4" />
+        </button>
+      </div>
+
+      {/* Loading state */}
+      {vendorLoading && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-text-muted">
+          <Loader2 className="w-6 h-6 animate-spin" aria-hidden="true" />
+          <span className="text-sm">{t('detail.loading')}</span>
+        </div>
+      )}
+
+      {/* Error state */}
+      {vendorError && !vendorLoading && (
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-text-muted">
+          <AlertCircle className="w-6 h-6 text-red-400" aria-hidden="true" />
+          <span className="text-sm">{t('detail.loadError')}</span>
+          {/* Fallback: still show ARIA data if we have it */}
+          {ariaItem && (
+            <div className="mt-4 w-full">
+              <AriaFallbackSection ariaItem={ariaItem} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Content */}
+      {vendor && !vendorLoading && (
+        <div className="flex-1 p-5 space-y-5 overflow-y-auto">
+
+          {/* Vendor name */}
+          <div>
+            <h2
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="text-xl font-bold text-text-primary leading-tight"
+            >
+              {vendor.name}
+            </h2>
+            {vendor.rfc ? (
+              <p className="text-xs text-text-muted mt-1 font-mono">
+                {t('detail.rfc')}: <span className="text-text-secondary">{vendor.rfc}</span>
+              </p>
+            ) : (
+              <p className="text-xs text-text-muted mt-1 font-mono">
+                {t('detail.rfc')}: <span className="text-text-muted/40">{NA}</span>
+              </p>
+            )}
+          </div>
+
+          {/* ARIA tier + IPS */}
+          {ariaItem && (
+            <div className="flex flex-wrap gap-2">
+              <span className={cn('text-xs px-2 py-1 rounded border font-mono font-bold', getTierBadgeColor(ariaItem.ips_tier))}>
+                {t('detail.tier')} {ariaItem.ips_tier}
+              </span>
+              <span className={cn('text-xs px-2 py-1 rounded border font-mono font-bold', getIpsColor(ariaItem.ips_final))}>
+                {t('detail.ipsScore')}: {ariaItem.ips_final.toFixed(3)}
+              </span>
+            </div>
+          )}
+
+          {/* External watchlist flags */}
+          {(vendor.is_efos_ghost || vendor.is_sfp_sanctioned) && (
+            <div>
+              <SectionLabel>{t('detail.externalFlags')}</SectionLabel>
+              <div className="flex flex-wrap gap-2 mt-1">
+                {vendor.is_efos_ghost && (
+                  <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 font-mono font-bold">
+                    EFOS {t('card.efos')}
+                  </span>
+                )}
+                {vendor.is_sfp_sanctioned && (
+                  <span className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-bold">
+                    SFP {t('card.sfp')}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+
+          {/* Key stats grid */}
+          <div>
+            <SectionLabel>{t('detail.riskScore')}</SectionLabel>
+            <div className="grid grid-cols-2 gap-2 mt-2">
+              <StatCell
+                label={t('detail.riskScore')}
+                value={vendor.avg_risk_score != null ? formatPercent(vendor.avg_risk_score, 1) : NA}
+              />
+              <StatCell
+                label={t('detail.riskLevel')}
+                value={
+                  riskLevel
+                    ? <span className={cn('text-xs font-mono font-bold px-1.5 py-0.5 rounded border', getRiskBadgeColor(riskLevel))}>
+                        {t(`riskLevels.${riskLevel}`)}
+                      </span>
+                    : NA
+                }
+              />
+              <StatCell
+                label={t('detail.totalContracts')}
+                value={formatNumber(vendor.total_contracts)}
+              />
+              <StatCell
+                label={t('detail.totalValue')}
+                value={formatCompactMXN(vendor.total_value_mxn)}
+              />
+              <StatCell
+                label={t('detail.directAward')}
+                value={vendor.direct_award_pct != null ? formatPercent(vendor.direct_award_pct / 100, 1) : NA}
+              />
+              <StatCell
+                label={t('detail.singleBid')}
+                value={vendor.single_bid_pct != null ? formatPercent(vendor.single_bid_pct / 100, 1) : NA}
+              />
+              <StatCell
+                label={t('detail.yearsActive')}
+                value={vendor.years_active > 0 ? String(vendor.years_active) : NA}
+              />
+              <StatCell
+                label={t('detail.sector')}
+                value={vendor.primary_sector_name ?? NA}
+              />
+            </div>
+          </div>
+
+          {/* Top institutions */}
+          <div>
+            <SectionLabel>{t('detail.topInstitutions')}</SectionLabel>
+            {vendor.top_institutions && vendor.top_institutions.length > 0 ? (
+              <ul className="mt-2 space-y-1.5">
+                {vendor.top_institutions.slice(0, 5).map((inst) => (
+                  <li
+                    key={inst.institution_id}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
+                    <span className="text-text-secondary truncate">{inst.institution_name}</span>
+                    <span className="text-text-muted/60 shrink-0 font-mono">
+                      {formatNumber(inst.total_contracts)} {t('detail.contracts')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-xs text-text-muted/50 mt-2">{t('detail.noInstitutions')}</p>
+            )}
+          </div>
+
+          {/* Co-bidders */}
+          <div>
+            <SectionLabel>{t('detail.coBidders')}</SectionLabel>
+            {coBiddersLoading ? (
+              <div className="flex items-center gap-2 mt-2 text-xs text-text-muted/50">
+                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
+                <span>{t('detail.loading')}</span>
+              </div>
+            ) : coBiddersData?.co_bidders && coBiddersData.co_bidders.length > 0 ? (
+              <ul className="mt-2 space-y-1.5">
+                {coBiddersData.co_bidders.slice(0, 5).map((cb) => (
+                  <li
+                    key={cb.vendor_id}
+                    className="flex items-center justify-between gap-2 text-xs"
+                  >
+                    <Link
+                      to={`/vendors/${cb.vendor_id}`}
+                      className="text-accent-primary hover:underline truncate"
+                    >
+                      {cb.vendor_name}
+                    </Link>
+                    <span className="text-text-muted/60 shrink-0 font-mono">
+                      {cb.co_bid_count ?? 0} {t('detail.contracts')}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            ) : !coBiddersLoading ? (
+              <p className="text-xs text-text-muted/50 mt-2">{t('detail.noCoBidders')}</p>
+            ) : null}
+          </div>
+
+          {/* ARIA memo if available */}
+          {ariaItem?.memo_text && (
+            <div>
+              <SectionLabel>{t('detail.memo')}</SectionLabel>
+              <p className="text-xs text-text-secondary mt-2 leading-relaxed line-clamp-6">
+                {ariaItem.memo_text}
+              </p>
+            </div>
+          )}
+
+          {/* Action buttons */}
+          <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
+            <Link
+              to={`/thread/${vendorId}`}
+              className="flex items-center justify-center gap-2 bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary border border-accent-primary/30 rounded-lg py-2.5 text-sm font-semibold transition-colors"
+            >
+              {t('detail.openDossier')} <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+            <Link
+              to={`/vendors/${vendorId}`}
+              className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-text-secondary border border-white/10 rounded-lg py-2.5 text-sm transition-colors"
+            >
+              {t('detail.viewProfile')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
+            </Link>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Fallback section — shows ARIA data when vendor endpoint fails
+// ---------------------------------------------------------------------------
+
+function AriaFallbackSection({ ariaItem }: { ariaItem: AriaQueueItem }) {
+  const { t } = useTranslation('redes')
+  const NA = t('detail.notAvailable')
+
+  return (
+    <div className="space-y-3 w-full px-2">
+      <h2
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+        className="text-lg font-bold text-text-primary"
+      >
+        {ariaItem.vendor_name}
+      </h2>
+      <div className="grid grid-cols-2 gap-2">
+        <StatCell label={t('detail.ipsScore')} value={ariaItem.ips_final.toFixed(3)} />
+        <StatCell label={t('detail.tier')} value={String(ariaItem.ips_tier)} />
+        <StatCell label={t('detail.totalContracts')} value={formatNumber(ariaItem.total_contracts)} />
+        <StatCell label={t('detail.totalValue')} value={formatCompactMXN(ariaItem.total_value_mxn)} />
+        <StatCell label={t('detail.riskScore')} value={ariaItem.avg_risk_score != null ? formatPercent(ariaItem.avg_risk_score, 1) : NA} />
+        <StatCell label={t('detail.sector')} value={ariaItem.primary_sector_name ?? NA} />
+      </div>
+      <div className="flex flex-col gap-2 pt-2">
+        <Link
+          to={`/thread/${ariaItem.vendor_id}`}
+          className="flex items-center justify-center gap-2 bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary border border-accent-primary/30 rounded-lg py-2 text-sm font-semibold transition-colors"
+        >
+          {t('detail.openDossier')} <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
+        </Link>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Small helpers
+// ---------------------------------------------------------------------------
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/50 mb-1">
+      {children}
+    </div>
+  )
+}
+
+function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
+  return (
+    <div className="bg-white/3 rounded-lg p-2.5 border border-white/8">
+      <div className="text-[10px] text-text-muted/50 mb-1">{label}</div>
+      <div className="text-sm font-semibold text-text-primary">
+        {value === null || value === undefined || value === '' ? '—' : value}
+      </div>
+    </div>
   )
 }

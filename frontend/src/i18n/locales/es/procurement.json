@@ -2,6 +2,48 @@
   "title": "Inteligencia de Riesgo en Compras",
   "trackingLabel": "INTELIGENCIA DE RIESGO",
   "subtitle": "Anomalías detectadas por IA, patrones estructurales de corrupción y señales de investigación",
+  "alertTicker": {
+    "label": "Alerta de Riesgo",
+    "highRiskContracts": "contratos de alto riesgo en",
+    "ofAllContracts": "({{pct}}% de todos los contratos)",
+    "vsPriorYear": "vs año anterior"
+  },
+  "topRiskVendors": {
+    "title": "Proveedores de Mayor Riesgo",
+    "description": "ARIA Nivel 1 — puntajes de prioridad de investigación más altos entre los 318K proveedores monitoreados.",
+    "fullQueue": "Cola completa",
+    "empty": "No se encontraron proveedores ARIA N1",
+    "colVendor": "Proveedor",
+    "colIps": "Puntaje IPS",
+    "colAvgRisk": "Riesgo Prom.",
+    "colValue": "Valor",
+    "colPattern": "Patrón",
+    "efosTitle": "Listado en el registro SAT EFOS",
+    "sfpTitle": "Sancionado por la SFP",
+    "openProfile": "Abrir perfil de {{name}}"
+  },
+  "sectorHeatmap": {
+    "title": "Mapa de Calor de Riesgo por Sector (2020–2025)",
+    "description": "Tasa de contratos de alto riesgo (%) por sector por año. Haz clic en cualquier celda para ver esos contratos.",
+    "colSector": "Sector",
+    "footer": "Valores = % de contratos clasificados como alto o crítico riesgo. Haz clic en cualquier celda para abrir la lista de contratos.",
+    "cellLabel": "{{sector}} {{year}}: {{pct}}% contratos de alto riesgo",
+    "cellTitle": "{{sector}} {{year}}: {{pct}}% alto riesgo",
+    "error": "No se pudo cargar la información. Intente de nuevo más tarde."
+  },
+  "recentCritical": {
+    "title": "Contratos Críticos Recientes",
+    "description": "Contratos más recientes con puntaje crítico (≥ 0.60) según el modelo de riesgo v6.5. Cada uno es interactivo.",
+    "allCritical": "Todos los críticos",
+    "empty": "No se encontraron contratos críticos",
+    "showAll": "Mostrar los {{count}} contratos",
+    "colDate": "Fecha",
+    "colVendor": "Proveedor",
+    "colInstitution": "Institución",
+    "colAmount": "Monto",
+    "colRisk": "Riesgo",
+    "viewDetail": "Ver detalle del contrato"
+  },
   "anomalies": {
     "title": "Anomalías detectadas por IA",
     "subtitle": "Valores atípicos estadísticos e irregularidades estructurales marcadas por el modelo de riesgo",

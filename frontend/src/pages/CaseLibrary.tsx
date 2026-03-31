@@ -195,8 +195,15 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
         </div>
       </button>
 
-      {/* Footer: quick-link actions */}
+      {/* Footer: primary CTA + quick-link actions */}
       <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800 gap-2 bg-zinc-950/50">
+        {/* Primary CTA: View Full Investigation */}
+        <button
+          onClick={onClick}
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-accent hover:text-accent/80 transition-colors"
+        >
+          {t('card.viewInvestigation')}
+        </button>
         <div className="flex items-center gap-1.5">
           {/* View contracts filtered to this case's sector + year */}
           {(cas.sector_ids?.length > 0 || cas.contract_year_start) && (
@@ -230,20 +237,20 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
               {t('card.categoriesLink')}
             </button>
           )}
+          <AddToDossierButton
+            entityType="note"
+            entityId={cas.id}
+            entityName={cas.name_en}
+            className="h-7 text-xs"
+          />
         </div>
-        <AddToDossierButton
-          entityType="note"
-          entityId={cas.id}
-          entityName={cas.name_en}
-          className="h-7 text-xs"
-        />
       </div>
     </motion.div>
   )
 }
 
-// ── Evidence Manifest (Stats Bar) ────────────────────────────────────────────
-function EvidenceManifest() {
+// ── Dossier Hero (Stats Banner) ───────────────────────────────────────────────
+function DossierHero() {
   const { t } = useTranslation('cases')
   const { data } = useQuery({
     queryKey: ['cases', 'stats'],
@@ -252,37 +259,73 @@ function EvidenceManifest() {
   })
 
   const totalBn = data ? (data.total_amount_mxn_low / 1e9).toFixed(0) : '--'
-
-  const stats = [
-    { label: t('statsBar.totalCases'), value: data?.total_cases ?? '--', accent: true },
-    { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '--', accent: true },
-    { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '--', accent: false },
-    { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '--', accent: false },
-  ]
+  const totalCases = data?.total_cases ?? '--'
 
   return (
     <div className="mb-8">
+      {/* Hero headline — dossier style */}
+      <motion.div
+        variants={slideUp}
+        initial="initial"
+        animate="animate"
+        className="relative overflow-hidden rounded-sm border border-red-900/40 bg-red-950/20 px-6 py-5 mb-4"
+      >
+        {/* Decorative corner rule */}
+        <div className="absolute top-0 left-0 w-1 h-full bg-red-600" />
+        <div className="pl-4">
+          <div className="text-[9px] font-mono font-bold tracking-[0.3em] uppercase text-red-400/70 mb-2">
+            {t('pageSubhead')}
+          </div>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <span
+              className="text-3xl sm:text-4xl font-black font-mono text-red-500 tabular-nums"
+              aria-label={`${totalCases} documented cases`}
+            >
+              {totalCases}
+            </span>
+            <span className="text-base font-semibold text-text-secondary">
+              {t('statsBar.totalCases')}
+            </span>
+            <span className="text-text-muted/40 hidden sm:inline">·</span>
+            <span
+              className="text-3xl sm:text-4xl font-black font-mono text-red-500 tabular-nums"
+              aria-label={`$${totalBn}B+ estimated losses`}
+            >
+              {data ? `$${totalBn}B+` : '--'}
+            </span>
+            <span className="text-base font-semibold text-text-secondary">
+              {t('statsBar.totalAmount')}
+            </span>
+          </div>
+        </div>
+      </motion.div>
+
+      {/* Secondary stats */}
       <motion.div
         className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-border/60 rounded-sm overflow-hidden"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
       >
-        {stats.map(({ label, value, accent }, i) => (
+        {[
+          { label: t('statsBar.totalCases'), value: totalCases, accent: true },
+          { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '--', accent: true },
+          { label: t('statsBar.gtLinked'), value: data?.gt_linked_count ?? '--', accent: false },
+          { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '--', accent: false },
+        ].map(({ label, value, accent }, i) => (
           <motion.div
             key={label}
             variants={slideUp}
-            className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'border-l-[3px] sm:border-l-[3px]' : ''}`}
+            className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'sm:border-t-0 border-t border-border/40' : ''}`}
           >
-            <div
-              className={`text-2xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}
-            >
+            <div className={`text-xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}>
               {value}
             </div>
             <div className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-medium">{label}</div>
           </motion.div>
         ))}
       </motion.div>
+
       <p className="mt-2 text-[11px] text-text-muted leading-relaxed">
         {t('caseCount.explanation')}
       </p>
@@ -336,22 +379,21 @@ export default function CaseLibrary() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Sort by impact: ML-linked cases first (they have known contract counts),
-  // then by severity descending, then by amount descending.
-  // This puts IMSS (9,366 contracts, severity 4, ML-linked) first.
+  // Sort by fraud value (default): amount_mxn_low descending,
+  // then severity descending, then ML-linked first as tiebreaker.
   const data = useMemo(() => {
     if (!rawData) return rawData
     return [...rawData].sort((a, b) => {
-      // ML-linked (ground truth) cases first
-      const aLinked = a.ground_truth_case_id != null ? 1 : 0
-      const bLinked = b.ground_truth_case_id != null ? 1 : 0
-      if (bLinked !== aLinked) return bLinked - aLinked
-      // Then by severity descending (4 = most severe)
-      if (b.severity !== a.severity) return b.severity - a.severity
-      // Then by amount descending
+      // Primary: fraud value descending
       const aAmt = a.amount_mxn_low ?? 0
       const bAmt = b.amount_mxn_low ?? 0
-      return bAmt - aAmt
+      if (bAmt !== aAmt) return bAmt - aAmt
+      // Secondary: severity descending
+      if (b.severity !== a.severity) return b.severity - a.severity
+      // Tertiary: ML-linked first
+      const aLinked = a.ground_truth_case_id != null ? 1 : 0
+      const bLinked = b.ground_truth_case_id != null ? 1 : 0
+      return bLinked - aLinked
     })
   }, [rawData])
 
@@ -383,8 +425,8 @@ export default function CaseLibrary() {
       {/* Spacing after header */}
       <div className="h-6" />
 
-      {/* ── Evidence Manifest ── */}
-      <EvidenceManifest />
+      {/* ── Dossier Hero ── */}
+      <DossierHero />
 
       {/* ── Filters: FILTRAR ARCHIVOS ── */}
       <div className="mb-6">

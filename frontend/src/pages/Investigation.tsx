@@ -697,7 +697,7 @@ export function Investigation() {
         <Card>
           <CardContent className="flex items-center gap-3 p-6 text-muted-foreground">
             <AlertTriangle className="h-5 w-5 text-destructive flex-shrink-0" />
-            <span>No se pudo cargar la información. Intente de nuevo más tarde.</span>
+            <span>{t('loadingError')}</span>
           </CardContent>
         </Card>
       </div>

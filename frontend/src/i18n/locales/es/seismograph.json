@@ -1,26 +1,43 @@
 {
-  "eyebrow": "INTELIGENCIA VISUAL · MONITOR TEMPORAL DE RIESGO",
-  "description": "Oscilaciones de riesgo en 7 sectores clave de 2010 a 2025. Los marcadores verticales señalan escándalos de corrupción documentados — úsalos como puntos de referencia al leer las formas de onda.",
-  "title": "EL SISMOGRAFO",
-  "subtitle": "Monitoreo de anomalías en contratación pública",
-  "dateRange": "2010-2025",
-  "system": "Sistema de detección temporal de riesgo RUBLI",
-  "loading": "Cargando datos sismicos...",
+  "eyebrow": "ANÁLISIS DE RIESGO POLÍTICO · 2001–2025",
+  "title": "Cómo evolucionó el riesgo de corrupción por administración",
+  "subtitle": "Comparativa del riesgo de contratación, adjudicaciones directas y contratos de alto riesgo a lo largo de cinco sexenios. Mayor tasa de adjudicación directa y puntajes de riesgo más altos indican controles competitivos más débiles.",
+  "loading": "Cargando datos…",
   "error": "Error al cargar datos",
-  "legend": {
-    "scandal": "ESCANDALO"
+
+  "sexenio": {
+    "heading": "Comparativa por administración",
+    "description": "Cada barra representa un sexenio completo. Selecciona una métrica para cambiar la vista.",
+    "metricAvgRisk": "Riesgo promedio",
+    "metricHighRisk": "Contratos alto riesgo",
+    "metricDirectAward": "Adj. directas",
+    "metricAriaLabel": "Seleccionar métrica de comparación",
+    "dataSource": "Fuente: COMPRANET 2001–2025 · RUBLI v6.5"
   },
-  "tooltip": {
-    "totalContracts": "Total contratos"
+
+  "insights": {
+    "heading": "Hallazgos clave",
+    "ariaLabel": "Tarjetas de hallazgos clave"
   },
-  "footer": "Cada canal muestra la desviación del porcentaje de contratos de alto riesgo respecto a la media histórica del sector. Oscilaciones ascendentes indican períodos con anomalías por encima del promedio.",
-  "scandalEvents": {
-    "laEstafaMaestra": "La Estafa\nMaestra",
-    "casoLozoya": "Caso Lozoya\nOdebrecht",
-    "comprasCovid": "Compras\nCOVID-19",
-    "segalmexEscandalo": "Segalmex\nEscándalo"
+
+  "insight": {
+    "directAward": {
+      "label": "Adj. directas AMLO",
+      "body": "El {{amloRate}}% de los contratos del sexenio de AMLO se adjudicaron sin concurso, frente al {{calderonRate}}% de Calderón. Esto elimina la salvaguarda competitiva que disuade la manipulación de precios."
+    },
+    "riskIncrease": {
+      "label": "Aumento del riesgo",
+      "body": "El riesgo promedio por contrato subió de {{calderonRisk}}% con Calderón a {{amloRisk}}% con AMLO — el mayor incremento entre administraciones en el conjunto de datos."
+    },
+    "highRisk": {
+      "label": "Contratos alto riesgo AMLO",
+      "body": "El {{amloHighRisk}}% de los contratos del sexenio AMLO puntúan como riesgo alto o crítico, versus {{foxHighRisk}}% con Fox. Los puntajes de RUBLI reflejan similitud con patrones de corrupción documentados."
+    }
   },
-  "aria": {
-    "chartLabel": "Visualización sismográfica de anomalías de riesgo en contratación pública por sector, de 2010 a 2025"
+
+  "timeline": {
+    "heading": "Tendencia anual de riesgo (2006–2025)",
+    "description": "Línea roja: riesgo promedio. Área naranja: % contratos alto riesgo. Azul punteado: tasa de adjudicación directa. Líneas verticales punteadas = escándalos documentados.",
+    "footnote": "Los puntajes de riesgo miden similitud con patrones de corrupción documentados — no son prueba de irregularidades. Los datos de adjudicación directa antes de 2010 están incompletos (brecha de cobertura Estructura A)."
   }
 }

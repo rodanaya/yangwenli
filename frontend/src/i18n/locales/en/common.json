@@ -89,6 +89,8 @@
     "investigateMore": "Investigate more",
     "viewOnPlatform": "View on platform",
     "allStories": "All stories",
+    "notFound": "Story not found",
+    "notFoundDetail": "The story \"{{slug}}\" could not be found.",
     "investigations": "RUBLI Investigations",
     "shareInvestigation": "Share this investigation",
     "ariaIntelligence": "ARIA Intelligence Briefing",

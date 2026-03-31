@@ -18,7 +18,7 @@
   "sortedByConfidence": "ordenadas por confianza de detección",
   "workbenchTitle": "Banco de Trabajo de Anomalías de Precio",
   "workbenchDesc": "Tabla ordenable y filtrable de todas las hipótesis de anomalías de precio. Haz clic en una fila para inspeccionar el contexto de la línea base del sector. Usa los botones de acción para marcar hipótesis como válidas o inválidas.",
-  "noResults": "Ninguna hipótesis de anomalía de precio coincide con los filtros actuales.",
+  "noResults": "Ningún contrato con anomalía de precio coincide con los filtros actuales.",
   "baselinesTitle": "Líneas Base de Precio por Sector",
   "baselinesSubtitle": "Umbrales IQR usados para la detección de anomalías (clic para expandir)",
   "baselinesDesc": "Distribución estadística de valores de contrato por sector. El límite superior (Q3 + 1.5× IQR) es el umbral de valor atípico; el límite extremo (Q3 + 3× IQR) activa la señal de sobreprecio extremo.",

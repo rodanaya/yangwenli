@@ -1,36 +1,88 @@
 {
   "title": "Year in Review",
   "subtitle": "Annual procurement summary — contracts, spending, and risk patterns",
+  "edition": "Annual Edition",
+  "annualReport": "Annual Report",
   "yearSelector": "Select Year",
+  "loading": "Loading year data…",
+  "noData": "No data available for this year",
+  "contracts": "contracts",
+  "risk": "risk",
+  "riskLabel": "Risk",
+  "allYears": "All Years",
+  "goToYear": "View {{year}} in review",
+  "heroSubtitle": "{{contracts}} contracts · {{spending}} in federal spending · {{riskPct}}% high-risk",
+  "sexenioYear": "Year {{current}}/{{total}}",
   "heroStats": {
     "totalContracts": "Total Contracts",
     "totalSpending": "Total Spending",
     "highRiskRate": "High-Risk Rate",
-    "yoyChange": "YoY Spending Change"
+    "topSector": "Top Sector",
+    "yoyChange": "YoY Change"
+  },
+  "lede": {
+    "pandemic": "{{year}} was defined by the health emergency. With {{contracts}} contracts and {{directPct}}% awarded directly, emergency spending fundamentally reshaped public procurement patterns.",
+    "transition": "{{year}} was a year of presidential transition. {{contracts}} contracts totaling {{spending}} reflect the close of one administration and the start of another.",
+    "highRisk": "{{year}} recorded a high-risk rate of {{riskPct}}%, significantly above the OECD-recommended threshold. {{contracts}} contracts totaling {{spending}} warrant closer scrutiny.",
+    "default": "In {{year}}, the federal government processed {{contracts}} contracts totaling {{spending}}. The direct-award rate was {{directPct}}%."
+  },
+  "spotlight": {
+    "label": "Spotlight",
+    "topVendorLabel": "Top vendor by value in {{year}}"
   },
   "topVendors": {
+    "sectionLabel": "Top 5 Vendors",
+    "headline": "Who received the most money in {{year}}",
     "title": "Top 10 Vendors by Value",
     "subtitle": "Highest-value vendors in selected year",
     "rank": "Rank",
     "vendor": "Vendor",
-    "value": "Total Value",
-    "contracts": "Contracts",
-    "risk": "Risk"
+    "value": "Total Value"
+  },
+  "topRiskVendors": {
+    "sectionLabel": "Highest-Risk Vendors",
+    "headline": "Red flags from {{year}}",
+    "title": "Top Risk Vendors",
+    "subtitle": "Vendors with highest average risk score that year (min 5 contracts)"
+  },
+  "sectorBreakdown": {
+    "sectionLabel": "Sector Distribution",
+    "headline": "How spending was distributed in {{year}}"
+  },
+  "sectorGrowth": {
+    "title": "Sector Growth Ranking",
+    "headline": "Which sectors grew and which contracted",
+    "subtitle": "Year-over-year change in contract value by sector",
+    "noComparison": "No prior-year data available for comparison",
+    "growth": "Growth"
+  },
+  "yoyDeltas": {
+    "directAward": "Direct Award",
+    "avgRisk": "Avg. Risk"
+  },
+  "findings": {
+    "sectionLabel": "Key Findings",
+    "headline": "Statistical anomalies detected in {{year}}",
+    "highRiskAboveOECD": "High-risk rate of {{pct}}% — above the OECD 15% threshold",
+    "highDirectAward": "{{pct}}% of contracts awarded directly — concentration of discretionary power",
+    "highSingleBid": "{{pct}}% of competitive procedures received only a single bid",
+    "spendingSpike": "Spending increased {{pct}}% compared to the prior year",
+    "spendingDrop": "Spending dropped {{pct}}% compared to the prior year"
+  },
+  "administrationBanner": {
+    "title": "Presidential Administration",
+    "Fox": "Vicente Fox (PAN) · 2000–2006",
+    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
+    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
+    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
+    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–present"
   },
   "topInstitutions": {
     "title": "Top 10 Institutions by Spend",
     "subtitle": "Highest-spending institutions in selected year",
     "rank": "Rank",
     "institution": "Institution",
-    "value": "Total Spend",
-    "contracts": "Contracts",
-    "risk": "Risk"
-  },
-  "sectorGrowth": {
-    "title": "Sector Growth Ranking",
-    "subtitle": "Year-over-year change in contract value by sector",
-    "noComparison": "No prior-year data available for comparison",
-    "growth": "Growth"
+    "value": "Total Spend"
   },
   "riskBreakdown": {
     "title": "Risk Level Breakdown",
@@ -41,19 +93,5 @@
     "low": "Low",
     "noData": "No risk data available for this year"
   },
-  "administrationBanner": {
-    "title": "Presidential Administration",
-    "Fox": "Vicente Fox (PAN) · 2000–2006",
-    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
-    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
-    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
-    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–present"
-  },
-  "noData": "No data available for this year",
-  "loading": "Loading year data…",
-  "vsLastYear": "vs prior year",
-  "topRiskVendors": {
-    "title": "Top Risk Vendors",
-    "subtitle": "Vendors with highest average risk score that year (min 5 contracts)"
-  }
+  "vsLastYear": "vs prior year"
 }

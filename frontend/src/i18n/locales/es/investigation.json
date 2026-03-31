@@ -309,5 +309,22 @@
     "disclaimer": "Los indicadores de riesgo son estadísticos, no determinaciones legales. Las puntuaciones altas indican similitud con patrones de corrupción documentada y requieren verificación independiente antes de su publicación."
   },
   "riskScoreLabel": "Indicador de riesgo",
-  "riskScoreTooltip": "Indicador de riesgo = similitud estadística con patrones conocidos de corrupción. No es prueba de irregularidad."
+  "riskScoreTooltip": "Indicador de riesgo = similitud estadística con patrones conocidos de corrupción. No es prueba de irregularidad.",
+  "loadingError": "No se pudo cargar la información. Intente de nuevo más tarde.",
+  "saving": "Guardando...",
+  "vendorTableHeaders": {
+    "vendor": "Proveedor",
+    "role": "Rol",
+    "contracts": "Contratos",
+    "value": "Valor",
+    "avgRisk": "Riesgo Prom."
+  },
+  "suspicionScore": "Puntuación de Sospecha",
+  "totalValue": "Valor Total",
+  "credibility": {
+    "low": "Credibilidad baja",
+    "medium": "Credibilidad media",
+    "high": "Credibilidad alta"
+  },
+  "highPriority": "Alta Prioridad"
 }

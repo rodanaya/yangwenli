@@ -1,5 +1,6 @@
 import { cn, formatCompactMXN } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { useTranslation } from 'react-i18next'
 
 interface AdminVendorEntry {
   name: string
@@ -15,6 +16,8 @@ interface Props {
 }
 
 export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
+  const { t } = useTranslation('administrations')
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -28,7 +31,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
   if (!vendors?.length) {
     return (
       <div className="text-sm text-text-muted py-4 text-center">
-        No vendor data available
+        {t('vendorSection.noData')}
       </div>
     )
   }
@@ -60,7 +63,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
               />
             </div>
             <div className="text-xs text-text-muted mt-0.5">
-              {v.contracts.toLocaleString()} contracts &middot; {v.risk_pct.toFixed(0)}% avg risk
+              {v.contracts.toLocaleString()} {t('vendorSection.contracts')} &middot; {v.risk_pct.toFixed(0)}% {t('vendorSection.riskScore')}
             </div>
           </div>
         )

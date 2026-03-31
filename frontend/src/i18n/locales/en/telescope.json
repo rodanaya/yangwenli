@@ -2,8 +2,28 @@
   "eyebrow": "VISUAL INTELLIGENCE · SECTOR & YEAR ANALYSIS",
   "description": "Each bubble is a sector-year data point: size = contract value, vertical position = risk level. Higher bubbles demand attention first.",
   "title": "Sector Radar",
-  "subtitle": "Risk by sector and year in Mexican public contracting",
+  "subtitle": "Risk by sector and year · size = contract value · color = sector",
   "loading": "Loading sector data...",
+  "error": "Error loading sector data",
+  "years": "Years",
+  "clearFilters": "Clear filters",
+  "sectorYearRanking": "Sector-Year Ranking",
+  "searchPlaceholder": "Search sector or year\u2026",
+  "showingOf": "Showing 100 of {{total}}. Filter by sector or year to see more.",
+  "tableHeaders": {
+    "year": "Year",
+    "sector": "Sector",
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "avgRisk": "Avg Risk",
+    "highRiskPct": "% High Risk",
+    "directAwardPct": "% Direct Award"
+  },
+  "kpi": {
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "avgRisk": "Avg Risk"
+  },
   "controls": {
     "none": "None",
     "all": "All",

@@ -89,6 +89,8 @@
     "investigateMore": "Investigar más",
     "viewOnPlatform": "Ver en la plataforma",
     "allStories": "Todas las historias",
+    "notFound": "Historia no encontrada",
+    "notFoundDetail": "La historia \"{{slug}}\" no pudo encontrarse.",
     "investigations": "RUBLI Investigaciones",
     "shareInvestigation": "Compartir esta investigación",
     "ariaIntelligence": "Informe de Inteligencia ARIA",

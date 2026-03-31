@@ -1,9 +1,15 @@
 /**
  * CapturaHeatmap — Institutional Capture Heatmap
  *
- * Replaces the old Money Flow page. Shows a heatmap of institution-vendor
- * concentration: rows = top institutions, columns = top vendors, cells = value.
- * High concentration = "captura institucional" (institutional capture).
+ * Answers ONE question clearly: "Which government institutions are most
+ * dependent on a single vendor?"
+ *
+ * Layout:
+ *   1. Editorial header + "What is institutional capture?" explainer
+ *   2. Top 5 most captured institutions (data-driven, ranked by dominant vendor share)
+ *   3. Filters
+ *   4. Full heatmap (desktop) / ranked list (mobile)
+ *   5. Methodology note
  */
 import React, { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +20,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
-import { ArrowUpRight } from 'lucide-react'
+import { ArrowUpRight, Info } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
 // Hook: detect mobile viewport (below md = 768px)
@@ -44,26 +50,36 @@ interface HeatmapCell {
   vendorId: number
   value: number
   contracts: number
-  pctOfInstitution: number // vendor's share of institution total
+  pctOfInstitution: number
   avgRisk: number | null
+}
+
+// Top capture summary: one row per institution showing its most dominant vendor
+interface TopCaptureRow {
+  institution: string
+  institutionId: number
+  topVendor: string
+  topVendorId: number
+  pct: number
+  value: number
+  contracts: number
 }
 
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
-/** Truncate a name to maxLen chars */
 function truncName(name: string, maxLen = 24): string {
   if (name.length <= maxLen) return name
   return name.slice(0, maxLen - 1) + '\u2026'
 }
 
-/** Risk-based color for a capture percentage: white -> amber -> red */
+/** Risk-based background color for a capture percentage */
 function captureColor(pct: number): string {
-  if (pct >= 0.5) return 'rgba(220,38,38,0.85)' // red-600
-  if (pct >= 0.3) return 'rgba(234,88,12,0.75)' // orange-600
-  if (pct >= 0.15) return 'rgba(234,179,8,0.55)' // yellow-500
-  if (pct >= 0.05) return 'rgba(234,179,8,0.25)' // light amber
+  if (pct >= 0.5) return 'rgba(220,38,38,0.85)'
+  if (pct >= 0.3) return 'rgba(234,88,12,0.75)'
+  if (pct >= 0.15) return 'rgba(234,179,8,0.55)'
+  if (pct >= 0.05) return 'rgba(234,179,8,0.25)'
   return 'rgba(255,255,255,0.05)'
 }
 
@@ -73,66 +89,197 @@ function captureTextColor(pct: number): string {
   return 'text-white/40'
 }
 
-/** Human-readable risk label for a capture percentage */
-function captureRiskLabel(pct: number): { label: string; className: string } {
-  if (pct >= 0.5) return { label: 'Captura Total', className: 'text-risk-critical' }
-  if (pct >= 0.3) return { label: 'Alto Riesgo', className: 'text-risk-high' }
-  if (pct >= 0.15) return { label: 'Moderado', className: 'text-risk-medium' }
-  return { label: 'Bajo', className: 'text-text-muted' }
+// ---------------------------------------------------------------------------
+// Sub-components
+// ---------------------------------------------------------------------------
+
+/** Explainer callout: what is institutional capture */
+function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-blue-500/20 bg-blue-500/5 rounded-lg p-4">
+      <button
+        className="flex items-center gap-2 w-full text-left"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="capture-explainer-body"
+      >
+        <Info className="w-4 h-4 text-blue-400 shrink-0" aria-hidden="true" />
+        <span className="text-[11px] uppercase tracking-wide text-blue-400 font-semibold">
+          {t('whatIsCapture.label')}
+        </span>
+        <span className="ml-auto text-blue-400/60 text-xs">{open ? '−' : '+'}</span>
+      </button>
+      {open && (
+        <div id="capture-explainer-body" className="mt-3 space-y-3">
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {t('whatIsCapture.body')}
+          </p>
+          <ul className="space-y-1.5">
+            {(
+              [
+                { key: 'total', bg: 'rgba(220,38,38,0.85)' },
+                { key: 'high', bg: 'rgba(234,88,12,0.75)' },
+                { key: 'moderate', bg: 'rgba(234,179,8,0.55)' },
+                { key: 'low', bg: 'rgba(255,255,255,0.12)' },
+              ] as const
+            ).map(({ key, bg }) => (
+              <li key={key} className="flex items-center gap-2 text-xs text-text-muted/80">
+                <span
+                  className="w-3 h-3 rounded-sm shrink-0"
+                  style={{ background: bg }}
+                  aria-hidden="true"
+                />
+                {t(`whatIsCapture.thresholds.${key}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** Top-5 most-captured institutions as ranked cards */
+function TopCapturedList({
+  rows,
+  t,
+}: {
+  rows: TopCaptureRow[]
+  t: ReturnType<typeof useTranslation>['t']
+}) {
+  if (rows.length === 0) {
+    return <p className="text-sm text-text-muted/60 py-4">{t('topCaptured.noData')}</p>
+  }
+
+  return (
+    <ol className="space-y-2" aria-label={t('topCaptured.label')}>
+      {rows.map((row, idx) => {
+        const bg = captureColor(row.pct)
+        const riskKey =
+          row.pct >= 0.5 ? 'riskLabels.total'
+          : row.pct >= 0.3 ? 'riskLabels.high'
+          : row.pct >= 0.15 ? 'riskLabels.moderate'
+          : 'riskLabels.low'
+
+        return (
+          <li
+            key={`${row.institutionId}-${row.topVendorId}`}
+            className="bg-surface-card border border-white/10 rounded-lg px-4 py-3 flex items-start gap-4"
+          >
+            {/* Rank number */}
+            <span
+              className="text-2xl font-bold text-text-muted/20 w-8 text-right tabular-nums shrink-0 mt-0.5"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+              aria-label={`Rank ${idx + 1}`}
+            >
+              {idx + 1}
+            </span>
+
+            {/* Color bar representing severity */}
+            <div
+              className="w-1 self-stretch rounded-full shrink-0 mt-0.5"
+              style={{ background: bg, minHeight: '2.5rem' }}
+              aria-hidden="true"
+            />
+
+            {/* Institution + vendor info */}
+            <div className="flex-1 min-w-0 space-y-0.5">
+              <div
+                className="text-[11px] text-text-muted/60 truncate"
+                title={row.institution}
+              >
+                {truncName(row.institution, 48)}
+              </div>
+              <div className="text-xs text-text-muted/50">
+                {t('topCaptured.topVendor')}:{' '}
+                <Link
+                  to={`/vendors/${row.topVendorId}`}
+                  className="font-semibold text-text-primary hover:text-primary transition-colors"
+                  title={row.topVendor}
+                  aria-label={`${t('topCaptured.viewVendor')}: ${row.topVendor}`}
+                >
+                  {truncName(row.topVendor, 36)}
+                  <ArrowUpRight className="inline ml-0.5 w-3 h-3 opacity-50" aria-hidden="true" />
+                </Link>
+              </div>
+              <div className="text-[10px] text-text-muted/40">
+                {formatCompactMXN(row.value)} &middot; {formatNumber(row.contracts)} {t('topCaptured.contracts')}
+              </div>
+            </div>
+
+            {/* Capture percentage + label */}
+            <div className="text-right shrink-0">
+              <div
+                className="text-lg font-bold tabular-nums leading-tight"
+                style={{ color: row.pct >= 0.5 ? '#f87171' : row.pct >= 0.3 ? '#fb923c' : row.pct >= 0.15 ? '#fbbf24' : '#94a3b8' }}
+              >
+                {formatPercent(row.pct, 1)}
+              </div>
+              <div className="text-[10px] text-text-muted/50">{t(riskKey)}</div>
+              <div className="text-[9px] text-text-muted/30">{t('topCaptured.share')}</div>
+            </div>
+          </li>
+        )
+      })}
+    </ol>
+  )
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Main component
 // ---------------------------------------------------------------------------
 
 export default function CapturaHeatmap() {
   const { t } = useTranslation('captura')
   const isMobile = useIsMobile()
 
-  // Filters
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [yearRange, setYearRange] = useState<string>('all')
 
-  // Determine year param for API
   const yearParam = useMemo(() => {
     if (yearRange === '2023') return 2023
     if (yearRange === '2018') return 2018
     return undefined
   }, [yearRange])
 
-  // Fetch money flow data
   const { data: flowData, isLoading, error } = useQuery({
     queryKey: ['money-flow-captura', sectorId, yearParam],
     queryFn: () => analysisApi.getMoneyFlow(yearParam, sectorId),
     staleTime: 10 * 60 * 1000,
   })
 
-  // Build heatmap matrix
-  const { cells, institutions, vendors, highCaptureCount } = useMemo(() => {
-    if (!flowData?.flows?.length) {
-      return { cells: [] as HeatmapCell[], institutions: [] as string[], vendors: [] as string[], highCaptureCount: 0 }
+  // Build heatmap matrix + derive top-5 capture ranking
+  const { cells, institutions, vendors, highCaptureCount, topCaptured } = useMemo(() => {
+    const empty = {
+      cells: [] as HeatmapCell[],
+      institutions: [] as string[],
+      vendors: [] as string[],
+      highCaptureCount: 0,
+      topCaptured: [] as TopCaptureRow[],
     }
+    if (!flowData?.flows?.length) return empty
 
     const flows = flowData.flows
 
-    // Compute institution totals
+    // Institution totals
     const instTotals = new Map<string, number>()
+    const instIds = new Map<string, number>()
     for (const f of flows) {
-      const key = f.source_name
-      instTotals.set(key, (instTotals.get(key) || 0) + f.value)
+      instTotals.set(f.source_name, (instTotals.get(f.source_name) || 0) + f.value)
+      instIds.set(f.source_name, f.source_id)
     }
 
-    // Top 10 institutions by total value
+    // Top 10 institutions by value
     const topInstitutions = [...instTotals.entries()]
       .sort((a, b) => b[1] - a[1])
       .slice(0, 10)
       .map(([name]) => name)
     const topInstSet = new Set(topInstitutions)
 
-    // Filter flows to top institutions
     const filteredFlows = flows.filter((f) => topInstSet.has(f.source_name))
 
-    // Top 8 vendors across those flows
+    // Top 8 vendors
     const vendorTotals = new Map<string, number>()
     for (const f of filteredFlows) {
       vendorTotals.set(f.target_name, (vendorTotals.get(f.target_name) || 0) + f.value)
@@ -174,30 +321,82 @@ export default function CapturaHeatmap() {
       if (cell.pctOfInstitution > 0.3) highCapture++
     }
 
+    // For top-captured ranking: find each institution's DOMINANT vendor
+    // (across ALL flows, not just top-8 vendors)
+    const instVendorMap = new Map<
+      string,
+      { vendorName: string; vendorId: number; value: number; contracts: number }
+    >()
+    for (const f of flows) {
+      if (!topInstSet.has(f.source_name)) continue
+      const instTotal = instTotals.get(f.source_name) || 1
+      const existing = instVendorMap.get(`${f.source_name}||${f.target_name}`)
+      if (!existing) {
+        instVendorMap.set(`${f.source_name}||${f.target_name}`, {
+          vendorName: f.target_name,
+          vendorId: f.target_id,
+          value: f.value,
+          contracts: f.contracts,
+        })
+      } else {
+        existing.value += f.value
+        existing.contracts += f.contracts
+      }
+      void instTotal
+    }
+
+    // Per institution, find the vendor with the highest share
+    const bestVendorPerInst = new Map<
+      string,
+      { vendorName: string; vendorId: number; value: number; contracts: number; pct: number }
+    >()
+    for (const [key, vendor] of instVendorMap) {
+      const instName = key.split('||')[0]
+      const instTotal = instTotals.get(instName) || 1
+      const pct = vendor.value / instTotal
+      const existing = bestVendorPerInst.get(instName)
+      if (!existing || pct > existing.pct) {
+        bestVendorPerInst.set(instName, { ...vendor, pct })
+      }
+    }
+
+    // Build top-5 ranking sorted by dominant vendor share
+    const topCapturedRows: TopCaptureRow[] = [...bestVendorPerInst.entries()]
+      .map(([instName, vendor]) => ({
+        institution: instName,
+        institutionId: instIds.get(instName) ?? 0,
+        topVendor: vendor.vendorName,
+        topVendorId: vendor.vendorId,
+        pct: vendor.pct,
+        value: vendor.value,
+        contracts: vendor.contracts,
+      }))
+      .sort((a, b) => b.pct - a.pct)
+      .slice(0, 5)
+
     return {
       cells: [...cellMap.values()],
       institutions: topInstitutions,
       vendors: topVendors,
       highCaptureCount: highCapture,
+      topCaptured: topCapturedRows,
     }
   }, [flowData])
 
-  // Lookup cell for a given institution+vendor
   const cellLookup = useMemo(() => {
     const map = new Map<string, HeatmapCell>()
-    for (const c of cells) {
-      map.set(`${c.institution}||${c.vendor}`, c)
-    }
+    for (const c of cells) map.set(`${c.institution}||${c.vendor}`, c)
     return map
   }, [cells])
 
-  // Mobile: top 20 institution-vendor pairs sorted by capture percentage
-  const mobileRankedPairs = useMemo(() => {
-    return [...cells]
-      .filter((c) => c.pctOfInstitution > 0)
-      .sort((a, b) => b.pctOfInstitution - a.pctOfInstitution)
-      .slice(0, 20)
-  }, [cells])
+  const mobileRankedPairs = useMemo(
+    () =>
+      [...cells]
+        .filter((c) => c.pctOfInstitution > 0)
+        .sort((a, b) => b.pctOfInstitution - a.pctOfInstitution)
+        .slice(0, 20),
+    [cells]
+  )
 
   // ---------------------------------------------------------------------------
   // Render
@@ -205,22 +404,27 @@ export default function CapturaHeatmap() {
 
   return (
     <div className="space-y-6 max-w-7xl mx-auto">
-      {/* Editorial header — "TERRITORIOS OCUPADOS" */}
+
+      {/* ===== Editorial header ===== */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Captura Institucional &middot; {t('trackingLabel', 'An\u00e1lisis de Concentraci\u00f3n')}
+          {t('trackingLabel')}
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
-          Territorios Ocupados
+        <h1
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+          className="text-2xl font-bold text-text-primary mb-2"
+        >
+          {t('title')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
-          Mapa de captura institucional: cu\u00e1ndo un proveedor controla el presupuesto de contrataci\u00f3n
-          de una instituci\u00f3n. Guerrero SDUYOP: <strong className="text-risk-critical">96.4%</strong> de
-          sus contratos van a un solo proveedor &mdash; $2.55B MXN.
+          {t('subtitle')}
         </p>
       </div>
 
-      {/* Source pill + stats row */}
+      {/* ===== "What is institutional capture?" explainer ===== */}
+      <WhatIsCaptureBox t={t} />
+
+      {/* ===== Source pill + stats row ===== */}
       {flowData && !isLoading && (
         <motion.div
           initial={{ opacity: 0 }}
@@ -230,8 +434,12 @@ export default function CapturaHeatmap() {
           <span className="bg-white/5 px-3 py-1 rounded-full border border-white/10">
             COMPRANET &middot; {formatNumber(flowData.total_contracts)} {t('sourcePill')}
           </span>
-          <span>{t('stats.capturedInstitutions')}: {institutions.length}</span>
-          <span>{t('stats.dominantVendors')}: {vendors.length}</span>
+          <span>
+            {t('stats.capturedInstitutions')}: {institutions.length}
+          </span>
+          <span>
+            {t('stats.dominantVendors')}: {vendors.length}
+          </span>
           {highCaptureCount > 0 && (
             <span className="text-red-400">
               {t('stats.highCaptureFlows')}: {highCaptureCount}
@@ -240,33 +448,25 @@ export default function CapturaHeatmap() {
         </motion.div>
       )}
 
-      {/* "CASO EXTREMO" callout */}
-      <div className="border border-risk-critical/30 bg-risk-critical/5 rounded p-4">
-        <div className="text-[10px] uppercase tracking-wide text-risk-critical font-semibold mb-2">
-          Caso Extremo Documentado
-        </div>
-        <p className="text-sm text-text-primary">
-          <strong>GUERRERO &mdash; SDUYOP</strong>: 96.4% de su presupuesto de obra p\u00fablica
-          adjudicado a CONSTRUCTORA ARHNOS. Monto: $2.55B MXN.
-          Esto equivale a la captura total de una instituci\u00f3n p\u00fablica.
-        </p>
-      </div>
-
-      {/* Filters — "FILTRAR TERRITORIO" */}
+      {/* ===== Filters ===== */}
       <div>
         <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
-          Filtrar Territorio
+          {t('filters.bySector')}
         </div>
         <div className="flex flex-wrap gap-3">
           <select
             value={sectorId ?? ''}
-            onChange={(e) => setSectorId(e.target.value ? Number(e.target.value) : undefined)}
+            onChange={(e) =>
+              setSectorId(e.target.value ? Number(e.target.value) : undefined)
+            }
             className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
             aria-label={t('filters.bySector')}
           >
             <option value="">{t('filters.allSectors')}</option>
             {SECTORS.map((s) => (
-              <option key={s.id} value={s.id}>{s.name}</option>
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
             ))}
           </select>
 
@@ -274,7 +474,7 @@ export default function CapturaHeatmap() {
             value={yearRange}
             onChange={(e) => setYearRange(e.target.value)}
             className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-            aria-label="Year range"
+            aria-label={t('filters.allYears')}
           >
             <option value="all">{t('filters.allYears')}</option>
             <option value="2018">{t('filters.period2018')}</option>
@@ -283,11 +483,16 @@ export default function CapturaHeatmap() {
         </div>
       </div>
 
-      {/* Loading */}
+      {/* ===== Loading skeleton ===== */}
       {isLoading && (
         <div className="space-y-3">
           <Skeleton className="h-6 w-48" />
-          <div className="grid grid-cols-9 gap-1">
+          <div className="grid grid-cols-1 gap-2">
+            {Array.from({ length: 5 }).map((_, i) => (
+              <Skeleton key={i} className="h-16" />
+            ))}
+          </div>
+          <div className="grid grid-cols-9 gap-1 mt-4">
             {Array.from({ length: 90 }).map((_, i) => (
               <Skeleton key={i} className="h-14" />
             ))}
@@ -295,56 +500,86 @@ export default function CapturaHeatmap() {
         </div>
       )}
 
-      {/* Error */}
+      {/* ===== Error ===== */}
       {error && !isLoading && (
         <div className="bg-surface-card border border-red-500/20 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">{t('errorTitle')}</h3>
+          <h3 className="font-serif text-xl text-text-primary mb-2">
+            {t('errorTitle')}
+          </h3>
           <p className="text-text-muted text-sm">{t('errorMessage')}</p>
           <p className="text-text-muted/60 text-xs mt-2">{t('errorHint')}</p>
         </div>
       )}
 
-      {/* Empty state */}
+      {/* ===== Empty state ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="bg-surface-card border border-white/10 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">{t('emptyTitle')}</h3>
+          <h3 className="font-serif text-xl text-text-primary mb-2">
+            {t('emptyTitle')}
+          </h3>
           <p className="text-text-muted text-sm">{t('emptyMessage')}</p>
           <p className="text-text-muted/60 text-xs mt-2">{t('emptyHint')}</p>
         </div>
       )}
 
-      {/* Mobile fallback: ranked list (shown on screens below md breakpoint) */}
+      {/* ===== Top 5 most-captured institutions ===== */}
+      {!isLoading && !error && topCaptured.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.4 }}
+          aria-labelledby="top-captured-heading"
+        >
+          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-1">
+            {t('topCaptured.label')}
+          </div>
+          <p className="text-[11px] text-text-muted/40 mb-3">
+            {t('topCaptured.sublabel')}
+          </p>
+          <h2 id="top-captured-heading" className="sr-only">
+            {t('topCaptured.label')}
+          </h2>
+          <TopCapturedList rows={topCaptured} t={t} />
+        </motion.section>
+      )}
+
+      {/* ===== Mobile: ranked list ===== */}
       {!isLoading && !error && isMobile && mobileRankedPairs.length > 0 && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.4 }}
+          transition={{ duration: 0.4, delay: 0.1 }}
           className="space-y-2"
         >
           <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-3">
-            Top Concentraciones — Lista
+            {t('heatmap.mobileLabel')}
           </div>
-          <ol className="space-y-2" aria-label="Ranked institution-vendor capture pairs">
+          <ol className="space-y-2" aria-label={t('heatmap.mobileLabel')}>
             {mobileRankedPairs.map((cell, idx) => {
-              const risk = captureRiskLabel(cell.pctOfInstitution)
+              const riskKey =
+                cell.pctOfInstitution >= 0.5 ? 'riskLabels.total'
+                : cell.pctOfInstitution >= 0.3 ? 'riskLabels.high'
+                : cell.pctOfInstitution >= 0.15 ? 'riskLabels.moderate'
+                : 'riskLabels.low'
+
               return (
                 <li
                   key={`${cell.institution}||${cell.vendor}`}
                   className="bg-surface-card border border-white/10 rounded-lg px-4 py-3 flex items-center gap-3"
                 >
-                  {/* Rank */}
                   <span className="text-[13px] font-mono text-text-muted/50 w-5 shrink-0 text-right">
                     {idx + 1}
                   </span>
-                  {/* Capture bar */}
                   <div
                     className="w-1 self-stretch rounded-full shrink-0"
                     style={{ background: captureColor(cell.pctOfInstitution) }}
                     aria-hidden="true"
                   />
-                  {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <div className="text-[11px] text-text-muted/60 truncate mb-0.5" title={cell.institution}>
+                    <div
+                      className="text-[11px] text-text-muted/60 truncate mb-0.5"
+                      title={cell.institution}
+                    >
                       {truncName(cell.institution, 32)}
                     </div>
                     <Link
@@ -353,17 +588,29 @@ export default function CapturaHeatmap() {
                       title={cell.vendor}
                     >
                       {truncName(cell.vendor, 32)}
-                      <ArrowUpRight className="inline ml-1 w-3 h-3 opacity-50" />
+                      <ArrowUpRight className="inline ml-1 w-3 h-3 opacity-50" aria-hidden="true" />
                     </Link>
                   </div>
-                  {/* Capture score + meta */}
                   <div className="text-right shrink-0">
-                    <div className={cn('text-sm font-semibold tabular-nums', risk.className)}>
+                    <div
+                      className="text-sm font-semibold tabular-nums"
+                      style={{
+                        color:
+                          cell.pctOfInstitution >= 0.5 ? '#f87171'
+                          : cell.pctOfInstitution >= 0.3 ? '#fb923c'
+                          : cell.pctOfInstitution >= 0.15 ? '#fbbf24'
+                          : '#94a3b8',
+                      }}
+                    >
                       {formatPercent(cell.pctOfInstitution, 1)}
                     </div>
-                    <div className="text-[10px] text-text-muted/50">{risk.label}</div>
-                    <div className="text-[10px] text-text-muted/40">{formatCompactMXN(cell.value)}</div>
-                    <div className="text-[10px] text-text-muted/40">{formatNumber(cell.contracts)} contratos</div>
+                    <div className="text-[10px] text-text-muted/50">{t(riskKey)}</div>
+                    <div className="text-[10px] text-text-muted/40">
+                      {formatCompactMXN(cell.value)}
+                    </div>
+                    <div className="text-[10px] text-text-muted/40">
+                      {formatNumber(cell.contracts)} {t('heatmap.contracts')}
+                    </div>
                   </div>
                 </li>
               )
@@ -372,37 +619,33 @@ export default function CapturaHeatmap() {
         </motion.div>
       )}
 
-      {/* Heatmap (desktop only when on mobile, always shown on md+) */}
+      {/* ===== Heatmap (desktop only) ===== */}
       {!isLoading && !error && institutions.length > 0 && vendors.length > 0 && !isMobile && (
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5 }}
+          transition={{ duration: 0.5, delay: 0.15 }}
           className="bg-surface-card border border-white/10 rounded-xl p-4 md:p-6 overflow-x-auto"
         >
-          {/* Section label */}
           <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-4">
-            Mapa de Concentraci\u00f3n
+            {t('heatmap.sectionLabel')}
           </div>
 
-          {/* Legend — editorial labels */}
+          {/* Legend */}
           <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/60">
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(220,38,38,0.85)' }} />
-              Captura Total (&gt;50%)
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(234,88,12,0.75)' }} />
-              Alto Riesgo (30-50%)
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(234,179,8,0.55)' }} />
-              Moderado (15-30%)
-            </span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-3 h-3 rounded-sm" style={{ background: 'rgba(255,255,255,0.05)' }} />
-              Bajo (&lt;15%)
-            </span>
+            {(
+              [
+                { key: 'legend.total', bg: 'rgba(220,38,38,0.85)' },
+                { key: 'legend.high', bg: 'rgba(234,88,12,0.75)' },
+                { key: 'legend.moderate', bg: 'rgba(234,179,8,0.55)' },
+                { key: 'legend.low', bg: 'rgba(255,255,255,0.05)' },
+              ] as const
+            ).map(({ key, bg }) => (
+              <span key={key} className="flex items-center gap-1.5">
+                <span className="w-3 h-3 rounded-sm" style={{ background: bg }} aria-hidden="true" />
+                {t(key)}
+              </span>
+            ))}
           </div>
 
           {/* CSS Grid heatmap */}
@@ -412,16 +655,20 @@ export default function CapturaHeatmap() {
               gridTemplateColumns: `200px repeat(${vendors.length}, minmax(100px, 1fr))`,
             }}
             role="table"
-            aria-label="Territorios Ocupados"
+            aria-label={t('title')}
           >
-            {/* Header row: empty corner + vendor names */}
+            {/* Header row */}
             <div role="columnheader" className="text-[10px] text-text-muted/40 font-medium" />
             {vendors.map((v) => (
               <div
                 key={v}
                 role="columnheader"
                 className="text-[10px] text-text-muted/60 font-medium px-1 pb-2 truncate"
-                style={{ writingMode: 'vertical-lr', transform: 'rotate(180deg)', height: '120px' }}
+                style={{
+                  writingMode: 'vertical-lr',
+                  transform: 'rotate(180deg)',
+                  height: '120px',
+                }}
                 title={v}
               >
                 {truncName(v, 28)}
@@ -431,7 +678,6 @@ export default function CapturaHeatmap() {
             {/* Data rows */}
             {institutions.map((inst) => (
               <React.Fragment key={inst}>
-                {/* Row header: institution name */}
                 <div
                   role="rowheader"
                   className="text-[11px] text-text-primary/80 font-medium truncate flex items-center pr-2"
@@ -439,8 +685,6 @@ export default function CapturaHeatmap() {
                 >
                   {truncName(inst, 28)}
                 </div>
-
-                {/* Cells */}
                 {vendors.map((v) => {
                   const cell = cellLookup.get(`${inst}||${v}`)
                   const pct = cell?.pctOfInstitution ?? 0
@@ -450,7 +694,7 @@ export default function CapturaHeatmap() {
                       role="cell"
                       className={cn(
                         'relative rounded-sm min-h-[48px] flex flex-col items-center justify-center cursor-default transition-all hover:ring-1 hover:ring-white/30 group',
-                        captureTextColor(pct),
+                        captureTextColor(pct)
                       )}
                       style={{ background: captureColor(pct) }}
                       title={
@@ -472,14 +716,13 @@ export default function CapturaHeatmap() {
                         <span className="text-[9px] opacity-30">&lt;1%</span>
                       ) : null}
 
-                      {/* Hover: link to vendor */}
                       {cell && (
                         <Link
                           to={`/vendors/${cell.vendorId}`}
                           className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center bg-black/40 rounded-sm transition-opacity"
-                          aria-label={`View vendor ${v}`}
+                          aria-label={`${t('topCaptured.viewVendor')}: ${v}`}
                         >
-                          <ArrowUpRight className="w-3.5 h-3.5 text-white" />
+                          <ArrowUpRight className="w-3.5 h-3.5 text-white" aria-hidden="true" />
                         </Link>
                       )}
                     </div>
@@ -491,7 +734,7 @@ export default function CapturaHeatmap() {
         </motion.div>
       )}
 
-      {/* Methodology footer */}
+      {/* ===== Methodology footer ===== */}
       <div className="bg-surface-card/50 border border-white/5 rounded-xl p-5 text-xs text-text-muted/50 space-y-1">
         <h4 className="font-serif text-text-muted/70 text-sm">{t('methodology.title')}</h4>
         <p>{t('methodology.content')}</p>

@@ -11,6 +11,7 @@
  */
 
 import { useMemo, useState, useRef, memo } from 'react'
+import { Link } from 'react-router-dom'
 import { useWikipediaImage } from '@/hooks/useWikipediaImage'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -50,6 +51,9 @@ import {
   FileText,
   Activity,
   ChevronDown,
+  ExternalLink,
+  BookOpen,
+  BarChart3,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { FuentePill } from '@/components/ui/FuentePill'
@@ -95,6 +99,65 @@ const PARTY_COLORS: Record<string, string> = {
   PAN: '#002395',
   PRI: '#008000',
   MORENA: '#8B0000',
+}
+
+// =============================================================================
+// Static dossier data — political context + known scandals per administration
+// =============================================================================
+
+interface ScandalRef {
+  key: string           // i18n key under dossier.scandals
+  caseId?: string       // links to /cases/:caseId if present
+  severity: 'critical' | 'high' | 'medium'
+}
+
+interface DossierEntry {
+  contextKey: string      // i18n key under dossier.contexts
+  scandals: ScandalRef[]
+  topSectorKeys: string[] // sector codes ranked by spending priority for this era
+}
+
+const DOSSIER_DATA: Record<string, DossierEntry> = {
+  Fox: {
+    contextKey: 'fox',
+    scandals: [
+      { key: 'pemexgate', severity: 'high' },
+    ],
+    topSectorKeys: ['energia', 'infraestructura', 'salud', 'defensa', 'educacion'],
+  },
+  Calderon: {
+    contextKey: 'calderon',
+    scandals: [
+      { key: 'odebrecht', severity: 'high' },
+    ],
+    topSectorKeys: ['defensa', 'infraestructura', 'energia', 'salud', 'gobernacion'],
+  },
+  'Pena Nieto': {
+    contextKey: 'pena_nieto',
+    scandals: [
+      { key: 'casa_blanca',   severity: 'high' },
+      { key: 'grupo_higa',    severity: 'high' },
+      { key: 'estafa_maestra',severity: 'critical' },
+      { key: 'imss_ghost',    severity: 'critical' },
+      { key: 'odebrecht',     severity: 'high' },
+    ],
+    topSectorKeys: ['salud', 'infraestructura', 'educacion', 'energia', 'hacienda'],
+  },
+  AMLO: {
+    contextKey: 'amlo',
+    scandals: [
+      { key: 'covid_procurement', severity: 'critical' },
+      { key: 'segalmex',          severity: 'critical' },
+      { key: 'efos_sat',          severity: 'high' },
+      { key: 'tren_maya',         severity: 'high' },
+    ],
+    topSectorKeys: ['infraestructura', 'salud', 'energia', 'defensa', 'gobernacion'],
+  },
+  Sheinbaum: {
+    contextKey: 'sheinbaum',
+    scandals: [],
+    topSectorKeys: ['infraestructura', 'salud', 'energia', 'educacion', 'gobernacion'],
+  },
 }
 
 // Administration colors for bar chart cells and reference bands
@@ -296,6 +359,279 @@ const PresidentAvatar = memo(function PresidentAvatar({
     </div>
   )
 })
+
+// =============================================================================
+// AdminDossierPanel — per-administration deep-dive panel
+// =============================================================================
+
+interface DossierPanelProps {
+  adminName: AdminName
+  adminMeta: typeof ADMINISTRATIONS[number]
+  agg: AdminAgg | undefined
+  vendors: Array<{ name: string; total_mxn: number; contracts: number; risk_pct: number }>
+  vendorsLoading: boolean
+  sectorData: Array<{ sectorId: number; code: string; name: string; color: string; contracts: number; da: number; sb: number; hr: number; risk: number }>
+}
+
+const SEVERITY_COLORS = {
+  critical: '#f87171',
+  high:     '#fb923c',
+  medium:   '#fbbf24',
+}
+
+function AdminDossierPanel({
+  adminName,
+  adminMeta,
+  agg,
+  vendors,
+  vendorsLoading,
+  sectorData,
+}: DossierPanelProps) {
+  const { t } = useTranslation('administrations')
+  const dossier = DOSSIER_DATA[adminName]
+  const partyColor = PARTY_COLORS[adminMeta.party] || '#64748b'
+
+  // Top 3 sectors by contract count from live sectorData
+  const topSectors = useMemo(() => {
+    const sorted = [...sectorData]
+      .filter((s) => s.contracts > 0)
+      .sort((a, b) => b.contracts - a.contracts)
+      .slice(0, 5)
+    return sorted
+  }, [sectorData])
+
+  const fingerprintItems = agg ? [
+    { labelKey: 'dossier.fingerprint.totalSpend',   value: formatCompactMXN(agg.totalValue),               icon: Banknote },
+    { labelKey: 'dossier.fingerprint.directAward',  value: `${agg.directAwardPct.toFixed(1)}%`,            icon: Shield },
+    { labelKey: 'dossier.fingerprint.singleBid',    value: `${agg.singleBidPct.toFixed(1)}%`,              icon: Users },
+    { labelKey: 'dossier.fingerprint.avgRisk',      value: `${(agg.avgRisk * 100).toFixed(1)}%`,           icon: Activity },
+    { labelKey: 'dossier.fingerprint.highRisk',     value: `${agg.highRiskPct.toFixed(1)}%`,               icon: AlertTriangle },
+    { labelKey: 'dossier.fingerprint.vendors',      value: formatNumber(agg.vendorCount),                  icon: FileText },
+  ] : []
+
+  return (
+    <motion.div
+      key={adminName}
+      initial={{ opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3, ease: 'easeOut' }}
+      className="rounded-xl border border-border/50 bg-background-card overflow-hidden"
+      style={{ borderLeftWidth: 4, borderLeftColor: partyColor }}
+    >
+      {/* Dossier Header */}
+      <div className="px-5 pt-4 pb-3 border-b border-border/30 flex flex-wrap items-start justify-between gap-3">
+        <div>
+          <div className="text-[9px] tracking-[0.28em] uppercase font-bold text-text-muted mb-1.5">
+            {t('dossier.sectionLabel')}
+          </div>
+          <div className="flex items-center gap-3">
+            <PresidentAvatar
+              wikiArticle={adminMeta.wikiArticle}
+              fullName={adminMeta.fullName}
+              color={adminMeta.color}
+              size={52}
+            />
+            <div>
+              <h2
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+                className="text-xl font-bold text-text-primary leading-tight"
+              >
+                {adminMeta.fullName}
+              </h2>
+              <div className="flex items-center gap-2 mt-1 flex-wrap">
+                <span
+                  className="text-[10px] font-mono font-bold px-2 py-0.5 rounded"
+                  style={{
+                    backgroundColor: `${partyColor}20`,
+                    color: partyColor,
+                    border: `1px solid ${partyColor}40`,
+                  }}
+                >
+                  {adminMeta.party}
+                </span>
+                <span className="text-xs text-text-muted font-mono">
+                  {adminMeta.dataStart}–{Math.min(adminMeta.end, 2025)}
+                </span>
+                {agg && (
+                  <span className="text-xs text-text-muted font-mono">
+                    {formatNumber(agg.contracts)} {t('contracts')}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        </div>
+        {/* Contracts badge */}
+        {agg && (
+          <div className="text-right flex-shrink-0">
+            <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
+              {t('dossier.fingerprint.highRisk')}
+            </div>
+            <div
+              className="text-2xl font-bold font-mono"
+              style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : RISK_COLORS.low }}
+            >
+              {agg.highRiskPct.toFixed(1)}%
+            </div>
+          </div>
+        )}
+      </div>
+
+      <div className="p-5 grid grid-cols-1 lg:grid-cols-3 gap-6">
+
+        {/* Column 1: Political Context */}
+        <div className="lg:col-span-1 space-y-4">
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <BookOpen className="h-3.5 w-3.5 text-accent" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                {t('dossier.politicalContext')}
+              </span>
+            </div>
+            <p
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="text-sm text-text-secondary leading-relaxed"
+            >
+              {t(`dossier.contexts.${dossier.contextKey}`)}
+            </p>
+          </div>
+
+          {/* Known Scandals */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                {t('dossier.knownScandals')}
+              </span>
+            </div>
+            {dossier.scandals.length === 0 ? (
+              <p className="text-xs text-text-muted italic leading-relaxed">
+                {t('dossier.noScandals')}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {dossier.scandals.map((scandal) => (
+                  <div
+                    key={scandal.key}
+                    className="flex items-start gap-2 rounded-md border-l-2 pl-2.5 py-1.5"
+                    style={{ borderLeftColor: SEVERITY_COLORS[scandal.severity] }}
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-text-secondary leading-snug">
+                        {t(`dossier.scandals.${scandal.key}`)}
+                      </p>
+                    </div>
+                  </div>
+                ))}
+                <Link
+                  to="/cases"
+                  className="inline-flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 font-mono mt-1 transition-colors"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                  {t('dossier.linkToCases')}
+                </Link>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Column 2: Procurement Fingerprint */}
+        <div className="lg:col-span-1 space-y-4">
+          <div>
+            <div className="flex items-center gap-1.5 mb-3">
+              <BarChart3 className="h-3.5 w-3.5 text-accent" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                {t('dossier.procurementFingerprint')}
+              </span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {fingerprintItems.map(({ labelKey, value, icon: Icon }) => (
+                <div
+                  key={labelKey}
+                  className="rounded-lg border border-border/30 bg-background-elevated/30 px-3 py-2"
+                >
+                  <div className="flex items-center gap-1 mb-0.5">
+                    <Icon className="h-3 w-3 text-text-muted flex-shrink-0" />
+                    <span className="text-[9px] text-text-muted uppercase tracking-wider font-mono truncate">
+                      {t(labelKey)}
+                    </span>
+                  </div>
+                  <div
+                    className="text-sm font-bold font-mono"
+                    style={{ color: adminMeta.color }}
+                  >
+                    {value}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        {/* Column 3: Top Vendors + Top Sectors */}
+        <div className="lg:col-span-1 space-y-4">
+          {/* Top Vendors */}
+          <div>
+            <div className="flex items-center gap-1.5 mb-2">
+              <Users className="h-3.5 w-3.5 text-accent" />
+              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                {t('vendorSection.title')}
+              </span>
+            </div>
+            <AdminVendorBreakdown
+              vendors={vendors.slice(0, 5)}
+              eraColor={adminMeta.color}
+              loading={vendorsLoading}
+            />
+          </div>
+
+          {/* Top Sectors */}
+          {topSectors.length > 0 && (
+            <div>
+              <div className="flex items-center gap-1.5 mb-2">
+                <Activity className="h-3.5 w-3.5 text-accent" />
+                <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                  {t('dossier.topSectors')}
+                </span>
+              </div>
+              <div className="space-y-1.5">
+                {topSectors.map((sector, idx) => {
+                  const maxContracts = topSectors[0]?.contracts ?? 1
+                  const pct = Math.min(100, (sector.contracts / maxContracts) * 100)
+                  return (
+                    <div key={sector.sectorId} className="flex items-center gap-2">
+                      <span className="text-[10px] font-mono text-text-muted w-4 text-right flex-shrink-0">
+                        {idx + 1}
+                      </span>
+                      <span
+                        className="h-2 w-2 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: sector.color }}
+                      />
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center justify-between text-[10px] mb-0.5">
+                          <span className="text-text-secondary truncate">{sector.name}</span>
+                          <span className="font-mono text-text-muted ml-1 flex-shrink-0">
+                            {formatNumber(sector.contracts)}
+                          </span>
+                        </div>
+                        <div className="h-1 bg-background-elevated/50 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full"
+                            style={{ width: `${pct}%`, backgroundColor: sector.color, opacity: 0.7 }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </motion.div>
+  )
+}
 
 export default function Administrations() {
   const { t } = useTranslation('administrations')
@@ -577,22 +913,22 @@ export default function Administrations() {
       {/* ── CLASSIFIED HEADER ── */}
       <div className="border-b border-border pb-6 mb-2">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
-          Informe Clasificado · RUBLI · Sistema Nacional de Transparencia
+          {t('classifiedHeader.eyebrow')}
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
-          Los Sexenios de la Sombra
+          {t('classifiedHeader.title')}
         </h1>
         <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
-          Análisis comparativo de riesgo en contratación pública federal · 2001-2025 · {formatNumber(3049988)} contratos · $9.87T MXN auditados
+          {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
         </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
-            <span>AMLO registro la tasa mas alta de riesgo: <strong className="text-risk-critical">15.82%</strong></span>
+            <span>{t('classifiedHeader.highestRiskNote')} <strong className="text-risk-critical">15.82%</strong></span>
           </div>
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <span className="w-2 h-2 rounded-full bg-risk-low" />
-            <span>EPN registro la mas baja: <strong className="text-risk-low">3.84%</strong></span>
+            <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
           </div>
         </div>
       </div>
@@ -601,8 +937,8 @@ export default function Administrations() {
       <div className="flex flex-wrap items-center gap-3 mb-2">
         <FuentePill source="COMPRANET" verified={true} />
         <MetodologiaTooltip
-          title="Sobre la comparacion"
-          body="Comparacion normalizada por ano y valor total presupuestal. Diferencias entre administraciones reflejan prioridades de politica, no necesariamente irregularidades. La mayor calidad de datos en 2018+ puede contribuir a tasas de riesgo mas altas."
+          title={t('narrative')}
+          body={t('comparisonTableDesc')}
           link="/methodology"
         />
       </div>
@@ -663,10 +999,10 @@ export default function Administrations() {
           <div className="card mt-6">
             <CardHeader className="pb-2">
               <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
-                Comparación · Trayectoria de Riesgo
+                {t('trajectoryChart.title')}
               </div>
               <CardTitle className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
-                Risk Trajectory by Term Year — All Administrations
+                {t('trajectoryChart.title')}
                 <div className="flex gap-1">
                   {(['avg_risk', 'direct_award_pct', 'high_risk_pct'] as const).map((m) => (
                     <button
@@ -679,13 +1015,13 @@ export default function Administrations() {
                           : 'border-border text-text-muted hover:border-accent/50',
                       )}
                     >
-                      {m === 'avg_risk' ? 'Risk' : m === 'direct_award_pct' ? 'Direct Award' : 'High Risk'}
+                      {m === 'avg_risk' ? t('trajectoryChart.metricRisk') : m === 'direct_award_pct' ? t('trajectoryChart.metricDA') : t('trajectoryChart.metricHR')}
                     </button>
                   ))}
                 </div>
               </CardTitle>
               <p className="text-xs text-text-muted mt-1">
-                Each line traces one administration's metric across term years 1–6. Dashed = partial term data.
+                {t('trajectoryChart.subtitle')}
               </p>
             </CardHeader>
             <CardContent>
@@ -710,7 +1046,7 @@ export default function Administrations() {
       <div className="mb-2">
         <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-3 flex items-center gap-2">
           <span className="h-px flex-1 bg-border" />
-          Expedientes Presidenciales
+          {t('expedientes')}
           <span className="h-px flex-1 bg-border" />
         </div>
       </div>
@@ -742,7 +1078,7 @@ export default function Administrations() {
               <div className="p-3.5">
                 {/* EXPEDIENTE label */}
                 <div className="text-[9px] tracking-[0.25em] uppercase text-text-muted font-semibold mb-2">
-                  Expediente
+                  {t('cardLabels.expediente')}
                 </div>
                 {/* President avatar + name row */}
                 <div className="flex items-center gap-2.5 mb-2">
@@ -779,15 +1115,15 @@ export default function Administrations() {
                 {/* Quick stats */}
                 <div className="border-t border-border/30 pt-2 mt-1 space-y-1">
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-text-muted">Contratos</span>
+                    <span className="text-text-muted">{t('cardLabels.contratos')}</span>
                     <span className="font-mono font-semibold text-text-secondary">{agg ? formatNumber(agg.contracts) : '0'}</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-text-muted">Gasto total</span>
+                    <span className="text-text-muted">{t('cardLabels.gastoTotal')}</span>
                     <span className="font-mono font-semibold text-text-secondary">{agg ? formatCompactMXN(agg.totalValue) : '$0'}</span>
                   </div>
                   <div className="flex items-center justify-between text-[10px]">
-                    <span className="text-text-muted">Alto riesgo</span>
+                    <span className="text-text-muted">{t('cardLabels.altoRiesgo')}</span>
                     <span className={cn(
                       'font-mono font-bold',
                       agg && agg.highRiskPct > 10 ? 'text-risk-critical' : agg && agg.highRiskPct > 6 ? 'text-risk-high' : 'text-risk-low'
@@ -820,6 +1156,16 @@ export default function Administrations() {
         })}
       </motion.div>
 
+      {/* ── DOSSIER PANEL — per-administration deep-dive ── */}
+      <AdminDossierPanel
+        adminName={selectedAdmin}
+        adminMeta={selectedMeta}
+        agg={selectedAgg}
+        vendors={selectedVendors}
+        vendorsLoading={breakdownLoading}
+        sectorData={sectorHeatmap}
+      />
+
       {/* Spending Fingerprint Sunburst — collapsed by default */}
       <details className="group">
         <summary className="cursor-pointer list-none">
@@ -827,11 +1173,11 @@ export default function Administrations() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-mono flex items-center gap-2">
                 <Activity className="h-4 w-4 text-accent" />
-                Spending Fingerprint by Administration
+                {t('sunburstCard.title')}
                 <ChevronDown className="h-3.5 w-3.5 text-text-muted ml-auto transition-transform group-open:rotate-180" />
               </CardTitle>
               <p className="text-xs text-text-muted">
-                Inner ring = administration · Outer ring = sector spending · Click to expand
+                {t('sunburstCard.subtitle')}
               </p>
             </CardHeader>
           </div>
@@ -853,11 +1199,10 @@ export default function Administrations() {
             <CardHeader className="pb-2">
               <CardTitle className="text-sm font-mono flex items-center gap-2">
                 <Activity className="h-4 w-4 text-accent" />
-                Procurement Intensity Heatmap
+                {t('intensityHeatmap.title')}
               </CardTitle>
               <p className="text-xs text-text-muted">
-                % of each administration's total spend allocated per sector.
-                Darker cells = higher concentration of procurement spend in that sector.
+                {t('intensityHeatmap.subtitle')}
               </p>
             </CardHeader>
             <CardContent>
@@ -886,13 +1231,13 @@ export default function Administrations() {
         </p>
         <div className="pt-1 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-risk-high mb-1">Key Risk</p>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-risk-high mb-1">{t('keyRisk')}</p>
             <p className="text-xs text-text-muted leading-relaxed">
               {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.keyRisk`)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted mb-1">Legacy</p>
+            <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted mb-1">{t('legacy')}</p>
             <p className="text-xs text-text-muted leading-relaxed">
               {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.legacy`)}
             </p>
@@ -949,7 +1294,7 @@ export default function Administrations() {
       <div className="mb-2 mt-4">
         <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-1 flex items-center gap-2">
           <span className="h-px flex-1 bg-border" />
-          Evidencia
+          {t('evidenceSection.label')}
           <span className="h-px flex-1 bg-border" />
         </div>
       </div>
@@ -957,7 +1302,7 @@ export default function Administrations() {
       {/* High-risk rate comparison — dramatic bar visualization */}
       <div className="bg-background-card rounded-lg border border-border/40 p-5 mb-4">
         <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
-          El Registro — Tasa de Alto Riesgo por Sexenio
+          {t('evidenceSection.registryTitle')}
         </div>
         <div className="space-y-2.5">
           {adminAggs.map((a) => {
@@ -985,7 +1330,7 @@ export default function Administrations() {
                     />
                     {isAmlo && (
                       <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse">
-                        4x vs EPN
+                        {t('evidenceSection.amloMultiplier')}
                       </span>
                     )}
                   </div>
@@ -1001,7 +1346,7 @@ export default function Administrations() {
           })}
         </div>
         <p className="mt-3 text-[10px] text-text-muted italic leading-relaxed">
-          Nota: la mayor cobertura de RFC en datos 2018+ puede contribuir a tasas de deteccion de riesgo mas altas en administraciones recientes.
+          {t('evidenceSection.registryNote')}
         </p>
       </div>
 
@@ -1009,7 +1354,7 @@ export default function Administrations() {
       <div className="mb-4 flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/8 px-3 py-2.5">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-400/70" aria-hidden="true" />
         <p className="text-[11px] text-text-muted leading-relaxed">
-          All amounts in nominal MXN. Cumulative inflation 2002–2025 exceeds 150%. Cross-administration spending comparisons should account for purchasing power changes.
+          {t('evidenceSection.inflationNote')}
         </p>
       </div>
 
@@ -1234,7 +1579,7 @@ export default function Administrations() {
         <ScrollReveal direction="fade">
         <div className="card-elevated">
           <CardHeader className="pb-2">
-            <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">Evidencia · Perfil Sectorial</div>
+            <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('evidenceLabel')}</div>
             <CardTitle className="text-sm font-mono text-text-primary">
               {t('sectorProfile', { admin: selectedAdmin })}
             </CardTitle>
@@ -1316,11 +1661,11 @@ export default function Administrations() {
             </p>
           </CardHeader>
           <CardContent className="space-y-3">
-            {transitions.map((t, i) => {
-              const isRelevant = t.to === selectedAdmin || t.from === selectedAdmin
-              const sig = transitionSignificance.get(`${t.from}-${t.to}`)
+            {transitions.map((tr, i) => {
+              const isRelevant = tr.to === selectedAdmin || tr.from === selectedAdmin
+              const sig = transitionSignificance.get(`${tr.from}-${tr.to}`)
               return (
-                <ScrollReveal key={`${t.from}-${t.to}`} delay={i * 100} direction="up">
+                <ScrollReveal key={`${tr.from}-${tr.to}`} delay={i * 100} direction="up">
                 <div
                   className={cn(
                     'rounded-lg border p-3 transition-all',
@@ -1330,18 +1675,18 @@ export default function Administrations() {
                   )}
                 >
                   <div className="flex items-center gap-2 mb-2">
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.fromColor }} />
-                    <span className="text-xs font-semibold text-text-secondary">{t.from}</span>
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tr.fromColor }} />
+                    <span className="text-xs font-semibold text-text-secondary">{tr.from}</span>
                     <ArrowRight className="h-3 w-3 text-text-muted" />
-                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: t.toColor }} />
-                    <span className="text-xs font-semibold text-text-secondary">{t.to}</span>
+                    <span className="h-2 w-2 rounded-full" style={{ backgroundColor: tr.toColor }} />
+                    <span className="text-xs font-semibold text-text-secondary">{tr.to}</span>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    <TransitionMetric label="Direct Award" delta={t.dDA.value} unit=" pts" significance={sig?.da} />
-                    <TransitionMetric label="Single Bid" delta={t.dSB.value} unit=" pts" significance={sig?.sb} />
-                    <TransitionMetric label="High Risk" delta={t.dHR.value} unit=" pts" significance={sig?.hr} />
-                    <TransitionMetric label="Contracts" delta={t.dContracts.value} unit="" isCount />
-                    <TransitionMetric label="Vendors" delta={t.dVendors.value} unit="" isCount invertColor />
+                    <TransitionMetric label={t('transitionMetrics.directAward')} delta={tr.dDA.value} unit=" pts" significance={sig?.da} />
+                    <TransitionMetric label={t('transitionMetrics.singleBid')} delta={tr.dSB.value} unit=" pts" significance={sig?.sb} />
+                    <TransitionMetric label={t('transitionMetrics.highRisk')} delta={tr.dHR.value} unit=" pts" significance={sig?.hr} />
+                    <TransitionMetric label={t('transitionMetrics.contracts')} delta={tr.dContracts.value} unit="" isCount />
+                    <TransitionMetric label={t('transitionMetrics.vendors')} delta={tr.dVendors.value} unit="" isCount invertColor />
                   </div>
                 </div>
                 </ScrollReveal>
@@ -1367,7 +1712,7 @@ export default function Administrations() {
       {/* L6: Events Timeline */}
       <div className="card">
         <CardHeader className="pb-2">
-          <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">Cronologia · Hechos Documentados</div>
+          <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('cronologiaLabel')}</div>
           <CardTitle className="text-sm font-mono text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>
@@ -1472,6 +1817,7 @@ const HARDCODED_EVENTS: Record<string, Array<{ year: number; title: string; type
 }
 
 function HardcodedEventsTimeline({ adminName }: { adminName: AdminName }) {
+  const { t } = useTranslation('administrations')
   const events = HARDCODED_EVENTS[adminName] ?? []
   const typeIcons: Record<string, React.ElementType> = {
     reform: FileText,
@@ -1486,16 +1832,16 @@ function HardcodedEventsTimeline({ adminName }: { adminName: AdminName }) {
     crisis: '#fb923c',
   }
   const typeLabels: Record<string, string> = {
-    reform: 'Reform',
-    scandal: 'Scandal',
-    audit: 'Audit',
-    crisis: 'Crisis',
+    reform:  t('eventTypes.reform'),
+    scandal: t('eventTypes.scandal'),
+    audit:   t('eventTypes.audit'),
+    crisis:  t('eventTypes.crisis'),
   }
 
   if (events.length === 0) {
     return (
       <div className="py-6 text-center text-text-muted text-xs">
-        No events recorded for this period.
+        {t('eventsNoData')}
       </div>
     )
   }
@@ -1756,13 +2102,13 @@ function AdminSectorMatrix({
             </div>
             {/* Gradient legend */}
             <div className="flex items-center gap-1.5">
-              <span className="text-[10px] text-text-muted font-mono">Low</span>
+              <span className="text-[10px] text-text-muted font-mono">{t('matrixLegend.low')}</span>
               <div
                 className="h-3 w-20 rounded"
                 style={{ background: 'linear-gradient(to right, rgb(191,219,254), rgb(55,48,163))' }}
                 aria-hidden="true"
               />
-              <span className="text-[10px] text-text-muted font-mono">High</span>
+              <span className="text-[10px] text-text-muted font-mono">{t('matrixLegend.high')}</span>
             </div>
           </div>
         </div>
@@ -1772,7 +2118,7 @@ function AdminSectorMatrix({
           <thead>
             <tr>
               <th className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">
-                Administration
+                {t('matrixLegend.administration')}
               </th>
               {MATRIX_SECTORS.map((sector) => (
                 <th key={sector.key} className="text-center pb-1 align-bottom" title={sector.name}>
@@ -1845,11 +2191,11 @@ function AdminSectorMatrix({
         </table>
         {isLive ? (
           <p className="mt-2 text-[10px] text-text-muted/50 italic">
-            Source: COMPRANET contracts weighted by volume · {METRIC_LABELS[metric]}
+            {t('matrixLegend.sourceNote')} · {METRIC_LABELS[metric]}
           </p>
         ) : (
           <p className="mt-2 text-[10px] text-text-muted/50 italic">
-            Loading sector data…
+            {t('patternsView.loadingData')}
           </p>
         )}
       </CardContent>
@@ -1868,6 +2214,7 @@ interface PatternsViewProps {
 }
 
 function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
+  const { t } = useTranslation('administrations')
   const systemicChartRef = useRef<HTMLDivElement>(null)
   const { data: breaksData } = useQuery({
     queryKey: ['analysis', 'structural-breaks'],
@@ -1894,7 +2241,6 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
 
   // OECD benchmark: ~20-30% direct award is "normal"
   const daVsOECD = allTimeAvg.da - 25 // deviation from OECD midpoint
-  // December rush: approximate from single-bid patterns at year-end (use hr as proxy)
   const maxDA = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.direct_award_pct), 0) : 0
   const maxSB = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.single_bid_pct), 0) : 0
   const maxHR = yoyData.length > 0 ? Math.max(...yoyData.map(y => y.high_risk_pct), 0) : 0
@@ -1916,18 +2262,20 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={0} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Direct Award Rate</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.directAwardCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.da > 50 ? 'text-risk-critical' : allTimeAvg.da > 30 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.da.toFixed(1)}%
             </div>
             <div className="mt-1 text-xs text-text-muted leading-relaxed">
-              23-year average. OECD benchmark: 20–30%.
+              {t('patternsView.directAwardDesc')}
               {daVsOECD > 0 && (
-                <span className="ml-1 text-risk-high">+{daVsOECD.toFixed(1)}pp above benchmark.</span>
+                <span className="ml-1 text-risk-high">{t('patternsView.directAwardAboveBenchmark', { val: daVsOECD.toFixed(1) })}</span>
               )}
             </div>
             <div className="mt-2 text-xs text-text-muted">
-              Peak: {maxDA.toFixed(1)}%{peakDAYear ? ` (${peakDAYear})` : ''}
+              {peakDAYear
+                ? t('patternsView.directAwardPeak', { val: maxDA.toFixed(1), year: peakDAYear })
+                : `${maxDA.toFixed(1)}%`}
             </div>
           </CardContent>
         </div>
@@ -1936,15 +2284,15 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={80} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">Single Bidder Rate</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.singleBidCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.sb > 30 ? 'text-risk-critical' : allTimeAvg.sb > 15 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.sb.toFixed(1)}%
             </div>
             <div className="mt-1 text-xs text-text-muted leading-relaxed">
-              Competitive tenders with only one bidder — a primary collusion indicator.
+              {t('patternsView.singleBidDesc')}
             </div>
             <div className="mt-2 text-xs text-text-muted">
-              Peak: {maxSB.toFixed(1)}% · All-time high-risk: {maxHR.toFixed(1)}%
+              {t('patternsView.singleBidPeak', { maxSB: maxSB.toFixed(1), maxHR: maxHR.toFixed(1) })}
             </div>
           </CardContent>
         </div>
@@ -1953,16 +2301,15 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={160} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">High Risk Rate</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.highRiskCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.hr > 15 ? 'text-risk-critical' : allTimeAvg.hr > 8 ? 'text-risk-high' : 'text-risk-low')}>
               {allTimeAvg.hr.toFixed(1)}%
             </div>
             <div className="mt-1 text-xs text-text-muted leading-relaxed">
-              Contracts scored critical or high risk by the v6.0 risk model. Thresholds calibrated using ~390 documented corruption cases.
+              {t('patternsView.highRiskDesc')}
             </div>
             <div className="mt-2 text-xs text-text-muted">
-              {/* HARDCODED: "3.1M contracts" — update if total_contracts from API endpoint is available */}
-              Avg risk score: {(allTimeAvg.risk * 100).toFixed(1)}% across 3.1M contracts
+              {t('patternsView.highRiskAvg', { val: (allTimeAvg.risk * 100).toFixed(1) })}
             </div>
           </CardContent>
         </div>
@@ -1975,7 +2322,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <CardHeader className="pb-2">
           <div className="flex items-center justify-between">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Systemic Patterns — 23-Year Timeline (2002–2025)
+              {t('patternsView.chartTitle')}
             </CardTitle>
             <ChartDownloadButton targetRef={systemicChartRef} filename="systemic-patterns-23yr" />
           </div>
@@ -2013,7 +2360,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.04} label={{ value: 'EPN', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
                 <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.04} label={{ value: 'AMLO', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
                 {/* Direct award national average benchmark */}
-                <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: 'National avg 78%', fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
+                <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
                 {transitionYears.map((year) => (
                   <ReferenceLine
@@ -2076,17 +2423,15 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </div>
           ) : (
             <div className="h-[360px] flex items-center justify-center text-text-muted text-sm">
-              No data available
+              {t('patternsView.noData')}
             </div>
           )}
           <p className="mt-3 text-xs text-text-muted leading-relaxed">
-            Vertical dashed lines indicate presidential administration transitions.
-            Three systemic patterns — direct awards bypassing competition, single-bidder tenders,
-            and AI-flagged high-risk contracts — persist across all administrations regardless of political party.
+            {t('patternsView.chartFootnote')}
           </p>
           {breaksData?.breakpoints && breaksData.breakpoints.length > 0 && (
             <p className="text-[10px] text-amber-500/80 font-mono mt-1">
-              <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> Amber lines = statistically detected regime shifts (PELT algorithm)
+              <Activity className="inline-block h-3 w-3 mr-0.5 align-text-bottom" /> {t('patternsView.regimeShiftNote')}
             </p>
           )}
         </CardContent>
@@ -2099,13 +2444,12 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <div className="card">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm font-mono text-text-primary">
-              Political Budget Cycle — Risk by Sexenio Year
+              {t('patternsView.politicalCycleTitle')}
             </CardTitle>
           </CardHeader>
           <CardContent>
             <div className="mb-3 text-xs text-text-muted leading-relaxed">
-              Mexico's 6-year presidential cycle creates predictable budget rhythms.
-              Year 1 = new administration (election year). Year 3 = midterm elections. Year 6 = lame-duck spending surge.
+              {t('patternsView.politicalCycleDesc')}
             </div>
             <ResponsiveContainer width="100%" height={220}>
               <ComposedChart
@@ -2150,8 +2494,10 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             </ResponsiveContainer>
             {politicalData.election_year_effect.risk_delta !== undefined && (
               <p className="mt-2 text-[11px] text-text-muted font-mono">
-                Election year avg risk: {((politicalData.election_year_effect.election_year?.avg_risk ?? 0) * 100).toFixed(2)}%
-                {' vs '}{((politicalData.election_year_effect.non_election_year?.avg_risk ?? 0) * 100).toFixed(2)}% non-election
+                {t('patternsView.electionYearAvgNote', {
+                  election: ((politicalData.election_year_effect.election_year?.avg_risk ?? 0) * 100).toFixed(2),
+                  nonElection: ((politicalData.election_year_effect.non_election_year?.avg_risk ?? 0) * 100).toFixed(2),
+                })}
                 {' ('}
                 <span className={politicalData.election_year_effect.risk_delta > 0 ? 'text-risk-high' : 'text-risk-low'}>
                   {politicalData.election_year_effect.risk_delta > 0 ? '+' : ''}{(politicalData.election_year_effect.risk_delta * 100).toFixed(3)}pp

@@ -31,6 +31,25 @@
   "grid": {
     "noStories": "No hay historias para este filtro."
   },
+  "landing": {
+    "title": "Comienza tu investigación",
+    "subtitle": "23 años de contratación pública federal mexicana — 3.1 millones de contratos calificados por riesgo de corrupción. Tres puntos de entrada:",
+    "card1Title": "Buscar una empresa",
+    "card1Description": "Busca cualquier proveedor, institución o contrato. Explora perfiles de riesgo, historial de compras y conexiones en red.",
+    "card2Title": "Explorar casos documentados",
+    "card2Description": "748 casos de corrupción documentados — IMSS, Segalmex, Odebrecht y más. Descubre cómo se conectan los datos.",
+    "card3Title": "Mapa de riesgo por sector",
+    "card3Description": "Explora la concentración de riesgo en 12 sectores. Salud, agricultura e infraestructura lideran en contratos señalados.",
+    "howTitle": "Cómo usar RUBLI para el periodismo",
+    "step1Title": "Encuentra una pista",
+    "step1Body": "Usa la búsqueda de proveedores para identificar empresas con puntajes de riesgo elevados, o comienza desde un caso conocido en la biblioteca de casos.",
+    "step2Title": "Sigue el dinero",
+    "step2Body": "Abre el perfil del proveedor para ver el historial de contratos, conexiones con instituciones y los factores de riesgo que determinan el puntaje.",
+    "step3Title": "Construye un dossier",
+    "step3Body": "Agrega proveedores, instituciones y contratos a un dossier de investigación privado. Exporta en CSV o JSON cuando estés listo.",
+    "step4Title": "Verifica y corrobora",
+    "step4Body": "Cruza referencias con EFOS (empresas fantasma del SAT), sanciones del SFP e informes de inteligencia ARIA para coincidencias en registros externos."
+  },
   "methodology": {
     "title": "Metodología y Datos",
     "description": "Todas las investigaciones se basan en 3,051,294 contratos federales (2002–2025) de COMPRANET. El modelo de riesgo usa regresión logística entrenada con 748 casos documentados de corrupción. Los datos, la metodología y el código son de acceso abierto.",

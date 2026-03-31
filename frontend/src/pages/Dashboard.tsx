@@ -34,7 +34,6 @@ import {
   Layers,
   BarChart3,
   Users,
-  DollarSign,
   Gauge,
   Calendar,
   Scissors,
@@ -162,11 +161,12 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
 
 // 2. LiveDataPulse — Small pulsing green dot with "LIVE DATA" label
 function LiveDataPulse() {
+  const { t } = useTranslation('dashboard')
   return (
     <PulseRing
       color="#22c55e"
       size={8}
-      label="LIVE DATA"
+      label={t('liveData')}
       className="ml-2"
     />
   )
@@ -629,12 +629,12 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                     <div className="space-y-0.5 mt-1">
                       <p className="text-xs text-text-muted tabular-nums">
                         <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: aggregateColor }} />
-                        {t('highRiskRate')} (all): <strong className="text-text-secondary">{(d.highRiskPct ?? 0).toFixed(1)}%</strong>
+                        {t('highRiskRate')} {t('tooltipAllSuffix')}: <strong className="text-text-secondary">{(d.highRiskPct ?? 0).toFixed(1)}%</strong>
                       </p>
                       {hasSectorOverlay && d.sectorHighRiskPct != null && (
                         <p className="text-xs text-text-muted tabular-nums">
                           <span className="inline-block w-2.5 h-2.5 rounded-full mr-1.5" style={{ backgroundColor: sectorColor }} />
-                          {t('highRiskRate')} (sector): <strong className="text-text-secondary">{d.sectorHighRiskPct.toFixed(1)}%</strong>
+                          {t('highRiskRate')} {t('tooltipSectorSuffix')}: <strong className="text-text-secondary">{d.sectorHighRiskPct.toFixed(1)}%</strong>
                         </p>
                       )}
                       {hasStddev && d.ciLower != null && d.ciUpper != null && (
@@ -645,7 +645,7 @@ const RiskTrajectoryChart = memo(function RiskTrajectoryChart({
                       {d.directAwardPct != null && (
                         <p className="text-xs text-text-muted tabular-nums">
                           <span className="inline-block w-2.5 h-0.5 rounded mr-1.5" style={{ backgroundColor: '#f97316', borderTop: '1.5px dashed #f97316' }} />
-                          Direct award: <strong className="text-text-secondary">{d.directAwardPct.toFixed(1)}%</strong>
+                          {t('tooltipDirectAward')}: <strong className="text-text-secondary">{d.directAwardPct.toFixed(1)}%</strong>
                         </p>
                       )}
                       <p className="text-xs text-text-secondary tabular-nums">
@@ -973,7 +973,7 @@ const GroundTruthSection = memo(function GroundTruthSection({
   return (
     <div>
       <div className="flex items-center gap-2 mb-1.5 px-1">
-        <span className="text-[10px] font-mono text-text-muted flex-1">Case</span>
+        <span className="text-[10px] font-mono text-text-muted flex-1">{t('caseColumnLabel')}</span>
         <span className="text-[10px] font-mono text-text-muted w-[100px]">{t('detectionRate')}</span>
         <span className="text-[10px] font-mono text-text-muted w-10 text-right">%</span>
       </div>
@@ -1011,7 +1011,7 @@ const GroundTruthSection = memo(function GroundTruthSection({
       </div>
       <div className="flex items-center justify-between mt-2 px-1">
         <p className="text-[10px] text-text-muted font-mono">
-          AUC {modelAuc.toFixed(3)} | {totalCases} cases
+          AUC {modelAuc.toFixed(3)} | {totalCases} {t('documentedCorruptionCases')}
         </p>
         <button onClick={onFullAnalysis} className="text-[10px] text-accent hover:underline font-mono flex items-center gap-0.5">
           {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
@@ -1153,7 +1153,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
       }} />
 
       <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
-        {t('heroSurveillanceLabel')} &middot; RUBLI v6.5 &middot; {t('heroSurveillanceActive')}
+        {t('heroSurveillanceLabel')} &middot; {t('modelVersionBadge')} &middot; {t('heroSurveillanceActive')}
       </div>
 
       <h1 className="dash-hero-headline" style={{ fontSize: 'clamp(1.5rem, 3vw, 2.25rem)', fontWeight: 700, color: 'var(--color-text-primary)', fontFamily: 'var(--font-family-serif)', lineHeight: 1.15, marginBottom: '16px', maxWidth: '700px' }}>
@@ -1286,7 +1286,7 @@ function InvestigationSpotlight() {
           {ipsScore.toFixed(3)}
         </div>
         <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(196,30,58,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
-          IPS SCORE
+          {t('ipsScore')}
         </div>
       </div>
     </div>
@@ -1354,18 +1354,19 @@ function DashboardSection({
 // ============================================================================
 
 function SectionErrorFallback({ onRetry }: { onRetry?: () => void }) {
+  const { t } = useTranslation('dashboard')
   return (
     <div className="flex items-center justify-between rounded-lg border border-border/40 bg-background-card/30 px-4 py-3">
       <div className="flex items-center gap-2 text-text-muted">
         <AlertTriangle className="h-4 w-4 text-risk-high flex-shrink-0" />
-        <span className="text-xs">No se pudo cargar esta sección.</span>
+        <span className="text-xs">{t('sectionLoadError')}</span>
       </div>
       {onRetry && (
         <button
           onClick={onRetry}
           className="text-xs text-accent hover:underline ml-4 flex-shrink-0"
         >
-          Reintentar
+          {t('retry')}
         </button>
       )}
     </div>
@@ -1473,15 +1474,6 @@ export function Dashboard() {
     return riskDist
       .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
       .reduce((s, d) => s + (d.percentage || 0), 0)
-  }, [riskDist])
-
-  const criticalHighValuePct = useMemo(() => {
-    if (!riskDist) return 0
-    const totalVal = riskDist.reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-    const flaggedVal = riskDist
-      .filter(d => d.risk_level === 'critical' || d.risk_level === 'high')
-      .reduce((s, d) => s + (d.total_value_mxn || 0), 0)
-    return totalVal > 0 ? (flaggedVal / totalVal) * 100 : 0
   }, [riskDist])
 
   const criticalCount = useMemo(() => {
@@ -1715,52 +1707,56 @@ export function Dashboard() {
 
       {/* ================================================================ */}
       {/* HEADLINE ROW: 4 KPI Cards — staggered reveal                    */}
+      {/* These show COMPLEMENTARY data to the hero above (no repeats).   */}
+      {/* Hero covers: total contracts, alert %, critical count, total     */}
+      {/* value. These cards show: direct award %, single bid %, vendor    */}
+      {/* count, model AUC.                                                */}
       {/* ================================================================ */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         <ScrollReveal delay={0}>
           <KPICard
-            label={t('contractsShowingRisk')}
-            value={kpiLoading ? '--' : `${criticalHighContractPct.toFixed(1)}%`}
-            sublabel={kpiLoading ? '' : t('contractsFlaggedDetail', { num: formatNumber(overview?.high_risk_contracts ?? 0) })}
-            color="#f87171"
+            label={t('directAwardRate')}
+            value={kpiLoading ? '--' : (overview?.direct_award_pct != null ? `${(overview.direct_award_pct * 100).toFixed(1)}%` : '—')}
+            sublabel={t('oecdDirectAward')}
+            color="#fb923c"
             loading={kpiLoading}
             icon={Gauge}
-            onClick={() => navigate('/contracts?risk_level=critical&risk_level=high')}
-            sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
-            sparkKey="highRiskPct"
+            onClick={() => navigate('/detective?pattern=direct_award')}
           />
         </ScrollReveal>
         <ScrollReveal delay={100}>
           <KPICard
-            label={t('criticalContracts')}
-            value={kpiLoading ? '--' : formatNumber(criticalCount)}
-            sublabel={t('oecdHighRisk')}
-            color="#ef4444"
+            label={t('singleBidRate')}
+            value={kpiLoading ? '--' : (overview?.single_bid_pct != null ? `${(overview.single_bid_pct * 100).toFixed(1)}%` : '—')}
+            sublabel={t('oecdSingleBid')}
+            color="#f87171"
             loading={kpiLoading}
             icon={AlertTriangle}
-            onClick={() => navigate('/contracts?risk_level=critical')}
+            onClick={() => navigate('/detective?pattern=single_bid')}
           />
         </ScrollReveal>
         <ScrollReveal delay={200}>
           <KPICard
-            label={t('valueFlagged')}
-            value={kpiLoading ? '--' : formatCompactMXN(overview?.total_value_mxn ?? 0)}
-            sublabel={kpiLoading ? '' : t('valueFlaggedDetail', { pct: criticalHighValuePct.toFixed(1) })}
-            color="#fb923c"
-            loading={kpiLoading}
-            icon={DollarSign}
-            onClick={() => navigate('/categories')}
-          />
-        </ScrollReveal>
-        <ScrollReveal delay={300}>
-          <KPICard
             label={t('topVendors')}
-            value={kpiLoading ? '--' : formatNumber(overview?.total_vendors ?? 0)}
+            value={kpiLoading ? '--' : (overview?.total_vendors != null ? formatNumber(overview.total_vendors) : '—')}
             sublabel={kpiLoading ? '' : `${formatNumber(overview?.total_contracts ?? 0)} ${tc('contracts').toLowerCase()} | 2002-2025`}
             color="#818cf8"
             loading={kpiLoading}
             icon={Users}
             onClick={() => navigate('/network')}
+          />
+        </ScrollReveal>
+        <ScrollReveal delay={300}>
+          <KPICard
+            label={t('detectionAccuracy')}
+            value={kpiLoading ? '--' : `${((modelMeta?.auc_test ?? 0.828) * 100).toFixed(1)}%`}
+            sublabel={t('detectionDetail')}
+            color="#4ade80"
+            loading={kpiLoading}
+            icon={Shield}
+            onClick={() => navigate('/methodology')}
+            sparkData={riskTrajectory.length > 3 ? riskTrajectory : undefined}
+            sparkKey="highRiskPct"
           />
         </ScrollReveal>
       </div>
@@ -1792,7 +1788,7 @@ export function Dashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
-                      {t('anomaliasEstadisticas', { defaultValue: 'Anomalías Estadísticas' })}
+                      {t('statisticalAnomalies')}
                     </p>
                     <Target className="h-4 w-4 text-risk-critical opacity-50" />
                   </div>
@@ -1803,7 +1799,7 @@ export function Dashboard() {
                     {formatNumber(fastDashboard.multivariate_anomaly_count)}
                   </p>
                   <p className="text-[10px] text-text-muted leading-tight mt-3">
-                    contratos con patrón multivariado (p &lt; 0.01)
+                    {t('multivariateDetail')}
                   </p>
                 </CardContent>
               </Card>
@@ -1821,7 +1817,7 @@ export function Dashboard() {
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between mb-3">
                       <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
-                        Efecto Año Electoral
+                        {t('electionYearEffect')}
                       </p>
                       <Calendar className="h-4 w-4 opacity-50" style={{ color: '#eab308' }} />
                     </div>
@@ -1832,7 +1828,7 @@ export function Dashboard() {
                       {isHigher ? '+' : ''}{diffPct}%
                     </p>
                     <p className={cn('text-[10px] leading-tight mt-3', isHigher ? 'text-risk-high' : 'text-text-muted')}>
-                      {isHigher ? 'mayor riesgo en años electorales' : 'similar en años electorales'}
+                      {isHigher ? t('electionYearHigher') : t('electionYearSimilar')}
                     </p>
                   </CardContent>
                 </Card>
@@ -1845,7 +1841,7 @@ export function Dashboard() {
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono leading-none">
-                      Nuevos Proveedores Riesgosos
+                      {t('newRiskyVendors')}
                     </p>
                     <AlertTriangle className="h-4 w-4 text-risk-high opacity-50" />
                   </div>
@@ -1856,7 +1852,7 @@ export function Dashboard() {
                     {formatNumber(fastDashboard.new_vendor_risk_count)}
                   </p>
                   <p className="text-[10px] text-text-muted leading-tight mt-3">
-                    proveedores 2022+ con riesgo alto (&gt;0.40)
+                    {t('newVendorDetail')}
                   </p>
                 </CardContent>
               </Card>
@@ -1891,34 +1887,34 @@ export function Dashboard() {
                 <div className="flex items-center gap-2 mb-4">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
                   <p className="text-[10px] font-bold tracking-[0.12em] uppercase text-text-muted font-mono">
-                    Comparación Sexenial
+                    {t('sexenioComparison')}
                   </p>
                 </div>
                 <div className="grid grid-cols-2 gap-4">
                   {/* AMLO */}
                   <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3">
-                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">AMLO (2018-2024)</p>
+                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">{t('amloLabel')}</p>
                     <p className="text-xl font-black font-mono tabular-nums" style={{ color: '#f97316' }}>
                       {(amlo.avg_risk * 100).toFixed(2)}%
                     </p>
                     <p className="text-[10px] text-text-muted mt-1">
-                      {formatNumber(amlo.contract_count ?? amlo.contracts ?? 0)} contratos &middot; {(amlo.high_risk_pct ?? 0).toFixed(1)}% alto riesgo
+                      {formatNumber(amlo.contract_count ?? amlo.contracts ?? 0)} {t('contractsShort')} &middot; {(amlo.high_risk_pct ?? 0).toFixed(1)}% {t('highRiskShort')}
                     </p>
                   </div>
                   {/* Sheinbaum */}
                   <div className="rounded-lg border border-border/30 bg-background-elevated/20 p-3">
-                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">Sheinbaum (2024+)</p>
+                    <p className="text-[10px] font-mono text-text-muted uppercase tracking-wider mb-1">{t('sheinbaumLabel')}</p>
                     <p className="text-xl font-black font-mono tabular-nums" style={{ color: '#dc2626' }}>
                       {(sheinbaum.avg_risk * 100).toFixed(2)}%
                     </p>
                     <p className="text-[10px] text-text-muted mt-1">
-                      {formatNumber(sheinbaum.contract_count ?? sheinbaum.contracts ?? 0)} contratos &middot; {(sheinbaum.high_risk_pct ?? 0).toFixed(1)}% alto riesgo
+                      {formatNumber(sheinbaum.contract_count ?? sheinbaum.contracts ?? 0)} {t('contractsShort')} &middot; {(sheinbaum.high_risk_pct ?? 0).toFixed(1)}% {t('highRiskShort')}
                     </p>
                   </div>
                 </div>
                 <p className={cn('text-[10px] mt-3 font-mono', isHigher ? 'text-risk-high' : 'text-risk-low')}>
                   {isHigher ? <TrendingUp className="h-3 w-3 inline mr-1" /> : <TrendingDown className="h-3 w-3 inline mr-1" />}
-                  Sheinbaum {isHigher ? '+' : ''}{(delta * 100).toFixed(2)}pp vs AMLO
+                  {t('sheinbaumVsAmlo', { delta: `${isHigher ? '+' : ''}${(delta * 100).toFixed(2)}pp` })}
                 </p>
               </CardContent>
             </Card>
@@ -1974,73 +1970,73 @@ export function Dashboard() {
         <div className="flex items-center gap-2 mb-4">
           <FileSearch className="h-4 w-4 text-accent" />
           <h2 className="text-sm font-bold tracking-[0.10em] uppercase font-mono text-text-muted">
-            Historias destacadas
+            {t('featuredStories')}
           </h2>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
-          {/* Story A: El Fenómeno de Diciembre */}
+          {/* Story A: December Phenomenon */}
           <Card className="fern-card border-l-4 border-l-amber-500 hover:border-l-amber-400 transition-colors cursor-pointer group" onClick={() => navigate('/seismograph')}>
             <CardContent className="pt-4 pb-4">
               <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
-                Temporalidad
+                {t('storyTemporality')}
               </p>
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-amber-400 transition-colors">
-                El Fenómeno de Diciembre
+                {t('storyDecemberTitle')}
               </h3>
               <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#d97706', fontFamily: 'var(--font-family-mono)' }}>
-                +47%
+                {t('storyDecemberStat')}
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
-                El monto promedio en diciembre (5.4M MXN) supera en 47% al promedio del resto del año — el clásico "gasto de fin de año" que favorece adjudicaciones directas.
+                {t('storyDecemberDesc')}
               </p>
               <Link to="/seismograph" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <ArrowRight className="h-3 w-3" />
-                Ver en sismógrafo
+                {t('storyDecemberLink')}
               </Link>
             </CardContent>
           </Card>
 
-          {/* Story B: Concentración en Hacienda 2021 */}
+          {/* Story B: CFE / Hacienda concentration */}
           <Card className="fern-card border-l-4 border-l-red-500 hover:border-l-red-400 transition-colors cursor-pointer group" onClick={() => navigate('/contracts?sector_id=7')}>
             <CardContent className="pt-4 pb-4">
               <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
-                Concentración
+                {t('storyConcentration')}
               </p>
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-red-400 transition-colors">
-                CFE acapara Hacienda 2021
+                {t('storyHaciendaTitle')}
               </h3>
               <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#ef4444', fontFamily: 'var(--font-family-mono)' }}>
-                18.9%
+                {t('storyHaciendaStat')}
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
-                En 2021, un solo proveedor (CFE) concentró casi 1 de cada 5 pesos del sector Hacienda — 6.2B MXN de un total de 32.8B MXN.
+                {t('storyHaciendaDesc')}
               </p>
               <Link to="/contracts?sector_id=7" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <ArrowRight className="h-3 w-3" />
-                Explorar contratos
+                {t('storyHaciendaLink')}
               </Link>
             </CardContent>
           </Card>
 
-          {/* Story C: Auge de adjudicaciones directas */}
+          {/* Story C: Direct award surge */}
           <Card className="fern-card border-l-4 border-l-blue-500 hover:border-l-blue-400 transition-colors cursor-pointer group" onClick={() => navigate('/detective?pattern=december_rush')}>
             <CardContent className="pt-4 pb-4">
               <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
-                Tendencia 2010–2023
+                {t('storyTrend')}
               </p>
               <h3 className="font-bold text-sm leading-tight mb-2 text-text-primary group-hover:text-blue-400 transition-colors">
-                Adjudicaciones directas: auge histórico
+                {t('storyDirectTitle')}
               </h3>
               <p className="text-xl font-bold tabular-nums mb-1" style={{ color: '#3b82f6', fontFamily: 'var(--font-family-mono)' }}>
-                82.2%
+                {t('storyDirectStat')}
               </p>
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
-                En 2023, el 82.2% de todos los contratos fueron adjudicaciones directas — subida de +19.5pp desde el 62.7% de 2010. El pico más alto en 23 años de datos.
+                {t('storyDirectDesc')}
               </p>
               <Link to="/detective?pattern=december_rush" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <ArrowRight className="h-3 w-3" />
-                Analizar patrones
+                {t('storyDirectLink')}
               </Link>
             </CardContent>
           </Card>
@@ -2302,7 +2298,7 @@ export function Dashboard() {
                       </p>
                       {flow.avg_risk != null && (
                         <p className={cn('text-[10px] font-bold tabular-nums font-mono', riskColor)}>
-                          {(flow.avg_risk * 100).toFixed(0)}% risk
+                          {(flow.avg_risk * 100).toFixed(0)}% {t('riskSuffix')}
                         </p>
                       )}
                     </div>
@@ -2322,7 +2318,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       <DashboardSection
         title={t('validatedAgainstReal')}
-        subtitle={`AUC ${modelAuc.toFixed(3)} | ${groundTruth?.cases ?? 390} documented corruption cases`}
+        subtitle={`AUC ${modelAuc.toFixed(3)} | ${groundTruth?.cases ?? 390} ${t('documentedCorruptionCases')}`}
         icon={Shield}
         action={
           <button

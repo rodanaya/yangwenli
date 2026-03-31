@@ -18,7 +18,7 @@
   "sortedByConfidence": "sorted by detection confidence",
   "workbenchTitle": "Price Anomaly Workbench",
   "workbenchDesc": "Sortable, filterable table of all price anomaly hypotheses. Click a row to inspect sector baseline context. Use the action buttons to mark hypotheses valid or invalid.",
-  "noResults": "No price anomaly hypotheses match the current filters.",
+  "noResults": "No price anomaly contracts match the current filters.",
   "baselinesTitle": "Sector Price Baselines",
   "baselinesSubtitle": "IQR thresholds used for anomaly detection (click to expand)",
   "baselinesDesc": "Statistical distribution of contract values per sector. The upper fence (Q3 + 1.5× IQR) is the outlier threshold; the extreme fence (Q3 + 3× IQR) triggers the extreme overpricing flag.",

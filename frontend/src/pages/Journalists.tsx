@@ -2,7 +2,7 @@ import { useQuery } from '@tanstack/react-query'
 import { storiesApi } from '@/api/client'
 import { useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, BookOpen, Download } from 'lucide-react'
+import { ArrowRight, BookOpen, Download, Search, FileText, Map } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
@@ -14,7 +14,6 @@ import type { StoryType } from '@/components/stories/StoryCard'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-import { DataInfographics } from '@/components/ui/DataInfographics'
 
 // ---------------------------------------------------------------------------
 // Story definitions (hardcoded editorial content, live stats where available)
@@ -488,6 +487,105 @@ export default function Journalists() {
         </motion.div>
 
         {/* ================================================================ */}
+        {/* LANDING: 3 ENTRY-POINT CARDS                                     */}
+        {/* ================================================================ */}
+        <ScrollReveal className="mb-12">
+          <p className="text-sm text-zinc-500 mb-6 uppercase tracking-widest font-semibold">
+            {t('landing.subtitle')}
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            {/* Card 1 — Search a Company */}
+            <button
+              onClick={() => navigate('/explore')}
+              className={cn(
+                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
+                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
+              )}
+              aria-label={t('landing.card1Title')}
+            >
+              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/20">
+                <Search className="h-5 w-5 text-[#3b82f6]" aria-hidden="true" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">{t('landing.card1Title')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card1Description')}</p>
+              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
+            </button>
+
+            {/* Card 2 — Browse Known Cases */}
+            <button
+              onClick={() => navigate('/cases')}
+              className={cn(
+                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
+                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
+              )}
+              aria-label={t('landing.card2Title')}
+            >
+              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#dc2626]/10 border border-[#dc2626]/20">
+                <FileText className="h-5 w-5 text-[#dc2626]" aria-hidden="true" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">{t('landing.card2Title')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card2Description')}</p>
+              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
+            </button>
+
+            {/* Card 3 — Risk Map by Sector */}
+            <button
+              onClick={() => navigate('/sectors')}
+              className={cn(
+                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
+                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
+              )}
+              aria-label={t('landing.card3Title')}
+            >
+              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#eab308]/10 border border-[#eab308]/20">
+                <Map className="h-5 w-5 text-[#eab308]" aria-hidden="true" />
+              </div>
+              <h3 className="text-base font-bold text-white mb-2">{t('landing.card3Title')}</h3>
+              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card3Description')}</p>
+              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
+            </button>
+          </div>
+        </ScrollReveal>
+
+        {/* ================================================================ */}
+        {/* HOW TO USE RUBLI FOR JOURNALISM — 4 STEPS                        */}
+        {/* ================================================================ */}
+        <ScrollReveal className="mb-14">
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8">
+            <h2
+              className="text-lg font-bold text-white mb-6"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              {t('landing.howTitle')}
+            </h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
+              {([
+                { titleKey: 'landing.step1Title', bodyKey: 'landing.step1Body' },
+                { titleKey: 'landing.step2Title', bodyKey: 'landing.step2Body' },
+                { titleKey: 'landing.step3Title', bodyKey: 'landing.step3Body' },
+                { titleKey: 'landing.step4Title', bodyKey: 'landing.step4Body' },
+              ] as const).map((step, i) => (
+                <div key={i} className="flex gap-3">
+                  <div className="shrink-0 mt-0.5">
+                    <span
+                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
+                      style={{ backgroundColor: '#dc2626', color: '#fff' }}
+                      aria-hidden="true"
+                    >
+                      {i + 1}
+                    </span>
+                  </div>
+                  <div>
+                    <p className="text-sm font-semibold text-zinc-200 mb-1">{t(step.titleKey)}</p>
+                    <p className="text-xs text-zinc-500 leading-relaxed">{t(step.bodyKey)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </ScrollReveal>
+
+        {/* ================================================================ */}
         {/* FEATURED STORY                                                    */}
         {/* ================================================================ */}
         <ScrollReveal className="mb-14">
@@ -603,11 +701,6 @@ export default function Journalists() {
             )}
           </motion.div>
         </AnimatePresence>
-
-        {/* ================================================================ */}
-        {/* INFOGRAPHICS GALLERY                                              */}
-        {/* ================================================================ */}
-        <DataInfographics />
 
         {/* ================================================================ */}
         {/* BOTTOM SECTION                                                    */}

@@ -8,6 +8,7 @@
 import { useMemo, useState } from 'react'
 import { useNavigate, useParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -22,6 +23,8 @@ import {
   AlertTriangle,
   TrendingUp,
   TrendingDown,
+  Calendar,
+  ChevronDown,
 } from 'lucide-react'
 
 // =============================================================================
@@ -71,18 +74,17 @@ function getRiskLevel(score: number): string {
 // Sub-components
 // =============================================================================
 
-/** Month-by-month sparkline for contract volume */
-function MonthlySparkline({
+/** Sector spend distribution as horizontal bar chart */
+function SectorBreakdownChart({
   data,
   year,
 }: {
   data: SectorYearItem[]
   year: number
 }) {
+  const { t } = useTranslation('yearinreview')
   const [hoveredIdx, setHoveredIdx] = useState<number | null>(null)
 
-  // We don't have monthly data from the sector-year breakdown API,
-  // so we show sector contribution as a horizontal bar chart instead
   const sectorData = useMemo(() => {
     const yearRows = data.filter((r) => r.year === year)
     if (!yearRows.length) return []
@@ -112,7 +114,7 @@ function MonthlySparkline({
   if (!sectorData.length) {
     return (
       <div className="py-8 text-center text-sm text-text-muted italic">
-        Sin datos sectoriales para {year}.
+        {t('noData')}
       </div>
     )
   }
@@ -150,7 +152,7 @@ function MonthlySparkline({
               {isHovered && (
                 <div className="absolute inset-0 flex items-center px-2">
                   <span className="text-[10px] font-mono text-text-primary">
-                    {formatCompactMXN(s.value)} / {formatNumber(s.contracts)} contratos / riesgo {(s.avgRisk * 100).toFixed(0)}%
+                    {formatCompactMXN(s.value)} / {formatNumber(s.contracts)} {t('contracts')} / {t('risk')} {(s.avgRisk * 100).toFixed(0)}%
                   </span>
                 </div>
               )}
@@ -175,6 +177,7 @@ function VendorRankCard({
   rank: number
   onClick: () => void
 }) {
+  const { t } = useTranslation('yearinreview')
   const score = vendor.avg_risk_score ?? 0
   const riskLevel = getRiskLevel(score)
   const riskColor = getRiskLevelColor(riskLevel)
@@ -214,7 +217,7 @@ function VendorRankCard({
               {formatCompactMXN(vendor.metric_value)}
             </span>
             <span className="text-xs text-text-muted">
-              {formatNumber(vendor.total_contracts)} contratos
+              {formatNumber(vendor.total_contracts)} {t('contracts')}
             </span>
           </div>
         </div>
@@ -246,6 +249,7 @@ function VendorRankCard({
 // =============================================================================
 
 export default function YearInReview() {
+  const { t } = useTranslation('yearinreview')
   const { year: yearParam } = useParams<{ year?: string }>()
   const navigate = useNavigate()
 
@@ -256,7 +260,7 @@ export default function YearInReview() {
     navigate(`/year-in-review/${y}`, { replace: false })
   }
 
-  // -- Data queries (preserved from original) --
+  // -- Data queries --
 
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
     queryKey: ['analysis', 'year-over-year'],
@@ -311,7 +315,6 @@ export default function YearInReview() {
     return sectorInfo ? { ...sectorInfo, value: top.total_value, contracts: top.contracts } : null
   }, [sectorYearData, validYear])
 
-
   // Sector growth ranking
   const sectorGrowth = useMemo(() => {
     const currentRows = sectorYearData.filter((r) => r.year === validYear)
@@ -340,82 +343,106 @@ export default function YearInReview() {
       })
   }, [sectorYearData, validYear])
 
-  // Top hallazgos / anomalies for the year
+  // Key anomaly findings for the year
   const hallazgos = useMemo(() => {
     if (!yearRow) return []
     const findings: { text: string; severity: 'high' | 'medium' }[] = []
 
     if (yearRow.high_risk_pct > 15) {
       findings.push({
-        text: `Tasa de alto riesgo del ${yearRow.high_risk_pct.toFixed(1)}% -- por encima del umbral OCDE del 15%`,
+        text: t('findings.highRiskAboveOECD', {
+          pct: yearRow.high_risk_pct.toFixed(1),
+        }),
         severity: 'high',
       })
     }
 
     if (yearRow.direct_award_pct > 75) {
       findings.push({
-        text: `${yearRow.direct_award_pct.toFixed(1)}% de contratos por adjudicacion directa -- concentracion de poder discrecional`,
+        text: t('findings.highDirectAward', {
+          pct: yearRow.direct_award_pct.toFixed(1),
+        }),
         severity: 'high',
       })
     }
 
     if (yearRow.single_bid_pct > 30) {
       findings.push({
-        text: `${yearRow.single_bid_pct.toFixed(1)}% de procedimientos competitivos con un solo licitante`,
+        text: t('findings.highSingleBid', {
+          pct: yearRow.single_bid_pct.toFixed(1),
+        }),
         severity: 'medium',
       })
     }
 
-    // YoY spending spike
     if (spendingChangePct != null && spendingChangePct > 30) {
       findings.push({
-        text: `Incremento del ${spendingChangePct.toFixed(0)}% en gasto respecto al ano anterior`,
+        text: t('findings.spendingSpike', {
+          pct: spendingChangePct.toFixed(0),
+        }),
         severity: 'medium',
       })
     }
 
-    // YoY spending drop
     if (spendingChangePct != null && spendingChangePct < -25) {
       findings.push({
-        text: `Caida del ${Math.abs(spendingChangePct).toFixed(0)}% en gasto respecto al ano anterior`,
+        text: t('findings.spendingDrop', {
+          pct: Math.abs(spendingChangePct).toFixed(0),
+        }),
         severity: 'medium',
       })
     }
 
     return findings
-  }, [yearRow, spendingChangePct])
+  }, [yearRow, spendingChangePct, t])
 
   const sexenio = getSexenioInfo(validYear)
   const isLoading = yoyLoading || syLoading
 
-  // Generate dynamic subtitle
+  // Generate dynamic subtitle from i18n template
   const dynamicSubtitle = useMemo(() => {
-    if (!yearRow) return 'Cargando datos del ano...'
-    const parts: string[] = []
-    parts.push(`${formatNumber(yearRow.contracts)} contratos`)
-    parts.push(`${formatCompactMXN(yearRow.total_value)} en gasto federal`)
-    parts.push(`${yearRow.high_risk_pct.toFixed(1)}% de alto riesgo`)
-    return parts.join(' | ')
-  }, [yearRow])
+    if (!yearRow) return t('loading')
+    return t('heroSubtitle', {
+      contracts: formatNumber(yearRow.contracts),
+      spending: formatCompactMXN(yearRow.total_value),
+      riskPct: yearRow.high_risk_pct.toFixed(1),
+    })
+  }, [yearRow, t])
 
   // Generate narrative lede text
   const ledeText = useMemo(() => {
     if (!yearRow) return ''
-    const yrStr = String(validYear)
-
     if (validYear === 2020 || validYear === 2021) {
-      return `${yrStr} estuvo marcado por la emergencia sanitaria. Con ${formatNumber(yearRow.contracts)} contratos y un ${yearRow.direct_award_pct.toFixed(0)}% de adjudicacion directa, el gasto de emergencia redefinio los patrones de contratacion publica.`
+      return t('lede.pandemic', {
+        year: validYear,
+        contracts: formatNumber(yearRow.contracts),
+        directPct: yearRow.direct_award_pct.toFixed(0),
+      })
     }
     if (validYear === 2024) {
-      return `${yrStr} fue un ano de transicion presidencial. ${formatNumber(yearRow.contracts)} contratos por ${formatCompactMXN(yearRow.total_value)} reflejan el cierre de una administracion y el inicio de otra.`
+      return t('lede.transition', {
+        year: validYear,
+        contracts: formatNumber(yearRow.contracts),
+        spending: formatCompactMXN(yearRow.total_value),
+      })
     }
     if (yearRow.high_risk_pct > 15) {
-      return `${yrStr} registro una tasa de alto riesgo del ${yearRow.high_risk_pct.toFixed(1)}%, significativamente por encima del umbral recomendado por la OCDE. ${formatNumber(yearRow.contracts)} contratos por ${formatCompactMXN(yearRow.total_value)} requieren atencion.`
+      return t('lede.highRisk', {
+        year: validYear,
+        riskPct: yearRow.high_risk_pct.toFixed(1),
+        contracts: formatNumber(yearRow.contracts),
+        spending: formatCompactMXN(yearRow.total_value),
+      })
     }
-    return `En ${yrStr}, el gobierno federal proceso ${formatNumber(yearRow.contracts)} contratos por un total de ${formatCompactMXN(yearRow.total_value)}. La tasa de adjudicacion directa fue del ${yearRow.direct_award_pct.toFixed(0)}%.`
-  }, [yearRow, validYear])
+    return t('lede.default', {
+      year: validYear,
+      contracts: formatNumber(yearRow.contracts),
+      spending: formatCompactMXN(yearRow.total_value),
+      directPct: yearRow.direct_award_pct.toFixed(0),
+    })
+  }, [yearRow, validYear, t])
 
-  // Top vendor by value (for "Momento Mas Destacado")
+  // Top vendor by value (for Spotlight section)
   const topVendor = (vendorsResp?.data ?? [])[0] ?? null
 
   // =============================================================================
@@ -426,42 +453,74 @@ export default function YearInReview() {
     <div className="max-w-[900px] mx-auto px-4 py-8 space-y-8">
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. Year Selector Pills — newspaper edition style                    */}
+      {/* 1. Hero Banner — prominent year display                             */}
       {/* ------------------------------------------------------------------ */}
-      <div className="text-center">
-        <p className="text-[10px] uppercase tracking-[0.3em] text-text-muted mb-3">
-          EDICION ANUAL
-        </p>
-        <div className="flex items-center justify-center gap-2 flex-wrap">
-          {FEATURED_YEARS.map((y) => (
-            <button
-              key={y}
-              onClick={() => handleYearChange(y)}
-              className={cn(
-                'px-5 py-2.5 text-lg font-bold transition-all rounded-sm',
-                y === validYear
-                  ? 'bg-text-primary text-background shadow-lg'
-                  : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border'
-              )}
-              style={{ fontFamily: "var(--font-family-serif)" }}
-              aria-current={y === validYear ? 'page' : undefined}
-            >
-              {y}
-            </button>
-          ))}
+      <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 pt-8 pb-6">
+        {/* Large watermark year */}
+        <div
+          className="absolute right-4 top-1/2 -translate-y-1/2 text-[120px] font-black leading-none select-none pointer-events-none tabular-nums"
+          style={{
+            fontFamily: "var(--font-family-serif)",
+            color: 'rgba(255,255,255,0.04)',
+          }}
+          aria-hidden="true"
+        >
+          {validYear}
         </div>
-        {/* Full year selector for other years */}
-        <div className="mt-3">
-          <select
-            value={validYear}
-            onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
-            className="text-xs text-text-muted bg-transparent border-b border-border/30 py-1 px-2 cursor-pointer focus:outline-none"
-            aria-label="Seleccionar otro ano"
+
+        <div className="relative z-10">
+          <p className="text-[10px] uppercase tracking-[0.35em] text-text-muted mb-2">
+            {t('edition')}
+          </p>
+          <h1
+            className="text-4xl sm:text-5xl font-black text-text-primary leading-none mb-3"
+            style={{ fontFamily: "var(--font-family-serif)" }}
           >
-            {ALL_YEARS.map((y) => (
-              <option key={y} value={y}>{y}</option>
+            {validYear}
+          </h1>
+          <p className="text-base text-text-secondary max-w-xl">
+            {t('title')} — {t('subtitle')}
+          </p>
+
+          {/* Featured year pills inside hero */}
+          <div className="flex items-center gap-2 flex-wrap mt-5">
+            <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
+            <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
+              {t('yearSelector')}:
+            </span>
+            {FEATURED_YEARS.map((y) => (
+              <button
+                key={y}
+                onClick={() => handleYearChange(y)}
+                className={cn(
+                  'px-4 py-1.5 text-base font-bold transition-all rounded-sm',
+                  y === validYear
+                    ? 'bg-text-primary text-background shadow-lg'
+                    : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border'
+                )}
+                style={{ fontFamily: "var(--font-family-serif)" }}
+                aria-current={y === validYear ? 'page' : undefined}
+                aria-label={t('goToYear', { year: y })}
+              >
+                {y}
+              </button>
             ))}
-          </select>
+
+            {/* Dropdown for other years */}
+            <div className="relative flex items-center gap-1">
+              <select
+                value={validYear}
+                onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
+                className="appearance-none text-xs text-text-muted bg-transparent border border-border/30 rounded-sm py-1.5 pl-3 pr-6 cursor-pointer focus:outline-none focus:border-border hover:border-border transition-colors"
+                aria-label={t('yearSelector')}
+              >
+                {ALL_YEARS.map((y) => (
+                  <option key={y} value={y}>{y}</option>
+                ))}
+              </select>
+              <ChevronDown className="absolute right-1.5 h-3 w-3 text-text-muted pointer-events-none" aria-hidden="true" />
+            </div>
+          </div>
         </div>
       </div>
 
@@ -470,8 +529,8 @@ export default function YearInReview() {
       {/* ------------------------------------------------------------------ */}
       <motion.div variants={fadeIn} initial="initial" animate="animate">
         <EditorialHeadline
-          section={`INFORME ANUAL ${validYear}`}
-          headline={`${validYear}: El Año en Contratos`}
+          section={`${t('annualReport')} ${validYear}`}
+          headline={`${validYear}: ${t('title')}`}
           subtitle={dynamicSubtitle}
         />
       </motion.div>
@@ -511,29 +570,29 @@ export default function YearInReview() {
           <motion.div variants={staggerItem}>
             <HallazgoStat
               value={formatNumber(yearRow.contracts)}
-              label="Contratos"
+              label={t('heroStats.totalContracts')}
               color="border-blue-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
             <HallazgoStat
               value={formatCompactMXN(yearRow.total_value)}
-              label="Gasto Total"
+              label={t('heroStats.totalSpending')}
               color="border-violet-500"
             />
           </motion.div>
           <motion.div variants={staggerItem}>
             <HallazgoStat
               value={`${yearRow.high_risk_pct.toFixed(1)}%`}
-              label="Alto Riesgo"
-              annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} contratos`}
+              label={t('heroStats.highRiskRate')}
+              annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} ${t('contracts')}`}
               color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
             />
           </motion.div>
           <motion.div variants={staggerItem}>
             <HallazgoStat
               value={topSector?.name ?? '--'}
-              label="Sector Lider"
+              label={t('heroStats.topSector')}
               annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
               color={`border-[${topSector?.color ?? '#64748b'}]`}
               className="[&>div:first-child]:text-2xl"
@@ -546,7 +605,7 @@ export default function YearInReview() {
                   ? `${spendingChangePct > 0 ? '+' : ''}${spendingChangePct.toFixed(0)}%`
                   : '--'
               }
-              label="vs Ano Anterior"
+              label={t('heroStats.yoyChange')}
               annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
               color={
                 spendingChangePct == null ? 'border-zinc-500'
@@ -556,7 +615,11 @@ export default function YearInReview() {
             />
           </motion.div>
         </motion.div>
-      ) : null}
+      ) : (
+        <div className="py-8 text-center text-text-muted text-sm italic">
+          {t('noData')}
+        </div>
+      )}
 
       {/* ------------------------------------------------------------------ */}
       {/* 5. Sexenio Context                                                  */}
@@ -576,7 +639,7 @@ export default function YearInReview() {
             className="text-[10px] font-bold uppercase tracking-[0.2em]"
             style={{ color: sexenio.color }}
           >
-            ADMINISTRACION PRESIDENCIAL
+            {t('administrationBanner.title')}
           </span>
         </div>
         <p className="text-sm text-text-secondary">
@@ -599,19 +662,19 @@ export default function YearInReview() {
             ))}
           </div>
           <span className="text-[10px] font-mono text-text-muted flex-shrink-0">
-            Ano {sexenio.yearInSexenio}/{sexenio.totalYears}
+            {t('sexenioYear', { current: sexenio.yearInSexenio, total: sexenio.totalYears })}
           </span>
         </div>
       </motion.div>
 
       {/* ------------------------------------------------------------------ */}
-      {/* 6. "Momento Mas Destacado" — Spotlight on top vendor                */}
+      {/* 6. Spotlight — top vendor of the year                               */}
       {/* ------------------------------------------------------------------ */}
       {topVendor && !vendorsLoading && (
         <motion.div variants={fadeIn} initial="initial" animate="animate">
           <div className="h-px bg-border mb-4" />
           <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-3">
-            MOMENTO MAS DESTACADO
+            {t('spotlight.label')}
           </p>
           <div
             className="rounded-lg border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
@@ -621,7 +684,7 @@ export default function YearInReview() {
             onKeyDown={(e) => { if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`) }}
           >
             <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              PROVEEDOR CON MAYOR GASTO EN {validYear}
+              {t('spotlight.topVendorLabel', { year: validYear })}
             </p>
             <h3
               className="text-xl font-bold text-text-primary"
@@ -634,7 +697,7 @@ export default function YearInReview() {
                 {formatCompactMXN(topVendor.metric_value)}
               </span>
               <span className="text-sm text-text-muted">
-                {formatNumber(topVendor.total_contracts)} contratos
+                {formatNumber(topVendor.total_contracts)} {t('contracts')}
               </span>
               {(topVendor.avg_risk_score ?? 0) > 0 && (() => {
                 const score = topVendor.avg_risk_score ?? 0
@@ -648,7 +711,7 @@ export default function YearInReview() {
                       borderColor: `${riskColor}30`,
                     }}
                   >
-                    Riesgo {score.toFixed(2)}
+                    {t('riskLabel')} {score.toFixed(2)}
                   </span>
                 )
               })()}
@@ -670,28 +733,28 @@ export default function YearInReview() {
         >
           {[
             {
-              label: 'Contratos',
+              label: t('heroStats.totalContracts'),
               val: formatNumber(yearRow.contracts),
               delta: priorRow.contracts > 0 ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100 : null,
               suffix: '%',
               invertColor: false,
             },
             {
-              label: 'Tasa Alto Riesgo',
+              label: t('heroStats.highRiskRate'),
               val: `${yearRow.high_risk_pct.toFixed(1)}%`,
               delta: yearRow.high_risk_pct - priorRow.high_risk_pct,
               suffix: 'pp',
               invertColor: true,
             },
             {
-              label: 'Adjudicacion Directa',
+              label: t('yoyDeltas.directAward'),
               val: `${yearRow.direct_award_pct.toFixed(1)}%`,
               delta: yearRow.direct_award_pct - priorRow.direct_award_pct,
               suffix: 'pp',
               invertColor: true,
             },
             {
-              label: 'Riesgo Promedio',
+              label: t('yoyDeltas.avgRisk'),
               val: yearRow.avg_risk.toFixed(3),
               delta: (yearRow.avg_risk - priorRow.avg_risk) * 100,
               suffix: 'pp',
@@ -716,7 +779,7 @@ export default function YearInReview() {
                 </div>
                 {item.delta != null && (
                   <span className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0" style={{ color }}>
-                    <Icon className="h-3 w-3" />
+                    <Icon className="h-3 w-3" aria-hidden="true" />
                     {item.delta > 0 ? '+' : ''}{item.delta.toFixed(1)}{item.suffix}
                   </span>
                 )}
@@ -732,13 +795,13 @@ export default function YearInReview() {
       <div>
         <div className="h-px bg-border mb-4" />
         <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          LOS 5 MAYORES PROVEEDORES
+          {t('topVendors.sectionLabel')}
         </p>
         <p
           className="text-lg font-bold text-text-primary mb-4"
           style={{ fontFamily: "var(--font-family-serif)" }}
         >
-          Quienes recibieron mas dinero en {validYear}
+          {t('topVendors.headline', { year: validYear })}
         </p>
 
         {vendorsLoading ? (
@@ -747,7 +810,7 @@ export default function YearInReview() {
           </div>
         ) : (vendorsResp?.data ?? []).length === 0 ? (
           <div className="py-8 text-center text-text-muted text-sm italic">
-            Sin datos de proveedores para {validYear}.
+            {t('noData')}
           </div>
         ) : (
           <motion.div
@@ -778,14 +841,14 @@ export default function YearInReview() {
           <div className="flex items-center gap-2 mb-1">
             <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
             <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
-              PROVEEDORES DE MAYOR RIESGO
+              {t('topRiskVendors.sectionLabel')}
             </p>
           </div>
           <p
             className="text-lg font-bold text-text-primary mb-4"
             style={{ fontFamily: "var(--font-family-serif)" }}
           >
-            Banderas rojas de {validYear}
+            {t('topRiskVendors.headline', { year: validYear })}
           </p>
           <motion.div
             className="space-y-2"
@@ -812,13 +875,13 @@ export default function YearInReview() {
       <div>
         <div className="h-px bg-border mb-4" />
         <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          DISTRIBUCION SECTORIAL
+          {t('sectorBreakdown.sectionLabel')}
         </p>
         <p
           className="text-lg font-bold text-text-primary mb-4"
           style={{ fontFamily: "var(--font-family-serif)" }}
         >
-          Como se repartio el gasto en {validYear}
+          {t('sectorBreakdown.headline', { year: validYear })}
         </p>
 
         {syLoading ? (
@@ -826,7 +889,7 @@ export default function YearInReview() {
             {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-7" />)}
           </div>
         ) : (
-          <MonthlySparkline data={sectorYearData} year={validYear} />
+          <SectorBreakdownChart data={sectorYearData} year={validYear} />
         )}
       </div>
 
@@ -837,13 +900,13 @@ export default function YearInReview() {
         <div>
           <div className="h-px bg-border mb-4" />
           <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-            CRECIMIENTO SECTORIAL
+            {t('sectorGrowth.title')}
           </p>
           <p
             className="text-lg font-bold text-text-primary mb-4"
             style={{ fontFamily: "var(--font-family-serif)" }}
           >
-            Que sectores crecieron y cuales se contrajeron
+            {t('sectorGrowth.headline')}
           </p>
 
           <div className="space-y-2">
@@ -889,19 +952,19 @@ export default function YearInReview() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 12. Hallazgos del Ano                                               */}
+      {/* 12. Anomaly findings for the year                                   */}
       {/* ------------------------------------------------------------------ */}
       {hallazgos.length > 0 && (
         <div>
           <div className="h-px bg-border mb-4" />
           <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-            HALLAZGOS DEL ANO
+            {t('findings.sectionLabel')}
           </p>
           <p
             className="text-lg font-bold text-text-primary mb-4"
             style={{ fontFamily: "var(--font-family-serif)" }}
           >
-            Anomalias estadisticas detectadas en {validYear}
+            {t('findings.headline', { year: validYear })}
           </p>
           <div className="space-y-3">
             {hallazgos.map((h, i) => (
@@ -931,14 +994,14 @@ export default function YearInReview() {
       )}
 
       {/* ------------------------------------------------------------------ */}
-      {/* 13. Full year navigation pills at bottom                            */}
+      {/* 13. Full year navigation at bottom                                  */}
       {/* ------------------------------------------------------------------ */}
       <div>
         <div className="h-px bg-border mb-4" />
         <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted mb-3">
-          TODOS LOS ANOS
+          {t('allYears')}
         </p>
-        <div className="flex flex-wrap gap-1.5" role="navigation" aria-label="Navegacion por ano">
+        <div className="flex flex-wrap gap-1.5" role="navigation" aria-label={t('allYears')}>
           {ALL_YEARS.map((y) => (
             <button
               key={y}

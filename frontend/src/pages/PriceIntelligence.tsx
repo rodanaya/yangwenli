@@ -3,15 +3,21 @@
  *
  * NYT/FT investigative journalism aesthetic for price anomaly analysis.
  *
- * Primary data sources:
+ * Primary data source:
  *   GET /api/v1/analysis/price-anomalies?min_z=3&limit=50
- *   GET /api/v1/aria/queue (T1+T2, for vendor detail)
+ *
+ * Backend response shape (verified):
+ *   summary: { total_outliers, total_value_mxn, avg_z_score, max_z_score, threshold_applied }
+ *   by_sector: [{ sector_id, outlier_count, total_mxn, avg_z }]
+ *   data: [{ contract_id, vendor_name, amount_mxn, sector_id, contract_year,
+ *             institution_name, risk_score, risk_level, z_price_ratio,
+ *             z_price_volatility, vendor_id }]
  */
 
-import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
+import { useState } from 'react'
 import {
   BarChart,
   Bar,
@@ -31,8 +37,7 @@ import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
-import { api, ariaApi } from '@/api/client'
-import type { AriaQueueItem } from '@/api/types'
+import { api } from '@/api/client'
 import {
   ChevronDown,
   ChevronRight,
@@ -50,6 +55,7 @@ const STALE_TIME = 10 * 60 * 1000
 interface PriceAnomalyContract {
   contract_id: number
   vendor_name: string
+  vendor_id: number | null
   amount_mxn: number
   sector_id: number
   contract_year: number
@@ -60,12 +66,12 @@ interface PriceAnomalyContract {
   z_price_volatility: number
 }
 
+// Exact field names returned by the backend /analysis/price-anomalies endpoint
 interface PriceAnomalySectorItem {
   sector_id: number
-  sector_name: string
-  count: number
-  total_value_mxn: number
-  avg_z_score: number
+  outlier_count: number     // backend key (NOT "count")
+  total_mxn: number         // backend key (NOT "total_value_mxn")
+  avg_z: number             // backend key (NOT "avg_z_score")
 }
 
 interface PriceAnomalyResponse {
@@ -73,6 +79,8 @@ interface PriceAnomalyResponse {
     total_outliers: number
     total_value_mxn: number
     avg_z_score: number
+    max_z_score?: number
+    threshold_applied?: number
   }
   by_sector: PriceAnomalySectorItem[]
   data: PriceAnomalyContract[]
@@ -162,11 +170,9 @@ function SectorRiskChart({
 
 function ExtremeCaseCard({
   contract,
-  vendorId,
   sectorName,
 }: {
   contract: PriceAnomalyContract
-  vendorId: number | undefined
   sectorName: string
 }) {
   const overpricingFactor = (contract.z_price_ratio ?? 0).toFixed(1)
@@ -182,7 +188,7 @@ function ExtremeCaseCard({
         <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
           {sectorName} &middot; {contract.contract_year}
         </span>
-        <RiskScoreBadge score={contract.risk_score} />
+        <RiskScoreBadge score={contract.risk_score ?? 0} />
       </div>
 
       {/* Overpricing factor -- hero number */}
@@ -205,9 +211,9 @@ function ExtremeCaseCard({
 
       {/* Vendor */}
       <p className="text-sm text-text-secondary truncate mb-0.5">
-        {vendorId ? (
+        {contract.vendor_id ? (
           <Link
-            to={`/vendors/${vendorId}`}
+            to={`/vendors/${contract.vendor_id}`}
             className="hover:underline text-primary"
             title={contract.vendor_name}
           >
@@ -233,9 +239,9 @@ function ExtremeCaseCard({
           Ver contrato
           <ExternalLink className="w-3 h-3" />
         </Link>
-        {vendorId && (
+        {contract.vendor_id && (
           <Link
-            to={`/vendors/${vendorId}`}
+            to={`/vendors/${contract.vendor_id}`}
             className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary hover:underline"
           >
             Perfil del proveedor
@@ -317,7 +323,7 @@ function MethodologySection() {
 // --- Main Page ---------------------------------------------------------------
 
 export default function PriceIntelligence() {
-  const { t } = useTranslation('common')
+  const { t } = useTranslation('price')
 
   // Primary: price anomaly endpoint (contracts with z_price_ratio > 3)
   const anomalyQuery = useQuery({
@@ -326,49 +332,23 @@ export default function PriceIntelligence() {
     staleTime: STALE_TIME,
   })
 
-  // ARIA queue T1+T2 -- used to resolve vendor IDs for deep-link profile links
-  const ariaT1Query = useQuery({
-    queryKey: ['aria', 'queue', 'tier1', 100],
-    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 100 }),
-    staleTime: STALE_TIME,
-  })
-
-  const ariaT2Query = useQuery({
-    queryKey: ['aria', 'queue', 'tier2', 200],
-    queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 100 }),
-    staleTime: STALE_TIME,
-  })
-
-  // Build vendor name -> ID map from ARIA for linking
-  const allAriaVendors: AriaQueueItem[] = [
-    ...(ariaT1Query.data?.data ?? []),
-    ...(ariaT2Query.data?.data ?? []),
-  ]
-
-  const vendorMap = new Map<string, number>()
-  for (const v of allAriaVendors) {
-    vendorMap.set(v.vendor_name.toLowerCase(), v.vendor_id)
-  }
-
   // Derived stats
   const summary = anomalyQuery.data?.summary
   const bySector = anomalyQuery.data?.by_sector ?? []
   const contracts = anomalyQuery.data?.data ?? []
 
-  // Build chart data from by_sector
+  // Build chart data from by_sector — using actual backend field names
   const chartData: SectorBarDatum[] = bySector
     .map((s) => {
-      const sector = SECTORS.find(
-        (sec) => sec.id === s.sector_id || sec.name === s.sector_name
-      )
+      const sector = SECTORS.find((sec) => sec.id === s.sector_id)
       const code = sector?.code ?? 'otros'
       return {
-        name: sector?.name ?? s.sector_name,
+        name: sector?.name ?? `Sector ${s.sector_id}`,
         code,
-        count: s.count,
+        count: s.outlier_count,        // backend field: outlier_count
         color: SECTOR_COLORS[code] ?? SECTOR_COLORS['otros'],
-        avgZ: s.avg_z_score,
-        totalValue: s.total_value_mxn,
+        avgZ: s.avg_z,                 // backend field: avg_z
+        totalValue: s.total_mxn,       // backend field: total_mxn
       }
     })
     .sort((a, b) => b.count - a.count)
@@ -377,9 +357,9 @@ export default function PriceIntelligence() {
   const topSectorName = chartData[0]?.name ?? '--'
   const loading = anomalyQuery.isLoading
 
-  // Top 10 extreme cases for the editorial cards
+  // Top 10 extreme cases for the editorial cards — sorted by z_price_ratio
   const extremeCases = [...contracts]
-    .sort((a, b) => b.z_price_ratio - a.z_price_ratio)
+    .sort((a, b) => (b.z_price_ratio ?? 0) - (a.z_price_ratio ?? 0))
     .slice(0, 10)
 
   // Sector name lookup helper
@@ -405,9 +385,9 @@ export default function PriceIntelligence() {
 
       {/* === Editorial Headline === */}
       <EditorialHeadline
-        section="INTELIGENCIA DE PRECIOS"
+        section={t('intelligenceLabel')}
         headline="El Mercado Secreto: Precios que No Cuadran"
-        subtitle="Cuando el gobierno paga 10 veces mas por el mismo producto, los datos lo revelan"
+        subtitle={t('pageDesc')}
       />
 
       {/* === Source pill === */}
@@ -415,11 +395,11 @@ export default function PriceIntelligence() {
         <FuentePill
           source="COMPRANET"
           count={summary?.total_outliers}
-          countLabel="contratos anomalos"
+          countLabel={t('anomaliesDetected')}
         />
         <MetodologiaTooltip
-          title="Deteccion de precios anomalos"
-          body="Z-score de precio > 3 desviaciones estandar sobre la media sectorial. Metodo IQR (Tukey) complementario."
+          title={t('baselinesTitle')}
+          body={t('baselinesDesc')}
           link="/methodology"
         />
       </div>
@@ -462,19 +442,19 @@ export default function PriceIntelligence() {
           <>
             <HallazgoStat
               value={summary ? formatNumber(summary.total_outliers) : '--'}
-              label="contratos con precio anomalo detectados"
+              label={t('totalAnomaliesDetail')}
               annotation="z_price_ratio > 3 desviaciones estandar"
               color="border-orange-500"
             />
             <HallazgoStat
               value={summary ? formatCompactMXN(summary.total_value_mxn) : '--'}
-              label="monto acumulado en sobreprecios"
+              label={t('totalFlaggedDetail')}
               annotation="valor total de contratos estadisticamente extremos"
               color="border-red-500"
             />
             <HallazgoStat
               value={topSectorName}
-              label="sector con mayor concentracion de sobreprecios"
+              label={t('topAnomalySector')}
               annotation={
                 chartData[0]
                   ? `${formatNumber(chartData[0].count)} contratos anomalos`
@@ -493,7 +473,7 @@ export default function PriceIntelligence() {
             className="text-xl font-bold text-text-primary"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Casos Mas Extremos
+            {t('topAnomaliesTitle')}
           </h2>
           <p className="text-sm text-text-muted mt-1">
             Los contratos con mayor desviacion respecto a la mediana de su sector y ano.
@@ -510,7 +490,7 @@ export default function PriceIntelligence() {
         ) : extremeCases.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-12 text-text-muted gap-2">
             <AlertTriangle className="w-6 h-6" />
-            <p className="text-sm">No se encontraron contratos con precios anomalos.</p>
+            <p className="text-sm">{t('noResults')}</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -518,7 +498,6 @@ export default function PriceIntelligence() {
               <ExtremeCaseCard
                 key={c.contract_id}
                 contract={c}
-                vendorId={vendorMap.get(c.vendor_name.toLowerCase())}
                 sectorName={getSectorName(c.sector_id)}
               />
             ))}
@@ -533,12 +512,10 @@ export default function PriceIntelligence() {
             className="text-xl font-bold text-text-primary mb-1"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Sobreprecios por Sector
+            {t('sectorMapTitle')}
           </h2>
           <p className="text-sm text-text-muted mb-4">
-            Sectores con mayor numero de contratos cuyo precio excede 3 desviaciones
-            estandar de la mediana. Los sectores de salud y tecnologia muestran
-            patrones persistentes.
+            {t('sectorMapDesc')}
           </p>
           <SectorRiskChart data={chartData} loading={loading} />
 
@@ -626,7 +603,7 @@ export default function PriceIntelligence() {
           <p className="text-xs text-text-muted leading-relaxed">
             Desviaciones estandar sobre la media sectorial en los contratos
             con precios anomalos detectados.{' '}
-            {t('contracts', 'contratos')}:{' '}
+            Contratos:{' '}
             <span className="text-text-primary font-semibold tabular-nums">
               {formatNumber(summary.total_outliers)}
             </span>

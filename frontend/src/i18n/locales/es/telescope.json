@@ -2,8 +2,28 @@
   "eyebrow": "INTELIGENCIA VISUAL · ANÁLISIS POR SECTOR Y AÑO",
   "description": "Cada burbuja representa un sector-año: tamaño = valor contratado, posición vertical = nivel de riesgo. Las burbujas más elevadas merecen atención prioritaria.",
   "title": "Radar de Sectores",
-  "subtitle": "Riesgo por sector y año en la contratación pública mexicana",
+  "subtitle": "Riesgo por sector y año · tamaño = valor contratado · color = sector",
   "loading": "Cargando datos de sectores...",
+  "error": "Error cargando datos de sectores",
+  "years": "Años",
+  "clearFilters": "Limpiar filtros",
+  "sectorYearRanking": "Ranking sector-año",
+  "searchPlaceholder": "Buscar sector o año\u2026",
+  "showingOf": "Mostrando 100 de {{total}}. Filtra por sector o año para ver más.",
+  "tableHeaders": {
+    "year": "Año",
+    "sector": "Sector",
+    "contracts": "Contratos",
+    "totalValue": "Valor Total",
+    "avgRisk": "Riesgo Prom.",
+    "highRiskPct": "% Alto Riesgo",
+    "directAwardPct": "% Adj. Directa"
+  },
+  "kpi": {
+    "contracts": "Contratos",
+    "totalValue": "Valor Total",
+    "avgRisk": "Riesgo Prom."
+  },
   "controls": {
     "none": "Ninguno",
     "all": "Todos",

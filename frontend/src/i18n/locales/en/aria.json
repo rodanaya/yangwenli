@@ -26,7 +26,13 @@
   "filters": {
     "byPattern": "Filter by Pattern",
     "all": "All",
-    "newVendorOnly": "New Vendor Risk"
+    "newVendorOnly": "New Vendor Risk",
+    "novelOnly": "New leads only",
+    "novelOnlyTooltip": "Show only leads not already in the documented cases database"
+  },
+  "gtBadge": {
+    "knownTooltip": "Already in documented cases database",
+    "nuevo": "New"
   },
   "tier1": {
     "heading": "Critical Leads — Tier 1",
@@ -153,7 +159,11 @@
     "saving": "Saving\u2026",
     "close": "Close",
     "error": "Error saving. Please try again.",
-    "updateTitle": "Update review status"
+    "updateTitle": "Update review status",
+    "promoting": "Promoting\u2026",
+    "promotedToGT": "\u2713 Added to GT",
+    "promoteToGT": "\u2191 Add to Ground Truth",
+    "alreadyInGT": "Already in Ground Truth"
   },
   "intelligenceDetails": "Intelligence Details",
   "header": {

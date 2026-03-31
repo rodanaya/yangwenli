@@ -379,11 +379,11 @@ function ReviewPopover({
           disabled={promoteMutation.isPending || promoteMutation.isSuccess}
           className="w-full py-1.5 rounded text-xs font-medium border border-green-700 text-green-400 hover:bg-green-950/40 disabled:opacity-50 transition-colors"
         >
-          {promoteMutation.isPending ? 'Promoviendo...' : promoteMutation.isSuccess ? '✓ Añadido a GT' : '↑ Añadir a Ground Truth'}
+          {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
         </button>
       )}
       {inGroundTruth && (
-        <p className="text-[10px] text-green-500/70 text-center">Ya en Ground Truth</p>
+        <p className="text-[10px] text-green-500/70 text-center">{t('reviewPopover.alreadyInGT')}</p>
       )}
       {(mutation.isError || promoteMutation.isError) && (
         <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>

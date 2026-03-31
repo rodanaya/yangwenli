@@ -26,7 +26,13 @@
   "filters": {
     "byPattern": "Filtrar por Patrón",
     "all": "Todos",
-    "newVendorOnly": "Riesgo de Proveedor Nuevo"
+    "newVendorOnly": "Riesgo de Proveedor Nuevo",
+    "novelOnly": "Solo nuevos",
+    "novelOnlyTooltip": "Mostrar solo leads que no están en la base de casos documentados"
+  },
+  "gtBadge": {
+    "knownTooltip": "Ya en base de casos documentados",
+    "nuevo": "Nuevo"
   },
   "tier1": {
     "heading": "Pistas Críticas — Nivel 1",
@@ -153,7 +159,11 @@
     "saving": "Guardando…",
     "close": "Cerrar",
     "error": "Error al guardar. Intenta de nuevo.",
-    "updateTitle": "Actualizar estado de revisión"
+    "updateTitle": "Actualizar estado de revisión",
+    "promoting": "Promoviendo\u2026",
+    "promotedToGT": "\u2713 A\u00f1adido a GT",
+    "promoteToGT": "\u2191 A\u00f1adir a Ground Truth",
+    "alreadyInGT": "Ya en Ground Truth"
   },
   "intelligenceDetails": "Detalles de Inteligencia",
   "header": {

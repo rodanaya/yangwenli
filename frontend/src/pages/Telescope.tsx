@@ -55,9 +55,8 @@ function getRiskColor(risk: number): string {
 // ---------------------------------------------------------------------------
 
 export default function Telescope() {
-  const { t, i18n } = useTranslation('telescope')
+  const { t } = useTranslation('telescope')
   const navigate = useNavigate()
-  const lang = i18n.language
 
   const [yMetric, setYMetric] = useState<YMetric>('avg_risk')
   const [selectedSectors, setSelectedSectors] = useState<Set<number>>(new Set())
@@ -158,7 +157,7 @@ export default function Telescope() {
     },
     xAxis: {
       type: 'value',
-      name: lang === 'es' ? 'Año' : 'Year',
+      name: t('tableHeaders.year'),
       nameLocation: 'middle',
       nameGap: 30,
       min: yearRange[0] - 0.5,
@@ -182,7 +181,7 @@ export default function Telescope() {
     },
     legend: { show: false },
     series: scatterSeries,
-  }), [scatterSeries, yLabel, yMetric, yearRange, t, lang])
+  }), [scatterSeries, yLabel, yMetric, yearRange, t])
 
   // Table
   const tableItems = useMemo(() => {
@@ -251,7 +250,7 @@ export default function Telescope() {
     return (
       <div className="flex items-center justify-center h-64 gap-3 text-red-400">
         <AlertTriangle size={20} />
-        <span>{lang === 'es' ? 'Error cargando datos de sectores' : 'Error loading sector data'}</span>
+        <span>{t('error')}</span>
       </div>
     )
   }
@@ -262,21 +261,19 @@ export default function Telescope() {
       <div>
         <p className="text-xs tracking-widest text-slate-500 uppercase mb-1">{t('eyebrow')}</p>
         <h1 className="text-2xl font-bold text-white">
-          {lang === 'es' ? 'Radar de Sectores' : 'Sector Radar'}
+          {t('title')}
         </h1>
         <p className="text-slate-400 text-sm mt-1">
-          {lang === 'es'
-            ? 'Riesgo por sector y año · tamaño = valor contratado · color = sector'
-            : 'Risk by sector and year · size = contract value · color = sector'}
+          {t('subtitle')}
         </p>
       </div>
 
       {/* KPI strip */}
       <div className="grid grid-cols-3 gap-3">
         {[
-          { label: lang === 'es' ? 'Contratos' : 'Contracts', value: formatNumber(totalContracts) },
-          { label: lang === 'es' ? 'Valor Total' : 'Total Value', value: formatCompactMXN(totalValue) },
-          { label: lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk', value: (avgRisk * 100).toFixed(1) + '%', color: getRiskColor(avgRisk) },
+          { label: t('kpi.contracts'), value: formatNumber(totalContracts) },
+          { label: t('kpi.totalValue'), value: formatCompactMXN(totalValue) },
+          { label: t('kpi.avgRisk'), value: (avgRisk * 100).toFixed(1) + '%', color: getRiskColor(avgRisk) },
         ].map(kpi => (
           <div key={kpi.label} className="bg-slate-800/60 border border-slate-700/50 rounded-xl p-4">
             <p className="text-xs text-slate-400 uppercase tracking-wide">{kpi.label}</p>
@@ -306,7 +303,7 @@ export default function Telescope() {
 
         {/* Year range */}
         <div className="flex items-center gap-2 text-xs text-slate-400">
-          <span>{lang === 'es' ? 'Años' : 'Years'}:</span>
+          <span>{t('years')}:</span>
           <select
             value={yearRange[0]}
             onChange={e => setYearRange([Number(e.target.value), yearRange[1]])}
@@ -333,7 +330,7 @@ export default function Telescope() {
             onClick={() => setSelectedSectors(new Set())}
             className="text-xs text-blue-400 hover:text-blue-300 underline"
           >
-            {lang === 'es' ? 'Limpiar filtros' : 'Clear filters'}
+            {t('clearFilters')}
           </button>
         )}
       </div>
@@ -382,13 +379,13 @@ export default function Telescope() {
           <div className="flex items-center gap-2">
             <TrendingUp size={16} className="text-blue-400" />
             <span className="text-sm font-semibold text-white">
-              {lang === 'es' ? 'Ranking sector-año' : 'Sector-Year Ranking'}
+              {t('sectorYearRanking')}
             </span>
             <span className="text-xs text-slate-500 ml-1">({tableItems.length})</span>
           </div>
           <input
             type="text"
-            placeholder={lang === 'es' ? 'Buscar sector o año…' : 'Search sector or year…'}
+            placeholder={t('searchPlaceholder')}
             value={tableSearch}
             onChange={e => setTableSearch(e.target.value)}
             className="bg-slate-800 border border-slate-700 rounded px-3 py-1 text-xs text-white placeholder-slate-500 w-48"
@@ -400,13 +397,13 @@ export default function Telescope() {
             <thead>
               <tr className="border-b border-slate-700/50">
                 {([
-                  ['year', lang === 'es' ? 'Año' : 'Year'],
-                  ['sector', lang === 'es' ? 'Sector' : 'Sector'],
-                  ['contracts', lang === 'es' ? 'Contratos' : 'Contracts'],
-                  ['total_value', lang === 'es' ? 'Valor Total' : 'Total Value'],
-                  ['avg_risk', lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk'],
-                  ['high_risk_pct', lang === 'es' ? '% Alto Riesgo' : '% High Risk'],
-                  ['direct_award_pct', lang === 'es' ? '% Adj. Directa' : '% Direct Award'],
+                  ['year', t('tableHeaders.year')],
+                  ['sector', t('tableHeaders.sector')],
+                  ['contracts', t('tableHeaders.contracts')],
+                  ['total_value', t('tableHeaders.totalValue')],
+                  ['avg_risk', t('tableHeaders.avgRisk')],
+                  ['high_risk_pct', t('tableHeaders.highRiskPct')],
+                  ['direct_award_pct', t('tableHeaders.directAwardPct')],
                 ] as [SortKey, string][]).map(([k, label]) => (
                   <th
                     key={k}
@@ -453,9 +450,7 @@ export default function Telescope() {
               {tableItems.length > 100 && (
                 <tr>
                   <td colSpan={7} className="px-3 py-2 text-center text-slate-500 text-xs">
-                    {lang === 'es'
-                      ? `Mostrando 100 de ${tableItems.length}. Filtra por sector o año para ver más.`
-                      : `Showing 100 of ${tableItems.length}. Filter by sector or year to see more.`}
+                    {t('showingOf', { total: tableItems.length })}
                   </td>
                 </tr>
               )}

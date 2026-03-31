@@ -1,26 +1,43 @@
 {
-  "eyebrow": "VISUAL INTELLIGENCE · TEMPORAL RISK MONITOR",
-  "description": "Risk score oscillations across 7 key sectors from 2010–2025. Vertical markers indicate documented corruption scandals — use them as orientation points when reading the waveforms.",
-  "title": "EL SISMOGRAFO",
-  "subtitle": "Monitoring anomalies in public procurement",
-  "dateRange": "2010-2025",
-  "system": "RUBLI temporal risk detection system",
-  "loading": "Loading seismic data...",
+  "eyebrow": "POLITICAL RISK ANALYSIS · 2001–2025",
+  "title": "How corruption risk changed across Mexican administrations",
+  "subtitle": "Comparing procurement risk, direct award rates, and high-risk contracts across five presidential terms. Higher direct awards and risk scores indicate weaker competitive safeguards.",
+  "loading": "Loading timeline data…",
   "error": "Error loading data",
-  "legend": {
-    "scandal": "SCANDAL"
+
+  "sexenio": {
+    "heading": "Administration comparison",
+    "description": "Each bar represents a full presidential term (sexenio). Click a metric below to switch the view.",
+    "metricAvgRisk": "Avg risk score",
+    "metricHighRisk": "High-risk contracts",
+    "metricDirectAward": "Direct award rate",
+    "metricAriaLabel": "Select comparison metric",
+    "dataSource": "Source: COMPRANET 2001–2025 · RUBLI v6.5"
   },
-  "tooltip": {
-    "totalContracts": "Total contracts"
+
+  "insights": {
+    "heading": "Key findings",
+    "ariaLabel": "Key insight callouts"
   },
-  "footer": "Each channel shows the deviation of the high-risk contract percentage from the sector's historical mean. Upward oscillations indicate periods with anomalies above average.",
-  "scandalEvents": {
-    "laEstafaMaestra": "La Estafa\nMaestra",
-    "casoLozoya": "Caso Lozoya\nOdebrecht",
-    "comprasCovid": "Compras\nCOVID-19",
-    "segalmexEscandalo": "Segalmex\nEscandalo"
+
+  "insight": {
+    "directAward": {
+      "label": "AMLO direct awards",
+      "body": "{{amloRate}}% of contracts under AMLO were awarded without competition, versus {{calderonRate}}% under Calderón. This removes the competitive safeguard that deters price manipulation."
+    },
+    "riskIncrease": {
+      "label": "Risk score increase",
+      "body": "Average risk per contract rose from {{calderonRisk}}% under Calderón to {{amloRisk}}% under AMLO — the largest cross-administration jump in the dataset."
+    },
+    "highRisk": {
+      "label": "AMLO high-risk share",
+      "body": "{{amloHighRisk}}% of AMLO-era contracts score as high or critical risk, compared to {{foxHighRisk}}% under Fox. RUBLI risk scores reflect similarity to documented corruption patterns."
+    }
   },
-  "aria": {
-    "chartLabel": "Seismograph visualization of procurement risk anomalies across sectors from 2010 to 2025"
+
+  "timeline": {
+    "heading": "Year-by-year risk trend (2006–2025)",
+    "description": "Red line: avg risk score. Orange area: % high-risk contracts. Blue dashed: direct award rate. Dashed vertical lines mark major procurement scandals.",
+    "footnote": "Risk scores measure similarity to documented corruption patterns — not proof of wrongdoing. Direct award data before 2010 is incomplete (Structure A coverage gap)."
   }
 }

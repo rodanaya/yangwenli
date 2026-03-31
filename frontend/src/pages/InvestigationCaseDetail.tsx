@@ -369,7 +369,7 @@ export function InvestigationCaseDetail() {
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-text-muted mb-1">Total Value</p>
+            <p className="text-xs text-text-muted mb-1">{t('totalValue')}</p>
             <p className="text-2xl font-bold text-text-primary tabular-nums font-mono">
               {formatCompactMXN(detail.total_value_mxn)}
             </p>
@@ -377,7 +377,7 @@ export function InvestigationCaseDetail() {
         </Card>
         <Card>
           <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-text-muted mb-1">Suspicion Score</p>
+            <p className="text-xs text-text-muted mb-1">{t('suspicionScore')}</p>
             <p className={cn('text-2xl font-bold tabular-nums font-mono', SCORE_COLOR[priority.level])}>
               {(detail.suspicion_score * 100).toFixed(1)}%
             </p>
@@ -444,11 +444,11 @@ export function InvestigationCaseDetail() {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="pb-2 text-left text-xs font-medium text-text-muted">Vendor</th>
-                    <th className="pb-2 text-left text-xs font-medium text-text-muted">Role</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">Contracts</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">Value</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">Avg Risk</th>
+                    <th className="pb-2 text-left text-xs font-medium text-text-muted">{t('vendorTableHeaders.vendor')}</th>
+                    <th className="pb-2 text-left text-xs font-medium text-text-muted">{t('vendorTableHeaders.role')}</th>
+                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.contracts')}</th>
+                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.value')}</th>
+                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.avgRisk')}</th>
                     <th className="pb-2 text-left text-xs font-medium text-text-muted"></th>
                   </tr>
                 </thead>
@@ -561,7 +561,7 @@ export function InvestigationCaseDetail() {
                       <span className="text-xs text-text-muted font-mono">{q.question_type}</span>
                       {q.priority <= 2 && (
                         <span className="text-xs px-1.5 py-0.5 rounded bg-risk-high/10 text-risk-high font-medium">
-                          High Priority
+                          {t('highPriority')}
                         </span>
                       )}
                     </div>
@@ -670,9 +670,9 @@ export function InvestigationCaseDetail() {
                   value={credibility}
                   onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
                 >
-                  <option value="low">Low credibility</option>
-                  <option value="medium">Medium credibility</option>
-                  <option value="high">High credibility</option>
+                  <option value="low">{t('credibility.low')}</option>
+                  <option value="medium">{t('credibility.medium')}</option>
+                  <option value="high">{t('credibility.high')}</option>
                 </select>
                 <input
                   type="date"
@@ -762,7 +762,7 @@ export function InvestigationCaseDetail() {
           {reviewMutation.isPending && (
             <p className="text-xs text-text-muted mt-2">
               <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
-              Saving...
+              {t('saving')}
             </p>
           )}
           {promoteMutation.isSuccess && (

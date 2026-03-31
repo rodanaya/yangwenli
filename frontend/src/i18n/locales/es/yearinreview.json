@@ -1,36 +1,88 @@
 {
   "title": "Año en Revisión",
   "subtitle": "Resumen anual de contrataciones — contratos, gasto y patrones de riesgo",
+  "edition": "Edición Anual",
+  "annualReport": "Informe Anual",
   "yearSelector": "Seleccionar año",
+  "loading": "Cargando datos del año…",
+  "noData": "Sin datos disponibles para este año",
+  "contracts": "contratos",
+  "risk": "riesgo",
+  "riskLabel": "Riesgo",
+  "allYears": "Todos los años",
+  "goToYear": "Ver {{year}} en revisión",
+  "heroSubtitle": "{{contracts}} contratos · {{spending}} en gasto federal · {{riskPct}}% de alto riesgo",
+  "sexenioYear": "Año {{current}}/{{total}}",
   "heroStats": {
     "totalContracts": "Total de Contratos",
     "totalSpending": "Gasto Total",
     "highRiskRate": "Tasa de Alto Riesgo",
-    "yoyChange": "Cambio Anual en Gasto"
+    "topSector": "Sector Líder",
+    "yoyChange": "Cambio Anual"
+  },
+  "lede": {
+    "pandemic": "{{year}} estuvo marcado por la emergencia sanitaria. Con {{contracts}} contratos y un {{directPct}}% de adjudicación directa, el gasto de emergencia redefinió los patrones de contratación pública.",
+    "transition": "{{year}} fue un año de transición presidencial. {{contracts}} contratos por {{spending}} reflejan el cierre de una administración y el inicio de otra.",
+    "highRisk": "{{year}} registró una tasa de alto riesgo del {{riskPct}}%, significativamente por encima del umbral recomendado por la OCDE. {{contracts}} contratos por {{spending}} requieren atención.",
+    "default": "En {{year}}, el gobierno federal procesó {{contracts}} contratos por un total de {{spending}}. La tasa de adjudicación directa fue del {{directPct}}%."
+  },
+  "spotlight": {
+    "label": "Momento Más Destacado",
+    "topVendorLabel": "Proveedor con mayor gasto en {{year}}"
   },
   "topVendors": {
+    "sectionLabel": "Los 5 Mayores Proveedores",
+    "headline": "Quiénes recibieron más dinero en {{year}}",
     "title": "Top 10 Proveedores por Valor",
     "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
     "rank": "Posición",
     "vendor": "Proveedor",
-    "value": "Valor Total",
-    "contracts": "Contratos",
-    "risk": "Riesgo"
+    "value": "Valor Total"
+  },
+  "topRiskVendors": {
+    "sectionLabel": "Proveedores de Mayor Riesgo",
+    "headline": "Banderas rojas de {{year}}",
+    "title": "Proveedores de Mayor Riesgo",
+    "subtitle": "Proveedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
+  },
+  "sectorBreakdown": {
+    "sectionLabel": "Distribución Sectorial",
+    "headline": "Cómo se repartió el gasto en {{year}}"
+  },
+  "sectorGrowth": {
+    "title": "Crecimiento por Sector",
+    "headline": "Qué sectores crecieron y cuáles se contrajeron",
+    "subtitle": "Cambio interanual en valor de contratos por sector",
+    "noComparison": "No hay datos del año anterior para comparar",
+    "growth": "Crecimiento"
+  },
+  "yoyDeltas": {
+    "directAward": "Adjudicación Directa",
+    "avgRisk": "Riesgo Promedio"
+  },
+  "findings": {
+    "sectionLabel": "Hallazgos del Año",
+    "headline": "Anomalías estadísticas detectadas en {{year}}",
+    "highRiskAboveOECD": "Tasa de alto riesgo del {{pct}}% — por encima del umbral OCDE del 15%",
+    "highDirectAward": "{{pct}}% de contratos por adjudicación directa — concentración de poder discrecional",
+    "highSingleBid": "{{pct}}% de procedimientos competitivos con un solo licitante",
+    "spendingSpike": "Incremento del {{pct}}% en gasto respecto al año anterior",
+    "spendingDrop": "Caída del {{pct}}% en gasto respecto al año anterior"
+  },
+  "administrationBanner": {
+    "title": "Administración Presidencial",
+    "Fox": "Vicente Fox (PAN) · 2000–2006",
+    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
+    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
+    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
+    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–presente"
   },
   "topInstitutions": {
     "title": "Top 10 Instituciones por Gasto",
     "subtitle": "Instituciones con mayor gasto en el año seleccionado",
     "rank": "Posición",
     "institution": "Institución",
-    "value": "Gasto Total",
-    "contracts": "Contratos",
-    "risk": "Riesgo"
-  },
-  "sectorGrowth": {
-    "title": "Crecimiento por Sector",
-    "subtitle": "Cambio interanual en valor de contratos por sector",
-    "noComparison": "No hay datos del año anterior para comparar",
-    "growth": "Crecimiento"
+    "value": "Gasto Total"
   },
   "riskBreakdown": {
     "title": "Distribución de Nivel de Riesgo",
@@ -41,19 +93,5 @@
     "low": "Bajo",
     "noData": "Sin datos de riesgo disponibles para este año"
   },
-  "administrationBanner": {
-    "title": "Administración Presidencial",
-    "Fox": "Vicente Fox (PAN) · 2000–2006",
-    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
-    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
-    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
-    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–presente"
-  },
-  "noData": "Sin datos disponibles para este año",
-  "loading": "Cargando datos del año…",
-  "vsLastYear": "vs año anterior",
-  "topRiskVendors": {
-    "title": "Proveedores de Mayor Riesgo",
-    "subtitle": "Proveedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
-  }
+  "vsLastYear": "vs año anterior"
 }

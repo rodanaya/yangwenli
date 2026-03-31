@@ -1,34 +1,58 @@
 {
   "trackingLabel": "ANÁLISIS DE CAPTURA INSTITUCIONAL",
-  "title": "Captura Institucional",
-  "subtitle": "Qué instituciones están capturadas por qué proveedores en la contratación federal mexicana",
-  "sourcePill": "datos COMPRANET analizados",
+  "title": "Territorios Ocupados",
+  "subtitle": "¿Qué instituciones del gobierno dependen más de un solo proveedor?",
+  "sourcePill": "contratos analizados",
   "loading": "Construyendo matriz de captura...",
-  "errorTitle": "Captura Institucional",
-  "errorMessage": "Error al cargar datos de flujo de dinero",
-  "errorHint": "Verifique que el servidor esté en funcionamiento e intente de nuevo.",
-  "emptyTitle": "Sin Datos de Captura",
-  "emptyMessage": "Sin datos de flujo institución-proveedor para los filtros seleccionados",
-  "emptyHint": "Intente ajustar el filtro de sector o rango de años.",
+  "errorTitle": "Error al Cargar",
+  "errorMessage": "No se pudieron cargar los datos de flujo de dinero.",
+  "errorHint": "Verifique que el servidor esté en funcionamiento en el puerto 8001 e intente de nuevo.",
+  "whatIsCapture": {
+    "label": "¿QUÉ ES LA CAPTURA INSTITUCIONAL?",
+    "body": "La captura institucional ocurre cuando un solo proveedor gana una porción tan grande de los contratos de una institución que efectivamente controla sus decisiones de compra. Según las directrices de la OCDE, cuando un proveedor acumula más del 30% del gasto total de contratación de una institución, es una señal de alerta significativa. Por encima del 50%, representa una dependencia casi total — un patrón asociado con colusión, contratos fantasma y corrupción sistémica.",
+    "thresholds": {
+      "total": "Captura Total — un proveedor controla >50% del gasto",
+      "high": "Alto Riesgo — un proveedor tiene 30–50% del gasto",
+      "moderate": "Moderado — un proveedor tiene 15–30% del gasto",
+      "low": "Bajo — participación del proveedor menor al 15%"
+    }
+  },
+  "topCaptured": {
+    "label": "INSTITUCIONES MÁS CAPTURADAS",
+    "sublabel": "Ordenadas por la participación del proveedor dominante en el gasto institucional total",
+    "topVendor": "Proveedor Principal",
+    "share": "del gasto",
+    "contracts": "contratos",
+    "viewVendor": "Ver perfil del proveedor",
+    "noData": "Sin datos de captura disponibles."
+  },
   "filters": {
     "allSectors": "Todos los Sectores",
-    "bySector": "Sector",
-    "period2018": "2018-2022",
-    "period2023": "2023-2025",
+    "bySector": "Filtrar por Sector",
+    "period2018": "2018–2022",
+    "period2023": "2023–2025",
     "allYears": "Todos los Años"
   },
   "heatmap": {
+    "sectionLabel": "MAPA DE CONCENTRACIÓN",
     "institution": "Institución",
     "vendor": "Proveedor",
     "value": "Valor",
     "pctBudget": "del gasto institucional",
     "contracts": "contratos",
     "highCapture": "Alta Captura",
-    "lowCapture": "Baja Captura"
+    "lowCapture": "Baja Captura",
+    "mobileLabel": "Top Concentraciones — Lista"
+  },
+  "legend": {
+    "total": "Captura Total (>50%)",
+    "high": "Alto Riesgo (30–50%)",
+    "moderate": "Moderado (15–30%)",
+    "low": "Bajo (<15%)"
   },
   "methodology": {
     "title": "Metodología",
-    "content": "Calculado sobre 3.1M contratos de contratación pública (2002-2025) con montos superiores a 100K MXN. Alta concentración (>30% del presupuesto de una institución a un solo proveedor) es indicador de riesgo según directrices de la OCDE. La intensidad del color refleja la participación del proveedor en el gasto total de la institución."
+    "content": "Calculado sobre 3.1M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. Alta concentración (>30%) es un indicador de riesgo según las directrices de contratación de la OCDE. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
   },
   "stats": {
     "topFlows": "FLUJOS ANALIZADOS",
@@ -36,5 +60,11 @@
     "dominantVendors": "PROVEEDORES MOSTRADOS",
     "highCaptureFlows": "ALTA CAPTURA",
     "highCaptureDesc": "Flujos donde proveedor tiene >30% del gasto institucional"
+  },
+  "riskLabels": {
+    "total": "Captura Total",
+    "high": "Alto Riesgo",
+    "moderate": "Moderado",
+    "low": "Bajo"
   }
 }

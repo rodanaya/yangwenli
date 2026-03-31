@@ -31,6 +31,25 @@
   "grid": {
     "noStories": "No stories for this filter."
   },
+  "landing": {
+    "title": "Start your investigation",
+    "subtitle": "23 years of Mexican federal procurement — 3.1 million contracts scored for corruption risk. Three paths in:",
+    "card1Title": "Search a Company",
+    "card1Description": "Look up any vendor, institution, or contract. Explore risk profiles, procurement history, and network connections.",
+    "card2Title": "Browse Known Cases",
+    "card2Description": "748 documented corruption cases — IMSS, Segalmex, Odebrecht, and more. See how the data connects.",
+    "card3Title": "Risk Map by Sector",
+    "card3Description": "Explore risk concentration across 12 sectors. Health, agriculture, and infrastructure lead in flagged contracts.",
+    "howTitle": "How to use RUBLI for journalism",
+    "step1Title": "Find a lead",
+    "step1Body": "Use the vendor search to identify companies with high risk scores, or start from a known case in the case library.",
+    "step2Title": "Follow the money",
+    "step2Body": "Open the vendor profile to see contract history, institution connections, and the risk factors driving the score.",
+    "step3Title": "Build a dossier",
+    "step3Body": "Add vendors, institutions, and contracts to a private investigation dossier. Export as CSV or JSON when ready.",
+    "step4Title": "Verify and corroborate",
+    "step4Body": "Cross-reference with EFOS (SAT shell companies), SFP sanctions, and ARIA intelligence briefings for external registry matches."
+  },
   "methodology": {
     "title": "Methodology & Data",
     "description": "All investigations are based on 3,051,294 federal contracts (2002–2025) from COMPRANET. Risk scoring uses logistic regression trained on 748 documented corruption cases. All data, methodology and code are open source.",

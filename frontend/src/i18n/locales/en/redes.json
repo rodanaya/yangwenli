@@ -11,7 +11,15 @@
   "emptyTitle": "No Investigation Dossiers",
   "emptyMessage": "No high-priority investigation targets found",
   "emptyHint": "The ARIA pipeline may need to run first to populate the investigation queue.",
+  "noFilterResults": "No dossiers match current filters.",
+  "dossierCount": "{{filtered}} / {{total}} dossiers",
+  "header": {
+    "eyebrow": "Network Analysis · ARIA Tier 1 and Tier 2",
+    "title": "The Invisible Network",
+    "description": "Documented corruption networks in federal public procurement. Vendors under maximum surveillance (Tier 1). Patterns identified by ARIA system."
+  },
   "filters": {
+    "searchPlaceholder": "Search vendor...",
     "allPatterns": "All Patterns",
     "byPattern": "Pattern Type"
   },
@@ -31,21 +39,70 @@
     "P7": "Temporal Anomaly",
     "default": "Risk Pattern"
   },
+  "patternGrid": {
+    "vendors": "vendors",
+    "P1": { "name": "Monopoly", "desc": "Exclusive market dominance" },
+    "P2": { "name": "Shell Company", "desc": "Companies with no real operations" },
+    "P3": { "name": "Intermediary", "desc": "Paper intermediaries" },
+    "P6": { "name": "Capture", "desc": "Institutional capture" },
+    "P7": { "name": "Extreme Risk", "desc": "Extreme risk patterns" }
+  },
   "card": {
     "linkedVendors": "linked vendors",
     "totalValue": "total value",
     "contracts": "contracts",
     "ipsScore": "IPS",
-    "viewCase": "Investigate",
+    "viewCase": "Open Dossier",
+    "viewProfile": "Profile",
     "efos": "EFOS Listed",
     "sfp": "SFP Sanctioned",
     "newVendor": "NEW",
-    "riskScore": "Risk"
+    "riskScore": "Risk",
+    "yearsActive_one": "{{count}} year active",
+    "yearsActive_other": "{{count}} years active"
   },
   "stats": {
     "totalDossiers": "INVESTIGATION TARGETS",
     "tier1": "TIER 1 (CRITICAL)",
     "tier2": "TIER 2 (HIGH)",
     "patternsDetected": "PATTERNS DETECTED"
+  },
+  "detail": {
+    "closePanel": "Close panel",
+    "openDossier": "Open Full Dossier",
+    "viewProfile": "View Full Profile",
+    "rfc": "RFC",
+    "riskScore": "Risk Score",
+    "riskLevel": "Risk Level",
+    "totalContracts": "Total Contracts",
+    "totalValue": "Total Value",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "yearsActive": "Years Active",
+    "sector": "Primary Sector",
+    "topInstitutions": "Top Institutions",
+    "coBidders": "Known Co-Bidders",
+    "externalFlags": "External Watchlist",
+    "networkData": "Network data pending",
+    "networkDataHint": "Co-bidder analysis requires the graph pipeline to run.",
+    "noInstitutions": "No institutions recorded",
+    "noCoBidders": "No co-bidders detected",
+    "loading": "Loading vendor details...",
+    "loadError": "Could not load vendor details",
+    "confidence": "Confidence",
+    "relationship": "Relationship",
+    "contracts": "contracts",
+    "value": "value",
+    "ipsScore": "IPS Score",
+    "pattern": "Pattern",
+    "tier": "Tier",
+    "memo": "ARIA Memo",
+    "notAvailable": "—"
+  },
+  "riskLevels": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low"
   }
 }

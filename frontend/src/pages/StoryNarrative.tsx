@@ -581,15 +581,15 @@ export default function StoryNarrative() {
   if (!story) {
     return (
       <div className="max-w-3xl mx-auto py-24 px-6 text-center">
-        <p className="text-2xl font-bold text-text-primary mb-4">Story not found</p>
+        <p className="text-2xl font-bold text-text-primary mb-4">{t('story.notFound', 'Story not found')}</p>
         <p className="text-text-secondary mb-6">
-          The story &quot;{slug}&quot; could not be found.
+          {t('story.notFoundDetail', 'The story "{{slug}}" could not be found.', { slug })}
         </p>
         <button
           onClick={() => navigate('/journalists')}
           className="text-sm text-accent hover:underline underline-offset-4"
         >
-          Browse all stories
+          {t('story.allStories')}
         </button>
       </div>
     )
