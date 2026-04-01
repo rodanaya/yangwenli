@@ -842,9 +842,9 @@ export function Methodology() {
               {/* Validation metrics */}
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
                 {[
-                  { label: t('body.validation.metricTestAuc'), value: '0.840' },
-                  { label: t('body.validation.metricTrainAuc'), value: '0.880' },
-                  { label: 'Population AUC (external reporting)', value: '0.728' },
+                  { label: t('body.validation.metricTestAuc'), value: '0.828' },
+                  { label: t('body.validation.metricTrainAuc'), value: '0.798' },
+                  { label: 'High-risk rate (OECD compliance)', value: '13.49%' },
                   { label: t('body.validation.metricHighPlus'), value: '25.3%' },
                   { label: t('body.validation.metricMedPlus'), value: '88.7%' },
                 ].map((m) => (
@@ -858,7 +858,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted italic">
-                Population AUC 0.728 — all GT contracts vs all 2.7M unlabeled. Use for external reporting. The internal AUC (0.840) measures generalization to new vendors from the same GT distribution; the population AUC measures how well the model ranks any corrupt contract above any clean contract across the full dataset.
+                Train AUC 0.798 / Test AUC 0.828 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=13.49% OECD-compliant (within 2–15% benchmark). Model v6.5 active since March 25, 2026.
               </p>
             </div>
           </CollapsibleSection>

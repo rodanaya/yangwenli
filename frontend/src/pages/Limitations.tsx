@@ -50,9 +50,9 @@ const LIMITATIONS = [
     icon: BarChart3,
     title: 'Training Data Bias — Three Cases Dominate',
     severity: 'high',
-    summary: 'The v6.0 risk model was trained on ~390 documented corruption cases (~725 vendors), but the signal remains concentrated in health/agriculture mega-cases despite per-vendor capping.',
+    summary: 'The v6.5 risk model was trained on 1,363 documented corruption cases (911 vendors), but the signal remains concentrated in health/agriculture mega-cases despite per-vendor capping.',
     body: [
-      'The v6.0 model dramatically expanded ground truth to ~390 cases and ~725 vendors across all 12 sectors, with a per-vendor cap of 100 training contracts. However, the training signal is still concentrated:',
+      'The v6.5 model expanded ground truth to 1,363 cases and 911 vendors across all 12 sectors, with institution-scoped windowed labels and a per-vendor cap on training contracts. However, the training signal is still concentrated:',
       'The IMSS, Segalmex, DICONSA/LICONSA, and COVID-19 ecosystems still contribute a disproportionate share of positive training data. These cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
       'Corruption that doesn\'t match this pattern is systematically underdetected. A local official awarding contracts to a family member\'s new shell company — few contracts, small amounts, not concentrated — may score low because it doesn\'t resemble IMSS Pisa.',
       'EFOS ghost company detection improved significantly: Case 22 (SAT Art. 69-B Definitivo, 38 RFC-confirmed ghost companies) is in the training set. However, the fundamental detection gap persists for small-shell vendors with very few contracts per RFC (avg 3), unlike the large concentrated vendors that dominate training data.',
@@ -178,7 +178,7 @@ const LIMITATIONS = [
     severity: 'low',
     summary: 'The model was trained on contracts through 2020. Corruption patterns may evolve, and new patterns in 2021–2025 data may go undetected.',
     body: [
-      'The v6.0 model uses a vendor-stratified 70/30 split: no vendor appears in both train and test sets. Two AUC metrics are reported: (1) internal validation AUC 0.840 — the model never saw test-set vendor contracts during training, confirming honest generalization; (2) population discrimination AUC 0.728 — computed by ranking all 295K GT-labeled contracts against all 2.7M unlabeled contracts, a harder and more realistic evaluation. Both are valid metrics measuring different things.',
+      'The v6.5 model uses a vendor-stratified 70/30 split: no vendor appears in both train and test sets. Train AUC: 0.798, Test AUC: 0.828 (vendor-stratified). HR=13.49% — OECD compliant within the 2–15% benchmark range.',
       'However, the model assumes corruption patterns are relatively stable over time — that what was corrupt in 2018 is structured similarly to what is corrupt in 2024. If a new administration introduces fundamentally different procurement fraud mechanisms, the model may be slow to detect them.',
       'Recalibration with new ground truth cases should occur when major new corruption cases are documented.',
     ],
@@ -211,9 +211,9 @@ const LIMITATIONS = [
     severity: 'high',
     summary: 'The Elkan & Noto correction assumes labeled positives are a random sample of all corrupt contracts (SCAR). They are not — known cases are high-profile scandals selected by media attention and prosecution, not a random draw.',
     body: [
-      'The PU-learning correction c=0.3432 estimates P(labeled=1 | corrupt): how likely a truly corrupt contract is to appear in the labeled set. This requires the SCAR assumption — that labeled positives are a Selected Completely At Random sample of all corrupt contracts.',
+      'The PU-learning correction c=0.3000 estimates P(labeled=1 | corrupt): how likely a truly corrupt contract is to appear in the labeled set. This requires the SCAR assumption — that labeled positives are a Selected Completely At Random sample of all corrupt contracts.',
       'This assumption is structurally violated. The labeled positives are contracts from publicly documented, high-profile scandals (IMSS, Segalmex, COVID procurement) selected because they attracted regulatory and media attention. Selection probability is correlated with vendor size, sector prominence, and media visibility.',
-      'The correction factor c=0.3432 estimates how well the model detects cases similar to already-known scandals. True coverage of all corruption — including undiscovered, small-scale, or non-media-visible fraud — is likely far lower (estimated 0.10–0.30). Risk scores should be interpreted as similarity to documented scandal patterns, not as calibrated probabilities of corruption.',
+      'The correction factor c=0.3000 estimates how well the model detects cases similar to already-known scandals. True coverage of all corruption — including undiscovered, small-scale, or non-media-visible fraud — is likely far lower (estimated 0.10–0.30). Risk scores should be interpreted as similarity to documented scandal patterns, not as calibrated probabilities of corruption.',
     ],
     blind_spots: [
       'Small-scale corruption that never reaches media or prosecutors',
@@ -231,8 +231,8 @@ const LIMITATIONS = [
     summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. v6.0 mitigates this with vendor-stratified splitting but the underlying feature leakage persists.',
     body: [
       'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
-      'v6.0 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The internal test AUC of 0.840 is more honest than v5.1\'s 0.957 temporal split. The population discrimination AUC of 0.728 (all GT vs all non-GT) represents the real-world performance ceiling under the SCAR violation. However, the underlying feature leakage in vendor aggregates persists.',
-      'Point-in-time rolling features (vendor_rolling_stats table) would fully fix this but create cold-start problems for first-year vendors. This limitation persists in v6.0.',
+      'v6.5 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The test AUC of 0.828 reflects honest generalization to unseen vendors. However, the underlying feature leakage in vendor aggregates persists.',
+      'Point-in-time rolling features (vendor_rolling_stats table) would fully fix this but create cold-start problems for first-year vendors. This limitation persists in v6.5.',
     ],
     workaround: 'For newly-created vendors with no historical COMPRANET activity, risk scores are less reliable because vendor-level features cannot be computed. Newly incorporated vendors should be flagged separately for manual review regardless of their risk score.',
   },
@@ -278,7 +278,7 @@ const SEVERITY_LABELS: Record<string, string> = {
 const SUMMARY_ROWS = [
   { limitation: 'Execution-phase fraud invisible', impact: 'Construction/infrastructure underscored', fixable: 'partial', fix: 'Requires ASF audit data integration' },
   { limitation: 'Training bias (3 dominant cases)', impact: 'Small-vendor & multi-sector corruption underdetected', fixable: 'yes', fix: 'Add more labeled ground truth cases' },
-  { limitation: 'Ghost company blind spot (improved in v6.0)', impact: 'EFOS vendors detection improved; small-shell pattern remains challenging', fixable: 'partial', fix: 'Case 22 included; per-vendor cap reduces mega-case dominance' },
+  { limitation: 'Ghost company blind spot (improved in v6.5)', impact: 'EFOS vendors detection improved; small-shell pattern remains challenging', fixable: 'partial', fix: 'Case 22 included; institution-scoped labels reduce noise' },
   { limitation: 'Vendor deduplication unsolved', impact: 'True concentration understated pre-2018', fixable: 'partial', fix: 'RFC + address blocking (partial fix only)' },
   { limitation: 'Co-bidding signal = zero', impact: 'Bid rotation & cover bidding not in risk score', fixable: 'yes', fix: 'Need collusion-specific ground truth' },
   { limitation: 'CompraNet abolished, data pipeline disrupted', impact: 'Future data unavailable; 1.9M historical contracts already deleted', fixable: 'no', fix: 'Dependent on government platform decisions' },
@@ -288,8 +288,8 @@ const SUMMARY_ROWS = [
   { limitation: 'Temporal stationarity', impact: 'New fraud patterns may be undetected', fixable: 'yes', fix: 'Periodic retraining with new cases' },
   { limitation: 'Contract modifications invisible', impact: 'Infrastructure/energy execution-phase costs untracked', fixable: 'partial', fix: 'Requires ASF audit data integration (Phase 6)' },
   { limitation: 'Mexico-specific concentration model', impact: 'Bid-rotation collusion in competitive procedures underdetected', fixable: 'yes', fix: 'Add collusion-ring ground truth cases to training data' },
-  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.3432 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
-  { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Vendor-level features use full history; mitigated by vendor-stratified split in v6.0', fixable: 'yes', fix: 'Point-in-time rolling features (vendor_rolling_stats table)' },
+  { limitation: 'PU learning SCAR assumption violated', impact: 'c=0.3000 only covers scandal-similar corruption; true coverage estimated 0.10–0.30', fixable: 'partial', fix: 'Better labeled data from prosecutors, SAT, ASF' },
+  { limitation: 'Temporal feature leakage in vendor aggregates', impact: 'Vendor-level features use full history; mitigated by vendor-stratified split in v6.5', fixable: 'yes', fix: 'Point-in-time rolling features (vendor_rolling_stats table)' },
 ] as const
 
 // ============================================================================
