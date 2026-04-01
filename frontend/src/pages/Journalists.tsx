@@ -1,6 +1,7 @@
 import { useQuery } from '@tanstack/react-query'
-import { storiesApi } from '@/api/client'
-import { useNavigate } from 'react-router-dom'
+import { storiesApi, ariaApi } from '@/api/client'
+import { useNavigate, Link } from 'react-router-dom'
+import type { AriaQueueItem } from '@/api/types'
 import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, BookOpen, Download, Search, FileText, Map } from 'lucide-react'
 import { useState, useMemo } from 'react'
@@ -14,6 +15,173 @@ import type { StoryType } from '@/components/stories/StoryCard'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
+
+// ---------------------------------------------------------------------------
+// Breaking Investigations — live ARIA T1 feed
+// ---------------------------------------------------------------------------
+
+function getInvestigationSentence(item: AriaQueueItem): string {
+  const daRate = item.direct_award_rate
+  const riskNorm = item.risk_score_norm ?? item.avg_risk_score ?? 0
+  const score = Math.round(riskNorm * 100)
+
+  if (item.is_efos_definitivo || item.is_sfp_sanctioned) {
+    return 'Confirmed on government sanctions registry'
+  }
+  if (daRate !== undefined && daRate > 0.8) {
+    return `Wins ${Math.round(daRate * 100)}%+ of contracts without competitive bidding`
+  }
+  if (riskNorm > 0.8) {
+    return 'Extreme risk pattern — top 5% of all vendors'
+  }
+  return `Flagged for immediate investigation — risk score ${score}`
+}
+
+function RiskBar({ value }: { value: number }) {
+  const pct = Math.min(100, Math.round(value * 100))
+  const color =
+    value >= 0.6 ? '#dc2626' : value >= 0.4 ? '#ea580c' : value >= 0.25 ? '#eab308' : '#16a34a'
+  return (
+    <div className="flex items-center gap-2">
+      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+        <div
+          className="h-full rounded-full transition-all duration-500"
+          style={{ width: `${pct}%`, backgroundColor: color }}
+        />
+      </div>
+      <span className="text-xs font-mono tabular-nums" style={{ color }}>
+        {pct}%
+      </span>
+    </div>
+  )
+}
+
+function BreakingInvestigationsSkeleton() {
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+      {[0, 1, 2].map((i) => (
+        <div
+          key={i}
+          className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 animate-pulse"
+        >
+          <div className="h-3 w-16 bg-zinc-800 rounded mb-3" />
+          <div className="h-4 w-3/4 bg-zinc-800 rounded mb-2" />
+          <div className="h-3 w-full bg-zinc-800 rounded mb-4" />
+          <div className="h-1.5 w-full bg-zinc-800 rounded mb-4" />
+          <div className="h-3 w-24 bg-zinc-800 rounded" />
+        </div>
+      ))}
+    </div>
+  )
+}
+
+function BreakingInvestigations() {
+  const { data, isLoading, isError } = useQuery({
+    queryKey: ['aria', 'breaking-feed'],
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 5 }),
+    staleTime: 5 * 60 * 1000,
+  })
+
+  if (isError) return null
+
+  const items = data?.data ?? []
+
+  return (
+    <section aria-label="Breaking investigations" className="mb-10">
+      {/* Section label */}
+      <div className="flex items-center gap-3 mb-5">
+        <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">
+          Investigaciones activas
+        </span>
+        <div className="h-px flex-1 bg-zinc-800" />
+        <span className="text-[10px] text-zinc-600 uppercase tracking-widest">
+          ARIA T1 — Nivel crítico
+        </span>
+      </div>
+
+      {/* Value-at-risk stat strip */}
+      <div className="grid grid-cols-3 gap-3 mb-6">
+        {[
+          { value: '65.3%', label: 'contracts skip competitive bidding', color: '#dc2626' },
+          { value: 'MXN 1.33T', label: 'en contratos de alto riesgo', color: '#ea580c' },
+          { value: '+28%', label: 'increase in avg risk, 2002–2025', color: '#eab308' },
+        ].map((stat) => (
+          <div
+            key={stat.label}
+            className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-center"
+          >
+            <div
+              className="text-xl sm:text-2xl font-black tabular-nums leading-none"
+              style={{ color: stat.color }}
+            >
+              {stat.value}
+            </div>
+            <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{stat.label}</p>
+          </div>
+        ))}
+      </div>
+
+      {/* Cards */}
+      {isLoading ? (
+        <BreakingInvestigationsSkeleton />
+      ) : items.length === 0 ? null : (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {items.map((item) => {
+            const riskNorm = item.risk_score_norm ?? item.avg_risk_score ?? 0
+            const name =
+              item.vendor_name.length > 40
+                ? item.vendor_name.slice(0, 40) + '…'
+                : item.vendor_name
+            const sentence = getInvestigationSentence(item)
+            return (
+              <div
+                key={item.vendor_id}
+                className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex flex-col gap-3 hover:border-zinc-700 transition-colors"
+              >
+                {/* Badge */}
+                <div className="flex items-center gap-2">
+                  <span className="bg-red-600 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded">
+                    NIVEL 1
+                  </span>
+                  {(item.is_efos_definitivo || item.is_sfp_sanctioned) && (
+                    <span className="bg-amber-600/20 text-amber-400 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-amber-600/30">
+                      SANCIONADO
+                    </span>
+                  )}
+                </div>
+
+                {/* Vendor name */}
+                <p
+                  className="text-sm font-semibold text-zinc-100 leading-snug"
+                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  title={item.vendor_name}
+                >
+                  {name}
+                </p>
+
+                {/* Plain-language sentence */}
+                <p className="text-xs text-zinc-400 leading-relaxed">{sentence}</p>
+
+                {/* Risk bar */}
+                <RiskBar value={riskNorm} />
+
+                {/* CTA */}
+                <Link
+                  to={`/thread/${item.vendor_id}`}
+                  className="mt-auto inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors group"
+                  aria-label={`Open investigation for ${item.vendor_name}`}
+                >
+                  Open Investigation
+                  <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
+                </Link>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </section>
+  )
+}
 
 // ---------------------------------------------------------------------------
 // Story definitions (hardcoded editorial content, live stats where available)
@@ -662,6 +830,11 @@ export default function Journalists() {
             </button>
           ))}
         </div>
+
+        {/* ================================================================ */}
+        {/* BREAKING INVESTIGATIONS — live ARIA T1 feed                      */}
+        {/* ================================================================ */}
+        <BreakingInvestigations />
 
         {/* ================================================================ */}
         {/* STORY GRID                                                        */}

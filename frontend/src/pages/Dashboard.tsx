@@ -1581,6 +1581,12 @@ export function Dashboard() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const { data: yearOverYearData } = useQuery({
+    queryKey: ['analysis', 'year-over-year'],
+    queryFn: () => analysisApi.getYearOverYear(),
+    staleTime: 30 * 60 * 1000,
+  })
+
   const { data: moneyFlowData } = useQuery({
     queryKey: ['analysis', 'money-flow', 'dashboard'],
     queryFn: () => analysisApi.getMoneyFlow(),
@@ -1780,6 +1786,119 @@ export function Dashboard() {
         criticalCount={criticalCount}
         loading={dashLoading || !overview}
       />
+
+      {/* ================================================================ */}
+      {/* KEY FINDINGS SIGNAL STRIP — 3 explosive stat facts             */}
+      {/* ================================================================ */}
+      <div className="bg-background-elevated border-y border-border grid grid-cols-3 divide-x divide-border py-6 px-8">
+        <div className="flex flex-col items-center justify-center text-center px-4">
+          <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>65.3%</span>
+          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">of contracts skip competitive bidding</span>
+        </div>
+        <div className="flex flex-col items-center justify-center text-center px-4">
+          <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>MXN 1.33T</span>
+          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">in high-risk contracts</span>
+        </div>
+        <div className="flex flex-col items-center justify-center text-center px-4">
+          <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>+28%</span>
+          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">rise in avg risk since 2002</span>
+        </div>
+      </div>
+
+      {/* ================================================================ */}
+      {/* PERIOD TREND CHART — avg risk score 2002–2025                   */}
+      {/* ================================================================ */}
+      {yearOverYearData?.data && yearOverYearData.data.length > 0 && (
+        <div className="fern-card px-5 pt-5 pb-5">
+          <div className="mb-3">
+            <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-text-muted font-mono leading-none mb-0.5">
+              Risk Trend 2002–2025 — Average Risk Score by Year
+            </p>
+            <p className="text-[10px] text-text-muted">
+              Average contract risk score (%) &middot; RUBLI v6.5 &middot; 3M contracts
+            </p>
+          </div>
+          <ResponsiveContainer width="100%" height={220}>
+            <AreaChart
+              data={yearOverYearData.data.map((d) => ({
+                year: d.year,
+                avgRiskPct: d.avg_risk * 100,
+                highRiskPct: d.high_risk_pct,
+              }))}
+              margin={{ top: 10, right: 16, left: 0, bottom: 4 }}
+            >
+              <defs>
+                <linearGradient id="periodTrendGradient" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#dc2626" stopOpacity={0.25} />
+                  <stop offset="95%" stopColor="#dc2626" stopOpacity={0.03} />
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" vertical={false} />
+              <XAxis
+                dataKey="year"
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                tickLine={false}
+                axisLine={false}
+                interval={2}
+              />
+              <YAxis
+                tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+                tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                tickLine={false}
+                axisLine={false}
+                width={36}
+              />
+              <RechartsTooltip
+                contentStyle={{
+                  background: 'var(--color-background-elevated)',
+                  border: '1px solid var(--color-border)',
+                  borderRadius: '6px',
+                  fontSize: '11px',
+                  fontFamily: 'var(--font-family-mono)',
+                }}
+                formatter={(value: number | undefined, name: string | undefined) => [
+                  value != null ? `${value.toFixed(2)}%` : '—',
+                  name === 'avgRiskPct' ? 'Avg Risk' : 'High Risk %',
+                ]}
+                labelFormatter={(label: number) => `Year: ${label}`}
+              />
+              {/* Early period annotation */}
+              <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: '~24.5% avg', fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopLeft' }} />
+              {/* Recent period annotation */}
+              <ReferenceArea x1={2021} x2={2025} fill="rgba(220,38,38,0.04)" label={{ value: '~31.4% avg', fill: 'rgba(220,38,38,0.45)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
+              <Area
+                type="monotone"
+                dataKey="avgRiskPct"
+                stroke="#dc2626"
+                strokeWidth={2}
+                fill="url(#periodTrendGradient)"
+                dot={false}
+                activeDot={{ r: 3, stroke: '#dc2626', strokeWidth: 2, fill: 'var(--color-background-base)' }}
+                connectNulls
+              />
+              <Line
+                type="monotone"
+                dataKey="highRiskPct"
+                stroke="#f97316"
+                strokeWidth={1.5}
+                dot={false}
+                strokeDasharray="4 3"
+                connectNulls
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+          <div className="flex items-center gap-4 mt-1 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <div className="h-0.5 w-4 rounded" style={{ backgroundColor: '#dc2626' }} />
+              <span className="text-xs text-text-muted">Avg Risk Score</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="h-0.5 w-4 rounded" style={{ borderTop: '1.5px dashed #f97316' }} />
+              <span className="text-xs text-text-muted">High-Risk Rate</span>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Section divider — "NATIONAL OVERVIEW" label + live-data badges */}
       <div className="flex items-center justify-between px-1 py-2 border-b border-border/30">
