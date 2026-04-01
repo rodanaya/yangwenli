@@ -88,7 +88,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       "Vendors operating across many sectors have diversified risk exposure. However, v6.0 analysis shows some corruption networks intentionally operate across sectors to avoid detection. Cross-sector presence is a weak positive signal.",
     theory:
       'Extended ground truth: Some major corruption cases (LICONSA ecosystem, IMSS networks) span multiple sectors. Sector spread alone is insufficient for distinguishing corruption.',
-    citation: 'RUBLI v6.0 ground truth analysis (390 cases)',
+    citation: 'RUBLI v6.5 ground truth analysis (1,363 cases)',
     rubli_note:
       'Zeroed by sign constraint in v6.4. Cross-sector presence is ambiguous — some corruption networks span sectors, but many legitimate vendors also operate broadly.',
   },
@@ -478,7 +478,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
         <span className="flex items-center gap-1"><TrendingUp size={11} className="text-risk-critical" /> Increases risk</span>
         <span className="flex items-center gap-1"><TrendingDown size={11} className="text-risk-low" /> Decreases risk (protective)</span>
         <span className="flex items-center gap-1"><Minus size={11} /> Negligible / regularized to zero</span>
-        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v6.0 ElasticNet model (C=1.28, l1_ratio=0.961)</span>
+        <span className="flex items-center gap-1"><FlaskConical size={11} /> Coefficients from v6.5 ElasticNet model (C=0.01, l1_ratio=0.9673)</span>
       </div>
     </div>
   )

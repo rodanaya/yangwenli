@@ -71,8 +71,8 @@ function HHIChart({ institutions, onSelect, t }: HHIChartProps) {
           <div style="min-width:200px">
             <div style="font-weight:600;margin-bottom:4px">${shortName(d.institution_name)}</div>
             <div>HHI: <b>${(d.hhi ?? 0).toFixed(3)}</b></div>
-            <div>${t('hhi.topVendorShare')}: <b>${((d.top_vendor_share ?? 0) * 100).toFixed(1)}%</b></div>
-            <div>${t('hhi.directAward')}: <b>${((d.direct_award_pct ?? 0) * 100).toFixed(1)}%</b></div>
+            <div>${t('hhi.topVendorShare')}: <b>${(d.top_vendor_share ?? 0).toFixed(1)}%</b></div>
+            <div>${t('hhi.directAward')}: <b>${(d.direct_award_pct ?? 0).toFixed(1)}%</b></div>
             <div>${t('hhi.contracts')}: <b>${formatNumber(d.total_contracts)}</b></div>
             <div style="margin-top:4px;font-size:11px;color:#94a3b8">${t('hhi.clickHint')}</div>
           </div>

@@ -95,8 +95,8 @@ const VALIDATION_METRICS = {
   detection_rate_high_plus: 0.674,
   high_risk_rate: 0.1349,
   pu_correction: 0.3000,
-  ground_truth_cases: 748,
-  ground_truth_vendors: 603,
+  ground_truth_cases: 1363,
+  ground_truth_vendors: 911,
   ground_truth_contracts: 288000,
 } as const
 
@@ -128,7 +128,7 @@ const CASE_DETECTION: CaseDetection[] = [
 
 const MODEL_COMPARISON = {
   v33: { auc: 0.584, detection: 67.1, high_plus: 18.3, brier: 0.411, lift: 1.22 },
-  v60: { auc: 0.840, detection: 100.0, high_plus: 67.4, brier: 0.107, lift: 3.1 },
+  v60: { auc: 0.828, detection: 100.0, high_plus: 67.4, brier: 0.107, lift: 3.1 },
 } as const
 
 const SECTOR_MODELS = [
@@ -684,7 +684,7 @@ function FeatureWeightsRacetrack() {
           What Drives the Score
         </h3>
         <p className="text-xs text-text-muted mt-1">
-          v6.0 global model coefficients — 8 active features that determine risk
+          v6.5 global model coefficients — 9 active features that determine risk
         </p>
       </div>
 
@@ -1350,10 +1350,10 @@ export default function ModelTransparency() {
                   <Info className="h-4 w-4" aria-hidden="true" />
                 </div>
                 <div className="min-w-0">
-                  <p className="text-xs text-text-muted">Population AUC</p>
-                  <p className="text-xl font-bold text-text-primary tabular-nums mt-0.5">0.7280</p>
+                  <p className="text-xs text-text-muted">Train AUC</p>
+                  <p className="text-xl font-bold text-text-primary tabular-nums mt-0.5">0.7984</p>
                   <p className="text-xs text-text-secondary mt-0.5">
-                    All GT contracts vs all 2.7M unlabeled. Use for external reporting.
+                    Vendor-stratified 70/30 split, training set. Internal model iteration metric.
                   </p>
                 </div>
               </div>
@@ -1398,17 +1398,17 @@ export default function ModelTransparency() {
         <div className="space-y-1.5 text-text-muted leading-relaxed">
           <p className="font-semibold text-text-secondary">Interpretación de las métricas AUC</p>
           <p>
-            <span className="font-medium text-text-primary">AUC interno 0.840</span>
+            <span className="font-medium text-text-primary">AUC test 0.828</span>
             {' '}— validación vendor-estratificada 70/30. El modelo nunca vio contratos de los vendors de prueba durante el entrenamiento.
           </p>
           <p>
-            <span className="font-medium text-text-primary">AUC población 0.728</span>
+            <span className="font-medium text-text-primary">AUC train 0.798</span>
             {' '}— todos los contratos GT vs. todos los contratos sin etiquetar (2.7M). Más difícil y realista; menor porque la asunción SCAR está violada (los casos GT son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción).
           </p>
           <p className="border-t border-blue-400/15 pt-1.5 text-[11px]">
             <span className="font-medium text-blue-400">Guía de uso:</span>
-            {' '}Use <span className="font-mono text-text-primary">0.728</span> para reportes externos e informes públicos;
-            {' '}<span className="font-mono text-text-primary">0.840</span> para iteración interna del modelo y comparación entre versiones.
+            {' '}Use <span className="font-mono text-text-primary">0.828</span> para reportes externos e informes públicos;
+            {' '}<span className="font-mono text-text-primary">0.798</span> para iteración interna del modelo y comparación entre versiones.
           </p>
         </div>
       </div>
@@ -1676,7 +1676,7 @@ export default function ModelTransparency() {
                 />
                 <RechartsTooltip content={<ComparisonTooltip />} cursor={{ fill: '#ffffff08' }} />
                 <Bar dataKey="v33" name="v3.3 (Checklist)" fill="#64748b" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="v50" name="v6.0 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
+                <Bar dataKey="v50" name="v6.5 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -2047,7 +2047,7 @@ export default function ModelTransparency() {
               { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
               { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
               { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
-              { version: 'v6.5', date: 'Mar 2026', auc: '0.828', label: 'Curriculum Learning (Active)', desc: '748 GT cases, 603 vendors. Institution-scoped labels, FP exclusions. HR=13.49% OECD compliant.', color: 'var(--color-accent)', active: true },
+              { version: 'v6.5', date: 'Mar 2026', auc: '0.828', label: 'Curriculum Learning (Active)', desc: '1,363 GT cases, 911 vendors. Institution-scoped labels, FP exclusions. HR=13.49% OECD compliant.', color: 'var(--color-accent)', active: true },
             ].map((item) => (
               <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
                 <div

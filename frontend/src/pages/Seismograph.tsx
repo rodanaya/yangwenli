@@ -337,7 +337,7 @@ function BarRow({ year, avgRisk, highRiskPct, index, isElectionYear }: BarRowPro
         {(avgRisk * 100).toFixed(1)}%
       </span>
       <span className="text-xs text-slate-500 w-14 text-right font-mono shrink-0 hidden sm:block">
-        {(highRiskPct * 100).toFixed(1)}% hi
+        {highRiskPct.toFixed(1)}% hi
       </span>
     </motion.div>
   )

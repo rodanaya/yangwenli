@@ -417,7 +417,7 @@ export default function Journalists() {
   // Live stats for hero counters
   const totalContracts = 3051294
   const totalValueBillions = 9.87
-  const totalCases = 748
+  const totalCases = 1363
 
   // Build stories array with translations
   const stories = useMemo(() => getStories(t), [t])

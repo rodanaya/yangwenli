@@ -13,7 +13,7 @@
  * Uses zero new backend endpoints — all data from existing APIs.
  */
 
-import { useRef, useState, useCallback } from 'react'
+import { useRef, useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
@@ -221,8 +221,11 @@ function ChapterSubject({ vendor, aria }: {
 
 // ─── Chapter 2: The Timeline ────────────────────────────────────────────────
 
-function ChapterTimeline({ contracts }: {
+function ChapterTimeline({ contracts, totalContracts, vendorFirstYear, vendorLastYear }: {
   contracts: Array<{ id: number; contract_date?: string; amount_mxn?: number; risk_score?: number; institution_name?: string; procedure_type?: string }>
+  totalContracts?: number
+  vendorFirstYear?: number
+  vendorLastYear?: number
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-20% 0px' })
@@ -249,11 +252,16 @@ function ChapterTimeline({ contracts }: {
   const minYear = years[0] ?? 2002
   const maxYear = years[years.length - 1] ?? 2025
 
+  // Use vendor-level date range for axis and heading (prevents "2025-2025" when all 100 fetched contracts are recent)
+  const displayMinYear = vendorFirstYear ?? minYear
+  const displayMaxYear = vendorLastYear ?? maxYear
+  const displayTotal = totalContracts ?? contracts.length
+
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
       <ChapterLabel>Chapter II · The Timeline</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        {formatNumber(contracts.length)} Contracts, {minYear}–{maxYear}
+        {formatNumber(displayTotal)} Contracts, {displayMinYear}–{displayMaxYear}
       </h2>
       <p className="text-text-muted mb-12 max-w-xl">
         Each dot is one contract. Size reflects value. Color reflects risk. Scroll across to trace the history.
@@ -270,7 +278,7 @@ function ChapterTimeline({ contracts }: {
         {/* Dot field */}
         <div className="relative h-48 bg-background border border-border rounded-xl overflow-hidden px-4 py-4">
           {dots.map((dot, idx) => {
-            const xPct = maxYear > minYear ? ((dot.year - minYear) / (maxYear - minYear)) * 96 : 50
+            const xPct = displayMaxYear > displayMinYear ? ((dot.year - displayMinYear) / (displayMaxYear - displayMinYear)) * 96 : 50
             const seed = dot.id != null ? Number(dot.id) : idx
             const sinVal = Math.sin(seed * 9301 + 49297) * 233280
             const yPct = 10 + (sinVal - Math.floor(sinVal)) * 80
@@ -789,7 +797,33 @@ function ChapterVerdict({
         {aria?.memo_text && (
           <div className="border-l-2 border-[var(--color-accent)] pl-4 mt-4">
             <p className="editorial-label text-text-muted mb-2">ARIA Intelligence Memo</p>
-            <p className="text-text-primary text-sm leading-relaxed whitespace-pre-line">{aria.memo_text}</p>
+            <div className="text-text-primary text-sm leading-relaxed space-y-1.5">
+              {aria.memo_text.split('\n').map((line, i) => {
+                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-white text-sm mt-3">{line.slice(4)}</h4>
+                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-white text-base mt-4">{line.slice(3)}</h3>
+                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-white text-lg mt-4">{line.slice(2)}</h2>
+                if (line.trim() === '') return <div key={i} className="h-1" />
+                // Pipe table row
+                if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
+                  const cells = line.split('|').filter((_, ci) => ci > 0 && ci < line.split('|').length - 1)
+                  const isSeparator = cells.every(c => /^[-: ]+$/.test(c))
+                  if (isSeparator) return null
+                  return (
+                    <div key={i} className="flex gap-2 text-xs">
+                      {cells.map((cell, ci) => (
+                        <span key={ci} className={cn('flex-1 px-2 py-0.5 bg-background-elevated rounded', ci === 0 ? 'text-text-muted' : 'text-text-primary font-medium')}>{cell.trim()}</span>
+                      ))}
+                    </div>
+                  )
+                }
+                const parts = line.split(/\*\*(.+?)\*\*/g)
+                return (
+                  <p key={i}>
+                    {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-white">{part}</strong> : part)}
+                  </p>
+                )
+              })}
+            </div>
           </div>
         )}
       </div>
@@ -831,7 +865,7 @@ function ChapterVerdict({
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary leading-relaxed">
-            <strong className="text-text-muted">Methodology note:</strong> Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v6.0, vendor-stratified validation, AUC 0.840 (internal) / 0.728 (population). See{' '}
+            <strong className="text-text-muted">Methodology note:</strong> Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See{' '}
             <Link to="/methodology" className="text-text-muted underline hover:text-text-primary">
               full methodology
             </Link>.
@@ -921,7 +955,7 @@ export default function RedThread() {
   const containerRef = useRef<HTMLDivElement>(null)
   const [activeChapter, setActiveChapter] = useState(0)
 
-  const { scrollYProgress } = useScroll({ container: containerRef })
+  const { scrollYProgress } = useScroll()
 
   // Track active chapter by scroll position (simple approach)
   const handleScroll = useCallback(() => {
@@ -933,6 +967,13 @@ export default function RedThread() {
     })
     setActiveChapter(active)
   }, [])
+
+  // Bind scroll handler to window — the outer div has no overflow so onScroll never fires
+  useEffect(() => {
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    handleScroll() // set initial active chapter
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [handleScroll])
 
   // Queries
   const { data: vendor, isLoading: vendorLoading, isError: vendorError } = useQuery({
@@ -1009,7 +1050,7 @@ export default function RedThread() {
   }
 
   return (
-    <div className="relative min-h-screen bg-[var(--color-background)]" onScroll={handleScroll}>
+    <div ref={containerRef} className="relative min-h-screen bg-[var(--color-background)]">
       {/* Fixed elements */}
       <RedThreadLine progress={scrollPct} />
       <ChapterNav active={activeChapter} />
@@ -1055,6 +1096,9 @@ export default function RedThread() {
             institution_name: c.institution_name ?? undefined,
             procedure_type: c.procedure_type ?? undefined,
           }))}
+          totalContracts={vendor.total_contracts}
+          vendorFirstYear={vendor.first_contract_year}
+          vendorLastYear={vendor.last_contract_year}
         />
 
         <ChapterDivider />

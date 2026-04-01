@@ -1098,9 +1098,9 @@ function ReportCard() {
   const totalValueMxn: number | null = dashData?.overview?.total_value_mxn ?? national.total_value_mxn ?? null
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
-  // Ground truth cases count — hardcoded known value (748 cases as of v6.5)
+  // Ground truth cases count — hardcoded known value (1363 cases as of Mar 26, 2026)
   // This is stable and known from project memory; we don't have a live API for it.
-  const GT_CASES_COUNT = 748
+  const GT_CASES_COUNT = 1363
 
   return (
     <main className="max-w-4xl mx-auto px-4 py-8" id="main-content">

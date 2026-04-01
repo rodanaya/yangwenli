@@ -122,7 +122,7 @@ const REFERENCES = [
 ] as const
 
 const MODEL_COMPARISON = [
-  { metric: 'AUC-ROC', v33: '0.584', v60: '0.840', improvement: '+44%' },
+  { metric: 'AUC-ROC', v33: '0.584', v60: '0.828', improvement: '+42%' },
   { metric: 'Brier Score', v33: '0.411', v60: '0.107', improvement: '-74%' },
   { metric: 'Detection Rate (med+)', v33: '67.1%', v60: '100%', improvement: '+33pp' },
   { metric: 'High+ Detection', v33: '18.3%', v60: '67.4%', improvement: '+49pp' },
@@ -167,11 +167,11 @@ const MODEL_EVOLUTION_STEPS = [
     overlay: false,
   },
   {
-    version: 'v6.0',
-    date: 'Mar 17, 2026',
+    version: 'v6.5',
+    date: 'Mar 25, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
-    metric: 'AUC 0.840',
+    metric: 'AUC 0.828 (test)',
     active: true,
     overlay: false,
   },
@@ -688,11 +688,11 @@ export function Methodology() {
 
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#f87171]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#f87171]" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendDecreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">

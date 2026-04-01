@@ -11,7 +11,7 @@ import { memo, useMemo, useState } from 'react'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import type { SectorYearItem } from '@/api/types'
 
-const DATA_SOURCE = 'Source: RUBLI analysis \u00b7 COMPRANET data 2002\u20132025 \u00b7 Risk model v6.4'
+const DATA_SOURCE = 'Source: RUBLI analysis \u00b7 COMPRANET data 2002\u20132025 \u00b7 Risk model v6.5'
 
 interface Administration {
   name: string

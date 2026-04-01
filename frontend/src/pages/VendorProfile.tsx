@@ -4485,8 +4485,8 @@ const ARC_ICONS: Record<string, string> = {
 
 const ARC_LABELS: Record<string, string> = {
   explosive_entry: 'Entrada explosiva',
-  capture_pattern: 'Patron de captura',
-  single_burst: 'Rafaga unica',
+  capture_pattern: 'Patrón de captura',
+  single_burst: 'Ráfaga única',
   steady_growth: 'Crecimiento constante',
   disappeared: 'Desaparecido',
   irregular: 'Irregular',
@@ -4524,22 +4524,22 @@ function PeriodistaPanel({
   // Build auto-generated lede paragraph
   const ledeParagraph = useMemo(() => {
     if (!narrative) return null
-    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'patron irregular'
+    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'Patrón irregular'
     const riskScore = avgRiskScore ?? 0
     const riskLevelLabel = getRiskLevel(riskScore)
     const riskLabelEs: Record<string, string> = {
-      critical: 'critico',
+      critical: 'crítico',
       high: 'alto',
       medium: 'medio',
       low: 'bajo',
     }
-    let text = `Este proveedor muestra una ${arcLabel.toLowerCase()}. `
+    let text = `Este proveedor muestra el patrón "${arcLabel}". `
     if (similarCases && similarCases.length > 0) {
       const topCase = similarCases[0]
       const pct = Math.round(topCase.similarity_score * 100)
-      text += `Sus patrones de contratacion tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucro ${topCase.case_type}. `
+      text += `Sus patrones de contratación tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucró ${topCase.case_type}. `
     }
-    text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, esta clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
+    text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, está clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
     return text
   }, [narrative, similarCases, avgRiskScore])
 

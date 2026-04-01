@@ -1875,7 +1875,7 @@ export function Dashboard() {
         <ScrollReveal delay={0}>
           <KPICard
             label={t('directAwardRate')}
-            value={kpiLoading ? '--' : (overview?.direct_award_pct != null ? `${(overview.direct_award_pct * 100).toFixed(1)}%` : '—')}
+            value={kpiLoading ? '--' : (overview?.direct_award_pct != null ? `${overview.direct_award_pct.toFixed(1)}%` : '—')}
             sublabel={t('oecdDirectAward')}
             color="#fb923c"
             loading={kpiLoading}
@@ -1886,7 +1886,7 @@ export function Dashboard() {
         <ScrollReveal delay={100}>
           <KPICard
             label={t('singleBidRate')}
-            value={kpiLoading ? '--' : (overview?.single_bid_pct != null ? `${(overview.single_bid_pct * 100).toFixed(1)}%` : '—')}
+            value={kpiLoading ? '--' : (overview?.single_bid_pct != null ? `${overview.single_bid_pct.toFixed(1)}%` : '—')}
             sublabel={t('oecdSingleBid')}
             color="#f87171"
             loading={kpiLoading}

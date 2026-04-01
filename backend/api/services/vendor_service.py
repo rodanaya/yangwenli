@@ -78,7 +78,14 @@ class VendorService(BaseService):
 
         # Stats-table filters
         if sector_id is not None:
-            qb.where("s.primary_sector_id = ?", sector_id)
+            # primary_sector_id in vendor_stats is unpopulated (NULL for all rows).
+            # Fall back to a contracts-based subquery: include vendors that have
+            # at least one contract in the requested sector.
+            qb.where(
+                "v.id IN (SELECT DISTINCT c2.vendor_id FROM contracts c2"
+                " WHERE c2.sector_id = ? AND c2.vendor_id IS NOT NULL)",
+                sector_id,
+            )
         if risk_level is not None:
             # Use high_risk_pct (% of high+critical contracts) for vendor-level filtering.
             # avg_risk_score is too strict at vendor level since many low-risk contracts

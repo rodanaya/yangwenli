@@ -3,7 +3,7 @@
  *
  * All statistics are real, pulled from the RUBLI database (3,051,294 contracts,
  * 2002-2025, COMPRANET federal procurement records). Risk scores produced by
- * the v6.4 calibrated model (AUC 0.840, vendor-stratified split).
+ * the v6.5 calibrated model (AUC 0.828 test, vendor-stratified split).
  */
 
 // ---------------------------------------------------------------------------
@@ -99,7 +99,7 @@ export const STORIES: StoryDef[] = [
           'COMPRANET — Base de datos federal de contratos 2002-2025 (3,051,294 registros).',
           'OCDE (2023). Public Procurement Performance Report. OECD Publishing, París.',
           'DOF, 1 de diciembre de 2018 — Decreto de austeridad republicana, Art. 3-5.',
-          'RUBLI v6.4 — Modelo de riesgo, 150 trials Optuna, AUC=0.840.',
+          'RUBLI v6.5 — Modelo de riesgo, 150 trials Optuna, AUC=0.828.',
         ],
         prose: [
           'Palacio Nacional, 1 de diciembre de 2018. Andrés Manuel López Obrador se ciñe la banda presidencial y pronuncia las palabras que definirán su gobierno: la Cuarta Transformación acabará con la corrupción. No más moches. No más empresas fantasma. No más contratos a modo. La transparencia en el gasto público será la piedra angular del nuevo régimen.',
