@@ -252,7 +252,7 @@ function FiltersRow({
         onClick={onReset}
         className="ml-auto text-xs text-text-muted hover:text-text-secondary underline"
       >
-        Reset
+        {t('filters.reset')}
       </button>
     </div>
   )

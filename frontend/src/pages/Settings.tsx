@@ -1,4 +1,5 @@
 import { useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { useSearchParams } from 'react-router-dom'
@@ -102,6 +103,7 @@ type TabId = typeof TABS[number]['id']
 // ============================================================================
 
 export function Settings() {
+  const { t } = useTranslation('settings')
   const [searchParams, setSearchParams] = useSearchParams()
   const activeTab = (searchParams.get('tab') || 'general') as TabId
 
@@ -126,9 +128,9 @@ export function Settings() {
       >
         <h2 className="text-lg font-bold tracking-tight flex items-center gap-2 font-mono">
           <SettingsIcon className="h-4.5 w-4.5 text-accent" />
-          <span className="text-gradient">Platform Settings</span>
+          <span className="text-gradient">{t('pageTitle')}</span>
         </h2>
-        <p className="text-xs text-text-muted mt-0.5">Configure preferences, export data, and review data quality</p>
+        <p className="text-xs text-text-muted mt-0.5">{t('pageDescription')}</p>
       </motion.div>
 
       {/* Tab Bar */}
@@ -151,7 +153,7 @@ export function Settings() {
               aria-controls={`tab-panel-${tab.id}`}
             >
               <Icon className="h-4 w-4" aria-hidden="true" />
-              {tab.label}
+              {t(`tabs.${tab.id}`)}
               {isActive && (
                 <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-accent rounded-t" />
               )}
@@ -175,6 +177,7 @@ export function Settings() {
 // ============================================================================
 
 function GeneralTab() {
+  const { t } = useTranslation('settings')
   const { data: stats, isLoading, error, refetch } = useQuery<DatabaseStats>({
     queryKey: ['stats', 'database'],
     queryFn: () => statsApi.getDatabase() as Promise<DatabaseStats>,
@@ -197,15 +200,15 @@ function GeneralTab() {
           <div>
             <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
               <Database className="h-4 w-4 text-accent-data" />
-              Data Information
+              {t('general.dataInfo.title')}
             </h3>
-            <p className="text-xs text-text-muted mt-0.5">About the procurement data</p>
+            <p className="text-xs text-text-muted mt-0.5">{t('general.dataInfo.description')}</p>
           </div>
           <button
             type="button"
             onClick={() => refetch()}
             disabled={isLoading}
-            aria-label="Refresh statistics"
+            aria-label={t('general.dataInfo.refreshLabel')}
             className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
@@ -213,11 +216,11 @@ function GeneralTab() {
         </div>
         <div className="px-6 py-4 space-y-4" style={{ borderTop: '1px solid var(--color-border)' }}>
           {error ? (
-            <p className="text-sm text-risk-critical">Failed to load statistics</p>
+            <p className="text-sm text-risk-critical">{t('general.dataInfo.loadError')}</p>
           ) : (
             <div className="grid grid-cols-2 gap-4 text-sm">
               <div>
-                <p className="text-text-muted">Database</p>
+                <p className="text-text-muted">{t('general.dataInfo.database')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-32" />
                 ) : (
@@ -225,7 +228,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Total Contracts</p>
+                <p className="text-text-muted">{t('general.dataInfo.totalContracts')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
@@ -235,7 +238,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Total Vendors</p>
+                <p className="text-text-muted">{t('general.dataInfo.totalVendors')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
@@ -245,7 +248,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Total Institutions</p>
+                <p className="text-text-muted">{t('general.dataInfo.totalInstitutions')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
@@ -255,7 +258,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Total Value</p>
+                <p className="text-text-muted">{t('general.dataInfo.totalValue')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
@@ -265,7 +268,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Time Range</p>
+                <p className="text-text-muted">{t('general.dataInfo.timeRange')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-20" />
                 ) : (
@@ -273,7 +276,7 @@ function GeneralTab() {
                 )}
               </div>
               <div>
-                <p className="text-text-muted">Source</p>
+                <p className="text-text-muted">{t('general.dataInfo.source')}</p>
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
@@ -292,14 +295,12 @@ function GeneralTab() {
         <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
           <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
             <Info className="h-4 w-4 text-accent" />
-            About RUBLI
+            {t('general.about.title')}
           </h3>
         </div>
         <div className="px-6 py-4" style={{ borderTop: '1px solid var(--color-border)' }}>
           <p className="text-sm text-text-muted mb-4">
-            RUBLI (Red Unificada de Busqueda de Licitaciones Irregulares) is an AI-Powered Corruption Detection
-            Platform for Mexican Government Procurement. Named after the unified network concept for detecting
-            irregular procurement patterns across federal sectors.
+            {t('general.about.description')}
           </p>
           <div className="text-xs text-text-muted space-y-1 font-mono">
             <p><span className="text-accent">Risk Model:</span> v6.4 Vendor-Stratified Calibrated (Internal AUC: 0.840 · Population AUC: 0.728)</p>
@@ -319,6 +320,7 @@ function GeneralTab() {
 // ============================================================================
 
 function ExportTab() {
+  const { t } = useTranslation('settings')
   const [toasts, setToasts] = useState<Toast[]>([])
 
   const showToast = useCallback((message: string, type: 'success' | 'error' | 'warning') => {
@@ -336,7 +338,7 @@ function ExportTab() {
         <CardContent className="p-4 flex items-start gap-3">
           <AlertTriangle className="h-5 w-5 text-risk-medium flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div>
-            <p className="text-sm font-medium text-text-primary">Export Limits</p>
+            <p className="text-sm font-medium text-text-primary">{t('export.limitsTitle')}</p>
             <p className="text-xs text-text-muted mt-1">
               Exports are limited to {formatNumber(EXPORT_LIMITS.contracts.default)} records by default.
               For larger exports, please contact the administrator or use the API directly.
@@ -347,8 +349,8 @@ function ExportTab() {
 
       <div className="grid gap-4 md:grid-cols-2">
         <ExportCard
-          title="Contracts"
-          description="Export contract data with risk scores and classifications"
+          title={t('export.contracts.title')}
+          description={t('export.contracts.description')}
           icon={FileText}
           estimatedRecords={EXPORT_LIMITS.contracts.default}
           estimatedSizeMB={EXPORT_LIMITS.contracts.estimatedSizeMB}
@@ -365,8 +367,8 @@ function ExportTab() {
           onError={(error) => showToast(`Export failed: ${error}`, 'error')}
         />
         <ExportCard
-          title="Vendors"
-          description="Export vendor profiles with risk metrics and classifications"
+          title={t('export.vendors.title')}
+          description={t('export.vendors.description')}
           icon={Users}
           estimatedRecords={EXPORT_LIMITS.vendors.default}
           estimatedSizeMB={EXPORT_LIMITS.vendors.estimatedSizeMB}

@@ -946,7 +946,7 @@ export default function AriaPage() {
             <span className="flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-signal-live animate-pulse" />
               <span className="text-[11px] text-text-muted">
-                {tier1Data?.pagination?.total ?? 285} {t('header.t1Require')}
+                {tier1Data?.pagination?.total ?? '—'} {t('header.t1Require')}
               </span>
             </span>
           </div>
@@ -960,7 +960,7 @@ export default function AriaPage() {
       {/* COMPACT STATS PILL ROW                                              */}
       {/* ================================================================== */}
       <div className="flex flex-wrap gap-4 px-6 py-2 bg-background-card/50 border-b border-border text-[11px] text-text-muted">
-        <span><strong className="text-text-primary font-mono">{formatNumber(stats?.queue_total ?? 198038)}</strong> {t('stats.vendorsUnderSurveillance')}</span>
+        <span><strong className="text-text-primary font-mono">{stats?.queue_total != null ? formatNumber(stats.queue_total) : '—'}</strong> {t('stats.vendorsUnderSurveillance')}</span>
         <span>&middot;</span>
         <span><strong className="text-text-primary font-mono">{formatCompactMXN(elevatedValue)}</strong> {t('stats.valueAtRisk')}</span>
         <span>&middot;</span>

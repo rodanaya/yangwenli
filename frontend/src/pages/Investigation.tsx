@@ -17,7 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { Card, CardContent } from '@/components/ui/card'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { investigationApi } from '@/api/client'
-import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
 import { TableExportButton } from '@/components/TableExportButton'
 import { EmptyState } from '@/components/EmptyState'
 import type {
@@ -156,10 +156,9 @@ function VerifyPanel() {
 type PriorityLevel = 'critical' | 'high' | 'medium' | 'low'
 
 function getPriority(score: number): { level: PriorityLevel; n: number } {
-  if (score >= 0.75) return { level: 'critical', n: 1 }
-  if (score >= 0.50) return { level: 'high', n: 2 }
-  if (score >= 0.25) return { level: 'medium', n: 3 }
-  return { level: 'low', n: 4 }
+  const level = getRiskLevelFromScore(score)
+  const n = level === 'critical' ? 1 : level === 'high' ? 2 : level === 'medium' ? 3 : 4
+  return { level, n }
 }
 
 const PRIORITY_BADGE: Record<PriorityLevel, string> = {
@@ -192,17 +191,25 @@ const SIGNAL_TAG_CLASS: Record<string, string> = {
 // ============================================================================
 
 function getRiskBorderStyle(score: number): React.CSSProperties {
-  if (score >= 0.5) return { borderLeftWidth: '3px', borderLeftColor: 'var(--color-risk-critical)' }
-  if (score >= 0.3) return { borderLeftWidth: '3px', borderLeftColor: 'var(--color-risk-high)' }
-  if (score >= 0.1) return { borderLeftWidth: '3px', borderLeftColor: 'var(--color-risk-medium)' }
-  return { borderLeftWidth: '3px', borderLeftColor: 'var(--color-risk-low)' }
+  const level = getRiskLevelFromScore(score)
+  const colorMap = {
+    critical: 'var(--color-risk-critical)',
+    high: 'var(--color-risk-high)',
+    medium: 'var(--color-risk-medium)',
+    low: 'var(--color-risk-low)',
+  }
+  return { borderLeftWidth: '3px', borderLeftColor: colorMap[level] }
 }
 
 function getCardBorderColor(score: number): string {
-  if (score >= 0.75) return 'var(--color-risk-critical)'
-  if (score >= 0.50) return 'var(--color-risk-high)'
-  if (score >= 0.25) return 'var(--color-risk-medium)'
-  return 'var(--color-risk-low)'
+  const level = getRiskLevelFromScore(score)
+  const colorMap = {
+    critical: 'var(--color-risk-critical)',
+    high: 'var(--color-risk-high)',
+    medium: 'var(--color-risk-medium)',
+    low: 'var(--color-risk-low)',
+  }
+  return colorMap[level]
 }
 
 // ============================================================================

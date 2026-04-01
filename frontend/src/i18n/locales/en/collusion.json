@@ -16,7 +16,8 @@
     "minShared": "Min. shared procedures",
     "sortBy": "Sort by",
     "sortShared": "Shared procedures",
-    "sortRate": "Co-bid rate"
+    "sortRate": "Co-bid rate",
+    "reset": "Reset"
   },
   "table": {
     "vendorA": "Vendor A",

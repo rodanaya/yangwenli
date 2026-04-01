@@ -8,6 +8,9 @@
   "errorTitle": "Redes Conocidas",
   "errorMessage": "Error al cargar datos de investigación",
   "errorHint": "Verifique que el servidor esté en funcionamiento e intente de nuevo.",
+  "emptyTitle": "Sin Expedientes de Investigación",
+  "emptyMessage": "No se encontraron objetivos de investigación de alta prioridad",
+  "emptyHint": "Es posible que el pipeline ARIA deba ejecutarse primero para poblar la cola de investigación.",
   "noFilterResults": "No se encontraron expedientes con los filtros actuales.",
   "dossierCount": "{{filtered}} / {{total}} expedientes",
   "header": {

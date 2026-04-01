@@ -830,58 +830,6 @@ function LangToggle({ dark = false }: { dark?: boolean }) {
   )
 }
 
-// ---------------------------------------------------------------------------
-// ProcessStep -- one step in the methodology pipeline
-// ---------------------------------------------------------------------------
-function ProcessStep({
-  step,
-  title,
-  body,
-  color,
-  index,
-  inView,
-}: {
-  step: string
-  title: string
-  body: string
-  color: string
-  index: number
-  inView: boolean
-}) {
-  return (
-    <motion.div
-      className="flex flex-col relative"
-      initial={{ opacity: 0, y: 30 }}
-      animate={inView ? { opacity: 1, y: 0 } : {}}
-      transition={{ duration: 0.5, delay: index * 0.15 + 0.2 }}
-    >
-      {/* Step number */}
-      <span
-        className="text-6xl font-black font-mono mb-4 leading-none"
-        style={{ color, opacity: 0.18 }}
-      >
-        {step}
-      </span>
-      <h3 className="text-lg font-bold mb-2" style={{ color: '#f0ede8' }}>
-        {title}
-      </h3>
-      <p className="text-sm leading-relaxed" style={{ color: '#6a6560' }}>
-        {body}
-      </p>
-      {/* Animated connector line on desktop */}
-      {index < 3 && (
-        <motion.div
-          className="hidden sm:block absolute -right-4 top-8 w-8 h-0.5"
-          style={{ backgroundColor: color, opacity: 0.25 }}
-          initial={{ scaleX: 0 }}
-          animate={inView ? { scaleX: 1 } : {}}
-          transition={{ duration: 0.4, delay: index * 0.15 + 0.5 }}
-        />
-      )}
-    </motion.div>
-  )
-}
-
 // ===========================================================================
 // Main Intro page
 // ===========================================================================
@@ -941,7 +889,6 @@ export default function Intro() {
   // Section refs for GSAP ScrollTrigger
   const s2Ref = useRef<HTMLDivElement>(null)
   const s3Ref = useRef<HTMLDivElement>(null)
-  const s4Ref = useRef<HTMLDivElement>(null)
   const s5Ref = useRef<HTMLDivElement>(null)
   const s6Ref = useRef<HTMLDivElement>(null)
 
@@ -953,16 +900,9 @@ export default function Intro() {
   const heroScrollRef = useRef<HTMLDivElement>(null)
   const heroTopBarRef = useRef<HTMLDivElement>(null)
 
-  // GSAP hero stat counter state
-  const [heroValueT, setHeroValueT] = useState(0)
-  const [heroRiskPct, setHeroRiskPct] = useState(0)
-  const [heroCases, setHeroCases] = useState(0)
-  const heroStatsRef = useRef<HTMLDivElement>(null)
-
   // Section inView states (driven by ScrollTrigger callbacks)
   const [s2InView, setS2InView] = useState(false)
   const [s3InView, setS3InView] = useState(false)
-  const [s4InView, setS4InView] = useState(false)
   const [s5InView, setS5InView] = useState(false)
 
   // Count-up for section 2 stats
@@ -997,28 +937,6 @@ export default function Intro() {
       tl.to(heroSubRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.3)
     }
 
-    // Stat counters
-    if (heroStatsRef.current) {
-      gsap.set(heroStatsRef.current, { opacity: 0, y: 20 })
-      tl.to(heroStatsRef.current, { opacity: 1, y: 0, duration: 0.6, ease: 'power3.out' }, 0.6)
-    }
-
-    // GSAP counter animation for hero stats (hardcoded targets, live data shown below fold)
-    const counterObj = { valueT: 0, risk: 0, cases: 0 }
-    tl.to(counterObj, {
-      valueT: 99,
-      risk: 1349,
-      cases: 25,
-      duration: 2.5,
-      ease: 'power2.out',
-      snap: { valueT: 1, risk: 1, cases: 1 },
-      onUpdate: () => {
-        setHeroValueT(Math.round(counterObj.valueT))
-        setHeroRiskPct(Math.round(counterObj.risk))
-        setHeroCases(Math.round(counterObj.cases))
-      },
-    }, 0.6)
-
     // CTA buttons
     if (heroCtaRef.current) {
       gsap.set(heroCtaRef.current, { opacity: 0, scale: 0.8 })
@@ -1040,7 +958,6 @@ export default function Intro() {
   useEffect(() => {
     const quietSections = [
       { ref: s2Ref, setter: setS2InView },
-      { ref: s4Ref, setter: setS4InView },
       { ref: s5Ref, setter: setS5InView },
     ]
 
@@ -1242,43 +1159,6 @@ export default function Intro() {
           >
             {t('hero.storySubtitle')}
           </p>
-
-          {/* Hero stats - GSAP animated counters */}
-          <div ref={heroStatsRef} className="flex flex-wrap items-center justify-center gap-6 sm:gap-10 mt-2">
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
-                ${(heroValueT / 10).toFixed(1)}T
-              </span>
-              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>MXN</span>
-            </div>
-            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: CRIMSON }}>
-                {(heroRiskPct / 100).toFixed(1)}%
-              </span>
-              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {t('hero.highRisk')}
-              </span>
-            </div>
-            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
-                {heroCases}+
-              </span>
-              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {t('hero.documentedCases')}
-              </span>
-            </div>
-            <div className="hidden sm:block w-px h-10" style={{ backgroundColor: 'rgba(255,255,255,0.15)' }} />
-            <div className="flex flex-col items-center gap-1">
-              <span className="text-2xl sm:text-3xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
-                23
-              </span>
-              <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.4)' }}>
-                {t('hero.years')}
-              </span>
-            </div>
-          </div>
 
           {/* CTA buttons */}
           <div ref={heroCtaRef} className="flex flex-wrap gap-3 justify-center mt-2">
@@ -1669,79 +1549,6 @@ export default function Intro() {
         inView={s3InView}
         goToApp={goToApp}
       />
-
-      {/* ================================================================= */}
-      {/* SECTION 4: HOW IT WORKS - Dark bg, animated steps */}
-      {/* ================================================================= */}
-      <section
-        ref={s4Ref}
-        className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#0d0f0e' }}
-      >
-        <div className="max-w-5xl mx-auto">
-          <span
-            className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-4"
-            style={{ color: CRIMSON }}
-          >
-            {t('how.label')}
-          </span>
-
-          <h2
-            className="gsap-reveal text-3xl sm:text-4xl font-black mb-14 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
-          >
-            {t('how.headline')}
-          </h2>
-
-          <div className="gsap-reveal grid grid-cols-1 sm:grid-cols-4 gap-8">
-            {[
-              {
-                step: '01',
-                title: t('how.step01Title'),
-                body: t('how.step01Body'),
-                color: '#2563eb',
-              },
-              {
-                step: '02',
-                title: t('how.step02Title'),
-                body: t('how.step02Body'),
-                color: '#8b5cf6',
-              },
-              {
-                step: '03',
-                title: t('how.step03Title'),
-                body: t('how.step03Body'),
-                color: CRIMSON,
-              },
-              {
-                step: '04',
-                title: t('how.step04Title'),
-                body: t('how.step04Body'),
-                color: '#16a34a',
-              },
-            ].map((item, i) => (
-              <ProcessStep key={item.step} {...item} index={i} inView={s4InView} />
-            ))}
-          </div>
-
-          {/* Disclaimer */}
-          <div
-            className="gsap-reveal mt-14 rounded-xl border p-5 text-sm leading-relaxed"
-            style={{ color: '#6a6560', background: 'rgba(255,255,255,0.04)', borderColor: 'rgba(255,255,255,0.08)' }}
-          >
-            {t('how.disclaimer')}
-          </div>
-
-          <button
-            onClick={() => goToApp('/methodology')}
-            className="gsap-reveal mt-8 inline-flex items-center gap-2 text-base font-bold transition-colors duration-200 hover:underline focus:outline-none"
-            style={{ color: CRIMSON }}
-          >
-            {t('how.seeMethodology')}
-            <ArrowRight className="h-4 w-4" aria-hidden="true" />
-          </button>
-        </div>
-      </section>
 
       {/* ================================================================= */}
       {/* SECTION 5: REPORT CARD TEASER - Warm bg, grade slot machine */}

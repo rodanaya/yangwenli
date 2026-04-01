@@ -16,7 +16,8 @@
     "minShared": "Mín. procedimientos compartidos",
     "sortBy": "Ordenar por",
     "sortShared": "Procedimientos compartidos",
-    "sortRate": "Tasa de co-oferta"
+    "sortRate": "Tasa de co-oferta",
+    "reset": "Restablecer"
   },
   "table": {
     "vendorA": "Proveedor A",

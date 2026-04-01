@@ -28,7 +28,7 @@ import {
   Bar,
   Cell,
 } from 'recharts'
-import { vendorApi, ariaApi } from '@/api/client'
+import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import {
@@ -445,9 +445,22 @@ function ChapterPattern({ waterfall, ariaPattern }: {
 
 // ─── Chapter 4: The Network ─────────────────────────────────────────────────
 
-function ChapterNetwork({ vendorId, vendor }: {
+function classifyRole(coBidder: { win_count: number; co_bid_count: number }): {
+  label: string
+  color: string
+  bg: string
+} {
+  const winRate = coBidder.co_bid_count > 0 ? coBidder.win_count / coBidder.co_bid_count : 0
+  if (winRate < 0.15) return { label: 'Possible Decoy', color: '#f87171', bg: 'rgba(248,113,113,0.12)' }
+  if (winRate >= 0.3 && winRate <= 0.7) return { label: 'Rotation Pattern', color: '#fb923c', bg: 'rgba(251,146,60,0.12)' }
+  if (winRate > 0.6) return { label: 'Possible Accomplice', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' }
+  return { label: 'Co-bidder', color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
+}
+
+function ChapterNetwork({ vendorId, vendor, coBidders }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number }
+  coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
 }) {
   return (
     <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
@@ -484,6 +497,50 @@ function ChapterNetwork({ vendorId, vendor }: {
               : 'Multi-sector vendor.'}
           </AnnotationNote>
         </div>
+      </div>
+
+      {/* Co-bidding partners */}
+      <div className="mb-10">
+        <p className="editorial-label text-text-muted mb-4">Co-Bidding Partners</p>
+        {coBidders === null ? (
+          <div className="space-y-2">
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className="h-14 rounded-xl bg-background-elevated animate-pulse" />
+            ))}
+          </div>
+        ) : coBidders.length === 0 ? (
+          <p className="text-text-muted text-sm italic">No coordinated bidding patterns detected.</p>
+        ) : (
+          <ul className="space-y-2">
+            {coBidders.slice(0, 5).map((cb) => {
+              const role = classifyRole(cb)
+              return (
+                <li key={cb.vendor_id}>
+                  <Link
+                    to={`/thread/${cb.vendor_id}`}
+                    className="flex items-center gap-3 bg-background hover:bg-background-elevated border border-border rounded-xl px-4 py-3 transition-colors group"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-white text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors">
+                        {cb.vendor_name}
+                      </p>
+                      <p className="text-text-muted text-xs mt-0.5">
+                        {cb.co_bid_count} shared procedure{cb.co_bid_count !== 1 ? 's' : ''}
+                      </p>
+                    </div>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full flex-shrink-0"
+                      style={{ color: role.color, backgroundColor: role.bg }}
+                    >
+                      {role.label}
+                    </span>
+                    <ExternalLink className="w-3 h-3 text-text-muted flex-shrink-0" />
+                  </Link>
+                </li>
+              )
+            })}
+          </ul>
+        )}
       </div>
 
       {/* CTA to full network graph */}
@@ -909,6 +966,13 @@ export default function RedThread() {
     retry: false, // vendor may not be in ARIA queue — that's OK
   })
 
+  const { data: coBidders } = useQuery({
+    queryKey: ['co-bidders', id],
+    queryFn: () => networkApi.getCoBidders(id, 10, 5),
+    enabled: !!id && !isNaN(id) && activeChapter >= 3,
+    retry: false,
+  })
+
   // scroll progress for the thread line (page-level)
   const [scrollPct, setScrollPct] = useState(0)
   scrollYProgress.on('change', setScrollPct)
@@ -1009,6 +1073,7 @@ export default function RedThread() {
             total_institutions: vendor.total_institutions,
             sectors_count: vendor.sectors_count,
           }}
+          coBidders={coBidders?.co_bidders ?? null}
         />
 
         <ChapterDivider />

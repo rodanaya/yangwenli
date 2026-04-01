@@ -16,7 +16,7 @@ import {
   toTitleCase,
   getRiskLevel,
 } from '@/lib/utils'
-import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { institutionApi, analysisApi } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
@@ -278,7 +278,7 @@ export default function InstitutionsTab() {
     const totalContracts = insts.reduce((s, i) => s + (i.total_contracts || 0), 0)
     const withRisk = insts.filter((i) => i.avg_risk_score != null)
     const avgRisk = withRisk.length > 0 ? withRisk.reduce((s, i) => s + i.avg_risk_score!, 0) / withRisk.length : 0
-    const highRiskCount = insts.filter((i) => (i.avg_risk_score || 0) >= 0.30).length
+    const highRiskCount = insts.filter((i) => (i.avg_risk_score || 0) >= RISK_THRESHOLDS.high).length
     const totalVendors = insts.reduce((s, i) => s + (i.vendor_count || 0), 0)
     return { totalValue, totalContracts, avgRisk, highRiskCount, totalVendors }
   }, [data])
@@ -373,7 +373,7 @@ export default function InstitutionsTab() {
             )}
             <input
               type="text"
-              placeholder="Search name or acronym..."
+              placeholder={t('institutions.searchPlaceholder')}
               className="h-8 w-48 rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
               value={searchInput}
               onChange={(e) => { setSearchInput(e.target.value); setActivePreset(null) }}

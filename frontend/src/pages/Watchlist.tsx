@@ -402,7 +402,7 @@ export function Watchlist() {
     mutationFn: ({ name, color }: { name: string; color: string }) =>
       watchlistApi.createFolder(name, color),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] }),
-    onError: (err) => console.error('[Watchlist] Failed to create folder:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   const deleteFolderMutation = useMutation({
@@ -411,7 +411,7 @@ export function Watchlist() {
       setActiveFolderId(null)
       queryClient.invalidateQueries({ queryKey: ['watchlist-folders'] })
     },
-    onError: (err) => console.error('[Watchlist] Failed to delete folder:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   // Stats query (separate so header cards always show totals)
@@ -442,7 +442,7 @@ export function Watchlist() {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
-    onError: (err) => console.error('[Watchlist] Failed to update item:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   const deleteMutation = useMutation({
@@ -451,7 +451,7 @@ export function Watchlist() {
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       queryClient.invalidateQueries({ queryKey: ['watchlist-stats'] })
     },
-    onError: (err) => console.error('[Watchlist] Failed to delete item:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   // Dossier queries and mutations — #92 status filter wired here
@@ -466,7 +466,7 @@ export function Watchlist() {
     mutationFn: (data: { name: string; description: string; color: string }) =>
       dossierApi.create(data),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['dossiers'] }),
-    onError: (err) => console.error('[Watchlist] Failed to create dossier:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   const deleteDossier = useMutation({
@@ -475,7 +475,7 @@ export function Watchlist() {
       if (activeDossierId === id) setActiveDossierId(null)
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
     },
-    onError: (err) => console.error('[Watchlist] Failed to delete dossier:', err),
+    onError: () => { /* handled by toast */ },
   })
 
   const isLoading = itemsLoading

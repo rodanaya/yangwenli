@@ -23,7 +23,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
-import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
 import type {
   InvestigationValidationStatus,
   InvestigationVendor,
@@ -59,10 +59,9 @@ type PriorityLevel = 'critical' | 'high' | 'medium' | 'low'
 // ============================================================================
 
 function getPriority(score: number): { level: PriorityLevel; n: number } {
-  if (score >= 0.75) return { level: 'critical', n: 1 }
-  if (score >= 0.50) return { level: 'high', n: 2 }
-  if (score >= 0.25) return { level: 'medium', n: 3 }
-  return { level: 'low', n: 4 }
+  const level = getRiskLevelFromScore(score)
+  const n = level === 'critical' ? 1 : level === 'high' ? 2 : level === 'medium' ? 3 : 4
+  return { level, n }
 }
 
 const PRIORITY_BADGE: Record<PriorityLevel, string> = {

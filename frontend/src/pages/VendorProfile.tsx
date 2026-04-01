@@ -16,7 +16,7 @@ import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
 import { RedThreadPanel } from '@/components/RedThreadPanel'
 import { PercentileBadge } from '@/components/PercentileBadge'
 import { GenerateReportButton } from '@/components/GenerateReportButton'
-import { RISK_COLORS, SECTOR_COLORS } from '@/lib/constants'
+import { RISK_COLORS, SECTOR_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
 import { InfoTooltip } from '@/components/ui/info-tooltip'
 import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
@@ -1374,9 +1374,9 @@ export function VendorProfile() {
         }
         // Risk score
         const score = vendor.avg_risk_score ?? 0
-        if (score >= 0.50) {
+        if (score >= RISK_THRESHOLDS.critical) {
           flags.push({ icon: '🔴', text: `Critical risk score (${(score * 100).toFixed(0)}/100) — strongest similarity to documented corruption patterns`, severity: 'critical' })
-        } else if (score >= 0.30) {
+        } else if (score >= RISK_THRESHOLDS.high) {
           flags.push({ icon: '🟠', text: `High risk score (${(score * 100).toFixed(0)}/100) — strong similarity to documented corruption patterns`, severity: 'high' })
         }
         // Procurement patterns

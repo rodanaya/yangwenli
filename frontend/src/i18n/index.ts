@@ -83,6 +83,8 @@ import esInstitutionleague from './locales/es/institutionleague.json'
 import enInstitutionleague from './locales/en/institutionleague.json'
 import esCollusion from './locales/es/collusion.json'
 import enCollusion from './locales/en/collusion.json'
+import esSettings from './locales/es/settings.json'
+import enSettings from './locales/en/settings.json'
 
 i18n
   .use(LanguageDetector)
@@ -115,6 +117,7 @@ i18n
         scandals: esScandals,
         institutionleague: esInstitutionleague,
         collusion: esCollusion,
+        settings: esSettings,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -142,6 +145,7 @@ i18n
         scandals: enScandals,
         institutionleague: enInstitutionleague,
         collusion: enCollusion,
+        settings: enSettings,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

@@ -1,0 +1,42 @@
+{
+  "pageTitle": "Configuración de la Plataforma",
+  "pageDescription": "Configure preferencias, exporte datos y revise la calidad de los datos",
+  "tabs": {
+    "general": "General",
+    "export": "Exportar",
+    "quality": "Calidad de Datos"
+  },
+  "general": {
+    "dataInfo": {
+      "title": "Información de Datos",
+      "description": "Acerca de los datos de contratación",
+      "refreshLabel": "Actualizar estadísticas",
+      "database": "Base de datos",
+      "totalContracts": "Total de Contratos",
+      "totalVendors": "Total de Proveedores",
+      "totalInstitutions": "Total de Instituciones",
+      "totalValue": "Valor Total",
+      "timeRange": "Rango de Años",
+      "source": "Fuente",
+      "loadError": "Error al cargar estadísticas"
+    },
+    "about": {
+      "title": "Acerca de RUBLI",
+      "description": "RUBLI (Red Unificada de Búsqueda de Licitaciones Irregulares) es una plataforma de detección de corrupción con inteligencia artificial para la contratación pública federal de México. Nombrada en referencia al concepto de red unificada para detectar patrones irregulares de contratación en los sectores federales."
+    }
+  },
+  "export": {
+    "limitsTitle": "Límites de Exportación",
+    "limitsDescription": "Las exportaciones están limitadas a {{count}} registros por defecto. Para exportaciones más grandes, contacte al administrador o use la API directamente.",
+    "contracts": {
+      "title": "Contratos",
+      "description": "Exportar datos de contratos con puntuaciones de riesgo y clasificaciones"
+    },
+    "vendors": {
+      "title": "Proveedores",
+      "description": "Exportar perfiles de proveedores con métricas de riesgo y clasificaciones"
+    },
+    "exportSuccess": "{{type}} exportado como {{format}} exitosamente.",
+    "exportError": "Error en la exportación: {{error}}"
+  }
+}

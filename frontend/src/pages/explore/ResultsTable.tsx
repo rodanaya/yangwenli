@@ -4,7 +4,7 @@ import { Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { vendorApi, institutionApi, dossierApi } from '@/api/client'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { RISK_COLORS, SECTORS, getRiskLevelFromScore } from '@/lib/constants'
+import { RISK_COLORS, SECTORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
   ExternalLink,
@@ -155,7 +155,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     const pageAvgRisk = vendors.length > 0
       ? vendors.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / vendors.length
       : 0
-    const pageHighPlus = vendors.filter(v => (v.avg_risk_score || 0) >= 0.30).length
+    const pageHighPlus = vendors.filter(v => (v.avg_risk_score || 0) >= RISK_THRESHOLDS.high).length
     const aiConfirmedCount = allVendors.filter(isAiConfirmed).length
     return (
       <div>
@@ -223,7 +223,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   const instPageAvgRisk = institutions.length > 0
     ? institutions.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / institutions.length
     : 0
-  const instPageHighPlus = institutions.filter(v => (v.avg_risk_score || 0) >= 0.30).length
+  const instPageHighPlus = institutions.filter(v => (v.avg_risk_score || 0) >= RISK_THRESHOLDS.high).length
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">

@@ -16,7 +16,7 @@ import {
   toTitleCase,
   getRiskLevel,
 } from '@/lib/utils'
-import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { vendorApi, analysisApi } from '@/api/client'
 import type { FlashVendorItem } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
@@ -248,8 +248,8 @@ export default function VendorsTab() {
     const totalValue = vendors.reduce((s, v) => s + v.total_value_mxn, 0)
     const totalContracts = vendors.reduce((s, v) => s + v.total_contracts, 0)
     const avgRisk = vendors.reduce((s, v) => s + (v.avg_risk_score || 0), 0) / vendors.length
-    const highRiskCount = vendors.filter((v) => (v.avg_risk_score || 0) >= 0.30).length
-    const criticalCount = vendors.filter((v) => (v.avg_risk_score || 0) >= 0.50).length
+    const highRiskCount = vendors.filter((v) => (v.avg_risk_score || 0) >= RISK_THRESHOLDS.high).length
+    const criticalCount = vendors.filter((v) => (v.avg_risk_score || 0) >= RISK_THRESHOLDS.critical).length
     return { totalValue, totalContracts, avgRisk, highRiskCount, criticalCount }
   }, [data])
 
@@ -341,7 +341,7 @@ export default function VendorsTab() {
             )}
             <input
               type="text"
-              placeholder="Search name or RFC..."
+              placeholder={t('vendors.searchPlaceholder')}
               className="h-8 w-48 rounded-md border border-border bg-background-card pl-8 pr-3 text-xs focus:outline-none focus:ring-1 focus:ring-accent"
               value={searchInput}
               onChange={(e) => { setSearchInput(e.target.value); setActivePreset(null) }}
