@@ -49,9 +49,10 @@ services:
     container_name: rubli-backup
     # Mount RUBLI_DEPLOY.db (real file, not symlink) read-write so WAL checkpoint can run before backup.
     # The script calls PRAGMA wal_checkpoint(TRUNCATE) to flush WAL into the main file before copying.
+    user: root  # volume is root:root 755; app user (uid=100) can't write backups
     entrypoint: ["sh", "-c", "while true; do python -m scripts.backup_database --output-dir /backups && sleep 86400; done"]
     volumes:
-      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_NORMALIZED.db  # rw: checkpoint requires write access; file is 666 on prod
+      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_NORMALIZED.db  # rw: SQLite needs to create -shm sidecar in WAL mode
       - rubli-backups:/backups
     environment:
       - PYTHONPATH=/app
