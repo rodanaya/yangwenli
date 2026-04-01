@@ -228,7 +228,7 @@ const LIMITATIONS = [
     icon: TrendingUp,
     title: 'Temporal Feature Leakage — Vendor Aggregates Use Future Data',
     severity: 'medium',
-    summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. v6.0 mitigates this with vendor-stratified splitting but the underlying feature leakage persists.',
+    summary: 'Vendor-level features (concentration, win rate, price volatility) are computed using full-dataset history (2002–2025). A 2019 contract uses its vendor\'s 2020–2025 activity. v6.5 mitigates this with vendor-stratified splitting but the underlying feature leakage persists.',
     body: [
       'Five features — vendor_concentration, win_rate, price_volatility, institution_diversity, sector_spread — are computed as vendor-level aggregates over all available data (2002–2025). When scoring a contract from 2019, these features include information from 2020–2025 that could not have been known at award time.',
       'v6.5 mitigates the validation impact by using vendor-stratified splitting (no vendor in both train and test), which prevents the model from memorizing individual vendor patterns. The test AUC of 0.828 reflects honest generalization to unseen vendors. However, the underlying feature leakage in vendor aggregates persists.',

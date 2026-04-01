@@ -470,7 +470,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
-  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v6.0 model.',
+  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v6.5 model.',
   industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
   same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
@@ -1533,7 +1533,7 @@ export function VendorProfile() {
           </CardHeader>
           <CardContent>
             <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              ⚠ This is a <strong>separate heuristic analysis</strong>. The v6.0 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
+              ⚠ This is a <strong>separate heuristic analysis</strong>. The v6.5 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
             </div>
             <p className="text-sm text-text-muted mb-4">
               {t('coBidding.description')}
