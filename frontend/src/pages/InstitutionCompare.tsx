@@ -120,7 +120,7 @@ const METRICS: MetricDef[] = [
   {
     label: 'Adjudicacion directa',
     getValue: (i) => i.direct_award_pct ?? null,
-    format: (n) => formatPercentSafe(n),
+    format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
@@ -132,13 +132,13 @@ const METRICS: MetricDef[] = [
   {
     label: 'Contratos alto riesgo',
     getValue: (i) => i.high_risk_pct ?? null,
-    format: (n) => formatPercentSafe(n),
+    format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
     label: 'Licitante unico',
     getValue: (i) => i.single_bid_pct ?? null,
-    format: (n) => formatPercentSafe(n),
+    format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
@@ -247,7 +247,7 @@ function InstitutionPreviewCard({
         <div>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Adj. Directa</p>
           <p className="text-sm font-bold text-text-primary tabular-nums">
-            {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct) : '--'}
+            {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct, false) : '--'}
           </p>
         </div>
       </div>
