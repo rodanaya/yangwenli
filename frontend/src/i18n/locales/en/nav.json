@@ -37,8 +37,10 @@
   "workspace": "Workspace",
   "investigation": "Investigation",
   "caseLibrary": "Cases",
+  "scandals": "Scandals",
   "ariaQueue": "Intelligence Briefing",
   "sectors": "Sectors",
+  "institutionLeague": "Institution League",
   "groundTruth": "Ground Truth",
   "model": "Model Transparency",
   "methodology": "Methodology",
@@ -63,5 +65,6 @@
   "tagline": "Procurement Transparency",
   "contractsIndexed": "3.1M contracts indexed",
   "contractsIndexedShort": "3.1M indexed",
-  "reportIssue": "Report an issue"
+  "reportIssue": "Report an issue",
+  "collusion": "Collusion Explorer"
 }

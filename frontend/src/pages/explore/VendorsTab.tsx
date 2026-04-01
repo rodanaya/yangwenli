@@ -44,6 +44,7 @@ import {
 } from 'lucide-react'
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
+import { VendorBadge } from '@/components/ui/VendorBadge'
 import {
   ScatterChart,
   Scatter,
@@ -877,6 +878,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
               {isActive && (
                 <span className="w-1.5 h-1.5 rounded-full bg-risk-low animate-pulse shrink-0" title="Active (recent contracts)" />
               )}
+              <VendorBadge isEfos={vendor.is_efos} efosStage={vendor.efos_stage} isSfp={vendor.is_sfp_sanctioned} />
             </div>
             <div className="flex items-center gap-2 mt-0.5">
               {sector && (

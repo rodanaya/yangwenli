@@ -61,6 +61,9 @@ const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const Telescope = lazy(() => import('@/pages/Telescope'))
 const Seismograph = lazy(() => import('@/pages/Seismograph'))
+const Scandals = lazy(() => import('@/pages/Scandals'))
+const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
+const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 
 // First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
 function FirstVisitRedirect() {
@@ -435,9 +438,34 @@ function App() {
                 }
               />
 
+              <Route
+                path="scandals"
+                element={
+                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
+                    <Scandals />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="collusion"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CollusionExplorer />
+                  </SuspenseBoundary>
+                }
+              />
+
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />
-              <Route path="institutions" element={<Navigate to="/explore?tab=institutions" replace />} />
+              <Route
+                path="institutions"
+                element={
+                  <SuspenseBoundary fallback={<TablePageSkeleton />}>
+                    <InstitutionLeague />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="analysis/risk" element={<Navigate to="/methodology" replace />} />
               <Route path="analysis/price" element={<Navigate to="/patterns" replace />} />
               <Route path="analysis/detective" element={<Navigate to="/patterns" replace />} />

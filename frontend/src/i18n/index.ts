@@ -77,6 +77,12 @@ import esTelescope from './locales/es/telescope.json'
 import enTelescope from './locales/en/telescope.json'
 import esJournalists from './locales/es/journalists.json'
 import enJournalists from './locales/en/journalists.json'
+import esScandals from './locales/es/scandals.json'
+import enScandals from './locales/en/scandals.json'
+import esInstitutionleague from './locales/es/institutionleague.json'
+import enInstitutionleague from './locales/en/institutionleague.json'
+import esCollusion from './locales/es/collusion.json'
+import enCollusion from './locales/en/collusion.json'
 
 i18n
   .use(LanguageDetector)
@@ -106,6 +112,9 @@ i18n
         seismograph: esSeismograph,
         telescope: esTelescope,
         journalists: esJournalists,
+        scandals: esScandals,
+        institutionleague: esInstitutionleague,
+        collusion: esCollusion,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -130,6 +139,9 @@ i18n
         seismograph: enSeismograph,
         telescope: enTelescope,
         journalists: enJournalists,
+        scandals: enScandals,
+        institutionleague: enInstitutionleague,
+        collusion: enCollusion,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

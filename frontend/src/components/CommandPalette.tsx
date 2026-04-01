@@ -26,6 +26,14 @@ import { searchApi } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
 import { useSavedSearches } from '@/hooks/useSavedSearches'
 import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { VendorBadge } from '@/components/ui/VendorBadge'
+
+// Mexican RFC pattern: 3-4 uppercase letters + 6 digits (YYMMDD) + 3 alphanumeric
+const RFC_PATTERN = /^[A-Z&Ñ]{3,4}\d{6}[A-Z0-9]{3}$/i
+
+function isRfcQuery(q: string): boolean {
+  return RFC_PATTERN.test(q.trim())
+}
 
 // ---------------------------------------------------------------------------
 // Quick-action definitions
@@ -322,6 +330,21 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
           </>
         )}
 
+        {/* ── RFC shortcut — shown when query looks like a Mexican RFC ── */}
+        {debouncedQuery.length >= 2 && isRfcQuery(debouncedQuery) && (
+          <CommandGroup heading="RFC search">
+            <CommandItem
+              value={`rfc-direct-${debouncedQuery}`}
+              onSelect={() => go(`/explore?tab=vendors&search=${encodeURIComponent(debouncedQuery.trim().toUpperCase())}`)}
+              className="gap-2"
+            >
+              <Users className="h-3.5 w-3.5 text-accent shrink-0" />
+              <span className="text-accent font-medium">Search by RFC:</span>
+              <span className="font-mono text-xs text-text-primary shrink-0">{debouncedQuery.trim().toUpperCase()}</span>
+            </CommandItem>
+          </CommandGroup>
+        )}
+
         {/* ── Entity results (ranked by risk level via backend ORDER BY) ── */}
         {hasResults && (
           <>
@@ -339,6 +362,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                       <Users className="h-3.5 w-3.5 text-text-muted shrink-0" />
                       <span className="truncate">{v.name}</span>
                       {v.rfc && <span className="text-xs font-mono text-text-muted ml-1 shrink-0">{v.rfc}</span>}
+                      <VendorBadge isEfos={v.is_efos} isSfp={v.is_sfp_sanctioned} />
                       {riskLevel && riskLevel !== 'low' && <RiskPill level={riskLevel} />}
                     </CommandItem>
                   )

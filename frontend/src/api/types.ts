@@ -277,6 +277,9 @@ export interface VendorListItem {
   years_active?: number
   primary_sector_id?: number
   pct_anomalous?: number
+  is_efos?: boolean
+  efos_stage?: string | null
+  is_sfp_sanctioned?: boolean
 }
 
 export interface VendorDetailResponse {
@@ -2388,3 +2391,31 @@ export interface VendorNarrativeResponse {
 export interface AdminVendorEntry { vendor_name: string; total_mxn: number; contracts: number; avg_risk: number | null }
 export interface AdminEraStats { era: string; year_start: number; year_end: number; top_vendors: AdminVendorEntry[]; gt_case_count: number; est_fraud_mxn: number; hhi: number; dec_spike_pct: number }
 export interface AdminBreakdownResponse { eras: AdminEraStats[]; cached_at: string | null }
+
+// ============================================================================
+// Collusion / Co-bidding Types
+// ============================================================================
+
+export interface CollusionPair {
+  vendor_id_a: number
+  vendor_id_b: number
+  vendor_name_a: string
+  vendor_name_b: string
+  shared_procedures: number
+  vendor_a_procedures: number
+  vendor_b_procedures: number
+  co_bid_rate: number
+  is_potential_collusion: boolean
+}
+
+export interface CollusionPairsResponse {
+  data: CollusionPair[]
+  pagination: PaginationMeta
+}
+
+export interface CollusionStats {
+  total_pairs: number
+  potential_collusion_count: number
+  total_shared_procedures: number
+  max_co_bid_rate: number
+}

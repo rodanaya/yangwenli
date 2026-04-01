@@ -1,0 +1,25 @@
+{
+  "pageTitle": "Procurement Scandals",
+  "pageTitleEs": "Escándalos de Corrupción",
+  "pageSubhead": "Corruption Chronicle — Federal Mexico 2001–2025",
+  "pageDesc": "43 documented cases of fraud and corruption in Mexican federal procurement. Ranked by estimated financial impact.",
+  "goToCaseLibrary": "Full Investigation Files",
+  "legalStatus": "Legal status",
+  "viewCase": "Open case",
+  "byFraudType": "By Fraud Type",
+  "filterHint": "Sorted by fraud amount",
+  "resultCount": "{{count}} scandals",
+  "noResults": "No scandals match the current filters.",
+  "noResultsHint": "Try adjusting or clearing your filters.",
+  "clearFilters": "Clear filters",
+  "loadError": "Failed to load scandals. Please try again.",
+  "gridLabel": "Procurement scandals",
+  "stats": {
+    "totalCases": "Cases",
+    "estimatedFraud": "Estimated fraud",
+    "sectorsAffected": "Sectors affected",
+    "impunityRate": "Impunity rate",
+    "mlLinked": "Model-linked"
+  },
+  "disclaimer": "Risk scores and fraud estimates are statistical indicators derived from procurement records. High scores indicate patterns similar to documented corruption cases — not proof of wrongdoing. All figures in MXN. Sources: ASF, SFP, MCCI, FGR, Animal Político."
+}

@@ -81,6 +81,7 @@ from .routers.stories import router as stories_router
 from .routers.health import router as health_router
 from .routers.analysis_patterns import router as analysis_patterns_router
 from .routers.analysis_vendor_sector import router as analysis_vendor_sector_router
+from .routers.collusion import router as collusion_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -294,6 +295,7 @@ _CACHE_MED_PREFIXES = (  # 10min — analytical read-only aggregates
     "/api/v1/industries",
     "/api/v1/categories",
     "/api/v1/procurement-health",
+    "/api/v1/collusion",
 )
 _CACHE_SHORT_PREFIXES = (  # 5min — entity profiles (change only with new data)
     "/api/v1/vendors",
@@ -346,6 +348,7 @@ app.include_router(network_router, prefix="/api/v1")
 app.include_router(analysis_router, prefix="/api/v1")
 app.include_router(analysis_patterns_router, prefix="/api/v1")
 app.include_router(analysis_vendor_sector_router, prefix="/api/v1")
+app.include_router(collusion_router, prefix="/api/v1")
 app.include_router(watchlist_folders_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")

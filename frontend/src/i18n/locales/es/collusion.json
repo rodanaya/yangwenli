@@ -1,0 +1,48 @@
+{
+  "title": "Explorador de Colusión",
+  "subtitle": "Análisis de patrones de manipulación de licitaciones — pares de proveedores con actividad sospechosa de oferta conjunta",
+  "stats": {
+    "totalPairs": "Pares Analizados",
+    "totalPairsSub": "pares únicos de proveedores",
+    "flaggedPairs": "Pares Marcados",
+    "flaggedPairsSub": "posible colusión detectada",
+    "sharedProcedures": "Procedimientos Compartidos",
+    "sharedProceduresSub": "eventos de oferta conjunta",
+    "maxRate": "Tasa Máxima de Co-oferta",
+    "maxRateSub": "entre pares marcados"
+  },
+  "filters": {
+    "showFlaggedOnly": "Solo marcados",
+    "minShared": "Mín. procedimientos compartidos",
+    "sortBy": "Ordenar por",
+    "sortShared": "Procedimientos compartidos",
+    "sortRate": "Tasa de co-oferta"
+  },
+  "table": {
+    "vendorA": "Proveedor A",
+    "vendorB": "Proveedor B",
+    "sharedProcedures": "Procedimientos Compartidos",
+    "coBidRate": "Tasa de Co-oferta",
+    "status": "Estado",
+    "flagged": "Marcado",
+    "monitored": "Monitoreado"
+  },
+  "tooltip": {
+    "coBidRateTitle": "¿Qué es la Tasa de Co-oferta?",
+    "coBidRateBody": "La tasa de co-oferta es el porcentaje de procedimientos en los que ambos proveedores presentaron ofertas simultáneamente. Tasas superiores al 70% combinadas con un alto volumen de procedimientos compartidos pueden indicar licitación coordinada — donde los proveedores colusionan para influir en quién gana."
+  },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Página {{page}} de {{total}}",
+    "showing": "Mostrando {{from}}–{{to}} de {{total}} pares"
+  },
+  "empty": "Ningún par coincide con los filtros actuales.",
+  "loading": "Cargando datos de colusión...",
+  "error": "Error al cargar datos de colusión. Por favor intente de nuevo.",
+  "editorial": {
+    "section": "ANÁLISIS RUBLI",
+    "headline": "Inteligencia de Colusión",
+    "badge": "MANIPULACIÓN DE LICITACIONES"
+  }
+}

@@ -37,8 +37,10 @@
   "workspace": "Espacio de Trabajo",
   "investigation": "Investigación",
   "caseLibrary": "Casos",
+  "scandals": "Escándalos",
   "ariaQueue": "Alertas de inteligencia",
   "sectors": "Sectores",
+  "institutionLeague": "Liga Institucional",
   "groundTruth": "Casos documentados",
   "model": "Transparencia del Modelo",
   "methodology": "Metodología",
@@ -63,5 +65,6 @@
   "tagline": "Transparencia en Contrataciones",
   "contractsIndexed": "3.1M contratos indexados",
   "contractsIndexedShort": "3.1M indexados",
-  "reportIssue": "Reportar un problema"
+  "reportIssue": "Reportar un problema",
+  "collusion": "Explorador de Colusión"
 }

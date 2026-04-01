@@ -114,12 +114,23 @@ class VendorService(BaseService):
             default="s.total_contracts DESC",
         )
 
+        # LEFT JOIN EFOS — one row per RFC so no duplicates
+        qb.left_join(
+            "(SELECT rfc, MIN(stage) AS stage FROM sat_efos_vendors GROUP BY rfc) efos",
+            "v.rfc IS NOT NULL AND v.rfc != '' AND v.rfc = efos.rfc",
+        )
+        # Scalar EXISTS for SFP — avoids fan-out when vendor has multiple sanctions
         columns = """
             v.id, v.name, v.rfc, v.name_normalized,
             s.total_contracts, s.total_value_mxn, s.avg_risk_score,
             s.high_risk_pct, s.direct_award_pct, s.single_bid_pct,
             s.first_contract_year, s.last_contract_year,
-            s.primary_sector_id, s.anomalous_pct
+            s.primary_sector_id, s.anomalous_pct,
+            CASE WHEN efos.rfc IS NOT NULL THEN 1 ELSE 0 END AS is_efos,
+            efos.stage AS efos_stage,
+            CASE WHEN v.rfc IS NOT NULL AND v.rfc != ''
+                      AND EXISTS (SELECT 1 FROM sfp_sanctions ss WHERE ss.rfc = v.rfc)
+                 THEN 1 ELSE 0 END AS is_sfp_sanctioned
         """
 
         return self._paginated_list(
@@ -144,6 +155,9 @@ class VendorService(BaseService):
             "last_contract_year": row["last_contract_year"],
             "primary_sector_id": row["primary_sector_id"],
             "pct_anomalous": round(row["anomalous_pct"], 2) if row["anomalous_pct"] else None,
+            "is_efos": bool(row["is_efos"]),
+            "efos_stage": row["efos_stage"],
+            "is_sfp_sanctioned": bool(row["is_sfp_sanctioned"]),
         }
 
     def get_vendor_detail(

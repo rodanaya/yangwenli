@@ -28,6 +28,8 @@ class VendorResult(BaseModel):
     rfc: Optional[str] = None
     contracts: int
     risk_score: Optional[float] = None
+    is_efos: bool = False
+    is_sfp_sanctioned: bool = False
 
 class InstitutionResult(BaseModel):
     id: int
@@ -65,14 +67,21 @@ def _search_vendors(q: str, limit: int) -> list[VendorResult]:
     try:
         with get_db() as conn:
             # Use name_normalized index when available (2x faster than raw name LIKE).
-            # Also match rfc prefix (rfc values never have leading wildcards needed).
+            # Also match rfc prefix. LEFT JOINs attach watchlist flags at query time.
             cur = conn.execute(
                 """
                 SELECT v.id, v.name, v.rfc,
                        COALESCE(vs.total_contracts, 0) AS contracts,
-                       vs.avg_risk_score
+                       vs.avg_risk_score,
+                       CASE WHEN efos.rfc IS NOT NULL THEN 1 ELSE 0 END AS is_efos,
+                       CASE WHEN v.rfc IS NOT NULL AND v.rfc != ''
+                                 AND EXISTS (SELECT 1 FROM sfp_sanctions ss WHERE ss.rfc = v.rfc)
+                            THEN 1 ELSE 0 END AS is_sfp_sanctioned
                 FROM vendors v
                 LEFT JOIN vendor_stats vs ON v.id = vs.vendor_id
+                LEFT JOIN (
+                    SELECT rfc, MIN(stage) AS stage FROM sat_efos_vendors GROUP BY rfc
+                ) efos ON v.rfc IS NOT NULL AND v.rfc != '' AND v.rfc = efos.rfc
                 WHERE v.name_normalized LIKE ?
                    OR (v.rfc IS NOT NULL AND v.rfc LIKE ?)
                 ORDER BY contracts DESC
@@ -88,6 +97,8 @@ def _search_vendors(q: str, limit: int) -> list[VendorResult]:
                 rfc=r["rfc"],
                 contracts=r["contracts"] or 0,
                 risk_score=r["avg_risk_score"],
+                is_efos=bool(r["is_efos"]),
+                is_sfp_sanctioned=bool(r["is_sfp_sanctioned"]),
             )
             for r in rows
         ]

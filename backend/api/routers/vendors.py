@@ -2799,3 +2799,103 @@ def get_vendor_narrative(vendor_id: int = Path(..., ge=1)):
         "total_value_mxn": total_value,
         "years": years_data,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# vendor_rolling_stats timeline
+# ─────────────────────────────────────────────────────────────────────────────
+
+class VendorRollingStatsItem(BaseModel):
+    vendor_id: int
+    sector_id: int
+    as_of_year: int
+    total_value: float
+    total_count: int
+    comp_wins: int
+    comp_total: int
+    n_institutions: int
+    n_sectors: int
+    win_rate: Optional[float] = None
+
+
+class VendorRollingStatsResponse(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    rows: List[VendorRollingStatsItem]
+
+
+@router.get("/{vendor_id:int}/timeline", response_model=VendorRollingStatsResponse)
+def get_vendor_rolling_timeline(
+    vendor_id: int = Path(..., description="Vendor ID"),
+):
+    """
+    Return year-by-year cumulative stats for a vendor from vendor_rolling_stats.
+
+    Each row covers one (vendor_id, sector_id, as_of_year) combination.
+    Rows are ordered by as_of_year ASC.  Derived win_rate = comp_wins / comp_total
+    when comp_total > 0, otherwise null.
+
+    This table is precomputed by scripts/compute_vendor_rolling_stats.py and
+    provides point-in-time feature values used by the v6.x scoring pipeline.
+    """
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        vendor_row = cursor.execute(
+            "SELECT name FROM vendors WHERE id = ?", (vendor_id,)
+        ).fetchone()
+        if not vendor_row:
+            raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
+
+        # Confirm table exists (may not exist on older deploys)
+        table_check = cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='vendor_rolling_stats'"
+        ).fetchone()
+        if not table_check:
+            raise HTTPException(
+                status_code=404,
+                detail="vendor_rolling_stats table not found — run compute_vendor_rolling_stats.py first"
+            )
+
+        rows = cursor.execute(
+            """
+            SELECT
+                vendor_id,
+                sector_id,
+                as_of_year,
+                COALESCE(total_value, 0.0)  AS total_value,
+                COALESCE(total_count, 0)    AS total_count,
+                COALESCE(comp_wins, 0)      AS comp_wins,
+                COALESCE(comp_total, 0)     AS comp_total,
+                COALESCE(n_institutions, 0) AS n_institutions,
+                COALESCE(n_sectors, 0)      AS n_sectors
+            FROM vendor_rolling_stats
+            WHERE vendor_id = ?
+            ORDER BY as_of_year ASC, sector_id ASC
+            """,
+            (vendor_id,),
+        ).fetchall()
+
+        result = []
+        for r in rows:
+            comp_total = r["comp_total"]
+            comp_wins = r["comp_wins"]
+            win_rate = round(comp_wins / comp_total, 4) if comp_total > 0 else None
+            result.append({
+                "vendor_id": r["vendor_id"],
+                "sector_id": r["sector_id"],
+                "as_of_year": r["as_of_year"],
+                "total_value": r["total_value"],
+                "total_count": r["total_count"],
+                "comp_wins": comp_wins,
+                "comp_total": comp_total,
+                "n_institutions": r["n_institutions"],
+                "n_sectors": r["n_sectors"],
+                "win_rate": win_rate,
+            })
+
+        return {
+            "vendor_id": vendor_id,
+            "vendor_name": vendor_row["name"],
+            "rows": result,
+        }

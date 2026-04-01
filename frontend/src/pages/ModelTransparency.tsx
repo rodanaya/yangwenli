@@ -1090,6 +1090,16 @@ export default function ModelTransparency() {
   })
 
   // ------------------------------------------------------------------
+  // Live model calibration — full coefficients + CIs from model_calibration
+  // ------------------------------------------------------------------
+  const { data: modelCalibration, isLoading: calibrationLoading } = useQuery({
+    queryKey: ['model', 'calibration'],
+    queryFn: () => analysisApi.getModelCalibration(),
+    staleTime: 30 * 60 * 1000,
+    retry: 1,
+  })
+
+  // ------------------------------------------------------------------
   // Live feature importance from API (per-sector or global)
   // ------------------------------------------------------------------
   const { data: featureImportance } = useQuery({
@@ -1137,9 +1147,33 @@ export default function ModelTransparency() {
 
   // ------------------------------------------------------------------
   // L2: Prepare coefficient chart data (sorted by beta descending)
-  // Prefer live API data; fallback to hardcoded
+  // Priority: calibration API (with real CIs) > featureImportance API > hardcoded
   // ------------------------------------------------------------------
   const coefficientData = useMemo(() => {
+    // Prefer live calibration data for global model (has real bootstrap CIs)
+    if (!coeffSectorId && modelCalibration?.coefficients?.length) {
+      return modelCalibration.coefficients.map((c) => {
+        const direction: Coefficient['direction'] =
+          c.beta > 0.001 ? 'positive' : c.beta < -0.001 ? 'negative' : 'zeroed'
+        const ciLower = c.ci_lower ?? c.beta
+        const ciUpper = c.ci_upper ?? c.beta
+        return {
+          factor: c.factor,
+          beta: c.beta,
+          raw_beta: c.beta,
+          ci_lower: ciLower,
+          ci_upper: ciUpper,
+          direction,
+          label: FACTOR_LABELS[c.factor] ?? c.factor.replace(/_/g, ' ').replace(/\b\w/g, (ch) => ch.toUpperCase()),
+          displayBeta: c.beta,
+          errorLower: Math.max(0, c.beta - ciLower),
+          errorUpper: Math.max(0, ciUpper - c.beta),
+          fill: DIRECTION_COLORS[direction],
+          note: undefined,
+        }
+      })
+      // already sorted by abs(beta) DESC from backend
+    }
     if (featureImportance && featureImportance.length > 0) {
       return featureImportance
         .map((f) => {
@@ -1171,7 +1205,7 @@ export default function ModelTransparency() {
         fill: DIRECTION_COLORS[c.direction],
       }))
       .sort((a, b) => b.beta - a.beta)
-  }, [featureImportance])
+  }, [coeffSectorId, modelCalibration, featureImportance])
 
   // ------------------------------------------------------------------
   // L3: Prepare comparison chart data
@@ -1231,27 +1265,52 @@ export default function ModelTransparency() {
           </p>
         </div>
       </div>
-      {/* #77 — Model Version Tag */}
+      {/* #77 — Model Version Tag (live from model_calibration) */}
       <div className="flex flex-wrap items-start gap-3 rounded-md border border-border/40 bg-background-elevated/30 px-4 py-3 text-xs">
-        <div className="flex items-center gap-2 shrink-0">
-          <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-          <span className="font-semibold text-text-primary font-mono">v6.5 (C=0.01)</span>
-        </div>
-        <span className="text-text-muted/40">|</span>
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="text-text-muted shrink-0">Run ID:</span>
-          <span className="font-mono text-text-secondary truncate">CAL-v6.1-202603191034</span>
-        </div>
-        <span className="text-text-muted/40">|</span>
-        <div className="flex items-center gap-1.5">
-          <span className="text-text-muted shrink-0">Hyperparams:</span>
-          <span className="font-mono text-text-secondary">C=0.0100, l1_ratio=0.9673</span>
-        </div>
-        <span className="text-text-muted/40">|</span>
-        <div className="flex items-center gap-1.5">
-          <span className="text-text-muted shrink-0">PU c:</span>
-          <span className="font-mono text-text-secondary">0.3432</span>
-        </div>
+        {calibrationLoading ? (
+          <>
+            <Skeleton className="h-4 w-24" />
+            <Skeleton className="h-4 w-40" />
+            <Skeleton className="h-4 w-36" />
+            <Skeleton className="h-4 w-20" />
+          </>
+        ) : (
+          <>
+            <div className="flex items-center gap-2 shrink-0">
+              <Brain className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+              <span className="font-semibold text-text-primary font-mono">
+                {modelCalibration
+                  ? `${modelCalibration.model_version} (C=${modelCalibration.hyperparameters?.C ?? '0.01'})`
+                  : 'v6.5 (C=0.01)'}
+              </span>
+            </div>
+            <span className="text-text-muted/40">|</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="text-text-muted shrink-0">Run ID:</span>
+              <span className="font-mono text-text-secondary truncate">
+                {modelCalibration?.run_id ?? 'CAL-v6.1-202603251039'}
+              </span>
+            </div>
+            <span className="text-text-muted/40">|</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-text-muted shrink-0">Hyperparams:</span>
+              <span className="font-mono text-text-secondary">
+                {modelCalibration?.hyperparameters
+                  ? `C=${modelCalibration.hyperparameters.C}, l1_ratio=${modelCalibration.hyperparameters.l1_ratio}`
+                  : 'C=0.0100, l1_ratio=0.9673'}
+              </span>
+            </div>
+            <span className="text-text-muted/40">|</span>
+            <div className="flex items-center gap-1.5">
+              <span className="text-text-muted shrink-0">PU c:</span>
+              <span className="font-mono text-text-secondary">
+                {modelCalibration?.pu_correction_c != null
+                  ? modelCalibration.pu_correction_c.toFixed(4)
+                  : '0.3000'}
+              </span>
+            </div>
+          </>
+        )}
       </div>
 
       <div className="flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/[0.04] px-3 py-2 text-xs text-text-muted">

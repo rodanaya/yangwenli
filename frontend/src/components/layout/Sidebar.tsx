@@ -25,6 +25,9 @@ import {
   Award,
   History,
   CalendarDays,
+  AlertTriangle,
+  Building2,
+  GitMerge,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -70,6 +73,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'journalists', href: '/journalists', icon: FileSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
+      { i18nKey: 'scandals', href: '/scandals', icon: AlertTriangle },
+      { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
@@ -80,6 +85,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
+      { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'seismograph', href: '/seismograph', icon: Activity },
       { i18nKey: 'telescope', href: '/telescope', icon: Telescope },

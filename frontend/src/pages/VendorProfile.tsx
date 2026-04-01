@@ -867,6 +867,15 @@ export function VendorProfile() {
     retry: false,
   })
 
+  // Rolling stats timeline from vendor_rolling_stats — deferred until Risk tab
+  const { data: rollingTimeline } = useQuery({
+    queryKey: ['vendor', vendorId, 'rolling-timeline'],
+    queryFn: () => vendorApi.getRollingTimeline(vendorId),
+    enabled: !!vendorId && activeTab === 'risk',
+    staleTime: 60 * 60 * 1000,
+    retry: false,
+  })
+
   // P14: ARIA investigation data — deferred until ARIA tab
   const { data: ariaData, isLoading: ariaLoading } = useQuery<AriaQueueItem>({
     queryKey: ['vendor', vendorId, 'aria-detail'],
@@ -2572,6 +2581,115 @@ export function VendorProfile() {
                   </CardContent>
                 </Card>
               )}
+
+              {/* Rolling Stats Timeline — year-over-year from vendor_rolling_stats */}
+              {(() => {
+                if (!rollingTimeline?.rows?.length) return null
+                // Aggregate across sectors: sum total_value and total_count per year
+                const byYear = new Map<number, { total_value: number; total_count: number; comp_wins: number; comp_total: number }>()
+                for (const r of rollingTimeline.rows) {
+                  const prev = byYear.get(r.as_of_year) ?? { total_value: 0, total_count: 0, comp_wins: 0, comp_total: 0 }
+                  byYear.set(r.as_of_year, {
+                    total_value: prev.total_value + r.total_value,
+                    total_count: prev.total_count + r.total_count,
+                    comp_wins: prev.comp_wins + r.comp_wins,
+                    comp_total: prev.comp_total + r.comp_total,
+                  })
+                }
+                const chartData = Array.from(byYear.entries())
+                  .sort(([a], [b]) => a - b)
+                  .map(([year, agg]) => ({
+                    year,
+                    total_value_m: agg.total_value / 1_000_000,
+                    win_rate: agg.comp_total > 0 ? Math.round((agg.comp_wins / agg.comp_total) * 100) : null,
+                  }))
+                if (chartData.length < 2) return null
+                return (
+                  <Card className="fern-card">
+                    <CardHeader className="pb-2">
+                      <CardTitle className="text-sm flex items-center gap-2">
+                        <BarChart3 className="h-4 w-4" />
+                        Rolling Activity (vendor_rolling_stats)
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div
+                        className="h-[120px]"
+                        role="img"
+                        aria-label="Composed chart showing cumulative value and win rate per year from rolling stats"
+                      >
+                        <span className="sr-only">Bar and line chart showing cumulative contract value in millions and win rate percentage per year.</span>
+                        <ResponsiveContainer width="100%" height="100%">
+                          <ComposedChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
+                            <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
+                            <XAxis
+                              dataKey="year"
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                            />
+                            <YAxis
+                              yAxisId="left"
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                              width={30}
+                              tickFormatter={(v: number) => `${v.toFixed(0)}M`}
+                            />
+                            <YAxis
+                              yAxisId="right"
+                              orientation="right"
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                              width={24}
+                              tickFormatter={(v: number) => `${v}%`}
+                              domain={[0, 100]}
+                            />
+                            <RechartsTooltip
+                              content={({ active, payload }) => {
+                                if (active && payload?.length) {
+                                  const d = payload[0]?.payload as { year: number; total_value_m: number; win_rate: number | null }
+                                  return (
+                                    <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg space-y-0.5">
+                                      <span className="font-medium">{d.year}</span>
+                                      <div className="text-text-muted">
+                                        Value: <span className="text-text-primary tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
+                                      </div>
+                                      {d.win_rate != null && (
+                                        <div className="text-text-muted">
+                                          Win rate: <span className="text-text-primary tabular-nums">{d.win_rate}%</span>
+                                        </div>
+                                      )}
+                                    </div>
+                                  )
+                                }
+                                return null
+                              }}
+                            />
+                            <Bar
+                              yAxisId="left"
+                              dataKey="total_value_m"
+                              name="Value (M MXN)"
+                              fill="var(--color-accent-data)"
+                              fillOpacity={0.5}
+                              radius={[2, 2, 0, 0]}
+                            />
+                            <Line
+                              yAxisId="right"
+                              type="monotone"
+                              dataKey="win_rate"
+                              name="Win rate %"
+                              stroke={riskColor}
+                              strokeWidth={2}
+                              dot={{ r: 2 }}
+                              connectNulls
+                            />
+                          </ComposedChart>
+                        </ResponsiveContainer>
+                      </div>
+                      <p className="text-[10px] text-text-muted mt-1">
+                        Cumulative value (bars, left axis) and competitive win rate % (line, right axis) by year.
+                        Source: vendor_rolling_stats point-in-time features.
+                      </p>
+                    </CardContent>
+                  </Card>
+                )
+              })()}
 
               {/* Statistical Anomaly */}
               {vendor.avg_mahalanobis != null && (

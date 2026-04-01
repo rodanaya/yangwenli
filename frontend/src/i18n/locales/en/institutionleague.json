@@ -1,0 +1,70 @@
+{
+  "eyebrow": "INSTITUTION TRANSPARENCY LEAGUE",
+  "title": "Institution Transparency League",
+  "subtitle": "Rankings based on competition rate, single-bid rate, price fairness, and risk indicators across {{total}} scored institutions",
+  "podiumTitle": "Top Performers",
+  "podiumSubtitle": "Institutions with the highest transparency scores",
+  "tableTitle": "Full Rankings",
+  "filters": {
+    "searchPlaceholder": "Search institutions...",
+    "sectorLabel": "Sector",
+    "allSectors": "All sectors",
+    "minContracts": "Min contracts",
+    "sortBy": "Sort by"
+  },
+  "stats": {
+    "totalScored": "Scored Institutions",
+    "medianScore": "Median Score",
+    "topPerformer": "Top Performer",
+    "worstPerformer": "Worst Performer"
+  },
+  "columns": {
+    "rank": "#",
+    "institution": "Institution",
+    "grade": "Grade",
+    "score": "Score",
+    "sector": "Sector",
+    "contracts": "Contracts",
+    "pillarOpenness": "Openness",
+    "pillarPrice": "Price",
+    "pillarVendors": "Vendors",
+    "pillarProcess": "Process",
+    "pillarExternal": "External",
+    "trend": "Trend",
+    "percentile": "National %ile"
+  },
+  "grades": {
+    "S": "Exemplary",
+    "A": "Strong",
+    "B+": "Good",
+    "B": "Adequate",
+    "C+": "Watch",
+    "C": "Concerning",
+    "D": "High Risk",
+    "D-": "Very High Risk",
+    "F": "Critical",
+    "F-": "Red Flag"
+  },
+  "trend": {
+    "improving": "Improving",
+    "stable": "Stable",
+    "declining": "Declining"
+  },
+  "confidence": {
+    "high": "High confidence",
+    "medium": "Medium confidence",
+    "wide": "Low confidence (few contracts)"
+  },
+  "pillars": {
+    "openness": "Competition & Openness",
+    "price": "Price Fairness",
+    "vendors": "Vendor Diversity",
+    "process": "Process Integrity",
+    "external": "External Alerts"
+  },
+  "empty": "No institutions match your current filters.",
+  "loading": "Loading institution rankings...",
+  "error": "Failed to load institution rankings. Please try again.",
+  "viewProfile": "View profile",
+  "noSector": "Unclassified"
+}

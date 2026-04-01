@@ -618,6 +618,31 @@ export const vendorApi = {
     const { data } = await api.get<ContractHistogramResponse>(`/vendors/${vendorId}/contract-histogram`)
     return data
   },
+
+  /**
+   * Get year-by-year rolling stats for a vendor from vendor_rolling_stats table.
+   * Each row is one (sector_id, as_of_year) combination.
+   * Used for the vendor rolling stats timeline chart in VendorProfile.
+   */
+  async getRollingTimeline(vendorId: number): Promise<{
+    vendor_id: number
+    vendor_name: string
+    rows: Array<{
+      vendor_id: number
+      sector_id: number
+      as_of_year: number
+      total_value: number
+      total_count: number
+      comp_wins: number
+      comp_total: number
+      n_institutions: number
+      n_sectors: number
+      win_rate: number | null
+    }>
+  }> {
+    const { data } = await api.get(`/vendors/${vendorId}/timeline`)
+    return data
+  },
 }
 
 // ============================================================================
@@ -1151,6 +1176,28 @@ export const analysisApi = {
 
   async getModelMetadata(): Promise<{ version: string; trained_at: string; auc_test: number; pu_correction?: number; n_contracts?: number }> {
     const { data } = await api.get('/analysis/model/metadata')
+    return data
+  },
+
+  async getModelCalibration(): Promise<{
+    model_version: string
+    run_id: string
+    created_at: string
+    global_intercept: number
+    coefficients: Array<{
+      factor: string
+      beta: number
+      ci_lower: number | null
+      ci_upper: number | null
+    }>
+    auc_train: number | null
+    auc_test: number | null
+    pu_correction_c: number | null
+    n_positive: number | null
+    n_negative: number | null
+    hyperparameters: Record<string, unknown> | null
+  }> {
+    const { data } = await api.get('/analysis/model/calibration')
     return data
   },
 
@@ -2013,6 +2060,8 @@ export interface FederatedVendorResult {
   rfc?: string | null
   contracts: number
   risk_score?: number | null
+  is_efos?: boolean
+  is_sfp_sanctioned?: boolean
 }
 
 export interface FederatedInstitutionResult {
@@ -2643,6 +2692,10 @@ export const scorecardApi = {
     const { data } = await api.get(`/scorecards/institutions?${q}`)
     return data
   },
+  async getInstitutionStats() {
+    const { data } = await api.get('/scorecards/institutions/stats')
+    return data
+  },
   async getInstitution(id: number) {
     const { data } = await api.get(`/scorecards/institutions/${id}`)
     return data
@@ -2690,6 +2743,24 @@ export const storiesApi = {
   },
 }
 
+export const collusionApi = {
+  async getPairs(params: {
+    is_potential_collusion?: boolean
+    min_shared_procedures?: number
+    sort_by?: 'shared_procedures' | 'co_bid_rate'
+    page?: number
+    per_page?: number
+  } = {}) {
+    const q = buildQueryParams(params)
+    const { data } = await api.get(`/collusion/pairs?${q}`)
+    return data
+  },
+  async getStats() {
+    const { data } = await api.get('/collusion/stats')
+    return data
+  },
+}
+
 // Default export with all API modules
 export default {
   sector: sectorApi,
@@ -2716,4 +2787,5 @@ export default {
   alerts: alertsApi,
   scorecards: scorecardApi,
   stories: storiesApi,
+  collusion: collusionApi,
 }

@@ -47,6 +47,9 @@ class VendorListItem(BaseModel):
     last_contract_year: Optional[int] = Field(None, description="Year of most recent contract")
     primary_sector_id: Optional[int] = Field(None, description="Primary sector ID (1-12)")
     pct_anomalous: Optional[float] = Field(None, description="Percentage of anomalous contracts")
+    is_efos: bool = Field(False, description="Vendor RFC is on SAT EFOS ghost company list")
+    efos_stage: Optional[str] = Field(None, description="EFOS stage: definitivo or desvirtuado")
+    is_sfp_sanctioned: bool = Field(False, description="Vendor RFC is on SFP sanctions list")
 
     model_config = ConfigDict(from_attributes=True)
 

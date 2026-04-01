@@ -1,0 +1,25 @@
+{
+  "pageTitle": "Procurement Scandals",
+  "pageTitleEs": "Escándalos de Corrupción",
+  "pageSubhead": "Crónica de Corrupción — México Federal 2001–2025",
+  "pageDesc": "43 casos documentados de fraude y corrupción en contratación pública federal. Ordenados por impacto financiero estimado.",
+  "goToCaseLibrary": "Expedientes de Investigación",
+  "legalStatus": "Estado legal",
+  "viewCase": "Abrir caso",
+  "byFraudType": "Por Tipo de Fraude",
+  "filterHint": "Ordenado por monto del fraude",
+  "resultCount": "{{count}} escándalos",
+  "noResults": "Ningún escándalo coincide con los filtros actuales.",
+  "noResultsHint": "Intenta ajustar o limpiar los filtros.",
+  "clearFilters": "Limpiar filtros",
+  "loadError": "Error al cargar los escándalos. Por favor intenta de nuevo.",
+  "gridLabel": "Escándalos de contratación pública",
+  "stats": {
+    "totalCases": "Casos",
+    "estimatedFraud": "Fraude estimado",
+    "sectorsAffected": "Sectores afectados",
+    "impunityRate": "Tasa de impunidad",
+    "mlLinked": "Vinculados al modelo"
+  },
+  "disclaimer": "Las puntuaciones de riesgo y estimaciones de fraude son indicadores estadísticos derivados de registros de contratación. Una puntuación alta indica patrones similares a casos de corrupción documentados — no constituye prueba de irregularidades. Todas las cifras en MXN. Fuentes: ASF, SFP, MCCI, FGR, Animal Político."
+}

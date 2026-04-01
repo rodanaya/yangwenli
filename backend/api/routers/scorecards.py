@@ -501,6 +501,69 @@ def list_institution_scorecards(
     )
 
 
+class InstitutionScorecardStats(BaseModel):
+    total_scored: int
+    median_score: float
+    top_institution_id: Optional[int]
+    top_institution_name: Optional[str]
+    top_institution_score: Optional[float]
+    worst_institution_id: Optional[int]
+    worst_institution_name: Optional[str]
+    worst_institution_score: Optional[float]
+    grade_distribution: Dict[str, int]
+
+
+@router.get("/institutions/stats", response_model=InstitutionScorecardStats)
+def get_institution_scorecard_stats():
+    """Aggregate statistics across all institution scorecards."""
+    with get_db() as conn:
+        agg = conn.execute("""
+            SELECT COUNT(*), AVG(total_score)
+            FROM institution_scorecards
+        """).fetchone()
+        total_scored = agg[0] or 0
+
+        # Median via NTILE approximation (SQLite has no MEDIAN)
+        mid = total_scored // 2
+        median_row = conn.execute("""
+            SELECT total_score FROM institution_scorecards
+            ORDER BY total_score
+            LIMIT 1 OFFSET ?
+        """, (max(0, mid - 1),)).fetchone()
+        median_score = round(median_row[0], 1) if median_row else 0.0
+
+        top_row = conn.execute("""
+            SELECT s.institution_id, i.name, s.total_score
+            FROM institution_scorecards s
+            JOIN institutions i ON i.id = s.institution_id
+            ORDER BY s.total_score DESC
+            LIMIT 1
+        """).fetchone()
+        worst_row = conn.execute("""
+            SELECT s.institution_id, i.name, s.total_score
+            FROM institution_scorecards s
+            JOIN institutions i ON i.id = s.institution_id
+            ORDER BY s.total_score ASC
+            LIMIT 1
+        """).fetchone()
+        dist_rows = conn.execute(
+            "SELECT grade, COUNT(*) FROM institution_scorecards GROUP BY grade"
+        ).fetchall()
+        grade_dist = {r[0]: r[1] for r in dist_rows}
+
+    return InstitutionScorecardStats(
+        total_scored=total_scored,
+        median_score=median_score,
+        top_institution_id=top_row[0] if top_row else None,
+        top_institution_name=top_row[1] if top_row else None,
+        top_institution_score=round(top_row[2], 1) if top_row else None,
+        worst_institution_id=worst_row[0] if worst_row else None,
+        worst_institution_name=worst_row[1] if worst_row else None,
+        worst_institution_score=round(worst_row[2], 1) if worst_row else None,
+        grade_distribution=grade_dist,
+    )
+
+
 @router.get("/institutions/{institution_id}", response_model=InstitutionScorecardResponse)
 def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
     """Full scorecard for a single institution."""

@@ -1,0 +1,48 @@
+{
+  "title": "Collusion Explorer",
+  "subtitle": "Bid-rigging pattern analysis — vendor pairs with suspicious co-bidding activity",
+  "stats": {
+    "totalPairs": "Total Pairs Analyzed",
+    "totalPairsSub": "unique vendor pairs tracked",
+    "flaggedPairs": "Flagged Pairs",
+    "flaggedPairsSub": "potential collusion detected",
+    "sharedProcedures": "Shared Procedures",
+    "sharedProceduresSub": "total co-bidding events",
+    "maxRate": "Highest Co-bid Rate",
+    "maxRateSub": "among flagged pairs"
+  },
+  "filters": {
+    "showFlaggedOnly": "Show flagged only",
+    "minShared": "Min. shared procedures",
+    "sortBy": "Sort by",
+    "sortShared": "Shared procedures",
+    "sortRate": "Co-bid rate"
+  },
+  "table": {
+    "vendorA": "Vendor A",
+    "vendorB": "Vendor B",
+    "sharedProcedures": "Shared Procedures",
+    "coBidRate": "Co-bid Rate",
+    "status": "Status",
+    "flagged": "Flagged",
+    "monitored": "Monitored"
+  },
+  "tooltip": {
+    "coBidRateTitle": "What is Co-bid Rate?",
+    "coBidRateBody": "Co-bid rate is the percentage of procedures where both vendors submitted bids simultaneously. Rates above 70% combined with high shared procedure volume may indicate coordinated bidding — where vendors collude to influence which one wins."
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "pageOf": "Page {{page}} of {{total}}",
+    "showing": "Showing {{from}}–{{to}} of {{total}} pairs"
+  },
+  "empty": "No pairs match your current filters.",
+  "loading": "Loading collusion data...",
+  "error": "Failed to load collusion data. Please try again.",
+  "editorial": {
+    "section": "RUBLI ANALYSIS",
+    "headline": "Collusion Intelligence",
+    "badge": "BID RIGGING"
+  }
+}

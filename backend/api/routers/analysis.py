@@ -219,6 +219,27 @@ class ModelMetadataResponse(BaseModel):
     updated_at: Optional[str] = None
 
 
+class CoefficientItem(BaseModel):
+    factor: str
+    beta: float
+    ci_lower: Optional[float] = None
+    ci_upper: Optional[float] = None
+
+
+class ModelCalibrationResponse(BaseModel):
+    model_version: str
+    run_id: str
+    created_at: str
+    global_intercept: float
+    coefficients: List[CoefficientItem]
+    auc_train: Optional[float] = None
+    auc_test: Optional[float] = None
+    pu_correction_c: Optional[float] = None
+    n_positive: Optional[int] = None
+    n_negative: Optional[int] = None
+    hyperparameters: Optional[Dict[str, Any]] = None
+
+
 class RiskOverviewResponse(BaseModel):
     overview: Dict[str, Any]
     risk_distribution: List[Dict[str, Any]]
@@ -384,6 +405,94 @@ def get_model_metadata():
         raise HTTPException(status_code=503, detail="Database temporarily unavailable")
     except Exception as e:
         logger.error(f"Unexpected error in get_model_metadata: {e}", exc_info=True)
+        raise HTTPException(status_code=500, detail="Internal server error")
+
+
+@router.get("/model/calibration", response_model=ModelCalibrationResponse)
+def get_model_calibration():
+    """
+    Return the most recent global model calibration row with full coefficients and CIs.
+
+    Pulls live data from model_calibration (sector_id IS NULL, most recent row).
+    Coefficients and bootstrap_ci are stored as JSON; this endpoint parses and
+    normalises them into a typed list so the frontend can drive charts without
+    hardcoded values.
+    """
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+            pragma_cols = {r[1] for r in cursor.execute(
+                "PRAGMA table_info(model_calibration)"
+            ).fetchall()}
+            has_test_auc = "test_auc" in pragma_cols
+
+            select_cols = (
+                "model_version, run_id, created_at, intercept, coefficients, "
+                "bootstrap_ci, pu_correction_factor, auc_roc, "
+                + ("test_auc, " if has_test_auc else "")
+                + "n_positive, n_negative, hyperparameters, temporal_metrics"
+            )
+            row = cursor.execute(
+                f"SELECT {select_cols} FROM model_calibration "
+                "WHERE sector_id IS NULL ORDER BY created_at DESC LIMIT 1"
+            ).fetchone()
+
+            if not row:
+                raise HTTPException(status_code=404, detail="No model calibration data found")
+
+            coefficients_raw: Dict[str, float] = json.loads(row["coefficients"]) if row["coefficients"] else {}
+            bootstrap_ci_raw: Dict[str, Any] = json.loads(row["bootstrap_ci"]) if row["bootstrap_ci"] else {}
+
+            coefficient_items: List[Dict[str, Any]] = []
+            for factor, beta in coefficients_raw.items():
+                ci = bootstrap_ci_raw.get(factor)
+                coefficient_items.append({
+                    "factor": factor,
+                    "beta": beta,
+                    "ci_lower": ci[0] if isinstance(ci, (list, tuple)) and len(ci) >= 2 else None,
+                    "ci_upper": ci[1] if isinstance(ci, (list, tuple)) and len(ci) >= 2 else None,
+                })
+            # Sort descending by absolute beta so the frontend can render in importance order
+            coefficient_items.sort(key=lambda x: abs(x["beta"]), reverse=True)
+
+            test_auc_val = row["test_auc"] if has_test_auc else None
+            auc_train = None
+            if row["temporal_metrics"]:
+                try:
+                    tm = json.loads(row["temporal_metrics"])
+                    auc_train = tm.get("train_auc")
+                    if not has_test_auc:
+                        test_auc_val = tm.get("test_auc")
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            hyperparameters = None
+            if row["hyperparameters"]:
+                try:
+                    hyperparameters = json.loads(row["hyperparameters"])
+                except (json.JSONDecodeError, TypeError):
+                    pass
+
+            return {
+                "model_version": row["model_version"],
+                "run_id": row["run_id"],
+                "created_at": row["created_at"],
+                "global_intercept": row["intercept"],
+                "coefficients": coefficient_items,
+                "auc_train": round(auc_train, 4) if auc_train else row["auc_roc"],
+                "auc_test": test_auc_val or row["auc_roc"],
+                "pu_correction_c": row["pu_correction_factor"],
+                "n_positive": row["n_positive"],
+                "n_negative": row["n_negative"],
+                "hyperparameters": hyperparameters,
+            }
+    except HTTPException:
+        raise
+    except sqlite3.OperationalError as e:
+        logger.error(f"DB error in get_model_calibration: {e}")
+        raise HTTPException(status_code=503, detail="Database temporarily unavailable")
+    except Exception as e:
+        logger.error(f"Unexpected error in get_model_calibration: {e}", exc_info=True)
         raise HTTPException(status_code=500, detail="Internal server error")
 
 
