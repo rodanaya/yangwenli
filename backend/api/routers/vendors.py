@@ -1736,15 +1736,47 @@ def _load_global_coefficients(conn) -> Dict[str, float]:
     return json.loads(row["coefficients"])
 
 
+def _build_waterfall_from_shap(conn, vendor_id: int) -> tuple:
+    """Fallback: build waterfall from precomputed vendor_shap_v52 when contract_z_features is unavailable."""
+    row = conn.execute(
+        "SELECT shap_values, mean_z_vector, n_contracts FROM vendor_shap_v52 WHERE vendor_id = ?",
+        (vendor_id,)
+    ).fetchone()
+    if not row:
+        return [], 0
+    shap_values = json.loads(row["shap_values"]) if row["shap_values"] else {}
+    z_vector = json.loads(row["mean_z_vector"]) if row["mean_z_vector"] else {}
+    coefficients = _load_global_coefficients(conn)
+    items = []
+    for feature, contribution in shap_values.items():
+        z_val = z_vector.get(feature, 0.0) or 0.0
+        coeff = coefficients.get(feature, 0.0)
+        items.append(RiskWaterfallItem(
+            feature=feature,
+            z_score=round(float(z_val), 4),
+            coefficient=round(float(coeff), 4),
+            contribution=round(float(contribution), 4),
+            label_en=_FEATURE_LABELS.get(feature, feature),
+        ))
+    items.sort(key=lambda x: abs(x.contribution), reverse=True)
+    return items, row["n_contracts"] or 0
+
+
 def _build_waterfall(conn, filter_col: str, filter_id: int) -> tuple:
     """Build risk waterfall items for a vendor or institution. Returns (items, total_contracts)."""
-    avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _Z_FEATURE_COLS)
-    row = conn.execute(f"""
-        SELECT {avg_cols}, COUNT(*) as cnt
-        FROM contract_z_features czf
-        JOIN contracts c ON czf.contract_id = c.id
-        WHERE c.{filter_col} = ?
-    """, (filter_id,)).fetchone()
+    try:
+        avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _Z_FEATURE_COLS)
+        row = conn.execute(f"""
+            SELECT {avg_cols}, COUNT(*) as cnt
+            FROM contract_z_features czf
+            JOIN contracts c ON czf.contract_id = c.id
+            WHERE c.{filter_col} = ?
+        """, (filter_id,)).fetchone()
+    except sqlite3.OperationalError:
+        # contract_z_features not in this DB — fall back to vendor_shap_v52 for vendor queries
+        if filter_col == "vendor_id":
+            return _build_waterfall_from_shap(conn, filter_id)
+        return [], 0
 
     if not row or row["cnt"] == 0:
         return [], 0

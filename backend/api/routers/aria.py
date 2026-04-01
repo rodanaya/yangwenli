@@ -182,6 +182,9 @@ def get_aria_queue(
             "fp_structural_monopoly", "is_disappeared",
         )
         d["pattern_confidences"] = _decode_json_field(d.get("pattern_confidences"))
+        # Compute value_per_contract on the fly when not stored
+        if not d.get("value_per_contract") and d.get("total_contracts") and d.get("total_value_mxn"):
+            d["value_per_contract"] = d["total_value_mxn"] / d["total_contracts"]
         data.append(d)
 
     # Latest run summary

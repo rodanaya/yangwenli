@@ -943,7 +943,7 @@ export default function RedThread() {
 
   const { data: contracts } = useQuery({
     queryKey: ['vendor-contracts', id, 'thread'],
-    queryFn: () => vendorApi.getContracts(id, { per_page: 300 }),
+    queryFn: () => vendorApi.getContracts(id, { per_page: 100 }),
     enabled: !!id && !isNaN(id),
   })
 

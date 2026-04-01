@@ -1,6 +1,7 @@
 """API router for institution endpoints."""
 import math
 import logging
+import sqlite3 as _sqlite3
 import threading
 from collections import defaultdict
 from datetime import datetime, timedelta
@@ -439,12 +440,17 @@ def get_institution_risk_waterfall(
         import json
         # safe: _INST_Z_COLS is a hardcoded module-level constant, not from user input
         avg_cols = ", ".join(f"AVG(czf.{col}) as {col}" for col in _INST_Z_COLS)
-        row = conn.execute(f"""
-            SELECT {avg_cols}, COUNT(*) as cnt
-            FROM contract_z_features czf
-            JOIN contracts c ON czf.contract_id = c.id
-            WHERE c.institution_id = ?
-        """, (institution_id,)).fetchone()
+        try:
+            row = conn.execute(f"""
+                SELECT {avg_cols}, COUNT(*) as cnt
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.institution_id = ?
+            """, (institution_id,)).fetchone()
+        except _sqlite3.OperationalError:
+            result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
+            _set_top_cache(cache_key, result)
+            return result
 
         if not row or row["cnt"] == 0:
             result = InstitutionWaterfallResponse(institution_id=institution_id, items=[], total_contracts=0)
@@ -934,8 +940,12 @@ def get_institution_top_categories(
             LIMIT ?
         """
         params.append(limit)
-        cursor.execute(query, params)
-        rows = cursor.fetchall()
+        try:
+            cursor.execute(query, params)
+            rows = cursor.fetchall()
+        except _sqlite3.OperationalError:
+            # partida_codes table not in this DB — return empty
+            rows = []
 
         if not rows:
             raise HTTPException(
