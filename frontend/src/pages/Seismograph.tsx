@@ -222,8 +222,8 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
         return `<div style="min-width:180px">
           <div style="font-weight:600;margin-bottom:4px">${year}</div>
           <div>${lang === 'es' ? 'Riesgo prom.' : 'Avg risk'}: <b>${(d.avg_risk * 100).toFixed(1)}%</b></div>
-          <div>${lang === 'es' ? 'Alto riesgo' : 'High risk'}: <b>${(d.high_risk_pct * 100).toFixed(1)}%</b></div>
-          <div>${lang === 'es' ? 'Adj. directa' : 'Direct award'}: <b>${(d.direct_award_pct * 100).toFixed(1)}%</b></div>
+          <div>${lang === 'es' ? 'Alto riesgo' : 'High risk'}: <b>${d.high_risk_pct.toFixed(1)}%</b></div>
+          <div>${lang === 'es' ? 'Adj. directa' : 'Direct award'}: <b>${d.direct_award_pct.toFixed(1)}%</b></div>
           <div>${lang === 'es' ? 'Valor total' : 'Total value'}: <b>${formatCompactMXN(d.total_value)}</b></div>
         </div>`
       },
@@ -249,7 +249,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
       {
         name: lang === 'es' ? '% Alto Riesgo' : '% High Risk',
         type: 'line',
-        data: sorted.map(d => d.high_risk_pct),
+        data: sorted.map(d => d.high_risk_pct / 100),
         smooth: true,
         lineStyle: { color: '#fb923c', width: 1.5 },
         areaStyle: { color: 'rgba(251,146,60,0.08)' },
@@ -271,7 +271,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
       {
         name: lang === 'es' ? '% Adj. Directas' : '% Direct Awards',
         type: 'line',
-        data: sorted.map(d => d.direct_award_pct),
+        data: sorted.map(d => d.direct_award_pct / 100),
         smooth: true,
         lineStyle: { color: '#60a5fa', width: 1.5, type: 'dashed' as const },
         symbol: 'none',
@@ -370,8 +370,9 @@ export default function Seismograph() {
       const totalContracts = inPeriod.reduce((sum, d) => sum + d.contracts, 0)
       const totalValue = inPeriod.reduce((sum, d) => sum + d.total_value, 0)
       const avgRisk = inPeriod.reduce((sum, d) => sum + d.avg_risk * d.contracts, 0) / totalContracts
-      const highRiskPct = inPeriod.reduce((sum, d) => sum + d.high_risk_pct * d.contracts, 0) / totalContracts
-      const directAwardPct = inPeriod.reduce((sum, d) => sum + d.direct_award_pct * d.contracts, 0) / totalContracts
+      // API returns high_risk_pct and direct_award_pct as percentages (0–100); normalize to 0–1 for display consistency
+      const highRiskPct = inPeriod.reduce((sum, d) => sum + d.high_risk_pct * d.contracts, 0) / totalContracts / 100
+      const directAwardPct = inPeriod.reduce((sum, d) => sum + d.direct_award_pct * d.contracts, 0) / totalContracts / 100
       return [{ ...s, contracts: totalContracts, totalValue, avgRisk, highRiskPct, directAwardPct }]
     })
   }, [years])
@@ -680,7 +681,7 @@ export default function Seismograph() {
                       </span>
                     </div>
                     <span className="text-xs text-slate-400 text-right font-mono">
-                      {(row.high_risk_pct * 100).toFixed(1)}%{' '}
+                      {row.high_risk_pct.toFixed(1)}%{' '}
                       <span className="text-slate-600">{lang === 'es' ? 'alto' : 'hi'}</span>
                     </span>
                   </motion.div>

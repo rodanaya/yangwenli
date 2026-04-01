@@ -251,6 +251,18 @@ class InstitutionService(BaseService):
 
         where_clause = " AND ".join(conditions)
 
+        # Get true total vendor count first
+        count_row = self._execute_one(
+            conn,
+            f"""
+            SELECT COUNT(DISTINCT c.vendor_id) as cnt
+            FROM contracts c
+            WHERE {where_clause} AND c.vendor_id IS NOT NULL
+            """,
+            tuple(params),
+        )
+        true_total_vendors = count_row["cnt"] if count_row else 0
+
         rows = self._execute_many(
             conn,
             f"""
@@ -309,7 +321,7 @@ class InstitutionService(BaseService):
             "institution_name": inst_row["name"],
             "institution_type": inst_row["institution_type"],
             "vendors": vendors,
-            "total_vendors": len(vendors),
+            "total_vendors": true_total_vendors,
             "total_contracts": total_contracts,
             "total_value": total_value,
             "concentration_index": concentration_index,
