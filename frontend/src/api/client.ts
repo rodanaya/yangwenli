@@ -1370,6 +1370,15 @@ export const analysisApi = {
     const { data } = await api.get<FactorBaselineResponse>(`/analysis/factor-baselines/${sectorId}/${year}`)
     return data
   },
+
+  /**
+   * Get vendor concentration per sector — top-N vendors' share of contracts
+   * Returns concentration_pct as 0-100
+   */
+  async getVendorConcentration(topN: number = 3): Promise<{ data: Array<{ sector_id: number; sector_name: string; concentration_pct: number }> }> {
+    const { data } = await api.get(`/analysis/vendor-concentration?top_n=${topN}`)
+    return data
+  },
 }
 
 // ============================================================================

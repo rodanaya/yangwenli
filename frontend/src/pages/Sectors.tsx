@@ -23,6 +23,7 @@ import {
 } from '@/lib/constants'
 import type { SectorStatistics } from '@/api/types'
 import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
+import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -425,6 +426,11 @@ export function Sectors() {
                 ))}
           </div>
         )}
+
+        {/* Market Concentration Chart */}
+        <div className="mt-8">
+          <SectorConcentrationChart />
+        </div>
 
         {/* Model note footnote */}
         {!isLoading && !error && (

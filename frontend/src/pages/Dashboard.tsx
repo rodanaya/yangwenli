@@ -58,6 +58,7 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } fr
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { AnomalyLeadsWidget } from '@/components/widgets/AnomalyLeadsWidget'
 import { PoliticalIntelligenceStrip } from '@/components/widgets/PoliticalIntelligenceStrip'
+import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 
 // ============================================================================
 // Dashboard 2.0: Situation Room
@@ -1899,6 +1900,11 @@ export function Dashboard() {
           </div>
         </div>
       )}
+
+      {/* ================================================================ */}
+      {/* SECTOR MARKET CONCENTRATION                                      */}
+      {/* ================================================================ */}
+      <SectorConcentrationChart className="rounded-none border-x-0 border-b-0" showTitle={true} />
 
       {/* Section divider — "NATIONAL OVERVIEW" label + live-data badges */}
       <div className="flex items-center justify-between px-1 py-2 border-b border-border/30">

@@ -839,6 +839,8 @@ export function VendorProfile() {
 
   // RFC copy button state
   const [rfcCopied, setRfcCopied] = useState(false)
+  // CSV export loading state for the header button
+  const [csvExporting, setCsvExporting] = useState(false)
 
   // Fetch vendor details
   const { data: vendor, isLoading: vendorLoading, error: vendorError } = useQuery({
@@ -1389,6 +1391,19 @@ export function VendorProfile() {
           >
             <BarChart3 className="h-3.5 w-3.5" />
             Compare
+          </button>
+          <button
+            onClick={async () => {
+              setCsvExporting(true)
+              try { await exportContractsCSV() } finally { setCsvExporting(false) }
+            }}
+            disabled={csvExporting}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
+            aria-label="Export vendor contracts as CSV"
+            title="Export all contracts as CSV"
+          >
+            <Download className="h-3.5 w-3.5" />
+            {csvExporting ? 'Exportando…' : 'Export CSV'}
           </button>
           <button
             onClick={() => navigate(`/thread/${vendorId}`)}
