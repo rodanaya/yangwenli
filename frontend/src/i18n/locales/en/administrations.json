@@ -271,5 +271,33 @@
   },
   "compareView": {
     "sourceNote": "Source: COMPRANET contracts weighted by volume · {{metric}}"
+  },
+  "grade": {
+    "title": "PROCUREMENT GRADE",
+    "subtitle": "OECD-aligned score based on direct award rate, high-risk rate, and single-bid rate",
+    "scoreLabel": "Score",
+    "directAward": "Direct Award",
+    "highRisk": "High Risk Rate",
+    "singleBid": "Single Bid",
+    "gradeA": "Excellent — below OECD alert thresholds on all indicators",
+    "gradeB": "Good — mostly within OECD guidelines",
+    "gradeC": "Fair — some indicators above recommended levels",
+    "gradeD": "Poor — multiple indicators in alert zone",
+    "gradeF": "Critical — exceeds OECD thresholds across indicators"
+  },
+  "radar": {
+    "title": "All Administrations: Procurement Fingerprint",
+    "subtitle": "Comparative radar of 5 key procurement metrics across all presidencies (higher = better performance)",
+    "axisDirectAward": "Direct Award",
+    "axisHighRisk": "High Risk",
+    "axisSingleBid": "Single Bid",
+    "axisAvgRisk": "Avg Risk",
+    "axisVolume": "Volume",
+    "legend": "Administration"
+  },
+  "transition": {
+    "comparisonLabel": "vs prior administration",
+    "fromAdmin": "From",
+    "toAdmin": "To"
   }
 }

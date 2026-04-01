@@ -93,5 +93,34 @@
     "low": "Low",
     "noData": "No risk data available for this year"
   },
-  "vsLastYear": "vs prior year"
+  "vsLastYear": "vs prior year",
+  "topStory": {
+    "label": "TOP STORY",
+    "severity": {
+      "critical": "CRITICAL",
+      "high": "HIGH ALERT",
+      "normal": "KEY FINDING"
+    }
+  },
+  "yoy": {
+    "label": "YEAR OVER YEAR",
+    "subtitle": "Change from prior year",
+    "firstYear": "First year in dataset — no prior year comparison available",
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "avgRisk": "Avg Risk Score",
+    "directAward": "Direct Award Rate",
+    "improved": "improved",
+    "worsened": "worsened",
+    "noChange": "unchanged"
+  },
+  "riskDist": {
+    "label": "RISK DISTRIBUTION",
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "yearEndLabel": "Year-end concentration",
+    "yearEndNote": "Historically, Mexican government procurement spikes in Q4 as agencies rush to exhaust annual budgets."
+  }
 }

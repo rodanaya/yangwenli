@@ -271,5 +271,33 @@
   },
   "compareView": {
     "sourceNote": "Fuente: contratos COMPRANET ponderados por volumen · {{metric}}"
+  },
+  "grade": {
+    "title": "CALIFICACIÓN DE COMPRAS",
+    "subtitle": "Puntuación alineada con OCDE basada en adjudicación directa, riesgo alto y licitación única",
+    "scoreLabel": "Puntaje",
+    "directAward": "Adjudicación Directa",
+    "highRisk": "Tasa de Alto Riesgo",
+    "singleBid": "Licitación Única",
+    "gradeA": "Excelente — por debajo de los umbrales de alerta OCDE en todos los indicadores",
+    "gradeB": "Bueno — mayormente dentro de las pautas OCDE",
+    "gradeC": "Regular — algunos indicadores sobre los niveles recomendados",
+    "gradeD": "Deficiente — múltiples indicadores en zona de alerta",
+    "gradeF": "Crítico — supera umbrales OCDE en varios indicadores"
+  },
+  "radar": {
+    "title": "Todas las Administraciones: Huella de Compras",
+    "subtitle": "Radar comparativo de 5 métricas clave de contratación en todas las presidencias (más alto = mejor desempeño)",
+    "axisDirectAward": "Adj. Directa",
+    "axisHighRisk": "Alto Riesgo",
+    "axisSingleBid": "Licit. Única",
+    "axisAvgRisk": "Riesgo Prom.",
+    "axisVolume": "Volumen",
+    "legend": "Administración"
+  },
+  "transition": {
+    "comparisonLabel": "vs administración anterior",
+    "fromAdmin": "De",
+    "toAdmin": "A"
   }
 }

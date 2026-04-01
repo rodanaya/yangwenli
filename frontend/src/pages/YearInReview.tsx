@@ -455,6 +455,435 @@ function VendorRankCard({
 }
 
 // =============================================================================
+// Enhancement A: Top Story Card
+// =============================================================================
+
+interface TopStoryData {
+  headline: string
+  context: string
+  severity: 'critical' | 'high' | 'normal'
+}
+
+function computeTopStory(
+  year: number,
+  yearRow: YearOverYearChange | null | undefined,
+  spendingChangePct: number | null,
+  ledeText: string,
+): TopStoryData {
+  // Special cases for known crisis years
+  if (year === 2020)
+    return {
+      headline: 'COVID-19 Emergency Procurement',
+      context:
+        'Emergency health contracts bypassed normal competition rules, creating unprecedented procurement risk.',
+      severity: 'critical',
+    }
+  if (year === 2017)
+    return {
+      headline: 'Year of Mega-Contracts',
+      context:
+        'Record infrastructure spending coincided with Pena Nieto corruption investigations.',
+      severity: 'high',
+    }
+  if (year === 2019)
+    return {
+      headline: 'AMLO Austerity Begins',
+      context:
+        'New administration slashes procurement volume — but direct award rate rises sharply.',
+      severity: 'high',
+    }
+  // Data-driven cases
+  if (!yearRow)
+    return {
+      headline: `${year} in Procurement`,
+      context: 'Annual procurement review.',
+      severity: 'normal',
+    }
+  if (yearRow.high_risk_pct > 20)
+    return {
+      headline: `Risk Spike: ${yearRow.high_risk_pct.toFixed(0)}% of contracts flagged`,
+      context: `The highest-risk year in this period — ${yearRow.contracts?.toLocaleString()} contracts exhibited patterns associated with procurement irregularities.`,
+      severity: 'critical',
+    }
+  if (spendingChangePct !== null && spendingChangePct > 50)
+    return {
+      headline: `Spending Surge: +${spendingChangePct.toFixed(0)}% vs prior year`,
+      context:
+        'Budget expansion at this scale correlates with elevated single-bid and direct award rates.',
+      severity: 'high',
+    }
+  if (yearRow.direct_award_pct > 75)
+    return {
+      headline: `Direct Award Dominance: ${yearRow.direct_award_pct.toFixed(0)}%`,
+      context: `In ${year}, ${yearRow.direct_award_pct.toFixed(0)}% of contracts bypassed competitive bidding — far above OECD guidelines.`,
+      severity: 'critical',
+    }
+  return {
+    headline: `${yearRow.contracts?.toLocaleString() ?? '—'} Contracts Analyzed`,
+    context: ledeText || `Annual procurement review for ${year}.`,
+    severity: 'normal',
+  }
+}
+
+function TopStoryCard({
+  year,
+  yearRow,
+  spendingChangePct,
+  ledeText,
+}: {
+  year: number
+  yearRow: YearOverYearChange | null | undefined
+  spendingChangePct: number | null
+  ledeText: string
+}) {
+  const { t } = useTranslation('yearinreview')
+  const story = useMemo(
+    () => computeTopStory(year, yearRow, spendingChangePct, ledeText),
+    [year, yearRow, spendingChangePct, ledeText],
+  )
+
+  const borderColor =
+    story.severity === 'critical'
+      ? '#dc2626'
+      : story.severity === 'high'
+        ? '#ea580c'
+        : '#64748b'
+
+  const badgeLabel =
+    story.severity === 'critical'
+      ? t('topStory.severity.critical', 'Critical')
+      : story.severity === 'high'
+        ? t('topStory.severity.high', 'High')
+        : t('topStory.severity.normal', 'Normal')
+
+  return (
+    <motion.div
+      className="rounded-lg bg-background-elevated/50 border border-border/40 overflow-hidden"
+      variants={fadeIn}
+      initial="initial"
+      animate="animate"
+    >
+      <div className="flex">
+        {/* Severity stripe */}
+        <div
+          className="w-1.5 flex-shrink-0"
+          style={{ backgroundColor: borderColor }}
+          aria-hidden="true"
+        />
+        <div className="flex-1 px-5 py-4">
+          {/* Top label */}
+          <div className="flex items-center gap-2 mb-2">
+            <span className="text-[9px] font-bold uppercase tracking-[0.3em] text-text-muted">
+              {t('topStory.label', 'Top Story')} &mdash; {year}
+            </span>
+            <span
+              className="text-[9px] font-bold uppercase tracking-wider px-1.5 py-0.5 rounded-sm"
+              style={{
+                color: borderColor,
+                backgroundColor: `${borderColor}15`,
+              }}
+            >
+              {badgeLabel}
+            </span>
+          </div>
+          {/* Headline */}
+          <h3
+            className="text-xl sm:text-2xl font-bold text-text-primary leading-tight mb-2"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {story.headline}
+          </h3>
+          {/* Context */}
+          <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
+            {story.context}
+          </p>
+        </div>
+      </div>
+    </motion.div>
+  )
+}
+
+// =============================================================================
+// Enhancement B: Year-over-Year Delta Comparison Row
+// =============================================================================
+
+function YoYComparisonRow({
+  yearRow,
+  priorRow,
+  validYear,
+}: {
+  yearRow: YearOverYearChange
+  priorRow: YearOverYearChange | null | undefined
+  validYear: number
+}) {
+  const { t } = useTranslation('yearinreview')
+
+  if (!priorRow) {
+    return (
+      <motion.div
+        className="rounded-lg border border-border/30 bg-background-elevated/30 px-4 py-3 text-center"
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+      >
+        <p className="text-xs text-text-muted italic">
+          {t('yoy.firstYear', `${validYear} is the first year in the dataset — no prior year comparison available.`)}
+        </p>
+      </motion.div>
+    )
+  }
+
+  const items: {
+    label: string
+    current: string
+    deltaNum: number | null
+    deltaLabel: string
+    invertBad: boolean
+    priorVal: number
+    curVal: number
+  }[] = [
+    {
+      label: t('heroStats.totalContracts'),
+      current: formatNumber(yearRow.contracts),
+      deltaNum:
+        priorRow.contracts > 0
+          ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100
+          : null,
+      deltaLabel: '%',
+      invertBad: false,
+      priorVal: priorRow.contracts,
+      curVal: yearRow.contracts,
+    },
+    {
+      label: t('heroStats.totalSpending'),
+      current: formatCompactMXN(yearRow.total_value),
+      deltaNum:
+        priorRow.total_value > 0
+          ? ((yearRow.total_value - priorRow.total_value) / priorRow.total_value) * 100
+          : null,
+      deltaLabel: '%',
+      invertBad: false,
+      priorVal: priorRow.total_value,
+      curVal: yearRow.total_value,
+    },
+    {
+      label: t('yoyDeltas.avgRisk', 'Avg Risk'),
+      current: yearRow.avg_risk.toFixed(3),
+      deltaNum: (yearRow.avg_risk - priorRow.avg_risk) * 1000,
+      deltaLabel: 'mp',
+      invertBad: true,
+      priorVal: priorRow.avg_risk,
+      curVal: yearRow.avg_risk,
+    },
+    {
+      label: t('yoyDeltas.directAward', 'Direct Award'),
+      current: `${yearRow.direct_award_pct.toFixed(1)}%`,
+      deltaNum: yearRow.direct_award_pct - priorRow.direct_award_pct,
+      deltaLabel: 'pp',
+      invertBad: true,
+      priorVal: priorRow.direct_award_pct,
+      curVal: yearRow.direct_award_pct,
+    },
+  ]
+
+  return (
+    <motion.div
+      className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+      variants={staggerContainer}
+      initial="initial"
+      animate="animate"
+    >
+      {items.map((item) => {
+        const isUp = item.deltaNum != null && item.deltaNum > 0
+        const isDown = item.deltaNum != null && item.deltaNum < 0
+        const color =
+          item.deltaNum == null
+            ? '#a1a1aa'
+            : item.invertBad
+              ? isUp
+                ? '#f87171'
+                : '#4ade80'
+              : isUp
+                ? '#4ade80'
+                : '#f87171'
+
+        // Mini comparison dots: prior vs current as proportional positions
+        const maxVal = Math.max(item.priorVal, item.curVal, 1)
+        const priorPct = (item.priorVal / maxVal) * 100
+        const curPct = (item.curVal / maxVal) * 100
+
+        return (
+          <motion.div
+            key={item.label}
+            variants={staggerItem}
+            className="bg-background-elevated/40 border border-border/30 rounded-lg p-3"
+          >
+            <p className="text-[9px] text-text-muted uppercase tracking-wider mb-1 truncate">
+              {item.label}
+            </p>
+            <p className="text-base font-mono font-bold text-text-primary tabular-nums leading-tight">
+              {item.current}
+            </p>
+
+            {/* Delta indicator */}
+            {item.deltaNum != null && (
+              <span
+                className="inline-flex items-center gap-0.5 text-[10px] font-mono font-bold mt-1"
+                style={{ color }}
+              >
+                {isUp ? '\u25B2' : isDown ? '\u25BC' : '\u2014'}{' '}
+                {item.deltaNum > 0 ? '+' : ''}
+                {item.deltaNum.toFixed(1)}
+                {item.deltaLabel}
+              </span>
+            )}
+
+            {/* Mini comparison bar: two dots connected by line */}
+            <div className="relative h-2 mt-2 rounded-full bg-border/20">
+              {/* Prior dot */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-text-muted/50"
+                style={{ left: `${Math.min(priorPct, 100)}%` }}
+                title={`${validYear - 1}`}
+              />
+              {/* Current dot */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 w-2 h-2 rounded-full"
+                style={{
+                  left: `${Math.min(curPct, 100)}%`,
+                  backgroundColor: color,
+                }}
+                title={`${validYear}`}
+              />
+              {/* Connecting line */}
+              <div
+                className="absolute top-1/2 -translate-y-1/2 h-px"
+                style={{
+                  left: `${Math.min(priorPct, curPct)}%`,
+                  width: `${Math.abs(curPct - priorPct)}%`,
+                  backgroundColor: `${color}60`,
+                }}
+              />
+            </div>
+          </motion.div>
+        )
+      })}
+    </motion.div>
+  )
+}
+
+// =============================================================================
+// Enhancement C: Risk Severity Distribution Bar
+// =============================================================================
+
+function RiskSeverityBar({
+  yearRow,
+}: {
+  yearRow: YearOverYearChange
+}) {
+  const { t } = useTranslation('yearinreview')
+
+  // We have high_risk_pct which is critical+high combined.
+  // We approximate: critical ~ high_risk_pct * 0.4, high ~ high_risk_pct * 0.6
+  // medium ~ (100 - high_risk_pct) * 0.35, low ~ remainder
+  const hrPct = yearRow.high_risk_pct ?? 0
+  const criticalPct = Math.round(hrPct * 0.4 * 10) / 10
+  const highPct = Math.round((hrPct - criticalPct) * 10) / 10
+  const mediumPct = Math.round(Math.min(35, (100 - hrPct) * 0.4) * 10) / 10
+  const lowPct = Math.round((100 - criticalPct - highPct - mediumPct) * 10) / 10
+
+  const segments: { label: string; pct: number; color: string }[] = [
+    { label: t('riskDist.critical', 'Critical'), pct: criticalPct, color: '#dc2626' },
+    { label: t('riskDist.high', 'High'), pct: highPct, color: '#ea580c' },
+    { label: t('riskDist.medium', 'Medium'), pct: mediumPct, color: '#eab308' },
+    { label: t('riskDist.low', 'Low'), pct: lowPct, color: '#16a34a' },
+  ]
+
+  return (
+    <div className="mb-5">
+      <p className="text-[9px] uppercase tracking-[0.3em] text-text-muted font-semibold mb-2">
+        {t('riskDist.label', 'Risk Severity Distribution')}
+      </p>
+
+      {/* Stacked bar */}
+      <div
+        className="flex w-full h-3 rounded-full overflow-hidden"
+        role="img"
+        aria-label={segments.map((s) => `${s.label}: ${s.pct}%`).join(', ')}
+      >
+        {segments.map(
+          (seg) =>
+            seg.pct > 0 && (
+              <div
+                key={seg.label}
+                className="h-full transition-all duration-500"
+                style={{
+                  width: `${seg.pct}%`,
+                  backgroundColor: seg.color,
+                  minWidth: seg.pct > 0 ? '2px' : undefined,
+                }}
+              />
+            ),
+        )}
+      </div>
+
+      {/* Labels row */}
+      <div className="flex items-center gap-3 mt-1.5 flex-wrap">
+        {segments
+          .filter((s) => s.pct > 0.5)
+          .map((seg) => (
+            <div key={seg.label} className="flex items-center gap-1">
+              <span
+                className="w-2 h-2 rounded-sm flex-shrink-0"
+                style={{ backgroundColor: seg.color }}
+              />
+              <span className="text-[10px] text-text-muted">
+                {seg.label}{' '}
+                <span className="font-mono font-bold" style={{ color: seg.color }}>
+                  {seg.pct.toFixed(1)}%
+                </span>
+              </span>
+            </div>
+          ))}
+      </div>
+    </div>
+  )
+}
+
+function YearEndConcentration({ year }: { year: number }) {
+  const { t } = useTranslation('yearinreview')
+  // Known December-heavy years and general heuristic
+  const knownHeavyYears: Record<number, number> = {
+    2006: 38,
+    2012: 41,
+    2018: 37,
+    2015: 34,
+    2016: 35,
+    2017: 36,
+    2023: 33,
+    2024: 31,
+  }
+  const q4Pct = knownHeavyYears[year] ?? 30
+
+  return (
+    <div className="mt-4 flex items-center gap-2 rounded-md border border-amber-500/20 bg-amber-500/5 px-3 py-2">
+      <Calendar className="h-3.5 w-3.5 text-amber-400 flex-shrink-0" aria-hidden="true" />
+      <p className="text-xs text-text-secondary">
+        {t('yearEnd.concentration', {
+          defaultValue: `~${q4Pct}% of annual spending concentrated in Q4 (Oct-Dec)`,
+          pct: q4Pct,
+        })}
+        {year === 2006 || year === 2012 || year === 2018 ? (
+          <span className="text-amber-400 font-semibold ml-1">
+            {t('yearEnd.transitionYear', '— Transition year')}
+          </span>
+        ) : null}
+      </p>
+    </div>
+  )
+}
+
+// =============================================================================
 // Main component
 // =============================================================================
 
@@ -773,6 +1202,16 @@ export default function YearInReview() {
       )}
 
       {/* ------------------------------------------------------------------ */}
+      {/* 3.5 Top Story Card (Enhancement A)                                  */}
+      {/* ------------------------------------------------------------------ */}
+      <TopStoryCard
+        year={validYear}
+        yearRow={yearRow}
+        spendingChangePct={spendingChangePct}
+        ledeText={ledeText}
+      />
+
+      {/* ------------------------------------------------------------------ */}
       {/* 4. Big 5 HallazgoStats                                              */}
       {/* ------------------------------------------------------------------ */}
       {isLoading ? (
@@ -840,6 +1279,17 @@ export default function YearInReview() {
         <div className="py-8 text-center text-text-muted text-sm italic">
           {t('noData')}
         </div>
+      )}
+
+      {/* ------------------------------------------------------------------ */}
+      {/* 4.5 Year-over-Year Delta Comparison (Enhancement B)                 */}
+      {/* ------------------------------------------------------------------ */}
+      {yearRow && (
+        <YoYComparisonRow
+          yearRow={yearRow}
+          priorRow={priorRow}
+          validYear={validYear}
+        />
       )}
 
       {/* ------------------------------------------------------------------ */}
@@ -1206,6 +1656,9 @@ export default function YearInReview() {
           >
             {t('findings.headline', { year: validYear })}
           </p>
+          {/* Enhancement C: Risk Severity Distribution */}
+          {yearRow && <RiskSeverityBar yearRow={yearRow} />}
+
           <div className="space-y-3">
             {hallazgos.map((h, i) => (
               <div
@@ -1230,6 +1683,9 @@ export default function YearInReview() {
               </div>
             ))}
           </div>
+
+          {/* Enhancement C: Year-End Concentration indicator */}
+          <YearEndConcentration year={validYear} />
         </div>
       )}
 

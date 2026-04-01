@@ -657,6 +657,8 @@ function AdminDossierPanel({
                 </div>
               ))}
             </div>
+            {/* Enhancement A: Procurement Grade Card */}
+            {agg && <ProcurementGradeCard agg={agg} />}
           </div>
         </div>
 
@@ -1665,6 +1667,13 @@ export default function Administrations() {
         </div>
       </div>
 
+      {/* Enhancement B: All-Administration Radar Comparison */}
+      {adminAggs.length > 0 && (
+        <ScrollReveal direction="fade">
+          <AdminRadarChart allAggs={adminAggs} admins={ADMINISTRATIONS} />
+        </ScrollReveal>
+      )}
+
       {/* L4 + L5 side by side */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
         {/* L4: Sector Heatmap */}
@@ -1756,6 +1765,12 @@ export default function Administrations() {
             {transitions.map((tr, i) => {
               const isRelevant = tr.to === selectedAdmin || tr.from === selectedAdmin
               const sig = transitionSignificance.get(`${tr.from}-${tr.to}`)
+              const fromAgg = adminAggs.find((a) => a.name === tr.from)
+              const toAgg = adminAggs.find((a) => a.name === tr.to)
+              // Net change: use high-risk percentage delta as the headline metric
+              const netDelta = tr.dHR.value
+              const netIsWorse = netDelta > 0.01
+              const netIsBetter = netDelta < -0.01
               return (
                 <ScrollReveal key={`${tr.from}-${tr.to}`} delay={i * 100} direction="up">
                 <div
@@ -1772,6 +1787,23 @@ export default function Administrations() {
                     <ArrowRight className="h-3.5 w-3.5 text-accent" />
                     <span className="h-3 w-3 rounded-full" style={{ backgroundColor: tr.toColor, boxShadow: `0 0 6px ${tr.toColor}40` }} />
                     <span className="text-xs font-bold text-text-primary">{tr.to}</span>
+                    {/* Enhancement C: Net Change indicator */}
+                    <div className="ml-auto flex items-center gap-1">
+                      {netIsWorse ? (
+                        <TrendingUp className="h-4 w-4 text-risk-critical" />
+                      ) : netIsBetter ? (
+                        <TrendingDown className="h-4 w-4 text-risk-low" />
+                      ) : (
+                        <Minus className="h-4 w-4 text-text-muted" />
+                      )}
+                      <span className={cn(
+                        'text-sm font-bold font-mono',
+                        netIsWorse ? 'text-risk-critical' : netIsBetter ? 'text-risk-low' : 'text-text-muted'
+                      )}>
+                        {Math.abs(netDelta) < 0.01 ? '--' : `${netDelta > 0 ? '+' : ''}${netDelta.toFixed(1)}pp`}
+                      </span>
+                      <span className="text-[8px] text-text-muted font-mono">HR</span>
+                    </div>
                   </div>
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <TransitionMetric label={t('transitionMetrics.directAward')} delta={tr.dDA.value} unit=" pts" significance={sig?.da} />
@@ -1780,6 +1812,41 @@ export default function Administrations() {
                     <TransitionMetric label={t('transitionMetrics.contracts')} delta={tr.dContracts.value} unit="" isCount />
                     <TransitionMetric label={t('transitionMetrics.vendors')} delta={tr.dVendors.value} unit="" isCount invertColor />
                   </div>
+                  {/* Enhancement C: Mini-bar comparisons */}
+                  {fromAgg && toAgg && (
+                    <div className="mt-3 pt-2 border-t border-border/20 grid grid-cols-1 sm:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.directAward')}</div>
+                        <TransitionMiniBar
+                          fromName={tr.from}
+                          toName={tr.to}
+                          fromValue={fromAgg.directAwardPct}
+                          toValue={toAgg.directAwardPct}
+                          maxValue={100}
+                        />
+                      </div>
+                      <div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.highRisk')}</div>
+                        <TransitionMiniBar
+                          fromName={tr.from}
+                          toName={tr.to}
+                          fromValue={fromAgg.highRiskPct}
+                          toValue={toAgg.highRiskPct}
+                          maxValue={Math.max(fromAgg.highRiskPct, toAgg.highRiskPct, 1)}
+                        />
+                      </div>
+                      <div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.singleBid')}</div>
+                        <TransitionMiniBar
+                          fromName={tr.from}
+                          toName={tr.to}
+                          fromValue={fromAgg.singleBidPct}
+                          toValue={toAgg.singleBidPct}
+                          maxValue={Math.max(fromAgg.singleBidPct, toAgg.singleBidPct, 1)}
+                        />
+                      </div>
+                    </div>
+                  )}
                 </div>
                 </ScrollReveal>
               )
@@ -1862,6 +1929,319 @@ export default function Administrations() {
 
       </> /* end overview tab */
       )}
+    </div>
+  )
+}
+
+// =============================================================================
+// Enhancement A: Procurement Grade Card
+// =============================================================================
+
+interface ProcurementGradeResult {
+  grade: 'A' | 'B' | 'C' | 'D' | 'F'
+  score: number
+  details: Array<{ label: string; value: string; grade: string }>
+}
+
+function computeProcurementGrade(agg: AdminAgg): ProcurementGradeResult {
+  const daScore = agg.directAwardPct < 30 ? 4 : agg.directAwardPct < 50 ? 3 : agg.directAwardPct < 65 ? 2 : agg.directAwardPct < 80 ? 1 : 0
+  const hrScore = agg.highRiskPct < 8 ? 4 : agg.highRiskPct < 12 ? 3 : agg.highRiskPct < 16 ? 2 : agg.highRiskPct < 22 ? 1 : 0
+  const sbScore = agg.singleBidPct < 10 ? 4 : agg.singleBidPct < 20 ? 3 : agg.singleBidPct < 30 ? 2 : agg.singleBidPct < 40 ? 1 : 0
+  const total = (daScore + hrScore + sbScore) / 12
+  const grade: ProcurementGradeResult['grade'] = total >= 0.83 ? 'A' : total >= 0.66 ? 'B' : total >= 0.5 ? 'C' : total >= 0.33 ? 'D' : 'F'
+  return {
+    grade,
+    score: Math.round(total * 100),
+    details: [
+      { label: 'Direct Award', value: `${agg.directAwardPct.toFixed(0)}%`, grade: daScore >= 3 ? 'A' : daScore >= 2 ? 'B' : daScore >= 1 ? 'C' : 'F' },
+      { label: 'High Risk Rate', value: `${agg.highRiskPct.toFixed(1)}%`, grade: hrScore >= 3 ? 'A' : hrScore >= 2 ? 'B' : hrScore >= 1 ? 'C' : 'F' },
+      { label: 'Single Bid', value: `${agg.singleBidPct.toFixed(1)}%`, grade: sbScore >= 3 ? 'A' : sbScore >= 2 ? 'B' : sbScore >= 1 ? 'C' : 'F' },
+    ],
+  }
+}
+
+const GRADE_COLORS: Record<string, string> = {
+  A: '#16a34a',
+  B: '#84cc16',
+  C: '#eab308',
+  D: '#f97316',
+  F: '#dc2626',
+}
+
+function ProcurementGradeCard({ agg }: { agg: AdminAgg }) {
+  const { t } = useTranslation('administrations')
+  const result = useMemo(() => computeProcurementGrade(agg), [agg])
+  const gradeColor = GRADE_COLORS[result.grade] || '#64748b'
+
+  return (
+    <div
+      className="rounded-lg border bg-background-elevated/20 p-3 mt-3"
+      style={{ borderColor: `${gradeColor}30` }}
+    >
+      <div className="text-[8px] tracking-[0.25em] uppercase font-bold text-text-muted mb-2 font-mono">
+        {t('grade.title', { defaultValue: 'PROCUREMENT GRADE' })}
+      </div>
+      <div className="flex items-center gap-3">
+        <div className="flex-shrink-0 text-center">
+          <div
+            className="text-6xl font-black leading-none"
+            style={{ color: gradeColor }}
+          >
+            {result.grade}
+          </div>
+          <div className="text-[9px] font-mono text-text-muted mt-1">
+            {result.score}/100
+          </div>
+        </div>
+        <div className="flex-1 grid grid-cols-3 gap-1.5">
+          {result.details.map((d) => {
+            const detailColor = GRADE_COLORS[d.grade] || '#64748b'
+            return (
+              <div
+                key={d.label}
+                className="rounded-md border border-border/20 bg-background-elevated/30 px-1.5 py-1 text-center"
+              >
+                <div className="text-[7px] text-text-muted uppercase tracking-wider font-mono truncate">
+                  {d.label}
+                </div>
+                <div className="text-xs font-bold font-mono" style={{ color: detailColor }}>
+                  {d.grade}
+                </div>
+                <div className="text-[9px] text-text-muted font-mono">
+                  {d.value}
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <div className="text-[9px] text-text-muted font-mono mt-2 leading-relaxed">
+        {t('grade.procurement', { defaultValue: 'Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate.' })}
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Enhancement B: All-Administration Radar Comparison (Pure SVG)
+// =============================================================================
+
+function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typeof ADMINISTRATIONS }) {
+  const { t } = useTranslation('administrations')
+
+  const RADAR_CX = 150
+  const RADAR_CY = 150
+  const RADAR_R = 110
+  const AXIS_ANGLES_DEG = [-90, -18, 54, 126, 198]
+  const AXIS_LABELS = [
+    t('radar.axisDA', { defaultValue: 'Direct Award' }),
+    t('radar.axisHR', { defaultValue: 'High Risk' }),
+    t('radar.axisSB', { defaultValue: 'Single Bid' }),
+    t('radar.axisRisk', { defaultValue: 'Avg Risk' }),
+    t('radar.axisVolume', { defaultValue: 'Volume' }),
+  ]
+
+  // Compute normalized values for each admin (0=worst, 1=best)
+  const maxContracts = Math.max(...allAggs.map((a) => a.contracts), 1)
+
+  const adminPolygons = useMemo(() => {
+    return allAggs.map((agg, idx) => {
+      const admin = admins[idx]
+      // Invert: lower % = better = higher normalized value
+      const daMax = Math.max(...allAggs.map((a) => a.directAwardPct), 1)
+      const hrMax = Math.max(...allAggs.map((a) => a.highRiskPct), 1)
+      const sbMax = Math.max(...allAggs.map((a) => a.singleBidPct), 1)
+      const riskMax = Math.max(...allAggs.map((a) => a.avgRisk), 0.01)
+
+      const normalized = [
+        1 - Math.min(agg.directAwardPct / daMax, 1),   // DA: lower = better
+        1 - Math.min(agg.highRiskPct / hrMax, 1),       // HR: lower = better
+        1 - Math.min(agg.singleBidPct / sbMax, 1),      // SB: lower = better
+        1 - Math.min(agg.avgRisk / riskMax, 1),          // Risk: lower = better
+        Math.min(agg.contracts / maxContracts, 1),        // Volume: higher = more
+      ]
+
+      // Ensure minimum visibility
+      const points = normalized.map((val, i) => {
+        const v = Math.max(val, 0.05)
+        const angleRad = (AXIS_ANGLES_DEG[i] * Math.PI) / 180
+        return {
+          x: RADAR_CX + RADAR_R * v * Math.cos(angleRad),
+          y: RADAR_CY + RADAR_R * v * Math.sin(angleRad),
+        }
+      })
+
+      const pointsStr = points.map((p) => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+      return {
+        name: admin.name,
+        color: admin.color,
+        pointsStr,
+      }
+    })
+  }, [allAggs, admins, maxContracts])
+
+  // Grid pentagons at 20%, 40%, 60%, 80%, 100%
+  const gridLevels = [0.2, 0.4, 0.6, 0.8, 1.0]
+
+  function pentagonPoints(scale: number): string {
+    return AXIS_ANGLES_DEG.map((deg) => {
+      const rad = (deg * Math.PI) / 180
+      const x = RADAR_CX + RADAR_R * scale * Math.cos(rad)
+      const y = RADAR_CY + RADAR_R * scale * Math.sin(rad)
+      return `${x.toFixed(1)},${y.toFixed(1)}`
+    }).join(' ')
+  }
+
+  // Label positions slightly outside the pentagon
+  const labelPositions = AXIS_ANGLES_DEG.map((deg) => {
+    const rad = (deg * Math.PI) / 180
+    const labelR = RADAR_R + 18
+    return {
+      x: RADAR_CX + labelR * Math.cos(rad),
+      y: RADAR_CY + labelR * Math.sin(rad),
+    }
+  })
+
+  return (
+    <div className="card">
+      <CardHeader className="pb-2">
+        <CardTitle className="text-sm font-mono text-text-primary">
+          {t('radar.title', { defaultValue: 'All Administrations: Procurement Fingerprint' })}
+        </CardTitle>
+        <p className="text-xs text-text-muted mt-1">
+          {t('radar.subtitle', { defaultValue: 'Normalized comparison across 5 procurement dimensions. Outer = better performance.' })}
+        </p>
+      </CardHeader>
+      <CardContent>
+        <div className="flex justify-center">
+          <svg
+            viewBox="0 0 300 300"
+            width={300}
+            height={300}
+            className="max-w-full"
+            role="img"
+            aria-label="Radar chart comparing procurement metrics across all administrations"
+          >
+            {/* Grid pentagons */}
+            {gridLevels.map((level) => (
+              <polygon
+                key={level}
+                points={pentagonPoints(level)}
+                fill="none"
+                stroke="var(--color-border)"
+                strokeOpacity={0.3}
+                strokeWidth={0.5}
+              />
+            ))}
+            {/* Axis lines */}
+            {AXIS_ANGLES_DEG.map((deg, i) => {
+              const rad = (deg * Math.PI) / 180
+              return (
+                <line
+                  key={i}
+                  x1={RADAR_CX}
+                  y1={RADAR_CY}
+                  x2={RADAR_CX + RADAR_R * Math.cos(rad)}
+                  y2={RADAR_CY + RADAR_R * Math.sin(rad)}
+                  stroke="var(--color-border)"
+                  strokeOpacity={0.2}
+                  strokeWidth={0.5}
+                />
+              )
+            })}
+            {/* Axis labels */}
+            {labelPositions.map((pos, i) => (
+              <text
+                key={i}
+                x={pos.x}
+                y={pos.y}
+                textAnchor="middle"
+                dominantBaseline="middle"
+                fill="var(--color-text-muted)"
+                fontSize={8}
+                fontFamily="var(--font-family-mono)"
+              >
+                {AXIS_LABELS[i]}
+              </text>
+            ))}
+            {/* Admin polygons — filled */}
+            {adminPolygons.map((ap) => (
+              <polygon
+                key={`fill-${ap.name}`}
+                points={ap.pointsStr}
+                fill={ap.color}
+                fillOpacity={0.12}
+                stroke={ap.color}
+                strokeWidth={1.5}
+                strokeOpacity={0.8}
+              />
+            ))}
+          </svg>
+        </div>
+        {/* Legend */}
+        <div className="flex flex-wrap justify-center gap-3 mt-3">
+          {adminPolygons.map((ap) => (
+            <div key={ap.name} className="flex items-center gap-1.5">
+              <span
+                className="h-2.5 w-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: ap.color }}
+              />
+              <span className="text-[10px] font-mono text-text-muted">{ap.name}</span>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </div>
+  )
+}
+
+// =============================================================================
+// Enhancement C: Transition Impact Mini-Bar Comparison
+// =============================================================================
+
+function TransitionMiniBar({
+  fromName,
+  toName,
+  fromValue,
+  toValue,
+  maxValue,
+  invertColor,
+}: {
+  fromName: string
+  toName: string
+  fromValue: number
+  toValue: number
+  maxValue: number
+  invertColor?: boolean
+}) {
+  const safeMax = Math.max(maxValue, 0.01)
+  const fromPct = Math.min(100, (Math.abs(fromValue) / safeMax) * 100)
+  const toPct = Math.min(100, (Math.abs(toValue) / safeMax) * 100)
+  const isWorse = invertColor ? toValue < fromValue : toValue > fromValue
+  const isBetter = invertColor ? toValue > fromValue : toValue < fromValue
+  const toBarColor = isWorse ? '#f87171' : isBetter ? '#4ade80' : '#94a3b8'
+
+  return (
+    <div className="space-y-1 mt-1.5">
+      <div className="flex items-center gap-1.5">
+        <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{fromName}</span>
+        <div className="flex-1 h-2 bg-background-elevated/50 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full bg-text-muted/30"
+            style={{ width: `${fromPct}%` }}
+          />
+        </div>
+      </div>
+      <div className="flex items-center gap-1.5">
+        <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{toName}</span>
+        <div className="flex-1 h-2 bg-background-elevated/50 rounded-full overflow-hidden">
+          <div
+            className="h-full rounded-full"
+            style={{ width: `${toPct}%`, backgroundColor: toBarColor }}
+          />
+        </div>
+      </div>
     </div>
   )
 }

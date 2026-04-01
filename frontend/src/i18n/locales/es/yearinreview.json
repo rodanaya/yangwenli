@@ -93,5 +93,34 @@
     "low": "Bajo",
     "noData": "Sin datos de riesgo disponibles para este año"
   },
-  "vsLastYear": "vs año anterior"
+  "vsLastYear": "vs año anterior",
+  "topStory": {
+    "label": "TITULAR PRINCIPAL",
+    "severity": {
+      "critical": "CRÍTICO",
+      "high": "ALERTA ALTA",
+      "normal": "HALLAZGO CLAVE"
+    }
+  },
+  "yoy": {
+    "label": "AÑO SOBRE AÑO",
+    "subtitle": "Cambio respecto al año anterior",
+    "firstYear": "Primer año en el conjunto de datos — no hay comparación con año anterior",
+    "contracts": "Contratos",
+    "totalValue": "Valor Total",
+    "avgRisk": "Puntaje de Riesgo Prom.",
+    "directAward": "Tasa de Adjudicación Directa",
+    "improved": "mejoró",
+    "worsened": "empeoró",
+    "noChange": "sin cambio"
+  },
+  "riskDist": {
+    "label": "DISTRIBUCIÓN DE RIESGO",
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo",
+    "yearEndLabel": "Concentración en fin de año",
+    "yearEndNote": "Históricamente, la contratación del gobierno mexicano aumenta en el cuarto trimestre cuando las dependencias apresuran el gasto del presupuesto anual."
+  }
 }
