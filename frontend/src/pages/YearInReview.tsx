@@ -1095,12 +1095,10 @@ export default function YearInReview() {
       {/* ------------------------------------------------------------------ */}
       <div className="mb-6">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-          RUBLI · Informe Anual de Riesgo en Contratación Pública
+          {t('editorial.kicker')}
         </p>
         <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
-          Cada año cuenta su propia historia de gasto público. Aquí encontrarás
-          el perfil completo: quiénes ganaron, cuánto costó, qué patrones de riesgo
-          dominaron, y cómo se compara con el promedio histórico 2002-2025.
+          {t('editorial.body')}
         </p>
       </div>
 

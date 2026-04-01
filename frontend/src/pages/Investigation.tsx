@@ -780,14 +780,10 @@ export function Investigation() {
           ================================================================ */}
       <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 mb-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-blue-400 mb-1">
-          Cómo se generan estos casos
+          {t('methodology.kicker')}
         </p>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          Cada caso representa un clúster de contratos estadísticamente anómalos,
-          detectados por el ensemble PyOD (IForest + COPOD) y confirmados por
-          puntuación de riesgo v6.5 {'>'}  0.60. Los casos &quot;corroborados&quot; han sido
-          verificados contra fuentes externas (ASF, SFP, periodismo de investigación).
-          Los casos &quot;pendientes&quot; son leads activos sin verificación externa aún.
+          {t('methodology.body')}
         </p>
       </div>
 

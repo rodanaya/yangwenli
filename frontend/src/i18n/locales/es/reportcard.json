@@ -62,5 +62,8 @@
 
   "ofValue": "del valor",
   "countLabel": "contratos",
-  "viewFullMethodology": "Ver metodología completa \u2192"
+  "viewFullMethodology": "Ver metodología completa \u2192",
+  "gradeMethodology": {
+    "body": "Calificación basada en 5 dimensiones: tasa de adjudicación directa, concentración de proveedores, tasa de riesgo crítico, indicadores de fraccionamiento, y cobertura de datos. OCDE recomienda <25% adjudicaciones directas — México promedió 79.4%."
+  }
 }

@@ -62,5 +62,8 @@
 
   "ofValue": "of value",
   "countLabel": "contracts",
-  "viewFullMethodology": "View full methodology \u2192"
+  "viewFullMethodology": "View full methodology \u2192",
+  "gradeMethodology": {
+    "body": "Grade based on 5 dimensions: direct award rate, vendor concentration, critical risk rate, threshold-splitting indicators, and data coverage. OECD recommends <25% direct awards — Mexico averaged 79.4%."
+  }
 }

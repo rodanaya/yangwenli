@@ -347,7 +347,7 @@ function FilterRow({ filters, onChange }: { filters: Filters; onChange: (f: Filt
       )}
 
       <span className="ml-auto text-[10px] font-mono text-gray-500">
-        {t('filterHint')} · Ordenar por impacto financiero estimado
+        {t('filterHint')} · {t('filterHintSuffix')}
       </span>
     </div>
   )
@@ -448,19 +448,15 @@ export default function Scandals() {
       {/* ── Editorial lede ── */}
       <div className="mb-6 rounded-xl border border-white/8 bg-zinc-900/60 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-          RUBLI · Casos Documentados de Corrupción · 2001-2025
+          {t('editorial.kicker')}
         </p>
         <p className="text-sm text-zinc-300 leading-relaxed">
-          43 casos de fraude en contratación pública federal mexicana, documentados por
-          periodistas, auditores y fiscales. Clasificados por impacto financiero estimado.
-          Tres patrones dominan: empresas fantasma (40%), sobreprecio (28%),
-          y colusión en licitaciones (21%). Los casos verificados alimentan el modelo de
-          riesgo v6.5 — cada empresa documentada aquí hace el modelo más preciso.
+          {t('editorial.lede')}
         </p>
         <div className="mt-3 flex flex-wrap gap-4 text-xs text-zinc-500">
-          <span>Procesado judicialmente</span>
-          <span>Bajo investigación</span>
-          <span>Solo datos RUBLI</span>
+          <span>{t('editorial.statusProcessed')}</span>
+          <span>{t('editorial.statusInvestigated')}</span>
+          <span>{t('editorial.statusDataOnly')}</span>
         </div>
       </div>
 

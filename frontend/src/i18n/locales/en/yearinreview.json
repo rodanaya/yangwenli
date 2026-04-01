@@ -122,5 +122,9 @@
     "low": "Low",
     "yearEndLabel": "Year-end concentration",
     "yearEndNote": "Historically, Mexican government procurement spikes in Q4 as agencies rush to exhaust annual budgets."
+  },
+  "editorial": {
+    "kicker": "RUBLI · Annual Public Procurement Risk Report",
+    "body": "Every year tells its own story of public spending. Here you will find the complete profile: who won, what it cost, which risk patterns dominated, and how it compares to the 2002-2025 historical average."
   }
 }

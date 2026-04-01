@@ -418,10 +418,7 @@ function HeroSection({
             </span>
             {/* Grade methodology explanation */}
             <p className="text-xs text-zinc-500 max-w-sm text-center mt-2 leading-relaxed">
-              Calificación basada en 5 dimensiones: tasa de adjudicación directa,
-              concentración de proveedores, tasa de riesgo crítico,
-              indicadores de fraccionamiento, y cobertura de datos.
-              OCDE recomienda {'<'}25% adjudicaciones directas — México promedió 79.4%.
+              {t('gradeMethodology.body')}
             </p>
           </motion.div>
 

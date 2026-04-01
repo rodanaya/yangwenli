@@ -385,29 +385,26 @@ export function Sectors() {
         {/* Editorial finding callout */}
         <div className="mb-8">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Análisis por Sector · 2002-2025
+            {t('editorial.kicker')}
           </p>
           <h1 className="text-2xl font-bold text-white leading-tight mb-2">
-            Dónde se concentra el riesgo en el gasto federal
+            {t('editorial.headline')}
           </h1>
           <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl mb-4">
-            12 sectores. 3.06 millones de contratos. MXN 9.88 billones. El modelo v6.5
-            asigna puntuaciones de riesgo a cada contrato usando 9 indicadores estadísticos
-            calibrados contra 1,363 casos documentados de corrupción. Agricultura encabeza
-            la lista: 93.5% adjudicación directa, 0.369 riesgo promedio.
+            {t('editorial.body')}
           </p>
           <div className="flex flex-wrap gap-3">
             <div className="border-l-2 border-red-500 pl-3 py-0.5">
               <div className="text-xl font-mono font-bold text-red-500">93.5%</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">DA en Agricultura · AMLO 2019-24</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat1Label')}</div>
             </div>
             <div className="border-l-2 border-amber-500 pl-3 py-0.5">
               <div className="text-xl font-mono font-bold text-amber-400">MXN 3.07B</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">valor en riesgo · sector salud</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat2Label')}</div>
             </div>
             <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
               <div className="text-xl font-mono font-bold text-cyan-400">3.3×</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">sobre el límite OCDE del 25%</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat3Label')}</div>
             </div>
           </div>
         </div>

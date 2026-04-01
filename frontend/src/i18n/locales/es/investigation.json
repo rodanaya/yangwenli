@@ -326,5 +326,9 @@
     "medium": "Credibilidad media",
     "high": "Credibilidad alta"
   },
-  "highPriority": "Alta Prioridad"
+  "highPriority": "Alta Prioridad",
+  "methodology": {
+    "kicker": "Cómo se generan estos casos",
+    "body": "Cada caso representa un clúster de contratos estadísticamente anómalos, detectados por el ensemble PyOD (IForest + COPOD) y confirmados por puntuación de riesgo v6.5 > 0.60. Los casos \"corroborados\" han sido verificados contra fuentes externas (ASF, SFP, periodismo de investigación). Los casos \"pendientes\" son leads activos sin verificación externa aún."
+  }
 }

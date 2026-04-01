@@ -243,5 +243,13 @@
   "actions": {
     "vendorProfile": "Perfil del Proveedor",
     "redThread": "Investigación Hilo Rojo"
+  },
+  "explainer": {
+    "kicker": "ARIA · Automated Risk Investigation Algorithm",
+    "body": "ARIA combina nueve módulos de análisis — puntuación de riesgo v6.5, detección de anomalías PyOD, análisis de redes de co-licitación, y cruce con registros externos (SAT EFOS, SFP, ASF) — para clasificar a los >318K proveedores en cuatro niveles de prioridad de investigación. Los proveedores T1 son los 320 casos más críticos: todos muestran múltiples señales de alarma simultáneas.",
+    "t1Label": "Investigación inmediata",
+    "t2Label": "Revisión prioritaria",
+    "t3Label": "Monitoreo activo",
+    "t4Label": "Vigilancia pasiva"
   }
 }

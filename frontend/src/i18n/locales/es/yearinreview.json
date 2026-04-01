@@ -122,5 +122,9 @@
     "low": "Bajo",
     "yearEndLabel": "Concentración en fin de año",
     "yearEndNote": "Históricamente, la contratación del gobierno mexicano aumenta en el cuarto trimestre cuando las dependencias apresuran el gasto del presupuesto anual."
+  },
+  "editorial": {
+    "kicker": "RUBLI · Informe Anual de Riesgo en Contratación Pública",
+    "body": "Cada año cuenta su propia historia de gasto público. Aquí encontrarás el perfil completo: quiénes ganaron, cuánto costó, qué patrones de riesgo dominaron, y cómo se compara con el promedio histórico 2002-2025."
   }
 }

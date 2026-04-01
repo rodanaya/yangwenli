@@ -8,6 +8,14 @@
   "viewCase": "Open case",
   "byFraudType": "By Fraud Type",
   "filterHint": "Sorted by fraud amount",
+  "filterHintSuffix": "Sort by estimated financial impact",
+  "editorial": {
+    "kicker": "RUBLI · Documented Corruption Cases · 2001-2025",
+    "lede": "43 cases of fraud in Mexican federal public procurement, documented by journalists, auditors, and prosecutors. Ranked by estimated financial impact. Three patterns dominate: ghost companies (40%), overpricing (28%), and bid collusion (21%). Verified cases feed the v6.5 risk model — every documented company makes the model more precise.",
+    "statusProcessed": "Prosecuted",
+    "statusInvestigated": "Under investigation",
+    "statusDataOnly": "RUBLI data only"
+  },
   "resultCount": "{{count}} scandals",
   "noResults": "No scandals match the current filters.",
   "noResultsHint": "Try adjusting or clearing your filters.",

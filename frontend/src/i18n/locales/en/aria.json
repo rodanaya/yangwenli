@@ -243,5 +243,13 @@
   "actions": {
     "vendorProfile": "Vendor Profile",
     "redThread": "Red Thread Investigation"
+  },
+  "explainer": {
+    "kicker": "ARIA · Automated Risk Investigation Algorithm",
+    "body": "ARIA combines nine analysis modules — v6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",
+    "t1Label": "Immediate investigation",
+    "t2Label": "Priority review",
+    "t3Label": "Active monitoring",
+    "t4Label": "Passive surveillance"
   }
 }
