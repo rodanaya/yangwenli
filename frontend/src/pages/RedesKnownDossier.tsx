@@ -12,7 +12,7 @@ import { Link } from 'react-router-dom'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ariaApi, vendorApi, networkApi } from '@/api/client'
 import type { AriaQueueItem, VendorDetailResponse } from '@/api/types'
-import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { cn, formatCompactMXN, formatNumber, formatPercent, formatPercentSafe } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { getRiskLevelFromScore } from '@/lib/constants'
 import {
@@ -888,11 +888,11 @@ function VendorDetailPanel({ vendorId, ariaItem, onClose }: VendorDetailPanelPro
               />
               <StatCell
                 label={t('detail.directAward')}
-                value={vendor.direct_award_pct != null ? formatPercent(vendor.direct_award_pct / 100, 1) : NA}
+                value={vendor.direct_award_pct != null ? formatPercentSafe(vendor.direct_award_pct, false) : NA}
               />
               <StatCell
                 label={t('detail.singleBid')}
-                value={vendor.single_bid_pct != null ? formatPercent(vendor.single_bid_pct / 100, 1) : NA}
+                value={vendor.single_bid_pct != null ? formatPercentSafe(vendor.single_bid_pct, false) : NA}
               />
               <StatCell
                 label={t('detail.yearsActive')}

@@ -85,13 +85,13 @@ const METRICS: MetricDef[] = [
   {
     tKey: 'metrics.directAwardPct',
     getValue: (v) => v.direct_award_pct,
-    format: (n) => formatPercentSafe(n),
+    format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
     tKey: 'metrics.singleBidPct',
     getValue: (v) => v.single_bid_pct,
-    format: (n) => formatPercentSafe(n),
+    format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
