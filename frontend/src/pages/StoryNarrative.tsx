@@ -51,6 +51,12 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'community-bubbles': StoryCharts.StoryCommunityBubbles,
   'procedure-breakdown': StoryCharts.StoryProcedureBreakdown,
   'vendor-fingerprint': StoryCharts.StoryVendorFingerprint,
+  'story-cuarta-adj': StoryCharts.StoryCuartaAdjudicacion,
+  'story-granero-vacio': StoryCharts.StoryGraneroVacio,
+  'story-nuevos-ricos': StoryCharts.StoryNuevosRicos,
+  'story-hemoser': StoryCharts.StoryHemoserSplitting,
+  'story-austeridad': StoryCharts.StoryAusteridadChart,
+  'story-cero-competencia': StoryCharts.StoryCeroCompetenciaChart,
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified

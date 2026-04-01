@@ -115,8 +115,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'sunburst',
-          title: 'Huella presupuestal por administración — 5 sexenios, 12 sectores',
-          chartId: 'admin-sunburst',
+          title: 'Adjudicación directa por administración — Calderón, Peña, AMLO',
+          chartId: 'story-cuarta-adj',
         },
       },
       {
@@ -259,8 +259,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'racing',
-          title: 'Gasto federal por sector 2002–2025 — el ascenso de la agricultura',
-          chartId: 'racing-bar',
+          title: 'Proveedores agrícolas AMLO — cero competencia, máximo opacidad',
+          chartId: 'story-granero-vacio',
         },
       },
       {
@@ -375,8 +375,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'scatter',
-          title: 'La paradoja: adjudicación directa ≠ riesgo de corrupción',
-          chartId: 'sector-paradox',
+          title: 'Tasa de adjudicación directa por cohorte de ingreso al padrón',
+          chartId: 'story-nuevos-ricos',
         },
       },
       {
@@ -466,8 +466,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'vendor-list',
-          title: 'HEMOSER — 12 contratos bajo el umbral de supervisión · 2 agosto 2023',
-          chartId: 'threshold-splitting',
+          title: 'Fraccionamiento sistemático bajo AMLO — 93K contratos sospechosos',
+          chartId: 'story-hemoser',
         },
       },
       {
@@ -550,8 +550,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'radar',
-          title: 'Huella de contratación por sexenio — Fox a Sheinbaum',
-          chartId: 'administration-fingerprints',
+          title: 'Gasto y opacidad por administración — el gasto bajó, la opacidad subió',
+          chartId: 'story-austeridad',
         },
       },
       {
@@ -659,8 +659,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'scatter',
-          title: 'La paradoja: sectores con más adjudicación directa no son los más corruptos',
-          chartId: 'sector-paradox',
+          title: 'Competencia real por sector bajo AMLO 2019-2024',
+          chartId: 'story-cero-competencia',
         },
       },
       {
