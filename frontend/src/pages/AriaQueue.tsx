@@ -992,6 +992,34 @@ export default function AriaPage() {
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
+        {/* ARIA Algorithm Explainer */}
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-2">
+            ARIA · Automated Risk Investigation Algorithm
+          </p>
+          <p className="text-sm text-zinc-300 leading-relaxed mb-3">
+            ARIA combina nueve módulos de análisis — puntuación de riesgo v6.5,
+            detección de anomalías PyOD, análisis de redes de co-licitación,
+            y cruce con registros externos (SAT EFOS, SFP, ASF) — para clasificar
+            a los {'>'}318K proveedores en cuatro niveles de prioridad de investigación.
+            Los proveedores T1 son los 320 casos más críticos: todos muestran múltiples
+            señales de alarma simultáneas.
+          </p>
+          <div className="grid grid-cols-4 gap-2 text-center">
+            {([
+              { tier: 'T1', count: '320', label: 'Investigación inmediata', color: '#dc2626' },
+              { tier: 'T2', count: '1,234', label: 'Revisión prioritaria', color: '#ea580c' },
+              { tier: 'T3', count: '5,016', label: 'Monitoreo activo', color: '#eab308' },
+              { tier: 'T4', count: '311K', label: 'Vigilancia pasiva', color: '#64748b' },
+            ] as { tier: string; count: string; label: string; color: string }[]).map(({ tier, count, label, color }) => (
+              <div key={tier} className="rounded-lg bg-zinc-900/80 p-2">
+                <div className="text-lg font-mono font-bold" style={{ color }}>{count}</div>
+                <div className="text-[9px] text-zinc-500 uppercase tracking-wide">{tier} · {label}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Data source attribution */}
         <div className="flex flex-wrap items-center gap-3">
           <FuentePill source="COMPRANET" verified={true} />

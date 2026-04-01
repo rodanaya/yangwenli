@@ -382,6 +382,36 @@ export function Sectors() {
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
+        {/* Editorial finding callout */}
+        <div className="mb-8">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI · Análisis por Sector · 2002-2025
+          </p>
+          <h1 className="text-2xl font-bold text-white leading-tight mb-2">
+            Dónde se concentra el riesgo en el gasto federal
+          </h1>
+          <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl mb-4">
+            12 sectores. 3.06 millones de contratos. MXN 9.88 billones. El modelo v6.5
+            asigna puntuaciones de riesgo a cada contrato usando 9 indicadores estadísticos
+            calibrados contra 1,363 casos documentados de corrupción. Agricultura encabeza
+            la lista: 93.5% adjudicación directa, 0.369 riesgo promedio.
+          </p>
+          <div className="flex flex-wrap gap-3">
+            <div className="border-l-2 border-red-500 pl-3 py-0.5">
+              <div className="text-xl font-mono font-bold text-red-500">93.5%</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">DA en Agricultura · AMLO 2019-24</div>
+            </div>
+            <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+              <div className="text-xl font-mono font-bold text-amber-400">MXN 3.07B</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">valor en riesgo · sector salud</div>
+            </div>
+            <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
+              <div className="text-xl font-mono font-bold text-cyan-400">3.3×</div>
+              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">sobre el límite OCDE del 25%</div>
+            </div>
+          </div>
+        </div>
+
         {/* Controls row */}
         <div className="flex items-center justify-between mb-6">
           <p className="text-sm text-zinc-400">
