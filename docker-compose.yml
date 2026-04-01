@@ -47,9 +47,11 @@ services:
       context: ./backend
       dockerfile: Dockerfile
     container_name: rubli-backup
+    # Mount RUBLI_DEPLOY.db (real file, not symlink) read-write so WAL checkpoint can run before backup.
+    # The script calls PRAGMA wal_checkpoint(TRUNCATE) to flush WAL into the main file before copying.
     entrypoint: ["sh", "-c", "while true; do python -m scripts.backup_database --output-dir /backups && sleep 86400; done"]
     volumes:
-      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_NORMALIZED.db:ro  # mount real file (not symlink) as expected path
+      - ./backend/RUBLI_DEPLOY.db:/app/RUBLI_NORMALIZED.db  # rw: checkpoint requires write access; file is 666 on prod
       - rubli-backups:/backups
     environment:
       - PYTHONPATH=/app
