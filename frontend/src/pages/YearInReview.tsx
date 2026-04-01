@@ -79,18 +79,17 @@ function HeroBannerStats({
   year,
   contracts,
   totalValue,
-  avgRisk,
+  highRiskPct,
   isLoading,
 }: {
   year: number
   contracts: number
   totalValue: number
-  avgRisk: number
+  highRiskPct: number
   isLoading: boolean
 }) {
   const { t } = useTranslation('yearinreview')
-  const riskLevel = getRiskLevel(avgRisk)
-  const riskColor = getRiskLevelColor(riskLevel)
+  const riskColor = highRiskPct >= 15 ? '#f87171' : highRiskPct >= 10 ? '#fb923c' : '#fbbf24'
 
   const stats: { value: string; label: string; color: string }[] = [
     {
@@ -104,7 +103,7 @@ function HeroBannerStats({
       color: '#a78bfa',
     },
     {
-      value: isLoading ? '—' : avgRisk.toFixed(3),
+      value: isLoading ? '—' : `${highRiskPct.toFixed(1)}%`,
       label: t('heroStats.highRiskRate'),
       color: riskColor,
     },
@@ -1098,7 +1097,7 @@ export default function YearInReview() {
         year={validYear}
         contracts={yearRow?.contracts ?? 0}
         totalValue={yearRow?.total_value ?? 0}
-        avgRisk={yearRow?.avg_risk ?? 0}
+        highRiskPct={yearRow?.high_risk_pct ?? 0}
         isLoading={isLoading}
       />
 
