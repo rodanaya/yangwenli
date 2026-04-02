@@ -351,9 +351,8 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
 
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="var(--color-border)"
+            stroke="#3f3f46"
             vertical={false}
-            opacity={0.6}
           />
 
           <XAxis
@@ -361,8 +360,8 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
             type="number"
             domain={[minYear, maxYear]}
             allowDecimals={false}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            axisLine={{ stroke: '#3f3f46' }}
             tickLine={false}
             tickCount={Math.min(chartData.length, 8)}
           />
@@ -370,7 +369,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           {/* Left Y-axis: high-risk rate % */}
           <YAxis
             yAxisId="left"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => `${v.toFixed(0)}%`}
@@ -382,7 +381,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           <YAxis
             yAxisId="right"
             orientation="right"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
             axisLine={false}
             tickLine={false}
             tickFormatter={(v: number) => v.toFixed(2)}

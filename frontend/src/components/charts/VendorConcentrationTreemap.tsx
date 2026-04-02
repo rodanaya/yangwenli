@@ -1,6 +1,8 @@
 /**
  * VendorConcentrationTreemap — ECharts treemap showing vendor concentration at an institution.
  * Sized by total_value_mxn, colored by avg_risk_score.
+ *
+ * Design: dark editorial (zinc-900 bg), risk-colored cells, zinc-800 borders.
  */
 import { useMemo } from 'react'
 import ReactECharts from 'echarts-for-react'
@@ -46,7 +48,7 @@ export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _to
       riskScore: v.avg_risk_score ?? 0,
       itemStyle: {
         color: riskToColor(v.avg_risk_score ?? 0),
-        borderColor: 'var(--color-background-card)',
+        borderColor: '#27272a',
         borderWidth: 2,
       },
     }))
@@ -61,8 +63,8 @@ export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _to
         contractCount: rest.reduce((s, v) => s + (v.contract_count ?? 0), 0),
         riskScore: 0,
         itemStyle: {
-          color: '#64748b',
-          borderColor: 'var(--color-background-card)',
+          color: '#52525b',
+          borderColor: '#27272a',
           borderWidth: 2,
         },
       }
@@ -74,18 +76,26 @@ export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _to
   const allData = otherNode ? [...treeData, otherNode] : treeData
 
   const option = useMemo(() => ({
+    backgroundColor: 'transparent',
     tooltip: {
+      backgroundColor: '#18181b',
+      borderColor: '#3f3f46',
+      textStyle: {
+        color: '#f4f4f5',
+        fontFamily: "ui-monospace, 'SF Mono', monospace",
+        fontSize: 12,
+      },
       formatter: (info: any) => {
         const d = info.data
         if (!d) return ''
         const risk = d.riskScore ?? 0
         const riskPct = (risk * 100).toFixed(1)
         return `
-          <div style="font-size:12px;line-height:1.6">
-            <strong>${info.name}</strong><br/>
-            Valor: ${formatCompactMXN(d.value)}<br/>
-            Contratos: ${formatNumber(d.contractCount)}<br/>
-            Riesgo: ${riskPct}%
+          <div style="font-size:12px;line-height:1.6;color:#f4f4f5">
+            <strong style="color:#f4f4f5">${info.name}</strong><br/>
+            <span style="color:#a1a1aa">Valor:</span> ${formatCompactMXN(d.value)}<br/>
+            <span style="color:#a1a1aa">Contratos:</span> ${formatNumber(d.contractCount)}<br/>
+            <span style="color:#a1a1aa">Riesgo:</span> <span style="color:${riskToColor(risk)}">${riskPct}%</span>
           </div>
         `
       },
@@ -107,26 +117,28 @@ export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _to
         rich: {
           name: {
             fontSize: 10,
-            color: '#fff',
+            color: '#f4f4f5',
             fontWeight: 'bold',
             lineHeight: 14,
+            fontFamily: "ui-monospace, 'SF Mono', monospace",
           },
           value: {
             fontSize: 9,
-            color: 'rgba(255,255,255,0.7)',
+            color: '#a1a1aa',
             lineHeight: 12,
+            fontFamily: "ui-monospace, 'SF Mono', monospace",
           },
         },
         padding: [4, 6],
       },
       itemStyle: {
-        borderColor: 'var(--color-background-card)',
+        borderColor: '#27272a',
         borderWidth: 2,
         gapWidth: 2,
       },
       levels: [{
         itemStyle: {
-          borderColor: 'var(--color-border)',
+          borderColor: '#3f3f46',
           borderWidth: 0,
           gapWidth: 2,
         },

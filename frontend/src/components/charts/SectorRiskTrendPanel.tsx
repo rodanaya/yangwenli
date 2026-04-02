@@ -580,9 +580,8 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
         >
           <CartesianGrid
             strokeDasharray="3 3"
-            stroke="#1e293b"
+            stroke="#3f3f46"
             vertical={false}
-            opacity={0.6}
           />
 
           <XAxis
@@ -591,18 +590,18 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
             domain={[minYear, maxYear]}
             allowDecimals={false}
             tick={{
-              fill: '#64748b',
+              fill: '#71717a',
               fontSize: 10,
               fontFamily: 'var(--font-mono, monospace)',
             }}
-            axisLine={{ stroke: '#1e293b' }}
+            axisLine={{ stroke: '#3f3f46' }}
             tickLine={false}
             tickCount={Math.min(chartData.length, 8)}
           />
 
           <YAxis
             tick={{
-              fill: '#64748b',
+              fill: '#71717a',
               fontSize: 10,
               fontFamily: 'var(--font-mono, monospace)',
             }}

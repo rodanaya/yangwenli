@@ -1,3 +1,11 @@
+/**
+ * VendorConcentrationChart — Editorial dark-mode bar chart
+ *
+ * Shows vendor market concentration by category (% of total spend),
+ * color-coded by risk level. Dark zinc-900 aesthetic with monospace
+ * axis labels, editorial headline, and OECD context.
+ */
+
 import { motion } from 'framer-motion'
 import {
   BarChart,
@@ -8,39 +16,43 @@ import {
   Tooltip,
   ResponsiveContainer,
   Cell,
-  LabelList,
+  ReferenceLine,
 } from 'recharts'
-
-const RISK_COLORS: Record<string, string> = {
-  critical: '#dc2626',
-  high: '#f97316',
-  medium: '#eab308',
-}
+import { RISK_COLORS } from '@/lib/constants'
 
 const data = [
-  { vendor: 'Farmaceutica (top 3)', share: 8.4, risk: 'critical' },
-  { vendor: 'Energia (CFE/PEMEX red)', share: 6.7, risk: 'high' },
-  { vendor: 'Construccion (top 5)', share: 5.9, risk: 'high' },
-  { vendor: 'Alimentacion (SEGALMEX red)', share: 4.8, risk: 'critical' },
-  { vendor: 'Tecnologia (top 4)', share: 3.9, risk: 'high' },
-  { vendor: 'Logistica (top 3)', share: 3.1, risk: 'medium' },
-  { vendor: 'Salud (IMSS red)', share: 2.8, risk: 'critical' },
-  { vendor: 'Otros top 20', share: 11.2, risk: 'medium' },
+  { vendor: 'Farmaceutica (top 3)', share: 8.4, risk: 'critical' as const },
+  { vendor: 'Energia (CFE/PEMEX)', share: 6.7, risk: 'high' as const },
+  { vendor: 'Construccion (top 5)', share: 5.9, risk: 'high' as const },
+  { vendor: 'Alimentacion (SEGALMEX)', share: 4.8, risk: 'critical' as const },
+  { vendor: 'Tecnologia (top 4)', share: 3.9, risk: 'high' as const },
+  { vendor: 'Logistica (top 3)', share: 3.1, risk: 'medium' as const },
+  { vendor: 'Salud (IMSS red)', share: 2.8, risk: 'critical' as const },
+  { vendor: 'Otros top 20', share: 11.2, risk: 'medium' as const },
 ]
+
+const CHART_RISK_COLORS: Record<string, string> = {
+  critical: RISK_COLORS.critical,
+  high: RISK_COLORS.high,
+  medium: RISK_COLORS.medium,
+  low: RISK_COLORS.low,
+}
 
 interface PayloadEntry {
   payload: { vendor: string; share: number; risk: string }
 }
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   const riskLabel = d.risk === 'critical' ? 'Critico' : d.risk === 'high' ? 'Alto' : 'Medio'
   return (
-    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
-      <p className="font-semibold">{d.vendor}</p>
-      <p className="text-text-secondary">{d.share}% del gasto total</p>
-      <p style={{ color: RISK_COLORS[d.risk] }}>Riesgo: {riskLabel}</p>
+    <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs shadow-xl">
+      <p className="font-semibold text-zinc-100">{d.vendor}</p>
+      <p className="text-zinc-400 mt-0.5 font-mono tabular-nums">{d.share}% del gasto total</p>
+      <p className="mt-0.5 font-mono" style={{ color: CHART_RISK_COLORS[d.risk] }}>
+        Riesgo: {riskLabel}
+      </p>
     </div>
   )
 }
@@ -52,56 +64,94 @@ export function VendorConcentrationChart() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
+      className="bg-zinc-900 rounded-xl p-4 border border-zinc-800"
     >
-      <p className="mb-2 text-center text-xs text-text-muted">
-        Concentracion por categoria de proveedor (% del gasto total)
+      {/* Editorial overline */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+        RUBLI · Market Concentration
       </p>
-      <ResponsiveContainer width="100%" height={280}>
-        <BarChart data={data} margin={{ top: 20, right: 20, left: 10, bottom: 40 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+      {/* Editorial headline — the finding, not the topic */}
+      <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
+        Top 20 vendors control 46.8% of federal spending
+      </h3>
+      <p className="text-xs text-zinc-500 font-mono mb-4">
+        Concentration by vendor category · % of total spend · OECD red line: 5%
+      </p>
+
+      <ResponsiveContainer width="100%" height={300}>
+        <BarChart data={data} margin={{ top: 8, right: 16, left: 4, bottom: 48 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="vendor"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+            tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={{ stroke: '#3f3f46' }}
             angle={-25}
             textAnchor="end"
-            height={60}
+            height={56}
             interval={0}
           />
           <YAxis
             domain={[0, 14]}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={false}
+            tickFormatter={(v: number) => `${v}%`}
+            width={36}
+          />
+          <Tooltip
+            content={<ChartTooltip />}
+            cursor={{ fill: '#3f3f46', opacity: 0.2 }}
+          />
+          {/* OECD 5% concentration threshold */}
+          <ReferenceLine
+            y={5}
+            stroke="#22d3ee"
+            strokeWidth={1.5}
+            strokeDasharray="6 3"
             label={{
-              value: '% gasto total',
-              angle: -90,
-              position: 'insideLeft',
-              style: { fill: 'var(--color-text-muted)', fontSize: 10 },
+              value: 'OECD: 5% concentration limit',
+              fill: '#22d3ee',
+              fontSize: 9,
+              fontFamily: 'ui-monospace, monospace',
+              position: 'insideTopRight',
             }}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
           <Bar
             dataKey="share"
-            radius={[4, 4, 0, 0]}
+            radius={[3, 3, 0, 0]}
             isAnimationActive={true}
-            animationDuration={1200}
+            animationDuration={800}
             animationEasing="ease-out"
           >
             {data.map((entry, index) => (
-              <Cell key={index} fill={RISK_COLORS[entry.risk]} />
+              <Cell key={index} fill={CHART_RISK_COLORS[entry.risk]} fillOpacity={0.85} />
             ))}
-            <LabelList
-              dataKey="share"
-              position="top"
-              // eslint-disable-next-line @typescript-eslint/no-explicit-any
-              formatter={((v: number | string) => `${v}%`) as any}
-              style={{ fill: 'var(--color-text-primary)', fontSize: 10 }}
-            />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Risk legend */}
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+        {(['critical', 'high', 'medium'] as const).map((level) => (
+          <div key={level} className="flex items-center gap-1.5">
+            <div
+              className="w-2 h-2 rounded-sm"
+              style={{ backgroundColor: CHART_RISK_COLORS[level] }}
+            />
+            <span className="text-[10px] font-mono text-zinc-500 capitalize">{level}</span>
+          </div>
+        ))}
+        <div className="flex items-center gap-1.5 ml-auto">
+          <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: '#22d3ee' }} />
+          <span className="text-[10px] font-mono text-zinc-500">OECD benchmark</span>
+        </div>
+      </div>
+
+      {/* Source */}
+      <p className="text-[10px] text-zinc-600 mt-2 font-mono">
+        Source: COMPRANET 2002-2025 · RUBLI v6.5 risk model
+      </p>
     </motion.div>
   )
 }

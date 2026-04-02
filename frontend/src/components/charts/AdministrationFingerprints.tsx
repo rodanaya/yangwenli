@@ -1,3 +1,11 @@
+/**
+ * AdministrationFingerprints — 5-panel radar comparison of Mexican presidents
+ *
+ * Each administration gets a radar chart showing normalized metrics:
+ * risk score, high-risk %, direct award %, total value, and volume.
+ *
+ * Design: dark editorial (zinc-900 bg), monospace labels, colored radar fills.
+ */
 
 import {
   RadarChart,
@@ -11,53 +19,53 @@ import { useTranslation } from 'react-i18next'
 import { getLocale } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
-// Static data — no API call
+// Static data
 // ---------------------------------------------------------------------------
 
 const ADMIN_DATA = [
   {
-    name: 'Fox\n2000–06',
+    name: 'Fox\n2000-06',
     shortName: 'Fox',
-    yearRange: '2000–06',
+    yearRange: '2000-06',
     contracts: 207659,
     avgRisk: 0.1272,
     hrPct: 10.85,
     directAwardPct: 40.19,
     totalBillions: 938.9,
-    color: '#6366f1',
+    color: '#3b82f6',
   },
   {
-    name: 'Calderón\n2007–12',
-    shortName: 'Calderón',
-    yearRange: '2007–12',
+    name: 'Calderon\n2007-12',
+    shortName: 'Calderon',
+    yearRange: '2007-12',
     contracts: 487722,
     avgRisk: 0.0986,
     hrPct: 8.37,
     directAwardPct: 42.51,
     totalBillions: 2420.8,
-    color: '#3b82f6',
+    color: '#22d3ee',
   },
   {
-    name: 'Peña Nieto\n2013–18',
+    name: 'Pena Nieto\n2013-18',
     shortName: 'EPN',
-    yearRange: '2013–18',
+    yearRange: '2013-18',
     contracts: 1253865,
     avgRisk: 0.091,
     hrPct: 7.59,
     directAwardPct: 73.35,
     totalBillions: 3076.5,
-    color: '#10b981',
+    color: '#ea580c',
   },
   {
-    name: 'AMLO\n2019–24',
+    name: 'AMLO\n2019-24',
     shortName: 'AMLO',
-    yearRange: '2019–24',
+    yearRange: '2019-24',
     contracts: 1067913,
     avgRisk: 0.1154,
     hrPct: 10.24,
     directAwardPct: 79.52,
     totalBillions: 2772.0,
-    color: '#f59e0b',
+    color: '#8b5cf6',
   },
   {
     name: 'Sheinbaum\n2025+',
@@ -73,7 +81,7 @@ const ADMIN_DATA = [
 ]
 
 // ---------------------------------------------------------------------------
-// Normalization maxima
+// Normalization
 // ---------------------------------------------------------------------------
 
 const MAX_AVG_RISK = 0.1272
@@ -127,7 +135,7 @@ function buildRadarData(admin: (typeof ADMIN_DATA)[0]): RadarDatum[] {
 }
 
 // ---------------------------------------------------------------------------
-// Custom tooltip
+// Custom tooltip — dark editorial
 // ---------------------------------------------------------------------------
 
 interface TooltipPayloadItem {
@@ -144,10 +152,13 @@ function CustomTooltip({
   if (!active || !payload || payload.length === 0) return null
   const d = payload[0].payload
   return (
-    <div className="bg-background-card border border-border rounded-md px-3 py-2 text-xs shadow-xl">
-      <p className="text-text-secondary font-medium mb-0.5">{d.axis}</p>
-      <p className="text-text-primary font-mono">{d.rawLabel}</p>
-      <p className="text-text-muted mt-0.5">Index: {d.value}/100</p>
+    <div
+      className="rounded-lg px-3 py-2 text-xs shadow-2xl"
+      style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}
+    >
+      <p className="text-zinc-400 font-mono font-medium mb-0.5">{d.axis}</p>
+      <p className="text-zinc-100 font-mono">{d.rawLabel}</p>
+      <p className="text-zinc-600 mt-0.5 font-mono">Index: {d.value}/100</p>
     </div>
   )
 }
@@ -160,28 +171,28 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
   const data = buildRadarData(admin)
 
   return (
-    <div className="flex flex-col items-center bg-background-elevated border border-border rounded-xl p-4 gap-2">
+    <div className="flex flex-col items-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 gap-2">
       {/* Title */}
       <div className="text-center">
-        <p className="text-sm font-bold text-text-primary leading-tight">{admin.shortName}</p>
-        <p className="text-[10px] text-text-muted font-mono">{admin.yearRange}</p>
+        <p className="text-sm font-bold text-zinc-100 leading-tight">{admin.shortName}</p>
+        <p className="text-[10px] text-zinc-500 font-mono">{admin.yearRange}</p>
       </div>
 
       {/* Radar */}
       <div className="w-full" style={{ height: 180 }}>
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={data} margin={{ top: 10, right: 20, bottom: 10, left: 20 }}>
-            <PolarGrid stroke="var(--color-border)" />
+            <PolarGrid stroke="#3f3f46" />
             <PolarAngleAxis
               dataKey="axis"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+              tick={{ fill: '#71717a', fontSize: 9, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
             />
             <Radar
               name={admin.shortName}
               dataKey="value"
               stroke={admin.color}
               fill={admin.color}
-              fillOpacity={0.3}
+              fillOpacity={0.2}
               strokeWidth={2}
             />
             <Tooltip content={<CustomTooltip />} />
@@ -191,14 +202,14 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
 
       {/* Mini stats */}
       <div className="w-full grid grid-cols-2 gap-1 mt-1">
-        <div className="text-center bg-background-card rounded-md py-1">
-          <p className="text-[10px] text-text-muted">High-Risk</p>
+        <div className="text-center bg-zinc-800/50 rounded-md py-1">
+          <p className="text-[10px] text-zinc-500 font-mono">High-Risk</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.color }}>
             {admin.hrPct.toFixed(1)}%
           </p>
         </div>
-        <div className="text-center bg-background-card rounded-md py-1">
-          <p className="text-[10px] text-text-muted">Direct Award</p>
+        <div className="text-center bg-zinc-800/50 rounded-md py-1">
+          <p className="text-[10px] text-zinc-500 font-mono">Direct Award</p>
           <p className="text-xs font-mono font-semibold" style={{ color: admin.color }}>
             {admin.directAwardPct.toFixed(0)}%
           </p>
@@ -209,7 +220,7 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Insight stat card
+// Insight stat card — dark editorial
 // ---------------------------------------------------------------------------
 
 function InsightCard({
@@ -224,12 +235,12 @@ function InsightCard({
   color: string
 }) {
   return (
-    <div className="flex flex-col gap-1 bg-background-elevated border border-border rounded-xl p-4">
-      <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">{label}</p>
+    <div className="flex flex-col gap-1 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+      <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.15em]">{label}</p>
       <p className="text-base font-bold font-mono" style={{ color }}>
         {value}
       </p>
-      <p className="text-[11px] text-text-secondary">{note}</p>
+      <p className="text-[11px] text-zinc-400">{note}</p>
     </div>
   )
 }
@@ -243,12 +254,15 @@ export default function AdministrationFingerprints() {
 
   return (
     <div className="space-y-4">
-      {/* Section header */}
+      {/* Section header — editorial overline */}
       <div>
-        <h2 className="text-base font-bold text-text-primary font-mono tracking-tight">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          RUBLI v6.5 · Procurement Governance
+        </p>
+        <h2 className="text-base font-bold text-zinc-100 font-mono tracking-tight">
           {t('fingerprints.title')}
         </h2>
-        <p className="text-xs text-text-muted mt-0.5">
+        <p className="text-xs text-zinc-400 mt-0.5">
           {t('fingerprints.subtitle')}
         </p>
       </div>
@@ -264,21 +278,21 @@ export default function AdministrationFingerprints() {
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-2">
         <InsightCard
           label={t('fingerprints.insight_lowest_risk')}
-          value="Peña Nieto — 7.59%"
+          value="Pena Nieto -- 7.59%"
           note="Lowest high-risk contract rate across all administrations"
-          color="#10b981"
+          color="#ea580c"
         />
         <InsightCard
           label={t('fingerprints.insight_highest_da')}
-          value="AMLO — 79.5%"
+          value="AMLO -- 79.5%"
           note="Highest share of contracts awarded without competition"
-          color="#f59e0b"
+          color="#8b5cf6"
         />
         <InsightCard
           label={t('fingerprints.insight_biggest_spender')}
-          value="Peña Nieto — 3.08T MXN"
+          value="Pena Nieto -- 3.08T MXN"
           note="Largest total procurement value across a single administration"
-          color="#10b981"
+          color="#ea580c"
         />
       </div>
     </div>

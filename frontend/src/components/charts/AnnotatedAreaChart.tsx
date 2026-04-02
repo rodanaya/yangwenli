@@ -123,7 +123,7 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
 
   if (!chartData.length) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-text-muted text-sm font-mono">
+      <div className="flex items-center justify-center h-[200px] text-zinc-600 text-sm font-mono">
         No temporal data available
       </div>
     )
@@ -144,15 +144,15 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
               <stop offset="95%" stopColor={areaColor} stopOpacity={0.02} />
             </linearGradient>
           </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="year"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={{ stroke: '#3f3f46' }}
           />
           <YAxis
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => formatMetricValue(v, metric)}
@@ -160,14 +160,14 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
           />
           <Tooltip
             contentStyle={{
-              backgroundColor: 'var(--color-background-card)',
-              border: '1px solid var(--color-border)',
+              backgroundColor: '#18181b',
+              border: '1px solid #3f3f46',
               borderRadius: '8px',
               fontSize: 12,
-              fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)",
-              color: 'var(--color-text-primary)',
+              fontFamily: "ui-monospace, 'SF Mono', monospace",
+              color: '#f4f4f5',
             }}
-            labelStyle={{ color: 'var(--color-text-muted)' }}
+            labelStyle={{ color: '#a1a1aa' }}
             formatter={(v: number | undefined) => [formatMetricValue(v ?? 0, metric), METRIC_LABELS[metric]]}
           />
 
@@ -202,13 +202,13 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
               r: 5,
               stroke: areaColor,
               strokeWidth: 2,
-              fill: 'var(--color-background-card)',
+              fill: '#18181b',
             }}
             name={title}
           />
         </AreaChart>
       </ResponsiveContainer>
-      <p className="text-xs text-text-muted font-mono mt-2 pt-2 border-t border-border">
+      <p className="text-[10px] text-zinc-600 font-mono mt-2 pt-2 border-t border-zinc-800">
         {DATA_SOURCE}
       </p>
     </div>

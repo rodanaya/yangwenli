@@ -94,24 +94,27 @@ function ScatterTooltip({ active, payload }: CustomTooltipProps) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   return (
-    <div className="bg-background-card border border-border rounded-lg p-3 shadow-xl text-xs space-y-1 min-w-[180px]">
+    <div
+      className="rounded-lg p-3 shadow-2xl text-xs space-y-1 min-w-[180px]"
+      style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}
+    >
       <div className="flex items-center gap-2 mb-1">
         <span className="w-2.5 h-2.5 rounded-full inline-block" style={{ background: d.color }} />
-        <span className="font-semibold text-text-primary capitalize">{d.sector}</span>
+        <span className="font-semibold text-zinc-100 capitalize">{d.sector}</span>
       </div>
-      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-text-secondary">
-        <span className="text-text-muted">Direct Award</span>
-        <span className="font-medium">{d.directAwardPct}%</span>
-        <span className="text-text-muted">High-Risk</span>
-        <span className="font-medium">{d.highRiskPct}%</span>
-        <span className="text-text-muted">Avg Risk</span>
-        <span className="font-medium">{(d.avgRisk * 100).toFixed(1)}%</span>
-        <span className="text-text-muted">Total Value</span>
-        <span className="font-medium">{d.totalBillions >= 1000
+      <div className="grid grid-cols-2 gap-x-4 gap-y-0.5 text-zinc-400">
+        <span className="text-zinc-500">Direct Award</span>
+        <span className="font-medium font-mono text-zinc-300">{d.directAwardPct}%</span>
+        <span className="text-zinc-500">High-Risk</span>
+        <span className="font-medium font-mono text-zinc-300">{d.highRiskPct}%</span>
+        <span className="text-zinc-500">Avg Risk</span>
+        <span className="font-medium font-mono text-zinc-300">{(d.avgRisk * 100).toFixed(1)}%</span>
+        <span className="text-zinc-500">Total Value</span>
+        <span className="font-medium font-mono text-zinc-300">{d.totalBillions >= 1000
           ? `${(d.totalBillions / 1000).toFixed(1)}T`
           : `${d.totalBillions.toFixed(0)}B`} MXN</span>
-        <span className="text-text-muted">Contracts</span>
-        <span className="font-medium">{d.contracts.toLocaleString(getLocale())}</span>
+        <span className="text-zinc-500">Contracts</span>
+        <span className="font-medium font-mono text-zinc-300">{d.contracts.toLocaleString(getLocale())}</span>
       </div>
     </div>
   )
@@ -123,14 +126,14 @@ export function SectorParadoxScatter() {
   return (
     <div className="space-y-4">
       {/* Size legend */}
-      <div className="flex items-center gap-4 text-xs text-text-muted">
+      <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
         <span className="font-medium">Bubble size = total contract value</span>
         <div className="flex items-center gap-1.5">
-          <svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="#64748b" fillOpacity={0.5} /></svg>
+          <svg width="14" height="14"><circle cx="7" cy="7" r="5" fill="#71717a" fillOpacity={0.4} /></svg>
           <span>~40B MXN</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <svg width="24" height="24"><circle cx="12" cy="12" r="10" fill="#64748b" fillOpacity={0.5} /></svg>
+          <svg width="24" height="24"><circle cx="12" cy="12" r="10" fill="#71717a" fillOpacity={0.4} /></svg>
           <span>~3T MXN</span>
         </div>
       </div>
@@ -138,22 +141,22 @@ export function SectorParadoxScatter() {
       <div className="relative h-80">
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 16, right: 24, bottom: 36, left: 36 }}>
-            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" />
+            <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
             <XAxis
               type="number"
               dataKey="directAwardPct"
               name="Direct Award %"
               domain={[25, 100]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
-              axisLine={{ stroke: 'var(--color-border)' }}
+              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+              axisLine={{ stroke: '#3f3f46' }}
               tickLine={false}
               label={{
                 value: 'Direct Award Rate (%)',
                 position: 'insideBottom',
                 offset: -20,
                 fontSize: 10,
-                fill: 'var(--color-text-muted)',
+                fill: '#71717a',
               }}
             />
             <YAxis
@@ -162,8 +165,8 @@ export function SectorParadoxScatter() {
               name="High-Risk %"
               domain={[0, 22]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
-              axisLine={{ stroke: 'var(--color-border)' }}
+              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+              axisLine={{ stroke: '#3f3f46' }}
               tickLine={false}
               label={{
                 value: 'High-Risk Rate (%)',
@@ -171,22 +174,22 @@ export function SectorParadoxScatter() {
                 position: 'insideLeft',
                 offset: 10,
                 fontSize: 10,
-                fill: 'var(--color-text-muted)',
+                fill: '#71717a',
               }}
             />
-            <RechartsTooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3' }} />
+            <RechartsTooltip content={<ScatterTooltip />} cursor={{ strokeDasharray: '3 3', stroke: '#52525b' }} />
 
             {/* Diagonal reference line: "expected" positive correlation */}
             <ReferenceLine
               segment={[{ x: 25, y: 5 }, { x: 100, y: 20 }]}
-              stroke="#f8717166"
+              stroke="#f8717144"
               strokeWidth={1.5}
               strokeDasharray="6 3"
               label={{
                 value: t('sector_paradox.reference_line_label'),
                 position: 'insideTopRight',
                 fontSize: 9,
-                fill: '#f8717199',
+                fill: '#f8717177',
               }}
             />
 
@@ -198,28 +201,29 @@ export function SectorParadoxScatter() {
         </ResponsiveContainer>
 
         {/* Manual annotation overlays — positioned relative to chart container */}
-        {/* Agricultura: DA=93.4%, HighRisk=2% → approximately x=89%, y=9% of chart area */}
         <div
-          className="absolute pointer-events-none text-[9px] text-risk-low leading-tight max-w-[110px]"
-          style={{ right: 28, bottom: 60 }}
+          className="absolute pointer-events-none text-[9px] leading-tight max-w-[110px]"
+          style={{ right: 28, bottom: 60, color: '#4ade80' }}
           aria-hidden
         >
           {t('sector_paradox.annotation_ag')}
         </div>
 
-        {/* Salud: DA=63.8%, HighRisk=12.6% → upper-left region */}
         <div
-          className="absolute pointer-events-none text-[9px] text-risk-critical leading-tight max-w-[110px]"
-          style={{ left: 120, top: 55 }}
+          className="absolute pointer-events-none text-[9px] leading-tight max-w-[110px]"
+          style={{ left: 120, top: 55, color: '#f87171' }}
           aria-hidden
         >
           {t('sector_paradox.annotation_salud')}
         </div>
       </div>
 
-      {/* Callout */}
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3">
-        <p className="text-xs text-text-secondary leading-relaxed">
+      {/* Callout — editorial finding box */}
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+          HALLAZGO
+        </p>
+        <p className="text-sm text-zinc-200 leading-relaxed">
           {t('sector_paradox.callout')}
         </p>
       </div>

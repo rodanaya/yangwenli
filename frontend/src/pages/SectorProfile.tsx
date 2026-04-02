@@ -25,10 +25,13 @@ import {
   toTitleCase,
 } from '@/lib/utils'
 import {
+  api,
   sectorApi,
   vendorApi,
   analysisApi,
   institutionApi,
+  phiApi,
+  caseLibraryApi,
 } from '@/api/client'
 import {
   SECTOR_COLORS,
@@ -61,6 +64,9 @@ import {
   Area,
   PieChart,
   Pie,
+  LineChart,
+  Line,
+  ReferenceLine,
 } from '@/components/charts'
 
 // ── constants ────────────────────────────────────────────────────────────────
@@ -592,6 +598,382 @@ function InsightCard({
   )
 }
 
+// ── Enhancement 1: PHI Governance Grade panel ─────────────────────────────────
+
+interface PhiIndicator {
+  value: number
+  light: string
+  benchmark?: number | null
+  description?: string
+}
+
+interface PhiDetailData {
+  grade?: string
+  phi_composite_score?: number
+  indicators?: {
+    competition_rate?: PhiIndicator
+    avg_bidders?: PhiIndicator
+    single_bid_rate?: PhiIndicator
+  }
+}
+
+function PhiGradePanel({ data }: { data: PhiDetailData }) {
+  const grade = data.grade ?? '—'
+  const score = data.phi_composite_score ?? null
+  const compRate = data.indicators?.competition_rate?.value ?? null
+  const avgBidders = data.indicators?.avg_bidders?.value ?? null
+  const singleBidRate = data.indicators?.single_bid_rate?.value ?? null
+
+  const gradeColor =
+    grade === 'A' || grade === 'A+' ? 'text-emerald-400' :
+    grade.startsWith('B') ? 'text-lime-400' :
+    grade.startsWith('C') ? 'text-amber-400' :
+    grade.startsWith('D') ? 'text-orange-400' :
+    'text-red-500'
+
+  const indicators: Array<{ label: string; value: string | null; benchmark: string; highlight: boolean }> = [
+    {
+      label: 'Competition Rate',
+      value: compRate != null ? `${compRate.toFixed(1)}%` : null,
+      benchmark: 'OECD avg: 75%',
+      highlight: compRate != null && compRate < 50,
+    },
+    {
+      label: 'Avg Bidders',
+      value: avgBidders != null ? avgBidders.toFixed(2) : null,
+      benchmark: 'OECD avg: 3+',
+      highlight: avgBidders != null && avgBidders < 2,
+    },
+    {
+      label: 'Single-Bid Rate',
+      value: singleBidRate != null ? `${singleBidRate.toFixed(1)}%` : null,
+      benchmark: 'OECD target: <20%',
+      highlight: singleBidRate != null && singleBidRate > 30,
+    },
+  ]
+
+  return (
+    <div
+      className="rounded-xl border border-white/8 bg-zinc-900/40 p-4"
+      aria-label="Procurement Health Index governance grade"
+    >
+      <div className="flex items-start gap-5">
+        {/* Grade letter + score */}
+        <div className="flex flex-col items-center flex-shrink-0 min-w-[56px]">
+          <span
+            className={cn('text-5xl font-black leading-none tabular-nums', gradeColor)}
+            aria-label={`Governance grade: ${grade}`}
+          >
+            {grade}
+          </span>
+          {score != null && (
+            <span className="text-[11px] font-mono text-zinc-500 mt-1 tabular-nums">
+              {score.toFixed(1)}/100
+            </span>
+          )}
+          <span className="text-[9px] uppercase tracking-widest text-zinc-600 mt-1 font-semibold">
+            PHI
+          </span>
+        </div>
+
+        {/* Divider */}
+        <div className="w-px self-stretch bg-white/8" aria-hidden="true" />
+
+        {/* Indicator trio */}
+        <div className="flex flex-1 gap-4 flex-wrap">
+          {indicators.map((ind) => (
+            <div key={ind.label} className="flex flex-col min-w-[80px]">
+              <span
+                className={cn(
+                  'text-xl font-black tabular-nums leading-none',
+                  ind.highlight ? 'text-amber-400' : 'text-white'
+                )}
+              >
+                {ind.value ?? '—'}
+              </span>
+              <span className="text-[11px] text-zinc-300 mt-0.5 font-semibold">{ind.label}</span>
+              <span className="text-[10px] text-zinc-500 mt-0.5">{ind.benchmark}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ── Enhancement 2: Risk Trend chart ───────────────────────────────────────────
+
+interface TimelineYear {
+  year: number
+  contracts: number
+  total_value: number
+  high_risk_count: number
+  avg_risk: number
+}
+
+function RiskTrendChart({ years }: { years: TimelineYear[] }) {
+  const data = years
+    .filter((d) => d.year >= 2010)
+    .map((d) => ({
+      year: d.year,
+      avg_risk: Math.round(d.avg_risk * 1000) / 10, // → 0–100 scale
+      high_risk_pct:
+        d.contracts > 0
+          ? Math.round((d.high_risk_count / d.contracts) * 1000) / 10
+          : 0,
+    }))
+
+  if (!data.length) {
+    return (
+      <p className="text-sm text-zinc-500 py-8 text-center">No risk timeline data available.</p>
+    )
+  }
+
+  return (
+    <div
+      className="h-[180px]"
+      role="img"
+      aria-label="Line chart showing average risk score and high-risk percentage per year"
+    >
+      <span className="sr-only">
+        Dual-line chart: amber line shows average risk score × 100, red line shows percentage of
+        high-risk contracts, from 2010 to present.
+      </span>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" opacity={0.4} />
+          <XAxis
+            dataKey="year"
+            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            tickFormatter={(v: number) => `${v}%`}
+            domain={[0, 'auto']}
+          />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (active && payload?.length) {
+                return (
+                  <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs space-y-1">
+                    <p className="font-bold text-text-primary">{label}</p>
+                    {payload.map((p) => (
+                      <p key={p.dataKey as string} style={{ color: p.color as string }}>
+                        {p.name}: {(p.value as number).toFixed(1)}%
+                      </p>
+                    ))}
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="avg_risk"
+            name="Avg Risk Score ×100"
+            stroke="#f59e0b"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, fill: '#f59e0b', stroke: 'var(--color-background)', strokeWidth: 2 }}
+          />
+          <Line
+            type="monotone"
+            dataKey="high_risk_pct"
+            name="High-Risk %"
+            stroke="#ef4444"
+            strokeWidth={2}
+            dot={false}
+            activeDot={{ r: 4, fill: '#ef4444', stroke: 'var(--color-background)', strokeWidth: 2 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ── Enhancement 3: Concentration Gini chart ───────────────────────────────────
+
+interface ConcentrationYear {
+  year: number
+  gini: number
+  top_vendor_share: number
+  total_value: number
+  vendor_count: number
+}
+
+function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
+  const data = history.filter((d) => d.year >= 2010)
+
+  if (!data.length) {
+    return (
+      <p className="text-sm text-zinc-500 py-6 text-center">
+        No concentration history data available.
+      </p>
+    )
+  }
+
+  return (
+    <div
+      className="h-[160px]"
+      role="img"
+      aria-label="Line chart showing market concentration Gini coefficient over time"
+    >
+      <span className="sr-only">
+        Gini coefficient from 0 (perfectly equal) to 1 (full monopoly). Reference line at 0.25
+        marks low-concentration threshold.
+      </span>
+      <ResponsiveContainer width="100%" height="100%">
+        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" opacity={0.4} />
+          <XAxis
+            dataKey="year"
+            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+          />
+          <YAxis
+            tick={{ fill: '#a1a1aa', fontSize: 11 }}
+            tickLine={false}
+            axisLine={false}
+            domain={[0, 1]}
+            tickFormatter={(v: number) => v.toFixed(1)}
+          />
+          <ReferenceLine
+            y={0.25}
+            stroke="#4ade80"
+            strokeDasharray="4 3"
+            strokeOpacity={0.6}
+            label={{
+              value: 'Low concentration',
+              position: 'insideTopLeft',
+              fill: '#4ade80',
+              fontSize: 10,
+            }}
+          />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (active && payload?.length) {
+                const d = payload[0].payload as ConcentrationYear
+                return (
+                  <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs space-y-1">
+                    <p className="font-bold text-text-primary">{label}</p>
+                    <p className="text-amber-300">Gini: {d.gini.toFixed(3)}</p>
+                    <p className="text-zinc-400">Top vendor share: {(d.top_vendor_share * 100).toFixed(1)}%</p>
+                    <p className="text-zinc-500">{d.vendor_count} vendors</p>
+                  </div>
+                )
+              }
+              return null
+            }}
+          />
+          <Line
+            type="monotone"
+            dataKey="gini"
+            name="Gini"
+            stroke="#f59e0b"
+            strokeWidth={2.5}
+            dot={false}
+            activeDot={{ r: 4, fill: '#f59e0b', stroke: 'var(--color-background)', strokeWidth: 2 }}
+          />
+        </LineChart>
+      </ResponsiveContainer>
+    </div>
+  )
+}
+
+// ── Enhancement 4: Investigation Cases callout ────────────────────────────────
+
+interface ScandalCaseSummary {
+  id: number
+  name_en: string
+  name_es: string
+  slug: string
+  severity: number
+  amount_mxn_low?: number
+  amount_mxn_high?: number
+}
+
+function InvestigationCallout({
+  cases,
+  sectorId,
+}: {
+  cases: ScandalCaseSummary[]
+  sectorId: number
+}) {
+  if (!cases.length) return null
+
+  const totalLoss = cases.reduce(
+    (sum, c) => sum + (c.amount_mxn_low ?? 0),
+    0
+  )
+
+  const top3 = cases.slice(0, 3)
+
+  return (
+    <div
+      className="rounded-xl border border-red-500/25 bg-red-500/5 p-4"
+      role="region"
+      aria-label={`${cases.length} investigation cases in this sector`}
+    >
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div className="flex items-center gap-2">
+          <ShieldAlert className="h-4 w-4 text-red-400 flex-shrink-0" aria-hidden="true" />
+          <span className="text-sm font-bold text-red-400">
+            {cases.length} Investigation {cases.length === 1 ? 'Case' : 'Cases'}
+          </span>
+        </div>
+        {totalLoss > 0 && (
+          <span className="text-xs font-mono font-bold text-red-300 tabular-nums flex-shrink-0">
+            est. loss: {formatCompactMXN(totalLoss)}+
+          </span>
+        )}
+      </div>
+
+      <div className="space-y-1.5 mb-3">
+        {top3.map((c) => (
+          <Link
+            key={c.id}
+            to={`/cases/${c.slug}`}
+            className="flex items-center justify-between gap-2 group rounded-lg px-2 py-1.5 hover:bg-white/5 transition-colors"
+          >
+            <span className="text-xs text-zinc-300 group-hover:text-white transition-colors truncate">
+              {c.name_en}
+            </span>
+            <span
+              className="text-[10px] font-bold font-mono px-1.5 py-0.5 rounded flex-shrink-0"
+              style={{
+                color:
+                  c.severity >= 4 ? '#f87171' :
+                  c.severity >= 3 ? '#fb923c' :
+                  '#fbbf24',
+                backgroundColor:
+                  c.severity >= 4 ? '#f8717118' :
+                  c.severity >= 3 ? '#fb923c18' :
+                  '#fbbf2418',
+              }}
+            >
+              severity {c.severity}
+            </span>
+          </Link>
+        ))}
+      </div>
+
+      <Link
+        to={`/cases?sector=${sectorId}`}
+        className="inline-flex items-center gap-1 text-xs text-red-400 hover:text-red-300 transition-colors font-semibold"
+      >
+        View all cases
+        <ExternalLink className="h-3 w-3" aria-hidden="true" />
+      </Link>
+    </div>
+  )
+}
+
 function SectorProfileSkeleton() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 px-4 sm:px-6">
@@ -672,6 +1054,50 @@ export function SectorProfile() {
       }),
     enabled: !!sectorId && activeTab === 'overview',
     staleTime: 10 * 60 * 1000,
+  })
+
+  // Enhancement 1: PHI governance grade
+  const { data: phiDetail } = useQuery({
+    queryKey: ['phi', 'sector-detail', sectorId],
+    queryFn: () => phiApi.getSectorDetail(sectorId) as Promise<PhiDetailData>,
+    enabled: !!sectorId && activeTab === 'overview',
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // Enhancement 2: Risk timeline
+  const { data: timelineData } = useQuery({
+    queryKey: ['sector', sectorId, 'risk-timeline'],
+    queryFn: async (): Promise<{ sector_id: number; years: TimelineYear[] }> => {
+      const { data } = await api.get<{ sector_id: number; years: TimelineYear[] }>(
+        `/sectors/${sectorId}/timeline`
+      )
+      return data
+    },
+    enabled: !!sectorId && activeTab === 'overview',
+    staleTime: 30 * 60 * 1000,
+  })
+
+  // Enhancement 3: Concentration Gini history (Risk tab)
+  const { data: concentrationHistory } = useQuery({
+    queryKey: ['sector', sectorId, 'concentration-history'],
+    queryFn: async (): Promise<{ sector_id: number; sector_name: string; history: ConcentrationYear[] }> => {
+      const { data } = await api.get<{
+        sector_id: number
+        sector_name: string
+        history: ConcentrationYear[]
+      }>(`/sectors/${sectorId}/concentration-history`)
+      return data
+    },
+    enabled: !!sectorId && activeTab === 'risk',
+    staleTime: 60 * 60 * 1000,
+  })
+
+  // Enhancement 4: Investigation cases (Overview tab)
+  const { data: sectorCases } = useQuery({
+    queryKey: ['cases', 'by-sector', sectorId],
+    queryFn: () => caseLibraryApi.getBySector(sectorId),
+    enabled: !!sectorId && activeTab === 'overview',
+    staleTime: 60 * 60 * 1000,
   })
 
   // ── derived values ─────────────────────────────────────────────────────────
@@ -924,6 +1350,21 @@ export function SectorProfile() {
           hidden={activeTab !== 'overview'}
           className="space-y-6"
         >
+          {/* Enhancement 1: PHI Governance Grade panel */}
+          {phiDetail && (
+            <section aria-labelledby="phi-grade-heading">
+              <div className="flex items-center gap-2 mb-2">
+                <h2
+                  id="phi-grade-heading"
+                  className="text-sm font-bold text-zinc-300 uppercase tracking-wider"
+                >
+                  Procurement Health Index
+                </h2>
+              </div>
+              <PhiGradePanel data={phiDetail} />
+            </section>
+          )}
+
           {/* Insights */}
           {insights.length > 0 && (
             <section aria-label="Sector intelligence">
@@ -960,6 +1401,48 @@ export function SectorProfile() {
               )}
             </div>
           </section>
+
+          {/* Enhancement 2: Risk Profile Over Time */}
+          {timelineData?.years?.length ? (
+            <section aria-labelledby="risk-trend-heading">
+              <div className="flex items-center justify-between mb-3">
+                <div>
+                  <h2
+                    id="risk-trend-heading"
+                    className="text-base font-bold text-white"
+                  >
+                    Risk Profile Over Time
+                  </h2>
+                  <p className="text-xs text-zinc-400 mt-0.5">
+                    Average risk score and high-risk contract share per year
+                  </p>
+                </div>
+              </div>
+              <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-4">
+                <RiskTrendChart years={timelineData.years} />
+                <div className="flex items-center gap-4 mt-2 ml-1">
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-4 rounded-full bg-amber-400" aria-hidden="true" />
+                    <span className="text-[10px] text-zinc-400">Avg Risk Score ×100</span>
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <div className="h-2 w-4 rounded-full bg-red-500" aria-hidden="true" />
+                    <span className="text-[10px] text-zinc-400">High-Risk %</span>
+                  </div>
+                </div>
+              </div>
+            </section>
+          ) : null}
+
+          {/* Enhancement 4: Investigation Cases callout */}
+          {sectorCases && sectorCases.length > 0 && (
+            <section aria-labelledby="investigation-callout-heading">
+              <span id="investigation-callout-heading" className="sr-only">
+                Investigation cases for this sector
+              </span>
+              <InvestigationCallout cases={sectorCases} sectorId={sectorId} />
+            </section>
+          )}
 
           {/* Top institutions */}
           <section aria-labelledby="institutions-heading">
@@ -1122,6 +1605,24 @@ export function SectorProfile() {
               )}
             </div>
           </section>
+
+          {/* Enhancement 3: Concentration Gini history */}
+          {concentrationHistory?.history?.length ? (
+            <section aria-labelledby="gini-chart-heading">
+              <h2
+                id="gini-chart-heading"
+                className="text-base font-bold text-white mb-1"
+              >
+                Market Concentration Over Time
+              </h2>
+              <p className="text-xs text-zinc-400 mb-4">
+                Gini coefficient — 1.0 = full monopoly, 0 = perfect competition
+              </p>
+              <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-5">
+                <ConcentrationGiniChart history={concentrationHistory.history} />
+              </div>
+            </section>
+          ) : null}
 
           {/* Procurement pattern stats */}
           {stats && (

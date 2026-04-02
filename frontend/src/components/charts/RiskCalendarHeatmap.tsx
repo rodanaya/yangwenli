@@ -4,32 +4,35 @@
  * Each row = 1 year, each cell = 1 month.
  * Color intensity = average risk score.
  * Shows December budget-dump spikes and suspicious periods.
+ *
+ * Design: dark editorial (zinc-900 bg), risk-colored cells, monospace labels.
  */
 
 import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
+import { RISK_COLORS } from '@/lib/constants'
 import { getLocale } from '@/lib/utils'
 
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
-// Risk → color: low risk = pale green, high risk = deep red
+// Risk color ramp — dark-mode optimized (transparent for no data, zinc-800 base)
 function riskToColor(risk: number): string {
-  if (risk === 0) return '#f1f5f9'  // no data
-  if (risk < 0.10) return '#bbf7d0' // low — green
-  if (risk < 0.20) return '#86efac'
-  if (risk < 0.30) return '#fde68a' // medium — amber
-  if (risk < 0.40) return '#fbbf24'
-  if (risk < 0.50) return '#fb923c' // high — orange
-  return '#f87171'                   // critical — red
+  if (risk === 0) return '#27272a'    // zinc-800 — no data
+  if (risk < 0.10) return '#166534'   // green-800
+  if (risk < 0.20) return '#365314'   // lime-800
+  if (risk < 0.30) return '#713f12'   // amber-900
+  if (risk < 0.40) return '#9a3412'   // orange-800
+  if (risk < 0.50) return '#b91c1c'   // red-700
+  return '#dc2626'                     // red-600 — critical
 }
 
 function riskLabel(risk: number): string {
-  if (risk < 0.10) return 'Low'
-  if (risk < 0.30) return 'Medium'
-  if (risk < 0.50) return 'High'
+  if (risk < 0.25) return 'Low'
+  if (risk < 0.40) return 'Medium'
+  if (risk < 0.60) return 'High'
   return 'Critical'
 }
 
@@ -62,7 +65,7 @@ export function RiskCalendarHeatmap() {
     }))
   }, [results])
 
-  if (isLoading) return <Skeleton className="h-48 w-full" />
+  if (isLoading) return <Skeleton className="h-48 w-full bg-zinc-800" />
 
   const CELL_W = 28, CELL_H = 18, GAP = 3
   const LABEL_W = 36
@@ -75,7 +78,7 @@ export function RiskCalendarHeatmap() {
           {MONTH_ABBR.map(m => (
             <div
               key={m}
-              className="text-[9px] text-text-muted text-center"
+              className="text-[9px] font-mono text-zinc-500 text-center"
               style={{ width: CELL_W + GAP, flexShrink: 0 }}
             >
               {m}
@@ -88,7 +91,7 @@ export function RiskCalendarHeatmap() {
           {yearData.map(({ year, months }) => (
             <div key={year} className="flex items-center gap-0">
               <span
-                className="text-[10px] text-text-muted text-right shrink-0"
+                className="text-[10px] font-mono text-zinc-500 text-right shrink-0 tabular-nums"
                 style={{ width: LABEL_W }}
               >
                 {year}
@@ -104,12 +107,12 @@ export function RiskCalendarHeatmap() {
                   return (
                     <div
                       key={mi}
-                      className="rounded-[2px] cursor-default relative"
+                      className="rounded-[2px] cursor-default relative transition-all duration-150 hover:ring-1 hover:ring-zinc-400/30"
                       style={{
                         width: CELL_W,
                         height: CELL_H,
-                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#f1f5f9',
-                        outline: isDecember ? '1px solid #94a3b8' : 'none',
+                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#27272a',
+                        outline: isDecember ? '1px solid #71717a' : 'none',
                         outlineOffset: -1,
                       }}
                       onMouseEnter={(e) => {
@@ -125,37 +128,56 @@ export function RiskCalendarHeatmap() {
           ))}
         </div>
 
-        {/* Tooltip */}
+        {/* Tooltip — dark editorial */}
         {tooltip && (
           <div
-            className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
-            style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
+            className="fixed z-50 rounded-lg px-3 py-2 text-xs pointer-events-none shadow-2xl"
+            style={{
+              left: tooltip.x + 12,
+              top: tooltip.y - 8,
+              backgroundColor: '#18181b',
+              border: '1px solid #3f3f46',
+            }}
           >
-            <p className="font-semibold text-text-primary">{MONTH_ABBR[tooltip.month - 1]} {tooltip.year}</p>
-            <p className="text-text-secondary">
-              Risk: <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold">{tooltip.risk.toFixed(3)} ({riskLabel(tooltip.risk)})</span>
+            <p className="font-semibold text-zinc-100 font-mono">
+              {MONTH_ABBR[tooltip.month - 1]} {tooltip.year}
             </p>
-            <p className="text-text-secondary">Contracts: <span className="text-text-primary">{tooltip.contracts.toLocaleString(getLocale())}</span></p>
+            <p className="text-zinc-400 mt-0.5">
+              Risk:{' '}
+              <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold font-mono">
+                {tooltip.risk.toFixed(3)}
+              </span>{' '}
+              <span className="text-zinc-500">({riskLabel(tooltip.risk)})</span>
+            </p>
+            <p className="text-zinc-400">
+              Contracts:{' '}
+              <span className="text-zinc-100 font-mono">{tooltip.contracts.toLocaleString(getLocale())}</span>
+            </p>
           </div>
         )}
       </div>
 
-      {/* Legend */}
+      {/* Legend — dark-mode risk palette */}
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] text-text-muted">Risk:</span>
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">Risk:</span>
         {[
-          { label: 'None', color: '#f1f5f9' },
-          { label: 'Low', color: '#bbf7d0' },
-          { label: 'Medium', color: '#fbbf24' },
-          { label: 'High', color: '#fb923c' },
-          { label: 'Critical', color: '#f87171' },
+          { label: 'None', color: '#27272a' },
+          { label: 'Low', color: RISK_COLORS.low },
+          { label: 'Medium', color: RISK_COLORS.medium },
+          { label: 'High', color: RISK_COLORS.high },
+          { label: 'Critical', color: RISK_COLORS.critical },
         ].map(({ label, color }) => (
           <div key={label} className="flex items-center gap-1">
-            <div className="w-3 h-3 rounded-[2px]" style={{ backgroundColor: color }} />
-            <span className="text-[10px] text-text-muted">{label}</span>
+            <div
+              className="w-3 h-3 rounded-[2px]"
+              style={{ backgroundColor: color, border: label === 'None' ? '1px solid #3f3f46' : 'none' }}
+            />
+            <span className="text-[10px] font-mono text-zinc-500">{label}</span>
           </div>
         ))}
-        <span className="text-[10px] text-text-muted ml-2">⬜ = December (budget year-end)</span>
+        <span className="text-[10px] font-mono text-zinc-600 ml-2">
+          outlined = December (budget year-end)
+        </span>
       </div>
     </div>
   )

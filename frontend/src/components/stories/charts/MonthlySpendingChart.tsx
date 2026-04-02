@@ -9,8 +9,13 @@ import {
   ResponsiveContainer,
   ReferenceLine,
   Cell,
-  LabelList,
 } from 'recharts'
+
+const GRID_COLOR = '#3f3f46'
+const AXIS_COLOR = '#71717a'
+const ALERT_COLOR = '#dc2626'
+const WARNING_COLOR = '#ea580c'
+const MUTED_BAR = '#52525b'
 
 const data = [
   { mes: 'Ene', value: 42 },
@@ -27,11 +32,13 @@ const data = [
   { mes: 'Dic', value: 71 },
 ]
 
+const AVG = 48
+
 function getBarColor(index: number): string {
-  if (index === 11) return '#dc2626' // Dec
-  if (index === 10) return '#f97316' // Nov
-  if (index === 9) return '#ea580c' // Oct
-  return 'var(--color-text-muted)'
+  if (index === 11) return ALERT_COLOR
+  if (index === 10) return WARNING_COLOR
+  if (index >= 9) return '#f97316'
+  return MUTED_BAR
 }
 
 interface PayloadEntry {
@@ -41,32 +48,16 @@ interface PayloadEntry {
 function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
+  const pctAboveAvg = ((d.value - AVG) / AVG * 100).toFixed(0)
+  const isAbove = d.value > AVG
   return (
-    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
-      <p className="font-semibold">{d.mes} 2023</p>
-      <p className="text-text-secondary">${d.value}B MXN</p>
+    <div className="rounded-lg border px-3 py-2 shadow-xl" style={{ background: '#18181b', borderColor: GRID_COLOR }}>
+      <p className="font-mono font-semibold text-zinc-100">{d.mes} 2023</p>
+      <p className="mt-1 text-lg font-mono font-bold text-zinc-100">${d.value}B MXN</p>
+      <p className="text-[10px] text-zinc-500">
+        {isAbove ? `+${pctAboveAvg}% sobre promedio` : `${pctAboveAvg}% bajo promedio`}
+      </p>
     </div>
-  )
-}
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const renderLabel = (props: { x?: string | number; y?: string | number; width?: string | number; value?: string | number; index?: number }) => {
-  const x = typeof props.x === 'number' ? props.x : 0
-  const y = typeof props.y === 'number' ? props.y : 0
-  const width = typeof props.width === 'number' ? props.width : 0
-  const { value, index } = props
-  if (index !== 11) return null
-  return (
-    <text
-      x={x + width / 2}
-      y={y - 6}
-      fill="#dc2626"
-      textAnchor="middle"
-      fontSize={11}
-      fontWeight={600}
-    >
-      ${value}B
-    </text>
   )
 }
 
@@ -77,40 +68,59 @@ export function MonthlySpendingChart() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
+      className="rounded-xl bg-zinc-900 p-5"
     >
-      <p className="mb-2 text-center text-xs text-text-muted">
-        Gasto mensual en contratación pública, 2023 (miles de millones MXN)
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+        RUBLI · Estacionalidad
       </p>
-      <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} margin={{ top: 20, right: 15, left: 10, bottom: 5 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" vertical={false} />
+      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+        Diciembre concentra $71B — 48% mas que el promedio mensual
+      </h3>
+      <p className="text-xs text-zinc-500 mb-4">
+        El "rush" de fin de ano: Oct-Dic acumulan el 30% del gasto anual en solo 3 meses
+      </p>
+
+      {/* Hero stat */}
+      <div className="border-l-2 pl-3 py-0.5 mb-4" style={{ borderColor: ALERT_COLOR }}>
+        <p className="text-3xl font-mono font-bold" style={{ color: ALERT_COLOR }}>$71B</p>
+        <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Gasto Diciembre 2023 — 1.5x el mes promedio</p>
+      </div>
+
+      <ResponsiveContainer width="100%" height={240}>
+        <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
           <XAxis
             dataKey="mes"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={{ stroke: GRID_COLOR }}
           />
           <YAxis
             domain={[0, 80]}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            ticks={[0, 20, 40, 60, 80]}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={false}
+            width={28}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
+          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a', opacity: 0.5 }} />
           <ReferenceLine
-            y={45}
-            stroke="var(--color-text-muted)"
-            strokeDasharray="4 2"
+            y={AVG}
+            stroke="#a1a1aa"
+            strokeDasharray="6 3"
+            strokeWidth={1}
             label={{
-              value: 'Promedio mensual',
-              fill: 'var(--color-text-muted)',
+              value: `Prom. $${AVG}B`,
+              fill: '#a1a1aa',
               fontSize: 10,
-              position: 'right',
+              fontFamily: 'ui-monospace, monospace',
+              position: 'insideTopRight',
             }}
           />
           <Bar
             dataKey="value"
-            radius={[4, 4, 0, 0]}
+            radius={[3, 3, 0, 0]}
+            barSize={28}
             isAnimationActive={true}
             animationDuration={1200}
             animationEasing="ease-out"
@@ -119,13 +129,15 @@ export function MonthlySpendingChart() {
               <Cell
                 key={index}
                 fill={getBarColor(index)}
+                fillOpacity={index === 11 ? 1 : index >= 9 ? 0.8 : 0.5}
               />
             ))}
-            {/* eslint-disable-next-line @typescript-eslint/no-explicit-any */}
-            <LabelList content={renderLabel as any} />
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
+        Fuente: COMPRANET 2023 · Miles de millones MXN · RUBLI v6.5
+      </p>
     </motion.div>
   )
 }

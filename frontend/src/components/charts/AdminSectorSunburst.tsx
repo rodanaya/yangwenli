@@ -4,6 +4,9 @@
  * Inner ring = 5 presidential administrations.
  * Outer ring = 12 sectors, sized by spending under each administration.
  * Color = sector color. Click = filter to that admin/sector combo.
+ *
+ * Design: dark editorial (zinc-900 bg), sector colors at full opacity outer,
+ * lower opacity inward. Zinc-100 text, zinc-800 dividers.
  */
 
 import { useMemo, useState } from 'react'
@@ -14,11 +17,11 @@ import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 
 const ADMINS = [
-  { name: 'Fox',        short: 'Fox',  start: 2002, end: 2005, color: '#2563eb' },
-  { name: 'Calderón',   short: 'Cal',  start: 2006, end: 2011, color: '#16a34a' },
-  { name: 'Peña Nieto', short: 'EPN',  start: 2012, end: 2017, color: '#ea580c' },
-  { name: 'AMLO',       short: 'AMLO', start: 2018, end: 2023, color: '#7c3aed' },
-  { name: 'Sheinbaum',  short: 'Shei', start: 2024, end: 2025, color: '#db2777' },
+  { name: 'Fox',        short: 'Fox',  start: 2002, end: 2005, color: '#3b82f6' },
+  { name: 'Calderon',   short: 'Cal',  start: 2006, end: 2011, color: '#22d3ee' },
+  { name: 'Pena Nieto', short: 'EPN',  start: 2012, end: 2017, color: '#ea580c' },
+  { name: 'AMLO',       short: 'AMLO', start: 2018, end: 2023, color: '#8b5cf6' },
+  { name: 'Sheinbaum',  short: 'Shei', start: 2024, end: 2025, color: '#ec4899' },
 ]
 
 const TWO_PI = Math.PI * 2
@@ -52,10 +55,9 @@ export function AdminSectorSunburst() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // Build admin × sector spending matrix
+  // Build admin x sector spending matrix
   const matrix = useMemo(() => {
     if (!data?.data) return null
-    // adminIdx → sectorId → total_value
     const m: Record<number, Record<number, number>> = {}
     ADMINS.forEach((_, i) => { m[i] = {} })
 
@@ -85,7 +87,6 @@ export function AdminSectorSunburst() {
       const adminAngle = (adminTotal / grandTotal) * TWO_PI
       const adminStart = angle
 
-      // Sector arcs within this admin wedge
       const sectors = Object.entries(matrix[adminIdx])
         .sort((a, b) => b[1] - a[1])
       const sectorTotal = sectors.reduce((s, [, v]) => s + v, 0)
@@ -104,7 +105,7 @@ export function AdminSectorSunburst() {
     return { inner, outer }
   }, [matrix, grandTotal])
 
-  if (isLoading) return <Skeleton className="h-80 w-full" />
+  if (isLoading) return <Skeleton className="h-80 w-full bg-zinc-800" />
   if (!matrix) return null
 
   const totalW = CX * 2 + 20, totalH = CY * 2 + 20
@@ -117,7 +118,10 @@ export function AdminSectorSunburst() {
         style={{ maxWidth: 380 }}
         onMouseLeave={() => { setTooltip(null); setHoveredAdmin(null) }}
       >
-        {/* Outer ring: sectors */}
+        {/* Dark background */}
+        <rect width={totalW} height={totalH} fill="#18181b" rx="8" />
+
+        {/* Outer ring: sectors — full opacity */}
         {sunburstArcs.outer.map(({ adminIdx, sectorId, a0, a1, value }, i) => {
           const sector = SECTORS.find(s => s.id === sectorId)
           const fill = sector ? SECTOR_COLORS[sector.code] : '#64748b'
@@ -127,10 +131,10 @@ export function AdminSectorSunburst() {
               key={i}
               d={annularArc(CX, CY, R_MID + 2, isHovered ? R_OUTER + 6 : R_OUTER, a0, a1)}
               fill={fill}
-              opacity={hoveredAdmin ? (isHovered ? 0.95 : 0.3) : 0.85}
-              stroke="white"
+              opacity={hoveredAdmin ? (isHovered ? 0.95 : 0.25) : 0.85}
+              stroke="#27272a"
               strokeWidth={0.8}
-              style={{ cursor: 'pointer', transition: 'opacity 0.15s, d 0.15s' }}
+              style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
               onMouseEnter={(e) => {
                 setTooltip({ label: `${ADMINS[adminIdx].short} / ${sector?.nameEN ?? 'Sector '+sectorId}`, value, x: e.clientX, y: e.clientY })
                 setHoveredAdmin(ADMINS[adminIdx].name)
@@ -139,7 +143,7 @@ export function AdminSectorSunburst() {
           )
         })}
 
-        {/* Inner ring: administrations */}
+        {/* Inner ring: administrations — lower opacity */}
         {sunburstArcs.inner.map(({ adminIdx, a0, a1, total }) => {
           const admin = ADMINS[adminIdx]
           const midAngle = (a0 + a1) / 2
@@ -148,8 +152,8 @@ export function AdminSectorSunburst() {
               <path
                 d={annularArc(CX, CY, R_INNER, R_MID, a0, a1)}
                 fill={admin.color}
-                opacity={hoveredAdmin === admin.name ? 1 : 0.8}
-                stroke="white"
+                opacity={hoveredAdmin === admin.name ? 0.9 : 0.6}
+                stroke="#27272a"
                 strokeWidth={1}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={(e) => {
@@ -166,7 +170,8 @@ export function AdminSectorSunburst() {
                   dominantBaseline="middle"
                   fontSize={8}
                   fontWeight="700"
-                  fill="white"
+                  fontFamily="ui-monospace, 'SF Mono', monospace"
+                  fill="#f4f4f5"
                   pointerEvents="none"
                 >
                   {admin.short}
@@ -177,29 +182,34 @@ export function AdminSectorSunburst() {
         })}
 
         {/* Center label */}
-        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fill="var(--color-text-muted, #64748b)">Total</text>
-        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fill="var(--color-text-primary, #0f172a)">
+        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontFamily="ui-monospace, 'SF Mono', monospace" fill="#71717a">Total</text>
+        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fontFamily="ui-monospace, 'SF Mono', monospace" fill="#f4f4f5">
           {formatCompactMXN(grandTotal)}
         </text>
       </svg>
 
-      {/* Tooltip */}
+      {/* Tooltip — dark editorial */}
       {tooltip && (
         <div
-          className="fixed z-50 bg-background-card border border-border rounded px-2.5 py-1.5 text-xs pointer-events-none shadow-xl"
-          style={{ left: tooltip.x + 12, top: tooltip.y - 8 }}
+          className="fixed z-50 rounded-lg px-3 py-2 text-xs pointer-events-none shadow-2xl"
+          style={{
+            left: tooltip.x + 12,
+            top: tooltip.y - 8,
+            backgroundColor: '#18181b',
+            border: '1px solid #3f3f46',
+          }}
         >
-          <p className="font-semibold text-text-primary">{tooltip.label}</p>
-          <p className="text-text-secondary">{formatCompactMXN(tooltip.value)}</p>
+          <p className="font-semibold text-zinc-100 font-mono">{tooltip.label}</p>
+          <p className="text-zinc-400 font-mono">{formatCompactMXN(tooltip.value)}</p>
         </div>
       )}
 
-      {/* Legend */}
+      {/* Legend — dark editorial */}
       <div className="flex flex-wrap gap-x-3 gap-y-1 justify-center">
         {ADMINS.map(a => (
           <div key={a.name} className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
-            <span className="text-[10px] text-muted-foreground">{a.name}</span>
+            <span className="text-[10px] font-mono text-zinc-500">{a.name}</span>
           </div>
         ))}
       </div>

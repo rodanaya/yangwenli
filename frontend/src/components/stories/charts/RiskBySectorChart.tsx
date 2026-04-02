@@ -1,3 +1,11 @@
+/**
+ * RiskBySectorChart — Editorial horizontal bar chart
+ *
+ * Shows high-risk contract percentage by sector, sorted descending.
+ * Each bar uses the canonical SECTOR_COLORS. An OECD average reference
+ * line provides international context. Dark zinc-900 aesthetic.
+ */
+
 import { motion } from 'framer-motion'
 import {
   BarChart,
@@ -10,33 +18,49 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts'
+import { SECTOR_COLORS } from '@/lib/constants'
 
 const rawData = [
-  { sector: 'Agricultura', high_pct: 19.4, color: '#22c55e' },
-  { sector: 'Energia', high_pct: 16.8, color: '#eab308' },
-  { sector: 'Salud', high_pct: 14.2, color: '#dc2626' },
-  { sector: 'Infraestructura', high_pct: 13.7, color: '#ea580c' },
-  { sector: 'Gobernacion', high_pct: 12.1, color: '#be123c' },
-  { sector: 'Tecnologia', high_pct: 11.3, color: '#8b5cf6' },
-  { sector: 'Hacienda', high_pct: 9.8, color: '#16a34a' },
-  { sector: 'Educacion', high_pct: 8.4, color: '#3b82f6' },
-  { sector: 'Defensa', high_pct: 7.2, color: '#1e3a5f' },
-  { sector: 'Ambiente', high_pct: 6.9, color: '#10b981' },
-  { sector: 'Trabajo', high_pct: 6.1, color: '#f97316' },
-  { sector: 'Otros', high_pct: 5.3, color: '#64748b' },
-].reverse()
+  { sector: 'Agricultura', code: 'agricultura', high_pct: 19.4 },
+  { sector: 'Energia', code: 'energia', high_pct: 16.8 },
+  { sector: 'Salud', code: 'salud', high_pct: 14.2 },
+  { sector: 'Infraestructura', code: 'infraestructura', high_pct: 13.7 },
+  { sector: 'Gobernacion', code: 'gobernacion', high_pct: 12.1 },
+  { sector: 'Tecnologia', code: 'tecnologia', high_pct: 11.3 },
+  { sector: 'Hacienda', code: 'hacienda', high_pct: 9.8 },
+  { sector: 'Educacion', code: 'educacion', high_pct: 8.4 },
+  { sector: 'Defensa', code: 'defensa', high_pct: 7.2 },
+  { sector: 'Ambiente', code: 'ambiente', high_pct: 6.9 },
+  { sector: 'Trabajo', code: 'trabajo', high_pct: 6.1 },
+  { sector: 'Otros', code: 'otros', high_pct: 5.3 },
+].reverse() // ascending so highest is at top in horizontal layout
+
+const OECD_AVG = 9.0
 
 interface PayloadEntry {
-  payload: { sector: string; high_pct: number }
+  payload: { sector: string; code: string; high_pct: number }
 }
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
+function ChartTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
   if (!active || !payload?.length) return null
   const d = payload[0].payload
+  const delta = d.high_pct - OECD_AVG
+  const aboveBelow = delta > 0 ? 'above' : 'below'
   return (
-    <div className="rounded-lg border border-border bg-background-card px-3 py-2 text-sm shadow-lg text-text-primary">
-      <p className="font-semibold">{d.sector}</p>
-      <p className="text-text-secondary">{d.high_pct}% contratos alto riesgo</p>
+    <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs shadow-xl">
+      <div className="flex items-center gap-1.5 mb-1">
+        <div
+          className="w-2 h-2 rounded-sm"
+          style={{ backgroundColor: SECTOR_COLORS[d.code] || '#64748b' }}
+        />
+        <span className="font-semibold text-zinc-100">{d.sector}</span>
+      </div>
+      <p className="text-zinc-400 font-mono tabular-nums">
+        {d.high_pct}% high-risk contracts
+      </p>
+      <p className="text-zinc-500 font-mono mt-0.5">
+        {Math.abs(delta).toFixed(1)}pp {aboveBelow} national avg
+      </p>
     </div>
   )
 }
@@ -48,57 +72,91 @@ export function RiskBySectorChart() {
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
+      className="bg-zinc-900 rounded-xl p-4 border border-zinc-800"
     >
-      <p className="mb-2 text-center text-xs text-text-muted">
-        Contratos de alto riesgo por sector (% critico + alto)
+      {/* Editorial overline */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+        RUBLI · Sector Risk Distribution
       </p>
-      <ResponsiveContainer width="100%" height={340}>
+      {/* Finding headline */}
+      <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
+        Agriculture and Energy lead with 2x the national risk average
+      </h3>
+      <p className="text-xs text-zinc-500 font-mono mb-4">
+        % of contracts rated critical + high · National avg: {OECD_AVG}%
+      </p>
+
+      <ResponsiveContainer width="100%" height={360}>
         <BarChart
           data={rawData}
           layout="vertical"
-          margin={{ top: 5, right: 30, left: 10, bottom: 5 }}
+          margin={{ top: 4, right: 32, left: 4, bottom: 4 }}
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} />
+          <CartesianGrid horizontal={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             type="number"
             domain={[0, 25]}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={{ stroke: '#3f3f46' }}
+            tickFormatter={(v: number) => `${v}%`}
           />
           <YAxis
             type="category"
             dataKey="sector"
-            width={110}
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+            width={100}
+            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
             tickLine={false}
-            axisLine={{ stroke: 'var(--color-border)' }}
+            axisLine={false}
           />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--color-border)', opacity: 0.25 }} />
+          <Tooltip
+            content={<ChartTooltip />}
+            cursor={{ fill: '#3f3f46', opacity: 0.15 }}
+          />
+          {/* National average reference line */}
           <ReferenceLine
-            x={9.0}
-            stroke="var(--color-text-muted)"
-            strokeDasharray="4 2"
+            x={OECD_AVG}
+            stroke="#22d3ee"
+            strokeWidth={1.5}
+            strokeDasharray="6 3"
             label={{
-              value: 'Promedio (9.0%)',
-              fill: 'var(--color-text-muted)',
+              value: `Avg: ${OECD_AVG}%`,
+              fill: '#22d3ee',
               fontSize: 10,
+              fontFamily: 'ui-monospace, monospace',
               position: 'top',
             }}
           />
           <Bar
             dataKey="high_pct"
-            radius={[0, 4, 4, 0]}
+            radius={[0, 3, 3, 0]}
             isAnimationActive={true}
-            animationDuration={1200}
+            animationDuration={800}
             animationEasing="ease-out"
           >
             {rawData.map((entry, index) => (
-              <Cell key={index} fill={entry.color} />
+              <Cell
+                key={index}
+                fill={SECTOR_COLORS[entry.code] || '#64748b'}
+                fillOpacity={entry.high_pct > OECD_AVG ? 0.9 : 0.5}
+              />
             ))}
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+
+      {/* Context note */}
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-800">
+        <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: '#22d3ee' }} />
+        <span className="text-[10px] font-mono text-zinc-500">
+          National average (OECD HR benchmark: 2-15%)
+        </span>
+      </div>
+
+      {/* Source */}
+      <p className="text-[10px] text-zinc-600 mt-2 font-mono">
+        Source: COMPRANET 2002-2025 · RUBLI v6.5 · Sectors above avg shown at full opacity
+      </p>
     </motion.div>
   )
 }
