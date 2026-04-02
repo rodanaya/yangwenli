@@ -29,6 +29,14 @@
 - Check `.claude/ACTIVE_WORK.md` before spawning agents (if it exists) to avoid collisions.
 - Two agents must never write to the same DB table or scoring column simultaneously.
 
+### Context & Edit Safety
+- **Context decay**: After ~8–10 messages or when switching task domains (e.g. DB work → frontend), re-read relevant files before editing. Do not trust prior memory — compaction may have silently altered context.
+- **File read budget**: Files >500 LOC must be read in chunks using `offset`/`limit`. Never assume a single read captured the full file — state this if it matters.
+- **Tool result blindness**: Large tool outputs (>50k chars) are silently truncated. If a grep or SQL query returns suspiciously few results, re-run with narrower scope and flag possible truncation.
+- **Edit integrity**: Re-read any file immediately before editing it. After editing, re-read to confirm the change applied. Never batch more than 3 edits on the same file without a verification read in between.
+- **Rename safety**: When renaming any function, type, or variable — grep separately for: direct calls, type-level references (interfaces/generics), string literals containing the name, dynamic imports/require(), re-exports and barrel files, and test mocks. One grep is not enough.
+- **STEP 0 for large refactors**: Before any structural refactor of a file >300 LOC, first remove dead props, unused exports, unused imports, and debug logs in a separate commit. Start the real work only after that cleanup is in.
+
 ---
 
 ## Quick Reference

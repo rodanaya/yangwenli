@@ -53,6 +53,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const location = useLocation()
   const navigate = useNavigate()
   const { t } = useTranslation('nav')
+  const { t: tc } = useTranslation('common')
   const { theme, toggleTheme } = useTheme()
   const [searchOpen, setSearchOpen] = useState(false)
 
@@ -143,7 +144,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           aria-label="Open search (Ctrl+K)"
         >
           <Search className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-          <span className="flex-1 text-left truncate">Search vendors, cases...</span>
+          <span className="flex-1 text-left truncate">{tc('header.searchPlaceholder')}</span>
           <kbd className="flex-shrink-0 text-[10px] px-1 py-0.5 rounded bg-background border border-border/60 leading-none">⌘K</kbd>
         </button>
         {/* Mobile: icon-only button */}
@@ -177,7 +178,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               size="icon"
               className="h-7 w-7 relative"
               onClick={() => navigate('/methodology')}
-              aria-label={`${alertCount} high-risk alerts`}
+              aria-label={tc('header.alertsLabel', { count: alertCount })}
             >
               <Shield className="h-3.5 w-3.5 text-text-muted" />
               {alertCount > 0 && (
@@ -188,7 +189,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">{alertCount > 0 ? `${alertCount} high-risk alerts` : 'No active alerts'}</p>
+            <p className="text-xs">{alertCount > 0 ? tc('header.alertsLabel', { count: alertCount }) : tc('header.noAlerts')}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -212,7 +213,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               </button>
             </TooltipTrigger>
             <TooltipContent>
-              <p className="text-xs">Data Quality: Grade {qualityGrade} ({qualityScore?.toFixed(1)}%)</p>
+              <p className="text-xs">{tc('header.dataQuality', { grade: qualityGrade, score: qualityScore?.toFixed(1) })}</p>
             </TooltipContent>
           </Tooltip>
         )}
@@ -222,11 +223,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <TooltipTrigger asChild>
             <div className="hidden sm:flex items-center gap-1 h-7 px-1.5 text-xs text-text-muted">
               <Activity className="h-3 w-3 text-signal-live" />
-              <span className="font-mono">LIVE</span>
+              <span className="font-mono">{tc('header.live')}</span>
             </div>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Connected to database</p>
+            <p className="text-xs">{tc('header.connectedToDb')}</p>
           </TooltipContent>
         </Tooltip>
 
@@ -241,7 +242,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               size="icon"
               className="h-7 w-7"
               onClick={toggleTheme}
-              aria-label={theme === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'}
+              aria-label={theme === 'dark' ? tc('header.switchToLight') : tc('header.switchToDark')}
             >
               {theme === 'dark' ? <Sun className="h-3.5 w-3.5 text-text-muted" /> : <Moon className="h-3.5 w-3.5 text-text-muted" />}
             </Button>

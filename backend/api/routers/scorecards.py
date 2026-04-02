@@ -393,7 +393,7 @@ def _fallback_vendor_scorecards(
 @router.get("/institutions", response_model=InstitutionScorecardListResponse)
 def list_institution_scorecards(
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=200),
+    per_page: int = Query(50, ge=1, le=100),
     sort_by: str = Query("total_score", pattern="^(total_score|grade|national_percentile|institution_name|pillar_openness|pillar_price|pillar_vendors|pillar_process|pillar_external)$"),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     grade: Optional[str] = Query(None),
@@ -608,7 +608,7 @@ def get_institution_scorecard(institution_id: int = Path(..., ge=1)):
 @router.get("/vendors", response_model=VendorScorecardListResponse)
 def list_vendor_scorecards(
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=200),
+    per_page: int = Query(50, ge=1, le=100),
     sort_by: str = Query("total_score", pattern="^(total_score|grade|national_percentile|vendor_name|pillar_risk_signal|pillar_conduct|pillar_spread|pillar_behavior|pillar_flags)$"),
     order: str = Query("desc", pattern="^(asc|desc)$"),
     grade: Optional[str] = Query(None),

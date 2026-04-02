@@ -10,7 +10,7 @@ import { useMemo, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import type { SubnationalStateSummary } from '@/api/types'
 import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
-import { formatCompactMXN } from '@/lib/utils'
+import { formatCompactMXN, getLocale } from '@/lib/utils'
 
 // ── Hex grid layout ────────────────────────────────────────────────────────────
 // [row, col] positions in a pointy-top hex grid.
@@ -117,7 +117,7 @@ export function HexMap({ states, metric }: Props) {
   )
 
   const hoveredState = hovered ? stateByCode.get(hovered) : null
-  const fmt = metric === 'amount' ? formatCompactMXN : metric === 'risk' ? (v: number) => v.toFixed(3) : (v: number) => v.toLocaleString()
+  const fmt = metric === 'amount' ? formatCompactMXN : metric === 'risk' ? (v: number) => v.toFixed(3) : (v: number) => v.toLocaleString(getLocale())
 
   return (
     <div className="relative select-none">

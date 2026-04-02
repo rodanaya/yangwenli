@@ -29,6 +29,7 @@ Date: 2026-01-06
 import sqlite3
 import os
 import json
+import shutil
 from datetime import datetime
 from typing import Optional
 
@@ -522,6 +523,11 @@ CREATE INDEX IF NOT EXISTS idx_contracts_sector_year ON contracts(sector_id, con
 CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
 CREATE INDEX IF NOT EXISTS idx_contracts_institution_year ON contracts(institution_id, contract_year);
 
+-- Multi-column indexes for common analytics query patterns
+CREATE INDEX IF NOT EXISTS idx_contracts_sector_year_risk ON contracts(sector_id, contract_year, risk_level);
+CREATE INDEX IF NOT EXISTS idx_contracts_direct_single ON contracts(is_direct_award, is_single_bid);
+CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
+
 -- Transparency / publication delay index (column added by ETL pipeline when computing delays)
 CREATE INDEX IF NOT EXISTS idx_contracts_pub_delay ON contracts(publication_delay_days);
 
@@ -750,6 +756,8 @@ SELECT
 FROM contracts c
 LEFT JOIN financial_metrics f ON c.id = f.contract_id;
 
+-- WARNING: This view recalculates aggregates live on 3.1M contracts. It is 240x slower than
+-- the precomputed vendor_stats table. Never use this in API queries. Use vendor_stats instead.
 -- Vendor Stats View (computed aggregates, not stored)
 CREATE VIEW IF NOT EXISTS v_vendor_stats AS
 SELECT
@@ -1630,7 +1638,10 @@ def main():
 
     # Remove existing database if exists
     if os.path.exists(DB_PATH):
-        print(f"\nRemoving existing database...")
+        backup_path = f"{DB_PATH}.backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+        shutil.copy2(DB_PATH, backup_path)
+        print(f"\nBacked up existing database to: {backup_path}")
+        print(f"Removing existing database...")
         os.remove(DB_PATH)
 
     # Create database connection

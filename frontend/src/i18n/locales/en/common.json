@@ -64,6 +64,16 @@
     "create": "Create Dossier",
     "creating": "Creating\u2026"
   },
+  "header": {
+    "searchPlaceholder": "Search vendors, cases...",
+    "alertsLabel": "{{count}} high-risk alerts",
+    "noAlerts": "No active alerts",
+    "live": "LIVE",
+    "connectedToDb": "Connected to database",
+    "dataQuality": "Data Quality: Grade {{grade}} ({{score}}%)",
+    "switchToLight": "Switch to light mode",
+    "switchToDark": "Switch to dark mode"
+  },
   "banner": "Ground Truth expanded · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES",
   "dismissBanner": "Dismiss announcement",
   "footerBrand": "RUBLI 2.0",
@@ -125,6 +135,36 @@
     "skip": "Skip tour",
     "next": "Next",
     "getStarted": "Get Started"
+  },
+  "caseLeadDialog": {
+    "title": "Submit a Case Lead",
+    "vendorLabel": "Case name / Vendor name",
+    "fraudTypeLabel": "Suspected fraud type",
+    "sectorLabel": "Affected sector",
+    "fromYear": "From year",
+    "toYear": "To year",
+    "evidenceLabel": "Evidence description",
+    "submitBtn": "Submit Case Lead",
+    "cancelBtn": "Cancel",
+    "successMsg": "Case lead submitted — our team will investigate",
+    "errorMsg": "Submission failed. Please try again.",
+    "validation": {
+      "nameRequired": "Case name is required",
+      "fraudTypeRequired": "Fraud type is required",
+      "evidenceRequired": "Evidence description is required",
+      "evidenceMinLength": "Evidence description must be at least 50 characters",
+      "emailInvalid": "Contact email format is invalid"
+    },
+    "fraudTypes": {
+      "ghost_company": "Ghost companies",
+      "overpricing": "Overpricing",
+      "bid_rigging": "Bid rigging",
+      "conflict_of_interest": "Conflict of interest",
+      "procurement_fraud": "Procurement fraud",
+      "bribery": "Bribery",
+      "monopoly": "Monopoly",
+      "other": "Other"
+    }
   },
   "aboutData": "Risk scores are computed by a machine learning model trained on 748 documented corruption cases in Mexican federal procurement (2002–2025). Scores measure statistical similarity to known cases — they are not legal determinations or proof of wrongdoing. Source: COMPRANET (SHCP). Methodology: rubli.mx/methodology",
   "aboutDataToggle": "About this data",

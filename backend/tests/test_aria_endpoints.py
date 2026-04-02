@@ -88,6 +88,10 @@ class TestAriaStats:
     def test_returns_200(self, client):
         r = client.get(f"{ARIA_PREFIX}/stats")
         assert r.status_code == 200
+        # Body must be parseable JSON with expected top-level keys
+        data = r.json()
+        assert "review_stats" in data
+        assert "queue_total" in data
 
     def test_has_review_stats(self, client):
         data = client.get(f"{ARIA_PREFIX}/stats").json()
@@ -102,6 +106,18 @@ class TestAriaStats:
         # latest_run can be None if pipeline never ran, but key must exist
         assert "latest_run" in data
 
+    def test_review_stats_values_are_non_negative_integers(self, client):
+        data = client.get(f"{ARIA_PREFIX}/stats").json()
+        rs = data["review_stats"]
+        for key in ("pending", "confirmed", "dismissed", "reviewing"):
+            assert isinstance(rs[key], int), f"review_stats.{key} is not int"
+            assert rs[key] >= 0, f"review_stats.{key} is negative"
+
+    def test_queue_total_is_non_negative_integer(self, client):
+        data = client.get(f"{ARIA_PREFIX}/stats").json()
+        assert isinstance(data["queue_total"], int)
+        assert data["queue_total"] >= 0
+
 
 class TestAriaGTUpdates:
     """GET /api/v1/aria/gt-updates"""
@@ -109,6 +125,10 @@ class TestAriaGTUpdates:
     def test_returns_200(self, client):
         r = client.get(f"{ARIA_PREFIX}/gt-updates")
         assert r.status_code == 200
+        # Body must have data array and pagination envelope
+        data = r.json()
+        assert "data" in data
+        assert "pagination" in data
 
     def test_has_pagination(self, client):
         data = client.get(f"{ARIA_PREFIX}/gt-updates").json()
@@ -116,6 +136,24 @@ class TestAriaGTUpdates:
         assert "pagination" in data
         assert isinstance(data["data"], list)
 
+    def test_pagination_keys_present(self, client):
+        data = client.get(f"{ARIA_PREFIX}/gt-updates").json()
+        pag = data["pagination"]
+        for key in ("page", "per_page", "total", "total_pages"):
+            assert key in pag, f"pagination missing key: {key}"
+
     def test_filter_by_status(self, client):
         r = client.get(f"{ARIA_PREFIX}/gt-updates", params={"status": "approved"})
         assert r.status_code == 200
+        data = r.json()
+        # Must still return data/pagination envelope even when filtered
+        assert "data" in data
+        assert "pagination" in data
+        assert isinstance(data["data"], list)
+
+    def test_filter_by_status_pending_returns_envelope(self, client):
+        r = client.get(f"{ARIA_PREFIX}/gt-updates", params={"status": "pending"})
+        assert r.status_code == 200
+        data = r.json()
+        assert "data" in data
+        assert isinstance(data["data"], list)

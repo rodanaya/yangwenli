@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { getLocale } from '../../lib/utils'
 
 interface AnimatedCounterProps {
   value: number
@@ -72,7 +73,7 @@ export function AnimatedCounter({
   }, [value, duration])
 
   const display = current.toFixed(decimals)
-  const formatted = Number(display).toLocaleString('en-US', {
+  const formatted = Number(display).toLocaleString(getLocale(), {
     minimumFractionDigits: decimals,
   })
 

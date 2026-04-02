@@ -7,6 +7,7 @@
  */
 
 import { useTranslation } from 'react-i18next'
+import { getLocale } from '@/lib/utils'
 import {
   ScatterChart,
   Scatter,
@@ -110,7 +111,7 @@ function ScatterTooltip({ active, payload }: CustomTooltipProps) {
           ? `${(d.totalBillions / 1000).toFixed(1)}T`
           : `${d.totalBillions.toFixed(0)}B`} MXN</span>
         <span className="text-text-muted">Contracts</span>
-        <span className="font-medium">{d.contracts.toLocaleString()}</span>
+        <span className="font-medium">{d.contracts.toLocaleString(getLocale())}</span>
       </div>
     </div>
   )

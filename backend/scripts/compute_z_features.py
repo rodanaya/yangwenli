@@ -26,7 +26,7 @@ from collections import defaultdict
 DB_PATH = Path(__file__).parent.parent / "RUBLI_NORMALIZED.db"
 
 EPSILON = 0.1    # Minimum stddev to avoid pathological z-scores from thin cells
-Z_SCORE_CAP = 10.0  # Winsorize z-scores at ±10 (no signal beyond this; prevents 999 SD outliers)
+Z_SCORE_CAP = 5.0  # Winsorize z-scores at ±5 (matches scorer cap in _score_v6_now.py)
 MIN_CELL_SIZE = 10   # Minimum contracts in a baseline cell before forcing fallback
 
 # Factor names matching factor_baselines table

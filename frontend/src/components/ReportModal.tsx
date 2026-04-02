@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import { reportApi } from '@/api/client'
-import { formatRiskScorePercent } from '@/lib/utils'
+import { formatRiskScorePercent, getLocale } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
 import type { VendorReport, InstitutionReport, SectorReport } from '@/api/types'
 
@@ -69,7 +69,7 @@ function openVendorPrintWindow(report: VendorReport, entityName: string): void {
   const riskPct = Math.round(riskScore * 100)
   const color = riskColor(riskScore)
   const level = riskLabel(riskScore)
-  const generatedAt = new Date(report.generated_at).toLocaleString()
+  const generatedAt = new Date(report.generated_at).toLocaleString(getLocale())
 
   // Simple 5-bar SVG chart: risk score as bar width (0-100)
   const bars: Array<{ label: string; value: number; max: number; color: string }> = [
@@ -84,7 +84,7 @@ function openVendorPrintWindow(report: VendorReport, entityName: string): void {
       <text x="0" y="14" font-size="11" fill="#374151">${b.label}</text>
       <rect x="0" y="20" width="300" height="12" rx="3" fill="#e5e7eb"/>
       <rect x="0" y="20" width="${(b.value / b.max) * 300}" height="12" rx="3" fill="${b.color}"/>
-      <text x="308" y="31" font-size="10" fill="#6b7280">${b.label === 'Risk Score' ? riskPct + '%' : b.value.toLocaleString()}</text>
+      <text x="308" y="31" font-size="10" fill="#6b7280">${b.label === 'Risk Score' ? riskPct + '%' : b.value.toLocaleString(getLocale())}</text>
     </g>`
     )
     .join('')
@@ -128,7 +128,7 @@ function openVendorPrintWindow(report: VendorReport, entityName: string): void {
     </div>
     <div class="kpi-card">
       <div class="kpi-label">Total Contracts</div>
-      <div class="kpi-value">${report.contract_count.toLocaleString()}</div>
+      <div class="kpi-value">${report.contract_count.toLocaleString(getLocale())}</div>
     </div>
   </div>
 
@@ -243,7 +243,7 @@ export function ReportModal({
               <div className="border-b border-border pb-3">
                 <h2 className="text-lg font-semibold text-text-primary">{entityName}</h2>
                 <p className="text-xs text-text-muted">
-                  Generated: {new Date(data.generated_at).toLocaleString()}
+                  Generated: {new Date(data.generated_at).toLocaleString(getLocale())}
                 </p>
               </div>
 
@@ -262,7 +262,7 @@ export function ReportModal({
                   <div className="rounded-md border border-border p-3">
                     <p className="text-[11px] text-text-muted uppercase">Contracts</p>
                     <p className="text-lg font-semibold text-text-primary">
-                      {data.contract_count.toLocaleString()}
+                      {data.contract_count.toLocaleString(getLocale())}
                     </p>
                   </div>
                 </div>

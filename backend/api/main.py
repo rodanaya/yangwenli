@@ -43,7 +43,7 @@ from .middleware import RequestLoggingMiddleware, register_error_handlers
 
 # Create rate limiter instance (if available)
 if RATE_LIMITING_ENABLED:
-    limiter = Limiter(key_func=get_remote_address, default_limits=["200/minute"])
+    limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
 else:
     limiter = None
 

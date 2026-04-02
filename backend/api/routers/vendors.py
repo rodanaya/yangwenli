@@ -434,6 +434,8 @@ def get_top_vendors(
             "risk": ("AVG(c.risk_score)", "DESC"),
         }
         sort_expr, sort_dir = metric_mapping[by]
+        _VALID_VENDOR_METRIC_EXPRS = {"SUM(c.amount_mxn)", "COUNT(c.id)", "AVG(c.risk_score)"}
+        assert sort_expr in _VALID_VENDOR_METRIC_EXPRS, f"Invalid sort expression: {sort_expr}"
 
         cursor.execute(f"""
             SELECT v.id, v.name, v.rfc,
@@ -1130,6 +1132,7 @@ def get_vendor_contracts(
             "risk_score": "c.risk_score",
         }
         sort_expr = sort_map.get(sort_by, "c.contract_date")
+        assert sort_expr in sort_map.values(), f"Invalid sort: {sort_expr}"
         order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
         # Count
@@ -2269,7 +2272,7 @@ def get_vendor_classification(vendor_id: int):
 @router.get("/verified", response_model=VerifiedVendorListResponse)
 def list_verified_vendors(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    per_page: int = Query(50, ge=1, le=200, description="Items per page"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
     industry_id: Optional[int] = Query(None, description="Filter by industry ID"),
     industry_code: Optional[str] = Query(None, description="Filter by industry code"),
     search: Optional[str] = Query(None, min_length=3, description="Search vendor name"),

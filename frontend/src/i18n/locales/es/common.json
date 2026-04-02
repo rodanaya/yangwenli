@@ -64,6 +64,16 @@
     "create": "Crear expediente",
     "creating": "Creando\u2026"
   },
+  "header": {
+    "searchPlaceholder": "Buscar proveedores, casos...",
+    "alertsLabel": "{{count}} alertas de alto riesgo",
+    "noAlerts": "Sin alertas activas",
+    "live": "EN VIVO",
+    "connectedToDb": "Conectado a la base de datos",
+    "dataQuality": "Calidad de datos: Grado {{grade}} ({{score}}%)",
+    "switchToLight": "Cambiar a modo claro",
+    "switchToDark": "Cambiar a modo oscuro"
+  },
   "banner": "Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES",
   "dismissBanner": "Cerrar anuncio",
   "footerBrand": "RUBLI 2.0",
@@ -125,6 +135,36 @@
     "skip": "Saltar tour",
     "next": "Siguiente",
     "getStarted": "Comenzar"
+  },
+  "caseLeadDialog": {
+    "title": "Enviar una pista de caso",
+    "vendorLabel": "Nombre del caso / Nombre del proveedor",
+    "fraudTypeLabel": "Tipo de fraude sospechado",
+    "sectorLabel": "Sector afectado",
+    "fromYear": "Desde el año",
+    "toYear": "Hasta el año",
+    "evidenceLabel": "Descripción de evidencia",
+    "submitBtn": "Enviar pista",
+    "cancelBtn": "Cancelar",
+    "successMsg": "Pista enviada — nuestro equipo investigará",
+    "errorMsg": "Envío fallido. Por favor intenta de nuevo.",
+    "validation": {
+      "nameRequired": "El nombre del caso es obligatorio",
+      "fraudTypeRequired": "El tipo de fraude es obligatorio",
+      "evidenceRequired": "La descripción de evidencia es obligatoria",
+      "evidenceMinLength": "La descripción debe tener al menos 50 caracteres",
+      "emailInvalid": "El formato del correo electrónico es inválido"
+    },
+    "fraudTypes": {
+      "ghost_company": "Empresas fantasma",
+      "overpricing": "Sobreprecio",
+      "bid_rigging": "Colusión en licitación",
+      "conflict_of_interest": "Conflicto de interés",
+      "procurement_fraud": "Fraude en adquisiciones",
+      "bribery": "Soborno",
+      "monopoly": "Monopolio",
+      "other": "Otro"
+    }
   },
   "aboutData": "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 748 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia",
   "aboutDataToggle": "Acerca de estos datos",

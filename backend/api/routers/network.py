@@ -454,7 +454,7 @@ def get_related_vendors(
                     LEFT JOIN contracts c ON v.id = c.vendor_id
                         AND COALESCE(c.amount_mxn, 0) <= ?
                     WHERE v.rfc LIKE ? AND v.id != ?
-                    AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ?)
+                    AND v.id NOT IN (SELECT id FROM vendors WHERE group_id = ? AND id IS NOT NULL)
                     GROUP BY v.id, v.name, v.rfc
                     LIMIT ?
                 """, (MAX_CONTRACT_VALUE, f"{rfc_root}%", vendor_id,

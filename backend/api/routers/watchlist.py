@@ -113,6 +113,7 @@ def ensure_watchlist_table(conn: sqlite3.Connection):
 
     # Add risk_score_at_creation column to existing tables that predate this migration
     try:
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
         cursor.execute("ALTER TABLE watchlist_items ADD COLUMN risk_score_at_creation REAL")
         conn.commit()
     except Exception:

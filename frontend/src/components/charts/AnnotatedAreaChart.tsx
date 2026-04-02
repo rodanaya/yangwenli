@@ -18,6 +18,7 @@ import {
   ReferenceLine,
 } from 'recharts'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { getLocale } from '@/lib/utils'
 import type { SectorYearItem } from '@/api/types'
 
 const DATA_SOURCE = 'Source: RUBLI analysis \u00b7 COMPRANET data 2002\u20132025 \u00b7 Risk model v6.5'
@@ -56,7 +57,7 @@ function formatMetricValue(value: number, metric: string): string {
     if (value >= 1e12) return `${(value / 1e12).toFixed(1)}T`
     if (value >= 1e9) return `${(value / 1e9).toFixed(0)}B`
     if (value >= 1e6) return `${(value / 1e6).toFixed(0)}M`
-    return value.toLocaleString()
+    return value.toLocaleString(getLocale())
   }
   if (metric === 'high_risk_pct' || metric === 'avg_risk') {
     const pct = metric === 'avg_risk' ? value * 100 : value

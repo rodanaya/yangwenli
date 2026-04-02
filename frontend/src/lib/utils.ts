@@ -7,7 +7,7 @@ import { MAX_CONTRACT_VALUE, FLAG_THRESHOLD } from './constants'
  * Get the Intl locale string matching the current i18n language.
  * Falls back to 'es-MX' for Spanish, 'en-US' for English.
  */
-function getLocale(): string {
+export function getLocale(): string {
   const lang = i18n.language
   if (lang === 'en') return 'en-US'
   return 'es-MX'

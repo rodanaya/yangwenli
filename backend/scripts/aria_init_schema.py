@@ -171,7 +171,7 @@ def init_schema(db_path: Path = DB_PATH) -> None:
 
     conn = sqlite3.connect(str(db_path), timeout=60)
     conn.execute("PRAGMA journal_mode=WAL")
-    conn.execute("PRAGMA busy_timeout=30000")
+    conn.execute("PRAGMA busy_timeout=300000")
 
     try:
         for ddl in DDL_STATEMENTS:

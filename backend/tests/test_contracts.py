@@ -68,9 +68,80 @@ class TestContractPagination:
         # Either 422 validation error or auto-corrected to page 1
         assert response.status_code in [200, 422]
 
-    def test_large_page_returns_empty(self, client, base_url):
-        """Very large page number should return empty data."""
+    def test_large_page_returns_200(self, client, base_url):
+        """
+        Very large page number: the service clamps it to max page 1000,
+        so the response is always 200 (not empty for a large database).
+        """
         response = client.get(f"{base_url}/contracts?page=999999")
         assert response.status_code == 200
         data = response.json()
-        assert data["data"] == []
+        assert "data" in data
+        assert "pagination" in data
+
+
+class TestContractAmountValidation:
+    """Tests that amount filter parameters enforce the 100B MXN ceiling and non-negative floor."""
+
+    def test_max_amount_above_100b_returns_422(self, client, base_url):
+        """
+        max_amount=150_000_000_000 (150B) exceeds the 100B MXN ceiling.
+        The Query(..., le=100_000_000_000) annotation causes FastAPI to return 422.
+        """
+        response = client.get(
+            f"{base_url}/contracts",
+            params={"max_amount": 150_000_000_000},
+        )
+        assert response.status_code == 422, (
+            f"Expected 422 for max_amount > 100B, got {response.status_code}"
+        )
+
+    def test_min_amount_negative_returns_422(self, client, base_url):
+        """
+        min_amount=-1 is below the ge=0 constraint — must return 422.
+        """
+        response = client.get(
+            f"{base_url}/contracts",
+            params={"min_amount": -1},
+        )
+        assert response.status_code == 422, (
+            f"Expected 422 for min_amount < 0, got {response.status_code}"
+        )
+
+    def test_min_greater_than_max_returns_422_or_empty(self, client, base_url):
+        """
+        min_amount=5_000_000_000 > max_amount=1_000_000_000 is a logical contradiction.
+        The API returns either 422 (validation) or 200 with empty results.
+        Both are acceptable — we just verify the response is not a server error.
+        """
+        response = client.get(
+            f"{base_url}/contracts",
+            params={"min_amount": 5_000_000_000, "max_amount": 1_000_000_000},
+        )
+        assert response.status_code in (200, 422), (
+            f"Unexpected status {response.status_code} for min > max"
+        )
+        if response.status_code == 200:
+            data = response.json()
+            assert data["data"] == [], (
+                "Expected empty data when min_amount > max_amount"
+            )
+
+    def test_valid_max_amount_at_ceiling_is_accepted(self, client, base_url):
+        """max_amount exactly at 100B (the ceiling) must be accepted."""
+        response = client.get(
+            f"{base_url}/contracts",
+            params={"max_amount": 100_000_000_000},
+        )
+        assert response.status_code == 200
+
+    def test_valid_amount_range_returns_data_envelope(self, client, base_url):
+        """A sensible amount range must return the standard data/pagination envelope."""
+        response = client.get(
+            f"{base_url}/contracts",
+            params={"min_amount": 1_000_000, "max_amount": 10_000_000},
+        )
+        assert response.status_code == 200
+        data = response.json()
+        assert "data" in data
+        assert "pagination" in data

@@ -23,6 +23,34 @@ r = conn.execute('''
 ''')
 print(f'in_ground_truth synced: {r.rowcount} rows updated')
 
+# ── Fix 1b: Sync is_false_positive flags to aria_queue ────────────────────────
+# Propagates is_false_positive=1 from ground_truth_vendors to aria_queue and
+# vendor_stats so the scoring pipeline excludes them correctly.
+r_fp = conn.execute('''
+    UPDATE aria_queue SET is_false_positive=1
+    WHERE vendor_id IN (
+        SELECT DISTINCT vendor_id FROM ground_truth_vendors
+        WHERE is_false_positive=1 AND vendor_id IS NOT NULL
+    )
+      AND is_false_positive=0
+''')
+print(f'is_false_positive synced to aria_queue: {r_fp.rowcount} rows updated')
+
+# Sync to vendor_stats if the column exists
+vs_cols = {row[1] for row in conn.execute('PRAGMA table_info(vendor_stats)')}
+if 'is_false_positive' in vs_cols:
+    r_vs = conn.execute('''
+        UPDATE vendor_stats SET is_false_positive=1
+        WHERE vendor_id IN (
+            SELECT DISTINCT vendor_id FROM ground_truth_vendors
+            WHERE is_false_positive=1 AND vendor_id IS NOT NULL
+        )
+          AND is_false_positive=0
+    ''')
+    print(f'is_false_positive synced to vendor_stats: {r_vs.rowcount} rows updated')
+else:
+    print('vendor_stats.is_false_positive column not present — skipping')
+
 # ── Fix 2: Re-apply all structural FP flags ───────────────────────────────────
 STRUCTURAL_FPS = {
     # === PATENTED PHARMA MANUFACTURERS ===
@@ -127,4 +155,15 @@ print(f'GT Database: {total_cases} cases | {total_vendors} vendors | {total_cont
 print(f'ARIA Queue:  {gt_linked} GT-linked | {total_fp} structural FPs | {pending} unclassified Tier1/2')
 print()
 print('Ready for GT mining session.')
+
+# ── H3: Validate GT row counts (detects silently dropped INSERT OR IGNORE) ────
+# Print current counts so that after any batch insert script the user can
+# compare and detect rows that were silently skipped by INSERT OR IGNORE.
+_cases_now   = conn.execute('SELECT COUNT(*) FROM ground_truth_cases').fetchone()[0]
+_vendors_now = conn.execute('SELECT COUNT(*) FROM ground_truth_vendors').fetchone()[0]
+print(f'[H3 validation] ground_truth_cases: {_cases_now} rows')
+print(f'[H3 validation] ground_truth_vendors: {_vendors_now} rows')
+print('Compare these counts to the expected totals after any batch insert to detect')
+print('silently dropped duplicates from INSERT OR IGNORE.')
+
 conn.close()

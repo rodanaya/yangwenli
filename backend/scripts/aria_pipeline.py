@@ -39,17 +39,17 @@ SECTOR_MAP = {
 
 
 # ---------------------------------------------------------------------------
-# IPS weights
+# IPS weights (configurable via environment variables)
 # ---------------------------------------------------------------------------
-W_RISK = 0.40
-W_ENSEMBLE = 0.20
-W_FINANCIAL = 0.20
-W_EXTERNAL = 0.20
+W_RISK = float(os.environ.get("ARIA_W_RISK", "0.40"))
+W_ENSEMBLE = float(os.environ.get("ARIA_W_ENSEMBLE", "0.20"))
+W_FINANCIAL = float(os.environ.get("ARIA_W_FINANCIAL", "0.20"))
+W_EXTERNAL = float(os.environ.get("ARIA_W_EXTERNAL", "0.20"))
 
-# Tier thresholds
-TIER1_THRESHOLD = 0.80
-TIER2_THRESHOLD = 0.60
-TIER3_THRESHOLD = 0.40
+# Tier thresholds (configurable via environment variables)
+TIER1_THRESHOLD = float(os.environ.get("ARIA_TIER1_THRESHOLD", "0.80"))
+TIER2_THRESHOLD = float(os.environ.get("ARIA_TIER2_THRESHOLD", "0.60"))
+TIER3_THRESHOLD = float(os.environ.get("ARIA_TIER3_THRESHOLD", "0.40"))
 
 logger = logging.getLogger(__name__)
 
@@ -637,9 +637,14 @@ def screen_false_positives(
         fp_data_error = True
         penalty += 0.25
 
-    # FP3: Structural monopoly (sector has very few vendors)
+    # FP3: Structural monopoly (sector has very few vendors, or known large SOE)
     sector_vendor_count = vendor_data.get("sector_vendor_count", 999) or 999
-    if sector_vendor_count <= 10:
+    SOE_KEYWORDS = [
+        "pemex", "cfe ", "comision federal", "imss", "issste",
+        "banco de mexico", "banxico", "fonatur", "infonavit",
+        "diconsa", "liconsa", "conasupo",
+    ]
+    if sector_vendor_count <= 10 or any(kw in name_lower for kw in SOE_KEYWORDS):
         fp_structural = True
         penalty += 0.15
 
@@ -1164,6 +1169,11 @@ def run_pipeline(dry_run: bool = False, limit: int = None) -> tuple:
                 preserved[row[0]] = row[1:]
 
             # Replace all previous aria_queue rows with current run
+            current_count = conn.execute("SELECT COUNT(*) FROM aria_queue").fetchone()[0]
+            logger.warning(
+                "Replacing all aria_queue rows (%d vendors). Pass --dry-run to preview.",
+                current_count,
+            )
             conn.execute("DELETE FROM aria_queue")
 
             for r in results:

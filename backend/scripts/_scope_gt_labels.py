@@ -49,8 +49,8 @@ WHERE
     COALESCE(gtv.is_false_positive, 0) = 0
     -- Year scoping: restrict to fraud window when available
     AND (
-        gc.fraud_year_start IS NULL
-        OR c.contract_year BETWEEN gc.fraud_year_start AND gc.fraud_year_end
+        gc.year_start IS NULL
+        OR c.contract_year BETWEEN gc.year_start AND gc.year_end
     )
     -- Institution scoping: restrict to fraud institutions when available
     AND (
@@ -84,8 +84,8 @@ def run(execute: bool = False):
         JOIN ground_truth_vendors gtv ON c.vendor_id = gtv.vendor_id
         JOIN ground_truth_cases gc    ON gtv.case_id = gc.id
         WHERE COALESCE(gtv.is_false_positive, 0) = 0
-          AND (gc.fraud_year_start IS NULL
-               OR c.contract_year BETWEEN gc.fraud_year_start AND gc.fraud_year_end)
+          AND (gc.year_start IS NULL
+               OR c.contract_year BETWEEN gc.year_start AND gc.year_end)
           AND (gc.fraud_institution_ids IS NULL
                OR c.institution_id IN (SELECT value FROM json_each(gc.fraud_institution_ids)))
     """)
@@ -105,7 +105,7 @@ def run(execute: bool = False):
     # -- Per-case breakdown (top 30 by contracts removed) --
     # Use two separate lightweight queries to avoid Cartesian explosion
     cur.execute("""
-        SELECT gc.id, gc.case_name, gc.fraud_year_start, gc.fraud_year_end,
+        SELECT gc.id, gc.case_name, gc.year_start, gc.year_end,
                gc.fraud_institution_ids
         FROM ground_truth_cases gc
         WHERE EXISTS (

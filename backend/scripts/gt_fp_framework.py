@@ -106,6 +106,73 @@ FP_TIER_WEIGHT = {
 }
 
 
+def verify_gt_insert(conn, expected_case_id: str) -> bool:
+    """
+    H3 helper — call this immediately after INSERT OR IGNORE into ground_truth_cases.
+
+    Checks whether expected_case_id now exists in ground_truth_cases.
+    Prints a WARNING if the row is missing (silent INSERT OR IGNORE duplicate drop).
+    Returns True if the case exists, False if it was silently dropped.
+
+    Example usage in batch scripts:
+        conn.execute("INSERT OR IGNORE INTO ground_truth_cases (...) VALUES (...)")
+        conn.commit()
+        verify_gt_insert(conn, 'CASE-XYZ')
+    """
+    import logging
+    _log = logging.getLogger(__name__)
+    row = conn.execute(
+        "SELECT COUNT(*) FROM ground_truth_cases WHERE case_id = ?",
+        (expected_case_id,)
+    ).fetchone()
+    exists = row[0] > 0
+    if not exists:
+        _log.warning(
+            "INSERT OR IGNORE silently dropped case_id='%s' — "
+            "a row with this case_id already exists or the INSERT violated a constraint.",
+            expected_case_id,
+        )
+        print(f"[WARNING] verify_gt_insert: case_id='{expected_case_id}' NOT found after insert — possible silent duplicate drop.")
+    else:
+        print(f"[OK] verify_gt_insert: case_id='{expected_case_id}' confirmed in ground_truth_cases.")
+    return exists
+
+
+def assert_not_structural_fp(vendor_id: int, conn) -> None:
+    """
+    Guard — call before adding a vendor to ground_truth_vendors as an active
+    perpetrator (tier 3/4).  Raises ValueError if the vendor is in the
+    STRUCTURAL_FP_VENDOR_IDS list, which would contaminate training data.
+
+    Structural FPs (BAXTER, FRESENIUS, INFRA SA DE CV, PRAXAIR MEXICO and
+    others listed in STRUCTURAL_FP_VENDOR_IDS) must NEVER be inserted as
+    positive training examples.  Their is_false_positive flag must stay 1 and
+    their curriculum_weight must stay 0.0 unconditionally — not derived from
+    evidence_strength.
+
+    Example usage in batch scripts:
+        assert_not_structural_fp(vendor_id, conn)
+        conn.execute("INSERT OR IGNORE INTO ground_truth_vendors ...")
+    """
+    if vendor_id in STRUCTURAL_FP_VENDOR_IDS:
+        reason = STRUCTURAL_FP_VENDOR_IDS[vendor_id]
+        raise ValueError(
+            f"vendor_id={vendor_id} is a structural FP ({reason}) and must not be "
+            f"inserted as a positive training example. "
+            f"curriculum_weight for structural FPs is always 0.0."
+        )
+    # Also check whether it's already tagged is_false_positive=1 in the DB
+    row = conn.execute(
+        "SELECT is_false_positive FROM ground_truth_vendors WHERE vendor_id = ? LIMIT 1",
+        (vendor_id,)
+    ).fetchone()
+    if row is not None and row[0] == 1:
+        raise ValueError(
+            f"vendor_id={vendor_id} is already marked is_false_positive=1 in "
+            f"ground_truth_vendors. Do not add it as a positive training example."
+        )
+
+
 def get_conn():
     return sqlite3.connect(DB_PATH)
 
@@ -158,11 +225,13 @@ def detect(conn, dry_run=True):
          yr_start, yr_end, cur_fp, cur_tier) in rows:
 
         # ── Tier 1: Structural Market FP ──────────────────────────────────
+        # curriculum_weight is ALWAYS 0.0 for structural FPs — never derived
+        # from evidence_strength, regardless of what the DB contains.
         if vendor_id in STRUCTURAL_FP_VENDOR_IDS:
             tier = 1
             is_fp = 1
             reason = STRUCTURAL_FP_VENDOR_IDS[vendor_id]
-            weight = 0.0
+            weight = 0.0  # unconditional — do not change
 
         # ── Tier 2: Beneficiary, Low Evidence ─────────────────────────────
         elif vendor_id in LOW_EVIDENCE_BENEFICIARY_IDS:

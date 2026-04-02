@@ -544,7 +544,7 @@ def parse_date(value) -> Optional[str]:
 
     try:
         return pd.to_datetime(value).strftime('%Y-%m-%d')
-    except:
+    except (ValueError, TypeError, AttributeError, OverflowError):
         return None
 
 
@@ -579,10 +579,16 @@ def parse_amount(value, context: str = "") -> float:
     VALIDATION_STATS['total'] += 1
 
     if amount > MAX_CONTRACT_VALUE:
-        # Reject values over 100B MXN - these are data entry errors
-        logger.warning(f"[REJECTED] Contract value {amount:,.0f} MXN exceeds maximum ({MAX_CONTRACT_VALUE:,.0f}) {context}")
+        # Reject values over 100B MXN - these are data entry errors.
+        # Preserve the original value in the log so it is not lost.
+        rejected_amount = amount
+        amount = 0.0
+        logger.warning(
+            f"[REJECTED] Contract value {rejected_amount:,.0f} MXN exceeds maximum "
+            f"({MAX_CONTRACT_VALUE:,.0f}) {context} — stored as {amount:.1f}"
+        )
         VALIDATION_STATS['rejected'] += 1
-        return 0.0  # Return 0 to exclude from analytics
+        return amount  # Return 0 to exclude from analytics
 
     if amount > FLAG_THRESHOLD:
         # Flag values over 10B for review (but include them)
@@ -896,7 +902,7 @@ def normalize_row(
         try:
             contract_year = int(contract_date[:4])
             contract_month = int(contract_date[5:7])
-        except:
+        except (ValueError, TypeError, AttributeError):
             pass
 
     # Flags
@@ -905,8 +911,12 @@ def normalize_row(
 
     procedure_number = get_value(row, df_columns, mapping.get('procedure_number', []))
 
-    # Compute content hash for deduplication
-    contract_hash = compute_contract_hash(procedure_number, vendor_name, amount, contract_year)
+    # Compute content hash for deduplication using normalized values so that
+    # encoding variants of the same vendor (e.g. "PEMEX" vs "Pemex S.A.") do
+    # not produce duplicate rows.  amount is already the parse_amount() result;
+    # vendor_name is normalized here (same function used by entity_cache).
+    normalized_vendor_for_hash = normalize_vendor_name(vendor_name) if vendor_name else ''
+    contract_hash = compute_contract_hash(procedure_number, normalized_vendor_for_hash, amount, contract_year)
 
     record = {
         'source_file': source_file,
@@ -1155,6 +1165,11 @@ def process_xlsx_file(
     logger.info(f"Processing {filename}...")
 
     try:
+        file_size_mb = os.path.getsize(filepath) / (1024 * 1024)
+        if file_size_mb > 100:
+            logger.warning(
+                f"Large Excel file ({file_size_mb:.0f}MB) - consider converting to CSV for better performance"
+            )
         df = pd.read_excel(filepath, engine='openpyxl')
         row_count = len(df)
 
@@ -1181,7 +1196,10 @@ def process_xlsx_file(
         total_skipped = 0
         rows_processed = 0
 
-        for idx, row in df.iterrows():
+        # itertuples is 10-100x faster than iterrows; reconstruct a Series per
+        # row so that get_value (which uses row[col] / row.index) stays compatible.
+        for row_tuple in df.itertuples(index=False, name=None):
+            row = pd.Series(row_tuple, index=df_columns)
             record = normalize_row(
                 row, structure, df_columns, filename, source_year,
                 entity_cache, ramo_lookup
@@ -1213,6 +1231,11 @@ def process_xlsx_file(
             logger.info(f"  Completed {filename}: {total_inserted:,} rows")
 
         batch_checkpoint.clear(filename)
+
+        # Flush WAL to main DB file after each successful file to limit
+        # inconsistent state if the pipeline is interrupted between files.
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+
         return total_inserted, total_skipped, structure
 
     except Exception as e:
@@ -1240,11 +1263,12 @@ def process_csv_file(
     logger.info(f"Processing {filename}...")
 
     try:
-        # Try different encodings - latin-1 is most common for COMPRANET CSVs
+        # Probe the correct encoding with a single-chunk read, then stream the
+        # full file in 10 000-row chunks to avoid loading it all into memory.
         encoding_used = None
         for encoding in ['latin-1', 'utf-8', 'cp1252', 'iso-8859-1']:
             try:
-                df = pd.read_csv(filepath, encoding=encoding, low_memory=False)
+                probe = pd.read_csv(filepath, encoding=encoding, low_memory=False, nrows=5)
                 encoding_used = encoding
                 logger.info(f"  Successfully read with encoding: {encoding}")
                 break
@@ -1255,53 +1279,58 @@ def process_csv_file(
             logger.error(f"Could not decode file {filename} with any supported encoding")
             return 0, 0, 'error'
 
-        row_count = len(df)
+        # Get column names and row count from the probe read
+        df_columns = list(probe.columns)
+        source_year = extract_year_from_filename(filename) or 2023
 
-        if row_count == 0:
-            logger.warning(f"Empty file: {filename}")
-            return 0, 0, 'empty'
-
-        logger.info(f"  Loaded {row_count:,} rows from {filename}")
         logger.info(f"  Structure: D (CSV 2023-2025)")
 
-        # Validate structure
-        is_valid, missing_groups = validate_structure(df, 'D')
+        # Validate structure against the probe DataFrame
+        is_valid, missing_groups = validate_structure(probe, 'D')
         if not is_valid:
             logger.warning(f"  Structure validation failed for {filename}. "
                          f"Missing: {missing_groups}. Proceeding with caution.")
-
-        df_columns = list(df.columns)
-        source_year = extract_year_from_filename(filename) or 2023
 
         records = []
         total_inserted = 0
         total_skipped = 0
         rows_processed = 0
+        validated_structure = False
 
-        for idx, row in df.iterrows():
-            record = normalize_row(
-                row, 'D', df_columns, filename, source_year,
-                entity_cache, ramo_lookup
-            )
-            records.append(record)
-            rows_processed += 1
+        # Stream CSV in 10 000-row chunks to avoid loading the full file into memory
+        chunk_iter = pd.read_csv(
+            filepath, encoding=encoding_used, low_memory=False, chunksize=10000
+        )
+        for chunk in chunk_iter:
+            # itertuples is 10-100x faster than iterrows; reconstruct a Series
+            # per row so that get_value (which uses row[col] / row.index) stays compatible.
+            for row_tuple in chunk.itertuples(index=False, name=None):
+                row = pd.Series(row_tuple, index=df_columns)
+                record = normalize_row(
+                    row, 'D', df_columns, filename, source_year,
+                    entity_cache, ramo_lookup
+                )
+                records.append(record)
+                rows_processed += 1
 
-            if len(records) >= BATCH_SIZE:
-                inserted, skipped = insert_batch(conn, records, existing_hashes)
-                total_inserted += inserted
-                total_skipped += skipped
-                logger.info(f"  Processed {rows_processed:,}/{row_count:,} rows "
-                           f"(inserted: {total_inserted:,}, skipped: {total_skipped:,})...")
-                records = []
+                if len(records) >= BATCH_SIZE:
+                    inserted, skipped = insert_batch(conn, records, existing_hashes)
+                    total_inserted += inserted
+                    total_skipped += skipped
+                    logger.info(f"  Processed {rows_processed:,} rows "
+                               f"(inserted: {total_inserted:,}, skipped: {total_skipped:,})...")
+                    records = []
 
-                # Checkpoint every 50K rows
-                if rows_processed % 50000 < BATCH_SIZE:
-                    batch_checkpoint.save(filename, rows_processed, total_skipped, total_inserted)
+                    # Checkpoint every 50K rows
+                    if rows_processed % 50000 < BATCH_SIZE:
+                        batch_checkpoint.save(filename, rows_processed, total_skipped, total_inserted)
 
         if records:
             inserted, skipped = insert_batch(conn, records, existing_hashes)
             total_inserted += inserted
             total_skipped += skipped
+
+        logger.info(f"  Processed {rows_processed:,} total rows from {filename}")
 
         if total_skipped > 0:
             logger.info(f"  Completed {filename}: Skipped {total_skipped:,} duplicates, "
@@ -1310,6 +1339,11 @@ def process_csv_file(
             logger.info(f"  Completed {filename}: {total_inserted:,} rows")
 
         batch_checkpoint.clear(filename)
+
+        # Flush WAL to main DB file after each successful file to limit
+        # inconsistent state if the pipeline is interrupted between files.
+        conn.execute("PRAGMA wal_checkpoint(PASSIVE)")
+
         return total_inserted, total_skipped, 'D'
 
     except Exception as e:

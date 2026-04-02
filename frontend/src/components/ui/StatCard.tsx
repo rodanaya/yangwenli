@@ -1,5 +1,5 @@
 import { type LucideIcon } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { cn, getLocale } from '@/lib/utils'
 import { motion } from 'framer-motion'
 
 interface StatCardProps {
@@ -44,7 +44,7 @@ export function StatCard({
         className="text-2xl font-bold font-mono text-text-primary"
         style={accentColor !== '#06b6d4' ? { color: accentColor } : undefined}
       >
-        {typeof value === 'number' ? value.toLocaleString() : value}
+        {typeof value === 'number' ? value.toLocaleString(getLocale()) : value}
       </div>
       {subtitle && (
         <div className="text-xs text-text-muted mt-1">{subtitle}</div>

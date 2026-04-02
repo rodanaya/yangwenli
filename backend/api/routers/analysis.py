@@ -750,6 +750,7 @@ class SectorYearBreakdownResponse(BaseModel):
     """Sector x Year cross-tabulation."""
     data: List[SectorYearItem]
     total_rows: int
+    data_note: Optional[str] = None
 
 
 @router.get("/sector-year-breakdown", response_model=SectorYearBreakdownResponse)
@@ -790,6 +791,11 @@ def get_sector_year_breakdown(request: Request):
 
             # Fallback: live query limited to 2018+ (precomputed stat missing in this DB).
             # Full-history query takes 750s on 3.1M rows; 2018+ is ~1M rows and finishes in ~30s.
+            logger.warning(
+                "sector_year_breakdown: precomputed_stats key missing; falling back to live query "
+                "truncated to 2018+. Historical data (2002-2017) will NOT be returned. "
+                "Run precompute_stats to restore full history."
+            )
             cursor.execute("""
                 SELECT
                     contract_year as year, sector_id,
@@ -821,7 +827,15 @@ def get_sector_year_breakdown(request: Request):
                 institution_count=row["institution_count"]
             ) for row in cursor.fetchall()]
 
-            result = SectorYearBreakdownResponse(data=data, total_rows=len(data))
+            result = SectorYearBreakdownResponse(
+                data=data,
+                total_rows=len(data),
+                data_note=(
+                    "Data is truncated to 2018–present. Historical records from 2002–2017 are "
+                    "unavailable because the precomputed_stats key 'sector_year_breakdown' is "
+                    "missing. Run precompute_stats to restore full history."
+                ),
+            )
             _analysis_cache.set(cache_key, result, ttl_seconds=SECTOR_YEAR_CACHE_TTL)
             return result
 
@@ -1078,6 +1092,7 @@ def list_price_hypotheses(
                 (sort_by, sort_order.lower() if sort_order else "desc"),
                 "ORDER BY confidence DESC"
             )
+            assert order_clause in VALID_SORT_OPTIONS.values(), f"Invalid sort: {order_clause}"
 
             cursor.execute(f"SELECT COUNT(*) FROM price_hypotheses WHERE {where_clause}", params)
             total = cursor.fetchone()[0]
@@ -2644,6 +2659,7 @@ def get_institution_rankings(
             status_code=400,
             detail=f"Invalid sort_by value '{sort_by}'. Must be one of: risk, hhi, value, contracts"
         )
+    assert sort_map[sort_by] in sort_map.values(), f"Invalid sort: {sort_map[sort_by]}"
 
     try:
         with get_db() as conn:

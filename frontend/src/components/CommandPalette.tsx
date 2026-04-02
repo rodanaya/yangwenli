@@ -26,6 +26,7 @@ import { searchApi } from '@/api/client'
 import { useDebouncedValue } from '@/hooks/useDebouncedSearch'
 import { useSavedSearches } from '@/hooks/useSavedSearches'
 import { RISK_COLORS, RISK_THRESHOLDS } from '@/lib/constants'
+import { getLocale } from '@/lib/utils'
 import { VendorBadge } from '@/components/ui/VendorBadge'
 
 // Mexican RFC pattern: 3-4 uppercase letters + 6 digits (YYMMDD) + 3 alphanumeric
@@ -386,7 +387,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                     )}
                     {inst.total_contracts != null && (
                       <span className="ml-auto text-xs font-mono text-text-muted shrink-0">
-                        {inst.total_contracts.toLocaleString()} contracts
+                        {inst.total_contracts.toLocaleString(getLocale())} contracts
                       </span>
                     )}
                   </CommandItem>

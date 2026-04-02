@@ -64,91 +64,94 @@ def main() -> None:
     print("VENDOR DEDUPLICATION")
     print("=" * 60)
 
-    create_table(cur)
+    try:
+        create_table(cur)
 
-    # Track which vendors have been mapped
-    mapped_vendors = set()
-    cluster_id = 0
-    total_merged = 0
+        # Track which vendors have been mapped
+        mapped_vendors = set()
+        cluster_id = 0
+        total_merged = 0
 
-    # --- Tier 1: RFC exact match ---
-    print("\n--- Tier 1: RFC exact match ---")
-    cur.execute("""
-        SELECT UPPER(TRIM(rfc)) as rfc_norm, GROUP_CONCAT(id, ',') as ids
-        FROM vendors
-        WHERE rfc IS NOT NULL AND TRIM(rfc) != '' AND LENGTH(TRIM(rfc)) >= 10
-        GROUP BY UPPER(TRIM(rfc))
-        HAVING COUNT(*) > 1
-    """)
-    rfc_clusters = cur.fetchall()
-    print(f"  RFC duplicate clusters: {len(rfc_clusters)}")
+        # --- Tier 1: RFC exact match ---
+        print("\n--- Tier 1: RFC exact match ---")
+        cur.execute("""
+            SELECT UPPER(TRIM(rfc)) as rfc_norm, GROUP_CONCAT(id, ',') as ids
+            FROM vendors
+            WHERE rfc IS NOT NULL AND TRIM(rfc) != '' AND LENGTH(TRIM(rfc)) >= 10
+            GROUP BY UPPER(TRIM(rfc))
+            HAVING COUNT(*) > 1
+        """)
+        rfc_clusters = cur.fetchall()
+        print(f"  RFC duplicate clusters: {len(rfc_clusters)}")
 
-    for row in rfc_clusters:
-        cluster_id += 1
-        vendor_ids = [int(x) for x in row["ids"].split(",")]
-        canonical_id = pick_canonical(cur, vendor_ids)
+        for row in rfc_clusters:
+            cluster_id += 1
+            vendor_ids = [int(x) for x in row["ids"].split(",")]
+            canonical_id = pick_canonical(cur, vendor_ids)
 
-        for vid in vendor_ids:
-            cur.execute("""
-                INSERT INTO vendor_canonical_map
-                    (vendor_id, canonical_id, cluster_id, match_method, confidence)
-                VALUES (?, ?, ?, 'rfc_exact', 1.0)
-            """, (vid, canonical_id, cluster_id))
-            mapped_vendors.add(vid)
-            if vid != canonical_id:
-                total_merged += 1
+            for vid in vendor_ids:
+                cur.execute("""
+                    INSERT INTO vendor_canonical_map
+                        (vendor_id, canonical_id, cluster_id, match_method, confidence)
+                    VALUES (?, ?, ?, 'rfc_exact', 1.0)
+                """, (vid, canonical_id, cluster_id))
+                mapped_vendors.add(vid)
+                if vid != canonical_id:
+                    total_merged += 1
 
-    # --- Tier 2: Normalized name match ---
-    print("\n--- Tier 2: Normalized name match ---")
-    cur.execute("""
-        SELECT normalized_name, GROUP_CONCAT(id, ',') as ids
-        FROM vendors
-        WHERE normalized_name IS NOT NULL AND normalized_name != ''
-        GROUP BY normalized_name
-        HAVING COUNT(*) > 1
-        ORDER BY COUNT(*) DESC
-    """)
-    name_clusters = cur.fetchall()
-    name_cluster_count = 0
+        # --- Tier 2: Normalized name match ---
+        print("\n--- Tier 2: Normalized name match ---")
+        cur.execute("""
+            SELECT normalized_name, GROUP_CONCAT(id, ',') as ids
+            FROM vendors
+            WHERE normalized_name IS NOT NULL AND normalized_name != ''
+            GROUP BY normalized_name
+            HAVING COUNT(*) > 1
+            ORDER BY COUNT(*) DESC
+        """)
+        name_clusters = cur.fetchall()
+        name_cluster_count = 0
 
-    for row in name_clusters:
-        vendor_ids = [int(x) for x in row["ids"].split(",")]
-        # Skip vendors already mapped by RFC
-        unmapped = [v for v in vendor_ids if v not in mapped_vendors]
-        if len(unmapped) <= 1 and all(v in mapped_vendors for v in vendor_ids):
-            continue
-
-        cluster_id += 1
-        name_cluster_count += 1
-        canonical_id = pick_canonical(cur, vendor_ids)
-
-        for vid in vendor_ids:
-            if vid in mapped_vendors:
+        for row in name_clusters:
+            vendor_ids = [int(x) for x in row["ids"].split(",")]
+            # Skip vendors already mapped by RFC
+            unmapped = [v for v in vendor_ids if v not in mapped_vendors]
+            if len(unmapped) <= 1 and all(v in mapped_vendors for v in vendor_ids):
                 continue
-            cur.execute("""
-                INSERT INTO vendor_canonical_map
-                    (vendor_id, canonical_id, cluster_id, match_method, confidence)
-                VALUES (?, ?, ?, 'normalized_name', 0.9)
-            """, (vid, canonical_id, cluster_id))
-            mapped_vendors.add(vid)
-            if vid != canonical_id:
-                total_merged += 1
 
-    print(f"  Name duplicate clusters: {name_cluster_count}")
+            cluster_id += 1
+            name_cluster_count += 1
+            canonical_id = pick_canonical(cur, vendor_ids)
 
-    # --- Self-map remaining vendors ---
-    print("\n--- Self-mapping remaining vendors ---")
-    t1 = time.time()
-    cur.execute("""
-        INSERT INTO vendor_canonical_map (vendor_id, canonical_id, cluster_id, match_method, confidence)
-        SELECT id, id, id, 'self', 1.0
-        FROM vendors
-        WHERE id NOT IN (SELECT vendor_id FROM vendor_canonical_map)
-    """)
-    self_mapped = cur.rowcount
-    print(f"  Self-mapped: {self_mapped:,} vendors in {time.time() - t1:.1f}s")
+            for vid in vendor_ids:
+                if vid in mapped_vendors:
+                    continue
+                cur.execute("""
+                    INSERT INTO vendor_canonical_map
+                        (vendor_id, canonical_id, cluster_id, match_method, confidence)
+                    VALUES (?, ?, ?, 'normalized_name', 0.9)
+                """, (vid, canonical_id, cluster_id))
+                mapped_vendors.add(vid)
+                if vid != canonical_id:
+                    total_merged += 1
 
-    conn.commit()
+        print(f"  Name duplicate clusters: {name_cluster_count}")
+
+        # --- Self-map remaining vendors ---
+        print("\n--- Self-mapping remaining vendors ---")
+        t1 = time.time()
+        cur.execute("""
+            INSERT INTO vendor_canonical_map (vendor_id, canonical_id, cluster_id, match_method, confidence)
+            SELECT id, id, id, 'self', 1.0
+            FROM vendors
+            WHERE id NOT IN (SELECT vendor_id FROM vendor_canonical_map)
+        """)
+        self_mapped = cur.rowcount
+        print(f"  Self-mapped: {self_mapped:,} vendors in {time.time() - t1:.1f}s")
+
+        conn.commit()
+    finally:
+        cur.execute("PRAGMA synchronous=FULL")
 
     # Summary
     cur.execute("SELECT COUNT(*) FROM vendor_canonical_map")

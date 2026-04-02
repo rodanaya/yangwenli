@@ -157,8 +157,8 @@ def build_evidence_package(row: dict, conn: sqlite3.Connection) -> dict:
             {"feature": r[0], "shap_value": round(r[1], 4)}
             for r in shap_rows
         ]
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"SHAP features unavailable for vendor {row['vendor_id']}: {e}")
 
     # Get contract sample (up to 5 most recent significant contracts)
     contract_sample = []

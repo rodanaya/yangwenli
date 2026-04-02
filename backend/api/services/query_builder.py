@@ -172,9 +172,16 @@ class QueryBuilder:
 
     def paginate(self, page: int, per_page: int) -> QueryBuilder:
         """Set LIMIT/OFFSET for pagination."""
+        import logging as _logging
         page = max(1, page)
-        per_page = max(1, min(per_page, 500))
+        per_page = max(1, min(per_page, 100))
+        if page > 1000:
+            _logging.getLogger(__name__).warning(
+                f"Requested page {page} exceeds max allowed page 1000; clamping to 1000."
+            )
+        page = min(page, 1000)
         self._limit = per_page
+        # TODO: migrate to cursor-based pagination (WHERE id > last_id) for pages > 1000
         self._offset = (page - 1) * per_page
         return self
 

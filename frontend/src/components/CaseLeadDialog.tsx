@@ -52,15 +52,15 @@ const EMPTY_FORM: CaseLeadForm = {
   contactEmail: '',
 }
 
-const FRAUD_TYPES = [
-  { value: 'ghost_company', label: 'Ghost companies' },
-  { value: 'overpricing', label: 'Overpricing' },
-  { value: 'bid_rigging', label: 'Bid rigging' },
-  { value: 'conflict_of_interest', label: 'Conflict of interest' },
-  { value: 'procurement_fraud', label: 'Procurement fraud' },
-  { value: 'bribery', label: 'Bribery' },
-  { value: 'monopoly', label: 'Monopoly' },
-  { value: 'other', label: 'Other' },
+const FRAUD_TYPE_VALUES = [
+  'ghost_company',
+  'overpricing',
+  'bid_rigging',
+  'conflict_of_interest',
+  'procurement_fraud',
+  'bribery',
+  'monopoly',
+  'other',
 ] as const
 
 type SubmitState = 'idle' | 'loading' | 'success' | 'error'
@@ -69,13 +69,16 @@ type SubmitState = 'idle' | 'loading' | 'success' | 'error'
 // Validation
 // ---------------------------------------------------------------------------
 
-function validateForm(form: CaseLeadForm): string | null {
-  if (!form.caseName.trim()) return 'Case name is required'
-  if (!form.fraudType) return 'Fraud type is required'
-  if (!form.evidence.trim()) return 'Evidence description is required'
-  if (form.evidence.trim().length < 50) return 'Evidence description must be at least 50 characters'
+function validateForm(
+  form: CaseLeadForm,
+  t: (key: string) => string,
+): string | null {
+  if (!form.caseName.trim()) return t('caseLeadDialog.validation.nameRequired')
+  if (!form.fraudType) return t('caseLeadDialog.validation.fraudTypeRequired')
+  if (!form.evidence.trim()) return t('caseLeadDialog.validation.evidenceRequired')
+  if (form.evidence.trim().length < 50) return t('caseLeadDialog.validation.evidenceMinLength')
   if (form.contactEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.contactEmail)) {
-    return 'Contact email format is invalid'
+    return t('caseLeadDialog.validation.emailInvalid')
   }
   return null
 }
@@ -91,6 +94,7 @@ interface CaseLeadDialogProps {
 
 export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
   const { t: ts } = useTranslation('sectors')
+  const { t } = useTranslation('common')
   const [form, setForm] = useState<CaseLeadForm>(EMPTY_FORM)
   const [submitState, setSubmitState] = useState<SubmitState>('idle')
   const [errorMsg, setErrorMsg] = useState<string | null>(null)
@@ -127,7 +131,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const validationError = validateForm(form)
+    const validationError = validateForm(form, t)
     if (validationError) {
       setErrorMsg(validationError)
       return
@@ -167,14 +171,14 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
       })
       setSubmitState('success')
       setForm(EMPTY_FORM)
-      showToast('Case lead submitted — our team will investigate')
+      showToast(t('caseLeadDialog.successMsg'))
       setTimeout(() => {
         setSubmitState('idle')
         onOpenChange(false)
       }, 1500)
     } catch {
       setSubmitState('error')
-      setErrorMsg('Submission failed. Please try again.')
+      setErrorMsg(t('caseLeadDialog.errorMsg'))
     }
   }
 
@@ -197,7 +201,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-risk-high" aria-hidden="true" />
-              Submit a Case Lead
+              {t('caseLeadDialog.title')}
             </DialogTitle>
           </DialogHeader>
 
@@ -210,7 +214,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
             {/* Case name */}
             <div>
               <label htmlFor="cl-caseName" className="block text-xs font-medium text-text-secondary mb-1">
-                Case name / Vendor name <span className="text-risk-critical" aria-hidden="true">*</span>
+                {t('caseLeadDialog.vendorLabel')} <span className="text-risk-critical" aria-hidden="true">*</span>
               </label>
               <Input
                 id="cl-caseName"
@@ -231,7 +235,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="cl-fraudType" className="block text-xs font-medium text-text-secondary mb-1">
-                  Suspected fraud type <span className="text-risk-critical" aria-hidden="true">*</span>
+                  {t('caseLeadDialog.fraudTypeLabel')} <span className="text-risk-critical" aria-hidden="true">*</span>
                 </label>
                 <Select
                   value={form.fraudType}
@@ -241,8 +245,8 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                     <SelectValue placeholder="Select type…" />
                   </SelectTrigger>
                   <SelectContent>
-                    {FRAUD_TYPES.map((ft) => (
-                      <SelectItem key={ft.value} value={ft.value}>{ft.label}</SelectItem>
+                    {FRAUD_TYPE_VALUES.map((value) => (
+                      <SelectItem key={value} value={value}>{t(`caseLeadDialog.fraudTypes.${value}`)}</SelectItem>
                     ))}
                   </SelectContent>
                 </Select>
@@ -250,7 +254,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
 
               <div>
                 <label htmlFor="cl-sector" className="block text-xs font-medium text-text-secondary mb-1">
-                  Affected sector
+                  {t('caseLeadDialog.sectorLabel')}
                 </label>
                 <Select
                   value={form.sectorId}
@@ -275,7 +279,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label htmlFor="cl-yearFrom" className="block text-xs font-medium text-text-secondary mb-1">
-                  From year
+                  {t('caseLeadDialog.fromYear')}
                 </label>
                 <Select value={form.yearFrom} onValueChange={handleSelectChange('yearFrom')}>
                   <SelectTrigger id="cl-yearFrom" className="h-8 text-xs">
@@ -290,7 +294,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
               </div>
               <div>
                 <label htmlFor="cl-yearTo" className="block text-xs font-medium text-text-secondary mb-1">
-                  To year
+                  {t('caseLeadDialog.toYear')}
                 </label>
                 <Select value={form.yearTo} onValueChange={handleSelectChange('yearTo')}>
                   <SelectTrigger id="cl-yearTo" className="h-8 text-xs">

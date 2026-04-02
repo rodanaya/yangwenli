@@ -10,6 +10,7 @@ import { useMemo, useState } from 'react'
 import { useQueries } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { analysisApi } from '@/api/client'
+import { getLocale } from '@/lib/utils'
 
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
@@ -134,7 +135,7 @@ export function RiskCalendarHeatmap() {
             <p className="text-text-secondary">
               Risk: <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold">{tooltip.risk.toFixed(3)} ({riskLabel(tooltip.risk)})</span>
             </p>
-            <p className="text-text-secondary">Contracts: <span className="text-text-primary">{tooltip.contracts.toLocaleString()}</span></p>
+            <p className="text-text-secondary">Contracts: <span className="text-text-primary">{tooltip.contracts.toLocaleString(getLocale())}</span></p>
           </div>
         )}
       </div>

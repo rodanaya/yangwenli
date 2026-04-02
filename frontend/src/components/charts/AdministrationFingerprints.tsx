@@ -8,6 +8,7 @@ import {
   ResponsiveContainer,
 } from 'recharts'
 import { useTranslation } from 'react-i18next'
+import { getLocale } from '@/lib/utils'
 
 // ---------------------------------------------------------------------------
 // Static data — no API call
@@ -120,7 +121,7 @@ function buildRadarData(admin: (typeof ADMIN_DATA)[0]): RadarDatum[] {
     {
       axis: 'Volume',
       value: normalize(admin.contracts, MAX_CONTRACTS),
-      rawLabel: admin.contracts.toLocaleString() + ' contracts',
+      rawLabel: admin.contracts.toLocaleString(getLocale()) + ' contracts',
     },
   ]
 }

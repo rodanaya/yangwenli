@@ -84,21 +84,45 @@ def get_risk_level(score):
 
 
 def load_all_calibrations(conn):
-    """Load global + per-sector v6.0 calibrations with n_positive for fallback logic."""
+    """Load global + per-sector calibrations dynamically (most recent run by created_at DESC).
+
+    The model_version filter is intentionally omitted — we always load the most
+    recent calibration regardless of version string, so v6.5 (or any future
+    version) is picked up automatically without hardcoding 'v6.0'.
+    """
+    # Determine the run_id and model_version of the most recent global model (sector_id IS NULL).
+    global_row = conn.execute('''
+        SELECT run_id, model_version
+        FROM model_calibration
+        WHERE sector_id IS NULL
+        ORDER BY created_at DESC
+        LIMIT 1
+    ''').fetchone()
+
+    if global_row is None:
+        return {}
+
+    latest_run_id = global_row[0]
+    # Store model_version on the dict so callers can retrieve it
+    _model_version_tag = global_row[1] or 'v6.x'
+
+    # Load all models (global + per-sector) from the same run.
     rows = conn.execute('''
         SELECT sector_id, intercept, coefficients, pu_correction_factor, bootstrap_ci, n_positive,
                auc_roc
-        FROM model_calibration WHERE model_version='v6.0'
-        ORDER BY created_at DESC
-    ''').fetchall()
+        FROM model_calibration
+        WHERE run_id = ?
+        ORDER BY sector_id ASC
+    ''', (latest_run_id,)).fetchall()
 
     models = {}
     for row in rows:
         sid = row[0]  # None for global
-        intercept = row[1]
+        intercept = float(row[1])
         coefs = json.loads(row[2])
         coef_vec = np.array([coefs.get(f, 0.0) for f in FACTOR_NAMES])
-        pu_c = row[3] or 1.0
+        # M1: enforce pu_c floor of 0.30 (Elkan & Noto minimum)
+        pu_c = max(float(row[3] or 1.0), 0.30)
         ci_data = json.loads(row[4]) if row[4] else {}
         ci_widths = np.array([
             (ci_data[f][1] - ci_data[f][0]) / 2.0 if f in ci_data else 0.0
@@ -116,6 +140,23 @@ def load_all_calibrations(conn):
             'auc_roc': auc_roc,
         }
 
+    # Store the version tag so main() can write the correct label to the DB.
+    models['_version_tag'] = _model_version_tag
+
+    # H5: Validate calibration sanity before any scoring.
+    global_model = models.get('global')
+    if global_model is not None:
+        if global_model['intercept'] >= -0.5:
+            raise RuntimeError(
+                f"Calibration sanity check FAILED: global intercept={global_model['intercept']:.4f} "
+                f">= -0.5. This indicates a miscalibrated model. Aborting."
+            )
+        if global_model['pu_c'] < 0.30:
+            raise RuntimeError(
+                f"Calibration sanity check FAILED: global pu_c={global_model['pu_c']:.4f} "
+                f"< 0.30 (Elkan & Noto floor). Aborting."
+            )
+
     return models
 
 def load_ghost_scores(conn):
@@ -128,12 +169,24 @@ def load_ghost_scores(conn):
     return {r[0]: r[1] for r in rows}
 
 def main():
-    parser = argparse.ArgumentParser(description='v6.0 risk scoring with per-sector models')
+    parser = argparse.ArgumentParser(description='v6.x risk scoring with per-sector models')
     parser.add_argument('--start-id', type=int, default=0,
                         help='Resume scoring from this contract ID')
     parser.add_argument('--skip-ghost-blend', action='store_true',
                         help='Disable ghost companion score blending (Fix 3)')
+    parser.add_argument('--yes', action='store_true',
+                        help='Skip interactive confirmation and proceed immediately')
     args = parser.parse_args()
+
+    # M2: Confirmation gate — require --yes or non-TTY before rescoring 3M+ contracts.
+    if not args.yes and sys.stdin.isatty():
+        print(
+            "About to rescore 3M+ contracts. This will overwrite risk_score, "
+            "risk_level, risk_confidence_lower, risk_confidence_upper, and "
+            "risk_model_version for ALL contracts in the database.\n"
+            "Pass --yes to confirm and proceed."
+        )
+        sys.exit(1)
 
     conn = sqlite3.connect(DB, timeout=300)
     conn.execute('PRAGMA busy_timeout=300000')
@@ -143,13 +196,14 @@ def main():
 
     models = load_all_calibrations(conn)
     if 'global' not in models:
-        print('ERROR: No global v6.0 calibration')
+        print('ERROR: No global calibration found in model_calibration table')
         return 1
 
+    version_tag = models.pop('_version_tag', 'v6.x')
     g = models['global']
     n_models = len(models)
     n_sector = n_models - 1
-    print(f'Loaded v6.0: {n_models} models (1 global + {n_sector} sector)', flush=True)
+    print(f'Loaded {version_tag}: {n_models} models (1 global + {n_sector} sector)', flush=True)
     g_intercept = g["intercept"]
     g_pu_c = g["pu_c"]
     print(f'  Global: intercept={g_intercept:.4f}, pu_c={g_pu_c:.4f}', flush=True)
@@ -279,7 +333,7 @@ def main():
                 s, lvl,
                 float(np.round(cl_arr[i], 6)),
                 float(np.round(cu_arr[i], 6)),
-                'v6.0',
+                version_tag,
                 int(ids[i]),
             ))
 
@@ -304,7 +358,7 @@ def main():
     elapsed = time.time() - t0
     t = sum(dist.values())
     print('\n' + '=' * 50)
-    print(f'v6.0 SCORING COMPLETE in {elapsed:.1f}s')
+    print(f'{version_tag} SCORING COMPLETE in {elapsed:.1f}s')
     print('=' * 50)
     for lvl in ['critical', 'high', 'medium', 'low']:
         pct = 100 * dist[lvl] / t

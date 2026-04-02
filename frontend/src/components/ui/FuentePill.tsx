@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next'
-import { cn } from '@/lib/utils'
+import { cn, getLocale } from '@/lib/utils'
 
 interface FuentePillProps {
   source: string
@@ -29,7 +29,7 @@ export function FuentePill({
       <span className="text-text-primary font-semibold">{source}</span>
       {count != null && (
         <span className="text-text-muted">
-          &middot; {count.toLocaleString()} {countLabel ?? t('contracts')}
+          &middot; {count.toLocaleString(getLocale())} {countLabel ?? t('contracts')}
         </span>
       )}
       {verified && (

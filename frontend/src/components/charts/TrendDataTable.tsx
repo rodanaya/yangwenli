@@ -1,6 +1,6 @@
 import { useState, useCallback } from 'react'
 import { ArrowUpDown, Copy, Download } from 'lucide-react'
-import { cn, formatCompactMXN } from '@/lib/utils'
+import { cn, formatCompactMXN, getLocale } from '@/lib/utils'
 import {
   Table,
   TableHeader,
@@ -279,12 +279,12 @@ export default function TrendDataTable({
 
                     {/* Total contracts */}
                     <TableCell className="text-right tabular-nums text-text-secondary">
-                      {row.total_contracts.toLocaleString()}
+                      {row.total_contracts.toLocaleString(getLocale())}
                     </TableCell>
 
                     {/* High-risk count */}
                     <TableCell className="text-right tabular-nums text-text-secondary">
-                      {row.high_risk_count.toLocaleString()}
+                      {row.high_risk_count.toLocaleString(getLocale())}
                     </TableCell>
 
                     {/* High-risk % with bar */}

@@ -103,7 +103,7 @@ AUTONOMY_BASELINES = {
 @router.get("", response_model=InstitutionListResponse)
 def list_institutions(
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
-    per_page: int = Query(50, ge=1, le=200, description="Items per page"),
+    per_page: int = Query(50, ge=1, le=100, description="Items per page"),
     institution_type: Optional[str] = Query(None, description="Filter by institution type code"),
     size_tier: Optional[str] = Query(None, description="Filter by size tier"),
     autonomy_level: Optional[str] = Query(None, description="Filter by autonomy level"),
@@ -788,6 +788,8 @@ def get_top_institutions(
             raise HTTPException(status_code=400, detail=f"Invalid metric '{by}'. Use: spending, contracts, risk")
 
         sort_expr, sort_dir = metric_mapping[by]
+        _VALID_INSTITUTION_METRIC_EXPRS = {"SUM(c.amount_mxn)", "COUNT(c.id)", "AVG(c.risk_score)"}
+        assert sort_expr in _VALID_INSTITUTION_METRIC_EXPRS, f"Invalid sort expression: {sort_expr}"
 
         query = f"""
             SELECT
@@ -1019,6 +1021,7 @@ def get_institution_contracts(
             "risk_score": "c.risk_score",
         }
         sort_expr = SORT_FIELD_MAPPING.get(sort_by, "c.contract_date")
+        assert sort_expr in SORT_FIELD_MAPPING.values(), f"Invalid sort: {sort_expr}"
         order_direction = "DESC" if sort_order.lower() == "desc" else "ASC"
 
         # Count total -- use pre-computed stats when no filters active (fast path)

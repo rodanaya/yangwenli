@@ -1,5 +1,6 @@
 import { useRef, useEffect, useState } from 'react'
 import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
+import { getLocale } from '@/lib/utils'
 
 interface SingleBidWallProps {
   count: number
@@ -56,7 +57,7 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
                   textShadow: '0 0 30px rgba(239,68,68,0.3)',
                 }}
               >
-                <span ref={countRef}>{animCount.toLocaleString()}</span>
+                <span ref={countRef}>{animCount.toLocaleString(getLocale())}</span>
               </p>
               <p className="text-xs text-red-300/70 mt-2 leading-relaxed max-w-[260px]">
                 licitaciones con un solo oferente — competencia de papel
