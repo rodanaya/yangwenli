@@ -326,11 +326,11 @@ class TestQueryBuilderPagination:
         assert "OFFSET 0" in sql
 
     def test_paginate_clamps_per_page(self):
-        """per_page is clamped to 1-500."""
+        """per_page is clamped to 1-100 (C6: max reduced from 500 to 100)."""
         qb = QueryBuilder("contracts c")
         qb.paginate(1, 1000)
         sql, _ = qb.build_select("*")
-        assert "LIMIT 500" in sql
+        assert "LIMIT 100" in sql
 
     def test_paginate_min_per_page(self):
         """per_page of 0 is clamped to 1."""
