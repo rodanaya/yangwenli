@@ -244,6 +244,20 @@
     "vendorProfile": "Perfil del Proveedor",
     "redThread": "Investigación Hilo Rojo"
   },
+  "hero": {
+    "headline": "{{vendorCount}} proveedores bajo vigilancia en 4 niveles de amenaza",
+    "subtitle": "ARIA monitorea proveedores de contratacion publica federal usando ML, deteccion de anomalias y cruce con registros externos. Comienza con Nivel 1 — los 320 casos mas criticos que requieren investigacion inmediata.",
+    "t1RequireShort": "Pistas criticas T1"
+  },
+  "patternDesc": {
+    "P1": "Un proveedor domina un mercado — >60% del gasto sectorial",
+    "P2": "Empresa fantasma: sin empleados, sin historial, contratos repentinos",
+    "P3": "Proveedor actua como intermediario entre gobierno y subcontratistas",
+    "P4": "Multiples proveedores coordinan licitaciones — rotacion o cobertura",
+    "P5": "Precios de contratos significativamente arriba del mercado",
+    "P6": "Una institucion otorga >80% de su presupuesto a un solo proveedor",
+    "P7": "Proveedores comparten direcciones, representantes o patrones RFC"
+  },
   "explainer": {
     "kicker": "ARIA · Automated Risk Investigation Algorithm",
     "body": "ARIA combina nueve módulos de análisis — puntuación de riesgo v6.5, detección de anomalías PyOD, análisis de redes de co-licitación, y cruce con registros externos (SAT EFOS, SFP, ASF) — para clasificar a los >318K proveedores en cuatro niveles de prioridad de investigación. Los proveedores T1 son los 320 casos más críticos: todos muestran múltiples señales de alarma simultáneas.",

@@ -1171,7 +1171,91 @@ export function Methodology() {
           </CollapsibleSection>
           </motion.div>
 
-          {/* Section 10: References */}
+          {/* Section 10: Known Limitations */}
+          <motion.div variants={staggerItem}>
+          <CollapsibleSection id="limitations" title="Known Limitations" icon={AlertTriangle} defaultOpen={false}>
+            <div className="space-y-6">
+              <p className="text-xs text-text-secondary leading-relaxed">
+                These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform.
+                Understanding them is essential to interpreting risk scores correctly.
+              </p>
+
+              {/* Severity summary */}
+              <div className="grid grid-cols-3 gap-3">
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
+                  <div>
+                    <span className="text-lg font-bold tabular-nums text-risk-critical">5</span>
+                    <span className="text-xs text-text-muted ml-1.5">High Impact</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
+                  <div>
+                    <span className="text-lg font-bold tabular-nums text-risk-high">5</span>
+                    <span className="text-xs text-text-muted ml-1.5">Medium Impact</span>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
+                  <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
+                  <div>
+                    <span className="text-lg font-bold tabular-nums text-risk-medium">4</span>
+                    <span className="text-xs text-text-muted ml-1.5">Low Impact</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Summary table */}
+              <div className="overflow-x-auto">
+                <table className="w-full text-xs">
+                  <thead className="border-b border-border">
+                    <tr>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium">Limitation</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden md:table-cell">Impact</th>
+                      <th className="px-3 py-2.5 text-left text-text-muted font-medium hidden lg:table-cell">Path to Fix</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-border/40">
+                    {([
+                      { l: 'Execution-phase fraud invisible', i: 'Construction/infrastructure underscored', f: 'Requires ASF audit data integration' },
+                      { l: 'Training bias (dominant cases)', i: 'Small-vendor & multi-sector corruption underdetected', f: 'Add more labeled ground truth cases' },
+                      { l: 'Ghost company detection (partial)', i: 'Small-shell EFOS vendors still challenging to detect', f: 'Case 22 included; institution-scoped labels' },
+                      { l: 'Vendor deduplication unsolved', i: 'True concentration understated pre-2018', f: 'RFC + address blocking (partial)' },
+                      { l: 'Co-bidding signal = zero', i: 'Bid rotation & cover bidding not in score', f: 'Need collusion-specific ground truth' },
+                      { l: 'CompraNet abolished Apr 2025', i: 'Future data unavailable; 1.9M records already deleted', f: 'Dependent on government decisions' },
+                      { l: 'Pre-2010 data quality', i: '25% of records less reliable', f: 'Structural COMPRANET limitation' },
+                      { l: 'Correlation ≠ causation', i: 'Scores require investigative follow-up', f: 'By design — model informs, not concludes' },
+                      { l: 'Structural concentration', i: 'Some sectors over-flagged (Defensa, Energía)', f: 'Sector-specific exclusion lists' },
+                      { l: 'Temporal stationarity', i: 'New fraud patterns may be undetected', f: 'Periodic retraining with new cases' },
+                      { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
+                      { l: 'Mexico concentration model', i: 'Bid-rotation collusion underdetected', f: 'Add collusion-ring ground truth' },
+                      { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
+                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v6.5 split', f: 'Point-in-time rolling features' },
+                    ] as const).map((row) => (
+                      <tr key={row.l} className="hover:bg-accent/[0.03]">
+                        <td className="px-3 py-2 text-text-primary">{row.l}</td>
+                        <td className="px-3 py-2 text-text-muted hidden md:table-cell">{row.i}</td>
+                        <td className="px-3 py-2 text-text-muted hidden lg:table-cell">{row.f}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+
+              {/* Interpretive guidance */}
+              <div className="p-3 rounded-md bg-border/10 border border-border/40">
+                <p className="text-xs text-text-muted leading-relaxed">
+                  <span className="font-medium text-text-primary">Interpretation guidance: </span>
+                  Risk scores are statistical indicators — not verdicts. A high score means strong similarity
+                  to documented corruption patterns. A low score does not certify a contract is clean.
+                  Use scores for investigation triage only; follow-up with primary sources to establish facts.
+                </p>
+              </div>
+            </div>
+          </CollapsibleSection>
+          </motion.div>
+
+          {/* Section 11: References */}
           <motion.div variants={staggerItem}>
           <CollapsibleSection id="references" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
             <div className="space-y-2">

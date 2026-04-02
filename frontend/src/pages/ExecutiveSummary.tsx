@@ -6,24 +6,25 @@
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
  */
 
-import React, { useMemo, useRef, useState } from 'react'
+import { useMemo, useRef, useState } from 'react'
 import { motion, useInView, useReducedMotion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCompactMXN, formatCompactUSD, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+// EditorialHeadline available for sub-sections if needed
+// import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 // HallazgoStat available if needed for additional breakdowns
 // import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
-import { ScrollReveal, useCountUp } from '@/hooks/useAnimations'
+import { ScrollReveal } from '@/hooks/useAnimations'
 import {
   AlertTriangle,
   Scale,
@@ -39,7 +40,6 @@ import {
   Printer,
   Share2,
   Check,
-  ChevronDown,
 } from 'lucide-react'
 
 function PullQuote({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
@@ -434,6 +434,234 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
 }
 
 // ============================================================================
+// Hero Numbers — the 3 stats that define RUBLI, massive monospace
+// ============================================================================
+
+function HeroNumbers({
+  data,
+  highRiskPct,
+}: {
+  data: ExecutiveSummaryResponse
+  highRiskPct: string
+}) {
+  const reduced = useReducedMotion()
+
+  const stats = [
+    {
+      value: '3.06M',
+      label: 'contratos analizados',
+      labelEn: 'contracts analyzed',
+      color: 'text-text-primary',
+      sub: '2002 - 2025 · 23 anos de COMPRANET',
+    },
+    {
+      value: 'MX$9.9T',
+      label: 'gasto federal validado',
+      labelEn: 'validated federal spend',
+      color: 'text-text-primary',
+      sub: `~$${data.headline.total_value_usd ? (data.headline.total_value_usd / 1e9).toFixed(0) + 'B' : '550B'} USD`,
+    },
+    {
+      value: `${highRiskPct}%`,
+      label: 'tasa de riesgo alto + critico',
+      labelEn: 'high + critical risk rate',
+      color: 'text-[#dc2626]',
+      sub: 'OCDE: max 15% — 1 de cada 7 pesos',
+    },
+  ]
+
+  return (
+    <motion.header
+      className="pt-4"
+      initial={reduced ? {} : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Overline */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-4">
+        RUBLI · Resumen Ejecutivo · Executive Summary
+      </p>
+
+      {/* One-line mission statement */}
+      <h1 className="text-2xl sm:text-3xl font-bold font-serif leading-tight text-text-primary mb-2">
+        Inteligencia de Contrataciones Publicas
+      </h1>
+      <p className="text-sm text-text-muted mb-8 max-w-2xl leading-relaxed">
+        AI-powered analysis of 23 years of Mexican federal procurement data.
+        Every contract. Every vendor. Every red flag.
+      </p>
+
+      {/* The 3 hero numbers */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.label}
+            className="border-l-2 border-l-zinc-700 pl-4 py-1"
+            initial={reduced ? {} : { opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 + i * 0.15, duration: 0.6 }}
+          >
+            <div className={`text-4xl sm:text-5xl font-mono font-bold ${s.color} tabular-nums leading-none`}>
+              {s.value}
+            </div>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide mt-1.5 font-mono">
+              {s.label}
+            </div>
+            <div className="text-[10px] text-zinc-600 mt-0.5 italic">
+              {s.labelEn}
+            </div>
+            <div className="text-[10px] text-zinc-600 font-mono mt-1">
+              {s.sub}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Print + Share row */}
+      <div className="flex items-center gap-3 mt-8 print:hidden">
+        <ShareButton />
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          PDF
+        </button>
+      </div>
+    </motion.header>
+  )
+}
+
+// ============================================================================
+// Methodology Summary — 2 sentences + link
+// ============================================================================
+
+function MethodologySummary() {
+  const navigate = useNavigate()
+
+  return (
+    <section className="my-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        RUBLI · Metodologia
+      </p>
+      <h2 className="text-xl font-bold text-text-primary mb-3">
+        How does this work?
+      </h2>
+      <div className="border-l-2 border-[#22d3ee] pl-5 space-y-3">
+        <p className="text-sm leading-relaxed text-text-secondary">
+          RUBLI applies a <strong className="text-text-primary">per-sector logistic regression model</strong> (v6.5,
+          AUC 0.828) trained on 748 documented corruption cases to score every federal contract in COMPRANET.
+          The model uses 9 statistical features — from price volatility to vendor concentration — normalized
+          against sector-year baselines so a direct award in Defensa is not treated the same as one in Educacion.
+        </p>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          Risk scores are <strong className="text-text-primary">investigation leads, not verdicts</strong>.
+          A score of 0.60 means the contract resembles known corruption patterns — it does not mean 60% chance of fraud.
+          All data is from public COMPRANET records. No FOIA required.
+        </p>
+      </div>
+      <button
+        onClick={() => navigate('/methodology')}
+        className="mt-4 flex items-center gap-1.5 text-xs text-[#22d3ee] hover:text-[#22d3ee]/80 font-mono uppercase tracking-wide transition-colors"
+      >
+        Full methodology & model transparency
+        <ArrowRight className="h-3 w-3" />
+      </button>
+    </section>
+  )
+}
+
+// ============================================================================
+// Investigation CTA — 3 entry point cards
+// ============================================================================
+
+function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
+  const cards = [
+    {
+      title: 'Investigar un Proveedor',
+      titleEn: 'Investigate a Vendor',
+      desc: '320 proveedores en cola de investigacion urgente. Comienza por los de mayor puntaje.',
+      descEn: '320 vendors in the urgent investigation queue. Start with the highest-scoring.',
+      icon: Search,
+      color: '#dc2626',
+      href: '/aria',
+      cta: 'Abrir cola ARIA',
+    },
+    {
+      title: 'Leer una Investigacion',
+      titleEn: 'Read an Investigation',
+      desc: 'Narrativas editoriales sobre los patrones de corrupcion mas importantes.',
+      descEn: 'Editorial narratives on the most significant corruption patterns.',
+      icon: Compass,
+      color: '#f59e0b',
+      href: '/journalists',
+      cta: 'Ver historias',
+    },
+    {
+      title: 'Explorar por Sector',
+      titleEn: 'Explore by Sector',
+      desc: '12 sectores, cada uno con su perfil de riesgo. Salud y Agricultura lideran.',
+      descEn: '12 sectors, each with its own risk profile. Health and Agriculture lead.',
+      icon: Scale,
+      color: '#3b82f6',
+      href: '/sectors',
+      cta: 'Ver sectores',
+    },
+  ]
+
+  return (
+    <section className="my-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        RUBLI · Punto de Partida
+      </p>
+      <h2 className="text-xl font-bold text-text-primary mb-2">
+        Start your investigation
+      </h2>
+      <p className="text-sm text-text-muted mb-6">
+        Comienza tu investigacion · Three ways into the data
+      </p>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        {cards.map((card) => {
+          const Icon = card.icon
+          return (
+            <button
+              key={card.href}
+              onClick={() => navigate(card.href)}
+              className="text-left group rounded-xl border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
+              style={{
+                borderColor: `${card.color}30`,
+                background: `${card.color}06`,
+              }}
+            >
+              <div
+                className="p-2.5 rounded-lg inline-flex mb-4 transition-colors"
+                style={{ background: `${card.color}15` }}
+              >
+                <Icon className="h-5 w-5" style={{ color: card.color }} />
+              </div>
+              <h3 className="text-sm font-bold text-text-primary mb-0.5 group-hover:underline">
+                {card.title}
+              </h3>
+              <p className="text-[11px] text-text-muted italic mb-2">{card.titleEn}</p>
+              <p className="text-xs text-text-secondary leading-relaxed mb-3">{card.desc}</p>
+              <p className="text-[10px] text-text-muted italic leading-relaxed mb-3">{card.descEn}</p>
+              <span
+                className="inline-flex items-center gap-1 text-xs font-mono font-semibold group-hover:gap-2 transition-all"
+                style={{ color: card.color }}
+              >
+                {card.cta}
+                <ArrowRight className="h-3 w-3" />
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
 // Main Component
 // ============================================================================
 
@@ -441,7 +669,6 @@ export function ExecutiveSummary() {
   const navigate = useNavigate()
   const { t } = useTranslation('executive')
   const { data, isLoading, isError, refetch } = useExecutiveSummary()
-  const [showFullBreakdown, setShowFullBreakdown] = useState(false)
 
   if (isLoading) {
     return <LoadingSkeleton />
@@ -470,19 +697,19 @@ export function ExecutiveSummary() {
 
   return (
     <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
-      <EditorialHeadline
-        section={t('editorialSection')}
-        headline={t('editorialHeadline')}
-        subtitle={t('editorialSubtitle')}
-      />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          HERO: The 3 numbers that define RUBLI
+          ════════════════════════════════════════════════════════════════════ */}
+      <HeroNumbers data={data} highRiskPct={highRiskPct} />
 
       {/* ── Investigative Lede ── */}
       <InvestigativeLede />
 
-      {/* ── Five Key Findings (replaces 4 KPI cards) ── */}
+      {/* ── Five Key Findings ── */}
       <FiveKeyFindings highRiskPct={highRiskPct} valueAtRiskFormatted={valueAtRiskFormatted} />
 
-      {/* ── Editorial context notes below findings ── */}
+      {/* ── Editorial context ── */}
       <div className="space-y-1.5">
         <p className="text-xs text-text-muted leading-relaxed italic">
           {t('rateExplanation')}
@@ -490,29 +717,6 @@ export function ExecutiveSummary() {
         <p className="text-xs text-text-muted leading-relaxed italic">
           {t('budgetContext', { pct: '56' })}
         </p>
-      </div>
-
-      {/* ── Expandable Full Breakdown ── */}
-      <div>
-        <button
-          onClick={() => setShowFullBreakdown(!showFullBreakdown)}
-          className="flex items-center gap-2 text-sm text-accent hover:text-accent/80 font-medium transition-colors"
-        >
-          {showFullBreakdown ? t('hideBreakdown') : t('seeFullBreakdown')}
-          <ChevronDown className={`h-4 w-4 transition-transform duration-300 ${showFullBreakdown ? 'rotate-180' : ''}`} />
-        </button>
-        {showFullBreakdown && (
-          <motion.div
-            initial={{ opacity: 0, height: 0 }}
-            animate={{ opacity: 1, height: 'auto' }}
-            exit={{ opacity: 0, height: 0 }}
-            transition={{ duration: 0.3 }}
-            className="mt-4 space-y-6"
-          >
-            <ScrollReveal delay={80}><ReportHeader data={data} /></ScrollReveal>
-            <ScrollReveal delay={100}><StatBombs data={data} /></ScrollReveal>
-          </motion.div>
-        )}
       </div>
 
       {/* Pull quote */}
@@ -524,11 +728,6 @@ export function ExecutiveSummary() {
 
       {/* ── Pistas para Periodistas / Investigation Leads ── */}
       <ScrollReveal delay={140}><PistasParaPeriodistas navigate={navigate} /></ScrollReveal>
-
-      {/* Section numbering note — sections 02/04/06/07/11 reflect original 11-chapter report */}
-      <p className="text-[10px] text-text-muted/60 font-mono text-right">
-        {t('sectionNumberNote')}
-      </p>
 
       <AnimatedDivider />
       {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
@@ -548,9 +747,29 @@ export function ExecutiveSummary() {
       <AnimatedDivider />
       {/* 07 — WHICH SECTORS: Risk Concentration */}
       <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
+
+      <AnimatedDivider />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          METHODOLOGY: 2-sentence summary + link
+          ════════════════════════════════════════════════════════════════════ */}
+      <ScrollReveal>
+        <MethodologySummary />
+      </ScrollReveal>
+
+      <AnimatedDivider />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          CTA: 3 entry points — "Start your investigation"
+          ════════════════════════════════════════════════════════════════════ */}
+      <ScrollReveal>
+        <InvestigationCTA navigate={navigate} />
+      </ScrollReveal>
+
       <AnimatedDivider />
       {/* 11 — NOW WHAT: Recommendations */}
       <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
+
       {/* Data source attribution */}
       <div className="flex flex-wrap items-center gap-3 mt-8">
         <FuentePill source="COMPRANET" count={3051294} verified={true} />
@@ -606,200 +825,6 @@ function ShareButton() {
   )
 }
 
-// ============================================================================
-// S0: Report Header
-// ============================================================================
-
-
-function ReportHeader({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const { headline } = data
-  const totalValueUSD = headline.total_value_usd
-    ? `$${(headline.total_value_usd / 1e9).toFixed(1)}B USD`
-    : formatCompactUSD(headline.total_value)
-
-  return (
-    <header className="pt-4 relative overflow-hidden">
-      <div className="relative z-10">
-      {/* Small caps label + print button row */}
-      <div className="flex items-center justify-between mb-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-accent/30 bg-accent/5">
-          <Shield className="h-3.5 w-3.5 text-accent" />
-          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-            {t('header.badge')}
-          </span>
-          <div className="h-1.5 w-1.5 rounded-full bg-accent animate-pulse" />
-        </div>
-        <div className="print:hidden flex items-center gap-2">
-          <ShareButton />
-          <button
-            onClick={() => window.print()}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
-            title="Print or save as PDF"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            {t('exportPdf')}
-          </button>
-        </div>
-      </div>
-
-      {/* Date line */}
-      <p className="text-xs text-text-muted font-mono tracking-wide mb-3">
-        {t('header.dateline')}
-      </p>
-
-      {/* Editorial label */}
-      <div className="editorial-rule mb-4">
-        <span className="editorial-label text-accent">{t('header.badge')}</span>
-      </div>
-
-      {/* Title */}
-      <h1 className="text-editorial-display text-text-primary mb-3">
-        {t('header.title')}
-      </h1>
-      <p className="text-lg text-text-secondary italic mb-8 max-w-2xl">
-        {t('header.subtitle')}
-      </p>
-
-      {/* Lead paragraph */}
-      <div className="border-l-2 border-accent/40 pl-5 mb-10">
-        <p className="text-sm leading-relaxed text-text-secondary">
-          <Trans
-            t={t}
-            i18nKey="header.lead"
-            values={{
-              totalContracts: formatNumber(headline.total_contracts),
-              totalValue: formatCompactMXN(headline.total_value),
-              totalValueUSD: totalValueUSD,
-              valueAtRisk: formatCompactMXN(data.risk.value_at_risk),
-              pct: data.risk.value_at_risk_pct,
-            }}
-          />
-        </p>
-      </div>
-
-      {/* Headline stats */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-4 gap-4"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-40px' }}
-      >
-        <motion.div variants={staggerItem}>
-          <HeadlineStat value={formatNumber(headline.total_contracts)} label={t('header.contracts')} rawNumber={headline.total_contracts} />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HeadlineStat
-            value={formatCompactMXN(headline.total_value)}
-            label={t('header.totalValue')}
-            sublabel={headline.total_value_real_mxn
-              ? `${formatCompactMXN(headline.total_value_real_mxn)} pesos 2024`
-              : undefined}
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HeadlineStat value={formatNumber(headline.total_vendors)} label={t('header.vendors')} rawNumber={headline.total_vendors} />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HeadlineStat value={formatNumber(headline.total_institutions)} label={t('header.institutions')} rawNumber={headline.total_institutions} />
-        </motion.div>
-      </motion.div>
-      </div>
-    </header>
-  )
-}
-
-// ============================================================================
-// Hero Stat Bombs — dramatic number callouts after the header
-// ============================================================================
-
-function StatBombs({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const { risk } = data
-  const highRiskRate = (risk.high_pct + risk.critical_pct).toFixed(1)
-
-  const { data: pyodData } = useQuery({
-    queryKey: ['analysis', 'pyod-agreement'],
-    queryFn: () => analysisApi.getPyodAgreement(),
-    staleTime: 60 * 60 * 1000,
-  })
-
-  const highCriticalCount = (risk.critical_count ?? 0) + (risk.high_count ?? 0)
-  // Always display as compact number to prevent card overflow
-  const highCriticalFormatted = highCriticalCount >= 1_000_000
-    ? `${(highCriticalCount / 1_000_000).toFixed(1)}M`
-    : `${Math.round(highCriticalCount / 1_000)}K`
-
-  const bombs = [
-    {
-      key: 'highRiskRate',
-      value: `${highRiskRate}%`,
-      label: t('statBombs.highRiskRate'),
-      sub: t('statBombs.highRiskRateSub'),
-      context: t('statBombs.highRiskRateContext'),
-      color: '#f87171',
-    },
-    {
-      key: 'highCritical',
-      value: highCriticalFormatted,
-      label: t('statBombs.highCritical'),
-      sub: t('statBombs.highCriticalSub', { pct: highRiskRate }),
-      context: t('statBombs.highCriticalContext'),
-      color: '#fb923c',
-    },
-    {
-      key: 'yearsCovered',
-      value: '23',
-      label: t('statBombs.yearsCovered'),
-      sub: t('statBombs.yearsCoveredSub'),
-      context: t('statBombs.yearsCoveredContext'),
-      color: '#22d3ee',
-    },
-    {
-      key: 'modelAuc',
-      value: '0.828',
-      label: t('statBombs.modelAuc'),
-      sub: t('statBombs.modelAucSub'),
-      context: t('statBombs.modelAucContext'),
-      color: '#4ade80',
-    },
-    {
-      key: 'documentedCases',
-      value: '22',
-      label: t('statBombs.documentedCases'),
-      sub: t('statBombs.documentedCasesSub'),
-      context: t('statBombs.documentedCasesContext'),
-      color: '#fbbf24',
-    },
-    {
-      key: 'dualConfirmed',
-      value: pyodData ? `${Math.round(pyodData.both_flagged / 1000)}K` : '130K',
-      label: t('statBombs.dualConfirmed'),
-      sub: t('statBombs.dualConfirmedSub'),
-      context: t('statBombs.dualConfirmedContext'),
-      color: '#a78bfa',
-    },
-  ]
-
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 max-w-3xl mx-auto">
-      {bombs.map((b, i) => (
-        <ScrollReveal key={b.key} delay={i * 80}>
-          <div className="flex items-start gap-4 p-4 bg-background-card border border-border rounded-lg">
-            <div className="flex-shrink-0">
-              <div className="text-2xl font-mono font-bold text-text-primary">{b.value}</div>
-              <div className="text-[10px] uppercase tracking-wider text-text-muted mt-0.5">{b.label}</div>
-            </div>
-            <div className="text-xs text-text-muted leading-relaxed border-l border-border pl-4">
-              {b.context}
-            </div>
-          </div>
-        </ScrollReveal>
-      ))}
-    </div>
-  )
-}
 
 // ============================================================================
 // What We Found — bold finding highlight cards
@@ -1857,30 +1882,7 @@ function SectionHeading({
   )
 }
 
-function HeadlineStat({ value, label, rawNumber, sublabel }: { value: string; label: string; rawNumber?: number; sublabel?: string }) {
-  const { ref, value: animated } = useCountUp(rawNumber ?? 0, 1600)
-  const displayValue = rawNumber !== undefined
-    ? (animated >= 1_000_000_000
-        ? `${(animated / 1_000_000_000).toFixed(1)}T`
-        : animated >= 1_000_000
-          ? `${(animated / 1_000_000).toFixed(0)}M`
-          : animated.toLocaleString())
-    : value
-
-  return (
-    <div className="fern-card text-center py-5 px-3 group">
-      <span ref={ref}>
-        <div className="stat-hero text-text-primary group-hover:text-accent transition-colors duration-300" style={{ fontSize: '2.5rem' }}>
-          {displayValue}
-        </div>
-      </span>
-      <div className="editorial-label mt-2">{label}</div>
-      {sublabel && (
-        <div className="text-[10px] text-text-muted/60 font-mono mt-0.5 italic">{sublabel}</div>
-      )}
-    </div>
-  )
-}
+// HeadlineStat removed — superseded by HeroNumbers
 
 function StatCallout({ value, label, color, pulse }: { value: string; label: string; color: string; pulse?: boolean }) {
   return (

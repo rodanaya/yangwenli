@@ -18,20 +18,17 @@ import {
   FlaskConical,
   MessageSquarePlus,
   Shield,
-  Search,
   FileSearch,
   Award,
   History,
   CalendarDays,
   Building2,
   GitMerge,
-  Map,
   TrendingUp,
   Layers,
   ShieldCheck,
   Network,
   Flame,
-  ScanSearch,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -73,10 +70,9 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1', isHero: true, heroColor: '#c41e3a' },
-      { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
-      { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
+      { i18nKey: 'network', href: '/network', icon: Network },
       { i18nKey: 'journalists', href: '/journalists', icon: FileSearch },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
@@ -89,7 +85,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'map', href: '/map', icon: Map },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
     ],
   },
@@ -98,10 +93,9 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'categories', href: '/categories', icon: Layers },
+      { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
-      { i18nKey: 'telescope', href: '/telescope', icon: ScanSearch },
     ],
   },
   {

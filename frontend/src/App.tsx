@@ -39,7 +39,7 @@ const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
 const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
-const Limitations = lazy(() => import('@/pages/Limitations'))
+// Limitations removed — /limitations redirects to /methodology
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 const CapturaHeatmap = lazy(() => import('@/pages/CapturaHeatmap'))
@@ -49,14 +49,14 @@ const Workspace = lazy(() => import('@/pages/Watchlist'))
 const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
 const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
-const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
-const Annotations = lazy(() => import('@/pages/Annotations'))
+// MexicoMap removed — /map redirects to /administrations
+// Annotations removed — /annotations redirects to /workspace
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const ReportCard = lazy(() => import('@/pages/ReportCard'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
-const Telescope = lazy(() => import('@/pages/Telescope'))
+// Telescope removed — /telescope redirects to /sectors
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 
@@ -226,14 +226,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="limitations"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Limitations />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="limitations" element={<Navigate to="/methodology" replace />} />
               <Route
                 path="cases"
                 element={
@@ -258,8 +251,8 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="state-expenditure" element={<Navigate to="/map" replace />} />
-              <Route path="state-expenditure/:code" element={<Navigate to="/map" replace />} />
+              <Route path="state-expenditure" element={<Navigate to="/administrations" replace />} />
+              <Route path="state-expenditure/:code" element={<Navigate to="/administrations" replace />} />
               <Route
                 path="year-in-review"
                 element={
@@ -350,14 +343,7 @@ function App() {
               />
               <Route path="api-explorer" element={<Navigate to="/settings" replace />} />
               <Route path="heatmap" element={<Navigate to="/money-flow" replace />} />
-              <Route
-                path="map"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <MexicoMap />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="map" element={<Navigate to="/administrations" replace />} />
               <Route
                 path="journalists"
                 element={
@@ -366,14 +352,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="annotations"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Annotations />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="annotations" element={<Navigate to="/workspace" replace />} />
 
               {/* Story narratives — investigative journalism pieces */}
               <Route
@@ -394,14 +373,7 @@ function App() {
                 }
               />
 
-              <Route
-                path="telescope"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Telescope />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="telescope" element={<Navigate to="/sectors" replace />} />
 
               <Route path="seismograph" element={<Navigate to="/administrations" replace />} />
 

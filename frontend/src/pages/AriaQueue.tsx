@@ -420,7 +420,10 @@ function ThreatLevelCard({
           {t(config.labelKey)}
         </span>
         {config.tier === 1 && (
-          <span className={cn('w-1.5 h-1.5 rounded-full animate-pulse', config.dotColor)} />
+          <span className="relative flex h-2.5 w-2.5">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-400 opacity-50" />
+            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+          </span>
         )}
         {isActive && (
           <span className="ml-auto text-[9px] font-mono uppercase tracking-widest text-accent/80">
@@ -474,6 +477,7 @@ function ThreatLevelCard({
           config.color,
           config.bg,
           isActive ? 'ring-1 ring-accent/60 opacity-100' : 'hover:brightness-110 opacity-90 hover:opacity-100',
+          config.tier === 1 && !isActive && 'shadow-[0_0_20px_rgba(220,38,38,0.15)] hover:shadow-[0_0_30px_rgba(220,38,38,0.25)]',
         )}
       >
         {inner}
@@ -535,6 +539,9 @@ function IntelPatternCard({
       </div>
       <div className="text-[10px] text-text-muted uppercase tracking-wider">
         {t('leads.vendorCount')}
+      </div>
+      <div className="text-[10px] text-zinc-500 mt-1 leading-snug line-clamp-2">
+        {t(`patternDesc.${pattern}`, { defaultValue: '' })}
       </div>
     </button>
   )
@@ -799,10 +806,18 @@ function LeadRow({
             </button>
             <button
               onClick={(e) => { e.stopPropagation(); navigate(`/thread/${item.vendor_id}`) }}
-              className="text-accent hover:text-accent/80 p-1 rounded hover:bg-accent/10 transition-colors"
+              className={cn(
+                'p-1 rounded transition-colors flex items-center gap-1',
+                (item.ips_tier === 1 || item.ips_tier === 2)
+                  ? 'text-amber-400 hover:text-amber-300 hover:bg-amber-500/10 font-mono text-[10px] uppercase tracking-wide'
+                  : 'text-accent hover:text-accent/80 hover:bg-accent/10'
+              )}
               aria-label={t('actions.redThread')}
               title={t('actions.redThread')}
             >
+              {(item.ips_tier === 1 || item.ips_tier === 2) && (
+                <span className="hidden xl:inline">Thread</span>
+              )}
               <ArrowRight className="h-3.5 w-3.5" />
             </button>
             {reviewOpen && (
@@ -934,86 +949,77 @@ export default function AriaPage() {
     <div className="min-h-screen bg-background">
 
       {/* ================================================================== */}
-      {/* COMPACT STATUS BAR                                                  */}
+      {/* EDITORIAL HERO — the most important thing the reader should know   */}
       {/* ================================================================== */}
-      <div className="px-6 py-3 border-b border-border flex items-center justify-between">
-        <div>
-          <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted font-mono">
-            ARIA SYSTEM &middot; {t('header.statusActive')}
-          </span>
-          <div className="flex items-center gap-3 mt-0.5">
-            <span className="text-sm font-semibold text-text-primary">{t('header.title')}</span>
-            <span className="flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-signal-live animate-pulse" />
-              <span className="text-[11px] text-text-muted">
-                {tier1Data?.pagination?.total ?? '—'} {t('header.t1Require')}
-              </span>
-            </span>
-          </div>
-        </div>
-        <div className="text-[10px] text-text-muted font-mono">
-          {t('header.lastUpdated')}: {lastRunAt ?? todayStr}
-        </div>
-      </div>
-
-      {/* ================================================================== */}
-      {/* COMPACT STATS PILL ROW                                              */}
-      {/* ================================================================== */}
-      <div className="flex flex-wrap gap-4 px-6 py-2 bg-background-card/50 border-b border-border text-[11px] text-text-muted">
-        <span><strong className="text-text-primary font-mono">{stats?.queue_total != null ? formatNumber(stats.queue_total) : '—'}</strong> {t('stats.vendorsUnderSurveillance')}</span>
-        <span>&middot;</span>
-        <span><strong className="text-text-primary font-mono">{formatCompactMXN(elevatedValue)}</strong> {t('stats.valueAtRisk')}</span>
-        <span>&middot;</span>
-        <span><strong className="text-red-400 font-mono">{formatNumber(efosCount)}</strong> {t('stats.onEfos')}</span>
-        {stats?.reviewed_count != null && stats.reviewed_count > 0 && (
-          <>
-            <span>&middot;</span>
-            <span>
-              <strong className="text-text-primary font-mono">{formatNumber(stats.reviewed_count)}</strong> {t('efficiencyStats.reviewed')}
-              {stats.confirmed_count != null && stats.reviewed_count > 0 && (
-                <span className="ml-1 text-green-400/80">
-                  ({Math.round((stats.confirmed_count / stats.reviewed_count) * 100)}% {t('efficiencyStats.confirmationRate')})
-                </span>
-              )}
-            </span>
-            {stats.t1_reviewed_count != null && (
-              <>
-                <span>&middot;</span>
-                <span>
-                  <strong className="text-text-primary font-mono">
-                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 285)) * 100)}%
-                  </strong> {t('efficiencyStats.t1Complete')}
-                </span>
-              </>
-            )}
-          </>
-        )}
-      </div>
-
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
-
-        {/* ARIA Algorithm Explainer */}
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-2">
+      <div className="border-b border-border bg-zinc-950">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+          {/* Overline */}
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
             {t('explainer.kicker')}
           </p>
-          <p className="text-sm text-zinc-300 leading-relaxed mb-3">
-            {t('explainer.body')}
-          </p>
-          <div className="grid grid-cols-4 gap-2 text-center">
+
+          {/* Editorial headline */}
+          <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
+            <div className="flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-zinc-100 leading-tight mb-1.5">
+                {t('hero.headline', { vendorCount: stats?.queue_total != null ? formatNumber(stats.queue_total) : '318,441' })}
+              </h1>
+              <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+                {t('hero.subtitle')}
+              </p>
+            </div>
+            <div className="flex items-center gap-3 shrink-0">
+              <span className="flex items-center gap-1.5">
+                <span className="w-2 h-2 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-xs font-mono text-red-400 font-semibold">
+                  {tier1Data?.pagination?.total ?? '320'} T1
+                </span>
+              </span>
+              <span className="text-[10px] text-zinc-600 font-mono">
+                {t('header.lastUpdated')}: {lastRunAt ?? todayStr}
+              </span>
+            </div>
+          </div>
+
+          {/* Hero stat strip — the numbers that matter */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {([
-              { tier: 'T1', count: '320', label: t('explainer.t1Label'), color: '#dc2626' },
-              { tier: 'T2', count: '1,234', label: t('explainer.t2Label'), color: '#ea580c' },
-              { tier: 'T3', count: '5,016', label: t('explainer.t3Label'), color: '#eab308' },
-              { tier: 'T4', count: '311K', label: t('explainer.t4Label'), color: '#64748b' },
-            ] as { tier: string; count: string; label: string; color: string }[]).map(({ tier, count, label, color }) => (
-              <div key={tier} className="rounded-lg bg-zinc-900/80 p-2">
-                <div className="text-lg font-mono font-bold" style={{ color }}>{count}</div>
-                <div className="text-[9px] text-zinc-500 uppercase tracking-wide">{tier} · {label}</div>
+              { value: stats?.queue_total != null ? formatNumber(stats.queue_total) : '318K', label: t('stats.vendorsUnderSurveillance'), color: 'text-zinc-100' },
+              { value: formatCompactMXN(elevatedValue), label: t('stats.valueAtRisk'), color: 'text-amber-400' },
+              { value: formatNumber(efosCount), label: t('stats.onEfos'), color: 'text-red-400' },
+              { value: tier1Data?.pagination?.total != null ? String(tier1Data.pagination.total) : '320', label: t('hero.t1RequireShort'), color: 'text-red-500' },
+            ] as { value: string; label: string; color: string }[]).map(({ value, label, color }) => (
+              <div key={label} className="border-l-2 border-zinc-800 pl-3 py-1">
+                <div className={cn('text-xl sm:text-2xl font-mono font-bold', color)}>{value}</div>
+                <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">{label}</div>
               </div>
             ))}
           </div>
+
+          {/* Review progress (compact, only if data exists) */}
+          {stats?.reviewed_count != null && stats.reviewed_count > 0 && (
+            <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-zinc-800/60 text-[11px] text-zinc-500">
+              <span>
+                <strong className="text-zinc-300 font-mono">{formatNumber(stats.reviewed_count)}</strong> {t('efficiencyStats.reviewed')}
+                {stats.confirmed_count != null && (
+                  <span className="ml-1 text-green-400/80">
+                    ({Math.round((stats.confirmed_count / stats.reviewed_count) * 100)}% {t('efficiencyStats.confirmationRate')})
+                  </span>
+                )}
+              </span>
+              {stats.t1_reviewed_count != null && (
+                <span>
+                  <strong className="text-zinc-300 font-mono">
+                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 285)) * 100)}%
+                  </strong> {t('efficiencyStats.t1Complete')}
+                </span>
+              )}
+            </div>
+          )}
         </div>
+      </div>
+
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8 space-y-10">
 
         {/* Data source attribution */}
         <div className="flex flex-wrap items-center gap-3">
@@ -1102,7 +1108,7 @@ export default function AriaPage() {
           </div>
 
           {statsLoading ? (
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               {Array.from({ length: 4 }).map((_, i) => (
                 <Skeleton key={i} className="h-28 rounded-lg" />
               ))}
@@ -1112,7 +1118,7 @@ export default function AriaPage() {
               variants={staggerContainer}
               initial="hidden"
               animate="show"
-              className="grid grid-cols-2 lg:grid-cols-4 gap-4"
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4"
             >
               {TIER_CONFIG.map((cfg) => {
                 const isCollapsed = collapsedTiers.has(cfg.tier)

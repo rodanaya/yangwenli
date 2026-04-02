@@ -380,64 +380,14 @@ function SectorsByValueChart({ sectors, loading }: SectorsByValueChartProps) {
 }
 
 // ============================================================================
-// RISK FILTER CHIPS — Pill buttons to visually filter by risk level
+// RISK FILTER CHIPS — removed from render; kept as dead code reference
+// Uncomment and wire into dashboard state when filter functionality is needed
 // ============================================================================
 
-const RISK_CHIP_LEVELS = [
-  { key: 'all', label: 'All' },
-  { key: 'critical', label: 'Critical' },
-  { key: 'high', label: 'High' },
-  { key: 'medium', label: 'Medium' },
-  { key: 'low', label: 'Low' },
-] as const
-
-type RiskChipLevel = (typeof RISK_CHIP_LEVELS)[number]['key']
-
-function RiskFilterChips() {
-  const [active, setActive] = useState<RiskChipLevel>('all')
-
-  return (
-    <div
-      className="flex flex-wrap gap-2"
-      role="group"
-      aria-label="Filter by risk level"
-    >
-      {RISK_CHIP_LEVELS.map(({ key, label }) => {
-        const isActive = active === key
-        const chipColor = key === 'all' ? '#818cf8' : (RISK_COLORS[key as keyof typeof RISK_COLORS] ?? '#818cf8')
-        return (
-          <button
-            key={key}
-            onClick={() => setActive(key)}
-            aria-pressed={isActive}
-            className="rounded-full px-3 py-1 text-[11px] font-bold font-mono tracking-wider uppercase transition-all duration-150 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1"
-            style={{
-              backgroundColor: isActive ? chipColor : 'transparent',
-              color: isActive ? '#0a0a0f' : chipColor,
-              border: `1.5px solid ${chipColor}`,
-              opacity: isActive ? 1 : 0.65,
-              focusRingColor: chipColor,
-            } as React.CSSProperties}
-            onMouseEnter={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.opacity = '0.9'
-                e.currentTarget.style.backgroundColor = `${chipColor}18`
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isActive) {
-                e.currentTarget.style.opacity = '0.65'
-                e.currentTarget.style.backgroundColor = 'transparent'
-              }
-            }}
-          >
-            {label}
-          </button>
-        )
-      })}
-    </div>
-  )
-}
+/*
+ * RiskFilterChips — removed from render, not wired to any state.
+ * Restore when dashboard gets global risk-level filtering.
+ */
 
 // ============================================================================
 // MINI SPARKLINE — 120x24px area chart for KPI trend embedding
@@ -1774,7 +1724,7 @@ export function Dashboard() {
       />
       {!kpiLoading && criticalHighValue > 0 && (
         <p className="px-6 text-[10px] font-mono text-text-muted/70 -mt-2">
-          {t('budgetContext', { pct: '56' })}
+          {t('budgetContext', { pct: ((criticalHighValue / 9_900_000_000_000) * 100).toFixed(0) })}
         </p>
       )}
 
@@ -1789,22 +1739,30 @@ export function Dashboard() {
       />
 
       {/* ================================================================ */}
-      {/* KEY FINDINGS SIGNAL STRIP — 3 explosive stat facts             */}
+      {/* KEY FINDINGS SIGNAL STRIP — 3 live stats                       */}
       {/* ================================================================ */}
-      <div className="bg-background-elevated border-y border-border grid grid-cols-3 divide-x divide-border py-6 px-8">
-        <div className="flex flex-col items-center justify-center text-center px-4">
-          <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>65.3%</span>
-          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">of contracts skip competitive bidding</span>
+      {!kpiLoading && overview && (
+        <div className="bg-background-elevated border-y border-border grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-border py-6 px-8">
+          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
+            <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>
+              {overview.direct_award_pct != null ? `${overview.direct_award_pct.toFixed(1)}%` : '—'}
+            </span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripDirectAward', 'of contracts skip competitive bidding')}</span>
+          </div>
+          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
+            <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
+              {criticalHighValue > 0 ? formatCompactMXN(criticalHighValue) : '—'}
+            </span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskValue', 'in high-risk contracts')}</span>
+          </div>
+          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
+            <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
+              {criticalHighContractPct > 0 ? `${criticalHighContractPct.toFixed(1)}%` : '—'}
+            </span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskRate', 'of contracts flagged high or critical risk')}</span>
+          </div>
         </div>
-        <div className="flex flex-col items-center justify-center text-center px-4">
-          <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>MXN 1.33T</span>
-          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">in high-risk contracts</span>
-        </div>
-        <div className="flex flex-col items-center justify-center text-center px-4">
-          <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>+28%</span>
-          <span className="text-xs text-text-muted uppercase tracking-wide mt-1">rise in avg risk since 2002</span>
-        </div>
-      </div>
+      )}
 
       {/* ================================================================ */}
       {/* PERIOD TREND CHART — avg risk score 2002–2025                   */}
@@ -2045,10 +2003,7 @@ export function Dashboard() {
         </ScrollReveal>
       </div>
 
-      {/* ================================================================ */}
-      {/* RISK FILTER CHIPS — Quick risk-level filter pills                 */}
-      {/* ================================================================ */}
-      <RiskFilterChips />
+      {/* RiskFilterChips removed — state was local-only and had no downstream effect */}
 
       {/* ================================================================ */}
       {/* P1 INSIGHT CARDS — Multivariate anomalies, election effect,      */}
@@ -2607,7 +2562,7 @@ export function Dashboard() {
       {/* ================================================================ */}
       <DashboardSection
         title={t('validatedAgainstReal')}
-        subtitle={`AUC ${modelAuc.toFixed(3)} | ${groundTruth?.cases ?? 390} ${t('documentedCorruptionCases')}`}
+        subtitle={`AUC ${modelAuc.toFixed(3)} | ${groundTruth?.cases ?? 748} ${t('documentedCorruptionCases')}`}
         icon={Shield}
         action={
           <button
@@ -2622,7 +2577,7 @@ export function Dashboard() {
           cases={corruptionCases}
           loading={execLoading}
           modelAuc={modelAuc}
-          totalCases={groundTruth?.cases ?? 390}
+          totalCases={groundTruth?.cases ?? 748}
           onFullAnalysis={() => navigate('/executive-summary')}
         />
       </DashboardSection>

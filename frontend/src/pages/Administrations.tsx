@@ -70,10 +70,10 @@ import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
 
 const ADMINISTRATIONS = [
   { name: 'Fox',       fullName: 'Vicente Fox',                   start: 2001, end: 2006, dataStart: 2002, color: '#3b82f6', party: 'PAN',    wikiArticle: 'Vicente_Fox_Quesada' },
-  { name: 'Calderon',  fullName: 'Felipe Calderon',               start: 2006, end: 2012, dataStart: 2006, color: '#fb923c', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
-  { name: 'Pena Nieto',fullName: 'Enrique Pena Nieto',            start: 2012, end: 2018, dataStart: 2012, color: '#f87171', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
-  { name: 'AMLO',      fullName: 'Andres Manuel Lopez Obrador',   start: 2018, end: 2024, dataStart: 2018, color: '#4ade80', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
-  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum',             start: 2024, end: 2030, dataStart: 2024, color: '#60a5fa', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
+  { name: 'Calderon',  fullName: 'Felipe Calderon',               start: 2006, end: 2012, dataStart: 2006, color: '#22c55e', party: 'PAN',    wikiArticle: 'Felipe_Calderón_Hinojosa' },
+  { name: 'Pena Nieto',fullName: 'Enrique Pena Nieto',            start: 2012, end: 2018, dataStart: 2012, color: '#ef4444', party: 'PRI',    wikiArticle: 'Enrique_Peña_Nieto' },
+  { name: 'AMLO',      fullName: 'Andres Manuel Lopez Obrador',   start: 2018, end: 2024, dataStart: 2018, color: '#a16207', party: 'MORENA', wikiArticle: 'Andrés_Manuel_López_Obrador' },
+  { name: 'Sheinbaum', fullName: 'Claudia Sheinbaum',             start: 2024, end: 2030, dataStart: 2024, color: '#14b8a6', party: 'MORENA', wikiArticle: 'Claudia_Sheinbaum' },
 ] as const
 
 // Map AdminName to backend era key
@@ -161,12 +161,13 @@ const DOSSIER_DATA: Record<string, DossierEntry> = {
 }
 
 // Administration colors for bar chart cells and reference bands
+// Fox=blue, Calderon=green, Pena Nieto=red, AMLO=brown/sienna, Sheinbaum=teal
 const ADMIN_COLORS: Record<string, string> = {
-  Fox: '#6366f1',
-  Calderon: '#3b82f6',
-  'Pena Nieto': '#10b981',
-  AMLO: '#f59e0b',
-  Sheinbaum: '#ec4899',
+  Fox: '#3b82f6',
+  Calderon: '#22c55e',
+  'Pena Nieto': '#ef4444',
+  AMLO: '#a16207',
+  Sheinbaum: '#14b8a6',
 }
 
 // Sector list for the matrix grid
@@ -1419,7 +1420,7 @@ export default function Administrations() {
                       className="h-full rounded transition-all duration-700 ease-out"
                       style={{
                         width: `${barWidth}%`,
-                        backgroundColor: isAmlo ? 'var(--color-risk-critical)' : `${partyColor}80`,
+                        backgroundColor: isAmlo ? '#dc2626' : `${partyColor}80`,
                       }}
                     />
                     {isAmlo && (
@@ -1526,14 +1527,14 @@ export default function Administrations() {
             {selectedAgg && selectedAgg.years.length > 0 ? (
               <ResponsiveContainer width="100%" height={320}>
                 <ComposedChart data={selectedAgg.years} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                  <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="year"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                    tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
                   />
                   <YAxis
                     yAxisId="left"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tick={{ fill: '#71717a', fontSize: 10 }}
                     tickFormatter={(v: number) => formatNumber(v)}
                     width={60}
                   />
@@ -1541,14 +1542,14 @@ export default function Administrations() {
                     yAxisId="right"
                     orientation="right"
                     domain={[0, 100]}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tick={{ fill: '#71717a', fontSize: 10 }}
                     tickFormatter={(v: number) => `${v}%`}
                     width={45}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'var(--color-card)',
-                      border: '1px solid var(--color-border)',
+                      backgroundColor: '#18181b',
+                      border: '1px solid #3f3f46',
                       borderRadius: 8,
                       fontSize: 11,
                       fontFamily: 'var(--font-family-mono)',
@@ -2129,8 +2130,8 @@ function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typ
                 key={level}
                 points={pentagonPoints(level)}
                 fill="none"
-                stroke="var(--color-border)"
-                strokeOpacity={0.3}
+                stroke="#3f3f46"
+                strokeOpacity={0.5}
                 strokeWidth={0.5}
               />
             ))}
@@ -2144,8 +2145,8 @@ function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typ
                   y1={RADAR_CY}
                   x2={RADAR_CX + RADAR_R * Math.cos(rad)}
                   y2={RADAR_CY + RADAR_R * Math.sin(rad)}
-                  stroke="var(--color-border)"
-                  strokeOpacity={0.2}
+                  stroke="#3f3f46"
+                  strokeOpacity={0.3}
                   strokeWidth={0.5}
                 />
               )
@@ -2158,7 +2159,7 @@ function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typ
                 y={pos.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="var(--color-text-muted)"
+                fill="#71717a"
                 fontSize={8}
                 fontFamily="var(--font-family-mono)"
               >
@@ -2819,21 +2820,21 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             <div ref={systemicChartRef}>
             <ResponsiveContainer width="100%" height={360}>
               <ComposedChart data={yoyData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="year"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                  tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
                 />
                 <YAxis
                   domain={[0, 100]}
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tick={{ fill: '#71717a', fontSize: 10 }}
                   tickFormatter={(v: number) => `${v}%`}
                   width={40}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--color-card)',
-                    border: '1px solid var(--color-border)',
+                    backgroundColor: '#18181b',
+                    border: '1px solid #3f3f46',
                     borderRadius: 8,
                     fontSize: 11,
                     fontFamily: 'var(--font-family-mono)',
@@ -2842,10 +2843,10 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
                 {/* Administration background bands */}
-                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.04} label={{ value: 'Fox', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.04} label={{ value: 'Calderón', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.04} label={{ value: 'EPN', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
-                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.04} label={{ value: 'AMLO', fill: 'rgba(255,255,255,0.2)', fontSize: 9 }} />
+                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox', fill: '#71717a', fontSize: 9 }} />
+                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderon', fill: '#71717a', fontSize: 9 }} />
+                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN', fill: '#71717a', fontSize: 9 }} />
+                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO', fill: '#71717a', fontSize: 9 }} />
                 {/* Direct award national average benchmark */}
                 <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
@@ -2943,16 +2944,16 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 data={politicalData.sexenio_year_breakdown}
                 margin={{ top: 10, right: 20, bottom: 5, left: 0 }}
               >
-                <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" strokeOpacity={0.2} />
+                <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                  tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
                   interval={0}
                 />
                 <YAxis
                   yAxisId="risk"
                   domain={[0, 12]}
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tick={{ fill: '#71717a', fontSize: 10 }}
                   tickFormatter={(v: number) => `${v}%`}
                   width={36}
                 />
@@ -2960,14 +2961,14 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   yAxisId="da"
                   orientation="right"
                   domain={[60, 85]}
-                  tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                  tick={{ fill: '#71717a', fontSize: 10 }}
                   tickFormatter={(v: number) => `${v}%`}
                   width={36}
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: 'var(--color-card)',
-                    border: '1px solid var(--color-border)',
+                    backgroundColor: '#18181b',
+                    border: '1px solid #3f3f46',
                     borderRadius: 8,
                     fontSize: 11,
                     fontFamily: 'var(--font-family-mono)',
@@ -3137,28 +3138,28 @@ function PoliticalCycleView() {
             <CardContent>
               <ResponsiveContainer width="100%" height={280}>
                 <ComposedChart data={breakdownData} margin={{ top: 8, right: 24, bottom: 8, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                  <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
                   <XAxis
                     dataKey="label"
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
+                    tick={{ fill: '#71717a', fontSize: 11 }}
                   />
                   <YAxis
                     yAxisId="risk"
                     tickFormatter={(v: number) => `${v.toFixed(1)}%`}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tick={{ fill: '#71717a', fontSize: 10 }}
                     width={40}
                   />
                   <YAxis
                     yAxisId="da"
                     orientation="right"
                     tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                    tick={{ fill: '#71717a', fontSize: 10 }}
                     width={36}
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: 'var(--color-card)',
-                      border: '1px solid var(--color-border)',
+                      backgroundColor: '#18181b',
+                      border: '1px solid #3f3f46',
                       borderRadius: 8,
                       fontSize: 11,
                       fontFamily: 'var(--font-family-mono)',

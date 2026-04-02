@@ -48,10 +48,10 @@ interface SexenioInfo {
 function getSexenioInfo(year: number): SexenioInfo {
   if (year <= 2000) return { president: 'Ernesto Zedillo', party: 'PRI', period: '1994-2000', color: '#16a34a', partyColor: '#008000', yearInSexenio: year - 1994 + 1, totalYears: 6 }
   if (year <= 2006) return { president: 'Vicente Fox', party: 'PAN', period: '2000-2006', color: '#3b82f6', partyColor: '#002395', yearInSexenio: year - 2000 + 1, totalYears: 6 }
-  if (year <= 2012) return { president: 'Felipe Calderon', party: 'PAN', period: '2006-2012', color: '#fb923c', partyColor: '#002395', yearInSexenio: year - 2006 + 1, totalYears: 6 }
-  if (year <= 2018) return { president: 'Enrique Pena Nieto', party: 'PRI', period: '2012-2018', color: '#f87171', partyColor: '#008000', yearInSexenio: year - 2012 + 1, totalYears: 6 }
-  if (year <= 2024) return { president: 'Andres Manuel Lopez Obrador', party: 'MORENA', period: '2018-2024', color: '#4ade80', partyColor: '#8B0000', yearInSexenio: year - 2018 + 1, totalYears: 6 }
-  return { president: 'Claudia Sheinbaum', party: 'MORENA', period: '2024-2030', color: '#60a5fa', partyColor: '#8B0000', yearInSexenio: year - 2024 + 1, totalYears: 6 }
+  if (year <= 2012) return { president: 'Felipe Calderon', party: 'PAN', period: '2006-2012', color: '#22c55e', partyColor: '#002395', yearInSexenio: year - 2006 + 1, totalYears: 6 }
+  if (year <= 2018) return { president: 'Enrique Pena Nieto', party: 'PRI', period: '2012-2018', color: '#ef4444', partyColor: '#008000', yearInSexenio: year - 2012 + 1, totalYears: 6 }
+  if (year <= 2024) return { president: 'Andres Manuel Lopez Obrador', party: 'MORENA', period: '2018-2024', color: '#a16207', partyColor: '#8B0000', yearInSexenio: year - 2018 + 1, totalYears: 6 }
+  return { president: 'Claudia Sheinbaum', party: 'MORENA', period: '2024-2030', color: '#14b8a6', partyColor: '#8B0000', yearInSexenio: year - 2024 + 1, totalYears: 6 }
 }
 
 function getRiskLevelColor(level: string): string {

@@ -240,5 +240,8 @@
   "storyDirectLink": "Analyze patterns",
   "riskSuffix": "risk",
   "documentedCorruptionCases": "documented corruption cases",
-  "modelVersionBadge": "RUBLI v6.5"
+  "modelVersionBadge": "RUBLI v6.5",
+  "signalStripDirectAward": "of contracts skip competitive bidding",
+  "signalStripHighRiskValue": "in high-risk contracts",
+  "signalStripHighRiskRate": "of contracts flagged high or critical risk"
 }

@@ -244,6 +244,20 @@
     "vendorProfile": "Vendor Profile",
     "redThread": "Red Thread Investigation"
   },
+  "hero": {
+    "headline": "{{vendorCount}} vendors under surveillance across 4 threat tiers",
+    "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 320 most critical cases requiring immediate investigation.",
+    "t1RequireShort": "T1 critical leads"
+  },
+  "patternDesc": {
+    "P1": "Single vendor dominates a market — >60% of sector spend",
+    "P2": "Shell company signals: no employees, no history, sudden contracts",
+    "P3": "Vendor acts as pass-through between government and subcontractors",
+    "P4": "Multiple vendors coordinate bids — rotation or cover bidding",
+    "P5": "Contract prices significantly above market or sector median",
+    "P6": "One institution awards >80% of its budget to one vendor",
+    "P7": "Vendors share addresses, representatives, or RFC patterns"
+  },
   "explainer": {
     "kicker": "ARIA · Automated Risk Investigation Algorithm",
     "body": "ARIA combines nine analysis modules — v6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",

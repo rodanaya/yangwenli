@@ -25,7 +25,15 @@
     "riskDisclaimerLink": "See Methodology",
     "storyHook1": "23 years of Mexican government contracts.",
     "storyHook2": "One platform to investigate them.",
-    "storySubtitle": "RUBLI analyzes 3.1 million federal procurement contracts using machine learning to surface corruption patterns, ghost companies, and market manipulation."
+    "storySubtitle": "RUBLI analyzes 3.1 million federal procurement contracts using machine learning to surface corruption patterns, ghost companies, and market manipulation.",
+    "statContracts": "federal contracts",
+    "statValue": "validated spend",
+    "statHighRisk": "flagged high-risk",
+    "statHighRiskContext": "OECD limit: 2-15%",
+    "whatIs": "The largest open analysis of Mexican federal procurement. 23 years of contract data. One risk model. Every score explained.",
+    "ctaInvestigate": "Start Investigating",
+    "ctaReadData": "Read the Data",
+    "credibility": "Source: COMPRANET 2002-2025  |  Model v6.5  |  AUC 0.828  |  Updated March 2026"
   },
   "ctaPanels": {
     "ariaLabel": "Navigation entry points",

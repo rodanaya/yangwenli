@@ -1407,11 +1407,12 @@ export function VendorProfile() {
           </button>
           <button
             onClick={() => navigate(`/thread/${vendorId}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[#dc2626] hover:bg-red-700 text-white text-xs font-semibold transition-colors"
+            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#dc2626] hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-[0_0_12px_rgba(220,38,38,0.35)] hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]"
             title="Open scroll-driven investigation narrative"
+            aria-label="Open Red Thread investigation narrative"
           >
-            <span className="w-1.5 h-1.5 rounded-full bg-white/70 flex-shrink-0" />
-            Red Thread
+            <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
+            Read the Investigation
           </button>
           <GenerateReportButton
             reportType="vendor"
@@ -4069,13 +4070,13 @@ function RiskGauge({
   const label = level.charAt(0).toUpperCase() + level.slice(1)
   const color = RISK_COLORS[level]
 
-  // Gauge zone boundaries (as % of circumference)
+  // Gauge zone boundaries — v6.5 thresholds: low<25, medium 25–40, high 40–60, critical ≥60
   const circumference = 2 * Math.PI * 40
   const zones = [
-    { end: 10, color: RISK_COLORS.low },      // 0–10%
-    { end: 30, color: RISK_COLORS.medium },    // 10–30%
-    { end: 50, color: RISK_COLORS.high },      // 30–50%
-    { end: 100, color: RISK_COLORS.critical }, // 50–100%
+    { end: 25, color: RISK_COLORS.low },      // 0–25%
+    { end: 40, color: RISK_COLORS.medium },   // 25–40%
+    { end: 60, color: RISK_COLORS.high },     // 40–60%
+    { end: 100, color: RISK_COLORS.critical },// 60–100%
   ]
 
   return (

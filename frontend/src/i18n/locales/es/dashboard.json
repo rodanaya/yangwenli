@@ -240,5 +240,8 @@
   "storyDirectLink": "Analizar patrones",
   "riskSuffix": "riesgo",
   "documentedCorruptionCases": "casos documentados de corrupción",
-  "modelVersionBadge": "RUBLI v6.5"
+  "modelVersionBadge": "RUBLI v6.5",
+  "signalStripDirectAward": "de contratos omiten licitación competitiva",
+  "signalStripHighRiskValue": "en contratos de alto riesgo",
+  "signalStripHighRiskRate": "de contratos marcados como alto o crítico"
 }

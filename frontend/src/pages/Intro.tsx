@@ -451,8 +451,6 @@ const NetworkCanvas = memo(function NetworkCanvas() {
     edges: NetEdge[]
     packets: NetPacket[]
     scanY: number
-    counterValue: number
-    counterStart: number
     w: number
     h: number
   } | null>(null)
@@ -540,8 +538,6 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       edges,
       packets,
       scanY: 0,
-      counterValue: 0,
-      counterStart: performance.now(),
       w,
       h,
     }
@@ -638,21 +634,6 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       s.scanY = (s.scanY + ch / (4 * 60)) % ch
       ctx.fillStyle = 'rgba(196,30,58,0.08)'
       ctx.fillRect(0, s.scanY, cw, 1)
-
-      // Stats overlay (bottom-left)
-      const elapsed = (time - s.counterStart) / 1000
-      const counterProgress = Math.min(elapsed / 3, 1)
-      const eased = 1 - Math.pow(1 - counterProgress, 3)
-      s.counterValue = Math.round(eased * 3051294)
-
-      ctx.font = '11px "SF Mono", "Fira Code", "Consolas", monospace'
-      ctx.fillStyle = 'rgba(255,255,255,0.35)'
-      ctx.textAlign = 'left'
-      const bx = 16
-      const by = ch - 50
-      ctx.fillText(`CONTRATOS ANALIZADOS: ${s.counterValue.toLocaleString()}`, bx, by)
-      ctx.fillText('MONTO TOTAL: ~$9.9T MXN', bx, by + 16)
-      ctx.fillText('ALTO RIESGO: ~13.5%', bx, by + 32)
 
       animFrameRef.current = requestAnimationFrame(draw)
     }
@@ -1134,56 +1115,99 @@ export default function Intro() {
             RUBLI &bull; {t('hero.transparency')}
           </span>
 
-          {/* GSAP split-text hero title */}
-          <div ref={heroTitleRef}>
+          {/* ---- HERO NUMBERS: The first thing you see ---- */}
+          <div ref={heroTitleRef} className="w-full">
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-8 sm:gap-12 lg:gap-16 mb-6">
+              {/* 3.1M contracts */}
+              <div className="text-center">
+                <span
+                  className="block text-5xl sm:text-6xl lg:text-7xl font-black tabular-nums font-mono leading-none"
+                  style={{ color: '#fff', textShadow: '0 0 40px rgba(255,255,255,0.15)' }}
+                >
+                  3.1M
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {t('hero.statContracts')}
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-16" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
+
+              {/* MX$9.9T */}
+              <div className="text-center">
+                <span
+                  className="block text-5xl sm:text-6xl lg:text-7xl font-black tabular-nums font-mono leading-none"
+                  style={{ color: '#fff', textShadow: '0 0 40px rgba(255,255,255,0.15)' }}
+                >
+                  $9.9T
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  MXN {t('hero.statValue')}
+                </span>
+              </div>
+
+              {/* Divider */}
+              <div className="hidden sm:block w-px h-16" style={{ backgroundColor: 'rgba(255,255,255,0.1)' }} />
+
+              {/* 13.5% high-risk */}
+              <div className="text-center">
+                <span
+                  className="block text-5xl sm:text-6xl lg:text-7xl font-black tabular-nums font-mono leading-none"
+                  style={{ color: CRIMSON, textShadow: '0 0 40px rgba(196,30,58,0.3)' }}
+                >
+                  13.5%
+                </span>
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                  {t('hero.statHighRisk')}
+                </span>
+                <span className="text-[9px] font-mono mt-0.5 block" style={{ color: '#22d3ee' }}>
+                  ({t('hero.statHighRiskContext')})
+                </span>
+              </div>
+            </div>
+
+            {/* RUBLI wordmark + narrative title */}
             <SplitTextHero
               text="RUBLI"
-              className="text-5xl sm:text-6xl lg:text-7xl font-black leading-[1.05] block mb-2"
+              className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.05] block mb-3"
               style={{ fontFamily: SERIF, letterSpacing: '-0.03em', color: CRIMSON }}
             />
             <h1
-              className="text-4xl sm:text-5xl lg:text-6xl font-black leading-[1.1]"
-              style={{ fontFamily: SERIF, letterSpacing: '-0.03em' }}
+              className="text-xl sm:text-2xl font-medium leading-relaxed max-w-2xl mx-auto"
+              style={{ color: 'rgba(255,255,255,0.65)' }}
             >
-              <span style={{ color: '#fff' }}>{t('hero.storyHook1')}</span>
-              <br />
-              <span style={{ color: CRIMSON }}>{t('hero.storyHook2')}</span>
+              {t('hero.whatIs')}
             </h1>
           </div>
 
-          {/* Subtitle */}
+          {/* Subtitle -- methodology hook */}
           <p
             ref={heroSubRef}
-            className="text-lg sm:text-xl max-w-2xl leading-relaxed"
-            style={{ color: 'rgba(255,255,255,0.55)' }}
+            className="text-sm max-w-xl leading-relaxed"
+            style={{ color: 'rgba(255,255,255,0.35)' }}
           >
             {t('hero.storySubtitle')}
           </p>
 
-          {/* CTA buttons */}
+          {/* CTA buttons -- clear hierarchy */}
           <div ref={heroCtaRef} className="flex flex-wrap gap-3 justify-center mt-2">
             <button
-              onClick={() => goToApp('/report-card')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
+              onClick={() => goToApp('/aria')}
+              className="flex items-center gap-2 px-8 py-3.5 rounded-xl font-bold text-base transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-red-400/40"
               style={{ backgroundColor: CRIMSON, color: '#fff' }}
             >
-              {t('hero.seeReport')}
+              <Search className="h-4 w-4" aria-hidden="true" />
+              {t('hero.ctaInvestigate')}
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
-              onClick={() => goToApp('/aria')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-bold text-sm transition-all duration-200 hover:brightness-125 hover:scale-[1.02] focus:outline-none focus:ring-2 focus:ring-purple-400/40"
-              style={{ backgroundColor: '#8b5cf6', color: '#fff' }}
-            >
-              <Shield className="h-4 w-4" aria-hidden="true" />
-              {t('hero.ariaIntelligence')}
-            </button>
-            <button
-              onClick={() => goToApp('/dashboard')}
-              className="flex items-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-background-elevated/30 focus:outline-none focus:ring-2 focus:ring-background-elevated"
+              onClick={() => goToApp('/executive-summary')}
+              className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-white/20"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
-              {t('hero.explore')}
+              {t('hero.ctaReadData')}
+              <ArrowRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>
 
@@ -1212,6 +1236,16 @@ export default function Intro() {
             </motion.div>
           </div>
         </div>
+
+        {/* Credibility strip -- anchored to bottom of hero */}
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 py-3 text-center"
+          style={{ background: 'linear-gradient(to top, rgba(10,12,11,0.95), transparent)' }}
+        >
+          <p className="text-[10px] font-mono tracking-wide" style={{ color: 'rgba(255,255,255,0.25)' }}>
+            {t('hero.credibility')}
+          </p>
+        </div>
       </section>
 
       {/* Risk score disclaimer */}
@@ -1220,7 +1254,8 @@ export default function Intro() {
         style={{ background: '#0a0c0b' }}
       >
         <p className="text-xs text-stone-500 leading-relaxed">
-          ⚠ {t('hero.riskDisclaimer')} <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">{t('hero.riskDisclaimerLink')}</a>.
+          {t('hero.riskDisclaimer')}{' '}
+          <a href="/methodology" className="underline decoration-stone-600 hover:text-stone-400 transition-colors">{t('hero.riskDisclaimerLink')}</a>.
         </p>
       </div>
 
