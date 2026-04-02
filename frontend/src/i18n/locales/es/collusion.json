@@ -1,23 +1,38 @@
 {
-  "title": "Explorador de Colusión",
-  "subtitle": "Análisis de patrones de manipulación de licitaciones — pares de proveedores con actividad sospechosa de oferta conjunta",
+  "title": "Quienes licitan juntos, ganan juntos",
+  "subtitle": "Cuando los mismos proveedores aparecen repetidamente en las mismas licitaciones competitivas \u2014 y se turnan para ganar \u2014 deja de parecer competencia y empieza a parecer coordinaci\u00f3n.",
   "stats": {
-    "totalPairs": "Pares Analizados",
-    "totalPairsSub": "pares únicos de proveedores",
-    "flaggedPairs": "Pares Marcados",
-    "flaggedPairsSub": "posible colusión detectada",
+    "totalPairs": "Pares de Proveedores Analizados",
+    "totalPairsSub": "pares \u00fanicos rastreados en todos los sectores",
+    "flaggedPairs": "Pares con Sospecha de Colusi\u00f3n",
+    "flaggedPairsSub": "tasa de co-oferta superior al 50% con 10+ procedimientos compartidos",
     "sharedProcedures": "Procedimientos Compartidos",
-    "sharedProceduresSub": "eventos de oferta conjunta",
-    "maxRate": "Tasa Máxima de Co-oferta",
-    "maxRateSub": "entre pares marcados"
+    "sharedProceduresSub": "total de eventos de co-oferta entre pares marcados",
+    "maxRate": "Tasa M\u00e1xima de Co-oferta",
+    "maxRateSub": "entre todos los pares analizados"
+  },
+  "methodology": {
+    "title": "C\u00f3mo RUBLI detecta la manipulaci\u00f3n de licitaciones",
+    "body": "Analizamos cada licitaci\u00f3n competitiva en COMPRANET para encontrar pares de proveedores que ofertan en los mismos procedimientos a tasas anormalmente altas. Una tasa de co-oferta superior al 50% con 10+ procedimientos compartidos sugiere coordinaci\u00f3n \u2014 especialmente combinada con baja varianza en tasa de victoria (rotaci\u00f3n de ofertas) o un proveedor que pierde consistentemente (oferta de cobertura). Estos patrones son invisibles en contratos individuales pero emergen claramente a escala."
+  },
+  "patterns": {
+    "title": "Patrones de Colusi\u00f3n",
+    "bidRotation": "Rotaci\u00f3n de Ofertas",
+    "bidRotationDesc": "Los proveedores se turnan para ganar \u2014 A gana la ronda 1, B gana la ronda 2. Las tasas de victoria son casi iguales.",
+    "coverBidding": "Oferta de Cobertura",
+    "coverBiddingDesc": "Un proveedor siempre pierde, presentando ofertas deliberadamente altas para crear la apariencia de competencia.",
+    "marketAllocation": "Asignaci\u00f3n de Mercado",
+    "marketAllocationDesc": "Los proveedores dividen contratos por geograf\u00eda, instituci\u00f3n o periodo \u2014 nunca compitiendo en el territorio del otro.",
+    "unknown": "En Revisi\u00f3n",
+    "unknownDesc": "Patr\u00f3n detectado pero a\u00fan no clasificado \u2014 requiere investigaci\u00f3n adicional."
   },
   "filters": {
-    "showFlaggedOnly": "Solo marcados",
-    "minShared": "Mín. procedimientos compartidos",
+    "showFlaggedOnly": "Solo pares marcados",
+    "minShared": "M\u00edn. procedimientos compartidos",
     "sortBy": "Ordenar por",
     "sortShared": "Procedimientos compartidos",
     "sortRate": "Tasa de co-oferta",
-    "reset": "Restablecer"
+    "reset": "Restablecer filtros"
   },
   "table": {
     "vendorA": "Proveedor A",
@@ -26,24 +41,37 @@
     "coBidRate": "Tasa de Co-oferta",
     "status": "Estado",
     "flagged": "Marcado",
-    "monitored": "Monitoreado"
+    "monitored": "Monitoreado",
+    "proceduresLabel": "procedimientos"
   },
   "tooltip": {
-    "coBidRateTitle": "¿Qué es la Tasa de Co-oferta?",
-    "coBidRateBody": "La tasa de co-oferta es el porcentaje de procedimientos en los que ambos proveedores presentaron ofertas simultáneamente. Tasas superiores al 70% combinadas con un alto volumen de procedimientos compartidos pueden indicar licitación coordinada — donde los proveedores colusionan para influir en quién gana."
+    "coBidRateTitle": "\u00bfQu\u00e9 es la Tasa de Co-oferta?",
+    "coBidRateBody": "La tasa de co-oferta es el porcentaje de procedimientos en los que ambos proveedores presentaron ofertas simult\u00e1neamente. Tasas superiores al 70% combinadas con un alto volumen de procedimientos compartidos pueden indicar licitaci\u00f3n coordinada \u2014 donde los proveedores colusionan para influir en qui\u00e9n gana."
+  },
+  "pairCard": {
+    "sharedProc": "procedimientos compartidos",
+    "coBidRate": "tasa de co-oferta",
+    "viewProfile": "Ver perfil",
+    "connection": "conexi\u00f3n"
   },
   "pagination": {
     "previous": "Anterior",
     "next": "Siguiente",
-    "pageOf": "Página {{page}} de {{total}}",
-    "showing": "Mostrando {{from}}–{{to}} de {{total}} pares"
+    "pageOf": "P\u00e1gina {{page}} de {{total}}",
+    "showing": "Mostrando {{from}}\u2013{{to}} de {{total}} pares"
   },
-  "empty": "Ningún par coincide con los filtros actuales.",
-  "loading": "Cargando datos de colusión...",
-  "error": "Error al cargar datos de colusión. Por favor intente de nuevo.",
+  "empty": {
+    "title": "Ning\u00fan par coincide con los filtros actuales",
+    "body": "Intenta reducir el umbral m\u00ednimo de procedimientos compartidos o desactivar el filtro de solo marcados. Los pares con menos de 10 procedimientos compartidos se excluyen por defecto porque la co-oferta aislada es comportamiento normal del mercado."
+  },
+  "loading": "Cargando datos de colusi\u00f3n...",
+  "error": {
+    "title": "Datos de co-oferta de COMPRANET no disponibles",
+    "body": "El endpoint de an\u00e1lisis de colusi\u00f3n devolvi\u00f3 un error. Esto puede indicar que la tabla co_bidding_stats necesita ser reconstruida. Int\u00e9ntalo de nuevo o revisa los logs del backend."
+  },
   "editorial": {
-    "section": "ANÁLISIS RUBLI",
-    "headline": "Inteligencia de Colusión",
-    "badge": "MANIPULACIÓN DE LICITACIONES"
+    "section": "RUBLI \u00b7 Inteligencia de Colusi\u00f3n",
+    "headline": "Quienes licitan juntos, ganan juntos",
+    "badge": "MANIPULACI\u00d3N DE LICITACIONES"
   }
 }

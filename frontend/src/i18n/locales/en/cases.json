@@ -22,7 +22,15 @@
     "totalAmount": "Estimated losses",
     "gtLinked": "ML-linked",
     "compranetVisible": "COMPRANET visible",
-    "vendorsIdentified": "Vendors identified"
+    "vendorsIdentified": "Vendors identified",
+    "sectorsAffected": "Sectors affected",
+    "impunityRate": "Impunity rate",
+    "convictionRate": "Convicted"
+  },
+  "hero": {
+    "headline": "{{amount}} in documented losses across {{count}} corruption cases",
+    "subhead": "Mexico's federal procurement corruption archive. Each case represents public money diverted through ghost companies, bid rigging, overpricing, and institutional capture.",
+    "impunityCallout": "Only {{pct}}% of cases resulted in a conviction. {{impunity}} cases remain in impunity."
   },
   "filters": {
     "all": "All cases",
@@ -178,7 +186,8 @@
   },
   "loadError": "Failed to load cases.",
   "resultCount": "{{count}} cases",
-  "noResultsHint": "Try adjusting your search or filters",
+  "noResultsHint": "Try broadening your search or removing filters. The current combination may be too narrow.",
+  "noResultsExplain": "No documented cases match \"{{query}}\". This doesn't mean there is no corruption in this area — it means we haven't yet documented a case matching these criteria.",
   "noResults": "No cases match the current filters.",
   "loading": "Loading cases...",
   "caseCount": {

@@ -1,23 +1,38 @@
 {
-  "title": "Collusion Explorer",
-  "subtitle": "Bid-rigging pattern analysis — vendor pairs with suspicious co-bidding activity",
+  "title": "Who Bids Together, Wins Together",
+  "subtitle": "When the same vendors repeatedly appear in the same competitive tenders — and take turns winning — it stops looking like competition and starts looking like coordination.",
   "stats": {
-    "totalPairs": "Total Pairs Analyzed",
-    "totalPairsSub": "unique vendor pairs tracked",
-    "flaggedPairs": "Flagged Pairs",
-    "flaggedPairsSub": "potential collusion detected",
-    "sharedProcedures": "Shared Procedures",
-    "sharedProceduresSub": "total co-bidding events",
+    "totalPairs": "Vendor Pairs Analyzed",
+    "totalPairsSub": "unique vendor pairs tracked across all sectors",
+    "flaggedPairs": "Suspected Collusion Pairs",
+    "flaggedPairsSub": "co-bid rate above 50% with 10+ shared procedures",
+    "sharedProcedures": "Shared Tender Procedures",
+    "sharedProceduresSub": "total co-bidding events among flagged pairs",
     "maxRate": "Highest Co-bid Rate",
-    "maxRateSub": "among flagged pairs"
+    "maxRateSub": "among all analyzed pairs"
+  },
+  "methodology": {
+    "title": "How RUBLI detects bid rigging",
+    "body": "We analyze every competitive tender in COMPRANET to find vendor pairs that bid on the same procedures at abnormally high rates. A co-bid rate above 50% with 10+ shared procedures suggests coordination — especially when combined with low win-rate variance (bid rotation) or one vendor consistently losing (cover bidding). These patterns are invisible in individual contracts but emerge clearly at scale."
+  },
+  "patterns": {
+    "title": "Collusion Patterns",
+    "bidRotation": "Bid Rotation",
+    "bidRotationDesc": "Vendors take turns winning — A wins round 1, B wins round 2. Win rates are nearly equal.",
+    "coverBidding": "Cover Bidding",
+    "coverBiddingDesc": "One vendor always loses, submitting deliberately high bids to create the appearance of competition.",
+    "marketAllocation": "Market Allocation",
+    "marketAllocationDesc": "Vendors divide contracts by geography, institution, or time period — never competing in each other's territory.",
+    "unknown": "Under Review",
+    "unknownDesc": "Pattern detected but not yet classified — requires further investigation."
   },
   "filters": {
-    "showFlaggedOnly": "Show flagged only",
+    "showFlaggedOnly": "Flagged pairs only",
     "minShared": "Min. shared procedures",
     "sortBy": "Sort by",
     "sortShared": "Shared procedures",
     "sortRate": "Co-bid rate",
-    "reset": "Reset"
+    "reset": "Reset filters"
   },
   "table": {
     "vendorA": "Vendor A",
@@ -26,24 +41,37 @@
     "coBidRate": "Co-bid Rate",
     "status": "Status",
     "flagged": "Flagged",
-    "monitored": "Monitored"
+    "monitored": "Monitored",
+    "proceduresLabel": "procedures"
   },
   "tooltip": {
     "coBidRateTitle": "What is Co-bid Rate?",
     "coBidRateBody": "Co-bid rate is the percentage of procedures where both vendors submitted bids simultaneously. Rates above 70% combined with high shared procedure volume may indicate coordinated bidding — where vendors collude to influence which one wins."
   },
+  "pairCard": {
+    "sharedProc": "shared procedures",
+    "coBidRate": "co-bid rate",
+    "viewProfile": "View profile",
+    "connection": "connection"
+  },
   "pagination": {
     "previous": "Previous",
     "next": "Next",
     "pageOf": "Page {{page}} of {{total}}",
-    "showing": "Showing {{from}}–{{to}} of {{total}} pairs"
+    "showing": "Showing {{from}}\u2013{{to}} of {{total}} pairs"
   },
-  "empty": "No pairs match your current filters.",
+  "empty": {
+    "title": "No pairs match current filters",
+    "body": "Try lowering the minimum shared procedures threshold or disabling the flagged-only filter. Co-bidding pairs with fewer than 10 shared procedures are excluded by default because isolated co-bidding is normal market behavior."
+  },
   "loading": "Loading collusion data...",
-  "error": "Failed to load collusion data. Please try again.",
+  "error": {
+    "title": "COMPRANET co-bidding data unavailable",
+    "body": "The collusion analysis endpoint returned an error. This may indicate the co_bidding_stats table needs to be rebuilt. Try again or check backend logs."
+  },
   "editorial": {
-    "section": "RUBLI ANALYSIS",
-    "headline": "Collusion Intelligence",
+    "section": "RUBLI \u00b7 Collusion Intelligence",
+    "headline": "Who Bids Together, Wins Together",
     "badge": "BID RIGGING"
   }
 }

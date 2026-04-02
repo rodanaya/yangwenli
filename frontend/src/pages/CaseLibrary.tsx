@@ -9,81 +9,74 @@ import type { ScandalListItem, FraudType, Administration, LegalStatus, CaseLibra
 import { Badge } from '@/components/ui/badge'
 import { Input } from '@/components/ui/input'
 import { Button } from '@/components/ui/button'
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
-import { AlertCircle, Search, X, Eye, EyeOff, Activity, BarChart3, ArrowUpDown } from 'lucide-react'
+import {
+  AlertCircle, Search, X, Eye, EyeOff, Activity,
+  ArrowUpDown, ArrowRight, ChevronDown, Scale, Landmark
+} from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
-// ── severity colour ──────────────────────────────────────────────────────────
-const SEVERITY_COLORS: Record<number, string> = {
-  1: 'bg-accent-data/10 text-accent-data border border-accent-data/20',
-  2: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/20',
-  3: 'bg-risk-high/15 text-risk-high border border-risk-high/20',
-  4: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/20',
-}
-
-// Severity labels are resolved via t('severity.N') in CaseCard
-
-const LEGAL_STATUS_COLORS: Record<string, string> = {
-  impunity: 'border-red-500/50 text-red-400',
-  investigation: 'border-yellow-500/50 text-yellow-400',
-  prosecuted: 'border-orange-500/50 text-orange-400',
-  convicted: 'border-green-500/50 text-green-400',
-  acquitted: 'border-blue-500/50 text-blue-400',
-  dismissed: 'border-muted text-muted-foreground',
-  unresolved: 'border-muted text-muted-foreground',
-}
-
-// ── fraud type colours (distinct hue per category) ───────────────────────────
+// ── Fraud type pill colours ──────────────────────────────────────────────────
 const FRAUD_TYPE_COLORS: Record<string, string> = {
-  ghost_company:       'border-red-500/60 text-red-400 bg-red-500/10',
-  bid_rigging:         'border-orange-500/60 text-orange-400 bg-orange-500/10',
-  overpricing:         'border-amber-500/60 text-amber-400 bg-amber-500/10',
-  conflict_of_interest:'border-purple-500/60 text-purple-400 bg-purple-500/10',
-  embezzlement:        'border-rose-500/60 text-rose-400 bg-rose-500/10',
-  bribery:             'border-pink-500/60 text-pink-400 bg-pink-500/10',
-  procurement_fraud:   'border-yellow-500/60 text-yellow-400 bg-yellow-500/10',
-  monopoly:            'border-blue-500/60 text-blue-400 bg-blue-500/10',
-  emergency_fraud:     'border-cyan-500/60 text-cyan-400 bg-cyan-500/10',
-  tender_rigging:      'border-indigo-500/60 text-indigo-400 bg-indigo-500/10',
+  ghost_company:        'border-red-500/60 text-red-400 bg-red-500/10',
+  bid_rigging:          'border-orange-500/60 text-orange-400 bg-orange-500/10',
+  overpricing:          'border-amber-500/60 text-amber-400 bg-amber-500/10',
+  conflict_of_interest: 'border-purple-500/60 text-purple-400 bg-purple-500/10',
+  embezzlement:         'border-rose-500/60 text-rose-400 bg-rose-500/10',
+  bribery:              'border-pink-500/60 text-pink-400 bg-pink-500/10',
+  procurement_fraud:    'border-yellow-500/60 text-yellow-400 bg-yellow-500/10',
+  monopoly:             'border-blue-500/60 text-blue-400 bg-blue-500/10',
+  emergency_fraud:      'border-cyan-500/60 text-cyan-400 bg-cyan-500/10',
+  tender_rigging:       'border-indigo-500/60 text-indigo-400 bg-indigo-500/10',
 }
 
-const FRAUD_TYPE_ACCENT: Record<string, string> = {
-  ghost_company:       'border-l-red-500',
-  bid_rigging:         'border-l-orange-500',
-  overpricing:         'border-l-amber-500',
-  conflict_of_interest:'border-l-purple-500',
-  embezzlement:        'border-l-rose-500',
-  bribery:             'border-l-pink-500',
-  procurement_fraud:   'border-l-yellow-500',
-  monopoly:            'border-l-blue-500',
-  emergency_fraud:     'border-l-cyan-500',
-  tender_rigging:      'border-l-indigo-500',
+const FRAUD_TYPE_LEFT: Record<string, string> = {
+  ghost_company:        'border-l-red-500',
+  bid_rigging:          'border-l-orange-500',
+  overpricing:          'border-l-amber-500',
+  conflict_of_interest: 'border-l-purple-500',
+  embezzlement:         'border-l-rose-500',
+  bribery:              'border-l-pink-500',
+  procurement_fraud:    'border-l-yellow-500',
+  monopoly:             'border-l-blue-500',
+  emergency_fraud:      'border-l-cyan-500',
+  tender_rigging:       'border-l-indigo-500',
 }
 
-// ── Confidence badge (from is_verified: 0=medium, 1=high, 2=confirmed) ───────
+// ── Legal status: editorial colour system ────────────────────────────────────
+const LEGAL_STATUS_STYLE: Record<string, { dot: string; text: string; bg: string }> = {
+  impunity:      { dot: 'bg-red-500',    text: 'text-red-400',    bg: 'bg-red-500/10' },
+  investigation: { dot: 'bg-amber-500',  text: 'text-amber-400',  bg: 'bg-amber-500/10' },
+  prosecuted:    { dot: 'bg-blue-500',   text: 'text-blue-400',   bg: 'bg-blue-500/10' },
+  convicted:     { dot: 'bg-green-500',  text: 'text-green-400',  bg: 'bg-green-500/10' },
+  acquitted:     { dot: 'bg-zinc-400',   text: 'text-zinc-400',   bg: 'bg-zinc-500/10' },
+  dismissed:     { dot: 'bg-zinc-600',   text: 'text-zinc-500',   bg: 'bg-zinc-600/10' },
+  unresolved:    { dot: 'bg-zinc-600',   text: 'text-zinc-500',   bg: 'bg-zinc-600/10' },
+}
+
+// ── Confidence badge ─────────────────────────────────────────────────────────
 const CONFIDENCE_CONFIG: Record<number, { key: string; cls: string }> = {
   0: { key: 'confidence.medium',    cls: 'border-zinc-500/50 text-zinc-400' },
   1: { key: 'confidence.high',      cls: 'border-blue-500/50 text-blue-400' },
   2: { key: 'confidence.confirmed', cls: 'border-emerald-500/50 text-emerald-400' },
 }
 
-// ── Sort types ────────────────────────────────────────────────────────────────
-type SortMode = 'amount' | 'year' | 'severity'
-
-// ── COMPRANET visibility config ───────────────────────────────────────────────
+// ── COMPRANET visibility ─────────────────────────────────────────────────────
 type CompranetVisibility = 'high' | 'partial' | 'invisible'
-
-const COMPRANET_CONFIG: Record<CompranetVisibility, { icon: typeof Eye; cls: string; dotCls: string }> = {
-  high:      { icon: Eye,    cls: 'text-green-400',  dotCls: 'bg-green-400' },
-  partial:   { icon: Eye,    cls: 'text-yellow-400', dotCls: 'bg-yellow-400' },
-  invisible: { icon: EyeOff, cls: 'text-text-muted', dotCls: 'bg-muted-foreground' },
+const COMPRANET_ICON: Record<CompranetVisibility, typeof Eye> = {
+  high: Eye,
+  partial: Eye,
+  invisible: EyeOff,
 }
 
+// ── Sort types ───────────────────────────────────────────────────────────────
+type SortMode = 'amount' | 'year' | 'severity'
+
+// ── Helpers ──────────────────────────────────────────────────────────────────
 function formatMXN(n?: number | null): string {
   if (!n) return '?'
   if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
@@ -91,121 +84,319 @@ function formatMXN(n?: number | null): string {
   return `$${n.toLocaleString()}`
 }
 
-// ── Case Card — Evidence File ─────────────────────────────────────────────────
-function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; onClick: () => void; onNavigate: (path: string) => void; index: number }) {
+function formatMXNLarge(n: number): string {
+  if (n >= 1e12) return `MXN $${(n / 1e12).toFixed(1)}T`
+  if (n >= 1e9) return `MXN $${(n / 1e9).toFixed(0)}B`
+  return `MXN $${(n / 1e6).toFixed(0)}M`
+}
+
+// ── Dropdown chip (for filter categories) ────────────────────────────────────
+function DropdownChip({
+  label,
+  value,
+  options,
+  onSelect,
+}: {
+  label: string
+  value: string | undefined
+  options: { value: string; label: string }[]
+  onSelect: (v: string | undefined) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const active = value != null
+
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(!open)}
+        className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-[11px] font-medium tracking-wide transition-all duration-150
+          ${active
+            ? 'bg-amber-500/15 text-amber-300 ring-1 ring-amber-500/30'
+            : 'bg-zinc-800/60 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-300 border border-zinc-700/50'
+          }`}
+      >
+        {active ? options.find(o => o.value === value)?.label ?? label : label}
+        <ChevronDown className={`h-3 w-3 transition-transform ${open ? 'rotate-180' : ''}`} />
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-50 w-56 rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl py-1 max-h-64 overflow-y-auto">
+            <button
+              onClick={() => { onSelect(undefined); setOpen(false) }}
+              className={`w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors
+                ${!active ? 'text-amber-400 font-medium' : 'text-zinc-400'}`}
+            >
+              All
+            </button>
+            {options.map(o => (
+              <button
+                key={o.value}
+                onClick={() => { onSelect(o.value); setOpen(false) }}
+                className={`w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors
+                  ${value === o.value ? 'text-amber-400 font-medium' : 'text-zinc-300'}`}
+              >
+                {o.label}
+              </button>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
+// ── Hero Section ─────────────────────────────────────────────────────────────
+function HeroSection() {
+  const { t } = useTranslation('cases')
+  const { data: stats } = useQuery({
+    queryKey: ['cases', 'stats'],
+    queryFn: () => caseLibraryApi.getStats(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  const totalCases = stats?.total_cases ?? 0
+  const totalAmount = stats?.total_amount_mxn_low ?? 0
+  const amountStr = totalAmount > 0 ? formatMXNLarge(totalAmount) : '--'
+
+  // Derive conviction and impunity counts from stats
+  const convictedCount = stats?.cases_by_legal_status?.find(s => s.legal_status === 'convicted')?.count ?? 0
+  const impunityCount = stats?.cases_by_legal_status?.find(s => s.legal_status === 'impunity')?.count ?? 0
+  const convictionPct = totalCases > 0 ? Math.round((convictedCount / totalCases) * 100) : 0
+
+  // Unique sectors from fraud type distribution (approximation: use cases_by_fraud_type length as lower bound)
+  const fraudTypes = stats?.cases_by_fraud_type?.length ?? 0
+
+  return (
+    <motion.div
+      variants={slideUp}
+      initial="initial"
+      animate="animate"
+      className="mb-10"
+    >
+      {/* Overline */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        RUBLI -- Corruption Archive
+      </p>
+
+      {/* Hero stat: the number that matters */}
+      <div className="border-l-2 border-red-500 pl-5 py-1 mb-5">
+        <div className="text-4xl sm:text-5xl font-mono font-bold text-red-500 leading-tight tracking-tight">
+          {amountStr}
+        </div>
+        <div className="text-sm text-zinc-300 mt-1.5 max-w-xl leading-relaxed">
+          {t('hero.headline', { amount: amountStr, count: totalCases })}
+        </div>
+      </div>
+
+      {/* 4-stat strip */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-zinc-800 rounded-lg overflow-hidden mb-4">
+        {[
+          {
+            value: String(totalCases),
+            label: t('statsBar.totalCases'),
+            accent: 'text-red-500',
+          },
+          {
+            value: totalAmount > 0 ? `$${(totalAmount / 1e9).toFixed(0)}B+` : '--',
+            label: t('statsBar.totalAmount'),
+            accent: 'text-red-500',
+          },
+          {
+            value: stats?.gt_linked_count != null ? `${stats.gt_linked_count}` : '--',
+            label: t('statsBar.vendorsIdentified'),
+            accent: 'text-zinc-100',
+          },
+          {
+            value: `${fraudTypes}`,
+            label: t('statsBar.sectorsAffected'),
+            accent: 'text-zinc-100',
+          },
+        ].map(({ value, label, accent }) => (
+          <div key={label} className="bg-zinc-900 px-4 py-3">
+            <div className={`text-2xl font-mono font-bold tracking-tight ${accent}`}>
+              {value}
+            </div>
+            <div className="text-[10px] text-zinc-500 uppercase tracking-wider font-medium mt-0.5">
+              {label}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Impunity callout: the editorial finding */}
+      {totalCases > 0 && (
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
+          <Scale className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+              HALLAZGO
+            </p>
+            <p className="text-sm text-zinc-200 leading-relaxed">
+              {t('hero.impunityCallout', { pct: convictionPct, impunity: impunityCount })}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Source links */}
+      <div className="flex flex-wrap items-center gap-3 mt-3">
+        <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">Sources:</span>
+        {[
+          { label: t('sources.efosList'), href: 'https://www.sat.gob.mx/consultas/76674/consulta-la-lista-de-contribuyentes-con-operaciones-no-localizadas-o-inexistentes' },
+          { label: t('sources.sfpSanctions'), href: 'https://www.gob.mx/sfp' },
+          { label: t('sources.asfAudits'), href: 'https://www.asf.gob.mx' },
+        ].map(s => (
+          <a
+            key={s.href}
+            href={s.href}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-zinc-500 hover:text-amber-400 text-[10px] font-mono underline underline-offset-2 transition-colors"
+          >
+            {s.label}
+          </a>
+        ))}
+      </div>
+    </motion.div>
+  )
+}
+
+// ── Case Card: Investigation Dossier ─────────────────────────────────────────
+function CaseCard({
+  cas,
+  onClick,
+  onNavigate,
+  index,
+}: {
+  cas: ScandalListItem
+  onClick: () => void
+  onNavigate: (path: string) => void
+  index: number
+}) {
   const { t, i18n } = useTranslation('cases')
   const name = i18n.language === 'es' ? cas.name_es : cas.name_en
 
   const isMLLinked = cas.ground_truth_case_id != null
   const visibility = (cas.compranet_visibility ?? 'invisible') as CompranetVisibility
-  const visCfg = COMPRANET_CONFIG[visibility] ?? COMPRANET_CONFIG.invisible
-  const VisIcon = visCfg.icon
+  const VisIcon = COMPRANET_ICON[visibility] ?? COMPRANET_ICON.invisible
+  const leftBorder = FRAUD_TYPE_LEFT[cas.fraud_type] ?? 'border-l-zinc-700'
+  const legalStyle = LEGAL_STATUS_STYLE[cas.legal_status] ?? LEGAL_STATUS_STYLE.unresolved
+  const caseNum = String(index + 1).padStart(3, '0')
 
-  // Derive year display
+  // Year display
   const yearLabel = cas.contract_year_start
     ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
-      ? `${cas.contract_year_start}--${cas.contract_year_end}`
+      ? `${cas.contract_year_start}\u2013${cas.contract_year_end}`
       : String(cas.contract_year_start)
     : null
 
-  const leftBorder = FRAUD_TYPE_ACCENT[cas.fraud_type] ?? 'border-l-border'
-  const caseNum = String(index + 1).padStart(3, '0')
+  // Summary text: use language-appropriate or fallback
+  const summary = cas.summary_en
 
   return (
-    <motion.div
+    <motion.article
       variants={staggerItem}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`relative group flex flex-col overflow-hidden rounded-sm border border-border/60 border-l-[4px] ${leftBorder} hover:border-border transition-all duration-200 bg-zinc-900 text-white`}
+      className={`relative group flex flex-col overflow-hidden rounded-lg border border-zinc-800/80 border-l-[3px] ${leftBorder} hover:border-zinc-700 transition-all duration-200 bg-zinc-900`}
     >
-      {/* Case number stamp */}
+      {/* Case number watermark */}
       <div
-        className="absolute top-2 right-2 z-10 text-[9px] font-mono tracking-wider text-zinc-500 select-none"
+        className="absolute top-3 right-3 z-10 text-[9px] font-mono tracking-wider text-zinc-700 select-none"
         style={{ fontVariantNumeric: 'tabular-nums' }}
       >
-        N.{caseNum}
+        {caseNum}
       </div>
 
-      {/* ML training data banner */}
+      {/* ML training data indicator */}
       {isMLLinked && (
-        <div className="flex items-center gap-1.5 px-3 py-1.5 bg-red-950/30 border-b border-red-900/40">
-          <span className="relative flex h-2 w-2 flex-shrink-0">
+        <div className="flex items-center gap-1.5 px-4 py-1.5 bg-red-950/30 border-b border-red-900/30">
+          <span className="relative flex h-1.5 w-1.5 flex-shrink-0">
             <span className="animate-ping absolute inline-flex h-full w-full rounded-full opacity-75" style={{ backgroundColor: RISK_COLORS.high }} />
-            <span className="relative inline-flex rounded-full h-2 w-2" style={{ backgroundColor: RISK_COLORS.high }} />
+            <span className="relative inline-flex rounded-full h-1.5 w-1.5" style={{ backgroundColor: RISK_COLORS.high }} />
           </span>
-          <Activity className="h-3 w-3 text-accent flex-shrink-0" />
-          <span className="text-[10px] font-semibold text-accent tracking-wide uppercase">
+          <Activity className="h-3 w-3 text-amber-500 flex-shrink-0" />
+          <span className="text-[10px] font-semibold text-amber-500 tracking-wide uppercase">
             {t('card.mlTrainingData')}
           </span>
         </div>
       )}
 
-      {/* Clickable body */}
-      <button
-        onClick={onClick}
-        className="w-full text-left flex-1 p-4 pt-3"
-      >
-        {/* Fraud type — prominent */}
-        <div className="flex items-center gap-2 mb-2">
+      {/* Card body */}
+      <button onClick={onClick} className="w-full text-left flex-1 p-4 pb-3">
+        {/* Top row: fraud type + legal status */}
+        <div className="flex items-center gap-2 mb-3">
           <Badge
             variant="outline"
-            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wide ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
+            className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wide rounded-full ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
           >
             {t(`fraudTypes.${cas.fraud_type}`)}
           </Badge>
-          {/* Severity as damage level */}
-          <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-sm uppercase tracking-wider ${SEVERITY_COLORS[cas.severity] ?? SEVERITY_COLORS[2]}`}>
-            {t(`severity.${cas.severity}`)}
+
+          {/* Legal status pill with dot */}
+          <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${legalStyle.bg} ${legalStyle.text}`}>
+            <span className={`h-1.5 w-1.5 rounded-full ${legalStyle.dot}`} />
+            {t(`legalStatuses.${cas.legal_status}`)}
           </span>
         </div>
 
-        {/* Case name */}
+        {/* Case name: editorial weight */}
         <h3
-          className="text-sm font-bold text-zinc-100 group-hover:text-accent transition-colors leading-snug mb-1.5 pr-10"
+          className="text-base font-bold text-zinc-100 group-hover:text-amber-400 transition-colors leading-snug mb-2 pr-8"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {name}
         </h3>
 
-        {/* Summary */}
-        <p className="text-[11px] text-zinc-400 line-clamp-4 mb-3 leading-relaxed">
-          {cas.summary_en}
+        {/* Lede: 1-sentence summary */}
+        <p className="text-[12px] text-zinc-400 line-clamp-2 leading-relaxed mb-4">
+          {summary}
         </p>
 
-        {/* KPI row */}
-        <div className="flex items-center gap-2 mb-3 text-[10px] text-zinc-400 font-mono">
+        {/* Estimated loss: the big number */}
+        {cas.amount_mxn_low ? (
+          <div className="mb-3">
+            <div className="text-2xl font-mono font-bold text-zinc-100 tracking-tight leading-none">
+              {formatMXN(cas.amount_mxn_low)}
+              {cas.amount_mxn_high && cas.amount_mxn_high !== cas.amount_mxn_low ? (
+                <span className="text-zinc-500 text-lg">{` \u2013 ${formatMXN(cas.amount_mxn_high)}`}</span>
+              ) : (
+                <span className="text-zinc-500 text-lg">+</span>
+              )}
+            </div>
+            <div className="text-[10px] text-zinc-500 font-mono uppercase tracking-wider mt-0.5">
+              {t('statsBar.totalAmount')}
+            </div>
+          </div>
+        ) : null}
+
+        {/* Metadata row: year + sector + COMPRANET visibility */}
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[10px] text-zinc-500 font-mono">
           {yearLabel && (
-            <span className="flex items-center gap-1">
-              <span className="opacity-60">&#x29D7;</span>
-              {yearLabel}
+            <span className="text-zinc-400">{yearLabel}</span>
+          )}
+          {cas.administration && (
+            <span className="text-zinc-500">
+              {t(`administrations.${cas.administration}`)}
             </span>
           )}
-          {yearLabel && <span className="opacity-30">|</span>}
-          <span className={`flex items-center gap-1 ${visCfg.cls}`} title={t(`compranetVisibility.${visibility}`)}>
+          <span className={`flex items-center gap-1 ${
+            visibility === 'high' ? 'text-green-500' :
+            visibility === 'partial' ? 'text-yellow-500' : 'text-zinc-600'
+          }`}>
             <VisIcon className="h-3 w-3" />
-            {visibility === 'high' ? t('card.compranetFull')
-              : visibility === 'partial' ? t('card.compranetPartial')
-              : t('card.compranetInvisible')}
+            {visibility === 'high' ? t('card.compranetFull') :
+             visibility === 'partial' ? t('card.compranetPartial') :
+             t('card.compranetInvisible')}
           </span>
-          {cas.amount_mxn_low && (
-            <>
-              <span className="opacity-30">|</span>
-              <span className="ml-auto font-bold text-zinc-300">
-                {formatMXN(cas.amount_mxn_low)}
-                {cas.amount_mxn_high ? `--${formatMXN(cas.amount_mxn_high)}` : '+'}
-              </span>
-            </>
-          )}
         </div>
 
-        {/* Bottom pill row: legal status + confidence */}
-        <div className="flex flex-wrap gap-1.5 items-center">
-          <Badge variant="outline" className={`text-[10px] px-2 py-0.5 font-semibold ${LEGAL_STATUS_COLORS[cas.legal_status] ?? ''}`}>
-            {t(`legalStatuses.${cas.legal_status}`)}
-          </Badge>
+        {/* Confidence badge */}
+        <div className="flex flex-wrap gap-1.5 mt-3">
           {(() => {
             const conf = CONFIDENCE_CONFIG[cas.is_verified] ?? CONFIDENCE_CONFIG[0]
             return (
-              <Badge variant="outline" className={`text-[10px] px-2 py-0.5 font-semibold ${conf.cls}`}>
+              <Badge variant="outline" className={`text-[9px] px-2 py-0.5 font-semibold ${conf.cls}`}>
                 {t(conf.key)}
               </Badge>
             )
@@ -213,17 +404,17 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
         </div>
       </button>
 
-      {/* Footer: primary CTA + quick-link actions */}
-      <div className="flex items-center justify-between px-4 py-2 border-t border-zinc-800 gap-2 bg-zinc-950/50">
-        {/* Primary CTA: View Full Investigation */}
+      {/* Footer: investigation pathway */}
+      <div className="flex items-center justify-between px-4 py-2.5 border-t border-zinc-800/60 bg-zinc-950/40">
         <button
           onClick={onClick}
-          className="flex items-center gap-1.5 text-[11px] font-semibold text-accent hover:text-accent/80 transition-colors"
+          className="flex items-center gap-1.5 text-[11px] font-semibold text-amber-400 hover:text-amber-300 transition-colors font-mono uppercase tracking-wide"
         >
           {t('card.viewInvestigation')}
+          <ArrowRight className="h-3 w-3" />
         </button>
         <div className="flex items-center gap-1.5">
-          {/* View contracts filtered to this case's sector + year */}
+          {/* Quick-link: contracts */}
           {(cas.sector_ids?.length > 0 || cas.contract_year_start) && (
             <button
               onClick={(e) => {
@@ -234,25 +425,11 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
                 params.set('risk_level', 'high')
                 onNavigate(`/contracts?${params}`)
               }}
-              className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
-              title={t('card.viewDetail')}
+              className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-amber-400 border border-zinc-800 hover:border-amber-500/30 rounded-full px-2.5 py-1 transition-colors"
+              title={t('card.contractsLink')}
             >
               <Search className="h-3 w-3" />
               {t('card.contractsLink')}
-            </button>
-          )}
-          {/* View spending categories for this sector */}
-          {cas.sector_ids?.[0] && (
-            <button
-              onClick={(e) => {
-                e.stopPropagation()
-                onNavigate(`/categories?sector_id=${cas.sector_ids[0]}`)
-              }}
-              className="flex items-center gap-1 text-[10px] text-zinc-400 hover:text-accent border border-zinc-700 hover:border-accent/50 rounded px-2 py-1 transition-colors"
-              title={t('card.categoriesLink')}
-            >
-              <BarChart3 className="h-3 w-3" />
-              {t('card.categoriesLink')}
             </button>
           )}
           <AddToDossierButton
@@ -263,121 +440,11 @@ function CaseCard({ cas, onClick, onNavigate, index }: { cas: ScandalListItem; o
           />
         </div>
       </div>
-    </motion.div>
+    </motion.article>
   )
 }
 
-// ── Dossier Hero (Stats Banner) ───────────────────────────────────────────────
-function DossierHero() {
-  const { t } = useTranslation('cases')
-  const { data } = useQuery({
-    queryKey: ['cases', 'stats'],
-    queryFn: () => caseLibraryApi.getStats(),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  const totalBn = data ? (data.total_amount_mxn_low / 1e9).toFixed(0) : '--'
-  const totalCases = data?.total_cases ?? '--'
-
-  return (
-    <div className="mb-8">
-      {/* Hero headline — dossier style */}
-      <motion.div
-        variants={slideUp}
-        initial="initial"
-        animate="animate"
-        className="relative overflow-hidden rounded-sm border border-red-900/40 bg-red-950/20 px-6 py-5 mb-4"
-      >
-        {/* Decorative corner rule */}
-        <div className="absolute top-0 left-0 w-1 h-full bg-red-600" />
-        <div className="pl-4">
-          <div className="text-[9px] font-mono font-bold tracking-[0.3em] uppercase text-red-400/70 mb-2">
-            {t('pageSubhead')}
-          </div>
-          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-            <span
-              className="text-3xl sm:text-4xl font-black font-mono text-red-500 tabular-nums"
-              aria-label={`${totalCases} documented cases`}
-            >
-              {totalCases}
-            </span>
-            <span className="text-base font-semibold text-text-secondary">
-              {t('statsBar.totalCases')}
-            </span>
-            <span className="text-text-muted/40 hidden sm:inline">·</span>
-            <span
-              className="text-3xl sm:text-4xl font-black font-mono text-red-500 tabular-nums"
-              aria-label={`$${totalBn}B+ estimated losses`}
-            >
-              {data ? `$${totalBn}B+` : '--'}
-            </span>
-            <span className="text-base font-semibold text-text-secondary">
-              {t('statsBar.totalAmount')}
-            </span>
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Secondary stats */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-4 gap-0 border border-border/60 rounded-sm overflow-hidden"
-        variants={staggerContainer}
-        initial="initial"
-        animate="animate"
-      >
-        {[
-          { label: t('statsBar.totalCases'), value: totalCases, accent: true },
-          { label: t('statsBar.totalAmount'), value: data ? `$${totalBn}B+` : '--', accent: true },
-          { label: t('statsBar.vendorsIdentified'), value: data?.gt_linked_count != null ? `${data.gt_linked_count}+` : '--', accent: false },
-          { label: t('statsBar.compranetVisible'), value: data?.compranet_visible_count ?? '--', accent: false },
-        ].map(({ label, value, accent }, i) => (
-          <motion.div
-            key={label}
-            variants={slideUp}
-            className={`px-4 py-3 border-l-[3px] bg-background-elevated ${accent ? 'border-l-red-500' : 'border-l-border'} ${i > 0 ? 'sm:border-t-0 border-t border-border/40' : ''}`}
-          >
-            <div className={`text-xl font-black font-mono tracking-tight ${accent ? 'text-red-500' : 'text-text-primary'}`}>
-              {value}
-            </div>
-            <div className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-medium">{label}</div>
-          </motion.div>
-        ))}
-      </motion.div>
-
-      <p className="mt-2 text-[11px] text-text-muted leading-relaxed">
-        {t('caseCount.explanation')}
-      </p>
-      <div className="flex flex-wrap items-center gap-3 mt-1.5">
-        <a
-          href="https://www.sat.gob.mx/consultas/76674/consulta-la-lista-de-contribuyentes-con-operaciones-no-localizadas-o-inexistentes"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-muted hover:text-accent text-xs underline"
-        >
-          {t('sources.efosList')} ↗
-        </a>
-        <a
-          href="https://www.gob.mx/sfp"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-muted hover:text-accent text-xs underline"
-        >
-          {t('sources.sfpSanctions')} ↗
-        </a>
-        <a
-          href="https://www.asf.gob.mx"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-text-muted hover:text-accent text-xs underline"
-        >
-          {t('sources.asfAudits')} ↗
-        </a>
-      </div>
-    </div>
-  )
-}
-
-// ── Main Page ─────────────────────────────────────────────────────────────────
+// ── Main Page ────────────────────────────────────────────────────────────────
 export default function CaseLibrary() {
   const { t } = useTranslation('cases')
   const { t: ts } = useTranslation('sectors')
@@ -398,198 +465,216 @@ export default function CaseLibrary() {
     staleTime: 5 * 60 * 1000,
   })
 
-  // Sort by selected mode; severity + ML-linked as tiebreakers.
+  // Stats for filter chip counts
+  const { data: stats } = useQuery({
+    queryKey: ['cases', 'stats'],
+    queryFn: () => caseLibraryApi.getStats(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Sort
   const data = useMemo(() => {
     if (!rawData) return rawData
     return [...rawData].sort((a, b) => {
-      // Primary key by sortMode
       if (sortMode === 'amount') {
-        const aAmt = a.amount_mxn_low ?? 0
-        const bAmt = b.amount_mxn_low ?? 0
-        if (bAmt !== aAmt) return bAmt - aAmt
+        const diff = (b.amount_mxn_low ?? 0) - (a.amount_mxn_low ?? 0)
+        if (diff !== 0) return diff
       } else if (sortMode === 'year') {
-        const aYr = a.contract_year_start ?? 0
-        const bYr = b.contract_year_start ?? 0
-        if (bYr !== aYr) return bYr - aYr
+        const diff = (b.contract_year_start ?? 0) - (a.contract_year_start ?? 0)
+        if (diff !== 0) return diff
       } else if (sortMode === 'severity') {
         if (b.severity !== a.severity) return b.severity - a.severity
       }
-      // Secondary: severity descending
+      // Secondary: severity
       if (b.severity !== a.severity) return b.severity - a.severity
       // Tertiary: ML-linked first
-      const aLinked = a.ground_truth_case_id != null ? 1 : 0
-      const bLinked = b.ground_truth_case_id != null ? 1 : 0
-      return bLinked - aLinked
+      const aL = a.ground_truth_case_id != null ? 1 : 0
+      const bL = b.ground_truth_case_id != null ? 1 : 0
+      return bL - aL
     })
   }, [rawData, sortMode])
 
   const hasFilters = Object.values(queryParams).some(Boolean)
 
+  // Fraud type options for chip filter
+  const fraudTypeOptions = useMemo(() => {
+    const types = ['ghost_company', 'bid_rigging', 'overpricing', 'conflict_of_interest',
+      'embezzlement', 'bribery', 'procurement_fraud', 'monopoly', 'emergency_fraud', 'tender_rigging'] as const
+    return types.map(ft => {
+      const count = stats?.cases_by_fraud_type?.find(c => c.fraud_type === ft)?.count
+      return { value: ft, label: t(`fraudTypes.${ft}`), count }
+    }).filter(ft => ft.count == null || ft.count > 0)
+  }, [stats, t])
+
+  // Legal status options for chip filter
+  const legalStatusOptions = useMemo(() => {
+    const statuses = ['impunity', 'investigation', 'prosecuted', 'convicted', 'acquitted', 'dismissed', 'unresolved'] as const
+    return statuses.map(ls => {
+      const count = stats?.cases_by_legal_status?.find(c => c.legal_status === ls)?.count
+      return { value: ls, label: t(`legalStatuses.${ls}`), count }
+    }).filter(ls => ls.count == null || ls.count > 0)
+  }, [stats, t])
+
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* ── Page Header ── */}
-      <div className="border-b border-border pb-6 mb-0">
-        <div className="flex items-center justify-between">
-          <div>
-            <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-2">
-              {t('pageSubhead')}
-            </div>
-            <h1
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-              className="text-2xl font-bold text-text-primary mb-2"
-            >
-              {t('pageTitle')}
-            </h1>
-            <p className="text-sm text-text-secondary max-w-lg">
-              {t('pageDesc', { count: data?.length ?? 0 })}
-            </p>
-          </div>
-          <CaseLeadButton className="shrink-0" />
+      {/* ── Page header ── */}
+      <div className="flex items-start justify-between mb-2">
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            {t('pageSubhead')}
+          </p>
+          <h1
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-2xl sm:text-3xl font-bold text-zinc-100 leading-tight"
+          >
+            {t('pageTitle')}
+          </h1>
         </div>
+        <CaseLeadButton className="shrink-0 mt-1" />
       </div>
+      <p className="text-sm text-zinc-400 max-w-2xl mb-8 leading-relaxed">
+        {t('hero.subhead')}
+      </p>
 
-      {/* Spacing after header */}
-      <div className="h-6" />
+      {/* ── Hero Section ── */}
+      <HeroSection />
 
-      {/* ── Dossier Hero ── */}
-      <DossierHero />
-
-      {/* ── Filters: FILTRAR ARCHIVOS ── */}
-      <div className="mb-6">
-        <div className="text-[9px] tracking-[0.25em] uppercase text-text-muted font-bold mb-2">
-          {t('filterArchives')}
+      {/* ── Filter bar: editorial chips ── */}
+      <div className="mb-8">
+        <div className="flex items-center gap-2 mb-3">
+          <div className="text-[9px] font-mono font-bold tracking-[0.25em] uppercase text-zinc-600">
+            {t('filterArchives')}
+          </div>
+          <div className="flex-1 h-px bg-zinc-800" />
+          {hasFilters && (
+            <button
+              onClick={() => { setFilters({}); setSearch(null) }}
+              className="flex items-center gap-1 text-[10px] text-zinc-500 hover:text-amber-400 transition-colors font-mono"
+            >
+              <X className="h-3 w-3" />
+              {t('filters.clearFilters')}
+            </button>
+          )}
         </div>
-        <div className="flex flex-wrap gap-2 items-center">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-2.5 top-2.5 h-3.5 w-3.5 text-text-muted" />
+
+        <div className="flex flex-wrap gap-2 items-center mb-3">
+          {/* Search */}
+          <div className="relative">
+            <Search className="absolute left-2.5 top-2 h-3.5 w-3.5 text-zinc-500" />
             <Input
               value={search ?? ''}
               onChange={(e) => setSearch(e.target.value)}
               placeholder={t('filters.search')}
-              className="pl-8 h-8 text-sm bg-card border-border/60"
+              className="pl-8 h-8 w-56 text-xs bg-zinc-900 border-zinc-800 rounded-full focus:border-amber-500/50 focus:ring-amber-500/20"
             />
             {search && (
               <button className="absolute right-2 top-2" onClick={() => setSearch(null)}>
-                <X className="h-3.5 w-3.5 text-text-muted" />
+                <X className="h-3.5 w-3.5 text-zinc-500" />
               </button>
             )}
           </div>
 
-          <Select
-            value={filters.fraud_type ?? 'all'}
-            onValueChange={(v) => setFilters((f) => ({ ...f, fraud_type: v === 'all' ? undefined : v as FraudType }))}
-          >
-            <SelectTrigger className="w-[160px] h-8 text-xs bg-card border-border/60">
-              <SelectValue placeholder={t('filters.fraudType')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.all')}</SelectItem>
-              {['ghost_company','bid_rigging','overpricing','conflict_of_interest','embezzlement','bribery','procurement_fraud','monopoly','emergency_fraud','tender_rigging'].map((ft) => (
-                <SelectItem key={ft} value={ft}>{t(`fraudTypes.${ft}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Fraud type chips (top-level visible as pills) */}
+          <DropdownChip
+            label={t('filters.fraudType')}
+            value={filters.fraud_type}
+            options={fraudTypeOptions}
+            onSelect={(v) => setFilters(f => ({ ...f, fraud_type: v as FraudType | undefined }))}
+          />
 
-          <Select
-            value={filters.administration ?? 'all'}
-            onValueChange={(v) => setFilters((f) => ({ ...f, administration: v === 'all' ? undefined : v as Administration }))}
-          >
-            <SelectTrigger className="w-[180px] h-8 text-xs bg-card border-border/60">
-              <SelectValue placeholder={t('filters.administration')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.all')}</SelectItem>
-              {['fox','calderon','epn','amlo','sheinbaum'].map((a) => (
-                <SelectItem key={a} value={a}>{t(`administrations.${a}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Legal status chips */}
+          <DropdownChip
+            label={t('filters.legalStatus')}
+            value={filters.legal_status}
+            options={legalStatusOptions}
+            onSelect={(v) => setFilters(f => ({ ...f, legal_status: v as LegalStatus | undefined }))}
+          />
 
-          <Select
-            value={filters.legal_status ?? 'all'}
-            onValueChange={(v) => setFilters((f) => ({ ...f, legal_status: v === 'all' ? undefined : v as LegalStatus }))}
-          >
-            <SelectTrigger className="w-[170px] h-8 text-xs bg-card border-border/60">
-              <SelectValue placeholder={t('filters.legalStatus')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.all')}</SelectItem>
-              {['investigation','prosecuted','convicted','acquitted','dismissed','impunity','unresolved'].map((ls) => (
-                <SelectItem key={ls} value={ls}>{t(`legalStatuses.${ls}`)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Administration dropdown chip */}
+          <DropdownChip
+            label={t('filters.administration')}
+            value={filters.administration}
+            options={['fox', 'calderon', 'epn', 'amlo', 'sheinbaum'].map(a => ({
+              value: a,
+              label: t(`administrations.${a}`),
+            }))}
+            onSelect={(v) => setFilters(f => ({ ...f, administration: v as Administration | undefined }))}
+          />
 
-          <Select
-            value={filters.sector_id != null ? String(filters.sector_id) : 'all'}
-            onValueChange={(v) => setFilters((f) => ({ ...f, sector_id: v === 'all' ? undefined : Number(v) }))}
-          >
-            <SelectTrigger className="w-[150px] h-8 text-xs bg-card border-border/60">
-              <SelectValue placeholder={t('filters.sector')} />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">{t('filters.all')}</SelectItem>
-              {SECTORS.map((s) => (
-                <SelectItem key={s.id} value={String(s.id)}>{ts(s.code)}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          {/* Sector dropdown chip */}
+          <DropdownChip
+            label={t('filters.sector')}
+            value={filters.sector_id != null ? String(filters.sector_id) : undefined}
+            options={SECTORS.map(s => ({
+              value: String(s.id),
+              label: ts(s.code),
+            }))}
+            onSelect={(v) => setFilters(f => ({ ...f, sector_id: v != null ? Number(v) : undefined }))}
+          />
 
-          {/* Sort selector */}
+          {/* Sort: pushed right */}
           <div className="flex items-center gap-1.5 ml-auto">
-            <ArrowUpDown className="h-3 w-3 text-text-muted flex-shrink-0" />
-            <Select
-              value={sortMode}
-              onValueChange={(v) => setSortMode(v as SortMode)}
-            >
-              <SelectTrigger className="w-[150px] h-8 text-xs bg-card border-border/60">
-                <SelectValue placeholder={t('sortBy')} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="amount">{t('sortOptions.amount')}</SelectItem>
-                <SelectItem value="year">{t('sortOptions.year')}</SelectItem>
-                <SelectItem value="severity">{t('sortOptions.severity')}</SelectItem>
-              </SelectContent>
-            </Select>
+            <ArrowUpDown className="h-3 w-3 text-zinc-600 flex-shrink-0" />
+            <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">
+              {t('sortBy')}:
+            </span>
+            {(['amount', 'year', 'severity'] as SortMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setSortMode(mode)}
+                className={`text-[10px] font-mono px-2 py-1 rounded transition-colors ${
+                  sortMode === mode
+                    ? 'bg-zinc-800 text-zinc-200'
+                    : 'text-zinc-500 hover:text-zinc-300'
+                }`}
+              >
+                {t(`sortOptions.${mode}`)}
+              </button>
+            ))}
           </div>
-
-          {hasFilters && (
-            <Button
-              variant="ghost"
-              size="sm"
-              className="h-8 text-xs text-text-muted"
-              onClick={() => { setFilters({}); setSearch(null) }}
-            >
-              <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}
-            </Button>
-          )}
         </div>
       </div>
 
       {/* ── Results ── */}
       {isLoading && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <Skeleton key={i} className="h-48 rounded-sm" />
+            <div key={i} className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+              <Skeleton className="h-4 w-32 mb-3" />
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-3 w-full mb-1" />
+              <Skeleton className="h-3 w-2/3 mb-4" />
+              <Skeleton className="h-8 w-24" />
+            </div>
           ))}
         </div>
       )}
 
       {error && (
-        <div className="flex items-center gap-2 text-sm text-destructive p-4 bg-destructive/10 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
-          <span>{t('loadError')}</span>
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5 flex items-start gap-3">
+          <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
+          <div>
+            <p className="text-sm font-medium text-red-400 mb-1">{t('loadError')}</p>
+            <p className="text-xs text-zinc-400">
+              COMPRANET case data may be temporarily unavailable. The API returned an error while loading
+              the documented corruption cases archive.
+            </p>
+          </div>
         </div>
       )}
 
       {!isLoading && !error && data && (
         <>
-          <div className="flex items-center justify-between mb-3">
-            <p className="text-xs text-text-muted font-mono">
-              {t('resultCount', { count: data.length })} &middot; {t('sortBy')}: {t(`sortOptions.${sortMode}`)}
+          {/* Results count + export */}
+          <div className="flex items-center justify-between mb-4">
+            <p className="text-xs text-zinc-500 font-mono">
+              {t('resultCount', { count: data.length })}
+              {hasFilters && (
+                <span className="text-zinc-600"> (filtered)</span>
+              )}
             </p>
             <TableExportButton
-              data={data.map((c) => ({
+              data={data.map(c => ({
                 title: c.name_en,
                 fraud_type: c.fraud_type,
                 severity: c.severity,
@@ -600,17 +685,24 @@ export default function CaseLibrary() {
               filename="case-library"
             />
           </div>
+
           {data.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-20 gap-4 text-text-muted">
-              <Search className="h-10 w-10 opacity-30" />
-              <div className="text-center">
-                <p className="text-sm font-medium">{t('noResults')}</p>
-                <p className="text-xs mt-1 opacity-70">{t('noResultsHint')}</p>
+            /* ── Empty state: editorial, not generic ── */
+            <div className="flex flex-col items-center justify-center py-20 gap-6">
+              <Landmark className="h-12 w-12 text-zinc-700" />
+              <div className="text-center max-w-md">
+                <p className="text-base font-medium text-zinc-300 mb-2">{t('noResults')}</p>
+                <p className="text-sm text-zinc-500 leading-relaxed">
+                  {search
+                    ? t('noResultsExplain', { query: search })
+                    : t('noResultsHint')
+                  }
+                </p>
               </div>
               <Button
                 variant="outline"
                 size="sm"
-                className="h-8 text-xs"
+                className="h-8 text-xs rounded-full border-zinc-700 text-zinc-400 hover:text-amber-400 hover:border-amber-500/30"
                 onClick={() => { setFilters({}); setSearch(null) }}
               >
                 <X className="h-3 w-3 mr-1" /> {t('filters.clearFilters')}

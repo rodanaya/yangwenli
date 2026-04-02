@@ -31,7 +31,6 @@ const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
-const ProcurementIntelligence = lazy(() => import('@/pages/ProcurementIntelligence'))
 const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
 const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
 const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
@@ -49,8 +48,6 @@ const Workspace = lazy(() => import('@/pages/Watchlist'))
 // StateExpenditure removed — redirects to /map
 const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
-const ApiExplorer = lazy(() => import('@/pages/ApiExplorer'))
-const InstitutionHeatmap = lazy(() => import('@/pages/InstitutionHeatmap'))
 const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const MexicoMap = lazy(() => import('@/pages/MexicoMap'))
 const Annotations = lazy(() => import('@/pages/Annotations'))
@@ -60,8 +57,6 @@ const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const Telescope = lazy(() => import('@/pages/Telescope'))
-const Seismograph = lazy(() => import('@/pages/Seismograph'))
-const Scandals = lazy(() => import('@/pages/Scandals'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 
@@ -149,14 +144,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="procurement-intelligence"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ProcurementIntelligence />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="procurement-intelligence" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="categories"
                 element={
@@ -347,7 +335,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="red-flags" element={<Navigate to="/procurement-intelligence" replace />} />
+              <Route path="red-flags" element={<Navigate to="/dashboard" replace />} />
               <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
               <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
               <Route path="institution-health" element={<Navigate to="/institutions/health" replace />} />
@@ -360,22 +348,8 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="api-explorer"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ApiExplorer />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="heatmap"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <InstitutionHeatmap />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="api-explorer" element={<Navigate to="/settings" replace />} />
+              <Route path="heatmap" element={<Navigate to="/money-flow" replace />} />
               <Route
                 path="map"
                 element={
@@ -429,23 +403,9 @@ function App() {
                 }
               />
 
-              <Route
-                path="seismograph"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Seismograph />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="seismograph" element={<Navigate to="/administrations" replace />} />
 
-              <Route
-                path="scandals"
-                element={
-                  <SuspenseBoundary fallback={<CardGridSkeleton />}>
-                    <Scandals />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="scandals" element={<Navigate to="/cases" replace />} />
 
               <Route
                 path="collusion"

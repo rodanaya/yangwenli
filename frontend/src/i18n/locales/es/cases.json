@@ -22,7 +22,15 @@
     "totalAmount": "Pérdidas estimadas",
     "gtLinked": "Vinculados a ML",
     "compranetVisible": "Visibles en COMPRANET",
-    "vendorsIdentified": "Proveedores identificados"
+    "vendorsIdentified": "Proveedores identificados",
+    "sectorsAffected": "Sectores afectados",
+    "impunityRate": "Tasa de impunidad",
+    "convictionRate": "Condenados"
+  },
+  "hero": {
+    "headline": "{{amount}} en pérdidas documentadas en {{count}} casos de corrupción",
+    "subhead": "Archivo de corrupción en contratación pública federal de México. Cada caso representa dinero público desviado a través de empresas fantasma, manipulación de licitaciones, sobreprecios y captura institucional.",
+    "impunityCallout": "Solo el {{pct}}% de los casos resultaron en condena. {{impunity}} casos permanecen en impunidad."
   },
   "filters": {
     "all": "Todos los casos",
@@ -178,7 +186,8 @@
   },
   "loadError": "Error al cargar los casos.",
   "resultCount": "{{count}} casos",
-  "noResultsHint": "Intente ajustar su búsqueda o filtros",
+  "noResultsHint": "Intente ampliar su búsqueda o eliminar filtros. La combinación actual puede ser demasiado restrictiva.",
+  "noResultsExplain": "No hay casos documentados que coincidan con \"{{query}}\". Esto no significa que no haya corrupción en esta área — significa que aún no hemos documentado un caso con estos criterios.",
   "noResults": "Ningún caso coincide con los filtros actuales.",
   "loading": "Cargando casos...",
   "caseCount": {

@@ -31,6 +31,7 @@ import {
   ShieldCheck,
   Network,
   Flame,
+  ScanSearch,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -99,7 +100,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'categories', href: '/categories', icon: Layers },
-      { i18nKey: 'sectorHealth', href: '/report-card', icon: ShieldCheck },
+      { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
+      { i18nKey: 'telescope', href: '/telescope', icon: ScanSearch },
     ],
   },
   {

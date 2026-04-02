@@ -1351,7 +1351,7 @@ export default function SpendingCategories() {
                     margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
                     style={{ cursor: 'pointer' }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" horizontal={false} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
                     <XAxis
                       type="number"
                       dataKey="value"
@@ -1376,7 +1376,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-                            style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
                           >
                             <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
                             <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
@@ -1480,7 +1480,7 @@ export default function SpendingCategories() {
               <div style={{ height: 320 }} ref={trendChartRef}>
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
                     <XAxis
                       dataKey="year"
                       type="number"
@@ -1504,7 +1504,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
-                            style={{ backgroundColor: '#0d1117', borderColor: 'rgba(255,255,255,0.08)' }}
+                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
                           >
                             <p className="font-bold text-text-primary text-[11px]">{label}</p>
                             {payload.map((p, i) => (
@@ -1557,7 +1557,23 @@ export default function SpendingCategories() {
       </div>
 
       {/* ================================================================= */}
-      {/* 9. ImpactoHumano                                                  */}
+      {/* 9. See Also cross-link                                            */}
+      {/* ================================================================= */}
+      <div className="flex items-center gap-3 py-3 border-t border-zinc-800">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+          Ver también
+        </span>
+        <button
+          onClick={() => navigate('/price-analysis')}
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-zinc-700/60 hover:border-zinc-500 rounded px-2.5 py-1"
+        >
+          Análisis de Precios Anómalos
+          <ExternalLink className="w-3 h-3" />
+        </button>
+      </div>
+
+      {/* ================================================================= */}
+      {/* 10. ImpactoHumano                                                 */}
       {/* ================================================================= */}
       {healthCategorySpend > 0 && (
         <section>

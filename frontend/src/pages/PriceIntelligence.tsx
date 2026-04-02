@@ -27,7 +27,7 @@ import {
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
   Cell,
-} from 'recharts'
+} from '@/components/charts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
@@ -130,7 +130,7 @@ function SectorRiskChart({
   return (
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="rgba(255,255,255,0.06)" />
+        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#3f3f46" />
         <XAxis
           type="number"
           tick={{ fontSize: 10, fill: '#94a3b8' }}
@@ -143,15 +143,6 @@ function SectorRiskChart({
           tick={{ fontSize: 10, fill: '#94a3b8' }}
         />
         <RechartsTooltip
-          contentStyle={{
-            background: '#1e293b',
-            border: '1px solid rgba(255,255,255,0.1)',
-            borderRadius: '6px',
-            fontSize: '12px',
-            padding: '8px 12px',
-          }}
-          labelStyle={{ color: '#f1f5f9', fontWeight: 600, marginBottom: 4 }}
-          itemStyle={{ color: '#94a3b8' }}
           content={({ active, payload, label }) => {
             if (!active || !payload?.length) return null
             const d = payload[0]?.payload as SectorBarDatum | undefined
@@ -159,22 +150,22 @@ function SectorRiskChart({
             return (
               <div
                 style={{
-                  background: '#1e293b',
-                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: '#18181b',
+                  border: '1px solid #3f3f46',
                   borderRadius: '6px',
                   fontSize: '12px',
                   padding: '8px 12px',
                   minWidth: 160,
                 }}
               >
-                <p style={{ color: '#f1f5f9', fontWeight: 600, marginBottom: 4 }}>{label}</p>
-                <p style={{ color: '#94a3b8', margin: 0 }}>
+                <p style={{ color: '#f4f4f5', fontWeight: 600, marginBottom: 4 }}>{label}</p>
+                <p style={{ color: '#a1a1aa', margin: 0 }}>
                   Contratos: <strong style={{ color: '#fb923c' }}>{formatNumber(d.count)}</strong>
                 </p>
-                <p style={{ color: '#94a3b8', margin: '2px 0 0' }}>
-                  Valor: <strong style={{ color: '#f1f5f9' }}>{formatCompactMXN(d.totalValue)}</strong>
+                <p style={{ color: '#a1a1aa', margin: '2px 0 0' }}>
+                  Valor: <strong style={{ color: '#f4f4f5' }}>{formatCompactMXN(d.totalValue)}</strong>
                 </p>
-                <p style={{ color: '#94a3b8', margin: '2px 0 0' }}>
+                <p style={{ color: '#a1a1aa', margin: '2px 0 0' }}>
                   Z-score prom: <strong style={{ color: '#fbbf24' }}>+{(d.avgZ ?? 0).toFixed(1)}&sigma;</strong>
                 </p>
               </div>
@@ -467,7 +458,7 @@ export default function PriceIntelligence() {
       </div>
 
       {/* === Filter Controls === */}
-      <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4 space-y-4">
+      <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-4 space-y-4">
         {/* Z-score threshold slider */}
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -520,7 +511,7 @@ export default function PriceIntelligence() {
                 'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
                 activeSectorId === null
                   ? 'bg-orange-500/20 border-orange-500/60 text-orange-300'
-                  : 'border-slate-600/50 text-text-muted hover:border-slate-500 hover:text-text-secondary',
+                  : 'border-zinc-600/50 text-text-muted hover:border-zinc-500 hover:text-text-secondary',
               ].join(' ')}
               aria-pressed={activeSectorId === null}
             >
@@ -538,7 +529,7 @@ export default function PriceIntelligence() {
                   'px-3 py-1 rounded-full text-xs font-medium transition-colors border',
                   activeSectorId === (SECTORS.find((sec) => sec.code === s.code)?.id ?? -1)
                     ? 'border-current text-white'
-                    : 'border-slate-600/50 text-text-muted hover:border-slate-500 hover:text-text-secondary',
+                    : 'border-zinc-600/50 text-text-muted hover:border-zinc-500 hover:text-text-secondary',
                 ].join(' ')}
                 style={
                   activeSectorId === (SECTORS.find((sec) => sec.code === s.code)?.id ?? -1)
@@ -644,7 +635,7 @@ export default function PriceIntelligence() {
           {/* Summary Stats Bar */}
           {!loading && summary && (
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
-              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+              <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
                   Total outliers
                 </p>
@@ -653,7 +644,7 @@ export default function PriceIntelligence() {
                 </p>
                 <span className="inline-block mt-1 w-2 h-2 rounded-full bg-orange-500" aria-hidden="true" />
               </div>
-              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+              <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
                   Valor en riesgo
                 </p>
@@ -662,7 +653,7 @@ export default function PriceIntelligence() {
                 </p>
                 <span className="inline-block mt-1 w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
               </div>
-              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+              <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
                   Z-score prom.
                 </p>
@@ -671,7 +662,7 @@ export default function PriceIntelligence() {
                 </p>
                 <span className="inline-block mt-1 w-2 h-2 rounded-full bg-amber-500" aria-hidden="true" />
               </div>
-              <div className="bg-slate-900/40 border border-slate-700/40 rounded-lg p-3 text-center">
+              <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
                   Z-score max.
                 </p>
@@ -776,6 +767,20 @@ export default function PriceIntelligence() {
           </p>
         </div>
       )}
+
+      {/* === See Also === */}
+      <div className="flex items-center gap-3 py-3 border-t border-zinc-800">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+          Ver también
+        </span>
+        <Link
+          to="/categories"
+          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-zinc-700/60 hover:border-zinc-500 rounded px-2.5 py-1"
+        >
+          Categorías de Gasto
+          <ExternalLink className="w-3 h-3" />
+        </Link>
+      </div>
 
       {/* === Methodology === */}
       <MethodologySection />

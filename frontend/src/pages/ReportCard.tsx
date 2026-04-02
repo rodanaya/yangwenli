@@ -1,3 +1,12 @@
+/**
+ * National Procurement Health Report Card
+ *
+ * Annual-report style editorial page showing Mexico's overall procurement
+ * health grade with sector breakdowns, trend analysis, and OECD context.
+ *
+ * Dark-mode first: zinc-900/950 palette, serif headlines, large grade display.
+ */
+
 import { useMemo } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -8,7 +17,7 @@ import { phiApi, analysisApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
-// Types (minimal — only what the new design needs)
+// Types
 // ---------------------------------------------------------------------------
 
 interface RiskLevelEntry {
@@ -92,7 +101,7 @@ interface TrendYear {
 
 const SERIF = "'Playfair Display', Georgia, serif"
 
-// Grade → colour + headline tier
+// Grade config: color + tier
 const GRADE_CONFIGS: Record<string, {
   text: string
   bg: string
@@ -130,16 +139,16 @@ const SECTOR_COLORS_MAP: Record<string, string> = {
   otros:           '#64748b',
 }
 
-// Sector display names (ES fallback for when lang is ES)
+// Sector display names (ES)
 const SECTOR_NAME_ES: Record<string, string> = {
   salud: 'Salud',
-  educacion: 'Educación',
+  educacion: 'Educacion',
   infraestructura: 'Infraestructura',
-  energia: 'Energía',
+  energia: 'Energia',
   defensa: 'Defensa',
-  tecnologia: 'Tecnología',
+  tecnologia: 'Tecnologia',
   hacienda: 'Hacienda',
-  gobernacion: 'Gobernación',
+  gobernacion: 'Gobernacion',
   agricultura: 'Agricultura',
   ambiente: 'Ambiente',
   trabajo: 'Trabajo',
@@ -175,7 +184,6 @@ function gradeConfig(grade: string) {
 
 /** Convert raw high_risk_pct (0-1 or 0-100) to "1 in N" integer. */
 function highRiskToOneIn(pct: number): number {
-  // Backend returns 0–100 for overview high_risk_pct based on DashboardOverview type
   const fraction = pct > 1 ? pct / 100 : pct
   if (fraction <= 0) return 100
   return Math.round(1 / fraction)
@@ -188,7 +196,7 @@ function formatTrillions(mxn: number): string {
 }
 
 // ---------------------------------------------------------------------------
-// Hero Impact Section — dark card with key stats above the grade hero
+// Hero Impact Section -- dark card with key stats above the grade hero
 // ---------------------------------------------------------------------------
 
 function HeroImpactSection({
@@ -200,22 +208,18 @@ function HeroImpactSection({
 }) {
   const dist = national.risk_distribution
 
-  // Total value label: prefer totalValueMxn (from fast dashboard), fall back to national
   const valueMxn = totalValueMxn ?? national.total_value_mxn ?? null
   const valueLabel: string = valueMxn != null
-    ? `MX$${formatTrillions(valueMxn)} Trillion`
-    : 'MX$9.9 Trillion'
+    ? `MX$${formatTrillions(valueMxn)}T`
+    : 'MX$9.9T'
 
-  // Critical count from national risk distribution
   const criticalCount: number = dist?.critical?.count ?? 184031
   const criticalCountLabel = criticalCount.toLocaleString('en-US')
 
-  // High-risk rate = critical% + high%
   const critPct = dist?.critical?.count_pct ?? 6.01
   const highPct = dist?.high?.count_pct ?? 7.48
   const highRiskRate = (critPct + highPct).toFixed(1)
 
-  // Risk bar proportions (by count_pct)
   const totalPct =
     (dist?.critical?.count_pct ?? 0) +
     (dist?.high?.count_pct ?? 0) +
@@ -231,12 +235,7 @@ function HeroImpactSection({
 
   return (
     <motion.section
-      className="mb-8 rounded-2xl overflow-hidden"
-      style={{
-        background: 'linear-gradient(135deg, rgba(10,10,18,0.97) 0%, rgba(22,18,32,0.97) 100%)',
-        border: '1px solid rgba(196,30,58,0.25)',
-        boxShadow: '0 4px 32px rgba(0,0,0,0.45)',
-      }}
+      className="mb-8 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800"
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: 'easeOut' }}
@@ -244,65 +243,52 @@ function HeroImpactSection({
       role="region"
     >
       {/* Stats row */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-y md:divide-y-0"
-        style={{ borderColor: 'rgba(255,255,255,0.07)' }}
-      >
-        {/* Stat 1 — total value */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-0 divide-x divide-y md:divide-y-0 divide-zinc-800">
+        {/* Stat 1 -- total value */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span
-            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
-            style={{ fontFamily: SERIF, color: '#f1f5f9' }}
-          >
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-zinc-100">
             {valueLabel}
           </span>
-          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
-            in contracts analyzed
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
+            Contracts analyzed
           </span>
         </div>
 
-        {/* Stat 2 — critical contracts */}
+        {/* Stat 2 -- critical contracts */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span
-            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
-            style={{ fontFamily: SERIF, color: '#f87171' }}
-          >
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-red-400">
             {criticalCountLabel}
           </span>
-          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
-            critical risk contracts
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
+            Critical risk contracts
           </span>
         </div>
 
-        {/* Stat 3 — high-risk rate */}
+        {/* Stat 3 -- high-risk rate */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span
-            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
-            style={{ fontFamily: SERIF, color: '#fb923c' }}
-          >
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-orange-400">
             {highRiskRate}%
           </span>
-          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
-            high-risk rate
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
+            High-risk rate
+            <span className="text-cyan-400 ml-1">(OECD: max 15%)</span>
           </span>
         </div>
 
-        {/* Stat 4 — sectors graded */}
+        {/* Stat 4 -- sectors graded */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span
-            className="text-2xl md:text-3xl font-bold leading-none tabular-nums"
-            style={{ fontFamily: SERIF, color: '#a78bfa' }}
-          >
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-violet-400">
             12
           </span>
-          <span className="text-xs mt-1" style={{ color: 'rgba(241,245,249,0.50)' }}>
-            sectors graded
+          <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
+            Sectors graded
           </span>
         </div>
       </div>
 
       {/* Risk bar */}
       {dist && totalPct > 0 && (
-        <div className="px-6 pb-5 pt-1">
+        <div className="px-6 pb-5 pt-1 border-t border-zinc-800">
           <div
             className="flex rounded-full overflow-hidden gap-[2px] h-3"
             role="img"
@@ -332,16 +318,15 @@ function HeroImpactSection({
               return (
                 <span
                   key={key}
-                  className="flex items-center gap-1.5 text-[11px]"
-                  style={{ color: 'rgba(241,245,249,0.55)' }}
+                  className="flex items-center gap-1.5 text-[10px] text-zinc-500"
                 >
                   <span
                     className="w-2 h-2 rounded-sm flex-shrink-0"
                     style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
-                  <span style={{ color }}>{label}</span>
-                  {entry.count_pct.toFixed(1)}%
+                  <span className="font-mono font-bold" style={{ color }}>{label}</span>
+                  <span className="tabular-nums">{entry.count_pct.toFixed(1)}%</span>
                 </span>
               )
             })}
@@ -353,7 +338,7 @@ function HeroImpactSection({
 }
 
 // ---------------------------------------------------------------------------
-// Hero Section — big grade + plain-language headline
+// Hero Section -- big grade + plain-language headline
 // ---------------------------------------------------------------------------
 
 function HeroSection({
@@ -372,7 +357,7 @@ function HeroSection({
   return (
     <section className="mb-10">
       <div
-        className="rounded-2xl overflow-hidden"
+        className="rounded-xl overflow-hidden"
         style={{
           border: `1px solid ${cfg.border}`,
           borderLeftWidth: 6,
@@ -398,14 +383,14 @@ function HeroSection({
               {national.grade}
             </span>
             <span
-              className="text-xs font-semibold tracking-widest uppercase mt-1"
+              className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mt-1"
               style={{ color: cfg.text, opacity: 0.7 }}
             >
               {t('heroGradeLabel')}
             </span>
             {/* YoY delta badge */}
             <span
-              className="mt-2 text-xs px-2 py-0.5 rounded-full font-medium"
+              className="mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full font-medium"
               style={{
                 backgroundColor: 'rgba(245,158,11,0.20)',
                 color: '#fbbf24',
@@ -414,10 +399,10 @@ function HeroSection({
               title="Change vs prior year (estimated)"
               aria-label="Grade trend: plus 0.02 vs prior year"
             >
-              ▲ +0.02 vs prior year
+              +0.02 vs prior year
             </span>
             {/* Grade methodology explanation */}
-            <p className="text-xs text-zinc-500 max-w-sm text-center mt-2 leading-relaxed">
+            <p className="text-[10px] text-zinc-500 max-w-sm text-center mt-2 leading-relaxed font-mono">
               {t('gradeMethodology.body')}
             </p>
           </motion.div>
@@ -430,8 +415,8 @@ function HeroSection({
             transition={{ delay: 0.4, duration: 0.6 }}
           >
             <h1
-              className="text-2xl md:text-3xl font-bold leading-snug mb-3"
-              style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
+              className="text-2xl md:text-3xl font-bold leading-snug mb-3 text-zinc-100"
+              style={{ fontFamily: SERIF }}
             >
               {headline}
             </h1>
@@ -441,7 +426,7 @@ function HeroSection({
               <RiskBar dist={national.risk_distribution} />
             )}
 
-            <p className="text-xs mt-4" style={{ color: 'var(--color-text-muted)' }}>
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-4">
               {t('heroBadgeLabel', { count: national.total_indicators })}
             </p>
 
@@ -453,10 +438,10 @@ function HeroSection({
                   style={{ backgroundColor: highRiskPct > 15 ? '#dc2626' : highRiskPct > 10 ? '#f97316' : '#16a34a' }}
                   aria-hidden="true"
                 />
-                <span className="text-sm font-medium" style={{ color: 'var(--color-text-secondary)' }}>
+                <span className="text-sm font-medium text-zinc-300">
                   {highRiskPct.toFixed(1)}% {t('sectorHighRisk')}
                   {' · '}
-                  {t('metricRiskNote')}
+                  <span className="text-cyan-400">{t('metricRiskNote')}</span>
                 </span>
               </div>
             )}
@@ -523,14 +508,14 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
           const entry = dist[key]
           if (!entry || entry.value_pct < 0.5) return null
           return (
-            <span key={key} className="flex items-center gap-1 text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+            <span key={key} className="flex items-center gap-1 text-[10px] text-zinc-500">
               <span
                 className="w-2 h-2 rounded-sm flex-shrink-0"
                 style={{ backgroundColor: RISK_LEVEL_COLORS[key] }}
                 aria-hidden="true"
               />
-              <span style={{ color: RISK_LEVEL_COLORS[key] }}>{label}</span>
-              {entry.value_pct.toFixed(0)}%
+              <span className="font-mono font-bold" style={{ color: RISK_LEVEL_COLORS[key] }}>{label}</span>
+              <span className="tabular-nums">{entry.value_pct.toFixed(0)}%</span>
             </span>
           )
         })}
@@ -563,21 +548,17 @@ function KeyMetrics({
   const metrics = [
     {
       id: 'risk',
-      title: oneIn !== null ? t('metricRiskTitle', { n: oneIn }) : '–',
+      title: oneIn !== null ? t('metricRiskTitle', { n: oneIn }) : '--',
       subtitle: t('metricRiskSubtitle'),
       note: t('metricRiskNote'),
       accent: '#dc2626',
-      bgAccent: 'rgba(220,38,38,0.06)',
-      icon: '⚠',
     },
     {
       id: 'value',
-      title: valueTrillions !== null ? t('metricValueTitle', { value: valueTrillions }) : '–',
+      title: valueTrillions !== null ? t('metricValueTitle', { value: valueTrillions }) : '--',
       subtitle: t('metricValueSubtitle'),
       note: t('metricValueNote', { contracts: contractsFormatted ?? '3.1M' }),
-      accent: '#2563eb',
-      bgAccent: 'rgba(37,99,235,0.06)',
-      icon: '₿',
+      accent: '#3b82f6',
     },
     {
       id: 'cases',
@@ -585,14 +566,12 @@ function KeyMetrics({
       subtitle: t('metricCasesSubtitle'),
       note: t('metricCasesNote'),
       accent: '#16a34a',
-      bgAccent: 'rgba(22,163,74,0.06)',
-      icon: '✓',
     },
   ]
 
   return (
     <motion.div
-      className="grid grid-cols-1 md:grid-cols-3 gap-5 mb-10"
+      className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-10"
       variants={cardContainerVariants}
       initial="hidden"
       animate="show"
@@ -601,25 +580,16 @@ function KeyMetrics({
         <motion.div
           key={m.id}
           variants={cardItemVariants}
-          className="rounded-2xl p-6"
-          style={{
-            backgroundColor: m.bgAccent,
-            border: `1px solid ${m.accent}33`,
-          }}
+          className="rounded-xl p-5 bg-zinc-900 border border-zinc-800"
+          style={{ borderLeftWidth: 3, borderLeftColor: m.accent }}
         >
-          <p
-            className="text-xl md:text-2xl font-bold leading-tight mb-2"
-            style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-          >
+          <p className="text-lg md:text-xl font-bold leading-tight mb-2 text-zinc-100" style={{ fontFamily: SERIF }}>
             {m.title}
           </p>
-          <p className="text-sm leading-relaxed mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-sm leading-relaxed mb-3 text-zinc-400">
             {m.subtitle}
           </p>
-          <p
-            className="text-xs font-medium"
-            style={{ color: m.accent, opacity: 0.8 }}
-          >
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.1em]" style={{ color: m.accent }}>
             {m.note}
           </p>
         </motion.div>
@@ -655,39 +625,40 @@ function WhatThisMeans({
 
   return (
     <section className="mb-10">
-      <h2
-        className="text-lg font-semibold mb-4"
-        style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-      >
+      <h2 className="text-lg font-bold mb-4 text-zinc-100" style={{ fontFamily: SERIF }}>
         {t('whatThisMeansTitle')}
       </h2>
-      <ul className="space-y-3" role="list">
-        {bullets.map((bullet, i) => (
-          <li key={i} className="flex gap-3 text-sm leading-relaxed" style={{ color: 'var(--color-text-secondary)' }}>
-            <span
-              className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-xs font-bold"
-              style={{ backgroundColor: 'rgba(196,30,58,0.10)', color: '#c41e3a' }}
-              aria-hidden="true"
-            >
-              {i + 1}
-            </span>
-            {bullet}
-          </li>
-        ))}
-      </ul>
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-3">
+          HALLAZGO
+        </p>
+        <ul className="space-y-3" role="list">
+          {bullets.map((bullet, i) => (
+            <li key={i} className="flex gap-3 text-sm leading-relaxed text-zinc-300">
+              <span
+                className="flex-shrink-0 mt-0.5 w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                aria-hidden="true"
+              >
+                {i + 1}
+              </span>
+              {bullet}
+            </li>
+          ))}
+        </ul>
+      </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Sector Breakdown — horizontal bar chart
+// Sector Breakdown -- horizontal bar chart
 // ---------------------------------------------------------------------------
 
 function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
   const { t, i18n } = useTranslation('reportcard')
   const navigate = useNavigate()
 
-  // Sort worst → best by high+critical pct
+  // Sort worst -> best by high+critical pct
   const sorted = useMemo(() => {
     return [...sectors].sort((a, b) => {
       const aHighPct =
@@ -714,24 +685,15 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
 
   return (
     <section className="mb-10">
-      <h2
-        className="text-lg font-semibold mb-1"
-        style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-      >
+      <h2 className="text-lg font-bold mb-1 text-zinc-100" style={{ fontFamily: SERIF }}>
         {t('sectorTitle')}
       </h2>
-      <p className="text-sm mb-5" style={{ color: 'var(--color-text-muted)' }}>
+      <p className="text-sm mb-5 text-zinc-500">
         {t('sectorSubtitle')}
       </p>
 
-      <div
-        className="rounded-2xl overflow-hidden"
-        style={{
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-background-card)',
-        }}
-      >
-        <div className="divide-y" style={{ borderColor: 'var(--color-border)' }}>
+      <div className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+        <div className="divide-y divide-zinc-800/60">
           {sorted.map((sector, idx) => {
             const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
             const color = SECTOR_COLORS_MAP[sector.sector_name] ?? sectorMeta?.color ?? '#64748b'
@@ -749,8 +711,9 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
             return (
               <motion.div
                 key={sector.sector_id}
-                className="flex items-center gap-4 px-5 py-3 hover:bg-opacity-50 transition-colors cursor-default"
-                style={{ backgroundColor: idx % 2 === 0 ? 'transparent' : 'rgba(0,0,0,0.015)' }}
+                className={`flex items-center gap-4 px-5 py-3 transition-colors cursor-default ${
+                  idx % 2 === 0 ? 'bg-transparent' : 'bg-zinc-800/20'
+                }`}
                 initial={{ opacity: 0, x: -16 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04, duration: 0.35 }}
@@ -762,10 +725,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                     style={{ backgroundColor: color }}
                     aria-hidden="true"
                   />
-                  <span
-                    className="text-sm font-medium truncate"
-                    style={{ color: 'var(--color-text-primary)' }}
-                  >
+                  <span className="text-sm font-medium truncate text-zinc-200">
                     {displayName}
                   </span>
                 </div>
@@ -773,8 +733,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                 {/* Bar */}
                 <div className="flex-1 flex items-center gap-3">
                   <div
-                    className="h-4 rounded-full overflow-hidden flex-1"
-                    style={{ backgroundColor: 'var(--color-border)' }}
+                    className="h-4 rounded-full overflow-hidden flex-1 bg-zinc-800"
                     role="meter"
                     aria-valuenow={combinedPct}
                     aria-valuemin={0}
@@ -795,8 +754,8 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
 
                   {/* Pct label */}
                   <span
-                    className="text-sm font-bold tabular-nums w-14 text-right flex-shrink-0"
-                    style={{ color: combinedPct > 20 ? '#dc2626' : combinedPct > 10 ? '#f97316' : 'var(--color-text-secondary)' }}
+                    className="text-sm font-bold font-mono tabular-nums w-14 text-right flex-shrink-0"
+                    style={{ color: combinedPct > 20 ? '#dc2626' : combinedPct > 10 ? '#f97316' : '#a1a1aa' }}
                   >
                     {combinedPct.toFixed(1)}%
                   </span>
@@ -819,11 +778,10 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                 {/* Go to sector link */}
                 <button
                   onClick={() => navigate(`/sectors/${sector.sector_id}`)}
-                  className="text-xs flex-shrink-0 transition-colors hover:underline"
-                  style={{ color: '#c41e3a' }}
+                  className="text-[10px] font-mono uppercase tracking-wide flex-shrink-0 transition-colors text-amber-400 hover:text-amber-300"
                   aria-label={`${t('sectorGoTo')}: ${displayName}`}
                 >
-                  {t('sectorGoTo')} →
+                  {t('sectorGoTo')} &rarr;
                 </button>
               </motion.div>
             )
@@ -835,7 +793,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
 }
 
 // ---------------------------------------------------------------------------
-// Trend section — "Getting better or worse?"
+// Trend section -- "Getting better or worse?"
 // ---------------------------------------------------------------------------
 
 function TrendSection() {
@@ -850,7 +808,6 @@ function TrendSection() {
 
   const trendDirection = useMemo((): 'improving' | 'stable' | 'worsening' => {
     if (years.length < 4) return 'stable'
-    // Compare average competition_by_value of last 3 years vs 3 years prior
     const recent = years.slice(-3)
     const prior = years.slice(-6, -3)
     if (prior.length === 0) return 'stable'
@@ -863,29 +820,20 @@ function TrendSection() {
   }, [years])
 
   const trendConfig = {
-    improving: { icon: '↑', color: '#16a34a', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
-    stable:    { icon: '→', color: '#6b7280', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
-    worsening: { icon: '↓', color: '#dc2626', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
+    improving: { icon: '\u2191', color: '#16a34a', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
+    stable:    { icon: '\u2192', color: '#6b7280', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
+    worsening: { icon: '\u2193', color: '#dc2626', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
   }[trendDirection]
 
   const earliestYear = years.length > 0 ? years[0].year : 2010
 
   return (
     <section className="mb-10">
-      <h2
-        className="text-lg font-semibold mb-4"
-        style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-      >
+      <h2 className="text-lg font-bold mb-4 text-zinc-100" style={{ fontFamily: SERIF }}>
         {t('trendTitle')}
       </h2>
 
-      <div
-        className="rounded-2xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6"
-        style={{
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-background-card)',
-        }}
-      >
+      <div className="rounded-xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 border border-zinc-800 bg-zinc-900">
         {/* Big arrow */}
         <div className="flex-shrink-0 text-center">
           <span
@@ -896,7 +844,7 @@ function TrendSection() {
             {trendConfig.icon}
           </span>
           <span
-            className="block text-sm font-semibold mt-1"
+            className="block text-sm font-bold font-mono mt-1"
             style={{ color: trendConfig.color }}
           >
             {t(trendConfig.labelKey)}
@@ -905,14 +853,14 @@ function TrendSection() {
 
         {/* Sentence + small year markers */}
         <div className="flex-1 min-w-0">
-          <p className="text-base leading-relaxed mb-4" style={{ color: 'var(--color-text-secondary)' }}>
+          <p className="text-base leading-relaxed mb-4 text-zinc-300">
             {t(trendConfig.sentenceKey)}
           </p>
 
           {/* Compact year-grade timeline ribbon */}
           {years.length > 0 && (
             <div className="flex items-center gap-1 overflow-x-auto pb-1">
-              <span className="text-[10px] font-medium mr-1 flex-shrink-0" style={{ color: 'var(--color-text-muted)' }}>
+              <span className="text-[10px] font-mono text-zinc-600 mr-1 flex-shrink-0">
                 {t('trendSince', { year: earliestYear })}:
               </span>
               {years.map((y) => {
@@ -931,10 +879,7 @@ function TrendSection() {
                     >
                       {y.grade}
                     </span>
-                    <span
-                      className="text-[9px] mt-0.5 tabular-nums"
-                      style={{ color: 'var(--color-text-muted)' }}
-                    >
+                    <span className="text-[9px] font-mono mt-0.5 tabular-nums text-zinc-600">
                       {String(y.year).slice(2)}
                     </span>
                   </div>
@@ -958,24 +903,17 @@ function MethodologyFooter() {
 
   return (
     <section className="mt-12 mb-8">
-      <div
-        className="rounded-xl p-5"
-        style={{
-          border: '1px solid var(--color-border)',
-          backgroundColor: 'var(--color-background-card)',
-        }}
-      >
-        <p className="text-xs leading-relaxed mb-3" style={{ color: 'var(--color-text-secondary)' }}>
+      <div className="rounded-xl p-5 border border-zinc-800 bg-zinc-900">
+        <p className="text-xs leading-relaxed mb-3 text-zinc-400">
           {t('methodologyNote')}
         </p>
         <div className="flex flex-wrap items-center justify-between gap-3">
-          <p className="text-[11px]" style={{ color: 'var(--color-text-muted)' }}>
+          <p className="text-[10px] font-mono text-zinc-600">
             {t('sourcesLabel')}
           </p>
           <button
             onClick={() => navigate('/methodology')}
-            className="text-xs font-medium transition-colors hover:underline"
-            style={{ color: '#c41e3a' }}
+            className="text-[10px] font-mono font-bold uppercase tracking-wide transition-colors text-amber-400 hover:text-amber-300"
           >
             {t('viewFullMethodology')}
           </button>
@@ -992,15 +930,14 @@ function MethodologyFooter() {
 function LoadingState() {
   const { t } = useTranslation('reportcard')
   return (
-    <div className="flex items-center justify-center min-h-[40vh]">
+    <div className="flex items-center justify-center min-h-[40vh] bg-zinc-950">
       <div className="text-center">
         <div
-          className="animate-spin rounded-full h-10 w-10 border-2 mx-auto mb-4"
-          style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }}
+          className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-500 mx-auto mb-4"
           role="status"
           aria-label={t('loading')}
         />
-        <p style={{ color: 'var(--color-text-muted)' }}>{t('loading')}</p>
+        <p className="text-zinc-500 text-sm font-mono">{t('loading')}</p>
       </div>
     </div>
   )
@@ -1009,17 +946,16 @@ function LoadingState() {
 function ComputingState() {
   const { t } = useTranslation('reportcard')
   return (
-    <div className="flex items-center justify-center min-h-[40vh]">
+    <div className="flex items-center justify-center min-h-[40vh] bg-zinc-950">
       <div className="text-center max-w-md">
         <div
-          className="animate-spin rounded-full h-10 w-10 border-2 mx-auto mb-4"
-          style={{ borderColor: 'var(--color-border)', borderTopColor: '#c41e3a' }}
+          className="animate-spin rounded-full h-10 w-10 border-2 border-zinc-700 border-t-amber-500 mx-auto mb-4"
           role="status"
         />
-        <p className="font-semibold mb-2" style={{ color: 'var(--color-text-primary)' }}>
+        <p className="font-bold mb-2 text-zinc-100">
           {t('computing')}
         </p>
-        <p className="text-sm" style={{ color: 'var(--color-text-muted)' }}>
+        <p className="text-sm text-zinc-500">
           {t('computingDetail')}
         </p>
       </div>
@@ -1030,8 +966,11 @@ function ComputingState() {
 function ErrorState() {
   const { t } = useTranslation('reportcard')
   return (
-    <div className="flex items-center justify-center min-h-[40vh]">
-      <p role="alert" style={{ color: '#dc2626' }}>{t('error')}</p>
+    <div className="flex items-center justify-center min-h-[40vh] bg-zinc-950">
+      <div className="text-center">
+        <p role="alert" className="text-red-400 mb-2">{t('error')}</p>
+        <p className="text-zinc-600 text-xs font-mono">COMPRANET data may be temporarily unavailable.</p>
+      </div>
     </div>
   )
 }
@@ -1102,56 +1041,56 @@ function ReportCard() {
   const totalValueMxn: number | null = dashData?.overview?.total_value_mxn ?? national.total_value_mxn ?? null
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
-  // Ground truth cases count — hardcoded known value (1363 cases as of Mar 26, 2026)
-  // This is stable and known from project memory; we don't have a live API for it.
+  // Ground truth cases count -- hardcoded known value (1363 cases as of Mar 26, 2026)
   const GT_CASES_COUNT = 1363
 
   return (
-    <main className="max-w-4xl mx-auto px-4 py-8" id="main-content">
-      {/* Page header */}
-      <header className="mb-8 pb-5 border-b" style={{ borderColor: 'var(--color-border)' }}>
-        <p
-          className="text-xs font-semibold tracking-[0.15em] uppercase mb-2"
-          style={{ color: '#c41e3a' }}
-        >
-          {t('pageEyebrow')}
+    <main className="min-h-screen bg-zinc-950" id="main-content">
+      <div className="max-w-4xl mx-auto px-4 py-8">
+        {/* Page header */}
+        <header className="mb-8 pb-5 border-b border-zinc-800">
+          <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 text-amber-500">
+            RUBLI · {t('pageEyebrow')}
+          </p>
+          <h1 className="text-3xl md:text-4xl font-bold text-zinc-100" style={{ fontFamily: SERIF }}>
+            {t('pageTitle')}
+          </h1>
+          <p className="text-sm mt-1 text-zinc-500">
+            {t('pageSubtitle')}
+          </p>
+        </header>
+
+        {/* Hero impact: dark card with key numbers */}
+        <HeroImpactSection national={national} totalValueMxn={totalValueMxn} />
+
+        {/* Hero: big grade + headline */}
+        <HeroSection national={national} highRiskPct={highRiskPct} />
+
+        {/* 3 key metrics in plain language */}
+        <KeyMetrics
+          highRiskPct={highRiskPct}
+          totalValueMxn={totalValueMxn}
+          totalContracts={totalContracts}
+          gtCasesCount={GT_CASES_COUNT}
+        />
+
+        {/* Plain-language bullets */}
+        <WhatThisMeans highRiskPct={highRiskPct} worstSectors={worstSectorNames} />
+
+        {/* Sector breakdown: horizontal bar chart */}
+        <SectorBreakdown sectors={sectors} />
+
+        {/* Trend: better or worse? */}
+        <TrendSection />
+
+        {/* Methodology link */}
+        <MethodologyFooter />
+
+        {/* Source footnote */}
+        <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
+          RUBLI v6.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
         </p>
-        <h1
-          className="text-3xl md:text-4xl font-bold"
-          style={{ fontFamily: SERIF, color: 'var(--color-text-primary)' }}
-        >
-          {t('pageTitle')}
-        </h1>
-        <p className="text-sm mt-1" style={{ color: 'var(--color-text-muted)' }}>
-          {t('pageSubtitle')}
-        </p>
-      </header>
-
-      {/* Hero impact: dark card with key numbers */}
-      <HeroImpactSection national={national} totalValueMxn={totalValueMxn} />
-
-      {/* Hero: big grade + headline */}
-      <HeroSection national={national} highRiskPct={highRiskPct} />
-
-      {/* 3 key metrics in plain language */}
-      <KeyMetrics
-        highRiskPct={highRiskPct}
-        totalValueMxn={totalValueMxn}
-        totalContracts={totalContracts}
-        gtCasesCount={GT_CASES_COUNT}
-      />
-
-      {/* Plain-language bullets */}
-      <WhatThisMeans highRiskPct={highRiskPct} worstSectors={worstSectorNames} />
-
-      {/* Sector breakdown: horizontal bar chart */}
-      <SectorBreakdown sectors={sectors} />
-
-      {/* Trend: better or worse? */}
-      <TrendSection />
-
-      {/* Methodology link */}
-      <MethodologyFooter />
+      </div>
     </main>
   )
 }

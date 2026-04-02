@@ -1,23 +1,62 @@
 import { useQuery } from '@tanstack/react-query'
-import { storiesApi, ariaApi } from '@/api/client'
+import { ariaApi } from '@/api/client'
 import { useNavigate, Link } from 'react-router-dom'
 import type { AriaQueueItem } from '@/api/types'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, BookOpen, Download, Search, FileText, Map } from 'lucide-react'
+import { ArrowRight, Clock, BookOpen, Download, AlertTriangle } from 'lucide-react'
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { staggerContainer, slideUp, fadeIn } from '@/lib/animations'
+import { staggerContainer, slideUp, staggerItem, fadeIn } from '@/lib/animations'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
-import { StoryCard } from '@/components/stories/StoryCard'
-import type { OutletType } from '@/components/stories/OutletBadge'
-import type { StoryType } from '@/components/stories/StoryCard'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { FuentePill } from '@/components/ui/FuentePill'
+import { STORIES } from '@/lib/story-content'
+import type { StoryDef, StoryStatus } from '@/lib/story-content'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 
 // ---------------------------------------------------------------------------
-// Breaking Investigations — live ARIA T1 feed
+// Constants & helpers
+// ---------------------------------------------------------------------------
+
+/** Map story status to visual treatment */
+const STATUS_CONFIG: Record<StoryStatus, { label: string; color: string; bg: string; border: string }> = {
+  solo_datos: { label: 'DATA LEAD', color: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20' },
+  reporteado: { label: 'REPORTED', color: 'text-blue-400', bg: 'bg-blue-500/10', border: 'border-blue-500/20' },
+  auditado: { label: 'AUDITED', color: 'text-cyan-400', bg: 'bg-cyan-500/10', border: 'border-cyan-500/20' },
+  procesado: { label: 'PROSECUTED', color: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20' },
+}
+
+/** Topic categories for filtering — editorial, not technical */
+interface TopicFilter {
+  id: string
+  label: string
+  match: (s: StoryDef) => boolean
+  accent?: string
+}
+
+const TOPIC_FILTERS: TopicFilter[] = [
+  { id: 'all', label: 'All Investigations', match: () => true },
+  { id: 'direct-awards', label: 'Direct Awards', match: (s) => ['la-cuarta-adjudicacion', 'la-austeridad-que-no-fue', 'el-ano-sin-excusas', 'sexenio-a-sexenio', 'cero-competencia'].includes(s.slug), accent: '#dc2626' },
+  { id: 'ghost-companies', label: 'Ghost Companies', match: (s) => ['los-nuevos-ricos-de-la-4t', 'red-fantasma', 'pandemia-sin-supervision'].includes(s.slug), accent: '#ea580c' },
+  { id: 'health', label: 'Health', match: (s) => ['el-granero-vacio', 'hemoser-el-2-de-agosto', 'triangulo-farmaceutico', 'cartel-del-corazon', 'insabi-el-experimento'].includes(s.slug), accent: '#dc2626' },
+  { id: 'infrastructure', label: 'Infrastructure', match: (s) => ['infraestructura-sin-competencia', 'la-casa-de-los-contratos', 'tren-maya-sin-reglas'].includes(s.slug), accent: '#ea580c' },
+  { id: 'energy', label: 'Energy', match: (s) => ['pemex-el-gigante', 'oceanografia', 'fabrica-de-monopolios'].includes(s.slug), accent: '#eab308' },
+  { id: 'amlo', label: '4T Era', match: (s) => s.era === 'amlo', accent: '#8b5cf6' },
+  { id: 'cases', label: 'Case Studies', match: (s) => s.type === 'case' },
+]
+
+function getExcerpt(story: StoryDef): string {
+  // Pull the first 1-2 sentences from the first chapter's prose
+  const firstChapter = story.chapters[0]
+  if (!firstChapter?.prose?.length) return story.subheadline
+  const firstPara = firstChapter.prose[0]
+  // Take first two sentences
+  const sentences = firstPara.match(/[^.!?]+[.!?]+/g)
+  if (!sentences) return firstPara.slice(0, 200)
+  return sentences.slice(0, 2).join('').trim()
+}
+
+// ---------------------------------------------------------------------------
+// Breaking Investigations — ARIA T1 compact strip
 // ---------------------------------------------------------------------------
 
 function getInvestigationSentence(item: AriaQueueItem): string {
@@ -26,822 +65,382 @@ function getInvestigationSentence(item: AriaQueueItem): string {
   const score = Math.round(riskNorm * 100)
 
   if (item.is_efos_definitivo || item.is_sfp_sanctioned) {
-    return 'Confirmed on government sanctions registry'
+    return 'On government sanctions registry'
   }
   if (daRate !== undefined && daRate > 0.8) {
-    return `Wins ${Math.round(daRate * 100)}%+ of contracts without competitive bidding`
+    return `${Math.round(daRate * 100)}% contracts without bidding`
   }
   if (riskNorm > 0.8) {
-    return 'Extreme risk pattern — top 5% of all vendors'
+    return 'Extreme risk — top 5% of all vendors'
   }
-  return `Flagged for immediate investigation — risk score ${score}`
+  return `Risk score ${score} — flagged for investigation`
 }
 
-function RiskBar({ value }: { value: number }) {
-  const pct = Math.min(100, Math.round(value * 100))
-  const color =
-    value >= 0.6 ? '#dc2626' : value >= 0.4 ? '#ea580c' : value >= 0.25 ? '#eab308' : '#16a34a'
-  return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-zinc-800 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="text-xs font-mono tabular-nums" style={{ color }}>
-        {pct}%
-      </span>
-    </div>
-  )
-}
-
-function BreakingInvestigationsSkeleton() {
-  return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-      {[0, 1, 2].map((i) => (
-        <div
-          key={i}
-          className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 animate-pulse"
-        >
-          <div className="h-3 w-16 bg-zinc-800 rounded mb-3" />
-          <div className="h-4 w-3/4 bg-zinc-800 rounded mb-2" />
-          <div className="h-3 w-full bg-zinc-800 rounded mb-4" />
-          <div className="h-1.5 w-full bg-zinc-800 rounded mb-4" />
-          <div className="h-3 w-24 bg-zinc-800 rounded" />
-        </div>
-      ))}
-    </div>
-  )
-}
-
-function BreakingInvestigations() {
+function BreakingStrip() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['aria', 'breaking-feed'],
-    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 5 }),
+    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 4 }),
     staleTime: 5 * 60 * 1000,
   })
 
-  if (isError) return null
-
+  if (isError || isLoading) return null
   const items = data?.data ?? []
+  if (items.length === 0) return null
 
   return (
-    <section aria-label="Breaking investigations" className="mb-10">
-      {/* Section label */}
-      <div className="flex items-center gap-3 mb-5">
-        <span className="text-[10px] font-bold uppercase tracking-widest text-red-500">
-          Investigaciones activas
-        </span>
-        <div className="h-px flex-1 bg-zinc-800" />
-        <span className="text-[10px] text-zinc-600 uppercase tracking-widest">
-          ARIA T1 — Nivel crítico
-        </span>
-      </div>
-
-      {/* Value-at-risk stat strip */}
-      <div className="grid grid-cols-3 gap-3 mb-6">
-        {[
-          { value: '65.3%', label: 'contracts skip competitive bidding', color: '#dc2626' },
-          { value: 'MXN 1.33T', label: 'en contratos de alto riesgo', color: '#ea580c' },
-          { value: '+28%', label: 'increase in avg risk, 2002–2025', color: '#eab308' },
-        ].map((stat) => (
-          <div
-            key={stat.label}
-            className="rounded-xl border border-zinc-800 bg-zinc-900/60 px-4 py-3 text-center"
-          >
-            <div
-              className="text-xl sm:text-2xl font-black tabular-nums leading-none"
-              style={{ color: stat.color }}
-            >
-              {stat.value}
-            </div>
-            <p className="text-[10px] text-zinc-500 mt-1 leading-snug">{stat.label}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Cards */}
-      {isLoading ? (
-        <BreakingInvestigationsSkeleton />
-      ) : items.length === 0 ? null : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-          {items.map((item) => {
-            const riskNorm = item.risk_score_norm ?? item.avg_risk_score ?? 0
-            const name =
-              item.vendor_name.length > 40
-                ? item.vendor_name.slice(0, 40) + '…'
-                : item.vendor_name
-            const sentence = getInvestigationSentence(item)
-            return (
-              <div
-                key={item.vendor_id}
-                className="rounded-xl border border-zinc-800 bg-zinc-900 p-5 flex flex-col gap-3 hover:border-zinc-700 transition-colors"
-              >
-                {/* Badge */}
-                <div className="flex items-center gap-2">
-                  <span className="bg-red-600 text-white text-[10px] font-bold uppercase px-2 py-0.5 rounded">
-                    NIVEL 1
-                  </span>
-                  {(item.is_efos_definitivo || item.is_sfp_sanctioned) && (
-                    <span className="bg-amber-600/20 text-amber-400 text-[10px] font-bold uppercase px-2 py-0.5 rounded border border-amber-600/30">
-                      SANCIONADO
-                    </span>
-                  )}
-                </div>
-
-                {/* Vendor name */}
-                <p
-                  className="text-sm font-semibold text-zinc-100 leading-snug"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                  title={item.vendor_name}
-                >
-                  {name}
-                </p>
-
-                {/* Plain-language sentence */}
-                <p className="text-xs text-zinc-400 leading-relaxed">{sentence}</p>
-
-                {/* Risk bar */}
-                <RiskBar value={riskNorm} />
-
-                {/* CTA */}
-                <Link
-                  to={`/thread/${item.vendor_id}`}
-                  className="mt-auto inline-flex items-center gap-1 text-xs font-semibold text-red-500 hover:text-red-400 transition-colors group"
-                  aria-label={`Open investigation for ${item.vendor_name}`}
-                >
-                  Open Investigation
-                  <ArrowRight className="h-3 w-3 group-hover:translate-x-0.5 transition-transform" aria-hidden="true" />
-                </Link>
-              </div>
-            )
-          })}
+    <section aria-label="Active investigations" className="mb-12">
+      <div className="flex items-center gap-3 mb-4">
+        <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-red-500/10 border border-red-500/20 text-xs text-red-400">
+          <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+          Live Investigation Leads
         </div>
-      )}
+        <div className="h-px flex-1 bg-zinc-800" />
+        <span className="text-[10px] text-zinc-600 uppercase tracking-widest font-mono">
+          ARIA T1
+        </span>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        {items.map((item) => {
+          const riskNorm = item.risk_score_norm ?? item.avg_risk_score ?? 0
+          const pct = Math.min(100, Math.round(riskNorm * 100))
+          const color = riskNorm >= 0.6 ? '#dc2626' : riskNorm >= 0.4 ? '#ea580c' : '#eab308'
+          const name = item.vendor_name.length > 35 ? item.vendor_name.slice(0, 35) + '...' : item.vendor_name
+
+          return (
+            <Link
+              key={item.vendor_id}
+              to={`/thread/${item.vendor_id}`}
+              className="group rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 hover:border-zinc-700 transition-colors"
+            >
+              <p className="text-xs font-semibold text-zinc-200 leading-snug mb-1 group-hover:text-white transition-colors" title={item.vendor_name}>
+                {name}
+              </p>
+              <p className="text-[11px] text-zinc-500 leading-snug mb-2">
+                {getInvestigationSentence(item)}
+              </p>
+              <div className="flex items-center gap-2">
+                <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
+                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
+                </div>
+                <span className="text-[10px] font-mono tabular-nums" style={{ color }}>{pct}%</span>
+              </div>
+            </Link>
+          )
+        })}
+      </div>
     </section>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Story definitions (hardcoded editorial content, live stats where available)
+// Featured Story — hero card
 // ---------------------------------------------------------------------------
 
-interface StoryDef {
-  slug: string
-  outlet: OutletType
-  type: StoryType
-  headline: string
-  subheadline: string
-  leadStatValue: string
-  leadStatLabel: string
-  leadStatColor?: string
-  estimatedMinutes: number
-  era?: string
-  tags: string[]
-}
+function FeaturedStory({ story }: { story: StoryDef }) {
+  const navigate = useNavigate()
+  const { t } = useTranslation('journalists')
 
-type TFunction = ReturnType<typeof useTranslation<'journalists'>>['t']
+  return (
+    <motion.button
+      whileHover={{ y: -2, transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.99 }}
+      onClick={() => navigate(`/stories/${story.slug}`)}
+      className={cn(
+        'relative w-full rounded-2xl border border-zinc-800 bg-zinc-900',
+        'p-8 sm:p-10 lg:p-12 text-left overflow-hidden group cursor-pointer',
+        'transition-colors hover:border-zinc-700'
+      )}
+    >
+      {/* Accent glow */}
+      <div
+        className="absolute top-0 right-0 w-96 h-96 rounded-full opacity-[0.03] blur-3xl pointer-events-none"
+        style={{ background: story.leadStat.color.includes('red') ? '#dc2626' : '#ea580c' }}
+      />
 
-function getStories(t: TFunction): StoryDef[] {
-  return [
-    // Row 1 — AMLO themed
-    {
-      slug: 'la-cuarta-adjudicacion',
-      outlet: 'data_analysis',
-      type: 'era',
-      headline: t('stories.la-cuarta-adjudicacion.headline'),
-      subheadline: t('stories.la-cuarta-adjudicacion.subheadline'),
-      leadStatValue: '81.9%',
-      leadStatLabel: t('stories.la-cuarta-adjudicacion.statLabel'),
-      leadStatColor: '#dc2626',
-      estimatedMinutes: 12,
-      era: 'AMLO',
-      tags: ['AMLO', 'era'],
-    },
-    {
-      slug: 'el-granero-vacio',
-      outlet: 'investigative',
-      type: 'case',
-      headline: t('stories.el-granero-vacio.headline'),
-      subheadline: t('stories.el-granero-vacio.subheadline'),
-      leadStatValue: '15',
-      leadStatLabel: t('stories.el-granero-vacio.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 15,
-      era: 'AMLO',
-      tags: ['AMLO', 'case'],
-    },
-    {
-      slug: 'los-nuevos-ricos-de-la-4t',
-      outlet: 'data_analysis',
-      type: 'thematic',
-      headline: t('stories.los-nuevos-ricos-de-la-4t.headline'),
-      subheadline: t('stories.los-nuevos-ricos-de-la-4t.subheadline'),
-      leadStatValue: '1,253',
-      leadStatLabel: t('stories.los-nuevos-ricos-de-la-4t.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 10,
-      era: 'AMLO',
-      tags: ['AMLO', 'thematic'],
-    },
-    // Row 2 — AMLO continued + Cross-era
-    {
-      slug: 'hemoser-el-2-de-agosto',
-      outlet: 'data_analysis',
-      type: 'case',
-      headline: t('stories.hemoser-el-2-de-agosto.headline'),
-      subheadline: t('stories.hemoser-el-2-de-agosto.subheadline'),
-      leadStatValue: '17.2',
-      leadStatLabel: t('stories.hemoser-el-2-de-agosto.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 8,
-      era: 'AMLO',
-      tags: ['AMLO', 'case', 'salud'],
-    },
-    {
-      slug: 'la-austeridad-que-no-fue',
-      outlet: 'longform',
-      type: 'era',
-      headline: t('stories.la-austeridad-que-no-fue.headline'),
-      subheadline: t('stories.la-austeridad-que-no-fue.subheadline'),
-      leadStatValue: '80.0%',
-      leadStatLabel: t('stories.la-austeridad-que-no-fue.statLabel'),
-      leadStatColor: '#71717a',
-      estimatedMinutes: 14,
-      era: 'AMLO',
-      tags: ['AMLO', 'era'],
-    },
-    {
-      slug: 'cero-competencia',
-      outlet: 'longform',
-      type: 'thematic',
-      headline: t('stories.cero-competencia.headline'),
-      subheadline: t('stories.cero-competencia.subheadline'),
-      leadStatValue: '505,219',
-      leadStatLabel: t('stories.cero-competencia.statLabel'),
-      leadStatColor: '#71717a',
-      estimatedMinutes: 11,
-      tags: ['thematic'],
-    },
-    // Row 3 — Cross-era + Cases
-    {
-      slug: 'triangulo-farmaceutico',
-      outlet: 'investigative',
-      type: 'thematic',
-      headline: t('stories.triangulo-farmaceutico.headline'),
-      subheadline: t('stories.triangulo-farmaceutico.subheadline'),
-      leadStatValue: '270',
-      leadStatLabel: t('stories.triangulo-farmaceutico.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 13,
-      tags: ['thematic', 'salud'],
-    },
-    {
-      slug: 'avalancha-diciembre',
-      outlet: 'longform',
-      type: 'thematic',
-      headline: t('stories.avalancha-diciembre.headline'),
-      subheadline: t('stories.avalancha-diciembre.subheadline'),
-      leadStatValue: '57.5',
-      leadStatLabel: t('stories.avalancha-diciembre.statLabel'),
-      leadStatColor: '#71717a',
-      estimatedMinutes: 9,
-      tags: ['thematic'],
-    },
-    {
-      slug: 'cartel-del-corazon',
-      outlet: 'investigative',
-      type: 'case',
-      headline: t('stories.cartel-del-corazon.headline'),
-      subheadline: t('stories.cartel-del-corazon.subheadline'),
-      leadStatValue: '50',
-      leadStatLabel: t('stories.cartel-del-corazon.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 12,
-      tags: ['case', 'salud'],
-    },
-    // Row 4 — Infrastructure + PEN
-    {
-      slug: 'infraestructura-sin-competencia',
-      outlet: 'longform',
-      type: 'thematic',
-      headline: t('stories.infraestructura-sin-competencia.headline'),
-      subheadline: t('stories.infraestructura-sin-competencia.subheadline'),
-      leadStatValue: '2.1',
-      leadStatLabel: t('stories.infraestructura-sin-competencia.statLabel'),
-      leadStatColor: '#71717a',
-      estimatedMinutes: 14,
-      tags: ['thematic', 'infraestructura'],
-    },
-    {
-      slug: 'la-casa-de-los-contratos',
-      outlet: 'data_analysis',
-      type: 'era',
-      headline: t('stories.la-casa-de-los-contratos.headline'),
-      subheadline: t('stories.la-casa-de-los-contratos.subheadline'),
-      leadStatValue: '85',
-      leadStatLabel: t('stories.la-casa-de-los-contratos.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 16,
-      era: 'Pena Nieto',
-      tags: ['Pena Nieto', 'era', 'infraestructura'],
-    },
-    {
-      slug: 'oceanografia',
-      outlet: 'investigative',
-      type: 'case',
-      headline: t('stories.oceanografia.headline'),
-      subheadline: t('stories.oceanografia.subheadline'),
-      leadStatValue: '22.4',
-      leadStatLabel: t('stories.oceanografia.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 15,
-      era: 'Pena Nieto',
-      tags: ['Pena Nieto', 'case'],
-    },
-    // Row 5 — Systemic
-    {
-      slug: 'sixsigma-hacienda',
-      outlet: 'data_analysis',
-      type: 'case',
-      headline: t('stories.sixsigma-hacienda.headline'),
-      subheadline: t('stories.sixsigma-hacienda.subheadline'),
-      leadStatValue: '27',
-      leadStatLabel: t('stories.sixsigma-hacienda.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 10,
-      tags: ['case'],
-    },
-    {
-      slug: 'sexenio-a-sexenio',
-      outlet: 'longform',
-      type: 'era',
-      headline: t('stories.sexenio-a-sexenio.headline'),
-      subheadline: t('stories.sexenio-a-sexenio.subheadline'),
-      leadStatValue: '82%',
-      leadStatLabel: t('stories.sexenio-a-sexenio.statLabel'),
-      leadStatColor: '#71717a',
-      estimatedMinutes: 18,
-      tags: ['era'],
-    },
-    {
-      slug: 'red-fantasma',
-      outlet: 'data_analysis',
-      type: 'thematic',
-      headline: t('stories.red-fantasma.headline'),
-      subheadline: t('stories.red-fantasma.subheadline'),
-      leadStatValue: '13,960',
-      leadStatLabel: t('stories.red-fantasma.statLabel'),
-      leadStatColor: '#dc2626',
-      estimatedMinutes: 7,
-      tags: ['thematic'],
-    },
-    // 10 new investigative stories
-    {
-      slug: 'el-ano-sin-excusas',
-      outlet: 'data_analysis',
-      type: 'year',
-      headline: t('stories.el-ano-sin-excusas.headline'),
-      subheadline: t('stories.el-ano-sin-excusas.subheadline'),
-      leadStatValue: '81.9%',
-      leadStatLabel: t('stories.el-ano-sin-excusas.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 9,
-      era: 'AMLO',
-      tags: ['AMLO', 'year'],
-    },
-    {
-      slug: 'insabi-el-experimento',
-      outlet: 'data_analysis',
-      type: 'case',
-      headline: t('stories.insabi-el-experimento.headline'),
-      subheadline: t('stories.insabi-el-experimento.subheadline'),
-      leadStatValue: '94%',
-      leadStatLabel: t('stories.insabi-el-experimento.statLabel'),
-      leadStatColor: '#dc2626',
-      estimatedMinutes: 11,
-      era: 'AMLO',
-      tags: ['AMLO', 'case', 'salud'],
-    },
-    {
-      slug: 'tren-maya-sin-reglas',
-      outlet: 'longform',
-      type: 'case',
-      headline: t('stories.tren-maya-sin-reglas.headline'),
-      subheadline: t('stories.tren-maya-sin-reglas.subheadline'),
-      leadStatValue: '$180B',
-      leadStatLabel: t('stories.tren-maya-sin-reglas.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 13,
-      era: 'AMLO',
-      tags: ['AMLO', 'case', 'infraestructura'],
-    },
-    {
-      slug: 'fabrica-de-monopolios',
-      outlet: 'data_analysis',
-      type: 'thematic',
-      headline: t('stories.fabrica-de-monopolios.headline'),
-      subheadline: t('stories.fabrica-de-monopolios.subheadline'),
-      leadStatValue: '70%',
-      leadStatLabel: t('stories.fabrica-de-monopolios.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 10,
-      era: 'AMLO',
-      tags: ['AMLO', 'thematic'],
-    },
-    {
-      slug: 'el-dinero-de-todos',
-      outlet: 'investigative',
-      type: 'thematic',
-      headline: t('stories.el-dinero-de-todos.headline'),
-      subheadline: t('stories.el-dinero-de-todos.subheadline'),
-      leadStatValue: '1,253',
-      leadStatLabel: t('stories.el-dinero-de-todos.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 12,
-      tags: ['thematic'],
-    },
-    {
-      slug: 'pandemia-sin-supervision',
-      outlet: 'data_analysis',
-      type: 'case',
-      headline: t('stories.pandemia-sin-supervision.headline'),
-      subheadline: t('stories.pandemia-sin-supervision.subheadline'),
-      leadStatValue: '73%',
-      leadStatLabel: t('stories.pandemia-sin-supervision.statLabel'),
-      leadStatColor: '#dc2626',
-      estimatedMinutes: 10,
-      era: 'AMLO',
-      tags: ['AMLO', 'case', 'salud'],
-    },
-    {
-      slug: 'pemex-el-gigante',
-      outlet: 'longform',
-      type: 'case',
-      headline: t('stories.pemex-el-gigante.headline'),
-      subheadline: t('stories.pemex-el-gigante.subheadline'),
-      leadStatValue: '$2T',
-      leadStatLabel: t('stories.pemex-el-gigante.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 14,
-      tags: ['case'],
-    },
-    {
-      slug: 'atlas-del-riesgo',
-      outlet: 'data_analysis',
-      type: 'thematic',
-      headline: t('stories.atlas-del-riesgo.headline'),
-      subheadline: t('stories.atlas-del-riesgo.subheadline'),
-      leadStatValue: '118,061',
-      leadStatLabel: t('stories.atlas-del-riesgo.statLabel'),
-      leadStatColor: '#dc2626',
-      estimatedMinutes: 8,
-      tags: ['thematic', 'salud', 'infraestructura'],
-    },
-    {
-      slug: 'la-herencia-envenenada',
-      outlet: 'data_analysis',
-      type: 'era',
-      headline: t('stories.la-herencia-envenenada.headline'),
-      subheadline: t('stories.la-herencia-envenenada.subheadline'),
-      leadStatValue: '505,219',
-      leadStatLabel: t('stories.la-herencia-envenenada.statLabel'),
-      leadStatColor: '#e6420e',
-      estimatedMinutes: 10,
-      era: 'AMLO',
-      tags: ['AMLO', 'era'],
-    },
-    {
-      slug: 'dividir-para-evadir',
-      outlet: 'longform',
-      type: 'thematic',
-      headline: t('stories.dividir-para-evadir.headline'),
-      subheadline: t('stories.dividir-para-evadir.subheadline'),
-      leadStatValue: '247,946',
-      leadStatLabel: t('stories.dividir-para-evadir.statLabel'),
-      leadStatColor: '#1e3a5f',
-      estimatedMinutes: 11,
-      tags: ['thematic'],
-    },
-    // New COMPRANET story
-    {
-      slug: 'la-maquina-de-papel',
-      outlet: 'longform',
-      type: 'thematic',
-      headline: t('stories.la-maquina-de-papel.headline'),
-      subheadline: t('stories.la-maquina-de-papel.subheadline'),
-      leadStatValue: '23',
-      leadStatLabel: t('stories.la-maquina-de-papel.statLabel'),
-      leadStatColor: '#3b82f6',
-      estimatedMinutes: 16,
-      tags: ['thematic'],
-    },
-  ]
+      <div className="relative z-10">
+        {/* Overline */}
+        <div className="flex items-center gap-3 mb-5">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+            RUBLI Investigations
+          </p>
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-red-500">
+            {t('featured.label')}
+          </span>
+        </div>
+
+        <div className="flex flex-col lg:flex-row lg:items-start lg:gap-12">
+          {/* Left: editorial content */}
+          <div className="flex-1 max-w-2xl">
+            <h2
+              className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-[1.15] mb-4"
+              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            >
+              {story.headline}
+            </h2>
+            <p className="text-base sm:text-lg text-zinc-400 leading-relaxed mb-6">
+              {story.subheadline}
+            </p>
+
+            {/* Excerpt from chapter 1 */}
+            <p className="text-sm text-zinc-500 leading-relaxed mb-6 max-w-xl line-clamp-3">
+              {getExcerpt(story)}
+            </p>
+
+            <div className="flex items-center gap-4">
+              <span className="inline-flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:text-red-400 transition-colors">
+                {t('featured.readMore')}
+                <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              </span>
+              <span className="inline-flex items-center gap-1 text-[11px] text-zinc-600">
+                <Clock className="h-3 w-3" />
+                {story.estimatedMinutes} min read
+              </span>
+            </div>
+          </div>
+
+          {/* Right: hero stat */}
+          <div className="mt-8 lg:mt-0 lg:flex-shrink-0">
+            <div className="border-l-2 border-red-500 pl-5 py-1">
+              <div className={cn('text-4xl sm:text-5xl font-mono font-bold', story.leadStat.color)}>
+                {story.leadStat.value}
+              </div>
+              <div className="text-xs text-zinc-400 uppercase tracking-wide mt-1.5 max-w-[240px] leading-snug">
+                {story.leadStat.label}
+              </div>
+              {story.leadStat.sublabel && (
+                <div className="text-[10px] text-zinc-600 mt-1">
+                  {story.leadStat.sublabel}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  )
 }
 
 // ---------------------------------------------------------------------------
-// Filter config
+// Story Card — editorial weight
 // ---------------------------------------------------------------------------
 
-interface FilterDef {
-  id: string
-  labelKey: string
-  match: (s: StoryDef) => boolean
+function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () => void }) {
+  const { t } = useTranslation('journalists')
+  const status = story.status ? STATUS_CONFIG[story.status] : null
+
+  // Use i18n headline/subheadline if available, fall back to story-content
+  const headline = t(`stories.${story.slug}.headline`, { defaultValue: story.headline })
+  const subheadline = t(`stories.${story.slug}.subheadline`, { defaultValue: story.subheadline })
+
+  return (
+    <motion.button
+      variants={staggerItem}
+      whileHover={{ y: -3, borderColor: 'rgba(113,113,122,0.4)', transition: { duration: 0.15 } }}
+      whileTap={{ scale: 0.98 }}
+      onClick={onClick}
+      className={cn(
+        'relative bg-zinc-900 border border-zinc-800 rounded-xl text-left w-full',
+        'flex flex-col transition-colors cursor-pointer group overflow-hidden'
+      )}
+      aria-label={headline}
+    >
+      {/* Card body */}
+      <div className="p-5 pb-4 flex flex-col gap-2.5 flex-1">
+        {/* Top row: type + status */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-600">
+            {story.type === 'case' ? 'CASE STUDY' : story.type === 'era' ? 'ERA ANALYSIS' : story.type === 'year' ? 'ANNUAL REVIEW' : 'INVESTIGATION'}
+          </span>
+          {status && (
+            <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold border', status.bg, status.border, status.color)}>
+              {status.label}
+            </span>
+          )}
+          {story.era && (
+            <span className="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-500 font-mono">
+              {story.era === 'amlo' ? '4T' : story.era === 'pena' ? 'EPN' : story.era === 'calderon' ? 'FCH' : story.era === 'fox' ? 'FOX' : story.era.toUpperCase()}
+            </span>
+          )}
+        </div>
+
+        {/* Headline */}
+        <h3
+          className="text-lg font-bold text-white leading-tight line-clamp-2 group-hover:text-zinc-100"
+          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        >
+          {headline}
+        </h3>
+
+        {/* Subheadline / excerpt */}
+        <p className="text-sm text-zinc-400 leading-relaxed line-clamp-3">
+          {subheadline}
+        </p>
+      </div>
+
+      {/* Stat footer — the number that matters */}
+      <div className="px-5 pb-5 mt-auto">
+        <div className="border-t border-zinc-800 pt-3 flex items-end justify-between gap-3">
+          <div className="min-w-0">
+            <div className={cn('text-2xl font-mono font-bold leading-none', story.leadStat.color)}>
+              {story.leadStat.value}
+            </div>
+            <p className="text-[11px] text-zinc-500 mt-1 leading-snug line-clamp-1">
+              {story.leadStat.label}
+            </p>
+          </div>
+          <div className="flex items-center gap-1 text-[11px] text-zinc-600 flex-shrink-0">
+            <Clock className="h-3 w-3" />
+            {story.estimatedMinutes}m
+          </div>
+        </div>
+      </div>
+    </motion.button>
+  )
 }
 
-const FILTERS: FilterDef[] = [
-  { id: 'all', labelKey: 'filters.all', match: () => true },
-  { id: 'amlo', labelKey: 'filters.amlo', match: (s) => s.tags.includes('AMLO') },
-  { id: 'pena', labelKey: 'filters.pena', match: (s) => s.tags.includes('Pena Nieto') },
-  { id: 'salud', labelKey: 'filters.salud', match: (s) => s.tags.includes('salud') },
-  { id: 'infra', labelKey: 'filters.infra', match: (s) => s.tags.includes('infraestructura') },
-  { id: 'case', labelKey: 'filters.case', match: (s) => s.type === 'case' },
-  { id: 'thematic', labelKey: 'filters.thematic', match: (s) => s.type === 'thematic' },
-]
-
 // ---------------------------------------------------------------------------
-// Component
+// Main page
 // ---------------------------------------------------------------------------
 
 export default function Journalists() {
   const { t } = useTranslation('journalists')
   const navigate = useNavigate()
-  const [activeFilter, setActiveFilter] = useState('all')
+  const [activeTopic, setActiveTopic] = useState('all')
 
-  // Pre-fetch story data for cache warming (used by child story pages)
-  useQuery({
-    queryKey: ['stories', 'administration-comparison'],
-    queryFn: () => storiesApi.getAdministrationComparison(),
-    staleTime: 10 * 60 * 1000,
-  })
+  // Featured story = first story in the canonical array
+  const featured = STORIES[0]
 
-  useQuery({
-    queryKey: ['stories', 'packages'],
-    queryFn: () => storiesApi.getPackages(),
-    staleTime: 10 * 60 * 1000,
-  })
+  // Remaining stories (exclude featured from grid)
+  const remaining = useMemo(() => STORIES.slice(1), [])
 
-  // Live stats for hero counters
-  const totalContracts = 3051294
-  const totalValueBillions = 9.87
-  const totalCases = 1363
-
-  // Build stories array with translations
-  const stories = useMemo(() => getStories(t), [t])
-
-  // Filtered stories
-  const currentFilter = FILTERS.find((f) => f.id === activeFilter) ?? FILTERS[0]
+  // Filter
+  const currentFilter = TOPIC_FILTERS.find((f) => f.id === activeTopic) ?? TOPIC_FILTERS[0]
   const filtered = useMemo(
-    () => stories.filter(currentFilter.match),
-    [stories, activeFilter] // eslint-disable-line react-hooks/exhaustive-deps
+    () => remaining.filter(currentFilter.match),
+    [remaining, activeTopic] // eslint-disable-line react-hooks/exhaustive-deps
   )
 
-  const featured = stories[0] // "La Cuarta Adjudicacion"
+  // Count for the headline
+  const storyCount = STORIES.length
 
   return (
     <div className="min-h-screen bg-zinc-950">
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
 
-        {/* Editorial masthead — single unified header */}
-        <motion.div
+        {/* ================================================================ */}
+        {/* EDITORIAL MASTHEAD                                               */}
+        {/* ================================================================ */}
+        <motion.header
           variants={slideUp}
           initial="initial"
           animate="animate"
-          className="pt-12 sm:pt-16 pb-10 sm:pb-14"
+          className="pt-12 sm:pt-16 pb-8"
         >
-          <EditorialHeadline
-            section={t('masthead.section')}
-            headline={t('masthead.headline')}
-            subtitle={t('masthead.subtitle')}
-            className="mb-4"
-          />
-          <div className="flex flex-wrap items-center gap-3 mb-3">
-            <FuentePill source="COMPRANET" count={3051294} countLabel={t('masthead.compranetLabel')} verified={true} />
-            <FuentePill source="SAT EFOS" count={13960} countLabel={t('masthead.satEfosLabel')} />
-          </div>
-          <p className="text-xs text-zinc-500 mb-8">
-            {t('masthead.lastUpdated')}
+          {/* Overline */}
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+            RUBLI Investigations
           </p>
 
-          {/* Stat row — key numbers surface in the header, not a separate hero */}
-          <div className="flex flex-wrap gap-8 sm:gap-12 mb-8">
-            <div>
-              <AnimatedNumber
-                value={totalContracts}
-                duration={2000}
-                className="text-xl sm:text-2xl font-black text-white tabular-nums"
-              />
-              <p className="text-sm text-zinc-500 mt-1">{t('hero.contractsLabel')}</p>
+          {/* Main headline */}
+          <h1
+            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] mb-4"
+            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          >
+            {storyCount} Investigations Into Mexican Federal Procurement
+          </h1>
+
+          {/* Mission statement */}
+          <p className="text-base sm:text-lg text-zinc-400 leading-relaxed max-w-3xl mb-6">
+            Every investigation is built from real data: 3,051,294 federal contracts (2002-2025)
+            scored by a machine learning model trained on 748 documented corruption cases.
+            The numbers are the starting point. The stories are what they reveal.
+          </p>
+
+          {/* Stat strip — the three numbers that contextualize everything */}
+          <div className="flex flex-wrap gap-6 sm:gap-10 mb-6">
+            <div className="border-l-2 border-red-500 pl-3">
+              <div className="text-xl font-mono font-bold text-white tabular-nums">
+                <AnimatedNumber value={3051294} duration={2000} />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.contractsLabel')}</p>
             </div>
-            <div>
-              <span className="text-xl sm:text-2xl font-black text-white tabular-nums">
-                <AnimatedNumber value={totalValueBillions} decimals={2} prefix="$" suffix="T" duration={1800} />
-              </span>
-              <p className="text-sm text-zinc-500 mt-1">{t('hero.valueLabel')}</p>
+            <div className="border-l-2 border-amber-500 pl-3">
+              <div className="text-xl font-mono font-bold text-white tabular-nums">
+                <AnimatedNumber value={9.88} decimals={2} prefix="$" suffix="T" duration={1800} />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.valueLabel')}</p>
             </div>
-            <div>
-              <AnimatedNumber
-                value={totalCases}
-                duration={1600}
-                className="text-xl sm:text-2xl font-black text-white tabular-nums"
-              />
-              <p className="text-sm text-zinc-500 mt-1">{t('hero.casesLabel')}</p>
+            <div className="border-l-2 border-zinc-600 pl-3">
+              <div className="text-xl font-mono font-bold text-white tabular-nums">
+                <AnimatedNumber value={748} duration={1600} />
+              </div>
+              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.casesLabel')}</p>
             </div>
           </div>
 
-          {/* Crimson divider */}
-          <div className="h-[2px] w-24 bg-[#dc2626]" />
-        </motion.div>
+          {/* Source line */}
+          <p className="text-[10px] text-zinc-600 font-mono">
+            Source: COMPRANET (Secretaria de Hacienda) | Risk model v6.5 (AUC 0.828) | {t('masthead.lastUpdated')}
+          </p>
+        </motion.header>
+
+        {/* Crimson rule */}
+        <div className="h-[2px] w-full bg-gradient-to-r from-red-600 via-red-600/40 to-transparent mb-10" />
 
         {/* ================================================================ */}
-        {/* LANDING: 3 ENTRY-POINT CARDS                                     */}
+        {/* FEATURED INVESTIGATION — hero card                              */}
         {/* ================================================================ */}
         <ScrollReveal className="mb-12">
-          <p className="text-sm text-zinc-500 mb-6 uppercase tracking-widest font-semibold">
-            {t('landing.subtitle')}
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {/* Card 1 — Search a Company */}
-            <button
-              onClick={() => navigate('/explore')}
-              className={cn(
-                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
-                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
-              )}
-              aria-label={t('landing.card1Title')}
-            >
-              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#3b82f6]/10 border border-[#3b82f6]/20">
-                <Search className="h-5 w-5 text-[#3b82f6]" aria-hidden="true" />
-              </div>
-              <h3 className="text-base font-bold text-white mb-2">{t('landing.card1Title')}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card1Description')}</p>
-              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
-            </button>
-
-            {/* Card 2 — Browse Known Cases */}
-            <button
-              onClick={() => navigate('/cases')}
-              className={cn(
-                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
-                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
-              )}
-              aria-label={t('landing.card2Title')}
-            >
-              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#dc2626]/10 border border-[#dc2626]/20">
-                <FileText className="h-5 w-5 text-[#dc2626]" aria-hidden="true" />
-              </div>
-              <h3 className="text-base font-bold text-white mb-2">{t('landing.card2Title')}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card2Description')}</p>
-              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
-            </button>
-
-            {/* Card 3 — Risk Map by Sector */}
-            <button
-              onClick={() => navigate('/sectors')}
-              className={cn(
-                'group relative rounded-2xl border border-zinc-800 bg-zinc-900 p-6 text-left',
-                'hover:border-zinc-600 hover:bg-zinc-800/70 transition-all duration-200 cursor-pointer'
-              )}
-              aria-label={t('landing.card3Title')}
-            >
-              <div className="mb-4 inline-flex items-center justify-center w-10 h-10 rounded-xl bg-[#eab308]/10 border border-[#eab308]/20">
-                <Map className="h-5 w-5 text-[#eab308]" aria-hidden="true" />
-              </div>
-              <h3 className="text-base font-bold text-white mb-2">{t('landing.card3Title')}</h3>
-              <p className="text-sm text-zinc-400 leading-relaxed">{t('landing.card3Description')}</p>
-              <ArrowRight className="absolute right-5 bottom-5 h-4 w-4 text-zinc-600 group-hover:text-zinc-400 group-hover:translate-x-1 transition-all" aria-hidden="true" />
-            </button>
-          </div>
+          <FeaturedStory story={featured} />
         </ScrollReveal>
 
         {/* ================================================================ */}
-        {/* HOW TO USE RUBLI FOR JOURNALISM — 4 STEPS                        */}
+        {/* BREAKING — live ARIA T1 strip                                    */}
         {/* ================================================================ */}
-        <ScrollReveal className="mb-14">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8">
+        <BreakingStrip />
+
+        {/* ================================================================ */}
+        {/* TOPIC FILTER BAR                                                 */}
+        {/* ================================================================ */}
+        <div className="mb-8">
+          <div className="flex items-center gap-3 mb-4">
             <h2
-              className="text-lg font-bold text-white mb-6"
+              className="text-lg font-bold text-white"
               style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
             >
-              {t('landing.howTitle')}
+              All Investigations
             </h2>
-            <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6">
-              {([
-                { titleKey: 'landing.step1Title', bodyKey: 'landing.step1Body' },
-                { titleKey: 'landing.step2Title', bodyKey: 'landing.step2Body' },
-                { titleKey: 'landing.step3Title', bodyKey: 'landing.step3Body' },
-                { titleKey: 'landing.step4Title', bodyKey: 'landing.step4Body' },
-              ] as const).map((step, i) => (
-                <div key={i} className="flex gap-3">
-                  <div className="shrink-0 mt-0.5">
-                    <span
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-full text-xs font-bold"
-                      style={{ backgroundColor: '#dc2626', color: '#fff' }}
-                      aria-hidden="true"
-                    >
-                      {i + 1}
-                    </span>
-                  </div>
-                  <div>
-                    <p className="text-sm font-semibold text-zinc-200 mb-1">{t(step.titleKey)}</p>
-                    <p className="text-xs text-zinc-500 leading-relaxed">{t(step.bodyKey)}</p>
-                  </div>
-                </div>
-              ))}
-            </div>
+            <div className="h-px flex-1 bg-zinc-800" />
+            <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
+              {filtered.length} {filtered.length === 1 ? 'story' : 'stories'}
+            </span>
           </div>
-        </ScrollReveal>
 
-        {/* ================================================================ */}
-        {/* FEATURED STORY                                                    */}
-        {/* ================================================================ */}
-        <ScrollReveal className="mb-14">
-          <motion.button
-            whileHover={{ y: -2, transition: { duration: 0.15 } }}
-            whileTap={{ scale: 0.99 }}
-            onClick={() => navigate(`/stories/${featured.slug}`)}
-            className={cn(
-              'relative w-full rounded-2xl border border-zinc-800 bg-gradient-to-br from-zinc-900 via-zinc-900 to-zinc-950',
-              'p-8 sm:p-12 text-left overflow-hidden group cursor-pointer transition-colors hover:border-zinc-600'
-            )}
-          >
-            {/* Subtle accent glow */}
-            <div
-              className="absolute top-0 right-0 w-80 h-80 rounded-full opacity-[0.04] blur-3xl pointer-events-none"
-              style={{ background: '#dc2626' }}
-            />
-
-            <div className="relative z-10 flex flex-col lg:flex-row lg:items-end lg:justify-between gap-8">
-              <div className="max-w-2xl">
-                <div className="flex items-center gap-2 mb-4">
-                  <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
-                    {t('featured.label')}
-                  </span>
-                </div>
-                <h2
-                  className="text-xl sm:text-2xl font-black text-white leading-tight mb-4"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
-                >
-                  {featured.headline}
-                </h2>
-                <p className="text-lg text-zinc-400 leading-relaxed mb-6 max-w-xl">
-                  {featured.subheadline}
-                </p>
-                <span
-                  className="inline-flex items-center gap-2 text-sm font-semibold transition-colors"
-                  style={{ color: '#dc2626' }}
-                >
-                  {t('featured.readMore')} <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-                </span>
-              </div>
-
-              <div className="text-right lg:text-left flex-shrink-0">
-                <div
-                  className="text-2xl sm:text-3xl font-black leading-none"
-                  style={{ color: '#dc2626' }}
-                >
-                  <AnimatedNumber value={81.9} decimals={1} suffix="%" duration={2000} />
-                </div>
-                <p className="text-sm text-zinc-500 mt-2 max-w-[220px]">
-                  {t('featured.statSuffix')}
-                </p>
-              </div>
-            </div>
-          </motion.button>
-        </ScrollReveal>
-
-        {/* ================================================================ */}
-        {/* FILTER BAR                                                        */}
-        {/* ================================================================ */}
-        <div className="mb-8 flex flex-wrap gap-2">
-          {FILTERS.map((f) => (
-            <button
-              key={f.id}
-              onClick={() => setActiveFilter(f.id)}
-              className={cn(
-                'px-4 py-2 rounded-lg text-sm font-medium transition-all',
-                activeFilter === f.id
-                  ? 'bg-zinc-100 text-zinc-900'
-                  : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
-              )}
-            >
-              {t(f.labelKey)}
-            </button>
-          ))}
+          <div className="flex flex-wrap gap-2">
+            {TOPIC_FILTERS.map((f) => (
+              <button
+                key={f.id}
+                onClick={() => setActiveTopic(f.id)}
+                className={cn(
+                  'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all',
+                  activeTopic === f.id
+                    ? 'bg-zinc-100 text-zinc-900 font-semibold'
+                    : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
+                )}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
         </div>
 
         {/* ================================================================ */}
-        {/* BREAKING INVESTIGATIONS — live ARIA T1 feed                      */}
-        {/* ================================================================ */}
-        <BreakingInvestigations />
-
-        {/* ================================================================ */}
-        {/* STORY GRID                                                        */}
+        {/* STORY GRID                                                       */}
         {/* ================================================================ */}
         <AnimatePresence mode="wait">
           <motion.div
-            key={activeFilter}
+            key={activeTopic}
             variants={staggerContainer}
             initial="initial"
             animate="animate"
@@ -849,41 +448,38 @@ export default function Journalists() {
             className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-16"
           >
             {filtered.map((story) => (
-              <StoryCard
+              <InvestigationCard
                 key={story.slug}
-                slug={story.slug}
-                outlet={story.outlet}
-                type={story.type}
-                headline={story.headline}
-                subheadline={story.subheadline}
-                leadStatValue={story.leadStatValue}
-                leadStatLabel={story.leadStatLabel}
-                leadStatColor={story.leadStatColor}
-                estimatedMinutes={story.estimatedMinutes}
-                era={story.era}
+                story={story}
                 onClick={() => navigate(`/stories/${story.slug}`)}
               />
             ))}
             {filtered.length === 0 && (
-              <motion.p
+              <motion.div
                 variants={fadeIn}
-                className="col-span-full text-center text-zinc-500 py-16"
+                className="col-span-full py-16 text-center"
               >
-                {t('grid.noStories')}
-              </motion.p>
+                <AlertTriangle className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
+                <p className="text-sm text-zinc-500">
+                  No investigations match this filter. Try "All Investigations" to see the full archive.
+                </p>
+              </motion.div>
             )}
           </motion.div>
         </AnimatePresence>
 
         {/* ================================================================ */}
-        {/* BOTTOM SECTION                                                    */}
+        {/* METHODOLOGY FOOTER                                               */}
         {/* ================================================================ */}
         <ScrollReveal className="pb-16">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/50 p-8 sm:p-10">
-            <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-              <div>
+          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+              <div className="max-w-lg">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
+                  RUBLI Methodology
+                </p>
                 <h3
-                  className="text-xl font-bold text-white mb-2 flex items-center gap-1"
+                  className="text-xl font-bold text-white mb-3 flex items-center gap-1.5"
                   style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
                 >
                   {t('methodology.title')}
@@ -893,11 +489,11 @@ export default function Journalists() {
                     link="/methodology"
                   />
                 </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
+                <p className="text-sm text-zinc-400 leading-relaxed">
                   {t('methodology.description')}
                 </p>
               </div>
-              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0">
+              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0 sm:mt-6">
                 <button
                   onClick={() => navigate('/methodology')}
                   className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
