@@ -337,8 +337,8 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
       // Casos documentados: IMSS redes fantasma, Segalmex, COVID-19, Odebrecht
       title: 'Casos documentados: punto de partida',
       titleEn: 'Documented cases as starting points',
-      body: 'El sistema cuenta con 1,363 casos de corrupción validados, incluyendo: redes fantasma IMSS (9,366 contratos, 99% detección crítica), Segalmex (fraude en distribución alimentaria), compras COVID-19 de emergencia, y soborno Odebrecht-PEMEX.',
-      bodyEn: '1,363 validated corruption cases including: IMSS ghost companies (9,366 contracts), Segalmex food fraud, COVID-19 emergency procurement, and Odebrecht-PEMEX bribery.',
+      body: 'El sistema cuenta con 748 casos de corrupción validados (acotados por institución y período), incluyendo: redes fantasma IMSS (9,366 contratos, 99% detección crítica), Segalmex (fraude en distribución alimentaria), compras COVID-19 de emergencia, y soborno Odebrecht-PEMEX.',
+      bodyEn: '748 validated corruption cases (institution-scoped) including: IMSS ghost companies (9,366 contracts), Segalmex food fraud, COVID-19 emergency procurement, and Odebrecht-PEMEX bribery.',
       action: { label: 'Ver casos documentados', href: '/ground-truth' },
     },
     {

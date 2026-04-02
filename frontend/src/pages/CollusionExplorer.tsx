@@ -359,6 +359,15 @@ function PairCard({ pair }: { pair: CollusionPair }) {
         </div>
 
         <div className="flex items-center gap-3">
+          {pair.is_potential_collusion && (
+            <button
+              type="button"
+              onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
+              className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
+            >
+              Thread
+            </button>
+          )}
           <button
             type="button"
             onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}

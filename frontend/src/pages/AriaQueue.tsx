@@ -894,21 +894,21 @@ export default function AriaPage() {
   const PER_PAGE = 50
 
   // Stats
-  const { data: stats, isLoading: statsLoading } = useQuery<AriaStatsResponse>({
+  const { data: stats, isLoading: statsLoading, isError: statsError } = useQuery<AriaStatsResponse>({
     queryKey: ['aria-stats'],
     queryFn: () => ariaApi.getStats(),
     staleTime: 5 * 60_000,
   })
 
   // Tier 1 spotlight
-  const { data: tier1Data, isLoading: tier1Loading } = useQuery({
+  const { data: tier1Data, isLoading: tier1Loading, isError: tier1Error } = useQuery({
     queryKey: ['aria-queue', { tier: 1, novelOnly }],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 12, novel_only: novelOnly || undefined }),
     staleTime: 5 * 60_000,
   })
 
   // Full leads table
-  const { data: leadsData, isLoading: leadsLoading } = useQuery({
+  const { data: leadsData, isLoading: leadsLoading, isError: leadsError } = useQuery({
     queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, reviewStatusFilter }],
     queryFn: () =>
       ariaApi.getQueue({
@@ -944,6 +944,24 @@ export default function AriaPage() {
   const todayStr = new Intl.DateTimeFormat(locale, {
     day: 'numeric', month: 'long', year: 'numeric',
   }).format(new Date())
+
+  if (statsError || (tier1Error && leadsError)) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <div className="text-center max-w-sm px-4">
+          <p className="text-xs font-mono uppercase tracking-widest text-red-500 mb-2">Connection Error</p>
+          <p className="text-lg font-bold text-zinc-100 mb-2">ARIA is unavailable</p>
+          <p className="text-sm text-zinc-500">The investigation queue could not be loaded. The backend may be restarting — try refreshing in a moment.</p>
+          <button
+            onClick={() => window.location.reload()}
+            className="mt-4 px-4 py-2 rounded bg-zinc-800 text-zinc-300 text-xs font-mono hover:bg-zinc-700 transition-colors"
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background">

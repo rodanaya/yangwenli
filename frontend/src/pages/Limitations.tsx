@@ -50,9 +50,9 @@ const LIMITATIONS = [
     icon: BarChart3,
     title: 'Training Data Bias — Three Cases Dominate',
     severity: 'high',
-    summary: 'The v6.5 risk model was trained on 1,363 documented corruption cases (911 vendors), but the signal remains concentrated in health/agriculture mega-cases despite per-vendor capping.',
+    summary: 'The v6.5 risk model was trained on 748 institution-scoped corruption cases (603 vendors), but the signal remains concentrated in health/agriculture mega-cases despite per-vendor capping.',
     body: [
-      'The v6.5 model expanded ground truth to 1,363 cases and 911 vendors across all 12 sectors, with institution-scoped windowed labels and a per-vendor cap on training contracts. However, the training signal is still concentrated:',
+      'The v6.5 model uses 748 windowed, institution-scoped cases and 603 vendors across all 12 sectors, with a per-vendor cap on training contracts. However, the training signal is still concentrated:',
       'The IMSS, Segalmex, DICONSA/LICONSA, and COVID-19 ecosystems still contribute a disproportionate share of positive training data. These cases all involve large, concentrated vendors in the health/agriculture sectors. The model has effectively learned: large vendor + high concentration + same institution = risk.',
       'Corruption that doesn\'t match this pattern is systematically underdetected. A local official awarding contracts to a family member\'s new shell company — few contracts, small amounts, not concentrated — may score low because it doesn\'t resemble IMSS Pisa.',
       'EFOS ghost company detection improved significantly: Case 22 (SAT Art. 69-B Definitivo, 38 RFC-confirmed ghost companies) is in the training set. However, the fundamental detection gap persists for small-shell vendors with very few contracts per RFC (avg 3), unlike the large concentrated vendors that dominate training data.',

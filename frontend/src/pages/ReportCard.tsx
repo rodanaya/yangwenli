@@ -1041,8 +1041,8 @@ function ReportCard() {
   const totalValueMxn: number | null = dashData?.overview?.total_value_mxn ?? national.total_value_mxn ?? null
   const totalContracts: number | null = dashData?.overview?.total_contracts ?? national.total_contracts ?? null
 
-  // Ground truth cases count -- hardcoded known value (1363 cases as of Mar 26, 2026)
-  const GT_CASES_COUNT = 1363
+  // Ground truth cases count -- institution-scoped windowed cases (v6.5 model)
+  const GT_CASES_COUNT = 748
 
   return (
     <main className="min-h-screen bg-zinc-950" id="main-content">
