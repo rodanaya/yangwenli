@@ -4,7 +4,6 @@
   "subtitle": "Comparing procurement risk, direct award rates, and high-risk contracts across five presidential terms. Higher direct awards and risk scores indicate weaker competitive safeguards.",
   "loading": "Loading timeline data…",
   "error": "Error loading data",
-
   "sexenio": {
     "heading": "Administration comparison",
     "description": "Each bar represents a full presidential term (sexenio). Click a metric below to switch the view.",
@@ -14,12 +13,10 @@
     "metricAriaLabel": "Select comparison metric",
     "dataSource": "Source: COMPRANET 2001–2025 · RUBLI v6.5"
   },
-
   "insights": {
     "heading": "Key findings",
     "ariaLabel": "Key insight callouts"
   },
-
   "insight": {
     "directAward": {
       "label": "AMLO direct awards",
@@ -34,10 +31,10 @@
       "body": "{{amloHighRisk}}% of AMLO-era contracts score as high or critical risk, compared to {{foxHighRisk}}% under Fox. RUBLI risk scores reflect similarity to documented corruption patterns."
     }
   },
-
   "timeline": {
     "heading": "Year-by-year risk trend (2006–2025)",
     "description": "Red line: avg risk score. Orange area: % high-risk contracts. Blue dashed: direct award rate. Dashed vertical lines mark major procurement scandals.",
     "footnote": "Risk scores measure similarity to documented corruption patterns — not proof of wrongdoing. Direct award data before 2010 is incomplete (Structure A coverage gap)."
-  }
+  },
+  "noData": "No data"
 }

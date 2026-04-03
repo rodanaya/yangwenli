@@ -161,7 +161,7 @@ function HHIChart({ institutions, onSelect, t }: HHIChartProps) {
 
 export default function InstitutionHeatmap() {
   const navigate = useNavigate()
-  const { i18n } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
   const lang = i18n.language
 
   const [activeTab, setActiveTab] = useState<'sankey' | 'hhi'>('sankey')
@@ -257,9 +257,7 @@ export default function InstitutionHeatmap() {
     return (
       <div className="flex items-center justify-center h-64">
         <div className="text-slate-400 animate-pulse">
-          {lang === 'es'
-            ? 'Cargando mapa de riesgo institucional\u2026'
-            : 'Loading institutional risk map\u2026'}
+          {t('heatmap.loading')}
         </div>
       </div>
     )
@@ -270,7 +268,7 @@ export default function InstitutionHeatmap() {
       <div className="flex items-center justify-center h-64 gap-3 text-red-400">
         <AlertTriangle size={20} />
         <span>
-          {lang === 'es' ? 'Error cargando datos' : 'Error loading data'}
+          {t('heatmap.errorLoading')}
         </span>
       </div>
     )
@@ -321,9 +319,7 @@ export default function InstitutionHeatmap() {
           label={
             mostConcentrated
               ? shortName(mostConcentrated.institution_name)
-              : lang === 'es'
-              ? 'Sin datos'
-              : 'No data'
+              : t('heatmap.noData')
           }
           annotation={
             lang === 'es'
@@ -339,9 +335,7 @@ export default function InstitutionHeatmap() {
           label={
             highestRisk
               ? shortName(highestRisk.institution_name)
-              : lang === 'es'
-              ? 'Sin datos'
-              : 'No data'
+              : t('heatmap.noData')
           }
           annotation={
             lang === 'es' ? 'Riesgo promedio m\u00e1s alto' : 'Highest average risk'
@@ -506,9 +500,7 @@ export default function InstitutionHeatmap() {
                 <MoneySankeyChart flows={flows} height={560} />
               ) : (
                 <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
-                  {lang === 'es'
-                    ? 'Sin flujos para este filtro'
-                    : 'No flows for this filter'}
+                  {t('heatmap.noFlows')}
                 </div>
               )}
             </div>
@@ -575,9 +567,7 @@ export default function InstitutionHeatmap() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
-                  {lang === 'es'
-                    ? 'Sin datos de instituciones'
-                    : 'No institution data'}
+                  {t('heatmap.noInstitutions')}
                 </div>
               )}
             </div>
@@ -633,9 +623,7 @@ export default function InstitutionHeatmap() {
           </button>
           {criticalOnly && filteredRiskInstitutions.length === 0 && (
             <span className="text-xs text-zinc-500">
-              {lang === 'es'
-                ? 'No hay instituciones con riesgo cr\u00edtico en la muestra actual.'
-                : 'No institutions with critical risk in the current sample.'}
+              {t('heatmap.noCritical')}
             </span>
           )}
         </div>

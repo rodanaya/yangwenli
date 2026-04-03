@@ -25,7 +25,13 @@
     "directAward": "Direct Award",
     "singleBid": "Single Bid",
     "concentration": "Concentration",
-    "topVendor": "Top Vendor"
+    "topVendor": "Top Vendor",
+    "loading": "Loading institutional risk map…",
+    "errorLoading": "Error loading data",
+    "noData": "No data",
+    "noFlows": "No flows for this filter",
+    "noInstitutions": "No institution data",
+    "noCritical": "No institutions with critical risk in the current sample."
   },
   "scatter": {
     "vendorConcentration": "Vendor Concentration",

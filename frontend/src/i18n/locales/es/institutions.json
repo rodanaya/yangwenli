@@ -25,7 +25,13 @@
     "directAward": "Adj. Directa",
     "singleBid": "Licitación Única",
     "concentration": "Concentración",
-    "topVendor": "Proveedor Top"
+    "topVendor": "Proveedor Top",
+    "loading": "Cargando mapa de riesgo institucional…",
+    "errorLoading": "Error cargando datos",
+    "noData": "Sin datos",
+    "noFlows": "Sin flujos para este filtro",
+    "noInstitutions": "Sin datos de instituciones",
+    "noCritical": "No hay instituciones con riesgo crítico en la muestra actual."
   },
   "scatter": {
     "vendorConcentration": "Concentración de Proveedores",

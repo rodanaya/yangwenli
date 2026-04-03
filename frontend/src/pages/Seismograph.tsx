@@ -653,7 +653,7 @@ export default function Seismograph() {
                 if (!row) return (
                   <div key={elYear} className="flex items-center gap-3 py-1 px-2 text-xs text-slate-500">
                     <span className="font-mono w-10">{elYear}</span>
-                    <span>{lang === 'es' ? 'Sin datos' : 'No data'}</span>
+                    <span>{t('noData')}</span>
                   </div>
                 )
                 const riskColor = row.avg_risk >= 0.25 ? '#f87171' : row.avg_risk >= 0.15 ? '#fb923c' : '#fbbf24'

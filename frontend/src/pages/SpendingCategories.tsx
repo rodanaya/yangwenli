@@ -224,6 +224,7 @@ function CategoryDetailPanel({
   onClose: () => void
   onNavigate: (path: string) => void
 }) {
+  const { t } = useTranslation('spending')
   const maxValue = pairs[0]?.total_value ?? 1
 
   return (
@@ -271,7 +272,7 @@ function CategoryDetailPanel({
           </div>
         ) : pairs.length === 0 ? (
           <p className="text-xs text-text-muted text-center py-8 px-4">
-            No hay datos de proveedor-instituci\u00f3n disponibles para esta categor\u00eda.
+            {t('table.noPairData')}
           </p>
         ) : (
           <>
@@ -956,7 +957,7 @@ export default function SpendingCategories() {
               y qu\u00e9 tipos de bienes y servicios presentan los patrones m\u00e1s sospechosos.
             </>
           ) : (
-            'Cargando an\u00e1lisis de categor\u00edas de gasto\u2026'
+            {t('hero.loading')}
           )}
         </p>
         <div className="mt-2">

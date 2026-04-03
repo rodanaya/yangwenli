@@ -2,7 +2,8 @@
   "hero": {
     "trackingLabel": "SPENDING CATEGORIES",
     "subtitle": "What Mexico buys — spending categories from government procurement",
-    "detail": "72 regex-based categories classify 3.1M contracts (2002-2025) by title with accent-aware matching. Coverage: ~84% specific, ~16% unclassified."
+    "detail": "72 regex-based categories classify 3.1M contracts (2002-2025) by title with accent-aware matching. Coverage: ~84% specific, ~16% unclassified.",
+    "loading": "Loading spending category analysis…"
   },
   "stats": {
     "totalCategories": "TOTAL CATEGORIES",
@@ -34,7 +35,8 @@
     "colAvgRisk": "Avg Risk",
     "colDA": "DA%",
     "colTopVendor": "Top Vendor",
-    "empty": "No categories found. Category data may not be available yet."
+    "empty": "No categories found. Category data may not be available yet.",
+    "noPairData": "No vendor-institution data available for this category."
   },
   "trends": {
     "title": "Spending Trends — Top 5 Categories",
