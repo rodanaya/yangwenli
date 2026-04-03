@@ -6,6 +6,7 @@
  * metric table, top-vendor comparison, and risk distribution.
  */
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -481,6 +482,7 @@ function TopVendorsComparison({
   totalA: number
   totalB: number
 }) {
+  const { t } = useTranslation('institutions')
   const top5A = vendorsA.slice(0, 5)
   const top5B = vendorsB.slice(0, 5)
 
@@ -504,7 +506,7 @@ function TopVendorsComparison({
           {instName}
         </h4>
         {vendors.length === 0 ? (
-          <p className="text-xs text-text-muted italic">Sin datos de proveedores</p>
+          <p className="text-xs text-text-muted italic">{t('profile.noVendorData')}</p>
         ) : (
           <div className="space-y-2">
             {vendors.map((v, idx) => {

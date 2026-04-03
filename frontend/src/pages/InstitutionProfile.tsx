@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -206,6 +207,7 @@ function buildEditorialLedeText(inst: {
 // ---- Main component ----
 
 export function InstitutionProfile() {
+  const { t } = useTranslation('institutions')
   const { id } = useParams<{ id: string }>()
   const institutionId = Number(id)
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
@@ -466,11 +468,11 @@ export function InstitutionProfile() {
         <div className="flex h-16 w-16 items-center justify-center rounded-full bg-background-elevated border border-border/40 mb-4">
           <Building2 className="h-8 w-8 text-text-muted" aria-hidden="true" />
         </div>
-        <h2 className="text-lg font-semibold mb-2">Institucion no encontrada</h2>
+        <h2 className="text-lg font-semibold mb-2">{t('profile.notFound')}</h2>
         <p className="text-sm text-text-muted mb-6 max-w-sm">
           {institutionError
-            ? `Error al cargar la institucion: ${(institutionError as Error).message ?? 'Error desconocido'}`
-            : <>La institucion con ID <span className="font-mono text-accent">{institutionId || id}</span> no pudo ser localizada.</>
+            ? t('profile.loadError', { message: (institutionError as Error).message ?? 'Error desconocido' })
+            : <>{t('profile.notFoundDesc', { id: String(institutionId || id) })}</>
           }
         </p>
         <Link to="/institutions/health">
@@ -777,7 +779,7 @@ export function InstitutionProfile() {
                         {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-6" />)}
                       </div>
                     ) : riskProfileError ? (
-                      <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar datos de riesgo.</p>
+                      <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingRisk')}</p>
                     ) : riskDistribution.length > 0 ? (
                       <div className="space-y-2.5">
                         {riskDistribution.map((r) => (
@@ -799,13 +801,13 @@ export function InstitutionProfile() {
                         ))}
                         {riskProfile?.effective_risk != null && (
                           <div className="mt-3 pt-3 border-t border-border/30 flex justify-between text-xs">
-                            <span className="text-text-muted">Riesgo efectivo</span>
+                            <span className="text-text-muted">{t('profile.effectiveRiskLabel')}</span>
                             <span className="font-bold font-mono" style={{ color: riskColor }}>{formatPercentSafe(riskProfile.effective_risk, true)}</span>
                           </div>
                         )}
                       </div>
                     ) : (
-                      <p className="text-xs text-text-muted">Sin datos de riesgo</p>
+                      <p className="text-xs text-text-muted">{t('profile.noRiskData')}</p>
                     )}
                   </CardContent>
                 </div>
@@ -816,7 +818,7 @@ export function InstitutionProfile() {
                     <CardHeader className="pb-2 pt-4">
                       <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                         <Shield className="h-3.5 w-3.5 text-accent" />
-                        Calificacion de integridad
+                        {t('profile.integrityScoreLabel')}
                         <GradeBadge10 grade={scorecard.grade} size="sm" />
                       </CardTitle>
                     </CardHeader>
@@ -869,11 +871,11 @@ export function InstitutionProfile() {
                     {vendorsLoading ? (
                       <div className="space-y-2">{[...Array(6)].map((_, i) => <Skeleton key={i} className="h-8" />)}</div>
                     ) : vendorsError ? (
-                      <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar proveedores.</p>
+                      <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingVendors')}</p>
                     ) : vendors?.data?.length ? (
                       <VendorRankedList vendors={vendors.data.slice(0, 10)} totalValue={totalValue} />
                     ) : (
-                      <p className="text-sm text-text-muted">Sin datos de proveedores</p>
+                      <p className="text-sm text-text-muted">{t('profile.noVendorData')}</p>
                     )}
                   </CardContent>
                 </div>
@@ -954,7 +956,7 @@ export function InstitutionProfile() {
                 {timelineLoading ? (
                   <Skeleton className="h-40" />
                 ) : timelineError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar linea de tiempo.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingTimeline')}</p>
                 ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
                   <div className="relative" ref={riskTimelineChartRef}>
                     <ChartDownloadButton
@@ -983,7 +985,7 @@ export function InstitutionProfile() {
               </CardHeader>
               <CardContent className="pb-4">
                 {waterfallDataError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar desglose de riesgo.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingRisk')}</p>
                 ) : waterfallLoading ? (
                   <Skeleton className="h-48" />
                 ) : waterfallData?.features?.length > 0 ? (
@@ -1017,7 +1019,7 @@ export function InstitutionProfile() {
                     {[...Array(3)].map((_, i) => <div key={i} className="space-y-1"><div className="h-3 w-24 bg-background-elevated rounded" /><div className="h-2 bg-background-elevated rounded" /></div>)}
                   </div>
                 ) : peerError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar datos de pares.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingPeers')}</p>
                 ) : peerComparison?.metrics?.length ? (
                   <div className="space-y-3.5">
                     {peerComparison.metrics.map((m) => {
@@ -1103,7 +1105,7 @@ export function InstitutionProfile() {
                 ) : vendors?.data?.length ? (
                   <VendorTreemapLazy vendors={vendors.data} totalInstitutionValue={totalValue} />
                 ) : (
-                  <p className="text-xs text-text-muted">Sin datos de proveedores</p>
+                  <p className="text-xs text-text-muted">{t('profile.noVendorData')}</p>
                 )}
               </CardContent>
             </div>
@@ -1121,7 +1123,7 @@ export function InstitutionProfile() {
                 {loyaltyLoading ? (
                   <Skeleton className="h-32" />
                 ) : loyaltyError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar datos de lealtad.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingLoyalty')}</p>
                 ) : vendorLoyalty && vendorLoyalty.vendors.length > 0 ? (
                   <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
                     <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" />
@@ -1192,7 +1194,7 @@ export function InstitutionProfile() {
                 {categoriesLoading ? (
                   <div className="space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-7" />)}</div>
                 ) : (topCategories?.data ?? []).length === 0 ? (
-                  <p className="text-sm text-text-muted">Sin datos de categorias</p>
+                  <p className="text-sm text-text-muted">{t('profile.noCategoryData')}</p>
                 ) : (
                   <div className="space-y-1.5">
                     {(topCategories?.data ?? []).map((cat: { category_id: number; name_en: string; name_es: string; code: string; contract_count: number; total_value_mxn: number; avg_risk_score: number; direct_award_pct: number }) => {
@@ -1229,12 +1231,12 @@ export function InstitutionProfile() {
               </div>
             ) : officialsError ? (
               <div className="card-elevated p-6 text-center">
-                <p className="text-xs text-rose-400/80">Error al cargar datos de funcionarios.</p>
+                <p className="text-xs text-rose-400/80">{t('profile.errorLoadingOfficials')}</p>
               </div>
             ) : !officialsData?.data_available || sortedOfficials.length === 0 ? (
               <div className="card-elevated p-8 text-center">
                 <UserCheck className="h-8 w-8 text-text-muted mx-auto mb-3" />
-                <p className="text-sm text-text-muted">Sin datos de funcionarios para esta institucion</p>
+                <p className="text-sm text-text-muted">{t('profile.noOfficialsData')}</p>
                 {officialsData?.note && (
                   <p className="text-[10px] text-text-muted/60 mt-2 max-w-md mx-auto">{officialsData.note}</p>
                 )}
@@ -1343,7 +1345,7 @@ export function InstitutionProfile() {
                 {timelineLoading ? (
                   <Skeleton className="h-56" />
                 ) : timelineError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar linea de tiempo.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingTimeline')}</p>
                 ) : (riskTimeline?.timeline?.length ?? 0) > 1 ? (
                   <div className="relative" ref={spendingChartRef}>
                     <ChartDownloadButton targetRef={spendingChartRef} filename={`institution-${institutionId}-spending`} className="absolute top-0 right-0 z-10" />
@@ -1370,7 +1372,7 @@ export function InstitutionProfile() {
               </CardHeader>
               <CardContent className="p-0 pb-1">
                 {highRiskContractsError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar contratos de alto riesgo.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingContracts')}</p>
                 ) : highRiskLoading ? (
                   <div className="p-4 space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 ) : highRiskContracts?.data?.length ? (
@@ -1380,7 +1382,7 @@ export function InstitutionProfile() {
                     ))}
                   </div>
                 ) : (
-                  <p className="p-4 text-sm text-text-muted">Sin contratos encontrados</p>
+                  <p className="p-4 text-sm text-text-muted">{t('profile.noContractsFound')}</p>
                 )}
               </CardContent>
             </div>
@@ -1402,7 +1404,7 @@ export function InstitutionProfile() {
                 {recentLoading ? (
                   <div className="p-4 space-y-2">{[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10" />)}</div>
                 ) : contractsError ? (
-                  <p className="text-xs text-rose-400/80 p-4 text-center">Error al cargar contratos.</p>
+                  <p className="text-xs text-rose-400/80 p-4 text-center">{t('profile.errorLoadingContracts')}</p>
                 ) : recentContracts?.data?.length ? (
                   <ScrollArea className="max-h-[280px]">
                     <div className="divide-y divide-border/30">
@@ -1412,7 +1414,7 @@ export function InstitutionProfile() {
                     </div>
                   </ScrollArea>
                 ) : (
-                  <p className="p-4 text-sm text-text-muted">Sin contratos encontrados</p>
+                  <p className="p-4 text-sm text-text-muted">{t('profile.noContractsFound')}</p>
                 )}
               </CardContent>
             </div>
@@ -1432,7 +1434,7 @@ export function InstitutionProfile() {
               </CardHeader>
               <CardContent>
                 {asfDataError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar hallazgos ASF.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingAudit')}</p>
                 ) : asfLoading ? (
                   <div className="space-y-2">
                     <Skeleton className="h-12" />
@@ -1440,7 +1442,7 @@ export function InstitutionProfile() {
                     <Skeleton className="h-8" />
                   </div>
                 ) : !asfData || asfData.findings.length === 0 ? (
-                  <p className="text-sm text-text-muted">Sin hallazgos de auditoria ASF registrados</p>
+                  <p className="text-sm text-text-muted">{t('profile.noAuditFindings')}</p>
                 ) : (
                   <div className="space-y-4">
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
@@ -1510,7 +1512,7 @@ export function InstitutionProfile() {
               <div className="card-elevated">
                 <CardContent className="pt-5 pb-4">
                   {sectorCasesError ? (
-                    <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar escandalos del sector.</p>
+                    <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingScandals')}</p>
                   ) : (
                     <>
                       <div className="flex items-center gap-2 mb-3">
@@ -1827,7 +1829,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
                         border: count > 0 ? `1px solid ${color}50` : '1px solid transparent',
                         color: count > 0 ? color : 'transparent',
                       }}
-                      title={count > 0 ? `${count} contratos \u00B7 riesgo ${(risk * 100).toFixed(0)}%` : 'Sin contratos'}
+                      title={count > 0 ? t('profile.contractsRiskTooltip', { count, risk: (risk * 100).toFixed(0) }) : t('profile.noContractsTooltip')}
                     >
                       {count > 0 ? count : ''}
                     </div>
@@ -1977,7 +1979,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
   asfFindings: Array<{ year: number; amount_mxn?: number; observations_total?: number }>
 }) {
   if (timeline.length === 0 && asfFindings.length === 0) {
-    return <p className="text-xs text-text-muted py-4 text-center">Sin eventos de registros externos</p>
+    return <p className="text-xs text-text-muted py-4 text-center">{t('profile.noExternalEvents')}</p>
   }
 
   const allYears = new Set<number>()
@@ -2042,7 +2044,7 @@ function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
   }, [])
 
   if (loadError) {
-    return <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar el mapa de concentracion.</p>
+    return <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingConcentration')}</p>
   }
 
   if (!TreemapComp) {
