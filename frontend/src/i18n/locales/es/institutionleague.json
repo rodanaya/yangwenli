@@ -1,28 +1,41 @@
 {
   "eyebrow": "LIGA DE TRANSPARENCIA INSTITUCIONAL",
   "title": "Liga de Transparencia Institucional",
-  "subtitle": "Clasificaciones basadas en tasa de competencia, licitaciones únicas, equidad de precios e indicadores de riesgo en {{total}} instituciones evaluadas",
+  "subtitle": "Clasificaciones basadas en tasa de competencia, licitaciones unicas, equidad de precios e indicadores de riesgo en {{total}} instituciones evaluadas",
   "podiumTitle": "Mejores Instituciones",
-  "podiumSubtitle": "Instituciones con las puntuaciones de transparencia más altas",
-  "tableTitle": "Clasificación Completa",
+  "podiumSubtitle": "Instituciones con las puntuaciones de transparencia mas altas",
+  "tableTitle": "Clasificacion Completa",
   "filters": {
     "searchPlaceholder": "Buscar instituciones...",
     "sectorLabel": "Sector",
     "allSectors": "Todos los sectores",
-    "minContracts": "Contratos mínimos",
-    "sortBy": "Ordenar por"
+    "allGrades": "Todas las calificaciones",
+    "minContracts": "Contratos minimos",
+    "sortBy": "Ordenar por",
+    "adjustFilters": "Intenta ajustar los filtros o la busqueda."
   },
   "stats": {
     "totalScored": "Instituciones Evaluadas",
-    "medianScore": "Puntuación Mediana",
-    "topPerformer": "Mejor Institución",
-    "worstPerformer": "Institución Más Débil"
+    "medianScore": "Puntuacion Mediana",
+    "topPerformer": "Mejor Institucion",
+    "worstPerformer": "Institucion Mas Debil",
+    "gradeDistribution": "Distribucion de Calificaciones",
+    "institutionsCount": "{{num}} instituciones",
+    "scoreOutOf": "de 100",
+    "findingCritical": "Solo el {{pct}}% de instituciones obtiene B o superior. {{count}} estan senaladas como criticas.",
+    "findingNormal": "Solo el {{pct}}% de instituciones obtiene B o superior entre {{total}} agencias evaluadas."
   },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageOf": "Pagina {{page}} de {{total}}"
+  },
+  "hallazgo": "HALLAZGO",
   "columns": {
     "rank": "#",
-    "institution": "Institución",
-    "grade": "Calificación",
-    "score": "Puntuación",
+    "institution": "Institucion",
+    "grade": "Calificacion",
+    "score": "Puntuacion",
     "sector": "Sector",
     "contracts": "Contratos",
     "pillarOpenness": "Apertura",
@@ -35,14 +48,14 @@
   },
   "grades": {
     "S": "Ejemplar",
-    "A": "Sólido",
+    "A": "Solido",
     "B+": "Bueno",
     "B": "Adecuado",
     "C+": "Vigilancia",
     "C": "Preocupante",
     "D": "Alto Riesgo",
     "D-": "Riesgo Muy Alto",
-    "F": "Crítico",
+    "F": "Critico",
     "F-": "Bandera Roja"
   },
   "trend": {
@@ -62,7 +75,7 @@
     "process": "Integridad del Proceso",
     "external": "Alertas Externas"
   },
-  "empty": "Ninguna institución coincide con los filtros actuales.",
+  "empty": "Ninguna institucion coincide con los filtros actuales.",
   "loading": "Cargando clasificaciones institucionales...",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
   "viewProfile": "Ver perfil",

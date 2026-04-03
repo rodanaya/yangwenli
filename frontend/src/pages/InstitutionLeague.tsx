@@ -92,20 +92,20 @@ type SortKey =
 // Grade helpers
 // ---------------------------------------------------------------------------
 
-const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
-  S:    { text: 'text-emerald-300', bg: 'bg-emerald-900/40', border: 'border-emerald-700/50' },
-  A:    { text: 'text-green-300',   bg: 'bg-green-900/40',   border: 'border-green-700/50'   },
-  'B+': { text: 'text-lime-300',    bg: 'bg-lime-900/40',    border: 'border-lime-700/50'    },
-  B:    { text: 'text-yellow-300',  bg: 'bg-yellow-900/40',  border: 'border-yellow-700/50'  },
-  'C+': { text: 'text-amber-300',   bg: 'bg-amber-900/40',   border: 'border-amber-700/50'   },
-  C:    { text: 'text-orange-300',  bg: 'bg-orange-900/40',  border: 'border-orange-700/50'  },
-  D:    { text: 'text-red-300',     bg: 'bg-red-900/40',     border: 'border-red-700/50'     },
-  'D-': { text: 'text-red-400',     bg: 'bg-red-900/50',     border: 'border-red-700/50'     },
-  F:    { text: 'text-red-400',     bg: 'bg-red-950/60',     border: 'border-red-800/50'     },
-  'F-': { text: 'text-red-500',     bg: 'bg-red-950/70',     border: 'border-red-800/60'     },
+const GRADE_COLORS: Record<string, { text: string; bg: string; border: string; solid: string; glow: string }> = {
+  S:    { text: 'text-emerald-300', bg: 'bg-emerald-900/40', border: 'border-emerald-700/50', solid: '#34d399', glow: 'shadow-emerald-500/30' },
+  A:    { text: 'text-green-300',   bg: 'bg-green-900/40',   border: 'border-green-700/50',   solid: '#4ade80', glow: 'shadow-green-500/30'   },
+  'B+': { text: 'text-lime-300',    bg: 'bg-lime-900/40',    border: 'border-lime-700/50',    solid: '#a3e635', glow: 'shadow-lime-500/20'    },
+  B:    { text: 'text-yellow-300',  bg: 'bg-yellow-900/40',  border: 'border-yellow-700/50',  solid: '#facc15', glow: 'shadow-yellow-500/20'  },
+  'C+': { text: 'text-amber-300',   bg: 'bg-amber-900/40',   border: 'border-amber-700/50',   solid: '#fbbf24', glow: 'shadow-amber-500/20'   },
+  C:    { text: 'text-orange-300',  bg: 'bg-orange-900/40',  border: 'border-orange-700/50',  solid: '#fb923c', glow: 'shadow-orange-500/20'  },
+  D:    { text: 'text-red-300',     bg: 'bg-red-900/40',     border: 'border-red-700/50',     solid: '#f87171', glow: 'shadow-red-500/20'     },
+  'D-': { text: 'text-red-400',     bg: 'bg-red-900/50',     border: 'border-red-700/50',     solid: '#ef4444', glow: 'shadow-red-500/25'     },
+  F:    { text: 'text-red-400',     bg: 'bg-red-950/60',     border: 'border-red-800/50',     solid: '#dc2626', glow: 'shadow-red-600/30'     },
+  'F-': { text: 'text-red-500',     bg: 'bg-red-950/70',     border: 'border-red-800/60',     solid: '#991b1b', glow: 'shadow-red-700/30'     },
 }
 
-const GRADE_FALLBACK = { text: 'text-zinc-400', bg: 'bg-zinc-800/40', border: 'border-zinc-700/50' }
+const GRADE_FALLBACK = { text: 'text-zinc-400', bg: 'bg-zinc-800/40', border: 'border-zinc-700/50', solid: '#71717a', glow: '' }
 
 function gradeClasses(grade: string) {
   const g = GRADE_COLORS[grade] ?? GRADE_COLORS[grade.charAt(0)] ?? GRADE_FALLBACK
@@ -116,6 +116,14 @@ function gradeTextClass(grade: string): string {
   return (GRADE_COLORS[grade] ?? GRADE_COLORS[grade.charAt(0)] ?? GRADE_FALLBACK).text
 }
 
+function gradeSolid(grade: string): string {
+  return (GRADE_COLORS[grade] ?? GRADE_COLORS[grade.charAt(0)] ?? GRADE_FALLBACK).solid
+}
+
+function gradeGlow(grade: string): string {
+  return (GRADE_COLORS[grade] ?? GRADE_COLORS[grade.charAt(0)] ?? GRADE_FALLBACK).glow
+}
+
 function TrendIcon({ direction }: { direction: string | null }) {
   if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label="Improving" />
   if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-red-400" aria-label="Declining" />
@@ -123,42 +131,37 @@ function TrendIcon({ direction }: { direction: string | null }) {
 }
 
 // ---------------------------------------------------------------------------
-// Score progress bar
+// Pillar value (colored number, no bar)
 // ---------------------------------------------------------------------------
 
-function ScoreBar({ score, color }: { score: number; color: string }) {
+function PillarValue({ value, max }: { value: number; max: number }) {
+  const pct = (value / max) * 100
+  const color = pct > 70 ? 'text-green-400' : pct > 40 ? 'text-amber-400' : 'text-red-400'
   return (
-    <div className="flex items-center gap-2">
-      <div className="w-20 h-1.5 bg-zinc-800 rounded-full overflow-hidden" role="presentation">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${Math.min(100, score)}%`, backgroundColor: color }}
-        />
-      </div>
-      <span className="text-zinc-200 tabular-nums text-xs font-mono w-8 text-right">{score.toFixed(1)}</span>
-    </div>
+    <span className={`text-xs font-mono font-bold tabular-nums ${color}`}>
+      {value.toFixed(1)}
+    </span>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Pillar mini-bar (compact, single-value)
+// Risk driver pill
 // ---------------------------------------------------------------------------
 
-function PillarBar({ value, max }: { value: number; max: number }) {
-  const pct = Math.min(100, (value / max) * 100)
-  const hue = pct > 70 ? '#4ade80' : pct > 40 ? '#eab308' : '#f87171'
+function RiskDriverPill({ driver }: { driver: string }) {
   return (
-    <div className="w-12 h-1 bg-zinc-800 rounded-full overflow-hidden" role="presentation">
-      <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: hue }} />
-    </div>
+    <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-[9px] text-red-400 font-mono uppercase tracking-wide mt-0.5">
+      <span className="h-1 w-1 rounded-full bg-red-500 flex-shrink-0" />
+      {driver}
+    </span>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Grade distribution strip
+// Grade distribution bar (full stacked bar with labels)
 // ---------------------------------------------------------------------------
 
-function GradeDistributionStrip({ distribution }: { distribution: Record<string, number> }) {
+function GradeDistributionBar({ distribution, t }: { distribution: Record<string, number>; t: (key: string) => string }) {
   const total = Object.values(distribution).reduce((s, n) => s + n, 0)
   if (total === 0) return null
 
@@ -176,35 +179,51 @@ function GradeDistributionStrip({ distribution }: { distribution: Record<string,
   ]
 
   return (
-    <div className="space-y-2">
-      <div className="flex rounded-full overflow-hidden h-2.5 gap-[1px]" role="img" aria-label="Grade distribution">
+    <div className="space-y-3">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+        {t('stats.gradeDistribution')}
+      </p>
+      {/* Stacked bar */}
+      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label={t('stats.gradeDistribution')}>
         {segments.map(({ grade, count, color }) => {
           const pct = (count / total) * 100
-          if (pct < 0.5) return null
+          if (pct < 0.3) return null
           return (
             <div
               key={grade}
-              style={{ width: `${pct}%`, backgroundColor: color, minWidth: '3px', opacity: 0.85 }}
+              className="relative flex items-center justify-center overflow-hidden transition-all hover:opacity-100"
+              style={{ width: `${pct}%`, backgroundColor: color, minWidth: '4px', opacity: 0.9 }}
               title={`${grade}: ${count} (${pct.toFixed(1)}%)`}
-            />
+            >
+              {pct > 5 && (
+                <span className="text-[10px] font-mono font-black text-black/70 leading-none select-none">
+                  {grade}
+                </span>
+              )}
+            </div>
           )
         })}
       </div>
-      <div className="flex flex-wrap gap-x-3 gap-y-0.5">
-        {segments.filter(s => s.count > 0).map(({ grade, count, color }) => (
-          <span key={grade} className="flex items-center gap-1 text-[10px] text-zinc-500">
-            <span className="w-1.5 h-1.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
-            <span className="font-mono font-bold" style={{ color }}>{grade}</span>
-            <span className="tabular-nums">{count}</span>
-          </span>
-        ))}
+      {/* Legend */}
+      <div className="flex flex-wrap gap-x-4 gap-y-1">
+        {segments.filter(s => s.count > 0).map(({ grade, count, color }) => {
+          const pct = ((count / total) * 100).toFixed(1)
+          return (
+            <span key={grade} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: color }} />
+              <span className="font-mono font-bold" style={{ color }}>{grade}</span>
+              <span className="tabular-nums text-zinc-500">{count}</span>
+              <span className="tabular-nums text-zinc-600">({pct}%)</span>
+            </span>
+          )
+        })}
       </div>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Podium card
+// Podium card (redesigned with top accent + prominent score)
 // ---------------------------------------------------------------------------
 
 function PodiumCard({
@@ -221,10 +240,20 @@ function PodiumCard({
     2: 'from-zinc-700/30 to-zinc-900/10 border-zinc-600/40',
     3: 'from-amber-900/20 to-zinc-950/10 border-amber-800/40',
   }
+  const topBorder: Record<number, string> = {
+    1: 'border-t-4 border-t-yellow-400',
+    2: 'border-t-4 border-t-zinc-400',
+    3: 'border-t-4 border-t-amber-600',
+  }
   const medalColors: Record<number, string> = {
     1: 'text-yellow-400',
     2: 'text-zinc-400',
     3: 'text-amber-600',
+  }
+  const gradeSize: Record<number, string> = {
+    1: 'text-5xl',
+    2: 'text-4xl',
+    3: 'text-4xl',
   }
 
   return (
@@ -233,14 +262,18 @@ function PodiumCard({
       className={`
         relative flex flex-col gap-3 p-5 rounded-xl bg-gradient-to-b border
         ${podiumColors[rank]}
+        ${topBorder[rank]}
         hover:border-zinc-500/60 transition-all text-left w-full group
       `}
       aria-label={`#${rank}: ${item.institution_name}, score ${item.total_score}`}
     >
       <div className="flex items-start justify-between gap-2">
-        <Medal className={`h-5 w-5 flex-shrink-0 mt-0.5 ${medalColors[rank]}`} aria-hidden="true" />
+        <div className="flex items-center gap-2">
+          <Medal className={`h-5 w-5 flex-shrink-0 ${medalColors[rank]}`} aria-hidden="true" />
+          <span className="text-zinc-500 text-xs font-mono font-bold">#{rank}</span>
+        </div>
         {/* Large grade letter */}
-        <span className={`text-3xl font-bold font-serif leading-none ${gradeTextClass(item.grade)}`}>
+        <span className={`${gradeSize[rank]} font-bold font-serif leading-none ${gradeTextClass(item.grade)}`}>
           {item.grade}
         </span>
       </div>
@@ -250,7 +283,13 @@ function PodiumCard({
       {item.sector_name && (
         <p className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide truncate">{item.sector_name}</p>
       )}
-      <ScoreBar score={item.total_score} color={item.grade_color} />
+      {/* Prominent score */}
+      <div className="flex items-baseline gap-1.5 mt-auto">
+        <span className={`text-2xl font-bold font-mono tabular-nums ${gradeTextClass(item.grade)}`}>
+          {item.total_score.toFixed(1)}
+        </span>
+        <span className="text-zinc-600 text-xs font-mono">/100</span>
+      </div>
     </button>
   )
 }
@@ -384,9 +423,14 @@ export default function InstitutionLeague() {
     const aboveBPct = totalScored > 0 ? ((aboveB / totalScored) * 100).toFixed(0) : '0'
     const failingCount = (dist['F'] ?? 0) + (dist['F-'] ?? 0)
     if (failingCount > 0) {
-      return `Only ${aboveBPct}% of institutions score B or above. ${failingCount} are flagged critical.`
+      return t('stats.findingCritical', { pct: aboveBPct, count: failingCount })
     }
-    return `Only ${aboveBPct}% of institutions score B or above across ${formatNumber(totalScored)} agencies.`
+    return t('stats.findingNormal', { pct: aboveBPct, total: formatNumber(totalScored) })
+  }, [statsData, t])
+
+  const failingCount = useMemo(() => {
+    if (!statsData?.grade_distribution) return 0
+    return (statsData.grade_distribution['F'] ?? 0) + (statsData.grade_distribution['F-'] ?? 0)
   }, [statsData])
 
   const sectorOptions = useMemo(
@@ -416,13 +460,19 @@ export default function InstitutionLeague() {
             <Building2 className="h-8 w-8 text-zinc-700 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
           </div>
 
-          {/* Editorial finding headline */}
+          {/* Editorial finding headline -- urgent red when failing institutions exist */}
           {editorialHeadline && (
-            <div className="mt-4 border-l-2 border-amber-500 pl-4 py-1">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-500/70 mb-0.5">
-                HALLAZGO
+            <div className={`mt-5 pl-5 py-3 rounded-r-lg ${
+              failingCount > 0
+                ? 'border-l-4 border-red-500 bg-red-950/30'
+                : 'border-l-4 border-amber-500 bg-amber-950/20'
+            }`}>
+              <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
+                failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
+              }`}>
+                {t('hallazgo')}
               </p>
-              <p className="text-sm text-zinc-200 leading-relaxed">{editorialHeadline}</p>
+              <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
             </div>
           )}
         </div>
@@ -439,7 +489,7 @@ export default function InstitutionLeague() {
               aria-label={t('stats.totalScored')}
             >
               <StatCard label={t('stats.totalScored')} value={formatNumber(statsData.total_scored)} />
-              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub="of 100" />
+              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub={t('stats.scoreOutOf')} />
               <StatCard
                 label={t('stats.topPerformer')}
                 value={statsData.top_institution_score?.toFixed(1) ?? '--'}
@@ -454,13 +504,10 @@ export default function InstitutionLeague() {
                 onClick={statsData.worst_institution_id ? () => navigate(`/institutions/${statsData.worst_institution_id}`) : undefined}
               />
             </div>
-            {/* Grade distribution strip */}
+            {/* Grade distribution bar */}
             {statsData.grade_distribution && (
               <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2.5">
-                  Grade Distribution
-                </p>
-                <GradeDistributionStrip distribution={statsData.grade_distribution} />
+                <GradeDistributionBar distribution={statsData.grade_distribution} t={t} />
               </div>
             )}
           </div>
@@ -528,7 +575,7 @@ export default function InstitutionLeague() {
               onChange={(e) => updateParams({ grade: e.target.value || undefined, page: '1' })}
               className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600"
             >
-              <option value="">All grades</option>
+              <option value="">{t('filters.allGrades')}</option>
               {gradeOptions.map((g) => (
                 <option key={g} value={g}>{g} -- {t(`grades.${g}`)}</option>
               ))}
@@ -537,7 +584,7 @@ export default function InstitutionLeague() {
 
           {/* Result count */}
           <span className="text-zinc-500 text-[10px] font-mono ml-auto tabular-nums tracking-wide">
-            {formatNumber(total)} institutions
+            {t('stats.institutionsCount', { num: formatNumber(total) })}
           </span>
         </div>
 
@@ -559,7 +606,7 @@ export default function InstitutionLeague() {
               {Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-10 bg-zinc-800/40 rounded animate-pulse"
+                  className="h-12 bg-zinc-800/40 rounded animate-pulse"
                   aria-hidden="true"
                 />
               ))}
@@ -570,7 +617,7 @@ export default function InstitutionLeague() {
             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
               <p className="text-zinc-400 text-sm">{t('empty')}</p>
               <p className="text-zinc-600 text-xs mt-1">
-                Try adjusting your filters or search query.
+                {t('filters.adjustFilters')}
               </p>
             </div>
           )}
@@ -599,7 +646,7 @@ export default function InstitutionLeague() {
                         {t('columns.grade')}
                       </span>
                     </th>
-                    <th className="px-3 py-2.5 text-left w-36">
+                    <th className="px-3 py-2.5 text-left w-28">
                       <SortHeader
                         label={t('columns.score')}
                         sortKey="total_score"
@@ -608,7 +655,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-28">
+                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-20">
                       <SortHeader
                         label={t('columns.pillarOpenness')}
                         sortKey="pillar_openness"
@@ -617,7 +664,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-28">
+                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-20">
                       <SortHeader
                         label={t('columns.pillarPrice')}
                         sortKey="pillar_price"
@@ -626,7 +673,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-28">
+                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-20">
                       <SortHeader
                         label={t('columns.pillarVendors')}
                         sortKey="pillar_vendors"
@@ -635,7 +682,7 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-28">
+                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-20">
                       <SortHeader
                         label={t('columns.pillarProcess')}
                         sortKey="pillar_process"
@@ -663,6 +710,7 @@ export default function InstitutionLeague() {
                 <tbody>
                   {items.map((item, idx) => {
                     const rank = firstItemRank + idx
+                    const borderColor = gradeSolid(item.grade)
                     return (
                       <tr
                         key={item.institution_id}
@@ -670,76 +718,75 @@ export default function InstitutionLeague() {
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         role="row"
                         aria-label={`${item.institution_name}, grade ${item.grade}, score ${item.total_score}`}
+                        style={{ borderLeft: `3px solid ${borderColor}` }}
                       >
                         {/* Rank */}
-                        <td className="px-3 py-2.5 text-zinc-600 tabular-nums text-xs font-mono text-right w-10">
+                        <td className="px-3 py-3 text-zinc-600 tabular-nums text-xs font-mono text-right w-10">
                           {rank}
                         </td>
 
-                        {/* Institution name */}
-                        <td className="px-3 py-2.5">
+                        {/* Institution name + risk driver pill */}
+                        <td className="px-3 py-3">
                           <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-1 block">
                             {item.institution_name}
                           </span>
-                          {item.sector_name && (
-                            <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
-                          )}
+                          <div className="flex items-center gap-2 flex-wrap">
+                            {item.sector_name && (
+                              <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
+                            )}
+                            {item.top_risk_driver && (
+                              <RiskDriverPill driver={item.top_risk_driver} />
+                            )}
+                          </div>
                         </td>
 
-                        {/* Grade badge -- large and prominent */}
-                        <td className="px-3 py-2.5 text-center">
+                        {/* Grade badge -- large, glowing */}
+                        <td className="px-3 py-3 text-center">
                           <span
-                            className={`inline-flex items-center justify-center w-9 h-9 rounded-lg text-sm font-bold font-serif ${gradeClasses(item.grade)}`}
+                            className={`inline-flex items-center justify-center w-11 h-11 rounded-lg text-base font-bold font-serif shadow-md ${gradeClasses(item.grade)} ${gradeGlow(item.grade)}`}
                             title={item.grade_label}
                           >
                             {item.grade}
                           </span>
                         </td>
 
-                        {/* Score bar */}
-                        <td className="px-3 py-2.5">
-                          <ScoreBar score={item.total_score} color={item.grade_color} />
+                        {/* Score as bold number */}
+                        <td className="px-3 py-3">
+                          <div className="flex items-baseline gap-1">
+                            <span className={`text-lg font-bold font-mono tabular-nums ${gradeTextClass(item.grade)}`}>
+                              {item.total_score.toFixed(1)}
+                            </span>
+                            <span className="text-zinc-600 text-[10px] font-mono">/100</span>
+                          </div>
                         </td>
 
                         {/* Pillar: Openness */}
-                        <td className="px-3 py-2.5 hidden lg:table-cell">
-                          <div className="flex items-center gap-2">
-                            <PillarBar value={item.pillar_openness} max={20} />
-                            <span className="text-zinc-400 text-xs font-mono tabular-nums">{item.pillar_openness.toFixed(1)}</span>
-                          </div>
+                        <td className="px-3 py-3 hidden lg:table-cell">
+                          <PillarValue value={item.pillar_openness} max={20} />
                         </td>
 
                         {/* Pillar: Price */}
-                        <td className="px-3 py-2.5 hidden lg:table-cell">
-                          <div className="flex items-center gap-2">
-                            <PillarBar value={item.pillar_price} max={25} />
-                            <span className="text-zinc-400 text-xs font-mono tabular-nums">{item.pillar_price.toFixed(1)}</span>
-                          </div>
+                        <td className="px-3 py-3 hidden lg:table-cell">
+                          <PillarValue value={item.pillar_price} max={25} />
                         </td>
 
                         {/* Pillar: Vendors */}
-                        <td className="px-3 py-2.5 hidden xl:table-cell">
-                          <div className="flex items-center gap-2">
-                            <PillarBar value={item.pillar_vendors} max={20} />
-                            <span className="text-zinc-400 text-xs font-mono tabular-nums">{item.pillar_vendors.toFixed(1)}</span>
-                          </div>
+                        <td className="px-3 py-3 hidden xl:table-cell">
+                          <PillarValue value={item.pillar_vendors} max={20} />
                         </td>
 
                         {/* Pillar: Process */}
-                        <td className="px-3 py-2.5 hidden xl:table-cell">
-                          <div className="flex items-center gap-2">
-                            <PillarBar value={item.pillar_process} max={15} />
-                            <span className="text-zinc-400 text-xs font-mono tabular-nums">{item.pillar_process.toFixed(1)}</span>
-                          </div>
+                        <td className="px-3 py-3 hidden xl:table-cell">
+                          <PillarValue value={item.pillar_process} max={15} />
                         </td>
 
                         {/* Trend icon */}
-                        <td className="px-3 py-2.5 text-center hidden sm:table-cell">
+                        <td className="px-3 py-3 text-center hidden sm:table-cell">
                           <TrendIcon direction={item.trend_direction} />
                         </td>
 
                         {/* National percentile */}
-                        <td className="px-3 py-2.5 hidden md:table-cell">
+                        <td className="px-3 py-3 hidden md:table-cell">
                           <span className="text-zinc-400 text-xs font-mono tabular-nums">
                             {item.national_percentile !== null
                               ? `P${Math.round(item.national_percentile * 100)}`
@@ -764,21 +811,21 @@ export default function InstitutionLeague() {
                 disabled={page <= 1}
                 onClick={() => updateParams({ page: String(page - 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Previous page"
+                aria-label={t('pagination.previous')}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                Previous
+                {t('pagination.previous')}
               </button>
               <span className="text-zinc-500 text-sm font-mono tabular-nums">
-                Page {page} of {totalPages}
+                {t('pagination.pageOf', { page, total: totalPages })}
               </span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => updateParams({ page: String(page + 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Next page"
+                aria-label={t('pagination.next')}
               >
-                Next
+                {t('pagination.next')}
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </nav>
