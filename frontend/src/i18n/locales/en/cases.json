@@ -197,5 +197,62 @@
     "efosList": "EFOS List (SAT)",
     "sfpSanctions": "SFP Sanctions Registry",
     "asfAudits": "ASF Audit Reports"
+  },
+  "signals": {
+    "ghost_company": [
+      "High vendor concentration: a single vendor controlled a disproportionate share of sector contracts",
+      "Abnormal price volatility: contract amounts varied far outside the sector norm",
+      "Win rate anomaly: vendor won near 100% of competitive procedures it entered"
+    ],
+    "bid_rigging": [
+      "Repeated co-bidding patterns: the same group of vendors appeared together in sequential procedures",
+      "Alternating win rates: vendors took turns winning, consistent with bid rotation",
+      "Suspiciously low price gaps: losing bids were just slightly above the winner, signalling cover bidding"
+    ],
+    "overpricing": [
+      "Price ratio outlier: contract amounts were 3x or more above the sector median",
+      "High price hypothesis confidence: IQR-based statistical test flagged extreme overpricing",
+      "Repeated same-institution awards: same vendor repeatedly won from the same contracting authority"
+    ],
+    "conflict_of_interest": [
+      "Abnormally high win rate with a single institution",
+      "Industry mismatch: vendor stated sector did not match the contract category",
+      "Short advertisement periods: limited time for competing vendors to prepare bids"
+    ],
+    "embezzlement": [
+      "Year-end contract clustering: contracts concentrated in December budget spending",
+      "Same-day contract patterns: multiple contracts signed simultaneously to the same vendor",
+      "Threshold splitting: contract values just below legal thresholds for competitive bidding"
+    ],
+    "bribery": [
+      "Industry mismatch: out-of-sector vendor winning specialised contracts",
+      "Network centrality: vendor appeared at the hub of a co-bidding relationship cluster",
+      "Win rate anomaly: success rate far above the sector baseline"
+    ],
+    "procurement_fraud": [
+      "Direct award prevalence: contracts awarded without competitive procedures",
+      "High vendor concentration in a single institution",
+      "Abnormal price volatility across contracts of the same type"
+    ],
+    "monopoly": [
+      "Extreme vendor concentration: one vendor held more than 50% of all sector contracts by value",
+      "Near-zero single-bid rate in competitive procedures: no real competition detected",
+      "Institution diversity signal: vendor served only one or two contracting authorities"
+    ],
+    "emergency_fraud": [
+      "Short advertisement periods: procedures fast-tracked under emergency justification",
+      "Price ratio outliers: amounts significantly above normal benchmarks",
+      "Direct award clustering: multiple emergency contracts to the same vendor simultaneously"
+    ],
+    "tender_rigging": [
+      "Co-bidding concentration: a closed group of vendors dominated the procedure pool",
+      "High win rate with a single institution over a sustained period",
+      "Price anomaly: winning bids consistently at the ceiling of acceptable ranges"
+    ],
+    "other": [
+      "Statistical anomalies in vendor concentration detected by the risk model",
+      "Behavioural patterns consistent with known corruption cases in the training set",
+      "Multiple z-score features above sector baselines simultaneously"
+    ]
   }
 }

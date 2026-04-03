@@ -885,8 +885,8 @@ export default function SpendingCategories() {
       <div className="flex flex-col items-center justify-center py-24 gap-4 text-center">
         <AlertTriangle className="h-10 w-10 text-destructive" aria-hidden="true" />
         <div>
-          <p className="text-sm font-medium text-text-primary">Error al cargar las categor\u00edas de gasto</p>
-          <p className="text-xs text-text-muted mt-1">Verifique su conexi\u00f3n e intente de nuevo.</p>
+          <p className="text-sm font-medium text-text-primary">{t('errors.loadCategories')}</p>
+          <p className="text-xs text-text-muted mt-1">{t('errors.checkConnection')}</p>
         </div>
       </div>
     )

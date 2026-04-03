@@ -316,7 +316,9 @@ export default function CaseDetail() {
   const summary = i18n.language === 'es' && data.summary_es ? data.summary_es : data.summary_en
 
   const fraudColors = FRAUD_TYPE_COLORS[data.fraud_type] ?? FRAUD_TYPE_COLORS.other
-  const signals = FRAUD_TYPE_SIGNALS[data.fraud_type] ?? FRAUD_TYPE_SIGNALS.other
+  const signalKeys = FRAUD_TYPE_SIGNALS[data.fraud_type] ?? FRAUD_TYPE_SIGNALS.other
+  const fraudTypeKey = data.fraud_type in FRAUD_TYPE_SIGNALS ? data.fraud_type : 'other'
+  const signals = signalKeys.map((_, idx) => t(`signals.${fraudTypeKey}.${idx}`, { defaultValue: signalKeys[idx] }))
   const timelineEvents = buildTimeline(
     data.contract_year_start,
     data.contract_year_end,

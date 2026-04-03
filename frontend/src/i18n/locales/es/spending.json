@@ -40,5 +40,9 @@
     "title": "Tendencias de Gasto — Top 5 Categorías",
     "description": "Valor de contratos interanual para las cinco categorías de mayor gasto.",
     "empty": "No hay datos de tendencias disponibles."
+  },
+  "errors": {
+    "loadCategories": "Error al cargar las categorías de gasto",
+    "checkConnection": "Verifique su conexión e intente de nuevo."
   }
 }

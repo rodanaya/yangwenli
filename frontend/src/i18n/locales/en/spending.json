@@ -40,5 +40,9 @@
     "title": "Spending Trends — Top 5 Categories",
     "description": "Year-over-year contract value for the five largest spending categories.",
     "empty": "No trend data available."
+  },
+  "errors": {
+    "loadCategories": "Error loading spending categories",
+    "checkConnection": "Check your connection and try again."
   }
 }
