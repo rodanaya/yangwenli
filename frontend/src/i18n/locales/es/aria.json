@@ -46,7 +46,7 @@
   "tierCard": {
     "avgRisk": "Riesgo prom.",
     "valueAtRisk": "Valor en riesgo",
-    "clickFilter": "Clic para filtrar cola",
+    "clickFilter": "Clic para filtrar por nivel",
     "activeFilter": "Filtrado — clic para limpiar"
   },
   "tier2": {
@@ -148,7 +148,7 @@
     "objectives": "Pistas Prioritarias — Nivel 1"
   },
   "queueSection": {
-    "title": "Cola de Investigación"
+    "title": "Pistas de Investigación"
   },
   "reviewFilter": {
     "all": "Todos"

@@ -184,5 +184,21 @@
     "amlo": "López Obrador (2018-2024)",
     "sheinbaum": "Sheinbaum (2024-)",
     "cross": "Multi-sexenio"
+  },
+  "cronologia": {
+    "title": "Cronología de Contratos",
+    "noData": "Sin datos de cronología disponibles para {{vendor}}.",
+    "contracts": "contratos",
+    "risk": "Riesgo"
+  },
+  "ariaWidget": {
+    "loadError": "Error al cargar las pistas de investigación ARIA",
+    "viewFull": "Ver todas las pistas de investigación"
+  },
+  "infographics": {
+    "sectionTitle": "Infografías para Publicación",
+    "sectionSubtitle": "Datos verificados · Descarga libre · Cita: RUBLI / COMPRANET",
+    "source": "Fuente",
+    "download": "Descargar"
   }
 }

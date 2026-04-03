@@ -184,5 +184,21 @@
     "amlo": "López Obrador (2018-2024)",
     "sheinbaum": "Sheinbaum (2024-)",
     "cross": "Multi-administration"
+  },
+  "cronologia": {
+    "title": "Contract Timeline",
+    "noData": "No timeline data available for {{vendor}}.",
+    "contracts": "contracts",
+    "risk": "Risk"
+  },
+  "ariaWidget": {
+    "loadError": "Error loading ARIA investigation leads",
+    "viewFull": "View all investigation leads"
+  },
+  "infographics": {
+    "sectionTitle": "Publication Infographics",
+    "sectionSubtitle": "Verified data · Free download · Cite: RUBLI / COMPRANET",
+    "source": "Source",
+    "download": "Download"
   }
 }

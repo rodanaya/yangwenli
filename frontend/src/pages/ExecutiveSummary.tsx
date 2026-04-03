@@ -192,7 +192,7 @@ function FiveKeyFindings({
       headline: 'Proveedores bajo lupa',
       headlineEn: 'Vendors under scrutiny',
       stat: '320',
-      statLabel: 'proveedores en cola de investigación urgente (ARIA Nivel 1)',
+      statLabel: 'proveedores bajo investigación prioritaria (ARIA Nivel 1)',
       body: (
         <>
           <strong className="text-text-primary">320 proveedores</strong> en nuestro nivel de investigación urgente
@@ -201,7 +201,7 @@ function FiveKeyFindings({
         </>
       ),
       bodyEn: '320 vendors in our urgent-investigation queue (ARIA Tier 1) have been flagged by multiple independent signals.',
-      action: { label: 'Ver cola ARIA →', href: '/aria' },
+      action: { label: 'Ver pistas ARIA →', href: '/aria' },
     },
     {
       num: '04',
@@ -325,11 +325,11 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
       icon: Search,
       color: '#dc2626',
       // Título: Cola de investigación urgente — 320 proveedores ARIA Nivel 1
-      title: 'Cola ARIA Nivel 1 — 320 proveedores urgentes',
+      title: 'ARIA Nivel 1 — 320 proveedores prioritarios',
       titleEn: 'ARIA Tier 1 — 320 vendors for urgent investigation',
       body: 'Estos 320 proveedores fueron marcados de forma independiente por el modelo de riesgo, la detección de anomalías PyOD y registros externos (EFOS, SFP, RUPC). Es la lista de mayor prioridad.',
       bodyEn: 'These 320 vendors were independently flagged by the risk model, PyOD anomaly detection, and external registries (EFOS, SFP, RUPC). Highest priority list.',
-      action: { label: 'Abrir cola ARIA', href: '/aria' },
+      action: { label: 'Abrir pistas ARIA', href: '/aria' },
     },
     {
       icon: AlertTriangle,
@@ -580,12 +580,12 @@ function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
     {
       title: 'Investigar un Proveedor',
       titleEn: 'Investigate a Vendor',
-      desc: '320 proveedores en cola de investigacion urgente. Comienza por los de mayor puntaje.',
+      desc: '320 proveedores bajo investigación prioritaria. Comienza por los de mayor puntaje.',
       descEn: '320 vendors in the urgent investigation queue. Start with the highest-scoring.',
       icon: Search,
       color: '#dc2626',
       href: '/aria',
-      cta: 'Abrir cola ARIA',
+      cta: 'Abrir pistas ARIA',
     },
     {
       title: 'Leer una Investigacion',

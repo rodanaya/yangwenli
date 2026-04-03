@@ -4,6 +4,7 @@
  * Shows contract activity by year as a bar chart with annotation dots.
  */
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
 interface TimelineYear {
@@ -36,6 +37,7 @@ function formatCompact(val: number): string {
 }
 
 export default function CronologiaVendor({ data, vendorName, className }: CronologiaVendorProps) {
+  const { t } = useTranslation('common')
   const [hoveredYear, setHoveredYear] = useState<number | null>(null)
 
   const maxCount = useMemo(() => {
@@ -46,15 +48,15 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
   if (!data.length) {
     return (
       <div className={cn('rounded-lg border border-zinc-800 bg-zinc-900/40 p-4', className)}>
-        <p className="text-sm text-zinc-400 mb-2">Cronologia de Contratos</p>
-        <p className="text-xs text-zinc-500 italic">Sin datos de cronologia disponibles para {vendorName}.</p>
+        <p className="text-sm text-zinc-400 mb-2">{t('cronologia.title')}</p>
+        <p className="text-xs text-zinc-500 italic">{t('cronologia.noData', { vendor: vendorName })}</p>
       </div>
     )
   }
 
   return (
     <div className={cn('rounded-lg border border-zinc-800 bg-zinc-900/40 p-4', className)}>
-      <p className="text-sm text-zinc-400 mb-3">Cronologia de Contratos</p>
+      <p className="text-sm text-zinc-400 mb-3">{t('cronologia.title')}</p>
 
       {/* Chart area — 120px tall */}
       <div className="relative" style={{ height: '120px' }}>
@@ -99,13 +101,13 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                   >
                     <p className="text-[11px] font-bold text-white">{d.year}</p>
                     <p className="text-[10px] text-zinc-300">
-                      {d.contractCount} contratos
+                      {d.contractCount} {t('cronologia.contracts')}
                     </p>
                     <p className="text-[10px] text-zinc-400">
                       ${formatCompact(d.totalValue)} MXN
                     </p>
                     <p className="text-[10px] text-zinc-400">
-                      Riesgo: {(d.avgRiskScore * 100).toFixed(0)}%
+                      {t('cronologia.risk')}: {(d.avgRiskScore * 100).toFixed(0)}%
                     </p>
                     {d.hasAnomaly && d.anomalyNote && (
                       <p className="text-[10px] text-orange-400 mt-0.5">

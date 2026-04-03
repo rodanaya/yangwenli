@@ -244,20 +244,28 @@ def get_case(slug: str):
         linked_vendors = []
         gt_case_id = row["ground_truth_case_id"]
         if gt_case_id:
+            year_start = row["contract_year_start"] or 2000
+            year_end = row["contract_year_end"] or 2025
             vendor_rows = conn.execute("""
                 SELECT gtv.vendor_id, gtv.vendor_name_source, gtv.role,
                        gtv.evidence_strength, gtv.match_method,
                        v.name as vendor_name,
-                       COUNT(c.id) as contract_count,
-                       AVG(c.risk_score) as avg_risk_score
+                       COALESCE(vc.contract_count, 0) as contract_count,
+                       vc.avg_risk_score
                 FROM ground_truth_vendors gtv
                 LEFT JOIN vendors v ON gtv.vendor_id = v.id
-                LEFT JOIN contracts c ON c.vendor_id = gtv.vendor_id
+                LEFT JOIN (
+                    SELECT vendor_id,
+                           COUNT(*) as contract_count,
+                           AVG(risk_score) as avg_risk_score
+                    FROM contracts
+                    WHERE source_year BETWEEN ? AND ?
+                    GROUP BY vendor_id
+                ) vc ON vc.vendor_id = gtv.vendor_id
                 WHERE gtv.case_id = ?
-                GROUP BY gtv.id
                 ORDER BY contract_count DESC
                 LIMIT 50
-            """, (gt_case_id,)).fetchall()
+            """, (year_start, year_end, gt_case_id)).fetchall()
 
             for vr in vendor_rows:
                 linked_vendors.append({

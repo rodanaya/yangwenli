@@ -8,6 +8,7 @@
 import { useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
 import type { AriaQueueItem } from '@/api/types'
 import { cn, formatCompactMXN } from '@/lib/utils'
@@ -95,6 +96,7 @@ function LoadingSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function AnomalyLeadsWidget({ className }: { className?: string }) {
+  const { t } = useTranslation('common')
   const [tier, setTier] = useState<1 | 2>(1)
 
   const { data, isLoading, error } = useQuery({
@@ -144,7 +146,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
       {isLoading ? (
         <LoadingSkeleton />
       ) : error ? (
-        <div className="text-sm text-red-400 py-4">Error al cargar la cola ARIA</div>
+        <div className="text-sm text-red-400 py-4">{t('ariaWidget.loadError')}</div>
       ) : vendors.length === 0 ? (
         <div className="text-sm text-text-muted py-4 italic">
           No hay proveedores en Tier {tier}
@@ -217,7 +219,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
             to="/aria"
             className="text-[11px] text-accent hover:underline flex items-center gap-1"
           >
-            Ver cola completa <ExternalLink size={10} />
+            {t('ariaWidget.viewFull')} <ExternalLink size={10} />
           </Link>
         </div>
       )}
