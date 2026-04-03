@@ -63,7 +63,7 @@ export default defineConfig({
     target: 'esnext', // Modern browsers for smaller bundle
     sourcemap: false, // Disable sourcemaps in production
     minify: 'esbuild', // Fast minification
-    chunkSizeWarningLimit: 1200, // echarts is ~1.1MB min — known large dep, loaded lazily
+    chunkSizeWarningLimit: 1200, // VendorProfile/StoryNarrative are ~150KB — expected
     rollupOptions: {
       output: {
         manualChunks: {
@@ -71,8 +71,6 @@ export default defineConfig({
           'vendor-react': ['react', 'react-dom', 'react-router-dom'],
           // Recharts — used across many chart components
           'vendor-recharts': ['recharts'],
-          // ECharts — heavy canvas charting library (only loaded for NetworkGraph/PriceIntelligence)
-          'vendor-echarts': ['echarts', 'echarts-for-react'],
           // D3 / Sankey — used in MoneyFlow
           'vendor-d3': ['d3-sankey'],
           // TanStack family - used across many pages
@@ -115,8 +113,6 @@ export default defineConfig({
           'vendor-gsap': ['gsap'],
           // Framer Motion — used by RedThread and editorial components
           'vendor-motion': ['framer-motion'],
-          // react-simple-maps — used by geographic visualizations
-          'vendor-maps': ['react-simple-maps'],
         },
       },
     },
