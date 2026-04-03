@@ -61,7 +61,7 @@ class CollusionStats(BaseModel):
 def get_collusion_pairs(
     is_potential_collusion: Optional[bool] = Query(True, description="Filter by collusion flag"),
     min_shared_procedures: int = Query(10, ge=1, description="Minimum shared procedures"),
-    sort_by: str = Query("shared_procedures", regex="^(shared_procedures|co_bid_rate)$"),
+    sort_by: str = Query("shared_procedures", pattern="^(shared_procedures|co_bid_rate)$"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     conn=Depends(get_db_dep),

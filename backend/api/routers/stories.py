@@ -126,7 +126,7 @@ def _safe_rows_to_dicts(rows, cols):
 # ---------------------------------------------------------------------------
 
 @router.get("/administration-comparison")
-def administration_comparison(lang: str = Query("es", regex="^(en|es)$")):
+def administration_comparison(lang: str = Query("es", pattern="^(en|es)$")):
     """
     Compare procurement patterns across Mexico's 6-year presidential administrations.
     """
@@ -199,7 +199,7 @@ def administration_comparison(lang: str = Query("es", regex="^(en|es)$")):
 
 
 @router.get("/ghost-companies")
-def ghost_companies(lang: str = Query("es", regex="^(en|es)$")):
+def ghost_companies(lang: str = Query("es", pattern="^(en|es)$")):
     """
     Top ghost-company suspects: new vendors with near-100% direct awards,
     few contracts, and significant value.
@@ -295,7 +295,7 @@ def ghost_companies(lang: str = Query("es", regex="^(en|es)$")):
 
 
 @router.get("/top-suspicious-vendors")
-def top_suspicious_vendors(lang: str = Query("es", regex="^(en|es)$")):
+def top_suspicious_vendors(lang: str = Query("es", pattern="^(en|es)$")):
     """
     Top vendors by ARIA IPS score (composite risk) — Tier 1 and Tier 2.
     """
@@ -392,7 +392,7 @@ def top_suspicious_vendors(lang: str = Query("es", regex="^(en|es)$")):
 
 
 @router.get("/overpricing-patterns")
-def overpricing_patterns(lang: str = Query("es", regex="^(en|es)$")):
+def overpricing_patterns(lang: str = Query("es", pattern="^(en|es)$")):
     """
     Contracts with critical risk scores grouped by sector and year.
     """
@@ -1325,7 +1325,7 @@ def _build_direct_award_surge_package(conn, lang: str = "es") -> dict:
 # ---------------------------------------------------------------------------
 
 @router.get("/packages")
-def story_packages(lang: str = Query("es", regex="^(en|es)$")):
+def story_packages(lang: str = Query("es", pattern="^(en|es)$")):
     """
     Return all 8 pre-packaged investigation story templates with live data.
     Pass ?lang=en for English narrative; default is Spanish.

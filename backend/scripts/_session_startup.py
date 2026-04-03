@@ -26,15 +26,19 @@ print(f'in_ground_truth synced: {r.rowcount} rows updated')
 # ── Fix 1b: Sync is_false_positive flags to aria_queue ────────────────────────
 # Propagates is_false_positive=1 from ground_truth_vendors to aria_queue and
 # vendor_stats so the scoring pipeline excludes them correctly.
-r_fp = conn.execute('''
-    UPDATE aria_queue SET is_false_positive=1
-    WHERE vendor_id IN (
-        SELECT DISTINCT vendor_id FROM ground_truth_vendors
-        WHERE is_false_positive=1 AND vendor_id IS NOT NULL
-    )
-      AND is_false_positive=0
-''')
-print(f'is_false_positive synced to aria_queue: {r_fp.rowcount} rows updated')
+aq_cols = {row[1] for row in conn.execute('PRAGMA table_info(aria_queue)')}
+if 'is_false_positive' in aq_cols:
+    r_fp = conn.execute('''
+        UPDATE aria_queue SET is_false_positive=1
+        WHERE vendor_id IN (
+            SELECT DISTINCT vendor_id FROM ground_truth_vendors
+            WHERE is_false_positive=1 AND vendor_id IS NOT NULL
+        )
+          AND is_false_positive=0
+    ''')
+    print(f'is_false_positive synced to aria_queue: {r_fp.rowcount} rows updated')
+else:
+    print('aria_queue.is_false_positive column not present — skipping')
 
 # Sync to vendor_stats if the column exists
 vs_cols = {row[1] for row in conn.execute('PRAGMA table_info(vendor_stats)')}
