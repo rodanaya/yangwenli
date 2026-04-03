@@ -309,14 +309,24 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
         {formatCompactMXN(vendor.total_value_mxn || 0)}
       </td>
       <td className="data-cell text-right">
-        <div className="inline-flex flex-col items-end gap-0.5">
+        <div className="inline-flex flex-col items-end gap-1 min-w-[56px]">
           {(() => {
-            const level = getRiskLevelFromScore(vendor.avg_risk_score ?? 0)
+            const score = vendor.avg_risk_score ?? 0
+            const level = getRiskLevelFromScore(score)
+            const color = RISK_COLORS[level]
             const riskClass = level === 'critical' ? 'risk-critical' : level === 'high' ? 'risk-high' : level === 'medium' ? 'risk-medium' : 'risk-low'
             return (
-              <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
-                {((vendor.avg_risk_score || 0) * 100).toFixed(0)}%
-              </span>
+              <>
+                <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
+                  {(score * 100).toFixed(0)}%
+                </span>
+                <div className="w-full h-1 rounded-full bg-zinc-800 overflow-hidden">
+                  <div
+                    className="h-full rounded-full transition-all duration-500"
+                    style={{ width: `${Math.min(score * 100, 100)}%`, backgroundColor: color }}
+                  />
+                </div>
+              </>
             )
           })()}
           {(vendor.avg_risk_score || 0) >= 0.50 && (

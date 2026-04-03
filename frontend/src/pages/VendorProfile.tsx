@@ -1191,8 +1191,53 @@ export function VendorProfile() {
     ? SECTOR_COLORS[vendor.primary_sector_name.toLowerCase()] || SECTOR_COLORS.otros
     : SECTOR_COLORS.otros
 
+  // Determine top-level alert state for above-the-fold warning
+  const isEfosDefinitivo = externalFlags?.sat_efos?.stage === 'definitivo'
+  const isEfosPresunto = externalFlags?.sat_efos?.stage === 'presunto'
+  const isSfpSanctioned = (externalFlags?.sfp_sanctions?.length ?? 0) > 0
+  const isGroundTruth = groundTruthStatus?.is_known_bad && (groundTruthStatus.cases?.length ?? 0) > 0
+
   return (
     <div className="space-y-6 stagger-animate">
+      {/* ── TOP-OF-PAGE CRITICAL ALERT — shown above everything for EFOS/GT vendors ── */}
+      {(isEfosDefinitivo || isGroundTruth) && (
+        <div className="rounded-lg border-2 border-red-500 bg-red-950/60 px-4 py-3 flex items-center gap-3"
+          style={{ animation: 'vpSlideIn 300ms cubic-bezier(0.16,1,0.3,1) both' }}>
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/30 border border-red-500/60 flex items-center justify-center">
+            <AlertTriangle className="h-4 w-4 text-red-300" />
+          </div>
+          <div className="flex-1 min-w-0">
+            {isEfosDefinitivo && (
+              <p className="text-sm font-bold text-red-200">
+                SAT EFOS Definitivo — Confirmed ghost company under Art. 69-B Mexican Tax Code
+              </p>
+            )}
+            {isGroundTruth && !isEfosDefinitivo && (
+              <p className="text-sm font-bold text-red-200">
+                Documented in {groundTruthStatus!.cases!.length} corruption case{(groundTruthStatus!.cases!.length ?? 1) > 1 ? 's' : ''} in RUBLI ground truth
+              </p>
+            )}
+            <p className="text-xs text-red-400/80 mt-0.5">
+              {isEfosDefinitivo
+                ? 'The Mexican Tax Authority (SAT) has formally confirmed this entity engages in non-existent transactions. Contracts may be fraudulent.'
+                : 'Statistical patterns in this vendor\'s procurement history match documented corruption cases.'}
+            </p>
+          </div>
+          <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
+            HIGH RISK
+          </span>
+        </div>
+      )}
+      {(isEfosPresunto || isSfpSanctioned) && !isEfosDefinitivo && !isGroundTruth && (
+        <div className="rounded-lg border border-amber-500/60 bg-amber-950/40 px-4 py-3 flex items-center gap-3"
+          style={{ animation: 'vpSlideIn 300ms cubic-bezier(0.16,1,0.3,1) both' }}>
+          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
+          <p className="text-sm text-amber-300 flex-1">
+            {isEfosPresunto && 'SAT EFOS Presunto — Listed as alleged ghost company (investigation ongoing).'}
+            {isSfpSanctioned && !isEfosPresunto && `SFP sanction record${(externalFlags?.sfp_sanctions?.length ?? 1) > 1 ? 's' : ''} on file — sanctioned by federal comptroller.`}
+          </p>
+        </div>
+      )}
       <style>{`
         @keyframes vpSlideIn {
           from { opacity: 0; transform: translateY(-12px); filter: blur(3px); }
