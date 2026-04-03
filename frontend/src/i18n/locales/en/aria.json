@@ -68,7 +68,7 @@
     "filteredResults": "Filtered Results",
     "allLeads": "All Leads",
     "vendorCount": "vendors",
-    "searchPlaceholder": "Search vendors\u2026",
+    "searchPlaceholder": "Search vendors…",
     "investigateBtn": "Investigate vendor",
     "empty": "No leads match your filters.",
     "filterActive": "filter active"
@@ -98,7 +98,8 @@
   },
   "memo": {
     "less": "Less",
-    "full": "Full memo"
+    "full": "Full memo",
+    "loadError": "Error loading memo"
   },
   "pagination": {
     "previous": "Previous",
@@ -165,18 +166,18 @@
   "reviewPopover": {
     "reviewStatus": "Review Status",
     "save": "Save",
-    "saving": "Saving\u2026",
+    "saving": "Saving…",
     "close": "Close",
     "error": "Error saving. Please try again.",
     "updateTitle": "Update review status",
-    "promoting": "Promoting\u2026",
-    "promotedToGT": "\u2713 Added to GT",
-    "promoteToGT": "\u2191 Add to Ground Truth",
+    "promoting": "Promoting…",
+    "promotedToGT": "✓ Added to GT",
+    "promoteToGT": "↑ Add to Ground Truth",
     "alreadyInGT": "Already in Ground Truth"
   },
   "intelligenceDetails": "Intelligence Details",
   "header": {
-    "systemLabel": "ARIA System \u00b7 Procurement Intelligence",
+    "systemLabel": "ARIA System · Procurement Intelligence",
     "live": "LIVE",
     "title": "Intelligence Center",
     "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting.",

@@ -67,5 +67,8 @@
     "exportSuccess": "Export complete",
     "selectFormat": "Select export format",
     "includesNRecords": "Includes {{count}} records"
+  },
+  "search": {
+    "noResults": "No results for \"{{query}}\""
   }
 }

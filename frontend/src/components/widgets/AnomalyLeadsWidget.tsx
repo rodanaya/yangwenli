@@ -149,7 +149,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
         <div className="text-sm text-red-400 py-4">{t('ariaWidget.loadError')}</div>
       ) : vendors.length === 0 ? (
         <div className="text-sm text-text-muted py-4 italic">
-          No hay proveedores en Tier {tier}
+          {t('ariaWidget.noVendorsInTier', { tier })}
         </div>
       ) : (
         <div className="overflow-x-auto">

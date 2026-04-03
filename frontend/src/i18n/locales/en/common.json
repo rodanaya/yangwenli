@@ -199,7 +199,8 @@
   },
   "ariaWidget": {
     "loadError": "Error loading ARIA investigation leads",
-    "viewFull": "View all investigation leads"
+    "viewFull": "View all investigation leads",
+    "noVendorsInTier": "No vendors in Tier {{tier}}"
   },
   "infographics": {
     "sectionTitle": "Publication Infographics",

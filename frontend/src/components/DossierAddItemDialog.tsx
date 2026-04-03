@@ -4,6 +4,7 @@
  */
 
 import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Input } from '@/components/ui/input'
@@ -26,6 +27,7 @@ export function DossierAddItemDialog({
   dossierId,
   dossierName,
 }: DossierAddItemDialogProps) {
+  const { t } = useTranslation('workspace')
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<VendorListItem[]>([])
@@ -139,7 +141,7 @@ export function DossierAddItemDialog({
               </div>
             ) : !hasResults ? (
               <p className="text-xs text-text-muted text-center py-6">
-                Sin resultados para "{query}"
+                {t('search.noResults', { query })}
               </p>
             ) : (
               results.map((vendor) => {

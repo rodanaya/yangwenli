@@ -98,7 +98,8 @@
   },
   "memo": {
     "less": "Menos",
-    "full": "Nota completa"
+    "full": "Nota completa",
+    "loadError": "Error al cargar memo"
   },
   "pagination": {
     "previous": "Anterior",
@@ -169,9 +170,9 @@
     "close": "Cerrar",
     "error": "Error al guardar. Intenta de nuevo.",
     "updateTitle": "Actualizar estado de revisión",
-    "promoting": "Promoviendo\u2026",
-    "promotedToGT": "\u2713 A\u00f1adido a GT",
-    "promoteToGT": "\u2191 A\u00f1adir a Ground Truth",
+    "promoting": "Promoviendo…",
+    "promotedToGT": "✓ Añadido a GT",
+    "promoteToGT": "↑ Añadir a Ground Truth",
     "alreadyInGT": "Ya en Ground Truth"
   },
   "intelligenceDetails": "Detalles de Inteligencia",

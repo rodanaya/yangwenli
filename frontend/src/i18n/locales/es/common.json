@@ -199,7 +199,8 @@
   },
   "ariaWidget": {
     "loadError": "Error al cargar las pistas de investigación ARIA",
-    "viewFull": "Ver todas las pistas de investigación"
+    "viewFull": "Ver todas las pistas de investigación",
+    "noVendorsInTier": "No hay proveedores en Tier {{tier}}"
   },
   "infographics": {
     "sectionTitle": "Infografías para Publicación",

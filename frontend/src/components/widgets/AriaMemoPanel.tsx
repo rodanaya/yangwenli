@@ -6,6 +6,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { ariaApi } from '@/api/client'
 import type { AriaMemoResponse } from '@/api/client'
@@ -57,6 +58,7 @@ function MemoSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMemoProps) {
+  const { t } = useTranslation('aria')
   const [copied, setCopied] = useState(false)
 
   const { data: memo, isLoading, error } = useQuery<AriaMemoResponse | null>({
@@ -114,7 +116,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
         ) : error ? (
           <div className="flex items-center gap-2 text-sm text-red-400 py-2">
             <AlertCircle className="h-4 w-4 shrink-0" />
-            Error al cargar memo
+            {t('memo.loadError')}
           </div>
         ) : memo?.memo_text ? (
           <>
