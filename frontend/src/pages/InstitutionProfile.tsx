@@ -1788,6 +1788,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     year_range: number[]
   }
 }) {
+  const { t } = useTranslation('institutions')
   const allYears = vendorLoyalty.year_range ?? []
   const displayYears = allYears.slice(-8)
   const topVendors = vendorLoyalty.vendors.slice(0, 8)
@@ -1978,6 +1979,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
   timeline: Array<{ year: number; contract_count: number; total_value: number }>
   asfFindings: Array<{ year: number; amount_mxn?: number; observations_total?: number }>
 }) {
+  const { t } = useTranslation('institutions')
   if (timeline.length === 0 && asfFindings.length === 0) {
     return <p className="text-xs text-text-muted py-4 text-center">{t('profile.noExternalEvents')}</p>
   }
@@ -2034,6 +2036,7 @@ function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
   vendors: InstitutionVendorItem[]
   totalInstitutionValue?: number
 }) {
+  const { t } = useTranslation('institutions')
   const [TreemapComp, setTreemapComp] = useState<React.ComponentType<any> | null>(null)
   const [loadError, setLoadError] = useState(false)
 
@@ -2057,6 +2060,7 @@ function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
 // ---- Contract Row ----
 
 function ContractRow({ contract, onView }: { contract: ContractListItem; onView?: (id: number) => void }) {
+  const { t } = useTranslation('institutions')
   return (
     <div
       className="flex items-center justify-between px-3 py-2 hover:bg-background-elevated/40 transition-colors cursor-pointer"

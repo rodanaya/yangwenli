@@ -957,7 +957,7 @@ export default function SpendingCategories() {
               y qu\u00e9 tipos de bienes y servicios presentan los patrones m\u00e1s sospechosos.
             </>
           ) : (
-            {t('hero.loading')}
+            t('hero.loading')
           )}
         </p>
         <div className="mt-2">

@@ -8,6 +8,7 @@
  */
 
 import { memo, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import type { SectorYearItem } from '@/api/types'
 
@@ -77,6 +78,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
   rowHeight = 44,
   cellWidth = 64,
 }: AdminSectorHeatmapProps) {
+  const { t } = useTranslation('common')
   const [hoveredCell, setHoveredCell] = useState<string | null>(null)
 
   const { cells, maxPct } = useMemo(() => {

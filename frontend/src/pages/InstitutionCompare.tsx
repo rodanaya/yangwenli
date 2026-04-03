@@ -1037,9 +1037,9 @@ export default function InstitutionCompare() {
         <div className="rounded-lg border border-red-500/30 bg-red-500/10 px-4 py-3 flex items-start gap-2 mb-6">
           <AlertCircle className="h-4 w-4 text-red-400 flex-shrink-0 mt-0.5" />
           <div>
-            <p className="text-sm font-medium text-red-400">Error al cargar instituciones</p>
+            <p className="text-sm font-medium text-red-400">{t('compare.loadError')}</p>
             <p className="text-xs text-text-muted mt-0.5">
-              Verifica los IDs de las instituciones e intenta de nuevo.
+              {t('compare.loadErrorDesc')}
             </p>
           </div>
         </div>
