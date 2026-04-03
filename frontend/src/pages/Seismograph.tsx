@@ -74,27 +74,28 @@ interface SexenioStats {
 // Sexenio horizontal bar chart
 // ---------------------------------------------------------------------------
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type TFunction = (key: string, opts?: Record<string, any>) => string
+
 interface ComparisonChartProps {
   data: SexenioStats[]
   metric: MetricKey
   lang: string
+  t: TFunction
 }
 
-function ComparisonBarChart({ data, metric, lang }: ComparisonChartProps) {
-  const metaMap: Record<MetricKey, { labelES: string; labelEN: string; formatter: (v: number) => string }> = {
+function ComparisonBarChart({ data, metric, lang, t }: ComparisonChartProps) {
+  const metaMap: Record<MetricKey, { label: string; formatter: (v: number) => string }> = {
     avgRisk: {
-      labelES: 'Riesgo Promedio',
-      labelEN: 'Avg Risk Score',
+      label: t('sexenio.metricAvgRisk'),
       formatter: (v) => `${(v * 100).toFixed(1)}%`,
     },
     highRiskPct: {
-      labelES: '% Contratos Alto Riesgo',
-      labelEN: '% High-Risk Contracts',
+      label: t('sexenio.metricHighRisk'),
       formatter: (v) => `${(v * 100).toFixed(1)}%`,
     },
     directAwardPct: {
-      labelES: '% Adjudicaciones Directas',
-      labelEN: '% Direct Awards',
+      label: t('sexenio.metricDirectAward'),
       formatter: (v) => `${(v * 100).toFixed(0)}%`,
     },
   }
@@ -122,7 +123,7 @@ function ComparisonBarChart({ data, metric, lang }: ComparisonChartProps) {
         return `<div style="min-width:160px">
           <div style="font-weight:700">${p.name}</div>
           <div style="color:#94a3b8;font-size:10px;margin-bottom:4px">${sub}</div>
-          <div>${lang === 'es' ? meta.labelES : meta.labelEN}: <b>${meta.formatter(p.value)}</b></div>
+          <div>${meta.label}: <b>${meta.formatter(p.value)}</b></div>
         </div>`
       },
     },
@@ -175,7 +176,7 @@ function ComparisonBarChart({ data, metric, lang }: ComparisonChartProps) {
 // Yearly timeline chart
 // ---------------------------------------------------------------------------
 
-function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: string }) {
+function YearlyAreaChart({ data, lang, t }: { data: YearOverYearChange[]; lang: string; t: TFunction }) {
   const sorted = useMemo(
     () => [...data].sort((a, b) => a.year - b.year).filter(d => d.year >= 2006),
     [data],
@@ -184,7 +185,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
   const markLines = ANNOTATION_EVENTS.map(ev => ({
     xAxis: ev.year,
     label: {
-      formatter: lang === 'es' ? ev.es : ev.en,
+      formatter: lang === 'es' ? ev.es : ev.en,  // proper nouns, no t() needed
       position: 'insideStartTop',
       color: '#f87171',
       fontSize: 10,
@@ -199,7 +200,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
       label: {
         show: true,
         position: 'insideTopLeft',
-        formatter: lang === 'es' ? s.nameES : s.nameEN,
+        formatter: lang === 'es' ? s.nameES : s.nameEN,  // proper nouns, no t() needed
         color: '#475569',
         fontSize: 10,
       },
@@ -221,10 +222,10 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
         if (!d) return ''
         return `<div style="min-width:180px">
           <div style="font-weight:600;margin-bottom:4px">${year}</div>
-          <div>${lang === 'es' ? 'Riesgo prom.' : 'Avg risk'}: <b>${(d.avg_risk * 100).toFixed(1)}%</b></div>
-          <div>${lang === 'es' ? 'Alto riesgo' : 'High risk'}: <b>${d.high_risk_pct.toFixed(1)}%</b></div>
-          <div>${lang === 'es' ? 'Adj. directa' : 'Direct award'}: <b>${d.direct_award_pct.toFixed(1)}%</b></div>
-          <div>${lang === 'es' ? 'Valor total' : 'Total value'}: <b>${formatCompactMXN(d.total_value)}</b></div>
+          <div>${t('chart.avgRiskLabel')}: <b>${(d.avg_risk * 100).toFixed(1)}%</b></div>
+          <div>${t('chart.highRiskLabel')}: <b>${d.high_risk_pct.toFixed(1)}%</b></div>
+          <div>${t('chart.directAwardLabel')}: <b>${d.direct_award_pct.toFixed(1)}%</b></div>
+          <div>${t('chart.totalValueLabel')}: <b>${formatCompactMXN(d.total_value)}</b></div>
         </div>`
       },
     },
@@ -247,7 +248,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
     },
     series: [
       {
-        name: lang === 'es' ? '% Alto Riesgo' : '% High Risk',
+        name: t('chart.seriesHighRisk'),
         type: 'line',
         data: sorted.map(d => d.high_risk_pct / 100),
         smooth: true,
@@ -256,7 +257,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
         symbol: 'none',
       },
       {
-        name: lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk',
+        name: t('chart.seriesAvgRisk'),
         type: 'line',
         data: sorted.map(d => d.avg_risk),
         smooth: true,
@@ -269,7 +270,7 @@ function YearlyAreaChart({ data, lang }: { data: YearOverYearChange[]; lang: str
         markArea: { data: adminBands, silent: true },
       },
       {
-        name: lang === 'es' ? '% Adj. Directas' : '% Direct Awards',
+        name: t('chart.seriesDirectAward'),
         type: 'line',
         data: sorted.map(d => d.direct_award_pct / 100),
         smooth: true,
@@ -447,7 +448,7 @@ export default function Seismograph() {
 
         <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
           {sexenioStats.length > 0 && (
-            <ComparisonBarChart data={sexenioStats} metric={metric} lang={lang} />
+            <ComparisonBarChart data={sexenioStats} metric={metric} lang={lang} t={t} />
           )}
         </div>
 
@@ -471,33 +472,33 @@ export default function Seismograph() {
       {amlo && (
         <section aria-label="AMLO era key metrics">
           <h2 className="text-base font-semibold text-slate-300 mb-3">
-            {lang === 'es' ? 'Métricas — Era AMLO (2019–2024)' : 'Metrics — AMLO Era (2019–2024)'}
+            {t('amlo.sectionHeading')}
           </h2>
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
             {[
               {
-                label: lang === 'es' ? 'Adj. Directas' : 'Direct Award %',
+                label: t('amlo.directAwardLabel'),
                 value: `${(amlo.directAwardPct * 100).toFixed(0)}%`,
                 level: amlo.directAwardPct > 0.6 ? 'high' : amlo.directAwardPct > 0.4 ? 'medium' : 'low',
                 barPct: Math.min(amlo.directAwardPct * 100, 100),
                 color: '#60a5fa',
               },
               {
-                label: lang === 'es' ? 'Riesgo Prom.' : 'Avg Risk Score',
+                label: t('amlo.avgRiskLabel'),
                 value: `${(amlo.avgRisk * 100).toFixed(1)}%`,
                 level: amlo.avgRisk >= 0.25 ? 'high' : 'medium',
                 barPct: Math.min(amlo.avgRisk * 400, 100),
                 color: '#f87171',
               },
               {
-                label: lang === 'es' ? '% Alto Riesgo' : 'High Risk %',
+                label: t('amlo.highRiskLabel'),
                 value: `${(amlo.highRiskPct * 100).toFixed(1)}%`,
                 level: amlo.highRiskPct > 0.15 ? 'high' : 'medium',
                 barPct: Math.min(amlo.highRiskPct * 400, 100),
                 color: '#fb923c',
               },
               {
-                label: lang === 'es' ? 'Contratos' : 'Contracts',
+                label: t('amlo.contractsLabel'),
                 value: amlo.contracts.toLocaleString('es-MX'),
                 level: 'neutral',
                 barPct: 65,
@@ -604,7 +605,7 @@ export default function Seismograph() {
           {t('timeline.description')}
         </p>
         <div className="bg-slate-900/60 border border-slate-700/50 rounded-xl p-4">
-          <YearlyAreaChart data={years} lang={lang} />
+          <YearlyAreaChart data={years} lang={lang} t={t} />
         </div>
         <p className="text-xs text-slate-500 mt-2 flex items-start gap-1.5">
           <Info size={12} className="mt-0.5 shrink-0" aria-hidden="true" />
@@ -623,13 +624,11 @@ export default function Seismograph() {
             }`}
           >
             <Vote size={12} aria-hidden="true" />
-            {lang === 'es' ? 'Mostrar años electorales' : 'Show Election Years'}
+            {t('election.toggleButton')}
           </button>
           {showElectionMarkers && (
             <span className="text-xs text-slate-500">
-              {lang === 'es'
-                ? `Elecciones presidenciales: ${ELECTION_YEARS.join(', ')}`
-                : `Presidential elections: ${ELECTION_YEARS.join(', ')}`}
+              {t('election.yearsNote', { years: ELECTION_YEARS.join(', ') })}
             </span>
           )}
         </div>
@@ -645,7 +644,7 @@ export default function Seismograph() {
           >
             <p className="text-xs text-blue-400 font-semibold uppercase tracking-wide mb-3 flex items-center gap-1.5">
               <Vote size={11} aria-hidden="true" />
-              {lang === 'es' ? 'Riesgo en años electorales' : 'Risk in Election Years'}
+              {t('election.sectionHeading')}
             </p>
             <div className="space-y-1">
               {ELECTION_YEARS.map((elYear, i) => {
@@ -682,16 +681,14 @@ export default function Seismograph() {
                     </div>
                     <span className="text-xs text-slate-400 text-right font-mono">
                       {row.high_risk_pct.toFixed(1)}%{' '}
-                      <span className="text-slate-600">{lang === 'es' ? 'alto' : 'hi'}</span>
+                      <span className="text-slate-600">{t('election.hiSuffix')}</span>
                     </span>
                   </motion.div>
                 )
               })}
             </div>
             <p className="text-xs text-slate-600 mt-3">
-              * {lang === 'es'
-                ? 'Elecciones presidenciales — julio del año indicado'
-                : 'Presidential election years — held in July'}
+              * {t('election.footnote')}
             </p>
           </motion.div>
         )}
@@ -700,9 +697,9 @@ export default function Seismograph() {
         <div className="mt-4">
           <p className="text-xs text-slate-500 mb-2 flex items-center gap-1.5">
             <TrendingUp size={11} aria-hidden="true" />
-            {lang === 'es' ? 'Riesgo promedio por año' : 'Average risk by year'}
+            {t('election.avgRiskByYear')}
             {showElectionMarkers && (
-              <span className="ml-2 text-blue-400">* = {lang === 'es' ? 'año electoral' : 'election year'}</span>
+              <span className="ml-2 text-blue-400">* = {t('election.electionYearMark')}</span>
             )}
           </p>
           <div className="space-y-0.5">

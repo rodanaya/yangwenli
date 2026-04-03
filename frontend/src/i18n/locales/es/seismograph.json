@@ -36,5 +36,30 @@
     "description": "Línea roja: riesgo promedio. Área naranja: % contratos alto riesgo. Azul punteado: tasa de adjudicación directa. Líneas verticales punteadas = escándalos documentados.",
     "footnote": "Los puntajes de riesgo miden similitud con patrones de corrupción documentados — no son prueba de irregularidades. Los datos de adjudicación directa antes de 2010 están incompletos (brecha de cobertura Estructura A)."
   },
-  "noData": "Sin datos"
+  "noData": "Sin datos",
+  "chart": {
+    "avgRiskLabel": "Riesgo prom.",
+    "highRiskLabel": "Alto riesgo",
+    "directAwardLabel": "Adj. directa",
+    "totalValueLabel": "Valor total",
+    "seriesHighRisk": "% Alto Riesgo",
+    "seriesAvgRisk": "Riesgo Prom.",
+    "seriesDirectAward": "% Adj. Directas"
+  },
+  "amlo": {
+    "sectionHeading": "Métricas — Era AMLO (2019–2024)",
+    "directAwardLabel": "Adj. Directas",
+    "avgRiskLabel": "Riesgo Prom.",
+    "highRiskLabel": "% Alto Riesgo",
+    "contractsLabel": "Contratos"
+  },
+  "election": {
+    "toggleButton": "Mostrar años electorales",
+    "yearsNote": "Elecciones presidenciales: {{years}}",
+    "sectionHeading": "Riesgo en años electorales",
+    "hiSuffix": "alto",
+    "footnote": "Elecciones presidenciales — julio del año indicado",
+    "avgRiskByYear": "Riesgo promedio por año",
+    "electionYearMark": "año electoral"
+  }
 }

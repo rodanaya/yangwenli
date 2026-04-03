@@ -36,5 +36,30 @@
     "description": "Red line: avg risk score. Orange area: % high-risk contracts. Blue dashed: direct award rate. Dashed vertical lines mark major procurement scandals.",
     "footnote": "Risk scores measure similarity to documented corruption patterns — not proof of wrongdoing. Direct award data before 2010 is incomplete (Structure A coverage gap)."
   },
-  "noData": "No data"
+  "noData": "No data",
+  "chart": {
+    "avgRiskLabel": "Avg risk",
+    "highRiskLabel": "High risk",
+    "directAwardLabel": "Direct award",
+    "totalValueLabel": "Total value",
+    "seriesHighRisk": "% High Risk",
+    "seriesAvgRisk": "Avg Risk",
+    "seriesDirectAward": "% Direct Awards"
+  },
+  "amlo": {
+    "sectionHeading": "Metrics — AMLO Era (2019–2024)",
+    "directAwardLabel": "Direct Award %",
+    "avgRiskLabel": "Avg Risk Score",
+    "highRiskLabel": "High Risk %",
+    "contractsLabel": "Contracts"
+  },
+  "election": {
+    "toggleButton": "Show Election Years",
+    "yearsNote": "Presidential elections: {{years}}",
+    "sectionHeading": "Risk in Election Years",
+    "hiSuffix": "hi",
+    "footnote": "Presidential election years — held in July",
+    "avgRiskByYear": "Average risk by year",
+    "electionYearMark": "election year"
+  }
 }
