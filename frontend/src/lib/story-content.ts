@@ -509,7 +509,7 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'fingerprint',
-          title: 'Risk fingerprint: HEMOSER — 8 factors from the v6.4 model',
+          title: 'Risk fingerprint: HEMOSER — 9 active features from the v6.5 model',
           chartId: 'vendor-fingerprint',
         },
       },
@@ -937,14 +937,14 @@ export const STORIES: StoryDef[] = [
         ],
         pullquote: {
           quote: '1,253 companies with the same profile are not a coincidence',
-          stat: 'AUC 0.840',
-          statLabel: 'detection model accuracy v6.4',
+          stat: 'AUC 0.828',
+          statLabel: 'detection model accuracy v6.5',
           barValue: 84.0,
           barLabel: 'Area under the ROC curve',
         },
         chartConfig: {
           type: 'pyramid',
-          title: 'How the RUBLI model distributes — risk pyramid 3.05M contracts',
+          title: 'How the RUBLI model distributes — risk pyramid 3.06M contracts',
           chartId: 'risk-pyramid',
         },
       },
@@ -1036,7 +1036,7 @@ export const STORIES: StoryDef[] = [
         prose: [
           'The Servicio de Administración Tributaria is Mexico\'s tax authority: the institution that collects taxes, pursues evaders and maintains the EFOS list of shell companies. It is, in theory, the most sophisticated federal agency in fraud detection. It was also a victim of it.',
           'The SixSigma case is a textbook example of tender rigging. RUBLI identifies 147 contracts linked to this case in its ground-truth database, worth an estimated 27 billion pesos in technology contracting for the SAT. The mechanism was direct: tenders were drafted with technical specifications that only SixSigma could meet. Not because the company was the best available provider; but because the bid documents were written so that no other company could participate.',
-          'RUBLI\'s v6.4 model assigns contracts in this case an average risk score of 0.756, with 87.8% classified as high or critical risk. The algorithm detects the pattern without knowing the case file: concentration in a single institution, repeated wins in nominally competitive processes, prices above market rates.',
+          'RUBLI\'s v6.5 model assigns contracts in this case an average risk score of 0.756, with 87.8% classified as high or critical risk. The algorithm detects the pattern without knowing the case file: concentration in a single institution, repeated wins in nominally competitive processes, prices above market rates.',
         ],
         pullquote: {
           quote: 'The SAT hunts fraud. It was also a victim of it.',
@@ -1059,7 +1059,7 @@ export const STORIES: StoryDef[] = [
         prose: [
           'The SixSigma case illustrates one of RUBLI\'s model strengths: the ability to detect patterns that, contract by contract, appear ordinary, but together reveal a systemic anomaly.',
           'No individual SixSigma contract would have raised suspicion on its own. The amounts were reasonable for government technology consulting. The processes followed the public tender format. Publication timelines met regulations. What the algorithm detects is the repetition: the same vendor winning tender after tender at the same institution, with an anomalous win_rate and institutional concentration that spikes against the norm for the Hacienda sector.',
-          'Hacienda is one of the sectors where the network_member_count coefficient (+0.77) is highest in the v6.4 model — vendor networks in the government\'s financial sector are a robust risk predictor. SixSigma did not operate in a network, but its institutional concentration was so pronounced that it did not need one.',
+          'Hacienda is one of the sectors where the network_member_count coefficient (+0.77) is highest in the v6.5 model — vendor networks in the government\'s financial sector are a robust risk predictor. SixSigma did not operate in a network, but its institutional concentration was so pronounced that it did not need one.',
         ],
         pullquote: {
           quote: 'Contract by contract, everything looked normal. Together, it was a pattern.',
@@ -1634,7 +1634,7 @@ export const STORIES: StoryDef[] = [
           'When the contract amount does not justify an open public tender — because it falls below the legal threshold — the law allows an intermediate modality: the "invitation to at least three parties." The institution can select three companies and ask them to submit proposals. On the surface, there is competition. In practice, the data tell a different story.',
           'RUBLI\'s analysis of restricted-invitation contracts shows a consistent pattern: in many sectors, the same three companies appear together in tender after tender, for years. This has a name in collusion theory: bid rotation. One company wins today, the next wins tomorrow, the third wins the week after. All submit proposals. None actually competes.',
           'No explicit agreement need exist. It is enough for contracting institutions to always invite the same companies. The result is functionally identical to a direct award, but with the formal cover of having followed a competitive process. The files are in order. COMPRANET records three bids. And the money goes where it always went.',
-          'The system identifies these patterns through the co_bid_rate indicator: the co-bidding rate between pairs of vendors. In the v6.4 model, this indicator was regularized to zero — not because the pattern does not exist, but because the training data does not contain enough documented cases of bidding cartels. What the model cannot see, COMPRANET data already suggests.',
+          'The system identifies these patterns through the co_bid_rate indicator: the co-bidding rate between pairs of vendors. In the v6.5 model, this indicator was regularized to zero — not because the pattern does not exist, but because the training data does not contain enough documented cases of bidding cartels. What the model cannot see, COMPRANET data already suggests.',
         ],
         pullquote: {
           quote: 'Three bids, the same winning company, year after year. That is not competition.',

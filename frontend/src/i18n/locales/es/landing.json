@@ -29,8 +29,8 @@
     "statContracts": "contratos federales",
     "statValue": "gasto validado",
     "statHighRisk": "alto riesgo detectado",
-    "statHighRiskContext": "Limite OCDE: 2-15%",
-    "whatIs": "El mayor analisis abierto de contrataciones federales mexicanas. 23 anos de datos. Un modelo de riesgo. Cada puntaje explicado.",
+    "statHighRiskContext": "Límite OCDE: 2-15%",
+    "whatIs": "El mayor análisis abierto de contrataciones federales mexicanas. 23 años de datos. Un modelo de riesgo. Cada puntaje explicado.",
     "ctaInvestigate": "Empezar a Investigar",
     "ctaReadData": "Leer los Datos",
     "credibility": "Fuente: COMPRANET 2002-2025  |  Modelo v6.5  |  AUC 0.828  |  Actualizado marzo 2026"
@@ -100,7 +100,7 @@
     "step02Title": "16 Indicadores",
     "step02Body": "Concentración de proveedores, precios atípicos, adjudicación directa, redes...",
     "step03Title": "Modelo ML",
-    "step03Body": "Comparamos contra 289 casos documentados de corrupción en los 12 sectores",
+    "step03Body": "Comparamos contra 748 casos documentados de corrupción en los 12 sectores",
     "step04Title": "Reporte",
     "step04Body": "Calificamos la salud procuratoria de A a F para cada sector",
     "disclaimer": "Las puntuaciones son indicadores estadísticos de riesgo, no prueba de corrupción. Una puntuación alta significa que el contrato se parece a patrones documentados.",
@@ -150,12 +150,12 @@
   "featuredCase": {
     "label": "CASO DOCUMENTADO",
     "contracts": "contratos",
-    "directAward": "adjudicacion directa",
-    "criticalContracts": "contratos criticos",
-    "yearsOfContracts": "anos de contratos",
-    "riskScore": "Puntuacion de Riesgo",
+    "directAward": "adjudicación directa",
+    "criticalContracts": "contratos críticos",
+    "yearsOfContracts": "años de contratos",
+    "riskScore": "Puntuación de Riesgo",
     "ariaLabel": "Caso documentado destacado",
-    "description": "Esta empresa farmaceutica recibio contratos gubernamentales con un {{directAwardPct}}% de adjudicaciones directas. El modelo de riesgo asigna una puntuacion de {{riskScore}} — el mas alto posible — senalando que su patron de contratacion coincide casi perfectamente con casos documentados de fraude.",
+    "description": "Esta empresa farmacéutica recibió contratos gubernamentales con un {{directAwardPct}}% de adjudicaciones directas. El modelo de riesgo asigna una puntuacion de {{riskScore}} — el mas alto posible — señalando que su patron de contratacion coincide casi perfectamente con casos documentados de fraude.",
     "cta": "Ver investigación completa"
   },
   "footer": {

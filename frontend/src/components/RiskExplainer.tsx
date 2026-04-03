@@ -42,7 +42,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory (Klitgaard 1988): Monopoly power is the primary enabling condition for procurement corruption — it eliminates price competition and reduces the ability to compare against market rates.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
     rubli_note:
-      "Strong predictor globally in v6.4 (+0.238). Expanded ground truth (390 cases, 725 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
+      "Strong predictor globally in v6.5 (+0.238). Expanded ground truth (748 cases, 603 vendors) reveals market concentration remains a significant signal across diverse corruption types.",
   },
   price_volatility: {
     title: 'Price Volatility',
@@ -54,7 +54,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Rent-Seeking Theory (Tullock 1967): Rents are extracted through price inflation above competitive levels. Porter & Zona (1993): Price manipulation is detectable in bid distributions — colluding firms show unusual variance patterns.',
     citation: 'Porter & Zona (1993): Price manipulation detectable in bid distributions',
     rubli_note:
-      'Top global predictor in v6.4 (+1.857). Remains strongest across 390 documented cases. Vendors with wildly varying contract amounts relative to sector norms consistently scored highest.',
+      'Top global predictor in v6.5 (+1.857). Remains strongest across 748 documented cases. Vendors with wildly varying contract amounts relative to sector norms consistently scored highest.',
   },
   institution_diversity: {
     title: 'Institution Diversity',
@@ -66,7 +66,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Competition Theory (Coviello & Mariniello 2014): Competition and transparency reduce award concentration. Vendors serving many buyers have more accountability exposure and less ability to corrupt all of them simultaneously.',
     citation: 'Coviello & Mariniello (2014): Competition and transparency reduce award concentration',
     rubli_note:
-      'Protective factor in v6.4 (-0.468). Negative coefficient means more institutions served = lower risk. Reduced weight vs v5.x reflects expanded ground truth showing institution capture is strongest in specific sector-institution pairs, not universal.',
+      'Protective factor in v6.5 (-0.468). Negative coefficient means more institutions served = lower risk. Reduced weight vs v5.x reflects expanded ground truth showing institution capture is strongest in specific sector-institution pairs, not universal.',
   },
   win_rate: {
     title: 'Win Rate',
@@ -78,7 +78,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Bid-Ring Theory (Conley & Decarolis 2016): Bid rings are detectable via win pattern analysis. However, Mexico-specific analysis shows high win rates can reflect both corruption and legitimate market dominance.',
     citation: 'Conley & Decarolis (2016): Bid rings detectable via win pattern analysis',
     rubli_note:
-      'Zeroed by sign constraint in v6.4. With expanded ground truth, win_rate lost predictive power. Corruption in Mexico manifests through vendor_concentration and price_volatility more consistently than through abnormal win rates.',
+      'Zeroed by sign constraint in v6.5. With expanded ground truth, win_rate lost predictive power. Corruption in Mexico manifests through vendor_concentration and price_volatility more consistently than through abnormal win rates.',
   },
   sector_spread: {
     title: 'Sector Spread',
@@ -90,7 +90,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Extended ground truth: Some major corruption cases (LICONSA ecosystem, IMSS networks) span multiple sectors. Sector spread alone is insufficient for distinguishing corruption.',
     citation: 'RUBLI v6.5 ground truth analysis (748 institution-scoped cases)',
     rubli_note:
-      'Zeroed by sign constraint in v6.4. Cross-sector presence is ambiguous — some corruption networks span sectors, but many legitimate vendors also operate broadly.',
+      'Zeroed by sign constraint in v6.5. Cross-sector presence is ambiguous — some corruption networks span sectors, but many legitimate vendors also operate broadly.',
   },
   industry_mismatch: {
     title: 'Industry Mismatch',
@@ -102,7 +102,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Shell Company Theory (Fazekas & Kocsis 2020): Ghost companies are created with generic or mismatched industry classifications to collect payments for work actually performed by the corrupt network.',
     citation: 'Fazekas & Kocsis (2020), British Journal of Political Science',
     rubli_note:
-      'Regularized to zero in v6.4. While theoretically important, industry mismatch does not discriminate well in Mexico\'s current training data under near-L1 regularization.',
+      'Regularized to zero in v6.5. While theoretically important, industry mismatch does not discriminate well in Mexico\'s current training data under near-L1 regularization.',
   },
   same_day_count: {
     title: 'Same-Day Award Count',
@@ -126,7 +126,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Principal-Agent Theory: Discretion is the second enabling condition (after monopoly). Direct awards maximize official discretion — the awarding official can choose any vendor without justifying the choice through price competition.',
     citation: 'OECD (2016): Preventing Corruption in Public Procurement',
     rubli_note:
-      'Regularized to zero in v6.4. Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline. Direct award status alone does not discriminate between corrupt and clean vendors under near-L1 regularization.',
+      'Regularized to zero in v6.5. Mexico issues ~70% of contracts as direct awards — the z-score normalizes by sector/year baseline. Direct award status alone does not discriminate between corrupt and clean vendors under near-L1 regularization.',
   },
   ad_period_days: {
     title: 'Advertisement Period',
@@ -138,7 +138,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Transparency Theory (EU Directive 2014/24): Short advertisement periods reduce bidder participation. However, Mexico-specific data shows known-bad vendors often comply with timeline requirements while manipulating vendor selection.',
     citation: 'EU Directive 2014/24 minimum timelines',
     rubli_note:
-      'Now active in v6.4 (+0.042) with C=0.01 (was zeroed with C=0.0013). Weak positive signal — shorter ad periods slightly increase risk after controlling for other factors.',
+      'Now active in v6.5 (+0.042) with C=0.01 (was zeroed with C=0.0013). Weak positive signal — shorter ad periods slightly increase risk after controlling for other factors.',
   },
   network_member_count: {
     title: 'Network Membership',
@@ -150,7 +150,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Network Theory of Corruption (Wachs et al. 2021): Procurement fraud often involves coordinated networks of companies. Network membership — being connected to other vendors — is a risk signal.',
     citation: 'Fazekas, Skuhrovec & Wachs (2020): Network analysis of procurement graphs',
     rubli_note:
-      'Moderate predictor (+0.187) in v6.4. Expanded ground truth revealed network effects are consistent predictors. The Louvain community detection detects 1,837 vendor communities with correlation to corruption.',
+      'Moderate predictor (+0.187) in v6.5. Expanded ground truth revealed network effects are consistent predictors. The Louvain community detection detects 1,837 vendor communities with correlation to corruption.',
   },
   year_end: {
     title: 'Year-End Award',
@@ -162,7 +162,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Budget Cycle Theory (IMCO Mexico): Year-end budget pressure reduces oversight. Officials face career risk if they return unspent budget, creating incentive to approve contracts rapidly without full scrutiny.',
     citation: 'IMCO (Mexico): Budget rushing in December',
     rubli_note:
-      'Regularized to zero in v6.4. Direct awards are common year-round in Mexico, reducing the signal distinctiveness of December awards.',
+      'Regularized to zero in v6.5. Direct awards are common year-round in Mexico, reducing the signal distinctiveness of December awards.',
   },
   institution_risk: {
     title: 'Institution Risk Type',
@@ -174,7 +174,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Institutional Economics: Different types of government entities have different accountability mechanisms, oversight levels, and corruption opportunities based on their procurement volumes and technical complexity.',
     citation: 'IMF CRI Methodology',
     rubli_note:
-      'Regularized to zero in v6.4. While some institutional categories are systematically higher risk, this feature does not discriminate well under near-L1 regularization.',
+      'Regularized to zero in v6.5. While some institutional categories are systematically higher risk, this feature does not discriminate well under near-L1 regularization.',
   },
   single_bid: {
     title: 'Single Bid',
@@ -186,7 +186,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Competition Theory (Charron et al. 2017): Single bidding rates are among the most universally validated red flags globally. Higher rates consistently correlate with corruption perception indices across 28 EU countries.',
     citation: 'Charron et al. (2017), Journal of Politics',
     rubli_note:
-      'Now active in v6.4 (+0.098) with C=0.01 (was zeroed with C=0.0013). Single bid in competitive procedures is a meaningful signal — less aggressive regularization allows it to contribute.',
+      'Now active in v6.5 (+0.098) with C=0.01 (was zeroed with C=0.0013). Single bid in competitive procedures is a meaningful signal — less aggressive regularization allows it to contribute.',
   },
   price_ratio: {
     title: 'Price Ratio',
@@ -198,7 +198,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Overpricing Theory (World Bank INT 2019): Warning signs of fraud include prices significantly above market rates. The IQR method identifies statistical outliers in contract amounts.',
     citation: 'World Bank INT (2019): Warning Signs of Fraud',
     rubli_note:
-      'Strong predictor in v6.4 (+0.391). With less aggressive L1 regularization (C=0.01), price_ratio now contributes meaningfully alongside price_volatility. Contracts priced far above sector median are flagged.',
+      'Strong predictor in v6.5 (+0.391). With less aggressive L1 regularization (C=0.01), price_ratio now contributes meaningfully alongside price_volatility. Contracts priced far above sector median are flagged.',
   },
   co_bid_rate: {
     title: 'Co-Bid Rate',

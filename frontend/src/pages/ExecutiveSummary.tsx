@@ -1038,18 +1038,18 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   const { t } = useTranslation('executive')
   const { risk } = data
-  const criticalCount = risk.critical_count ?? 133572
-  const highCount = risk.high_count ?? 148043
+  const criticalCount = risk.critical_count ?? 184031
+  const highCount = risk.high_count ?? 228814
   const highPlusPct = risk.high_pct + risk.critical_pct
   const highPlusCount = criticalCount + highCount
   const medPlusPct = (risk.medium_pct ?? 0) + highPlusPct
-  const medPlusCount = Math.round(medPlusPct / 100 * 3051294)
+  const medPlusCount = Math.round(medPlusPct / 100 * 3058286)
 
   const stages = [
     {
       label: t('funnel.allContracts'),
       pct: 100,
-      count: 3051294,
+      count: 3058286,
       barH: 16,
       color: 'var(--color-text-muted)',
       accent: false,

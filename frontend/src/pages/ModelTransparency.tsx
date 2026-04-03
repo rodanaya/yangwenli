@@ -802,7 +802,7 @@ function RiskDistributionStrip() {
           Where 3.1M Contracts Land
         </h3>
         <p className="text-xs text-text-muted mt-1">
-          Risk level distribution across all scored contracts (v6.2 OECD-calibrated)
+          Risk level distribution across all scored contracts (v6.5 OECD-calibrated)
         </p>
       </div>
 

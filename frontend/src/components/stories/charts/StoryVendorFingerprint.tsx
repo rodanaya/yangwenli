@@ -88,7 +88,7 @@ export function StoryVendorFingerprint() {
           HOW TO READ THIS CHART
         </p>
         <p className="text-xs text-zinc-400 leading-relaxed">
-          Each petal represents one of the 8 active risk model features.
+          Each petal represents one of the 9 active risk model features.
           <strong className="text-red-400"> Red petals</strong> are risk-increasing factors;
           <strong className="text-teal-400"> teal petals</strong> are protective.
           Petal size is proportional to the SHAP contribution — larger petals drive

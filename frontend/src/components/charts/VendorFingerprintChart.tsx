@@ -2,7 +2,7 @@
  * VendorFingerprintChart — "La Huella Digital"
  *
  * A Nightingale rose / polar area chart that visualizes a vendor's SHAP values
- * as a unique corruption "fingerprint". Each petal represents one of the 8 active
+ * as a unique corruption "fingerprint". Each petal represents one of the 9 active
  * risk model features. Red petals = risk-increasing, teal petals = protective.
  *
  * Inspired by Florence Nightingale's 1858 polar area diagram.
@@ -13,7 +13,7 @@ import { useMemo } from 'react'
 import { getRiskLevelFromScore } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
-// Feature definitions — the 8 active v6.4 coefficients
+// Feature definitions — the 9 active v6.5 coefficients
 // ---------------------------------------------------------------------------
 
 interface FingerprintFeature {
@@ -31,6 +31,7 @@ const FINGERPRINT_FEATURES: FingerprintFeature[] = [
   { key: 'same_day_count',        labelES: 'Contratos\nsimultaneos',     labelEN: 'Same-day\ncontracts',  direction: 'risk' },
   { key: 'single_bid',            labelES: 'Propuesta\nunica',           labelEN: 'Single\nbid',          direction: 'risk' },
   { key: 'ad_period_days',        labelES: 'Periodo\nanuncio',           labelEN: 'Ad\nperiod',           direction: 'risk' },
+  { key: 'win_rate',              labelES: 'Tasa de\nvictorias',         labelEN: 'Win\nrate',            direction: 'risk' },
   { key: 'institution_diversity', labelES: 'Diversidad\ninstitucional',  labelEN: 'Inst.\ndiversity',     direction: 'protective' },
 ]
 

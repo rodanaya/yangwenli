@@ -1028,7 +1028,7 @@ export default function AriaPage() {
               {stats.t1_reviewed_count != null && (
                 <span>
                   <strong className="text-zinc-300 font-mono">
-                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 285)) * 100)}%
+                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 320)) * 100)}%
                   </strong> {t('efficiencyStats.t1Complete')}
                 </span>
               )}

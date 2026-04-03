@@ -196,6 +196,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
   }
 
   return (
+    <>
+    {mobileOpen && (
+      <div
+        className="fixed inset-0 z-40 bg-black/50 md:hidden"
+        onClick={onMobileClose}
+        aria-hidden="true"
+      />
+    )}
     <aside
       className={cn(
         'fixed left-0 top-0 h-screen flex flex-col border-r border-stone-800 bg-[#1a1714] z-50',
@@ -355,6 +363,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </div>
       <ReportIssueDialog open={reportOpen} onOpenChange={setReportOpen} />
     </aside>
+    </>
   )
 }
 

@@ -405,7 +405,7 @@ function MiniSparkline({
   const gradId = `spark-${dataKey}-${color.replace('#', '')}`
   return (
     <div role="img" aria-label={`Mini sparkline trend chart for ${dataKey}`}>
-    <ResponsiveContainer width={120} height={24}>
+    <ResponsiveContainer width="100%" height={24}>
       <AreaChart data={data} margin={{ top: 2, right: 0, bottom: 0, left: 0 }}>
         <defs>
           <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
@@ -1742,7 +1742,7 @@ export function Dashboard() {
       {/* KEY FINDINGS SIGNAL STRIP — 3 live stats                       */}
       {/* ================================================================ */}
       {!kpiLoading && overview && (
-        <div className="bg-background-elevated border-y border-border grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-border py-6 px-8">
+        <div className="bg-background-elevated border-y border-border grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-border py-6 px-4 sm:px-8">
           <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
             <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>
               {overview.direct_award_pct != null ? `${overview.direct_award_pct.toFixed(1)}%` : '—'}

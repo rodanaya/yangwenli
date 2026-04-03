@@ -36,10 +36,10 @@ const INFOGRAPHICS: Infographic[] = [
   {
     id: 'risk-distribution',
     src: '/infographics/risk-distribution.svg',
-    title: 'Distribución de Riesgo: 281,615 Contratos Críticos',
+    title: 'Distribución de Riesgo: 412,845 Contratos Críticos',
     caption:
-      'De 3.05 millones de contratos federales, 281,615 (9.2%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v6.4 — entrenado con 347 casos documentados.',
-    source: 'RUBLI v6.4 · AUC=0.840 · HR=9.2% (cumple OCDE 2–15%)',
+      'De 3.05 millones de contratos federales, 412,845 (13.49%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v6.5 — entrenado con 748 casos documentados.',
+    source: 'RUBLI v6.5 · AUC=0.828 · HR=13.49% (cumple OCDE 2–15%)',
     tag: 'Modelo de Riesgo',
     tagColor: '#f87171',
   },
@@ -69,7 +69,7 @@ const INFOGRAPHICS: Infographic[] = [
     title: 'El Pico de Riesgo: 2020 y la Pandemia',
     caption:
       '2020 marcó el máximo histórico con 18.2% de contratos de alto riesgo — superando el umbral OCDE del 15%. Las compras de emergencia por COVID-19 dispararon patrones anómalos. Desde 2021 hay descenso, llegando a 9.2% en 2024.',
-    source: 'RUBLI v6.4 · Contratos clasificados como alto o crítico riesgo 2013–2024',
+    source: 'RUBLI v6.5 · Contratos clasificados como alto o crítico riesgo 2013–2024',
     tag: 'Tendencia',
     tagColor: '#10b981',
   },
