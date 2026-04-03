@@ -19,7 +19,9 @@ import { cn } from '@/lib/utils'
 interface ConcentrationRow {
   sector_id: number
   sector_name: string
-  concentration_pct: number
+  color: string
+  metric_value: number
+  rank: number
 }
 
 export interface SectorConcentrationChartProps {
@@ -97,7 +99,7 @@ export default function SectorConcentrationChart({
   const rows: ConcentrationRow[] = data?.data ?? []
 
   // Sort by concentration descending for visual impact
-  const sorted = [...rows].sort((a, b) => b.concentration_pct - a.concentration_pct)
+  const sorted = [...rows].sort((a, b) => b.metric_value - a.metric_value)
 
   return (
     <section
@@ -139,9 +141,9 @@ export default function SectorConcentrationChart({
       {!isLoading && !isError && sorted.length > 0 && (
         <ul className="space-y-2.5" role="list" aria-label="Concentración de mercado por sector">
           {sorted.map((row) => {
-            const { color: barColor, label } = getConcentrationLevel(row.concentration_pct)
+            const { color: barColor, label } = getConcentrationLevel(row.metric_value)
             const accentColor = getSectorColor(row.sector_name)
-            const pct = Math.min(100, Math.max(0, row.concentration_pct))
+            const pct = Math.min(100, Math.max(0, row.metric_value))
 
             return (
               <li

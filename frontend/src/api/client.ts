@@ -1373,9 +1373,9 @@ export const analysisApi = {
 
   /**
    * Get vendor concentration per sector — top-N vendors' share of contracts
-   * Returns concentration_pct as 0-100
+   * Returns metric_value as 0-100 (SectorComparisonItem shape)
    */
-  async getVendorConcentration(topN: number = 3): Promise<{ data: Array<{ sector_id: number; sector_name: string; concentration_pct: number }> }> {
+  async getVendorConcentration(topN: number = 3): Promise<{ data: Array<{ sector_id: number; sector_name: string; color: string; metric_value: number; rank: number }> }> {
     const { data } = await api.get(`/analysis/vendor-concentration?top_n=${topN}`)
     return data
   },

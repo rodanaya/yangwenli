@@ -1092,6 +1092,25 @@ const GroundTruthSection = memo(function GroundTruthSection({
     .sort((a, b) => b.high_plus_pct - a.high_plus_pct)
     .slice(0, 8)
 
+  if (filtered.length === 0) {
+    return (
+      <div className="space-y-2">
+        <div className="flex items-center gap-3 py-4">
+          <div className="h-8 w-8 rounded-full bg-green-500/10 flex items-center justify-center flex-shrink-0">
+            <Shield className="h-4 w-4 text-green-400" />
+          </div>
+          <div>
+            <p className="text-sm font-bold text-text-primary font-mono">AUC {modelAuc.toFixed(3)} · {totalCases} {t('documentedCorruptionCases')}</p>
+            <p className="text-xs text-text-muted">Model validated against documented Mexican procurement corruption scandals.</p>
+          </div>
+        </div>
+        <button onClick={onFullAnalysis} className="text-xs text-accent hover:underline font-mono flex items-center gap-1">
+          {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />
+        </button>
+      </div>
+    )
+  }
+
   return (
     <div>
       <div className="flex items-center gap-2 mb-1.5 px-1">
@@ -1535,7 +1554,8 @@ export function Dashboard() {
   const { data: execData, isLoading: execLoading } = useQuery({
     queryKey: ['executive', 'summary'],
     queryFn: () => analysisApi.getExecutiveSummary(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: Infinity, // historical model data — never re-fetch automatically
+    gcTime: 60 * 60 * 1000,
   })
 
   const { data: patternCountsData } = useQuery({
