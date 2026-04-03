@@ -588,9 +588,9 @@ export function Watchlist() {
   }
 
   return (
-    <div className="flex gap-4">
+    <div className="flex flex-col md:flex-row gap-4">
       {/* Folder sidebar */}
-      <div className="w-[200px] shrink-0 space-y-3">
+      <div className="w-full md:w-[200px] md:shrink-0 space-y-3">
         <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted px-1">{t('folders')}</p>
         <FolderSidebar
           folders={folders}

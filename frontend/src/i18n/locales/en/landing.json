@@ -127,7 +127,7 @@
   "aria": {
     "label": "AUTOMATED INVESTIGATION",
     "headline": "Intelligence Briefing",
-    "body": "Our 9-module Automated Risk Investigation Algorithm classifies 198K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.",
+    "body": "Our 9-module Automated Risk Investigation Algorithm classifies 318K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.",
     "cta": "Open ARIA Briefing",
     "vendorsScreened": "Vendors screened",
     "capturePatterns": "Capture patterns",

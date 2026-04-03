@@ -85,7 +85,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
     coefficient: 0.0,
     direction: 'positive',
     mechanism:
-      "Vendors operating across many sectors have diversified risk exposure. However, v6.0 analysis shows some corruption networks intentionally operate across sectors to avoid detection. Cross-sector presence is a weak positive signal.",
+      "Vendors operating across many sectors have diversified risk exposure. However, v6.5 analysis shows some corruption networks intentionally operate across sectors to avoid detection. Cross-sector presence is a weak positive signal.",
     theory:
       'Extended ground truth: Some major corruption cases (LICONSA ecosystem, IMSS networks) span multiple sectors. Sector spread alone is insufficient for distinguishing corruption.',
     citation: 'RUBLI v6.5 ground truth analysis (748 institution-scoped cases)',
@@ -210,7 +210,7 @@ export const FACTOR_EXPLANATIONS: Record<string, FactorExplanation> = {
       'Bid-Ring Theory (Porter & Zona 1993): Co-bidding as a collusion indicator. Vendors that consistently appear together and alternate wins are likely coordinating rather than genuinely competing.',
     citation: 'Porter & Zona (1993): Co-bidding as collusion indicator',
     rubli_note:
-      'Regularized to zero in v6.0. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
+      'Regularized to zero in v6.5. Co-bidding patterns do not discriminate in Mexico\'s training data because the dominant corruption cases (IMSS, Segalmex, COVID) involve market concentration, not coordinated bidding rings. The Collusion Detection tab provides separate heuristic analysis.',
   },
   price_hyp_confidence: {
     title: 'Price Hypothesis Confidence',
@@ -491,7 +491,7 @@ export function RiskFactorTable({ factors, className }: RiskFactorTableProps) {
 function getEvidenceStrength(factor: string): string {
   const map: Record<string, string> = {
     vendor_concentration: 'Strong (multiple countries)',
-    price_volatility: 'Strong (v6.0 top predictor)',
+    price_volatility: 'Strong (v6.5 top predictor)',
     institution_diversity: 'Negative — protective factor',
     win_rate: 'Strong — abnormal rates = market capture',
     sector_spread: 'Negative — protective factor',

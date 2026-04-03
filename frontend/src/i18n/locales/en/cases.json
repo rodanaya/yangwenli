@@ -191,7 +191,7 @@
   "noResults": "No cases match the current filters.",
   "loading": "Loading cases...",
   "caseCount": {
-    "explanation": "43 fully documented case files with narrative analysis. The risk model was trained on 1,156 ground truth case associations across 603 vendors."
+    "explanation": "43 fully documented case files with narrative analysis. The risk model was trained on 748 ground truth cases across 603 vendors."
   },
   "sources": {
     "efosList": "EFOS List (SAT)",

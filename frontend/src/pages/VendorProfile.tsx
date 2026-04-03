@@ -1795,7 +1795,7 @@ export function VendorProfile() {
       {/* F3: SanctionsAlertBanner (proper component) */}
       {externalFlags && (() => {
         const sanctions = [
-          ...externalFlags.sfp_sanctions.map((s: any) => ({
+          ...(externalFlags.sfp_sanctions ?? []).map((s: any) => ({
             list_type: 'sfp' as const,
             match_method: (s.match_method || 'rfc') as 'rfc' | 'name_fuzzy',
             match_confidence: s.match_confidence ?? 1,

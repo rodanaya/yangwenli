@@ -1919,7 +1919,7 @@ function LoadingSkeleton() {
       <Skeleton className="h-6 w-48" />
       <Skeleton className="h-10 w-96" />
       <Skeleton className="h-24 w-full" />
-      <div className="grid grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         {[...Array(4)].map((_, i) => (
           <Skeleton key={i} className="h-20" />
         ))}

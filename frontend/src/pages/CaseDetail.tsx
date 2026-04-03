@@ -913,7 +913,7 @@ export default function CaseDetail() {
             {t('detail.evidenceTrail')}
           </p>
           <p className="text-[11px] text-text-muted mb-3">{t('detail.evidenceTrailSubtitle')}</p>
-          <div className="rounded-lg border border-border/40 overflow-hidden">
+          <div className="rounded-lg border border-border/40 overflow-x-auto">
             <table className="w-full text-xs">
               <thead>
                 <tr className="border-b border-border/40 bg-card/60">

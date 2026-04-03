@@ -191,7 +191,7 @@
   "noResults": "Ningún caso coincide con los filtros actuales.",
   "loading": "Cargando casos...",
   "caseCount": {
-    "explanation": "43 expedientes documentados con análisis narrativo. El modelo de riesgo fue entrenado con 1,156 asociaciones de casos de verdad fundamental."
+    "explanation": "43 expedientes documentados con análisis narrativo. El modelo de riesgo fue entrenado con 748 casos de verdad fundamental en 603 proveedores."
   },
   "sources": {
     "efosList": "Lista EFOS (SAT)",

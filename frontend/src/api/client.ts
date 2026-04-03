@@ -383,7 +383,7 @@ export const contractApi = {
   async getForExport(filters: ContractExportFilters = {}): Promise<ContractListItem[]> {
     const params: Record<string, unknown> = {
       ...filters,
-      per_page: filters.limit ?? 5000,
+      per_page: Math.min(filters.limit ?? 100, 100),
     }
     delete params.limit
     const queryParams = buildQueryParams(params)
@@ -1096,12 +1096,12 @@ export const analysisApi = {
   },
 
   async getCoBiddingPatterns(minCoBidRate = 0.5): Promise<CoBiddingResponse> {
-    const { data } = await api.get(`/analysis/patterns/co-bidding?min_co_bid_rate=${minCoBidRate}`)
+    const { data } = await api.get(`/analysis/patterns/co-bidding?min_rate=${minCoBidRate * 100}`)
     return data
   },
 
   async getConcentrationPatterns(minSharePct = 0.3): Promise<ConcentrationResponse> {
-    const { data } = await api.get(`/analysis/patterns/concentration?min_share_pct=${minSharePct}`)
+    const { data } = await api.get(`/analysis/patterns/concentration?min_share=${minSharePct * 100}`)
     return data
   },
 

@@ -1963,7 +1963,7 @@ export function Dashboard() {
             color="#fb923c"
             loading={kpiLoading}
             icon={Gauge}
-            onClick={() => navigate('/detective?pattern=direct_award')}
+            onClick={() => navigate('/administrations')}
           />
         </ScrollReveal>
         <ScrollReveal delay={100}>
@@ -1974,7 +1974,7 @@ export function Dashboard() {
             color="#f87171"
             loading={kpiLoading}
             icon={AlertTriangle}
-            onClick={() => navigate('/detective?pattern=single_bid')}
+            onClick={() => navigate('/administrations')}
           />
         </ScrollReveal>
         <ScrollReveal delay={200}>
@@ -2220,7 +2220,7 @@ export function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
 
           {/* Story A: December Phenomenon */}
-          <Card className="fern-card border-l-4 border-l-amber-500 hover:border-l-amber-400 transition-colors cursor-pointer group" onClick={() => navigate('/seismograph')}>
+          <Card className="fern-card border-l-4 border-l-amber-500 hover:border-l-amber-400 transition-colors cursor-pointer group" onClick={() => navigate('/administrations')}>
             <CardContent className="pt-4 pb-4">
               <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
                 {t('storyTemporality')}
@@ -2234,7 +2234,7 @@ export function Dashboard() {
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
                 {t('storyDecemberDesc')}
               </p>
-              <Link to="/seismograph" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <Link to="/administrations" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <ArrowRight className="h-3 w-3" />
                 {t('storyDecemberLink')}
               </Link>
@@ -2264,7 +2264,7 @@ export function Dashboard() {
           </Card>
 
           {/* Story C: Direct award surge */}
-          <Card className="fern-card border-l-4 border-l-blue-500 hover:border-l-blue-400 transition-colors cursor-pointer group" onClick={() => navigate('/detective?pattern=december_rush')}>
+          <Card className="fern-card border-l-4 border-l-blue-500 hover:border-l-blue-400 transition-colors cursor-pointer group" onClick={() => navigate('/administrations')}>
             <CardContent className="pt-4 pb-4">
               <p className="text-[9px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1.5">
                 {t('storyTrend')}
@@ -2278,7 +2278,7 @@ export function Dashboard() {
               <p className="text-[10px] text-text-muted mb-3 leading-snug">
                 {t('storyDirectDesc')}
               </p>
-              <Link to="/detective?pattern=december_rush" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
+              <Link to="/administrations" className="text-[10px] font-mono text-accent hover:underline flex items-center gap-1" onClick={(e) => e.stopPropagation()}>
                 <ArrowRight className="h-3 w-3" />
                 {t('storyDirectLink')}
               </Link>

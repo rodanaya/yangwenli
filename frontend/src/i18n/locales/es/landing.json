@@ -127,7 +127,7 @@
   "aria": {
     "label": "INVESTIGACIÓN AUTOMATIZADA",
     "headline": "Reporte de Inteligencia",
-    "body": "Nuestro algoritmo automatizado de investigación de riesgos de 9 módulos clasifica 198K proveedores en niveles de investigación, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.",
+    "body": "Nuestro algoritmo automatizado de investigación de riesgos de 9 módulos clasifica 318K proveedores en niveles de investigación, detecta patrones de monopolio, empresas fantasma y captura institucional, y cruza datos con registros del SAT, SFP y ASF.",
     "cta": "Abrir Reporte ARIA",
     "vendorsScreened": "Proveedores evaluados",
     "capturePatterns": "Patrones de captura",

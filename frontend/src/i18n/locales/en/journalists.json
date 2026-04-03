@@ -56,7 +56,7 @@
     "viewMethodology": "View methodology",
     "downloadData": "Download data",
     "tooltipTitle": "Risk model v6.5",
-    "tooltipBody": "Logistic regression with 9 active features, 13 sector sub-models, AUC=0.828. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
+    "tooltipBody": "Logistic regression with 9 active features, 1 global + 12 per-sector models, AUC=0.828. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
   },
   "stories": {
     "la-cuarta-adjudicacion": {
