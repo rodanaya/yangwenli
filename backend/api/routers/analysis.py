@@ -4097,6 +4097,24 @@ def get_price_anomalies(
             return result
 
     except Exception as exc:
+        if "no such table" in str(exc).lower():
+            logger.warning("price-anomalies: %s (z-features not computed)", exc)
+            return {
+                "summary": {
+                    "total_outliers": 0,
+                    "total_value_mxn": 0,
+                    "avg_z_score": 0,
+                    "max_z_score": 0,
+                    "threshold_applied": min_z,
+                    "methodology": (
+                        "Z-score = (amount - sector_year_mean) / sector_year_std. "
+                        "Values > 3 indicate contracts priced >3 standard deviations above the sector-year baseline."
+                    ),
+                    "note": "Z-score features not yet computed. Run compute_z_features to enable this view.",
+                },
+                "by_sector": [],
+                "data": [],
+            }
         logger.error("price-anomalies error: %s", exc)
         raise HTTPException(status_code=500, detail="Failed to fetch price anomalies")
 
