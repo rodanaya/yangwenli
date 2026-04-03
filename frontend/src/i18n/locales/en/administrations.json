@@ -270,7 +270,9 @@
     "crisis": "Crisis"
   },
   "compareView": {
-    "sourceNote": "Source: COMPRANET contracts weighted by volume · {{metric}}"
+    "sourceNote": "Source: COMPRANET contracts weighted by volume · {{metric}}",
+    "signalWorse": "Worse",
+    "signalBetter": "Better"
   },
   "grade": {
     "title": "PROCUREMENT GRADE",

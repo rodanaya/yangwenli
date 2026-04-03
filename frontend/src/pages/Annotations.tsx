@@ -3,6 +3,7 @@
  * Route: /annotations (added to sidebar under My Workspace)
  */
 import { useState, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { StickyNote, FileText, Users, Trash2, RefreshCw } from 'lucide-react'
 import { getAnnotations, type AnnotationEntityType } from '@/components/AnnotationPin'
@@ -53,6 +54,7 @@ function AnnotationRow({
   entry: AnnotationEntry
   onDelete: (key: string) => void
 }) {
+  const { t } = useTranslation('workspace')
   const href =
     entry.entityType === 'vendor'
       ? `/vendors/${entry.entityId}`
@@ -67,9 +69,9 @@ function AnnotationRow({
         <Link
           to={href}
           className="text-xs font-medium text-accent hover:underline font-mono"
-          aria-label={`Go to ${entry.entityType} ${entry.entityId}`}
+          aria-label={t('annotations.goTo', { entityType: entry.entityType, id: entry.entityId })}
         >
-          {entry.entityType === 'vendor' ? 'Vendor' : 'Contract'} #{entry.entityId}
+          {entry.entityType === 'vendor' ? t('annotations.vendor') : t('annotations.contract')} #{entry.entityId}
         </Link>
         <p className="text-sm text-text-primary mt-0.5 whitespace-pre-wrap break-words">
           {entry.text}
@@ -78,8 +80,8 @@ function AnnotationRow({
       <button
         onClick={() => onDelete(entry.key)}
         className="flex-shrink-0 rounded p-1 text-text-muted hover:text-red-400 hover:bg-red-500/10 transition-colors"
-        aria-label={`Delete annotation for ${entry.entityType} ${entry.entityId}`}
-        title="Delete note"
+        aria-label={t('annotations.deleteLabel', { entityType: entry.entityType, id: entry.entityId })}
+        title={t('annotations.deleteNote')}
       >
         <Trash2 className="h-3.5 w-3.5" />
       </button>
@@ -92,6 +94,7 @@ function AnnotationRow({
 // ============================================================================
 
 export default function Annotations() {
+  const { t } = useTranslation('workspace')
   const [entries, setEntries] = useState<AnnotationEntry[]>([])
 
   const reload = () => setEntries(parseAnnotations())
@@ -115,18 +118,18 @@ export default function Annotations() {
         <div>
           <h1 className="text-2xl font-bold text-text-primary flex items-center gap-2">
             <StickyNote className="h-6 w-6 text-amber-400" aria-hidden="true" />
-            My Annotations
+            {t('annotations.title')}
           </h1>
           <p className="text-sm text-text-muted mt-1">
-            Private notes saved locally in your browser. {entries.length === 0 ? 'No notes yet.' : `${entries.length} note${entries.length > 1 ? 's' : ''} saved.`}
+            {t('annotations.description')}{' '}{entries.length === 0 ? t('annotations.noNotes') : (entries.length === 1 ? t('annotations.notesSaved', { count: entries.length }) : t('annotations.notesSavedPlural', { count: entries.length }))}
           </p>
         </div>
         <Button
           variant="ghost"
           size="sm"
           onClick={reload}
-          aria-label="Refresh annotations"
-          title="Refresh"
+          aria-label={t('annotations.refreshLabel')}
+          title={t('annotations.refresh')}
         >
           <RefreshCw className="h-4 w-4" />
         </Button>
@@ -136,11 +139,11 @@ export default function Annotations() {
         <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
           <StickyNote className="h-12 w-12 text-text-muted/30" aria-hidden="true" />
           <p className="text-sm text-text-muted max-w-xs">
-            No annotations yet. Click the sticky note icon on any contract or vendor to add a note.
+            {t('annotations.empty')}
           </p>
           <Link to="/contracts">
             <Button variant="outline" size="sm">
-              Browse Contracts
+              {t('annotations.browseContracts')}
             </Button>
           </Link>
         </div>
@@ -148,11 +151,11 @@ export default function Annotations() {
         <div className="space-y-6">
           {/* Contract annotations */}
           {contracts.length > 0 && (
-            <section aria-label="Contract annotations">
+            <section aria-label={t('annotations.sectionContracts')}>
               <div className="flex items-center gap-2 mb-3">
                 <FileText className="h-4 w-4 text-text-muted" aria-hidden="true" />
                 <h2 className="text-sm font-semibold text-text-secondary">
-                  Contracts ({contracts.length})
+                  {t('annotations.contractsHeading', { count: contracts.length })}
                 </h2>
               </div>
               <div className="space-y-2">
@@ -165,11 +168,11 @@ export default function Annotations() {
 
           {/* Vendor annotations */}
           {vendors.length > 0 && (
-            <section aria-label="Vendor annotations">
+            <section aria-label={t('annotations.sectionVendors')}>
               <div className="flex items-center gap-2 mb-3">
                 <Users className="h-4 w-4 text-text-muted" aria-hidden="true" />
                 <h2 className="text-sm font-semibold text-text-secondary">
-                  Vendors ({vendors.length})
+                  {t('annotations.vendorsHeading', { count: vendors.length })}
                 </h2>
               </div>
               <div className="space-y-2">

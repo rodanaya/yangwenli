@@ -270,7 +270,9 @@
     "crisis": "Crisis"
   },
   "compareView": {
-    "sourceNote": "Fuente: contratos COMPRANET ponderados por volumen · {{metric}}"
+    "sourceNote": "Fuente: contratos COMPRANET ponderados por volumen · {{metric}}",
+    "signalWorse": "Peor",
+    "signalBetter": "Mejor"
   },
   "grade": {
     "title": "CALIFICACIÓN DE COMPRAS",

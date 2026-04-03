@@ -3006,6 +3006,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
 // =============================================================================
 
 function PoliticalCycleView() {
+  const { t } = useTranslation('administrations')
   const { data, isLoading } = useQuery<PoliticalCycleResponse>({
     queryKey: ['political-cycle'],
     queryFn: () => analysisApi.getPoliticalCycle(),
@@ -3108,14 +3109,14 @@ function PoliticalCycleView() {
                   )}
                   <div className="text-[11px] text-text-muted mt-1">
                     {election_year_effect.risk_delta > 0
-                      ? 'Higher risk in election years'
+                      ? t('politicalView.higherInElection')
                       : election_year_effect.risk_delta < 0
-                      ? 'Lower risk in election years'
-                      : 'No significant difference'}
+                      ? t('politicalView.lowerInElection')
+                      : t('politicalView.noSignificantDiff')}
                   </div>
                 </>
               ) : (
-                <div className="text-text-muted text-sm">Insufficient data</div>
+                <div className="text-text-muted text-sm">{t('politicalView.insufficientData')}</div>
               )}
             </div>
           </div>
@@ -3260,10 +3261,11 @@ function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
 }
 
 function SignalBadge({ signal }: { signal: 'worse' | 'better' | 'neutral' }) {
+  const { t } = useTranslation('administrations')
   if (signal === 'worse')
-    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-critical"><TrendingUp className="h-3 w-3" />Worse</span>
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-critical"><TrendingUp className="h-3 w-3" />{t('compareView.signalWorse')}</span>
   if (signal === 'better')
-    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-low"><TrendingDown className="h-3 w-3" />Better</span>
+    return <span className="inline-flex items-center gap-1 text-xs font-medium text-risk-low"><TrendingDown className="h-3 w-3" />{t('compareView.signalBetter')}</span>
   return <span className="text-xs text-text-muted"><Minus className="h-3 w-3 inline" /> —</span>
 }
 
