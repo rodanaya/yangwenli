@@ -13,25 +13,14 @@ interface FactorBaselineTooltipProps {
   className?: string
 }
 
-/** Maps factor names to human-readable Spanish labels */
-const FACTOR_LABELS: Record<string, string> = {
-  price_volatility: 'Volatilidad de Precio',
-  institution_diversity: 'Diversidad Institucional',
-  vendor_concentration: 'Concentración de Proveedor',
-  price_ratio: 'Ratio de Precio',
-  network_member_count: 'Red de Co-contratación',
-  same_day_count: 'Contratos Mismo Día',
-  single_bid: 'Licitación Única',
-  ad_period_days: 'Período de Publicación',
-  win_rate: 'Tasa de Adjudicación',
-  direct_award: 'Adjudicación Directa',
-  sector_spread: 'Diversificación Sectorial',
-  co_bid_rate: 'Tasa de Co-licitación',
-  price_hyp_confidence: 'Anomalía de Precio',
-  year_end: 'Fin de Año',
-  industry_mismatch: 'Discrepancia Industrial',
-  institution_risk: 'Riesgo Institucional',
-}
+/** All known factor keys — used to build the i18n lookup key */
+const FACTOR_KEYS: ReadonlySet<string> = new Set([
+  'price_volatility', 'institution_diversity', 'vendor_concentration',
+  'price_ratio', 'network_member_count', 'same_day_count', 'single_bid',
+  'ad_period_days', 'win_rate', 'direct_award', 'sector_spread',
+  'co_bid_rate', 'price_hyp_confidence', 'year_end', 'industry_mismatch',
+  'institution_risk',
+])
 
 function getZScoreColor(z: number): string {
   const abs = Math.abs(z)
@@ -49,12 +38,12 @@ function getZScoreBg(z: number): string {
   return 'bg-emerald-500'
 }
 
-function getZScoreLabel(z: number): string {
+function getZScoreLabelKey(z: number): string {
   const abs = Math.abs(z)
-  if (abs > 3) return 'Extremo'
-  if (abs > 2) return 'Alto'
-  if (abs > 1) return 'Moderado'
-  return 'Normal'
+  if (abs > 3) return 'extreme'
+  if (abs > 2) return 'high'
+  if (abs > 1) return 'moderate'
+  return 'normal'
 }
 
 /** Tiny inline bell curve SVG showing where this z-score falls */
@@ -114,7 +103,9 @@ export function FactorBaselineTooltip({
     ? vendorValue ?? (zScore * baseline.stddev + baseline.mean)
     : vendorValue
 
-  const label = FACTOR_LABELS[factorName] || factorName
+  const label = FACTOR_KEYS.has(factorName)
+    ? t(`factorLabels.${factorName}`)
+    : factorName
 
   function handleMouseEnter() {
     if (timeoutRef.current) clearTimeout(timeoutRef.current)
@@ -148,22 +139,22 @@ export function FactorBaselineTooltip({
             <>
               <div className="text-xs text-text-muted space-y-0.5">
                 <div>
-                  <span className="text-text-secondary">Promedio sector:</span>{' '}
+                  <span className="text-text-secondary">{t('factorTooltip.sectorAvg')}</span>{' '}
                   <span className="font-mono">{baseline.mean.toFixed(3)}</span>
                 </div>
                 {derivedValue !== undefined && (
                   <div>
-                    <span className="text-text-secondary">Valor proveedor:</span>{' '}
+                    <span className="text-text-secondary">{t('factorTooltip.vendorValue')}</span>{' '}
                     <span className="font-mono">{derivedValue.toFixed(3)}</span>
                   </div>
                 )}
                 <div>
-                  <span className="text-text-secondary">Distancia:</span>{' '}
+                  <span className="text-text-secondary">{t('factorTooltip.distance')}</span>{' '}
                   <span className={cn('font-mono font-semibold', getZScoreColor(zScore))}>
                     {zScore >= 0 ? '+' : ''}{zScore.toFixed(2)} &sigma;
                   </span>
                   <span className={cn('ml-1 text-[10px] px-1 py-0.5 rounded', getZScoreColor(zScore))}>
-                    {getZScoreLabel(zScore)}
+                    {t(`zScoreLabels.${getZScoreLabelKey(zScore)}`)}
                   </span>
                 </div>
               </div>

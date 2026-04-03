@@ -364,5 +364,41 @@
   },
   "redaccion": {
     "noAlerts": "No active alerts"
+  },
+  "factorLabels": {
+    "price_volatility": "Price Volatility",
+    "institution_diversity": "Institutional Diversity",
+    "vendor_concentration": "Vendor Concentration",
+    "price_ratio": "Price Ratio",
+    "network_member_count": "Co-contracting Network",
+    "same_day_count": "Same-Day Contracts",
+    "single_bid": "Single Bid",
+    "ad_period_days": "Publication Period",
+    "win_rate": "Win Rate",
+    "direct_award": "Direct Award",
+    "sector_spread": "Sector Diversification",
+    "co_bid_rate": "Co-bidding Rate",
+    "price_hyp_confidence": "Price Anomaly",
+    "year_end": "Year-End",
+    "industry_mismatch": "Industry Mismatch",
+    "institution_risk": "Institutional Risk"
+  },
+  "zScoreLabels": {
+    "extreme": "Extreme",
+    "high": "High",
+    "moderate": "Moderate",
+    "normal": "Normal"
+  },
+  "factorTooltip": {
+    "sectorAvg": "Sector average:",
+    "vendorValue": "Vendor value:",
+    "distance": "Distance:"
+  },
+  "ariaTable": {
+    "vendor": "Vendor",
+    "sector": "Sector",
+    "risk": "Risk",
+    "ips": "IPS",
+    "pattern": "Pattern"
   }
 }

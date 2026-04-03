@@ -96,10 +96,10 @@ function useExecutiveSummary() {
 
 // ============================================================================
 // Investigative Lede
-// Hard-coded journalist-facing opening — no i18n dependency
 // ============================================================================
 
 function InvestigativeLede() {
+  const { t } = useTranslation('executive')
   return (
     <motion.div
       className="border-l-4 border-l-[#dc2626] pl-6 py-4 my-8"
@@ -107,26 +107,8 @@ function InvestigativeLede() {
       animate={{ opacity: 1, x: 0 }}
       transition={{ delay: 0.3, duration: 0.9 }}
     >
-      {/*
-        Spanish lede: Veintitrés años de datos de compras federales revelan que
-        1 de cada 7 pesos del gasto gubernamental fluye a través de contratos marcados
-        como sospechosos.
-      */}
-      <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif mb-3">
-        Veintitrés años de datos de compras federales revelan que{' '}
-        <strong className="text-text-primary not-italic">1 de cada 7 pesos</strong> del gasto
-        gubernamental fluye a través de contratos con indicadores de riesgo.
-        Nuestro análisis de 3.1 millones de contratos identifica{' '}
-        <strong className="text-text-primary not-italic">320 proveedores</strong>{' '}
-        que requieren investigación urgente — y{' '}
-        <strong className="text-[#dc2626] not-italic">184,031 contratos</strong>{' '}
-        en la categoría de mayor riesgo.
-      </p>
-      <p className="text-sm text-text-muted italic leading-relaxed">
-        Twenty-three years of federal procurement data reveal that 1 in 7 pesos of
-        government spending flows through flagged contracts. Our AI analysis identifies
-        320 vendors for urgent investigation and 184,031 contracts in the highest-risk zone.
-        The data tells a story that official audits have not.
+      <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif">
+        {t('lede', { highRiskPct: '13.49', valueAtRisk: '~MX$1.3T' })}
       </p>
     </motion.div>
   )
@@ -145,6 +127,7 @@ function FiveKeyFindings({
   valueAtRiskFormatted: string
 }) {
   const navigate = useNavigate()
+  const { t } = useTranslation('executive')
 
   const findings = [
     {
@@ -152,94 +135,51 @@ function FiveKeyFindings({
       color: '#dc2626',
       borderColor: 'border-red-500/30',
       bg: 'bg-red-500/5',
-      // Escala: 412,845 contratos — 13.49% de todo el gasto federal — muestran indicadores de riesgo alto o crítico
-      headline: 'Escala del problema',
-      headlineEn: 'Scale of the problem',
+      headlineKey: 'keyFindings5.f1.headline',
       stat: `${highRiskPct}%`,
-      statLabel: 'tasa de riesgo alto o crítico',
-      body: (
-        <>
-          <strong className="text-text-primary">412,845 contratos</strong> — el 13.49% de todo el gasto federal —
-          muestran indicadores de riesgo alto o crítico. Es más de{' '}
-          <strong className="text-text-primary">1 de cada 7</strong> pesos contratados.
-        </>
-      ),
-      bodyEn: '412,845 contracts — 13.49% of all federal spending — carry high or critical risk indicators.',
+      statLabelKey: 'keyFindings5.f1.statLabel',
+      bodyKey: 'keyFindings5.f1.body',
     },
     {
       num: '02',
       color: '#ea580c',
       borderColor: 'border-orange-500/30',
       bg: 'bg-orange-500/5',
-      headline: 'Dinero en riesgo',
-      headlineEn: 'Money at risk',
+      headlineKey: 'keyFindings5.f2.headline',
       stat: valueAtRiskFormatted,
-      statLabel: 'valor estimado en contratos de alto riesgo',
-      body: (
-        <>
-          El valor estimado en contratos de riesgo alto o crítico supera{' '}
-          <strong className="text-text-primary">1.3 billones de pesos</strong> —
-          más de siete veces el presupuesto federal de salud 2024 (~180,000 millones MXN).
-        </>
-      ),
-      bodyEn: '~1.3 trillion MXN flagged. For context: Mexico\'s 2024 health budget is ~180B MXN — this is more than 7x that.',
+      statLabelKey: 'keyFindings5.f2.statLabel',
+      bodyKey: 'keyFindings5.f2.body',
     },
     {
       num: '03',
       color: '#8b5cf6',
       borderColor: 'border-violet-500/30',
       bg: 'bg-violet-500/5',
-      headline: 'Proveedores bajo lupa',
-      headlineEn: 'Vendors under scrutiny',
+      headlineKey: 'keyFindings5.f3.headline',
       stat: '320',
-      statLabel: 'proveedores bajo investigación prioritaria (ARIA Nivel 1)',
-      body: (
-        <>
-          <strong className="text-text-primary">320 proveedores</strong> en nuestro nivel de investigación urgente
-          han sido marcados por múltiples señales independientes. Representan el núcleo más caliente
-          de un universo de 318,441 proveedores analizados.
-        </>
-      ),
-      bodyEn: '320 vendors in our urgent-investigation queue (ARIA Tier 1) have been flagged by multiple independent signals.',
-      action: { label: 'Ver pistas ARIA →', href: '/aria' },
+      statLabelKey: 'keyFindings5.f3.statLabel',
+      bodyKey: 'keyFindings5.f3.body',
+      action: { labelKey: 'keyFindings5.f3.action', href: '/aria' },
     },
     {
       num: '04',
       color: '#ca8a04',
       borderColor: 'border-amber-500/30',
       bg: 'bg-amber-500/5',
-      headline: 'Patrones dominantes',
-      headlineEn: 'Dominant patterns',
+      headlineKey: 'keyFindings5.f4.headline',
       stat: '21,957',
-      statLabel: 'proveedores con patrón de captura institucional o empresa fantasma',
-      body: (
-        <>
-          Las redes de empresas fantasma afectan{' '}
-          <strong className="text-text-primary">6,034 proveedores</strong> (Patrón P2).
-          La captura institucional —un proveedor que domina una dependencia— alcanza{' '}
-          <strong className="text-text-primary">15,923 proveedores</strong> (Patrón P6).
-          Estos dos patrones concentran la mayoría del riesgo identificado.
-        </>
-      ),
-      bodyEn: 'Ghost company networks (6,034 vendors) and institutional capture (15,923 vendors) are the two dominant corruption patterns.',
+      statLabelKey: 'keyFindings5.f4.statLabel',
+      bodyKey: 'keyFindings5.f4.body',
     },
     {
       num: '05',
       color: '#16a34a',
       borderColor: 'border-green-600/30',
       bg: 'bg-green-600/5',
-      headline: 'Efecto año electoral',
-      headlineEn: 'Election-year effect',
+      headlineKey: 'keyFindings5.f5.headline',
       stat: '↑',
-      statLabel: 'el riesgo aumenta en periodos preelectorales',
-      body: (
-        <>
-          Los indicadores de riesgo se elevan en los años previos a elecciones federales —
-          un patrón consistente a través de todos los sexenios analizados (2002–2025).
-          La urgencia de gastar antes del cambio de gobierno amplifica las debilidades sistémicas.
-        </>
-      ),
-      bodyEn: 'Risk indicators rise in pre-election years — a pattern consistent across all administrations studied (2002–2025).',
+      statLabelKey: 'keyFindings5.f5.statLabel',
+      bodyKey: 'keyFindings5.f5.body',
     },
   ]
 
@@ -252,7 +192,7 @@ function FiveKeyFindings({
       viewport={{ once: true, margin: '-40px' }}
     >
       <div className="editorial-rule mb-2">
-        <span className="editorial-label text-accent">Cinco hallazgos clave · Five Key Findings</span>
+        <span className="editorial-label text-accent">{t('keyFindings5.sectionLabel')}</span>
       </div>
 
       {findings.map((f) => (
@@ -272,9 +212,8 @@ function FiveKeyFindings({
 
             <div className="flex-1 min-w-0">
               {/* Headline */}
-              <div className="flex items-baseline gap-2 flex-wrap mb-2">
-                <h3 className="text-base font-semibold text-text-primary">{f.headline}</h3>
-                <span className="text-[11px] text-text-muted italic">{f.headlineEn}</span>
+              <div className="mb-2">
+                <h3 className="text-base font-semibold text-text-primary">{t(f.headlineKey)}</h3>
               </div>
 
               {/* Stat */}
@@ -286,15 +225,12 @@ function FiveKeyFindings({
                   {f.stat}
                 </span>
                 <span className="text-[11px] text-text-muted uppercase tracking-wide font-mono">
-                  {f.statLabel}
+                  {t(f.statLabelKey)}
                 </span>
               </div>
 
-              {/* Body — Spanish primary */}
-              <p className="text-sm leading-relaxed text-text-secondary mb-1">{f.body}</p>
-
-              {/* English note */}
-              <p className="text-[11px] text-text-muted italic leading-relaxed">{f.bodyEn}</p>
+              {/* Body */}
+              <p className="text-sm leading-relaxed text-text-secondary">{t(f.bodyKey)}</p>
 
               {/* Optional action link */}
               {f.action && (
@@ -303,7 +239,7 @@ function FiveKeyFindings({
                   className="mt-2 text-xs font-mono font-semibold"
                   style={{ color: f.color }}
                 >
-                  {f.action.label}
+                  {t(f.action.labelKey)}
                 </button>
               )}
             </div>
@@ -320,45 +256,35 @@ function FiveKeyFindings({
 // ============================================================================
 
 function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void }) {
+  const { t } = useTranslation('executive')
+
   const leads = [
     {
       icon: Search,
       color: '#dc2626',
-      // Título: Cola de investigación urgente — 320 proveedores ARIA Nivel 1
-      title: 'ARIA Nivel 1 — 320 proveedores prioritarios',
-      titleEn: 'ARIA Tier 1 — 320 vendors for urgent investigation',
-      body: 'Estos 320 proveedores fueron marcados de forma independiente por el modelo de riesgo, la detección de anomalías PyOD y registros externos (EFOS, SFP, RUPC). Es la lista de mayor prioridad.',
-      bodyEn: 'These 320 vendors were independently flagged by the risk model, PyOD anomaly detection, and external registries (EFOS, SFP, RUPC). Highest priority list.',
-      action: { label: 'Abrir pistas ARIA', href: '/aria' },
+      titleKey: 'pistas.l1.title',
+      bodyKey: 'pistas.l1.body',
+      action: { labelKey: 'pistas.l1.action', href: '/aria' },
     },
     {
       icon: AlertTriangle,
       color: '#ea580c',
-      // Casos documentados: IMSS redes fantasma, Segalmex, COVID-19, Odebrecht
-      title: 'Casos documentados: punto de partida',
-      titleEn: 'Documented cases as starting points',
-      body: 'El sistema cuenta con 748 casos de corrupción validados (acotados por institución y período), incluyendo: redes fantasma IMSS (9,366 contratos, 99% detección crítica), Segalmex (fraude en distribución alimentaria), compras COVID-19 de emergencia, y soborno Odebrecht-PEMEX.',
-      bodyEn: '748 validated corruption cases (institution-scoped) including: IMSS ghost companies (9,366 contracts), Segalmex food fraud, COVID-19 emergency procurement, and Odebrecht-PEMEX bribery.',
-      action: { label: 'Ver casos documentados', href: '/ground-truth' },
+      titleKey: 'pistas.l2.title',
+      bodyKey: 'pistas.l2.body',
+      action: { labelKey: 'pistas.l2.action', href: '/ground-truth' },
     },
     {
       icon: Compass,
       color: '#8b5cf6',
-      // Cómo filtrar: sector + risk_level=critical para reproducir hallazgos
-      title: 'Cómo reproducir los hallazgos',
-      titleEn: 'How to reproduce findings independently',
-      body: 'Filtra el explorador de contratos por sector (ej. salud) + risk_level=critical para replicar los patrones de empresas fantasma IMSS de forma independiente. Todos los datos provienen de COMPRANET — registros públicos, sin FOIA.',
-      bodyEn: 'Filter the contract explorer by sector (e.g. salud) + risk_level=critical to independently reproduce the IMSS ghost company patterns. All data is from public COMPRANET records — no FOIA required.',
-      action: { label: 'Explorador de contratos', href: '/contracts' },
+      titleKey: 'pistas.l3.title',
+      bodyKey: 'pistas.l3.body',
+      action: { labelKey: 'pistas.l3.action', href: '/contracts' },
     },
     {
       icon: Shield,
       color: '#ca8a04',
-      // Folio COMPRANET: cada contrato tiene número de folio para solicitudes
-      title: 'Acceso a documentos: folios COMPRANET',
-      titleEn: 'Document access via COMPRANET folio numbers',
-      body: 'Cada contrato marcado incluye su número de folio COMPRANET. Úsalo para acceder a la documentación completa vía el portal de transparencia (Art. 6 constitucional). No se requiere litigio — es información pública.',
-      bodyEn: 'Every flagged contract includes its COMPRANET folio. Use it to request full documentation via the transparency portal (constitutional Art. 6). No litigation needed — these are public records.',
+      titleKey: 'pistas.l4.title',
+      bodyKey: 'pistas.l4.body',
       action: null,
     },
   ]
@@ -370,20 +296,12 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
           <Search className="h-4 w-4 text-accent flex-shrink-0" />
           <span className="editorial-label text-accent">06·A</span>
         </div>
-        {/*
-          Spanish: Pistas para periodistas
-          English: Leads for Journalists
-        */}
         <h2 className="text-editorial-h2 text-text-primary">
-          Pistas para Periodistas
+          {t('pistas.title')}
         </h2>
-        <p className="text-sm text-text-muted italic mt-1">Leads for Journalists</p>
         <div className="accent-rule mt-3" />
         <p className="text-sm leading-relaxed text-text-secondary mt-4">
-          El análisis estadístico no es el final de la historia — es el comienzo.
-          Aquí están los cuatro puntos de partida más concretos para periodistas de investigación.
-          {' '}<span className="text-text-muted italic">(Statistical analysis is where the story begins, not ends.
-          Here are four concrete starting points for investigative reporters.)</span>
+          {t('pistas.intro')}
         </p>
       </div>
 
@@ -391,7 +309,7 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
         {leads.map((lead) => {
           const Icon = lead.icon
           return (
-            <ScrollReveal key={lead.title} delay={80}>
+            <ScrollReveal key={lead.titleKey} delay={80}>
               <div
                 className="fern-card p-5 flex flex-col h-full"
                 style={{ borderColor: `${lead.color}25`, background: `${lead.color}06` }}
@@ -405,14 +323,12 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
                   </div>
                   <div>
                     <h4 className="text-sm font-bold text-text-primary leading-snug">
-                      {lead.title}
+                      {t(lead.titleKey)}
                     </h4>
-                    <p className="text-[11px] text-text-muted italic mt-0.5">{lead.titleEn}</p>
                   </div>
                 </div>
 
-                <p className="text-sm leading-relaxed text-text-secondary flex-1 mb-2">{lead.body}</p>
-                <p className="text-[11px] text-text-muted italic leading-relaxed mb-3">{lead.bodyEn}</p>
+                <p className="text-sm leading-relaxed text-text-secondary flex-1 mb-3">{t(lead.bodyKey)}</p>
 
                 {lead.action && (
                   <button
@@ -420,7 +336,7 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
                     className="mt-auto flex items-center gap-1.5 text-xs font-semibold font-mono hover:underline self-start"
                     style={{ color: lead.color }}
                   >
-                    {lead.action.label}
+                    {t(lead.action.labelKey)}
                     <ArrowRight className="h-3 w-3" />
                   </button>
                 )}
@@ -446,27 +362,26 @@ function HeroNumbers({
 }) {
   const reduced = useReducedMotion()
 
+  const { t } = useTranslation('executive')
+
   const stats = [
     {
       value: '3.06M',
-      label: 'contratos analizados',
-      labelEn: 'contracts analyzed',
+      labelKey: 'hero.stat1Label',
       color: 'text-text-primary',
-      sub: '2002 - 2025 · 23 anos de COMPRANET',
+      subKey: 'hero.stat1Sub',
     },
     {
       value: 'MX$9.9T',
-      label: 'gasto federal validado',
-      labelEn: 'validated federal spend',
+      labelKey: 'hero.stat2Label',
       color: 'text-text-primary',
       sub: `~$${data.headline.total_value_usd ? (data.headline.total_value_usd / 1e9).toFixed(0) + 'B' : '550B'} USD`,
     },
     {
       value: `${highRiskPct}%`,
-      label: 'tasa de riesgo alto + critico',
-      labelEn: 'high + critical risk rate',
+      labelKey: 'hero.stat3Label',
       color: 'text-[#dc2626]',
-      sub: 'OCDE: max 15% — 1 de cada 7 pesos',
+      subKey: 'hero.stat3Sub',
     },
   ]
 
@@ -479,23 +394,22 @@ function HeroNumbers({
     >
       {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-4">
-        RUBLI · Resumen Ejecutivo · Executive Summary
+        {t('editorialSection')}
       </p>
 
       {/* One-line mission statement */}
       <h1 className="text-2xl sm:text-3xl font-bold font-serif leading-tight text-text-primary mb-2">
-        Inteligencia de Contrataciones Publicas
+        {t('editorialHeadline')}
       </h1>
       <p className="text-sm text-text-muted mb-8 max-w-2xl leading-relaxed">
-        AI-powered analysis of 23 years of Mexican federal procurement data.
-        Every contract. Every vendor. Every red flag.
+        {t('editorialSubtitle')}
       </p>
 
       {/* The 3 hero numbers */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
         {stats.map((s, i) => (
           <motion.div
-            key={s.label}
+            key={s.labelKey}
             className="border-l-2 border-l-zinc-700 pl-4 py-1"
             initial={reduced ? {} : { opacity: 0, x: -8 }}
             animate={{ opacity: 1, x: 0 }}
@@ -505,13 +419,10 @@ function HeroNumbers({
               {s.value}
             </div>
             <div className="text-xs text-zinc-400 uppercase tracking-wide mt-1.5 font-mono">
-              {s.label}
-            </div>
-            <div className="text-[10px] text-zinc-600 mt-0.5 italic">
-              {s.labelEn}
+              {t(s.labelKey)}
             </div>
             <div className="text-[10px] text-zinc-600 font-mono mt-1">
-              {s.sub}
+              {s.subKey ? t(s.subKey) : s.sub}
             </div>
           </motion.div>
         ))}
@@ -538,33 +449,37 @@ function HeroNumbers({
 
 function MethodologySummary() {
   const navigate = useNavigate()
+  const { t } = useTranslation('executive')
 
   return (
     <section className="my-4">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        RUBLI · Metodologia
+        {t('methodology.overline')}
       </p>
       <h2 className="text-xl font-bold text-text-primary mb-3">
-        How does this work?
+        {t('methodology.title')}
       </h2>
       <div className="border-l-2 border-[#22d3ee] pl-5 space-y-3">
         <p className="text-sm leading-relaxed text-text-secondary">
-          RUBLI applies a <strong className="text-text-primary">per-sector logistic regression model</strong> (v6.5,
-          AUC 0.828) trained on 748 documented corruption cases to score every federal contract in COMPRANET.
-          The model uses 9 statistical features — from price volatility to vendor concentration — normalized
-          against sector-year baselines so a direct award in Defensa is not treated the same as one in Educacion.
+          <Trans
+            t={t}
+            i18nKey="methodology.p1"
+            components={{ bold: <strong className="text-text-primary" /> }}
+          />
         </p>
         <p className="text-sm leading-relaxed text-text-secondary">
-          Risk scores are <strong className="text-text-primary">investigation leads, not verdicts</strong>.
-          A score of 0.60 means the contract resembles known corruption patterns — it does not mean 60% chance of fraud.
-          All data is from public COMPRANET records. No FOIA required.
+          <Trans
+            t={t}
+            i18nKey="methodology.p2"
+            components={{ bold: <strong className="text-text-primary" /> }}
+          />
         </p>
       </div>
       <button
         onClick={() => navigate('/methodology')}
         className="mt-4 flex items-center gap-1.5 text-xs text-[#22d3ee] hover:text-[#22d3ee]/80 font-mono uppercase tracking-wide transition-colors"
       >
-        Full methodology & model transparency
+        {t('methodology.link')}
         <ArrowRight className="h-3 w-3" />
       </button>
     </section>
@@ -576,49 +491,45 @@ function MethodologySummary() {
 // ============================================================================
 
 function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
+  const { t } = useTranslation('executive')
+
   const cards = [
     {
-      title: 'Investigar un Proveedor',
-      titleEn: 'Investigate a Vendor',
-      desc: '320 proveedores bajo investigación prioritaria. Comienza por los de mayor puntaje.',
-      descEn: '320 vendors in the urgent investigation queue. Start with the highest-scoring.',
+      titleKey: 'cta.c1.title',
+      descKey: 'cta.c1.desc',
       icon: Search,
       color: '#dc2626',
       href: '/aria',
-      cta: 'Abrir pistas ARIA',
+      ctaKey: 'cta.c1.cta',
     },
     {
-      title: 'Leer una Investigacion',
-      titleEn: 'Read an Investigation',
-      desc: 'Narrativas editoriales sobre los patrones de corrupcion mas importantes.',
-      descEn: 'Editorial narratives on the most significant corruption patterns.',
+      titleKey: 'cta.c2.title',
+      descKey: 'cta.c2.desc',
       icon: Compass,
       color: '#f59e0b',
       href: '/journalists',
-      cta: 'Ver historias',
+      ctaKey: 'cta.c2.cta',
     },
     {
-      title: 'Explorar por Sector',
-      titleEn: 'Explore by Sector',
-      desc: '12 sectores, cada uno con su perfil de riesgo. Salud y Agricultura lideran.',
-      descEn: '12 sectors, each with its own risk profile. Health and Agriculture lead.',
+      titleKey: 'cta.c3.title',
+      descKey: 'cta.c3.desc',
       icon: Scale,
       color: '#3b82f6',
       href: '/sectors',
-      cta: 'Ver sectores',
+      ctaKey: 'cta.c3.cta',
     },
   ]
 
   return (
     <section className="my-4">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        RUBLI · Punto de Partida
+        {t('cta.overline')}
       </p>
       <h2 className="text-xl font-bold text-text-primary mb-2">
-        Start your investigation
+        {t('cta.title')}
       </h2>
       <p className="text-sm text-text-muted mb-6">
-        Comienza tu investigacion · Three ways into the data
+        {t('cta.subtitle')}
       </p>
 
       <div className="grid sm:grid-cols-3 gap-4">
@@ -640,17 +551,15 @@ function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
               >
                 <Icon className="h-5 w-5" style={{ color: card.color }} />
               </div>
-              <h3 className="text-sm font-bold text-text-primary mb-0.5 group-hover:underline">
-                {card.title}
+              <h3 className="text-sm font-bold text-text-primary mb-2 group-hover:underline">
+                {t(card.titleKey)}
               </h3>
-              <p className="text-[11px] text-text-muted italic mb-2">{card.titleEn}</p>
-              <p className="text-xs text-text-secondary leading-relaxed mb-3">{card.desc}</p>
-              <p className="text-[10px] text-text-muted italic leading-relaxed mb-3">{card.descEn}</p>
+              <p className="text-xs text-text-secondary leading-relaxed mb-3">{t(card.descKey)}</p>
               <span
                 className="inline-flex items-center gap-1 text-xs font-mono font-semibold group-hover:gap-2 transition-all"
                 style={{ color: card.color }}
               >
-                {card.cta}
+                {t(card.ctaKey)}
                 <ArrowRight className="h-3 w-3" />
               </span>
             </button>
@@ -1316,17 +1225,14 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         </div>
         <div>
           <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-[#dc2626] mb-1">
-            En perspectiva · In Perspective
+            {t('perspective.label')}
           </p>
-          {/* Spanish: 184,031 contratos en zona crítica equivalen a
-              aproximadamente un contrato sospechoso por cada escuela primaria en México. */}
           <p className="text-sm leading-relaxed text-text-secondary">
-            <strong className="text-text-primary font-mono">184,031</strong> contratos en zona crítica (puntuación ≥ 0.60) —{' '}
-            el equivalente aproximado a <strong className="text-text-primary">un contrato sospechoso por cada escuela primaria
-            de México</strong>. Esa cifra no incluye los 228,814 contratos de riesgo alto.{' '}
-            <span className="text-text-muted italic">
-              (184K critical-risk contracts — roughly one per primary school in Mexico.)
-            </span>
+            <Trans
+              t={t}
+              i18nKey="perspective.body"
+              components={{ bold: <strong className="text-text-primary font-mono" /> }}
+            />
           </p>
         </div>
       </div>
@@ -1685,30 +1591,30 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
 
   const policyRecommendations = [
     {
-      audience: 'For Investigators (ASF / SFP)',
+      audienceKey: 'recommendations.a1.audience',
       color: '#f87171',
-      steps: [
-        'Start with the critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.',
-        'Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.',
-        'Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation.',
+      stepKeys: [
+        'recommendations.a1.s1',
+        'recommendations.a1.s2',
+        'recommendations.a1.s3',
       ],
     },
     {
-      audience: 'For Procurement Reformers',
+      audienceKey: 'recommendations.a2.audience',
       color: '#fb923c',
-      steps: [
-        'The 71% direct award rate is the single largest vulnerability. Mandate competitive procedures for all contracts above 500K MXN, with limited emergency exceptions.',
-        'Require publication of justification memos for direct awards within 24 hours of signing — not retroactively.',
-        'December contract volume spikes 1.33× — enforce quarterly budget release schedules to eliminate year-end spending dumps.',
+      stepKeys: [
+        'recommendations.a2.s1',
+        'recommendations.a2.s2',
+        'recommendations.a2.s3',
       ],
     },
     {
-      audience: 'For Journalists & Civil Society',
+      audienceKey: 'recommendations.a3.audience',
       color: '#fbbf24',
-      steps: [
-        'Use the Sector page to identify which agencies account for the highest value-at-risk in your area of coverage.',
-        'The Vendor Profile tool shows 27 documented ground truth vendors alongside statistical risk — compare institutional exposure.',
-        'Filter the contract explorer to risk_level=critical and sector=salud to reproduce the IMSS ghost company patterns independently.',
+      stepKeys: [
+        'recommendations.a3.s1',
+        'recommendations.a3.s2',
+        'recommendations.a3.s3',
       ],
     },
   ]
@@ -1753,12 +1659,12 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
       {/* Audience-specific next steps */}
       <div className="mb-2">
         <div className="editorial-rule mb-4">
-          <span className="editorial-label">Recommended next steps — by audience</span>
+          <span className="editorial-label">{t('recommendations.sectionLabel')}</span>
         </div>
         <div className="space-y-4">
           {policyRecommendations.map((rec) => (
             <div
-              key={rec.audience}
+              key={rec.audienceKey}
               className="fern-card p-5"
               style={{ borderColor: `${rec.color}30`, background: `${rec.color}06` }}
             >
@@ -1766,10 +1672,10 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
                 className="editorial-label mb-3"
                 style={{ color: rec.color }}
               >
-                {rec.audience}
+                {t(rec.audienceKey)}
               </p>
               <ol className="space-y-2">
-                {rec.steps.map((step, i) => (
+                {rec.stepKeys.map((stepKey, i) => (
                   <li key={i} className="flex items-start gap-2.5">
                     <span
                       className="text-[10px] font-black font-mono mt-0.5 flex-shrink-0 w-4"
@@ -1777,7 +1683,7 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
                     >
                       {i + 1}.
                     </span>
-                    <span className="text-sm text-text-secondary leading-relaxed">{step}</span>
+                    <span className="text-sm text-text-secondary leading-relaxed">{t(stepKey)}</span>
                   </li>
                 ))}
               </ol>
@@ -1789,21 +1695,14 @@ function SectionRecommendations({ navigate }: { navigate: (path: string) => void
       {/* Journalist methodology note */}
       <div className="mt-8 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
         <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-amber-500 mb-2">
-          Nota para periodistas · Journalist Note
+          {t('journalistNote.label')}
         </p>
-        {/*
-          Spanish: Las puntuaciones de riesgo son pistas de investigación, no condenas.
-          Each flagged contract can be cross-referenced via COMPRANET folio numbers for FOIA requests.
-        */}
-        <p className="text-sm leading-relaxed text-text-secondary mb-3">
-          Las puntuaciones de riesgo son <strong className="text-text-primary">pistas de investigación, no condenas</strong>.
-          Cada contrato marcado puede cruzarse con su número de folio en COMPRANET para solicitudes de información
-          (Art. 6 constitucional — no se requiere litigio). Los datos son de fuente pública; no se necesita FOIA.
-        </p>
-        <p className="text-xs text-text-muted italic leading-relaxed">
-          For journalists: risk scores are investigative leads, not verdicts. Each flagged contract carries a
-          COMPRANET folio number you can use to request full documentation. All underlying data is public
-          record — no freedom of information litigation required.
+        <p className="text-sm leading-relaxed text-text-secondary">
+          <Trans
+            t={t}
+            i18nKey="journalistNote.body"
+            components={{ bold: <strong className="text-text-primary" /> }}
+          />
         </p>
       </div>
     </section>

@@ -181,7 +181,8 @@ function GeneralTab() {
   const { data: stats, isLoading, error, refetch } = useQuery<DatabaseStats>({
     queryKey: ['stats', 'database'],
     queryFn: () => statsApi.getDatabase() as Promise<DatabaseStats>,
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000, // DB stats rarely change — 30 min stale window
+    gcTime: 60 * 60 * 1000,
   })
 
   return (
@@ -430,7 +431,9 @@ function DataQualityTab() {
   const { data, isLoading, error } = useQuery({
     queryKey: ['data-quality'],
     queryFn: () => analysisApi.getDataQuality(),
-    staleTime: 10 * 60 * 1000,
+    staleTime: Infinity, // live fallback runs 3 full table scans — cache for session lifetime
+    gcTime: 60 * 60 * 1000,
+    retry: 1,
   })
 
   if (isLoading) {

@@ -1164,7 +1164,7 @@ export const analysisApi = {
 
   async comparePeriods(p1s: string, p1e: string, p2s: string, p2e: string): Promise<ComparePeriodResponse> {
     const { data } = await api.get<ComparePeriodResponse>(
-      `/analysis/compare-periods?p1_start=${p1s}&p1_end=${p1e}&p2_start=${p2s}&p2_end=${p2e}`
+      `/analysis/compare-periods?period1_start=${p1s}&period1_end=${p1e}&period2_start=${p2s}&period2_end=${p2e}`
     )
     return data
   },

@@ -903,25 +903,27 @@ export default function YearInReview() {
   const { data: yoyResp, isLoading: yoyLoading } = useQuery({
     queryKey: ['analysis', 'year-over-year'],
     queryFn: () => analysisApi.getYearOverYear(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity, // historical data — never re-fetch automatically
+    gcTime: 60 * 60 * 1000,
   })
 
   const { data: sectorYearResp, isLoading: syLoading } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
-    staleTime: 5 * 60 * 1000,
+    staleTime: Infinity, // expensive query (30s fallback) — cache for session lifetime
+    gcTime: 60 * 60 * 1000,
   })
 
   const { data: vendorsResp, isLoading: vendorsLoading } = useQuery({
     queryKey: ['vendors', 'top', 'value', 10, validYear],
     queryFn: () => vendorApi.getTop('value', 10, { year: validYear }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   })
 
   const { data: riskVendorsResp } = useQuery({
     queryKey: ['vendors', 'top', 'risk', 10, validYear],
     queryFn: () => vendorApi.getTop('risk', 10, { year: validYear }),
-    staleTime: 5 * 60 * 1000,
+    staleTime: 30 * 60 * 1000,
   })
 
   const yoyData: YearOverYearChange[] = yoyResp?.data ?? []

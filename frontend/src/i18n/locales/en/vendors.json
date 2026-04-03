@@ -126,7 +126,8 @@
     "couldNotLoadPeerComparison": "Could not load peer comparison data. Try refreshing.",
     "fingerprint": "RISK FINGERPRINT",
     "fingerprintSubtitle": "Unique risk signature · Area proportional to each factor's SHAP contribution",
-    "fingerprintLegend": "Red petals = risk factors · Blue petals = protective factors · Area proportional to SHAP value"
+    "fingerprintLegend": "Red petals = risk factors · Blue petals = protective factors · Area proportional to SHAP value",
+    "vsSectorAvg": "vs sector avg."
   },
   "history": {
     "activityCalendar": "Contract Activity Calendar",

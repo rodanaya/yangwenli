@@ -104,6 +104,7 @@ def _warmup_caches():
     endpoints = [
         "/api/v1/stats/dashboard/fast",                # Dashboard (highest priority, pre-computed)
         "/api/v1/sectors",                             # Sectors list (small table)
+        *[f"/api/v1/sectors/{i}" for i in range(1, 13)],  # All 12 sector detail pages (fast with bug fix)
         "/api/v1/stats/data-quality",                  # Header quality badge (cached)
         "/api/v1/executive/summary",                   # Executive section — warm EARLY, cold=90s on VPS
         "/api/v1/analysis/patterns/counts",            # DetectivePatterns page (LIKE queries on 3.1M rows)
@@ -113,11 +114,12 @@ def _warmup_caches():
         "/api/v1/analysis/sector-year-breakdown",      # ProcurementIntelligence heatmap (slow cold)
         "/api/v1/analysis/money-flow",                 # Dashboard money flow panel
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
+        "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
     ]
     for ep in endpoints:
         try:
-            # executive/summary cold on VPS = 90s; publication-delays = 11s
-            timeout = 120 if "executive" in ep else (30 if "publication" in ep else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3)))
+            # executive/summary cold on VPS = 90s; price-anomalies cold = 50s+; publication-delays = 11s
+            timeout = 120 if "executive" in ep or "price-anomalies" in ep else (30 if "publication" in ep else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3)))
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")

@@ -364,7 +364,9 @@ function SHAPImportanceSection() {
   const { data, isLoading } = useQuery({
     queryKey: ['feature-importance-v52'],
     queryFn: () => analysisApi.getFeatureImportanceV52(),
-    staleTime: 24 * 60 * 60 * 1000, // 24 hours
+    staleTime: Infinity,
+    gcTime: 24 * 60 * 60 * 1000,
+    retry: false, // 404 means data not computed — don't retry
   })
 
   if (isLoading) return (
@@ -465,7 +467,8 @@ function DriftMonitorSection() {
   const { data, isLoading, isError } = useQuery({
     queryKey: ['drift-report'],
     queryFn: () => analysisApi.getDrift(),
-    staleTime: 24 * 60 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 24 * 60 * 60 * 1000,
     retry: (failureCount, error) => {
       // Do not retry on 404 — no report has been computed yet
       const axiosError = error as { response?: { status: number } }
@@ -1085,7 +1088,8 @@ export default function ModelTransparency() {
   const { data: modelMeta } = useQuery({
     queryKey: ['model', 'metadata'],
     queryFn: () => analysisApi.getModelMetadata(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
     retry: 1,
   })
 
@@ -1095,7 +1099,8 @@ export default function ModelTransparency() {
   const { data: modelCalibration, isLoading: calibrationLoading } = useQuery({
     queryKey: ['model', 'calibration'],
     queryFn: () => analysisApi.getModelCalibration(),
-    staleTime: 30 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
     retry: 1,
   })
 
@@ -1105,16 +1110,20 @@ export default function ModelTransparency() {
   const { data: featureImportance } = useQuery({
     queryKey: ['feature-importance', coeffSectorId],
     queryFn: () => analysisApi.getFeatureImportance(coeffSectorId),
-    staleTime: 60 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
   })
 
   // ------------------------------------------------------------------
   // Live model comparison from API
+  // model-comparison requires sector_id (required param) — disable until sector selected
   // ------------------------------------------------------------------
   const { data: modelComparison } = useQuery({
     queryKey: ['model-comparison'],
     queryFn: () => analysisApi.getModelComparison(),
-    staleTime: 60 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
+    enabled: false, // endpoint requires sector_id which is not passed — suppress 422 error
   })
 
   // ------------------------------------------------------------------
@@ -1142,7 +1151,8 @@ export default function ModelTransparency() {
   const { data: procedureRiskData, isLoading: procedureLoading, isError: procedureError } = useQuery({
     queryKey: ['analysis', 'procedure-risk-comparison', procedureSectorId],
     queryFn: () => analysisApi.getProcedureRiskComparison({ sector_id: procedureSectorId }),
-    staleTime: 30 * 60 * 1000,
+    staleTime: Infinity,
+    gcTime: 60 * 60 * 1000,
   })
 
   // ------------------------------------------------------------------

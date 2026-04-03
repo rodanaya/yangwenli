@@ -248,7 +248,13 @@ def get_sector(
     Get detailed information for a specific sector.
 
     Returns sector metadata, statistics, and year-over-year trends.
+    Uses precomputed_stats for instant stats; only year-trend query hits contracts table.
     """
+    cache_key = f"sector_detail:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -260,82 +266,143 @@ def get_sector(
             if not sector_row:
                 raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
 
-            # Get statistics
-            stats_query = """
-                SELECT
-                    COUNT(*) as total_contracts,
-                    COALESCE(SUM(amount_mxn), 0) as total_value,
-                    COUNT(DISTINCT vendor_id) as total_vendors,
-                    COUNT(DISTINCT institution_id) as total_institutions,
-                    COALESCE(AVG(amount_mxn), 0) as avg_value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk,
-                    SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) as low_risk,
-                    SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) as medium_risk,
-                    SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
-                    SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
-                    SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
-                    SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
-                FROM contracts
-                WHERE sector_id = ?
-            """
-            cursor.execute(stats_query, (sector_id,))
-            stats_row = cursor.fetchone()
+            # Fast path: use precomputed_stats sectors key
+            s = None
+            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
+            ps_row = cursor.fetchone()
+            if ps_row:
+                sector_data = json.loads(ps_row[0])
+                for item in sector_data:
+                    sid = item.get("id") or item.get("sector_id", 0)
+                    if sid == sector_id:
+                        s = item
+                        break
 
-            total = stats_row[0] or 0
-            high_risk = (stats_row[8] or 0) + (stats_row[9] or 0)
-
-            statistics = SectorStatistics(
-                sector_id=sector_row[0],
-                sector_code=sector_row[1],
-                sector_name=sector_row[2],
-                color=SECTOR_COLORS.get(sector_id, "#64748b"),
-                total_contracts=total,
-                total_value_mxn=stats_row[1] or 0,
-                total_vendors=stats_row[2] or 0,
-                total_institutions=stats_row[3] or 0,
-                avg_contract_value=stats_row[4] or 0,
-                avg_risk_score=round(stats_row[5] or 0, 4),
-                low_risk_count=stats_row[6] or 0,
-                medium_risk_count=stats_row[7] or 0,
-                high_risk_count=stats_row[8] or 0,
-                critical_risk_count=stats_row[9] or 0,
-                high_risk_pct=round(high_risk / total * 100, 2) if total > 0 else 0,
-                direct_award_count=stats_row[10] or 0,
-                direct_award_pct=round((stats_row[10] or 0) / total * 100, 2) if total > 0 else 0,
-                single_bid_count=stats_row[11] or 0,
-                single_bid_pct=round((stats_row[11] or 0) / total * 100, 2) if total > 0 else 0,
-            )
-
-            # Get year-over-year trends
-            trends_query = """
-                SELECT
-                    contract_year,
-                    COUNT(*) as total_contracts,
-                    COALESCE(SUM(amount_mxn), 0) as total_value,
-                    COALESCE(AVG(risk_score), 0) as avg_risk,
-                    ROUND(SUM(CASE WHEN is_direct_award = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as direct_pct,
-                    ROUND(SUM(CASE WHEN is_single_bid = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as single_pct
-                FROM contracts
-                WHERE sector_id = ? AND contract_year IS NOT NULL
-                GROUP BY contract_year
-                ORDER BY contract_year
-            """
-            cursor.execute(trends_query, (sector_id,))
-            trends_rows = cursor.fetchall()
-
-            trends = [
-                SectorTrend(
-                    year=row[0],
-                    total_contracts=row[1],
-                    total_value_mxn=row[2],
-                    avg_risk_score=round(row[3], 4),
-                    direct_award_pct=row[4] or 0,
-                    single_bid_pct=row[5] or 0,
+            if s:
+                total = s.get("total_contracts", 0) or 0
+                high_risk = (s.get("high_risk_count", 0) or 0) + (s.get("critical_risk_count", 0) or 0)
+                statistics = SectorStatistics(
+                    sector_id=sector_row[0],
+                    sector_code=sector_row[1],
+                    sector_name=sector_row[2],
+                    color=SECTOR_COLORS.get(sector_id, "#64748b"),
+                    total_contracts=total,
+                    total_value_mxn=s.get("total_value_mxn", 0) or 0,
+                    total_vendors=s.get("total_vendors", 0) or 0,
+                    total_institutions=s.get("total_institutions", 0) or 0,
+                    avg_contract_value=round((s.get("total_value_mxn", 0) or 0) / total, 2) if total > 0 else 0,
+                    avg_risk_score=round(s.get("avg_risk_score", 0) or 0, 4),
+                    low_risk_count=s.get("low_risk_count", 0) or 0,
+                    medium_risk_count=s.get("medium_risk_count", 0) or 0,
+                    high_risk_count=s.get("high_risk_count", 0) or 0,
+                    critical_risk_count=s.get("critical_risk_count", 0) or 0,
+                    high_risk_pct=round(high_risk / total * 100, 2) if total > 0 else 0,
+                    direct_award_count=s.get("direct_award_count", 0) or 0,
+                    direct_award_pct=round((s.get("direct_award_count", 0) or 0) / total * 100, 2) if total > 0 else 0,
+                    single_bid_count=s.get("single_bid_count", 0) or 0,
+                    single_bid_pct=round((s.get("single_bid_count", 0) or 0) / total * 100, 2) if total > 0 else 0,
                 )
-                for row in trends_rows
-            ]
+            else:
+                # Fallback: live query (slow but correct)
+                stats_query = """
+                    SELECT
+                        COUNT(*) as total_contracts,
+                        COALESCE(SUM(amount_mxn), 0) as total_value,
+                        COUNT(DISTINCT vendor_id) as total_vendors,
+                        COUNT(DISTINCT institution_id) as total_institutions,
+                        COALESCE(AVG(amount_mxn), 0) as avg_value,
+                        COALESCE(AVG(risk_score), 0) as avg_risk,
+                        SUM(CASE WHEN risk_level = 'low' THEN 1 ELSE 0 END) as low_risk,
+                        SUM(CASE WHEN risk_level = 'medium' THEN 1 ELSE 0 END) as medium_risk,
+                        SUM(CASE WHEN risk_level = 'high' THEN 1 ELSE 0 END) as high_risk,
+                        SUM(CASE WHEN risk_level = 'critical' THEN 1 ELSE 0 END) as critical_risk,
+                        SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as direct_awards,
+                        SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as single_bids
+                    FROM contracts
+                    WHERE sector_id = ?
+                """
+                cursor.execute(stats_query, (sector_id,))
+                stats_row = cursor.fetchone()
+                total = stats_row[0] or 0
+                high_risk = (stats_row[8] or 0) + (stats_row[9] or 0)
 
-            return SectorDetailResponse(
+                statistics = SectorStatistics(
+                    sector_id=sector_row[0],
+                    sector_code=sector_row[1],
+                    sector_name=sector_row[2],
+                    color=SECTOR_COLORS.get(sector_id, "#64748b"),
+                    total_contracts=total,
+                    total_value_mxn=stats_row[1] or 0,
+                    total_vendors=stats_row[2] or 0,
+                    total_institutions=stats_row[3] or 0,
+                    avg_contract_value=stats_row[4] or 0,
+                    avg_risk_score=round(stats_row[5] or 0, 4),
+                    low_risk_count=stats_row[6] or 0,
+                    medium_risk_count=stats_row[7] or 0,
+                    high_risk_count=stats_row[8] or 0,
+                    critical_risk_count=stats_row[9] or 0,
+                    high_risk_pct=round(high_risk / total * 100, 2) if total > 0 else 0,
+                    direct_award_count=stats_row[10] or 0,
+                    direct_award_pct=round((stats_row[10] or 0) / total * 100, 2) if total > 0 else 0,
+                    single_bid_count=stats_row[11] or 0,
+                    single_bid_pct=round((stats_row[11] or 0) / total * 100, 2) if total > 0 else 0,
+                )
+
+            # Get year-over-year trends — use precomputed sector_year_breakdown if available
+            trends: list = []
+            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'")
+            syb_row = cursor.fetchone()
+            if syb_row:
+                try:
+                    syb = json.loads(syb_row[0])
+                    # Format: list of {sector_id, year, total_contracts, total_value_mxn, avg_risk_score, ...}
+                    yr_items = [r for r in syb if r.get("sector_id") == sector_id]
+                    if yr_items:
+                        trends = [
+                            SectorTrend(
+                                year=r["year"],
+                                total_contracts=r.get("total_contracts", 0),
+                                total_value_mxn=r.get("total_value_mxn", 0),
+                                avg_risk_score=round(r.get("avg_risk_score", 0) or 0, 4),
+                                direct_award_pct=r.get("direct_award_pct", 0) or 0,
+                                single_bid_pct=r.get("single_bid_pct", 0) or 0,
+                            )
+                            for r in sorted(yr_items, key=lambda x: x["year"])
+                        ]
+                except Exception:
+                    pass
+
+            if not trends:
+                # Fallback: live trends query — limit to last 10 years to keep it fast
+                trends_query = """
+                    SELECT
+                        contract_year,
+                        COUNT(*) as total_contracts,
+                        COALESCE(SUM(amount_mxn), 0) as total_value,
+                        COALESCE(AVG(risk_score), 0) as avg_risk,
+                        ROUND(SUM(CASE WHEN is_direct_award = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as direct_pct,
+                        ROUND(SUM(CASE WHEN is_single_bid = 1 THEN 1.0 ELSE 0 END) / COUNT(*) * 100, 2) as single_pct
+                    FROM contracts
+                    WHERE sector_id = ? AND contract_year IS NOT NULL
+                      AND contract_year >= 2015
+                    GROUP BY contract_year
+                    ORDER BY contract_year
+                """
+                cursor.execute(trends_query, (sector_id,))
+                trends_rows = cursor.fetchall()
+                trends = [
+                    SectorTrend(
+                        year=row[0],
+                        total_contracts=row[1],
+                        total_value_mxn=row[2],
+                        avg_risk_score=round(row[3], 4),
+                        direct_award_pct=row[4] or 0,
+                        single_bid_pct=row[5] or 0,
+                    )
+                    for row in trends_rows
+                ]
+
+            response = SectorDetailResponse(
                 id=sector_row[0],
                 code=sector_row[1],
                 name=sector_row[2],
@@ -343,6 +410,8 @@ def get_sector(
                 statistics=statistics,
                 trends=trends,
             )
+            _cache.set(cache_key, response, SECTORS_CACHE_TTL)
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_sector: {e}")

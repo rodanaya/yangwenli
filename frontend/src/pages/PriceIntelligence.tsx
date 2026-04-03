@@ -90,7 +90,8 @@ interface PriceAnomalyResponse {
 
 async function fetchPriceAnomalies(minZ = 3, limit = 50): Promise<PriceAnomalyResponse> {
   const { data } = await api.get<PriceAnomalyResponse>(
-    `/analysis/price-anomalies?min_z=${minZ}&limit=${limit}`
+    `/analysis/price-anomalies?min_z=${minZ}&limit=${limit}`,
+    { timeout: 120_000 }  // cold-cache query can take 50s+; warmup covers most cases
   )
   return data
 }

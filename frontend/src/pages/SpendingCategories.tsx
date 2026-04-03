@@ -349,6 +349,185 @@ function CategoryDetailPanel({
 }
 
 // =============================================================================
+// Category Summary Card — prominent stats when a category is selected
+// =============================================================================
+
+function CategorySummaryCard({
+  category,
+  onClose,
+  onNavigate,
+}: {
+  category: CategoryStat
+  onClose: () => void
+  onNavigate: (path: string) => void
+}) {
+  const riskLevel = getRiskLevelFromScore(category.avg_risk)
+  const riskColor = RISK_COLORS[riskLevel]
+  const sectorColor = category.sector_code ? (SECTOR_COLORS[category.sector_code] || '#64748b') : '#64748b'
+  const isHighDA = category.direct_award_pct >= 70
+  const isOECDViolation = category.direct_award_pct > 25
+
+  return (
+    <div className="rounded-xl border border-accent/30 bg-accent/[0.03] overflow-hidden">
+      {/* Header bar */}
+      <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-accent/20 bg-accent/[0.05]">
+        <div className="flex items-center gap-3 min-w-0">
+          {category.sector_code && (
+            <span
+              className="h-3 w-3 rounded-full flex-shrink-0"
+              style={{ backgroundColor: sectorColor }}
+            />
+          )}
+          <h3 className="text-sm font-bold text-text-primary truncate" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            {category.name_es || category.name_en}
+          </h3>
+          {category.sector_code && (
+            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60 px-1.5 py-0.5 rounded bg-background-elevated/50 flex-shrink-0">
+              {category.sector_code}
+            </span>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <button
+            onClick={() => onNavigate(`/contracts?category_id=${category.category_id}`)}
+            className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded font-mono uppercase tracking-wider"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Contratos
+          </button>
+          <button
+            onClick={onClose}
+            className="text-text-muted hover:text-text-primary transition-colors"
+            aria-label="Cerrar resumen"
+          >
+            <X className="h-4 w-4" />
+          </button>
+        </div>
+      </div>
+
+      {/* Stats grid */}
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/10">
+        {/* Total Value */}
+        <div className="bg-background-card px-4 py-3.5">
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Monto Total</p>
+          <p className="text-xl font-mono font-bold text-text-primary leading-tight">
+            {formatCompactMXN(category.total_value)}
+          </p>
+        </div>
+
+        {/* Contract Count */}
+        <div className="bg-background-card px-4 py-3.5">
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Contratos</p>
+          <p className="text-xl font-mono font-bold text-text-primary leading-tight">
+            {formatNumber(category.total_contracts)}
+          </p>
+          <p className="text-[10px] text-text-muted/50 mt-0.5 font-mono">
+            ~{formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0)} prom.
+          </p>
+        </div>
+
+        {/* Avg Risk */}
+        <div className="bg-background-card px-4 py-3.5">
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Riesgo Promedio</p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-xl font-mono font-bold leading-tight" style={{ color: riskColor }}>
+              {(category.avg_risk * 100).toFixed(1)}%
+            </p>
+            <span
+              className="text-[10px] font-mono uppercase px-1.5 py-0.5 rounded"
+              style={{ color: riskColor, backgroundColor: `${riskColor}15` }}
+            >
+              {riskLevel}
+            </span>
+          </div>
+          {/* Risk bar */}
+          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden mt-2">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(category.avg_risk * 100, 100)}%`,
+                backgroundColor: riskColor,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Direct Award % */}
+        <div className="bg-background-card px-4 py-3.5">
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Adj. Directa</p>
+          <p
+            className="text-xl font-mono font-bold leading-tight"
+            style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
+          >
+            {category.direct_award_pct != null ? `${category.direct_award_pct.toFixed(0)}%` : '\u2014'}
+          </p>
+          {isOECDViolation && (
+            <p className="text-[10px] text-cyan-400 mt-0.5 font-mono">
+              OCDE: max 25%
+            </p>
+          )}
+          {/* DA bar */}
+          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden mt-2 relative">
+            <div
+              className="h-full rounded-full transition-all duration-500"
+              style={{
+                width: `${Math.min(category.direct_award_pct ?? 0, 100)}%`,
+                backgroundColor: isHighDA ? '#fb923c' : '#3b82f6',
+              }}
+            />
+            {/* OECD marker at 25% */}
+            <div
+              className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
+              style={{ left: '25%' }}
+              title="OCDE max 25%"
+            />
+          </div>
+        </div>
+
+        {/* Top Vendor */}
+        <div className="bg-background-card px-4 py-3.5 col-span-2 md:col-span-1">
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Principal Proveedor</p>
+          {category.top_vendor ? (
+            <button
+              onClick={() => onNavigate(`/vendors/${category.top_vendor!.id}`)}
+              className="text-sm font-semibold text-accent hover:text-accent/80 transition-colors flex items-center gap-1 leading-tight"
+            >
+              <span className="truncate max-w-[180px]">{truncate(category.top_vendor.name, 28)}</span>
+              <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
+            </button>
+          ) : (
+            <p className="text-sm text-text-muted">{'\u2014'}</p>
+          )}
+          {/* Single bid % */}
+          {category.single_bid_pct > 0 && (
+            <p className="text-[10px] text-text-muted/50 mt-1 font-mono">
+              {category.single_bid_pct.toFixed(0)}% licitaci{'\u00f3'}n {'\u00fa'}nica
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Contextual finding callout if high risk */}
+      {(category.avg_risk >= 0.40 || isHighDA) && (
+        <div className="px-5 py-3 border-t border-amber-500/20 bg-amber-500/5">
+          <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
+            HALLAZGO
+          </p>
+          <p className="text-sm text-zinc-200">
+            {category.avg_risk >= 0.40 && isHighDA
+              ? `Esta categor\u00eda combina riesgo ${riskLevel} (${(category.avg_risk * 100).toFixed(0)}%) con ${category.direct_award_pct.toFixed(0)}% de adjudicaci\u00f3n directa \u2014 ${(category.direct_award_pct / 25).toFixed(1)}x el l\u00edmite OCDE de 25%.`
+              : category.avg_risk >= 0.40
+                ? `Riesgo promedio ${riskLevel} en ${formatNumber(category.total_contracts)} contratos por ${formatCompactMXN(category.total_value)}. Revisar patrones de concentraci\u00f3n.`
+                : `${category.direct_award_pct.toFixed(0)}% de adjudicaci\u00f3n directa \u2014 ${(category.direct_award_pct / 25).toFixed(1)}x el l\u00edmite OCDE de 25%. Baja competencia en esta categor\u00eda.`
+            }
+          </p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
 // Subcategory Drill-Down Panel
 // =============================================================================
 
@@ -790,6 +969,11 @@ export default function SpendingCategories() {
     const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
     return cat ? getSectorId(cat.sector_code) : null
   }, [selectedCategoryId, filteredCategories])
+
+  const selectedCategory = useMemo(() => {
+    if (!selectedCategoryId) return null
+    return allCategories.find(c => c.category_id === selectedCategoryId) ?? null
+  }, [selectedCategoryId, allCategories])
 
   // Treemap data
   const treemapData = useMemo(() => {
@@ -1287,6 +1471,13 @@ export default function SpendingCategories() {
           <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
           <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategor\u00edas</span>, principales proveedores y desgloses institucionales.</span>
         </div>
+      )}
+      {selectedCategoryId !== null && selectedCategory && (
+        <CategorySummaryCard
+          category={selectedCategory}
+          onClose={() => setSelectedCategoryId(null)}
+          onNavigate={navigate}
+        />
       )}
       {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
         <SubcategoryPanel

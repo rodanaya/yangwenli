@@ -450,5 +450,128 @@
   },
   "share": "Share",
   "shareCopied": "Link copied!",
-  "exportPdf": "Print / PDF"
+  "exportPdf": "Print / PDF",
+
+  "hero": {
+    "stat1Label": "Contracts analyzed",
+    "stat1Sub": "2002 - 2025 · 23 years of COMPRANET",
+    "stat2Label": "Validated federal spend",
+    "stat3Label": "High + critical risk rate",
+    "stat3Sub": "OECD max 15% · 1 in 7 pesos"
+  },
+
+  "keyFindings5": {
+    "sectionLabel": "Five Key Findings",
+    "f1": {
+      "headline": "Scale of the problem",
+      "statLabel": "high or critical risk rate",
+      "body": "412,845 contracts — 13.49% of all federal spending — carry high or critical risk indicators. That is more than 1 in 7 pesos contracted."
+    },
+    "f2": {
+      "headline": "Money at risk",
+      "statLabel": "estimated value in high-risk contracts",
+      "body": "The estimated value in high or critical risk contracts exceeds 1.3 trillion MXN — more than seven times Mexico's 2024 federal health budget (~180B MXN)."
+    },
+    "f3": {
+      "headline": "Vendors under scrutiny",
+      "statLabel": "vendors under priority investigation (ARIA Tier 1)",
+      "body": "320 vendors in our urgent-investigation tier have been flagged by multiple independent signals. They represent the hottest core of a 318,441-vendor universe.",
+      "action": "Open ARIA leads"
+    },
+    "f4": {
+      "headline": "Dominant patterns",
+      "statLabel": "vendors with ghost company or institutional capture pattern",
+      "body": "Ghost company networks affect 6,034 vendors (Pattern P2). Institutional capture — one vendor dominating an agency — reaches 15,923 vendors (Pattern P6). These two patterns concentrate the bulk of identified risk."
+    },
+    "f5": {
+      "headline": "Election-year effect",
+      "statLabel": "risk rises in pre-election periods",
+      "body": "Risk indicators rise in the years preceding federal elections — a pattern consistent across all administrations studied (2002–2025). The urgency to spend before a government transition amplifies systemic weaknesses."
+    }
+  },
+
+  "pistas": {
+    "title": "Leads for Journalists",
+    "intro": "Statistical analysis is where the story begins, not ends. Here are four concrete starting points for investigative reporters.",
+    "l1": {
+      "title": "ARIA Tier 1 — 320 vendors for urgent investigation",
+      "body": "These 320 vendors were independently flagged by the risk model, PyOD anomaly detection, and external registries (EFOS, SFP, RUPC). Highest priority list.",
+      "action": "Open ARIA leads"
+    },
+    "l2": {
+      "title": "Documented cases as starting points",
+      "body": "748 validated corruption cases (institution-scoped) including: IMSS ghost companies (9,366 contracts, 99% critical detection), Segalmex food fraud, COVID-19 emergency procurement, and Odebrecht-PEMEX bribery.",
+      "action": "View documented cases"
+    },
+    "l3": {
+      "title": "How to reproduce findings independently",
+      "body": "Filter the contract explorer by sector (e.g. salud) + risk_level=critical to independently reproduce the IMSS ghost company patterns. All data is from public COMPRANET records — no FOIA required.",
+      "action": "Contract explorer"
+    },
+    "l4": {
+      "title": "Document access via COMPRANET folio numbers",
+      "body": "Every flagged contract includes its COMPRANET folio. Use it to request full documentation via the transparency portal (constitutional Art. 6). No litigation needed — these are public records."
+    }
+  },
+
+  "methodology": {
+    "overline": "RUBLI · Methodology",
+    "title": "How does this work?",
+    "p1": "RUBLI applies a <bold>per-sector logistic regression model</bold> (v6.5, AUC 0.828) trained on 748 documented corruption cases to score every federal contract in COMPRANET. The model uses 9 statistical features — from price volatility to vendor concentration — normalized against sector-year baselines so a direct award in Defensa is not treated the same as one in Educacion.",
+    "p2": "Risk scores are <bold>investigation leads, not verdicts</bold>. A score of 0.60 means the contract resembles known corruption patterns — it does not mean 60% chance of fraud. All data is from public COMPRANET records. No FOIA required.",
+    "link": "Full methodology & model transparency"
+  },
+
+  "cta": {
+    "overline": "RUBLI · Starting Points",
+    "title": "Start your investigation",
+    "subtitle": "Three ways into the data",
+    "c1": {
+      "title": "Investigate a Vendor",
+      "desc": "320 vendors in the urgent investigation queue. Start with the highest-scoring.",
+      "cta": "Open ARIA leads"
+    },
+    "c2": {
+      "title": "Read an Investigation",
+      "desc": "Editorial narratives on the most significant corruption patterns.",
+      "cta": "View stories"
+    },
+    "c3": {
+      "title": "Explore by Sector",
+      "desc": "12 sectors, each with its own risk profile. Health and Agriculture lead.",
+      "cta": "View sectors"
+    }
+  },
+
+  "perspective": {
+    "label": "In Perspective",
+    "body": "<bold>184,031</bold> contracts in the critical zone (score ≥ 0.60) — roughly one suspicious contract for every primary school in Mexico. That figure does not include the 228,814 high-risk contracts."
+  },
+
+  "recommendations": {
+    "sectionLabel": "Recommended next steps — by audience",
+    "a1": {
+      "audience": "For Investigators (ASF / SFP)",
+      "s1": "Start with the critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.",
+      "s2": "Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.",
+      "s3": "Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation."
+    },
+    "a2": {
+      "audience": "For Procurement Reformers",
+      "s1": "The 71% direct award rate is the single largest vulnerability. Mandate competitive procedures for all contracts above 500K MXN, with limited emergency exceptions.",
+      "s2": "Require publication of justification memos for direct awards within 24 hours of signing — not retroactively.",
+      "s3": "December contract volume spikes 1.33× — enforce quarterly budget release schedules to eliminate year-end spending dumps."
+    },
+    "a3": {
+      "audience": "For Journalists & Civil Society",
+      "s1": "Use the Sector page to identify which agencies account for the highest value-at-risk in your area of coverage.",
+      "s2": "The Vendor Profile tool shows 27 documented ground truth vendors alongside statistical risk — compare institutional exposure.",
+      "s3": "Filter the contract explorer to risk_level=critical and sector=salud to reproduce the IMSS ghost company patterns independently."
+    }
+  },
+
+  "journalistNote": {
+    "label": "Journalist Note",
+    "body": "Risk scores are <bold>investigative leads, not verdicts</bold>. Each flagged contract carries a COMPRANET folio number you can use to request full documentation via the transparency portal (constitutional Art. 6). All underlying data is public record — no freedom of information litigation required."
+  }
 }

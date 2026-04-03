@@ -3007,10 +3007,11 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
 
 function PoliticalCycleView() {
   const { t } = useTranslation('administrations')
-  const { data, isLoading } = useQuery<PoliticalCycleResponse>({
+  const { data, isLoading, isError } = useQuery<PoliticalCycleResponse>({
     queryKey: ['political-cycle'],
     queryFn: () => analysisApi.getPoliticalCycle(),
     staleTime: 30 * 60 * 1000,
+    retry: 1,
   })
 
   if (isLoading) {
@@ -3021,7 +3022,16 @@ function PoliticalCycleView() {
       </div>
     )
   }
-  if (!data) return null
+  if (isError || !data) {
+    return (
+      <div className="card">
+        <CardContent className="pt-6 flex items-center gap-2 text-text-muted text-sm">
+          <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
+          <span>{t('common.loadError', 'Political cycle data could not be loaded.')}</span>
+        </CardContent>
+      </div>
+    )
+  }
 
   const { election_year_effect, sexenio_year_breakdown } = data
 
@@ -3235,14 +3245,14 @@ interface CompareRow {
 }
 
 function buildCompareRows(data: ComparePeriodResponse): CompareRow[] {
-  const riskDelta = data.delta_risk
-  const valueDelta = data.delta_value
+  const riskDelta = (data.period2?.avg_risk_score ?? 0) - (data.period1?.avg_risk_score ?? 0)
+  const valueDelta = (data.period2?.total_value ?? 0) - (data.period1?.total_value ?? 0)
 
   return [
     {
       metric: 'Avg Risk Score',
-      p1: ((data.period1?.avg_risk ?? 0) * 100).toFixed(3) + '%',
-      p2: ((data.period2?.avg_risk ?? 0) * 100).toFixed(3) + '%',
+      p1: ((data.period1?.avg_risk_score ?? 0) * 100).toFixed(3) + '%',
+      p2: ((data.period2?.avg_risk_score ?? 0) * 100).toFixed(3) + '%',
       delta: riskDelta,
       deltaFmt: (riskDelta > 0 ? '+' : '') + (riskDelta * 100).toFixed(3) + 'pp',
       signal: Math.abs(riskDelta) < 0.0005 ? 'neutral' : riskDelta > 0 ? 'worse' : 'better',
@@ -3276,11 +3286,12 @@ function ComparePeriodView() {
   const [p2End, setP2End] = useState('2024')
   const [enabled, setEnabled] = useState(true)
 
-  const { data, isLoading, isFetching } = useQuery<ComparePeriodResponse>({
+  const { data, isLoading, isFetching, isError } = useQuery<ComparePeriodResponse>({
     queryKey: ['compare-periods', p1Start, p1End, p2Start, p2End],
     queryFn: () => analysisApi.comparePeriods(p1Start, p1End, p2Start, p2End),
     enabled,
     staleTime: 10 * 60 * 1000,
+    retry: 1,
   })
 
   const inputCls =
@@ -3405,12 +3416,22 @@ function ComparePeriodView() {
         </div>
       )}
 
+      {/* Error state */}
+      {isError && !isLoading && (
+        <div className="card">
+          <CardContent className="pt-5 flex items-center gap-2 text-text-muted text-sm">
+            <AlertTriangle className="h-4 w-4 text-risk-high shrink-0" />
+            <span>Period comparison data could not be loaded. Please try again.</span>
+          </CardContent>
+        </div>
+      )}
+
       {/* Results table */}
       {data && !isLoading && (
         <div className="card">
           <CardHeader>
             <CardTitle className="text-xs font-mono text-text-muted">
-              Results: Period A ({data.period1?.start}–{data.period1?.end}) vs Period B ({data.period2?.start}–{data.period2?.end})
+              Results: Period A ({data.period1?.period}) vs Period B ({data.period2?.period})
             </CardTitle>
           </CardHeader>
           <CardContent>

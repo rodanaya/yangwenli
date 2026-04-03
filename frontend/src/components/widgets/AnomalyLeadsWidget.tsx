@@ -51,8 +51,11 @@ function RiskBadge({ score }: { score: number }) {
 }
 
 function PatternBadge({ pattern }: { pattern: string | null }) {
+  const { t: tAria } = useTranslation('aria')
   if (!pattern) return null
-  const label = PATTERN_LABELS[pattern] ?? pattern
+  const label = PATTERN_LABELS[pattern] != null
+    ? tAria(`patterns.${pattern}`, { defaultValue: PATTERN_LABELS[pattern] })
+    : pattern
   return (
     <span className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-600/20 text-purple-300 border border-purple-600/30">
       {pattern} · {label}
@@ -157,12 +160,12 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
             <thead>
               <tr className="text-left text-[11px] text-text-muted uppercase tracking-wider border-b border-border">
                 <th className="pb-2 pr-2">#</th>
-                <th className="pb-2 pr-2">Proveedor</th>
-                <th className="pb-2 pr-2">Sector</th>
-                <th className="pb-2 pr-2">Riesgo</th>
-                <th className="pb-2 pr-2">IPS</th>
-                <th className="pb-2 pr-2">Patrón</th>
-                <th className="pb-2 pr-2 text-right">Valor</th>
+                <th className="pb-2 pr-2">{t('ariaTable.vendor')}</th>
+                <th className="pb-2 pr-2">{t('ariaTable.sector')}</th>
+                <th className="pb-2 pr-2">{t('ariaTable.risk')}</th>
+                <th className="pb-2 pr-2">{t('ariaTable.ips')}</th>
+                <th className="pb-2 pr-2">{t('ariaTable.pattern')}</th>
+                <th className="pb-2 pr-2 text-right">{t('amount')}</th>
               </tr>
             </thead>
             <tbody>

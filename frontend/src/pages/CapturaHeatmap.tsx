@@ -662,23 +662,113 @@ export default function CapturaHeatmap() {
 
       {/* ===== Error ===== */}
       {error && !isLoading && (
-        <div className="bg-surface-card border border-red-500/20 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">
-            {t('errorTitle')}
-          </h3>
-          <p className="text-text-muted text-sm">{t('errorMessage')}</p>
-          <p className="text-text-muted/60 text-xs mt-2">{t('errorHint')}</p>
+        <div className="bg-surface-card border border-red-500/20 rounded-xl p-6">
+          <div className="flex items-start gap-4">
+            <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
+              <Info className="h-5 w-5 text-red-400" />
+            </div>
+            <div>
+              <h3 className="font-serif text-lg text-text-primary mb-1">
+                {t('errorTitle')}
+              </h3>
+              <p className="text-text-muted text-sm mb-3">{t('errorMessage')}</p>
+              <div className="rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
+                <p className="text-[10px] font-mono uppercase tracking-wide text-red-400 mb-0.5">
+                  DIAGNOSTICO
+                </p>
+                <p className="text-xs text-text-muted/70">
+                  El endpoint /api/v1/analysis/money-flow no respondi{'\u00f3'} correctamente.
+                  Verifique que el backend est{'\u00e9'} activo en el puerto 8001 y que la tabla
+                  institution_top_vendors tenga datos precalculados.
+                </p>
+              </div>
+            </div>
+          </div>
         </div>
       )}
 
-      {/* ===== Empty state ===== */}
+      {/* ===== Empty state — editorial, explains WHY ===== */}
       {!isLoading && !error && institutions.length === 0 && (
-        <div className="bg-surface-card border border-white/10 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">
-            {t('emptyTitle')}
-          </h3>
-          <p className="text-text-muted text-sm">{t('emptyMessage')}</p>
-          <p className="text-text-muted/60 text-xs mt-2">{t('emptyHint')}</p>
+        <div className="space-y-5">
+          <div className="bg-surface-card border border-amber-500/20 rounded-xl p-6">
+            <div className="flex items-start gap-4">
+              <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
+                <Info className="h-5 w-5 text-amber-400" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 mb-1">
+                  SIN DATOS DE CAPTURA PARA ESTOS FILTROS
+                </p>
+                <h3 className="font-serif text-lg text-text-primary mb-2">
+                  {sectorId
+                    ? `No hay flujos institution-proveedor suficientes para el sector ${SECTORS.find(s => s.id === sectorId)?.name ?? sectorId}`
+                    : yearParam
+                      ? `No hay datos de flujos para el a${'\u00f1'}o ${yearParam}`
+                      : 'No se encontraron datos de flujos'}
+                </h3>
+                <p className="text-sm text-text-muted leading-relaxed mb-3">
+                  El heatmap de captura institucional requiere datos precalculados de las relaciones
+                  instituci{'\u00f3'}n-proveedor con montos significativos. Esto puede ocurrir cuando:
+                </p>
+                <ul className="space-y-1.5 text-sm text-text-muted/80">
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                    <span>La tabla <code className="text-xs font-mono bg-white/5 px-1 rounded">institution_top_vendors</code> no se ha precalculado a{'\u00fa'}n</span>
+                  </li>
+                  {sectorId && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                      <span>El sector seleccionado tiene pocas instituciones con proveedores dominantes</span>
+                    </li>
+                  )}
+                  {yearParam && (
+                    <li className="flex items-start gap-2">
+                      <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                      <span>El periodo {yearParam}+ a{'\u00fa'}n no tiene datos suficientes en COMPRANET</span>
+                    </li>
+                  )}
+                  <li className="flex items-start gap-2">
+                    <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                    <span>El backend necesita ejecutar <code className="text-xs font-mono bg-white/5 px-1 rounded">precompute_stats</code></span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+
+          {/* Provide a clear action path */}
+          <div className="flex flex-wrap gap-3">
+            {sectorId && (
+              <button
+                onClick={() => setSectorId(undefined)}
+                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/5 transition-colors"
+              >
+                Quitar filtro de sector
+              </button>
+            )}
+            {yearRange !== 'all' && (
+              <button
+                onClick={() => setYearRange('all')}
+                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/5 transition-colors"
+              >
+                Ver todos los a{'\u00f1'}os
+              </button>
+            )}
+          </div>
+
+          {/* Context: what capture analysis CAN show */}
+          <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
+            <p className="text-xs font-mono uppercase tracking-wide text-blue-400 mb-1">
+              CONTEXTO
+            </p>
+            <p className="text-sm text-zinc-300 leading-relaxed">
+              El an{'\u00e1'}lisis de captura institucional identifica cuando un solo proveedor
+              concentra m{'\u00e1'}s del 30% del presupuesto de una instituci{'\u00f3'}n {'\u2014'}
+              un indicador cr{'\u00ed'}tico de corrupci{'\u00f3'}n seg{'\u00fa'}n la OCDE.
+              En el dataset completo de 3.05M contratos, este patr{'\u00f3'}n es com{'\u00fa'}n
+              en sectores como Salud (laboratorios farmac{'\u00e9'}uticos) y Energ{'\u00ed'}a (proveedores especializados).
+            </p>
+          </div>
         </div>
       )}
 
@@ -837,6 +927,34 @@ export default function CapturaHeatmap() {
               </span>
             ))}
           </div>
+
+          {/* Editorial reading guide */}
+          {highCaptureCount > 0 && (
+            <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 mb-4 flex items-center gap-3">
+              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+              <p className="text-xs text-zinc-300">
+                <span className="font-semibold text-red-400">{highCaptureCount} relaciones</span> muestran
+                captura superior al 30% {'\u2014'} un proveedor controla m{'\u00e1'}s de un tercio
+                del presupuesto de la instituci{'\u00f3'}n.
+                {' '}<span className="text-zinc-500">(OCDE: {'>'} 30% = concentraci{'\u00f3'}n alta)</span>
+              </p>
+            </div>
+          )}
+
+          {/* Sparsity note when most cells are empty */}
+          {(() => {
+            const totalCells = institutions.length * vendors.length
+            const filledCells = cells.filter(c => c.pctOfInstitution > 0.01).length
+            const sparsity = totalCells > 0 ? 1 - (filledCells / totalCells) : 0
+            if (sparsity > 0.7 && totalCells > 10) {
+              return (
+                <div className="text-[10px] text-text-muted/40 mb-3 font-mono">
+                  {filledCells} de {totalCells} celdas con relaci{'\u00f3'}n significativa ({(100 - sparsity * 100).toFixed(0)}% de cobertura) {'\u2014'} las celdas vac{'\u00ed'}as indican que no hay flujos directos entre esa instituci{'\u00f3'}n y proveedor.
+                </div>
+              )
+            }
+            return null
+          })()}
 
           {/* CSS Grid heatmap */}
           <div

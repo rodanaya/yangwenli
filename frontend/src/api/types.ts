@@ -1995,21 +1995,33 @@ export interface CommunityDetailResponse {
   }>
 }
 
+export interface ComparePeriodPeriod {
+  period: string
+  contracts: number
+  total_value: number
+  avg_contract_value: number
+  avg_risk_score: number
+  direct_award_pct: number
+  single_bid_pct: number
+  high_risk_pct: number
+  unique_vendors: number
+  unique_institutions: number
+}
+
 export interface ComparePeriodResponse {
-  period1: {
-    start: string
-    end: string
+  period1: ComparePeriodPeriod
+  period2: ComparePeriodPeriod
+  changes: {
+    contracts: number
     total_value: number
-    avg_risk: number
+    avg_contract_value: number
+    avg_risk_score: number
+    direct_award_pct: number
+    single_bid_pct: number
+    high_risk_pct: number
+    unique_vendors: number
   }
-  period2: {
-    start: string
-    end: string
-    total_value: number
-    avg_risk: number
-  }
-  delta_risk: number
-  delta_value: number
+  significant_changes: string[]
 }
 
 export interface InstitutionRiskFactorResponse {
