@@ -6,6 +6,7 @@
  */
 
 import { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { analysisApi } from '@/api/client'
@@ -94,6 +95,7 @@ function AdminSkeleton() {
 // ---------------------------------------------------------------------------
 
 export function PoliticalIntelligenceStrip({ className }: { className?: string }) {
+  const { t } = useTranslation('common')
   const [selectedAdmin, setSelectedAdmin] = useState<AdminKey>('amlo')
 
   const admin = ADMINISTRATIONS.find((a) => a.key === selectedAdmin)!
@@ -157,11 +159,11 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
         <AdminSkeleton />
       ) : error ? (
         <div className="text-sm text-red-400 py-4">
-          Error al cargar datos de proveedores
+          {t('politicalStrip.errorLoading')}
         </div>
       ) : vendors.length === 0 ? (
         <div className="text-sm text-text-muted py-4 italic">
-          Sin datos para esta administracion
+          {t('politicalStrip.noData')}
         </div>
       ) : (
         <div className="divide-y divide-border/30">

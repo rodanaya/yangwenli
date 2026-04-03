@@ -62,7 +62,7 @@
     "color": "Color",
     "cancel": "Cancel",
     "create": "Create Dossier",
-    "creating": "Creating\u2026"
+    "creating": "Creating…"
   },
   "header": {
     "searchPlaceholder": "Search vendors, cases...",
@@ -86,7 +86,7 @@
   "footerStats": "3.1M contracts · 9.9T MXN · 2002-2025",
   "skipToContent": "Skip to main content",
   "verified": "verified",
-  "readMethodology": "Read methodology \u2192",
+  "readMethodology": "Read methodology →",
   "story": {
     "statusLabel": "Investigation status",
     "statusSoloDatos": "Data only — unreported lead",
@@ -208,17 +208,17 @@
     "download": "Download"
   },
   "cmdPalette": {
-    "inputPlaceholder": "Search vendors, RFC, contracts, cases\u2026 or navigate",
+    "inputPlaceholder": "Search vendors, RFC, contracts, cases… or navigate",
     "saveSearch": "Save this search",
-    "searchingEllipsis": "Searching\u2026",
-    "noResultsFor": "No results for \u201c{{query}}\u201d",
+    "searchingEllipsis": "Searching…",
+    "noResultsFor": "No results for “{{query}}”",
     "suggestedSearches": "Suggested searches",
     "researchActions": "Research actions",
     "rfcSearch": "RFC search",
     "searchByRfc": "Search by RFC:",
     "groupVendors": "Vendors",
     "groupInstitutions": "Institutions",
-    "groupContracts": "Contracts \u2014 highest risk first",
+    "groupContracts": "Contracts — highest risk first",
     "groupCases": "Cases",
     "groupPages": "Pages",
     "groupGoTo": "Go to",
@@ -229,7 +229,7 @@
     "contractsCount": "{{count}} contracts",
     "applySavedSearch": "Apply saved search: {{label}}",
     "removeSavedSearch": "Remove saved search: {{label}}",
-    "saveCurrentSearch": "Save search \u201c{{query}}\u201d"
+    "saveCurrentSearch": "Save search “{{query}}”"
   },
   "contractDetail": {
     "procurement": "Procurement",
@@ -310,7 +310,7 @@
   },
   "politicalStrip": {
     "title": "Political Intelligence",
-    "subtitle": "Top vendors by presidential administration \u2014 sorted by total value",
+    "subtitle": "Top vendors by presidential administration — sorted by total value",
     "errorLoading": "Error loading vendor data",
     "noData": "No data for this administration"
   },
@@ -320,7 +320,7 @@
     "errorLoading": "Error loading memo",
     "copy": "Copy",
     "copied": "Copied",
-    "disclaimer": "Auto-generated \u2014 requires journalistic verification",
+    "disclaimer": "Auto-generated — requires journalistic verification",
     "notAvailable": "Memo not available for {{vendorName}}"
   },
   "charts": {
@@ -357,5 +357,11 @@
       "legendPctSpend": "% of admin total spend",
       "ariaTable": "Procurement intensity heatmap: administrations vs sectors"
     }
+  },
+  "tooltip": {
+    "noBaselineData": "No baseline data for this sector/year"
+  },
+  "redaccion": {
+    "noAlerts": "No active alerts"
   }
 }

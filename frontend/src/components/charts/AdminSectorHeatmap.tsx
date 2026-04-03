@@ -111,7 +111,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
   if (!cells.length) {
     return (
       <div className="flex items-center justify-center h-[200px] text-text-muted text-sm font-mono">
-        No data available for heatmap
+        {t('charts.adminSectorHeatmap.noData')}
       </div>
     )
   }

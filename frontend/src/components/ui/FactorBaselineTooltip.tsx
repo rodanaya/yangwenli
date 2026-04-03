@@ -1,4 +1,5 @@
 import { useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useFactorBaseline } from '@/hooks/useFactorBaselines'
 import { cn } from '@/lib/utils'
 
@@ -101,6 +102,7 @@ export function FactorBaselineTooltip({
   className,
 }: FactorBaselineTooltipProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const { t } = useTranslation('common')
   const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const { data, isLoading } = useFactorBaseline(
     isOpen ? sectorId : 0,
@@ -169,7 +171,7 @@ export function FactorBaselineTooltip({
             </>
           ) : (
             <div className="text-xs text-text-muted italic">
-              Sin datos de referencia para este sector/ano
+              {t('tooltip.noBaselineData')}
             </div>
           )}
           {/* Tooltip arrow */}

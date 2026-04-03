@@ -3,6 +3,7 @@
  * Shows 3 "investigation story cards" from the ARIA queue,
  * formatted like a newspaper editorial sidebar.
  */
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Link } from 'react-router-dom'
 import { ariaApi } from '@/api/client'
@@ -56,6 +57,7 @@ function StoryCardSkeleton() {
 }
 
 export default function RedaccionWidget() {
+  const { t } = useTranslation('common')
   const { data, isLoading, error } = useQuery({
     queryKey: ['aria', 'queue', 'redaccion-widget'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 3 }),
@@ -90,7 +92,7 @@ export default function RedaccionWidget() {
             <StoryCardSkeleton />
           </>
         ) : error || stories.length === 0 ? (
-          <p className="text-xs text-zinc-500 italic">Sin alertas activas</p>
+          <p className="text-xs text-zinc-500 italic">{t('redaccion.noAlerts')}</p>
         ) : (
           stories.map((story) => (
             <div key={story.vendorId} className="border-t border-zinc-700/50 pt-3">

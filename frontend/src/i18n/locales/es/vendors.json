@@ -53,6 +53,13 @@
     "documented": "Documentado:",
     "couldNotCheck": "No se pudo verificar el estado del caso"
   },
+  "criticalAlert": {
+    "efosDefinitivoTitle": "SAT EFOS Definitivo — Empresa fantasma confirmada bajo el Art. 69-B del Código Fiscal",
+    "efosDefinitivoBody": "El Servicio de Administración Tributaria (SAT) ha confirmado formalmente que esta entidad realiza operaciones inexistentes. Los contratos pueden ser fraudulentos.",
+    "groundTruthTitle": "Documentado en {{count}} caso(s) de corrupción en la base RUBLI",
+    "groundTruthBody": "Los patrones estadísticos del historial de contratación de este proveedor coinciden con casos de corrupción documentados.",
+    "highRiskLabel": "ALTO RIESGO"
+  },
   "badges": {
     "sfpSanctioned": "Sancionado por SFP",
     "efosStageDef": "SAT EFOS Definitivo (Confirmado)",
@@ -245,7 +252,8 @@
     "dataSourceNote": "Los datos externos se cargan desde registros públicos y pueden estar incompletos. Los datos de sanciones SFP y RUPC deben actualizarse manualmente mediante scripts del backend. La cobertura ASF depende de la disponibilidad de scraping web. La lista SAT Art. 69-B se actualiza mensualmente mediante scripts/load_sat_efos.py. Los datos QQW se obtienen mediante scripts/fetch_qqw_data.py (200 proveedores de mayor riesgo).",
     "sanction": "Sanción",
     "report": "Reporte",
-    "contracts": "contrato(s)"
+    "contracts": "contrato(s)",
+    "sfpSanctionsLabel": "SANCIONES SFP"
   },
   "aria": {
     "notInQueue": "Este proveedor no está en la cola de investigación ARIA.",

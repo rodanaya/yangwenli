@@ -245,7 +245,16 @@
   },
   "actions": {
     "vendorProfile": "Vendor Profile",
-    "redThread": "Red Thread Investigation"
+    "redThread": "Red Thread Investigation",
+    "copyName": "Copy vendor name"
+  },
+  "filterBar": {
+    "active": "{{count}} filter(s) active",
+    "clearAll": "Clear all",
+    "pattern": "Pattern"
+  },
+  "emptyState": {
+    "noSearchResults": "No vendors found for \"{{query}}\""
   },
   "hero": {
     "headline": "{{vendorCount}} vendors under surveillance across 4 threat tiers",

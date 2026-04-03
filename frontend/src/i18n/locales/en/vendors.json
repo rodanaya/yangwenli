@@ -53,6 +53,13 @@
     "documented": "Documented:",
     "couldNotCheck": "Could not check case status"
   },
+  "criticalAlert": {
+    "efosDefinitivoTitle": "SAT EFOS Definitivo — Confirmed ghost company under Art. 69-B Mexican Tax Code",
+    "efosDefinitivoBody": "The Mexican Tax Authority (SAT) has formally confirmed this entity engages in non-existent transactions. Contracts may be fraudulent.",
+    "groundTruthTitle": "Documented in {{count}} corruption case(s) in RUBLI ground truth",
+    "groundTruthBody": "Statistical patterns in this vendor's procurement history match documented corruption cases.",
+    "highRiskLabel": "HIGH RISK"
+  },
   "badges": {
     "sfpSanctioned": "SFP Sanctioned",
     "efosStageDef": "SAT EFOS Definitivo (Confirmed)",
@@ -244,7 +251,8 @@
     "dataSourceNote": "External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability. SAT Art. 69-B list updated monthly via scripts/load_sat_efos.py. QQW data fetched via scripts/fetch_qqw_data.py (top 200 high-risk vendors).",
     "sanction": "Sanction",
     "report": "Report",
-    "contracts": "contract(s)"
+    "contracts": "contract(s)",
+    "sfpSanctionsLabel": "SFP SANCTIONS"
   },
   "aria": {
     "notInQueue": "This vendor is not in the ARIA investigation queue.",

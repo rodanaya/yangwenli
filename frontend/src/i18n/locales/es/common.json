@@ -53,16 +53,16 @@
   },
   "dossier": {
     "addToDossier": "Agregar al expediente",
-    "noDossiers": "A\u00fan no hay expedientes activos",
+    "noDossiers": "Aún no hay expedientes activos",
     "newDossier": "Nuevo expediente...",
-    "newTitle": "Nuevo Expediente de Investigaci\u00f3n",
+    "newTitle": "Nuevo Expediente de Investigación",
     "nameLabel": "Nombre *",
-    "description": "Descripci\u00f3n",
-    "descriptionPlaceholder": "\u00bfDe qu\u00e9 trata esta investigaci\u00f3n?",
+    "description": "Descripción",
+    "descriptionPlaceholder": "¿De qué trata esta investigación?",
     "color": "Color",
     "cancel": "Cancelar",
     "create": "Crear expediente",
-    "creating": "Creando\u2026"
+    "creating": "Creando…"
   },
   "header": {
     "searchPlaceholder": "Buscar proveedores, casos...",
@@ -73,12 +73,12 @@
     "dataQuality": "Calidad de datos: Grado {{grade}} ({{score}}%)",
     "switchToLight": "Cambiar a modo claro",
     "switchToDark": "Cambiar a modo oscuro",
-    "openMenu": "Abrir men\u00fa",
+    "openMenu": "Abrir menú",
     "toggleTheme": "Cambiar tema",
     "home": "Inicio"
   },
   "unknown": "Desconocido",
-  "untitled": "Sin t\u00edtulo",
+  "untitled": "Sin título",
   "banner": "Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES",
   "dismissBanner": "Cerrar anuncio",
   "footerBrand": "RUBLI 2.0",
@@ -208,43 +208,43 @@
     "download": "Descargar"
   },
   "cmdPalette": {
-    "inputPlaceholder": "Buscar proveedores, RFC, contratos, casos\u2026 o navegar",
-    "saveSearch": "Guardar esta b\u00fasqueda",
-    "searchingEllipsis": "Buscando\u2026",
-    "noResultsFor": "Sin resultados para \u201c{{query}}\u201d",
-    "suggestedSearches": "B\u00fasquedas sugeridas",
-    "researchActions": "Acciones de investigaci\u00f3n",
+    "inputPlaceholder": "Buscar proveedores, RFC, contratos, casos… o navegar",
+    "saveSearch": "Guardar esta búsqueda",
+    "searchingEllipsis": "Buscando…",
+    "noResultsFor": "Sin resultados para “{{query}}”",
+    "suggestedSearches": "Búsquedas sugeridas",
+    "researchActions": "Acciones de investigación",
     "rfcSearch": "Buscar por RFC",
     "searchByRfc": "Buscar por RFC:",
     "groupVendors": "Proveedores",
     "groupInstitutions": "Instituciones",
-    "groupContracts": "Contratos \u2014 mayor riesgo primero",
+    "groupContracts": "Contratos — mayor riesgo primero",
     "groupCases": "Casos",
-    "groupPages": "P\u00e1ginas",
+    "groupPages": "Páginas",
     "groupGoTo": "Ir a",
     "hintNavigate": "navegar",
     "hintSelect": "seleccionar",
     "hintClose": "cerrar",
     "rfcTip": "Consejo: escribe un RFC (p. ej. ABC123456789) para encontrar un proveedor",
     "contractsCount": "{{count}} contratos",
-    "applySavedSearch": "Aplicar b\u00fasqueda guardada: {{label}}",
-    "removeSavedSearch": "Eliminar b\u00fasqueda guardada: {{label}}",
-    "saveCurrentSearch": "Guardar b\u00fasqueda \u201c{{query}}\u201d"
+    "applySavedSearch": "Aplicar búsqueda guardada: {{label}}",
+    "removeSavedSearch": "Eliminar búsqueda guardada: {{label}}",
+    "saveCurrentSearch": "Guardar búsqueda “{{query}}”"
   },
   "contractDetail": {
-    "procurement": "Adquisici\u00f3n",
+    "procurement": "Adquisición",
     "procedure": "Procedimiento",
     "contractType": "Tipo de contrato",
-    "publication": "Publicaci\u00f3n",
-    "award": "Adjudicaci\u00f3n",
+    "publication": "Publicación",
+    "award": "Adjudicación",
     "start": "Inicio",
     "end": "Fin",
     "sector": "Sector",
     "status": "Estado",
     "viewOnCompranet": "Ver en COMPRANET",
     "context": "Contexto",
-    "electionYear": "A\u00f1o electoral",
-    "anomalyScore": "Puntuaci\u00f3n de anomal\u00eda",
+    "electionYear": "Año electoral",
+    "anomalyScore": "Puntuación de anomalía",
     "anomalyScoreSubtitle": "PyOD multimodelo",
     "aiConfirmed": "Confirmado por IA",
     "ensemble": "IForest+COPOD",
@@ -252,36 +252,36 @@
     "qualityLabel": "Calidad: {{grade}}",
     "sourceLabel": "Fuente: Estructura {{structure}}",
     "confidence": "Confianza: {{value}}",
-    "flagDirectAward": "Adjudicaci\u00f3n directa",
-    "flagSingleBid": "Licitante \u00fanico",
-    "flagYearEnd": "Fin de a\u00f1o",
+    "flagDirectAward": "Adjudicación directa",
+    "flagSingleBid": "Licitante único",
+    "flagYearEnd": "Fin de año",
     "flagHighValue": "Alto valor",
     "flagThresholdGaming": "Fraccionamiento de umbral"
   },
   "compareModal": {
     "title": "Comparar contratos",
     "selected": "({{n}} seleccionados)",
-    "closeComparison": "Cerrar comparaci\u00f3n",
+    "closeComparison": "Cerrar comparación",
     "fullDetails": "Ver detalles completos",
-    "riskScore": "Puntuaci\u00f3n de riesgo",
+    "riskScore": "Puntuación de riesgo",
     "riskLevel": "Nivel de riesgo",
     "amount": "Monto",
     "date": "Fecha",
     "vendor": "Proveedor",
-    "institution": "Instituci\u00f3n",
+    "institution": "Institución",
     "sector": "Sector",
     "procedure": "Procedimiento",
     "flags": "Indicadores"
   },
   "riskExplanation": {
-    "whyThisScore": "Por qu\u00e9 esta puntuaci\u00f3n",
+    "whyThisScore": "Por qué esta puntuación",
     "sectorModel": "modelo sectorial",
     "globalModel": "modelo global",
-    "moreFactors": "+{{count}} factores m\u00e1s"
+    "moreFactors": "+{{count}} factores más"
   },
   "riskExplainer": {
-    "whatItDetects": "Qu\u00e9 detecta",
-    "theory": "Teor\u00eda",
+    "whatItDetects": "Qué detecta",
+    "theory": "Teoría",
     "inRubli": "En RUBLI",
     "coefficientSuffix": "coeficiente",
     "colFactor": "Factor",
@@ -302,25 +302,25 @@
     "collapseDetails": "Ocultar detalles",
     "expandDetails": "Mostrar detalles",
     "vendorLabel": "Proveedor:",
-    "efosTip": "Definitivo: La autoridad fiscal ha confirmado formalmente que es una empresa fantasma. Presunto: En investigaci\u00f3n.",
+    "efosTip": "Definitivo: La autoridad fiscal ha confirmado formalmente que es una empresa fantasma. Presunto: En investigación.",
     "listSfp": "SFP Inhabilitado",
     "listEfos": "SAT EFOS",
     "listEfosDefinitivo": "SAT EFOS Definitivo (Confirmado)",
     "listEfosPresunto": "SAT EFOS Presunto (Alegado)"
   },
   "politicalStrip": {
-    "title": "Inteligencia Pol\u00edtica",
-    "subtitle": "Principales proveedores por administraci\u00f3n presidencial \u2014 ordenados por valor total",
+    "title": "Inteligencia Política",
+    "subtitle": "Principales proveedores por administración presidencial — ordenados por valor total",
     "errorLoading": "Error al cargar datos de proveedores",
-    "noData": "Sin datos para esta administraci\u00f3n"
+    "noData": "Sin datos para esta administración"
   },
   "ariaMemo": {
-    "title": "An\u00e1lisis de Investigaci\u00f3n",
+    "title": "Análisis de Investigación",
     "generatedByAi": "Generado por IA",
     "errorLoading": "Error al cargar memo",
     "copy": "Copiar",
     "copied": "Copiado",
-    "disclaimer": "Generado autom\u00e1ticamente \u2014 requiere verificaci\u00f3n period\u00edstica",
+    "disclaimer": "Generado automáticamente — requiere verificación periodística",
     "notAvailable": "Memo no disponible para {{vendorName}}"
   },
   "charts": {
@@ -357,5 +357,11 @@
       "legendPctSpend": "% del gasto total de la administración",
       "ariaTable": "Mapa de calor de intensidad de contratación: administraciones vs sectores"
     }
+  },
+  "tooltip": {
+    "noBaselineData": "Sin datos de referencia para este sector/año"
+  },
+  "redaccion": {
+    "noAlerts": "Sin alertas activas"
   }
 }

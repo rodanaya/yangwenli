@@ -245,7 +245,16 @@
   },
   "actions": {
     "vendorProfile": "Perfil del Proveedor",
-    "redThread": "Investigación Hilo Rojo"
+    "redThread": "Investigación Hilo Rojo",
+    "copyName": "Copiar nombre del proveedor"
+  },
+  "filterBar": {
+    "active": "{{count}} filtro(s) activo(s)",
+    "clearAll": "Limpiar todo",
+    "pattern": "Patrón"
+  },
+  "emptyState": {
+    "noSearchResults": "No se encontraron proveedores para \"{{query}}\""
   },
   "hero": {
     "headline": "{{vendorCount}} proveedores bajo vigilancia en 4 niveles de amenaza",
