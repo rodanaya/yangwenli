@@ -247,6 +247,7 @@ function PlainLanguageRiskCard({
   totalContracts,
   totalValueMxn,
 }: PlainLanguageRiskCardProps) {
+  const { t } = useTranslation('vendors')
   // Only show for medium risk and above
   if (avgRiskScore < 0.25) return null
 
@@ -276,11 +277,11 @@ function PlainLanguageRiskCard({
         <div className="flex items-center gap-2">
           <span className="text-lg leading-none" role="img" aria-hidden>📰</span>
           <span className="text-amber-400/80 text-[11px] font-semibold uppercase tracking-wider">
-            What This Means
+            {t('plainLanguage.whatThisMeans')}
           </span>
         </div>
         <span className="text-amber-500/50 text-[10px] font-medium uppercase tracking-wider">
-          for reporters
+          {t('plainLanguage.forReporters')}
         </span>
       </div>
 
@@ -745,6 +746,7 @@ function CounterfactualPanel({
   currentScore: number
   waterfallData: VendorWaterfallContribution[]
 }) {
+  const { t } = useTranslation('vendors')
   // Reconstruct logit from current score: score = sigmoid(logit) / PU_c
   // so sigmoid(logit) = score * PU_c, logit = log(s/(1-s)) where s = score * PU_c
   const s = Math.min(Math.max(currentScore * PU_C, 0.001), 0.999)
@@ -757,7 +759,7 @@ function CounterfactualPanel({
     .slice(0, 5)
 
   if (topFactors.length === 0) {
-    return <p className="text-xs text-text-muted">No hay factores significativos para analizar.</p>
+    return <p className="text-xs text-text-muted">{t('risk.noSignificantFactors')}</p>
   }
 
   return (
@@ -783,7 +785,7 @@ function CounterfactualPanel({
                 {parseFactorLabel(f.feature).label}
               </span>
               <span className="text-[9px] text-text-muted">
-                Si z = 0 (promedio del sector)
+                {t('risk.counterfactualAtAvg')}
               </span>
             </div>
             <div className="flex items-center gap-2 flex-shrink-0">
@@ -803,7 +805,7 @@ function CounterfactualPanel({
         )
       })}
       <p className="text-[9px] text-text-muted/50 pt-1 border-t border-border/20">
-        Simulacion basada en modelo v6.5 (PU c={PU_C}, intercept={INTERCEPT})
+        {t('risk.counterfactualFootnote', { c: PU_C, intercept: INTERCEPT })}
       </p>
     </div>
   )
@@ -1209,22 +1211,22 @@ export function VendorProfile() {
           <div className="flex-1 min-w-0">
             {isEfosDefinitivo && (
               <p className="text-sm font-bold text-red-200">
-                SAT EFOS Definitivo — Confirmed ghost company under Art. 69-B Mexican Tax Code
+                {t('criticalAlert.efosDefinitivoTitle')}
               </p>
             )}
             {isGroundTruth && !isEfosDefinitivo && (
               <p className="text-sm font-bold text-red-200">
-                Documented in {groundTruthStatus!.cases!.length} corruption case{(groundTruthStatus!.cases!.length ?? 1) > 1 ? 's' : ''} in RUBLI ground truth
+                {t('criticalAlert.groundTruthTitle', { count: groundTruthStatus!.cases!.length })}
               </p>
             )}
             <p className="text-xs text-red-400/80 mt-0.5">
               {isEfosDefinitivo
-                ? 'The Mexican Tax Authority (SAT) has formally confirmed this entity engages in non-existent transactions. Contracts may be fraudulent.'
-                : 'Statistical patterns in this vendor\'s procurement history match documented corruption cases.'}
+                ? t('criticalAlert.efosDefinitivoBody')
+                : t('criticalAlert.groundTruthBody')}
             </p>
           </div>
           <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
-            HIGH RISK
+            {t('criticalAlert.highRiskLabel')}
           </span>
         </div>
       )}
@@ -1303,13 +1305,13 @@ export function VendorProfile() {
                 {groundTruthError && (
                   <span className="ml-1 px-2 py-0.5 text-xs text-text-muted flex items-center gap-1">
                     <AlertTriangle className="h-3 w-3 text-amber-500" />
-                    Could not check case status
+                    {t('groundTruth.couldNotCheck')}
                   </span>
                 )}
                 {/* SFP/EFOS badges (fallback when no ground truth) */}
                 {!groundTruthStatus?.is_known_bad && externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
                   <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
-                    SFP Sanctioned
+                    {t('badges.sfpSanctioned')}
                   </span>
                 )}
                 {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'definitivo' && (
@@ -1317,7 +1319,7 @@ export function VendorProfile() {
                     className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40 cursor-help"
                     title="Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation."
                   >
-                    SAT EFOS Definitivo (Confirmed)
+                    {t('badges.efosStageDef')}
                   </span>
                 )}
                 {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'presunto' && (
@@ -1432,10 +1434,10 @@ export function VendorProfile() {
           <button
             onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
-            aria-label="Compare this vendor with another"
+            aria-label={t('compare')}
           >
             <BarChart3 className="h-3.5 w-3.5" />
-            Compare
+            {t('compare')}
           </button>
           <button
             onClick={async () => {
@@ -1444,11 +1446,11 @@ export function VendorProfile() {
             }}
             disabled={csvExporting}
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
-            aria-label="Export vendor contracts as CSV"
-            title="Export all contracts as CSV"
+            aria-label={t('exportCSV')}
+            title={t('exportCSV')}
           >
             <Download className="h-3.5 w-3.5" />
-            {csvExporting ? 'Exportando…' : 'Export CSV'}
+            {csvExporting ? t('exporting') : t('exportCSV')}
           </button>
           <button
             onClick={() => navigate(`/thread/${vendorId}`)}
@@ -1610,7 +1612,7 @@ export function VendorProfile() {
             style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both' }}
           >
             <div className="editorial-rule mb-3">
-              <span className="editorial-label">POR QUE ESTA MARCADO</span>
+              <span className="editorial-label">{t('flags.sectionLabel')}</span>
             </div>
             <div className="space-y-2">
               {flags.map((flag, i) => (
@@ -1625,7 +1627,7 @@ export function VendorProfile() {
               ))}
             </div>
             <p className="text-[10px] text-text-muted/60 mt-3 border-t border-border/30 pt-2">
-              Flags are statistical risk indicators, not proof of wrongdoing. Use for investigation triage only.
+              {t('flags.disclaimer')}
             </p>
           </div>
         )
@@ -1714,7 +1716,7 @@ export function VendorProfile() {
       {peerComparisonError && (
         <div className="flex items-center gap-2 text-sm text-text-muted px-1">
           <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-          <span>Could not load peer comparison data. Try refreshing.</span>
+          <span>{t('risk.couldNotLoadPeerComparison')}</span>
         </div>
       )}
 
@@ -1810,7 +1812,7 @@ export function VendorProfile() {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-sm font-bold text-red-300 mb-1">
-                This vendor appears in {groundTruthStatus.cases?.length ?? 0} documented corruption case{(groundTruthStatus.cases?.length ?? 0) > 1 ? 's' : ''}
+                {t('groundTruthBanner.appearsIn', { count: groundTruthStatus.cases?.length ?? 0 })}
               </p>
               <div className="space-y-1.5">
                 {groundTruthStatus.cases?.map((c) => (
@@ -1830,7 +1832,7 @@ export function VendorProfile() {
                 ))}
               </div>
               <p className="text-xs text-red-400/70 mt-2">
-                This vendor is part of RUBLI&apos;s ground truth training set — contracts matching documented corruption patterns.
+                {t('groundTruthBanner.trainingSetNote')}
               </p>
             </div>
           </div>
@@ -4354,8 +4356,8 @@ function VendorProfileSkeleton() {
           </div>
         </div>
       </div>
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
-        {[...Array(4)].map((_, i) => (
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        {[...Array(5)].map((_, i) => (
           <Skeleton key={i} className="h-24" />
         ))}
       </div>
@@ -4378,7 +4380,8 @@ function VendorProfileSkeleton() {
 // ============================================================================
 
 function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undefined; qqw?: VendorQQWResponse }) {
-  if (!flags) return <div className="text-text-muted text-sm py-8 text-center">Loading external records...</div>
+  const { t } = useTranslation('vendors')
+  if (!flags) return <div className="text-text-muted text-sm py-8 text-center">{t('externalRecords.loading')}</div>
 
   const hasSanctions = flags.sfp_sanctions.length > 0
   const hasRUPC = !!flags.rupc
@@ -4404,15 +4407,15 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
         <div>
           <p className={cn("text-sm font-medium", (hasSanctions || isEFOSDefinitivo) ? "text-red-300" : "text-text-secondary")}>
             {isEFOSDefinitivo
-              ? "CRITICAL: Vendor confirmed on SAT Art. 69-B ghost company list"
+              ? t('externalRecords.confirmedGhostCompany')
               : hasSanctions
-              ? `${flags.sfp_sanctions.length} SFP sanction record${flags.sfp_sanctions.length > 1 ? 's' : ''} found`
+              ? t('externalRecords.sfpSanctionsFound', { count: flags.sfp_sanctions.length })
               : hasAny
-              ? "No SFP sanctions — external records available"
-              : "No external records found for this vendor"}
+              ? t('externalRecords.noSfpSanctions')
+              : t('externalRecords.noExternalRecords')}
           </p>
           <p className="text-xs text-text-muted mt-0.5">
-            Sources: SFP Proveedores Sancionados · RUPC Vendor Registry · ASF Audit Findings · SAT Art. 69-B EFOS
+            {t('externalRecords.sourceNote')}
           </p>
         </div>
       </div>

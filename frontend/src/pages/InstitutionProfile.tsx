@@ -1101,7 +1101,7 @@ export function InstitutionProfile() {
                 {vendorsLoading ? (
                   <Skeleton className="h-64" />
                 ) : vendorsError ? (
-                  <p className="text-xs text-rose-400/80 py-4 text-center">Error al cargar proveedores.</p>
+                  <p className="text-xs text-rose-400/80 py-4 text-center">{t('profile.errorLoadingVendors')}</p>
                 ) : vendors?.data?.length ? (
                   <VendorTreemapLazy vendors={vendors.data} totalInstitutionValue={totalValue} />
                 ) : (
@@ -2065,7 +2065,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       <div className="flex items-center gap-2.5 min-w-0">
         <FileText className="h-3.5 w-3.5 text-text-muted flex-shrink-0" />
         <div className="min-w-0">
-          <p className="text-xs font-medium truncate max-w-[260px] text-text-primary">{contract.title || 'Sin titulo'}</p>
+          <p className="text-xs font-medium truncate max-w-[260px] text-text-primary">{contract.title || t('profile.untitled')}</p>
           <div className="flex items-center gap-1.5 text-xs text-text-muted mt-0.5">
             <span>{contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year}</span>
             {contract.vendor_name && (

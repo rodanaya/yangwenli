@@ -283,7 +283,8 @@
     "errorLoadingScandals": "Error al cargar escándalos del sector.",
     "errorLoadingConcentration": "Error al cargar el mapa de concentración.",
     "noContractsTooltip": "Sin contratos",
-    "contractsRiskTooltip": "{{count}} contratos · riesgo {{risk}}%"
+    "contractsRiskTooltip": "{{count}} contratos · riesgo {{risk}}%",
+    "untitled": "Sin título"
   },
   "compare": {
     "section": "COMPARATIVA INSTITUCIONAL",

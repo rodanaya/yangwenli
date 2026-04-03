@@ -896,6 +896,7 @@ function InstitutionSearchInput({
 // ============================================================================
 
 export default function InstitutionCompare() {
+  const { t } = useTranslation('institutions')
   const [searchParams, setSearchParams] = useSearchParams()
   const idA = searchParams.get('a')
   const idB = searchParams.get('b')

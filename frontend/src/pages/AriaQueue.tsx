@@ -35,6 +35,8 @@ import {
   ClipboardEdit,
   Check,
   X as XIcon,
+  Copy,
+  Filter,
 } from 'lucide-react'
 
 // ============================================================================
@@ -227,6 +229,32 @@ function DisappearedBadge({ lastYear }: { lastYear?: number | null }) {
   )
 }
 
+// Copy vendor name to clipboard with transient checkmark feedback
+function CopyVendorButton({ name }: { name: string }) {
+  const { t } = useTranslation('aria')
+  const [copied, setCopied] = useState(false)
+  const handleCopy = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    navigator.clipboard.writeText(name).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+  return (
+    <button
+      onClick={handleCopy}
+      className="inline-flex items-center p-1 rounded text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors shrink-0"
+      title={t('actions.copyName')}
+      aria-label={t('actions.copyName')}
+    >
+      {copied
+        ? <Check className="h-3 w-3 text-green-400" />
+        : <Copy className="h-3 w-3" />
+      }
+    </button>
+  )
+}
+
 // #55 — Pattern confidence breakdown row
 function PatternConfidenceRow({ confidences, primaryPattern }: { confidences: Record<string, number> | null | undefined; primaryPattern?: string | null }) {
   const { t } = useTranslation('aria')
@@ -388,6 +416,80 @@ function ReviewPopover({
       {(mutation.isError || promoteMutation.isError) && (
         <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
       )}
+    </div>
+  )
+}
+
+// ============================================================================
+// Active Filter Bar — shows what filters are on with individual dismiss buttons
+// ============================================================================
+
+function ActiveFilterBar({
+  patternFilter,
+  tierFilter,
+  newVendorOnly,
+  novelOnly,
+  reviewStatusFilter,
+  search,
+  onClearPattern,
+  onClearTier,
+  onClearNewVendor,
+  onClearNovel,
+  onClearReview,
+  onClearSearch,
+  onClearAll,
+}: {
+  patternFilter: string | null
+  tierFilter: number | null
+  newVendorOnly: boolean
+  novelOnly: boolean
+  reviewStatusFilter: ReviewStatus | null
+  search: string
+  onClearPattern: () => void
+  onClearTier: () => void
+  onClearNewVendor: () => void
+  onClearNovel: () => void
+  onClearReview: () => void
+  onClearSearch: () => void
+  onClearAll: () => void
+}) {
+  const { t } = useTranslation('aria')
+  const chips: { label: string; onRemove: () => void }[] = []
+
+  if (patternFilter) chips.push({ label: `${t('filters.pattern')}: ${t(`patterns.${patternFilter}`)}`, onRemove: onClearPattern })
+  if (tierFilter != null) {
+    const cfg = TIER_CONFIG.find(c => c.tier === tierFilter)
+    chips.push({ label: cfg ? t(cfg.labelKey) : `T${tierFilter}`, onRemove: onClearTier })
+  }
+  if (newVendorOnly) chips.push({ label: t('filters.newVendorOnly'), onRemove: onClearNewVendor })
+  if (novelOnly) chips.push({ label: t('filters.novelOnly', { defaultValue: 'Solo nuevos' }), onRemove: onClearNovel })
+  if (reviewStatusFilter) chips.push({ label: t('status.' + reviewStatusFilter), onRemove: onClearReview })
+  if (search) chips.push({ label: `"${search}"`, onRemove: onClearSearch })
+
+  if (chips.length === 0) return null
+
+  return (
+    <div className="flex flex-wrap items-center gap-2 px-4 py-2 bg-accent/5 border border-accent/20 rounded-lg">
+      <Filter className="h-3 w-3 text-accent/60 shrink-0" />
+      <span className="text-[10px] font-mono uppercase tracking-wider text-accent/60 shrink-0">
+        {t('filterBar.active', { count: chips.length })}
+      </span>
+      {chips.map((chip) => (
+        <button
+          key={chip.label}
+          onClick={chip.onRemove}
+          className="inline-flex items-center gap-1 px-2 py-0.5 rounded text-xs font-medium bg-background-elevated border border-border text-text-secondary hover:border-accent/40 hover:text-text-primary transition-colors"
+        >
+          {chip.label}
+          <XIcon className="h-2.5 w-2.5 opacity-60" />
+        </button>
+      ))}
+      <button
+        onClick={onClearAll}
+        className="ml-auto text-[10px] font-mono text-accent/60 hover:text-accent transition-colors uppercase tracking-wider"
+      >
+        {t('filterBar.clearAll')}
+      </button>
     </div>
   )
 }
@@ -584,9 +686,12 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
                   <DisappearedBadge lastYear={item.last_contract_year} />
                 )}
               </div>
-              <h3 className="font-semibold text-text-primary text-sm leading-snug line-clamp-2">
-                {item.vendor_name}
-              </h3>
+              <div className="flex items-start gap-1">
+                <h3 className="font-semibold text-text-primary text-sm leading-snug line-clamp-2 flex-1">
+                  {item.vendor_name}
+                </h3>
+                <CopyVendorButton name={item.vendor_name} />
+              </div>
               {item.top_institution && (
                 <p className={cn(
                   'text-xs mt-0.5 flex items-center gap-1',
@@ -749,7 +854,8 @@ function LeadRow({
             ) : (
               <ChevronDown className="h-3.5 w-3.5 text-text-muted shrink-0" />
             )}
-            <span className="font-medium text-text-primary line-clamp-1">{item.vendor_name}</span>
+            <span className="font-medium text-text-primary line-clamp-1 flex-1">{item.vendor_name}</span>
+            <CopyVendorButton name={item.vendor_name} />
           </div>
         </td>
         <td className="px-4 py-3 hidden md:table-cell">
@@ -1014,24 +1120,46 @@ export default function AriaPage() {
             ))}
           </div>
 
-          {/* Review progress (compact, only if data exists) */}
+          {/* Review progress bar — visual completion tracking */}
           {stats?.reviewed_count != null && stats.reviewed_count > 0 && (
-            <div className="flex flex-wrap items-center gap-4 mt-4 pt-3 border-t border-zinc-800/60 text-[11px] text-zinc-500">
-              <span>
-                <strong className="text-zinc-300 font-mono">{formatNumber(stats.reviewed_count)}</strong> {t('efficiencyStats.reviewed')}
-                {stats.confirmed_count != null && (
-                  <span className="ml-1 text-green-400/80">
-                    ({Math.round((stats.confirmed_count / stats.reviewed_count) * 100)}% {t('efficiencyStats.confirmationRate')})
-                  </span>
-                )}
-              </span>
-              {stats.t1_reviewed_count != null && (
-                <span>
-                  <strong className="text-zinc-300 font-mono">
-                    {Math.round(((stats.t1_reviewed_count) / (tier1Data?.pagination?.total ?? 320)) * 100)}%
-                  </strong> {t('efficiencyStats.t1Complete')}
-                </span>
-              )}
+            <div className="mt-4 pt-3 border-t border-zinc-800/60 space-y-2">
+              {stats.t1_reviewed_count != null && (tier1Data?.pagination?.total ?? 0) > 0 && (() => {
+                const t1Total = tier1Data?.pagination?.total ?? 320
+                const t1Pct = Math.min(100, Math.round((stats.t1_reviewed_count / t1Total) * 100))
+                return (
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+                        {t('efficiencyStats.t1Complete')}
+                      </span>
+                      <span className="text-[10px] font-mono text-zinc-400">
+                        {formatNumber(stats.t1_reviewed_count)} / {formatNumber(t1Total)} — {t1Pct}%
+                      </span>
+                    </div>
+                    <div className="h-1.5 bg-zinc-800 rounded-full overflow-hidden">
+                      <div
+                        className="h-full bg-red-500 rounded-full transition-all"
+                        style={{ width: `${t1Pct}%` }}
+                      />
+                    </div>
+                  </div>
+                )
+              })()}
+              {stats.confirmed_count != null && stats.reviewed_count > 0 && (() => {
+                const confirmPct = Math.min(100, Math.round((stats.confirmed_count / stats.reviewed_count) * 100))
+                return (
+                  <div className="flex items-center gap-3 text-[10px] text-zinc-500">
+                    <span>
+                      <strong className="text-zinc-300 font-mono">{formatNumber(stats.reviewed_count)}</strong>{' '}
+                      {t('efficiencyStats.reviewed')}
+                    </span>
+                    <span className="text-green-400/80">
+                      <strong className="font-mono">{confirmPct}%</strong>{' '}
+                      {t('efficiencyStats.confirmationRate')}
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
           )}
         </div>
@@ -1049,6 +1177,23 @@ export default function AriaPage() {
             link="/methodology"
           />
         </div>
+
+        {/* Active filter bar */}
+        <ActiveFilterBar
+          patternFilter={patternFilter}
+          tierFilter={tierFilter}
+          newVendorOnly={newVendorOnly}
+          novelOnly={novelOnly}
+          reviewStatusFilter={reviewStatusFilter}
+          search={search}
+          onClearPattern={() => { setPatternFilter(null); setPage(1) }}
+          onClearTier={() => { setTierFilter(null); setPage(1) }}
+          onClearNewVendor={() => { setNewVendorOnly(false); setPage(1) }}
+          onClearNovel={() => { setNovelOnly(false); setPage(1) }}
+          onClearReview={() => { setReviewStatusFilter(null); setPage(1) }}
+          onClearSearch={() => { setSearch(''); setPage(1) }}
+          onClearAll={() => { setPatternFilter(null); setTierFilter(null); setNewVendorOnly(false); setNovelOnly(false); setReviewStatusFilter(null); setSearch(''); setPage(1) }}
+        />
 
         {/* ================================================================ */}
         {/* INTEL PATTERNS — classification grid (FIRST interactive element) */}
@@ -1293,8 +1438,16 @@ export default function AriaPage() {
               <div className="flex items-center gap-2 mb-1">
                 <Users className="h-4 w-4 text-text-muted" />
                 <p className="text-[11px] tracking-[0.2em] uppercase font-mono text-text-muted font-bold">
-                  {patternFilter || newVendorOnly || search || tierFilter ? t('leads.filteredResults') : t('queueSection.title')}
+                  {patternFilter || newVendorOnly || search || tierFilter || novelOnly || reviewStatusFilter ? t('leads.filteredResults') : t('queueSection.title')}
                 </p>
+                {(() => {
+                  const activeCount = [patternFilter, tierFilter != null ? tierFilter : null, newVendorOnly || null, novelOnly || null, reviewStatusFilter, search || null].filter(Boolean).length
+                  return activeCount > 0 ? (
+                    <span className="inline-flex items-center justify-center h-4 min-w-[1rem] px-1 rounded-full bg-accent text-white text-[9px] font-bold font-mono">
+                      {activeCount}
+                    </span>
+                  ) : null
+                })()}
                 {tierFilter != null && (
                   <button
                     onClick={() => { setTierFilter(null); setPage(1) }}
@@ -1355,9 +1508,19 @@ export default function AriaPage() {
                 ))}
               </div>
             ) : leadsItems.length === 0 ? (
-              <div className="p-8 text-center text-text-muted">
-                <Search className="h-8 w-8 mx-auto mb-2 opacity-30" />
-                <p>{t('leads.empty')}</p>
+              <div className="p-10 text-center">
+                <Search className="h-10 w-10 mx-auto mb-3 text-text-muted opacity-25" />
+                <p className="text-sm font-medium text-text-secondary mb-1">
+                  {search ? t('emptyState.noSearchResults', { query: search }) : t('leads.empty')}
+                </p>
+                {(patternFilter || tierFilter != null || newVendorOnly || novelOnly || reviewStatusFilter || search) && (
+                  <button
+                    onClick={() => { setPatternFilter(null); setTierFilter(null); setNewVendorOnly(false); setNovelOnly(false); setReviewStatusFilter(null); setSearch(''); setPage(1) }}
+                    className="mt-3 px-4 py-1.5 rounded-lg text-xs font-medium bg-background-elevated border border-border text-text-secondary hover:border-accent/50 hover:text-text-primary transition-colors font-mono"
+                  >
+                    {t('filterBar.clearAll')}
+                  </button>
+                )}
               </div>
             ) : (
               <div className="overflow-x-auto">

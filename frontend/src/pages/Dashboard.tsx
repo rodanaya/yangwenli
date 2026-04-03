@@ -999,6 +999,8 @@ const TopVendorsTable = memo(function TopVendorsTable({
   loading: boolean
   onVendorClick: (id: number) => void
 }) {
+  const { t } = useTranslation('dashboard')
+
   if (loading) {
     return (
       <div className="space-y-2">
@@ -1008,7 +1010,16 @@ const TopVendorsTable = memo(function TopVendorsTable({
   }
 
   return (
-    <div className="space-y-0.5">
+    <div>
+      {/* Column headers */}
+      <div className="flex items-center gap-2 px-2 mb-1">
+        <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider w-5 flex-shrink-0" />
+        <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider flex-1">{t('vendorHeaderName')}</span>
+        <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider w-[68px] text-right flex-shrink-0">{t('vendorHeaderValue')}</span>
+        <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider w-[48px] text-right flex-shrink-0">{t('vendorHeaderContracts')}</span>
+        <span className="text-[9px] font-mono text-text-muted uppercase tracking-wider w-[72px] text-right flex-shrink-0">{t('vendorHeaderRisk')}</span>
+      </div>
+      <div className="space-y-0.5">
       {vendors.map((vendor, i) => {
         const riskPct = vendor.avg_risk * 100
         const riskColor = vendor.avg_risk >= 0.60 ? 'text-risk-critical' :
@@ -1044,6 +1055,7 @@ const TopVendorsTable = memo(function TopVendorsTable({
           </button>
         )
       })}
+      </div>
     </div>
   )
 })
@@ -1747,19 +1759,19 @@ export function Dashboard() {
             <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>
               {overview.direct_award_pct != null ? `${overview.direct_award_pct.toFixed(1)}%` : '—'}
             </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripDirectAward', 'of contracts skip competitive bidding')}</span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripDirectAward')}</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
             <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
               {criticalHighValue > 0 ? formatCompactMXN(criticalHighValue) : '—'}
             </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskValue', 'in high-risk contracts')}</span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskValue')}</span>
           </div>
           <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
             <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
               {criticalHighContractPct > 0 ? `${criticalHighContractPct.toFixed(1)}%` : '—'}
             </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskRate', 'of contracts flagged high or critical risk')}</span>
+            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskRate')}</span>
           </div>
         </div>
       )}
@@ -1777,6 +1789,7 @@ export function Dashboard() {
               {t('periodTrendSubtitle')}
             </p>
           </div>
+          <div role="img" aria-label={t('periodTrendAriaLabel')}>
           <ResponsiveContainer width="100%" height={220}>
             <AreaChart
               data={yearOverYearData.data.map((d) => ({
@@ -1822,9 +1835,9 @@ export function Dashboard() {
                 labelFormatter={(label: number) => t('tooltipYear', { year: label })}
               />
               {/* Early period annotation */}
-              <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: '~24.5% avg', fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopLeft' }} />
+              <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: t('periodAnnotationEarly'), fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopLeft' }} />
               {/* Recent period annotation */}
-              <ReferenceArea x1={2021} x2={2025} fill="rgba(220,38,38,0.04)" label={{ value: '~31.4% avg', fill: 'rgba(220,38,38,0.45)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
+              <ReferenceArea x1={2021} x2={2025} fill="rgba(220,38,38,0.04)" label={{ value: t('periodAnnotationRecent'), fill: 'rgba(220,38,38,0.45)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
               <Area
                 type="monotone"
                 dataKey="avgRiskPct"
@@ -1846,6 +1859,7 @@ export function Dashboard() {
               />
             </AreaChart>
           </ResponsiveContainer>
+          </div>
           <div className="flex items-center gap-4 mt-1 flex-wrap">
             <div className="flex items-center gap-1.5">
               <div className="h-0.5 w-4 rounded" style={{ backgroundColor: '#dc2626' }} />

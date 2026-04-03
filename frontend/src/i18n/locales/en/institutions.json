@@ -283,7 +283,8 @@
     "errorLoadingScandals": "Error loading sector scandals.",
     "errorLoadingConcentration": "Error loading concentration map.",
     "noContractsTooltip": "No contracts",
-    "contractsRiskTooltip": "{{count}} contracts · risk {{risk}}%"
+    "contractsRiskTooltip": "{{count}} contracts · risk {{risk}}%",
+    "untitled": "Untitled"
   },
   "compare": {
     "section": "INSTITUTIONAL COMPARISON",
@@ -298,7 +299,7 @@
     "viewFullProfile": "View full profile",
     "noVendorData": "No vendor data",
     "loadError": "Error loading institutions",
-    "loadErrorDesc": "Verify institution IDs and try again.",
+    "loadErrorDesc": "Check institution IDs and try again.",
     "changeInstitutions": "Change institutions",
     "metrics": {
       "title": "Key Metrics",
