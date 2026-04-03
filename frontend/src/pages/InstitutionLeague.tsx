@@ -125,9 +125,10 @@ function gradeGlow(grade: string): string {
 }
 
 function TrendIcon({ direction }: { direction: string | null }) {
-  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label="Improving" />
-  if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-red-400" aria-label="Declining" />
-  return <Minus className="h-3.5 w-3.5 text-zinc-600" aria-label="Stable" />
+  const { t } = useTranslation('institutionleague')
+  if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label={t('trend.improving')} />
+  if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-red-400" aria-label={t('trend.declining')} />
+  return <Minus className="h-3.5 w-3.5 text-zinc-600" aria-label={t('trend.stable')} />
 }
 
 // ---------------------------------------------------------------------------

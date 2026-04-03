@@ -259,13 +259,17 @@ def get_case(slug: str):
                            COUNT(*) as contract_count,
                            AVG(risk_score) as avg_risk_score
                     FROM contracts
-                    WHERE source_year BETWEEN ? AND ?
+                    WHERE vendor_id IN (
+                        SELECT vendor_id FROM ground_truth_vendors
+                        WHERE case_id = ? AND vendor_id IS NOT NULL
+                    )
+                      AND contract_year BETWEEN ? AND ?
                     GROUP BY vendor_id
                 ) vc ON vc.vendor_id = gtv.vendor_id
                 WHERE gtv.case_id = ?
                 ORDER BY contract_count DESC
                 LIMIT 50
-            """, (year_start, year_end, gt_case_id)).fetchall()
+            """, (gt_case_id, year_start, year_end, gt_case_id)).fetchall()
 
             for vr in vendor_rows:
                 linked_vendors.append({
