@@ -232,23 +232,10 @@ export default function InstitutionHeatmap() {
 
   // ---- i18n helper for riskLabel ----
   function riskLabel(score: number): string {
-    if (score >= 0.60) return lang === 'es' ? 'Cr\u00edtico' : 'Critical'
-    if (score >= 0.40) return lang === 'es' ? 'Alto' : 'High'
-    if (score >= 0.25) return lang === 'es' ? 'Medio' : 'Medium'
-    return lang === 'es' ? 'Bajo' : 'Low'
-  }
-
-  // Translator shim for HHI (uses lang directly since institutions namespace may not have these keys yet)
-  function hhiT(key: string): string {
-    const map: Record<string, Record<string, string>> = {
-      'hhi.topVendorShare': { es: 'Participaci\u00f3n top proveedor', en: 'Top vendor share' },
-      'hhi.directAward': { es: 'Adj. directa', en: 'Direct award' },
-      'hhi.contracts': { es: 'Contratos', en: 'Contracts' },
-      'hhi.clickHint': { es: 'Haz clic para ver instituci\u00f3n', en: 'Click to view institution' },
-      'hhi.highCapture': { es: 'Alta captura', en: 'High capture' },
-      'hhi.moderate': { es: 'Moderada', en: 'Moderate' },
-    }
-    return map[key]?.[lang] ?? map[key]?.['en'] ?? key
+    if (score >= 0.60) return t('heatmap.riskLevelCritical')
+    if (score >= 0.40) return t('heatmap.riskLevelHigh')
+    if (score >= 0.25) return t('heatmap.riskLevelMedium')
+    return t('heatmap.riskLevelLow')
   }
 
   // ---- Loading / Error ----
@@ -283,17 +270,9 @@ export default function InstitutionHeatmap() {
           1. Editorial Headline
           ============================================================ */}
       <EditorialHeadline
-        section={lang === 'es' ? 'MAPA DE RIESGO' : 'RISK MAP'}
-        headline={
-          lang === 'es'
-            ? 'El Term\u00f3metro de Corrupci\u00f3n Institucional'
-            : 'The Institutional Corruption Thermometer'
-        }
-        subtitle={
-          lang === 'es'
-            ? 'Cada celda representa el riesgo promedio de una instituci\u00f3n. El rojo no miente.'
-            : 'Each cell represents the average risk score of an institution. Red does not lie.'
-        }
+        section={t('heatmap.section')}
+        headline={t('heatmap.headline')}
+        subtitle={t('heatmap.subtitle')}
       />
 
       {/* ============================================================
@@ -304,9 +283,7 @@ export default function InstitutionHeatmap() {
           className="text-lg text-zinc-300 leading-relaxed"
           style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
         >
-          {lang === 'es'
-            ? `De las ${formatNumber(institutions.length)} instituciones mapeadas, las que concentran m\u00e1s proveedores y adjudicaciones directas tambi\u00e9n registran los puntajes de riesgo m\u00e1s altos. Este mapa revela d\u00f3nde se acumula el poder de compra \u2014 y d\u00f3nde la vigilancia es m\u00e1s urgente.`
-            : `Of the ${formatNumber(institutions.length)} institutions mapped, those with the highest vendor concentration and direct-award rates also register the highest risk scores. This map reveals where purchasing power accumulates \u2014 and where oversight is most urgent.`}
+          {t('heatmap.lede', { n: formatNumber(institutions.length) })}
         </p>
       </div>
 
@@ -321,11 +298,7 @@ export default function InstitutionHeatmap() {
               ? shortName(mostConcentrated.institution_name)
               : t('heatmap.noData')
           }
-          annotation={
-            lang === 'es'
-              ? 'Instituci\u00f3n m\u00e1s concentrada (HHI)'
-              : 'Most concentrated institution (HHI)'
-          }
+          annotation={t('heatmap.mostConcentratedAnnotation')}
           color="border-red-500"
         />
         <HallazgoStat
@@ -337,21 +310,13 @@ export default function InstitutionHeatmap() {
               ? shortName(highestRisk.institution_name)
               : t('heatmap.noData')
           }
-          annotation={
-            lang === 'es' ? 'Riesgo promedio m\u00e1s alto' : 'Highest average risk'
-          }
+          annotation={t('heatmap.highestRiskAnnotation')}
           color="border-orange-500"
         />
         <HallazgoStat
           value={formatNumber(institutions.length)}
-          label={
-            lang === 'es' ? 'Instituciones mapeadas' : 'Institutions mapped'
-          }
-          annotation={
-            lang === 'es'
-              ? `Valor total: ${formatCompactMXN(totalValue)}`
-              : `Total value: ${formatCompactMXN(totalValue)}`
-          }
+          label={t('heatmap.institutionsMapped')}
+          annotation={t('heatmap.totalValue', { value: formatCompactMXN(totalValue) })}
           color="border-amber-500"
         />
       </div>
@@ -366,37 +331,23 @@ export default function InstitutionHeatmap() {
           <div className="flex items-end justify-between pt-4">
             <div>
               <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold">
-                {lang === 'es' ? 'EL MAPA COMPLETO' : 'THE FULL MAP'}
+                {t('heatmap.fullMapSection')}
               </span>
               <p
                 className="text-base text-zinc-400 mt-1 max-w-xl italic"
                 style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
               >
-                {lang === 'es'
-                  ? '\u201cEl dinero deja rastro. Estos diagramas muestran a d\u00f3nde va cada peso y qui\u00e9n domina cada instituci\u00f3n.\u201d'
-                  : '\u201cMoney leaves a trail. These diagrams show where every peso goes and who dominates each institution.\u201d'}
+                {t('heatmap.fullMapQuote')}
               </p>
             </div>
 
             {/* Color legend — always show, not just on md+ */}
             <div className="flex flex-wrap gap-4 text-xs shrink-0 ml-4">
               {[
-                {
-                  color: '#f87171',
-                  label: lang === 'es' ? 'Cr\u00edtico (\u226560%)' : 'Critical (\u226560%)',
-                },
-                {
-                  color: '#fb923c',
-                  label: lang === 'es' ? 'Alto (40\u201360%)' : 'High (40\u201360%)',
-                },
-                {
-                  color: '#fbbf24',
-                  label: lang === 'es' ? 'Medio (25\u201340%)' : 'Medium (25\u201340%)',
-                },
-                {
-                  color: '#4ade80',
-                  label: lang === 'es' ? 'Bajo (<25%)' : 'Low (<25%)',
-                },
+                { color: '#f87171', label: t('heatmap.legendCritical') },
+                { color: '#fb923c', label: t('heatmap.legendHigh') },
+                { color: '#fbbf24', label: t('heatmap.legendMedium') },
+                { color: '#4ade80', label: t('heatmap.legendLow') },
               ].map((item) => (
                 <div key={item.label} className="flex items-center gap-1.5">
                   <span
@@ -415,16 +366,8 @@ export default function InstitutionHeatmap() {
         <div className="flex gap-1 bg-zinc-800/80 rounded-lg p-1 w-fit mb-5">
           {(
             [
-              [
-                'sankey',
-                GitBranch,
-                lang === 'es' ? 'Flujos de Dinero' : 'Money Flows',
-              ],
-              [
-                'hhi',
-                BarChart3,
-                lang === 'es' ? 'Concentraci\u00f3n HHI' : 'HHI Concentration',
-              ],
+              ['sankey', GitBranch, t('heatmap.tabSankey')],
+              ['hhi', BarChart3, t('heatmap.tabHhi')],
             ] as const
           ).map(([tab, Icon, label]) => (
             <button
@@ -448,16 +391,16 @@ export default function InstitutionHeatmap() {
           <div className="space-y-4">
             <div className="flex flex-wrap gap-3 items-center">
               <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <span>{lang === 'es' ? 'A\u00f1o' : 'Year'}:</span>
+                <span>{t('heatmap.filterYear')}:</span>
                 <select
                   value={sankeyYear ?? ''}
                   onChange={(e) =>
                     setSankeyYear(e.target.value ? Number(e.target.value) : undefined)
                   }
                   className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white"
-                  aria-label={lang === 'es' ? 'Filtrar por a\u00f1o' : 'Filter by year'}
+                  aria-label={t('heatmap.filterYearLabel')}
                 >
-                  <option value="">{lang === 'es' ? 'Todos' : 'All'}</option>
+                  <option value="">{t('heatmap.filterAll')}</option>
                   {Array.from({ length: 26 }, (_, i) => 2025 - i).map((y) => (
                     <option key={y} value={y}>
                       {y}
@@ -466,16 +409,16 @@ export default function InstitutionHeatmap() {
                 </select>
               </div>
               <div className="flex items-center gap-2 text-xs text-zinc-400">
-                <span>{lang === 'es' ? 'Sector' : 'Sector'}:</span>
+                <span>Sector:</span>
                 <select
                   value={sankeySector ?? ''}
                   onChange={(e) =>
                     setSankeySector(e.target.value ? Number(e.target.value) : undefined)
                   }
                   className="bg-zinc-800 border border-zinc-700 rounded px-2 py-1 text-white"
-                  aria-label={lang === 'es' ? 'Filtrar por sector' : 'Filter by sector'}
+                  aria-label={t('heatmap.filterSectorLabel')}
                 >
-                  <option value="">{lang === 'es' ? 'Todos' : 'All'}</option>
+                  <option value="">{t('heatmap.filterAll')}</option>
                   {SECTORS.map((s) => (
                     <option key={s.id} value={s.id}>
                       {lang === 'es' ? s.name : s.nameEN}
@@ -485,16 +428,14 @@ export default function InstitutionHeatmap() {
               </div>
               <span className="text-xs text-zinc-500">
                 {flows.length}{' '}
-                {lang === 'es' ? 'flujos' : 'flows'} &middot;{' '}
+                {t('heatmap.flowsCount')} &middot;{' '}
                 {formatCompactMXN(totalValue)}
               </span>
             </div>
 
             <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-4">
               <p className="text-xs text-zinc-500 mb-3">
-                {lang === 'es'
-                  ? 'Nodos izquierda = instituciones. Nodos derecha = proveedores. Ancho del enlace = valor contratado. Color = nivel de riesgo. Haz clic en un nodo para ver el perfil.'
-                  : 'Left nodes = institutions. Right nodes = vendors. Link width = contract value. Color = risk level. Click a node to view the profile.'}
+                {t('heatmap.sankeyDesc')}
               </p>
               {flows.length > 0 ? (
                 <MoneySankeyChart flows={flows} height={560} />
@@ -514,34 +455,10 @@ export default function InstitutionHeatmap() {
               <div className="flex items-center gap-3 mb-3">
                 <div className="flex flex-wrap gap-4 text-xs">
                   {[
-                    {
-                      color: '#f87171',
-                      label:
-                        lang === 'es'
-                          ? 'Alta captura (>0.25)'
-                          : 'High capture (>0.25)',
-                    },
-                    {
-                      color: '#fb923c',
-                      label:
-                        lang === 'es'
-                          ? 'Moderada (0.15\u20130.25)'
-                          : 'Moderate (0.15\u20130.25)',
-                    },
-                    {
-                      color: '#fbbf24',
-                      label:
-                        lang === 'es'
-                          ? 'Baja (0.10\u20130.15)'
-                          : 'Low (0.10\u20130.15)',
-                    },
-                    {
-                      color: '#4ade80',
-                      label:
-                        lang === 'es'
-                          ? 'Competitiva (<0.10)'
-                          : 'Competitive (<0.10)',
-                    },
+                    { color: '#f87171', label: t('heatmap.hhiLegendHighCapture') },
+                    { color: '#fb923c', label: t('heatmap.hhiLegendModerate') },
+                    { color: '#fbbf24', label: t('heatmap.hhiLegendLow') },
+                    { color: '#4ade80', label: t('heatmap.hhiLegendCompetitive') },
                   ].map((item) => (
                     <div key={item.label} className="flex items-center gap-1.5">
                       <span
@@ -555,15 +472,13 @@ export default function InstitutionHeatmap() {
                 </div>
               </div>
               <p className="text-xs text-zinc-500 mb-3">
-                {lang === 'es'
-                  ? 'HHI (Índice Herfindahl-Hirschman) mide la concentración de proveedores. HHI>0.25 indica que un solo proveedor domina. Haz clic en una barra para ver la institución.'
-                  : 'HHI (Herfindahl-Hirschman Index) measures vendor concentration. HHI>0.25 indicates a single vendor dominates. Click a bar to view the institution.'}
+                {t('heatmap.hhiDesc')}
               </p>
               {institutions.length > 0 ? (
                 <HHIChart
                   institutions={institutions}
                   onSelect={(id) => navigate(`/institutions/${id}`)}
-                  t={hhiT}
+                  t={t}
                 />
               ) : (
                 <div className="flex items-center justify-center h-40 text-zinc-500 text-sm">
@@ -582,21 +497,17 @@ export default function InstitutionHeatmap() {
         <div className="h-px bg-zinc-700/60" />
         <div className="pt-4 mb-4">
           <span className="text-xs uppercase tracking-[0.2em] text-red-400 font-semibold">
-            {lang === 'es' ? 'ZONAS ROJAS' : 'RED ZONES'}
+            {t('heatmap.zonasRojasSection')}
           </span>
           <h2
             id="zonas-rojas-heading"
             className="text-2xl font-bold text-white mt-1"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
-            {lang === 'es'
-              ? 'Las 10 Instituciones con Mayor Riesgo'
-              : 'The 10 Highest-Risk Institutions'}
+            {t('heatmap.zonasRojasHeadline')}
           </h2>
           <p className="text-sm text-zinc-400 mt-1">
-            {lang === 'es'
-              ? 'Ordenadas por puntaje de riesgo promedio. Haz clic para ver el perfil completo.'
-              : 'Ranked by average risk score. Click to view the full institution profile.'}
+            {t('heatmap.zonasRojasDesc')}
           </p>
         </div>
 
@@ -612,9 +523,7 @@ export default function InstitutionHeatmap() {
             aria-pressed={criticalOnly}
           >
             <Filter size={12} aria-hidden="true" />
-            {lang === 'es'
-              ? `Solo riesgo cr\u00edtico (\u226560%)`
-              : `Critical risk only (\u226560%)`}
+            {t('heatmap.criticalOnly')}
             {criticalOnly && criticalCount > 0 && (
               <span className="ml-1 bg-red-500/30 text-red-300 rounded-full px-1.5 py-0.5 text-[10px]">
                 {criticalCount}
@@ -674,7 +583,7 @@ export default function InstitutionHeatmap() {
                     )}
                     <span className="text-xs text-zinc-500">
                       {formatNumber(inst.total_contracts)}{' '}
-                      {lang === 'es' ? 'contratos' : 'contracts'}
+                      {t('heatmap.contracts')}
                       {' '}&middot;{' '}
                       {formatCompactMXN(inst.total_value)}
                     </span>
@@ -691,22 +600,18 @@ export default function InstitutionHeatmap() {
                             ? '#fb923c'
                             : '#6b7280',
                       }}
-                      title={
-                        lang === 'es'
-                          ? 'Índice Herfindahl-Hirschman: >0.25 = muy concentrado'
-                          : 'Herfindahl-Hirschman Index: >0.25 = highly concentrated'
-                      }
+                      title={t('heatmap.hhiTooltip')}
                     >
                       HHI {(inst.hhi ?? 0).toFixed(3)}
                     </span>
                     {(inst.hhi ?? 0) > 0.25 && (
                       <span className="text-red-400 text-[9px] uppercase tracking-wide">
-                        {lang === 'es' ? 'alta captura' : 'high capture'}
+                        {t('heatmap.hhiHighCapture')}
                       </span>
                     )}
                     <span className="text-zinc-600">&middot;</span>
                     <span>
-                      {lang === 'es' ? 'Top proveedor' : 'Top vendor'}{' '}
+                      {t('heatmap.topVendorLabel')}{' '}
                       <span
                         className="font-semibold"
                         style={{
@@ -762,31 +667,27 @@ export default function InstitutionHeatmap() {
           <div className="h-px bg-zinc-700/60" />
           <div className="pt-4 mb-4">
             <span className="text-xs uppercase tracking-[0.2em] text-amber-400 font-semibold">
-              {lang === 'es' ? 'CONCENTRACIÓN HHI' : 'HHI CONCENTRATION'}
+              {t('heatmap.hhiConcentrationSection')}
             </span>
             <h2
               id="top-hhi-heading"
               className="text-xl font-bold text-white mt-1"
               style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
             >
-              {lang === 'es'
-                ? 'Las 5 Instituciones Más Concentradas'
-                : 'Top 5 Most Concentrated Institutions'}
+              {t('heatmap.top5Headline')}
             </h2>
             <p className="text-sm text-zinc-400 mt-1">
-              {lang === 'es'
-                ? 'Medido por el Índice Herfindahl-Hirschman (HHI). HHI > 0.25 indica que un solo proveedor domina el gasto de esa institución.'
-                : 'Measured by the Herfindahl-Hirschman Index (HHI). HHI > 0.25 indicates a single vendor dominates that institution\'s spending.'}
+              {t('heatmap.top5Desc')}
             </p>
           </div>
 
           {/* HHI legend */}
           <div className="flex flex-wrap gap-4 text-xs mb-4">
             {[
-              { color: '#f87171', label: lang === 'es' ? 'Alta captura HHI > 0.25' : 'High capture HHI > 0.25' },
-              { color: '#fb923c', label: lang === 'es' ? 'Moderada 0.15–0.25' : 'Moderate 0.15–0.25' },
-              { color: '#fbbf24', label: lang === 'es' ? 'Baja 0.10–0.15' : 'Low 0.10–0.15' },
-              { color: '#4ade80', label: lang === 'es' ? 'Competitiva < 0.10' : 'Competitive < 0.10' },
+              { color: '#f87171', label: t('heatmap.hhiLegendHighCaptureLong') },
+              { color: '#fb923c', label: t('heatmap.hhiLegendModerateLong') },
+              { color: '#fbbf24', label: t('heatmap.hhiLegendLowLong') },
+              { color: '#4ade80', label: t('heatmap.hhiLegendCompetitiveLong') },
             ].map((item) => (
               <div key={item.label} className="flex items-center gap-1.5">
                 <span className="w-3 h-3 rounded-sm" style={{ backgroundColor: item.color }} aria-hidden="true" />
@@ -832,7 +733,7 @@ export default function InstitutionHeatmap() {
                       <div className="flex items-center gap-3 mt-0.5 text-xs text-zinc-500">
                         <span>
                           {formatNumber(inst.total_contracts)}{' '}
-                          {lang === 'es' ? 'contratos' : 'contracts'}
+                          {t('heatmap.contracts')}
                         </span>
                         <span>&middot;</span>
                         <span>{formatCompactMXN(inst.total_value)}</span>
@@ -859,7 +760,7 @@ export default function InstitutionHeatmap() {
                         {(inst.top_vendor_share ?? 0).toFixed(0)}%
                       </div>
                       <div className="text-[10px] text-zinc-500">
-                        {lang === 'es' ? 'top proveedor' : 'top vendor'}
+                        {t('heatmap.topVendorLabel')}
                       </div>
                     </div>
 
@@ -882,15 +783,13 @@ export default function InstitutionHeatmap() {
         <div className="h-px bg-zinc-700/60" />
         <div className="pt-6 pb-4 max-w-2xl">
           <span className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold">
-            {lang === 'es' ? 'NOTA METODOL\u00d3GICA' : 'METHODOLOGY NOTE'}
+            {t('heatmap.methodologySection')}
           </span>
           <p
             className="text-sm text-zinc-400 mt-2 leading-relaxed"
             style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
           >
-            {lang === 'es'
-              ? 'Los puntajes de riesgo se calculan con el modelo v6.5 de RUBLI: una regresi\u00f3n log\u00edstica calibrada con 9 indicadores estad\u00edsticos (volatilidad de precios, concentraci\u00f3n de proveedores, adjudicaci\u00f3n directa, entre otros), normalizada por sector y a\u00f1o. El puntaje no es prueba de corrupci\u00f3n \u2014 es un indicador de similitud con patrones documentados de irregularidades en la contrataci\u00f3n p\u00fablica mexicana. La concentraci\u00f3n se mide con el \u00cdndice Herfindahl-Hirschman (HHI): un valor superior a 0.25 indica que un solo proveedor domina las compras de esa instituci\u00f3n.'
-              : "Risk scores are computed using RUBLI model v6.5: a calibrated logistic regression with 9 statistical indicators (price volatility, vendor concentration, direct awards, among others), normalized by sector and year. A score is not proof of corruption \u2014 it measures similarity to documented patterns of irregularities in Mexican public procurement. Concentration is measured with the Herfindahl-Hirschman Index (HHI): a value above 0.25 indicates a single vendor dominates that institution's purchasing."}
+            {t('heatmap.methodologyText')}
           </p>
         </div>
       </section>
