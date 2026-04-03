@@ -24,7 +24,6 @@ const ROUTE_I18N_KEYS: Record<string, string> = {
   '/price-analysis': 'priceAnalysis',
   '/contracts': 'contracts',
   '/network': 'network',
-  '/map': 'map',
   '/executive-summary': 'executiveSummary',
   '/watchlist': 'watchlist',
   '/workspace': 'workspace',
