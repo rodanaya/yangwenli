@@ -117,9 +117,11 @@ interface SectorBarDatum {
 function SectorRiskChart({
   data,
   loading,
+  chartT,
 }: {
   data: SectorBarDatum[]
   loading: boolean
+  chartT: (key: string) => string
 }) {
   if (loading) {
     return <Skeleton className="h-56 w-full" />
@@ -160,13 +162,13 @@ function SectorRiskChart({
               >
                 <p style={{ color: '#f4f4f5', fontWeight: 600, marginBottom: 4 }}>{label}</p>
                 <p style={{ color: '#a1a1aa', margin: 0 }}>
-                  Contratos: <strong style={{ color: '#fb923c' }}>{formatNumber(d.count)}</strong>
+                  {chartT('tableHeaderContracts')}: <strong style={{ color: '#fb923c' }}>{formatNumber(d.count)}</strong>
                 </p>
                 <p style={{ color: '#a1a1aa', margin: '2px 0 0' }}>
-                  Valor: <strong style={{ color: '#f4f4f5' }}>{formatCompactMXN(d.totalValue)}</strong>
+                  {chartT('tableHeaderAmount')}: <strong style={{ color: '#f4f4f5' }}>{formatCompactMXN(d.totalValue)}</strong>
                 </p>
                 <p style={{ color: '#a1a1aa', margin: '2px 0 0' }}>
-                  Z-score prom: <strong style={{ color: '#fbbf24' }}>+{(d.avgZ ?? 0).toFixed(1)}&sigma;</strong>
+                  {chartT('statsAvgZ')}: <strong style={{ color: '#fbbf24' }}>+{(d.avgZ ?? 0).toFixed(1)}&sigma;</strong>
                 </p>
               </div>
             )
@@ -187,9 +189,11 @@ function SectorRiskChart({
 function ExtremeCaseCard({
   contract,
   sectorName,
+  t,
 }: {
   contract: PriceAnomalyContract
   sectorName: string
+  t: (key: string, opts?: Record<string, unknown>) => string
 }) {
   const overpricingFactor = (contract.z_price_ratio ?? 0).toFixed(1)
 
@@ -197,7 +201,7 @@ function ExtremeCaseCard({
     <article
       className="border border-border rounded-lg bg-background-card p-4 hover:border-orange-500/40 transition-colors"
       role="article"
-      aria-label={`Anomalia de precio: ${contract.vendor_name}`}
+      aria-label={t('cardAriaLabel', { vendorName: contract.vendor_name })}
     >
       {/* Top row: sector + year + risk */}
       <div className="flex items-center justify-between mb-2">
@@ -216,7 +220,7 @@ function ExtremeCaseCard({
           {overpricingFactor}x
         </span>
         <span className="text-sm text-text-muted">
-          mas caro que la mediana sectorial
+          {t('moreThan')}
         </span>
       </div>
 
@@ -252,7 +256,7 @@ function ExtremeCaseCard({
           className="inline-flex items-center gap-1 text-xs text-primary hover:underline"
           aria-label={`Ver detalle del contrato ${contract.contract_id}`}
         >
-          Ver contrato
+          {t('viewContract')}
           <ExternalLink className="w-3 h-3" />
         </Link>
         {contract.vendor_id && (
@@ -260,7 +264,7 @@ function ExtremeCaseCard({
             to={`/vendors/${contract.vendor_id}`}
             className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-primary hover:underline"
           >
-            Perfil del proveedor
+            {t('vendorProfile')}
           </Link>
         )}
       </div>
@@ -270,13 +274,13 @@ function ExtremeCaseCard({
 
 // --- Methodology Accordion ---------------------------------------------------
 
-function MethodologySection() {
+function MethodologySection({ t }: { t: (key: string) => string }) {
   const [open, setOpen] = useState(false)
 
   return (
     <section
       className="border-t border-b border-border py-6"
-      aria-label="Nota metodologica"
+      aria-label={t('methodologyAriaLabel')}
     >
       <button
         className="w-full flex items-center justify-between text-left group"
@@ -286,7 +290,7 @@ function MethodologySection() {
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-text-muted" aria-hidden="true" />
           <span className="text-xs uppercase tracking-[0.15em] font-semibold text-text-muted group-hover:text-text-primary transition-colors">
-            Nota Metodologica
+            {t('methodologyLabel')}
           </span>
         </div>
         {open ? (
@@ -299,35 +303,25 @@ function MethodologySection() {
       {open && (
         <div className="mt-4 space-y-4 text-sm text-text-secondary leading-relaxed max-w-3xl">
           <p>
-            <strong className="text-text-primary">Deteccion de precios anomalos.</strong>{' '}
-            Cada contrato se compara con la distribucion de precios de su sector y
-            ano utilizando z-scores. Un z-score de precio mayor a 3 significa que el
-            monto supera 3 desviaciones estandar sobre la media sectorial, ubicandose
-            en el 0.1% superior de la distribucion.
+            <strong className="text-text-primary">{t('methodologyPara1Title')}</strong>{' '}
+            {t('methodologyPara1')}
           </p>
           <p>
-            <strong className="text-text-primary">Metodo IQR (Tukey):</strong>{' '}
-            Complementariamente, el sistema utiliza el metodo de rango intercuartilico
-            (IQR) para detectar valores atipicos. El umbral de alerta se establece en
-            Q3 + 1.5 x IQR (valor atipico estadistico) y Q3 + 3.0 x IQR
-            (sobrevaloracion extrema).
+            <strong className="text-text-primary">{t('methodologyPara2Title')}</strong>{' '}
+            {t('methodologyPara2')}
           </p>
           <p>
-            <strong className="text-text-primary">price_volatility:</strong>{' '}
-            Mide la varianza de los montos de un proveedor respecto a la norma del sector.
-            Alta volatilidad sugiere precios inconsistentes o manipulacion selectiva.
-            Es el predictor mas fuerte del modelo de riesgo v6.5 (coeficiente +0.53).
+            <strong className="text-text-primary">{t('methodologyPara3Title')}</strong>{' '}
+            {t('methodologyPara3')}
           </p>
           <p className="text-xs text-text-muted italic">
-            Los scores de riesgo son indicadores estadisticos que miden similitud con
-            patrones de corrupcion documentados. Un score alto no constituye prueba
-            de irregularidad.
+            {t('methodologyDisclaimer')}
           </p>
           <Link
             to="/methodology"
             className="inline-flex items-center gap-1 text-primary hover:underline text-xs"
           >
-            Ver metodologia completa
+            {t('viewFullMethodology')}
             <ExternalLink className="w-3 h-3" />
           </Link>
         </div>
@@ -401,7 +395,7 @@ export default function PriceIntelligence() {
       <div className="max-w-4xl mx-auto p-6">
         <div className="flex items-center gap-3 p-6 text-text-muted border border-border rounded-lg">
           <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
-          <span>No se pudo cargar la informacion de precios. Intente de nuevo mas tarde.</span>
+          <span>{t('errorMessage')}</span>
         </div>
       </div>
     )
@@ -413,7 +407,7 @@ export default function PriceIntelligence() {
       {/* === Editorial Headline === */}
       <EditorialHeadline
         section={t('intelligenceLabel')}
-        headline="El Mercado Secreto: Precios que No Cuadran"
+        headline={t('headline')}
         subtitle={t('pageDesc')}
       />
 
@@ -441,17 +435,10 @@ export default function PriceIntelligence() {
             <Skeleton className="h-16 w-full" />
           ) : (
             <>
-              El analisis estadistico de 3.05 millones de contratos revela que{' '}
-              <strong className="text-text-primary">
-                {summary ? formatNumber(summary.total_outliers) : '--'}
-              </strong>{' '}
-              fueron adquiridos a precios que superan 3 veces la mediana del mercado.
-              En salud y tecnologia, los sobreprecios son mas frecuentes. El monto
-              acumulado en estos contratos anomalos asciende a{' '}
-              <strong className="text-text-primary">
-                {summary ? formatCompactMXN(summary.total_value_mxn) : '--'}
-              </strong>
-              .
+              {t('lede', {
+                countLabel: summary ? formatNumber(summary.total_outliers) : '--',
+                total: summary ? formatCompactMXN(summary.total_value_mxn) : '--',
+              })}
             </>
           )}
         </p>
@@ -470,7 +457,7 @@ export default function PriceIntelligence() {
               <span className="text-orange-400 font-bold">{zThreshold.toFixed(1)}&sigma;</span>
             </label>
             <span className="text-xs text-text-muted">
-              Valores mas altos = solo los casos mas extremos
+              {t('zThresholdHint')}
             </span>
           </div>
           <input
@@ -482,7 +469,7 @@ export default function PriceIntelligence() {
             value={zThreshold}
             onChange={(e) => setZThreshold(parseFloat(e.target.value))}
             className="w-full accent-orange-400 cursor-pointer"
-            aria-label={`Umbral minimo de Z-score: ${zThreshold} desviaciones estandar`}
+            aria-label={t('zThresholdAriaLabel', { value: zThreshold })}
             aria-valuemin={1.5}
             aria-valuemax={5}
             aria-valuenow={zThreshold}
@@ -502,9 +489,9 @@ export default function PriceIntelligence() {
         {/* Sector filter chips */}
         <div>
           <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
-            Filtrar por sector
+            {t('filterBySector')}
           </p>
-          <div className="flex flex-wrap gap-2" role="group" aria-label="Filtro de sector">
+          <div className="flex flex-wrap gap-2" role="group" aria-label={t('filterAriaLabel')}>
             <button
               onClick={() => setActiveSectorId(null)}
               className={[
@@ -515,7 +502,7 @@ export default function PriceIntelligence() {
               ].join(' ')}
               aria-pressed={activeSectorId === null}
             >
-              Todos
+              {t('allSectors')}
             </button>
             {chartData.map((s) => (
               <button
@@ -558,13 +545,12 @@ export default function PriceIntelligence() {
             <HallazgoStat
               value={summary ? formatNumber(summary.total_outliers) : '--'}
               label={t('totalAnomaliesDetail')}
-              annotation="z_price_ratio > 3 desviaciones estandar"
+              annotation="z_price_ratio > 3σ"
               color="border-orange-500"
             />
             <HallazgoStat
               value={summary ? formatCompactMXN(summary.total_value_mxn) : '--'}
               label={t('totalFlaggedDetail')}
-              annotation="valor total de contratos estadisticamente extremos"
               color="border-red-500"
             />
             <HallazgoStat
@@ -572,7 +558,7 @@ export default function PriceIntelligence() {
               label={t('topAnomalySector')}
               annotation={
                 chartData[0]
-                  ? `${formatNumber(chartData[0].count)} contratos anomalos`
+                  ? t('anomalyCountLabel', { countLabel: formatNumber(chartData[0].count) })
                   : undefined
               }
               color="border-amber-500"
@@ -582,7 +568,7 @@ export default function PriceIntelligence() {
       </div>
 
       {/* === Casos Mas Extremos === */}
-      <section aria-label="Casos mas extremos de sobreprecios">
+      <section aria-label={t('extremeCasesAriaLabel')}>
         <div className="mb-4">
           <h2
             className="text-xl font-bold text-text-primary"
@@ -591,8 +577,7 @@ export default function PriceIntelligence() {
             {t('topAnomaliesTitle')}
           </h2>
           <p className="text-sm text-text-muted mt-1">
-            Los contratos con mayor desviacion respecto a la mediana de su sector y ano.
-            Un factor de 8.3x significa que el gobierno pago 8.3 veces el precio tipico.
+            {t('extremeCasesSubtitle')}
           </p>
         </div>
 
@@ -614,6 +599,7 @@ export default function PriceIntelligence() {
                 key={c.contract_id}
                 contract={c}
                 sectorName={getSectorName(c.sector_id)}
+                t={t}
               />
             ))}
           </div>
@@ -637,7 +623,7 @@ export default function PriceIntelligence() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
-                  Total outliers
+                  {t('statsOutliers')}
                 </p>
                 <p className="text-xl font-bold tabular-nums text-orange-400">
                   {formatNumber(summary.total_outliers)}
@@ -646,7 +632,7 @@ export default function PriceIntelligence() {
               </div>
               <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
-                  Valor en riesgo
+                  {t('statsValueAtRisk')}
                 </p>
                 <p className="text-xl font-bold tabular-nums text-red-400">
                   {formatCompactMXN(summary.total_value_mxn)}
@@ -655,7 +641,7 @@ export default function PriceIntelligence() {
               </div>
               <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
-                  Z-score prom.
+                  {t('statsAvgZ')}
                 </p>
                 <p className="text-xl font-bold tabular-nums text-amber-400">
                   +{(summary.avg_z_score ?? 0).toFixed(1)}&sigma;
@@ -664,7 +650,7 @@ export default function PriceIntelligence() {
               </div>
               <div className="bg-zinc-900/40 border border-zinc-700/40 rounded-lg p-3 text-center">
                 <p className="text-[10px] uppercase tracking-widest text-text-muted mb-1">
-                  Z-score max.
+                  {t('statsMaxZ')}
                 </p>
                 <p className="text-xl font-bold tabular-nums text-purple-400">
                   +{(summary.max_z_score ?? 0).toFixed(1)}&sigma;
@@ -674,25 +660,25 @@ export default function PriceIntelligence() {
             </div>
           )}
 
-          <SectorRiskChart data={chartData} loading={loading} />
+          <SectorRiskChart data={chartData} loading={loading} chartT={t} />
 
           {/* Sector detail table */}
           {!loading && chartData.length > 0 && (
             <div className="mt-4 overflow-x-auto">
-              <table className="w-full text-sm" aria-label="Detalle de anomalias por sector">
+              <table className="w-full text-sm" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-border">
                     <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-                      Sector
+                      {t('tableHeaderSector')}
                     </th>
                     <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-                      Contratos
+                      {t('tableHeaderContracts')}
                     </th>
                     <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">
-                      Monto
+                      {t('tableHeaderAmount')}
                     </th>
                     <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">
-                      Z-score prom.
+                      {t('tableHeaderAvgZ')}
                     </th>
                   </tr>
                 </thead>
@@ -730,16 +716,13 @@ export default function PriceIntelligence() {
 
       {/* === Impacto Humano === */}
       {summary && summary.total_value_mxn > 0 && (
-        <section aria-label="Impacto humano del sobrecoste">
+        <section aria-label={t('humanImpactLabel')}>
           <div className="max-w-3xl">
             <p
               className="text-base text-text-secondary leading-relaxed mb-3"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              En el sector salud, un sobrecoste sistematico en contratos de medicamentos
-              y equipo medico significa que el gobierno podria haber comprado
-              significativamente mas insumos con el mismo presupuesto. Este es el costo
-              real de los sobreprecios:
+              {t('humanImpactPara')}
             </p>
             <ImpactoHumano amountMxn={summary.total_value_mxn} />
           </div>
@@ -751,16 +734,14 @@ export default function PriceIntelligence() {
         <div className="flex items-center gap-6 border border-border rounded-lg p-4 bg-background-card max-w-md">
           <div>
             <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
-              Z-score promedio
+              {t('avgZLabel')}
             </p>
             <p className="text-3xl font-bold tabular-nums text-orange-400">
               +{(summary.avg_z_score ?? 0).toFixed(1)}&sigma;
             </p>
           </div>
           <p className="text-xs text-text-muted leading-relaxed">
-            Desviaciones estandar sobre la media sectorial en los contratos
-            con precios anomalos detectados.{' '}
-            Contratos:{' '}
+            {t('avgZDesc')}{' '}
             <span className="text-text-primary font-semibold tabular-nums">
               {formatNumber(summary.total_outliers)}
             </span>
@@ -771,19 +752,19 @@ export default function PriceIntelligence() {
       {/* === See Also === */}
       <div className="flex items-center gap-3 py-3 border-t border-zinc-800">
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-          Ver también
+          {t('seeAlso')}
         </span>
         <Link
           to="/categories"
           className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-zinc-700/60 hover:border-zinc-500 rounded px-2.5 py-1"
         >
-          Categorías de Gasto
+          {t('spendingCategories')}
           <ExternalLink className="w-3 h-3" />
         </Link>
       </div>
 
       {/* === Methodology === */}
-      <MethodologySection />
+      <MethodologySection t={t} />
     </div>
   )
 }

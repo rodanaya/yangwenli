@@ -133,7 +133,7 @@ const LEVEL_COLORS: Record<string, string> = {
 }
 
 const LEVEL_LABELS: Record<string, string> = {
-  critical: 'Critico',
+  critical: 'Crítico',
   high: 'Alto',
   medium: 'Medio',
   low: 'Bajo',

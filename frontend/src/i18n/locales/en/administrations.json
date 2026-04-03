@@ -299,5 +299,61 @@
     "comparisonLabel": "vs prior administration",
     "fromAdmin": "From",
     "toAdmin": "To"
+  },
+  "actCard": {
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "directAward": "Direct Award",
+    "avgRisk": "Avg Risk",
+    "daVsOecd": "Direct Award vs OECD ({{pct}}%)",
+    "oecdBenchmark": "OECD {{pct}}%",
+    "notableCase": "Notable case:"
+  },
+  "politicalView2": {
+    "title": "Election Year Effect",
+    "subtitle": "Average procurement risk in election vs non-election years (2002–2025)",
+    "electionYears": "Election Years",
+    "nonElectionYears": "Non-Election Years",
+    "riskDelta": "Risk Delta",
+    "avgRiskScore": "avg risk score",
+    "electionMinusNon": "election − non-election",
+    "relative": "% relative",
+    "higherInElection": "Higher risk in election years",
+    "lowerInElection": "Lower risk in election years",
+    "noSignificantDiff": "No significant difference",
+    "insufficientData": "Insufficient data",
+    "sexenioBreakdownTitle": "Sexenio Year Breakdown",
+    "sexenioBreakdownDesc": "Average procurement risk across Years 1–6 of the presidential term (all administrations pooled)",
+    "sexenioFootnote": "Year 1 = first year of administration, Year 6 = final year before election. Higher risk in late sexenio years may indicate \"budget dump\" spending."
+  },
+  "compareView2": {
+    "title": "Compare Periods",
+    "subtitle": "Compare procurement risk and total spending between any two time windows. Click an administration preset to fill Period A.",
+    "quickPresets": "Quick Presets → Period A",
+    "periodA": "Period A",
+    "periodB": "Period B",
+    "periodsIdentical": "Periods are identical",
+    "compareBtn": "Compare Periods",
+    "loadingBtn": "Loading…",
+    "resultsTitle": "Results: Period A ({{s1}}–{{e1}}) vs Period B ({{s2}}–{{e2}})",
+    "colMetric": "Metric",
+    "colPeriodA": "Period A",
+    "colPeriodB": "Period B",
+    "colDelta": "Δ (B − A)",
+    "colSignal": "Signal",
+    "signalWorse": "Worse",
+    "signalBetter": "Better",
+    "metricAvgRisk": "Avg Risk Score",
+    "metricTotalSpend": "Total Spending",
+    "footnote": "Signal: \"Worse\" = risk increased between periods. \"Better\" = risk decreased. Spending change is reported as neutral — higher spending may reflect legitimate growth or procurement expansion."
+  },
+  "grade2": {
+    "subtitle": "Based on OECD benchmarks: direct award rate, high-risk rate, and single-bid rate."
+  },
+  "matrix": {
+    "metricRisk": "Avg Risk",
+    "metricDA": "Direct Award %",
+    "metricHR": "High Risk %",
+    "metricSB": "Single Bid %"
   }
 }

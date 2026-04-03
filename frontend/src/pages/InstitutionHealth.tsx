@@ -8,6 +8,7 @@
  */
 
 import React, { useState, useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -41,21 +42,22 @@ type SortDir = 'asc' | 'desc'
 // =============================================================================
 
 /** HHI badge color. Note: the API returns HHI on a 0-1 scale (not 0-10000). */
-function getHhiBadgeStyle(hhi: number): { bg: string; text: string; label: string } {
-  if (hhi >= 0.5) return { bg: '#dc2626', text: '#fff', label: 'Captura' }
-  if (hhi >= 0.25) return { bg: '#ea580c', text: '#fff', label: 'Concentrado' }
-  if (hhi >= 0.10) return { bg: '#eab308', text: '#000', label: 'Moderado' }
-  return { bg: '#16a34a', text: '#fff', label: 'Competitivo' }
+function getHhiBadgeStyle(hhi: number): { bg: string; text: string; labelKey: string } {
+  if (hhi >= 0.5) return { bg: '#dc2626', text: '#fff', labelKey: 'health.hhi.capture' }
+  if (hhi >= 0.25) return { bg: '#ea580c', text: '#fff', labelKey: 'health.hhi.concentrated' }
+  if (hhi >= 0.10) return { bg: '#eab308', text: '#000', labelKey: 'health.hhi.moderate' }
+  return { bg: '#16a34a', text: '#fff', labelKey: 'health.hhi.competitive' }
 }
 
 function HhiBadge({ hhi }: { hhi: number }) {
+  const { t } = useTranslation('institutions')
   const s = getHhiBadgeStyle(hhi)
   return (
     <span
       className="inline-flex items-center rounded px-2 py-0.5 text-xs font-semibold tabular-nums"
       style={{ backgroundColor: s.bg, color: s.text }}
     >
-      {hhi.toFixed(2)} — {s.label}
+      {hhi.toFixed(2)} — {t(s.labelKey)}
     </span>
   )
 }
@@ -118,6 +120,7 @@ function PageSkeleton() {
 // =============================================================================
 
 function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; rank: number }) {
+  const { t } = useTranslation('institutions')
   const s = getHhiBadgeStyle(item.hhi)
   const isCaptured = item.hhi >= 0.5
 
@@ -125,7 +128,7 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
     <Link
       to={`/institutions/${item.institution_id}`}
       className="group block relative"
-      aria-label={`Ver perfil de ${toTitleCase(item.institution_name)}`}
+      aria-label={`${t('health.viewInstitutionalProfile')} ${toTitleCase(item.institution_name)}`}
     >
       <div
         className="rounded-lg border border-border bg-background-card p-5 transition-all hover:border-accent/50 focus-within:ring-2 focus-within:ring-accent"
@@ -143,7 +146,7 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
             className="rounded px-2.5 py-1 text-xs font-bold uppercase tracking-wide"
             style={{ backgroundColor: s.bg, color: s.text }}
           >
-            {s.label}
+            {t(s.labelKey)}
           </span>
         </div>
 
@@ -162,7 +165,7 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
 
         {/* HHI score — large */}
         <div className="mb-4">
-          <p className="text-xs text-text-muted uppercase tracking-wide mb-1">Indice HHI</p>
+          <p className="text-xs text-text-muted uppercase tracking-wide mb-1">{t('health.hhiLabel')}</p>
           <p
             className="text-3xl font-bold tabular-nums"
             style={{ color: s.bg, fontFamily: 'var(--font-family-serif)' }}
@@ -174,19 +177,19 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
         {/* Key metrics */}
         <div className="space-y-2 text-sm border-t border-border pt-3">
           <div className="flex justify-between">
-            <span className="text-text-muted">Proveedor dominante</span>
+            <span className="text-text-muted">{t('health.dominantVendor')}</span>
             <span className="font-bold tabular-nums text-text-primary">
-              {item.top_vendor_share.toFixed(1)}% del gasto
+              {item.top_vendor_share.toFixed(1)}% {t('health.ofSpend')}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-muted">Gasto total</span>
+            <span className="text-text-muted">{t('health.totalSpend')}</span>
             <span className="font-semibold tabular-nums text-text-primary">
               {formatCompactMXN(item.total_value)}
             </span>
           </div>
           <div className="flex justify-between">
-            <span className="text-text-muted">Contratos</span>
+            <span className="text-text-muted">{t('columns.contracts')}</span>
             <span className="font-semibold tabular-nums text-text-primary">
               {formatNumber(item.total_contracts)}
             </span>
@@ -195,7 +198,7 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
 
         {/* Link */}
         <div className="mt-4 flex items-center gap-1 text-xs text-accent group-hover:underline">
-          <span>Ver perfil institucional</span>
+          <span>{t('health.viewInstitutionalProfile')}</span>
           <ExternalLink className="h-3 w-3" />
         </div>
       </div>
@@ -208,6 +211,7 @@ function CaptureSpotlightCard({ item, rank }: { item: InstitutionHealthItem; ran
 // =============================================================================
 
 function HhiMethodologyNote() {
+  const { t } = useTranslation('institutions')
   const [open, setOpen] = useState(false)
   return (
     <div className="border-t border-b border-border">
@@ -218,10 +222,10 @@ function HhiMethodologyNote() {
       >
         <div className="flex items-center gap-2">
           <span className="text-xs uppercase tracking-[0.15em] text-text-muted font-semibold">
-            Metodologia
+            {t('health.methodology.label')}
           </span>
           <span className="text-sm text-text-secondary">
-            ¿Que es el Indice Herfindahl-Hirschman y por que importa?
+            {t('health.methodology.question')}
           </span>
         </div>
         {open
@@ -237,48 +241,36 @@ function HhiMethodologyNote() {
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
             <p className="text-lg text-text-primary italic leading-relaxed">
-              "Un HHI de 1.0 significa que todo el dinero de una dependencia
-              va a un solo proveedor. Es la definicion estadistica de captura institucional."
+              "{t('health.methodology.pullQuote')}"
             </p>
           </blockquote>
 
           <div className="text-sm text-text-secondary leading-relaxed space-y-3 max-w-3xl">
-            <p>
-              El <strong className="text-text-primary">Indice Herfindahl-Hirschman (HHI)</strong> mide
-              que tan concentrado esta el gasto en una institucion. Se calcula sumando los cuadrados
-              de la participacion de mercado de cada proveedor. Un HHI cercano a 0 indica alta competencia;
-              un HHI de 1.0 indica monopolio absoluto.
-            </p>
-            <p>
-              En contratos publicos, la concentracion extrema es una bandera roja: sugiere que un proveedor
-              ha eliminado la competencia, ya sea por capacidad legitima, por relaciones politicas,
-              o por colusion con funcionarios.
-            </p>
+            <p dangerouslySetInnerHTML={{ __html: t('health.methodology.body1') }} />
+            <p>{t('health.methodology.body2')}</p>
           </div>
 
           {/* Tier cards */}
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
             {[
-              { range: '0.00 - 0.10', label: 'Competitivo', color: '#16a34a', desc: 'Muchos proveedores compiten' },
-              { range: '0.10 - 0.25', label: 'Moderado', color: '#eab308', desc: 'Concentracion normal' },
-              { range: '0.25 - 0.50', label: 'Concentrado', color: '#ea580c', desc: 'Pocos proveedores dominan' },
-              { range: '0.50 - 1.00', label: 'Captura', color: '#dc2626', desc: 'Un proveedor controla el gasto' },
+              { range: '0.00 - 0.10', labelKey: 'health.hhi.competitive', color: '#16a34a', descKey: 'health.methodology.tier_competitive_desc' },
+              { range: '0.10 - 0.25', labelKey: 'health.hhi.moderate', color: '#eab308', descKey: 'health.methodology.tier_moderate_desc' },
+              { range: '0.25 - 0.50', labelKey: 'health.hhi.concentrated', color: '#ea580c', descKey: 'health.methodology.tier_concentrated_desc' },
+              { range: '0.50 - 1.00', labelKey: 'health.hhi.capture', color: '#dc2626', descKey: 'health.methodology.tier_capture_desc' },
             ].map(tier => (
               <div key={tier.range} className="rounded-lg border border-border p-3 space-y-1">
                 <div className="flex items-center gap-1.5">
                   <span className="h-2 w-2 rounded-full flex-shrink-0" style={{ backgroundColor: tier.color }} />
-                  <span className="font-semibold text-xs" style={{ color: tier.color }}>{tier.label}</span>
+                  <span className="font-semibold text-xs" style={{ color: tier.color }}>{t(tier.labelKey)}</span>
                 </div>
                 <p className="text-xs font-mono tabular-nums text-text-muted">{tier.range}</p>
-                <p className="text-xs text-text-secondary">{tier.desc}</p>
+                <p className="text-xs text-text-secondary">{t(tier.descKey)}</p>
               </div>
             ))}
           </div>
 
           <p className="text-xs text-text-muted italic">
-            Nota: El HHI aqui se reporta en escala 0-1 (suma de cuadrados de participaciones decimales),
-            donde 1.0 representa monopolio absoluto. La escala tradicional de 0-10,000 se divide entre 10,000
-            para facilitar la comparacion.
+            {t('health.methodology.noteText')}
           </p>
         </div>
       )}
@@ -291,6 +283,7 @@ function HhiMethodologyNote() {
 // =============================================================================
 
 function RankingsTable({ items }: { items: InstitutionHealthItem[] }) {
+  const { t } = useTranslation('institutions')
   const [sortField, setSortField] = useState<SortField>('hhi')
   const [sortDir, setSortDir] = useState<SortDir>('desc')
 
@@ -318,38 +311,38 @@ function RankingsTable({ items }: { items: InstitutionHealthItem[] }) {
       <table
         className="w-full text-sm border-collapse"
         role="table"
-        aria-label="Clasificacion de instituciones por riesgo de captura"
+        aria-label={t('health.tableAriaLabel')}
       >
         <thead>
           <tr className="bg-background-elevated border-b border-border text-text-muted text-xs">
-            <th scope="col" className="px-4 py-3 text-left w-8 font-medium">#</th>
-            <th scope="col" className="px-4 py-3 text-left font-medium min-w-[220px]">Institucion</th>
+            <th scope="col" className="px-4 py-3 text-left w-8 font-medium">{t('health.colNumber')}</th>
+            <th scope="col" className="px-4 py-3 text-left font-medium min-w-[220px]">{t('health.colInstitution')}</th>
             <th scope="col" className="px-4 py-3 text-right font-medium">
               <SortButton field="hhi" sortField={sortField} sortDir={sortDir} onSort={handleSort}>
-                Concentracion HHI
+                {t('health.colHhi')}
               </SortButton>
             </th>
             <th scope="col" className="px-4 py-3 text-right font-medium">
               <SortButton field="top_vendor_share" sortField={sortField} sortDir={sortDir} onSort={handleSort}>
-                Proveedor top
+                {t('health.colTopVendor')}
               </SortButton>
             </th>
             <th scope="col" className="px-4 py-3 text-right font-medium">
               <SortButton field="total_contracts" sortField={sortField} sortDir={sortDir} onSort={handleSort}>
-                Contratos
+                {t('health.colContracts')}
               </SortButton>
             </th>
             <th scope="col" className="px-4 py-3 text-right font-medium">
               <SortButton field="avg_risk_score" sortField={sortField} sortDir={sortDir} onSort={handleSort}>
-                Riesgo prom.
+                {t('health.colAvgRisk')}
               </SortButton>
             </th>
             <th scope="col" className="px-4 py-3 text-right font-medium">
               <SortButton field="high_risk_pct" sortField={sortField} sortDir={sortDir} onSort={handleSort}>
-                Contratos criticos
+                {t('health.colCriticalContracts')}
               </SortButton>
             </th>
-            <th scope="col" className="px-4 py-3 text-center font-medium w-28">Perfil</th>
+            <th scope="col" className="px-4 py-3 text-center font-medium w-28">{t('health.colProfile')}</th>
           </tr>
         </thead>
         <tbody>
@@ -402,9 +395,9 @@ function RankingsTable({ items }: { items: InstitutionHealthItem[] }) {
                   <Link
                     to={`/institutions/${item.institution_id}`}
                     className="inline-flex items-center gap-1 text-xs text-accent hover:underline focus:outline-none focus-visible:ring-2 focus-visible:ring-accent rounded"
-                    aria-label={`Ver perfil de ${toTitleCase(item.institution_name)}`}
+                    aria-label={`${t('health.viewProfile')} ${toTitleCase(item.institution_name)}`}
                   >
-                    Ver perfil
+                    {t('health.viewProfile')}
                     <ChevronRight className="h-3 w-3" />
                   </Link>
                 </td>
@@ -422,6 +415,7 @@ function RankingsTable({ items }: { items: InstitutionHealthItem[] }) {
 // =============================================================================
 
 export default function InstitutionHealth() {
+  const { t } = useTranslation('institutions')
   const { data, isLoading, error } = useQuery<InstitutionRankingsResponse>({
     queryKey: ['institution-rankings', 'hhi', 50, 100],
     queryFn: () => analysisApi.getInstitutionRankings('hhi', 100, 50),
@@ -441,7 +435,7 @@ export default function InstitutionHealth() {
     return (
       <div className="p-8 text-center text-text-muted">
         <AlertTriangle className="mx-auto h-8 w-8 mb-3 opacity-40" />
-        <p className="text-sm">No se pudieron cargar los datos. Intenta recargar la pagina.</p>
+        <p className="text-sm">{t('health.loadError')}</p>
       </div>
     )
   }
@@ -468,9 +462,9 @@ export default function InstitutionHealth() {
       {/* Section 1: Editorial headline */}
       <motion.div variants={staggerItem}>
         <EditorialHeadline
-          section="CAPTURA INSTITUCIONAL"
-          headline="Las Instituciones Bajo Control de Proveedores"
-          subtitle="Un analisis del Indice Herfindahl-Hirschman revela que dependencias han sido capturadas por un solo proveedor"
+          section={t('health.section')}
+          headline={t('health.headline')}
+          subtitle={t('health.subtitle')}
         />
       </motion.div>
 
@@ -481,19 +475,19 @@ export default function InstitutionHealth() {
       >
         <HallazgoStat
           value={formatNumber(totalInstitutions)}
-          label="Instituciones analizadas"
-          annotation="Con al menos 100 contratos cada una"
+          label={t('health.statsInstitutions')}
+          annotation={t('health.statsInstitutionsAnnotation')}
           color="border-zinc-500"
         />
         <HallazgoStat
           value={String(capturedCount)}
-          label="Instituciones con captura (HHI > 0.50)"
-          annotation="Un solo proveedor domina el gasto"
+          label={t('health.statsCaptured')}
+          annotation={t('health.statsCapturedAnnotation')}
           color="border-red-500"
         />
         <HallazgoStat
           value={`${capturedSpendPct}%`}
-          label="Del gasto en instituciones capturadas"
+          label={t('health.statsSpend')}
           annotation={formatCompactMXN(capturedSpend)}
           color="border-orange-500"
         />
@@ -505,16 +499,12 @@ export default function InstitutionHealth() {
           className="text-lg text-text-secondary leading-relaxed max-w-3xl"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
-          <p>
-            Cuando una sola empresa gana mas del 50% de los contratos de una
-            dependencia federal, los expertos lo llaman{' '}
-            <em className="text-text-primary">captura institucional</em>.
-            En Mexico,{' '}
-            <strong className="text-red-500">{capturedCount} dependencias</strong>{' '}
-            exhiben este patron, concentrando{' '}
-            <strong className="text-text-primary">{formatCompactMXN(capturedSpend)}</strong>{' '}
-            en gasto publico bajo el control de un punado de proveedores.
-          </p>
+          <p dangerouslySetInnerHTML={{
+            __html: t('health.lede', {
+              count: capturedCount,
+              amount: formatCompactMXN(capturedSpend),
+            })
+          }} />
         </div>
       </motion.div>
 
@@ -525,10 +515,10 @@ export default function InstitutionHealth() {
             className="text-xl font-bold text-text-primary"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Los tres casos mas extremos
+            {t('health.top3Title')}
           </h2>
           <p className="text-sm text-text-muted mt-1">
-            Las dependencias donde un proveedor tiene el control mas absoluto del gasto publico.
+            {t('health.top3Subtitle')}
           </p>
         </div>
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
@@ -545,11 +535,10 @@ export default function InstitutionHealth() {
             className="text-xl font-bold text-text-primary"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Las 20 instituciones mas concentradas
+            {t('health.rankingsTitle')}
           </h2>
           <p className="text-sm text-text-muted mt-1">
-            Haz clic en los encabezados para ordenar. Las filas con borde rojo
-            indican captura (HHI &ge; 0.50); borde naranja indica concentracion alta.
+            {t('health.rankingsSubtitle')}
           </p>
         </div>
         <RankingsTable items={items} />
@@ -566,17 +555,13 @@ export default function InstitutionHealth() {
           className="rounded-lg border border-amber-800/40 bg-amber-950/20 p-5"
         >
           <p className="text-xs uppercase tracking-[0.15em] text-amber-500 font-semibold mb-3">
-            Impacto
+            {t('health.impactLabel')}
           </p>
           <p
             className="text-base text-text-secondary leading-relaxed"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            La captura institucional en salud significa que medicamentos esenciales
-            son adquiridos de un solo proveedor, eliminando la competencia y
-            elevando los precios. En infraestructura, implica que obras publicas
-            se asignan sin competencia real. En cada caso, el ciudadano paga mas
-            por menos.
+            {t('health.impactText')}
           </p>
         </div>
       </motion.div>

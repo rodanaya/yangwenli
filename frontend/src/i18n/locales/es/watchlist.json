@@ -88,5 +88,35 @@
   "riskFactors": "Principales factores de riesgo",
   "contractsAnalysed": "contratos analizados",
   "loadingRiskFactors": "Cargando factores de riesgo…",
-  "noRiskFactorData": "No hay datos de factores de riesgo disponibles para este proveedor."
+  "noRiskFactorData": "No hay datos de factores de riesgo disponibles para este proveedor.",
+  "dossierTab": {
+    "organize": "Organiza tus investigaciones en carpetas de caso. Cada expediente contiene proveedores, instituciones y contratos.",
+    "newDossier": "Nuevo Expediente",
+    "searchVendors": "Buscar proveedores",
+    "inDossier": "{{count}} elemento{{plural}} en expediente",
+    "focusVendor": "Proveedor central:",
+    "downloadReport": "Descargar Reporte del Expediente"
+  },
+  "dossierStatus": {
+    "all": "Todos",
+    "active": "Activos",
+    "archived": "Archivados",
+    "closed": "Cerrados"
+  },
+  "sort": {
+    "label": "Ordenar:",
+    "risk": "Riesgo",
+    "change": "Cambio",
+    "added": "Agregado",
+    "name": "Nombre"
+  },
+  "workspaceEmpty": {
+    "title": "Tu espacio de investigación está vacío",
+    "description": "Agrega proveedores e instituciones para rastrear cambios en su puntaje de riesgo a lo largo del tiempo.",
+    "hint": "Usa el ícono de ojo en cualquier perfil de proveedor o institución para comenzar a rastrear."
+  },
+  "hideRiskFactors": "Ocultar factores de riesgo",
+  "showRiskFactors": "Mostrar factores de riesgo",
+  "openInvestigation": "Abrir en Cola de Investigación",
+  "removeTitle": "Quitar de vigilancia"
 }

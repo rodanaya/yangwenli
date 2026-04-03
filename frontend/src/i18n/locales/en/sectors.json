@@ -158,6 +158,87 @@
     "noRiskData": "No risk distribution data",
     "noFactorData": "No factor data available",
     "sectorNotFound": "Sector Not Found",
-    "sectorNotFoundMsg": "The requested sector could not be found."
+    "sectorNotFoundMsg": "The requested sector could not be found.",
+    "phiHeading": "Procurement Health Index",
+    "riskTrendOverTime": "Risk Profile Over Time",
+    "riskTrendOverTimeSubtitle": "Average risk score and high-risk contract share per year",
+    "avgRiskLegend": "Avg Risk Score ×100",
+    "highRiskLegend": "High-Risk %",
+    "marketConcentration": "Market Concentration Over Time",
+    "giniSubtitle": "Gini coefficient — 1.0 = full monopoly, 0 = perfect competition",
+    "lowConcentration": "Low concentration",
+    "noRiskTimelineData": "No risk timeline data available.",
+    "noConcentrationData": "No concentration history data available.",
+    "contractsTooltip": "contracts",
+    "riskSuffix": "% risk"
+  },
+  "investigation": {
+    "caseSingular": "Investigation Case",
+    "casePlural": "Investigation Cases",
+    "estimatedLoss": "est. loss:",
+    "viewAllCases": "View all cases",
+    "severity": "severity"
+  },
+  "phi": {
+    "competitionRate": "Competition Rate",
+    "avgBidders": "Avg Bidders",
+    "singleBidRate": "Single-Bid Rate",
+    "oecdCompetition": "OECD avg: 75%",
+    "oecdBidders": "OECD avg: 3+",
+    "oecdSingleBid": "OECD target: <20%"
+  },
+  "insight": {
+    "elevatedRisk": {
+      "title": "Elevated High-Risk Rate",
+      "body": "{{rate}}% high-risk rate is significantly above the platform average of {{baseline}}%."
+    },
+    "lowSignal": {
+      "title": "Low Model Risk Signal",
+      "body": "{{rate}}% high-risk rate is unusually low — may reflect data quality gaps or structural sector characteristics."
+    },
+    "highDA": {
+      "title": "High Direct Award Rate",
+      "body": "{{rate}}% of contracts are direct awards, limiting competitive transparency."
+    },
+    "singleBid": {
+      "title": "Single-Bid Procedures",
+      "body": "{{rate}}% of competitive procedures had only one bidder."
+    }
+  },
+  "factors": {
+    "direct_award": "Direct Award",
+    "single_bid": "Single Bid",
+    "price_anomaly": "Price Anomaly",
+    "short_ad_period": "Short Ad Period",
+    "short_ad_lt5d": "Rushed Ad (<5 days)",
+    "short_ad_lt15d": "Short Ad (<15 days)",
+    "short_ad_lt30d": "Brief Ad (<30 days)",
+    "year_end": "Year-End Rush",
+    "vendor_concentration": "Vendor Concentration",
+    "threshold_splitting": "Contract Splitting",
+    "network_risk": "Network Connection",
+    "industry_mismatch": "Industry Mismatch",
+    "co_bid_high": "High Co-Bid Rate",
+    "co_bid_med": "Medium Co-Bid Rate",
+    "price_hyp": "Price Outlier",
+    "co_sid_high": "High Co-Bid Rate",
+    "co_sid_med": "Medium Co-Bid Rate"
+  },
+  "factorDesc": {
+    "direct_award": "Contract awarded without competitive bidding",
+    "single_bid": "Competitive procedure received only one offer",
+    "price_anomaly": "Contract value is 3x above sector median",
+    "short_ad_period": "Advertisement window too short for real competition",
+    "short_ad_lt5d": "Under 5 days between publication and award",
+    "short_ad_lt15d": "Under 15 days between publication and award",
+    "short_ad_lt30d": "Under 30 days between publication and award",
+    "year_end": "Awarded in December — budget-dump pattern",
+    "vendor_concentration": "One vendor controls >30% of sector contracts",
+    "threshold_splitting": "Multiple same-day contracts to avoid oversight thresholds",
+    "network_risk": "Vendor belongs to a connected group of related companies",
+    "industry_mismatch": "Vendor's primary industry doesn't match contract scope",
+    "co_bid_high": "Vendor co-bids in >80% of procedures with a partner",
+    "co_bid_med": "Vendor co-bids in 50–80% of procedures with a partner",
+    "price_hyp": "Statistical outlier flagged by IQR price model"
   }
 }

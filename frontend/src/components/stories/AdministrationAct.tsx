@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ScrollReveal, AnimatedNumber, AnimatedFill } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
 
@@ -67,14 +68,15 @@ export default function AdministrationAct({
   isHighlight = false,
   className,
 }: AdministrationActProps) {
+  const { t } = useTranslation('administrations')
   const partyStyle = PARTY_COLORS[party]
   const presidentLabel = ERA_LABELS[era] || president
 
   const statCards: { label: string; value: number; suffix: string; decimals: number }[] = [
-    { label: 'Contratos', value: stats.totalContracts, suffix: '', decimals: 0 },
-    { label: 'Valor total', value: stats.totalValueBn, suffix: 'B', decimals: 1 },
-    { label: 'Adj. directa', value: stats.daPct, suffix: '%', decimals: 1 },
-    { label: 'Riesgo prom.', value: stats.avgRisk, suffix: '', decimals: 2 },
+    { label: t('actCard.contracts'), value: stats.totalContracts, suffix: '', decimals: 0 },
+    { label: t('actCard.totalValue'), value: stats.totalValueBn, suffix: 'B', decimals: 1 },
+    { label: t('actCard.directAward'), value: stats.daPct, suffix: '%', decimals: 1 },
+    { label: t('actCard.avgRisk'), value: stats.avgRisk, suffix: '', decimals: 2 },
   ]
 
   return (
@@ -127,7 +129,7 @@ export default function AdministrationAct({
                 duration={1400}
                 className={cn(
                   'text-lg font-bold tabular-nums',
-                  s.label === 'Adj. directa' && s.value > OECD_DA_BENCHMARK
+                  s.label === t('actCard.directAward') && s.value > OECD_DA_BENCHMARK
                     ? 'text-red-400'
                     : 'text-zinc-100'
                 )}
@@ -139,7 +141,7 @@ export default function AdministrationAct({
         {/* DA% comparison bar */}
         <div className="px-5 pb-4">
           <div className="flex items-center gap-3 text-[10px] text-zinc-500 mb-1">
-            <span>Adjudicacion directa vs OCDE ({OECD_DA_BENCHMARK}%)</span>
+            <span>{t('actCard.daVsOecd', { pct: OECD_DA_BENCHMARK })}</span>
           </div>
           <div className="relative">
             <AnimatedFill
@@ -157,7 +159,7 @@ export default function AdministrationAct({
           </div>
           <div className="flex justify-between mt-1">
             <span className="text-[10px] text-zinc-600">0%</span>
-            <span className="text-[10px] text-zinc-500">OCDE {OECD_DA_BENCHMARK}%</span>
+            <span className="text-[10px] text-zinc-500">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
             <span className="text-[10px] text-zinc-600">100%</span>
           </div>
         </div>
@@ -167,7 +169,7 @@ export default function AdministrationAct({
           <div className="px-5 pb-3">
             <div className="flex items-center gap-2 text-xs text-zinc-500">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-              <span>Caso notable: <span className="text-zinc-300 font-medium">{stats.notableCase}</span></span>
+              <span>{t('actCard.notableCase')} <span className="text-zinc-300 font-medium">{stats.notableCase}</span></span>
               {stats.notableCaseValue && (
                 <span className="text-red-400 font-bold">{stats.notableCaseValue}</span>
               )}

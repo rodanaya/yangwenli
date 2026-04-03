@@ -88,5 +88,35 @@
   "riskFactors": "Top risk factors",
   "contractsAnalysed": "contracts analysed",
   "loadingRiskFactors": "Loading risk factors…",
-  "noRiskFactorData": "No risk factor data available for this vendor."
+  "noRiskFactorData": "No risk factor data available for this vendor.",
+  "dossierTab": {
+    "organize": "Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts.",
+    "newDossier": "New Dossier",
+    "searchVendors": "Search vendors",
+    "inDossier": "{{count}} item{{plural}} in dossier",
+    "focusVendor": "Focus vendor:",
+    "downloadReport": "Download Dossier Report"
+  },
+  "dossierStatus": {
+    "all": "All",
+    "active": "Active",
+    "archived": "Archived",
+    "closed": "Closed"
+  },
+  "sort": {
+    "label": "Sort:",
+    "risk": "Risk",
+    "change": "Change",
+    "added": "Added",
+    "name": "Name"
+  },
+  "workspaceEmpty": {
+    "title": "Your investigation workspace is empty",
+    "description": "Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.",
+    "hint": "Use the eye icon on any vendor or institution profile to start tracking."
+  },
+  "hideRiskFactors": "Hide risk factors",
+  "showRiskFactors": "Show risk factors",
+  "openInvestigation": "Open in Investigation Queue",
+  "removeTitle": "Remove from watchlist"
 }

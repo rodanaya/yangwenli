@@ -36,11 +36,13 @@ function isAiConfirmed(row: any): boolean {
   return isHighRisk && score != null && score >= 0.5
 }
 
-const SORT_LABELS: Record<SortField, string> = {
-  avg_risk_score: 'risk',
-  total_contracts: 'contracts',
-  total_value_mxn: 'value',
-  direct_award_pct: 'direct award %',
+function getSortLabels(t: ReturnType<typeof useTranslation>['t']): Record<SortField, string> {
+  return {
+    avg_risk_score: t('resultTable.risk'),
+    total_contracts: t('resultTable.contracts'),
+    total_value_mxn: t('resultTable.totalValue'),
+    direct_award_pct: t('resultTable.daPercent'),
+  }
 }
 
 const PAGE_SIZE = 25
@@ -52,10 +54,12 @@ interface ResultsTableProps {
 }
 
 export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps) {
+  const { t } = useTranslation('explore')
   const { sectorId, yearStart, yearEnd, riskLevels, searchText, entityType } = filters
   const [sortField, setSortField] = useState<SortField>('avg_risk_score')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [aiConfirmedOnly, setAiConfirmedOnly] = useState(false)
+  const sortLabels = getSortLabels(t)
 
   const handleSort = (field: SortField) => {
     if (field === sortField) {
@@ -161,7 +165,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
       <div>
         <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
           <span className="text-xs text-text-muted tabular-nums">
-            Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by {SORT_LABELS[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
+            Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
           </span>
           <div className="flex items-center gap-3 text-[11px] text-text-muted">
             <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(pageAvgRisk * 100).toFixed(0)}%</span></span>
@@ -228,7 +232,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     <div>
       <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
         <span className="text-xs text-text-muted tabular-nums">
-          Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by {SORT_LABELS[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
+          Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
         </span>
         <div className="flex items-center gap-3 text-[11px] text-text-muted">
           <span>Page avg risk: <span className="font-mono font-semibold text-text-primary">{(instPageAvgRisk * 100).toFixed(0)}%</span></span>

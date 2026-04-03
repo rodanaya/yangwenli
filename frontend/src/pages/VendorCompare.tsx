@@ -194,7 +194,7 @@ function VendorSearchInput({
           <div className="flex items-center gap-3 mt-2">
             <RiskLevelPill level={riskLevel} score={riskScore} />
             <span className="text-xs text-text-muted">
-              {formatNumber(selectedVendor.total_contracts)} contratos
+              {formatNumber(selectedVendor.total_contracts)} {t('contracts')}
             </span>
           </div>
           <Link
@@ -256,7 +256,7 @@ function VendorSearchInput({
                           {toTitleCase(v.name)}
                         </p>
                         <p className="text-xs text-text-muted mt-0.5">
-                          ID: {v.id} {v.rfc ? `| ${v.rfc}` : ''} | {formatNumber(v.total_contracts)} contratos
+                          ID: {v.id} {v.rfc ? `| ${v.rfc}` : ''} | {formatNumber(v.total_contracts)} {t('contracts')}
                         </p>
                       </div>
                       <RiskLevelPill level={rl} score={v.avg_risk_score ?? 0} size="sm" />

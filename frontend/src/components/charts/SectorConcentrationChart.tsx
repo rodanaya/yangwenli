@@ -9,6 +9,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
@@ -28,11 +29,11 @@ export interface SectorConcentrationChartProps {
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
-function getConcentrationLevel(pct: number): { color: string; label: string } {
-  if (pct >= 75) return { color: '#dc2626', label: 'ALTA' }
-  if (pct >= 50) return { color: '#ea580c', label: 'MODERADA' }
-  if (pct >= 30) return { color: '#eab308', label: 'BAJA' }
-  return { color: '#16a34a', label: 'COMPETITIVA' }
+function getConcentrationColor(pct: number): string {
+  if (pct >= 75) return '#dc2626'
+  if (pct >= 50) return '#ea580c'
+  if (pct >= 30) return '#eab308'
+  return '#16a34a'
 }
 
 /** Map a sector_name (Spanish, from API) to our SECTOR_COLORS key */
@@ -49,9 +50,9 @@ function getSectorColor(sectorName: string): string {
 
 // ── Skeleton ──────────────────────────────────────────────────────────────────
 
-function BarSkeleton() {
+function BarSkeleton({ label }: { label: string }) {
   return (
-    <div className="space-y-3" aria-busy="true" aria-label="Cargando concentración de mercado">
+    <div className="space-y-3" aria-busy="true" aria-label={label}>
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">
           <div className="w-[140px] flex-shrink-0 h-3 rounded bg-zinc-800 animate-pulse" />
@@ -72,6 +73,21 @@ export default function SectorConcentrationChart({
   className,
   showTitle = true,
 }: SectorConcentrationChartProps) {
+  const { t } = useTranslation('common')
+
+  function getConcentrationLevel(pct: number): { color: string; label: string } {
+    return {
+      color: getConcentrationColor(pct),
+      label: pct >= 75
+        ? t('charts.sectorConcentration.levelHigh')
+        : pct >= 50
+        ? t('charts.sectorConcentration.levelModerate')
+        : pct >= 30
+        ? t('charts.sectorConcentration.levelLow')
+        : t('charts.sectorConcentration.levelCompetitive'),
+    }
+  }
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'vendor-concentration', 3],
     queryFn: () => analysisApi.getVendorConcentration(3),
@@ -97,27 +113,27 @@ export default function SectorConcentrationChart({
             id="sector-concentration-title"
             className="text-base font-bold text-white leading-tight"
           >
-            Concentración de Mercado
+            {t('charts.sectorConcentration.title')}
           </h2>
           <p className="text-xs text-zinc-400 mt-0.5">
-            % de contratos adjudicados a los 3 proveedores principales por sector
+            {t('charts.sectorConcentration.subtitle')}
           </p>
         </div>
       )}
 
-      {isLoading && <BarSkeleton />}
+      {isLoading && <BarSkeleton label={t('charts.sectorConcentration.skeletonAriaLabel')} />}
 
       {isError && !isLoading && (
         <p
           role="alert"
           className="text-sm text-zinc-500 py-6 text-center"
         >
-          sin datos
+          {t('charts.sectorConcentration.noData')}
         </p>
       )}
 
       {!isLoading && !isError && sorted.length === 0 && (
-        <p className="text-sm text-zinc-500 py-6 text-center">sin datos</p>
+        <p className="text-sm text-zinc-500 py-6 text-center">{t('charts.sectorConcentration.noData')}</p>
       )}
 
       {!isLoading && !isError && sorted.length > 0 && (

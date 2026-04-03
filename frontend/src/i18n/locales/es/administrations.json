@@ -299,5 +299,61 @@
     "comparisonLabel": "vs administración anterior",
     "fromAdmin": "De",
     "toAdmin": "A"
+  },
+  "actCard": {
+    "contracts": "Contratos",
+    "totalValue": "Valor total",
+    "directAward": "Adj. directa",
+    "avgRisk": "Riesgo prom.",
+    "daVsOecd": "Adj. directa vs OCDE ({{pct}}%)",
+    "oecdBenchmark": "OCDE {{pct}}%",
+    "notableCase": "Caso notable:"
+  },
+  "politicalView2": {
+    "title": "Efecto del Año Electoral",
+    "subtitle": "Riesgo promedio de contratación en años electorales vs no electorales (2002–2025)",
+    "electionYears": "Años Electorales",
+    "nonElectionYears": "Años No Electorales",
+    "riskDelta": "Delta de Riesgo",
+    "avgRiskScore": "riesgo promedio",
+    "electionMinusNon": "electoral − no electoral",
+    "relative": "% relativo",
+    "higherInElection": "Mayor riesgo en años electorales",
+    "lowerInElection": "Menor riesgo en años electorales",
+    "noSignificantDiff": "Sin diferencia significativa",
+    "insufficientData": "Datos insuficientes",
+    "sexenioBreakdownTitle": "Desglose por Año del Sexenio",
+    "sexenioBreakdownDesc": "Riesgo promedio de contratación en los años 1–6 del período presidencial (todas las administraciones agrupadas)",
+    "sexenioFootnote": "Año 1 = primer año de la administración, Año 6 = último año antes de la elección. Un mayor riesgo en los años tardíos del sexenio puede indicar gasto de fin de período."
+  },
+  "compareView2": {
+    "title": "Comparar Períodos",
+    "subtitle": "Compara el riesgo de contratación y el gasto total entre dos ventanas de tiempo. Haz clic en un preset para llenar el Período A.",
+    "quickPresets": "Presets rápidos → Período A",
+    "periodA": "Período A",
+    "periodB": "Período B",
+    "periodsIdentical": "Los períodos son idénticos",
+    "compareBtn": "Comparar Períodos",
+    "loadingBtn": "Cargando…",
+    "resultsTitle": "Resultados: Período A ({{s1}}–{{e1}}) vs Período B ({{s2}}–{{e2}})",
+    "colMetric": "Métrica",
+    "colPeriodA": "Período A",
+    "colPeriodB": "Período B",
+    "colDelta": "Δ (B − A)",
+    "colSignal": "Señal",
+    "signalWorse": "Peor",
+    "signalBetter": "Mejor",
+    "metricAvgRisk": "Riesgo Promedio",
+    "metricTotalSpend": "Gasto Total",
+    "footnote": "Señal: «Peor» = el riesgo aumentó entre períodos. «Mejor» = el riesgo disminuyó. El cambio en el gasto se reporta como neutro — un mayor gasto puede reflejar crecimiento legítimo o expansión de la contratación."
+  },
+  "grade2": {
+    "subtitle": "Basado en los parámetros de la OCDE: tasa de adjudicación directa, tasa de alto riesgo y tasa de licitación única."
+  },
+  "matrix": {
+    "metricRisk": "Riesgo Prom.",
+    "metricDA": "Adj. Directa %",
+    "metricHR": "Alto Riesgo %",
+    "metricSB": "Lic. Única %"
   }
 }

@@ -5,6 +5,42 @@
     "institutions": "Instituciones",
     "trends": "Tendencias"
   },
+  "page": {
+    "title": "Explorar Contratos",
+    "subtitle": "Filtra cruzado entre 3.1M registros de contratación",
+    "crossfilterHint": "Haz clic en cualquier panel para filtrar los demás — sector, rango de años y nivel de riesgo están interconectados",
+    "clearAllFilters": "Limpiar todos los filtros",
+    "searchPlaceholder": "Buscar {{entityType}}s…",
+    "entityToggle": {
+      "vendors": "Proveedores",
+      "institutions": "Instituciones"
+    },
+    "sectorIntel": {
+      "label": "datos del sector",
+      "contracts": "Contratos",
+      "totalValue": "Valor total",
+      "highPlusRisk": "Riesgo alto+",
+      "directAward": "Adj. directa",
+      "avgRiskScore": "Riesgo promedio"
+    },
+    "filterChip": {
+      "sector": "Sector: {{value}}",
+      "years": "Años: {{start}}–{{end}}",
+      "yearsFrom": "Años: Desde {{start}}",
+      "yearsUntil": "Años: Hasta {{end}}",
+      "risk": "Riesgo: {{levels}}",
+      "removeFilter": "Quitar filtro {{label}}"
+    },
+    "suggestions": {
+      "criticalHigh": "Crítico + Alto riesgo",
+      "criticalOnly": "Solo Crítico",
+      "saludSector": "Sector Salud",
+      "energiaSector": "Sector Energía",
+      "infraestructura": "Infraestructura",
+      "imssIssste": "IMSS / ISSSTE",
+      "highRiskOnly": "Solo alto riesgo"
+    }
+  },
   "vendors": {
     "title": "Proveedores",
     "searchPlaceholder": "Buscar por nombre o RFC...",
@@ -109,11 +145,84 @@
     "valueOverTime": "Valor por Año",
     "riskOverTime": "Riesgo Promedio por Año",
     "directAwardTrend": "Tendencia de Adjudicación Directa",
+    "historicalTitle": "Tendencias Históricas",
+    "historicalDesc": "Volumen de contratos y riesgo promedio, 2002–2025",
+    "transparencyTitle": "Pulso de Transparencia en Contratación",
+    "transparencyDesc": "Indicadores de salud en capas — relleno más oscuro = menos transparencia",
+    "contracts": "contratos",
+    "avgRisk": "Riesgo prom.",
+    "vendors": "proveedores",
+    "da": "AD",
+    "sb": "LU",
+    "yoyPts": "pts AaA",
+    "administration": "Administración",
     "radarPresets": {
       "risk": "Perfil de Riesgo",
       "transparency": "Transparencia",
       "market": "Estructura de Mercado"
     }
+  },
+  "timeSeries": {
+    "title": "Contratos en el Tiempo",
+    "contractsLegend": "Contratos",
+    "avgRiskLegend": "Riesgo prom. %",
+    "dragHint": "Arrastra para filtrar rango de años",
+    "clear": "Limpiar",
+    "noData": "No hay datos de tendencia disponibles"
+  },
+  "riskStrip": {
+    "filterByRisk": "Filtrar por Nivel de Riesgo",
+    "clickToToggle": "Clic para activar/desactivar · se permiten múltiples"
+  },
+  "riskLevels": {
+    "critical": "Crítico",
+    "high": "Alto",
+    "medium": "Medio",
+    "low": "Bajo",
+    "criticalHint": "Mayor similitud con patrones documentados de corrupción",
+    "highHint": "Alta similitud con patrones de corrupción",
+    "mediumHint": "Similitud moderada — lista de vigilancia",
+    "lowHint": "Baja similitud — monitoreo estándar"
+  },
+  "resultTable": {
+    "showingVendors": "Mostrando {{start}}–{{end}} de {{total}} proveedores · ordenados por puntuación de riesgo",
+    "showingInstitutions": "Mostrando {{start}}–{{end}} de {{total}} instituciones · ordenadas por puntuación de riesgo",
+    "showingVendorsSorted": "Mostrando {{start}}–{{end}} de {{total}} proveedores · ordenados por {{field}} {{dir}}",
+    "showingInstitutionsSorted": "Mostrando {{start}}–{{end}} de {{total}} instituciones · ordenadas por {{field}} {{dir}}",
+    "pageAvgRisk": "Riesgo prom. en página:",
+    "highPlusOnPage": "Alto+ en página:",
+    "aiConfirmed": "Confirmado por IA",
+    "aiConfirmedBadge": "confirmado por IA",
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "contracts": "Contratos",
+    "totalValue": "Valor Total",
+    "risk": "Riesgo",
+    "daPercent": "% Adj.",
+    "anomaly": "Anomalía",
+    "addToDossier": "Agregar al expediente",
+    "noDossiers": "Sin expedientes",
+    "newDossier": "Nuevo expediente",
+    "failedToLoad": "Error al cargar resultados",
+    "retry": "Reintentar",
+    "noMatchFilters": "Ningún {{entityType}} coincide con los filtros actuales",
+    "broadenSearch": "Intenta ampliar la búsqueda:",
+    "removeSearchTerm": "Elimina el término de búsqueda — prueba con un nombre más corto o diferente",
+    "includeMoreRisk": "Incluye más niveles de riesgo (haz clic en Crítico / Alto en la barra superior)",
+    "changeSector": "Haz clic en otro sector del mapa o elimina el filtro de sector",
+    "widerYearRange": "Arrastra un rango de años más amplio en la gráfica de tiempo",
+    "noEntityFound": "No se encontraron {{entityType}}s",
+    "total": "total"
+  },
+  "dossier": {
+    "addToDossier": "Agregar al expediente",
+    "noDossiersYet": "Sin expedientes aún",
+    "whyTrack": "¿Por qué seguir a {{name}}?"
+  },
+  "treemap": {
+    "sectorsByValue": "Sectores por valor",
+    "value": "Valor",
+    "risk": "Riesgo"
   },
   "filters": {
     "sector": "Sector",
@@ -173,27 +282,5 @@
     "failed": "Error al cargar datos de concentración",
     "noAlerts": "Sin alertas de concentración",
     "alertCount": "{{count}} alertas"
-  },
-  "resultTable": {
-    "showingVendors": "Mostrando {{start}}–{{end}} de {{total}} proveedores · ordenados por puntuación de riesgo",
-    "showingInstitutions": "Mostrando {{start}}–{{end}} de {{total}} instituciones · ordenadas por puntuación de riesgo",
-    "vendor": "Proveedor",
-    "institution": "Institución",
-    "contracts": "Contratos",
-    "totalValue": "Valor Total",
-    "risk": "Riesgo",
-    "daPercent": "% Adj.",
-    "addToDossier": "Agregar al expediente",
-    "noDossiers": "Sin expedientes",
-    "failedToLoad": "Error al cargar resultados",
-    "retry": "Reintentar"
-  },
-  "dossier": {
-    "addToDossier": "Agregar al expediente",
-    "noDossiersYet": "Sin expedientes aún",
-    "whyTrack": "¿Por qué seguir a {{name}}?"
-  },
-  "treemap": {
-    "sectorsByValue": "Sectores por valor"
   }
 }

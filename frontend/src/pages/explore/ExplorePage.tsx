@@ -25,31 +25,28 @@ import { ResultsTable } from './ResultsTable'
 import { SECTORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 
-const RISK_LABELS: Record<string, string> = {
-  critical: 'Critical', high: 'High', medium: 'Medium', low: 'Low',
-}
-
-// Suggestion chips per entity type
+// Suggestion chips per entity type (labels resolved via t() inside component)
 // Each param maps to the useExplorerFilters URL params:
 //   sector → sector_id   risk → risk levels   q → search text
-const SUGGESTIONS: Record<'vendor' | 'institution', { label: string; params: Record<string, string> }[]> = {
+const SUGGESTION_PARAMS: Record<'vendor' | 'institution', { key: string; params: Record<string, string> }[]> = {
   vendor: [
-    { label: 'Critical + High risk', params: { risk: 'critical,high' } },
-    { label: 'Critical only',        params: { risk: 'critical' } },
-    { label: 'Salud sector',         params: { sector: '1' } },
-    { label: 'Energia sector',       params: { sector: '4' } },
-    { label: 'Infraestructura',      params: { sector: '3' } },
+    { key: 'criticalHigh',    params: { risk: 'critical,high' } },
+    { key: 'criticalOnly',    params: { risk: 'critical' } },
+    { key: 'saludSector',     params: { sector: '1' } },
+    { key: 'energiaSector',   params: { sector: '4' } },
+    { key: 'infraestructura', params: { sector: '3' } },
   ],
   institution: [
-    { label: 'IMSS / ISSSTE',    params: { q: 'IMSS' } },
-    { label: 'Salud sector',     params: { sector: '1' } },
-    { label: 'Infraestructura',  params: { sector: '3' } },
-    { label: 'High risk only',   params: { risk: 'critical,high' } },
+    { key: 'imssIssste',      params: { q: 'IMSS' } },
+    { key: 'saludSector',     params: { sector: '1' } },
+    { key: 'infraestructura', params: { sector: '3' } },
+    { key: 'highRiskOnly',    params: { risk: 'critical,high' } },
   ],
 }
 
 export function ExplorePage() {
   const [page, setPage] = useState(1)
+  const { t } = useTranslation('explore')
   const { t: ts } = useTranslation('sectors')
   const [, setSearchParams] = useSearchParams()
   const filters = useExplorerFilters()
@@ -95,24 +92,24 @@ export function ExplorePage() {
   if (filters.sectorId != null) {
     const sector = SECTORS.find(s => s.id === filters.sectorId)
     activeChips.push({
-      label: `Sector: ${sector ? ts(sector.code) : filters.sectorId}`,
+      label: t('page.filterChip.sector', { value: sector ? ts(sector.code) : filters.sectorId }),
       onRemove: () => { filters.setSectorId(undefined); setPage(1) },
     })
   }
   if (filters.yearStart != null || filters.yearEnd != null) {
     const label = filters.yearStart && filters.yearEnd
-      ? `${filters.yearStart}–${filters.yearEnd}`
+      ? t('page.filterChip.years', { start: filters.yearStart, end: filters.yearEnd })
       : filters.yearStart
-        ? `From ${filters.yearStart}`
-        : `Until ${filters.yearEnd}`
+        ? t('page.filterChip.yearsFrom', { start: filters.yearStart })
+        : t('page.filterChip.yearsUntil', { end: filters.yearEnd })
     activeChips.push({
-      label: `Years: ${label}`,
+      label,
       onRemove: () => { filters.setYearRange(undefined, undefined); setPage(1) },
     })
   }
   if (filters.riskLevels.length < 4) {
     activeChips.push({
-      label: `Risk: ${filters.riskLevels.map(l => RISK_LABELS[l]).join(', ')}`,
+      label: t('page.filterChip.risk', { levels: filters.riskLevels.map(l => t(`riskLevels.${l}`)).join(', ') }),
       onRemove: () => { filters.clearRiskFilter(); setPage(1) },
     })
   }
@@ -148,22 +145,22 @@ export function ExplorePage() {
   return (
     <div className="space-y-5">
       <PageHeader
-        title="Explore Contracts"
-        subtitle="Cross-filter 3.1M procurement records"
+        title={t('page.title')}
+        subtitle={t('page.subtitle')}
         icon={Layers}
       />
 
       {/* Crossfilter orientation */}
       <div className="flex items-center gap-2 text-xs text-text-muted border-b border-border/20 pb-4">
         <Layers className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-        <span>Click any panel to filter all others — sector, time range, and risk level are cross-connected</span>
+        <span>{t('page.crossfilterHint')}</span>
         {hasFilters && (
           <button
             onClick={() => { filters.clearAll(); setPage(1) }}
             className="ml-auto flex items-center gap-1 text-text-muted hover:text-risk-high transition-colors whitespace-nowrap"
           >
             <X className="h-3 w-3" />
-            Clear all filters
+            {t('page.clearAllFilters')}
           </button>
         )}
       </div>
@@ -202,35 +199,35 @@ export function ExplorePage() {
               <span className="text-sm font-semibold" style={{ color: activeSectorMeta.color }}>
                 {ts(activeSectorMeta.code)}
               </span>
-              <span className="text-[10px] text-text-muted uppercase tracking-wider">sector intel</span>
+              <span className="text-[10px] text-text-muted uppercase tracking-wider">{t('page.sectorIntel.label')}</span>
             </div>
             <div className="flex flex-wrap gap-x-5 gap-y-1 text-xs">
               <div>
-                <span className="text-text-muted">Contracts</span>
+                <span className="text-text-muted">{t('page.sectorIntel.contracts')}</span>
                 <span className="ml-1.5 font-mono font-semibold text-text-primary">
                   {formatNumber(sd.total_contracts || 0)}
                 </span>
               </div>
               <div>
-                <span className="text-text-muted">Total value</span>
+                <span className="text-text-muted">{t('page.sectorIntel.totalValue')}</span>
                 <span className="ml-1.5 font-mono font-semibold text-text-primary">
                   {formatCompactMXN(sd.total_value_mxn || 0)}
                 </span>
               </div>
               <div>
-                <span className="text-text-muted">High+ risk</span>
+                <span className="text-text-muted">{t('page.sectorIntel.highPlusRisk')}</span>
                 <span className="ml-1.5 font-mono font-semibold text-orange-400">
                   {riskRate.toFixed(1)}%
                 </span>
               </div>
               <div>
-                <span className="text-text-muted">Direct award</span>
+                <span className="text-text-muted">{t('page.sectorIntel.directAward')}</span>
                 <span className="ml-1.5 font-mono font-semibold text-text-primary">
                   {daRate.toFixed(0)}%
                 </span>
               </div>
               <div>
-                <span className="text-text-muted">Avg risk score</span>
+                <span className="text-text-muted">{t('page.sectorIntel.avgRiskScore')}</span>
                 <span className="ml-1.5 font-mono font-semibold text-text-primary">
                   {((sd.avg_risk_score || 0) * 100).toFixed(1)}%
                 </span>
@@ -264,7 +261,7 @@ export function ExplorePage() {
               aria-pressed={filters.entityType === 'vendor'}
             >
               <Users className="h-3 w-3" />
-              Vendors
+              {t('page.entityToggle.vendors')}
             </button>
             <button
               onClick={() => { filters.setEntityType('institution'); setPage(1) }}
@@ -277,19 +274,19 @@ export function ExplorePage() {
               aria-pressed={filters.entityType === 'institution'}
             >
               <Building2 className="h-3 w-3" />
-              Institutions
+              {t('page.entityToggle.institutions')}
             </button>
           </div>
 
           {/* Suggestion chips */}
           <div className="flex items-center gap-1.5 flex-wrap">
-            {SUGGESTIONS[filters.entityType as 'vendor' | 'institution']?.map(s => (
+            {SUGGESTION_PARAMS[filters.entityType as 'vendor' | 'institution']?.map(s => (
               <button
-                key={s.label}
+                key={s.key}
                 onClick={() => applySuggestion(s.params)}
                 className="px-2 py-1 rounded-full border border-border/30 bg-background-elevated/20 text-xs text-text-muted hover:border-accent/40 hover:text-accent transition-colors"
               >
-                {s.label}
+                {t(`page.suggestions.${s.key}`)}
               </button>
             ))}
           </div>
@@ -299,7 +296,7 @@ export function ExplorePage() {
             type="text"
             value={filters.searchText}
             onChange={handleSearchChange}
-            placeholder={`Search ${filters.entityType}s…`}
+            placeholder={t('page.searchPlaceholder', { entityType: filters.entityType })}
             className="flex-1 min-w-[180px] h-8 px-3 rounded-lg border border-border/40 bg-background-elevated/60 text-sm text-text-primary placeholder:text-text-muted/60 focus:outline-none focus:border-accent/50 transition-all"
           />
 
@@ -313,7 +310,7 @@ export function ExplorePage() {
               <button
                 onClick={chip.onRemove}
                 className="hover:text-risk-high transition-colors"
-                aria-label={`Remove ${chip.label} filter`}
+                aria-label={t('page.filterChip.removeFilter', { label: chip.label })}
               >
                 <X className="h-3 w-3" />
               </button>

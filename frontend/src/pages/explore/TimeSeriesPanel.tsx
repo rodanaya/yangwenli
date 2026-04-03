@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
 import {
@@ -27,6 +28,7 @@ interface ChartMouseEvent {
 }
 
 export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeSeriesPanelProps) {
+  const { t } = useTranslation('explore')
   const [brushStart, setBrushStart] = useState<number | null>(null)
   const [brushEnd, setBrushEnd] = useState<number | null>(null)
   const [isBrushing, setIsBrushing] = useState(false)
@@ -53,7 +55,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
     return (
       <div>
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
-          Contracts Over Time
+          {t('timeSeries.title')}
         </div>
         <Skeleton className="h-32 w-full" />
       </div>
@@ -64,10 +66,10 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
     return (
       <div>
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider mb-2">
-          Contracts Over Time
+          {t('timeSeries.title')}
         </div>
         <div className="h-32 w-full flex items-center justify-center text-[11px] text-text-muted/60 border border-border/20 rounded bg-background-elevated/10">
-          No trend data available
+          {t('timeSeries.noData')}
         </div>
       </div>
     )
@@ -109,7 +111,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
     <div>
       <div className="flex items-center justify-between mb-2">
         <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
-          Contracts Over Time
+          {t('timeSeries.title')}
           {hasSelection && (
             <span className="ml-2 text-accent normal-case">
               {selStart}–{selEnd}
@@ -121,7 +123,7 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
             onClick={() => onYearRangeChange(undefined, undefined)}
             className="text-[10px] text-accent hover:underline"
           >
-            Clear
+            {t('timeSeries.clear')}
           </button>
         )}
       </div>
@@ -164,8 +166,8 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 color: 'rgb(226 232 240)',
               }}
               formatter={(value: any, name: string | undefined) => {
-                if (name === 'contracts') return [Number(value).toLocaleString(), 'Contracts']
-                if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, 'Avg risk']
+                if (name === 'contracts') return [Number(value).toLocaleString(), t('timeSeries.contractsLegend')]
+                if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, t('timeSeries.avgRiskLegend')]
                 return [value, name ?? '']
               }}
               labelStyle={{ color: 'rgb(148 163 184)', fontSize: 10 }}
@@ -202,13 +204,13 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
       <div className="flex items-center gap-4 mt-1.5 text-[10px] text-text-muted/60">
         <div className="flex items-center gap-1">
           <div className="w-3 h-2 rounded-sm" style={{ backgroundColor: 'rgba(99,102,241,0.6)' }} />
-          <span>Contracts</span>
+          <span>{t('timeSeries.contractsLegend')}</span>
         </div>
         <div className="flex items-center gap-1">
           <div className="w-3 h-0.5 bg-red-400" />
-          <span>Avg risk %</span>
+          <span>{t('timeSeries.avgRiskLegend')}</span>
         </div>
-        <span className="ml-auto">Drag to filter year range</span>
+        <span className="ml-auto">{t('timeSeries.dragHint')}</span>
       </div>
     </div>
   )

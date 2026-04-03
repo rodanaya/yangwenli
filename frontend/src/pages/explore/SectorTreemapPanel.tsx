@@ -90,7 +90,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
                   : 'text-text-muted hover:text-text-secondary'
               )}
             >
-              Value
+              {t('treemap.value')}
             </button>
             <button
               onClick={() => setViewMode('risk')}
@@ -101,7 +101,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
                   : 'text-text-muted hover:text-text-secondary'
               )}
             >
-              Risk
+              {t('treemap.risk')}
             </button>
           </div>
         </div>

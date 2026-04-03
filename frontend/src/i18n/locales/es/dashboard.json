@@ -243,5 +243,14 @@
   "modelVersionBadge": "RUBLI v6.5",
   "signalStripDirectAward": "de contratos omiten licitación competitiva",
   "signalStripHighRiskValue": "en contratos de alto riesgo",
-  "signalStripHighRiskRate": "de contratos marcados como alto o crítico"
+  "signalStripHighRiskRate": "de contratos marcados como alto o crítico",
+  "sectorsByValueTitle": "Sectores por Valor de Contrato",
+  "barChartTotalValue": "Valor Total",
+  "periodTrendTitle": "Tendencia de Riesgo 2002–2025 — Puntuación de Riesgo Promedio por Año",
+  "periodTrendSubtitle": "Puntuación de riesgo promedio (%) · RUBLI v6.5 · 3M contratos",
+  "tooltipAvgRisk": "Riesgo Prom.",
+  "tooltipHighRiskRate": "Tasa de Alto Riesgo",
+  "tooltipYear": "Año: {{year}}",
+  "legendAvgRiskScore": "Puntuación de Riesgo Prom.",
+  "legendHighRiskRate": "Tasa de Alto Riesgo"
 }

@@ -1,14 +1,10 @@
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { RISK_COLORS } from '@/lib/constants'
 import { cn, formatNumber } from '@/lib/utils'
 
-const RISK_LEVELS = [
-  { key: 'critical', label: 'Critical', hint: 'Strongest match to documented corruption patterns' },
-  { key: 'high', label: 'High', hint: 'Strong similarity to corruption patterns' },
-  { key: 'medium', label: 'Medium', hint: 'Moderate similarity — watch list' },
-  { key: 'low', label: 'Low', hint: 'Low similarity — standard monitoring' },
-]
+const RISK_LEVEL_KEYS = ['critical', 'high', 'medium', 'low'] as const
 
 interface RiskDistributionStripProps {
   activeRiskLevels: string[]
@@ -16,6 +12,7 @@ interface RiskDistributionStripProps {
 }
 
 export function RiskDistributionStrip({ activeRiskLevels, onToggleRisk }: RiskDistributionStripProps) {
+  const { t } = useTranslation('explore')
   const { data } = useQuery({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
@@ -29,25 +26,25 @@ export function RiskDistributionStrip({ activeRiskLevels, onToggleRisk }: RiskDi
     <div>
       <div className="flex items-center justify-between mb-2">
         <div className="text-xs font-medium text-text-muted uppercase tracking-wider">
-          Filter by Risk Level
+          {t('riskStrip.filterByRisk')}
         </div>
         {!allActive && (
-          <span className="text-[10px] text-text-muted/60">Click to toggle · multiple allowed</span>
+          <span className="text-[10px] text-text-muted/60">{t('riskStrip.clickToToggle')}</span>
         )}
       </div>
       <div className="flex gap-2 flex-wrap">
-        {RISK_LEVELS.map(r => {
-          const stat = riskDist?.find(d => d.risk_level === r.key)
+        {RISK_LEVEL_KEYS.map(key => {
+          const stat = riskDist?.find(d => d.risk_level === key)
           const pct = stat?.percentage ?? 0
           const count = stat?.count ?? 0
-          const isActive = activeRiskLevels.includes(r.key)
-          const color = RISK_COLORS[r.key as keyof typeof RISK_COLORS]
+          const isActive = activeRiskLevels.includes(key)
+          const color = RISK_COLORS[key as keyof typeof RISK_COLORS]
           return (
             <button
-              key={r.key}
-              onClick={() => onToggleRisk(r.key)}
+              key={key}
+              onClick={() => onToggleRisk(key)}
               aria-pressed={isActive}
-              title={r.hint}
+              title={t(`riskLevels.${key}Hint`)}
               className={cn(
                 'flex items-center gap-2 px-3 py-1.5 rounded-lg border text-sm transition-all',
                 isActive
@@ -61,7 +58,7 @@ export function RiskDistributionStrip({ activeRiskLevels, onToggleRisk }: RiskDi
                 style={{ backgroundColor: color }}
               />
               <span className="font-medium" style={{ color: isActive ? color : undefined }}>
-                {r.label}
+                {t(`riskLevels.${key}`)}
               </span>
               {stat ? (
                 <span className="text-xs text-text-muted font-mono">

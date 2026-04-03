@@ -121,7 +121,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           size="icon"
           className="h-7 w-7 flex-shrink-0 md:hidden mr-1"
           onClick={onMenuClick}
-          aria-label="Open menu"
+          aria-label={tc('header.openMenu')}
         >
           <Menu className="h-4 w-4 text-text-muted" />
         </Button>
@@ -161,7 +161,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Search <kbd className="ml-1 text-xs px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
+            <p className="text-xs">{tc('search')} <kbd className="ml-1 text-xs px-1 py-0.5 rounded bg-background-elevated border border-border text-text-muted">Ctrl+K</kbd></p>
           </TooltipContent>
         </Tooltip>
 
@@ -248,7 +248,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             </Button>
           </TooltipTrigger>
           <TooltipContent>
-            <p className="text-xs">Toggle theme</p>
+            <p className="text-xs">{tc('header.toggleTheme')}</p>
           </TooltipContent>
         </Tooltip>
       </div>

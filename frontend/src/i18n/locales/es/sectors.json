@@ -158,6 +158,87 @@
     "noRiskData": "Sin datos de distribución de riesgo",
     "noFactorData": "Sin datos de factores disponibles",
     "sectorNotFound": "Sector No Encontrado",
-    "sectorNotFoundMsg": "El sector solicitado no pudo ser encontrado."
+    "sectorNotFoundMsg": "El sector solicitado no pudo ser encontrado.",
+    "phiHeading": "Índice de Salud en Contratación",
+    "riskTrendOverTime": "Perfil de Riesgo en el Tiempo",
+    "riskTrendOverTimeSubtitle": "Puntaje de riesgo promedio y proporción de contratos de alto riesgo por año",
+    "avgRiskLegend": "Riesgo Prom. ×100",
+    "highRiskLegend": "Alto Riesgo %",
+    "marketConcentration": "Concentración de Mercado en el Tiempo",
+    "giniSubtitle": "Coeficiente Gini — 1.0 = monopolio total, 0 = competencia perfecta",
+    "lowConcentration": "Baja concentración",
+    "noRiskTimelineData": "Sin datos de evolución de riesgo disponibles.",
+    "noConcentrationData": "Sin historial de concentración disponible.",
+    "contractsTooltip": "contratos",
+    "riskSuffix": "% riesgo"
+  },
+  "investigation": {
+    "caseSingular": "Caso de Investigación",
+    "casePlural": "Casos de Investigación",
+    "estimatedLoss": "pérdida est.:",
+    "viewAllCases": "Ver todos los casos",
+    "severity": "severidad"
+  },
+  "phi": {
+    "competitionRate": "Tasa de Competencia",
+    "avgBidders": "Licitantes Prom.",
+    "singleBidRate": "Tasa de Lic. Única",
+    "oecdCompetition": "Prom. OCDE: 75%",
+    "oecdBidders": "Prom. OCDE: 3+",
+    "oecdSingleBid": "Meta OCDE: <20%"
+  },
+  "insight": {
+    "elevatedRisk": {
+      "title": "Tasa de Alto Riesgo Elevada",
+      "body": "{{rate}}% de contratos de alto riesgo supera significativamente el promedio de la plataforma de {{baseline}}%."
+    },
+    "lowSignal": {
+      "title": "Señal de Riesgo Baja",
+      "body": "{{rate}}% de contratos de alto riesgo es inusualmente bajo — puede reflejar brechas de calidad de datos o características estructurales del sector."
+    },
+    "highDA": {
+      "title": "Alta Tasa de Adjudicación Directa",
+      "body": "El {{rate}}% de los contratos son adjudicaciones directas, limitando la transparencia competitiva."
+    },
+    "singleBid": {
+      "title": "Licitaciones con Oferta Única",
+      "body": "El {{rate}}% de los procedimientos competitivos recibió solo un licitante."
+    }
+  },
+  "factors": {
+    "direct_award": "Adjudicación Directa",
+    "single_bid": "Licitación Única",
+    "price_anomaly": "Anomalía de Precio",
+    "short_ad_period": "Período de Convocatoria Corto",
+    "short_ad_lt5d": "Convocatoria urgente (<5 días)",
+    "short_ad_lt15d": "Convocatoria corta (<15 días)",
+    "short_ad_lt30d": "Convocatoria breve (<30 días)",
+    "year_end": "Prisa de Fin de Año",
+    "vendor_concentration": "Concentración de Proveedor",
+    "threshold_splitting": "Fraccionamiento de Contratos",
+    "network_risk": "Conexión en Red",
+    "industry_mismatch": "Desajuste de Industria",
+    "co_bid_high": "Alta Tasa de Co-licitación",
+    "co_bid_med": "Tasa Media de Co-licitación",
+    "price_hyp": "Valor Atípico de Precio",
+    "co_sid_high": "Alta Tasa de Co-licitación",
+    "co_sid_med": "Tasa Media de Co-licitación"
+  },
+  "factorDesc": {
+    "direct_award": "Contrato adjudicado sin licitación competitiva",
+    "single_bid": "El procedimiento competitivo recibió solo una oferta",
+    "price_anomaly": "El valor del contrato es 3 veces superior a la mediana del sector",
+    "short_ad_period": "Plazo de convocatoria demasiado corto para competencia real",
+    "short_ad_lt5d": "Menos de 5 días entre publicación y adjudicación",
+    "short_ad_lt15d": "Menos de 15 días entre publicación y adjudicación",
+    "short_ad_lt30d": "Menos de 30 días entre publicación y adjudicación",
+    "year_end": "Adjudicado en diciembre — patrón de vaciado presupuestal",
+    "vendor_concentration": "Un proveedor controla más del 30% de los contratos del sector",
+    "threshold_splitting": "Múltiples contratos el mismo día para evadir umbrales de supervisión",
+    "network_risk": "El proveedor pertenece a un grupo de empresas relacionadas",
+    "industry_mismatch": "La industria principal del proveedor no corresponde al sector del contrato",
+    "co_bid_high": "El proveedor co-licita en más del 80% de los procedimientos con un socio",
+    "co_bid_med": "El proveedor co-licita en el 50–80% de los procedimientos con un socio",
+    "price_hyp": "Valor atípico estadístico detectado por el modelo de precios IQR"
   }
 }

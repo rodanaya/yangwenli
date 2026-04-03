@@ -9,6 +9,7 @@ import { useState, useEffect, useCallback, useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence } from 'framer-motion'
 import { Play, Pause, SkipBack, SkipForward } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCompactMXN } from '@/lib/utils'
@@ -43,6 +44,7 @@ interface RaceEntry {
 }
 
 export function RacingBarChart() {
+  const { t } = useTranslation('common')
   const [yearIdx, setYearIdx] = useState(0)
   const [playing, setPlaying] = useState(false)
 
@@ -126,7 +128,7 @@ export function RacingBarChart() {
           </Button>
           <Button variant="outline" size="sm" className="h-7 gap-1.5 px-3" onClick={handlePlay}>
             {playing ? <Pause className="h-3.5 w-3.5" /> : <Play className="h-3.5 w-3.5" />}
-            {playing ? 'Pause' : 'Play'}
+            {playing ? t('charts.racingBar.pause') : t('charts.racingBar.play')}
           </Button>
           <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setYearIdx(i => Math.min(YEARS.length-1, i+1))}>
             <SkipForward className="h-3.5 w-3.5" />

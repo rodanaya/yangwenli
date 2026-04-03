@@ -243,5 +243,14 @@
   "modelVersionBadge": "RUBLI v6.5",
   "signalStripDirectAward": "of contracts skip competitive bidding",
   "signalStripHighRiskValue": "in high-risk contracts",
-  "signalStripHighRiskRate": "of contracts flagged high or critical risk"
+  "signalStripHighRiskRate": "of contracts flagged high or critical risk",
+  "sectorsByValueTitle": "Sectors by Contract Value",
+  "barChartTotalValue": "Total Value",
+  "periodTrendTitle": "Risk Trend 2002–2025 — Average Risk Score by Year",
+  "periodTrendSubtitle": "Average contract risk score (%) · RUBLI v6.5 · 3M contracts",
+  "tooltipAvgRisk": "Avg Risk",
+  "tooltipHighRiskRate": "High Risk %",
+  "tooltipYear": "Year: {{year}}",
+  "legendAvgRiskScore": "Avg Risk Score",
+  "legendHighRiskRate": "High-Risk Rate"
 }

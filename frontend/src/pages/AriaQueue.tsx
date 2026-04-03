@@ -949,14 +949,14 @@ export default function AriaPage() {
     return (
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
-          <p className="text-xs font-mono uppercase tracking-widest text-red-500 mb-2">Connection Error</p>
-          <p className="text-lg font-bold text-zinc-100 mb-2">ARIA is unavailable</p>
-          <p className="text-sm text-zinc-500">The investigation queue could not be loaded. The backend may be restarting — try refreshing in a moment.</p>
+          <p className="text-xs font-mono uppercase tracking-widest text-red-500 mb-2">{t('connectionError.title')}</p>
+          <p className="text-lg font-bold text-zinc-100 mb-2">{t('connectionError.headline')}</p>
+          <p className="text-sm text-zinc-500">{t('connectionError.body')}</p>
           <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 rounded bg-zinc-800 text-zinc-300 text-xs font-mono hover:bg-zinc-700 transition-colors"
           >
-            Retry
+            {t('connectionError.retry')}
           </button>
         </div>
       </div>
@@ -1301,7 +1301,7 @@ export default function AriaPage() {
                     className="flex items-center gap-1 text-[10px] text-accent/70 hover:text-accent transition-colors mt-0.5"
                   >
                     <XIcon className="h-3 w-3" />
-                    {TIER_CONFIG.find(c => c.tier === tierFilter) && t(TIER_CONFIG.find(c => c.tier === tierFilter)!.labelKey)} filter active
+                    {TIER_CONFIG.find(c => c.tier === tierFilter) && t(TIER_CONFIG.find(c => c.tier === tierFilter)!.labelKey)} {t('leads.filterActive')}
                   </button>
                 )}
               </div>
@@ -1377,10 +1377,10 @@ export default function AriaPage() {
                         {t('table.headers.ips')}
                       </th>
                       <th className="px-4 py-3 text-left text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider w-12">
-                        TIER
+                        {t('table.headers.tier')}
                       </th>
                       <th className="px-4 py-3 text-left text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider hidden xl:table-cell">
-                        REVISIÓN
+                        {t('table.headers.revision')}
                       </th>
                       <th className="px-4 py-3 w-16" />
                     </tr>

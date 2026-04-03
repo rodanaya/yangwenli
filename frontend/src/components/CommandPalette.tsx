@@ -6,6 +6,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
@@ -155,6 +156,7 @@ interface CommandPaletteProps {
 
 export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
   const [query, setQuery] = useState('')
   const debouncedQuery = useDebouncedValue(query, 250)
   const { items: savedSearches, save: saveSearch, remove: removeSavedSearch } = useSavedSearches(SAVED_SEARCHES_KEY)
@@ -247,7 +249,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       )}
 
       <CommandInput
-        placeholder="Search vendors, RFC, contracts, cases… or navigate"
+        placeholder={t('cmdPalette.inputPlaceholder')}
         value={query}
         onValueChange={setQuery}
       />
@@ -262,7 +264,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             aria-label={`Save search "${query}"`}
           >
             <Bookmark className="h-3 w-3" aria-hidden="true" />
-            Save this search
+            {t('cmdPalette.saveSearch')}
           </button>
         </div>
       )}
@@ -271,19 +273,19 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* ── Loading indicator ── */}
         {isFetching && debouncedQuery.length >= 2 && (
           <div className="flex items-center justify-center py-3 text-xs text-text-muted gap-1.5">
-            <span className="animate-pulse">Searching…</span>
+            <span className="animate-pulse">{t('cmdPalette.searchingEllipsis')}</span>
           </div>
         )}
 
         {/* ── No results ── */}
         {!isFetching && debouncedQuery.length >= 2 && !hasResults && filteredActions.length === 0 && (
-          <CommandEmpty>No results for "{query}"</CommandEmpty>
+          <CommandEmpty>{t('cmdPalette.noResultsFor', { query })}</CommandEmpty>
         )}
 
         {/* ── Idle state: suggested searches + research actions ── */}
         {isIdle && (
           <>
-            <CommandGroup heading="Suggested searches">
+            <CommandGroup heading={t('cmdPalette.suggestedSearches')}>
               {SUGGESTED_SEARCHES.map((s) => (
                 <CommandItem
                   key={s.label}
@@ -307,7 +309,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
             <CommandSeparator />
 
-            <CommandGroup heading="Research actions">
+            <CommandGroup heading={t('cmdPalette.researchActions')}>
               {RESEARCH_ACTIONS.map((action) => {
                 const Icon = action.icon
                 return (
@@ -333,14 +335,14 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         {/* ── RFC shortcut — shown when query looks like a Mexican RFC ── */}
         {debouncedQuery.length >= 2 && isRfcQuery(debouncedQuery) && (
-          <CommandGroup heading="RFC search">
+          <CommandGroup heading={t('cmdPalette.rfcSearch')}>
             <CommandItem
               value={`rfc-direct-${debouncedQuery}`}
               onSelect={() => go(`/explore?tab=vendors&search=${encodeURIComponent(debouncedQuery.trim().toUpperCase())}`)}
               className="gap-2"
             >
               <Users className="h-3.5 w-3.5 text-accent shrink-0" />
-              <span className="text-accent font-medium">Search by RFC:</span>
+              <span className="text-accent font-medium">{t('cmdPalette.searchByRfc')}</span>
               <span className="font-mono text-xs text-text-primary shrink-0">{debouncedQuery.trim().toUpperCase()}</span>
             </CommandItem>
           </CommandGroup>
@@ -350,7 +352,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {hasResults && (
           <>
             {results!.vendors.length > 0 && (
-              <CommandGroup heading="Vendors">
+              <CommandGroup heading={t('cmdPalette.groupVendors')}>
                 {results!.vendors.map((v) => {
                   const riskLevel = riskLevelFromScore(v.risk_score)
                   return (
@@ -372,7 +374,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             )}
 
             {results!.institutions.length > 0 && (
-              <CommandGroup heading="Institutions">
+              <CommandGroup heading={t('cmdPalette.groupInstitutions')}>
                 {results!.institutions.map((inst) => (
                   <CommandItem
                     key={`i-${inst.id}`}
@@ -396,7 +398,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             )}
 
             {results!.contracts.length > 0 && (
-              <CommandGroup heading="Contracts — highest risk first">
+              <CommandGroup heading={t('cmdPalette.groupContracts')}>
                 {results!.contracts.map((c) => (
                   <CommandItem
                     key={`c-${c.id}`}
@@ -414,7 +416,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             )}
 
             {results!.cases.length > 0 && (
-              <CommandGroup heading="Cases">
+              <CommandGroup heading={t('cmdPalette.groupCases')}>
                 {results!.cases.map((cs) => (
                   <CommandItem
                     key={`cs-${cs.slug}`}
@@ -437,7 +439,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
 
         {/* ── Quick navigation actions ── */}
         {filteredActions.length > 0 && (
-          <CommandGroup heading={debouncedQuery.length >= 2 && hasResults ? 'Pages' : 'Go to'}>
+          <CommandGroup heading={debouncedQuery.length >= 2 && hasResults ? t('cmdPalette.groupPages') : t('cmdPalette.groupGoTo')}>
             {filteredActions.map((action) => {
               const Icon = action.icon
               return (

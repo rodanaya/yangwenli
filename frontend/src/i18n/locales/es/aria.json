@@ -70,14 +70,17 @@
     "vendorCount": "proveedores",
     "searchPlaceholder": "Buscar proveedores…",
     "investigateBtn": "Investigar proveedor",
-    "empty": "No hay pistas que coincidan con tus filtros."
+    "empty": "No hay pistas que coincidan con tus filtros.",
+    "filterActive": "filtro activo"
   },
   "table": {
     "headers": {
       "vendor": "Proveedor",
       "pattern": "Patrón",
       "value": "Valor",
-      "ips": "IPS"
+      "ips": "IPS",
+      "tier": "Nivel",
+      "revision": "Revisión"
     },
     "review": "Revisión:"
   },
@@ -265,5 +268,11 @@
     "t2Label": "Revisión prioritaria",
     "t3Label": "Monitoreo activo",
     "t4Label": "Vigilancia pasiva"
+  },
+  "connectionError": {
+    "title": "Error de Conexión",
+    "headline": "ARIA no está disponible",
+    "body": "No se pudieron cargar las pistas de investigación. El servidor puede estar reiniciando — intenta actualizar en un momento.",
+    "retry": "Reintentar"
   }
 }

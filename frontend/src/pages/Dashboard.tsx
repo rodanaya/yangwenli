@@ -362,7 +362,7 @@ function SectorsByValueChart({ sectors, loading }: SectorsByValueChartProps) {
               fontFamily: 'var(--font-family-mono)',
               color: '#e2e8f0',
             }}
-            formatter={(v: number | undefined) => [v != null ? formatCompactMXN(v) : '—', 'Total Value']}
+            formatter={(v: number | undefined) => [v != null ? formatCompactMXN(v) : '—', t('barChartTotalValue')]}
           />
           <Bar dataKey="value" radius={[0, 3, 3, 0]} isAnimationActive={false}>
             {chartData.map((entry) => (
@@ -1771,10 +1771,10 @@ export function Dashboard() {
         <div className="fern-card px-5 pt-5 pb-5">
           <div className="mb-3">
             <p className="text-[10px] font-bold tracking-[0.14em] uppercase text-text-muted font-mono leading-none mb-0.5">
-              Risk Trend 2002–2025 — Average Risk Score by Year
+              {t('periodTrendTitle')}
             </p>
             <p className="text-[10px] text-text-muted">
-              Average contract risk score (%) &middot; RUBLI v6.5 &middot; 3M contracts
+              {t('periodTrendSubtitle')}
             </p>
           </div>
           <ResponsiveContainer width="100%" height={220}>
@@ -1817,9 +1817,9 @@ export function Dashboard() {
                 }}
                 formatter={(value: number | undefined, name: string | undefined) => [
                   value != null ? `${value.toFixed(2)}%` : '—',
-                  name === 'avgRiskPct' ? 'Avg Risk' : 'High Risk %',
+                  name === 'avgRiskPct' ? t('tooltipAvgRisk') : t('tooltipHighRiskRate'),
                 ]}
-                labelFormatter={(label: number) => `Year: ${label}`}
+                labelFormatter={(label: number) => t('tooltipYear', { year: label })}
               />
               {/* Early period annotation */}
               <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: '~24.5% avg', fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopLeft' }} />
@@ -1849,11 +1849,11 @@ export function Dashboard() {
           <div className="flex items-center gap-4 mt-1 flex-wrap">
             <div className="flex items-center gap-1.5">
               <div className="h-0.5 w-4 rounded" style={{ backgroundColor: '#dc2626' }} />
-              <span className="text-xs text-text-muted">Avg Risk Score</span>
+              <span className="text-xs text-text-muted">{t('legendAvgRiskScore')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <div className="h-0.5 w-4 rounded" style={{ borderTop: '1.5px dashed #f97316' }} />
-              <span className="text-xs text-text-muted">High-Risk Rate</span>
+              <span className="text-xs text-text-muted">{t('legendHighRiskRate')}</span>
             </div>
           </div>
         </div>

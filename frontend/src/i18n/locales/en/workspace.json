@@ -35,6 +35,26 @@
     "addToDossierLabel": "Add to Dossier",
     "exportLabel": "Export"
   },
+  "annotations": {
+    "title": "My Annotations",
+    "description": "Private notes saved locally in your browser.",
+    "noNotes": "No notes yet.",
+    "notesSaved": "{{count}} note saved.",
+    "notesSavedPlural": "{{count}} notes saved.",
+    "refresh": "Refresh",
+    "refreshLabel": "Refresh annotations",
+    "empty": "No annotations yet. Click the sticky note icon on any contract or vendor to add a note.",
+    "browseContracts": "Browse Contracts",
+    "sectionContracts": "Contract annotations",
+    "sectionVendors": "Vendor annotations",
+    "contractsHeading": "Contracts ({{count}})",
+    "vendorsHeading": "Vendors ({{count}})",
+    "vendor": "Vendor",
+    "contract": "Contract",
+    "goTo": "Go to {{entityType}} {{id}}",
+    "deleteNote": "Delete note",
+    "deleteLabel": "Delete annotation for {{entityType}} {{id}}"
+  },
   "export": {
     "exportAs": "Export As",
     "csvFormat": "CSV Spreadsheet",

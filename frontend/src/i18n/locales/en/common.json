@@ -72,8 +72,13 @@
     "connectedToDb": "Connected to database",
     "dataQuality": "Data Quality: Grade {{grade}} ({{score}}%)",
     "switchToLight": "Switch to light mode",
-    "switchToDark": "Switch to dark mode"
+    "switchToDark": "Switch to dark mode",
+    "openMenu": "Open menu",
+    "toggleTheme": "Toggle theme",
+    "home": "Home"
   },
+  "unknown": "Unknown",
+  "untitled": "Untitled",
   "banner": "Ground Truth expanded · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES",
   "dismissBanner": "Dismiss announcement",
   "footerBrand": "RUBLI 2.0",
@@ -134,7 +139,8 @@
     "step4Step3": "Add to dossier",
     "skip": "Skip tour",
     "next": "Next",
-    "getStarted": "Get Started"
+    "getStarted": "Get Started",
+    "stepIndicator": "Step {{n}}"
   },
   "caseLeadDialog": {
     "title": "Submit a Case Lead",
@@ -200,5 +206,156 @@
     "sectionSubtitle": "Verified data · Free download · Cite: RUBLI / COMPRANET",
     "source": "Source",
     "download": "Download"
+  },
+  "cmdPalette": {
+    "inputPlaceholder": "Search vendors, RFC, contracts, cases\u2026 or navigate",
+    "saveSearch": "Save this search",
+    "searchingEllipsis": "Searching\u2026",
+    "noResultsFor": "No results for \u201c{{query}}\u201d",
+    "suggestedSearches": "Suggested searches",
+    "researchActions": "Research actions",
+    "rfcSearch": "RFC search",
+    "searchByRfc": "Search by RFC:",
+    "groupVendors": "Vendors",
+    "groupInstitutions": "Institutions",
+    "groupContracts": "Contracts \u2014 highest risk first",
+    "groupCases": "Cases",
+    "groupPages": "Pages",
+    "groupGoTo": "Go to",
+    "hintNavigate": "navigate",
+    "hintSelect": "select",
+    "hintClose": "close",
+    "rfcTip": "Tip: type an RFC (e.g. ABC123456789) to find a vendor",
+    "contractsCount": "{{count}} contracts",
+    "applySavedSearch": "Apply saved search: {{label}}",
+    "removeSavedSearch": "Remove saved search: {{label}}",
+    "saveCurrentSearch": "Save search \u201c{{query}}\u201d"
+  },
+  "contractDetail": {
+    "procurement": "Procurement",
+    "procedure": "Procedure",
+    "contractType": "Contract Type",
+    "publication": "Publication",
+    "award": "Award",
+    "start": "Start",
+    "end": "End",
+    "sector": "Sector",
+    "status": "Status",
+    "viewOnCompranet": "View on COMPRANET",
+    "context": "Context",
+    "electionYear": "Election Year",
+    "anomalyScore": "Anomaly Score",
+    "anomalyScoreSubtitle": "PyOD cross-model",
+    "aiConfirmed": "AI Confirmed",
+    "ensemble": "IForest+COPOD",
+    "ensembleDetail": "ensemble",
+    "qualityLabel": "Quality: {{grade}}",
+    "sourceLabel": "Source: Structure {{structure}}",
+    "confidence": "Confidence: {{value}}",
+    "flagDirectAward": "Direct Award",
+    "flagSingleBid": "Single Bid",
+    "flagYearEnd": "Year-End",
+    "flagHighValue": "High Value",
+    "flagThresholdGaming": "Threshold Gaming"
+  },
+  "compareModal": {
+    "title": "Compare Contracts",
+    "selected": "({{n}} selected)",
+    "closeComparison": "Close comparison",
+    "fullDetails": "Full details",
+    "riskScore": "Risk Score",
+    "riskLevel": "Risk Level",
+    "amount": "Amount",
+    "date": "Date",
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "sector": "Sector",
+    "procedure": "Procedure",
+    "flags": "Flags"
+  },
+  "riskExplanation": {
+    "whyThisScore": "Why This Score",
+    "sectorModel": "sector model",
+    "globalModel": "global model",
+    "moreFactors": "+{{count}} more factors"
+  },
+  "riskExplainer": {
+    "whatItDetects": "What It Detects",
+    "theory": "Theory",
+    "inRubli": "In RUBLI",
+    "coefficientSuffix": "coefficient",
+    "colFactor": "Factor",
+    "colCoefficient": "Coefficient",
+    "colEvidenceStrength": "Evidence Strength",
+    "colKeySource": "Key Source",
+    "legendIncreasesRisk": "Increases risk",
+    "legendDecreasesRisk": "Decreases risk (protective)",
+    "legendNegligible": "Negligible / regularized to zero",
+    "legendCoefficients": "Coefficients from v6.5 ElasticNet model (C=0.01, l1_ratio=0.9673)"
+  },
+  "sanctions": {
+    "onListSingular": "On {{count}} sanctions list:",
+    "onListPlural": "On {{count}} sanctions lists:",
+    "rfcMatch": "RFC match ({{pct}}%)",
+    "nameMatch": "Name match ({{pct}}%)",
+    "nameFuzzy": "Name fuzzy",
+    "collapseDetails": "Collapse details",
+    "expandDetails": "Expand details",
+    "vendorLabel": "Vendor:",
+    "efosTip": "Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation.",
+    "listSfp": "SFP Inhabilitado",
+    "listEfos": "SAT EFOS",
+    "listEfosDefinitivo": "SAT EFOS Definitivo (Confirmed)",
+    "listEfosPresunto": "SAT EFOS Presunto (Alleged)"
+  },
+  "politicalStrip": {
+    "title": "Political Intelligence",
+    "subtitle": "Top vendors by presidential administration \u2014 sorted by total value",
+    "errorLoading": "Error loading vendor data",
+    "noData": "No data for this administration"
+  },
+  "ariaMemo": {
+    "title": "Investigation Analysis",
+    "generatedByAi": "AI-generated",
+    "errorLoading": "Error loading memo",
+    "copy": "Copy",
+    "copied": "Copied",
+    "disclaimer": "Auto-generated \u2014 requires journalistic verification",
+    "notAvailable": "Memo not available for {{vendorName}}"
+  },
+  "charts": {
+    "racingBar": {
+      "play": "Play",
+      "pause": "Pause"
+    },
+    "sectorConcentration": {
+      "title": "Market Concentration",
+      "subtitle": "% of contracts awarded to the top-3 vendors per sector",
+      "skeletonAriaLabel": "Loading market concentration",
+      "noData": "No data",
+      "footnote": "Source: RUBLI v6.5 · 3.06M contracts · 2002-2025",
+      "ariaList": "Market concentration by sector",
+      "levelHigh": "HIGH",
+      "levelModerate": "MODERATE",
+      "levelLow": "LOW",
+      "levelCompetitive": "COMPETITIVE",
+      "legendHigh": "High ≥75%",
+      "legendModerate": "Moderate ≥50%",
+      "legendLow": "Low ≥30%",
+      "legendCompetitive": "Competitive <30%",
+      "concentrationAriaLabel": "{{pct}}% concentration"
+    },
+    "adminRiskTrajectory": {
+      "noData": "No administration data available",
+      "tooltipAvgRisk": "Average risk score",
+      "tooltipDirectAward": "Direct award rate",
+      "tooltipHighRisk": "High-risk contract rate"
+    },
+    "adminSectorHeatmap": {
+      "noData": "No data available for heatmap",
+      "pctOfTotalSpend": "% of total spend",
+      "legendPctSpend": "% of admin total spend",
+      "ariaTable": "Procurement intensity heatmap: administrations vs sectors"
+    }
   }
 }

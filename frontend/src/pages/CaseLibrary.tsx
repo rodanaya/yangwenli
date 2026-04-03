@@ -102,6 +102,7 @@ function DropdownChip({
   options: { value: string; label: string }[]
   onSelect: (v: string | undefined) => void
 }) {
+  const { t } = useTranslation('cases')
   const [open, setOpen] = useState(false)
   const active = value != null
 
@@ -127,7 +128,7 @@ function DropdownChip({
               className={`w-full text-left px-3 py-1.5 text-xs hover:bg-zinc-800 transition-colors
                 ${!active ? 'text-amber-400 font-medium' : 'text-zinc-400'}`}
             >
-              All
+              {t('filters.all')}
             </button>
             {options.map(o => (
               <button
@@ -176,7 +177,7 @@ function HeroSection() {
     >
       {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        RUBLI -- Corruption Archive
+        {t('hero.overline')}
       </p>
 
       {/* Hero stat: the number that matters */}
@@ -230,7 +231,7 @@ function HeroSection() {
           <Scale className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
-              HALLAZGO
+              {t('hero.findingLabel')}
             </p>
             <p className="text-sm text-zinc-200 leading-relaxed">
               {t('hero.impunityCallout', { pct: convictionPct, impunity: impunityCount })}
@@ -241,7 +242,7 @@ function HeroSection() {
 
       {/* Source links */}
       <div className="flex flex-wrap items-center gap-3 mt-3">
-        <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">Sources:</span>
+        <span className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">{t('hero.sourcesLabel')}</span>
         {[
           { label: t('sources.efosList'), href: 'https://www.sat.gob.mx/consultas/76674/consulta-la-lista-de-contribuyentes-con-operaciones-no-localizadas-o-inexistentes' },
           { label: t('sources.sfpSanctions'), href: 'https://www.gob.mx/sfp' },
@@ -656,8 +657,7 @@ export default function CaseLibrary() {
           <div>
             <p className="text-sm font-medium text-red-400 mb-1">{t('loadError')}</p>
             <p className="text-xs text-zinc-400">
-              COMPRANET case data may be temporarily unavailable. The API returned an error while loading
-              the documented corruption cases archive.
+              {t('loadErrorDetail')}
             </p>
           </div>
         </div>
@@ -670,7 +670,7 @@ export default function CaseLibrary() {
             <p className="text-xs text-zinc-500 font-mono">
               {t('resultCount', { count: data.length })}
               {hasFilters && (
-                <span className="text-zinc-600"> (filtered)</span>
+                <span className="text-zinc-600"> ({t('filteredSuffix')})</span>
               )}
             </p>
             <TableExportButton

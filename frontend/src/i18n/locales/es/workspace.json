@@ -35,6 +35,26 @@
     "addToDossierLabel": "Agregar al Dossier",
     "exportLabel": "Exportar"
   },
+  "annotations": {
+    "title": "Mis Anotaciones",
+    "description": "Notas privadas guardadas localmente en tu navegador.",
+    "noNotes": "Sin notas aún.",
+    "notesSaved": "{{count}} nota guardada.",
+    "notesSavedPlural": "{{count}} notas guardadas.",
+    "refresh": "Actualizar",
+    "refreshLabel": "Actualizar anotaciones",
+    "empty": "Sin anotaciones aún. Haz clic en el ícono de nota adhesiva en cualquier contrato o proveedor para agregar una nota.",
+    "browseContracts": "Ver Contratos",
+    "sectionContracts": "Anotaciones de contratos",
+    "sectionVendors": "Anotaciones de proveedores",
+    "contractsHeading": "Contratos ({{count}})",
+    "vendorsHeading": "Proveedores ({{count}})",
+    "vendor": "Proveedor",
+    "contract": "Contrato",
+    "goTo": "Ir a {{entityType}} {{id}}",
+    "deleteNote": "Eliminar nota",
+    "deleteLabel": "Eliminar anotación de {{entityType}} {{id}}"
+  },
   "export": {
     "exportAs": "Exportar Como",
     "csvFormat": "Hoja CSV",

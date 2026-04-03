@@ -114,7 +114,24 @@
     "selectForCompare": "Select to compare",
     "clearSelection": "Clear selection",
     "viewFullDetails": "View full details",
-    "fullDetails": "Full details"
+    "fullDetails": "Full details",
+    "riskScoreTooltipTitle": "About the risk score",
+    "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal."
+  },
+  "actions": {
+    "retry": "Retry",
+    "saveFilter": "Save filter",
+    "filterSaved": "Saved",
+    "compare": "Compare",
+    "selected": "selected"
+  },
+  "error": {
+    "failedToLoad": "Failed to load contracts",
+    "exportCapped": "Export capped",
+    "exportComplete": "Export complete",
+    "exportFailed": "Export failed",
+    "copyFailed": "Copy failed",
+    "linkCopied": "Link copied"
   },
   "empty": "No contracts found matching your filters.",
   "emptyInitial": "3.1 Million Contracts · 2002–2025",

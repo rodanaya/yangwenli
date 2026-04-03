@@ -5,12 +5,18 @@
   "alsoKnownAs": "También conocido como:",
   "viewNetwork": "Ver Red",
   "findSimilar": "Buscar Similares",
+  "compare": "Comparar",
+  "exportCSV": "Exportar CSV",
+  "exporting": "Exportando…",
+  "readInvestigation": "Leer la Investigación",
   "tabs": {
     "overview": "Resumen",
     "risk": "Análisis de Riesgo",
     "history": "Historial de Contratos",
     "network": "Red",
-    "external": "Registros Externos"
+    "external": "Registros Externos",
+    "aria": "ARIA",
+    "periodista": "Periodista"
   },
   "kpi": {
     "totalContracts": "Total de Contratos",
@@ -39,10 +45,18 @@
     "wins": "victorias:",
     "sameWinner": "mismo ganador",
     "ofTime": "de las veces",
-    "involves": "Involucra:"
+    "involves": "Involucra:",
+    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado."
   },
   "groundTruth": {
-    "documentedIn": "Documentado en"
+    "documentedIn": "Documentado en",
+    "documented": "Documentado:",
+    "couldNotCheck": "No se pudo verificar el estado del caso"
+  },
+  "badges": {
+    "sfpSanctioned": "Sancionado por SFP",
+    "efosStageDef": "SAT EFOS Definitivo (Confirmado)",
+    "efosStagePresunto": "SAT EFOS Presunto (Presunto)"
   },
   "cards": {
     "riskProfile": "Perfil de Riesgo",
@@ -70,7 +84,9 @@
     "procurementFootprintNote": "Relaciones sector × institución, dimensionadas por valor total",
     "footprintLegend": "Color = sector · insignia = puntuación de riesgo promedio · ordenado por valor total",
     "yrs": "años",
-    "long": "LARGO"
+    "long": "LARGO",
+    "valueShareByInstitution": "Distribución de valor por institución",
+    "integrityScore": "Calificación de Integridad"
   },
   "risk": {
     "riskScore": "Puntuación de Riesgo",
@@ -87,7 +103,24 @@
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
     "noRiskFactors": "No hay factores de riesgo disponibles",
     "sortByRisk": "Ordena por riesgo y va al inicio de la lista",
-    "viewMostRisky": "Ver contrato más riesgoso"
+    "viewMostRisky": "Ver contrato más riesgoso",
+    "perVendorAnalysis": "Análisis de Factores de Riesgo por Proveedor",
+    "shapAnalysis": "Análisis SHAP",
+    "primaryFactors": "FACTORES PRINCIPALES",
+    "modelEvolution": "Evolución del Modelo",
+    "counterfactual": "¿Qué Pasaría Si…?",
+    "counterfactualSubtitle": "Puntaje estimado si cada factor estuviera en el promedio del sector (z=0).",
+    "counterfactualAtAvg": "Si z = 0 (promedio del sector)",
+    "counterfactualFootnote": "Simulación basada en el modelo v6.5 (PU c={{c}}, intercepto={{intercept}})",
+    "noSignificantFactors": "No hay factores significativos para analizar.",
+    "loadAnalysis": "Cargar análisis",
+    "loadAnalysisHint": "Haz clic en «Cargar análisis» para obtener observaciones generadas por IA sobre los patrones de este proveedor.",
+    "couldNotLoad": "No se pudo cargar esta sección. Intenta actualizar la página.",
+    "couldNotLoadPeerComparison": "No se pudieron cargar los datos de comparación entre pares. Intenta actualizar.",
+    "fingerprint": "HUELLA DE RIESGO",
+    "fingerprintSubtitle": "Firma de riesgo única · Área proporcional a la contribución SHAP de cada factor",
+    "fingerprintLegend": "Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP",
+    "vsSectorAvg": "vs prom. sectorial"
   },
   "history": {
     "activityCalendar": "Calendario de Actividad de Contratos",
@@ -96,7 +129,25 @@
     "noContractData": "No hay datos de contratos disponibles",
     "allContracts": "Todos los Contratos",
     "calendarLess": "Menos",
-    "calendarMore": "Más"
+    "calendarMore": "Más",
+    "contractAnalysis": "ANÁLISIS DE CONTRATOS",
+    "yearFilter": "Año",
+    "sortLabel": "Ordenar",
+    "allYears": "Todos los Años",
+    "sortDateDesc": "Fecha (más reciente)",
+    "sortAmountDesc": "Monto (mayor)",
+    "sortRiskDesc": "Puntaje de Riesgo (mayor)",
+    "pageOf": "Página {{page}} de {{total}}",
+    "showing": "{{count}} mostrados de {{totalCount}} contratos — Total de página:",
+    "exportCSVAll": "Exportar CSV (Todos)",
+    "noMatchFilters": "Ningún contrato coincide con los filtros actuales.",
+    "pagePrev": "Anterior",
+    "pageNext": "Siguiente",
+    "filterAll": "Todos",
+    "filterCritical": "Crítico",
+    "filterHigh": "Alto",
+    "filterMedium": "Medio",
+    "filterLow": "Bajo"
   },
   "network": {
     "openNetworkGraph": "Abrir Gráfico de Red",
@@ -107,14 +158,21 @@
     "biddingTrianglesDetected": "Triángulos de licitación detectados",
     "highClustering": "Alta agrupación — posible estructura de cartel",
     "moderateClustering": "Agrupación moderada",
-    "lowClustering": "Baja agrupación"
+    "lowClustering": "Baja agrupación",
+    "highClusteringAlert": "Alta concentración de red detectada. Los socios licitadores de este proveedor forman un grupo muy cohesionado, lo cual es consistente con acuerdo de precios colusorio. Ver patrones de co-licitación a continuación.",
+    "rolesLabel": "Roles:",
+    "roleDecoy": "🔴 Señuelo — licita pero nunca gana",
+    "roleRotation": "🟠 Rotación — los proveedores se turnan para ganar",
+    "roleAccomplice": "🟡 Cómplice — ambos ganan frecuentemente juntos"
   },
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
     "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
     "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v6.5, que asigna co_bid_rate un coeficiente de 0.000)",
     "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
-    "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)"
+    "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)",
+    "sectionLabel": "POR QUÉ ESTE PROVEEDOR ESTÁ MARCADO",
+    "disclaimer": "Las alertas son indicadores estadísticos de riesgo, no prueba de irregularidades. Úselas solo para priorizar investigaciones."
   },
   "waterfall": {
     "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",
@@ -124,8 +182,16 @@
     "riskIncreasing": "Factor que aumenta el riesgo",
     "riskReducing": "Factor que reduce el riesgo"
   },
+  "shap": {
+    "protectiveFactors": "Factores protectores (reducen el riesgo):"
+  },
+  "plainLanguage": {
+    "whatThisMeans": "Qué Significa Esto",
+    "forReporters": "para periodistas"
+  },
   "noContributingFactors": "No se encontraron factores de riesgo contribuyentes.",
   "untitledContract": "Sin título",
+  "noRiskFactorsTriggered": "Sin factores de riesgo activados",
   "priceVolatility": {
     "title": "Volatilidad de Precios",
     "zscore": "z-score vs. sector",
@@ -154,6 +220,53 @@
     "yLabel": "Contratos",
     "thresholdLabel": "Límite 3M MXN"
   },
+  "externalRecords": {
+    "loading": "Cargando registros externos...",
+    "confirmedGhostCompany": "CRÍTICO: Proveedor confirmado en la lista de empresas fantasma SAT Art. 69-B",
+    "sfpSanctionsFound": "{{count}} registro(s) de sanción SFP encontrado(s)",
+    "noSfpSanctions": "Sin sanciones SFP — registros externos disponibles",
+    "noExternalRecords": "No se encontraron registros externos para este proveedor",
+    "sourceNote": "Fuentes: SFP Proveedores Sancionados · Registro RUPC · Hallazgos ASF · SAT Art. 69-B EFOS",
+    "rupcNotFound": "No encontrado en el registro RUPC.",
+    "rupcRfcRequired": "Se requiere RFC para consulta RUPC.",
+    "complianceGrade": "Calificación de Cumplimiento",
+    "status": "Estado",
+    "registered": "Registrado",
+    "expires": "Vence",
+    "asfNotFound": "Sin hallazgos de auditoría ASF en registro. La cobertura de datos ASF está limitada a registros obtenidos por scraping.",
+    "efosNotFound": "No encontrado en la lista SAT Art. 69-B EFOS/EDOS de empresas fantasma.",
+    "efosConfirmed": "Empresa fantasma confirmada — las facturas de este proveedor se presumen fraudulentas bajo el Art. 69-B CFF.",
+    "efosPresunto": "Bajo revisión como presunta empresa fantasma (Art. 69-B CFF).",
+    "efosFavorecido": "Recibió facturas de una empresa fantasma confirmada.",
+    "efosDesvirtuado": "Desvirtuó exitosamente la clasificación Art. 69-B.",
+    "qqwLoading": "Cargando datos QQW...",
+    "qqwOfficials": "Funcionarios de adquisiciones que firmaron contratos con este proveedor (del conjunto de datos QQW):",
+    "qqwContracts": "Contratos recientes en el conjunto de datos QQW ({{count}} en total):",
+    "dataSourceNote": "Los datos externos se cargan desde registros públicos y pueden estar incompletos. Los datos de sanciones SFP y RUPC deben actualizarse manualmente mediante scripts del backend. La cobertura ASF depende de la disponibilidad de scraping web. La lista SAT Art. 69-B se actualiza mensualmente mediante scripts/load_sat_efos.py. Los datos QQW se obtienen mediante scripts/fetch_qqw_data.py (200 proveedores de mayor riesgo).",
+    "sanction": "Sanción",
+    "report": "Reporte",
+    "contracts": "contrato(s)"
+  },
+  "aria": {
+    "notInQueue": "Este proveedor no está en la cola de investigación ARIA.",
+    "notInQueueNote": "Solo los proveedores con un IPS significativo aparecen aquí.",
+    "ipsBanner": "IPS (Puntaje de Prioridad de Investigación)",
+    "ipsBreakdown": "Desglose del IPS",
+    "patternConfidences": "Confianza en Patrones",
+    "signals": "Señales",
+    "burstScore": "Puntaje de Ráfaga",
+    "fpPenalty": "Penalización por Falso Positivo",
+    "riskScoreLabel": "Puntaje de Riesgo (v6.5)"
+  },
+  "groundTruthBanner": {
+    "appearsIn": "Este proveedor aparece en {{count}} caso(s) de corrupción documentado(s)",
+    "trainingSetNote": "Este proveedor es parte del conjunto de entrenamiento de RUBLI — contratos que coinciden con patrones de corrupción documentados."
+  },
   "sectorPercentile": "Top {{pct}}% en sector",
-  "confidenceInterval": "IC 95%: {{lo}}–{{hi}}"
+  "confidenceInterval": "IC 95%: {{lo}}–{{hi}}",
+  "groupTitle": "Este proveedor pertenece a un grupo de red relacionado",
+  "nameVariantsMore": "+{{count}} más",
+  "rfcCopied": "RFC copiado",
+  "copyRfc": "Copiar RFC",
+  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado"
 }

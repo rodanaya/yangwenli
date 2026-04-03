@@ -114,7 +114,24 @@
     "selectForCompare": "Seleccionar para comparar",
     "clearSelection": "Limpiar selección",
     "viewFullDetails": "Ver detalles completos",
-    "fullDetails": "Detalles completos"
+    "fullDetails": "Detalles completos",
+    "riskScoreTooltipTitle": "Sobre el score de riesgo",
+    "riskScoreTooltipBody": "El score de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación."
+  },
+  "actions": {
+    "retry": "Reintentar",
+    "saveFilter": "Guardar filtro",
+    "filterSaved": "Guardado",
+    "compare": "Comparar",
+    "selected": "seleccionados"
+  },
+  "error": {
+    "failedToLoad": "Error al cargar contratos",
+    "exportCapped": "Exportación limitada",
+    "exportComplete": "Exportación completa",
+    "exportFailed": "Error al exportar",
+    "copyFailed": "Error al copiar",
+    "linkCopied": "Enlace copiado"
   },
   "empty": "No se encontraron contratos con los filtros seleccionados.",
   "emptyInitial": "3.1 Millones de Contratos · 2002–2025",

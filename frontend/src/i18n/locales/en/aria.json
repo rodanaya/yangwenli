@@ -70,14 +70,17 @@
     "vendorCount": "vendors",
     "searchPlaceholder": "Search vendors\u2026",
     "investigateBtn": "Investigate vendor",
-    "empty": "No leads match your filters."
+    "empty": "No leads match your filters.",
+    "filterActive": "filter active"
   },
   "table": {
     "headers": {
       "vendor": "Vendor",
       "pattern": "Pattern",
       "value": "Value",
-      "ips": "IPS"
+      "ips": "IPS",
+      "tier": "Tier",
+      "revision": "Review"
     },
     "review": "Review:"
   },
@@ -257,6 +260,12 @@
     "P5": "Contract prices significantly above market or sector median",
     "P6": "One institution awards >80% of its budget to one vendor",
     "P7": "Vendors share addresses, representatives, or RFC patterns"
+  },
+  "connectionError": {
+    "title": "Connection Error",
+    "headline": "ARIA is unavailable",
+    "body": "The investigation queue could not be loaded. The backend may be restarting — try refreshing in a moment.",
+    "retry": "Retry"
   },
   "explainer": {
     "kicker": "ARIA · Automated Risk Investigation Algorithm",

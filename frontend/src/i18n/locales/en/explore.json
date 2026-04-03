@@ -5,6 +5,42 @@
     "institutions": "Institutions",
     "trends": "Trends"
   },
+  "page": {
+    "title": "Explore Contracts",
+    "subtitle": "Cross-filter 3.1M procurement records",
+    "crossfilterHint": "Click any panel to filter all others — sector, time range, and risk level are cross-connected",
+    "clearAllFilters": "Clear all filters",
+    "searchPlaceholder": "Search {{entityType}}s…",
+    "entityToggle": {
+      "vendors": "Vendors",
+      "institutions": "Institutions"
+    },
+    "sectorIntel": {
+      "label": "sector intel",
+      "contracts": "Contracts",
+      "totalValue": "Total value",
+      "highPlusRisk": "High+ risk",
+      "directAward": "Direct award",
+      "avgRiskScore": "Avg risk score"
+    },
+    "filterChip": {
+      "sector": "Sector: {{value}}",
+      "years": "Years: {{start}}–{{end}}",
+      "yearsFrom": "Years: From {{start}}",
+      "yearsUntil": "Years: Until {{end}}",
+      "risk": "Risk: {{levels}}",
+      "removeFilter": "Remove {{label}} filter"
+    },
+    "suggestions": {
+      "criticalHigh": "Critical + High risk",
+      "criticalOnly": "Critical only",
+      "saludSector": "Salud sector",
+      "energiaSector": "Energia sector",
+      "infraestructura": "Infraestructura",
+      "imssIssste": "IMSS / ISSSTE",
+      "highRiskOnly": "High risk only"
+    }
+  },
   "vendors": {
     "title": "Vendors",
     "searchPlaceholder": "Search by name or RFC...",
@@ -109,11 +145,84 @@
     "valueOverTime": "Value by Year",
     "riskOverTime": "Average Risk by Year",
     "directAwardTrend": "Direct Award Trend",
+    "historicalTitle": "Historical Trends",
+    "historicalDesc": "Contract volume and avg risk, 2002–2025",
+    "transparencyTitle": "Procurement Transparency Pulse",
+    "transparencyDesc": "Layered health metrics — darker fill = less transparent procurement",
+    "contracts": "contracts",
+    "avgRisk": "Avg risk",
+    "vendors": "vendors",
+    "da": "DA",
+    "sb": "SB",
+    "yoyPts": "pts YoY",
+    "administration": "Administration",
     "radarPresets": {
       "risk": "Risk Profile",
       "transparency": "Transparency",
       "market": "Market Structure"
     }
+  },
+  "timeSeries": {
+    "title": "Contracts Over Time",
+    "contractsLegend": "Contracts",
+    "avgRiskLegend": "Avg risk %",
+    "dragHint": "Drag to filter year range",
+    "clear": "Clear",
+    "noData": "No trend data available"
+  },
+  "riskStrip": {
+    "filterByRisk": "Filter by Risk Level",
+    "clickToToggle": "Click to toggle · multiple allowed"
+  },
+  "riskLevels": {
+    "critical": "Critical",
+    "high": "High",
+    "medium": "Medium",
+    "low": "Low",
+    "criticalHint": "Strongest match to documented corruption patterns",
+    "highHint": "Strong similarity to corruption patterns",
+    "mediumHint": "Moderate similarity — watch list",
+    "lowHint": "Low similarity — standard monitoring"
+  },
+  "resultTable": {
+    "showingVendors": "Showing {{start}}–{{end}} of {{total}} vendors · sorted by risk score",
+    "showingInstitutions": "Showing {{start}}–{{end}} of {{total}} institutions · sorted by risk score",
+    "showingVendorsSorted": "Showing {{start}}–{{end}} of {{total}} vendors · sorted by {{field}} {{dir}}",
+    "showingInstitutionsSorted": "Showing {{start}}–{{end}} of {{total}} institutions · sorted by {{field}} {{dir}}",
+    "pageAvgRisk": "Page avg risk:",
+    "highPlusOnPage": "High+ on page:",
+    "aiConfirmed": "AI Confirmed",
+    "aiConfirmedBadge": "AI confirmed",
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "contracts": "Contracts",
+    "totalValue": "Total Value",
+    "risk": "Risk",
+    "daPercent": "DA %",
+    "anomaly": "Anomaly",
+    "addToDossier": "Add to dossier",
+    "noDossiers": "No dossiers yet",
+    "newDossier": "New dossier",
+    "failedToLoad": "Failed to load results",
+    "retry": "Retry",
+    "noMatchFilters": "No {{entityType}}s match your current filters",
+    "broadenSearch": "Try broadening your search:",
+    "removeSearchTerm": "Remove the search term — try a shorter or different name",
+    "includeMoreRisk": "Include more risk levels (click Critical / High in the strip above)",
+    "changeSector": "Click a different sector in the treemap, or clear the sector filter",
+    "widerYearRange": "Drag a wider year range in the time series chart",
+    "noEntityFound": "No {{entityType}}s found",
+    "total": "total"
+  },
+  "dossier": {
+    "addToDossier": "Add to dossier",
+    "noDossiersYet": "No dossiers yet",
+    "whyTrack": "Why track {{name}}?"
+  },
+  "treemap": {
+    "sectorsByValue": "Sectors by value",
+    "value": "Value",
+    "risk": "Risk"
   },
   "filters": {
     "sector": "Sector",
@@ -140,9 +249,9 @@
   "search": {
     "nameOrRfc": "Search name or RFC...",
     "nameOrAcronym": "Search name or acronym...",
-    "searching": "Searching\u2026",
+    "searching": "Searching…",
     "noResultsFor": "No results for \u201c{{query}}\u201d",
-    "placeholder": "Search vendors, RFC, institutions\u2026"
+    "placeholder": "Search vendors, RFC, institutions…"
   },
   "stats": {
     "pageValue": "Page value",
@@ -173,27 +282,5 @@
     "failed": "Failed to load concentration data",
     "noAlerts": "No concentration alerts found",
     "alertCount": "{{count}} alerts"
-  },
-  "resultTable": {
-    "showingVendors": "Showing {{start}}–{{end}} of {{total}} vendors · sorted by risk score",
-    "showingInstitutions": "Showing {{start}}–{{end}} of {{total}} institutions · sorted by risk score",
-    "vendor": "Vendor",
-    "institution": "Institution",
-    "contracts": "Contracts",
-    "totalValue": "Total Value",
-    "risk": "Risk",
-    "daPercent": "DA %",
-    "addToDossier": "Add to dossier",
-    "noDossiers": "No dossiers yet",
-    "failedToLoad": "Failed to load results",
-    "retry": "Retry"
-  },
-  "dossier": {
-    "addToDossier": "Add to dossier",
-    "noDossiersYet": "No dossiers yet",
-    "whyTrack": "Why track {{name}}?"
-  },
-  "treemap": {
-    "sectorsByValue": "Sectors by value"
   }
 }
