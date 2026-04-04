@@ -116,6 +116,11 @@ def _warmup_caches():
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
         "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
         "/api/v1/analysis/vendor-concentration?top_n=3",  # Dashboard market concentration panel
+        # Sector sub-pages — now use precomputed fast paths so safe to warm
+        *[f"/api/v1/sectors/{i}/trends" for i in range(1, 13)],
+        *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
+        *[f"/api/v1/analysis/risk-distribution?sector_id={i}" for i in range(1, 13)],
+        *[f"/api/v1/vendors/top?by=value&limit=10&sector_id={i}" for i in range(1, 13)],
     ]
     for ep in endpoints:
         try:

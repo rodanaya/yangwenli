@@ -469,7 +469,9 @@ def get_sector_timeline(
                 _cache.set(cache_key, result, SECTORS_CACHE_TTL)
                 return result
 
-            # Fallback: live query capped to recent 10 years to avoid timeout
+            # Fallback: live query — ensure index on sector_id is used; cap to 2010+ to limit scan
+            # idx_c_sector_vendor (sector_id, vendor_id) or idx_c_sector_risk (sector_id, risk_level)
+            # allow the planner to seek into this sector's rows.
             cursor.execute(
                 """
                 SELECT
@@ -479,7 +481,7 @@ def get_sector_timeline(
                     SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) AS high_risk_count,
                     ROUND(COALESCE(AVG(risk_score), 0), 4) AS avg_risk
                 FROM contracts
-                WHERE sector_id = ? AND contract_year >= 2015 AND contract_year IS NOT NULL
+                WHERE sector_id = ? AND contract_year IS NOT NULL AND contract_year >= 2010
                 GROUP BY contract_year
                 ORDER BY contract_year
                 """,
@@ -512,13 +514,45 @@ def get_sector_trends(
     end_year: Optional[int] = Query(None, le=2026, description="End year"),
 ):
     """Get year-over-year trends for a sector."""
+    cache_key = f"sector_trends:{sector_id}:{start_year}:{end_year}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
     try:
         with get_db() as conn:
             cursor = conn.cursor()
 
+            # Fast path: use precomputed sector_year_breakdown when no date filters
+            if not start_year and not end_year:
+                cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'"
+                )
+                precomp_row = cursor.fetchone()
+                if precomp_row:
+                    all_breakdown = json.loads(precomp_row[0])
+                    sector_rows = sorted(
+                        [r for r in all_breakdown if r.get("sector_id") == sector_id],
+                        key=lambda r: r["year"],
+                    )
+                    trends = [
+                        SectorTrend(
+                            year=r["year"],
+                            total_contracts=r["contracts"],
+                            total_value_mxn=r["total_value"],
+                            avg_risk_score=round(r.get("avg_risk", 0) or 0, 4),
+                            direct_award_pct=r.get("direct_award_pct", 0) or 0,
+                            single_bid_pct=r.get("single_bid_pct", 0) or 0,
+                        )
+                        for r in sector_rows
+                    ]
+                    result = SectorTrendListResponse(data=trends)
+                    _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+                    return result
+
             # safe: conditions list contains only hardcoded column names, values are parameterized
             conditions = ["sector_id = ?", "contract_year IS NOT NULL"]
-            params = [sector_id]
+            params: list = [sector_id]
 
             if start_year:
                 conditions.append("contract_year >= ?")
@@ -556,7 +590,9 @@ def get_sector_trends(
                 for row in rows
             ]
 
-            return SectorTrendListResponse(data=trends)
+            result = SectorTrendListResponse(data=trends)
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_sector_trends: {e}")
@@ -713,7 +749,6 @@ def get_risk_distribution(
                 cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'risk_distribution'")
                 row = cursor.fetchone()
                 if row:
-                    import json
                     dist_data = json.loads(row[0])
                     # Handle both dict and list formats from precomputed_stats
                     if isinstance(dist_data, dict):
@@ -740,10 +775,51 @@ def get_risk_distribution(
                     _cache.set(cache_key, result, ttl_seconds=7200)
                     return result
 
+            # Per-sector fast path: use precomputed sectors key (has risk level counts)
+            if sector_id is not None and year is None:
+                cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
+                )
+                sec_ps_row = cursor.fetchone()
+                if sec_ps_row:
+                    sector_data = json.loads(sec_ps_row[0])
+                    s = next(
+                        (
+                            item for item in sector_data
+                            if (item.get("id") or item.get("sector_id")) == sector_id
+                        ),
+                        None,
+                    )
+                    if s:
+                        total = s.get("total_contracts", 0) or 0
+                        counts = {
+                            "low": s.get("low_risk_count", 0) or 0,
+                            "medium": s.get("medium_risk_count", 0) or 0,
+                            "high": s.get("high_risk_count", 0) or 0,
+                            "critical": s.get("critical_risk_count", 0) or 0,
+                        }
+                        distribution = [
+                            RiskDistribution(
+                                risk_level=lvl,
+                                count=cnt,
+                                percentage=round(cnt / total * 100, 2) if total > 0 else 0,
+                                total_value_mxn=0,
+                            )
+                            for lvl, cnt in [
+                                ("low", counts["low"]),
+                                ("medium", counts["medium"]),
+                                ("high", counts["high"]),
+                                ("critical", counts["critical"]),
+                            ]
+                        ]
+                        result = RiskDistributionListResponse(data=distribution)
+                        _cache.set(cache_key, result, ttl_seconds=7200)
+                        return result
+
             # Slow path: live query with filters
             # safe: conditions list contains only hardcoded column names, values are parameterized
             conditions = []
-            params = []
+            params: list = []
 
             if sector_id:
                 conditions.append("sector_id = ?")

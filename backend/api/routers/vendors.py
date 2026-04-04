@@ -418,14 +418,19 @@ def get_top_vendors(
             return response
 
         # Slow path: compute aggregates with filters
-        conditions = ["COALESCE(c.amount_mxn, 0) <= ?"]
-        params = [MAX_CONTRACT_VALUE]
+        # NOTE: do NOT use COALESCE on indexed columns — it prevents index usage and causes full scans.
+        # Use explicit NULL check instead: (col IS NULL OR col <= ?) allows index pushdown.
+        conditions: list = []
+        params: list = []
         if sector_id is not None:
             conditions.append("c.sector_id = ?")
             params.append(sector_id)
         if year is not None:
             conditions.append("c.contract_year = ?")
             params.append(year)
+        # Amount guard: explicit NULL-safe form keeps index on sector_id usable
+        conditions.append("(c.amount_mxn IS NULL OR c.amount_mxn <= ?)")
+        params.append(MAX_CONTRACT_VALUE)
 
         where_clause = " AND ".join(conditions)
         metric_mapping = {
@@ -437,18 +442,25 @@ def get_top_vendors(
         _VALID_VENDOR_METRIC_EXPRS = {"SUM(c.amount_mxn)", "COUNT(c.id)", "AVG(c.risk_score)"}
         assert sort_expr in _VALID_VENDOR_METRIC_EXPRS, f"Invalid sort expression: {sort_expr}"
 
+        # Two-step CTE: aggregate contracts first (uses idx_c_sector_vendor), then join for names
         cursor.execute(f"""
+            WITH ranked AS (
+                SELECT c.vendor_id,
+                       {sort_expr} as metric_value,
+                       COUNT(c.id) as total_contracts,
+                       COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
+                       COALESCE(AVG(c.risk_score), 0) as avg_risk_score
+                FROM contracts c
+                WHERE {where_clause}
+                GROUP BY c.vendor_id
+                ORDER BY metric_value {sort_dir} NULLS LAST
+                LIMIT ?
+            )
             SELECT v.id, v.name, v.rfc,
-                   {sort_expr} as metric_value,
-                   COUNT(c.id) as total_contracts,
-                   COALESCE(SUM(c.amount_mxn), 0) as total_value_mxn,
-                   COALESCE(AVG(c.risk_score), 0) as avg_risk_score
-            FROM vendors v
-            JOIN contracts c ON v.id = c.vendor_id
-            WHERE {where_clause}
-            GROUP BY v.id, v.name, v.rfc
-            ORDER BY metric_value {sort_dir} NULLS LAST
-            LIMIT ?
+                   r.metric_value, r.total_contracts, r.total_value_mxn, r.avg_risk_score
+            FROM ranked r
+            JOIN vendors v ON r.vendor_id = v.id
+            ORDER BY r.metric_value {sort_dir} NULLS LAST
         """, params + [limit])
 
         vendors = [
