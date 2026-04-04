@@ -871,7 +871,7 @@ export function VendorProfile() {
   // Fetch larger batch for chart visualizations (separate from table pagination)
   const { data: contractsForCharts } = useQuery({
     queryKey: ['vendor', vendorId, 'contracts-charts'],
-    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 500 }),
+    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 100 }),
     enabled: !!vendorId,
     staleTime: 5 * 60 * 1000,
   })
@@ -1121,7 +1121,7 @@ export function VendorProfile() {
   // CSV export helper — exports ALL contracts (not just current page)
   const exportContractsCSV = useCallback(async () => {
     try {
-      const allData = await vendorApi.getContracts(vendorId, { per_page: 5000 })
+      const allData = await vendorApi.getContracts(vendorId, { per_page: 100 })
       const headers = ['contract_id', 'title', 'amount_mxn', 'procedure_type', 'institution_name', 'contract_date', 'risk_score', 'risk_level']
       const rows = allData.data.map((c: ContractListItem) => [
         c.id,
