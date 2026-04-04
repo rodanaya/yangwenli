@@ -78,10 +78,13 @@ def explain_contract(contract_id: int):
         if not contract:
             raise HTTPException(status_code=404, detail="Contract not found")
 
-        features = conn.execute(
-            "SELECT * FROM contract_z_features WHERE contract_id = ?",
-            (contract_id,),
-        ).fetchone()
+        try:
+            features = conn.execute(
+                "SELECT * FROM contract_z_features WHERE contract_id = ?",
+                (contract_id,),
+            ).fetchone()
+        except sqlite3.OperationalError:
+            features = None
 
     # Build feature context
     feature_context = ""

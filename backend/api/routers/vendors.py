@@ -2158,22 +2158,25 @@ def get_vendor_ai_summary(
             raise HTTPException(status_code=404, detail=f"Vendor {vendor_id} not found")
 
         # Get avg z-features for this vendor's contracts
-        cursor.execute("""
-            SELECT
-                AVG(czf.z_price_volatility) as price_volatility,
-                AVG(czf.z_win_rate) as win_rate,
-                AVG(czf.z_institution_diversity) as institution_diversity,
-                AVG(czf.z_vendor_concentration) as vendor_concentration,
-                AVG(czf.z_industry_mismatch) as industry_mismatch,
-                AVG(czf.z_same_day_count) as same_day_count,
-                AVG(czf.z_direct_award) as direct_award,
-                AVG(czf.z_single_bid) as single_bid,
-                AVG(czf.z_sector_spread) as sector_spread
-            FROM contract_z_features czf
-            JOIN contracts c ON czf.contract_id = c.id
-            WHERE c.vendor_id = ?
-        """, (vendor_id,))
-        z_features = cursor.fetchone()
+        try:
+            cursor.execute("""
+                SELECT
+                    AVG(czf.z_price_volatility) as price_volatility,
+                    AVG(czf.z_win_rate) as win_rate,
+                    AVG(czf.z_institution_diversity) as institution_diversity,
+                    AVG(czf.z_vendor_concentration) as vendor_concentration,
+                    AVG(czf.z_industry_mismatch) as industry_mismatch,
+                    AVG(czf.z_same_day_count) as same_day_count,
+                    AVG(czf.z_direct_award) as direct_award,
+                    AVG(czf.z_single_bid) as single_bid,
+                    AVG(czf.z_sector_spread) as sector_spread
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.vendor_id = ?
+            """, (vendor_id,))
+            z_features = cursor.fetchone()
+        except sqlite3.OperationalError:
+            z_features = None
 
         insights = []
         if z_features:
@@ -2631,37 +2634,45 @@ def get_vendor_similar_cases(vendor_id: int = Path(..., ge=1)):
     """
     z_cols_sql = ", ".join(f"AVG(czf.{z}) AS {z}" for z in _Z_FEATURES)
 
+    no_features_response = {
+        "vendor_id": vendor_id,
+        "similar_cases": [],
+        "message": "No z-score features found for this vendor.",
+    }
+
     with get_db() as conn:
         # 1. Compute vendor centroid from its contracts' z-features
-        vendor_row = conn.execute(f"""
-            SELECT {z_cols_sql}, COUNT(*) AS n
-            FROM contract_z_features czf
-            JOIN contracts c ON czf.contract_id = c.id
-            WHERE c.vendor_id = ?
-        """, (vendor_id,)).fetchone()
+        try:
+            vendor_row = conn.execute(f"""
+                SELECT {z_cols_sql}, COUNT(*) AS n
+                FROM contract_z_features czf
+                JOIN contracts c ON czf.contract_id = c.id
+                WHERE c.vendor_id = ?
+            """, (vendor_id,)).fetchone()
+        except sqlite3.OperationalError:
+            return no_features_response
 
         if vendor_row is None or vendor_row["n"] == 0:
-            return {
-                "vendor_id": vendor_id,
-                "similar_cases": [],
-                "message": "No z-score features found for this vendor.",
-            }
+            return no_features_response
 
         vendor_vec = [vendor_row[z] or 0.0 for z in _Z_FEATURES]
 
         # 2. Compute GT case centroids
-        gt_rows = conn.execute(f"""
-            SELECT gtc.id AS case_id, gtc.case_name, gtc.case_type,
-                   {z_cols_sql}, COUNT(czf.contract_id) AS n_contracts
-            FROM ground_truth_cases gtc
-            JOIN ground_truth_vendors gtv ON gtc.id = gtv.case_id
-            JOIN contracts c ON c.vendor_id = gtv.vendor_id
-            JOIN contract_z_features czf ON czf.contract_id = c.id
-            WHERE gtv.vendor_id IS NOT NULL
-            GROUP BY gtc.id, gtc.case_name, gtc.case_type
-            HAVING COUNT(czf.contract_id) >= 10
-            LIMIT 50
-        """).fetchall()
+        try:
+            gt_rows = conn.execute(f"""
+                SELECT gtc.id AS case_id, gtc.case_name, gtc.case_type,
+                       {z_cols_sql}, COUNT(czf.contract_id) AS n_contracts
+                FROM ground_truth_cases gtc
+                JOIN ground_truth_vendors gtv ON gtc.id = gtv.case_id
+                JOIN contracts c ON c.vendor_id = gtv.vendor_id
+                JOIN contract_z_features czf ON czf.contract_id = c.id
+                WHERE gtv.vendor_id IS NOT NULL
+                GROUP BY gtc.id, gtc.case_name, gtc.case_type
+                HAVING COUNT(czf.contract_id) >= 10
+                LIMIT 50
+            """).fetchall()
+        except sqlite3.OperationalError:
+            gt_rows = []
 
     # 3. Compute cosine similarity
     results = []

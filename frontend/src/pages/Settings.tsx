@@ -755,7 +755,7 @@ function BulkExportSection({ onSuccess, onError }: BulkExportSectionProps) {
   const handleHighRiskCSV = async () => {
     setLoadingKey('high-risk')
     try {
-      const result = await contractApi.getAll({ risk_level: 'critical', per_page: 1000, page: 1 })
+      const result = await contractApi.getAll({ risk_level: 'critical', per_page: 100, page: 1 })
       const rows = result.data ?? result
       const rowsArray = Array.isArray(rows) ? rows : []
       if (!rowsArray.length) {

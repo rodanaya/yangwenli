@@ -866,6 +866,10 @@ def get_temporal_events(
     return TemporalEventsResponse(events=events, total=len(events))
 
 
+_compare_periods_cache: Dict[str, Any] = {}
+_COMPARE_PERIODS_TTL = 3600  # 1 hour
+
+
 @router.get("/compare-periods", response_model=PeriodComparisonResponse)
 def compare_periods(
     period1_start: int = Query(..., ge=2002, le=2026),
@@ -875,6 +879,10 @@ def compare_periods(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
 ):
     """Compare procurement patterns between two time periods."""
+    cache_key = f"{period1_start}:{period1_end}:{period2_start}:{period2_end}:{sector_id}"
+    cached = _compare_periods_cache.get(cache_key)
+    if cached and (_time.time() - cached["ts"]) < _COMPARE_PERIODS_TTL:
+        return cached["data"]
     try:
         with get_db() as conn:
             cursor = conn.cursor()
@@ -950,10 +958,12 @@ def compare_periods(
                 dir_ = "worsened" if changes["avg_risk_score"] > 0 else "improved"
                 significant.append(f"Average risk {dir_} by {abs(changes['avg_risk_score']):.1f}%")
 
-            return PeriodComparisonResponse(
+            response = PeriodComparisonResponse(
                 period1=period1, period2=period2,
                 changes=changes, significant_changes=significant
             )
+            _compare_periods_cache[cache_key] = {"ts": _time.time(), "data": response}
+            return response
 
     except sqlite3.Error as e:
         logger.error(f"Database error in compare_periods: {e}")

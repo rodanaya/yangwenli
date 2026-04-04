@@ -778,6 +778,7 @@ def get_vendor_concentration(
 
     Returns sectors ranked by concentration of contracts among top vendors.
     Response is cached for 2 hours to improve performance.
+    Uses per-sector queries instead of a single window function for speed.
     """
     # Check cache first
     cache_key = f"vendor_concentration:{top_n}"
@@ -789,51 +790,54 @@ def get_vendor_concentration(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            # For each sector, calculate what % of contracts go to top N vendors
-            query = """
-                WITH sector_totals AS (
-                    SELECT sector_id, COUNT(*) as total
-                    FROM contracts
-                    GROUP BY sector_id
-                ),
-                top_vendor_contracts AS (
-                    SELECT
-                        c.sector_id,
-                        SUM(vendor_contracts) as top_vendor_total
-                    FROM (
-                        SELECT
-                            sector_id,
-                            vendor_id,
-                            COUNT(*) as vendor_contracts,
-                            ROW_NUMBER() OVER (PARTITION BY sector_id ORDER BY COUNT(*) DESC) as rn
-                        FROM contracts
-                        GROUP BY sector_id, vendor_id
-                    ) c
-                    WHERE c.rn <= ?
-                    GROUP BY c.sector_id
-                )
-                SELECT
-                    s.id,
-                    s.name_es,
-                    ROUND(COALESCE(t.top_vendor_total * 100.0 / st.total, 0), 2) as concentration_pct
-                FROM sectors s
-                LEFT JOIN sector_totals st ON s.id = st.sector_id
-                LEFT JOIN top_vendor_contracts t ON s.id = t.sector_id
-                ORDER BY concentration_pct DESC
-            """
-            cursor.execute(query, (top_n,))
-            rows = cursor.fetchall()
+            # Get all sectors
+            cursor.execute("SELECT id, name_es FROM sectors ORDER BY id")
+            sector_rows = cursor.fetchall()
 
-            items = [
-                SectorComparisonItem(
-                    sector_id=row[0],
-                    sector_name=row[1],
-                    color=SECTOR_COLORS.get(row[0], "#64748b"),
-                    metric_value=row[2] or 0,
-                    rank=i + 1,
+            items = []
+            for sector_row in sector_rows:
+                sid = sector_row["id"]
+                sname = sector_row["name_es"]
+
+                # Get total contracts for this sector
+                cursor.execute(
+                    "SELECT COUNT(*) as total FROM contracts WHERE sector_id = ?",
+                    (sid,),
                 )
-                for i, row in enumerate(rows)
-            ]
+                total = cursor.fetchone()["total"]
+                if total == 0:
+                    items.append(SectorComparisonItem(
+                        sector_id=sid, sector_name=sname,
+                        color=SECTOR_COLORS.get(sid, "#64748b"),
+                        metric_value=0, rank=0,
+                    ))
+                    continue
+
+                # Get top N vendors' contract counts for this sector
+                cursor.execute("""
+                    SELECT SUM(cnt) as top_total FROM (
+                        SELECT COUNT(*) as cnt
+                        FROM contracts
+                        WHERE sector_id = ?
+                        GROUP BY vendor_id
+                        ORDER BY cnt DESC
+                        LIMIT ?
+                    )
+                """, (sid, top_n))
+                top_total_row = cursor.fetchone()
+                top_total = top_total_row["top_total"] if top_total_row and top_total_row["top_total"] else 0
+
+                concentration_pct = round(top_total * 100.0 / total, 2)
+                items.append(SectorComparisonItem(
+                    sector_id=sid, sector_name=sname,
+                    color=SECTOR_COLORS.get(sid, "#64748b"),
+                    metric_value=concentration_pct, rank=0,
+                ))
+
+            # Sort by concentration descending and assign ranks
+            items.sort(key=lambda x: x.metric_value, reverse=True)
+            for i, item in enumerate(items):
+                item.rank = i + 1
 
             response = SectorComparisonListResponse(data=items)
 

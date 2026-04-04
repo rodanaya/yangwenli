@@ -292,11 +292,14 @@ def get_contract_features(
 
         # Try to get z-score features
         col_list = ", ".join(_Z_FEATURE_COLS)
-        cursor.execute(
-            f"SELECT {col_list} FROM contract_z_features WHERE contract_id = ?",
-            (contract_id,),
-        )
-        feat_row = cursor.fetchone()
+        try:
+            cursor.execute(
+                f"SELECT {col_list} FROM contract_z_features WHERE contract_id = ?",
+                (contract_id,),
+            )
+            feat_row = cursor.fetchone()
+        except sqlite3.OperationalError:
+            feat_row = None
 
         explanation_available = feat_row is not None
         features = []
