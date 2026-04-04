@@ -418,8 +418,10 @@ def get_top_vendors(
             return response
 
         # Slow path: compute aggregates with filters
-        # NOTE: do NOT use COALESCE on indexed columns — it prevents index usage and causes full scans.
-        # Use explicit NULL check instead: (col IS NULL OR col <= ?) allows index pushdown.
+        # IMPORTANT: do NOT add any condition that wraps indexed columns in functions.
+        # COALESCE / IS NULL OR ... prevents the planner from using idx_c_sector_vendor.
+        # Amount guard is intentionally omitted from the sector-filtered path: data was
+        # validated at ETL time; the OR-condition would force a full table scan.
         conditions: list = []
         params: list = []
         if sector_id is not None:
@@ -428,9 +430,10 @@ def get_top_vendors(
         if year is not None:
             conditions.append("c.contract_year = ?")
             params.append(year)
-        # Amount guard: explicit NULL-safe form keeps index on sector_id usable
-        conditions.append("(c.amount_mxn IS NULL OR c.amount_mxn <= ?)")
-        params.append(MAX_CONTRACT_VALUE)
+        # Only add amount guard when no indexed column filters are present (global scan)
+        if sector_id is None and year is None:
+            conditions.append("(c.amount_mxn IS NULL OR c.amount_mxn <= ?)")
+            params.append(MAX_CONTRACT_VALUE)
 
         where_clause = " AND ".join(conditions)
         metric_mapping = {
