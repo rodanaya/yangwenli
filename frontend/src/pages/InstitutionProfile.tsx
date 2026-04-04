@@ -1740,6 +1740,7 @@ function SpendingOverTimeChart({ data }: {
 // ---- Vendor Ranked List ----
 
 function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorItem[]; totalValue: number }) {
+  const { t } = useTranslation('institutions')
   const maxValue = vendors[0]?.total_value_mxn ?? 1
   return (
     <div className="space-y-1">
@@ -1771,7 +1772,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
         )
       })}
       <div className="pt-2 text-xs text-text-muted text-right font-mono">
-        {vendors.length > 0 && <span>Top {vendors.length} mostrados</span>}
+        {vendors.length > 0 && <span>{t('vendors.topShown', { count: vendors.length })}</span>}
       </div>
     </div>
   )
