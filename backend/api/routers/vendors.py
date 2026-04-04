@@ -383,7 +383,35 @@ def get_top_vendors(
 
         valid_metrics = {"value", "count", "risk"}
 
-        # Fast path: use precomputed aggregates when no filters
+        # Per-sector fast path: use precomputed sector_top_vendors when only sector_id filter
+        if sector_id is not None and year is None and by == "value":
+            cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_top_vendors'"
+            )
+            stv_row = cursor.fetchone()
+            if stv_row:
+                import json as _json
+                stv = _json.loads(stv_row[0])
+                sector_vendors = stv.get(str(sector_id), [])[:limit]
+                if sector_vendors:
+                    vendors = [
+                        VendorTopItem(
+                            rank=i + 1,
+                            vendor_id=v["vendor_id"],
+                            vendor_name=v["vendor_name"],
+                            rfc=v.get("rfc"),
+                            metric_value=v.get("total_value_mxn", 0),
+                            total_contracts=v.get("total_contracts", 0),
+                            total_value_mxn=v.get("total_value_mxn", 0),
+                            avg_risk_score=v.get("avg_risk_score"),
+                        )
+                        for i, v in enumerate(sector_vendors)
+                    ]
+                    response = VendorTopListResponse(data=vendors, metric=by, total=len(vendors))
+                    _set_vendor_cache(cache_key, response)
+                    return response
+
+        # Global fast path: use precomputed aggregates when no filters
         if sector_id is None and year is None:
             if by == "risk":
                 sort_field = "avg_risk_score"
