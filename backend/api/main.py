@@ -115,6 +115,7 @@ def _warmup_caches():
         "/api/v1/analysis/money-flow",                 # Dashboard money flow panel
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
         "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
+        "/api/v1/analysis/vendor-concentration?top_n=3",  # Dashboard market concentration panel
     ]
     for ep in endpoints:
         try:
