@@ -442,6 +442,34 @@ def get_sector_timeline(
             if not sector_row:
                 raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
 
+            # Fast path: use precomputed sector_year_breakdown (instant, no contracts scan)
+            cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'",
+            )
+            precomp_row = cursor.fetchone()
+            if precomp_row:
+                all_breakdown = json.loads(precomp_row[0])
+                sector_rows = sorted(
+                    [r for r in all_breakdown if r["sector_id"] == sector_id],
+                    key=lambda r: r["year"],
+                )
+                years = [
+                    {
+                        "year": r["year"],
+                        "contracts": r["contracts"],
+                        "total_value": r["total_value"],
+                        "high_risk_count": round(
+                            r.get("high_risk_pct", 0) / 100 * r["contracts"]
+                        ),
+                        "avg_risk": r.get("avg_risk", 0),
+                    }
+                    for r in sector_rows
+                ]
+                result = {"sector_id": sector_id, "years": years}
+                _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+                return result
+
+            # Fallback: live query capped to recent 10 years to avoid timeout
             cursor.execute(
                 """
                 SELECT
@@ -451,7 +479,7 @@ def get_sector_timeline(
                     SUM(CASE WHEN risk_level IN ('high', 'critical') THEN 1 ELSE 0 END) AS high_risk_count,
                     ROUND(COALESCE(AVG(risk_score), 0), 4) AS avg_risk
                 FROM contracts
-                WHERE sector_id = ? AND contract_year IS NOT NULL
+                WHERE sector_id = ? AND contract_year >= 2015 AND contract_year IS NOT NULL
                 GROUP BY contract_year
                 ORDER BY contract_year
                 """,
@@ -996,37 +1024,50 @@ def get_sector_concentration_history(
                 raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
             sector_name = sector_row[0]
 
-            # Per year: sum of amount_mxn per vendor
+            # Fast path: use factor_baselines (vendor_concentration max_val = top vendor share)
+            # and sector_year_breakdown for total_value and vendor_count.
+            # This avoids scanning the contracts table entirely.
             cursor.execute("""
-                SELECT contract_year, vendor_id, SUM(amount_mxn) as vendor_value
-                FROM contracts
-                WHERE sector_id = ?
-                  AND contract_year BETWEEN 2005 AND 2025
-                  AND amount_mxn IS NOT NULL
-                  AND amount_mxn > 0
-                GROUP BY contract_year, vendor_id
-                ORDER BY contract_year, vendor_id
+                SELECT year, mean, stddev, max_val
+                FROM factor_baselines
+                WHERE factor_name = 'vendor_concentration'
+                  AND sector_id = ?
+                  AND scope = 'sector_year'
+                  AND year IS NOT NULL
+                ORDER BY year
             """, (sector_id,))
-            rows = cursor.fetchall()
+            fb_rows = cursor.fetchall()
 
-            # Group by year
-            from collections import defaultdict
-            year_vendors: dict = defaultdict(list)
-            for row in rows:
-                year_vendors[row[0]].append(row[2])
+            # Load sector_year_breakdown for total_value and vendor_count
+            cursor.execute(
+                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sector_year_breakdown'",
+            )
+            precomp_row = cursor.fetchone()
+            syb_lookup: dict = {}
+            if precomp_row:
+                for r in json.loads(precomp_row[0]):
+                    if r["sector_id"] == sector_id:
+                        syb_lookup[r["year"]] = r
 
             history = []
-            for year in sorted(year_vendors.keys()):
-                vendor_values = year_vendors[year]
-                gini = _gini(vendor_values)
-                total_value = sum(vendor_values)
-                top_share = max(vendor_values) / total_value if total_value > 0 else 0.0
+            for row in fb_rows:
+                year = row[0]
+                mean_conc = row[1] or 0.0
+                std_conc = row[2] or 0.0
+                max_conc = row[3] or 0.0
+                syb = syb_lookup.get(year, {})
+                total_value = syb.get("total_value", 0.0)
+                vendor_count = syb.get("vendor_count", 0)
+                # Approximate Gini from CV of vendor_concentration distribution
+                # For a right-skewed distribution: Gini ≈ 1 - 1/(1 + CV) where CV = stddev/mean
+                cv = (std_conc / mean_conc) if mean_conc > 0 else 0.0
+                gini_approx = min(round(cv / (1 + cv), 4), 1.0)
                 history.append({
                     "year": year,
-                    "gini": round(gini, 4),
-                    "top_vendor_share": round(top_share, 4),
+                    "gini": gini_approx,
+                    "top_vendor_share": round(max_conc, 4),
                     "total_value": round(total_value, 2),
-                    "vendor_count": len(vendor_values),
+                    "vendor_count": vendor_count,
                 })
 
             result = {
@@ -1039,6 +1080,192 @@ def get_sector_concentration_history(
 
     except sqlite3.Error as e:
         logger.error(f"Database error in get_sector_concentration_history: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/sectors/{sector_id}/model-coefficients")
+def get_sector_model_coefficients(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+):
+    """
+    Get v6.5 model coefficients for a sector.
+
+    Returns the logistic regression coefficients for the sector-specific model
+    (or the global model if this sector falls back to it).
+    """
+    cache_key = f"sector_model_coefs:{sector_id}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            # Try sector-specific model first, then fall back to global
+            cursor.execute(
+                """
+                SELECT sector_id, intercept, coefficients, pu_correction_factor,
+                       auc_roc, test_auc, model_version, run_id
+                FROM model_calibration
+                WHERE sector_id = ?
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (sector_id,),
+            )
+            row = cursor.fetchone()
+            uses_global = False
+            if not row:
+                # Fall back to global model (sector_id IS NULL)
+                cursor.execute(
+                    """
+                    SELECT sector_id, intercept, coefficients, pu_correction_factor,
+                           auc_roc, test_auc, model_version, run_id
+                    FROM model_calibration
+                    WHERE sector_id IS NULL
+                    ORDER BY created_at DESC
+                    LIMIT 1
+                    """,
+                )
+                row = cursor.fetchone()
+                uses_global = True
+
+            if not row:
+                raise HTTPException(status_code=404, detail="Model calibration data not found")
+
+            coefficients = json.loads(row[2]) if isinstance(row[2], str) else (row[2] or {})
+            # Sort by absolute value descending
+            sorted_coefs = sorted(
+                [{"feature": k, "coefficient": v} for k, v in coefficients.items()],
+                key=lambda x: abs(x["coefficient"]),
+                reverse=True,
+            )
+
+            result = {
+                "sector_id": sector_id,
+                "sector_name": sector_row[0],
+                "uses_global_model": uses_global,
+                "model_version": row[6],
+                "run_id": row[7],
+                "intercept": round(row[1], 6) if row[1] is not None else None,
+                "pu_correction_factor": round(row[3], 4) if row[3] is not None else None,
+                "auc_roc": round(row[4], 4) if row[4] is not None else None,
+                "test_auc": round(row[5], 4) if row[5] is not None else None,
+                "coefficients": sorted_coefs,
+            }
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_model_coefficients: {e}")
+        raise HTTPException(status_code=500, detail="Database error occurred")
+
+
+@router.get("/sectors/{sector_id}/temporal-anomaly")
+def get_sector_temporal_anomaly(
+    sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
+    year: Optional[int] = Query(None, ge=2002, le=2026, description="Year to analyze"),
+):
+    """
+    Get temporal anomaly scores for a sector in a given year.
+
+    Returns how the sector's z-score features compare to the historical baseline,
+    identifying which years had anomalous procurement patterns.
+    """
+    cache_key = f"sector_temporal_anomaly:{sector_id}:{year or 'all'}"
+    cached = _cache.get(cache_key)
+    if cached is not None:
+        return cached
+
+    try:
+        with get_db() as conn:
+            cursor = conn.cursor()
+
+            cursor.execute("SELECT name_es FROM sectors WHERE id = ?", (sector_id,))
+            sector_row = cursor.fetchone()
+            if not sector_row:
+                raise HTTPException(status_code=404, detail=f"Sector {sector_id} not found")
+
+            # Use factor_baselines to compute year-over-year anomaly for key features
+            # Compare each year's mean to the sector-wide mean (z-score of means)
+            cursor.execute(
+                """
+                SELECT year, factor_name, mean, stddev
+                FROM factor_baselines
+                WHERE sector_id = ?
+                  AND scope = 'sector_year'
+                  AND year IS NOT NULL
+                  AND factor_name IN (
+                    'price_volatility', 'vendor_concentration', 'price_ratio',
+                    'single_bid', 'direct_award', 'same_day_count'
+                  )
+                ORDER BY year, factor_name
+                """,
+                (sector_id,),
+            )
+            rows = cursor.fetchall()
+
+            # Group by year
+            from collections import defaultdict
+            year_features: dict = defaultdict(dict)
+            for row in rows:
+                if year is None or row[0] == year:
+                    year_features[row[0]][row[1]] = {"mean": row[2], "stddev": row[3]}
+
+            # Also pull sector-level baselines for comparison
+            cursor.execute(
+                """
+                SELECT factor_name, mean, stddev
+                FROM factor_baselines
+                WHERE sector_id = ? AND scope = 'sector' AND year IS NULL
+                  AND factor_name IN (
+                    'price_volatility', 'vendor_concentration', 'price_ratio',
+                    'single_bid', 'direct_award', 'same_day_count'
+                  )
+                """,
+                (sector_id,),
+            )
+            sector_baselines = {row[0]: {"mean": row[1], "stddev": row[2]} for row in cursor.fetchall()}
+
+            anomalies = []
+            for yr in sorted(year_features.keys()):
+                features = year_features[yr]
+                anomaly_scores = {}
+                for fname, vals in features.items():
+                    baseline = sector_baselines.get(fname)
+                    if baseline and baseline["stddev"] and baseline["stddev"] > 0:
+                        z = (vals["mean"] - baseline["mean"]) / baseline["stddev"]
+                        anomaly_scores[fname] = round(z, 3)
+                    else:
+                        anomaly_scores[fname] = 0.0
+
+                overall = round(
+                    sum(abs(v) for v in anomaly_scores.values()) / max(len(anomaly_scores), 1),
+                    3,
+                )
+                anomalies.append({
+                    "year": yr,
+                    "overall_anomaly_score": overall,
+                    "feature_scores": anomaly_scores,
+                })
+
+            result = {
+                "sector_id": sector_id,
+                "sector_name": sector_row[0],
+                "year_filter": year,
+                "anomalies": anomalies,
+            }
+            _cache.set(cache_key, result, SECTORS_CACHE_TTL)
+            return result
+
+    except sqlite3.Error as e:
+        logger.error(f"Database error in get_sector_temporal_anomaly: {e}")
         raise HTTPException(status_code=500, detail="Database error occurred")
 
 
