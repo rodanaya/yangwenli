@@ -497,6 +497,7 @@ CREATE INDEX IF NOT EXISTS idx_contracts_amount ON contracts(amount_mxn);
 CREATE INDEX IF NOT EXISTS idx_contracts_direct_award ON contracts(is_direct_award);
 CREATE INDEX IF NOT EXISTS idx_contracts_single_bid ON contracts(is_single_bid);
 CREATE INDEX IF NOT EXISTS idx_contracts_high_value ON contracts(is_high_value);
+CREATE INDEX IF NOT EXISTS idx_c_sector_vendor ON contracts(sector_id, vendor_id);
 
 -- Risk scores indexes
 CREATE INDEX IF NOT EXISTS idx_risk_scores_contract ON risk_scores(contract_id);
