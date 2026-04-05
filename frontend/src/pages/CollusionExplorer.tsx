@@ -5,7 +5,7 @@
  * connection visualization, pattern legend, contextual empty/error states.
  */
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
@@ -21,6 +21,9 @@ import {
   Shield,
   MapPin,
   HelpCircle,
+  Search,
+  X,
+  Table2,
 } from 'lucide-react'
 import { collusionApi } from '@/api/client'
 import type { CollusionPair, CollusionStats } from '@/api/types'
@@ -435,6 +438,364 @@ function ErrorState() {
 }
 
 // ---------------------------------------------------------------------------
+// Co-Bid Rate Bar
+// ---------------------------------------------------------------------------
+
+function CoBidRateBar({ rate }: { rate: number }) {
+  const color =
+    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
+  return (
+    <div className="flex items-center gap-2">
+      <div className="w-16 bg-zinc-800 rounded-full h-1.5 shrink-0">
+        <div
+          className={`h-1.5 rounded-full ${color}`}
+          style={{ width: `${Math.min(rate, 100)}%` }}
+          role="presentation"
+        />
+      </div>
+      <span className="tabular-nums">{rate.toFixed(1)}%</span>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Collusion Pairs Table
+// ---------------------------------------------------------------------------
+
+const TABLE_PER_PAGE = 25
+
+function CollusionPairsTable() {
+  const navigate = useNavigate()
+
+  const [tablePage, setTablePage] = useState(1)
+  const [tableSort, setTableSort] = useState<SortField>('co_bid_rate')
+  const [tableMinShared, setTableMinShared] = useState(5)
+  const [searchTerm, setSearchTerm] = useState('')
+  const [debouncedSearch, setDebouncedSearch] = useState('')
+  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const handleSearch = useCallback((value: string) => {
+    setSearchTerm(value)
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => {
+      setDebouncedSearch(value)
+      setTablePage(1)
+    }, 300)
+  }, [])
+
+  const handleClearSearch = () => {
+    setSearchTerm('')
+    setDebouncedSearch('')
+    setTablePage(1)
+  }
+
+  const tableQueryParams = useMemo(
+    () => ({
+      is_potential_collusion: undefined as boolean | undefined,
+      min_shared_procedures: tableMinShared,
+      sort_by: tableSort,
+      page: tablePage,
+      per_page: TABLE_PER_PAGE,
+    }),
+    [tableMinShared, tableSort, tablePage],
+  )
+
+  const { data: tableData, isLoading: tableLoading, isError: tableError } = useQuery({
+    queryKey: ['collusion-pairs-table', tableQueryParams],
+    queryFn: () => collusionApi.getPairs(tableQueryParams),
+    staleTime: 10 * 60 * 1000,
+    placeholderData: (prev) => prev,
+  })
+
+  const allPairs: CollusionPair[] = tableData?.data ?? []
+  const tablePagination = tableData?.pagination
+  const tableTotalPages = tablePagination?.total_pages ?? 1
+  const tableTotal = tablePagination?.total ?? 0
+
+  // Client-side search filter on current page
+  const filteredPairs = useMemo(() => {
+    if (!debouncedSearch.trim()) return allPairs
+    const q = debouncedSearch.toLowerCase()
+    return allPairs.filter(
+      (p) =>
+        p.vendor_name_a.toLowerCase().includes(q) ||
+        p.vendor_name_b.toLowerCase().includes(q),
+    )
+  }, [allPairs, debouncedSearch])
+
+  const tablePageOffset = (tablePage - 1) * TABLE_PER_PAGE
+
+  return (
+    <section
+      aria-labelledby="pairs-table-heading"
+      className="mt-14 pt-10 border-t border-zinc-800"
+    >
+      {/* Section header */}
+      <div className="mb-6">
+        <div className="flex items-center gap-2 mb-1">
+          <Table2 className="h-4 w-4 text-zinc-500" aria-hidden="true" />
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+            Investigative View
+          </p>
+        </div>
+        <h2
+          id="pairs-table-heading"
+          className="text-2xl font-bold text-zinc-100 mb-2"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          8,701 Suspected Collusion Pairs
+        </h2>
+        <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed">
+          Vendor pairs that bid together in more than 50% of their procedures —
+          the statistical signature of bid rigging. Use this table to find, copy,
+          and share specific vendor names for investigation.
+        </p>
+      </div>
+
+      {/* Controls row */}
+      <div className="flex flex-wrap items-end gap-3 mb-4">
+        {/* Search */}
+        <div className="relative flex-1 min-w-48 max-w-xs">
+          <label htmlFor="table-search" className="sr-only">
+            Filter by vendor name
+          </label>
+          <Search
+            className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none"
+            aria-hidden="true"
+          />
+          <input
+            id="table-search"
+            type="search"
+            value={searchTerm}
+            onChange={(e) => handleSearch(e.target.value)}
+            placeholder="Filter by vendor name..."
+            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm pl-8 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder:text-zinc-600"
+          />
+          {searchTerm && (
+            <button
+              type="button"
+              onClick={handleClearSearch}
+              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
+              aria-label="Clear search"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          )}
+        </div>
+
+        {/* Sort */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="table-sort" className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 whitespace-nowrap">
+            Sort
+          </label>
+          <select
+            id="table-sort"
+            value={tableSort}
+            onChange={(e) => { setTableSort(e.target.value as SortField); setTablePage(1) }}
+            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          >
+            <option value="co_bid_rate">Co-Bid Rate</option>
+            <option value="shared_procedures">Shared Procedures</option>
+          </select>
+        </div>
+
+        {/* Min shared */}
+        <div className="flex items-center gap-2">
+          <label htmlFor="table-min-shared" className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 whitespace-nowrap">
+            Min shared
+          </label>
+          <input
+            id="table-min-shared"
+            type="number"
+            min={1}
+            max={500}
+            value={tableMinShared}
+            onChange={(e) => { setTableMinShared(Math.max(1, Number(e.target.value))); setTablePage(1) }}
+            className="w-20 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          />
+        </div>
+      </div>
+
+      {/* Search scope note */}
+      {debouncedSearch && (
+        <p className="text-[10px] font-mono text-zinc-600 mb-3" aria-live="polite">
+          Filtering {filteredPairs.length} of {allPairs.length} results on this page. Adjust sort/min-shared to search broader data.
+        </p>
+      )}
+
+      {/* Table */}
+      {tableLoading ? (
+        <div className="space-y-2">
+          {Array.from({ length: 8 }).map((_, i) => (
+            <Skeleton key={i} className="h-10 rounded-lg" />
+          ))}
+        </div>
+      ) : tableError ? (
+        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center">
+          <AlertTriangle className="h-6 w-6 text-red-400 mx-auto mb-2" aria-hidden="true" />
+          <p className="text-sm text-red-300">Failed to load collusion pairs table.</p>
+        </div>
+      ) : filteredPairs.length === 0 ? (
+        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-center">
+          <Users className="h-6 w-6 text-zinc-700 mx-auto mb-2" aria-hidden="true" />
+          <p className="text-sm text-zinc-400">No pairs match current filters.</p>
+        </div>
+      ) : (
+        <div className="overflow-x-auto rounded-xl border border-zinc-800">
+          <table className="w-full text-sm" aria-label="Collusion pairs">
+            <thead>
+              <tr className="border-b border-zinc-800 bg-zinc-900/80">
+                <th
+                  scope="col"
+                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-12"
+                >
+                  #
+                </th>
+                <th
+                  scope="col"
+                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5"
+                >
+                  Vendor A
+                </th>
+                <th
+                  scope="col"
+                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5"
+                >
+                  Vendor B
+                </th>
+                <th
+                  scope="col"
+                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-40"
+                >
+                  Co-Bid Rate
+                </th>
+                <th
+                  scope="col"
+                  className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-24"
+                >
+                  Shared
+                </th>
+                <th
+                  scope="col"
+                  className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-24"
+                >
+                  Flag
+                </th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-zinc-800/60">
+              {filteredPairs.map((pair, idx) => (
+                <tr
+                  key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
+                  className="hover:bg-zinc-900/60 transition-colors"
+                >
+                  {/* Rank */}
+                  <td className="px-3 py-2.5 text-[11px] font-mono text-zinc-600 tabular-nums">
+                    {tablePageOffset + idx + 1}
+                  </td>
+
+                  {/* Vendor A */}
+                  <td className="px-3 py-2.5 max-w-[220px]">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
+                      className="text-xs font-medium text-zinc-200 hover:text-blue-400 transition-colors text-left truncate block max-w-full"
+                      title={pair.vendor_name_a}
+                    >
+                      {pair.vendor_name_a}
+                    </button>
+                    <span className="text-[10px] font-mono text-zinc-600">
+                      {formatNumber(pair.vendor_a_procedures)} proc.
+                    </span>
+                  </td>
+
+                  {/* Vendor B */}
+                  <td className="px-3 py-2.5 max-w-[220px]">
+                    <button
+                      type="button"
+                      onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
+                      className="text-xs font-medium text-zinc-200 hover:text-blue-400 transition-colors text-left truncate block max-w-full"
+                      title={pair.vendor_name_b}
+                    >
+                      {pair.vendor_name_b}
+                    </button>
+                    <span className="text-[10px] font-mono text-zinc-600">
+                      {formatNumber(pair.vendor_b_procedures)} proc.
+                    </span>
+                  </td>
+
+                  {/* Co-bid rate bar */}
+                  <td className="px-3 py-2.5 text-xs font-mono text-zinc-300">
+                    <CoBidRateBar rate={pair.co_bid_rate} />
+                  </td>
+
+                  {/* Shared procedures */}
+                  <td className="px-3 py-2.5 text-right text-xs font-mono font-semibold text-zinc-200 tabular-nums">
+                    {formatNumber(pair.shared_procedures)}
+                  </td>
+
+                  {/* Collusion flag */}
+                  <td className="px-3 py-2.5 text-center">
+                    {pair.is_potential_collusion ? (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/20 text-red-400">
+                        <AlertTriangle className="h-2 w-2" aria-hidden="true" />
+                        Flagged
+                      </span>
+                    ) : (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-zinc-800 border border-zinc-700 text-zinc-500">
+                        Watch
+                      </span>
+                    )}
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+
+      {/* Table Pagination */}
+      {tableTotalPages > 1 && !debouncedSearch && (
+        <div
+          className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800"
+          role="navigation"
+          aria-label="Table pagination"
+        >
+          <button
+            type="button"
+            onClick={() => setTablePage((p) => Math.max(1, p - 1))}
+            disabled={tablePage <= 1}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+            Prev
+          </button>
+
+          <span className="text-[10px] font-mono text-zinc-600" aria-live="polite">
+            Page {tablePage} of {tableTotalPages} &middot; {formatNumber(tableTotal)} pairs
+          </span>
+
+          <button
+            type="button"
+            onClick={() => setTablePage((p) => Math.min(tableTotalPages, p + 1))}
+            disabled={tablePage >= tableTotalPages}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+          >
+            Next
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+          </button>
+        </div>
+      )}
+
+      {/* Journalist tip */}
+      <p className="text-[10px] text-zinc-700 mt-6">
+        Tip: Click any vendor name to open their full profile. Vendor pairs with co-bid rate &gt;80% and &gt;50 shared procedures warrant immediate investigation.
+      </p>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -597,6 +958,9 @@ export default function CollusionExplorer() {
             </button>
           </div>
         )}
+
+        {/* ── Collusion Pairs Table ── */}
+        <CollusionPairsTable />
 
         {/* ── Source footnote ── */}
         <p className="text-[10px] text-zinc-700 mt-8 text-center">

@@ -38,6 +38,7 @@
   "executiveSummary": "Executive Summary",
   "map": "Mexico Map",
   "priceAnalysis": "Price Analysis",
+  "politicalCycle": "Political Cycle",
   "captureHeatmap": "Capture Heatmap",
   "sectorHealth": "Sector Health",
   "watchlist": "My Watchlist",
@@ -48,6 +49,7 @@
   "ariaQueue": "Investigation Leads",
   "sectors": "Sectors",
   "institutionLeague": "Institution League",
+  "stateExplorer": "States Explorer",
   "groundTruth": "Ground Truth",
   "model": "Model Transparency",
   "methodology": "Methodology",
@@ -73,5 +75,7 @@
   "contractsIndexed": "3.1M contracts indexed",
   "contractsIndexedShort": "3.1M indexed",
   "reportIssue": "Report an issue",
-  "collusion": "Collusion Explorer"
+  "collusion": "Collusion Explorer",
+  "procurementCalendar": "Procurement Calendar",
+  "scorecards": "Institution Scorecards"
 }

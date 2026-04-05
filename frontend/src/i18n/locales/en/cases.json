@@ -28,9 +28,12 @@
     "convictionRate": "Convicted"
   },
   "hero": {
+    "overline": "CORRUPTION ARCHIVE — MEXICO 2001–2025",
     "headline": "{{amount}} in documented losses across {{count}} corruption cases",
     "subhead": "Mexico's federal procurement corruption archive. Each case represents public money diverted through ghost companies, bid rigging, overpricing, and institutional capture.",
-    "impunityCallout": "Only {{pct}}% of cases resulted in a conviction. {{impunity}} cases remain in impunity."
+    "impunityCallout": "Only {{pct}}% of cases resulted in a conviction. {{impunity}} cases remain in impunity.",
+    "findingLabel": "FINDING",
+    "sourcesLabel": "SOURCES"
   },
   "filters": {
     "all": "All cases",

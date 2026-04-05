@@ -76,6 +76,9 @@ class TestWatchlistFolders:
             data = r.json()
             assert "id" in data
             assert data["name"] == "Test Folder"
+            # Always clean up — avoid test data accumulation in production DB
+            folder_id = data["id"]
+            client.delete(f"{base_url}/watchlist/folders/{folder_id}")
 
     def test_create_folder_missing_name(self, client, base_url):
         r = client.post(f"{base_url}/watchlist/folders", json={"color": "#fff"})

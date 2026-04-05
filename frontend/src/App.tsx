@@ -58,7 +58,11 @@ const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 // Telescope removed — /telescope redirects to /sectors
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
+const InstitutionScorecards = lazy(() => import('@/pages/InstitutionScorecards'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
+const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
+const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
+const PoliticalCycle = lazy(() => import('@/pages/PoliticalCycle'))
 
 // First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
 function FirstVisitRedirect() {
@@ -343,6 +347,14 @@ function App() {
               />
               <Route path="api-explorer" element={<Navigate to="/settings" replace />} />
               <Route path="heatmap" element={<Navigate to="/money-flow" replace />} />
+              <Route
+                path="procurement-calendar"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <ProcurementCalendar />
+                  </SuspenseBoundary>
+                }
+              />
               <Route path="map" element={<Navigate to="/administrations" replace />} />
               <Route
                 path="journalists"
@@ -388,6 +400,24 @@ function App() {
                 }
               />
 
+              <Route
+                path="scorecards"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <InstitutionScorecards />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="political-cycle"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <PoliticalCycle />
+                  </SuspenseBoundary>
+                }
+              />
+
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />
               <Route
@@ -417,6 +447,15 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<DetailPageSkeleton />}>
                     <RedThread />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="states"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <StateExplorer />
                   </SuspenseBoundary>
                 }
               />

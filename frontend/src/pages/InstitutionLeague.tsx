@@ -455,7 +455,7 @@ export default function InstitutionLeague() {
                 {t('title')}
               </h1>
               <p className="text-zinc-400 text-sm mt-1 max-w-2xl">
-                {t('subtitle', { total: formatNumber(statsData?.total_scored ?? 0) })}
+                {statsData ? t('subtitle', { total: formatNumber(statsData.total_scored) }) : <span className="opacity-0">Loading...</span>}
               </p>
             </div>
             <Building2 className="h-8 w-8 text-zinc-700 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />

@@ -1379,6 +1379,15 @@ export const analysisApi = {
     const { data } = await api.get(`/analysis/vendor-concentration?top_n=${topN}`)
     return data
   },
+
+  /**
+   * Get daily contract activity for a full year — GitHub-style calendar heatmap data.
+   * Returns 365 (or 366 for leap years) records, one per calendar day.
+   */
+  async getCalendarHeatmap(year: number): Promise<Array<{ date: string; total_contracts: number; high_risk_contracts: number; risk_rate: number }>> {
+    const { data } = await api.get<Array<{ date: string; total_contracts: number; high_risk_contracts: number; risk_rate: number }>>(`/analysis/calendar-heatmap?year=${year}`)
+    return data
+  },
 }
 
 // ============================================================================

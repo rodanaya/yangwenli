@@ -28,9 +28,12 @@
     "convictionRate": "Condenados"
   },
   "hero": {
+    "overline": "ARCHIVO DE CORRUPCIÓN — MÉXICO 2001–2025",
     "headline": "{{amount}} en pérdidas documentadas en {{count}} casos de corrupción",
     "subhead": "Archivo de corrupción en contratación pública federal de México. Cada caso representa dinero público desviado a través de empresas fantasma, manipulación de licitaciones, sobreprecios y captura institucional.",
-    "impunityCallout": "Solo el {{pct}}% de los casos resultaron en condena. {{impunity}} casos permanecen en impunidad."
+    "impunityCallout": "Solo el {{pct}}% de los casos resultaron en condena. {{impunity}} casos permanecen en impunidad.",
+    "findingLabel": "HALLAZGO",
+    "sourcesLabel": "FUENTES"
   },
   "filters": {
     "all": "Todos los casos",

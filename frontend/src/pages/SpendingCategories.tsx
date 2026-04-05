@@ -93,7 +93,7 @@ type SortDir = 'asc' | 'desc'
 // =============================================================================
 
 function truncate(text: string, maxLen: number): string {
-  return text.length > maxLen ? text.slice(0, maxLen - 1) + '\u2026' : text
+  return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text
 }
 
 function getRiskColor(score: number): string {
@@ -177,13 +177,13 @@ const MAX_YEAR = 2025
 const SECTOR_OPTIONS = [
   { code: '', label: 'Todos los Sectores' },
   { code: 'salud', label: 'Salud' },
-  { code: 'educacion', label: 'Educaci\u00f3n' },
+  { code: 'educacion', label: 'Educación' },
   { code: 'infraestructura', label: 'Infraestructura' },
-  { code: 'energia', label: 'Energ\u00eda' },
+  { code: 'energia', label: 'Energía' },
   { code: 'defensa', label: 'Defensa' },
-  { code: 'tecnologia', label: 'Tecnolog\u00eda' },
+  { code: 'tecnologia', label: 'Tecnología' },
   { code: 'hacienda', label: 'Hacienda' },
-  { code: 'gobernacion', label: 'Gobernaci\u00f3n' },
+  { code: 'gobernacion', label: 'Gobernación' },
   { code: 'agricultura', label: 'Agricultura' },
   { code: 'ambiente', label: 'Medio Ambiente' },
   { code: 'trabajo', label: 'Trabajo' },
@@ -234,7 +234,7 @@ function CategoryDetailPanel({
           <div className="min-w-0">
             <CardTitle className="text-sm font-bold text-text-primary truncate">{categoryName}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              Principales relaciones proveedor-instituci\u00f3n por monto
+              Principales relaciones proveedor-institución por monto
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -249,7 +249,7 @@ function CategoryDetailPanel({
               <button
                 onClick={() => onNavigate(`/investigation?sector_id=${sectorId}`)}
                 className="flex items-center gap-1 text-xs text-[#f87171] hover:text-[#fca5a5] transition-colors border border-[#f87171]/30 px-2 py-1 rounded"
-                title="Ver casos de investigaci\u00f3n en este sector"
+                title="Ver casos de investigación en este sector"
               >
                 <ExternalLink className="h-3 w-3" />
                 Casos
@@ -283,7 +283,7 @@ function CategoryDetailPanel({
                 <span>Proveedor</span>
                 <span className="text-text-muted/30">&rarr;</span>
                 <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span>Instituci\u00f3n</span>
+                <span>Institución</span>
               </div>
               <span className="w-20 text-right flex-shrink-0">Monto</span>
               <span className="w-14 text-right flex-shrink-0 hidden md:block">Contratos</span>
@@ -459,7 +459,7 @@ function CategorySummaryCard({
             className="text-xl font-mono font-bold leading-tight"
             style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
           >
-            {category.direct_award_pct != null ? `${category.direct_award_pct.toFixed(0)}%` : '\u2014'}
+            {category.direct_award_pct != null ? `${category.direct_award_pct.toFixed(0)}%` : '—'}
           </p>
           {isOECDViolation && (
             <p className="text-[10px] text-cyan-400 mt-0.5 font-mono">
@@ -496,12 +496,12 @@ function CategorySummaryCard({
               <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
             </button>
           ) : (
-            <p className="text-sm text-text-muted">{'\u2014'}</p>
+            <p className="text-sm text-text-muted">{'—'}</p>
           )}
           {/* Single bid % */}
           {category.single_bid_pct > 0 && (
             <p className="text-[10px] text-text-muted/50 mt-1 font-mono">
-              {category.single_bid_pct.toFixed(0)}% licitaci{'\u00f3'}n {'\u00fa'}nica
+              {category.single_bid_pct.toFixed(0)}% licitaci{'ó'}n {'ú'}nica
             </p>
           )}
         </div>
@@ -515,10 +515,10 @@ function CategorySummaryCard({
           </p>
           <p className="text-sm text-zinc-200">
             {category.avg_risk >= 0.40 && isHighDA
-              ? `Esta categor\u00eda combina riesgo ${riskLevel} (${(category.avg_risk * 100).toFixed(0)}%) con ${category.direct_award_pct.toFixed(0)}% de adjudicaci\u00f3n directa \u2014 ${(category.direct_award_pct / 25).toFixed(1)}x el l\u00edmite OCDE de 25%.`
+              ? `Esta categoría combina riesgo ${riskLevel} (${(category.avg_risk * 100).toFixed(0)}%) con ${category.direct_award_pct.toFixed(0)}% de adjudicación directa — ${(category.direct_award_pct / 25).toFixed(1)}x el límite OCDE de 25%.`
               : category.avg_risk >= 0.40
-                ? `Riesgo promedio ${riskLevel} en ${formatNumber(category.total_contracts)} contratos por ${formatCompactMXN(category.total_value)}. Revisar patrones de concentraci\u00f3n.`
-                : `${category.direct_award_pct.toFixed(0)}% de adjudicaci\u00f3n directa \u2014 ${(category.direct_award_pct / 25).toFixed(1)}x el l\u00edmite OCDE de 25%. Baja competencia en esta categor\u00eda.`
+                ? `Riesgo promedio ${riskLevel} en ${formatNumber(category.total_contracts)} contratos por ${formatCompactMXN(category.total_value)}. Revisar patrones de concentración.`
+                : `${category.direct_award_pct.toFixed(0)}% de adjudicación directa — ${(category.direct_award_pct / 25).toFixed(1)}x el límite OCDE de 25%. Baja competencia en esta categoría.`
             }
           </p>
         </div>
@@ -593,7 +593,7 @@ function SubcategoryPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-            Qu\u00e9 se compr\u00f3 &mdash; {categoryName}
+            Qué se compró &mdash; {categoryName}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -622,10 +622,10 @@ function SubcategoryPanel({
           <div>
             <CardTitle className="text-sm flex items-center gap-2">
               <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-              Qu\u00e9 se compr\u00f3
+              Qué se compró
             </CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              {namedCount} subcategor\u00edas &middot; {categoryName} &middot; haga clic en una fila para expandir
+              {namedCount} subcategorías &middot; {categoryName} &middot; haga clic en una fila para expandir
             </CardDescription>
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
@@ -648,7 +648,7 @@ function SubcategoryPanel({
         </div>
         <div className="mt-2.5">
           <div className="flex items-center justify-between text-[10px] font-mono text-text-muted/60 mb-1">
-            <span>{classifiedPct.toFixed(0)}% del gasto categorizado en subcategor\u00edas</span>
+            <span>{classifiedPct.toFixed(0)}% del gasto categorizado en subcategorías</span>
             <span className="text-text-muted/40">{catchAllPct.toFixed(0)}% sin clasificar</span>
           </div>
           <div className="h-1.5 bg-border/20 rounded-full overflow-hidden flex">
@@ -666,7 +666,7 @@ function SubcategoryPanel({
 
       <CardContent className="p-0">
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
-          <div className="flex-1 min-w-0">Subcategor\u00eda</div>
+          <div className="flex-1 min-w-0">Subcategoría</div>
           <span className="w-20 text-right flex-shrink-0">Monto</span>
           <span className="w-12 text-right flex-shrink-0">%</span>
           <span className="w-10 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
@@ -704,7 +704,7 @@ function SubcategoryPanel({
                         </span>
                       )}
                       {isFlagged && (
-                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% adjudicaci\u00f3n directa` : ''}${isHighDA && isHighSB ? ' \u00b7 ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% licitaci\u00f3n \u00fanica` : ''}`}>
+                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% adjudicación directa` : ''}${isHighDA && isHighSB ? ' · ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% licitación única` : ''}`}>
                           <AlertTriangle className="h-2.5 w-2.5 text-amber-400 flex-shrink-0" />
                         </span>
                       )}
@@ -744,13 +744,13 @@ function SubcategoryPanel({
                     className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden lg:block"
                     style={{ color: sub.avg_risk > 0 ? getRiskColor(sub.avg_risk) : undefined }}
                   >
-                    {sub.avg_risk > 0 ? `${(sub.avg_risk * 100).toFixed(0)}%` : '\u2014'}
+                    {sub.avg_risk > 0 ? `${(sub.avg_risk * 100).toFixed(0)}%` : '—'}
                   </span>
                   <span
                     className="w-10 text-right text-xs font-mono tabular-nums flex-shrink-0 hidden xl:block"
                     style={{ color: isHighDA ? '#fb923c' : undefined }}
                   >
-                    {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '\u2014'}
+                    {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
                   </span>
                   <span className="w-4 text-right text-text-muted/40 text-[10px] flex-shrink-0 select-none">
                     {expandedId === sub.subcategory_id ? '\u25B2' : '\u25BC'}
@@ -764,10 +764,10 @@ function SubcategoryPanel({
                         <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
                         <span className="text-[11px] text-amber-300/80">
                           {[
-                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% adjudicaci\u00f3n directa (baja competencia)`,
-                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% licitaci\u00f3n \u00fanica`,
+                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% adjudicación directa (baja competencia)`,
+                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% licitación única`,
                             sub.avg_risk >= RISK_THRESHOLDS.high && `riesgo promedio ${(sub.avg_risk * 100).toFixed(0)}%`,
-                          ].filter(Boolean).join(' \u00b7 ')}
+                          ].filter(Boolean).join(' · ')}
                         </span>
                       </div>
                     )}
@@ -778,8 +778,8 @@ function SubcategoryPanel({
                       </div>
                       {sub.year_min != null && sub.year_max != null && (
                         <div>
-                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">A\u00f1os activo</p>
-                          <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}\u2013{sub.year_max}</p>
+                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Años activo</p>
+                          <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}–{sub.year_max}</p>
                         </div>
                       )}
                       <div>
@@ -788,16 +788,16 @@ function SubcategoryPanel({
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
                         >
-                          {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '\u2014'}
+                          {sub.direct_award_pct > 0 ? `${sub.direct_award_pct.toFixed(0)}%` : '—'}
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Licit. \u00danica</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Licit. Única</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighSB ? '#fb923c' : 'var(--color-text-primary)' }}
                         >
-                          {sub.single_bid_pct > 0 ? `${sub.single_bid_pct.toFixed(0)}%` : '\u2014'}
+                          {sub.single_bid_pct > 0 ? `${sub.single_bid_pct.toFixed(0)}%` : '—'}
                         </p>
                       </div>
                     </div>
@@ -820,7 +820,7 @@ function SubcategoryPanel({
                     {sub.example_titles.length > 0 && (
                       <div>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-1.5">
-                          T\u00edtulos de contratos ejemplo
+                          Títulos de contratos ejemplo
                         </p>
                         <div className="space-y-1.5">
                           {sub.example_titles.slice(0, 4).map((title, i) => (
@@ -1086,8 +1086,8 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       <EditorialHeadline
         section="PARTIDAS PRESUPUESTARIAS"
-        headline="En Qu\u00e9 Gasta el Gobierno: Un Desglose por Categor\u00eda"
-        subtitle="An\u00e1lisis de los c\u00f3digos Partida que revelan d\u00f3nde se concentra el gasto p\u00fablico y el riesgo de corrupci\u00f3n"
+        headline="En Qué Gasta el Gobierno: Un Desglose por Categoría"
+        subtitle="Análisis de los códigos Partida que revelan dónde se concentra el gasto público y el riesgo de corrupción"
       />
 
       {/* ================================================================= */}
@@ -1095,25 +1095,25 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <HallazgoStat
-          value={allCategories.length > 0 ? String(allCategories.length) : '\u2014'}
-          label="Categor\u00edas de gasto rastreadas"
-          annotation="C\u00f3digos Partida presupuestal, 2002\u20132025"
+          value={allCategories.length > 0 ? String(allCategories.length) : '—'}
+          label="Categorías de gasto rastreadas"
+          annotation="Códigos Partida presupuestal, 2002–2025"
           color="border-blue-500"
         />
         <HallazgoStat
           value={`${highestRiskPct}%`}
           label={highestRiskCat
-            ? `Riesgo promedio m\u00e1s alto: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
-            : 'Categor\u00eda de mayor riesgo'
+            ? `Riesgo promedio más alto: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
+            : 'Categoría de mayor riesgo'
           }
           annotation={highestRiskCat ? `${formatNumber(highestRiskCat.total_contracts)} contratos` : undefined}
           color="border-red-500"
         />
         <HallazgoStat
-          value={topSpendCat ? formatCompactMXN(topSpendCat.total_value) : '\u2014'}
+          value={topSpendCat ? formatCompactMXN(topSpendCat.total_value) : '—'}
           label={topSpendCat
             ? `Mayor gasto: ${truncate(topSpendCat.name_es || topSpendCat.name_en, 35)}`
-            : 'Categor\u00eda l\u00edder en gasto'
+            : 'Categoría líder en gasto'
           }
           annotation={topSpendCat ? `${formatNumber(topSpendCat.total_contracts)} contratos` : undefined}
           color="border-amber-500"
@@ -1130,15 +1130,15 @@ export default function SpendingCategories() {
         >
           {allCategories.length > 0 ? (
             <>
-              De las {allCategories.length} categor\u00edas presupuestarias del gobierno federal,
+              De las {allCategories.length} categorías presupuestarias del gobierno federal,
               {' '}{banderasRojas.length > 0 && (
                 <>
-                  las de mayor riesgo muestran indicadores de corrupci\u00f3n
+                  las de mayor riesgo muestran indicadores de corrupción
                   hasta {highestRiskPct}% por encima del promedio.{' '}
                 </>
               )}
-              El desglose por c\u00f3digo Partida revela d\u00f3nde se concentra el gasto
-              y qu\u00e9 tipos de bienes y servicios presentan los patrones m\u00e1s sospechosos.
+              El desglose por código Partida revela dónde se concentra el gasto
+              y qué tipos de bienes y servicios presentan los patrones más sospechosos.
             </>
           ) : (
             t('hero.loading')
@@ -1164,7 +1164,7 @@ export default function SpendingCategories() {
               Banderas Rojas
             </h2>
             <span className="text-xs text-text-muted ml-2">
-              Las 5 categor\u00edas con mayor riesgo promedio (min. 10 contratos)
+              Las 5 categorías con mayor riesgo promedio (min. 10 contratos)
             </span>
           </div>
 
@@ -1255,15 +1255,15 @@ export default function SpendingCategories() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Buscar categor\u00eda\u2026"
+              placeholder="Buscar categoría…"
               className="w-full h-8 pl-8 pr-3 rounded border border-border bg-background-card text-xs text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label="Buscar categor\u00edas de gasto"
+              aria-label="Buscar categorías de gasto"
             />
           </div>
 
           {/* Year range */}
           <div className="flex items-center gap-2">
-            <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">A\u00f1o</label>
+            <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">Año</label>
             <select
               id="year-from"
               value={yearFrom}
@@ -1311,7 +1311,7 @@ export default function SpendingCategories() {
             className="text-base font-bold text-text-primary"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            {filteredCategories.length} Categor\u00edas{sectorFilter ? ` en ${getSectorNameEN(sectorFilter)}` : ''}
+            {filteredCategories.length} Categorías{sectorFilter ? ` en ${getSectorNameEN(sectorFilter)}` : ''}
           </h2>
           {stats && (
             <span className="text-xs text-text-muted">
@@ -1334,7 +1334,7 @@ export default function SpendingCategories() {
                   <thead>
                     <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
                       <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
-                      <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Categor\u00eda</th>
+                      <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Categoría</th>
                       <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">Sector</th>
                       <th
                         className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
@@ -1398,7 +1398,7 @@ export default function SpendingCategories() {
                             </div>
                           </td>
                           <td className="px-3 py-2 text-text-muted hidden md:table-cell capitalize">
-                            {cat.sector_code ?? '\u2014'}
+                            {cat.sector_code ?? '—'}
                           </td>
                           <td className="px-3 py-2 text-right text-text-secondary tabular-nums font-mono">
                             {formatNumber(cat.total_contracts)}
@@ -1426,7 +1426,7 @@ export default function SpendingCategories() {
                             </span>
                           </td>
                           <td className="px-3 py-2 text-right text-text-muted tabular-nums font-mono hidden lg:table-cell">
-                            {cat.direct_award_pct != null ? `${cat.direct_award_pct.toFixed(0)}%` : '\u2014'}
+                            {cat.direct_award_pct != null ? `${cat.direct_award_pct.toFixed(0)}%` : '—'}
                           </td>
                           <td className="px-3 py-2 text-text-muted text-xs truncate max-w-[200px] hidden lg:table-cell">
                             {cat.top_vendor ? (
@@ -1437,7 +1437,7 @@ export default function SpendingCategories() {
                                 {truncate(cat.top_vendor.name, 28)}
                                 <ArrowUpRight className="h-3 w-3 flex-shrink-0" />
                               </button>
-                            ) : '\u2014'}
+                            ) : '—'}
                           </td>
                           <td className="px-3 py-2 text-right hidden xl:table-cell">
                             <div className="flex items-center justify-end">
@@ -1454,7 +1454,7 @@ export default function SpendingCategories() {
                 </table>
                 {sortedCategories.length === 0 && (
                   <div className="flex items-center justify-center py-12 text-text-muted text-sm">
-                    No se encontraron categor\u00edas con los filtros actuales.
+                    No se encontraron categorías con los filtros actuales.
                   </div>
                 )}
               </div>
@@ -1469,7 +1469,7 @@ export default function SpendingCategories() {
       {selectedCategoryId === null && sortedCategories.length > 0 && (
         <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
           <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-          <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategor\u00edas</span>, principales proveedores y desgloses institucionales.</span>
+          <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategorías</span>, principales proveedores y desgloses institucionales.</span>
         </div>
       )}
       {selectedCategoryId !== null && selectedCategory && (
@@ -1513,7 +1513,7 @@ export default function SpendingCategories() {
               {t('treemap.title')}
             </CardTitle>
             <CardDescription>
-              Top 30 categor\u00edas de gasto por monto total. Color = sector. Clic en una barra para detalle.
+              Top 30 categorías de gasto por monto total. Color = sector. Clic en una barra para detalle.
             </CardDescription>
           </CardHeader>
           <CardContent>
@@ -1557,7 +1557,7 @@ export default function SpendingCategories() {
                       dataKey="name"
                       width={200}
                       tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
-                      tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '\u2026' : v}
+                      tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '…' : v}
                       axisLine={false}
                       tickLine={false}
                     />
@@ -1775,7 +1775,7 @@ export default function SpendingCategories() {
               className="text-sm text-text-secondary leading-relaxed mb-3"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              Las categor\u00edas de medicamentos y equipo m\u00e9dico representan una parte sustancial del gasto en salud &mdash; y presentan indicadores de riesgo elevados.
+              Las categorías de medicamentos y equipo médico representan una parte sustancial del gasto en salud &mdash; y presentan indicadores de riesgo elevados.
             </p>
             <ImpactoHumano amountMxn={healthCategorySpend} />
           </div>

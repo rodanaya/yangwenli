@@ -39,6 +39,7 @@
   "executiveSummary": "Resumen Ejecutivo",
   "map": "Mapa de México",
   "priceAnalysis": "Análisis de Precios",
+  "politicalCycle": "Ciclo Político",
   "captureHeatmap": "Captura Institucional",
   "sectorHealth": "Salud Sectorial",
   "watchlist": "Mi Vigilancia",
@@ -49,6 +50,7 @@
   "ariaQueue": "Pistas de investigación",
   "sectors": "Sectores",
   "institutionLeague": "Liga Institucional",
+  "stateExplorer": "Explorador de Estados",
   "groundTruth": "Casos documentados",
   "model": "Transparencia del Modelo",
   "methodology": "Metodología",
@@ -74,5 +76,7 @@
   "contractsIndexed": "3.1M contratos indexados",
   "contractsIndexedShort": "3.1M indexados",
   "reportIssue": "Reportar un problema",
-  "collusion": "Explorador de Colusión"
+  "collusion": "Explorador de Colusión",
+  "procurementCalendar": "Calendario de Compras",
+  "scorecards": "Calificaciones Institucionales"
 }
