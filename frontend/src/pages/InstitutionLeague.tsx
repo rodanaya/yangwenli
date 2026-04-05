@@ -491,10 +491,14 @@ export default function InstitutionLeague() {
     [],
   )
 
-  // Determine which backend grade values correspond to currently selected tier filter
-  // The gradeFilter URL param stores the tier name (e.g., "Excelente")
-  // which we map to backend grade values for the API call
-  const activeTierLabel = gradeFilter
+  // Map current gradeFilter (backend grade value like "S") back to its tier name for display
+  const activeTierName = useMemo(() => {
+    if (!gradeFilter) return ''
+    for (const [tierName, grades] of Object.entries(TIER_GRADE_MAP)) {
+      if (grades.includes(gradeFilter)) return tierName
+    }
+    return ''
+  }, [gradeFilter])
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -624,15 +628,15 @@ export default function InstitutionLeague() {
             </select>
           </div>
 
-          {/* Tier filter (5-tier Spanish) */}
+          {/* Tier filter (5-tier Spanish — sends first backend grade of the tier to API) */}
           <div>
             <label htmlFor="tier-filter" className="sr-only">Nivel</label>
             <select
               id="tier-filter"
-              value={activeTierLabel}
+              value={activeTierName}
               onChange={(e) => {
                 const tierName = e.target.value
-                // Map tier name to the first backend grade in that tier (API filters by grade)
+                // Send the first backend grade of the selected tier to the API
                 const grades = tierName ? TIER_GRADE_MAP[tierName] : undefined
                 const gradeVal = grades ? grades[0] : undefined
                 updateParams({ grade: gradeVal || undefined, page: '1' })
