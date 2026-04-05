@@ -18,7 +18,6 @@ import {
   FlaskConical,
   MessageSquarePlus,
   Shield,
-  FileSearch,
   Award,
   History,
   CalendarDays,
@@ -69,44 +68,54 @@ interface NavSectionDef {
 
 const NAV_SECTIONS: NavSectionDef[] = [
   {
+    // Active investigation bureau — journalist-facing
     sectionKey: 'sections.investigate',
     items: [
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1', isHero: true, heroColor: '#c41e3a' },
+      { i18nKey: 'investigation', href: '/investigation', icon: Shield, isHero: true, heroColor: '#c41e3a' },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
       { i18nKey: 'network', href: '/network', icon: Network },
-      { i18nKey: 'journalists', href: '/journalists', icon: FileSearch },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
   {
-    sectionKey: 'sections.intelligence',
+    // Editorial centerpieces — where the stories are
+    sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'executiveSummary', href: '/executive-summary', icon: Award },
-      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
-      { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
+      { i18nKey: 'categories', href: '/categories', icon: Layers, isHero: true, heroColor: '#8b5cf6' },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
-      { i18nKey: 'politicalCycle', href: '/political-cycle', icon: Activity },
+      { i18nKey: 'administrations', href: '/administrations', icon: History },
+      { i18nKey: 'scorecards', href: '/scorecards', icon: Award },
     ],
   },
   {
+    // Summaries & overviews
+    sectionKey: 'sections.overview',
+    items: [
+      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
+      { i18nKey: 'politicalCycle', href: '/political-cycle', icon: Activity },
+      { i18nKey: 'executiveSummary', href: '/executive-summary', icon: Award },
+    ],
+  },
+  {
+    // Raw data & exploration
     sectionKey: 'sections.data',
     items: [
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'scorecards', href: '/scorecards', icon: Award },
       { i18nKey: 'stateExplorer', href: '/states', icon: Map },
-      { i18nKey: 'categories', href: '/categories', icon: Layers },
       { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
+      { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
       { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
     ],
   },
   {
+    // Model & tooling — internal/technical
     sectionKey: 'sections.platform',
     items: [
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
       { i18nKey: 'model', href: '/model', icon: FlaskConical },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
       { i18nKey: 'settings', href: '/settings', icon: Settings },

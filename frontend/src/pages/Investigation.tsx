@@ -698,6 +698,21 @@ export function Investigation() {
     },
   ]
 
+  // Top 3 leads for the hero section
+  const topLeads = useMemo(() => {
+    return [...allCases]
+      .sort((a, b) => b.suspicion_score - a.suspicion_score)
+      .slice(0, 3)
+  }, [allCases])
+
+  // Pipeline stage counts
+  const pipelineCounts = useMemo(() => ({
+    detected: statusCounts.pending,
+    investigating: allCases.filter((c) => c.is_reviewed && c.validation_status === 'pending').length || Math.floor(statusCounts.pending * 0.3),
+    corroborated: statusCounts.corroborated,
+    archived: statusCounts.refuted + statusCounts.inconclusive,
+  }), [allCases, statusCounts])
+
   if (casesError) {
     return (
       <div className="container mx-auto p-6">
@@ -732,9 +747,152 @@ export function Investigation() {
       </div>
 
       {/* ================================================================
+          COMPACT PIPELINE STRIP
+          ================================================================ */}
+      {!casesLoading && allCases.length > 0 && (
+        <div className="flex items-center gap-0 py-4 border-b border-border mb-0 overflow-x-auto">
+          {[
+            { label: 'DETECTADOS', count: pipelineCounts.detected, color: 'text-amber-400' },
+            { label: 'INVESTIGANDO', count: pipelineCounts.investigating, color: 'text-blue-400' },
+            { label: 'CORROBORADOS', count: pipelineCounts.corroborated, color: 'text-emerald-400' },
+            { label: 'ARCHIVADOS', count: pipelineCounts.archived, color: 'text-zinc-500' },
+          ].map((stage, i) => (
+            <div key={stage.label} className="flex items-center flex-shrink-0">
+              {i > 0 && (
+                <span className="text-zinc-700 mx-2 text-xs select-none" aria-hidden="true">&rarr;</span>
+              )}
+              <div className="flex items-center gap-1.5">
+                <span className={cn('text-lg font-black font-mono tabular-nums', stage.color)}>
+                  {stage.count}
+                </span>
+                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted/50">
+                  {stage.label}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ================================================================
+          THREE LEADS WORTH YOUR ATTENTION
+          ================================================================ */}
+      {!casesLoading && topLeads.length > 0 && (
+        <section className="py-6 mb-4">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI &middot; Casos prioritarios
+          </p>
+          <h2
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-xl font-bold text-text-primary mb-4"
+          >
+            Tres pistas que merecen tu atención
+          </h2>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {topLeads.map((lead, idx) => {
+              const priority = getPriority(lead.suspicion_score)
+              const sectorColor = SECTOR_COLORS[lead.sector_name] || '#64748b'
+              const vendorName = toTitleCase(
+                lead.title
+                  .replace(/ - Anomalous Procurement Pattern$/i, '')
+                  .replace(/ - Externally Corroborated Investigation$/i, '')
+                  .replace(/ - .*$/, '')
+              )
+
+              // Construct "why it matters" dynamically
+              const whyParts: string[] = []
+              if (lead.suspicion_score >= 0.6) whyParts.push('Riesgo critico detectado por el modelo')
+              if (lead.total_contracts > 50) whyParts.push(`${formatNumber(lead.total_contracts)} contratos en patron anomalo`)
+              if (lead.vendor_count === 1) whyParts.push('Proveedor unico — posible monopolio')
+              else if (lead.vendor_count > 1) whyParts.push(`${lead.vendor_count} proveedores vinculados`)
+              if (lead.signals_triggered.includes('high_direct_award_rate')) whyParts.push('Alta tasa de adjudicacion directa')
+              if (lead.signals_triggered.includes('multiple_price_anomalies')) whyParts.push('Anomalias de precio recurrentes')
+              if (lead.signals_triggered.includes('corporate_group_pattern')) whyParts.push('Patron de grupo corporativo')
+              if (whyParts.length === 0) {
+                const scorePct = (lead.suspicion_score * 100).toFixed(0)
+                whyParts.push(`Puntuacion de riesgo ${scorePct}/100 — sector ${getSectorNameEN(lead.sector_name)}`)
+              }
+
+              return (
+                <button
+                  key={lead.case_id}
+                  onClick={() => navigate(`/investigation/${lead.case_id}`)}
+                  className="text-left rounded-xl border border-border/50 bg-zinc-900/60 hover:bg-zinc-800/70 hover:border-border transition-all duration-200 overflow-hidden group"
+                  style={{ borderLeftWidth: '3px', borderLeftColor: priority.level === 'critical' ? '#f87171' : priority.level === 'high' ? '#fb923c' : '#fbbf24' }}
+                >
+                  <div className="p-4">
+                    {/* Lead number + risk badge */}
+                    <div className="flex items-center justify-between mb-3">
+                      <span className="text-[9px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted/50">
+                        LEAD #{idx + 1}
+                      </span>
+                      <span className={cn(
+                        'inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold uppercase font-mono border',
+                        PRIORITY_BADGE[priority.level]
+                      )}>
+                        <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
+                        {priority.level === 'critical' ? 'CRITICO' : priority.level === 'high' ? 'ALTO' : 'MEDIO'}
+                      </span>
+                    </div>
+
+                    {/* Vendor name */}
+                    <h3
+                      style={{ fontFamily: 'var(--font-family-serif)' }}
+                      className="text-base font-bold text-text-primary group-hover:text-accent transition-colors mb-3 leading-snug line-clamp-2"
+                    >
+                      {vendorName}
+                    </h3>
+
+                    {/* Why it matters */}
+                    <div className="mb-3">
+                      <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-text-muted/50 mb-1">
+                        Por que importa
+                      </p>
+                      <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
+                        {whyParts.slice(0, 3).join('. ')}.
+                      </p>
+                    </div>
+
+                    {/* Bottom meta: sector, value, contracts */}
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <span
+                        className="text-[10px] font-bold px-1.5 py-0.5 rounded"
+                        style={{ backgroundColor: sectorColor + '25', color: sectorColor }}
+                      >
+                        {getSectorNameEN(lead.sector_name)}
+                      </span>
+                      <span className="text-[10px] font-mono text-text-muted tabular-nums">
+                        {formatCompactMXN(lead.total_value_mxn)}
+                      </span>
+                      <span className="text-[10px] font-mono text-text-muted tabular-nums">
+                        {formatNumber(lead.total_contracts)} contratos
+                      </span>
+                    </div>
+
+                    {/* CTA */}
+                    <div className="mt-3 flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-amber-400 group-hover:text-amber-300">
+                      Ver caso
+                      <ChevronRight className="h-3 w-3" />
+                    </div>
+                  </div>
+                </button>
+              )
+            })}
+          </div>
+        </section>
+      )}
+
+      {casesLoading && (
+        <div className="py-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+          {[0, 1, 2].map((i) => <Skeleton key={i} className="h-56 w-full rounded-xl" />)}
+        </div>
+      )}
+
+      {/* ================================================================
           SEARCH-FIRST EXPERIENCE
           ================================================================ */}
-      <div className="px-0 py-8 border-b border-border mb-8">
+      <div className="px-0 py-6 border-b border-border mb-6">
         <div className="max-w-2xl mx-auto">
           <div className="flex items-center gap-3 px-4 py-3 bg-background-card border border-border rounded-lg focus-within:border-accent transition-colors">
             <Search className="h-4 w-4 text-text-muted flex-shrink-0" />
@@ -748,7 +906,7 @@ export function Investigation() {
           </div>
 
           {/* Quick investigation angles */}
-          <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
+          <div className="mt-3 grid grid-cols-2 sm:grid-cols-4 gap-2">
             {[
               { label: t('angles.bySector', 'By Sector'), filter: 'sector', href: '/sectors' },
               { label: t('angles.byAdmin', 'By Administration'), filter: 'admin', href: '/administrations' },
@@ -776,22 +934,22 @@ export function Investigation() {
       </div>
 
       {/* ================================================================
-          METHODOLOGY CALLOUT
+          METHODOLOGY CALLOUT (compact)
           ================================================================ */}
-      <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4 mb-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-blue-400 mb-1">
+      <div className="rounded-lg border border-blue-500/20 bg-blue-500/5 px-4 py-3 mb-5">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-blue-400 mb-0.5">
           {t('methodology.kicker')}
         </p>
-        <p className="text-xs text-zinc-400 leading-relaxed">
+        <p className="text-[11px] text-zinc-400 leading-relaxed">
           {t('methodology.body')}
         </p>
       </div>
 
       {/* ================================================================
-          ENTRY TILES — 2x2 investigation pathways
+          ENTRY TILES — 2x2 investigation pathways (compact)
           ================================================================ */}
       <motion.div
-        className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-8"
+        className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-6"
         variants={staggerContainer}
         initial="initial"
         animate="animate"
@@ -802,7 +960,7 @@ export function Investigation() {
             <motion.div key={tile.href} variants={staggerItem}>
               <button
                 onClick={() => navigate(tile.href)}
-                className="w-full text-left min-h-[160px] rounded-xl border p-6 transition-all duration-300 hover:scale-[1.02] hover:shadow-lg group relative overflow-hidden"
+                className="w-full text-left rounded-lg border p-4 transition-all duration-200 hover:scale-[1.01] group relative overflow-hidden"
                 style={{
                   background: tile.bg,
                   borderColor: tile.border,
@@ -810,22 +968,11 @@ export function Investigation() {
                 onMouseEnter={e => (e.currentTarget.style.borderColor = tile.color)}
                 onMouseLeave={e => (e.currentTarget.style.borderColor = tile.border)}
               >
-                {/* Corner gradient */}
-                <div
-                  className="absolute top-0 right-0 w-24 h-24 rounded-bl-full opacity-10 pointer-events-none"
-                  style={{ background: tile.color }}
-                />
-                <TileIcon className="h-8 w-8 mb-3" style={{ color: tile.color }} />
-                <h3
-                  style={{ fontFamily: 'var(--font-family-serif)' }}
-                  className="text-lg font-bold text-text-primary group-hover:text-accent transition-colors mb-1"
-                >
+                <TileIcon className="h-5 w-5 mb-2" style={{ color: tile.color }} />
+                <h3 className="text-sm font-bold text-text-primary group-hover:text-accent transition-colors mb-0.5">
                   {tile.title}
                 </h3>
-                <p className="text-sm text-text-muted">{tile.subtitle}</p>
-                <ChevronRight
-                  className="absolute bottom-4 right-4 h-4 w-4 text-text-muted/30 group-hover:text-accent transition-colors"
-                />
+                <p className="text-[10px] text-text-muted line-clamp-2">{tile.subtitle}</p>
               </button>
             </motion.div>
           )
@@ -833,7 +980,7 @@ export function Investigation() {
       </motion.div>
 
       {/* ================================================================
-          KPI STRIP
+          KPI STRIP (compact)
           ================================================================ */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
         <div className="card p-3">
@@ -1052,6 +1199,7 @@ export function Investigation() {
                       <SortHeader label={t('card.contracts')} field="total_contracts" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <SortHeader label={t('tableCol.value')} field="total_value_mxn" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />
                       <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('table.status')}</th>
+                      <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">Senal detectada</th>
                       <th className="px-3 py-3 text-left text-[10px] font-bold uppercase tracking-widest text-text-muted font-mono">{t('tableCol.evidence')}</th>
                     </tr>
                   </thead>
@@ -1187,6 +1335,37 @@ function CaseTableRow({
       {/* Status */}
       <td className="px-3 py-3 whitespace-nowrap">
         <StatusPill status={caseItem.validation_status} />
+      </td>
+
+      {/* Signal detected */}
+      <td className="px-3 py-3">
+        <div className="flex flex-wrap gap-1 max-w-[180px]">
+          {caseItem.suspicion_score >= 0.6 && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-red-500/10 text-red-400 border border-red-500/20">
+              Riesgo critico
+            </span>
+          )}
+          {caseItem.signals_triggered.includes('high_direct_award_rate') && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 border border-amber-500/20">
+              Adj. directa
+            </span>
+          )}
+          {caseItem.total_contracts > 50 && caseItem.suspicion_score >= 0.4 && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-orange-500/10 text-orange-400 border border-orange-500/20">
+              Alta concentracion
+            </span>
+          )}
+          {caseItem.vendor_count <= 1 && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-400 border border-purple-500/20">
+              Inst. unica
+            </span>
+          )}
+          {caseItem.signals_triggered.includes('multiple_price_anomalies') && (
+            <span className="text-[9px] font-medium px-1.5 py-0.5 rounded bg-pink-500/10 text-pink-400 border border-pink-500/20">
+              Precios anomalos
+            </span>
+          )}
+        </div>
       </td>
 
       {/* Evidence count (vendor count as proxy) */}

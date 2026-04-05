@@ -21,9 +21,23 @@ import {
   RISK_COLORS,
   getRiskLevelFromScore,
 } from '@/lib/constants'
-import type { SectorStatistics } from '@/api/types'
+import type { SectorStatistics, SectorTrend } from '@/api/types'
 import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
 import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip as RechartsTooltip,
+  ResponsiveContainer,
+  Cell,
+  ReferenceLine,
+  LineChart,
+  Line,
+  Legend,
+} from '@/components/charts'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -134,6 +148,8 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   const color = SECTOR_COLORS[sector.sector_code] ?? '#64748b'
   const riskLevel = getRiskLevelFromScore(sector.avg_risk_score)
   const highPlusCritical = (sector.high_risk_count ?? 0) + (sector.critical_risk_count ?? 0)
+  const daPct = sector.direct_award_pct ?? 0
+  const exceedsOECD = daPct > 25
 
   return (
     <Link
@@ -149,7 +165,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
       />
 
       <div className="px-4 pt-3 pb-3 flex flex-col gap-3 flex-1">
-        {/* Header row: rank + sector name + risk badge */}
+        {/* Header row: rank + sector name + risk badge + OECD badge */}
         <div className="flex items-start justify-between gap-2">
           <div>
             <span
@@ -162,7 +178,13 @@ function SectorCard({ sector, rank }: SectorCardProps) {
               {t(sector.sector_code)}
             </h2>
           </div>
-          <RiskBadge level={riskLevel} />
+          <div className="flex items-center gap-1.5">
+            {/* OECD compliance badge */}
+            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+              OCDE {exceedsOECD ? '\u2717' : '\u2713'}
+            </span>
+            <RiskBadge level={riskLevel} />
+          </div>
         </div>
 
         {/* Spend + sparkline row */}
@@ -178,11 +200,16 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           <MiniSparkline sector={sector} color={color} />
         </div>
 
-        {/* Vendor count row */}
-        <div className="flex items-center gap-1 text-[11px] text-zinc-500">
-          <Building2 className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
-          <span>
-            {formatNumber(sector.total_vendors)} {t('card.vendors')}
+        {/* Vendor count + DA pct row */}
+        <div className="flex items-center justify-between gap-1 text-[11px] text-zinc-500">
+          <div className="flex items-center gap-1">
+            <Building2 className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
+            <span>
+              {formatNumber(sector.total_vendors)} {t('card.vendors')}
+            </span>
+          </div>
+          <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-zinc-500'}`}>
+            {daPct.toFixed(0)}% adj. directa
           </span>
         </div>
 
@@ -282,6 +309,109 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
           aria-hidden="true"
         />
       </div>
+    </div>
+  )
+}
+
+// ── SectorRiskTrendPanel ─────────────────────────────────────────────────────
+// Fetches per-sector trends for the top 6 sectors and renders a LineChart.
+
+function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: (k: string) => string }) {
+  const top6 = useMemo(
+    () => [...sectors].sort((a, b) => b.total_value_mxn - a.total_value_mxn).slice(0, 6),
+    [sectors]
+  )
+
+  // Fetch trends for each of the top 6 sectors
+  const trendQueries = top6.map((s) =>
+    // eslint-disable-next-line react-hooks/rules-of-hooks
+    useQuery({
+      queryKey: ['sector', 'trends', s.sector_id],
+      queryFn: () => sectorApi.getTrends(s.sector_id),
+      staleTime: 10 * 60 * 1000,
+    })
+  )
+
+  const isLoadingTrends = trendQueries.some((q) => q.isLoading)
+
+  // Build merged year-keyed dataset
+  const chartData = useMemo(() => {
+    if (isLoadingTrends) return []
+    const yearMap = new Map<number, Record<string, number>>()
+    for (let i = 0; i < top6.length; i++) {
+      const sectorCode = top6[i].sector_code
+      const rawTrends = trendQueries[i].data?.data ?? []
+      for (const tr of rawTrends) {
+        if (tr.year < 2015 || tr.year > 2025) continue
+        const existing = yearMap.get(tr.year) || { year: tr.year }
+        // YearOverYearChange uses avg_risk; SectorTrend uses avg_risk_score
+        const avgRiskVal = ('avg_risk_score' in tr ? (tr as unknown as SectorTrend).avg_risk_score : (tr as { avg_risk?: number }).avg_risk) ?? 0
+        existing[sectorCode] = avgRiskVal
+        yearMap.set(tr.year, existing)
+      }
+    }
+    return [...yearMap.values()].sort((a, b) => (a.year as number) - (b.year as number))
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoadingTrends, top6.length])
+
+  if (isLoadingTrends) {
+    return (
+      <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+        <Skeleton className="h-5 w-48 mb-3" />
+        <Skeleton className="h-[220px] w-full" />
+      </div>
+    )
+  }
+
+  return (
+    <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+        Tendencia temporal
+      </p>
+      <h3 className="text-sm font-bold text-white mb-3">
+        Riesgo promedio por sector 2015-2025
+      </h3>
+      <ResponsiveContainer width="100%" height={220}>
+        <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#71717a' }} />
+          <YAxis
+            tick={{ fontSize: 9, fill: '#71717a' }}
+            tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+            domain={[0, 'auto']}
+          />
+          <RechartsTooltip
+            content={({ active, payload, label }) => {
+              if (!active || !payload?.length) return null
+              return (
+                <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
+                  <p className="text-white font-semibold mb-1">{label}</p>
+                  {payload.map((p) => (
+                    <p key={String(p.dataKey)} style={{ color: String(p.color) }}>
+                      {t(String(p.dataKey))}: {((p.value as number) * 100).toFixed(1)}%
+                    </p>
+                  ))}
+                </div>
+              )
+            }}
+          />
+          <Legend
+            wrapperStyle={{ fontSize: '10px' }}
+            formatter={(value: string) => t(value)}
+          />
+          {top6.map((s) => (
+            <Line
+              key={s.sector_code}
+              type="monotone"
+              dataKey={s.sector_code}
+              stroke={SECTOR_COLORS[s.sector_code] ?? '#64748b'}
+              strokeWidth={1.5}
+              dot={false}
+              connectNulls
+            />
+          ))}
+        </LineChart>
+      </ResponsiveContainer>
     </div>
   )
 }
@@ -408,6 +538,126 @@ export function Sectors() {
             </div>
           </div>
         </div>
+
+        {/* ── HERO FINDING STRIP ─────────────────────────────────────── */}
+        {!isLoading && sectors.length > 0 && (() => {
+          const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
+          const exceedingOECD = sectors.filter((s) => (s.direct_award_pct ?? 0) > 25).length
+          return (
+            <div className="mb-8 border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-5">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
+                RUBLI &middot; Hallazgo principal
+              </p>
+              <h2
+                className="text-lg font-bold text-white leading-snug mb-4 max-w-2xl"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                El sector {t(topRiskSector.sector_code)} concentra el mayor riesgo de contratacion publica en Mexico
+              </h2>
+              <div className="flex flex-wrap gap-4">
+                <div className="border-l-2 border-red-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-red-500">
+                    {(topRiskSector.avg_risk_score * 100).toFixed(1)}%
+                  </div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+                    riesgo promedio sector lider
+                  </div>
+                </div>
+                <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-amber-400">
+                    {formatSpend(totalValue)}
+                  </div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+                    valor total contratado
+                  </div>
+                </div>
+                <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-cyan-400">
+                    {exceedingOECD} de 12
+                  </div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+                    sectores exceden limite OCDE (25%)
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        })()}
+
+        {/* ── OECD COMPETITION GAP + RISK TREND ─────────────────────── */}
+        {!isLoading && sectors.length > 0 && (
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
+            {/* OECD Competition Gap Bar Chart */}
+            <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                Brecha de competencia
+              </p>
+              <h3 className="text-sm font-bold text-white mb-3">
+                Adjudicacion directa vs. limite OCDE (25%)
+              </h3>
+              <ResponsiveContainer width="100%" height={220}>
+                <BarChart
+                  data={[...sectors]
+                    .map((s) => ({
+                      name: t(s.sector_code),
+                      code: s.sector_code,
+                      da_pct: s.direct_award_pct ?? 0,
+                    }))
+                    .sort((a, b) => b.da_pct - a.da_pct)}
+                  layout="vertical"
+                  margin={{ top: 0, right: 16, left: 4, bottom: 0 }}
+                >
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#27272a" />
+                  <XAxis
+                    type="number"
+                    domain={[0, 100]}
+                    tick={{ fontSize: 9, fill: '#71717a' }}
+                    tickFormatter={(v: number) => `${v}%`}
+                  />
+                  <YAxis
+                    type="category"
+                    dataKey="name"
+                    width={90}
+                    tick={{ fontSize: 9, fill: '#a1a1aa' }}
+                  />
+                  <ReferenceLine x={25} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: 'OCDE 25%', position: 'top', fill: '#22d3ee', fontSize: 9 }} />
+                  <RechartsTooltip
+                    content={({ active, payload }) => {
+                      if (!active || !payload?.length) return null
+                      const d = payload[0]?.payload as { name: string; da_pct: number } | undefined
+                      if (!d) return null
+                      return (
+                        <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
+                          <p className="text-white font-semibold">{d.name}</p>
+                          <p className="text-zinc-400">Adj. directa: <span className="text-orange-400 font-bold">{d.da_pct.toFixed(1)}%</span></p>
+                          <p className="text-zinc-500">{d.da_pct > 25 ? `${(d.da_pct / 25).toFixed(1)}x sobre limite OCDE` : 'Dentro del limite OCDE'}</p>
+                        </div>
+                      )
+                    }}
+                  />
+                  <Bar dataKey="da_pct" radius={[0, 3, 3, 0]}>
+                    {[...sectors]
+                      .map((s) => ({
+                        code: s.sector_code,
+                        da_pct: s.direct_award_pct ?? 0,
+                      }))
+                      .sort((a, b) => b.da_pct - a.da_pct)
+                      .map((entry) => (
+                        <Cell
+                          key={entry.code}
+                          fill={SECTOR_COLORS[entry.code] ?? '#64748b'}
+                          fillOpacity={entry.da_pct > 25 ? 0.85 : 0.35}
+                        />
+                      ))}
+                  </Bar>
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+
+            {/* Risk Trend per Sector (top 6 by value) */}
+            <SectorRiskTrendPanel sectors={sectors} t={t} />
+          </div>
+        )}
 
         {/* Controls row */}
         <div className="flex items-center justify-between mb-6">

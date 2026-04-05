@@ -17,7 +17,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 import {
   BarChart,
   Bar,
@@ -31,7 +31,7 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
+// HallazgoStat removed — replaced by inline hero lede KPI strip
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
@@ -331,6 +331,194 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
   )
 }
 
+// --- Reincidentes Section (repeat offenders) --------------------------------
+
+function ReincidentesSection({ contracts, loading }: { contracts: PriceAnomalyContract[]; loading: boolean }) {
+  const reincidentes = useMemo(() => {
+    if (!contracts.length) return []
+    // Group by vendor_id (or vendor_name fallback)
+    const vendorMap = new Map<string, {
+      vendor_id: number | null
+      vendor_name: string
+      years: Set<number>
+      contracts: number
+      total_value: number
+      sector_id: number
+      z_sum: number
+    }>()
+
+    for (const c of contracts) {
+      const key = c.vendor_id != null ? String(c.vendor_id) : c.vendor_name
+      const existing = vendorMap.get(key)
+      if (existing) {
+        existing.years.add(c.contract_year)
+        existing.contracts++
+        existing.total_value += c.amount_mxn
+        existing.z_sum += c.z_price_ratio ?? 0
+      } else {
+        vendorMap.set(key, {
+          vendor_id: c.vendor_id,
+          vendor_name: c.vendor_name,
+          years: new Set([c.contract_year]),
+          contracts: 1,
+          total_value: c.amount_mxn,
+          sector_id: c.sector_id,
+          z_sum: c.z_price_ratio ?? 0,
+        })
+      }
+    }
+
+    return [...vendorMap.values()]
+      .filter((v) => v.years.size >= 2)
+      .sort((a, b) => b.years.size - a.years.size || b.total_value - a.total_value)
+      .slice(0, 8)
+      .map((v) => ({
+        ...v,
+        avg_z: v.z_sum / v.contracts,
+        yearsList: [...v.years].sort((a, b) => a - b),
+      }))
+  }, [contracts])
+
+  if (loading) return <Skeleton className="h-48 w-full" />
+  if (!reincidentes.length) return null
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          RUBLI &middot; Patron de reincidencia
+        </p>
+        <h2
+          className="text-lg font-bold text-text-primary"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          Proveedores con anomalias de precio recurrentes
+        </h2>
+        <p className="text-xs text-text-muted mt-0.5">
+          Proveedores detectados en multiples anos con precios significativamente superiores al mercado
+        </p>
+      </div>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm" aria-label="Proveedores reincidentes">
+          <thead>
+            <tr className="border-b border-border">
+              <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">Proveedor</th>
+              <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">Anos flaggeados</th>
+              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">Contratos</th>
+              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted hidden sm:table-cell">Valor total</th>
+              <th className="text-right py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-text-muted">Z-score prom</th>
+            </tr>
+          </thead>
+          <tbody>
+            {reincidentes.map((v, i) => (
+              <tr key={i} className="border-b border-border/50 hover:bg-zinc-800/30 transition-colors">
+                <td className="py-2 px-3 max-w-[200px]">
+                  {v.vendor_id ? (
+                    <Link to={`/vendors/${v.vendor_id}`} className="text-xs font-medium text-text-primary hover:underline truncate block">
+                      {v.vendor_name}
+                    </Link>
+                  ) : (
+                    <span className="text-xs font-medium text-text-primary truncate block">{v.vendor_name}</span>
+                  )}
+                </td>
+                <td className="py-2 px-3">
+                  <div className="flex flex-wrap gap-1">
+                    {v.yearsList.map((yr) => {
+                      const recency = yr >= 2023 ? 'text-orange-300 bg-orange-500/15 border-orange-500/30' : yr >= 2020 ? 'text-amber-400 bg-amber-500/10 border-amber-500/20' : 'text-zinc-400 bg-zinc-700/30 border-zinc-600/30'
+                      return (
+                        <span key={yr} className={`text-[9px] font-mono px-1.5 py-0.5 rounded border ${recency}`}>
+                          {yr}
+                        </span>
+                      )
+                    })}
+                  </div>
+                </td>
+                <td className="py-2 px-3 text-right tabular-nums text-text-secondary text-xs">{v.contracts}</td>
+                <td className="py-2 px-3 text-right tabular-nums text-text-secondary text-xs hidden sm:table-cell">{formatCompactMXN(v.total_value)}</td>
+                <td className="py-2 px-3 text-right tabular-nums text-orange-400 text-xs font-mono">+{v.avg_z.toFixed(1)}&sigma;</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+// --- Anomaly Timeline Section -----------------------------------------------
+
+function AnomalyTimelineSection({ contracts, loading }: { contracts: PriceAnomalyContract[]; loading: boolean }) {
+  const yearData = useMemo(() => {
+    if (!contracts.length) return []
+    const yearMap = new Map<number, { year: number; count: number; total_z: number }>()
+    for (const c of contracts) {
+      const yr = c.contract_year
+      if (yr < 2015 || yr > 2025) continue
+      const existing = yearMap.get(yr)
+      if (existing) {
+        existing.count++
+        existing.total_z += c.z_price_ratio ?? 0
+      } else {
+        yearMap.set(yr, { year: yr, count: 1, total_z: c.z_price_ratio ?? 0 })
+      }
+    }
+    return [...yearMap.values()]
+      .sort((a, b) => a.year - b.year)
+      .map((d) => ({
+        ...d,
+        avg_z: d.count > 0 ? d.total_z / d.count : 0,
+      }))
+  }, [contracts])
+
+  if (loading) return <Skeleton className="h-48 w-full" />
+  if (!yearData.length) return null
+
+  return (
+    <section className="space-y-3">
+      <div>
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          Evolucion temporal
+        </p>
+        <h2
+          className="text-lg font-bold text-text-primary"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          Anomalias de precio detectadas por ano
+        </h2>
+      </div>
+      <ResponsiveContainer width="100%" height={200}>
+        <BarChart data={yearData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
+          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#71717a' }} />
+          <YAxis tick={{ fontSize: 10, fill: '#71717a' }} />
+          <RechartsTooltip
+            content={({ active, payload }) => {
+              if (!active || !payload?.length) return null
+              const d = payload[0]?.payload as { year: number; count: number; avg_z: number } | undefined
+              if (!d) return null
+              return (
+                <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
+                  <p className="text-white font-semibold">{d.year}</p>
+                  <p className="text-zinc-400">Anomalias: <span className="text-orange-400 font-bold">{d.count}</span></p>
+                  <p className="text-zinc-400">Z-score prom: <span className="text-amber-400">+{d.avg_z.toFixed(1)}&sigma;</span></p>
+                </div>
+              )
+            }}
+          />
+          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
+            {yearData.map((entry) => (
+              <Cell
+                key={entry.year}
+                fill={entry.avg_z > 5 ? '#f87171' : entry.avg_z > 3 ? '#fb923c' : '#fbbf24'}
+              />
+            ))}
+          </Bar>
+        </BarChart>
+      </ResponsiveContainer>
+    </section>
+  )
+}
+
 // --- Main Page ---------------------------------------------------------------
 
 export default function PriceIntelligence() {
@@ -376,7 +564,6 @@ export default function PriceIntelligence() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 10)
 
-  const topSectorName = chartData[0]?.name ?? '--'
   const loading = anomalyQuery.isLoading
 
   // Top 10 extreme cases for the editorial cards — sorted by z_price_ratio
@@ -426,23 +613,53 @@ export default function PriceIntelligence() {
         />
       </div>
 
-      {/* === Lede paragraph === */}
+      {/* === Hero Lede — the finding, not the topic === */}
       <div className="max-w-3xl">
-        <p
-          className="text-lg text-text-secondary leading-relaxed"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {loading ? (
-            <Skeleton className="h-16 w-full" />
-          ) : (
-            <>
-              {t('lede', {
-                countLabel: summary ? formatNumber(summary.total_outliers) : '--',
-                total: summary ? formatCompactMXN(summary.total_value_mxn) : '--',
-              })}
-            </>
-          )}
-        </p>
+        {loading ? (
+          <Skeleton className="h-24 w-full" />
+        ) : summary ? (() => {
+          const avgZ = summary.avg_z_score || 3
+          const estimatedOverpayPct = avgZ > 1 ? ((1 - 1 / avgZ) * 100) : 0
+          const estimatedSavings = summary.total_value_mxn * (1 - 1 / avgZ)
+          return (
+            <div className="space-y-4">
+              <p
+                className="text-lg text-text-primary leading-relaxed font-semibold"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {formatNumber(summary.total_outliers)} contratos por valor de {formatCompactMXN(summary.total_value_mxn)} fueron
+                adjudicados a precios {avgZ.toFixed(1)} veces por encima del precio de mercado. De no haber ocurrido
+                esta sobrevaloracion, el gobierno podria haber ahorrado {formatCompactMXN(estimatedSavings)}.
+              </p>
+
+              {/* 5-stat KPI strip */}
+              <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="border-l-2 border-orange-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-orange-400 tabular-nums">{formatNumber(summary.total_outliers)}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">contratos anomalos</div>
+                </div>
+                <div className="border-l-2 border-red-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-red-400 tabular-nums">{formatCompactMXN(summary.total_value_mxn)}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">valor en riesgo</div>
+                </div>
+                <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-amber-400 tabular-nums">+{avgZ.toFixed(1)}&sigma;</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">z-score promedio</div>
+                </div>
+                <div className="border-l-2 border-purple-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-purple-400 tabular-nums">+{(summary.max_z_score ?? 0).toFixed(1)}&sigma;</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">z-score maximo</div>
+                </div>
+                <div className="border-l-2 border-emerald-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-emerald-400 tabular-nums">{formatCompactMXN(estimatedSavings)}</div>
+                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">ahorro potencial <span className="text-zinc-600">({estimatedOverpayPct.toFixed(0)}%)</span></div>
+                </div>
+              </div>
+            </div>
+          )
+        })() : (
+          <p className="text-lg text-text-secondary">No se encontraron anomalias de precio.</p>
+        )}
       </div>
 
       {/* === Filter Controls === */}
@@ -533,40 +750,11 @@ export default function PriceIntelligence() {
         </div>
       </div>
 
-      {/* === 3 HallazgoStat stats === */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-        {loading ? (
-          <>
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-            <Skeleton className="h-24 w-full" />
-          </>
-        ) : (
-          <>
-            <HallazgoStat
-              value={summary ? formatNumber(summary.total_outliers) : '--'}
-              label={t('totalAnomaliesDetail')}
-              annotation="z_price_ratio > 3σ"
-              color="border-orange-500"
-            />
-            <HallazgoStat
-              value={summary ? formatCompactMXN(summary.total_value_mxn) : '--'}
-              label={t('totalFlaggedDetail')}
-              color="border-red-500"
-            />
-            <HallazgoStat
-              value={topSectorName}
-              label={t('topAnomalySector')}
-              annotation={
-                chartData[0]
-                  ? t('anomalyCountLabel', { countLabel: formatNumber(chartData[0].count) })
-                  : undefined
-              }
-              color="border-amber-500"
-            />
-          </>
-        )}
-      </div>
+      {/* === Reincidentes — vendors flagged in multiple years === */}
+      <ReincidentesSection contracts={allContracts} loading={loading} />
+
+      {/* === Year-over-Year Anomaly Timeline === */}
+      <AnomalyTimelineSection contracts={allContracts} loading={loading} />
 
       {/* === Casos Mas Extremos === */}
       <section aria-label={t('extremeCasesAriaLabel')}>
