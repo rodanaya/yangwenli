@@ -1965,7 +1965,7 @@ export const categoriesApi = {
     return data
   },
 
-  getContracts: async (categoryId: number, params?: { page?: number; per_page?: number; risk_level?: string; year?: number }) => {
+  getContracts: async (categoryId: number, params?: { page?: number; per_page?: number; risk_level?: string; year?: number; sort_by?: string; sort_order?: string }) => {
     const { data } = await api.get(`/categories/${categoryId}/contracts`, { params })
     return data
   },
@@ -2018,6 +2018,46 @@ export const categoriesApi = {
         total_value: number
         avg_risk: number
         max_risk: number
+        direct_award_pct: number
+        single_bid_pct: number
+      }[]
+    }
+  },
+
+  getSexenio: async () => {
+    const { data } = await api.get('/categories/sexenio')
+    return data as {
+      data: {
+        category_id: number
+        name_es: string
+        name_en: string
+        sector_id: number | null
+        sector_code: string | null
+        lifetime_value: number
+        administrations: Record<string, { value: number; contracts: number; avg_risk: number }>
+      }[]
+      administrations: { name: string; years: string }[]
+      total: number
+    }
+  },
+
+  getTopVendors: async (categoryId: number, limit = 15) => {
+    const { data } = await api.get(`/categories/${categoryId}/top-vendors`, { params: { limit } })
+    return data as {
+      category_id: number
+      category_name: string
+      total_value: number
+      total_contracts: number
+      hhi: number
+      concentration_label: 'highly_concentrated' | 'moderately_concentrated' | 'competitive'
+      top3_share_pct: number
+      data: {
+        vendor_id: number
+        vendor_name: string
+        contract_count: number
+        vendor_value: number
+        market_share_pct: number
+        avg_risk: number
         direct_award_pct: number
         single_bid_pct: number
       }[]

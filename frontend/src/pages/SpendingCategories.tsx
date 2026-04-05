@@ -29,6 +29,10 @@ import {
   Legend,
   Cell,
   LabelList,
+  ScatterChart,
+  Scatter,
+  ZAxis,
+  ReferenceLine,
 } from '@/components/charts'
 import {
   TrendingUp,
@@ -258,6 +262,13 @@ function CategoryDetailPanel({
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
+            <button
+              onClick={() => onNavigate(`/categories/${categoryId}`)}
+              className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors border border-amber-500/30 px-2 py-1 rounded"
+            >
+              <ExternalLink className="h-3 w-3" />
+              Ver perfil completo
+            </button>
             <button
               onClick={() => onNavigate(`/contracts?category_id=${categoryId}`)}
               className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded"
@@ -1015,6 +1026,12 @@ export default function SpendingCategories() {
     staleTime: 5 * 60 * 1000,
   })
 
+  const { data: sexenioData, isLoading: sexenioLoading } = useQuery({
+    queryKey: ['categories', 'sexenio'],
+    queryFn: () => categoriesApi.getSexenio(),
+    staleTime: 10 * 60 * 1000,
+  })
+
   const allCategories: CategoryStat[] = summaryData?.data ?? []
 
   // Apply sector + search filter
@@ -1174,6 +1191,79 @@ export default function SpendingCategories() {
       .filter(t => t.category_id === selectedCategoryId)
       .sort((a, b) => a.year - b.year)
   }, [selectedCategoryId, trendsData])
+
+  // Scatter plot data for Risk x Value Quadrant
+  const scatterData = useMemo(() => {
+    return allCategories
+      .filter(c => c.total_value > 0 && c.avg_risk > 0)
+      .map(c => ({
+        category_id: c.category_id,
+        name: c.name_es || c.name_en,
+        total_value: c.total_value,
+        avg_risk: c.avg_risk,
+        total_contracts: c.total_contracts,
+        direct_award_pct: c.direct_award_pct,
+        sector_code: c.sector_code,
+        radius: Math.max(4, Math.min(12, Math.sqrt(c.total_contracts / 1000))),
+        fill: c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : '#64748b',
+      }))
+  }, [allCategories])
+
+  const scatterMedianValue = useMemo(() => {
+    if (!scatterData.length) return 0
+    const sorted = [...scatterData].sort((a, b) => a.total_value - b.total_value)
+    const mid = Math.floor(sorted.length / 2)
+    return sorted.length % 2 === 0
+      ? (sorted[mid - 1].total_value + sorted[mid].total_value) / 2
+      : sorted[mid].total_value
+  }, [scatterData])
+
+  // Sexenio stacked bar data
+  const ADMIN_NAMES = ['Fox', 'Calderon', 'Pena Nieto', 'AMLO', 'Sheinbaum']
+  const ADMIN_DISPLAY: Record<string, string> = {
+    Fox: 'Fox', Calderon: 'Calderon', 'Calderón': 'Calderon',
+    'Pena Nieto': 'Pena Nieto', 'Peña Nieto': 'Pena Nieto',
+    AMLO: 'AMLO', Sheinbaum: 'Sheinbaum',
+  }
+
+  const sexenioChartData = useMemo(() => {
+    if (!sexenioData?.data) return []
+    const top10 = [...allCategories]
+      .sort((a, b) => b.total_value - a.total_value)
+      .slice(0, 10)
+    const top10Ids = new Set(top10.map(c => c.category_id))
+
+    const adminTotals = new Map<string, Record<string, number>>()
+    for (const admin of ADMIN_NAMES) {
+      adminTotals.set(admin, {})
+    }
+
+    for (const cat of sexenioData.data) {
+      if (!top10Ids.has(cat.category_id)) continue
+      const catKey = (cat.name_es || cat.name_en).slice(0, 20)
+      for (const [rawAdmin, vals] of Object.entries(cat.administrations)) {
+        const admin = ADMIN_DISPLAY[rawAdmin] ?? rawAdmin
+        if (!adminTotals.has(admin)) continue
+        const bucket = adminTotals.get(admin)!
+        bucket[catKey] = (bucket[catKey] ?? 0) + vals.value
+      }
+    }
+
+    return ADMIN_NAMES.map(admin => ({
+      admin,
+      ...adminTotals.get(admin),
+    }))
+  }, [sexenioData, allCategories])
+
+  const sexenioCategories = useMemo(() => {
+    return [...allCategories]
+      .sort((a, b) => b.total_value - a.total_value)
+      .slice(0, 10)
+      .map(c => ({
+        key: (c.name_es || c.name_en).slice(0, 20),
+        color: c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : '#64748b',
+      }))
+  }, [allCategories])
 
   // Auto-scroll to detail panels when a category is selected
   useEffect(() => {
@@ -1535,6 +1625,7 @@ export default function SpendingCategories() {
                       <th className="px-3 py-2.5 text-right font-medium hidden xl:table-cell whitespace-nowrap">
                         Tendencia
                       </th>
+                      <th className="px-2 py-2.5 w-8" aria-label="Perfil" />
                     </tr>
                   </thead>
                   <tbody>
@@ -1614,6 +1705,16 @@ export default function SpendingCategories() {
                               />
                             </div>
                           </td>
+                          <td className="px-2 py-2 text-center">
+                            <button
+                              onClick={(e) => { e.stopPropagation(); navigate(`/categories/${cat.category_id}`) }}
+                              className="text-text-muted hover:text-accent transition-colors p-0.5"
+                              aria-label={`Ver perfil de ${cat.name_es || cat.name_en}`}
+                              title="Ver perfil completo"
+                            >
+                              <ArrowUpRight className="h-3.5 w-3.5" />
+                            </button>
+                          </td>
                         </tr>
                       )
                     })}
@@ -1670,6 +1771,259 @@ export default function SpendingCategories() {
           />
         )}
       </div>
+
+      {/* ================================================================= */}
+      {/* 7b. Risk x Value Quadrant                                        */}
+      {/* ================================================================= */}
+      <section aria-labelledby="risk-value-heading">
+        <div className="h-px bg-border mb-6" />
+        <div className="mb-4">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI · Mapa de Riesgo
+          </p>
+          <h2
+            id="risk-value-heading"
+            className="text-xl font-bold text-text-primary leading-tight"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            Riesgo y valor: el panorama de las 72 categorías
+          </h2>
+          <p className="text-sm text-text-secondary mt-1 max-w-2xl leading-relaxed">
+            Cada punto es una categoría. Eje X = gasto total 2002–2025. Eje Y = riesgo promedio.
+            Las categorías arriba a la derecha requieren atención inmediata.
+          </p>
+        </div>
+        <Card>
+          <CardContent className="pt-6 pb-4">
+            {summaryLoading ? (
+              <ChartSkeleton height={420} />
+            ) : scatterData.length > 0 ? (
+              <div style={{ height: 420 }} className="relative">
+                {/* Quadrant labels */}
+                <div className="absolute top-2 left-16 text-[10px] font-mono uppercase tracking-wider text-text-muted/40 z-10 pointer-events-none">
+                  Bajo Valor / Alto Riesgo
+                </div>
+                <div className="absolute top-2 right-8 text-[10px] font-mono uppercase tracking-wider text-red-400/60 z-10 pointer-events-none">
+                  Alto Valor / Alto Riesgo
+                </div>
+                <div className="absolute bottom-10 left-16 text-[10px] font-mono uppercase tracking-wider text-text-muted/30 z-10 pointer-events-none">
+                  Bajo Valor / Bajo Riesgo
+                </div>
+                <div className="absolute bottom-10 right-8 text-[10px] font-mono uppercase tracking-wider text-green-500/40 z-10 pointer-events-none">
+                  Alto Valor / Bajo Riesgo
+                </div>
+                <ResponsiveContainer width="100%" height="100%">
+                  <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" strokeOpacity={0.4} />
+                    <XAxis
+                      type="number"
+                      dataKey="total_value"
+                      name="Gasto"
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      tickFormatter={(v: number) => formatCompactMXN(v)}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                      label={{
+                        value: 'Gasto total (MXN)',
+                        position: 'insideBottom',
+                        offset: -10,
+                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' },
+                      }}
+                    />
+                    <YAxis
+                      type="number"
+                      dataKey="avg_risk"
+                      name="Riesgo"
+                      domain={[0, 'auto']}
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                      width={45}
+                      label={{
+                        value: 'Riesgo promedio',
+                        angle: -90,
+                        position: 'insideLeft',
+                        offset: 5,
+                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' },
+                      }}
+                    />
+                    <ZAxis type="number" dataKey="radius" range={[30, 450]} />
+                    <ReferenceLine
+                      x={scatterMedianValue}
+                      stroke="var(--color-border)"
+                      strokeDasharray="6 4"
+                      strokeOpacity={0.5}
+                    />
+                    <ReferenceLine
+                      y={0.15}
+                      stroke="var(--color-border)"
+                      strokeDasharray="6 4"
+                      strokeOpacity={0.5}
+                      label={{
+                        value: '15% riesgo',
+                        position: 'right',
+                        style: { fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' },
+                      }}
+                    />
+                    <RechartsTooltip
+                      cursor={{ strokeDasharray: '3 3', stroke: '#52525b' }}
+                      content={({ active, payload }) => {
+                        if (!active || !payload?.length) return null
+                        const d = payload[0].payload as (typeof scatterData)[0]
+                        return (
+                          <div
+                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
+                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                          >
+                            <p className="font-bold text-text-primary text-[11px] max-w-[220px] whitespace-normal">{d.name}</p>
+                            <div className="flex items-center gap-2">
+                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
+                              <span className="text-text-muted capitalize">{d.sector_code ?? 'otros'}</span>
+                            </div>
+                            <p className="text-text-secondary">Gasto: <span className="font-bold text-text-primary">{formatCompactMXN(d.total_value)}</span></p>
+                            <p className="text-text-secondary">Riesgo: <span className="font-bold" style={{ color: getRiskColor(d.avg_risk) }}>{(d.avg_risk * 100).toFixed(1)}%</span></p>
+                            <p className="text-text-secondary">AD: <span className="text-text-primary">{d.direct_award_pct?.toFixed(0) ?? '—'}%</span></p>
+                            <p className="text-text-secondary">{formatNumber(d.total_contracts)} contratos</p>
+                            <p className="text-accent/60 mt-1">Clic para ver perfil</p>
+                          </div>
+                        )
+                      }}
+                    />
+                    <Scatter
+                      data={scatterData}
+                      onClick={(entry) => {
+                        if (entry?.category_id) {
+                          navigate(`/categories/${entry.category_id}`)
+                        }
+                      }}
+                      cursor="pointer"
+                    >
+                      {scatterData.map((entry, index) => (
+                        <Cell
+                          key={`scatter-${index}`}
+                          fill={entry.fill}
+                          fillOpacity={0.75}
+                          stroke={entry.fill}
+                          strokeWidth={1}
+                          strokeOpacity={0.3}
+                        />
+                      ))}
+                    </Scatter>
+                  </ScatterChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                Sin datos de categorías para el cuadrante de riesgo.
+              </div>
+            )}
+          </CardContent>
+        </Card>
+        <FuentePill source="COMPRANET 2002-2025" />
+      </section>
+
+      {/* ================================================================= */}
+      {/* 7c. Sexenio Shifts                                                */}
+      {/* ================================================================= */}
+      <section aria-labelledby="sexenio-shifts-heading">
+        <div className="h-px bg-border mb-6" />
+        <div className="mb-4">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI · Gasto Federal
+          </p>
+          <h2
+            id="sexenio-shifts-heading"
+            className="text-xl font-bold text-text-primary leading-tight"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            Gasto por administración: cómo cambió lo que compra el gobierno
+          </h2>
+          <p className="text-sm text-text-secondary mt-1 max-w-2xl leading-relaxed">
+            Gasto federal acumulado en las 10 categorías de mayor valor, distribuido por sexenio presidencial.
+          </p>
+        </div>
+        <Card>
+          <CardContent className="pt-6 pb-4">
+            {sexenioLoading ? (
+              <ChartSkeleton height={380} />
+            ) : sexenioChartData.length > 0 ? (
+              <div style={{ height: 380 }}>
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart data={sexenioChartData} margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
+                    <XAxis
+                      dataKey="admin"
+                      tick={{ fill: 'var(--color-text-secondary)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      axisLine={{ stroke: 'var(--color-border)' }}
+                      tickLine={false}
+                      tickFormatter={(v: number) => formatCompactMXN(v)}
+                      width={72}
+                    />
+                    <RechartsTooltip
+                      content={({ active, payload, label }) => {
+                        if (!active || !payload?.length) return null
+                        const total = payload.reduce((s, p) => s + (Number(p.value) || 0), 0)
+                        return (
+                          <div
+                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
+                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                          >
+                            <p className="font-bold text-text-primary text-[11px] mb-1">{label}</p>
+                            <p className="text-text-secondary mb-1.5">Total: <span className="font-bold text-text-primary">{formatCompactMXN(total)}</span></p>
+                            {payload.filter(p => (Number(p.value) || 0) > 0).map((p, i) => (
+                              <div key={i} className="flex items-center gap-2">
+                                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: String(p.color) }} />
+                                <span className="text-text-muted/80 truncate max-w-[160px]">{String(p.name)}</span>
+                                <span className="ml-auto font-semibold tabular-nums" style={{ color: String(p.color) }}>
+                                  {formatCompactMXN(Number(p.value))}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+                        )
+                      }}
+                    />
+                    <Legend
+                      verticalAlign="bottom"
+                      height={48}
+                      wrapperStyle={{ paddingTop: 8 }}
+                      formatter={(value: string) => (
+                        <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
+                          {value}
+                        </span>
+                      )}
+                    />
+                    {sexenioCategories.map((cat) => (
+                      <Bar
+                        key={cat.key}
+                        dataKey={cat.key}
+                        stackId="sexenio"
+                        fill={cat.color}
+                        fillOpacity={0.8}
+                        maxBarSize={60}
+                      />
+                    ))}
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            ) : (
+              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
+                Sin datos de sexenio disponibles.
+              </div>
+            )}
+            <p className="text-[10px] text-text-muted/50 mt-2 font-mono">
+              Sheinbaum = 2025 parcial. Fox incluye parte del dato COMPRANET.
+            </p>
+          </CardContent>
+        </Card>
+        <FuentePill source="COMPRANET 2002-2025" />
+      </section>
 
       {/* ================================================================= */}
       {/* 8. Charts Section                                                 */}

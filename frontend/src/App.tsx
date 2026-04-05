@@ -39,6 +39,7 @@ const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
 const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
+const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 // Limitations removed — /limitations redirects to /methodology
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
@@ -154,6 +155,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <SpendingCategories />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="categories/:id"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CategoryProfile />
                   </SuspenseBoundary>
                 }
               />
