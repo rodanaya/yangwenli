@@ -1,9 +1,10 @@
 /**
- * SectorParadoxScatter — Scatter plot disproving "direct awards = corruption"
+ * SectorParadoxScatter — Scatter plot: Direct Award % vs High-Risk %
  *
  * X: Direct Award %, Y: High-Risk %, bubble size: total value (billions)
- * Demonstrates that Agricultura (93% DA) has only 2% high-risk,
- * while Salud (64% DA) has 12.6% high-risk — concentration matters more.
+ * v6.5 live data (Apr 2026): Agricultura (93% DA) is now 29.73% high-risk
+ * (Segalmex dominates GT training data). Salud (64% DA) = 12.01% but largest
+ * absolute value at risk (MX$369B). DA rate alone does NOT predict risk level.
  */
 
 import { useTranslation } from 'react-i18next'
@@ -29,24 +30,25 @@ interface SectorPoint {
   color: string
 }
 
+// Live data from DuckDB queries — Apr 2026 (v6.5 risk model)
 const SECTOR_SCATTER_DATA: SectorPoint[] = [
-  { sector: 'otros', directAwardPct: 52.0, highRiskPct: 18.6, avgRisk: 0.1986, totalBillions: 40.9, contracts: 28757, color: '#64748b' },
-  { sector: 'salud', directAwardPct: 63.8, highRiskPct: 12.6, avgRisk: 0.1564, totalBillions: 3085.7, contracts: 1103317, color: '#dc2626' },
-  { sector: 'defensa', directAwardPct: 56.3, highRiskPct: 15.9, avgRisk: 0.1499, totalBillions: 281.1, contracts: 79505, color: '#1e3a5f' },
-  { sector: 'gobernacion', directAwardPct: 60.3, highRiskPct: 12.2, avgRisk: 0.1430, totalBillions: 317.6, contracts: 120029, color: '#be123c' },
-  { sector: 'infraestructura', directAwardPct: 31.9, highRiskPct: 8.5, avgRisk: 0.1096, totalBillions: 2446.1, contracts: 326592, color: '#ea580c' },
-  { sector: 'tecnologia', directAwardPct: 71.8, highRiskPct: 12.0, avgRisk: 0.1048, totalBillions: 81.9, contracts: 52253, color: '#8b5cf6' },
-  { sector: 'energia', directAwardPct: 55.7, highRiskPct: 10.5, avgRisk: 0.0995, totalBillions: 1972.3, contracts: 315967, color: '#eab308' },
-  { sector: 'trabajo', directAwardPct: 75.9, highRiskPct: 6.8, avgRisk: 0.0801, totalBillions: 97.5, contracts: 48855, color: '#f97316' },
-  { sector: 'hacienda', directAwardPct: 80.0, highRiskPct: 5.3, avgRisk: 0.0601, totalBillions: 619.8, contracts: 151313, color: '#16a34a' },
-  { sector: 'educacion', directAwardPct: 78.0, highRiskPct: 4.9, avgRisk: 0.0530, totalBillions: 371.8, contracts: 335853, color: '#3b82f6' },
-  { sector: 'ambiente', directAwardPct: 44.4, highRiskPct: 3.1, avgRisk: 0.0318, totalBillions: 291.6, contracts: 92635, color: '#10b981' },
-  { sector: 'agricultura', directAwardPct: 93.4, highRiskPct: 2.0, avgRisk: 0.0214, totalBillions: 321.3, contracts: 454931, color: '#22c55e' },
+  { sector: 'agricultura', directAwardPct: 93.4, highRiskPct: 29.73, avgRisk: 0.3693, totalBillions: 317.6, contracts: 447708, color: '#22c55e' },
+  { sector: 'trabajo', directAwardPct: 75.8, highRiskPct: 24.74, avgRisk: 0.3122, totalBillions: 97.1, contracts: 48134, color: '#f97316' },
+  { sector: 'defensa', directAwardPct: 56.1, highRiskPct: 14.46, avgRisk: 0.2336, totalBillions: 280.5, contracts: 78974, color: '#1e3a5f' },
+  { sector: 'energia', directAwardPct: 55.6, highRiskPct: 13.49, avgRisk: 0.2598, totalBillions: 1957.9, contracts: 312931, color: '#eab308' },
+  { sector: 'otros', directAwardPct: 51.8, highRiskPct: 16.50, avgRisk: 0.2839, totalBillions: 41.0, contracts: 28502, color: '#64748b' },
+  { sector: 'salud', directAwardPct: 63.7, highRiskPct: 12.01, avgRisk: 0.2794, totalBillions: 3070.3, contracts: 1085497, color: '#dc2626' },
+  { sector: 'tecnologia', directAwardPct: 71.7, highRiskPct: 11.41, avgRisk: 0.2765, totalBillions: 81.7, contracts: 51977, color: '#8b5cf6' },
+  { sector: 'hacienda', directAwardPct: 78.5, highRiskPct: 8.98, avgRisk: 0.2195, totalBillions: 618.9, contracts: 138156, color: '#16a34a' },
+  { sector: 'infraestructura', directAwardPct: 31.3, highRiskPct: 8.72, avgRisk: 0.2459, totalBillions: 2438.9, contracts: 321626, color: '#ea580c' },
+  { sector: 'ambiente', directAwardPct: 44.3, highRiskPct: 8.29, avgRisk: 0.2513, totalBillions: 290.6, contracts: 91954, color: '#10b981' },
+  { sector: 'gobernacion', directAwardPct: 60.1, highRiskPct: 7.98, avgRisk: 0.2431, totalBillions: 316.6, contracts: 118907, color: '#be123c' },
+  { sector: 'educacion', directAwardPct: 78.0, highRiskPct: 4.64, avgRisk: 0.2052, totalBillions: 371.0, contracts: 333920, color: '#3b82f6' },
 ]
 
 // Scale bubble radius: sqrt of billions, clamped to [6, 32]
 function bubbleRadius(billions: number): number {
-  const maxB = 3085.7
+  const maxB = 3070.3
   const r = 6 + 26 * Math.sqrt(billions / maxB)
   return Math.max(6, Math.min(32, r))
 }
@@ -163,7 +165,7 @@ export function SectorParadoxScatter() {
               type="number"
               dataKey="highRiskPct"
               name="High-Risk %"
-              domain={[0, 22]}
+              domain={[0, 35]}
               tickFormatter={v => `${v}%`}
               tick={{ fontSize: 10, fill: '#71717a', fontFamily: "ui-monospace, 'SF Mono', monospace" }}
               axisLine={{ stroke: '#3f3f46' }}

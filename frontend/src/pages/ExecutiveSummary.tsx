@@ -48,21 +48,23 @@ import {
 // These change infrequently; API data overrides where available
 // ============================================================================
 
-// live data from DuckDB query Apr 2026
+// live data from DuckDB query Apr 2026 — sorted by valueAtRiskMxn (absolute MXN at risk)
+// valueAtRiskMxn = totalMxn × highRiskPct / 100
+// Ranked by money at risk, NOT by rate — Salud 369B > Energia 264B > Infra 213B
 const SECTOR_RISK_DATA = [
-  { code: 'agricultura', contracts: 446601, totalMxn: 318e9, avgRisk: 0.3693, highRiskPct: 29.81 },
-  { code: 'trabajo', contracts: 48125, totalMxn: 97e9, avgRisk: 0.3122, highRiskPct: 24.74 },
-  { code: 'otros', contracts: 28334, totalMxn: 41e9, avgRisk: 0.2839, highRiskPct: 16.60 },
-  { code: 'defensa', contracts: 78642, totalMxn: 281e9, avgRisk: 0.2336, highRiskPct: 14.52 },
-  { code: 'energia', contracts: 312911, totalMxn: 1.96e12, avgRisk: 0.2598, highRiskPct: 13.49 },
-  { code: 'salud', contracts: 1084389, totalMxn: 3.07e12, avgRisk: 0.2794, highRiskPct: 12.02 },
-  { code: 'tecnologia', contracts: 51906, totalMxn: 82e9, avgRisk: 0.2765, highRiskPct: 11.42 },
-  { code: 'hacienda', contracts: 133911, totalMxn: 619e9, avgRisk: 0.2195, highRiskPct: 9.26 },
-  { code: 'infraestructura', contracts: 321564, totalMxn: 2.44e12, avgRisk: 0.2459, highRiskPct: 8.72 },
-  { code: 'ambiente', contracts: 91898, totalMxn: 291e9, avgRisk: 0.2513, highRiskPct: 8.29 },
-  { code: 'gobernacion', contracts: 118805, totalMxn: 317e9, avgRisk: 0.2431, highRiskPct: 7.98 },
-  { code: 'educacion', contracts: 332902, totalMxn: 371e9, avgRisk: 0.2052, highRiskPct: 4.65 },
-] as const
+  { code: 'salud',          contracts: 1084389, totalMxn: 3.07e12,  avgRisk: 0.2794, highRiskPct: 12.02, valueAtRiskMxn: 369e9  },
+  { code: 'energia',        contracts: 312911,  totalMxn: 1.96e12,  avgRisk: 0.2598, highRiskPct: 13.49, valueAtRiskMxn: 264e9  },
+  { code: 'infraestructura',contracts: 321564,  totalMxn: 2.44e12,  avgRisk: 0.2459, highRiskPct: 8.72,  valueAtRiskMxn: 213e9  },
+  { code: 'agricultura',    contracts: 446601,  totalMxn: 318e9,    avgRisk: 0.3693, highRiskPct: 29.81, valueAtRiskMxn: 95e9   },
+  { code: 'hacienda',       contracts: 133911,  totalMxn: 619e9,    avgRisk: 0.2195, highRiskPct: 9.26,  valueAtRiskMxn: 57e9   },
+  { code: 'defensa',        contracts: 78642,   totalMxn: 281e9,    avgRisk: 0.2336, highRiskPct: 14.52, valueAtRiskMxn: 41e9   },
+  { code: 'gobernacion',    contracts: 118805,  totalMxn: 317e9,    avgRisk: 0.2431, highRiskPct: 7.98,  valueAtRiskMxn: 25e9   },
+  { code: 'ambiente',       contracts: 91898,   totalMxn: 291e9,    avgRisk: 0.2513, highRiskPct: 8.29,  valueAtRiskMxn: 24e9   },
+  { code: 'trabajo',        contracts: 48125,   totalMxn: 97e9,     avgRisk: 0.3122, highRiskPct: 24.74, valueAtRiskMxn: 24e9   },
+  { code: 'educacion',      contracts: 332902,  totalMxn: 371e9,    avgRisk: 0.2052, highRiskPct: 4.65,  valueAtRiskMxn: 17e9   },
+  { code: 'tecnologia',     contracts: 51906,   totalMxn: 82e9,     avgRisk: 0.2765, highRiskPct: 11.42, valueAtRiskMxn: 9e9    },
+  { code: 'otros',          contracts: 28334,   totalMxn: 41e9,     avgRisk: 0.2839, highRiskPct: 16.60, valueAtRiskMxn: 7e9    },
+]
 
 // live data from DuckDB query Apr 2026
 const HISTORICAL_TREND = [
@@ -1533,8 +1535,8 @@ function SectionSectors({
 }) {
   const { t } = useTranslation(['executive', 'sectors'])
 
-  // Use static sector risk data sorted by high-risk% (descending) — live data from DuckDB Apr 2026
-  const maxHighRiskPct = SECTOR_RISK_DATA[0].highRiskPct
+  // SECTOR_RISK_DATA is pre-sorted by valueAtRiskMxn descending — salud first
+  const maxValueAtRisk = SECTOR_RISK_DATA[0].valueAtRiskMxn
 
   const healthSector = data.sectors.find((s) => s.code === 'salud')
 
@@ -1567,20 +1569,22 @@ function SectionSectors({
         />
       </p>
 
-      {/* HALLAZGO: Agriculture and Labor anomaly */}
+      {/* HALLAZGO: Absolute value at risk vs rate illusion */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1 font-bold">
           {/* TODO: i18n */}
-          HALLAZGO
+          HALLAZGO — RANKED BY MONEY AT RISK, NOT RATE
         </p>
         <p className="text-sm text-zinc-200">
           {/* TODO: i18n */}
-          <strong className="text-text-primary">Agricultura</strong> has the highest risk rate at{' '}
-          <strong className="text-[#dc2626] font-mono">29.8%</strong> -- nearly 1 in 3 contracts
-          flagged high-risk. <strong className="text-text-primary">Trabajo</strong> follows at{' '}
-          <strong className="text-[#dc2626] font-mono">24.7%</strong>.
-          Both are &quot;small money, high risk&quot; sectors: lower total spend but disproportionate corruption patterns.
-          Compare with Salud (MX$3.07T, 12%) and Infraestructura (MX$2.44T, 8.7%).
+          <strong className="text-[#dc2626]">Salud</strong> leads with{' '}
+          <strong className="font-mono">MX$369B</strong> at risk (12% rate on MX$3.07T budget).{' '}
+          <strong className="text-[#eab308]">Energía</strong> follows at{' '}
+          <strong className="font-mono">MX$264B</strong>, then{' '}
+          <strong className="text-[#ea580c]">Infraestructura</strong> at{' '}
+          <strong className="font-mono">MX$213B</strong>.{' '}
+          <strong className="text-[#22c55e]">Agricultura</strong>&apos;s 29.8% rate looks alarming but its smaller budget
+          means only MX$95B at risk — less than a quarter of Salud.
         </p>
       </div>
 
@@ -1590,15 +1594,15 @@ function SectionSectors({
           <BarChart3 className="h-3.5 w-3.5 text-text-muted" />
           <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
             {/* TODO: i18n */}
-            SECTOR HIGH-RISK RATE (Critical + High %)
+            ABSOLUTE VALUE AT RISK (Critical + High, MXN)
           </p>
         </div>
 
         <div className="px-4 py-3 space-y-2.5">
           {SECTOR_RISK_DATA.map((s, idx) => {
             const sectorColor = SECTOR_COLORS[s.code] || SECTOR_COLORS.otros
-            const barPct = (s.highRiskPct / maxHighRiskPct) * 100
-            const isTop = idx < 2 // Agricultura and Trabajo
+            const barPct = (s.valueAtRiskMxn / maxValueAtRisk) * 100
+            const isTop = idx < 3 // Salud, Energia, Infraestructura
             return (
               <div
                 key={s.code}
@@ -1623,26 +1627,26 @@ function SectionSectors({
                       className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500"
                       style={{
                         width: `${Math.max(barPct, 2)}%`,
-                        backgroundColor: isTop ? '#dc2626' : sectorColor,
-                        opacity: isTop ? 0.9 : 0.6,
+                        backgroundColor: sectorColor,
+                        opacity: isTop ? 0.85 : 0.5,
                       }}
                     />
-                    {/* Inline percentage */}
+                    {/* Inline value */}
                     <span
                       className="absolute inset-y-0 flex items-center text-[10px] font-mono font-bold tabular-nums"
                       style={{
-                        left: `${Math.min(barPct + 1, 90)}%`,
-                        color: isTop ? '#dc2626' : 'var(--color-text-secondary)',
+                        left: `${Math.min(barPct + 1, 85)}%`,
+                        color: isTop ? sectorColor : 'var(--color-text-secondary)',
                         paddingLeft: '4px',
                       }}
                     >
-                      {s.highRiskPct.toFixed(1)}%
+                      {formatCompactMXN(s.valueAtRiskMxn)}
                     </span>
                   </div>
 
-                  {/* Spend context */}
-                  <span className="text-[10px] font-mono text-text-muted tabular-nums w-[56px] text-right flex-shrink-0 hidden sm:block">
-                    {formatCompactMXN(s.totalMxn)}
+                  {/* Rate context */}
+                  <span className="text-[10px] font-mono text-text-muted tabular-nums w-[40px] text-right flex-shrink-0 hidden sm:block">
+                    {s.highRiskPct.toFixed(1)}%
                   </span>
                 </div>
               </div>

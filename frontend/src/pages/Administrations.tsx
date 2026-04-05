@@ -195,6 +195,7 @@ const ADMIN_METRIC_KEYS = [
   { key: 'avgRisk' as const,          labelKey: 'metrics.avgRiskScore',     format: (v: number) => (v * 100).toFixed(1) + '%' },
   { key: 'directAwardPct' as const,   labelKey: 'metrics.directAwardPct',   format: (v: number) => v.toFixed(1) + '%' },
   { key: 'highRiskPct' as const,      labelKey: 'metrics.highRiskPct',      format: (v: number) => v.toFixed(1) + '%' },
+  { key: 'valueAtRisk' as const,      labelKey: 'metrics.valueAtRisk',      format: (v: number) => formatCompactMXN(v) },
   { key: 'singleBidPct' as const,     labelKey: 'metrics.singleBidPct',     format: (v: number) => v.toFixed(1) + '%' },
 ]
 
@@ -210,6 +211,7 @@ interface AdminAgg {
   directAwardPct: number
   singleBidPct: number
   highRiskPct: number
+  valueAtRisk: number  // totalValue × highRiskPct / 100
   vendorCount: number
   institutionCount: number
   years: YearOverYearChange[]
@@ -250,6 +252,7 @@ function aggregateByAdmin(yoyData: YearOverYearChange[]): AdminAgg[] {
       directAwardPct: weightedDA,
       singleBidPct: weightedSB,
       highRiskPct: weightedHR,
+      valueAtRisk: totalValue * weightedHR / 100,
       vendorCount: maxVendors,
       institutionCount: maxInst,
       years,
@@ -401,12 +404,15 @@ function AdminDossierPanel({
     return sorted
   }, [sectorData])
 
+  // Flag Fox era DA as data artifact (Structure A 2002-2010 didn't record DA reliably)
+  const isFoxEra = adminName === 'Fox'
   const fingerprintItems = agg ? [
     { labelKey: 'dossier.fingerprint.totalSpend',   value: formatCompactMXN(agg.totalValue),               icon: Banknote },
-    { labelKey: 'dossier.fingerprint.directAward',  value: `${agg.directAwardPct.toFixed(1)}%`,            icon: Shield },
+    { labelKey: 'dossier.fingerprint.directAward',  value: isFoxEra ? `${agg.directAwardPct.toFixed(1)}%*` : `${agg.directAwardPct.toFixed(1)}%`, icon: Shield },
     { labelKey: 'dossier.fingerprint.singleBid',    value: `${agg.singleBidPct.toFixed(1)}%`,              icon: Users },
     { labelKey: 'dossier.fingerprint.avgRisk',      value: `${(agg.avgRisk * 100).toFixed(1)}%`,           icon: Activity },
     { labelKey: 'dossier.fingerprint.highRisk',     value: `${agg.highRiskPct.toFixed(1)}%`,               icon: AlertTriangle },
+    { labelKey: 'dossier.fingerprint.valueAtRisk',  value: formatCompactMXN(agg.valueAtRisk),              icon: Banknote },
     { labelKey: 'dossier.fingerprint.vendors',      value: formatNumber(agg.vendorCount),                  icon: FileText },
   ] : []
 
@@ -462,17 +468,27 @@ function AdminDossierPanel({
             </div>
           </div>
         </div>
-        {/* Contracts badge */}
+        {/* Risk badge — rate + absolute MXN at risk */}
         {agg && (
-          <div className="text-right flex-shrink-0">
-            <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
-              {t('dossier.fingerprint.highRisk')}
+          <div className="text-right flex-shrink-0 space-y-2">
+            <div>
+              <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
+                {t('dossier.fingerprint.highRisk')}
+              </div>
+              <div
+                className="text-2xl font-bold font-mono"
+                style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : RISK_COLORS.low }}
+              >
+                {agg.highRiskPct.toFixed(1)}%
+              </div>
             </div>
-            <div
-              className="text-2xl font-bold font-mono"
-              style={{ color: agg.highRiskPct > 12 ? RISK_COLORS.critical : agg.highRiskPct > 7 ? RISK_COLORS.high : RISK_COLORS.low }}
-            >
-              {agg.highRiskPct.toFixed(1)}%
+            <div>
+              <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
+                MXN at risk
+              </div>
+              <div className="text-sm font-bold font-mono text-text-primary">
+                {formatCompactMXN(agg.valueAtRisk)}
+              </div>
             </div>
           </div>
         )}
@@ -1513,6 +1529,11 @@ export default function Administrations() {
                 </tbody>
               </table>
             </div>
+            {/* Fox era data quality footnote */}
+            <p className="text-[10px] text-text-muted mt-3 leading-relaxed border-t border-border/20 pt-2">
+              * Fox era (2002–2006) uses Structure A COMPRANET data (RFC coverage 0.1%). Direct award flags were not reliably recorded — 0% is a data artifact, not a true policy metric.
+              Risk scores for this period are directional estimates only.
+            </p>
           </CardContent>
         </div>
 
