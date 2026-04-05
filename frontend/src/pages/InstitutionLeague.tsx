@@ -131,17 +131,35 @@ function TrendIcon({ direction }: { direction: string | null }) {
   return <Minus className="h-3.5 w-3.5 text-zinc-600" aria-label={t('trend.stable')} />
 }
 
-// ---------------------------------------------------------------------------
-// Pillar value (colored number, no bar)
-// ---------------------------------------------------------------------------
-
-function PillarValue({ value, max }: { value: number; max: number }) {
-  const pct = (value / max) * 100
-  const color = pct > 70 ? 'text-green-400' : pct > 40 ? 'text-amber-400' : 'text-red-400'
+/** 5 mini vertical bars showing all pillars at a glance */
+function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
+  const pillars = [
+    { key: 'O', value: item.pillar_openness, max: 20 },
+    { key: 'P', value: item.pillar_price, max: 25 },
+    { key: 'V', value: item.pillar_vendors, max: 20 },
+    { key: 'R', value: item.pillar_process, max: 15 },
+    { key: 'E', value: item.pillar_external, max: 20 },
+  ]
+  const tooltip = pillars.map(p => `${p.key}:${p.value.toFixed(0)}/${p.max}`).join(' ')
   return (
-    <span className={`text-xs font-mono font-bold tabular-nums ${color}`}>
-      {value.toFixed(1)}
-    </span>
+    <div
+      className="flex items-end gap-[3px]"
+      title={tooltip}
+      aria-hidden="true"
+    >
+      {pillars.map(({ key, value, max }) => {
+        const pct = Math.min(100, Math.max(2, (value / max) * 100))
+        const bg = pct > 65 ? '#4ade80' : pct > 35 ? '#fbbf24' : '#f87171'
+        return (
+          <div key={key} className="flex flex-col items-center gap-[2px]">
+            <div className="w-[18px] h-7 bg-zinc-800/80 rounded-[2px] flex flex-col justify-end overflow-hidden">
+              <div style={{ height: `${pct}%`, background: bg }} className="w-full rounded-[1px] transition-all" />
+            </div>
+            <span className="text-[7px] text-zinc-600 font-mono leading-none select-none">{key}</span>
+          </div>
+        )
+      })}
+    </div>
   )
 }
 
@@ -656,41 +674,10 @@ export default function InstitutionLeague() {
                         onSort={handleSort}
                       />
                     </th>
-                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-20">
-                      <SortHeader
-                        label={t('columns.pillarOpenness')}
-                        sortKey="pillar_openness"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
-                    <th className="px-3 py-2.5 text-left hidden lg:table-cell w-20">
-                      <SortHeader
-                        label={t('columns.pillarPrice')}
-                        sortKey="pillar_price"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
-                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-20">
-                      <SortHeader
-                        label={t('columns.pillarVendors')}
-                        sortKey="pillar_vendors"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
-                    </th>
-                    <th className="px-3 py-2.5 text-left hidden xl:table-cell w-20">
-                      <SortHeader
-                        label={t('columns.pillarProcess')}
-                        sortKey="pillar_process"
-                        currentKey={sortBy}
-                        currentDir={sortOrder}
-                        onSort={handleSort}
-                      />
+                    <th className="px-3 py-2.5 text-left hidden sm:table-cell w-32">
+                      <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
+                        Pillars
+                      </span>
                     </th>
                     <th className="px-3 py-2.5 text-center w-16 hidden sm:table-cell">
                       <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
@@ -728,7 +715,7 @@ export default function InstitutionLeague() {
 
                         {/* Institution name + risk driver pill */}
                         <td className="px-3 py-3">
-                          <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-1 block">
+                          <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
                             {item.institution_name}
                           </span>
                           <div className="flex items-center gap-2 flex-wrap">
@@ -761,24 +748,9 @@ export default function InstitutionLeague() {
                           </div>
                         </td>
 
-                        {/* Pillar: Openness */}
-                        <td className="px-3 py-3 hidden lg:table-cell">
-                          <PillarValue value={item.pillar_openness} max={20} />
-                        </td>
-
-                        {/* Pillar: Price */}
-                        <td className="px-3 py-3 hidden lg:table-cell">
-                          <PillarValue value={item.pillar_price} max={25} />
-                        </td>
-
-                        {/* Pillar: Vendors */}
-                        <td className="px-3 py-3 hidden xl:table-cell">
-                          <PillarValue value={item.pillar_vendors} max={20} />
-                        </td>
-
-                        {/* Pillar: Process */}
-                        <td className="px-3 py-3 hidden xl:table-cell">
-                          <PillarValue value={item.pillar_process} max={15} />
+                        {/* Pillar sparkbars */}
+                        <td className="px-3 py-3 hidden sm:table-cell">
+                          <PillarSparkBars item={item} />
                         </td>
 
                         {/* Trend icon */}

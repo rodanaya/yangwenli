@@ -11,7 +11,7 @@
  *   4. Full heatmap (desktop) / ranked list (mobile)
  *   5. Methodology note
  */
-import React, { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -82,12 +82,6 @@ function captureColor(pct: number): string {
   if (pct >= 0.15) return 'rgba(234,179,8,0.55)'
   if (pct >= 0.05) return 'rgba(234,179,8,0.25)'
   return 'rgba(255,255,255,0.05)'
-}
-
-function captureTextColor(pct: number): string {
-  if (pct >= 0.3) return 'text-white'
-  if (pct >= 0.05) return 'text-white/80'
-  return 'text-white/40'
 }
 
 // ---------------------------------------------------------------------------
@@ -187,10 +181,10 @@ function TopCapturedList({
             {/* Institution + vendor info */}
             <div className="flex-1 min-w-0 space-y-0.5">
               <div
-                className="text-[11px] text-text-muted/60 truncate"
+                className="text-[11px] text-text-muted/70 font-medium leading-snug"
                 title={row.institution}
               >
-                {truncName(row.institution, 48)}
+                {row.institution}
               </div>
               <div className="text-xs text-text-muted/50">
                 {t('topCaptured.topVendor')}:{' '}
@@ -298,6 +292,107 @@ function HeroCaptureCallout({
 }
 
 // ---------------------------------------------------------------------------
+// CaptureBarChart — replaces the unreadable rotated-header grid heatmap
+// Shows each institution as a horizontal bar row: dominant vendor share
+// ---------------------------------------------------------------------------
+
+function CaptureBarChart({
+  rows,
+  t,
+}: {
+  rows: TopCaptureRow[]
+  t: ReturnType<typeof useTranslation>['t']
+}) {
+  if (rows.length === 0) return null
+  return (
+    <div role="list" aria-label={t('topCaptured.label')} className="space-y-1.5">
+      {rows.map((row, idx) => {
+        const pct = row.pct * 100
+        const barColor =
+          pct >= 50 ? '#dc2626'
+          : pct >= 30 ? '#ea580c'
+          : pct >= 15 ? '#eab308'
+          : '#94a3b8'
+        const textColor =
+          pct >= 50 ? '#f87171'
+          : pct >= 30 ? '#fb923c'
+          : pct >= 15 ? '#fbbf24'
+          : '#94a3b8'
+        const riskLabel =
+          pct >= 50 ? t('riskLabels.total')
+          : pct >= 30 ? t('riskLabels.high')
+          : pct >= 15 ? t('riskLabels.moderate')
+          : t('riskLabels.low')
+
+        return (
+          <div
+            key={row.institutionId}
+            role="listitem"
+            className="bg-surface-card border border-white/8 rounded-lg px-4 py-3 hover:border-white/20 transition-colors"
+          >
+            <div className="flex items-start gap-3">
+              {/* Rank */}
+              <span
+                className="text-lg font-bold text-text-muted/20 w-6 shrink-0 tabular-nums leading-tight pt-0.5"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {idx + 1}
+              </span>
+
+              {/* Institution + vendor + bar */}
+              <div className="flex-1 min-w-0 space-y-1.5">
+                {/* Institution name — full, not truncated */}
+                <div className="text-sm font-semibold text-text-primary leading-snug">
+                  {row.institution}
+                </div>
+
+                {/* Dominant vendor */}
+                <div className="flex items-center gap-1.5 text-xs text-text-muted/60">
+                  <span>{t('topCaptured.topVendor')}:</span>
+                  <Link
+                    to={`/vendors/${row.topVendorId}`}
+                    className="font-medium text-text-primary hover:text-primary transition-colors truncate"
+                    title={row.topVendor}
+                  >
+                    {row.topVendor}
+                    <ArrowUpRight className="inline ml-0.5 w-3 h-3 opacity-40" aria-hidden="true" />
+                  </Link>
+                </div>
+
+                {/* Horizontal bar */}
+                <div className="flex items-center gap-2">
+                  <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full transition-all duration-500"
+                      style={{ width: `${Math.min(100, pct)}%`, background: barColor }}
+                    />
+                  </div>
+                  <span
+                    className="text-sm font-bold tabular-nums shrink-0 w-14 text-right"
+                    style={{ color: textColor }}
+                  >
+                    {pct.toFixed(1)}%
+                  </span>
+                </div>
+
+                {/* Meta row */}
+                <div className="flex items-center gap-3 text-[10px] text-text-muted/40">
+                  <span>{formatCompactMXN(row.value)}</span>
+                  <span>&middot;</span>
+                  <span>{formatNumber(row.contracts)} {t('topCaptured.contracts')}</span>
+                  <span>&middot;</span>
+                  <span style={{ color: textColor }}>{riskLabel}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Main component
 // ---------------------------------------------------------------------------
 
@@ -308,7 +403,6 @@ export default function CapturaHeatmap() {
   const [sectorId, setSectorId] = useState<number | undefined>(undefined)
   const [yearRange, setYearRange] = useState<string>('all')
   const [minCapture, setMinCapture] = useState<number>(0)
-  const [viewMode, setViewMode] = useState<'value' | 'count'>('value')
 
   const yearParam = useMemo(() => {
     if (yearRange === '2023') return 2023
@@ -465,7 +559,7 @@ export default function CapturaHeatmap() {
         hhi: hhiByInst.get(instName) ?? 0,
       }))
       .sort((a, b) => b.pct - a.pct)
-      .slice(0, 5)
+      .slice(0, 10)
 
     return {
       cells: [...cellMap.values()],
@@ -484,12 +578,6 @@ export default function CapturaHeatmap() {
 
   // Hero row: highest-capture institution (always from unfiltered topCaptured)
   const heroRow = topCaptured.length > 0 ? topCaptured[0] : null
-
-  const cellLookup = useMemo(() => {
-    const map = new Map<string, HeatmapCell>()
-    for (const c of cells) map.set(`${c.institution}||${c.vendor}`, c)
-    return map
-  }, [cells])
 
   const mobileRankedPairs = useMemo(
     () =>
@@ -615,32 +703,6 @@ export default function CapturaHeatmap() {
           </div>
         </div>
 
-        {/* View mode toggle */}
-        <div>
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
-            {t('filters.displayMode')}
-          </div>
-          <div className="flex gap-2" role="group" aria-label={t('filters.displayMode')}>
-            {([
-              { mode: 'value' as const, label: t('filters.byValue') },
-              { mode: 'count' as const, label: t('filters.byCount') },
-            ]).map(({ mode, label }) => (
-              <button
-                key={mode}
-                onClick={() => setViewMode(mode)}
-                aria-pressed={viewMode === mode}
-                className={cn(
-                  'px-3 py-1 rounded-full text-xs font-medium border transition-colors',
-                  viewMode === mode
-                    ? 'bg-primary/20 border-primary/50 text-primary'
-                    : 'bg-surface-card border-white/10 text-text-muted/70 hover:border-white/30 hover:text-text-primary'
-                )}
-              >
-                {label}
-              </button>
-            ))}
-          </div>
-        </div>
       </div>
 
       {/* ===== Loading skeleton ===== */}
@@ -899,149 +961,56 @@ export default function CapturaHeatmap() {
         </motion.div>
       )}
 
-      {/* ===== Heatmap (desktop only) ===== */}
-      {!isLoading && !error && institutions.length > 0 && vendors.length > 0 && !isMobile && (
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
+      {/* ===== Capture Bar Chart: dominant vendor share per institution ===== */}
+      {!isLoading && !error && topCaptured.length > 0 && (
+        <motion.section
+          initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.15 }}
-          className="bg-surface-card border border-white/10 rounded-xl p-4 md:p-6 overflow-x-auto"
+          transition={{ duration: 0.45, delay: 0.2 }}
+          aria-labelledby="capture-chart-heading"
         >
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-4">
-            {t('heatmap.sectionLabel')}
+          <div className="flex items-center justify-between mb-3">
+            <div>
+              <div
+                id="capture-chart-heading"
+                className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-0.5"
+              >
+                {t('heatmap.sectionLabel')}
+              </div>
+              <p className="text-[11px] text-text-muted/40">
+                {t('topCaptured.sublabel')}
+              </p>
+            </div>
+            {highCaptureCount > 0 && (
+              <div className="flex items-center gap-2 text-xs text-red-400">
+                <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse shrink-0" />
+                <span className="font-mono tabular-nums">
+                  {highCaptureCount} {t('stats.highCaptureFlows')}
+                </span>
+              </div>
+            )}
           </div>
 
-          {/* Legend */}
-          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/60">
+          {/* Color legend */}
+          <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/50">
             {(
               [
-                { key: 'legend.total', bg: 'rgba(220,38,38,0.85)' },
-                { key: 'legend.high', bg: 'rgba(234,88,12,0.75)' },
-                { key: 'legend.moderate', bg: 'rgba(234,179,8,0.55)' },
-                { key: 'legend.low', bg: 'rgba(255,255,255,0.05)' },
+                { color: '#dc2626', label: '\u226550%', desc: t('riskLabels.total') },
+                { color: '#ea580c', label: '30\u201350%', desc: t('riskLabels.high') },
+                { color: '#eab308', label: '15\u201330%', desc: t('riskLabels.moderate') },
+                { color: '#94a3b8', label: '<15%', desc: t('riskLabels.low') },
               ] as const
-            ).map(({ key, bg }) => (
-              <span key={key} className="flex items-center gap-1.5">
-                <span className="w-3 h-3 rounded-sm" style={{ background: bg }} aria-hidden="true" />
-                {t(key)}
+            ).map(({ color, label, desc }) => (
+              <span key={label} className="flex items-center gap-1.5">
+                <span className="w-3 h-1.5 rounded-full" style={{ background: color }} aria-hidden="true" />
+                <span className="font-mono">{label}</span>
+                <span className="text-text-muted/30">{desc}</span>
               </span>
             ))}
           </div>
 
-          {/* Editorial reading guide */}
-          {highCaptureCount > 0 && (
-            <div className="rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2.5 mb-4 flex items-center gap-3">
-              <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-              <p className="text-xs text-zinc-300">
-                <span className="font-semibold text-red-400">{highCaptureCount} relaciones</span> muestran
-                captura superior al 30% {'\u2014'} un proveedor controla m{'\u00e1'}s de un tercio
-                del presupuesto de la instituci{'\u00f3'}n.
-                {' '}<span className="text-zinc-500">(OCDE: {'>'} 30% = concentraci{'\u00f3'}n alta)</span>
-              </p>
-            </div>
-          )}
-
-          {/* Sparsity note when most cells are empty */}
-          {(() => {
-            const totalCells = institutions.length * vendors.length
-            const filledCells = cells.filter(c => c.pctOfInstitution > 0.01).length
-            const sparsity = totalCells > 0 ? 1 - (filledCells / totalCells) : 0
-            if (sparsity > 0.7 && totalCells > 10) {
-              return (
-                <div className="text-[10px] text-text-muted/40 mb-3 font-mono">
-                  {filledCells} de {totalCells} celdas con relaci{'\u00f3'}n significativa ({(100 - sparsity * 100).toFixed(0)}% de cobertura) {'\u2014'} las celdas vac{'\u00ed'}as indican que no hay flujos directos entre esa instituci{'\u00f3'}n y proveedor.
-                </div>
-              )
-            }
-            return null
-          })()}
-
-          {/* CSS Grid heatmap */}
-          <div
-            className="grid gap-[2px]"
-            style={{
-              gridTemplateColumns: `200px repeat(${vendors.length}, minmax(100px, 1fr))`,
-            }}
-            role="table"
-            aria-label={t('title')}
-          >
-            {/* Header row */}
-            <div role="columnheader" className="text-[10px] text-text-muted/40 font-medium" />
-            {vendors.map((v) => (
-              <div
-                key={v}
-                role="columnheader"
-                className="text-[10px] text-text-muted/60 font-medium px-1 pb-2 truncate"
-                style={{
-                  writingMode: 'vertical-lr',
-                  transform: 'rotate(180deg)',
-                  height: '120px',
-                }}
-                title={v}
-              >
-                {truncName(v, 28)}
-              </div>
-            ))}
-
-            {/* Data rows */}
-            {institutions.map((inst) => (
-              <React.Fragment key={inst}>
-                <div
-                  role="rowheader"
-                  className="text-[11px] text-text-primary/80 font-medium truncate flex items-center pr-2"
-                  title={inst}
-                >
-                  {truncName(inst, 28)}
-                </div>
-                {vendors.map((v) => {
-                  const cell = cellLookup.get(`${inst}||${v}`)
-                  const pct = cell?.pctOfInstitution ?? 0
-                  return (
-                    <div
-                      key={`${inst}||${v}`}
-                      role="cell"
-                      className={cn(
-                        'relative rounded-sm min-h-[48px] flex flex-col items-center justify-center cursor-default transition-all hover:ring-1 hover:ring-white/30 group',
-                        captureTextColor(pct)
-                      )}
-                      style={{ background: captureColor(pct) }}
-                      title={
-                        cell
-                          ? `${inst} \u2192 ${v}\n${formatCompactMXN(cell.value)} (${(pct * 100).toFixed(1)}% ${t('heatmap.pctBudget')})\n${formatNumber(cell.contracts)} ${t('heatmap.contracts')}`
-                          : `${inst} \u2192 ${v}\n\u2014`
-                      }
-                    >
-                      {cell && pct > 0.01 ? (
-                        <>
-                          <span className="text-[11px] font-semibold leading-tight">
-                            {formatPercent(pct, 0)}
-                          </span>
-                          <span className="text-[9px] opacity-60 leading-tight">
-                            {viewMode === 'count'
-                              ? `${formatNumber(cell.contracts)} contr.`
-                              : formatCompactMXN(cell.value)}
-                          </span>
-                        </>
-                      ) : cell ? (
-                        <span className="text-[9px] opacity-30">&lt;1%</span>
-                      ) : null}
-
-                      {cell && (
-                        <Link
-                          to={`/vendors/${cell.vendorId}`}
-                          className="absolute inset-0 opacity-0 group-hover:opacity-100 flex items-center justify-center bg-black/40 rounded-sm transition-opacity"
-                          aria-label={`${t('topCaptured.viewVendor')}: ${v}`}
-                        >
-                          <ArrowUpRight className="w-3.5 h-3.5 text-white" aria-hidden="true" />
-                        </Link>
-                      )}
-                    </div>
-                  )
-                })}
-              </React.Fragment>
-            ))}
-          </div>
-        </motion.div>
+          <CaptureBarChart rows={topCaptured} t={t} />
+        </motion.section>
       )}
 
       {/* ===== Methodology footer ===== */}
