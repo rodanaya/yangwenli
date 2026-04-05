@@ -6,7 +6,7 @@
  * Banderas Rojas, Charts, ImpactoHumano, drill-down panels.
  */
 
-import { useMemo, useState, useRef } from 'react'
+import { useMemo, useState, useRef, useEffect } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -83,6 +83,22 @@ interface TrendItem {
   contracts: number
   value: number
   avg_risk: number
+}
+
+interface TopContractItem {
+  id: number
+  title: string | null
+  amount_mxn: number
+  contract_date: string | null
+  contract_year: number | null
+  risk_score: number
+  risk_level: string | null
+  is_direct_award: boolean
+  is_single_bid: boolean
+  vendor_name: string | null
+  vendor_id: number | null
+  institution_name: string | null
+  institution_id: number | null
 }
 
 type SortField = 'total_contracts' | 'total_value' | 'avg_risk' | 'direct_award_pct'
@@ -215,6 +231,8 @@ function CategoryDetailPanel({
   loading,
   onClose,
   onNavigate,
+  topContracts = [],
+  topContractsLoading = false,
 }: {
   categoryId: number
   categoryName: string
@@ -223,6 +241,8 @@ function CategoryDetailPanel({
   loading: boolean
   onClose: () => void
   onNavigate: (path: string) => void
+  topContracts?: TopContractItem[]
+  topContractsLoading?: boolean
 }) {
   const { t } = useTranslation('spending')
   const maxValue = pairs[0]?.total_value ?? 1
@@ -266,6 +286,43 @@ function CategoryDetailPanel({
         </div>
       </CardHeader>
       <CardContent className="p-0">
+        {/* Top 5 most expensive contracts */}
+        {(topContractsLoading || topContracts.length > 0) && (
+          <div className="border-b border-border/20">
+            <div className="px-4 py-2 bg-background-elevated/20 border-b border-border/10">
+              <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Contratos más costosos</p>
+            </div>
+            {topContractsLoading ? (
+              <div className="space-y-1.5 p-3">
+                {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-8 w-full" />)}
+              </div>
+            ) : (
+              <div className="divide-y divide-border/10">
+                {topContracts.map((c, idx) => (
+                  <div key={c.id} className="flex items-center gap-3 px-4 py-2 hover:bg-background-elevated/30 transition-colors">
+                    <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-xs text-text-secondary truncate">{truncate(c.title ?? '—', 50)}</p>
+                      <div className="flex items-center gap-2 mt-0.5 text-[10px] text-text-muted/50 font-mono">
+                        <span>{c.contract_year ?? '—'}</span>
+                        {c.vendor_name && <><span>·</span><span className="truncate max-w-[160px]">{truncate(c.vendor_name, 28)}</span></>}
+                        {c.is_direct_award && <span className="text-orange-400/80">AD</span>}
+                      </div>
+                    </div>
+                    <div className="text-right flex-shrink-0">
+                      <p className="text-xs font-mono font-bold text-text-primary tabular-nums">{formatCompactMXN(c.amount_mxn ?? 0)}</p>
+                      {c.risk_level && (
+                        <span className="text-[9px] font-mono uppercase" style={{ color: getRiskColor(c.risk_score ?? 0) }}>
+                          {c.risk_level}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        )}
         {loading ? (
           <div className="space-y-2 p-4">
             {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-10 w-full" />)}
@@ -356,10 +413,12 @@ function CategorySummaryCard({
   category,
   onClose,
   onNavigate,
+  trendItems = [],
 }: {
   category: CategoryStat
   onClose: () => void
   onNavigate: (path: string) => void
+  trendItems?: TrendItem[]
 }) {
   const riskLevel = getRiskLevelFromScore(category.avg_risk)
   const riskColor = RISK_COLORS[riskLevel]
@@ -506,6 +565,69 @@ function CategorySummaryCard({
           )}
         </div>
       </div>
+
+      {/* Year Trend + YoY */}
+      {trendItems.length >= 2 && (() => {
+        const last5 = trendItems.slice(-5)
+        const maxV = Math.max(...last5.map(t => t.value), 1)
+        const latest = trendItems[trendItems.length - 1]
+        const prev = trendItems[trendItems.length - 2]
+        const yoy = prev.value > 0 ? (latest.value - prev.value) / prev.value : null
+        return (
+          <div className="px-5 py-3 border-t border-border/20">
+            <div className="flex items-center justify-between mb-2">
+              <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60">Tendencia de gasto ({last5[0].year}–{last5[last5.length - 1].year})</p>
+              {yoy !== null && (
+                <span className={cn(
+                  'text-xs font-mono font-bold',
+                  yoy > 0.05 ? 'text-orange-400' : yoy < -0.05 ? 'text-green-400' : 'text-text-muted',
+                )}>
+                  {yoy > 0 ? '↑' : '↓'} {Math.abs(yoy * 100).toFixed(0)}% vs {prev.year}
+                </span>
+              )}
+            </div>
+            <div className="flex items-end gap-1 h-10">
+              {last5.map(t => (
+                <div key={t.year} className="flex flex-col items-center flex-1 gap-0.5">
+                  <div
+                    className="w-full rounded-t-sm transition-all"
+                    style={{
+                      height: `${Math.max(4, (t.value / maxV) * 32)}px`,
+                      backgroundColor: `${getRiskColor(t.avg_risk)}50`,
+                      borderTop: `2px solid ${getRiskColor(t.avg_risk)}`,
+                    }}
+                  />
+                  <span className="text-[8px] text-text-muted/50 font-mono tabular-nums">{t.year}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        )
+      })()}
+
+      {/* Risk Flags Checklist */}
+      {(() => {
+        const flags: string[] = []
+        if (category.direct_award_pct > 75) flags.push(`${category.direct_award_pct.toFixed(0)}% adj. directa — ${(category.direct_award_pct / 25).toFixed(1)}x límite OCDE`)
+        else if (category.direct_award_pct > 25) flags.push(`${category.direct_award_pct.toFixed(0)}% adj. directa excede límite OCDE (25%)`)
+        if (category.single_bid_pct > 25) flags.push(`${category.single_bid_pct.toFixed(0)}% licitaciones con un solo postor`)
+        if (category.avg_risk >= 0.60) flags.push('Riesgo crítico — patrón coincide con casos de corrupción documentados')
+        else if (category.avg_risk >= 0.40) flags.push('Riesgo alto — revisar patrones de concentración de proveedores')
+        if (!flags.length) return null
+        return (
+          <div className="px-5 py-3 border-t border-red-500/20 bg-red-500/[0.04]">
+            <p className="text-[9px] font-mono uppercase tracking-wide text-red-400 mb-1.5">INDICADORES DE RIESGO</p>
+            <ul className="space-y-1">
+              {flags.map((f, i) => (
+                <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
+                  <AlertTriangle className="h-3 w-3 text-red-400 flex-shrink-0 mt-0.5" />
+                  {f}
+                </li>
+              ))}
+            </ul>
+          </div>
+        )
+      })()}
 
       {/* Contextual finding callout if high risk */}
       {(category.avg_risk >= 0.40 || isHighDA) && (
@@ -858,6 +980,7 @@ export default function SpendingCategories() {
   const [selectedCategoryId, setSelectedCategoryId] = useState<number | null>(null)
   const [searchQuery, setSearchQuery] = useState('')
   const trendChartRef = useRef<HTMLDivElement>(null)
+  const detailPanelRef = useRef<HTMLDivElement>(null)
 
   const { data: summaryData, isLoading: summaryLoading, error: summaryError } = useQuery({
     queryKey: ['categories', 'summary'],
@@ -883,6 +1006,13 @@ export default function SpendingCategories() {
     queryFn: () => categoriesApi.getSubcategories(selectedCategoryId!),
     enabled: selectedCategoryId !== null,
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: topContractsData, isLoading: topContractsLoading } = useQuery({
+    queryKey: ['categories', 'top-contracts', selectedCategoryId],
+    queryFn: () => categoriesApi.getContracts(selectedCategoryId!, { per_page: 5, sort_by: 'amount_mxn', sort_order: 'desc' }),
+    enabled: selectedCategoryId !== null,
+    staleTime: 5 * 60 * 1000,
   })
 
   const allCategories: CategoryStat[] = summaryData?.data ?? []
@@ -960,15 +1090,15 @@ export default function SpendingCategories() {
 
   const selectedCategoryName = useMemo(() => {
     if (!selectedCategoryId) return null
-    const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
+    const cat = allCategories.find(c => c.category_id === selectedCategoryId)
     return cat ? (cat.name_en || cat.name_es) : null
-  }, [selectedCategoryId, filteredCategories])
+  }, [selectedCategoryId, allCategories])
 
   const selectedCategorySectorId = useMemo(() => {
     if (!selectedCategoryId) return null
-    const cat = filteredCategories.find(c => c.category_id === selectedCategoryId)
+    const cat = allCategories.find(c => c.category_id === selectedCategoryId)
     return cat ? getSectorId(cat.sector_code) : null
-  }, [selectedCategoryId, filteredCategories])
+  }, [selectedCategoryId, allCategories])
 
   const selectedCategory = useMemo(() => {
     if (!selectedCategoryId) return null
@@ -1037,6 +1167,23 @@ export default function SpendingCategories() {
     }
     return result
   }, [trendsData, yearTo])
+
+  const selectedCategoryTrend = useMemo(() => {
+    if (!selectedCategoryId || !trendsData?.data) return []
+    return (trendsData.data as TrendItem[])
+      .filter(t => t.category_id === selectedCategoryId)
+      .sort((a, b) => a.year - b.year)
+  }, [selectedCategoryId, trendsData])
+
+  // Auto-scroll to detail panels when a category is selected
+  useEffect(() => {
+    if (selectedCategoryId !== null) {
+      const timer = setTimeout(() => {
+        detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }, 80)
+      return () => clearTimeout(timer)
+    }
+  }, [selectedCategoryId])
 
   const yearOptions = Array.from({ length: MAX_YEAR - MIN_YEAR + 1 }, (_, i) => MIN_YEAR + i)
 
@@ -1320,6 +1467,26 @@ export default function SpendingCategories() {
           )}
         </div>
 
+        {selectedCategoryId !== null && selectedCategory && (
+          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/5 border border-accent/20 mb-3 text-xs animate-in fade-in duration-200">
+            <span className="font-mono text-text-muted/60 uppercase tracking-wider text-[10px] flex-shrink-0">Seleccionado:</span>
+            <span className="font-semibold text-accent truncate flex-1">{selectedCategory.name_es || selectedCategory.name_en}</span>
+            <button
+              onClick={() => setTimeout(() => detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)}
+              className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/30 text-accent hover:bg-accent/10 transition-colors whitespace-nowrap flex-shrink-0 font-mono"
+            >
+              Ver detalles ↓
+            </button>
+            <button
+              onClick={() => setSelectedCategoryId(null)}
+              className="text-text-muted hover:text-text-primary transition-colors flex-shrink-0"
+              aria-label="Deseleccionar categoría"
+            >
+              <X className="h-3.5 w-3.5" />
+            </button>
+          </div>
+        )}
+
         <Card className="overflow-hidden">
           <CardContent className="p-0">
             {summaryLoading ? (
@@ -1466,38 +1633,43 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       {/* 7. Subcategory + Vendor Drill-Down Panels                         */}
       {/* ================================================================= */}
-      {selectedCategoryId === null && sortedCategories.length > 0 && (
-        <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
-          <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-          <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategorías</span>, principales proveedores y desgloses institucionales.</span>
-        </div>
-      )}
-      {selectedCategoryId !== null && selectedCategory && (
-        <CategorySummaryCard
-          category={selectedCategory}
-          onClose={() => setSelectedCategoryId(null)}
-          onNavigate={navigate}
-        />
-      )}
-      {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
-        <SubcategoryPanel
-          categoryName={selectedCategoryName ?? ''}
-          items={subcategoryData?.data ?? []}
-          loading={subcategoryLoading}
-          onNavigate={navigate}
-        />
-      )}
-      {selectedCategoryId !== null && (
-        <CategoryDetailPanel
-          categoryId={selectedCategoryId}
-          categoryName={selectedCategoryName ?? ''}
-          sectorId={selectedCategorySectorId}
-          pairs={vendorInstData?.data ?? []}
-          loading={vendorInstLoading}
-          onClose={() => setSelectedCategoryId(null)}
-          onNavigate={navigate}
-        />
-      )}
+      <div ref={detailPanelRef} className="scroll-mt-4 space-y-4">
+        {selectedCategoryId === null && sortedCategories.length > 0 && (
+          <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
+            <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
+            <span>Haga clic en cualquier fila de la tabla para ver <span className="font-semibold text-text-secondary">subcategorías</span>, principales proveedores y desgloses institucionales.</span>
+          </div>
+        )}
+        {selectedCategoryId !== null && selectedCategory && (
+          <CategorySummaryCard
+            category={selectedCategory}
+            onClose={() => setSelectedCategoryId(null)}
+            onNavigate={navigate}
+            trendItems={selectedCategoryTrend}
+          />
+        )}
+        {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (
+          <SubcategoryPanel
+            categoryName={selectedCategoryName ?? ''}
+            items={subcategoryData?.data ?? []}
+            loading={subcategoryLoading}
+            onNavigate={navigate}
+          />
+        )}
+        {selectedCategoryId !== null && (
+          <CategoryDetailPanel
+            categoryId={selectedCategoryId}
+            categoryName={selectedCategoryName ?? ''}
+            sectorId={selectedCategorySectorId}
+            pairs={vendorInstData?.data ?? []}
+            loading={vendorInstLoading}
+            onClose={() => setSelectedCategoryId(null)}
+            onNavigate={navigate}
+            topContracts={topContractsData?.data as TopContractItem[] ?? []}
+            topContractsLoading={topContractsLoading}
+          />
+        )}
+      </div>
 
       {/* ================================================================= */}
       {/* 8. Charts Section                                                 */}
