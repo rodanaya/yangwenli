@@ -1,7 +1,32 @@
 {
   "trackingLabel": "INSTITUTIONAL CAPTURE ANALYSIS",
   "title": "Occupied Territories",
+  "titleV2": "Institutional Capture Map",
   "subtitle": "Which government institutions are most dependent on a single vendor?",
+  "editorialLede": {
+    "overline": "FINDING",
+    "body": "Institutional capture occurs when a government agency depends on a single vendor for the majority of its purchases. This phenomenon eliminates competition, inflates prices, and creates political dependencies that are difficult to break.",
+    "statLine": "{{count}} institutions concentrate over 50% of their spending in a single vendor."
+  },
+  "statStrip": {
+    "severeCaptureLabel": "Institutions with severe capture (>50%)",
+    "valueAtRiskLabel": "Value at capture risk (top 10)",
+    "highestLabel": "Highest concentration"
+  },
+  "whyItMatters": {
+    "label": "WHY DOES IT MATTER?",
+    "intro": "Excessive dependence on a single vendor creates:",
+    "prices": "Inflated prices: without competition, the vendor sets the terms",
+    "corruption": "Corruption risk: the exclusive relationship facilitates favor-trading",
+    "fragility": "Operational fragility: if the vendor fails, the institution collapses",
+    "opacity": "Opacity: direct contracts without bidding are harder to audit"
+  },
+  "legendDescriptive": {
+    "severe": "Severe capture",
+    "high": "High dependency",
+    "moderate": "Moderate dependency",
+    "competitive": "Competitive"
+  },
   "sourcePill": "contracts analyzed",
   "loading": "Building capture matrix...",
   "errorTitle": "Failed to Load",

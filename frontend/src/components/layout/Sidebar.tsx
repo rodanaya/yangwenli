@@ -28,7 +28,6 @@ import {
   ShieldCheck,
   Network,
   Flame,
-  Map,
   Activity,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -105,7 +104,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'stateExplorer', href: '/states', icon: Map },
       { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
       { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },

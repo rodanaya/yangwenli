@@ -1,13 +1,22 @@
 {
   "pageEyebrow": "Integridad Procuratoria",
-  "pageTitle": "Boleta de las Compras Públicas",
-  "pageSubtitle": "¿Qué tan bien maneja México el gasto público federal?",
+  "pageTitle": "Salud de la Contratación Pública",
+  "pageSubtitle": "¿Qué tan bien maneja México el gasto p��blico federal?",
+  "pageSubtitleV2": "Evaluación basada en indicadores OCDE y modelo de riesgo v6.5",
 
   "heroGradeLabel": "Calificación General",
-  "heroHeadline_good": "Compras públicas de México: {{grade}} — Buen desempeño según estándares internacionales",
+  "heroHeadline_good": "Compras públicas de México: {{grade}} — Buen desempeño según est��ndares internacionales",
   "heroHeadline_ok": "Compras públicas de México: {{grade}} — Hay margen de mejora",
   "heroHeadline_poor": "Compras públicas de México: {{grade}} — Se detectan problemas significativos",
   "heroHeadline_bad": "Compras públicas de México: {{grade}} — Se requiere acción urgente",
+
+  "oecdContextTitle": "CONTEXTO OCDE",
+  "oecdDALabel": "Tasa de adjudicación directa",
+  "oecdDABenchmark": "Recomendación OCDE: máximo 25%",
+  "oecdMexicoDA": "México: {{pct}}%",
+  "oecdSBLabel": "Tasa de oferente único",
+  "oecdSBBenchmark": "Recomendación OCDE: máximo 15%",
+  "oecdMexicoSB": "México: {{pct}}%",
   "heroBadgeLabel": "Basado en {{count}} indicadores internacionales · OCDE, FMI, Banco Mundial",
 
   "metricRiskTitle": "1 de cada {{n}} contratos muestra señales de riesgo",

@@ -1,7 +1,32 @@
 {
   "trackingLabel": "ANÁLISIS DE CAPTURA INSTITUCIONAL",
   "title": "Territorios Ocupados",
+  "titleV2": "Mapa de Captura Institucional",
   "subtitle": "¿Qué instituciones del gobierno dependen más de un solo proveedor?",
+  "editorialLede": {
+    "overline": "HALLAZGO",
+    "body": "La captura institucional ocurre cuando una agencia de gobierno depende de un solo proveedor para la mayoría de sus compras. Este fenómeno elimina la competencia, infla los precios y crea dependencias políticas que son difíciles de romper.",
+    "statLine": "{{count}} instituciones concentran más del 50% de su gasto en un solo proveedor."
+  },
+  "statStrip": {
+    "severeCaptureLabel": "Instituciones con captura severa (>50%)",
+    "valueAtRiskLabel": "Valor en riesgo de captura (top 10)",
+    "highestLabel": "Mayor concentración"
+  },
+  "whyItMatters": {
+    "label": "¿POR QUÉ IMPORTA?",
+    "intro": "La dependencia excesiva de un solo proveedor genera:",
+    "prices": "Precios inflados: sin competencia, el proveedor fija las condiciones",
+    "corruption": "Riesgo de corrupción: la relación exclusiva facilita el cobro de favores",
+    "fragility": "Fragilidad operativa: si el proveedor falla, la institución colapsa",
+    "opacity": "Opacidad: contratos directos sin licitación son más difíciles de auditar"
+  },
+  "legendDescriptive": {
+    "severe": "Captura severa",
+    "high": "Alta dependencia",
+    "moderate": "Dependencia moderada",
+    "competitive": "Competitiva"
+  },
   "sourcePill": "contratos analizados",
   "loading": "Construyendo matriz de captura...",
   "errorTitle": "Error al Cargar",

@@ -1,13 +1,22 @@
 {
   "pageEyebrow": "Procurement Integrity",
-  "pageTitle": "Mexico Procurement Report Card",
+  "pageTitle": "Procurement Health Index",
   "pageSubtitle": "How well does Mexico's federal government manage public spending?",
+  "pageSubtitleV2": "Assessment based on OECD indicators and risk model v6.5",
 
-  "heroGradeLabel": "Overall Grade",
+  "heroGradeLabel": "Overall Score",
   "heroHeadline_good": "Mexico's procurement: {{grade}} — Performing well by international standards",
   "heroHeadline_ok": "Mexico's procurement: {{grade}} — Room for improvement",
   "heroHeadline_poor": "Mexico's procurement: {{grade}} — Significant problems detected",
   "heroHeadline_bad": "Mexico's procurement: {{grade}} — Urgent action needed",
+
+  "oecdContextTitle": "OECD CONTEXT",
+  "oecdDALabel": "Direct award rate",
+  "oecdDABenchmark": "OECD recommendation: maximum 25%",
+  "oecdMexicoDA": "Mexico: {{pct}}%",
+  "oecdSBLabel": "Single bidder rate",
+  "oecdSBBenchmark": "OECD recommendation: maximum 15%",
+  "oecdMexicoSB": "Mexico: {{pct}}%",
   "heroBadgeLabel": "Based on {{count}} international indicators · OECD, IMF, World Bank",
 
   "metricRiskTitle": "1 in {{n}} contracts shows risk signals",

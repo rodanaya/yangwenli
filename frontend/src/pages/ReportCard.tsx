@@ -101,27 +101,69 @@ interface TrendYear {
 
 const SERIF = "'Playfair Display', Georgia, serif"
 
-// Grade config: color + tier
-const GRADE_CONFIGS: Record<string, {
-  text: string
+// ---------------------------------------------------------------------------
+// Mexican traffic-light system (semaforo) -- replaces US letter grades
+// ---------------------------------------------------------------------------
+
+interface MexicanGrade {
+  label: string
+  labelEN: string
+  color: string
   bg: string
   border: string
-  ring: string
+  semaforo: 'verde' | 'amarillo' | 'rojo'
   tier: 'good' | 'ok' | 'poor' | 'bad'
-}> = {
-  'S':  { text: '#34d399', bg: 'rgba(16,185,129,0.10)',  border: 'rgba(52,211,153,0.25)',  ring: 'rgba(52,211,153,0.30)',  tier: 'good' },
-  'A':  { text: '#4ade80', bg: 'rgba(74,222,128,0.08)',  border: 'rgba(74,222,128,0.20)',  ring: 'rgba(74,222,128,0.25)',  tier: 'good' },
-  'B+': { text: '#a3e635', bg: 'rgba(132,204,22,0.08)',  border: 'rgba(163,230,53,0.20)',  ring: 'rgba(163,230,53,0.25)',  tier: 'ok'   },
-  'B':  { text: '#60a5fa', bg: 'rgba(96,165,250,0.08)',  border: 'rgba(96,165,250,0.20)',  ring: 'rgba(96,165,250,0.25)',  tier: 'ok'   },
-  'C+': { text: '#fcd34d', bg: 'rgba(245,158,11,0.08)',  border: 'rgba(252,211,77,0.20)',  ring: 'rgba(252,211,77,0.25)',  tier: 'poor' },
-  'C':  { text: '#fbbf24', bg: 'rgba(251,191,36,0.08)',  border: 'rgba(251,191,36,0.20)',  ring: 'rgba(251,191,36,0.25)',  tier: 'poor' },
-  'D':  { text: '#fb923c', bg: 'rgba(251,146,60,0.08)',  border: 'rgba(251,146,60,0.20)',  ring: 'rgba(251,146,60,0.30)',  tier: 'bad'  },
-  'D-': { text: '#f87171', bg: 'rgba(239,68,68,0.08)',   border: 'rgba(248,113,113,0.20)', ring: 'rgba(248,113,113,0.30)', tier: 'bad'  },
-  'F':  { text: '#fca5a5', bg: 'rgba(153,27,27,0.12)',   border: 'rgba(239,68,68,0.20)',   ring: 'rgba(220,38,38,0.35)',   tier: 'bad'  },
-  'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.75)',      border: 'rgba(153,27,27,0.40)',   ring: 'rgba(220,38,38,0.45)',   tier: 'bad'  },
 }
 
-const GRADE_FALLBACK = GRADE_CONFIGS['F']
+function gradeToMexican(grade: string, _score?: number): MexicanGrade {
+  switch (grade) {
+    case 'S':
+    case 'A':
+      return { label: 'Excelente', labelEN: 'Excellent', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)', semaforo: 'verde', tier: 'good' }
+    case 'B+':
+    case 'B':
+      return { label: 'Satisfactorio', labelEN: 'Satisfactory', color: '#0d9488', bg: 'rgba(13,148,136,0.08)', border: 'rgba(13,148,136,0.25)', semaforo: 'verde', tier: 'ok' }
+    case 'C+':
+    case 'C':
+      return { label: 'Regular', labelEN: 'Fair', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'amarillo', tier: 'poor' }
+    case 'D':
+    case 'D-':
+      return { label: 'Deficiente', labelEN: 'Deficient', color: '#ea580c', bg: 'rgba(234,88,12,0.08)', border: 'rgba(234,88,12,0.25)', semaforo: 'rojo', tier: 'bad' }
+    default:
+      return { label: 'Critico', labelEN: 'Critical', color: '#dc2626', bg: 'rgba(220,38,38,0.10)', border: 'rgba(220,38,38,0.25)', semaforo: 'rojo', tier: 'bad' }
+  }
+}
+
+/** Semaforo (traffic light) indicator -- 3 stacked CSS circles */
+function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }) {
+  const lights: Array<{ key: 'verde' | 'amarillo' | 'rojo'; color: string }> = [
+    { key: 'verde', color: '#16a34a' },
+    { key: 'amarillo', color: '#d97706' },
+    { key: 'rojo', color: '#dc2626' },
+  ]
+  return (
+    <div
+      className="flex flex-col gap-1 items-center bg-zinc-800/60 rounded-full px-1.5 py-2"
+      role="img"
+      aria-label={`Semaforo: ${active}`}
+    >
+      {lights.map(({ key, color }) => (
+        <span
+          key={key}
+          className="block rounded-full"
+          style={{
+            width: 12,
+            height: 12,
+            backgroundColor: key === active ? color : 'rgba(255,255,255,0.06)',
+            boxShadow: key === active ? `0 0 8px ${color}60` : 'none',
+            transition: 'all 0.3s ease',
+          }}
+        />
+      ))}
+    </div>
+  )
+}
+
 
 // Sector colours from project taxonomy
 const SECTOR_COLORS_MAP: Record<string, string> = {
@@ -177,10 +219,6 @@ const cardItemVariants = {
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
-
-function gradeConfig(grade: string) {
-  return GRADE_CONFIGS[grade] ?? GRADE_FALLBACK
-}
 
 /** Convert raw high_risk_pct (0-1 or 0-100) to "1 in N" integer. */
 function highRiskToOneIn(pct: number): number {
@@ -348,63 +386,77 @@ function HeroSection({
   national: PHINational
   highRiskPct: number | null
 }) {
-  const { t } = useTranslation('reportcard')
-  const cfg = gradeConfig(national.grade)
+  const { t, i18n } = useTranslation('reportcard')
+  const mx = gradeToMexican(national.grade, national.phi_composite_score)
+  const isES = i18n.language?.startsWith('es')
 
-  const headlineKey = `heroHeadline_${cfg.tier}` as const
-  const headline = t(headlineKey, { grade: national.grade })
+  const headlineKey = `heroHeadline_${mx.tier}` as const
+  const displayLabel = isES ? mx.label : mx.labelEN
+  const headline = t(headlineKey, { grade: displayLabel })
+
+  const score = national.phi_composite_score ?? 0
 
   return (
     <section className="mb-10">
       <div
         className="rounded-xl overflow-hidden"
         style={{
-          border: `1px solid ${cfg.border}`,
+          border: `1px solid ${mx.border}`,
           borderLeftWidth: 6,
-          borderLeftColor: cfg.text,
-          backgroundColor: cfg.bg,
+          borderLeftColor: mx.color,
+          backgroundColor: mx.bg,
         }}
         role="region"
         aria-label={t('heroGradeLabel')}
       >
         <div className="flex flex-col sm:flex-row items-center sm:items-start gap-6 py-10 px-8">
-          {/* Grade letter */}
+          {/* Score + semaforo */}
           <motion.div
-            className="flex-shrink-0 flex flex-col items-center"
+            className="flex-shrink-0 flex items-center gap-4"
             initial={{ scale: 2.5, opacity: 0, filter: 'blur(16px)' }}
             animate={{ scale: 1, opacity: 1, filter: 'blur(0px)' }}
             transition={{ duration: 1.0, type: 'spring', stiffness: 130, damping: 16 }}
-            aria-hidden="true"
           >
-            <span
-              className="leading-none font-bold"
-              style={{ fontFamily: SERIF, fontSize: '8rem', color: cfg.text }}
-            >
-              {national.grade}
-            </span>
-            <span
-              className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mt-1"
-              style={{ color: cfg.text, opacity: 0.7 }}
-            >
-              {t('heroGradeLabel')}
-            </span>
-            {/* YoY delta badge */}
-            <span
-              className="mt-2 text-[10px] font-mono px-2 py-0.5 rounded-full font-medium"
-              style={{
-                backgroundColor: 'rgba(245,158,11,0.20)',
-                color: '#fbbf24',
-                border: '1px solid rgba(245,158,11,0.30)',
-              }}
-              title="Change vs prior year (estimated)"
-              aria-label="Grade trend: plus 0.02 vs prior year"
-            >
-              +0.02 vs prior year
-            </span>
-            {/* Grade methodology explanation */}
-            <p className="text-[10px] text-zinc-500 max-w-sm text-center mt-2 leading-relaxed font-mono">
-              {t('gradeMethodology.body')}
-            </p>
+            <SemaforoIndicator active={mx.semaforo} />
+            <div className="flex flex-col items-center">
+              {/* Large numeric score */}
+              <div className="flex items-baseline gap-1">
+                <span
+                  className="leading-none font-bold tabular-nums"
+                  style={{ fontFamily: SERIF, fontSize: '5.5rem', color: mx.color }}
+                  aria-label={`${Math.round(score)} de 100`}
+                >
+                  {Math.round(score)}
+                </span>
+                <span
+                  className="text-2xl font-bold"
+                  style={{ color: mx.color, opacity: 0.5 }}
+                >
+                  /100
+                </span>
+              </div>
+              {/* Colored label badge */}
+              <span
+                className="mt-1 text-xs font-mono font-bold uppercase tracking-[0.15em] px-3 py-1 rounded-full"
+                style={{
+                  color: mx.color,
+                  backgroundColor: mx.bg,
+                  border: `1px solid ${mx.border}`,
+                }}
+              >
+                {displayLabel}
+              </span>
+              <span
+                className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mt-2"
+                style={{ color: mx.color, opacity: 0.6 }}
+              >
+                {t('heroGradeLabel')}
+              </span>
+              {/* Methodology explanation */}
+              <p className="text-[10px] text-zinc-500 max-w-sm text-center mt-2 leading-relaxed font-mono">
+                {t('gradeMethodology.body')}
+              </p>
+            </div>
           </motion.div>
 
           {/* Headline + sub-text */}
@@ -446,6 +498,69 @@ function HeroSection({
               </div>
             )}
           </motion.div>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// OECD Context Panel
+// ---------------------------------------------------------------------------
+
+function OECDContextPanel({ national }: { national: PHINational }) {
+  const { t } = useTranslation('reportcard')
+
+  // Extract DA rate from national indicators if available
+  const daIndicator = national.indicators?.['direct_award_rate']
+  const sbIndicator = national.indicators?.['single_bid_rate']
+
+  const daRate = daIndicator?.value ?? (national.competition_by_value != null ? (100 - national.competition_by_value) : null)
+  const sbRate = sbIndicator?.value ?? null
+
+  return (
+    <section className="mb-10">
+      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-cyan-400 mb-3">
+          {t('oecdContextTitle')}
+        </p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          {/* DA rate */}
+          <div className="flex items-start gap-3">
+            <span
+              className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+              style={{ backgroundColor: '#22d3ee' }}
+            />
+            <div>
+              <p className="text-xs text-zinc-400">{t('oecdDALabel')}</p>
+              <p className="text-sm text-zinc-200 font-medium">
+                {t('oecdDABenchmark')}
+              </p>
+              {daRate != null && (
+                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: daRate > 25 ? '#dc2626' : '#16a34a' }}>
+                  {t('oecdMexicoDA', { pct: daRate.toFixed(1) })}
+                </p>
+              )}
+            </div>
+          </div>
+          {/* Single bid rate */}
+          <div className="flex items-start gap-3">
+            <span
+              className="block w-1.5 h-1.5 rounded-full mt-1.5 flex-shrink-0"
+              style={{ backgroundColor: '#22d3ee' }}
+            />
+            <div>
+              <p className="text-xs text-zinc-400">{t('oecdSBLabel')}</p>
+              <p className="text-sm text-zinc-200 font-medium">
+                {t('oecdSBBenchmark')}
+              </p>
+              {sbRate != null && (
+                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: sbRate > 15 ? '#dc2626' : '#16a34a' }}>
+                  {t('oecdMexicoSB', { pct: sbRate.toFixed(1) })}
+                </p>
+              )}
+            </div>
+          </div>
         </div>
       </div>
     </section>
@@ -706,7 +821,9 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
             const combinedPct = critPct + highPct
             const barWidth = maxPct > 0 ? (combinedPct / maxPct) * 100 : 0
 
-            const gradeColors = GRADE_CONFIGS[sector.grade] ?? GRADE_FALLBACK
+            const sectorMx = gradeToMexican(sector.grade, sector.phi_composite_score)
+            const sectorScore = sector.phi_composite_score ?? 0
+            const sectorDisplayLabel = isES ? sectorMx.label : sectorMx.labelEN
 
             return (
               <motion.div
@@ -718,8 +835,17 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: idx * 0.04, duration: 0.35 }}
               >
-                {/* Sector colour dot + name */}
-                <div className="flex items-center gap-2.5 w-36 flex-shrink-0">
+                {/* Traffic light dot + sector colour dot + name */}
+                <div className="flex items-center gap-2.5 w-40 flex-shrink-0">
+                  <span
+                    className="w-2 h-2 rounded-full flex-shrink-0"
+                    style={{
+                      backgroundColor: sectorMx.color,
+                      boxShadow: `0 0 4px ${sectorMx.color}40`,
+                    }}
+                    aria-hidden="true"
+                    title={sectorMx.semaforo}
+                  />
                   <span
                     className="w-2.5 h-2.5 rounded-full flex-shrink-0"
                     style={{ backgroundColor: color }}
@@ -761,19 +887,27 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                   </span>
                 </div>
 
-                {/* Grade badge */}
-                <span
-                  className="inline-flex items-center justify-center w-8 h-8 rounded-lg font-bold text-sm flex-shrink-0"
-                  style={{
-                    fontFamily: SERIF,
-                    color: gradeColors.text,
-                    backgroundColor: gradeColors.bg,
-                    border: `1px solid ${gradeColors.border}`,
-                  }}
-                  title={sector.grade}
-                >
-                  {sector.grade}
-                </span>
+                {/* Score + label badge */}
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span
+                    className="text-sm font-bold font-mono tabular-nums w-8 text-right"
+                    style={{ color: sectorMx.color }}
+                    title={`${Math.round(sectorScore)}/100`}
+                  >
+                    {Math.round(sectorScore)}
+                  </span>
+                  <span
+                    className="inline-flex items-center px-2 py-0.5 rounded text-[10px] font-semibold"
+                    style={{
+                      color: sectorMx.color,
+                      backgroundColor: sectorMx.bg,
+                      border: `1px solid ${sectorMx.border}`,
+                    }}
+                    title={sectorDisplayLabel}
+                  >
+                    {sectorDisplayLabel}
+                  </span>
+                </div>
 
                 {/* Go to sector link */}
                 <button
@@ -864,20 +998,20 @@ function TrendSection() {
                 {t('trendSince', { year: earliestYear })}:
               </span>
               {years.map((y) => {
-                const gc = GRADE_CONFIGS[y.grade] ?? GRADE_FALLBACK
+                const ymx = gradeToMexican(y.grade, y.phi_composite_score)
+                const yScore = y.phi_composite_score ?? 0
                 return (
                   <div key={y.year} className="flex flex-col items-center flex-shrink-0">
                     <span
-                      className="inline-flex items-center justify-center w-6 h-6 rounded-md text-[10px] font-bold"
+                      className="inline-flex items-center justify-center w-7 h-6 rounded-md text-[10px] font-bold font-mono tabular-nums"
                       style={{
-                        fontFamily: SERIF,
-                        color: gc.text,
-                        backgroundColor: gc.bg,
-                        border: `1px solid ${gc.border}`,
+                        color: ymx.color,
+                        backgroundColor: ymx.bg,
+                        border: `1px solid ${ymx.border}`,
                       }}
-                      title={String(y.year)}
+                      title={`${String(y.year)}: ${Math.round(yScore)}/100`}
                     >
-                      {y.grade}
+                      {Math.round(yScore)}
                     </span>
                     <span className="text-[9px] font-mono mt-0.5 tabular-nums text-zinc-600">
                       {String(y.year).slice(2)}
@@ -1056,15 +1190,18 @@ function ReportCard() {
             {t('pageTitle')}
           </h1>
           <p className="text-sm mt-1 text-zinc-500">
-            {t('pageSubtitle')}
+            {t('pageSubtitleV2')}
           </p>
         </header>
 
         {/* Hero impact: dark card with key numbers */}
         <HeroImpactSection national={national} totalValueMxn={totalValueMxn} />
 
-        {/* Hero: big grade + headline */}
+        {/* Hero: numeric score + semaforo + headline */}
         <HeroSection national={national} highRiskPct={highRiskPct} />
+
+        {/* OECD context panel */}
+        <OECDContextPanel national={national} />
 
         {/* 3 key metrics in plain language */}
         <KeyMetrics

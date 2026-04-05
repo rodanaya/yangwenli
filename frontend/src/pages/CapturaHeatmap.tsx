@@ -113,11 +113,11 @@ function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) 
           <ul className="space-y-1.5">
             {(
               [
-                { key: 'total', bg: 'rgba(220,38,38,0.85)' },
-                { key: 'high', bg: 'rgba(234,88,12,0.75)' },
-                { key: 'moderate', bg: 'rgba(234,179,8,0.55)' },
-                { key: 'low', bg: 'rgba(255,255,255,0.12)' },
-              ] as const
+                { key: 'total' as const, bg: 'rgba(220,38,38,0.85)' },
+                { key: 'high' as const, bg: 'rgba(234,88,12,0.75)' },
+                { key: 'moderate' as const, bg: 'rgba(234,179,8,0.55)' },
+                { key: 'low' as const, bg: 'rgba(255,255,255,0.12)' },
+              ]
             ).map(({ key, bg }) => (
               <li key={key} className="flex items-center gap-2 text-xs text-text-muted/80">
                 <span
@@ -126,6 +126,42 @@ function WhatIsCaptureBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) 
                   aria-hidden="true"
                 />
                 {t(`whatIsCapture.thresholds.${key}`)}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+    </div>
+  )
+}
+
+/** "Why it matters" expandable accordion */
+function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="border border-amber-500/20 bg-amber-500/5 rounded-lg p-4 mb-4">
+      <button
+        className="flex items-center gap-2 w-full text-left"
+        onClick={() => setOpen((v) => !v)}
+        aria-expanded={open}
+        aria-controls="why-it-matters-body"
+      >
+        <Info className="w-4 h-4 text-amber-400 shrink-0" aria-hidden="true" />
+        <span className="text-[11px] uppercase tracking-wide text-amber-400 font-semibold">
+          {t('whyItMatters.label')}
+        </span>
+        <span className="ml-auto text-amber-400/60 text-xs">{open ? '\u2212' : '+'}</span>
+      </button>
+      {open && (
+        <div id="why-it-matters-body" className="mt-3 space-y-2">
+          <p className="text-sm text-zinc-300 leading-relaxed">
+            {t('whyItMatters.intro')}
+          </p>
+          <ul className="space-y-1.5">
+            {(['prices', 'corruption', 'fragility', 'opacity'] as const).map((key) => (
+              <li key={key} className="flex items-start gap-2 text-sm text-zinc-400">
+                <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                <span>{t(`whyItMatters.${key}`)}</span>
               </li>
             ))}
           </ul>
@@ -604,15 +640,70 @@ export default function CapturaHeatmap() {
           style={{ fontFamily: 'var(--font-family-serif)' }}
           className="text-2xl font-bold text-text-primary mb-2"
         >
-          {t('title')}
+          {t('titleV2')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
           {t('subtitle')}
         </p>
       </div>
 
+      {/* ===== Editorial lede: WHY this matters ===== */}
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-2">
+          {t('editorialLede.overline')}
+        </p>
+        <p className="text-sm text-zinc-200 leading-relaxed mb-3">
+          {t('editorialLede.body')}
+        </p>
+        {!isLoading && topCaptured.length > 0 && (
+          <p className="text-sm font-medium text-amber-300">
+            {t('editorialLede.statLine', {
+              count: topCaptured.filter(r => r.pct >= 0.5).length,
+            })}
+          </p>
+        )}
+      </div>
+
+      {/* ===== 3-stat strip ===== */}
+      {!isLoading && !error && topCaptured.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
+          {/* Stat 1: severe capture count */}
+          <div className="border-l-2 border-red-500 pl-4 py-1">
+            <div className="text-2xl font-mono font-bold text-red-500">
+              {topCaptured.filter(r => r.pct >= 0.5).length}
+            </div>
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
+              {t('statStrip.severeCaptureLabel')}
+            </div>
+          </div>
+          {/* Stat 2: value at risk */}
+          <div className="border-l-2 border-orange-500 pl-4 py-1">
+            <div className="text-2xl font-mono font-bold text-orange-400">
+              {formatCompactMXN(topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0))}
+            </div>
+            <div className="text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5">
+              {t('statStrip.valueAtRiskLabel')}
+            </div>
+          </div>
+          {/* Stat 3: highest concentration */}
+          {topCaptured[0] && (
+            <div className="border-l-2 border-amber-500 pl-4 py-1">
+              <div className="text-2xl font-mono font-bold text-amber-400">
+                {(topCaptured[0].pct * 100).toFixed(1)}%
+              </div>
+              <div className="text-[10px] text-zinc-400 uppercase tracking-wide mt-0.5 truncate" title={`${topCaptured[0].institution} → ${topCaptured[0].topVendor}`}>
+                {t('statStrip.highestLabel')}: {truncName(topCaptured[0].institution, 20)}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* ===== "What is institutional capture?" explainer ===== */}
       <WhatIsCaptureBox t={t} />
+
+      {/* ===== "Por que importa?" expandable section ===== */}
+      <WhyItMattersBox t={t} />
 
       {/* ===== Source pill + stats row ===== */}
       {flowData && !isLoading && (
@@ -991,14 +1082,14 @@ export default function CapturaHeatmap() {
             )}
           </div>
 
-          {/* Color legend */}
+          {/* Color legend -- descriptive labels */}
           <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/50">
             {(
               [
-                { color: '#dc2626', label: '\u226550%', desc: t('riskLabels.total') },
-                { color: '#ea580c', label: '30\u201350%', desc: t('riskLabels.high') },
-                { color: '#eab308', label: '15\u201330%', desc: t('riskLabels.moderate') },
-                { color: '#94a3b8', label: '<15%', desc: t('riskLabels.low') },
+                { color: '#dc2626', label: '\u226550%', desc: t('legendDescriptive.severe') },
+                { color: '#ea580c', label: '30\u201350%', desc: t('legendDescriptive.high') },
+                { color: '#eab308', label: '15\u201330%', desc: t('legendDescriptive.moderate') },
+                { color: '#94a3b8', label: '<15%', desc: t('legendDescriptive.competitive') },
               ] as const
             ).map(({ color, label, desc }) => (
               <span key={label} className="flex items-center gap-1.5">

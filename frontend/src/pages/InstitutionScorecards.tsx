@@ -1,13 +1,13 @@
 /**
- * Institution Scorecards Gallery — /scorecards
+ * Transparencia Institucional — /scorecards
  *
- * A gallery-style page showing letter grades (A–F) for 2,563 Mexican
+ * A gallery-style page showing transparency tiers for 2,563 Mexican
  * government institutions based on their procurement transparency, scored
  * across 5 pillars: openness, pricing, vendor diversity, process integrity,
  * and external flags.
  *
- * Design: editorial dark aesthetic, 3-column card grid, grade filter chips,
- * grade distribution bar, pagination.
+ * 5-tier Spanish system: Excelente / Satisfactorio / Regular / Deficiente / Critico
+ * Editorial dark aesthetic, 3-column card grid, tier filter chips, pagination.
  */
 
 import { useState, useCallback } from 'react'
@@ -78,27 +78,66 @@ type SortKey = 'total_score' | 'national_percentile' | 'institution_name'
 type SortOrder = 'asc' | 'desc'
 
 // ---------------------------------------------------------------------------
-// Grade colour palette
+// 5-tier Spanish system
 // ---------------------------------------------------------------------------
 
-const GRADE_CONFIG: Record<string, { solid: string; bg: string; border: string; text: string }> = {
-  S:    { solid: '#34d399', bg: 'rgba(52,211,153,0.12)',  border: 'rgba(52,211,153,0.30)',  text: '#6ee7b7' },
-  A:    { solid: '#4ade80', bg: 'rgba(74,222,128,0.12)',  border: 'rgba(74,222,128,0.30)',  text: '#86efac' },
-  'B+': { solid: '#a3e635', bg: 'rgba(163,230,53,0.10)',  border: 'rgba(163,230,53,0.28)',  text: '#bef264' },
-  B:    { solid: '#facc15', bg: 'rgba(250,204,21,0.10)',  border: 'rgba(250,204,21,0.28)',  text: '#fde047' },
-  'C+': { solid: '#fbbf24', bg: 'rgba(251,191,36,0.10)',  border: 'rgba(251,191,36,0.28)',  text: '#fcd34d' },
-  C:    { solid: '#fb923c', bg: 'rgba(251,146,60,0.10)',  border: 'rgba(251,146,60,0.28)',  text: '#fdba74' },
-  D:    { solid: '#f87171', bg: 'rgba(248,113,113,0.10)', border: 'rgba(248,113,113,0.28)', text: '#fca5a5' },
-  'D-': { solid: '#ef4444', bg: 'rgba(239,68,68,0.12)',   border: 'rgba(239,68,68,0.30)',   text: '#f87171' },
-  F:    { solid: '#dc2626', bg: 'rgba(220,38,38,0.12)',   border: 'rgba(220,38,38,0.30)',   text: '#f87171' },
-  'F-': { solid: '#991b1b', bg: 'rgba(153,27,27,0.15)',   border: 'rgba(153,27,27,0.35)',   text: '#ef4444' },
+interface TierInfo {
+  label: string
+  color: string
+  bg: string
+  border: string
 }
 
-const GRADE_FALLBACK = { solid: '#71717a', bg: 'rgba(113,113,122,0.10)', border: 'rgba(113,113,122,0.25)', text: '#a1a1aa' }
-
-function gradeConfig(grade: string) {
-  return GRADE_CONFIG[grade] ?? GRADE_CONFIG[grade?.charAt(0)] ?? GRADE_FALLBACK
+const TIER_MAP: Record<string, TierInfo> = {
+  Excelente:     { label: 'Excelente',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.30)' },
+  Satisfactorio: { label: 'Satisfactorio', color: '#0d9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.30)' },
+  Regular:       { label: 'Regular',       color: '#d97706', bg: 'rgba(217,119,6,0.12)',  border: 'rgba(217,119,6,0.30)' },
+  Deficiente:    { label: 'Deficiente',    color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.30)' },
+  Critico:       { label: 'Critico',       color: '#dc2626', bg: 'rgba(220,38,38,0.12)',  border: 'rgba(220,38,38,0.30)' },
 }
+
+/** Map backend grade to 5-tier Spanish system */
+function gradeToTier(grade: string): TierInfo {
+  switch (grade) {
+    case 'S':
+    case 'A':
+      return TIER_MAP.Excelente
+    case 'B+':
+    case 'B':
+      return TIER_MAP.Satisfactorio
+    case 'C+':
+    case 'C':
+      return TIER_MAP.Regular
+    case 'D':
+    case 'D-':
+      return TIER_MAP.Deficiente
+    case 'F':
+    case 'F-':
+    default:
+      return TIER_MAP.Critico
+  }
+}
+
+/** Aggregate 10-grade distribution into 5 tiers */
+function aggregateTiers(dist: Record<string, number>): Array<{ tier: TierInfo; count: number; grades: string[] }> {
+  return [
+    { tier: TIER_MAP.Excelente,     count: (dist['S'] ?? 0) + (dist['A'] ?? 0),   grades: ['S', 'A'] },
+    { tier: TIER_MAP.Satisfactorio, count: (dist['B+'] ?? 0) + (dist['B'] ?? 0),  grades: ['B+', 'B'] },
+    { tier: TIER_MAP.Regular,       count: (dist['C+'] ?? 0) + (dist['C'] ?? 0),  grades: ['C+', 'C'] },
+    { tier: TIER_MAP.Deficiente,    count: (dist['D'] ?? 0) + (dist['D-'] ?? 0),  grades: ['D', 'D-'] },
+    { tier: TIER_MAP.Critico,       count: (dist['F'] ?? 0) + (dist['F-'] ?? 0),  grades: ['F', 'F-'] },
+  ]
+}
+
+// Grades that map to each tier for API filtering
+const TIER_GRADE_MAP: Record<string, string[]> = {
+  Excelente:     ['S', 'A'],
+  Satisfactorio: ['B+', 'B'],
+  Regular:       ['C+', 'C'],
+  Deficiente:    ['D', 'D-'],
+  Critico:       ['F', 'F-'],
+}
+const TIER_NAMES = ['Excelente', 'Satisfactorio', 'Regular', 'Deficiente', 'Critico'] as const
 
 const PILLAR_MAXES: Record<string, number> = {
   openness: 25,
@@ -108,37 +147,34 @@ const PILLAR_MAXES: Record<string, number> = {
   external: 10,
 }
 
-const ALL_GRADES = ['S', 'A', 'B+', 'B', 'C+', 'C', 'D', 'D-', 'F', 'F-']
-
 // ---------------------------------------------------------------------------
-// Grade distribution bar
+// Tier distribution bar (5-tier)
 // ---------------------------------------------------------------------------
 
-function GradeDistributionBar({ distribution }: { distribution: Record<string, number> }) {
-  const total = Object.values(distribution).reduce((s, n) => s + n, 0)
+function TierDistributionBar({ distribution }: { distribution: Record<string, number> }) {
+  const tiers = aggregateTiers(distribution)
+  const total = tiers.reduce((s, t) => s + t.count, 0)
   if (total === 0) return null
-
-  const segments = ALL_GRADES.map((g) => ({ grade: g, count: distribution[g] ?? 0, ...gradeConfig(g) }))
 
   return (
     <div className="space-y-3">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-        Grade Distribution — {formatNumber(total)} institutions
+        Distribucion por nivel — {formatNumber(total)} instituciones
       </p>
-      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label="Grade distribution across all institutions">
-        {segments.map(({ grade, count, solid }) => {
+      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label="Distribucion por nivel de transparencia">
+        {tiers.map(({ tier, count }) => {
           const pct = (count / total) * 100
           if (pct < 0.3) return null
           return (
             <div
-              key={grade}
+              key={tier.label}
               className="relative flex items-center justify-center overflow-hidden"
-              style={{ width: `${pct}%`, backgroundColor: solid, minWidth: '4px', opacity: 0.88 }}
-              title={`${grade}: ${count} (${pct.toFixed(1)}%)`}
+              style={{ width: `${pct}%`, backgroundColor: tier.color, minWidth: '4px', opacity: 0.88 }}
+              title={`${tier.label}: ${count} (${pct.toFixed(1)}%)`}
             >
-              {pct > 5 && (
-                <span className="text-[10px] font-mono font-black text-black/70 leading-none select-none">
-                  {grade}
+              {pct > 8 && (
+                <span className="text-[9px] font-mono font-black text-black/70 leading-none select-none truncate px-1">
+                  {tier.label}
                 </span>
               )}
             </div>
@@ -146,12 +182,12 @@ function GradeDistributionBar({ distribution }: { distribution: Record<string, n
         })}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {segments.filter((s) => s.count > 0).map(({ grade, count, solid }) => {
+        {tiers.filter((t) => t.count > 0).map(({ tier, count }) => {
           const pct = ((count / total) * 100).toFixed(1)
           return (
-            <span key={grade} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
-              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: solid }} />
-              <span className="font-mono font-bold" style={{ color: solid }}>{grade}</span>
+            <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+              <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
+              <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
               <span className="tabular-nums text-zinc-500">{formatNumber(count)}</span>
               <span className="tabular-nums text-zinc-600">({pct}%)</span>
             </span>
@@ -176,15 +212,15 @@ interface PillarBarsProps {
 
 function PillarBars({ openness, price, vendors, process, external }: PillarBarsProps) {
   const pillars = [
-    { key: 'openness', label: 'Open', value: openness, max: PILLAR_MAXES.openness },
-    { key: 'price',    label: 'Price', value: price,    max: PILLAR_MAXES.price    },
-    { key: 'vendors',  label: 'Vend',  value: vendors,  max: PILLAR_MAXES.vendors  },
+    { key: 'openness', label: 'Apert', value: openness, max: PILLAR_MAXES.openness },
+    { key: 'price',    label: 'Prec',  value: price,    max: PILLAR_MAXES.price    },
+    { key: 'vendors',  label: 'Prov',  value: vendors,  max: PILLAR_MAXES.vendors  },
     { key: 'process',  label: 'Proc',  value: process,  max: PILLAR_MAXES.process  },
     { key: 'external', label: 'Ext',   value: external, max: PILLAR_MAXES.external },
   ]
 
   return (
-    <div className="space-y-1" aria-label="Pillar scores">
+    <div className="space-y-1" aria-label="Puntuaciones por pilar">
       {pillars.map(({ key, label, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
         const color = pct > 70 ? '#4ade80' : pct > 40 ? '#fbbf24' : '#f87171'
@@ -212,13 +248,13 @@ function PillarBars({ openness, price, vendors, process, external }: PillarBarsP
 // ---------------------------------------------------------------------------
 
 function TrendIcon({ direction }: { direction: string | null }) {
-  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label="Improving" />
-  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label="Declining" />
-  return <Minus className="h-3 w-3 text-zinc-600" aria-label="Stable" />
+  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label="Mejorando" />
+  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label="Deteriorando" />
+  return <Minus className="h-3 w-3 text-zinc-600" aria-label="Estable" />
 }
 
 // ---------------------------------------------------------------------------
-// Institution card
+// Institution card — redesigned: score as hero, tier badge, no letter grade
 // ---------------------------------------------------------------------------
 
 interface InstitutionCardProps {
@@ -227,47 +263,53 @@ interface InstitutionCardProps {
 }
 
 function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
-  const gc = gradeConfig(item.grade)
+  const tier = gradeToTier(item.grade)
   const hasRedSignals = (item.signal_count_red ?? 0) > 0
 
   return (
     <article
       className="group flex flex-col rounded-xl border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-white/20"
       style={{
-        borderColor: gc.border,
+        borderColor: tier.border,
         backgroundColor: 'rgba(24,24,27,0.70)',
       }}
       onClick={() => onNavigate(item.institution_id)}
     >
       {/* Top accent strip */}
-      <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: gc.solid }} aria-hidden="true" />
+      <div className="h-1 w-full flex-shrink-0" style={{ backgroundColor: tier.color }} aria-hidden="true" />
 
       <div className="flex flex-col gap-3 p-4 flex-1">
-        {/* Header: grade badge + red signal badge */}
+        {/* Header: large score number + tier badge */}
         <div className="flex items-start justify-between gap-2">
-          {/* Grade badge */}
-          <div
-            className="flex-shrink-0 w-12 h-12 rounded-lg flex items-center justify-center border"
-            style={{ backgroundColor: gc.bg, borderColor: gc.border }}
-            aria-label={`Grade ${item.grade} — ${item.grade_label}`}
-          >
-            <span className="text-xl font-black leading-none" style={{ color: gc.solid }}>
-              {item.grade}
+          {/* Large score number (hero display) */}
+          <div className="flex flex-col">
+            <span
+              className="text-4xl font-black font-mono tabular-nums leading-none"
+              style={{ color: tier.color }}
+            >
+              {item.total_score.toFixed(0)}
             </span>
+            <span className="text-[9px] text-zinc-600 font-mono mt-0.5">/ 100</span>
           </div>
 
-          <div className="flex flex-col items-end gap-1">
-            {/* Score */}
-            <span className="text-2xl font-black tabular-nums text-white leading-none">
-              {item.total_score.toFixed(1)}
+          <div className="flex flex-col items-end gap-1.5">
+            {/* Tier badge */}
+            <span
+              className="inline-flex items-center rounded-full px-2.5 py-1 text-[10px] font-mono font-bold uppercase tracking-wide"
+              style={{
+                backgroundColor: tier.bg,
+                border: `1px solid ${tier.border}`,
+                color: tier.color,
+              }}
+            >
+              {tier.label}
             </span>
-            <span className="text-[9px] text-zinc-500 font-mono">/ 100</span>
 
             {/* Red signal badge */}
             {hasRedSignals && (
               <span
                 className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-red-400 bg-red-500/10 border border-red-500/20"
-                aria-label={`${item.signal_count_red} red signals`}
+                aria-label={`${item.signal_count_red} alertas rojas`}
               >
                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
                 {item.signal_count_red}
@@ -289,19 +331,13 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
           )}
         </div>
 
-        {/* Grade label + trend + percentile */}
+        {/* Percentile + trend */}
         <div className="flex items-center justify-between gap-2">
-          <span
-            className="text-[10px] font-semibold"
-            style={{ color: gc.text }}
-          >
-            {item.grade_label}
+          <span className="text-[10px] text-zinc-400 font-mono tabular-nums">
+            Percentil {Math.round((item.national_percentile ?? 0) * 100)}
           </span>
           <div className="flex items-center gap-1.5">
             <TrendIcon direction={item.trend_direction} />
-            <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
-              P{Math.round((item.national_percentile ?? 0) * 100)}
-            </span>
           </div>
         </div>
 
@@ -328,12 +364,12 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
       {/* Footer CTA */}
       <button
         className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none"
-        style={{ borderColor: gc.border, color: gc.text }}
+        style={{ borderColor: tier.border, color: tier.color }}
         onClick={(e) => { e.stopPropagation(); onNavigate(item.institution_id) }}
-        aria-label={`View profile for ${item.institution_name}`}
+        aria-label={`Ver perfil de ${item.institution_name}`}
         tabIndex={-1}
       >
-        View Profile
+        Ver Perfil
       </button>
     </article>
   )
@@ -349,11 +385,11 @@ function InstitutionCardSkeleton() {
       <div className="h-1 w-full bg-zinc-800" />
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
-          <Skeleton className="h-12 w-12 rounded-lg" />
-          <div className="space-y-1 items-end flex flex-col">
-            <Skeleton className="h-7 w-14" />
-            <Skeleton className="h-3 w-8" />
+          <div className="space-y-1">
+            <Skeleton className="h-9 w-16" />
+            <Skeleton className="h-2 w-8" />
           </div>
+          <Skeleton className="h-6 w-24 rounded-full" />
         </div>
         <div className="space-y-1.5">
           <Skeleton className="h-3 w-full" />
@@ -409,31 +445,31 @@ function StatCardSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
-// Grade filter chip
+// Tier filter chip
 // ---------------------------------------------------------------------------
 
-interface GradeChipProps {
-  grade: string
+interface TierChipProps {
+  tierName: string
   active: boolean
   count: number
   onClick: () => void
 }
 
-function GradeChip({ grade, active, count, onClick }: GradeChipProps) {
-  const gc = gradeConfig(grade)
+function TierChip({ tierName, active, count, onClick }: TierChipProps) {
+  const tier = TIER_MAP[tierName] ?? TIER_MAP.Critico
   return (
     <button
       onClick={onClick}
       className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border"
       style={{
-        backgroundColor: active ? gc.solid : 'transparent',
-        borderColor: active ? gc.solid : gc.border,
-        color: active ? '#000' : gc.text,
+        backgroundColor: active ? tier.color : 'transparent',
+        borderColor: active ? tier.color : tier.border,
+        color: active ? '#000' : tier.color,
       }}
       aria-pressed={active}
-      aria-label={`Filter grade ${grade}, ${count} institutions`}
+      aria-label={`Filtrar nivel ${tierName}, ${count} instituciones`}
     >
-      {grade}
+      {tierName}
       <span
         className="text-[9px] font-normal"
         style={{ opacity: 0.7 }}
@@ -453,7 +489,7 @@ const PER_PAGE = 50
 export default function InstitutionScorecards() {
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
-  const [selectedGrade, setSelectedGrade] = useState<string | null>(null)
+  const [selectedTier, setSelectedTier] = useState<string | null>(null)
   const [sortBy, setSortBy] = useState<SortKey>('total_score')
   const [sortOrder, setSortOrder] = useState<SortOrder>('desc')
   const [search, setSearch] = useState('')
@@ -462,6 +498,9 @@ export default function InstitutionScorecards() {
   const handleNavigate = useCallback((id: number) => {
     navigate(`/institutions/${id}`)
   }, [navigate])
+
+  // Map selected tier to backend grade for API call
+  const gradeForApi = selectedTier ? TIER_GRADE_MAP[selectedTier]?.[0] : undefined
 
   // Stats query
   const { data: stats, isLoading: statsLoading } = useQuery<InstitutionStats>({
@@ -472,12 +511,12 @@ export default function InstitutionScorecards() {
 
   // List query
   const { data: listData, isLoading: listLoading, isPlaceholderData } = useQuery<ScorecardListResponse>({
-    queryKey: ['scorecard-institutions', page, selectedGrade, sortBy, sortOrder, search],
+    queryKey: ['scorecard-institutions', page, gradeForApi, sortBy, sortOrder, search],
     queryFn: () =>
       scorecardApi.getInstitutions({
         page,
         per_page: PER_PAGE,
-        grade: selectedGrade ?? undefined,
+        grade: gradeForApi ?? undefined,
         sort_by: sortBy,
         order: sortOrder,
         search: search || undefined,
@@ -490,12 +529,13 @@ export default function InstitutionScorecards() {
   const totalCount = listData?.total ?? 0
 
   const gradeDistribution = stats?.grade_distribution ?? {}
+  const tierDistribution = aggregateTiers(gradeDistribution)
 
-  function handleGradeClick(grade: string) {
-    if (selectedGrade === grade) {
-      setSelectedGrade(null)
+  function handleTierClick(tierName: string) {
+    if (selectedTier === tierName) {
+      setSelectedTier(null)
     } else {
-      setSelectedGrade(grade)
+      setSelectedTier(tierName)
     }
     setPage(1)
   }
@@ -516,14 +556,14 @@ export default function InstitutionScorecards() {
     setPage(1)
   }
 
-  const topName = stats?.top_institution_name ?? '—'
+  const topName = stats?.top_institution_name ?? '--'
   const topScore = stats?.top_institution_score
-  const worstName = stats?.worst_institution_name ?? '—'
+  const worstName = stats?.worst_institution_name ?? '--'
   const worstScore = stats?.worst_institution_score
 
   return (
     <div className="min-h-screen">
-      {/* ── DARK HEADER ──────────────────────────────────────────────── */}
+      {/* -- DARK HEADER -------------------------------------------------- */}
       <header className="relative bg-zinc-950 border-b border-white/8 overflow-hidden">
         {/* Grid background */}
         <div
@@ -540,50 +580,51 @@ export default function InstitutionScorecards() {
           <div className="flex items-center gap-2 mb-3">
             <Award className="h-4 w-4 text-zinc-500" aria-hidden="true" />
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500">
-              INSTITUTION ACCOUNTABILITY · COMPRANET 2002–2025 · v6.5
+              TRANSPARENCIA INSTITUCIONAL · COMPRANET 2002-2025 · v6.5
             </p>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-            Mexico's 2,563 Procurement Institutions — Graded
+            Transparencia Institucional
           </h1>
           <p className="mt-3 text-base text-zinc-400 max-w-2xl leading-relaxed">
-            Scored on openness, pricing, vendor diversity, process integrity, and external flags.
-            Each institution receives a letter grade based on 5 procurement transparency pillars.
+            Evaluacion de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones del gobierno federal mexicano
+            en su transparencia de contrataciones. Puntuacion de 0-100 basada en 5 dimensiones:
+            apertura, precios, diversidad de proveedores, proceso e incidencias externas.
           </p>
         </div>
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
-        {/* ── STATS ROW ─────────────────────────────────────────────── */}
-        <section aria-label="Summary statistics">
+        {/* -- STATS ROW -------------------------------------------------- */}
+        <section aria-label="Estadisticas generales">
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {statsLoading ? (
               Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
             ) : (
               <>
                 <StatCard
-                  label="Total Institutions Graded"
+                  label="Instituciones Evaluadas"
                   value={formatNumber(stats?.total_scored ?? 2563)}
-                  sub="Mexican federal procurement bodies"
+                  sub="Instituciones del gobierno federal"
                   accentColor="#6366f1"
                 />
                 <StatCard
-                  label="Best Performer"
-                  value={topScore != null ? topScore.toFixed(1) : '—'}
-                  sub={topName.length > 40 ? topName.slice(0, 40) + '…' : topName}
+                  label="Mejor Institucion"
+                  value={topScore != null ? topScore.toFixed(1) : '--'}
+                  sub={topName.length > 40 ? topName.slice(0, 40) + '...' : topName}
                   accentColor="#34d399"
                 />
                 <StatCard
-                  label="Worst Performer"
-                  value={worstScore != null ? worstScore.toFixed(1) : '—'}
-                  sub={worstName.length > 40 ? worstName.slice(0, 40) + '…' : worstName}
+                  label="Institucion Mas Debil"
+                  value={worstScore != null ? worstScore.toFixed(1) : '--'}
+                  sub={worstName.length > 40 ? worstName.slice(0, 40) + '...' : worstName}
                   accentColor="#dc2626"
                 />
                 <StatCard
-                  label="Median Score"
-                  value={stats?.median_score != null ? stats.median_score.toFixed(1) : '—'}
-                  sub="out of 100 points"
+                  label="Puntuacion Mediana"
+                  value={stats?.median_score != null ? stats.median_score.toFixed(1) : '--'}
+                  sub="de 100 puntos"
                   accentColor="#fbbf24"
                 />
               </>
@@ -591,53 +632,56 @@ export default function InstitutionScorecards() {
           </div>
         </section>
 
-        {/* ── GRADE DISTRIBUTION BAR ────────────────────────────────── */}
+        {/* -- TIER DISTRIBUTION BAR -------------------------------------- */}
         <section
           className="rounded-xl border border-white/8 bg-zinc-900/60 p-5"
-          aria-label="Grade distribution"
+          aria-label="Distribucion por nivel"
         >
           {statsLoading ? (
             <div className="space-y-3">
               <Skeleton className="h-2.5 w-48" />
               <Skeleton className="h-7 w-full rounded-lg" />
               <div className="flex gap-4 flex-wrap">
-                {Array.from({ length: 8 }).map((_, i) => (
-                  <Skeleton key={i} className="h-3 w-20" />
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-3 w-24" />
                 ))}
               </div>
             </div>
           ) : (
-            <GradeDistributionBar distribution={gradeDistribution} />
+            <TierDistributionBar distribution={gradeDistribution} />
           )}
         </section>
 
-        {/* ── FILTER BAR ────────────────────────────────────────────── */}
-        <section className="space-y-4" aria-label="Filters">
-          {/* Grade chips */}
+        {/* -- FILTER BAR ------------------------------------------------- */}
+        <section className="space-y-4" aria-label="Filtros">
+          {/* Tier chips */}
           <div className="flex flex-wrap items-center gap-2">
             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-500">
-              Grade:
+              Nivel:
             </span>
             <button
-              onClick={() => { setSelectedGrade(null); setPage(1) }}
+              onClick={() => { setSelectedTier(null); setPage(1) }}
               className={`rounded-full px-3 py-1 text-[11px] font-mono font-bold transition-all duration-150 border focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
-                selectedGrade === null
+                selectedTier === null
                   ? 'bg-white text-zinc-900 border-white'
                   : 'bg-transparent text-zinc-400 border-white/15 hover:border-white/30'
               }`}
-              aria-pressed={selectedGrade === null}
+              aria-pressed={selectedTier === null}
             >
-              All
+              Todos
             </button>
-            {ALL_GRADES.map((g) => (
-              <GradeChip
-                key={g}
-                grade={g}
-                active={selectedGrade === g}
-                count={gradeDistribution[g] ?? 0}
-                onClick={() => handleGradeClick(g)}
-              />
-            ))}
+            {TIER_NAMES.map((tierName) => {
+              const tierData = tierDistribution.find(t => t.tier.label === tierName)
+              return (
+                <TierChip
+                  key={tierName}
+                  tierName={tierName}
+                  active={selectedTier === tierName}
+                  count={tierData?.count ?? 0}
+                  onClick={() => handleTierClick(tierName)}
+                />
+              )
+            })}
           </div>
 
           {/* Sort + Search row */}
@@ -645,13 +689,13 @@ export default function InstitutionScorecards() {
             {/* Sort controls */}
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-500">
-                Sort:
+                Ordenar:
               </span>
               {(
                 [
-                  { key: 'total_score' as SortKey, label: 'Score' },
-                  { key: 'national_percentile' as SortKey, label: 'Percentile' },
-                  { key: 'institution_name' as SortKey, label: 'Name' },
+                  { key: 'total_score' as SortKey, label: 'Puntuacion' },
+                  { key: 'national_percentile' as SortKey, label: 'Percentil' },
+                  { key: 'institution_name' as SortKey, label: 'Nombre' },
                 ] as const
               ).map(({ key, label }) => (
                 <button
@@ -663,11 +707,11 @@ export default function InstitutionScorecards() {
                       : 'bg-transparent border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
                   }`}
                   aria-pressed={sortBy === key}
-                  aria-label={`Sort by ${label} ${sortBy === key ? (sortOrder === 'desc' ? 'descending' : 'ascending') : ''}`}
+                  aria-label={`Ordenar por ${label} ${sortBy === key ? (sortOrder === 'desc' ? 'descendente' : 'ascendente') : ''}`}
                 >
                   {label}
                   {sortBy === key && (
-                    <span className="text-[9px]">{sortOrder === 'desc' ? '↓' : '↑'}</span>
+                    <span className="text-[9px]">{sortOrder === 'desc' ? '\u2193' : '\u2191'}</span>
                   )}
                 </button>
               ))}
@@ -684,25 +728,25 @@ export default function InstitutionScorecards() {
                   type="search"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Search institutions…"
+                  placeholder="Buscar instituciones..."
                   className="w-full rounded-lg border border-white/10 bg-zinc-800/80 pl-8 pr-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-colors"
-                  aria-label="Search institutions by name"
+                  aria-label="Buscar instituciones por nombre"
                 />
               </div>
               <button
                 type="submit"
                 className="rounded-lg border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-white/20 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               >
-                Go
+                Ir
               </button>
               {search && (
                 <button
                   type="button"
                   onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
                   className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
-                  aria-label="Clear search"
+                  aria-label="Limpiar busqueda"
                 >
-                  Clear
+                  Limpiar
                 </button>
               )}
             </form>
@@ -714,22 +758,22 @@ export default function InstitutionScorecards() {
               <Skeleton className="h-3 w-40 inline-block" />
             ) : (
               <>
-                Showing{' '}
+                Mostrando{' '}
                 <span className="text-zinc-300 font-semibold">{formatNumber(Math.min(PER_PAGE, institutions.length))}</span>
-                {' '}of{' '}
+                {' '}de{' '}
                 <span className="text-zinc-300 font-semibold">{formatNumber(totalCount)}</span>
-                {' '}institutions
-                {selectedGrade && (
-                  <> with grade <span className="font-bold" style={{ color: gradeConfig(selectedGrade).solid }}>{selectedGrade}</span></>
+                {' '}instituciones
+                {selectedTier && (
+                  <> con nivel <span className="font-bold" style={{ color: TIER_MAP[selectedTier]?.color ?? '#dc2626' }}>{selectedTier}</span></>
                 )}
-                {search && <> matching "<span className="text-zinc-300">{search}</span>"</>}
+                {search && <> que coinciden con &quot;<span className="text-zinc-300">{search}</span>&quot;</>}
               </>
             )}
           </p>
         </section>
 
-        {/* ── CARD GRID ─────────────────────────────────────────────── */}
-        <section aria-label="Institution scorecards" aria-busy={listLoading}>
+        {/* -- CARD GRID -------------------------------------------------- */}
+        <section aria-label="Tarjetas de instituciones" aria-busy={listLoading}>
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-200 ${isPlaceholderData ? 'opacity-60' : 'opacity-100'}`}
             role="list"
@@ -754,31 +798,31 @@ export default function InstitutionScorecards() {
               className="rounded-xl border border-white/8 bg-zinc-900/60 p-12 text-center"
             >
               <Building2 className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm text-zinc-500">No institutions found matching those filters.</p>
+              <p className="text-sm text-zinc-500">No se encontraron instituciones con esos filtros.</p>
               <button
-                onClick={() => { setSelectedGrade(null); setSearch(''); setSearchInput(''); setPage(1) }}
+                onClick={() => { setSelectedTier(null); setSearch(''); setSearchInput(''); setPage(1) }}
                 className="mt-3 text-xs text-zinc-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
               >
-                Clear all filters
+                Limpiar todos los filtros
               </button>
             </div>
           )}
         </section>
 
-        {/* ── PAGINATION ────────────────────────────────────────────── */}
+        {/* -- PAGINATION ------------------------------------------------- */}
         {totalPages > 1 && (
           <nav
             className="flex items-center justify-between"
-            aria-label="Pagination"
+            aria-label="Paginacion"
           >
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Previous page"
+              aria-label="Pagina anterior"
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              Previous
+              Anterior
             </button>
 
             <div className="flex items-center gap-1">
@@ -806,7 +850,7 @@ export default function InstitutionScorecards() {
                         ? 'bg-white text-zinc-900'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
                     }`}
-                    aria-label={`Page ${pageNum}`}
+                    aria-label={`Pagina ${pageNum}`}
                     aria-current={pageNum === page ? 'page' : undefined}
                   >
                     {pageNum}
@@ -819,21 +863,26 @@ export default function InstitutionScorecards() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Next page"
+              aria-label="Pagina siguiente"
             >
-              Next
+              Siguiente
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </nav>
         )}
 
-        {/* Footer note */}
-        <p className="text-[11px] text-zinc-600 leading-relaxed max-w-4xl pb-4">
-          <strong className="text-zinc-500">Note:</strong> Scores are derived from procurement records
-          in COMPRANET (2002–2025) using the v6.5 risk model. Grades reflect transparency and process
-          quality indicators — not proof of wrongdoing. Institutions with fewer than 30 contracts may
-          show wider confidence bands.
-        </p>
+        {/* Footer note — context footnote */}
+        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400/70 mb-1">
+            NOTA METODOLOGICA
+          </p>
+          <p className="text-[11px] text-zinc-400 leading-relaxed">
+            Las calificaciones reflejan indicadores estadisticos de transparencia en contratacion publica.
+            Una calificacion baja no es prueba de irregularidades, sino una senal para investigacion adicional.
+            Puntuacion basada en COMPRANET (2002-2025), modelo de riesgo v6.5, metodologia OCDE / FMI.
+            Instituciones con menos de 30 contratos pueden mostrar mayor variabilidad.
+          </p>
+        </div>
 
       </main>
     </div>
