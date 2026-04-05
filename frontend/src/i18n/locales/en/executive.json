@@ -573,5 +573,43 @@
   "journalistNote": {
     "label": "Journalist Note",
     "body": "Risk scores are <bold>investigative leads, not verdicts</bold>. Each flagged contract carries a COMPRANET folio number you can use to request full documentation via the transparency portal (constitutional Art. 6). All underlying data is public record — no freedom of information litigation required."
+  },
+
+  "historicalTrend": {
+    "overline": "HIGH-RISK RATE BY YEAR",
+    "headline": "Risk nearly doubled: 12% in 2015 to 18% in 2022",
+    "footnote": "Percentage of contracts scored critical + high by RUBLI v6.5",
+    "legendPreAmlo": "2015-2018 Pre-AMLO",
+    "legendAmlo": "2019-2024 AMLO/Sheinbaum",
+    "legendPeak": "Peak years (\u226518%)",
+    "hallazgoLabel": "HALLAZGO",
+    "hallazgoBody": "High-risk procurement jumped from ~12% (2015-2017) to ~18% (2019-2022) — a 50% increase coinciding with expanded direct awards under the AMLO administration. Risk remained elevated through 2024 despite declining contract volume."
+  },
+
+  "aria": {
+    "sectionTitle": "ARIA: {{totalVendors}} Vendors Under Surveillance",
+    "description": "The Automated Risk Investigation Algorithm (ARIA) triages all {{totalVendors}} vendors into four priority tiers using a composite Intelligence Priority Score (IPS) that combines risk scores, anomaly detection, financial scale, and external registry flags.",
+    "tierValueLabel": "{{value}} total value",
+    "tierAvgIps": "avg IPS {{ips}}",
+    "tier1Label": "TIER 1 — IMMEDIATE INVESTIGATION",
+    "tier1Body": "<strong>320 vendors</strong> controlling <strong>MX$1.98T</strong> in contracts have been flagged for immediate investigation. Average IPS: 0.846.",
+    "topVendorsHeader": "TOP ARIA T1 VENDORS BY IPS",
+    "patternsHeader": "CORRUPTION PATTERNS DETECTED",
+    "p6CaptureNote": "P6 Institutional Capture dominates: 15,923 vendors concentrate contracts from single institutions",
+    "exploreQueue": "Explore full ARIA queue"
+  },
+
+  "documentedCases": {
+    "header": "TOP DOCUMENTED CORRUPTION CASES",
+    "subtitle": "1,374 documented cases. Top 5 by estimated fraud value:",
+    "viewAll": "View all 1,374 documented cases"
+  },
+
+  "sectorHallazgo": {
+    "label": "HALLAZGO \u2014 RANKED BY MONEY AT RISK, NOT RATE",
+    "body": "<salud>Salud</salud> leads with <mono>MX$369B</mono> at risk (12% rate on MX$3.07T budget). <energia>Energ\u00eda</energia> follows at <mono>MX$264B</mono>, then <infraestructura>Infraestructura</infraestructura> at <mono>MX$213B</mono>. <agricultura>Agricultura</agricultura>'s 29.8% rate looks alarming but its smaller budget means only MX$95B at risk \u2014 less than a quarter of Salud.",
+    "chartHeader": "ABSOLUTE VALUE AT RISK (Critical + High, MXN)",
+    "oecdRef": "OECD max: 15% high-risk rate",
+    "sortedFootnote": "Sorted by high-risk rate (critical + high \u00b7 Source: COMPRANET 2002-2025 \u00b7 RUBLI v6.5"
   }
 }

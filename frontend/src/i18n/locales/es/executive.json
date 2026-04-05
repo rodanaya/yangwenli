@@ -573,5 +573,43 @@
   "journalistNote": {
     "label": "Nota para Periodistas",
     "body": "Las puntuaciones de riesgo son <bold>pistas de investigación, no condenas</bold>. Cada contrato marcado lleva un número de folio COMPRANET que puedes usar para solicitar documentación completa vía el portal de transparencia (Art. 6 constitucional). Todos los datos subyacentes son registros públicos — no se requiere litigio de acceso a la información."
+  },
+
+  "historicalTrend": {
+    "overline": "TASA DE ALTO RIESGO POR AÑO",
+    "headline": "El riesgo casi se duplicó: 12% en 2015 a 18% en 2022",
+    "footnote": "Porcentaje de contratos clasificados como crítico + alto por RUBLI v6.5",
+    "legendPreAmlo": "2015-2018 Pre-AMLO",
+    "legendAmlo": "2019-2024 AMLO/Sheinbaum",
+    "legendPeak": "Años pico (\u226518%)",
+    "hallazgoLabel": "HALLAZGO",
+    "hallazgoBody": "La contratación de alto riesgo saltó de ~12% (2015-2017) a ~18% (2019-2022) — un incremento del 50% coincidiendo con la expansión de adjudicaciones directas bajo la administración AMLO. El riesgo se mantuvo elevado hasta 2024 pese a la reducción del volumen de contratos."
+  },
+
+  "aria": {
+    "sectionTitle": "ARIA: {{totalVendors}} Proveedores Bajo Vigilancia",
+    "description": "El Algoritmo Automatizado de Investigación de Riesgo (ARIA) clasifica los {{totalVendors}} proveedores en cuatro niveles de prioridad usando una Puntuación de Prioridad de Inteligencia (IPS) compuesta que combina puntuaciones de riesgo, detección de anomalías, escala financiera y señales de registros externos.",
+    "tierValueLabel": "{{value}} valor total",
+    "tierAvgIps": "IPS prom. {{ips}}",
+    "tier1Label": "NIVEL 1 — INVESTIGACIÓN INMEDIATA",
+    "tier1Body": "<strong>320 proveedores</strong> que controlan <strong>MX$1.98B</strong> en contratos han sido señalados para investigación inmediata. IPS promedio: 0.846.",
+    "topVendorsHeader": "PRINCIPALES PROVEEDORES ARIA N1 POR IPS",
+    "patternsHeader": "PATRONES DE CORRUPCIÓN DETECTADOS",
+    "p6CaptureNote": "Captura Institucional P6 domina: 15,923 proveedores concentran contratos de instituciones únicas",
+    "exploreQueue": "Explorar cola ARIA completa"
+  },
+
+  "documentedCases": {
+    "header": "PRINCIPALES CASOS DOCUMENTADOS DE CORRUPCIÓN",
+    "subtitle": "1,374 casos documentados. Top 5 por valor estimado de fraude:",
+    "viewAll": "Ver los 1,374 casos documentados"
+  },
+
+  "sectorHallazgo": {
+    "label": "HALLAZGO \u2014 ORDENADO POR DINERO EN RIESGO, NO POR TASA",
+    "body": "<salud>Salud</salud> lidera con <mono>MX$369B</mono> en riesgo (tasa del 12% sobre presupuesto de MX$3.07B). <energia>Energ\u00eda</energia> le sigue con <mono>MX$264B</mono>, luego <infraestructura>Infraestructura</infraestructura> con <mono>MX$213B</mono>. La tasa del 29.8% de <agricultura>Agricultura</agricultura> parece alarmante, pero su presupuesto menor implica solo MX$95B en riesgo — menos de la cuarta parte de Salud.",
+    "chartHeader": "VALOR ABSOLUTO EN RIESGO (Crítico + Alto, MXN)",
+    "oecdRef": "OCDE máx: 15% tasa de alto riesgo",
+    "sortedFootnote": "Ordenado por tasa de alto riesgo (crítico + alto) · Fuente: COMPRANET 2002-2025 · RUBLI v6.5"
   }
 }

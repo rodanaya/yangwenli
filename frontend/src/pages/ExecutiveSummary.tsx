@@ -788,6 +788,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function HistoricalRiskTrend() {
+  const { t } = useTranslation('executive')
   const maxPct = Math.max(...HISTORICAL_TREND.map(d => d.highRiskPct))
   const minPct = Math.min(...HISTORICAL_TREND.map(d => d.highRiskPct))
   const chartH = 120
@@ -796,16 +797,13 @@ function HistoricalRiskTrend() {
   return (
     <div className="my-8 rounded-lg border border-border bg-background-card p-5">
       <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-1">
-        {/* TODO: i18n */}
-        HIGH-RISK RATE BY YEAR
+        {t('historicalTrend.overline')}
       </p>
       <h3 className="text-sm font-bold text-text-primary mb-1">
-        {/* TODO: i18n */}
-        Risk nearly doubled: 12% in 2015 to 18% in 2022
+        {t('historicalTrend.headline')}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        {/* TODO: i18n */}
-        Percentage of contracts scored critical + high by RUBLI v6.5
+        {t('historicalTrend.footnote')}
       </p>
 
       {/* Bar chart */}
@@ -875,22 +873,19 @@ function HistoricalRiskTrend() {
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#64748b', opacity: 0.5 }} />
           <span className="text-[10px] font-mono text-text-muted">
-            {/* TODO: i18n */}
-            2015-2018 Pre-AMLO
+            {t('historicalTrend.legendPreAmlo')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ea580c', opacity: 0.8 }} />
           <span className="text-[10px] font-mono text-text-muted">
-            {/* TODO: i18n */}
-            2019-2024 AMLO/Sheinbaum
+            {t('historicalTrend.legendAmlo')}
           </span>
         </div>
         <div className="flex items-center gap-1.5">
           <div className="w-2 h-2 rounded-full bg-[#dc2626]" />
           <span className="text-[10px] font-mono text-text-muted">
-            {/* TODO: i18n */}
-            Peak years ({'\u2265'}18%)
+            {t('historicalTrend.legendPeak')}
           </span>
         </div>
       </div>
@@ -898,14 +893,10 @@ function HistoricalRiskTrend() {
       {/* Hallazgo */}
       <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1 font-bold">
-          {/* TODO: i18n */}
-          HALLAZGO
+          {t('historicalTrend.hallazgoLabel')}
         </p>
         <p className="text-sm text-zinc-200">
-          {/* TODO: i18n */}
-          High-risk procurement jumped from ~12% (2015-2017) to ~18% (2019-2022) --
-          a 50% increase coinciding with expanded direct awards under the AMLO administration.
-          Risk remained elevated through 2024 despite declining contract volume.
+          {t('historicalTrend.hallazgoBody')}
         </p>
       </div>
     </div>
@@ -1289,22 +1280,19 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 // ============================================================================
 
 function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
+  const { t } = useTranslation('executive')
   const totalVendors = ARIA_TIERS.reduce((s, t) => s + t.vendors, 0)
 
   return (
     <section>
       <SectionHeading
         number="05"
-        // TODO: i18n
-        title={`ARIA: ${totalVendors.toLocaleString()} Vendors Under Surveillance`}
+        title={t('aria.sectionTitle', { totalVendors: totalVendors.toLocaleString() })}
         icon={Eye}
       />
 
       <p className="text-sm leading-relaxed text-text-secondary mb-6">
-        {/* TODO: i18n */}
-        The Automated Risk Investigation Algorithm (ARIA) triages all {totalVendors.toLocaleString()} vendors
-        into four priority tiers using a composite Intelligence Priority Score (IPS) that combines
-        risk scores, anomaly detection, financial scale, and external registry flags.
+        {t('aria.description', { totalVendors: totalVendors.toLocaleString() })}
       </p>
 
       {/* Tier cards */}
@@ -1327,12 +1315,10 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
                 {tier.vendors.toLocaleString()}
               </p>
               <p className="text-[10px] text-text-muted font-mono">
-                {/* TODO: i18n */}
-                {formatCompactMXN(tier.totalValue)}
+                {t('aria.tierValueLabel', { value: formatCompactMXN(tier.totalValue) })}
               </p>
               <p className="text-[9px] text-text-muted font-mono mt-1">
-                {/* TODO: i18n */}
-                avg IPS {tier.avgIps.toFixed(2)}
+                {t('aria.tierAvgIps', { ips: tier.avgIps.toFixed(2) })}
               </p>
             </div>
           </div>
@@ -1347,15 +1333,11 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
           </div>
           <div>
             <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-[#dc2626] mb-1">
-              {/* TODO: i18n */}
-              TIER 1 -- IMMEDIATE INVESTIGATION
+              {t('aria.tier1Label')}
             </p>
-            <p className="text-sm text-text-secondary leading-relaxed">
-              {/* TODO: i18n */}
-              <strong className="text-text-primary font-mono">320 vendors</strong> controlling{' '}
-              <strong className="text-text-primary font-mono">MX$1.98T</strong> in contracts
-              have been flagged for immediate investigation. Average IPS: 0.846.
-            </p>
+            <p className="text-sm text-text-secondary leading-relaxed"
+              dangerouslySetInnerHTML={{ __html: t('aria.tier1Body') }}
+            />
           </div>
         </div>
       </div>
@@ -1364,8 +1346,7 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
       <div className="rounded-lg border border-border bg-background-card overflow-hidden mb-6">
         <div className="px-4 pt-4 pb-2 border-b border-border">
           <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
-            {/* TODO: i18n */}
-            TOP ARIA T1 VENDORS BY IPS
+            {t('aria.topVendorsHeader')}
           </p>
         </div>
         <div className="divide-y divide-border/40">
@@ -1412,8 +1393,7 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
       {/* Pattern breakdown */}
       <div className="rounded-lg border border-border bg-background-card p-4 mb-6">
         <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-3">
-          {/* TODO: i18n */}
-          CORRUPTION PATTERNS DETECTED
+          {t('aria.patternsHeader')}
         </p>
         <div className="space-y-2">
           {ARIA_PATTERNS.map((p) => {
@@ -1443,8 +1423,7 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
           })}
         </div>
         <p className="text-[10px] text-text-muted font-mono mt-3">
-          {/* TODO: i18n */}
-          P6 Institutional Capture dominates: 15,923 vendors concentrate contracts from single institutions
+          {t('aria.p6CaptureNote')}
         </p>
       </div>
 
@@ -1452,8 +1431,7 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
         onClick={() => navigate('/aria')}
         className="flex items-center gap-1.5 text-xs text-[#dc2626] hover:text-[#dc2626]/80 font-mono uppercase tracking-wide transition-colors"
       >
-        {/* TODO: i18n */}
-        Explore full ARIA queue
+        {t('aria.exploreQueue')}
         <ArrowRight className="h-3 w-3" />
       </button>
     </section>
@@ -1465,19 +1443,18 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
 // ============================================================================
 
 function SectionDocumentedCases({ navigate }: { navigate: (path: string) => void }) {
+  const { t } = useTranslation('executive')
   return (
     <div className="my-6 rounded-lg border border-border bg-background-card p-5">
       <div className="flex items-center gap-2 mb-4">
         <Shield className="h-4 w-4 text-[#dc2626]" />
         <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
-          {/* TODO: i18n */}
-          TOP DOCUMENTED CORRUPTION CASES
+          {t('documentedCases.header')}
         </p>
       </div>
 
       <p className="text-xs text-text-muted mb-4">
-        {/* TODO: i18n */}
-        1,374 documented cases. Top 5 by estimated fraud value:
+        {t('documentedCases.subtitle')}
       </p>
 
       <div className="space-y-3">
@@ -1514,8 +1491,7 @@ function SectionDocumentedCases({ navigate }: { navigate: (path: string) => void
         onClick={() => navigate('/ground-truth')}
         className="mt-4 flex items-center gap-1.5 text-xs text-[#dc2626] hover:text-[#dc2626]/80 font-mono uppercase tracking-wide transition-colors"
       >
-        {/* TODO: i18n */}
-        View all 1,374 documented cases
+        {t('documentedCases.viewAll')}
         <ArrowRight className="h-3 w-3" />
       </button>
     </div>
@@ -1572,19 +1548,20 @@ function SectionSectors({
       {/* HALLAZGO: Absolute value at risk vs rate illusion */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1 font-bold">
-          {/* TODO: i18n */}
-          HALLAZGO — RANKED BY MONEY AT RISK, NOT RATE
+          {t('sectorHallazgo.label')}
         </p>
         <p className="text-sm text-zinc-200">
-          {/* TODO: i18n */}
-          <strong className="text-[#dc2626]">Salud</strong> leads with{' '}
-          <strong className="font-mono">MX$369B</strong> at risk (12% rate on MX$3.07T budget).{' '}
-          <strong className="text-[#eab308]">Energía</strong> follows at{' '}
-          <strong className="font-mono">MX$264B</strong>, then{' '}
-          <strong className="text-[#ea580c]">Infraestructura</strong> at{' '}
-          <strong className="font-mono">MX$213B</strong>.{' '}
-          <strong className="text-[#22c55e]">Agricultura</strong>&apos;s 29.8% rate looks alarming but its smaller budget
-          means only MX$95B at risk — less than a quarter of Salud.
+          <Trans
+            t={t}
+            i18nKey="sectorHallazgo.body"
+            components={{
+              salud: <strong className="text-[#dc2626]" />,
+              energia: <strong className="text-[#eab308]" />,
+              infraestructura: <strong className="text-[#ea580c]" />,
+              agricultura: <strong className="text-[#22c55e]" />,
+              mono: <strong className="font-mono" />,
+            }}
+          />
         </p>
       </div>
 
@@ -1593,8 +1570,7 @@ function SectionSectors({
         <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-2">
           <BarChart3 className="h-3.5 w-3.5 text-text-muted" />
           <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
-            {/* TODO: i18n */}
-            ABSOLUTE VALUE AT RISK (Critical + High, MXN)
+            {t('sectorHallazgo.chartHeader')}
           </p>
         </div>
 
@@ -1658,15 +1634,13 @@ function SectionSectors({
         <div className="px-4 py-2.5 border-t border-border/50 flex items-center gap-2">
           <div className="h-px flex-1 border-t border-dashed border-[#22d3ee]/40" />
           <span className="text-[9px] font-mono text-[#22d3ee]">
-            {/* TODO: i18n */}
-            OECD max: 15% high-risk rate
+            {t('sectorHallazgo.oecdRef')}
           </span>
         </div>
 
         <div className="px-4 py-2.5 border-t border-border bg-background-elevated/50">
           <p className="text-[10px] font-mono text-text-muted">
-            {/* TODO: i18n */}
-            Sorted by high-risk rate (critical + high %) &middot; Source: COMPRANET 2002-2025 &middot; RUBLI v6.5
+            {t('sectorHallazgo.sortedFootnote')}
           </p>
         </div>
       </div>

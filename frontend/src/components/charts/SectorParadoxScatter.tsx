@@ -8,7 +8,10 @@
  */
 
 import { useTranslation } from 'react-i18next'
+import { useQuery } from '@tanstack/react-query'
 import { getLocale } from '@/lib/utils'
+import { sectorApi } from '@/api/client'
+import type { SectorStatistics } from '@/api/types'
 import {
   ScatterChart,
   Scatter,
@@ -46,9 +49,8 @@ const SECTOR_SCATTER_DATA: SectorPoint[] = [
   { sector: 'educacion', directAwardPct: 78.0, highRiskPct: 4.64, avgRisk: 0.2052, totalBillions: 371.0, contracts: 333920, color: '#3b82f6' },
 ]
 
-// Scale bubble radius: sqrt of billions, clamped to [6, 32]
-function bubbleRadius(billions: number): number {
-  const maxB = 3070.3
+// Scale bubble radius: sqrt of billions relative to dataset max, clamped to [6, 32]
+function bubbleRadius(billions: number, maxB = 3070.3): number {
   const r = 6 + 26 * Math.sqrt(billions / maxB)
   return Math.max(6, Math.min(32, r))
 }
@@ -57,11 +59,12 @@ interface CustomDotProps {
   cx?: number
   cy?: number
   payload?: SectorPoint
+  maxBillions?: number
 }
 
-function CustomDot({ cx = 0, cy = 0, payload }: CustomDotProps) {
+function CustomDot({ cx = 0, cy = 0, payload, maxBillions = 3070.3 }: CustomDotProps) {
   if (!payload) return null
-  const r = bubbleRadius(payload.totalBillions)
+  const r = bubbleRadius(payload.totalBillions, maxBillions)
   return (
     <g>
       <circle
@@ -124,6 +127,25 @@ function ScatterTooltip({ active, payload }: CustomTooltipProps) {
 
 export function SectorParadoxScatter() {
   const { t } = useTranslation('procurement')
+
+  const { data: sectorsData } = useQuery({
+    queryKey: ['sectors-list'],
+    queryFn: () => sectorApi.getAll(),
+    staleTime: 10 * 60 * 1000,
+  })
+
+  // Build scatter data from live API; fall back to static constant if not loaded yet
+  const scatterData: SectorPoint[] = sectorsData?.data?.map((s: SectorStatistics) => ({
+    sector: s.sector_code,
+    directAwardPct: Math.round(s.direct_award_pct * 10) / 10,
+    highRiskPct: Math.round(s.high_risk_pct * 10) / 10,
+    avgRisk: s.avg_risk_score,
+    totalBillions: Math.round(s.total_value_mxn / 1e9 * 10) / 10,
+    contracts: s.total_contracts,
+    color: s.color,
+  })) ?? SECTOR_SCATTER_DATA
+
+  const maxBillions = scatterData.reduce((m, s) => Math.max(m, s.totalBillions), 1)
 
   return (
     <div className="space-y-4">
@@ -196,8 +218,8 @@ export function SectorParadoxScatter() {
             />
 
             <Scatter
-              data={SECTOR_SCATTER_DATA}
-              shape={<CustomDot />}
+              data={scatterData}
+              shape={<CustomDot maxBillions={maxBillions} />}
             />
           </ScatterChart>
         </ResponsiveContainer>

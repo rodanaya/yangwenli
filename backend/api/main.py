@@ -116,6 +116,7 @@ def _warmup_caches():
         "/api/v1/analysis/transparency/publication-delays",  # Dashboard transparency strip (11s cold)
         "/api/v1/analysis/price-anomalies?min_z=3&limit=50",  # PriceIntelligence page (slow cold — 50s+)
         "/api/v1/analysis/vendor-concentration?top_n=3",  # Dashboard market concentration panel
+        "/api/v1/network/communities",                     # Network communities (28s cold — warm to avoid UX lag)
         # Sector sub-pages — now use precomputed fast paths so safe to warm
         *[f"/api/v1/sectors/{i}/trends" for i in range(1, 13)],
         *[f"/api/v1/sectors/{i}/timeline" for i in range(1, 13)],
@@ -125,7 +126,7 @@ def _warmup_caches():
     for ep in endpoints:
         try:
             # executive/summary cold on VPS = 90s; price-anomalies cold = 50s+; publication-delays = 11s
-            timeout = 120 if "executive" in ep or "price-anomalies" in ep else (30 if "publication" in ep else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3)))
+            timeout = 120 if "executive" in ep or "price-anomalies" in ep else (45 if "communities" in ep else (30 if "publication" in ep else (20 if "data-quality" in ep else (12 if "statistics" in ep or "overview" in ep else 3))))
             urllib.request.urlopen(f"{base}{ep}", timeout=timeout)
         except Exception as e:
             logger.debug(f"Cache warmup skipped for {ep}: {e}")
