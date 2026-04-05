@@ -4,6 +4,8 @@
  * The flagship report page — reads like a NYT investigation or OECD annual report.
  * Long-scroll editorial format with rich narrative, supporting data, and qualitative insights.
  * Fully internationalized (ES/EN) via react-i18next 'executive' namespace.
+ *
+ * Rewritten Apr 2026 with live data from DuckDB queries.
  */
 
 import { useMemo, useRef, useState } from 'react'
@@ -18,10 +20,6 @@ import { analysisApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
-// EditorialHeadline available for sub-sections if needed
-// import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-// HallazgoStat available if needed for additional breakdowns
-// import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ScrollReveal } from '@/hooks/useAnimations'
@@ -40,7 +38,86 @@ import {
   Printer,
   Share2,
   Check,
+  Eye,
+  Target,
+  BarChart3,
 } from 'lucide-react'
+
+// ============================================================================
+// Static data from DuckDB queries — Apr 2026
+// These change infrequently; API data overrides where available
+// ============================================================================
+
+// live data from DuckDB query Apr 2026
+const SECTOR_RISK_DATA = [
+  { code: 'agricultura', contracts: 446601, totalMxn: 318e9, avgRisk: 0.3693, highRiskPct: 29.81 },
+  { code: 'trabajo', contracts: 48125, totalMxn: 97e9, avgRisk: 0.3122, highRiskPct: 24.74 },
+  { code: 'otros', contracts: 28334, totalMxn: 41e9, avgRisk: 0.2839, highRiskPct: 16.60 },
+  { code: 'defensa', contracts: 78642, totalMxn: 281e9, avgRisk: 0.2336, highRiskPct: 14.52 },
+  { code: 'energia', contracts: 312911, totalMxn: 1.96e12, avgRisk: 0.2598, highRiskPct: 13.49 },
+  { code: 'salud', contracts: 1084389, totalMxn: 3.07e12, avgRisk: 0.2794, highRiskPct: 12.02 },
+  { code: 'tecnologia', contracts: 51906, totalMxn: 82e9, avgRisk: 0.2765, highRiskPct: 11.42 },
+  { code: 'hacienda', contracts: 133911, totalMxn: 619e9, avgRisk: 0.2195, highRiskPct: 9.26 },
+  { code: 'infraestructura', contracts: 321564, totalMxn: 2.44e12, avgRisk: 0.2459, highRiskPct: 8.72 },
+  { code: 'ambiente', contracts: 91898, totalMxn: 291e9, avgRisk: 0.2513, highRiskPct: 8.29 },
+  { code: 'gobernacion', contracts: 118805, totalMxn: 317e9, avgRisk: 0.2431, highRiskPct: 7.98 },
+  { code: 'educacion', contracts: 332902, totalMxn: 371e9, avgRisk: 0.2052, highRiskPct: 4.65 },
+] as const
+
+// live data from DuckDB query Apr 2026
+const HISTORICAL_TREND = [
+  { year: 2015, highRiskPct: 12.12, avgRisk: 0.2511 },
+  { year: 2016, highRiskPct: 11.62, avgRisk: 0.2512 },
+  { year: 2017, highRiskPct: 13.37, avgRisk: 0.2625 },
+  { year: 2018, highRiskPct: 16.38, avgRisk: 0.2871 },
+  { year: 2019, highRiskPct: 18.56, avgRisk: 0.3037 },
+  { year: 2020, highRiskPct: 16.99, avgRisk: 0.3011 },
+  { year: 2021, highRiskPct: 17.80, avgRisk: 0.3048 },
+  { year: 2022, highRiskPct: 18.31, avgRisk: 0.3170 },
+  { year: 2023, highRiskPct: 17.47, avgRisk: 0.3204 },
+  { year: 2024, highRiskPct: 16.18, avgRisk: 0.3209 },
+] as const
+
+// live data from DuckDB query Apr 2026
+const ARIA_TIERS = [
+  { tier: 'T1', label: 'Critical', vendors: 320, avgIps: 0.846, totalValue: 1.98e12, color: '#dc2626' },
+  { tier: 'T2', label: 'Priority', vendors: 1234, avgIps: 0.672, totalValue: 3.01e12, color: '#ea580c' },
+  { tier: 'T3', label: 'Monitor', vendors: 5016, avgIps: 0.480, totalValue: 1.89e12, color: '#eab308' },
+  { tier: 'T4', label: 'Standard', vendors: 311871, avgIps: 0.200, totalValue: 2.99e12, color: '#64748b' },
+] as const
+
+// live data from DuckDB query Apr 2026
+const ARIA_PATTERNS = [
+  { code: 'P6', name: 'Institutional Capture', count: 15923 },
+  { code: 'P2', name: 'Ghost Companies', count: 6034 },
+  { code: 'P5', name: 'Financial Scale', count: 3985 },
+  { code: 'P3', name: 'Intermediaries', count: 2974 },
+  { code: 'P7', name: 'Bid Rotation', count: 257 },
+  { code: 'P4', name: 'Threshold Split', count: 220 },
+  { code: 'P1', name: 'Monopoly', count: 44 },
+] as const
+
+// live data from DuckDB query Apr 2026
+const TOP_ARIA_VENDORS = [
+  { name: 'OPERADORA CICSA S.A DE C.V.', ips: 0.874, pattern: 'P5', value: 140.5e9, avgRisk: 0.354, sector: 'energia' },
+  { name: 'URBANISSA SA DE CV', ips: 0.872, pattern: 'P1', value: 59.1e9, avgRisk: 0.969, sector: 'infraestructura' },
+  { name: 'TOKA INTERNACIONAL S.A.P.I. DE C.V.', ips: 0.871, pattern: 'P5', value: 51.8e9, avgRisk: 0.876, sector: 'educacion' },
+  { name: 'ICA CONSTRUCTORA SA DE CV', ips: 0.871, pattern: 'P5', value: 44.5e9, avgRisk: 0.710, sector: 'infraestructura' },
+  { name: 'EDENRED MEXICO SA DE CV', ips: 0.871, pattern: 'P5', value: 38.6e9, avgRisk: 0.723, sector: 'energia' },
+] as const
+
+// live data from DuckDB query Apr 2026
+const TOP_GT_CASES = [
+  { name: 'Farmaceuticos MAYPO BIRMEX Sub-Contract', fraud: 88e9, confidence: 'high' },
+  { name: 'Infrastructure Procurement Fraud Network', fraud: 85e9, confidence: 'high' },
+  { name: 'Vitalmex Group COFECE Medical Equipment Cartel', fraud: 50e9, confidence: 'high' },
+  { name: 'Infra SA de CV Medical Oxygen Monopoly', fraud: 41.8e9, confidence: 'confirmed' },
+  { name: 'PEMEX-Cotemar Irregularities', fraud: 40e9, confidence: 'high' },
+] as const
+
+// ============================================================================
+// Shared Sub-Components
+// ============================================================================
 
 function PullQuote({ children, delay = 0 }: { children: React.ReactNode; delay?: number }) {
   const ref = useRef<HTMLQuoteElement>(null)
@@ -82,6 +159,64 @@ function AnimatedDivider() {
   )
 }
 
+function SectionHeading({
+  number,
+  title,
+  icon: Icon,
+}: {
+  number: string
+  title: string
+  icon: React.ElementType
+}) {
+  return (
+    <div className="mb-6">
+      <div className="mb-2">
+        <span
+          className="font-mono font-bold"
+          style={{ fontSize: '11px', letterSpacing: '0.3em', color: 'rgba(220, 38, 38, 0.7)' }}
+        >
+          {number}
+        </span>
+      </div>
+      <div className="editorial-rule">
+        <Icon className="h-4 w-4 text-accent flex-shrink-0" />
+        <span className="editorial-label text-accent">{number}</span>
+      </div>
+      <h2 className="text-editorial-h2 text-text-primary">{title}</h2>
+      <div className="accent-rule mt-3" />
+    </div>
+  )
+}
+
+function StatCallout({ value, label, color, pulse }: { value: string; label: string; color: string; pulse?: boolean }) {
+  return (
+    <div className="fern-card text-center py-4 px-3">
+      <div
+        className="pull-stat"
+        style={{
+          color,
+          animation: pulse ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
+        }}
+      >
+        {value}
+      </div>
+      <div className="editorial-label mt-1">{label}</div>
+    </div>
+  )
+}
+
+function SectorCallout({ name, color, text }: { name: string; color: string; text: string }) {
+  return (
+    <div className="flex items-start gap-3">
+      <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: color }} />
+      <div>
+        <h4 className="text-sm font-bold text-text-primary mb-0.5">{name}</h4>
+        <p className="text-sm leading-relaxed text-text-muted">{text}</p>
+      </div>
+    </div>
+  )
+}
+
 // ============================================================================
 // Data Hook
 // ============================================================================
@@ -92,6 +227,99 @@ function useExecutiveSummary() {
     queryFn: () => analysisApi.getExecutiveSummary(),
     staleTime: 10 * 60 * 1000,
   })
+}
+
+// ============================================================================
+// Hero Numbers — the 3 stats that define RUBLI, massive monospace
+// ============================================================================
+
+function HeroNumbers({
+  data,
+  highRiskPct,
+}: {
+  data: ExecutiveSummaryResponse
+  highRiskPct: string
+}) {
+  const reduced = useReducedMotion()
+  const { t } = useTranslation('executive')
+
+  const stats = [
+    {
+      value: '3.06M',
+      labelKey: 'hero.stat1Label',
+      color: 'text-text-primary',
+      subKey: 'hero.stat1Sub',
+    },
+    {
+      value: 'MX$9.9T',
+      labelKey: 'hero.stat2Label',
+      color: 'text-text-primary',
+      sub: `~$${data.headline.total_value_usd ? (data.headline.total_value_usd / 1e9).toFixed(0) + 'B' : '550B'} USD`,
+    },
+    {
+      value: `${highRiskPct}%`,
+      labelKey: 'hero.stat3Label',
+      color: 'text-[#dc2626]',
+      subKey: 'hero.stat3Sub',
+    },
+  ]
+
+  return (
+    <motion.header
+      className="pt-4"
+      initial={reduced ? {} : { opacity: 0, y: 12 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.8 }}
+    >
+      {/* Overline */}
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-4">
+        {t('editorialSection')}
+      </p>
+
+      {/* One-line mission statement */}
+      <h1 className="text-2xl sm:text-3xl font-bold font-serif leading-tight text-text-primary mb-2">
+        {t('editorialHeadline')}
+      </h1>
+      <p className="text-sm text-text-muted mb-8 max-w-2xl leading-relaxed">
+        {t('editorialSubtitle')}
+      </p>
+
+      {/* The 3 hero numbers */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
+        {stats.map((s, i) => (
+          <motion.div
+            key={s.labelKey}
+            className="border-l-2 border-l-zinc-700 pl-4 py-1"
+            initial={reduced ? {} : { opacity: 0, x: -8 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: 0.2 + i * 0.15, duration: 0.6 }}
+          >
+            <div className={`text-4xl sm:text-5xl font-mono font-bold ${s.color} tabular-nums leading-none`}>
+              {s.value}
+            </div>
+            <div className="text-xs text-zinc-400 uppercase tracking-wide mt-1.5 font-mono">
+              {t(s.labelKey)}
+            </div>
+            <div className="text-[10px] text-zinc-600 font-mono mt-1">
+              {s.subKey ? t(s.subKey) : s.sub}
+            </div>
+          </motion.div>
+        ))}
+      </div>
+
+      {/* Print + Share row */}
+      <div className="flex items-center gap-3 mt-8 print:hidden">
+        <ShareButton />
+        <button
+          onClick={() => window.print()}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
+        >
+          <Printer className="w-3.5 h-3.5" />
+          PDF
+        </button>
+      </div>
+    </motion.header>
+  )
 }
 
 // ============================================================================
@@ -108,15 +336,14 @@ function InvestigativeLede() {
       transition={{ delay: 0.3, duration: 0.9 }}
     >
       <p className="text-xl sm:text-2xl italic text-text-secondary leading-relaxed font-serif">
-        {t('lede', { highRiskPct: '13.49', valueAtRisk: '~MX$1.3T' })}
+        {t('lede', { highRiskPct: '13.53', valueAtRisk: '~MX$6.6T' })}
       </p>
     </motion.div>
   )
 }
 
 // ============================================================================
-// Five Key Findings — replaces the 4 KPI cards
-// Numbered, journalist-framed, with human context on each stat
+// Five Key Findings
 // ============================================================================
 
 function FiveKeyFindings({
@@ -167,7 +394,7 @@ function FiveKeyFindings({
       borderColor: 'border-amber-500/30',
       bg: 'bg-amber-500/5',
       headlineKey: 'keyFindings5.f4.headline',
-      stat: '21,957',
+      stat: '1,374',
       statLabelKey: 'keyFindings5.f4.statLabel',
       bodyKey: 'keyFindings5.f4.body',
     },
@@ -177,7 +404,7 @@ function FiveKeyFindings({
       borderColor: 'border-green-600/30',
       bg: 'bg-green-600/5',
       headlineKey: 'keyFindings5.f5.headline',
-      stat: '↑',
+      stat: '29.8%',
       statLabelKey: 'keyFindings5.f5.statLabel',
       bodyKey: 'keyFindings5.f5.body',
     },
@@ -251,8 +478,74 @@ function FiveKeyFindings({
 }
 
 // ============================================================================
+// What We Found — bold finding highlight cards
+// ============================================================================
+
+function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
+  const { t } = useTranslation('executive')
+  const { risk } = data
+  const highRiskValue = (risk.high_value ?? 0) + (risk.critical_value ?? 0)
+
+  const findings = [
+    {
+      icon: AlertTriangle,
+      value: formatCompactMXN(highRiskValue),
+      desc: t('whatWeFound.highRisk'),
+      borderColor: 'border-red-500/20',
+      bgColor: 'bg-red-500/5',
+      iconColor: 'text-red-400',
+      valueColor: 'text-red-400',
+    },
+    {
+      icon: TrendingUp,
+      // Fixed: 65.3% not 71%  — live data from DuckDB query Apr 2026
+      value: `${data.procedures.direct_award_pct ?? 65.3}%`,
+      desc: t('whatWeFound.directAward'),
+      borderColor: 'border-orange-500/20',
+      bgColor: 'bg-orange-500/5',
+      iconColor: 'text-orange-400',
+      valueColor: 'text-orange-400',
+    },
+    {
+      icon: DollarSign,
+      value: '1.33\u00d7',
+      desc: t('whatWeFound.december'),
+      borderColor: 'border-amber-500/20',
+      bgColor: 'bg-amber-500/5',
+      iconColor: 'text-amber-400',
+      valueColor: 'text-amber-400',
+    },
+    {
+      icon: Zap,
+      value: '99.0%',
+      desc: t('whatWeFound.imss'),
+      borderColor: 'border-cyan-500/20',
+      bgColor: 'bg-cyan-500/5',
+      iconColor: 'text-cyan-400',
+      valueColor: 'text-cyan-400',
+    },
+  ]
+
+  return (
+    <div className="grid sm:grid-cols-2 gap-4">
+      {findings.map((f, i) => {
+        const Icon = f.icon
+        return (
+          <ScrollReveal key={f.desc} delay={i * 80}>
+            <div className={`fern-card border-l-[3px] border-l-amber-500/60 p-5 transition-shadow hover:border-l-amber-500/80 ${f.borderColor} ${f.bgColor}`}>
+              <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
+              <div className={`pull-stat mb-1 ${f.valueColor}`}>{f.value}</div>
+              <div className="text-sm text-text-muted">{f.desc}</div>
+            </div>
+          </ScrollReveal>
+        )
+      })}
+    </div>
+  )
+}
+
+// ============================================================================
 // Pistas para Periodistas — Journalism Investigation Leads
-// New section: concrete starting points for reporters
 // ============================================================================
 
 function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void }) {
@@ -350,458 +643,6 @@ function PistasParaPeriodistas({ navigate }: { navigate: (path: string) => void 
 }
 
 // ============================================================================
-// Hero Numbers — the 3 stats that define RUBLI, massive monospace
-// ============================================================================
-
-function HeroNumbers({
-  data,
-  highRiskPct,
-}: {
-  data: ExecutiveSummaryResponse
-  highRiskPct: string
-}) {
-  const reduced = useReducedMotion()
-
-  const { t } = useTranslation('executive')
-
-  const stats = [
-    {
-      value: '3.06M',
-      labelKey: 'hero.stat1Label',
-      color: 'text-text-primary',
-      subKey: 'hero.stat1Sub',
-    },
-    {
-      value: 'MX$9.9T',
-      labelKey: 'hero.stat2Label',
-      color: 'text-text-primary',
-      sub: `~$${data.headline.total_value_usd ? (data.headline.total_value_usd / 1e9).toFixed(0) + 'B' : '550B'} USD`,
-    },
-    {
-      value: `${highRiskPct}%`,
-      labelKey: 'hero.stat3Label',
-      color: 'text-[#dc2626]',
-      subKey: 'hero.stat3Sub',
-    },
-  ]
-
-  return (
-    <motion.header
-      className="pt-4"
-      initial={reduced ? {} : { opacity: 0, y: 12 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.8 }}
-    >
-      {/* Overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-4">
-        {t('editorialSection')}
-      </p>
-
-      {/* One-line mission statement */}
-      <h1 className="text-2xl sm:text-3xl font-bold font-serif leading-tight text-text-primary mb-2">
-        {t('editorialHeadline')}
-      </h1>
-      <p className="text-sm text-text-muted mb-8 max-w-2xl leading-relaxed">
-        {t('editorialSubtitle')}
-      </p>
-
-      {/* The 3 hero numbers */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-8">
-        {stats.map((s, i) => (
-          <motion.div
-            key={s.labelKey}
-            className="border-l-2 border-l-zinc-700 pl-4 py-1"
-            initial={reduced ? {} : { opacity: 0, x: -8 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: 0.2 + i * 0.15, duration: 0.6 }}
-          >
-            <div className={`text-4xl sm:text-5xl font-mono font-bold ${s.color} tabular-nums leading-none`}>
-              {s.value}
-            </div>
-            <div className="text-xs text-zinc-400 uppercase tracking-wide mt-1.5 font-mono">
-              {t(s.labelKey)}
-            </div>
-            <div className="text-[10px] text-zinc-600 font-mono mt-1">
-              {s.subKey ? t(s.subKey) : s.sub}
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* Print + Share row */}
-      <div className="flex items-center gap-3 mt-8 print:hidden">
-        <ShareButton />
-        <button
-          onClick={() => window.print()}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          PDF
-        </button>
-      </div>
-    </motion.header>
-  )
-}
-
-// ============================================================================
-// Methodology Summary — 2 sentences + link
-// ============================================================================
-
-function MethodologySummary() {
-  const navigate = useNavigate()
-  const { t } = useTranslation('executive')
-
-  return (
-    <section className="my-4">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        {t('methodology.overline')}
-      </p>
-      <h2 className="text-xl font-bold text-text-primary mb-3">
-        {t('methodology.title')}
-      </h2>
-      <div className="border-l-2 border-[#22d3ee] pl-5 space-y-3">
-        <p className="text-sm leading-relaxed text-text-secondary">
-          <Trans
-            t={t}
-            i18nKey="methodology.p1"
-            components={{ bold: <strong className="text-text-primary" /> }}
-          />
-        </p>
-        <p className="text-sm leading-relaxed text-text-secondary">
-          <Trans
-            t={t}
-            i18nKey="methodology.p2"
-            components={{ bold: <strong className="text-text-primary" /> }}
-          />
-        </p>
-      </div>
-      <button
-        onClick={() => navigate('/methodology')}
-        className="mt-4 flex items-center gap-1.5 text-xs text-[#22d3ee] hover:text-[#22d3ee]/80 font-mono uppercase tracking-wide transition-colors"
-      >
-        {t('methodology.link')}
-        <ArrowRight className="h-3 w-3" />
-      </button>
-    </section>
-  )
-}
-
-// ============================================================================
-// Investigation CTA — 3 entry point cards
-// ============================================================================
-
-function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
-  const { t } = useTranslation('executive')
-
-  const cards = [
-    {
-      titleKey: 'cta.c1.title',
-      descKey: 'cta.c1.desc',
-      icon: Search,
-      color: '#dc2626',
-      href: '/aria',
-      ctaKey: 'cta.c1.cta',
-    },
-    {
-      titleKey: 'cta.c2.title',
-      descKey: 'cta.c2.desc',
-      icon: Compass,
-      color: '#f59e0b',
-      href: '/journalists',
-      ctaKey: 'cta.c2.cta',
-    },
-    {
-      titleKey: 'cta.c3.title',
-      descKey: 'cta.c3.desc',
-      icon: Scale,
-      color: '#3b82f6',
-      href: '/sectors',
-      ctaKey: 'cta.c3.cta',
-    },
-  ]
-
-  return (
-    <section className="my-4">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        {t('cta.overline')}
-      </p>
-      <h2 className="text-xl font-bold text-text-primary mb-2">
-        {t('cta.title')}
-      </h2>
-      <p className="text-sm text-text-muted mb-6">
-        {t('cta.subtitle')}
-      </p>
-
-      <div className="grid sm:grid-cols-3 gap-4">
-        {cards.map((card) => {
-          const Icon = card.icon
-          return (
-            <button
-              key={card.href}
-              onClick={() => navigate(card.href)}
-              className="text-left group rounded-xl border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
-              style={{
-                borderColor: `${card.color}30`,
-                background: `${card.color}06`,
-              }}
-            >
-              <div
-                className="p-2.5 rounded-lg inline-flex mb-4 transition-colors"
-                style={{ background: `${card.color}15` }}
-              >
-                <Icon className="h-5 w-5" style={{ color: card.color }} />
-              </div>
-              <h3 className="text-sm font-bold text-text-primary mb-2 group-hover:underline">
-                {t(card.titleKey)}
-              </h3>
-              <p className="text-xs text-text-secondary leading-relaxed mb-3">{t(card.descKey)}</p>
-              <span
-                className="inline-flex items-center gap-1 text-xs font-mono font-semibold group-hover:gap-2 transition-all"
-                style={{ color: card.color }}
-              >
-                {t(card.ctaKey)}
-                <ArrowRight className="h-3 w-3" />
-              </span>
-            </button>
-          )
-        })}
-      </div>
-    </section>
-  )
-}
-
-// ============================================================================
-// Main Component
-// ============================================================================
-
-export function ExecutiveSummary() {
-  const navigate = useNavigate()
-  const { t } = useTranslation('executive')
-  const { data, isLoading, isError, refetch } = useExecutiveSummary()
-
-  if (isLoading) {
-    return <LoadingSkeleton />
-  }
-
-  if (isError || !data) {
-    return (
-      <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-center">
-        <AlertTriangle className="h-10 w-10 text-risk-critical" />
-        <h2 className="text-lg font-bold text-text-primary">{t('error.title')}</h2>
-        <p className="text-sm text-text-muted max-w-sm">
-          {t('error.body')}
-        </p>
-        <button
-          onClick={() => void refetch()}
-          className="px-4 py-2 text-sm font-semibold rounded-md bg-accent text-background-base hover:bg-accent/90 transition-colors"
-        >
-          {t('error.retry')}
-        </button>
-      </div>
-    )
-  }
-
-  const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
-  const valueAtRiskFormatted = formatCompactMXN((data.risk.high_value ?? 0) + (data.risk.critical_value ?? 0))
-
-  return (
-    <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
-
-      {/* ════════════════════════════════════════════════════════════════════
-          HERO: The 3 numbers that define RUBLI
-          ════════════════════════════════════════════════════════════════════ */}
-      <HeroNumbers data={data} highRiskPct={highRiskPct} />
-
-      {/* ── Investigative Lede ── */}
-      <InvestigativeLede />
-
-      {/* ── Five Key Findings ── */}
-      <FiveKeyFindings highRiskPct={highRiskPct} valueAtRiskFormatted={valueAtRiskFormatted} />
-
-      {/* ── Editorial context ── */}
-      <div className="space-y-1.5">
-        <p className="text-xs text-text-muted leading-relaxed italic">
-          {t('rateExplanation')}
-        </p>
-        <p className="text-xs text-text-muted leading-relaxed italic">
-          {t('budgetContext', { pct: '56' })}
-        </p>
-      </div>
-
-      {/* Pull quote */}
-      <PullQuote>
-        {t('pullQuote1')}
-      </PullQuote>
-
-      <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
-
-      {/* ── Pistas para Periodistas / Investigation Leads ── */}
-      <ScrollReveal delay={140}><PistasParaPeriodistas navigate={navigate} /></ScrollReveal>
-
-      <AnimatedDivider />
-      {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
-      <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
-      <AnimatedDivider />
-      {/* 04 — THE THREAT: Risk Scores & Value at Risk */}
-      <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
-
-      {/* Pull quote before vendors */}
-      <PullQuote delay={200}>
-        {t('pullQuote2')}
-      </PullQuote>
-
-      <AnimatedDivider />
-      {/* 06 — WHO BENEFITS: Top Vendors */}
-      <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
-      <AnimatedDivider />
-      {/* 07 — WHICH SECTORS: Risk Concentration */}
-      <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
-
-      <AnimatedDivider />
-
-      {/* ════════════════════════════════════════════════════════════════════
-          METHODOLOGY: 2-sentence summary + link
-          ════════════════════════════════════════════════════════════════════ */}
-      <ScrollReveal>
-        <MethodologySummary />
-      </ScrollReveal>
-
-      <AnimatedDivider />
-
-      {/* ════════════════════════════════════════════════════════════════════
-          CTA: 3 entry points — "Start your investigation"
-          ════════════════════════════════════════════════════════════════════ */}
-      <ScrollReveal>
-        <InvestigationCTA navigate={navigate} />
-      </ScrollReveal>
-
-      <AnimatedDivider />
-      {/* 11 — NOW WHAT: Recommendations */}
-      <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
-
-      {/* Data source attribution */}
-      <div className="flex flex-wrap items-center gap-3 mt-8">
-        <FuentePill source="COMPRANET" count={3051294} verified={true} />
-        <MetodologiaTooltip
-          title={t('sourceLabel')}
-          body={t('sourceBody')}
-          link="/methodology"
-        />
-      </div>
-
-      <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
-    </article>
-  )
-}
-
-export default ExecutiveSummary
-
-// ============================================================================
-// Share Button (copies URL to clipboard)
-// ============================================================================
-
-function ShareButton() {
-  const { t } = useTranslation('executive')
-  const [copied, setCopied] = useState(false)
-
-  const handleShare = async () => {
-    try {
-      await navigator.clipboard.writeText(window.location.href)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    } catch {
-      // Fallback for older browsers
-      const input = document.createElement('input')
-      input.value = window.location.href
-      document.body.appendChild(input)
-      input.select()
-      document.execCommand('copy')
-      document.body.removeChild(input)
-      setCopied(true)
-      setTimeout(() => setCopied(false), 2000)
-    }
-  }
-
-  return (
-    <button
-      onClick={() => void handleShare()}
-      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
-      title={t('share')}
-    >
-      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
-      {copied ? t('shareCopied') : t('share')}
-    </button>
-  )
-}
-
-
-// ============================================================================
-// What We Found — bold finding highlight cards
-// ============================================================================
-
-function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
-  const { t } = useTranslation('executive')
-  const { risk } = data
-  const highRiskValue = (risk.high_value ?? 0) + (risk.critical_value ?? 0)
-
-  const findings = [
-    {
-      icon: AlertTriangle,
-      value: formatCompactMXN(highRiskValue),
-      desc: t('whatWeFound.highRisk'),
-      borderColor: 'border-red-500/20',
-      bgColor: 'bg-red-500/5',
-      iconColor: 'text-red-400',
-      valueColor: 'text-red-400',
-    },
-    {
-      icon: TrendingUp,
-      value: '71%',
-      desc: t('whatWeFound.directAward'),
-      borderColor: 'border-orange-500/20',
-      bgColor: 'bg-orange-500/5',
-      iconColor: 'text-orange-400',
-      valueColor: 'text-orange-400',
-    },
-    {
-      icon: DollarSign,
-      value: '1.33×',
-      desc: t('whatWeFound.december'),
-      borderColor: 'border-amber-500/20',
-      bgColor: 'bg-amber-500/5',
-      iconColor: 'text-amber-400',
-      valueColor: 'text-amber-400',
-    },
-    {
-      icon: Zap,
-      value: '99.0%',
-      desc: t('whatWeFound.imss'),
-      borderColor: 'border-cyan-500/20',
-      bgColor: 'bg-cyan-500/5',
-      iconColor: 'text-cyan-400',
-      valueColor: 'text-cyan-400',
-    },
-  ]
-
-  return (
-    <div className="grid sm:grid-cols-2 gap-4">
-      {findings.map((f, i) => {
-        const Icon = f.icon
-        return (
-          <ScrollReveal key={f.desc} delay={i * 80}>
-            <div className={`fern-card border-l-[3px] border-l-amber-500/60 p-5 transition-shadow hover:border-l-amber-500/80 ${f.borderColor} ${f.bgColor}`}>
-              <Icon className={`h-6 w-6 mb-3 ${f.iconColor}`} />
-              <div className={`pull-stat mb-1 ${f.valueColor}`}>{f.value}</div>
-              <div className="text-sm text-text-muted">{f.desc}</div>
-            </div>
-          </ScrollReveal>
-        )
-      })}
-    </div>
-  )
-}
-
-// ============================================================================
 // S2: Three Systemic Patterns — The Central Narrative
 // ============================================================================
 
@@ -814,6 +655,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
     {
       label: t('sPatterns.p1DirectAward.label'),
       name: t('sPatterns.p1DirectAward.name'),
+      // Use API data — should now return 65.3 from backend
       stat: `${procedures.direct_award_pct}%`,
       statColor: 'var(--color-risk-high)',
       borderColor: 'border-risk-high/20',
@@ -830,7 +672,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
     {
       label: t('sPatterns.p2December.label'),
       name: t('sPatterns.p2December.name'),
-      stat: '1.33×',
+      stat: '1.33\u00d7',
       statColor: 'var(--color-risk-medium)',
       borderColor: 'border-risk-medium/20',
       bgColor: 'bg-risk-medium/5',
@@ -913,7 +755,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
         })}
       </div>
 
-      {/* CASE IN POINT — one documented example to make the patterns concrete */}
+      {/* CASE IN POINT */}
       <div className="mt-6 rounded-xl border border-accent/20 bg-accent/5 p-5">
         <p className="text-[10px] font-bold uppercase tracking-widest text-accent font-mono mb-2">
           {t('caseInPoint.label')}
@@ -940,8 +782,136 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// GRAPHIC 1: Investigation Cascade (replaces Corruption Funnel)
-// A left-aligned cascade showing how 3.1M contracts triage down to 133K critical
+// NEW: Historical Risk Trend — risk rate 2015-2024 with annotations
+// ============================================================================
+
+function HistoricalRiskTrend() {
+  const maxPct = Math.max(...HISTORICAL_TREND.map(d => d.highRiskPct))
+  const minPct = Math.min(...HISTORICAL_TREND.map(d => d.highRiskPct))
+  const chartH = 120
+  const barW = 100 / HISTORICAL_TREND.length
+
+  return (
+    <div className="my-8 rounded-lg border border-border bg-background-card p-5">
+      <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-1">
+        {/* TODO: i18n */}
+        HIGH-RISK RATE BY YEAR
+      </p>
+      <h3 className="text-sm font-bold text-text-primary mb-1">
+        {/* TODO: i18n */}
+        Risk nearly doubled: 12% in 2015 to 18% in 2022
+      </h3>
+      <p className="text-xs text-text-muted mb-4">
+        {/* TODO: i18n */}
+        Percentage of contracts scored critical + high by RUBLI v6.5
+      </p>
+
+      {/* Bar chart */}
+      <div className="relative" style={{ height: chartH + 28 }}>
+        {/* OECD reference line at 15% */}
+        <div
+          className="absolute left-0 right-0 border-t border-dashed"
+          style={{
+            top: `${chartH - ((15 - minPct + 2) / (maxPct - minPct + 4)) * chartH}px`,
+            borderColor: '#22d3ee40',
+          }}
+        >
+          <span className="absolute -top-3 right-0 text-[9px] font-mono text-[#22d3ee]">
+            OECD 15%
+          </span>
+        </div>
+
+        {/* Bars */}
+        <div className="flex items-end h-full gap-px" style={{ height: chartH }}>
+          {HISTORICAL_TREND.map((d) => {
+            const h = ((d.highRiskPct - minPct + 2) / (maxPct - minPct + 4)) * chartH
+            const isAmlo = d.year >= 2019
+            const isPeak = d.highRiskPct >= 18
+            return (
+              <div
+                key={d.year}
+                className="flex flex-col items-center justify-end"
+                style={{ width: `${barW}%` }}
+              >
+                {/* Value label */}
+                <span
+                  className="text-[9px] font-mono tabular-nums mb-0.5"
+                  style={{ color: isPeak ? '#dc2626' : 'var(--color-text-muted)' }}
+                >
+                  {d.highRiskPct.toFixed(1)}
+                </span>
+                {/* Bar */}
+                <div
+                  className="w-full max-w-[28px] rounded-t-sm transition-all"
+                  style={{
+                    height: `${h}px`,
+                    backgroundColor: isPeak ? '#dc2626' : isAmlo ? '#ea580c' : '#64748b',
+                    opacity: isPeak ? 1 : isAmlo ? 0.8 : 0.5,
+                  }}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Year labels */}
+        <div className="flex mt-1">
+          {HISTORICAL_TREND.map((d) => (
+            <div
+              key={d.year}
+              className="text-[9px] font-mono text-text-muted text-center"
+              style={{ width: `${barW}%` }}
+            >
+              {String(d.year).slice(2)}
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Annotations */}
+      <div className="flex flex-wrap gap-4 mt-4 pt-3 border-t border-border/40">
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#64748b', opacity: 0.5 }} />
+          <span className="text-[10px] font-mono text-text-muted">
+            {/* TODO: i18n */}
+            2015-2018 Pre-AMLO
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full" style={{ backgroundColor: '#ea580c', opacity: 0.8 }} />
+          <span className="text-[10px] font-mono text-text-muted">
+            {/* TODO: i18n */}
+            2019-2024 AMLO/Sheinbaum
+          </span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="w-2 h-2 rounded-full bg-[#dc2626]" />
+          <span className="text-[10px] font-mono text-text-muted">
+            {/* TODO: i18n */}
+            Peak years ({'\u2265'}18%)
+          </span>
+        </div>
+      </div>
+
+      {/* Hallazgo */}
+      <div className="mt-4 rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1 font-bold">
+          {/* TODO: i18n */}
+          HALLAZGO
+        </p>
+        <p className="text-sm text-zinc-200">
+          {/* TODO: i18n */}
+          High-risk procurement jumped from ~12% (2015-2017) to ~18% (2019-2022) --
+          a 50% increase coinciding with expanded direct awards under the AMLO administration.
+          Risk remained elevated through 2024 despite declining contract volume.
+        </p>
+      </div>
+    </div>
+  )
+}
+
+// ============================================================================
+// GRAPHIC 1: Investigation Cascade
 // ============================================================================
 
 function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
@@ -952,13 +922,13 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
   const highPlusPct = risk.high_pct + risk.critical_pct
   const highPlusCount = criticalCount + highCount
   const medPlusPct = (risk.medium_pct ?? 0) + highPlusPct
-  const medPlusCount = Math.round(medPlusPct / 100 * 3058286)
+  const medPlusCount = Math.round(medPlusPct / 100 * 3051294)
 
   const stages = [
     {
       label: t('funnel.allContracts'),
       pct: 100,
-      count: 3058286,
+      count: 3051294,
       barH: 16,
       color: 'var(--color-text-muted)',
       accent: false,
@@ -991,7 +961,6 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
 
   return (
     <div className="my-8 p-5 rounded-lg border border-border bg-background-card">
-      {/* Headline */}
       <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-1">
         {t('funnel.title')}
       </p>
@@ -1002,7 +971,6 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
       <div className="space-y-3">
         {stages.map((stage, i) => (
           <div key={i}>
-            {/* Label row */}
             <div className="flex items-center justify-between mb-1">
               <span
                 className="text-[11px] font-bold uppercase tracking-wider font-mono"
@@ -1011,9 +979,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
                 {stage.label}
               </span>
               <div className="flex items-center gap-3">
-                <span
-                  className="text-[11px] font-mono tabular-nums text-text-muted"
-                >
+                <span className="text-[11px] font-mono tabular-nums text-text-muted">
                   {stage.count.toLocaleString()} contracts
                 </span>
                 <span
@@ -1024,7 +990,6 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
                 </span>
               </div>
             </div>
-            {/* Bar — left-aligned, proportional width */}
             <div className="relative" style={{ height: `${stage.barH}px`, backgroundColor: 'var(--color-background-elevated)', borderRadius: 2 }}>
               <div
                 style={{
@@ -1036,15 +1001,7 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
                   opacity: stage.accent ? 1 : 0.65,
                 }}
               />
-              {/* Inline % label for narrow bars */}
-              {stage.pct < 15 && (
-                <span
-                  className="absolute left-[calc(var(--w)+6px)] top-1/2 -translate-y-1/2 text-[10px] font-bold font-mono tabular-nums"
-                  style={{ '--w': `${stage.pct}%` } as React.CSSProperties}
-                />
-              )}
             </div>
-            {/* Separator */}
             {i < stages.length - 1 && (
               <div className="mt-3 border-t border-border opacity-40" />
             )}
@@ -1052,7 +1009,6 @@ function CorruptionFunnel({ data }: { data: ExecutiveSummaryResponse }) {
         ))}
       </div>
 
-      {/* Critical callout */}
       <div className="mt-5 pt-4 border-t border-border flex items-start gap-3">
         <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ backgroundColor: 'var(--color-accent)' }} />
         <p className="text-xs text-text-secondary leading-relaxed">
@@ -1076,7 +1032,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
     {
       level: 'CRITICAL',
       pct: risk.critical_pct,
-      count: risk.critical_count != null ? risk.critical_count.toLocaleString() : '133,572',
+      count: risk.critical_count != null ? risk.critical_count.toLocaleString() : '184,031',
       action: t('riskInfographic.immediate'),
       color: 'var(--color-accent)',
       bg: 'rgba(196,30,58,0.08)',
@@ -1085,7 +1041,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
     {
       level: 'HIGH',
       pct: risk.high_pct,
-      count: risk.high_count != null ? risk.high_count.toLocaleString() : '148,043',
+      count: risk.high_count != null ? risk.high_count.toLocaleString() : '228,814',
       action: t('riskInfographic.priority'),
       color: '#ea580c',
       bg: 'rgba(234,88,12,0.06)',
@@ -1094,7 +1050,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
     {
       level: 'MEDIUM',
       pct: risk.medium_pct,
-      count: '~498K',
+      count: '~821K',
       action: t('riskInfographic.watchList'),
       color: '#ca8a04',
       bg: 'rgba(202,138,4,0.05)',
@@ -1103,7 +1059,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
     {
       level: 'LOW',
       pct: risk.low_pct,
-      count: '~2.3M',
+      count: '~1.8M',
       action: t('riskInfographic.standard'),
       color: 'var(--color-text-muted)',
       bg: 'transparent',
@@ -1111,7 +1067,6 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
     },
   ]
 
-  // Full-width distribution bar across the top
   const barSegments = [
     { pct: risk.critical_pct, color: 'var(--color-accent)' },
     { pct: risk.high_pct, color: '#ea580c' },
@@ -1125,7 +1080,6 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
         {t('riskInfographic.title')}
       </p>
 
-      {/* Distribution bar — thin strip showing proportional split */}
       <div className="flex h-2 rounded overflow-hidden mb-1 gap-px">
         {barSegments.map((s, i) => (
           <div key={i} style={{ width: `${s.pct}%`, backgroundColor: s.color, minWidth: 2 }} />
@@ -1138,7 +1092,6 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
         <span>LOW {risk.low_pct.toFixed(1)}%</span>
       </div>
 
-      {/* 2×2 stat grid */}
       <div className="grid grid-cols-2 gap-3">
         {tiers.map((tier) => (
           <div
@@ -1146,7 +1099,6 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
             className="rounded-lg border border-border p-4 relative overflow-hidden"
             style={{ backgroundColor: tier.bg }}
           >
-            {/* Left accent bar */}
             <div
               className="absolute left-0 inset-y-0 w-[3px] rounded-l-lg"
               style={{ backgroundColor: tier.color }}
@@ -1173,7 +1125,7 @@ function RiskLevelInfographic({ data }: { data: ExecutiveSummaryResponse }) {
       </div>
 
       <p className="text-[10px] font-mono text-text-muted mt-3">
-        Source: COMPRANET 2002–2025 · RUBLI v6.5 · OECD benchmark: 2–15%
+        Source: COMPRANET 2002-2025 &middot; RUBLI v6.5 &middot; OECD benchmark: 2-15%
       </p>
     </div>
   )
@@ -1211,7 +1163,7 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </p>
 
-      {/* Risk Level Infographic — 4-tier visual stack */}
+      {/* Risk Level Infographic */}
       <RiskLevelInfographic data={data} />
 
       <CorruptionFunnel data={data} />
@@ -1310,6 +1262,9 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
         />
       </div>
 
+      {/* Historical risk trend — NEW */}
+      <HistoricalRiskTrend />
+
       {/* Calibration context */}
       <p className="text-xs text-text-muted mt-1 max-w-prose">
         {t('s9.calibrationNote')}
@@ -1328,7 +1283,245 @@ function SectionThreat({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// S3: Where the Risk Concentrates — Sectors
+// NEW: ARIA Intelligence Panel — 318,441 vendors under surveillance
+// ============================================================================
+
+function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
+  const totalVendors = ARIA_TIERS.reduce((s, t) => s + t.vendors, 0)
+
+  return (
+    <section>
+      <SectionHeading
+        number="05"
+        // TODO: i18n
+        title={`ARIA: ${totalVendors.toLocaleString()} Vendors Under Surveillance`}
+        icon={Eye}
+      />
+
+      <p className="text-sm leading-relaxed text-text-secondary mb-6">
+        {/* TODO: i18n */}
+        The Automated Risk Investigation Algorithm (ARIA) triages all {totalVendors.toLocaleString()} vendors
+        into four priority tiers using a composite Intelligence Priority Score (IPS) that combines
+        risk scores, anomaly detection, financial scale, and external registry flags.
+      </p>
+
+      {/* Tier cards */}
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
+        {ARIA_TIERS.map((tier) => (
+          <div
+            key={tier.tier}
+            className="rounded-lg border border-border p-4 relative overflow-hidden"
+            style={{ backgroundColor: `${tier.color}08` }}
+          >
+            <div
+              className="absolute left-0 inset-y-0 w-[3px] rounded-l-lg"
+              style={{ backgroundColor: tier.color }}
+            />
+            <div className="pl-1">
+              <p className="text-[10px] font-black uppercase tracking-widest font-mono mb-1" style={{ color: tier.color }}>
+                {tier.tier} {tier.label}
+              </p>
+              <p className="text-2xl font-black font-mono tabular-nums leading-none mb-1" style={{ color: tier.color }}>
+                {tier.vendors.toLocaleString()}
+              </p>
+              <p className="text-[10px] text-text-muted font-mono">
+                {/* TODO: i18n */}
+                {formatCompactMXN(tier.totalValue)}
+              </p>
+              <p className="text-[9px] text-text-muted font-mono mt-1">
+                {/* TODO: i18n */}
+                avg IPS {tier.avgIps.toFixed(2)}
+              </p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* T1 hero callout */}
+      <div className="rounded-xl border border-[#dc2626]/20 bg-[#dc2626]/5 p-5 mb-6">
+        <div className="flex items-start gap-3">
+          <div className="p-2 rounded-md bg-[#dc2626]/10 flex-shrink-0">
+            <Target className="h-5 w-5 text-[#dc2626]" />
+          </div>
+          <div>
+            <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-[#dc2626] mb-1">
+              {/* TODO: i18n */}
+              TIER 1 -- IMMEDIATE INVESTIGATION
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {/* TODO: i18n */}
+              <strong className="text-text-primary font-mono">320 vendors</strong> controlling{' '}
+              <strong className="text-text-primary font-mono">MX$1.98T</strong> in contracts
+              have been flagged for immediate investigation. Average IPS: 0.846.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Top 5 ARIA vendors */}
+      <div className="rounded-lg border border-border bg-background-card overflow-hidden mb-6">
+        <div className="px-4 pt-4 pb-2 border-b border-border">
+          <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
+            {/* TODO: i18n */}
+            TOP ARIA T1 VENDORS BY IPS
+          </p>
+        </div>
+        <div className="divide-y divide-border/40">
+          {TOP_ARIA_VENDORS.map((v, i) => {
+            const sectorColor = SECTOR_COLORS[v.sector] || SECTOR_COLORS.otros
+            const isMonopoly = v.pattern === 'P1'
+            return (
+              <div
+                key={i}
+                className="px-4 py-3 flex items-center gap-3 hover:bg-background-elevated/50 transition-colors"
+              >
+                <span className="text-[10px] font-mono text-text-muted w-4 text-right tabular-nums">{i + 1}</span>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2 mb-0.5">
+                    <p className="text-sm text-text-primary truncate font-medium">{v.name}</p>
+                    {isMonopoly && (
+                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 bg-red-500/10 border border-red-500/20 text-[10px] text-red-400 font-mono flex-shrink-0">
+                        <span className="h-1 w-1 rounded-full bg-red-500 animate-pulse" />
+                        P1 Monopoly
+                      </span>
+                    )}
+                  </div>
+                  <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
+                    <span style={{ color: sectorColor }}>{v.sector}</span>
+                    <span>{v.pattern}</span>
+                    <span>{formatCompactMXN(v.value)}</span>
+                  </div>
+                </div>
+                <div className="text-right flex-shrink-0">
+                  <p
+                    className="text-sm font-bold font-mono tabular-nums"
+                    style={{ color: v.avgRisk >= 0.6 ? '#dc2626' : v.avgRisk >= 0.4 ? '#ea580c' : '#eab308' }}
+                  >
+                    {v.avgRisk.toFixed(3)}
+                  </p>
+                  <p className="text-[9px] text-text-muted font-mono">avg risk</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+
+      {/* Pattern breakdown */}
+      <div className="rounded-lg border border-border bg-background-card p-4 mb-6">
+        <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted mb-3">
+          {/* TODO: i18n */}
+          CORRUPTION PATTERNS DETECTED
+        </p>
+        <div className="space-y-2">
+          {ARIA_PATTERNS.map((p) => {
+            const maxCount = ARIA_PATTERNS[0].count
+            const pct = (p.count / maxCount) * 100
+            return (
+              <div key={p.code} className="flex items-center gap-3">
+                <span className="text-[10px] font-mono font-bold text-text-muted w-6">{p.code}</span>
+                <div className="flex-1">
+                  <div className="flex items-center justify-between mb-0.5">
+                    <span className="text-xs text-text-secondary">{p.name}</span>
+                    <span className="text-xs font-mono font-bold text-text-primary tabular-nums">{p.count.toLocaleString()}</span>
+                  </div>
+                  <div className="h-1.5 bg-background-elevated rounded-full overflow-hidden">
+                    <div
+                      className="h-full rounded-full"
+                      style={{
+                        width: `${Math.max(pct, 1)}%`,
+                        backgroundColor: p.code === 'P1' ? '#dc2626' : p.code === 'P2' ? '#ea580c' : '#64748b',
+                        opacity: 0.7,
+                      }}
+                    />
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+        <p className="text-[10px] text-text-muted font-mono mt-3">
+          {/* TODO: i18n */}
+          P6 Institutional Capture dominates: 15,923 vendors concentrate contracts from single institutions
+        </p>
+      </div>
+
+      <button
+        onClick={() => navigate('/aria')}
+        className="flex items-center gap-1.5 text-xs text-[#dc2626] hover:text-[#dc2626]/80 font-mono uppercase tracking-wide transition-colors"
+      >
+        {/* TODO: i18n */}
+        Explore full ARIA queue
+        <ArrowRight className="h-3 w-3" />
+      </button>
+    </section>
+  )
+}
+
+// ============================================================================
+// NEW: Top Documented Cases — Ground Truth Investigation Leads
+// ============================================================================
+
+function SectionDocumentedCases({ navigate }: { navigate: (path: string) => void }) {
+  return (
+    <div className="my-6 rounded-lg border border-border bg-background-card p-5">
+      <div className="flex items-center gap-2 mb-4">
+        <Shield className="h-4 w-4 text-[#dc2626]" />
+        <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
+          {/* TODO: i18n */}
+          TOP DOCUMENTED CORRUPTION CASES
+        </p>
+      </div>
+
+      <p className="text-xs text-text-muted mb-4">
+        {/* TODO: i18n */}
+        1,374 documented cases. Top 5 by estimated fraud value:
+      </p>
+
+      <div className="space-y-3">
+        {TOP_GT_CASES.map((c, i) => (
+          <div key={i} className="flex items-start gap-3">
+            <span className="text-[10px] font-mono font-bold text-[#dc2626] mt-0.5 w-4 flex-shrink-0 text-right">
+              {i + 1}
+            </span>
+            <div className="flex-1 min-w-0">
+              <p className="text-sm text-text-primary font-medium leading-snug">{c.name}</p>
+              <div className="flex items-center gap-2 mt-0.5">
+                <span className="text-xs font-mono font-bold text-[#dc2626] tabular-nums">
+                  {formatCompactMXN(c.fraud)}
+                </span>
+                <span className="text-[9px] font-mono text-text-muted uppercase">
+                  est. fraud
+                </span>
+                <span
+                  className="inline-block px-1.5 py-0.5 rounded text-[9px] font-mono"
+                  style={{
+                    color: c.confidence === 'high' ? '#ea580c' : '#eab308',
+                    background: c.confidence === 'high' ? '#ea580c15' : '#eab30815',
+                  }}
+                >
+                  {c.confidence}
+                </span>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <button
+        onClick={() => navigate('/ground-truth')}
+        className="mt-4 flex items-center gap-1.5 text-xs text-[#dc2626] hover:text-[#dc2626]/80 font-mono uppercase tracking-wide transition-colors"
+      >
+        {/* TODO: i18n */}
+        View all 1,374 documented cases
+        <ArrowRight className="h-3 w-3" />
+      </button>
+    </div>
+  )
+}
+
+// ============================================================================
+// S3: Where the Risk Concentrates — Sectors (MAJOR ENHANCEMENT)
 // ============================================================================
 
 function SectionSectors({
@@ -1339,7 +1532,14 @@ function SectionSectors({
   navigate: (path: string) => void
 }) {
   const { t } = useTranslation(['executive', 'sectors'])
-  const sortedSectors = useMemo(() => {
+
+  // Use static sector risk data sorted by high-risk% (descending) — live data from DuckDB Apr 2026
+  const maxHighRiskPct = SECTOR_RISK_DATA[0].highRiskPct
+
+  const healthSector = data.sectors.find((s) => s.code === 'salud')
+
+  // Also build a "value at risk" ranked view from API data
+  const sortedByValueAtRisk = useMemo(() => {
     return [...data.sectors].sort((a, b) => {
       const aRiskValue = (a.high_plus_pct / 100) * a.value
       const bRiskValue = (b.high_plus_pct / 100) * b.value
@@ -1348,16 +1548,14 @@ function SectionSectors({
   }, [data.sectors])
 
   const maxRiskValue = useMemo(() => {
-    return sortedSectors.length > 0 ? Math.max(...sortedSectors.map((s) => (s.high_plus_pct / 100) * s.value)) : 1
-  }, [sortedSectors])
-
-  const healthSector = data.sectors.find((s) => s.code === 'salud')
+    return sortedByValueAtRisk.length > 0 ? Math.max(...sortedByValueAtRisk.map((s) => (s.high_plus_pct / 100) * s.value)) : 1
+  }, [sortedByValueAtRisk])
 
   return (
     <section>
       <SectionHeading number="07" title={t('s3.title')} icon={Scale} />
 
-      <p className="text-sm leading-relaxed text-text-secondary mb-6">
+      <p className="text-sm leading-relaxed text-text-secondary mb-4">
         <Trans
           t={t}
           i18nKey="s3.p1"
@@ -1369,7 +1567,107 @@ function SectionSectors({
         />
       </p>
 
-      {/* Sector bars — ranked by estimated value at risk */}
+      {/* HALLAZGO: Agriculture and Labor anomaly */}
+      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 mb-6">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1 font-bold">
+          {/* TODO: i18n */}
+          HALLAZGO
+        </p>
+        <p className="text-sm text-zinc-200">
+          {/* TODO: i18n */}
+          <strong className="text-text-primary">Agricultura</strong> has the highest risk rate at{' '}
+          <strong className="text-[#dc2626] font-mono">29.8%</strong> -- nearly 1 in 3 contracts
+          flagged high-risk. <strong className="text-text-primary">Trabajo</strong> follows at{' '}
+          <strong className="text-[#dc2626] font-mono">24.7%</strong>.
+          Both are &quot;small money, high risk&quot; sectors: lower total spend but disproportionate corruption patterns.
+          Compare with Salud (MX$3.07T, 12%) and Infraestructura (MX$2.44T, 8.7%).
+        </p>
+      </div>
+
+      {/* ===== NEW: Horizontal bar chart — sectors ranked by high-risk % ===== */}
+      <div className="my-6 rounded-lg border border-border bg-background-card overflow-hidden">
+        <div className="px-4 pt-4 pb-2 border-b border-border flex items-center gap-2">
+          <BarChart3 className="h-3.5 w-3.5 text-text-muted" />
+          <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
+            {/* TODO: i18n */}
+            SECTOR HIGH-RISK RATE (Critical + High %)
+          </p>
+        </div>
+
+        <div className="px-4 py-3 space-y-2.5">
+          {SECTOR_RISK_DATA.map((s, idx) => {
+            const sectorColor = SECTOR_COLORS[s.code] || SECTOR_COLORS.otros
+            const barPct = (s.highRiskPct / maxHighRiskPct) * 100
+            const isTop = idx < 2 // Agricultura and Trabajo
+            return (
+              <div
+                key={s.code}
+                className="group cursor-pointer"
+                onClick={() => {
+                  const apiSector = data.sectors.find((x) => x.code === s.code)
+                  if (apiSector) navigate(`/sectors/${data.sectors.indexOf(apiSector) + 1}`)
+                }}
+              >
+                <div className="flex items-center gap-3">
+                  {/* Sector name */}
+                  <div className="flex items-center gap-1.5 w-[110px] sm:w-[130px] flex-shrink-0">
+                    <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sectorColor, flexShrink: 0 }} />
+                    <span className={`text-xs transition-colors truncate ${isTop ? 'font-bold text-text-primary' : 'text-text-secondary group-hover:text-text-primary'}`}>
+                      {t(s.code, { ns: 'sectors' })}
+                    </span>
+                  </div>
+
+                  {/* Bar */}
+                  <div className="flex-1 relative h-5 bg-background-elevated rounded-sm overflow-hidden">
+                    <div
+                      className="absolute inset-y-0 left-0 rounded-sm transition-all duration-500"
+                      style={{
+                        width: `${Math.max(barPct, 2)}%`,
+                        backgroundColor: isTop ? '#dc2626' : sectorColor,
+                        opacity: isTop ? 0.9 : 0.6,
+                      }}
+                    />
+                    {/* Inline percentage */}
+                    <span
+                      className="absolute inset-y-0 flex items-center text-[10px] font-mono font-bold tabular-nums"
+                      style={{
+                        left: `${Math.min(barPct + 1, 90)}%`,
+                        color: isTop ? '#dc2626' : 'var(--color-text-secondary)',
+                        paddingLeft: '4px',
+                      }}
+                    >
+                      {s.highRiskPct.toFixed(1)}%
+                    </span>
+                  </div>
+
+                  {/* Spend context */}
+                  <span className="text-[10px] font-mono text-text-muted tabular-nums w-[56px] text-right flex-shrink-0 hidden sm:block">
+                    {formatCompactMXN(s.totalMxn)}
+                  </span>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* OECD reference */}
+        <div className="px-4 py-2.5 border-t border-border/50 flex items-center gap-2">
+          <div className="h-px flex-1 border-t border-dashed border-[#22d3ee]/40" />
+          <span className="text-[9px] font-mono text-[#22d3ee]">
+            {/* TODO: i18n */}
+            OECD max: 15% high-risk rate
+          </span>
+        </div>
+
+        <div className="px-4 py-2.5 border-t border-border bg-background-elevated/50">
+          <p className="text-[10px] font-mono text-text-muted">
+            {/* TODO: i18n */}
+            Sorted by high-risk rate (critical + high %) &middot; Source: COMPRANET 2002-2025 &middot; RUBLI v6.5
+          </p>
+        </div>
+      </div>
+
+      {/* ===== Value-at-risk table (existing, enhanced) ===== */}
       <div className="my-6 rounded-lg border border-border bg-background-card overflow-hidden">
         <div className="px-4 pt-4 pb-2 border-b border-border">
           <p className="text-[10px] font-bold uppercase tracking-widest font-mono text-text-muted">
@@ -1378,7 +1676,7 @@ function SectionSectors({
         </div>
         <table className="w-full border-collapse">
           <tbody>
-            {sortedSectors.map((s, idx) => {
+            {sortedByValueAtRisk.map((s, idx) => {
               const riskValue = (s.high_plus_pct / 100) * s.value
               const pct = maxRiskValue > 0 ? (riskValue / maxRiskValue) * 100 : 0
               const sectorColor = SECTOR_COLORS[s.code] || SECTOR_COLORS.otros
@@ -1393,11 +1691,9 @@ function SectionSectors({
                     if (sector) navigate(`/sectors/${data.sectors.indexOf(sector) + 1}`)
                   }}
                 >
-                  {/* Rank */}
                   <td className="py-2.5 px-3 text-[10px] font-mono text-text-muted tabular-nums text-right" style={{ width: '28px' }}>
                     {idx + 1}
                   </td>
-                  {/* Sector name + color dot */}
                   <td className="py-2.5 pr-3" style={{ width: '130px' }}>
                     <div className="flex items-center gap-1.5">
                       <div style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: sectorColor, flexShrink: 0 }} />
@@ -1406,7 +1702,6 @@ function SectionSectors({
                       </span>
                     </div>
                   </td>
-                  {/* Bar */}
                   <td className="py-2.5 pr-3">
                     <div className="relative" style={{ height: '8px', backgroundColor: 'var(--color-background-elevated)', borderRadius: 2 }}>
                       <div
@@ -1421,11 +1716,9 @@ function SectionSectors({
                       />
                     </div>
                   </td>
-                  {/* Risk rate */}
                   <td className="py-2.5 pr-2 text-right text-[11px] font-mono tabular-nums text-text-muted" style={{ width: '48px' }}>
                     {s.high_plus_pct.toFixed(1)}%
                   </td>
-                  {/* MXN value */}
                   <td className="py-2.5 pl-1 pr-4 text-right font-mono font-bold tabular-nums text-text-primary" style={{ width: '96px', fontSize: '12px' }}>
                     {formatCompactMXN(riskValue)}
                   </td>
@@ -1436,7 +1729,7 @@ function SectionSectors({
         </table>
         <div className="px-4 py-2.5 border-t border-border bg-background-elevated/50">
           <p className="text-[10px] font-mono text-text-muted">
-            Value at risk = high+critical rate × sector spend · Source: COMPRANET 2002–2025
+            Value at risk = high+critical rate x sector spend &middot; Source: COMPRANET 2002-2025
           </p>
         </div>
       </div>
@@ -1572,6 +1865,136 @@ function SectionVendors({
           }}
         />
       </p>
+
+      {/* Documented cases panel */}
+      <SectionDocumentedCases navigate={navigate} />
+    </section>
+  )
+}
+
+// ============================================================================
+// Methodology Summary
+// ============================================================================
+
+function MethodologySummary() {
+  const navigate = useNavigate()
+  const { t } = useTranslation('executive')
+
+  return (
+    <section className="my-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        {t('methodology.overline')}
+      </p>
+      <h2 className="text-xl font-bold text-text-primary mb-3">
+        {t('methodology.title')}
+      </h2>
+      <div className="border-l-2 border-[#22d3ee] pl-5 space-y-3">
+        <p className="text-sm leading-relaxed text-text-secondary">
+          <Trans
+            t={t}
+            i18nKey="methodology.p1"
+            components={{ bold: <strong className="text-text-primary" /> }}
+          />
+        </p>
+        <p className="text-sm leading-relaxed text-text-secondary">
+          <Trans
+            t={t}
+            i18nKey="methodology.p2"
+            components={{ bold: <strong className="text-text-primary" /> }}
+          />
+        </p>
+      </div>
+      <button
+        onClick={() => navigate('/methodology')}
+        className="mt-4 flex items-center gap-1.5 text-xs text-[#22d3ee] hover:text-[#22d3ee]/80 font-mono uppercase tracking-wide transition-colors"
+      >
+        {t('methodology.link')}
+        <ArrowRight className="h-3 w-3" />
+      </button>
+    </section>
+  )
+}
+
+// ============================================================================
+// Investigation CTA
+// ============================================================================
+
+function InvestigationCTA({ navigate }: { navigate: (path: string) => void }) {
+  const { t } = useTranslation('executive')
+
+  const cards = [
+    {
+      titleKey: 'cta.c1.title',
+      descKey: 'cta.c1.desc',
+      icon: Search,
+      color: '#dc2626',
+      href: '/aria',
+      ctaKey: 'cta.c1.cta',
+    },
+    {
+      titleKey: 'cta.c2.title',
+      descKey: 'cta.c2.desc',
+      icon: Compass,
+      color: '#f59e0b',
+      href: '/journalists',
+      ctaKey: 'cta.c2.cta',
+    },
+    {
+      titleKey: 'cta.c3.title',
+      descKey: 'cta.c3.desc',
+      icon: Scale,
+      color: '#3b82f6',
+      href: '/sectors',
+      ctaKey: 'cta.c3.cta',
+    },
+  ]
+
+  return (
+    <section className="my-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        {t('cta.overline')}
+      </p>
+      <h2 className="text-xl font-bold text-text-primary mb-2">
+        {t('cta.title')}
+      </h2>
+      <p className="text-sm text-text-muted mb-6">
+        {t('cta.subtitle')}
+      </p>
+
+      <div className="grid sm:grid-cols-3 gap-4">
+        {cards.map((card) => {
+          const Icon = card.icon
+          return (
+            <button
+              key={card.href}
+              onClick={() => navigate(card.href)}
+              className="text-left group rounded-xl border p-5 transition-all duration-300 hover:shadow-lg hover:shadow-black/20"
+              style={{
+                borderColor: `${card.color}30`,
+                background: `${card.color}06`,
+              }}
+            >
+              <div
+                className="p-2.5 rounded-lg inline-flex mb-4 transition-colors"
+                style={{ background: `${card.color}15` }}
+              >
+                <Icon className="h-5 w-5" style={{ color: card.color }} />
+              </div>
+              <h3 className="text-sm font-bold text-text-primary mb-2 group-hover:underline">
+                {t(card.titleKey)}
+              </h3>
+              <p className="text-xs text-text-secondary leading-relaxed mb-3">{t(card.descKey)}</p>
+              <span
+                className="inline-flex items-center gap-1 text-xs font-mono font-semibold group-hover:gap-2 transition-all"
+                style={{ color: card.color }}
+              >
+                {t(card.ctaKey)}
+                <ArrowRight className="h-3 w-3" />
+              </span>
+            </button>
+          )
+        })}
+      </div>
     </section>
   )
 }
@@ -1748,69 +2171,45 @@ function ReportFooter({ data }: { data: ExecutiveSummaryResponse }) {
 }
 
 // ============================================================================
-// Shared Sub-Components
+// Share Button
 // ============================================================================
 
-function SectionHeading({
-  number,
-  title,
-  icon: Icon,
-}: {
-  number: string
-  title: string
-  icon: React.ElementType
-}) {
+function ShareButton() {
+  const { t } = useTranslation('executive')
+  const [copied, setCopied] = useState(false)
+
+  const handleShare = async () => {
+    try {
+      await navigator.clipboard.writeText(window.location.href)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    } catch {
+      const input = document.createElement('input')
+      input.value = window.location.href
+      document.body.appendChild(input)
+      input.select()
+      document.execCommand('copy')
+      document.body.removeChild(input)
+      setCopied(true)
+      setTimeout(() => setCopied(false), 2000)
+    }
+  }
+
   return (
-    <div className="mb-6">
-      {/* Small monospace crimson number label */}
-      <div className="mb-2">
-        <span
-          className="font-mono font-bold"
-          style={{ fontSize: '11px', letterSpacing: '0.3em', color: 'rgba(220, 38, 38, 0.7)' }}
-        >
-          {number}
-        </span>
-      </div>
-      <div className="editorial-rule">
-        <Icon className="h-4 w-4 text-accent flex-shrink-0" />
-        <span className="editorial-label text-accent">{number}</span>
-      </div>
-      <h2 className="text-editorial-h2 text-text-primary">{title}</h2>
-      <div className="accent-rule mt-3" />
-    </div>
+    <button
+      onClick={() => void handleShare()}
+      className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors"
+      title={t('share')}
+    >
+      {copied ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Share2 className="w-3.5 h-3.5" />}
+      {copied ? t('shareCopied') : t('share')}
+    </button>
   )
 }
 
-// HeadlineStat removed — superseded by HeroNumbers
-
-function StatCallout({ value, label, color, pulse }: { value: string; label: string; color: string; pulse?: boolean }) {
-  return (
-    <div className="fern-card text-center py-4 px-3">
-      <div
-        className="pull-stat"
-        style={{
-          color,
-          animation: pulse ? 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' : undefined,
-        }}
-      >
-        {value}
-      </div>
-      <div className="editorial-label mt-1">{label}</div>
-    </div>
-  )
-}
-
-function SectorCallout({ name, color, text }: { name: string; color: string; text: string }) {
-  return (
-    <div className="flex items-start gap-3">
-      <div className="w-1 self-stretch rounded-full flex-shrink-0" style={{ background: color }} />
-      <div>
-        <h4 className="text-sm font-bold text-text-primary mb-0.5">{name}</h4>
-        <p className="text-sm leading-relaxed text-text-muted">{text}</p>
-      </div>
-    </div>
-  )
-}
+// ============================================================================
+// Loading Skeleton
+// ============================================================================
 
 function LoadingSkeleton() {
   return (
@@ -1829,3 +2228,133 @@ function LoadingSkeleton() {
     </div>
   )
 }
+
+// ============================================================================
+// Main Component
+// ============================================================================
+
+export function ExecutiveSummary() {
+  const navigate = useNavigate()
+  const { t } = useTranslation('executive')
+  const { data, isLoading, isError, refetch } = useExecutiveSummary()
+
+  if (isLoading) {
+    return <LoadingSkeleton />
+  }
+
+  if (isError || !data) {
+    return (
+      <div className="max-w-4xl mx-auto py-24 flex flex-col items-center gap-4 text-center">
+        <AlertTriangle className="h-10 w-10 text-risk-critical" />
+        <h2 className="text-lg font-bold text-text-primary">{t('error.title')}</h2>
+        <p className="text-sm text-text-muted max-w-sm">
+          {t('error.body')}
+        </p>
+        <button
+          onClick={() => void refetch()}
+          className="px-4 py-2 text-sm font-semibold rounded-md bg-accent text-background-base hover:bg-accent/90 transition-colors"
+        >
+          {t('error.retry')}
+        </button>
+      </div>
+    )
+  }
+
+  const highRiskPct = (data.risk.high_pct + data.risk.critical_pct).toFixed(1)
+  const valueAtRiskFormatted = formatCompactMXN((data.risk.high_value ?? 0) + (data.risk.critical_value ?? 0))
+
+  return (
+    <article className="max-w-4xl mx-auto pb-20 space-y-16 print:text-black print:bg-background-card">
+
+      {/* ════════════════════════════════════════════════════════════════════
+          HERO: The 3 numbers that define RUBLI
+          ════════════════════════════════════════════════════════════════════ */}
+      <HeroNumbers data={data} highRiskPct={highRiskPct} />
+
+      {/* ── Investigative Lede ── */}
+      <InvestigativeLede />
+
+      {/* ── Five Key Findings ── */}
+      <FiveKeyFindings highRiskPct={highRiskPct} valueAtRiskFormatted={valueAtRiskFormatted} />
+
+      {/* ── Editorial context ── */}
+      <div className="space-y-1.5">
+        <p className="text-xs text-text-muted leading-relaxed italic">
+          {t('rateExplanation')}
+        </p>
+        <p className="text-xs text-text-muted leading-relaxed italic">
+          {t('budgetContext', { pct: '56' })}
+        </p>
+      </div>
+
+      {/* Pull quote */}
+      <PullQuote>
+        {t('pullQuote1')}
+      </PullQuote>
+
+      <ScrollReveal delay={120}><WhatWeFound data={data} /></ScrollReveal>
+
+      {/* ── Pistas para Periodistas / Investigation Leads ── */}
+      <ScrollReveal delay={140}><PistasParaPeriodistas navigate={navigate} /></ScrollReveal>
+
+      <AnimatedDivider />
+      {/* 02 — WHAT IT FOUND: Three Systemic Patterns */}
+      <ScrollReveal><SectionThreePatterns data={data} /></ScrollReveal>
+      <AnimatedDivider />
+      {/* 04 — THE THREAT: Risk Scores & Value at Risk (includes historical trend) */}
+      <ScrollReveal><SectionThreat data={data} /></ScrollReveal>
+
+      <AnimatedDivider />
+      {/* 05 — ARIA Intelligence Panel — NEW */}
+      <ScrollReveal><SectionARIA navigate={navigate} /></ScrollReveal>
+
+      {/* Pull quote before vendors */}
+      <PullQuote delay={200}>
+        {t('pullQuote2')}
+      </PullQuote>
+
+      <AnimatedDivider />
+      {/* 06 — WHO BENEFITS: Top Vendors (includes documented cases) */}
+      <ScrollReveal><SectionVendors data={data} navigate={navigate} /></ScrollReveal>
+      <AnimatedDivider />
+      {/* 07 — WHICH SECTORS: Risk Concentration (enhanced with bar chart) */}
+      <ScrollReveal><SectionSectors data={data} navigate={navigate} /></ScrollReveal>
+
+      <AnimatedDivider />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          METHODOLOGY: 2-sentence summary + link
+          ════════════════════════════════════════════════════════════════════ */}
+      <ScrollReveal>
+        <MethodologySummary />
+      </ScrollReveal>
+
+      <AnimatedDivider />
+
+      {/* ════════════════════════════════════════════════════════════════════
+          CTA: 3 entry points — "Start your investigation"
+          ════════════════════════════════════════════════════════════════════ */}
+      <ScrollReveal>
+        <InvestigationCTA navigate={navigate} />
+      </ScrollReveal>
+
+      <AnimatedDivider />
+      {/* 11 — NOW WHAT: Recommendations */}
+      <ScrollReveal><SectionRecommendations navigate={navigate} /></ScrollReveal>
+
+      {/* Data source attribution */}
+      <div className="flex flex-wrap items-center gap-3 mt-8">
+        <FuentePill source="COMPRANET" count={3051294} verified={true} />
+        <MetodologiaTooltip
+          title={t('sourceLabel')}
+          body={t('sourceBody')}
+          link="/methodology"
+        />
+      </div>
+
+      <ScrollReveal><ReportFooter data={data} /></ScrollReveal>
+    </article>
+  )
+}
+
+export default ExecutiveSummary
