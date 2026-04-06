@@ -108,10 +108,12 @@ function AnnotationNote({ children }: { children: React.ReactNode }) {
 
 function ChapterSubject({ vendor, aria }: {
   vendor: { name: string; total_value_mxn: number; total_contracts: number; primary_sector_name?: string; avg_risk_score?: number; first_contract_year?: number; last_contract_year?: number; high_risk_pct: number; direct_award_pct: number }
-  aria: { ips_final: number; ips_tier: number } | null
+  aria: { ips_final: number; ips_tier: number; primary_sector_name?: string | null } | null
 }) {
-  const sectorColor = vendor.primary_sector_name
-    ? SECTOR_COLORS[vendor.primary_sector_name.toLowerCase()] ?? '#dc2626'
+  // Fallback to ARIA sector when vendor object has no primary_sector_name
+  const sectorName = vendor.primary_sector_name ?? aria?.primary_sector_name ?? null
+  const sectorColor = sectorName
+    ? SECTOR_COLORS[sectorName.toLowerCase()] ?? '#dc2626'
     : '#dc2626'
 
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
@@ -137,12 +139,12 @@ function ChapterSubject({ vendor, aria }: {
         transition={{ delay: 0.3, duration: 0.6 }}
         className="flex flex-wrap items-center gap-3 mb-12"
       >
-        {vendor.primary_sector_name && (
+        {sectorName && (
           <span
             className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest"
             style={{ backgroundColor: sectorColor + '22', color: sectorColor, border: `1px solid ${sectorColor}44` }}
           >
-            {vendor.primary_sector_name}
+            {sectorName}
           </span>
         )}
         <span
@@ -221,84 +223,71 @@ function ChapterSubject({ vendor, aria }: {
 
 // ─── Chapter 2: The Timeline ────────────────────────────────────────────────
 
-function ChapterTimeline({ contracts, totalContracts, vendorFirstYear, vendorLastYear }: {
-  contracts: Array<{ id: number; contract_date?: string; amount_mxn?: number; risk_score?: number; institution_name?: string; procedure_type?: string }>
+function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline }: {
   totalContracts?: number
   vendorFirstYear?: number
   vendorLastYear?: number
+  timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-20% 0px' })
 
-  // Normalize dot sizes: log scale, 4px–28px
-  const maxValue = Math.max(...contracts.map((c) => c.amount_mxn ?? 0), 1)
+  // Use year-aggregate timeline data (covers ALL years, not just 100 most-recent contracts)
+  const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year)
+  const years = sortedTimeline.map((t) => t.year)
+  const minYear = years[0] ?? vendorFirstYear ?? 2010
+  const maxYear = years[years.length - 1] ?? vendorLastYear ?? 2025
+  const displayTotal = totalContracts ?? sortedTimeline.reduce((s, t) => s + t.contract_count, 0)
 
-  const dots = contracts.slice(0, 300).map((c, i) => {
-    const val = c.amount_mxn ?? 0
-    const size = Math.max(4, Math.min(28, 4 + (Math.log(val + 1) / Math.log(maxValue + 1)) * 24))
-    const level = getRiskLevel(c.risk_score ?? 0)
-    const year = c.contract_date ? new Date(c.contract_date).getFullYear() : 2010
-    return { ...c, size, level, year, i }
-  })
-
-  // Group by year for annotations
-  const yearGroups: Record<number, typeof dots> = {}
-  dots.forEach((d) => {
-    if (!yearGroups[d.year]) yearGroups[d.year] = []
-    yearGroups[d.year].push(d)
-  })
-
-  const years = Object.keys(yearGroups).map(Number).sort()
-  const minYear = years[0] ?? 2002
-  const maxYear = years[years.length - 1] ?? 2025
-
-  // Use vendor-level date range for axis and heading (prevents "2025-2025" when all 100 fetched contracts are recent)
-  const displayMinYear = vendorFirstYear ?? minYear
-  const displayMaxYear = vendorLastYear ?? maxYear
-  const displayTotal = totalContracts ?? contracts.length
+  // Normalize dot sizes: log scale, 10px–44px based on total_value per year
+  const maxValue = Math.max(...sortedTimeline.map((t) => t.total_value), 1)
 
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
       <ChapterLabel>Chapter II · The Timeline</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        {formatNumber(displayTotal)} Contracts, {displayMinYear}–{displayMaxYear}
+        {formatNumber(displayTotal)} Contracts, {minYear}–{maxYear}
       </h2>
-      <p className="text-text-muted mb-12 max-w-xl">
-        Each dot is one contract. Size reflects value. Color reflects risk. Scroll across to trace the history.
+      <p className="text-zinc-400 mb-12 max-w-xl">
+        Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.
       </p>
 
       <div ref={ref} className="relative">
         {/* Year axis */}
-        <div className="flex justify-between text-xs text-text-secondary mb-4 px-1">
+        <div className="flex justify-between text-xs text-zinc-500 mb-3 px-1">
           {years.filter((_, i) => i % 3 === 0 || i === years.length - 1).map((y) => (
             <span key={y}>{y}</span>
           ))}
         </div>
 
-        {/* Dot field */}
-        <div className="relative h-48 bg-background border border-border rounded-xl overflow-hidden px-4 py-4">
-          {dots.map((dot, idx) => {
-            const xPct = displayMaxYear > displayMinYear ? ((dot.year - displayMinYear) / (displayMaxYear - displayMinYear)) * 96 : 50
-            const seed = dot.id != null ? Number(dot.id) : idx
-            const sinVal = Math.sin(seed * 9301 + 49297) * 233280
-            const yPct = 10 + (sinVal - Math.floor(sinVal)) * 80
+        {/* Dot field — one dot per year, spread across timeline */}
+        <div className="relative h-48 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden px-4 py-2">
+          {sortedTimeline.map((t, idx) => {
+            const xPct = maxYear > minYear ? ((t.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
+            const risk = t.avg_risk_score ?? 0
+            const level = getRiskLevel(risk)
+            const size = Math.max(10, Math.min(44, 10 + (Math.log(t.total_value + 1) / Math.log(maxValue + 1)) * 34))
+            // Deterministic y jitter by year index
+            const sinVal = Math.sin(idx * 137.508 + 1.618) * 10000
+            const yPct = 15 + (sinVal - Math.floor(sinVal)) * 70
             return (
               <motion.div
-                key={dot.id ?? idx}
+                key={t.year}
                 initial={{ opacity: 0, scale: 0 }}
-                animate={inView ? { opacity: 0.85, scale: 1 } : {}}
-                transition={{ delay: idx * 0.002, duration: 0.3, ease: 'backOut' }}
-                className="absolute rounded-full cursor-pointer hover:opacity-100 hover:scale-150 transition-transform"
+                animate={inView ? { opacity: 0.9, scale: 1 } : {}}
+                transition={{ delay: idx * 0.04, duration: 0.35, ease: 'backOut' }}
+                className="absolute rounded-full cursor-pointer hover:opacity-100 hover:scale-125 transition-transform"
                 style={{
                   left: `${xPct}%`,
                   top: `${yPct}%`,
-                  width: dot.size,
-                  height: dot.size,
-                  backgroundColor: RISK_DOT_COLORS[dot.level],
+                  width: size,
+                  height: size,
+                  backgroundColor: RISK_DOT_COLORS[level],
                   transform: 'translate(-50%, -50%)',
-                  zIndex: Math.round(dot.size),
+                  boxShadow: risk > 0.6 ? `0 0 8px 2px ${RISK_DOT_COLORS[level]}55` : 'none',
+                  zIndex: Math.round(size),
                 }}
-                title={`${dot.institution_name ?? 'Unknown'} · ${formatCompactMXN(dot.amount_mxn ?? 0)} · ${dot.level} risk`}
+                title={`${t.year} · ${formatCompactMXN(t.total_value)} · ${t.contract_count} contracts · avg risk ${(risk * 100).toFixed(0)}%`}
               />
             )
           })}
@@ -309,30 +298,28 @@ function ChapterTimeline({ contracts, totalContracts, vendorFirstYear, vendorLas
           {Object.entries(RISK_DOT_COLORS).map(([level, color]) => (
             <div key={level} className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-xs text-text-muted capitalize">{level}</span>
+              <span className="text-xs text-zinc-500 capitalize">{level}</span>
             </div>
           ))}
-          <div className="ml-auto text-xs text-text-secondary">
-            Size = contract value
+          <div className="ml-auto text-xs text-zinc-600">
+            Size = annual contract value
           </div>
         </div>
       </div>
 
       <ChapterDivider />
 
-      {/* Yearly breakdown */}
+      {/* Yearly breakdown cards — from timeline aggregates */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-8">
-        {years.slice(-12).map((year) => {
-          const group = yearGroups[year] ?? []
-          const totalValue = group.reduce((s, c) => s + (c.amount_mxn ?? 0), 0)
-          const highRisk = group.filter((c) => c.level === 'critical' || c.level === 'high').length
-          const pctHigh = group.length > 0 ? (highRisk / group.length) * 100 : 0
+        {sortedTimeline.slice(-12).map((t) => {
+          const risk = t.avg_risk_score ?? 0
+          const pctHigh = risk * 100
           return (
-            <div key={year} className="bg-background border border-border rounded-lg p-3">
-              <p className="text-xs text-text-muted mb-1">{year}</p>
-              <p className="text-sm font-bold text-white tabular-nums">{formatCompactMXN(totalValue)}</p>
-              <p className="text-xs mt-1" style={{ color: pctHigh > 30 ? '#f87171' : '#6b7280' }}>
-                {Math.round(pctHigh)}% flagged
+            <div key={t.year} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+              <p className="text-xs text-zinc-500 mb-1">{t.year}</p>
+              <p className="text-sm font-bold text-white tabular-nums">{formatCompactMXN(t.total_value)}</p>
+              <p className="text-xs mt-0.5 tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
+                {t.contract_count} · {Math.round(pctHigh)}% risk
               </p>
             </div>
           )
@@ -415,24 +402,31 @@ function ChapterPattern({ waterfall, ariaPattern }: {
                 style={{ backgroundColor: color + '18' }}
               />
               <div className="relative flex items-center justify-between px-4 py-3">
-                <div className="flex items-center gap-3">
+                <div className="flex items-center gap-3 min-w-0">
                   <span
                     className="w-2 h-2 rounded-full flex-shrink-0"
                     style={{ backgroundColor: color }}
                   />
-                  <span className="text-sm text-text-primary">{f.label_en}</span>
-                  {f.z_score !== 0 && (
-                    <span className="text-xs text-text-secondary tabular-nums">
-                      z={f.z_score.toFixed(2)}
-                    </span>
-                  )}
+                  <div className="min-w-0">
+                    <span className="text-sm text-zinc-200">{f.label_en}</span>
+                    {f.z_score !== 0 && (
+                      <span className="text-xs text-zinc-500 tabular-nums ml-2">
+                        z={f.z_score.toFixed(2)}
+                      </span>
+                    )}
+                  </div>
                 </div>
-                <span
-                  className="text-sm font-mono font-bold tabular-nums"
-                  style={{ color }}
-                >
-                  {isPositive ? '+' : ''}{f.contribution.toFixed(3)}
-                </span>
+                <div className="flex items-center gap-2 flex-shrink-0">
+                  <span className="text-xs text-zinc-500">
+                    {isPositive ? '▲ raises risk' : '▼ lowers risk'}
+                  </span>
+                  <span
+                    className="text-sm font-mono font-bold tabular-nums"
+                    style={{ color }}
+                  >
+                    {isPositive ? '+' : ''}{f.contribution.toFixed(3)}
+                  </span>
+                </div>
               </div>
             </motion.div>
           )
@@ -982,12 +976,6 @@ export default function RedThread() {
     enabled: !!id && !isNaN(id),
   })
 
-  const { data: contracts } = useQuery({
-    queryKey: ['vendor-contracts', id, 'thread'],
-    queryFn: () => vendorApi.getContracts(id, { per_page: 100 }),
-    enabled: !!id && !isNaN(id),
-  })
-
   const { data: waterfall } = useQuery({
     queryKey: ['vendor-waterfall', id],
     queryFn: () => vendorApi.getRiskWaterfall(id),
@@ -1082,23 +1070,16 @@ export default function RedThread() {
       <div className="pl-6">
         <ChapterSubject
           vendor={vendor}
-          aria={aria ?? null}
+          aria={aria ? { ips_final: aria.ips_final, ips_tier: aria.ips_tier, primary_sector_name: aria.primary_sector_name } : null}
         />
 
         <ChapterDivider />
 
         <ChapterTimeline
-          contracts={(contracts?.data ?? []).map((c) => ({
-            id: c.id,
-            contract_date: c.contract_date,
-            amount_mxn: c.amount_mxn,
-            risk_score: c.risk_score ?? undefined,
-            institution_name: c.institution_name ?? undefined,
-            procedure_type: c.procedure_type ?? undefined,
-          }))}
           totalContracts={vendor.total_contracts}
           vendorFirstYear={vendor.first_contract_year}
           vendorLastYear={vendor.last_contract_year}
+          timeline={timeline?.timeline ?? []}
         />
 
         <ChapterDivider />
