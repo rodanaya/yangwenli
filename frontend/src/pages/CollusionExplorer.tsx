@@ -435,7 +435,7 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
           roam: true,
           draggable: true,
           label: {
-            show: false,
+            show: nodes.length <= 40,
             position: 'right',
             fontSize: 11,
             color: '#f4f4f5',
@@ -446,9 +446,9 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
             lineStyle: { width: 4 },
           },
           force: {
-            repulsion: 120,
-            gravity: 0.05,
-            edgeLength: [60, 180],
+            repulsion: 900,
+            gravity: 0.02,
+            edgeLength: [120, 350],
             layoutAnimation: true,
           },
           lineStyle: { curveness: 0.2, opacity: 0.6 },
@@ -495,7 +495,7 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
           Reset View
         </button>
       </div>
-      <div style={{ height: 420, width: '100%', position: 'relative' }}>
+      <div style={{ height: 580, width: '100%', position: 'relative' }}>
         {loading || nodes.length === 0 ? (
           <div className="absolute inset-0 flex items-center justify-center">
             <div className="flex flex-col items-center gap-2 text-zinc-600">
@@ -509,7 +509,7 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
           <ReactECharts
             ref={chartRef}
             option={option}
-            style={{ height: 420, width: '100%' }}
+            style={{ height: 580, width: '100%' }}
             onEvents={handleEvents}
             opts={{ renderer: 'canvas' }}
             notMerge={true}

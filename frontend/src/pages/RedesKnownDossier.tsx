@@ -202,8 +202,8 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         nameLocation: 'end',
         nameTextStyle: { color: '#6b6560', fontSize: 11 },
         type: 'value',
-        min: 0,
-        max: 100,
+        min: (val: { min: number }) => Math.max(0, Math.floor(val.min - 8)),
+        max: (val: { max: number }) => Math.min(100, Math.ceil(val.max + 4)),
         splitLine: { lineStyle: { color: '#2a2d2c', type: 'dashed' } },
         axisLine: { lineStyle: { color: '#3a3d3c' } },
         axisLabel: { color: '#6b6560', fontSize: 11 },
@@ -235,7 +235,6 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
             label: { show: false },
             data: [
               { xAxis: 0.5 },
-              { yAxis: 50 },
             ],
           },
           data: [],
@@ -286,10 +285,10 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
           ))}
         </div>
       </div>
-      <div style={{ height: 360, width: '100%' }}>
+      <div style={{ height: 480, width: '100%' }}>
         <ReactECharts
           option={option}
-          style={{ height: 360, width: '100%' }}
+          style={{ height: 480, width: '100%' }}
           onEvents={handleEvents}
           opts={{ renderer: 'canvas' }}
           notMerge={true}
@@ -314,7 +313,7 @@ export default function RedesKnownDossier() {
   // Selected vendor for the detail panel
   const [selectedVendorId, setSelectedVendorId] = useState<number | null>(null)
 
-  // Fetch Tier 1 + Tier 2 from ARIA queue
+  // Fetch Tier 1 + Tier 2 + Tier 3 (sample) from ARIA queue
   const { data: tier1Data, isLoading: loading1 } = useQuery({
     queryKey: ['aria-queue-redes-t1'],
     queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 30 }),
@@ -325,6 +324,11 @@ export default function RedesKnownDossier() {
     queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 30 }),
     staleTime: 10 * 60 * 1000,
   })
+  const { data: tier3Data, isLoading: loading3 } = useQuery({
+    queryKey: ['aria-queue-redes-t3'],
+    queryFn: () => ariaApi.getQueue({ tier: 3, per_page: 40 }),
+    staleTime: 10 * 60 * 1000,
+  })
 
   // Stats
   const { data: statsData } = useQuery({
@@ -333,13 +337,14 @@ export default function RedesKnownDossier() {
     staleTime: 10 * 60 * 1000,
   })
 
-  const isLoading = loading1 || loading2
+  const isLoading = loading1 || loading2 || loading3
 
   // Merge and sort by IPS
   const dossiers = useMemo(() => {
     const items: AriaQueueItem[] = []
     if (tier1Data?.data) items.push(...tier1Data.data)
     if (tier2Data?.data) items.push(...tier2Data.data)
+    if (tier3Data?.data) items.push(...tier3Data.data)
     // Deduplicate by vendor_id
     const seen = new Set<number>()
     const unique: AriaQueueItem[] = []
@@ -352,7 +357,7 @@ export default function RedesKnownDossier() {
     // Sort by IPS descending
     unique.sort((a, b) => b.ips_final - a.ips_final)
     return unique
-  }, [tier1Data, tier2Data])
+  }, [tier1Data, tier2Data, tier3Data])
 
   // Apply filters
   const filtered = useMemo(() => {
@@ -367,7 +372,7 @@ export default function RedesKnownDossier() {
     return result.slice(0, 40) // cap at 40 for perf
   }, [dossiers, patternFilter, searchTerm])
 
-  const error = !isLoading && dossiers.length === 0 && !tier1Data && !tier2Data
+  const error = !isLoading && dossiers.length === 0 && !tier1Data && !tier2Data && !tier3Data
 
   // Stats bar computations derived from filtered results
   const statsBar = useMemo(() => {
