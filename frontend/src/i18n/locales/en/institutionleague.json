@@ -79,5 +79,10 @@
   "loading": "Loading institution rankings...",
   "error": "Failed to load institution rankings. Please try again.",
   "viewProfile": "View profile",
-  "noSector": "Unclassified"
+  "noSector": "Unclassified",
+  "tabs": {
+    "ranking": "Ranking",
+    "fichas": "Scorecards",
+    "reporte": "Report"
+  }
 }

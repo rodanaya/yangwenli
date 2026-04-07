@@ -112,6 +112,17 @@ function getRiskBadgeColor(level: string): string {
   }
 }
 
+// Human-readable pattern labels (used in ECharts tooltips and legend — no React context available)
+const PATTERN_LABELS: Record<string, string> = {
+  P1: 'Monopolio Estructural',
+  P2: 'Empresa Fantasma',
+  P3: 'Intermediario Sospechoso',
+  P4: 'Facturador EFOS',
+  P5: 'Rotación de Proveedores',
+  P6: 'Captura Institucional',
+  P7: 'Patrón Mixto',
+}
+
 // All known patterns for filter
 const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
 
@@ -215,7 +226,8 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         textStyle: { color: '#f4f4f5', fontSize: 12 },
         formatter: (params: { data: ScatterPoint }) => {
           const [riskScore, ipsScore, totalVal, name, , pattern, tier] = params.data
-          return `<div style="max-width:280px"><b>${name}</b><br/>IPS: <b>${ipsScore.toFixed(1)}</b> · Tier ${tier}<br/>Risk: <b>${(riskScore * 100).toFixed(0)}%</b><br/>Pattern: ${pattern}<br/>Value: MX$${(totalVal / 1e9).toFixed(2)}B</div>`
+          const patternDisplay = PATTERN_LABELS[pattern] ?? pattern
+          return `<div style="max-width:280px"><b>${name}</b><br/>IPS: <b>${ipsScore.toFixed(1)}</b> · Tier ${tier}<br/>Risk: <b>${(riskScore * 100).toFixed(0)}%</b><br/>Patrón: ${patternDisplay}<br/>Value: MX$${(totalVal / 1e9).toFixed(2)}B</div>`
         },
       },
       graphic: [
@@ -280,7 +292,7 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
                 style={{ background: PATTERN_HEX[p] }}
                 aria-hidden="true"
               />
-              {p}
+              {p} {PATTERN_LABELS[p] ?? p}
             </span>
           ))}
         </div>

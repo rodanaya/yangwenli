@@ -53,13 +53,12 @@ const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 // MexicoMap removed — /map redirects to /administrations
 // Annotations removed — /annotations redirects to /workspace
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
-const ReportCard = lazy(() => import('@/pages/ReportCard'))
+// ReportCard and InstitutionScorecards are now lazy-loaded inside InstitutionLeague tabs
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 // Telescope removed — /telescope redirects to /sectors
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
-const InstitutionScorecards = lazy(() => import('@/pages/InstitutionScorecards'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
@@ -109,11 +108,7 @@ function App() {
               <Route index element={<FirstVisitRedirect />} />
               <Route
                 path="report-card"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ReportCard />
-                  </SuspenseBoundary>
-                }
+                element={<Navigate to="/institutions?tab=reporte" replace />}
               />
               <Route
                 path="executive-summary"
@@ -411,11 +406,7 @@ function App() {
 
               <Route
                 path="scorecards"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <InstitutionScorecards />
-                  </SuspenseBoundary>
-                }
+                element={<Navigate to="/institutions?tab=fichas" replace />}
               />
 
               <Route

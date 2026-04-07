@@ -400,5 +400,14 @@
     "risk": "Risk",
     "ips": "IPS",
     "pattern": "Pattern"
-  }
+  },
+  "pagination": {
+    "previous": "Previous",
+    "next": "Next",
+    "page": "Page",
+    "of": "of"
+  },
+  "backToAriaQueue": "Back to ARIA Queue",
+  "backToCollusion": "Back to Collusion Pairs",
+  "backToInstitutions": "Back to Institutions"
 }

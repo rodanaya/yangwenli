@@ -794,7 +794,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
           {/* Action buttons */}
           <div className="mt-auto pt-2 border-t border-border flex items-center gap-2">
             <button
-              onClick={() => navigate(`/vendors/${item.vendor_id}`)}
+              onClick={() => navigate(`/vendors/${item.vendor_id}`, { state: { from: '/aria' } })}
               className="flex-1 flex items-center justify-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-primary py-1.5 rounded hover:bg-background-elevated transition-colors border border-border/50 hover:border-border"
               title={t('actions.vendorProfile')}
             >
@@ -903,7 +903,7 @@ function LeadRow({
               <ClipboardEdit className="h-3.5 w-3.5" />
             </button>
             <button
-              onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${item.vendor_id}`) }}
+              onClick={(e) => { e.stopPropagation(); navigate(`/vendors/${item.vendor_id}`, { state: { from: '/aria' } }) }}
               className="text-text-muted hover:text-accent p-1 rounded hover:bg-accent/10 transition-colors"
               aria-label={t('actions.vendorProfile')}
               title={t('actions.vendorProfile')}

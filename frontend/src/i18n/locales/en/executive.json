@@ -611,5 +611,10 @@
     "chartHeader": "ABSOLUTE VALUE AT RISK (Critical + High, MXN)",
     "oecdRef": "OECD max: 15% high-risk rate",
     "sortedFootnote": "Sorted by high-risk rate (critical + high \u00b7 Source: COMPRANET 2002-2025 \u00b7 RUBLI v6.5"
+  },
+
+  "whatThisMeans": {
+    "title": "What these findings mean together",
+    "body": "Mexico's procurement risk is concentrated among a small fraction of vendors. The top 320 critical-tier vendors account for a disproportionate share of flagged spending. Three systemic patterns — price volatility, vendor concentration, and institution capture — appear across sectors and administrations, suggesting structural rather than isolated corruption."
   }
 }

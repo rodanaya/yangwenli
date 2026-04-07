@@ -16,7 +16,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation, Trans } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
-import { analysisApi } from '@/api/client'
+import { analysisApi, ariaApi } from '@/api/client'
 import type { ExecutiveSummaryResponse } from '@/api/types'
 import { SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
@@ -358,6 +358,12 @@ function FiveKeyFindings({
   const navigate = useNavigate()
   const { t } = useTranslation('executive')
 
+  const { data: ariaStats } = useQuery({
+    queryKey: ['aria-stats-executive'],
+    queryFn: () => ariaApi.getStats(),
+    staleTime: 10 * 60 * 1000,
+  })
+
   const findings = [
     {
       num: '01',
@@ -385,7 +391,7 @@ function FiveKeyFindings({
       borderColor: 'border-violet-500/30',
       bg: 'bg-violet-500/5',
       headlineKey: 'keyFindings5.f3.headline',
-      stat: '320',
+      stat: formatNumber(ariaStats?.latest_run?.tier1_count ?? 320),
       statLabelKey: 'keyFindings5.f3.statLabel',
       bodyKey: 'keyFindings5.f3.body',
       action: { labelKey: 'keyFindings5.f3.action', href: '/aria' },
@@ -396,7 +402,7 @@ function FiveKeyFindings({
       borderColor: 'border-amber-500/30',
       bg: 'bg-amber-500/5',
       headlineKey: 'keyFindings5.f4.headline',
-      stat: '1,374',
+      stat: formatNumber(ariaStats?.queue_total ?? 1374),
       statLabelKey: 'keyFindings5.f4.statLabel',
       bodyKey: 'keyFindings5.f4.body',
     },
@@ -2254,6 +2260,16 @@ export function ExecutiveSummary() {
 
       {/* ── Five Key Findings ── */}
       <FiveKeyFindings highRiskPct={highRiskPct} valueAtRiskFormatted={valueAtRiskFormatted} />
+
+      {/* ── What this means synthesis block ── */}
+      <div className="mt-8 p-6 bg-amber-500/5 border border-amber-500/20 rounded-xl">
+        <h3 className="text-sm font-semibold text-amber-400 uppercase tracking-wider mb-2">
+          {t('whatThisMeans.title')}
+        </h3>
+        <p className="text-sm text-zinc-300 leading-relaxed">
+          {t('whatThisMeans.body')}
+        </p>
+      </div>
 
       {/* ── Editorial context ── */}
       <div className="space-y-1.5">

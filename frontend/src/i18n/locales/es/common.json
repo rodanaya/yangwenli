@@ -400,5 +400,14 @@
     "risk": "Riesgo",
     "ips": "IPS",
     "pattern": "Patrón"
-  }
+  },
+  "pagination": {
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "page": "Página",
+    "of": "de"
+  },
+  "backToAriaQueue": "Volver a Cola ARIA",
+  "backToCollusion": "Volver a Pares Coludidos",
+  "backToInstitutions": "Volver a Instituciones"
 }

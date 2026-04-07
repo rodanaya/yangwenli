@@ -79,5 +79,10 @@
   "loading": "Cargando clasificaciones institucionales...",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
   "viewProfile": "Ver perfil",
-  "noSector": "Sin clasificar"
+  "noSector": "Sin clasificar",
+  "tabs": {
+    "ranking": "Ranking",
+    "fichas": "Fichas",
+    "reporte": "Reporte"
+  }
 }

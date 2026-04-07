@@ -611,5 +611,10 @@
     "chartHeader": "VALOR ABSOLUTO EN RIESGO (Crítico + Alto, MXN)",
     "oecdRef": "OCDE máx: 15% tasa de alto riesgo",
     "sortedFootnote": "Ordenado por tasa de alto riesgo (crítico + alto) · Fuente: COMPRANET 2002-2025 · RUBLI v6.5"
+  },
+
+  "whatThisMeans": {
+    "title": "Lo que estos hallazgos significan en conjunto",
+    "body": "El riesgo de contratación en México está concentrado en una fracción pequeña de proveedores. Los 320 proveedores de nivel crítico representan una parte desproporcionada del gasto señalado. Tres patrones sistémicos — volatilidad de precios, concentración de proveedores y captura institucional — aparecen en todos los sectores y administraciones, lo que sugiere corrupción estructural y no aislada."
   }
 }

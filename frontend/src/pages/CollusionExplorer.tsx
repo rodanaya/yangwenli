@@ -27,11 +27,13 @@ import {
   X,
   Table2,
   RotateCcw,
+  FileText,
 } from 'lucide-react'
 import { collusionApi } from '@/api/client'
 import type { CollusionPair, CollusionStats } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
+import { SharedContractsModal } from '@/components/SharedContractsModal'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -524,7 +526,12 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
 // Pair Card
 // ---------------------------------------------------------------------------
 
-function PairCard({ pair }: { pair: CollusionPair }) {
+interface PairCardProps {
+  pair: CollusionPair
+  onViewContracts: (vendorAId: number, vendorBId: number, vendorAName: string, vendorBName: string) => void
+}
+
+function PairCard({ pair, onViewContracts }: PairCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('collusion')
   const rc = rateClass(pair.co_bid_rate)
@@ -607,6 +614,14 @@ function PairCard({ pair }: { pair: CollusionPair }) {
               Thread
             </button>
           )}
+          <button
+            type="button"
+            onClick={() => onViewContracts(pair.vendor_id_a, pair.vendor_id_b, pair.vendor_name_a, pair.vendor_name_b)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg transition-colors"
+          >
+            <FileText className="w-3.5 h-3.5" aria-hidden="true" />
+            Ver contratos
+          </button>
           <button
             type="button"
             onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
@@ -1046,6 +1061,21 @@ export default function CollusionExplorer() {
   // Selected vendor (filtered from graph node click)
   const [selectedVendor, setSelectedVendor] = useState<{ id: number; name: string } | null>(null)
 
+  // Shared contracts modal state
+  const [selectedPair, setSelectedPair] = useState<{
+    vendorAId: number
+    vendorBId: number
+    vendorAName: string
+    vendorBName: string
+  } | null>(null)
+
+  const handleViewContracts = useCallback(
+    (vendorAId: number, vendorBId: number, vendorAName: string, vendorBName: string) => {
+      setSelectedPair({ vendorAId, vendorBId, vendorAName, vendorBName })
+    },
+    [],
+  )
+
   // Reset page when filters change
   const handleFlaggedOnly = (v: boolean) => { setFlaggedOnly(v); setPage(1) }
   const handleMinShared = (v: number) => { setMinShared(v); setPage(1) }
@@ -1217,6 +1247,7 @@ export default function CollusionExplorer() {
               <PairCard
                 key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
                 pair={pair}
+                onViewContracts={handleViewContracts}
               />
             ))}
           </div>
@@ -1265,6 +1296,17 @@ export default function CollusionExplorer() {
           COMPRANET 2010-2025 &middot; co_bidding_stats &middot; RUBLI v6.5
         </p>
       </div>
+
+      {/* ── Shared Contracts Modal ── */}
+      {selectedPair && (
+        <SharedContractsModal
+          vendorAId={selectedPair.vendorAId}
+          vendorBId={selectedPair.vendorBId}
+          vendorAName={selectedPair.vendorAName}
+          vendorBName={selectedPair.vendorBName}
+          onClose={() => setSelectedPair(null)}
+        />
+      )}
     </div>
   )
 }

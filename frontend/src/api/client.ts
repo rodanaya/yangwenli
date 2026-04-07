@@ -2801,6 +2801,36 @@ export const storiesApi = {
   },
 }
 
+export interface SharedContract {
+  id: number
+  procedure_number: string
+  vendor_id: number
+  vendor_name: string
+  amount: number
+  contract_date: string | null
+  risk_level: string | null
+  risk_score: number | null
+  procedure_type: string | null
+  sector_name: string | null
+  institution_name: string | null
+  is_direct_award: boolean
+  is_single_bid: boolean
+}
+
+export interface SharedContractsResponse {
+  data: SharedContract[]
+  pagination: {
+    page: number
+    per_page: number
+    total: number
+    total_pages: number
+  }
+  summary: {
+    shared_procedure_count: number
+    total_shared_amount: number
+  }
+}
+
 export const collusionApi = {
   async getPairs(params: {
     is_potential_collusion?: boolean
@@ -2815,6 +2845,11 @@ export const collusionApi = {
   },
   async getStats() {
     const { data } = await api.get('/collusion/stats')
+    return data
+  },
+  async getSharedContracts(vendorAId: number, vendorBId: number, page = 1, perPage = 20): Promise<SharedContractsResponse> {
+    const q = buildQueryParams({ page, per_page: perPage })
+    const { data } = await api.get<SharedContractsResponse>(`/collusion/pairs/${vendorAId}/${vendorBId}/shared-contracts?${q}`)
     return data
   },
 }

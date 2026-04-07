@@ -46,6 +46,33 @@ class CollusionPairsResponse(BaseModel):
     pagination: PaginationMeta
 
 
+class SharedContract(BaseModel):
+    id: int
+    procedure_number: Optional[str]
+    vendor_id: int
+    vendor_name: Optional[str]
+    amount: Optional[float]
+    contract_date: Optional[str]
+    risk_level: Optional[str]
+    risk_score: Optional[float]
+    procedure_type: Optional[str]
+    sector_name: Optional[str]
+    institution_name: Optional[str]
+    is_direct_award: Optional[bool]
+    is_single_bid: Optional[bool]
+
+
+class SharedContractsSummary(BaseModel):
+    shared_procedure_count: int
+    total_shared_amount: float
+
+
+class SharedContractsResponse(BaseModel):
+    data: List[SharedContract]
+    pagination: PaginationMeta
+    summary: SharedContractsSummary
+
+
 class CollusionStats(BaseModel):
     total_pairs: int = Field(..., description="Total rows in co_bidding_stats")
     potential_collusion_count: int = Field(..., description="Pairs flagged as potential collusion")
@@ -137,6 +164,105 @@ def get_collusion_pairs(
             per_page=per_page,
             total=total,
             total_pages=total_pages,
+        ),
+    )
+
+
+@router.get(
+    "/pairs/{vendor_a_id}/{vendor_b_id}/shared-contracts",
+    response_model=SharedContractsResponse,
+    summary="Contracts from shared procedures between two vendors",
+)
+def get_shared_contracts(
+    vendor_a_id: int,
+    vendor_b_id: int,
+    page: int = Query(1, ge=1),
+    per_page: int = Query(20, ge=1, le=100),
+    conn=Depends(get_db_dep),
+):
+    """
+    Return paginated contracts from licitaciones where both vendor_a and vendor_b participated.
+    """
+    # Find shared procedure_numbers
+    shared_proc_sql = """
+        SELECT DISTINCT c1.procedure_number
+        FROM contracts c1
+        JOIN contracts c2 ON c1.procedure_number = c2.procedure_number
+        WHERE c1.vendor_id = ? AND c2.vendor_id = ?
+          AND c1.procedure_number IS NOT NULL AND c1.procedure_number != ''
+    """
+    shared_procs = [
+        row[0] for row in conn.execute(shared_proc_sql, (vendor_a_id, vendor_b_id)).fetchall()
+    ]
+
+    if not shared_procs:
+        return SharedContractsResponse(
+            data=[],
+            pagination=PaginationMeta(page=page, per_page=per_page, total=0, total_pages=1),
+            summary=SharedContractsSummary(shared_procedure_count=0, total_shared_amount=0.0),
+        )
+
+    placeholders = ",".join("?" * len(shared_procs))
+
+    # Summary aggregates
+    summary_row = conn.execute(
+        f"""
+        SELECT COUNT(DISTINCT procedure_number) AS proc_count,
+               COALESCE(SUM(CASE WHEN amount IS NOT NULL AND amount < 100000000000 THEN amount ELSE 0 END), 0) AS total_amount
+        FROM contracts
+        WHERE procedure_number IN ({placeholders})
+        """,
+        shared_procs,
+    ).fetchone()
+
+    total_count = conn.execute(
+        f"SELECT COUNT(*) FROM contracts WHERE procedure_number IN ({placeholders})",
+        shared_procs,
+    ).fetchone()[0]
+
+    offset = (page - 1) * per_page
+    rows = conn.execute(
+        f"""
+        SELECT c.id, c.procedure_number, c.vendor_id, c.vendor_name,
+               c.importe_contrato AS amount, c.fecha_inicio AS contract_date,
+               c.risk_level, c.risk_score, c.procedure_type,
+               s.name AS sector_name, c.institution_name,
+               c.is_direct_award, c.is_single_bid
+        FROM contracts c
+        LEFT JOIN sectors s ON c.sector_id = s.id
+        WHERE c.procedure_number IN ({placeholders})
+        ORDER BY c.fecha_inicio DESC
+        LIMIT ? OFFSET ?
+        """,
+        shared_procs + [per_page, offset],
+    ).fetchall()
+
+    contracts = [
+        SharedContract(
+            id=r["id"],
+            procedure_number=r["procedure_number"],
+            vendor_id=r["vendor_id"],
+            vendor_name=r["vendor_name"],
+            amount=float(r["amount"]) if r["amount"] is not None else None,
+            contract_date=r["contract_date"],
+            risk_level=r["risk_level"],
+            risk_score=float(r["risk_score"]) if r["risk_score"] is not None else None,
+            procedure_type=r["procedure_type"],
+            sector_name=r["sector_name"],
+            institution_name=r["institution_name"],
+            is_direct_award=bool(r["is_direct_award"]) if r["is_direct_award"] is not None else None,
+            is_single_bid=bool(r["is_single_bid"]) if r["is_single_bid"] is not None else None,
+        )
+        for r in rows
+    ]
+
+    total_pages = max(1, (total_count + per_page - 1) // per_page)
+    return SharedContractsResponse(
+        data=contracts,
+        pagination=PaginationMeta(page=page, per_page=per_page, total=total_count, total_pages=total_pages),
+        summary=SharedContractsSummary(
+            shared_procedure_count=summary_row["proc_count"],
+            total_shared_amount=round(float(summary_row["total_amount"]), 2),
         ),
     )
 

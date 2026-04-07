@@ -1,6 +1,6 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
@@ -821,6 +821,8 @@ export function VendorProfile() {
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
   const navigate = useNavigate()
+  const location = useLocation()
+  const fromAria = location.state?.from === '/aria'
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
   const [networkOpen, setNetworkOpen] = useState(false)
@@ -1216,7 +1218,7 @@ export function VendorProfile() {
             )}
             {isGroundTruth && !isEfosDefinitivo && (
               <p className="text-sm font-bold text-red-200">
-                {t('criticalAlert.groundTruthTitle', { count: groundTruthStatus!.cases!.length })}
+                {t('criticalAlert.groundTruthTitle', { count: (groundTruthStatus?.cases?.length ?? 0) })}
               </p>
             )}
             <p className="text-xs text-red-400/80 mt-0.5">
@@ -1254,6 +1256,14 @@ export function VendorProfile() {
           to   { opacity: 1; transform: translateY(0); }
         }
       `}</style>
+      {fromAria && (
+        <div className="px-6 pt-4">
+          <Link to="/aria" className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
+            <ChevronLeft className="w-3.5 h-3.5" />
+            {tc('backToAriaQueue')}
+          </Link>
+        </div>
+      )}
       {/* Hero Header — Obsidian Intelligence */}
       <motion.div
         className="fern-card p-5 relative overflow-hidden"
@@ -3529,7 +3539,7 @@ export function VendorProfile() {
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
                     <ChevronLeft className="h-3.5 w-3.5" />
-                    Anterior
+                    {tc('pagination.previous')}
                   </button>
                   {/* Page number buttons */}
                   {(() => {
@@ -3564,7 +3574,7 @@ export function VendorProfile() {
                     aria-label="Next page"
                     className="flex items-center gap-1 px-2.5 py-1.5 rounded text-xs font-medium border border-border/40 bg-transparent hover:bg-background-elevated hover:border-accent/40 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   >
-                    Siguiente
+                    {tc('pagination.next')}
                     <ChevronRight className="h-3.5 w-3.5" />
                   </button>
                 </div>

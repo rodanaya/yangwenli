@@ -76,7 +76,8 @@
   "contractsIndexed": "3.1M contracts indexed",
   "contractsIndexedShort": "3.1M indexed",
   "reportIssue": "Report an issue",
-  "collusion": "Collusion Explorer",
+  "institutionHealth": "Institution Health",
+  "collusion": "Collusion Pairs",
   "procurementCalendar": "Procurement Calendar",
   "scorecards": "Institution Transparency"
 }

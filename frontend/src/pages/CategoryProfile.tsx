@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -110,6 +111,7 @@ function getConcentrationBadge(label: string) {
 export default function CategoryProfile() {
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation('categories')
   const categoryId = Number(id)
 
   // Data queries
@@ -209,17 +211,17 @@ export default function CategoryProfile() {
       <div className="max-w-3xl mx-auto py-16 text-center">
         <AlertTriangle className="h-12 w-12 text-text-muted mx-auto mb-4" />
         <h1 className="text-2xl font-bold text-text-primary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          Categoria no encontrada
+          {t('profile.notFound.title')}
         </h1>
         <p className="text-sm text-text-muted mb-6">
-          No existe una categoria con ID {id} en la base de datos.
+          {t('profile.notFound.description', { id })}
         </p>
         <Link
           to="/categories"
           className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
-          Volver a Categorias
+          {t('profile.notFound.backLink')}
         </Link>
       </div>
     )
@@ -253,7 +255,7 @@ export default function CategoryProfile() {
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors mb-4"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
-          Categorias
+          {t('profile.breadcrumb')}
         </Link>
 
         {summaryLoading ? (
@@ -301,22 +303,22 @@ export default function CategoryProfile() {
       ) : category ? (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/20 rounded-xl overflow-hidden">
           <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Monto Total</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.totalAmount')}</p>
             <p className="text-2xl font-mono font-bold text-text-primary leading-tight">
               {formatCompactMXN(category.total_value)}
             </p>
           </div>
           <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Contratos</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.contracts')}</p>
             <p className="text-2xl font-mono font-bold text-text-primary leading-tight">
               {formatNumber(category.total_contracts)}
             </p>
             <p className="text-[10px] text-text-muted/50 font-mono mt-0.5">
-              ~{formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0)} promedio
+              {t('profile.kpi.avgAmount', { value: formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0) })}
             </p>
           </div>
           <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Riesgo Promedio</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.avgRisk')}</p>
             <div className="flex items-baseline gap-2">
               <p className="text-2xl font-mono font-bold leading-tight" style={{ color: riskColor }}>
                 {(category.avg_risk * 100).toFixed(1)}%
@@ -330,13 +332,13 @@ export default function CategoryProfile() {
             </div>
           </div>
           <div className="bg-background-card px-5 py-4">
-            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Adjudicacion Directa</p>
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.directAward')}</p>
             <p className="text-2xl font-mono font-bold leading-tight" style={{ color: daColor }}>
               {daPct.toFixed(0)}%
             </p>
             {daPct > 25 && (
               <p className="text-[10px] text-cyan-400 font-mono mt-0.5">
-                OCDE: max 25%
+                {t('profile.kpi.oecd')}
               </p>
             )}
           </div>
@@ -349,13 +351,13 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Evolucion Historica
+            {t('profile.sections.eyebrow')}{t('profile.sections.timeline')}
           </p>
           <h2
             className="text-lg font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Gasto anual y nivel de riesgo 2002-2025
+            {t('profile.sections.timelineSubtitle')}
           </h2>
         </div>
         <Card>
@@ -402,7 +404,7 @@ export default function CategoryProfile() {
                             <p className="font-bold text-text-primary">{label}</p>
                             {payload.map((p, i) => (
                               <p key={i} style={{ color: String(p.color) }}>
-                                {p.name === 'value' ? 'Gasto' : 'Riesgo'}:{' '}
+                                {p.name === 'value' ? t('profile.tooltip.spend') : t('profile.tooltip.risk')}:{' '}
                                 <span className="font-bold">
                                   {p.name === 'value' ? formatCompactMXN(Number(p.value)) : `${(Number(p.value) * 100).toFixed(1)}%`}
                                 </span>
@@ -435,7 +437,7 @@ export default function CategoryProfile() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-                Sin datos de tendencia para esta categoria.
+                {t('profile.empty.noTrend')}
               </div>
             )}
           </CardContent>
@@ -448,13 +450,13 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Por Administracion
+            {t('profile.sections.eyebrow')}{t('profile.sections.byAdmin')}
           </p>
           <h2
             className="text-lg font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Evolucion por administracion presidencial
+            {t('profile.sections.byAdminSubtitle')}
           </h2>
         </div>
         <Card>
@@ -489,9 +491,9 @@ export default function CategoryProfile() {
                             style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
                           >
                             <p className="font-bold text-text-primary">{label}</p>
-                            <p className="text-text-secondary">Gasto: <span className="font-bold text-text-primary">{formatCompactMXN(d?.value ?? 0)}</span></p>
-                            <p className="text-text-secondary">Contratos: <span className="text-text-primary">{formatNumber(d?.contracts ?? 0)}</span></p>
-                            <p className="text-text-secondary">Riesgo: <span className="font-bold" style={{ color: getRiskColor(d?.avg_risk ?? 0) }}>{((d?.avg_risk ?? 0) * 100).toFixed(1)}%</span></p>
+                            <p className="text-text-secondary">{t('profile.adminTooltip.spend')} <span className="font-bold text-text-primary">{formatCompactMXN(d?.value ?? 0)}</span></p>
+                            <p className="text-text-secondary">{t('profile.adminTooltip.contracts')} <span className="text-text-primary">{formatNumber(d?.contracts ?? 0)}</span></p>
+                            <p className="text-text-secondary">{t('profile.adminTooltip.risk')} <span className="font-bold" style={{ color: getRiskColor(d?.avg_risk ?? 0) }}>{((d?.avg_risk ?? 0) * 100).toFixed(1)}%</span></p>
                           </div>
                         )
                       }}
@@ -510,11 +512,11 @@ export default function CategoryProfile() {
               </div>
             ) : (
               <div className="flex items-center justify-center h-48 text-text-muted text-sm">
-                Sin datos de sexenio para esta categoria.
+                {t('profile.empty.noAdmin')}
               </div>
             )}
             <p className="text-[10px] text-text-muted/50 mt-2 font-mono">
-              Sheinbaum = 2025 parcial. Fox incluye parte del dato COMPRANET.
+              {t('profile.footnote')}
             </p>
           </CardContent>
         </Card>
@@ -526,13 +528,13 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Concentracion de Mercado
+            {t('profile.sections.eyebrow')}{t('profile.sections.concentration')}
           </p>
           <h2
             className="text-lg font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Quien domina esta categoria?
+            {t('profile.sections.concentrationSubtitle')}
           </h2>
         </div>
         <Card>
@@ -560,7 +562,7 @@ export default function CategoryProfile() {
                     HHI: {topVendorsData.hhi.toFixed(0)}
                   </span>
                   <span className="text-xs text-text-secondary">
-                    Top 3 concentran <span className="font-bold text-text-primary">{topVendorsData.top3_share_pct.toFixed(1)}%</span> del mercado
+                    {t('profile.concentrationMarket', { pct: topVendorsData.top3_share_pct.toFixed(1) })}
                   </span>
                 </div>
               </CardHeader>
@@ -568,12 +570,12 @@ export default function CategoryProfile() {
                 {/* Header row */}
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
                   <span className="w-6 flex-shrink-0">#</span>
-                  <span className="flex-1 min-w-0">Proveedor</span>
-                  <span className="w-28 text-right flex-shrink-0">Participacion</span>
-                  <span className="w-20 text-right flex-shrink-0 hidden md:block">Monto</span>
-                  <span className="w-14 text-right flex-shrink-0 hidden md:block">Contratos</span>
-                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
-                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">AD%</span>
+                  <span className="flex-1 min-w-0">{t('profile.table.vendor')}</span>
+                  <span className="w-28 text-right flex-shrink-0">{t('profile.table.share')}</span>
+                  <span className="w-20 text-right flex-shrink-0 hidden md:block">{t('profile.table.amount')}</span>
+                  <span className="w-14 text-right flex-shrink-0 hidden md:block">{t('profile.table.contracts')}</span>
+                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">{t('profile.table.risk')}</span>
+                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">{t('profile.table.directAward')}</span>
                 </div>
                 <div className="divide-y divide-border/10">
                   {topVendorsData.data.map((v, idx) => {
@@ -638,7 +640,7 @@ export default function CategoryProfile() {
             </>
           ) : (
             <CardContent className="py-8 text-center text-text-muted text-sm">
-              No hay datos de proveedores para esta categoria.
+              {t('profile.empty.noVendors')}
             </CardContent>
           )}
         </Card>
@@ -650,13 +652,13 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Relaciones
+            {t('profile.sections.eyebrow')}{t('profile.sections.relations')}
           </p>
           <h2
             className="text-lg font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Principales pares proveedor-institucion
+            {t('profile.sections.relationsSubtitle')}
           </h2>
         </div>
         <Card>
@@ -671,14 +673,14 @@ export default function CategoryProfile() {
                   <span className="w-4 flex-shrink-0">#</span>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <User className="h-3 w-3 flex-shrink-0" />
-                    <span>Proveedor</span>
+                    <span>{t('profile.table.vendor')}</span>
                     <span className="text-text-muted/30">&rarr;</span>
                     <Building2 className="h-3 w-3 flex-shrink-0" />
-                    <span>Institucion</span>
+                    <span>{t('profile.table.institution')}</span>
                   </div>
-                  <span className="w-20 text-right flex-shrink-0">Monto</span>
-                  <span className="w-14 text-right flex-shrink-0 hidden md:block">Contratos</span>
-                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
+                  <span className="w-20 text-right flex-shrink-0">{t('profile.table.amount')}</span>
+                  <span className="w-14 text-right flex-shrink-0 hidden md:block">{t('profile.table.contracts')}</span>
+                  <span className="w-12 text-right flex-shrink-0 hidden lg:block">{t('profile.table.risk')}</span>
                 </div>
                 <div className="divide-y divide-border/10">
                   {vendorInstData!.data.map((pair, idx) => {
@@ -734,7 +736,7 @@ export default function CategoryProfile() {
               </>
             ) : (
               <div className="py-8 text-center text-text-muted text-sm">
-                Sin datos de relaciones proveedor-institucion para esta categoria.
+                {t('profile.empty.noRelations')}
               </div>
             )}
           </CardContent>
@@ -747,13 +749,13 @@ export default function CategoryProfile() {
       <section>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Contratos
+            {t('profile.sections.eyebrow')}{t('profile.sections.contracts')}
           </p>
           <h2
             className="text-lg font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Contratos mas costosos
+            {t('profile.sections.contractsSubtitle')}
           </h2>
         </div>
         <Card>
@@ -766,11 +768,11 @@ export default function CategoryProfile() {
               <>
                 <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
-                  <span className="flex-1 min-w-0">Descripcion</span>
-                  <span className="w-20 text-right flex-shrink-0">Monto</span>
-                  <span className="w-24 text-right flex-shrink-0 hidden md:block">Proveedor</span>
-                  <span className="w-10 text-right flex-shrink-0 hidden md:block">Ano</span>
-                  <span className="w-14 text-right flex-shrink-0">Riesgo</span>
+                  <span className="flex-1 min-w-0">{t('profile.table.description')}</span>
+                  <span className="w-20 text-right flex-shrink-0">{t('profile.table.amount')}</span>
+                  <span className="w-24 text-right flex-shrink-0 hidden md:block">{t('profile.table.vendor')}</span>
+                  <span className="w-10 text-right flex-shrink-0 hidden md:block">{t('profile.table.year')}</span>
+                  <span className="w-14 text-right flex-shrink-0">{t('profile.table.risk')}</span>
                 </div>
                 <div className="divide-y divide-border/10">
                   {topContracts.map((c, idx) => {
@@ -782,7 +784,7 @@ export default function CategoryProfile() {
                       >
                         <span className="text-[10px] text-text-muted/40 font-mono w-4 flex-shrink-0 tabular-nums">{idx + 1}</span>
                         <div className="flex-1 min-w-0">
-                          <p className="text-xs text-text-secondary truncate">{truncate(c.title ?? 'Sin descripcion', 60)}</p>
+                          <p className="text-xs text-text-secondary truncate">{truncate(c.title ?? t('profile.actions.noTitle'), 60)}</p>
                           {c.institution_name && (
                             <p className="text-[10px] text-text-muted/50 font-mono mt-0.5 truncate">{truncate(c.institution_name, 40)}</p>
                           )}
@@ -816,7 +818,7 @@ export default function CategoryProfile() {
               </>
             ) : (
               <div className="py-8 text-center text-text-muted text-sm">
-                Sin contratos disponibles para esta categoria.
+                {t('profile.empty.noContracts')}
               </div>
             )}
           </CardContent>
@@ -827,7 +829,7 @@ export default function CategoryProfile() {
             className="inline-flex items-center gap-1.5 text-xs text-accent hover:text-accent/80 transition-colors font-mono uppercase tracking-wide"
           >
             <ExternalLink className="h-3 w-3" />
-            Ver todos los contratos
+            {t('profile.actions.viewAll')}
           </button>
         </div>
       </section>

@@ -1,0 +1,75 @@
+{
+  "profile": {
+    "notFound": {
+      "title": "Category not found",
+      "description": "No category with ID {{id}} exists in the database.",
+      "backLink": "Back to Categories"
+    },
+    "breadcrumb": "Categories",
+    "concentration": {
+      "high": "Highly concentrated",
+      "moderate": "Moderately concentrated",
+      "competitive": "Competitive"
+    },
+    "kpi": {
+      "totalAmount": "Total Amount",
+      "contracts": "Contracts",
+      "avgAmount": "~{{value}} avg",
+      "avgRisk": "Average Risk",
+      "directAward": "Direct Award",
+      "oecd": "OECD: max 25%"
+    },
+    "sections": {
+      "timeline": "Historical Trend",
+      "timelineSubtitle": "Annual spending and risk level 2002–2025",
+      "byAdmin": "By Administration",
+      "byAdminSubtitle": "Evolution by presidential administration",
+      "concentration": "Market Concentration",
+      "concentrationSubtitle": "Who dominates this category?",
+      "relations": "Relationships",
+      "relationsSubtitle": "Top vendor–institution pairs",
+      "contracts": "Contracts",
+      "contractsSubtitle": "Most expensive contracts",
+      "subcategories": "Subcategories",
+      "subcategoriesSubtitle": "Breakdown by subcategory",
+      "eyebrow": "RUBLI · "
+    },
+    "table": {
+      "vendor": "Vendor",
+      "institution": "Institution",
+      "share": "Share",
+      "amount": "Amount",
+      "contracts": "Contracts",
+      "risk": "Risk",
+      "directAward": "DA%",
+      "description": "Description",
+      "year": "Year"
+    },
+    "tooltip": {
+      "spend": "Spend",
+      "risk": "Risk",
+      "contracts": "Contracts",
+      "riskPct": "Risk: {{value}}%"
+    },
+    "empty": {
+      "noTrend": "No trend data for this category.",
+      "noAdmin": "No administration data for this category.",
+      "noVendors": "No vendor data for this category.",
+      "noRelations": "No vendor–institution relationships for this category.",
+      "noContracts": "No contracts available for this category.",
+      "noSubcategories": "No subcategory data available."
+    },
+    "actions": {
+      "viewAll": "View all contracts",
+      "noTitle": "No description"
+    },
+    "footnote": "Sheinbaum = partial 2025. Fox includes partial COMPRANET data.",
+    "adminTooltip": {
+      "spend": "Spend:",
+      "contracts": "Contracts:",
+      "risk": "Risk:"
+    },
+    "concentrationMarketPrefix": "Top 3 hold ",
+    "concentrationMarketSuffix": " of market"
+  }
+}
