@@ -1,0 +1,80 @@
+{
+  "section": "Inteligencia del Ciclo Político",
+  "headline": "¿Cuándo alcanza su pico la corrupción? Dentro del ciclo de contratación sexenal de México",
+  "subtitle": "23 años de contratos federales revelan un patrón estructural: el año final de cada administración presenta un comportamiento de contratación dramáticamente distinto, y se repite sexenio tras sexenio, partido tras partido.",
+  "keyFinding": {
+    "label": "Hallazgo Clave",
+    "body": "El Año 1 de una nueva administración concentra las mayores tasas de adjudicación directa mientras los gobiernos entrantes instalan vendedores preferidos sin licitar. Los Años 5–6 presentan los puntajes de riesgo más altos, el efecto \"volcado presupuestal\" cuando funcionarios salientes apresuran el gasto final. Los picos de contratación en diciembre aparecen cada año, sin importar la administración."
+  },
+  "sexenio": {
+    "heading": "Análisis por Año del Sexenio",
+    "description": "Cómo se compara cada año del sexenio en riesgo de contratación y tipo de procedimiento, agrupando todas las administraciones 2000–2024.",
+    "stat": {
+      "year1Da": "Adjudicaciones directas — Año 1",
+      "year1DaNote": "Nueva administración instala vendedores preferidos",
+      "peakRisk": "Pico de riesgo — {{label}}",
+      "peakRiskNote": "Mayor proporción de contratos de alto riesgo",
+      "peakDa": "Pico adjudicación directa — {{label}}",
+      "peakDaNote": "Evita licitación competitiva",
+      "year6Risk": "Alto riesgo — Año 6",
+      "year6RiskNote": "Volcado presupuestal antes de la transición"
+    },
+    "chart": {
+      "highRiskAxis": "% Alto Riesgo",
+      "directAwardAxis": "% Adjudicación Directa",
+      "highRiskBarName": "% Alto Riesgo",
+      "directAwardLineName": "% Adjudicación Directa",
+      "legendHighRisk": "% alto riesgo (eje izq.)",
+      "legendDirect": "% adjudicación directa (eje der.)",
+      "legendNote": "Barra pico resaltada. Año 1 = primer año de la administración.",
+      "tooltipContracts": "contratos"
+    },
+    "table": {
+      "year": "Año",
+      "contracts": "Contratos",
+      "avgRisk": "Riesgo Prom.",
+      "highRiskPct": "% Alto Riesgo",
+      "directAwardPct": "% Adj. Directa",
+      "singleBidPct": "% Propuesta Única"
+    },
+    "error": "No se pudo cargar el desglose por año del sexenio."
+  },
+  "election": {
+    "heading": "Efecto del Año Electoral",
+    "description": "Riesgo promedio de contratación en años electorales federales vs años no electorales (2002–2025). Las elecciones federales de México se realizan cada 6 años para la presidencia.",
+    "electionYears": "Años Electorales",
+    "nonElectionYears": "Años No Electorales",
+    "avgRiskScore": "puntaje de riesgo promedio",
+    "highRisk": "Alto Riesgo",
+    "directAward": "Adj. Directa",
+    "singleBid": "Propuesta Única",
+    "contracts": "Contratos",
+    "riskDelta": "Delta de Riesgo",
+    "deltaCaption": "electoral menos no electoral",
+    "relativeChange": "Cambio relativo",
+    "higherElection": "Los años electorales muestran un riesgo de contratación mensurablemente mayor, consistente con presión de gasto político.",
+    "higherNonElection": "Los años no electorales muestran mayor riesgo — el escrutinio electoral puede suprimir el fraude.",
+    "noDifference": "No hay diferencia significativa entre el riesgo de años electorales y no electorales.",
+    "error": "No se pudieron cargar los datos del efecto electoral."
+  },
+  "admin": {
+    "heading": "Rendición de Cuentas Presidencial",
+    "description": "Métricas clave de contratación por administración: Fox, Calderón, Peña Nieto, AMLO, Sheinbaum. Casos de corrupción documentados y concentración de vendedores (HHI) por sexenio.",
+    "table": {
+      "administration": "Administración",
+      "period": "Periodo",
+      "gtCases": "Casos GT",
+      "estFraud": "Fraude Est. (MXN)",
+      "hhi": "HHI Vendedores",
+      "decSpike": "% Pico Dic."
+    },
+    "chartTitle": "Casos de Corrupción Documentados por Administración",
+    "chartLabel": "Casos GT",
+    "chartFootnote": "GT = Casos de verdad de campo en la base RUBLI. Mayores conteos reflejan tanto más corrupción como más evidencia documentada, no necesariamente una tasa absoluta mayor.",
+    "error": "No se pudieron cargar los datos de comparación entre administraciones."
+  },
+  "methodology": {
+    "label": "Metodología: ",
+    "body": "Este análisis agrupa 3,059,592 contratos (2002–2025) por el año dentro de cada sexenio presidencial. Año 1 = primer año calendario de un nuevo presidente. Puntajes de riesgo del modelo RUBLI v6.5 (AUC 0.828, split vendedor-estratificado). Umbral de alto riesgo: puntaje ≥ 0.40. Adjudicación directa = procedimiento de contratación no competitivo. Propuesta única = procedimiento competitivo con un solo oferente. Año electoral = año de elección presidencial federal (2000, 2006, 2012, 2018, 2024). Casos GT = contratos vinculados a casos de corrupción documentados en la base de verdad de campo de RUBLI (748 casos al 2026-03-25). La concentración HHI de vendedores se calcula por sexenio en todos los sectores."
+  }
+}

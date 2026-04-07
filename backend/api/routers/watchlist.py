@@ -215,11 +215,14 @@ def list_watchlist_items(
     status: Optional[str] = Query(None, description="Filter by status"),
     item_type: Optional[str] = Query(None, description="Filter by type"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
+    folder_id: Optional[int] = Query(None, description="Filter by investigation folder ID"),
 ):
     """
     List all watchlist items.
 
     Returns items with current risk scores and entity names.
+    Optionally filter by investigation folder via the
+    investigation_folder_items join table.
     """
     try:
         with get_db() as conn:
@@ -228,7 +231,7 @@ def list_watchlist_items(
 
             # Build conditions
             conditions = ["1=1"]
-            params = []
+            params: list = []
 
             if status:
                 conditions.append("status = ?")
@@ -241,6 +244,18 @@ def list_watchlist_items(
             if priority:
                 conditions.append("priority = ?")
                 params.append(priority)
+
+            # Folder filter: inner-join via investigation_folder_items
+            # (tables are created lazily by watchlist_folders router;
+            #  if missing, fall back to empty result rather than error)
+            if folder_id is not None:
+                try:
+                    conditions.append(
+                        "id IN (SELECT watchlist_item_id FROM investigation_folder_items WHERE folder_id = ?)"
+                    )
+                    params.append(folder_id)
+                except sqlite3.OperationalError:
+                    pass
 
             where_clause = " AND ".join(conditions)
 

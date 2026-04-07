@@ -419,17 +419,30 @@ function HeroSection({
           >
             <SemaforoIndicator active={mx.semaforo} />
             <div className="flex flex-col items-center">
-              {/* Large numeric score */}
+              {/* Extra-large numeric score — national index hero */}
               <div className="flex items-baseline gap-1">
-                <span
-                  className="leading-none font-bold tabular-nums"
-                  style={{ fontFamily: SERIF, fontSize: '5.5rem', color: mx.color }}
+                <motion.span
+                  className="leading-none font-black tabular-nums"
+                  style={{
+                    fontFamily: SERIF,
+                    fontSize: '7.5rem',
+                    color: mx.color,
+                    textShadow: `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
+                  }}
                   aria-label={`${Math.round(score)} de 100`}
+                  animate={{
+                    textShadow: [
+                      `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
+                      `0 0 60px ${mx.color}60, 0 0 100px ${mx.color}30`,
+                      `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
+                    ],
+                  }}
+                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
                 >
                   {Math.round(score)}
-                </span>
+                </motion.span>
                 <span
-                  className="text-2xl font-bold"
+                  className="text-3xl font-bold"
                   style={{ color: mx.color, opacity: 0.5 }}
                 >
                   /100
@@ -1181,15 +1194,21 @@ function ReportCard() {
   return (
     <main className="min-h-screen bg-zinc-950" id="main-content">
       <div className="max-w-4xl mx-auto px-4 py-8">
-        {/* Page header */}
+        {/* Page header — NATIONAL SYSTEM HEALTH */}
         <header className="mb-8 pb-5 border-b border-zinc-800">
-          <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase mb-2 text-amber-500">
-            RUBLI · {t('pageEyebrow')}
-          </p>
+          <div className="flex items-center gap-2 mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-amber-500 animate-pulse" aria-hidden="true" />
+            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-amber-500">
+              Salud del Sistema · Índice Nacional de Integridad
+            </p>
+          </div>
           <h1 className="text-3xl md:text-4xl font-bold text-zinc-100" style={{ fontFamily: SERIF }}>
             {t('pageTitle')}
           </h1>
-          <p className="text-sm mt-1 text-zinc-500">
+          <p className="text-sm mt-2 text-zinc-400 max-w-2xl leading-relaxed">
+            Este índice mide la salud del sistema de compras federales de México — no instituciones individuales.
+          </p>
+          <p className="text-[11px] mt-1 text-zinc-600 font-mono">
             {t('pageSubtitleV2')}
           </p>
         </header>
@@ -1199,6 +1218,18 @@ function ReportCard() {
 
         {/* Hero: numeric score + semaforo + headline */}
         <HeroSection national={national} highRiskPct={highRiskPct} />
+
+        {/* Clear separator between national score and sector breakdown */}
+        <div className="relative my-10" aria-hidden="true">
+          <div className="absolute inset-0 flex items-center">
+            <div className="w-full border-t border-zinc-800" />
+          </div>
+          <div className="relative flex justify-center">
+            <span className="bg-zinc-950 px-4 text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-600">
+              Desglose por Sector
+            </span>
+          </div>
+        </div>
 
         {/* OECD context panel */}
         <OECDContextPanel national={national} />

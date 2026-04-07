@@ -53,6 +53,7 @@ import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
+import { CategoryTreemap } from '@/components/charts/CategoryTreemap'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -976,6 +977,140 @@ function SubcategoryPanel({
 }
 
 // =============================================================================
+// Top Findings Bar — 3 views (value / risk / direct award)
+// =============================================================================
+
+type FindingView = 'value' | 'risk' | 'da'
+
+function TopFindingsBar({
+  categories,
+  onSelect,
+}: {
+  categories: CategoryStat[]
+  onSelect: (id: number) => void
+}) {
+  const [view, setView] = useState<FindingView>('value')
+
+  const top5 = useMemo(() => {
+    const eligible = categories.filter(c => c.total_contracts >= 10 && c.total_value > 0)
+    const comparators: Record<FindingView, (a: CategoryStat, b: CategoryStat) => number> = {
+      value: (a, b) => b.total_value - a.total_value,
+      risk: (a, b) => b.avg_risk - a.avg_risk,
+      da: (a, b) => b.direct_award_pct - a.direct_award_pct,
+    }
+    return [...eligible].sort(comparators[view]).slice(0, 5)
+  }, [categories, view])
+
+  const VIEWS: { key: FindingView; label: string; hint: string }[] = [
+    { key: 'value', label: 'Mayor gasto', hint: 'Por monto total' },
+    { key: 'risk', label: 'Mayor riesgo', hint: 'Por score promedio' },
+    { key: 'da', label: 'Adj. directa', hint: '% sobre total' },
+  ]
+
+  const getMetric = (cat: CategoryStat): { value: string; color: string; sub: string } => {
+    if (view === 'value') {
+      return {
+        value: formatCompactMXN(cat.total_value),
+        color: '#fafafa',
+        sub: `${formatNumber(cat.total_contracts)} contratos`,
+      }
+    }
+    if (view === 'risk') {
+      const level = getRiskLevelFromScore(cat.avg_risk)
+      return {
+        value: `${(cat.avg_risk * 100).toFixed(1)}%`,
+        color: RISK_COLORS[level],
+        sub: `${level.charAt(0).toUpperCase() + level.slice(1)} · ${formatCompactMXN(cat.total_value)}`,
+      }
+    }
+    // da
+    const overLimit = cat.direct_award_pct > 25
+    return {
+      value: `${cat.direct_award_pct.toFixed(0)}%`,
+      color: overLimit ? '#fb923c' : '#fafafa',
+      sub: overLimit ? `${(cat.direct_award_pct / 25).toFixed(1)}x límite OCDE` : 'Dentro de límite OCDE',
+    }
+  }
+
+  return (
+    <section aria-labelledby="top-findings-heading">
+      <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI · Ranking dinámico
+          </p>
+          <h2
+            id="top-findings-heading"
+            className="text-lg font-bold text-text-primary tracking-tight"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            Las cinco categorías que importan
+          </h2>
+        </div>
+        <div className="flex items-center gap-1 bg-background-card border border-border/40 rounded p-0.5">
+          {VIEWS.map(v => (
+            <button
+              key={v.key}
+              onClick={() => setView(v.key)}
+              className={cn(
+                'px-3 py-1 text-[10px] rounded transition-colors font-mono uppercase tracking-wider',
+                view === v.key
+                  ? 'bg-accent/20 text-accent'
+                  : 'text-text-muted hover:text-text-primary',
+              )}
+              title={v.hint}
+            >
+              {v.label}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
+        {top5.map((cat, idx) => {
+          const metric = getMetric(cat)
+          const sectorColor = cat.sector_code ? (SECTOR_COLORS[cat.sector_code] ?? '#64748b') : '#64748b'
+          return (
+            <button
+              key={cat.category_id}
+              onClick={() => onSelect(cat.category_id)}
+              className="group text-left p-3 rounded-lg border border-border/30 bg-background-card hover:bg-background-elevated/60 hover:border-accent/40 transition-colors"
+              style={{ borderLeft: `3px solid ${sectorColor}` }}
+            >
+              <div className="flex items-center justify-between mb-2">
+                <span className="text-[9px] font-mono text-text-muted/60 uppercase tracking-wider tabular-nums">
+                  #{idx + 1}
+                </span>
+                {cat.sector_code && (
+                  <span className="text-[9px] font-mono text-text-muted/50 uppercase tracking-wider">
+                    {cat.sector_code}
+                  </span>
+                )}
+              </div>
+              <p
+                className="text-xs font-semibold text-text-primary leading-snug mb-2 group-hover:text-accent transition-colors"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {truncate(cat.name_es || cat.name_en, 50)}
+              </p>
+              <p
+                className="text-xl font-mono font-bold tabular-nums leading-tight"
+                style={{ color: metric.color }}
+              >
+                {metric.value}
+              </p>
+              <p className="text-[10px] text-text-muted/70 font-mono mt-0.5">
+                {metric.sub}
+              </p>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -1356,6 +1491,45 @@ export default function SpendingCategories() {
           color="border-amber-500"
         />
       </div>
+
+      {/* ================================================================= */}
+      {/* 2.5 Category Treemap — hero visualization                         */}
+      {/* ================================================================= */}
+      {allCategories.length > 0 && (
+        <section aria-labelledby="treemap-heading" className="space-y-3">
+          <div className="flex items-end justify-between gap-3 flex-wrap">
+            <div>
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                RUBLI · Mapa de gasto
+              </p>
+              <h2
+                id="treemap-heading"
+                className="text-lg font-bold text-text-primary tracking-tight"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {allCategories.length} categorías dimensionadas por gasto total
+              </h2>
+              <p className="text-xs text-text-muted mt-0.5">
+                Tamaño = monto total · Color = sector · Clic en una categoría para ver su perfil
+              </p>
+            </div>
+            <FuentePill source="COMPRANET · 2002–2025" verified={true} />
+          </div>
+          <div className="rounded-xl border border-border/30 bg-background-card overflow-hidden p-2">
+            <CategoryTreemap categories={allCategories} height={480} />
+          </div>
+        </section>
+      )}
+
+      {/* ================================================================= */}
+      {/* 2.6 Top Findings Bar — 3 views                                    */}
+      {/* ================================================================= */}
+      {allCategories.length > 0 && (
+        <TopFindingsBar
+          categories={allCategories}
+          onSelect={(id) => setSelectedCategoryId(prev => prev === id ? null : id)}
+        />
+      )}
 
       {/* ================================================================= */}
       {/* 3. Journalistic Lede                                              */}

@@ -982,6 +982,175 @@ function LeadRow({
 }
 
 // ============================================================================
+// ARIA Impact Hero — communicates the scale and method of ARIA
+// ============================================================================
+
+function AriaImpactHero({
+  vendorsMonitored,
+  tier1Count,
+}: {
+  vendorsMonitored: number | null
+  tier1Count: number | null
+}) {
+  const { t } = useTranslation('aria')
+
+  const stats = [
+    {
+      value: vendorsMonitored != null ? formatNumber(vendorsMonitored) : '318,441',
+      label: t('impactHero.stat1Label'),
+      color: 'text-zinc-100',
+    },
+    {
+      value: tier1Count != null ? formatNumber(tier1Count) : '320',
+      label: t('impactHero.stat2Label'),
+      color: 'text-red-500',
+    },
+    {
+      value: '4',
+      label: t('impactHero.stat3Label'),
+      color: 'text-amber-400',
+    },
+  ]
+
+  const steps = [
+    { label: t('impactHero.step1Label'), body: t('impactHero.step1Body'), icon: Sparkles },
+    { label: t('impactHero.step2Label'), body: t('impactHero.step2Body'), icon: Crosshair },
+    { label: t('impactHero.step3Label'), body: t('impactHero.step3Body'), icon: Shield },
+  ]
+
+  return (
+    <section
+      aria-labelledby="aria-impact-headline"
+      className="relative overflow-hidden border-b border-zinc-800 bg-zinc-950"
+    >
+      {/* Dot-grid background */}
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 opacity-[0.04]"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle, rgba(245, 158, 11, 0.8) 1px, transparent 1px)',
+          backgroundSize: '22px 22px',
+        }}
+      />
+      {/* Subtle top accent line */}
+      <div
+        aria-hidden="true"
+        className="absolute inset-x-0 top-0 h-px bg-gradient-to-r from-transparent via-amber-500/40 to-transparent"
+      />
+
+      <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-10 sm:py-14">
+        {/* Kicker */}
+        <div className="flex items-center gap-2 mb-4">
+          <span className="relative flex h-2 w-2">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-60" />
+            <span className="relative inline-flex rounded-full h-2 w-2 bg-amber-500" />
+          </span>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400">
+            {t('impactHero.kicker')}
+          </p>
+        </div>
+
+        {/* Headline */}
+        <h1
+          id="aria-impact-headline"
+          className="text-3xl sm:text-4xl lg:text-5xl font-bold font-serif text-zinc-50 leading-[1.08] tracking-tight max-w-4xl"
+        >
+          {t('impactHero.headline')}
+        </h1>
+
+        {/* Subhead */}
+        <p className="mt-4 text-base sm:text-lg text-zinc-400 leading-relaxed max-w-3xl">
+          {t('impactHero.subhead')}
+        </p>
+
+        {/* Impact stats strip */}
+        <div className="mt-8 grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6">
+          {stats.map(({ value, label, color }) => (
+            <div
+              key={label}
+              className="border-l-2 border-amber-500/40 pl-4 py-1"
+            >
+              <div className={cn('text-4xl sm:text-5xl font-mono font-bold tabular-nums leading-none', color)}>
+                {value}
+              </div>
+              <div className="mt-2 text-[11px] text-zinc-500 uppercase tracking-wider">
+                {label}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Pipeline */}
+        <div className="mt-10 pt-6 border-t border-zinc-800/80">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-4">
+            {t('impactHero.pipelineTitle')}
+          </p>
+          <ol className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr_auto_1fr] items-stretch gap-3 md:gap-2">
+            {steps.map((step, idx) => {
+              const Icon = step.icon
+              return (
+                <div key={step.label} className="contents">
+                  <li className="relative rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 hover:border-amber-500/30 transition-colors">
+                    <div className="flex items-center gap-2 mb-2">
+                      <span className="flex h-6 w-6 items-center justify-center rounded-full bg-amber-500/10 border border-amber-500/30">
+                        <Icon className="h-3 w-3 text-amber-400" />
+                      </span>
+                      <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400">
+                        {String(idx + 1).padStart(2, '0')} · {step.label}
+                      </span>
+                    </div>
+                    <p className="text-xs text-zinc-300 leading-relaxed">
+                      {step.body}
+                    </p>
+                  </li>
+                  {idx < steps.length - 1 && (
+                    <div
+                      aria-hidden="true"
+                      className="hidden md:flex items-center justify-center text-amber-500/40"
+                    >
+                      <ArrowRight className="h-4 w-4" />
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+          </ol>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+// ============================================================================
+// Why It Matters — editorial callout
+// ============================================================================
+
+function WhyItMattersCallout({ t1Count }: { t1Count: number }) {
+  const { t } = useTranslation('aria')
+  return (
+    <aside
+      aria-labelledby="aria-why-matters"
+      className="relative rounded-lg border border-zinc-800 bg-zinc-900/40 pl-5 pr-6 py-5"
+    >
+      <div
+        aria-hidden="true"
+        className="absolute left-0 top-0 bottom-0 w-0.5 bg-amber-500"
+      />
+      <p
+        id="aria-why-matters"
+        className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400 mb-2"
+      >
+        {t('whyItMatters.kicker')}
+      </p>
+      <p className="text-sm sm:text-base font-serif text-zinc-200 leading-relaxed max-w-3xl">
+        {t('whyItMatters.body', { t1Count: formatNumber(t1Count) })}
+      </p>
+    </aside>
+  )
+}
+
+// ============================================================================
 // Main Page
 // ============================================================================
 
@@ -1073,7 +1242,15 @@ export default function AriaPage() {
     <div className="min-h-screen bg-background">
 
       {/* ================================================================== */}
-      {/* EDITORIAL HERO — the most important thing the reader should know   */}
+      {/* ARIA IMPACT HERO — scale, method, and impact stated in plain view  */}
+      {/* ================================================================== */}
+      <AriaImpactHero
+        vendorsMonitored={stats?.queue_total ?? null}
+        tier1Count={tier1Data?.pagination?.total ?? stats?.latest_run?.tier1_count ?? null}
+      />
+
+      {/* ================================================================== */}
+      {/* EDITORIAL HERO — operational summary: updated, T1 counter, progress */}
       {/* ================================================================== */}
       <div className="border-b border-border bg-zinc-950">
         <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
@@ -1428,6 +1605,13 @@ export default function AriaPage() {
             )}
           </section>
         )}
+
+        {/* ================================================================ */}
+        {/* WHY IT MATTERS — editorial callout before the queue             */}
+        {/* ================================================================ */}
+        <WhyItMattersCallout
+          t1Count={tier1Data?.pagination?.total ?? stats?.latest_run?.tier1_count ?? 320}
+        />
 
         {/* ================================================================ */}
         {/* FULL INTELLIGENCE QUEUE                                          */}

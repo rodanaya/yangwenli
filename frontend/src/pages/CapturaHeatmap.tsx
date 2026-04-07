@@ -72,7 +72,7 @@ interface TopCaptureRow {
 
 function truncName(name: string, maxLen = 24): string {
   if (name.length <= maxLen) return name
-  return name.slice(0, maxLen - 1) + '\u2026'
+  return name.slice(0, maxLen - 1) + '…'
 }
 
 /** Risk-based background color for a capture percentage */
@@ -150,7 +150,7 @@ function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
         <span className="text-[11px] uppercase tracking-wide text-amber-400 font-semibold">
           {t('whyItMatters.label')}
         </span>
-        <span className="ml-auto text-amber-400/60 text-xs">{open ? '\u2212' : '+'}</span>
+        <span className="ml-auto text-amber-400/60 text-xs">{open ? '−' : '+'}</span>
       </button>
       {open && (
         <div id="why-it-matters-body" className="mt-3 space-y-2">
@@ -160,7 +160,7 @@ function WhyItMattersBox({ t }: { t: ReturnType<typeof useTranslation>['t'] }) {
           <ul className="space-y-1.5">
             {(['prices', 'corruption', 'fragility', 'opacity'] as const).map((key) => (
               <li key={key} className="flex items-start gap-2 text-sm text-zinc-400">
-                <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
+                <span className="text-amber-400 mt-0.5">•</span>
                 <span>{t(`whyItMatters.${key}`)}</span>
               </li>
             ))}
@@ -730,19 +730,47 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Filters ===== */}
-      <div className="space-y-3">
-        <div>
-          <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted/50 mb-2">
-            {t('filters.bySector')}
-          </div>
-          <div className="flex flex-wrap gap-3">
+      <div className="space-y-3 rounded-xl border border-white/10 bg-surface-card/40 p-4">
+        {/* Current filter state indicator */}
+        <div className="flex flex-wrap items-center gap-2 text-[11px]">
+          <span className="text-text-muted/60 uppercase tracking-wide">{t('filters.currentView')}:</span>
+          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-full font-medium">
+            {sectorId ? SECTORS.find((s) => s.id === sectorId)?.name : t('filters.allSectors')}
+          </span>
+          <span className="text-text-muted/40">·</span>
+          <span className="inline-flex items-center gap-1.5 bg-primary/15 border border-primary/30 text-primary px-2.5 py-0.5 rounded-full font-medium">
+            {yearRange === 'all'
+              ? t('filters.allYears')
+              : yearRange === '2018'
+                ? t('filters.period2018')
+                : t('filters.period2023')}
+          </span>
+          {(sectorId !== undefined || yearRange !== 'all' || minCapture !== 0) && (
+            <button
+              onClick={() => {
+                setSectorId(undefined)
+                setYearRange('all')
+                setMinCapture(0)
+              }}
+              className="ml-auto inline-flex items-center gap-1 text-[11px] text-amber-400 hover:text-amber-300 font-medium border border-amber-500/30 px-2.5 py-0.5 rounded-full hover:bg-amber-500/10 transition-colors"
+            >
+              ↺ {t('filters.resetAll')}
+            </button>
+          )}
+        </div>
+
+        <div className="flex flex-wrap gap-4 items-end">
+          <div className="flex flex-col gap-1">
+            <label htmlFor="captura-sector-select" className="text-[10px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
+              {t('filters.sectorLabel')}
+            </label>
             <select
+              id="captura-sector-select"
               value={sectorId ?? ''}
               onChange={(e) =>
                 setSectorId(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-              aria-label={t('filters.bySector')}
+              className="bg-surface-card border border-white/15 hover:border-white/30 focus:border-primary focus:outline-none rounded-full px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
             >
               <option value="">{t('filters.allSectors')}</option>
               {SECTORS.map((s) => (
@@ -751,12 +779,17 @@ export default function CapturaHeatmap() {
                 </option>
               ))}
             </select>
+          </div>
 
+          <div className="flex flex-col gap-1">
+            <label htmlFor="captura-year-select" className="text-[10px] tracking-[0.15em] uppercase text-text-muted/60 font-semibold">
+              {t('filters.yearLabel')}
+            </label>
             <select
+              id="captura-year-select"
               value={yearRange}
               onChange={(e) => setYearRange(e.target.value)}
-              className="bg-surface-card border border-white/10 rounded-md px-3 py-1.5 text-sm text-text-primary"
-              aria-label={t('filters.allYears')}
+              className="bg-surface-card border border-white/15 hover:border-white/30 focus:border-primary focus:outline-none rounded-full px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
             >
               <option value="all">{t('filters.allYears')}</option>
               <option value="2018">{t('filters.period2018')}</option>
@@ -824,23 +857,14 @@ export default function CapturaHeatmap() {
               <h3 className="font-serif text-lg text-text-primary mb-1">
                 {t('errorTitle')}
               </h3>
-              <p className="text-text-muted text-sm mb-3">{t('errorMessage')}</p>
-              <div className="rounded-lg border border-red-500/10 bg-red-500/5 px-3 py-2">
-                <p className="text-[10px] font-mono uppercase tracking-wide text-red-400 mb-0.5">
-                  DIAGNOSTICO
-                </p>
-                <p className="text-xs text-text-muted/70">
-                  El endpoint /api/v1/analysis/money-flow no respondi{'\u00f3'} correctamente.
-                  Verifique que el backend est{'\u00e9'} activo en el puerto 8001 y que la tabla
-                  institution_top_vendors tenga datos precalculados.
-                </p>
-              </div>
+              <p className="text-text-muted text-sm mb-1">{t('errorMessage')}</p>
+              <p className="text-xs text-text-muted/70">{t('errorHint')}</p>
             </div>
           </div>
         </div>
       )}
 
-      {/* ===== Empty state — editorial, explains WHY ===== */}
+      {/* ===== Empty state — clean, user-facing ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="space-y-5">
           <div className="bg-surface-card border border-amber-500/20 rounded-xl p-6">
@@ -850,77 +874,26 @@ export default function CapturaHeatmap() {
               </div>
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 mb-1">
-                  SIN DATOS DE CAPTURA PARA ESTOS FILTROS
+                  {t('emptyState.overline')}
                 </p>
                 <h3 className="font-serif text-lg text-text-primary mb-2">
-                  {sectorId
-                    ? `No hay flujos institution-proveedor suficientes para el sector ${SECTORS.find(s => s.id === sectorId)?.name ?? sectorId}`
-                    : yearParam
-                      ? `No hay datos de flujos para el a${'\u00f1'}o ${yearParam}`
-                      : 'No se encontraron datos de flujos'}
+                  {t('emptyState.title')}
                 </h3>
                 <p className="text-sm text-text-muted leading-relaxed mb-3">
-                  El heatmap de captura institucional requiere datos precalculados de las relaciones
-                  instituci{'\u00f3'}n-proveedor con montos significativos. Esto puede ocurrir cuando:
+                  {t('emptyState.hint')}
                 </p>
-                <ul className="space-y-1.5 text-sm text-text-muted/80">
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
-                    <span>La tabla <code className="text-xs font-mono bg-white/5 px-1 rounded">institution_top_vendors</code> no se ha precalculado a{'\u00fa'}n</span>
-                  </li>
-                  {sectorId && (
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
-                      <span>El sector seleccionado tiene pocas instituciones con proveedores dominantes</span>
-                    </li>
-                  )}
-                  {yearParam && (
-                    <li className="flex items-start gap-2">
-                      <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
-                      <span>El periodo {yearParam}+ a{'\u00fa'}n no tiene datos suficientes en COMPRANET</span>
-                    </li>
-                  )}
-                  <li className="flex items-start gap-2">
-                    <span className="text-amber-400 mt-0.5">{'\u2022'}</span>
-                    <span>El backend necesita ejecutar <code className="text-xs font-mono bg-white/5 px-1 rounded">precompute_stats</code></span>
-                  </li>
-                </ul>
+                <button
+                  onClick={() => {
+                    setSectorId(undefined)
+                    setYearRange('all')
+                    setMinCapture(0)
+                  }}
+                  className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-medium border border-amber-500/30 px-3 py-1.5 rounded-full hover:bg-amber-500/10 transition-colors"
+                >
+                  ↺ {t('emptyState.resetButton')}
+                </button>
               </div>
             </div>
-          </div>
-
-          {/* Provide a clear action path */}
-          <div className="flex flex-wrap gap-3">
-            {sectorId && (
-              <button
-                onClick={() => setSectorId(undefined)}
-                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/5 transition-colors"
-              >
-                Quitar filtro de sector
-              </button>
-            )}
-            {yearRange !== 'all' && (
-              <button
-                onClick={() => setYearRange('all')}
-                className="inline-flex items-center gap-1.5 text-xs text-amber-400 hover:text-amber-300 font-mono uppercase tracking-wide border border-amber-500/30 px-3 py-1.5 rounded-lg hover:bg-amber-500/5 transition-colors"
-              >
-                Ver todos los a{'\u00f1'}os
-              </button>
-            )}
-          </div>
-
-          {/* Context: what capture analysis CAN show */}
-          <div className="rounded-xl border border-blue-500/20 bg-blue-500/5 p-4">
-            <p className="text-xs font-mono uppercase tracking-wide text-blue-400 mb-1">
-              CONTEXTO
-            </p>
-            <p className="text-sm text-zinc-300 leading-relaxed">
-              El an{'\u00e1'}lisis de captura institucional identifica cuando un solo proveedor
-              concentra m{'\u00e1'}s del 30% del presupuesto de una instituci{'\u00f3'}n {'\u2014'}
-              un indicador cr{'\u00ed'}tico de corrupci{'\u00f3'}n seg{'\u00fa'}n la OCDE.
-              En el dataset completo de 3.05M contratos, este patr{'\u00f3'}n es com{'\u00fa'}n
-              en sectores como Salud (laboratorios farmac{'\u00e9'}uticos) y Energ{'\u00ed'}a (proveedores especializados).
-            </p>
           </div>
         </div>
       )}
@@ -1086,9 +1059,9 @@ export default function CapturaHeatmap() {
           <div className="flex flex-wrap items-center gap-4 mb-4 text-[10px] text-text-muted/50">
             {(
               [
-                { color: '#dc2626', label: '\u226550%', desc: t('legendDescriptive.severe') },
-                { color: '#ea580c', label: '30\u201350%', desc: t('legendDescriptive.high') },
-                { color: '#eab308', label: '15\u201330%', desc: t('legendDescriptive.moderate') },
+                { color: '#dc2626', label: '≥50%', desc: t('legendDescriptive.severe') },
+                { color: '#ea580c', label: '30–50%', desc: t('legendDescriptive.high') },
+                { color: '#eab308', label: '15–30%', desc: t('legendDescriptive.moderate') },
                 { color: '#94a3b8', label: '<15%', desc: t('legendDescriptive.competitive') },
               ] as const
             ).map(({ color, label, desc }) => (

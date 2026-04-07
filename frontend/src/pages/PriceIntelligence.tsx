@@ -41,6 +41,7 @@ import {
   AlertTriangle,
   ExternalLink,
   Info,
+  CheckCircle2,
 } from 'lucide-react'
 
 // --- Constants ---------------------------------------------------------------
@@ -686,6 +687,36 @@ export default function PriceIntelligence() {
         {/* Hero lede */}
         {loading ? (
           <Skeleton className="h-24 w-full" />
+        ) : summary && summary.total_outliers === 0 ? (
+          // --- HEALTHY SYSTEM: no anomalies detected at current threshold -----
+          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 max-w-3xl">
+            <div className="flex items-start gap-3">
+              <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+              <div className="flex-1">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-emerald-400 mb-1">
+                  Sistema saludable
+                </p>
+                <h2
+                  className="text-lg md:text-xl font-bold text-zinc-100 mb-2"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  No se detectaron anomalias estadisticas significativas
+                </h2>
+                <p className="text-sm text-zinc-300 leading-relaxed">
+                  Con el umbral actual de{' '}
+                  <strong className="text-emerald-300">z &ge; {zThreshold.toFixed(1)}&sigma;</strong>,
+                  ningun contrato federal supera el limite de deteccion. El sistema de precios
+                  publicos esta dentro de rangos esperados en los sectores analizados.
+                </p>
+                <p className="text-xs text-zinc-500 mt-3 leading-relaxed">
+                  <strong className="text-zinc-400">Nota metodologica:</strong> el umbral z &ge; 3.0&sigma;
+                  es conservador por diseno &mdash; solo detecta valores extremos. Reduzca el umbral
+                  en el slider de abajo para ver anomalias moderadas (z &ge; 2.0&sigma;) que pueden
+                  reflejar patrones de sobreprecio menos obvios.
+                </p>
+              </div>
+            </div>
+          </div>
         ) : summary ? (
           (() => {
             const avgZ = summary.avg_z_score || 3

@@ -8,6 +8,7 @@
 
 import { useMemo } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, TrendingUp, Calendar, Activity } from 'lucide-react'
 import {
   BarChart,
@@ -25,7 +26,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { cn, formatNumber } from '@/lib/utils'
-import { analysisApi, storiesApi } from '@/api/client'
+import { analysisApi } from '@/api/client'
 import type { PoliticalCycleResponse, AdminBreakdownResponse } from '@/api/types'
 
 // =============================================================================
@@ -86,16 +87,14 @@ function SectionError({ message }: { message: string }) {
 // =============================================================================
 
 function KeyFindingBox() {
+  const { t } = useTranslation('politicalcycle')
   return (
     <div className="border-l-4 border-amber-500 bg-amber-500/5 rounded-r-lg px-5 py-4">
       <div className="text-[10px] uppercase tracking-[0.2em] text-amber-400 font-bold mb-2">
-        Key Finding
+        {t('keyFinding.label')}
       </div>
       <p className="text-sm text-text-secondary leading-relaxed">
-        Year 1 of a new administration sees the highest direct-award rates as incoming governments
-        bypass competitive bidding to install preferred vendors quickly. Years 5–6 exhibit the
-        highest risk scores — the "budget dump" effect as outgoing officials rush final spending.
-        December contract spikes appear every year regardless of administration.
+        {t('keyFinding.body')}
       </p>
     </div>
   )
@@ -110,6 +109,7 @@ interface SexenioChartProps {
 }
 
 function SexenioYearSection({ data }: SexenioChartProps) {
+  const { t } = useTranslation('politicalcycle')
   const chartData = useMemo(
     () =>
       data.map((r) => ({
@@ -142,12 +142,11 @@ function SexenioYearSection({ data }: SexenioChartProps) {
             id="sexenio-heading"
             className="text-xs uppercase tracking-[0.15em] text-text-muted font-bold"
           >
-            Sexenio Year Analysis
+            {t('sexenio.heading')}
           </h2>
         </div>
         <p className="text-sm text-text-secondary">
-          How each year of the 6-year presidential term compares on procurement risk and
-          procedure type — pooled across all administrations 2000–2024.
+          {t('sexenio.description')}
         </p>
       </div>
 
@@ -156,32 +155,32 @@ function SexenioYearSection({ data }: SexenioChartProps) {
         {yr1 && (
           <HallazgoStat
             value={`${yr1.direct_award_pct.toFixed(1)}%`}
-            label="Direct awards — Year 1"
-            annotation="New admin installs preferred vendors"
+            label={t('sexenio.stat.year1Da')}
+            annotation={t('sexenio.stat.year1DaNote')}
             color="border-blue-500"
           />
         )}
         {peakRisk && (
           <HallazgoStat
             value={`${peakRisk.high_risk_pct.toFixed(1)}%`}
-            label={`Peak risk — ${peakRisk.fullLabel}`}
-            annotation="Highest high-risk contract share"
+            label={t('sexenio.stat.peakRisk', { label: peakRisk.fullLabel })}
+            annotation={t('sexenio.stat.peakRiskNote')}
             color="border-red-500"
           />
         )}
         {peakDa && (
           <HallazgoStat
             value={`${peakDa.direct_award_pct.toFixed(1)}%`}
-            label={`Peak direct awards — ${peakDa.fullLabel}`}
-            annotation="Bypasses competitive bidding"
+            label={t('sexenio.stat.peakDa', { label: peakDa.fullLabel })}
+            annotation={t('sexenio.stat.peakDaNote')}
             color="border-amber-500"
           />
         )}
         {yr6 && (
           <HallazgoStat
             value={`${yr6.high_risk_pct.toFixed(1)}%`}
-            label="High-risk share — Year 6"
-            annotation="Budget dump before transition"
+            label={t('sexenio.stat.year6Risk')}
+            annotation={t('sexenio.stat.year6RiskNote')}
             color="border-orange-500"
           />
         )}
@@ -202,7 +201,7 @@ function SexenioYearSection({ data }: SexenioChartProps) {
               tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
               width={38}
               label={{
-                value: 'High Risk %',
+                value: t('sexenio.chart.highRiskAxis'),
                 angle: -90,
                 position: 'insideLeft',
                 offset: 10,
@@ -216,7 +215,7 @@ function SexenioYearSection({ data }: SexenioChartProps) {
               tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
               width={38}
               label={{
-                value: 'Direct Award %',
+                value: t('sexenio.chart.directAwardAxis'),
                 angle: 90,
                 position: 'insideRight',
                 offset: 10,
@@ -241,13 +240,13 @@ function SexenioYearSection({ data }: SexenioChartProps) {
               labelFormatter={(label: string, payload) => {
                 const item = payload?.[0]?.payload as (typeof chartData)[0] | undefined
                 if (!item) return label
-                return `${item.fullLabel} · ${formatNumber(item.contracts)} contracts`
+                return `${item.fullLabel} · ${formatNumber(item.contracts)} ${t('sexenio.chart.tooltipContracts')}`
               }}
             />
             <Bar
               yAxisId="risk"
               dataKey="high_risk_pct"
-              name="High-Risk %"
+              name={t('sexenio.chart.highRiskBarName')}
               radius={[3, 3, 0, 0]}
               maxBarSize={52}
             >
@@ -669,7 +668,7 @@ export default function PoliticalCycle() {
     isError: adminError,
   } = useQuery<AdminBreakdownResponse>({
     queryKey: ['admin-breakdown'],
-    queryFn: () => storiesApi.getAdministrationComparison(),
+    queryFn: () => analysisApi.getAdminBreakdown(),
     staleTime: 30 * 60 * 1000,
     retry: 1,
   })
@@ -691,7 +690,7 @@ export default function PoliticalCycle() {
       {cycleError && (
         <SectionError message="Sexenio year breakdown could not be loaded." />
       )}
-      {cycleData && cycleData.sexenio_year_breakdown.length > 0 && (
+      {cycleData && Array.isArray(cycleData.sexenio_year_breakdown) && cycleData.sexenio_year_breakdown.length > 0 && (
         <SexenioYearSection data={cycleData.sexenio_year_breakdown} />
       )}
 
@@ -700,7 +699,7 @@ export default function PoliticalCycle() {
       {cycleError && (
         <SectionError message="Election year effect data could not be loaded." />
       )}
-      {cycleData && (
+      {cycleData && cycleData.election_year_effect && (
         <ElectionYearSection effect={cycleData.election_year_effect} />
       )}
 
@@ -709,7 +708,7 @@ export default function PoliticalCycle() {
       {adminError && (
         <SectionError message="Administration comparison data could not be loaded." />
       )}
-      {adminData && adminData.eras.length > 0 && (
+      {adminData && Array.isArray(adminData.eras) && adminData.eras.length > 0 && (
         <AdminComparisonSection data={adminData} />
       )}
 

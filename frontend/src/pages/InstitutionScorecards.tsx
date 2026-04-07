@@ -460,19 +460,25 @@ function TierChip({ tierName, active, count, onClick }: TierChipProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-1.5 rounded-full px-3 py-1 text-[11px] font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border"
+      className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border-2"
       style={{
-        backgroundColor: active ? tier.color : 'transparent',
-        borderColor: active ? tier.color : tier.border,
+        backgroundColor: active ? tier.color : tier.bg,
+        borderColor: tier.color,
         color: active ? '#000' : tier.color,
+        boxShadow: active ? `0 0 20px ${tier.color}60` : 'none',
       }}
       aria-pressed={active}
       aria-label={`Filtrar nivel ${tierName}, ${count} instituciones`}
     >
+      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? '#000' : tier.color }} aria-hidden="true" />
       {tierName}
       <span
-        className="text-[9px] font-normal"
-        style={{ opacity: 0.7 }}
+        className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded"
+        style={{
+          backgroundColor: active ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.05)',
+          color: active ? '#000' : tier.color,
+          opacity: active ? 0.8 : 0.9,
+        }}
       >
         {formatNumber(count)}
       </span>
@@ -578,19 +584,26 @@ export default function InstitutionScorecards() {
         />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <div className="flex items-center gap-2 mb-3">
-            <Award className="h-4 w-4 text-zinc-500" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500">
-              TRANSPARENCIA INSTITUCIONAL · COMPRANET 2002-2025 · v6.5
+            <Award className="h-4 w-4 text-violet-400" aria-hidden="true" />
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-violet-400">
+              Transparencia Institucional · Expedientes Individuales
             </p>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-            Transparencia Institucional
+            Explora la transparencia de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones federales.
           </h1>
-          <p className="mt-3 text-base text-zinc-400 max-w-2xl leading-relaxed">
-            Evaluacion de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones del gobierno federal mexicano
-            en su transparencia de contrataciones. Puntuacion de 0-100 basada en 5 dimensiones:
-            apertura, precios, diversidad de proveedores, proceso e incidencias externas.
+          <p className="mt-4 text-base text-zinc-400 max-w-3xl leading-relaxed">
+            Explora y filtra las calificaciones de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones federales.
+            Cada tarjeta es un expediente independiente — basado en 5 pilares: apertura, precios, diversidad de proveedores,
+            proceso e incidencias externas.
           </p>
+          {/* Clarifying info badge */}
+          <div className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-violet-500/10 border border-violet-500/25">
+            <span className="h-1.5 w-1.5 rounded-full bg-violet-400" aria-hidden="true" />
+            <span className="text-[11px] font-mono uppercase tracking-wide text-violet-300">
+              Calificaciones individuales, no promedio nacional
+            </span>
+          </div>
         </div>
       </header>
 
@@ -654,17 +667,17 @@ export default function InstitutionScorecards() {
 
         {/* -- FILTER BAR ------------------------------------------------- */}
         <section className="space-y-4" aria-label="Filtros">
-          {/* Tier chips */}
-          <div className="flex flex-wrap items-center gap-2">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-500">
-              Nivel:
+          {/* Tier chips — prominent filter row */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-400 mr-1">
+              Filtrar por nivel:
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
-              className={`rounded-full px-3 py-1 text-[11px] font-mono font-bold transition-all duration-150 border focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+              className={`rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                 selectedTier === null
-                  ? 'bg-white text-zinc-900 border-white'
-                  : 'bg-transparent text-zinc-400 border-white/15 hover:border-white/30'
+                  ? 'bg-white text-zinc-900 border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
+                  : 'bg-transparent text-zinc-300 border-white/20 hover:border-white/40'
               }`}
               aria-pressed={selectedTier === null}
             >

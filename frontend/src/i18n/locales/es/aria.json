@@ -38,7 +38,7 @@
     "heading": "Pistas Críticas — Nivel 1",
     "subtitle": "Proveedores prioritarios según la Puntuación de Prioridad de Investigación",
     "empty": "No se encontraron pistas de Nivel 1. Ejecuta el pipeline de ARIA para rellenar.",
-    "description": "Requieren investigación inmediata",
+    "description": "Investigación inmediata recomendada",
     "label": "NIVEL 1",
     "name": "CRÍTICO",
     "objective": "PISTA #{{number}}"
@@ -50,19 +50,38 @@
     "activeFilter": "Filtrado — clic para limpiar"
   },
   "tier2": {
-    "description": "Revisión prioritaria",
+    "description": "Revisión prioritaria en las próximas semanas",
     "label": "NIVEL 2",
     "name": "ALTO"
   },
   "tier3": {
-    "description": "Bajo monitoreo activo",
+    "description": "Monitoreo activo — revisar en 90 días",
     "label": "NIVEL 3",
     "name": "MEDIO"
   },
   "tier4": {
-    "description": "Vigilancia pasiva",
+    "description": "Vigilancia pasiva — alertas automáticas",
     "label": "NIVEL 4",
     "name": "BAJO"
+  },
+  "impactHero": {
+    "kicker": "ARIA · MOTOR DE INTELIGENCIA",
+    "headline": "ARIA detectó lo que los auditores no vieron.",
+    "subhead": "Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra 22 casos documentados de corrupción.",
+    "stat1Label": "Proveedores bajo vigilancia activa",
+    "stat2Label": "Alertas críticas (Nivel 1)",
+    "stat3Label": "Niveles de amenaza por score IPS",
+    "pipelineTitle": "CÓMO FUNCIONA ARIA",
+    "step1Label": "ML SCORING",
+    "step1Body": "v0.6.5 logistic model: 9 factores estadísticos por contrato",
+    "step2Label": "DETECCIÓN DE PATRONES",
+    "step2Body": "P1 Monopolio · P2 Empresa Fantasma · P3 Intermediario · P6 Captura",
+    "step3Label": "REGISTROS EXTERNOS",
+    "step3Body": "EFOS SAT · SFP · RUPC · ASF — 5 registros cruzados"
+  },
+  "whyItMatters": {
+    "kicker": "POR QUÉ IMPORTA",
+    "body": "Los métodos tradicionales de auditoría revisan el 0.1% de los contratos. ARIA puntúa el 100%. Los {{t1Count}} proveedores en Nivel 1 concentran patrones estadísticos que coinciden con los casos de corrupción más graves documentados en México."
   },
   "leads": {
     "filteredResults": "Resultados Filtrados",

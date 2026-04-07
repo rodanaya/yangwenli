@@ -1,0 +1,80 @@
+{
+  "section": "Political Cycle Intelligence",
+  "headline": "When Does Corruption Peak? Inside Mexico's 6-Year Procurement Cycle",
+  "subtitle": "23 years of federal contracts reveal a structural pattern: the final year of every administration sees dramatically different procurement behavior — and it repeats across every president, every party.",
+  "keyFinding": {
+    "label": "Key Finding",
+    "body": "Year 1 of a new administration sees the highest direct-award rates as incoming governments bypass competitive bidding to install preferred vendors quickly. Years 5–6 exhibit the highest risk scores — the \"budget dump\" effect as outgoing officials rush final spending. December contract spikes appear every year regardless of administration."
+  },
+  "sexenio": {
+    "heading": "Sexenio Year Analysis",
+    "description": "How each year of the 6-year presidential term compares on procurement risk and procedure type — pooled across all administrations 2000–2024.",
+    "stat": {
+      "year1Da": "Direct awards — Year 1",
+      "year1DaNote": "New admin installs preferred vendors",
+      "peakRisk": "Peak risk — {{label}}",
+      "peakRiskNote": "Highest high-risk contract share",
+      "peakDa": "Peak direct awards — {{label}}",
+      "peakDaNote": "Bypasses competitive bidding",
+      "year6Risk": "High-risk share — Year 6",
+      "year6RiskNote": "Budget dump before transition"
+    },
+    "chart": {
+      "highRiskAxis": "High Risk %",
+      "directAwardAxis": "Direct Award %",
+      "highRiskBarName": "High-Risk %",
+      "directAwardLineName": "Direct Award %",
+      "legendHighRisk": "High-risk % (left axis)",
+      "legendDirect": "Direct award % (right axis)",
+      "legendNote": "Peak bar highlighted. Year 1 = first year of administration.",
+      "tooltipContracts": "contracts"
+    },
+    "table": {
+      "year": "Year",
+      "contracts": "Contracts",
+      "avgRisk": "Avg Risk",
+      "highRiskPct": "High-Risk %",
+      "directAwardPct": "Direct Award %",
+      "singleBidPct": "Single Bid %"
+    },
+    "error": "Sexenio year breakdown could not be loaded."
+  },
+  "election": {
+    "heading": "Election Year Effect",
+    "description": "Average procurement risk in federal election years vs non-election years (2002–2025). Mexican federal elections occur every 6 years for the presidency.",
+    "electionYears": "Election Years",
+    "nonElectionYears": "Non-Election Years",
+    "avgRiskScore": "avg risk score",
+    "highRisk": "High-Risk",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "contracts": "Contracts",
+    "riskDelta": "Risk Delta",
+    "deltaCaption": "election minus non-election",
+    "relativeChange": "Relative change",
+    "higherElection": "Election years show measurably higher procurement risk, consistent with political spending pressure.",
+    "higherNonElection": "Non-election years show higher procurement risk — election-year scrutiny may suppress fraud.",
+    "noDifference": "No significant difference between election and non-election year risk.",
+    "error": "Election year effect data could not be loaded."
+  },
+  "admin": {
+    "heading": "Presidential Accountability",
+    "description": "Key procurement metrics by administration — Fox, Calderón, Peña Nieto, AMLO, Sheinbaum. Documented corruption cases and vendor concentration (HHI) by era.",
+    "table": {
+      "administration": "Administration",
+      "period": "Period",
+      "gtCases": "GT Cases",
+      "estFraud": "Est. Fraud (MXN)",
+      "hhi": "Vendor HHI",
+      "decSpike": "Dec Spike %"
+    },
+    "chartTitle": "Documented Corruption Cases by Administration",
+    "chartLabel": "GT Cases",
+    "chartFootnote": "GT = Ground truth cases in RUBLI database. Higher counts reflect both more corruption and more documented evidence — not necessarily a higher absolute rate.",
+    "error": "Administration comparison data could not be loaded."
+  },
+  "methodology": {
+    "label": "Methodology: ",
+    "body": "This analysis groups 3,059,592 contracts (2002–2025) by the year within each 6-year presidential term (sexenio). Year 1 = first calendar year of a new president. Risk scores from RUBLI v6.5 model (AUC 0.828, vendor-stratified test split). High-risk threshold: score ≥ 0.40. Direct award = non-competitive procurement procedure. Single bid = competitive procedure with only one bidder. Election year = year of federal presidential election (2000, 2006, 2012, 2018, 2024). GT cases = contracts matched to documented corruption cases in the RUBLI ground truth database (748 cases as of 2026-03-25). Vendor concentration HHI is computed per era across all sectors."
+  }
+}

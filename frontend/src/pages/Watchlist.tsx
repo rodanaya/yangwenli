@@ -420,18 +420,21 @@ export function Watchlist() {
     queryFn: () => watchlistApi.getStats(),
   })
 
-  // Items query (filtered)
+  // Items query (filtered). `activeFolderId` MUST be in queryKey so
+  // TanStack Query refetches when the folder sidebar selection changes.
   const { data: watchlistData, isLoading: itemsLoading, error, refetch } = useQuery({
     queryKey: [
       'watchlist',
       statusFilter === 'all' ? undefined : statusFilter,
       typeFilter === 'all' ? undefined : typeFilter,
       priorityFilter === 'all' ? undefined : priorityFilter,
+      activeFolderId,
     ],
     queryFn: () => watchlistApi.getAll({
       status: statusFilter === 'all' ? undefined : statusFilter,
       item_type: typeFilter === 'all' ? undefined : typeFilter,
       priority: priorityFilter === 'all' ? undefined : priorityFilter,
+      folder_id: activeFolderId ?? undefined,
     }),
   })
 

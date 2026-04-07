@@ -85,6 +85,8 @@ import esCollusion from './locales/es/collusion.json'
 import enCollusion from './locales/en/collusion.json'
 import esSettings from './locales/es/settings.json'
 import enSettings from './locales/en/settings.json'
+import esPoliticalcycle from './locales/es/politicalcycle.json'
+import enPoliticalcycle from './locales/en/politicalcycle.json'
 
 i18n
   .use(LanguageDetector)
@@ -118,6 +120,7 @@ i18n
         institutionleague: esInstitutionleague,
         collusion: esCollusion,
         settings: esSettings,
+        politicalcycle: esPoliticalcycle,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -146,6 +149,7 @@ i18n
         institutionleague: enInstitutionleague,
         collusion: enCollusion,
         settings: enSettings,
+        politicalcycle: enPoliticalcycle,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

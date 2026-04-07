@@ -20,8 +20,8 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Building2,
   Medal,
+  Crown,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
@@ -320,13 +320,19 @@ function PodiumCard({
       `}
       aria-label={`#${rank}: ${item.institution_name}, puntuacion ${item.total_score}`}
     >
+      {rank === 1 && (
+        <Crown
+          className="absolute -top-3 left-1/2 -translate-x-1/2 h-7 w-7 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]"
+          aria-hidden="true"
+        />
+      )}
       <div className="flex items-start justify-between gap-2">
         <div className="flex items-center gap-2">
-          <Medal className={`h-5 w-5 flex-shrink-0 ${medalColors[rank]}`} aria-hidden="true" />
-          <span className="text-zinc-500 text-xs font-mono font-bold">#{rank}</span>
+          <Medal className={`h-6 w-6 flex-shrink-0 ${medalColors[rank]}`} aria-hidden="true" />
+          <span className={`text-2xl font-mono font-black ${medalColors[rank]}`}>#{rank}</span>
         </div>
         {/* Large score number */}
-        <span className="text-5xl font-bold font-mono tabular-nums leading-none" style={{ color: tier.color }}>
+        <span className="text-6xl font-black font-mono tabular-nums leading-none" style={{ color: tier.color }}>
           {item.total_score.toFixed(0)}
         </span>
       </div>
@@ -502,24 +508,38 @@ export default function InstitutionLeague() {
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* Page header */}
-      <div className="border-b border-zinc-800/60 bg-zinc-900/50">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-8">
-          <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-zinc-500 mb-2">
-            RUBLI · Ranking de Instituciones
-          </p>
+      {/* Page header — DRAMATIC COMPETITIVE HERO */}
+      <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
+        {/* Stadium-style stripe background */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(234,179,8,0.4) 80px, rgba(234,179,8,0.4) 81px)`,
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Crown className="h-4 w-4 text-yellow-400" aria-hidden="true" />
+            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-yellow-400">
+              Ranking Institucional · La Competencia por la Transparencia
+            </p>
+          </div>
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-white leading-tight">
-                Ranking de Instituciones
+              <h1
+                className="text-3xl sm:text-4xl md:text-5xl font-black font-serif text-white leading-[1.05] tracking-tight"
+                style={{ textShadow: '0 0 60px rgba(234,179,8,0.15)' }}
+              >
+                ¿Quién lidera la transparencia en México?
               </h1>
-              <p className="text-zinc-400 text-sm mt-1 max-w-2xl">
-                Ranking de {statsData ? formatNumber(statsData.total_scored) : '2,563'} instituciones del gobierno federal mexicano
-                por su indice de transparencia en contrataciones. Puntuacion de 0-100 basada en 5 dimensiones:
-                apertura, precios, proveedores, proceso e incidencias externas.
+              <p className="text-zinc-400 text-sm mt-3 max-w-2xl leading-relaxed">
+                Clasificación competitiva de {statsData ? formatNumber(statsData.total_scored) : '2,563'} instituciones
+                federales. Puntuación de 0-100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
+                Del primer lugar al último — sin excusas.
               </p>
             </div>
-            <Building2 className="h-8 w-8 text-zinc-700 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
+            <Medal className="h-10 w-10 text-yellow-500/60 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
           </div>
 
           {/* Editorial finding headline -- urgent red when failing institutions exist */}
@@ -751,18 +771,48 @@ export default function InstitutionLeague() {
                   {items.map((item, idx) => {
                     const rank = firstItemRank + idx
                     const tier = gradeToTier(item.grade)
+                    // Worst performers: bottom 5 when sorted by score ascending
+                    const isWorstPerformer = sortBy === 'total_score' && sortOrder === 'asc' && idx < 5
+                    // Top 3 medals (only visible when sorted by score descending on first page)
+                    const isTopMedalist = sortBy === 'total_score' && sortOrder === 'desc' && rank <= 3
+                    const rankColor = isTopMedalist
+                      ? (rank === 1 ? '#facc15' : rank === 2 ? '#d4d4d8' : '#d97706')
+                      : isWorstPerformer
+                        ? '#dc2626'
+                        : tier.color
                     return (
                       <tr
                         key={item.institution_id}
-                        className="border-b border-zinc-800/40 hover:bg-zinc-800/30 transition-colors cursor-pointer group"
+                        className={`border-b border-zinc-800/40 hover:bg-zinc-800/30 transition-colors cursor-pointer group ${
+                          isWorstPerformer ? 'bg-red-950/15' : ''
+                        }`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         role="row"
-                        aria-label={`${item.institution_name}, puntuacion ${item.total_score}, nivel ${tier.label}`}
-                        style={{ borderLeft: `3px solid ${tier.color}` }}
+                        aria-label={`#${rank} ${item.institution_name}, puntuacion ${item.total_score}, nivel ${tier.label}`}
+                        style={{ borderLeft: `4px solid ${tier.color}` }}
                       >
-                        {/* Rank */}
-                        <td className="px-3 py-3 text-zinc-600 tabular-nums text-xs font-mono text-right w-10">
-                          {rank}
+                        {/* Rank — large bold mono */}
+                        <td className="px-3 py-3 tabular-nums text-right w-16">
+                          <div className="flex items-center justify-end gap-1.5">
+                            {isTopMedalist && (
+                              <Crown
+                                className="h-4 w-4 flex-shrink-0"
+                                style={{ color: rankColor }}
+                                aria-hidden="true"
+                              />
+                            )}
+                            <span
+                              className="text-3xl font-mono font-bold leading-none"
+                              style={{ color: rankColor, opacity: isWorstPerformer || isTopMedalist ? 1 : 0.55 }}
+                            >
+                              #{rank}
+                            </span>
+                          </div>
+                          {isWorstPerformer && (
+                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-wider text-red-500 whitespace-nowrap">
+                              Peor Desempeño
+                            </div>
+                          )}
                         </td>
 
                         {/* Institution name + risk driver pill */}

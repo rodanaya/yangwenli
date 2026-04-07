@@ -1447,7 +1447,7 @@ export const watchlistApi = {
   /**
    * Get all watchlist items with optional filters
    */
-  async getAll(params?: { status?: string; item_type?: string; priority?: string }): Promise<WatchlistResponse> {
+  async getAll(params?: { status?: string; item_type?: string; priority?: string; folder_id?: number }): Promise<WatchlistResponse> {
     const queryParams = params ? buildQueryParams(params as QueryParams) : ''
     const { data } = await api.get<WatchlistResponse>(`/watchlist?${queryParams}`)
     return data

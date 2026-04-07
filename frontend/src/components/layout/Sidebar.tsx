@@ -85,6 +85,9 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
+      // Institution health trio — grouped for clarity
+      { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
+      { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'scorecards', href: '/scorecards', icon: Award },
     ],
   },
@@ -103,10 +106,8 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.data',
     items: [
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-      { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
-      { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
     ],
   },
   {

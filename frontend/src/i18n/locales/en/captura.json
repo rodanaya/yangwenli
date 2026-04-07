@@ -30,8 +30,8 @@
   "sourcePill": "contracts analyzed",
   "loading": "Building capture matrix...",
   "errorTitle": "Failed to Load",
-  "errorMessage": "Could not load money flow data from the backend.",
-  "errorHint": "Check that the backend is running on port 8001 and try again.",
+  "errorMessage": "Could not load money flow data.",
+  "errorHint": "Try reloading the page. If the problem persists, the service may be temporarily offline.",
   "emptyTitle": "No Capture Data",
   "emptyMessage": "No institution-vendor flow data available for the selected filters.",
   "emptyHint": "Try adjusting the sector or year range filter.",
@@ -57,6 +57,8 @@
   "filters": {
     "allSectors": "All Sectors",
     "bySector": "Filter by Sector",
+    "sectorLabel": "Sector:",
+    "yearLabel": "Year:",
     "period2018": "2018–2022",
     "period2023": "2023–2025",
     "allYears": "All Years",
@@ -68,7 +70,15 @@
     "displayMode": "Display Mode",
     "byValue": "By Value",
     "byCount": "By Count",
+    "resetAll": "Reset filters",
+    "currentView": "Showing",
     "noResults": "No institutions meet the ≥{{pct}}% capture threshold for the current selection."
+  },
+  "emptyState": {
+    "overline": "NO DATA FOR THESE FILTERS",
+    "title": "No data available for this combination of filters.",
+    "hint": "Try a different sector or year, or reset filters to see all data.",
+    "resetButton": "Show all sectors and years"
   },
   "heatmap": {
     "sectionLabel": "CONCENTRATION MAP",

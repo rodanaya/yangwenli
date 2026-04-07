@@ -50,6 +50,7 @@
   "ariaQueue": "Pistas de investigación",
   "sectors": "Sectores",
   "institutionLeague": "Ranking Institucional",
+  "institutionLeagueDesc": "Tabla ordenada de instituciones",
   "stateExplorer": "Explorador de Estados",
   "groundTruth": "Casos documentados",
   "model": "Transparencia del Modelo",
@@ -65,7 +66,7 @@
   "annotations": "Mis Notas",
   "apiExplorer": "Explorador de API",
   "journalists": "Investigaciones",
-  "reportCard": "Boleta de Calificaciones",
+  "reportCard": "Salud Nacional",
   "settings": "Configuración",
   "expandSidebar": "Expandir barra lateral",
   "collapseSidebar": "Contraer barra lateral",
@@ -78,5 +79,5 @@
   "reportIssue": "Reportar un problema",
   "collusion": "Explorador de Colusión",
   "procurementCalendar": "Calendario de Compras",
-  "scorecards": "Calificaciones Institucionales"
+  "scorecards": "Transparencia Institucional"
 }

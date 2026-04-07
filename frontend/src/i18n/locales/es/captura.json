@@ -31,7 +31,7 @@
   "loading": "Construyendo matriz de captura...",
   "errorTitle": "Error al Cargar",
   "errorMessage": "No se pudieron cargar los datos de flujo de dinero.",
-  "errorHint": "Verifique que el servidor esté en funcionamiento en el puerto 8001 e intente de nuevo.",
+  "errorHint": "Intenta recargar la página. Si el problema persiste, es posible que el servicio esté temporalmente fuera de línea.",
   "emptyTitle": "Sin Datos de Captura",
   "emptyMessage": "No hay datos de flujo institución-proveedor para los filtros seleccionados.",
   "emptyHint": "Intente ajustar el sector o el rango de años.",
@@ -57,6 +57,8 @@
   "filters": {
     "allSectors": "Todos los Sectores",
     "bySector": "Filtrar por Sector",
+    "sectorLabel": "Sector:",
+    "yearLabel": "Año:",
     "period2018": "2018–2022",
     "period2023": "2023–2025",
     "allYears": "Todos los Años",
@@ -68,7 +70,15 @@
     "displayMode": "Modo de Visualización",
     "byValue": "Por Valor",
     "byCount": "Por Contratos",
+    "resetAll": "Restablecer filtros",
+    "currentView": "Mostrando",
     "noResults": "Ninguna institución alcanza el umbral de captura ≥{{pct}}% para la selección actual."
+  },
+  "emptyState": {
+    "overline": "SIN DATOS PARA ESTOS FILTROS",
+    "title": "No hay datos disponibles para esta combinación de filtros.",
+    "hint": "Prueba con otro sector o año, o restablece los filtros para ver todos los datos.",
+    "resetButton": "Ver todos los sectores y años"
   },
   "heatmap": {
     "sectionLabel": "MAPA DE CONCENTRACIÓN",

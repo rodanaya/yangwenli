@@ -826,7 +826,8 @@ export default function Administrations() {
   // Selected admin top vendors from breakdown endpoint
   const selectedVendors = useMemo(() => {
     const eraKey = ERA_KEYS[selectedAdmin]
-    const era = breakdownResp?.eras.find((e) => e.era === eraKey)
+    const eras = breakdownResp?.eras ?? []
+    const era = eras.find((e) => e.era === eraKey)
     return (era?.top_vendors ?? []).map((v) => ({
       name: v.vendor_name,
       total_mxn: v.total_mxn,
@@ -2886,7 +2887,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   />
                 ))}
                 {/* Detected structural breakpoints */}
-                {breaksData?.breakpoints
+                {(breaksData?.breakpoints ?? [])
                   .filter((bp, i, arr) => arr.findIndex(b => b.year === bp.year) === i)
                   .map((bp) => (
                     <ReferenceLine
@@ -2948,7 +2949,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
       </ScrollReveal>
 
       {/* Political Budget Cycle — sexenio-year breakdown */}
-      {politicalData && politicalData.sexenio_year_breakdown.length > 0 && (
+      {politicalData && (politicalData.sexenio_year_breakdown?.length ?? 0) > 0 && (
         <ScrollReveal direction="fade">
         <div className="card">
           <CardHeader className="pb-2">
@@ -3001,15 +3002,15 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 <Line yAxisId="da" type="monotone" dataKey="direct_award_pct" name="Direct Award %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
               </ComposedChart>
             </ResponsiveContainer>
-            {politicalData.election_year_effect.risk_delta !== undefined && (
+            {politicalData.election_year_effect?.risk_delta !== undefined && (
               <p className="mt-2 text-[11px] text-text-muted font-mono">
                 {t('patternsView.electionYearAvgNote', {
-                  election: ((politicalData.election_year_effect.election_year?.avg_risk ?? 0) * 100).toFixed(2),
-                  nonElection: ((politicalData.election_year_effect.non_election_year?.avg_risk ?? 0) * 100).toFixed(2),
+                  election: ((politicalData.election_year_effect?.election_year?.avg_risk ?? 0) * 100).toFixed(2),
+                  nonElection: ((politicalData.election_year_effect?.non_election_year?.avg_risk ?? 0) * 100).toFixed(2),
                 })}
                 {' ('}
-                <span className={politicalData.election_year_effect.risk_delta > 0 ? 'text-risk-high' : 'text-risk-low'}>
-                  {politicalData.election_year_effect.risk_delta > 0 ? '+' : ''}{(politicalData.election_year_effect.risk_delta * 100).toFixed(3)}pp
+                <span className={(politicalData.election_year_effect?.risk_delta ?? 0) > 0 ? 'text-risk-high' : 'text-risk-low'}>
+                  {(politicalData.election_year_effect?.risk_delta ?? 0) > 0 ? '+' : ''}{((politicalData.election_year_effect?.risk_delta ?? 0) * 100).toFixed(3)}pp
                 </span>
                 {')'}
               </p>
@@ -3054,7 +3055,8 @@ function PoliticalCycleView() {
     )
   }
 
-  const { election_year_effect, sexenio_year_breakdown } = data
+  const election_year_effect = data.election_year_effect ?? {} as PoliticalCycleResponse['election_year_effect']
+  const sexenio_year_breakdown = data.sexenio_year_breakdown ?? []
 
   const breakdownData = sexenio_year_breakdown.map((r) => ({
     label: r.label,
