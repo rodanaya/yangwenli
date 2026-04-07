@@ -256,9 +256,13 @@ if RATE_LIMITING_ENABLED and limiter:
 app.add_middleware(RequestLoggingMiddleware)
 
 # CORS middleware for frontend access
-cors_origins = os.environ.get(
-    "CORS_ORIGINS", "http://localhost:3009,http://127.0.0.1:3009"
-).split(",")
+cors_origins = [
+    o.strip()
+    for o in os.environ.get(
+        "CORS_ORIGINS", "http://localhost:3009,http://127.0.0.1:3009"
+    ).split(",")
+    if o.strip()
+]
 if "*" in cors_origins:
     logger.error("CORS wildcard '*' is not allowed. Set explicit origins in CORS_ORIGINS env var.")
     raise ValueError("CORS_ORIGINS cannot contain '*'")

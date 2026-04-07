@@ -291,6 +291,7 @@ def get_concentration_patterns(
                         c.vendor_id,
                         COUNT(*) as vendor_contracts,
                         SUM(c.amount_mxn) as vendor_value,
+                        AVG(CASE WHEN c.risk_score IS NOT NULL THEN c.risk_score END) as avg_risk_score,
                         t.total_contracts,
                         t.total_value
                     FROM contracts c
@@ -303,6 +304,7 @@ def get_concentration_patterns(
                     vs.vendor_id,
                     vs.vendor_contracts,
                     vs.vendor_value,
+                    vs.avg_risk_score,
                     vs.total_contracts,
                     vs.total_value,
                     CAST(vs.vendor_value AS REAL) / vs.total_value * 100 as value_share,
@@ -318,14 +320,7 @@ def get_concentration_patterns(
 
             alerts = []
             for row in cursor.fetchall():
-                # Get average risk score
-                cursor.execute("""
-                    SELECT AVG(risk_score) as avg_risk
-                    FROM contracts
-                    WHERE vendor_id = ? AND institution_id = ?
-                      AND risk_score IS NOT NULL
-                """, (row['vendor_id'], row['institution_id']))
-                avg_risk = cursor.fetchone()['avg_risk']
+                avg_risk = row['avg_risk_score']
 
                 alerts.append(ConcentrationAlert(
                     vendor_id=row['vendor_id'],

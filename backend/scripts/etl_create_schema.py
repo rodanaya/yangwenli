@@ -342,8 +342,18 @@ CREATE TABLE IF NOT EXISTS contracts (
     is_high_value INTEGER DEFAULT 0,
     is_year_end INTEGER DEFAULT 0,
 
-    -- NOTE: Risk scores moved to separate risk_scores table
-    -- This enables model versioning, A/B testing, and recalculation
+    -- Risk scores (inline columns, mirroring live DB)
+    risk_score REAL DEFAULT NULL,
+    risk_score_v3 REAL DEFAULT NULL,
+    risk_score_v4 REAL DEFAULT NULL,
+    risk_score_v5 REAL DEFAULT NULL,
+    risk_level VARCHAR(10) DEFAULT NULL,
+    risk_model_version VARCHAR(10) DEFAULT NULL,
+    risk_confidence_lower REAL DEFAULT NULL,
+    risk_confidence_upper REAL DEFAULT NULL,
+    mahalanobis_distance REAL DEFAULT NULL,
+    ensemble_anomaly_score REAL DEFAULT NULL,
+    publication_delay_days INTEGER DEFAULT NULL,
 
     -- Deduplication
     contract_hash VARCHAR(64),
@@ -527,7 +537,7 @@ CREATE INDEX IF NOT EXISTS idx_contracts_institution_year ON contracts(instituti
 -- Multi-column indexes for common analytics query patterns
 CREATE INDEX IF NOT EXISTS idx_contracts_sector_year_risk ON contracts(sector_id, contract_year, risk_level);
 CREATE INDEX IF NOT EXISTS idx_contracts_direct_single ON contracts(is_direct_award, is_single_bid);
-CREATE INDEX IF NOT EXISTS idx_contracts_vendor_year ON contracts(vendor_id, contract_year);
+CREATE INDEX IF NOT EXISTS idx_contracts_procedure ON contracts(procedure_number);
 
 -- Transparency / publication delay index (column added by ETL pipeline when computing delays)
 CREATE INDEX IF NOT EXISTS idx_contracts_pub_delay ON contracts(publication_delay_days);
@@ -689,6 +699,18 @@ CREATE TABLE IF NOT EXISTS sfp_sanctions (
 );
 CREATE INDEX IF NOT EXISTS idx_sfp_sanctions_rfc ON sfp_sanctions(rfc);
 CREATE INDEX IF NOT EXISTS idx_sfp_sanctions_name ON sfp_sanctions(company_name);
+
+-- External data: SAT EFOS (Empresas que Facturan Operaciones Simuladas)
+CREATE TABLE IF NOT EXISTS sat_efos_vendors (
+    id          INTEGER PRIMARY KEY AUTOINCREMENT,
+    rfc         TEXT NOT NULL,
+    company_name TEXT NOT NULL,
+    stage       TEXT NOT NULL,
+    dof_date    TEXT,
+    loaded_at   TEXT DEFAULT (datetime('now'))
+);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_sat_efos_rfc ON sat_efos_vendors(rfc);
+CREATE INDEX IF NOT EXISTS idx_sat_efos_stage ON sat_efos_vendors(stage);
 
 -- External data: RUPC unified vendor registry
 CREATE TABLE IF NOT EXISTS rupc_vendors (

@@ -64,7 +64,8 @@ def _decode_json_field(value) -> Optional[dict]:
         return value
     try:
         return json.loads(value)
-    except Exception:
+    except Exception as e:
+        logger.warning(f"Failed to decode JSON field: {e}")
         return None
 
 
@@ -227,8 +228,8 @@ def get_aria_queue(
         ).fetchone()
         if t2_row:
             summary["novel_leads_t2"] = t2_row[0] or 0
-    except Exception:
-        pass
+    except Exception as e:
+        logger.warning(f"Failed to compute ARIA summary stats (novel_leads): {e}")
 
     return {
         "data": data,

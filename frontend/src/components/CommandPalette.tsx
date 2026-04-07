@@ -351,9 +351,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
         {/* ── Entity results (ranked by risk level via backend ORDER BY) ── */}
         {hasResults && (
           <>
-            {results!.vendors.length > 0 && (
+            {(results?.vendors.length ?? 0) > 0 && (
               <CommandGroup heading={t('cmdPalette.groupVendors')}>
-                {results!.vendors.map((v) => {
+                {(results?.vendors ?? []).map((v) => {
                   const riskLevel = riskLevelFromScore(v.risk_score)
                   return (
                     <CommandItem
@@ -373,9 +373,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               </CommandGroup>
             )}
 
-            {results!.institutions.length > 0 && (
+            {(results?.institutions.length ?? 0) > 0 && (
               <CommandGroup heading={t('cmdPalette.groupInstitutions')}>
-                {results!.institutions.map((inst) => (
+                {(results?.institutions ?? []).map((inst) => (
                   <CommandItem
                     key={`i-${inst.id}`}
                     value={`institution-${inst.id}-${inst.name}`}
@@ -397,9 +397,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               </CommandGroup>
             )}
 
-            {results!.contracts.length > 0 && (
+            {(results?.contracts.length ?? 0) > 0 && (
               <CommandGroup heading={t('cmdPalette.groupContracts')}>
-                {results!.contracts.map((c) => (
+                {(results?.contracts ?? []).map((c) => (
                   <CommandItem
                     key={`c-${c.id}`}
                     value={`contract-${c.id}-${c.title}`}
@@ -415,9 +415,9 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
               </CommandGroup>
             )}
 
-            {results!.cases.length > 0 && (
+            {(results?.cases.length ?? 0) > 0 && (
               <CommandGroup heading={t('cmdPalette.groupCases')}>
-                {results!.cases.map((cs) => (
+                {(results?.cases ?? []).map((cs) => (
                   <CommandItem
                     key={`cs-${cs.slug}`}
                     value={`case-${cs.slug}-${cs.title}`}

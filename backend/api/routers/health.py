@@ -71,6 +71,7 @@ def _get_db_info() -> dict:
     contract_count = None
     connected = False
     error = None
+    conn = None
     try:
         conn = sqlite3.connect(str(_DB_PATH), timeout=5)
         try:
@@ -96,9 +97,11 @@ def _get_db_info() -> dict:
                 pass
 
         connected = True
-        conn.close()
     except sqlite3.Error as exc:
         error = str(exc)
+    finally:
+        if conn is not None:
+            conn.close()
 
     return {
         "connected": connected,

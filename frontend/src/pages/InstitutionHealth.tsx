@@ -246,7 +246,8 @@ function HhiMethodologyNote() {
           </blockquote>
 
           <div className="text-sm text-text-secondary leading-relaxed space-y-3 max-w-3xl">
-            <p dangerouslySetInnerHTML={{ __html: t('health.methodology.body1') }} />
+            <p dangerouslySetInnerHTML={{ __html: t('health.methodology.body1') }} // safe: static translation-only markup (<strong>), no user input
+            />
             <p>{t('health.methodology.body2')}</p>
           </div>
 
@@ -499,6 +500,7 @@ export default function InstitutionHealth() {
           className="text-lg text-text-secondary leading-relaxed max-w-3xl"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
+          {/* safe: interpolated values are numeric (capturedCount=integer, capturedSpend=formatted number); no user-controlled strings */}
           <p dangerouslySetInnerHTML={{
             __html: t('health.lede', {
               count: capturedCount,

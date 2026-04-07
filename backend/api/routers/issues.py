@@ -78,7 +78,7 @@ class IssueOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("", response_model=IssueOut, status_code=201)
-def submit_issue(body: IssueIn):
+def submit_issue(body: IssueIn, _: None = Depends(require_write_key)):
     """Submit a new issue report (bug, wrong data, feature request, other)."""
     if body.category not in VALID_CATEGORIES:
         raise HTTPException(

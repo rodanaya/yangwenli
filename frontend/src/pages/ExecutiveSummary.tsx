@@ -1342,7 +1342,7 @@ function SectionARIA({ navigate }: { navigate: (path: string) => void }) {
               {t('aria.tier1Label')}
             </p>
             <p className="text-sm text-text-secondary leading-relaxed"
-              dangerouslySetInnerHTML={{ __html: t('aria.tier1Body') }}
+              dangerouslySetInnerHTML={{ __html: t('aria.tier1Body') }} // safe: static translation-only markup (<strong>), no user input
             />
           </div>
         </div>

@@ -2176,8 +2176,9 @@ export function Dashboard() {
           </CardContent>
         </Card>
       ) : fastDashboard?.sexenio_comparison?.amlo != null && fastDashboard?.sexenio_comparison?.sheinbaum != null && (() => {
-        const amlo = fastDashboard.sexenio_comparison!.amlo!
-        const sheinbaum = fastDashboard.sexenio_comparison!.sheinbaum!
+        const amlo = fastDashboard.sexenio_comparison?.amlo
+        const sheinbaum = fastDashboard.sexenio_comparison?.sheinbaum
+        if (!amlo || !sheinbaum) return null
         const delta = sheinbaum.avg_risk - amlo.avg_risk
         const isHigher = delta > 0
         return (
