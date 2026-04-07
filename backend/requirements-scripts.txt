@@ -1,0 +1,36 @@
+# RUBLI Scripts / Pipeline Dependencies
+# Install in addition to requirements.txt for ETL, scoring, and ML pipeline work.
+# NOT needed for the API server (Docker uses requirements-api.txt).
+#
+# Install: pip install -r requirements.txt -r requirements-scripts.txt
+
+# ML / Model Training
+scikit-learn>=1.3.0        # Logistic regression, IsolationForest, calibration, metrics
+optuna>=3.0.0              # Bayesian hyperparameter tuning (calibrate_risk_model_v6_enhanced.py)
+shap>=0.45.0               # SHAP explanations (compute_shap_explanations.py)
+pyod>=2.0.0                # Anomaly detection ensemble (compute_ml_anomalies_pyod.py)
+
+# Entity Resolution (HYPERION)
+splink>=4.0.0              # Entity resolution framework (hyperion/splink)
+rapidfuzz>=3.0.0           # Fast fuzzy string matching
+unidecode>=1.3.0           # Unicode to ASCII (hyperion normalizer)
+
+# Data Processing
+pandas>=2.0.0              # Bulk data manipulation in ETL/scoring scripts
+openpyxl>=3.1.0            # Excel file support
+chardet>=5.0.0             # Character encoding detection (ETL pipeline)
+python-dateutil>=2.8.0     # Date parsing utilities
+
+# Network Analysis
+networkx>=3.0              # Graph algorithms (vendor community detection)
+
+# Web Scraping (CENTINELA / ASF scrapers)
+beautifulsoup4>=4.12.0     # HTML parsing
+lxml>=5.0.0                # Fast XML/HTML parser
+pdfplumber>=0.10.0         # PDF table extraction (ASF reports)
+
+# Utilities
+tqdm>=4.65.0               # Progress bars in long-running scripts
+
+# AI Memo Generation
+anthropic>=0.40.0          # ARIA memo generation (aria_generate_memos.py)
