@@ -1792,6 +1792,21 @@ export function Dashboard() {
               {criticalHighContractPct > 0 ? `${criticalHighContractPct.toFixed(1)}%` : '—'}
             </span>
             <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskRate')}</span>
+            {criticalHighContractPct > 0 && (
+              <span className={`mt-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
+                criticalHighContractPct >= 2 && criticalHighContractPct <= 15
+                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
+                  : criticalHighContractPct > 15
+                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
+                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
+              }`}>
+                {criticalHighContractPct >= 2 && criticalHighContractPct <= 15
+                  ? t('oecdWithinRange')
+                  : criticalHighContractPct > 15
+                  ? t('oecdAboveLimit')
+                  : t('oecdBelowMin')}
+              </span>
+            )}
           </div>
         </div>
       )}
@@ -1876,6 +1891,13 @@ export function Dashboard() {
                 dot={false}
                 strokeDasharray="4 3"
                 connectNulls
+              />
+              <ReferenceLine
+                y={15}
+                stroke="#f59e0b"
+                strokeDasharray="4 4"
+                strokeWidth={1}
+                label={{ value: t('oecdUpperThresholdLabel'), position: 'insideTopRight', fontSize: 10, fill: '#f59e0b', fontFamily: 'monospace' }}
               />
             </AreaChart>
           </ResponsiveContainer>

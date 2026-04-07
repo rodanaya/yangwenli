@@ -9,7 +9,7 @@
  * Editorial dark-mode design: zinc-900/950 palette, prominent numeric scores.
  */
 
-import { useMemo, useCallback } from 'react'
+import { useMemo, useCallback, lazy, Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -29,6 +29,9 @@ import {
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
+
+const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
+const ReportCard = lazy(() => import('./ReportCard'))
 
 // ---------------------------------------------------------------------------
 // Types
@@ -506,8 +509,34 @@ export default function InstitutionLeague() {
     return ''
   }, [gradeFilter])
 
+  const activeTab = searchParams.get('tab') || 'ranking'
+  const setTab = (tab: string) => updateParams({ tab, page: undefined })
+
+  if (activeTab === 'fichas') {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+        <TabBar activeTab={activeTab} setTab={setTab} />
+        <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+          <InstitutionScorecards />
+        </Suspense>
+      </div>
+    )
+  }
+
+  if (activeTab === 'reporte') {
+    return (
+      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+        <TabBar activeTab={activeTab} setTab={setTab} />
+        <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+          <ReportCard />
+        </Suspense>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <TabBar activeTab={activeTab} setTab={setTab} />
       {/* Page header — DRAMATIC COMPETITIVE HERO */}
       <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
         {/* Stadium-style stripe background */}
@@ -906,6 +935,37 @@ export default function InstitutionLeague() {
         <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
           RUBLI Indice de Salud de Contrataciones v6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
         </p>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Tab bar — shared between ranking/fichas/reporte views
+// ---------------------------------------------------------------------------
+
+function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string) => void }) {
+  const tabs = [
+    { id: 'ranking', label: 'Ranking' },
+    { id: 'fichas',  label: 'Fichas' },
+    { id: 'reporte', label: 'Reporte' },
+  ]
+  return (
+    <div className="border-b border-zinc-800/60 bg-zinc-900/50 px-4 sm:px-6">
+      <div className="max-w-screen-xl mx-auto flex items-center gap-0">
+        {tabs.map((tab) => (
+          <button
+            key={tab.id}
+            onClick={() => setTab(tab.id)}
+            className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
+              activeTab === tab.id
+                ? 'border-yellow-400 text-yellow-400'
+                : 'border-transparent text-zinc-400 hover:text-zinc-200'
+            }`}
+          >
+            {tab.label}
+          </button>
+        ))}
       </div>
     </div>
   )
