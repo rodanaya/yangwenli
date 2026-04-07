@@ -529,8 +529,8 @@ export function Contracts() {
     }
     if (filters.is_direct_award) tags.push({ key: 'is_direct_award', label: 'Direct Awards' })
     if (filters.is_single_bid) tags.push({ key: 'is_single_bid', label: 'Single Bidders' })
-    if (filters.min_amount) tags.push({ key: 'min_amount', label: `\u2265 ${formatCompactMXN(filters.min_amount)}` })
-    if (filters.max_amount) tags.push({ key: 'max_amount', label: `\u2264 ${formatCompactMXN(filters.max_amount)}` })
+    if (filters.min_amount) tags.push({ key: 'min_amount', label: `≥ ${formatCompactMXN(filters.min_amount)}` })
+    if (filters.max_amount) tags.push({ key: 'max_amount', label: `≤ ${formatCompactMXN(filters.max_amount)}` })
     if (filters.category_id) tags.push({ key: 'category_id', label: `Category #${filters.category_id}` })
     return tags
   }, [filters])
@@ -1344,7 +1344,7 @@ function ContractRow({
           </div>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.vendor_name || ''}>
-            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '\u2014'}
+            {contract.vendor_name ? toTitleCase(contract.vendor_name) : '—'}
           </span>
         )}
       </td>
@@ -1362,7 +1362,7 @@ function ContractRow({
           </Link>
         ) : (
           <span className="text-xs text-text-muted truncate block" title={contract.institution_name || ''}>
-            {contract.institution_name ? toTitleCase(contract.institution_name) : '\u2014'}
+            {contract.institution_name ? toTitleCase(contract.institution_name) : '—'}
           </span>
         )}
       </td>
@@ -1374,7 +1374,7 @@ function ContractRow({
             {ts(sector.code)}
           </span>
         ) : (
-          <span className="text-xs text-text-muted">\u2014</span>
+          <span className="text-xs text-text-muted">—</span>
         )}
       </td>
 
@@ -1383,14 +1383,14 @@ function ContractRow({
         <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
           {contract.contract_date
             ? contract.contract_date.slice(0, 7)
-            : contract.contract_year || '\u2014'}
+            : contract.contract_year || '—'}
         </span>
       </td>
 
       {/* Procedure type */}
       <td className="px-3 py-2 max-w-[120px]">
         <span className="text-xs text-text-muted truncate block" title={contract.procedure_type || ''}>
-          {contract.procedure_type || '\u2014'}
+          {contract.procedure_type || '—'}
         </span>
       </td>
 
@@ -1417,7 +1417,7 @@ function ContractRow({
             </span>
           </span>
         ) : (
-          <span className="text-xs text-text-muted">\u2014</span>
+          <span className="text-xs text-text-muted">—</span>
         )}
       </td>
 
@@ -1451,7 +1451,7 @@ function ContractRow({
               </span>
             </div>
           ) : (
-            <span className="text-xs text-text-muted">\u2014</span>
+            <span className="text-xs text-text-muted">—</span>
           )}
         </td>
       )}
@@ -1510,7 +1510,7 @@ function ContractRow({
           {contract.procedure_type && <p>Procedure: {contract.procedure_type}</p>}
           {contract.contract_number && <p>Number: {contract.contract_number}</p>}
           {anomalyInfo && contract.mahalanobis_distance != null && (
-            <p>Anomaly: {anomalyInfo.label} (D\u00B2={contract.mahalanobis_distance.toFixed(2)})</p>
+            <p>Anomaly: {anomalyInfo.label} (D²={contract.mahalanobis_distance.toFixed(2)})</p>
           )}
         </div>
       </div>

@@ -273,7 +273,7 @@ function SplitTextHero({ text, className, style }: { text: string; className?: s
             textShadow: '0 0 30px rgba(196,30,58,0.4), 0 0 60px rgba(196,30,58,0.15)',
           }}
         >
-          {ch === ' ' ? '\u00A0' : ch}
+          {ch === ' ' ? ' ' : ch}
         </span>
       ))}
     </span>

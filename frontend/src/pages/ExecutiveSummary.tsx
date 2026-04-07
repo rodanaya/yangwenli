@@ -510,7 +510,7 @@ function WhatWeFound({ data }: { data: ExecutiveSummaryResponse }) {
     },
     {
       icon: DollarSign,
-      value: '1.33\u00d7',
+      value: '1.33×',
       desc: t('whatWeFound.december'),
       borderColor: 'border-amber-500/20',
       bgColor: 'bg-amber-500/5',
@@ -674,7 +674,7 @@ function SectionThreePatterns({ data }: { data: ExecutiveSummaryResponse }) {
     {
       label: t('sPatterns.p2December.label'),
       name: t('sPatterns.p2December.name'),
-      stat: '1.33\u00d7',
+      stat: '1.33×',
       statColor: 'var(--color-risk-medium)',
       borderColor: 'border-risk-medium/20',
       bgColor: 'bg-risk-medium/5',

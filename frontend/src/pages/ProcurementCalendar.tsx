@@ -38,13 +38,13 @@ interface WeekColumn {
 
 const AVAILABLE_YEARS = Array.from({ length: 2024 - 2015 + 1 }, (_, i) => 2024 - i)
 const DEFAULT_YEAR = 2024
-const DAY_LABELS = ['Lun', 'Mar', 'Mi\u00e9', 'Jue', 'Vie', 'S\u00e1b', 'Dom']
+const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
 const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 const ELECTION_YEARS = new Set([2018, 2021, 2024]) // Federal election years in Mexico
 
 const SPANISH_WEEKDAYS: Record<number, string> = {
-  0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Mi\u00e9rcoles',
-  4: 'Jueves', 5: 'Viernes', 6: 'S\u00e1bado',
+  0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles',
+  4: 'Jueves', 5: 'Viernes', 6: 'Sábado',
 }
 const SPANISH_MONTHS_FULL: Record<number, string> = {
   0: 'enero', 1: 'febrero', 2: 'marzo', 3: 'abril',
@@ -208,12 +208,12 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
         </div>
         {isDecember && (
           <div className="mt-1.5 pt-1.5 border-t border-stone-700/60 text-orange-400/80 text-[10px]">
-            Diciembre: per\u00edodo de cierre presupuestal
+            Diciembre: período de cierre presupuestal
           </div>
         )}
         {isElectionYear && month >= 3 && month <= 5 && (
           <div className="mt-1.5 pt-1.5 border-t border-stone-700/60 text-amber-400/80 text-[10px]">
-            Per\u00edodo pre-electoral federal
+            Período pre-electoral federal
           </div>
         )}
       </div>
@@ -403,7 +403,7 @@ function Legend() {
     { label: 'Riesgo bajo (<10%)', color: getDayColor(100, 0.05, 3000) },
     { label: 'Riesgo medio (10-20%)', color: getDayColor(400, 0.15, 3000) },
     { label: 'Riesgo alto (>20%)', color: getDayColor(800, 0.25, 3000) },
-    { label: 'Riesgo cr\u00edtico (>30%)', color: getDayColor(2000, 0.38, 3000) },
+    { label: 'Riesgo crítico (>30%)', color: getDayColor(2000, 0.38, 3000) },
   ]
 
   return (
@@ -419,7 +419,7 @@ function Legend() {
         <div className="w-2 h-2 rounded-sm bg-stone-800" />
         <div className="w-2.5 h-2.5 rounded-sm bg-stone-700" />
         <div className="w-3 h-3 rounded-sm bg-stone-500" />
-        <span>Actividad (m\u00e1s oscuro = m\u00e1s contratos)</span>
+        <span>Actividad (más oscuro = más contratos)</span>
       </div>
     </div>
   )
@@ -437,7 +437,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
           RUBLI &middot; Diciembre bajo la lupa
         </p>
         <p className="text-sm text-stone-500 italic">
-          Datos de diciembre no disponibles para {year}. El a\u00f1o seleccionado puede tener datos parciales.
+          Datos de diciembre no disponibles para {year}. El año seleccionado puede tener datos parciales.
         </p>
       </div>
     )
@@ -459,7 +459,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
       </p>
       <p className="text-sm text-stone-400 leading-relaxed">
         El cierre presupuestal de diciembre concentra contrataciones aceleradas.
-        En {year}, diciembre acumul\u00f3{' '}
+        En {year}, diciembre acumuló{' '}
         <span className="text-stone-200 font-semibold">{formatNumber(stats.decemberContracts)}</span>{' '}
         contratos frente a un promedio mensual de{' '}
         <span className="text-stone-200 font-semibold">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>.
@@ -520,7 +520,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-stone-500">Resto del a\u00f1o</span>
+                <span className="text-stone-500">Resto del año</span>
                 <span className="text-stone-500 font-mono">{annualRiskPct}%</span>
               </div>
               <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
@@ -578,7 +578,7 @@ export default function ProcurementCalendar() {
           <EditorialHeadline
             section="Calendario de Riesgo Presupuestal"
             headline="El calendario del gasto sospechoso"
-            subtitle="Actividad contractual y nivel de riesgo por d\u00eda. Los patrones de fin de a\u00f1o y a\u00f1o electoral revelan comportamientos sistem\u00e1ticos."
+            subtitle="Actividad contractual y nivel de riesgo por día. Los patrones de fin de año y año electoral revelan comportamientos sistemáticos."
             className="mb-2"
           />
         </div>
@@ -588,17 +588,17 @@ export default function ProcurementCalendar() {
         {/* Editorial lede */}
         <div className="max-w-3xl">
           <p className="text-sm text-stone-400 leading-relaxed">
-            Cada celda representa un d\u00eda. Los colores indican el nivel de riesgo promedio
-            de los contratos adjudicados ese d\u00eda: el rojo intenso se\u00f1ala d\u00edas donde la
-            mayor\u00eda de contratos presentan factores de riesgo. Los patrones de diciembre
-            son especialmente reveladores &mdash; el &ldquo;subejercicio&rdquo; de fin de a\u00f1o concentra
-            contrataciones que en circunstancias normales habr\u00edan sido licitadas.
+            Cada celda representa un día. Los colores indican el nivel de riesgo promedio
+            de los contratos adjudicados ese día: el rojo intenso señala días donde la
+            mayoría de contratos presentan factores de riesgo. Los patrones de diciembre
+            son especialmente reveladores &mdash; el &ldquo;subejercicio&rdquo; de fin de año concentra
+            contrataciones que en circunstancias normales habrían sido licitadas.
           </p>
         </div>
 
         {/* Year selector */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-stone-600 mr-2">A\u00f1o</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-stone-600 mr-2">Año</span>
           {AVAILABLE_YEARS.map((y) => (
             <button
               key={y}
@@ -616,7 +616,7 @@ export default function ProcurementCalendar() {
               {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-amber-500">*</span>}
             </button>
           ))}
-          <span className="text-[9px] text-amber-600/70 font-mono ml-1">* a\u00f1o electoral</span>
+          <span className="text-[9px] text-amber-600/70 font-mono ml-1">* año electoral</span>
         </div>
 
         {/* Stats row */}
@@ -628,22 +628,22 @@ export default function ProcurementCalendar() {
           className="grid grid-cols-2 md:grid-cols-4 gap-6"
         >
           <HallazgoStat
-            value={isLoading ? '\u2014' : formatNumber(stats.totalContracts)}
+            value={isLoading ? '—' : formatNumber(stats.totalContracts)}
             label={`Contratos en ${year}`}
             color="border-blue-500"
           />
           <HallazgoStat
-            value={isLoading ? '\u2014' : formatNumber(stats.highRiskContracts)}
+            value={isLoading ? '—' : formatNumber(stats.highRiskContracts)}
             label="Contratos de alto riesgo"
             color="border-red-500"
             annotation={isLoading ? undefined : `${(stats.highRiskRate * 100).toFixed(1)}% del total`}
           />
           <HallazgoStat
             value={
-              isLoading || !stats.peakDay ? '\u2014'
+              isLoading || !stats.peakDay ? '—'
               : new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' })
             }
-            label="D\u00eda m\u00e1s activo"
+            label="Día más activo"
             color="border-amber-500"
             annotation={
               isLoading || !stats.peakDay ? undefined
@@ -652,7 +652,7 @@ export default function ProcurementCalendar() {
           />
           <HallazgoStat
             value={
-              isLoading || !stats.decemberJanuaryRatio ? '\u2014'
+              isLoading || !stats.decemberJanuaryRatio ? '—'
               : `${stats.decemberJanuaryRatio.toFixed(1)}x`
             }
             label="Dic vs Ene contratos"
@@ -666,9 +666,9 @@ export default function ProcurementCalendar() {
           <div className="flex items-start gap-3 rounded-lg border border-amber-700/40 bg-amber-950/20 px-4 py-3">
             <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-300 leading-relaxed">
-              <span className="font-semibold">A\u00f1o electoral federal</span> &mdash; Los contratos en per\u00edodo pre-electoral
-              pueden mostrar patrones at\u00edpicos de adjudicaci\u00f3n directa. Compare los meses previos
-              a la elecci\u00f3n con a\u00f1os no electorales.
+              <span className="font-semibold">Año electoral federal</span> &mdash; Los contratos en período pre-electoral
+              pueden mostrar patrones atípicos de adjudicación directa. Compare los meses previos
+              a la elección con años no electorales.
             </p>
           </div>
         )}
@@ -690,12 +690,12 @@ export default function ProcurementCalendar() {
             ) : isError ? (
               <div className="text-stone-500 text-sm py-8 text-center">
                 No se pudieron cargar los datos del calendario. COMPRANET puede estar temporalmente
-                no disponible &mdash; mostrando datos en cach\u00e9 si existen.
+                no disponible &mdash; mostrando datos en caché si existen.
               </div>
             ) : days.length === 0 ? (
               <div className="text-stone-500 text-sm py-8 text-center">
-                Sin datos disponibles para {year}. Los registros de COMPRANET para este a\u00f1o
-                a\u00fan no han sido procesados o el a\u00f1o est\u00e1 fuera del rango de cobertura (2015-2024).
+                Sin datos disponibles para {year}. Los registros de COMPRANET para este año
+                aún no han sido procesados o el año está fuera del rango de cobertura (2015-2024).
               </div>
             ) : (
               <CalendarGrid
@@ -723,7 +723,7 @@ export default function ProcurementCalendar() {
             {stats.peakDay && (
               <div className="border border-stone-800 bg-stone-900/40 rounded-lg p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600 mb-1">
-                  D\u00eda m\u00e1s activo
+                  Día más activo
                 </div>
                 <div className="text-lg font-bold font-mono text-stone-200">
                   {new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
@@ -738,7 +738,7 @@ export default function ProcurementCalendar() {
             {stats.highestRiskDay && (
               <div className="border border-red-900/40 bg-red-950/10 rounded-lg p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-red-600 mb-1">
-                  D\u00eda de mayor riesgo
+                  Día de mayor riesgo
                 </div>
                 <div className="text-lg font-bold font-mono text-red-400">
                   {(stats.highestRiskDay.risk_rate * 100).toFixed(1)}%
@@ -760,7 +760,7 @@ export default function ProcurementCalendar() {
                   {(stats.decemberRiskRate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-stone-500">
-                  vs {(stats.nonDecemberRiskRate * 100).toFixed(1)}% resto del a\u00f1o
+                  vs {(stats.nonDecemberRiskRate * 100).toFixed(1)}% resto del año
                 </div>
               </div>
             )}
@@ -776,7 +776,7 @@ export default function ProcurementCalendar() {
                 'text-[10px] font-mono uppercase tracking-wider mb-1',
                 isElectionYear ? 'text-amber-600' : 'text-stone-600'
               )}>
-                Tipo de a\u00f1o
+                Tipo de año
               </div>
               <div className={cn(
                 'text-lg font-bold font-mono',
@@ -786,7 +786,7 @@ export default function ProcurementCalendar() {
               </div>
               <div className="text-[11px] text-stone-500">
                 {isElectionYear
-                  ? 'Compare con a\u00f1os no electorales'
+                  ? 'Compare con años no electorales'
                   : 'Sin elecciones federales'}
               </div>
             </div>
@@ -826,10 +826,10 @@ export default function ProcurementCalendar() {
                   <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-amber-300">
-                      Patr\u00f3n de a\u00f1o electoral
+                      Patrón de año electoral
                     </div>
                     <div className="text-xs text-stone-400 mt-0.5">
-                      Elecciones federales en {year} &mdash; la contrataci\u00f3n t\u00edpicamente se
+                      Elecciones federales en {year} &mdash; la contratación típicamente se
                       acelera en los meses previos mientras los gobiernos en turno aceleran el gasto
                     </div>
                   </div>
@@ -842,7 +842,7 @@ export default function ProcurementCalendar() {
                   <Info className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold">
-                      D\u00eda de mayor riesgo:{' '}
+                      Día de mayor riesgo:{' '}
                       {new Date(stats.highestRiskDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', {
                         month: 'long', day: 'numeric', timeZone: 'UTC'
                       })}
@@ -868,20 +868,20 @@ export default function ProcurementCalendar() {
             HALLAZGO
           </p>
           <p className="text-sm text-stone-300 leading-relaxed">
-            24 a\u00f1os consecutivos de picos de gasto en diciembre. El cierre presupuestal es estructural,
-            no accidental. Cada administraci\u00f3n, sin importar el partido, agota el presupuesto restante
-            en diciembre &mdash; creando una ventana predecible de contrataci\u00f3n acelerada y con menor
-            escrutinio que concentra una proporci\u00f3n desproporcionada de contrataci\u00f3n de alto riesgo.
+            24 años consecutivos de picos de gasto en diciembre. El cierre presupuestal es estructural,
+            no accidental. Cada administración, sin importar el partido, agota el presupuesto restante
+            en diciembre &mdash; creando una ventana predecible de contratación acelerada y con menor
+            escrutinio que concentra una proporción desproporcionada de contratación de alto riesgo.
           </p>
           <p className="text-xs text-stone-500 mt-2 italic">
-            OCDE: La tasa de adjudicaci\u00f3n directa en M\u00e9xico supera el 80% &mdash; m\u00e1s de 3x el l\u00edmite recomendado del 25%.
+            OCDE: La tasa de adjudicación directa en México supera el 80% &mdash; más de 3x el límite recomendado del 25%.
           </p>
         </div>
 
         {/* Source footnote */}
         <div className="text-[10px] text-stone-600 pt-2 border-t border-stone-800/50">
           <Calendar className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-          Fuente: COMPRANET &middot; 3.06M contratos (2002-2025) &middot; Modelo de riesgo v6.5 (AUC=0.828)
+          Fuente: COMPRANET &middot; 3.06M contratos (2002-2025) &middot; Modelo de riesgo v0.6.5 (AUC=0.828)
         </div>
       </div>
 

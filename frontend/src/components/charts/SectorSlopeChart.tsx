@@ -12,7 +12,7 @@ import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import type { SectorYearItem } from '@/api/types'
 
 // ─── Data source citation ────────────────────────────────────────────────────
-const DATA_SOURCE = 'Source: RUBLI analysis \u00b7 COMPRANET data 2002\u20132025 \u00b7 Risk model v6.5'
+const DATA_SOURCE = 'Source: RUBLI analysis · COMPRANET data 2002–2025 · Risk model v6.5'
 
 interface SectorSlopeChartProps {
   /** Raw sector-year breakdown items from the API */
@@ -125,8 +125,8 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
     )
   }
 
-  const periodALabel = `${periodAStart}\u2013${periodAEnd}`
-  const periodBLabel = `${periodBStart}\u2013${periodBEnd}`
+  const periodALabel = `${periodAStart}–${periodAEnd}`
+  const periodBLabel = `${periodBStart}–${periodBEnd}`
 
   return (
     <div>
@@ -220,7 +220,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                   fontWeight={700}
                   fill="#f87171"
                 >
-                  {'\u2191'} +{s.delta.toFixed(1)}pp
+                  {'↑'} +{s.delta.toFixed(1)}pp
                 </text>
               )}
 
@@ -234,7 +234,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                   fontWeight={700}
                   fill="#4ade80"
                 >
-                  {'\u2193'} {s.delta.toFixed(1)}pp
+                  {'↓'} {s.delta.toFixed(1)}pp
                 </text>
               )}
             </g>
