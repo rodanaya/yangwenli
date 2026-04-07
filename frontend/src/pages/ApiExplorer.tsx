@@ -63,7 +63,7 @@ const API_GROUPS: EndpointGroup[] = [
       {
         method: 'GET',
         path: '/api/v1/contracts/{id}/risk-explain',
-        description: 'Per-feature risk score contribution breakdown for a single contract (v6.5).',
+        description: 'Per-feature risk score contribution breakdown for a single contract (v0.6.5).',
       },
     ],
   },
@@ -120,7 +120,7 @@ const API_GROUPS: EndpointGroup[] = [
       {
         method: 'GET',
         path: '/api/v1/vendors/{id}/risk-waterfall',
-        description: 'Per-feature z-score contribution breakdown for risk score (v6.5 model).',
+        description: 'Per-feature z-score contribution breakdown for risk score (v0.6.5 model).',
       },
       {
         method: 'GET',

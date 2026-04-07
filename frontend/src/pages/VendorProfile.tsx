@@ -595,7 +595,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
-  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v6.5 model.',
+  sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v0.6.5 model.',
   industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
   same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
@@ -1533,7 +1533,7 @@ export function VendorProfile() {
           (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50
             ? `${(vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0)}% adjudicación directa`
             : riskLevel === 'critical' || riskLevel === 'high'
-              ? `Riesgo ${riskLevel} detectado por modelo v6.5`
+              ? `Riesgo ${riskLevel} detectado por modelo v0.6.5`
               : `${vendor.total_contracts.toLocaleString()} contratos analizados`
         }
         sector={vendor.primary_sector_name ?? ''}
@@ -1731,7 +1731,7 @@ export function VendorProfile() {
           </CardHeader>
           <CardContent>
             <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              ⚠ This is a <strong>separate heuristic analysis</strong>. The v6.5 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
+              ⚠ This is a <strong>separate heuristic analysis</strong>. The v0.6.5 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
             </div>
             <p className="text-sm text-text-muted mb-4">
               {t('coBidding.description')}
@@ -2948,7 +2948,7 @@ export function VendorProfile() {
                         { key: 'v3', label: 'v3.3' },
                         { key: 'v4', label: 'v4.0' },
                         { key: 'v5', label: 'v5.1' },
-                        { key: 'v6', label: 'v6.5' },
+                        { key: 'v6', label: 'v0.6.5' },
                       ].map((model, idx, arr) => {
                         const rawVal = trajectoryData.scores[model.key]
                         const score = rawVal != null ? rawVal : null
@@ -3989,7 +3989,7 @@ export function VendorProfile() {
                       </div>
                       {ariaData.new_vendor_risk_score != null && (
                         <div className="flex justify-between text-sm">
-                          <span className="text-text-muted">Risk Score (v6.5)</span>
+                          <span className="text-text-muted">Risk Score (v0.6.5)</span>
                           <span className="font-mono tabular-nums" style={{ color: RISK_COLORS[getRiskLevel(ariaData.new_vendor_risk_score)] }}>
                             {(ariaData.new_vendor_risk_score * 100).toFixed(1)}
                           </span>
@@ -4117,7 +4117,7 @@ function RiskGauge({
   const label = level.charAt(0).toUpperCase() + level.slice(1)
   const color = RISK_COLORS[level]
 
-  // Gauge zone boundaries — v6.5 thresholds: low<25, medium 25–40, high 40–60, critical ≥60
+  // Gauge zone boundaries — v0.6.5 thresholds: low<25, medium 25–40, high 40–60, critical ≥60
   const circumference = 2 * Math.PI * 40
   const zones = [
     { end: 25, color: RISK_COLORS.low },      // 0–25%

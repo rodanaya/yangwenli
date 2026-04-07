@@ -270,7 +270,7 @@ def get_contract_features(
     """
     Get z-score features for a contract with human-readable labels.
 
-    Returns each of the 16 z-score features computed for the v6.5 risk model (9 active),
+    Returns each of the 16 z-score features computed for the v0.6.5 risk model (9 active),
     sorted by absolute z-score (most anomalous first). Includes a rough
     percentile estimate and direction indicator (high_risk/low_risk).
 
@@ -402,7 +402,7 @@ def get_contract_risk(
             factors_str = row[4] or ""
             factors = []
 
-            # Map factor codes to descriptions and weights (v6.5 global coefficients)
+            # Map factor codes to descriptions and weights (v0.6.5 global coefficients)
             # Source: CAL-v6.1-202603251039, C=0.01, l1_ratio=0.9673
             factor_info = {
                 # Behavioral factors (active)

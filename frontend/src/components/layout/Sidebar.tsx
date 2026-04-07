@@ -134,10 +134,10 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[10px] font-bold tracking-[0.15em] uppercase text-stone-500 font-mono select-none">
+          <span className="text-[10px] font-semibold tracking-[0.08em] uppercase text-stone-500 font-mono select-none">
             {title}
           </span>
-          <div className="flex-1 h-px bg-stone-800" />
+          <div className="flex-1 h-px bg-stone-800/70" />
         </div>
       )}
       {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-stone-800" />}
@@ -249,7 +249,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
-              <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.0</span>
+              <span className="text-[9px] font-bold font-mono text-[#c41e3a] bg-[#c41e3a]/15 border border-[#c41e3a]/25 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v2.1</span>
             </div>
             <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
           </div>
@@ -421,11 +421,11 @@ function SidebarNavItem({
     <NavLink
       to={item.href}
       className={cn(
-        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-150',
+        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500',
         isActive
-          ? 'bg-[#342e2a] text-white'
-          : 'text-stone-300 hover:text-white hover:bg-[#2a2420]',
+          ? 'bg-white/[0.04] text-white ring-1 ring-inset ring-white/[0.06]'
+          : 'text-stone-300 hover:text-white hover:bg-white/[0.025]',
         isHero && !isActive && 'font-semibold',
         isHero && isActive && 'font-semibold',
         !isHero && 'font-medium',
@@ -433,10 +433,18 @@ function SidebarNavItem({
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      {/* Hero left indicator bar */}
-      {isHero && !collapsed && (
+      {/* Active item — 2px left accent bar */}
+      {isActive && !collapsed && (
         <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full"
+          className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full"
+          style={{ backgroundColor: isHero && heroColor ? heroColor : 'var(--color-accent)' }}
+          aria-hidden="true"
+        />
+      )}
+      {/* Hero left indicator bar (inactive heroes only) */}
+      {isHero && !isActive && !collapsed && (
+        <span
+          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full opacity-60"
           style={{ backgroundColor: heroColor }}
           aria-hidden="true"
         />

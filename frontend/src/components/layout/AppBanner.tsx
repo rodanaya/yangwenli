@@ -5,21 +5,28 @@ import { useTranslation } from 'react-i18next'
 export function AppBanner() {
   const { t } = useTranslation('common')
   const [dismissed, setDismissed] = useState(() =>
-    localStorage.getItem('rubli_banner_v20') === 'true'
+    localStorage.getItem('rubli_banner_v21') === 'true'
   )
 
   if (dismissed) return null
 
   const dismiss = () => {
-    localStorage.setItem('rubli_banner_v20', 'true')
+    localStorage.setItem('rubli_banner_v21', 'true')
     setDismissed(true)
   }
 
   return (
-    <div className="flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-accent/10 via-accent/5 to-transparent border-b border-accent/20 animate-in slide-in-from-top-1 duration-300">
+    <div className="relative flex items-center gap-2.5 px-5 py-1.5 bg-gradient-to-r from-accent/[0.08] via-accent/[0.04] to-transparent border-b border-accent/25 animate-in slide-in-from-top-1 duration-300">
+      {/* Thin colored accent rule below the banner */}
+      <span
+        className="absolute inset-x-0 bottom-0 h-px bg-gradient-to-r from-transparent via-accent/40 to-transparent"
+        aria-hidden="true"
+      />
       <Sparkles className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-      <p className="flex-1 text-xs text-accent font-medium">
-        <span className="font-bold">RUBLI 2.0 —</span> {t('banner')}
+      <p className="flex-1 text-[11px] text-accent font-medium tracking-tight leading-tight">
+        <span className="font-bold font-mono uppercase tracking-[0.08em] mr-1.5">RUBLI&nbsp;v2.1</span>
+        <span className="text-accent/70 mx-1.5">·</span>
+        {t('banner')}
       </p>
       <button
         onClick={dismiss}

@@ -721,7 +721,7 @@ export default function PoliticalCycle() {
           </span>
           This analysis groups 3,059,592 contracts (2002–2025) by the year within each 6-year
           presidential term (sexenio). Year 1 = first calendar year of a new president.
-          Risk scores from RUBLI v6.5 model (AUC 0.828, vendor-stratified test split).
+          Risk scores from RUBLI v0.6.5 model (AUC 0.828, vendor-stratified test split).
           High-risk threshold: score &ge; 0.40. Direct award = non-competitive procurement
           procedure. Single bid = competitive procedure with only one bidder.
           Election year = year of federal presidential election (2000, 2006, 2012, 2018, 2024).

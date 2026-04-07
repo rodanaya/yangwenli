@@ -9,6 +9,8 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
 import { Link } from 'react-router-dom'
+import ReactECharts from 'echarts-for-react'
+import type * as echarts from 'echarts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ariaApi, vendorApi, networkApi } from '@/api/client'
 import type { AriaQueueItem, VendorDetailResponse } from '@/api/types'
@@ -113,6 +115,190 @@ function getRiskBadgeColor(level: string): string {
 // All known patterns for filter
 const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
 
+// Solid hex colors per pattern (for ECharts which can't read tailwind classes)
+const PATTERN_HEX: Record<string, string> = {
+  P1: '#ef4444', // red-500
+  P2: '#f59e0b', // amber-500
+  P3: '#f97316', // orange-500
+  P6: '#e11d48', // rose-600
+  P7: '#eab308', // yellow-500
+}
+
+// ---------------------------------------------------------------------------
+// Risk Intelligence Matrix — scatter plot of every queue vendor
+// ---------------------------------------------------------------------------
+
+interface RiskMatrixProps {
+  dossiers: AriaQueueItem[]
+  onSelect: (vendorId: number) => void
+}
+
+// Each scatter point: [riskScore (x, 0-1), ipsScore (y, 0-100), totalValue, name, vendorId, pattern, tier]
+type ScatterPoint = [number, number, number, string, number, string, number]
+
+function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
+  const seriesData = useMemo(() => {
+    // Group dossiers by primary_pattern so each pattern is its own series
+    const grouped: Record<string, ScatterPoint[]> = {}
+    for (const d of dossiers) {
+      const pattern = d.primary_pattern || 'OTHER'
+      const point: ScatterPoint = [
+        Math.max(0, Math.min(1, d.avg_risk_score ?? 0)),
+        Math.max(0, Math.min(100, (d.ips_final ?? 0) * 100)),
+        d.total_value_mxn ?? 0,
+        d.vendor_name,
+        d.vendor_id,
+        pattern,
+        d.ips_tier,
+      ]
+      if (!grouped[pattern]) grouped[pattern] = []
+      grouped[pattern].push(point)
+    }
+    return grouped
+  }, [dossiers])
+
+  const option = useMemo(() => {
+    const series: echarts.SeriesOption[] = Object.entries(seriesData).map(
+      ([pattern, points]) => ({
+        type: 'scatter',
+        name: pattern,
+        data: points,
+        symbolSize: (data: number[]) => {
+          const value = data[2] ?? 0
+          return Math.max(8, Math.min(40, Math.sqrt(value / 5_000_000)))
+        },
+        itemStyle: {
+          color: PATTERN_HEX[pattern] ?? '#64748b',
+          opacity: 0.78,
+          borderColor: '#0a0a0a',
+          borderWidth: 1,
+        },
+        emphasis: {
+          itemStyle: { opacity: 1, borderColor: '#ffffff', borderWidth: 2 },
+        },
+      }),
+    )
+
+    return {
+      backgroundColor: 'transparent',
+      grid: { left: 60, right: 30, top: 40, bottom: 50 },
+      xAxis: {
+        name: 'Avg Risk Score →',
+        nameLocation: 'end',
+        nameTextStyle: { color: '#6b6560', fontSize: 11 },
+        type: 'value',
+        min: 0,
+        max: 1,
+        splitLine: { lineStyle: { color: '#2a2d2c', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#3a3d3c' } },
+        axisLabel: {
+          color: '#6b6560',
+          fontSize: 11,
+          formatter: (v: number) => v.toFixed(1),
+        },
+      },
+      yAxis: {
+        name: 'IPS Score ↑',
+        nameLocation: 'end',
+        nameTextStyle: { color: '#6b6560', fontSize: 11 },
+        type: 'value',
+        min: 0,
+        max: 100,
+        splitLine: { lineStyle: { color: '#2a2d2c', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#3a3d3c' } },
+        axisLabel: { color: '#6b6560', fontSize: 11 },
+      },
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#0a0a0a',
+        borderColor: '#3f3f46',
+        textStyle: { color: '#f4f4f5', fontSize: 12 },
+        formatter: (params: { data: ScatterPoint }) => {
+          const [riskScore, ipsScore, totalVal, name, , pattern, tier] = params.data
+          return `<div style="max-width:280px"><b>${name}</b><br/>IPS: <b>${ipsScore.toFixed(1)}</b> · Tier ${tier}<br/>Risk: <b>${(riskScore * 100).toFixed(0)}%</b><br/>Pattern: ${pattern}<br/>Value: MX$${(totalVal / 1e9).toFixed(2)}B</div>`
+        },
+      },
+      graphic: [
+        { type: 'text', left: '60%', top: '8%', style: { text: 'CRÍTICO', fill: '#dc2626', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
+        { type: 'text', left: '60%', top: '60%', style: { text: 'RIESGO', fill: '#ea580c', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
+        { type: 'text', left: '8%', top: '8%', style: { text: 'MONITOREO', fill: '#6b6560', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
+        { type: 'text', left: '8%', top: '60%', style: { text: 'BAJO', fill: '#6b6560', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
+      ],
+      series: [
+        ...series,
+        {
+          type: 'scatter',
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            lineStyle: { color: '#3a3d3c', type: 'dashed', width: 1 },
+            label: { show: false },
+            data: [
+              { xAxis: 0.5 },
+              { yAxis: 50 },
+            ],
+          },
+          data: [],
+        },
+      ],
+    } as unknown as echarts.EChartsOption
+  }, [seriesData])
+
+  const handleEvents = useMemo(
+    () => ({
+      click: (params: { data?: ScatterPoint }) => {
+        if (!params.data || !Array.isArray(params.data)) return
+        const vendorId = params.data[4]
+        if (typeof vendorId === 'number') onSelect(vendorId)
+      },
+    }),
+    [onSelect],
+  )
+
+  if (dossiers.length === 0) {
+    return null
+  }
+
+  return (
+    <div className="rounded-xl border border-white/10 bg-surface-card/40 overflow-hidden mb-6">
+      <div className="flex items-start justify-between px-4 pt-3 pb-2 gap-4 flex-wrap">
+        <div>
+          <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-muted">
+            Matriz de Investigación
+          </p>
+          <p className="text-[11px] text-text-muted/60 mt-0.5">
+            IPS vs riesgo · tamaño = valor contractual · clic para abrir expediente
+          </p>
+        </div>
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {ALL_PATTERNS.map((p) => (
+            <span
+              key={p}
+              className="inline-flex items-center gap-1 text-[9px] font-mono text-text-muted/70 px-1.5 py-0.5 rounded border border-white/10 bg-white/5"
+            >
+              <span
+                className="h-2 w-2 rounded-full"
+                style={{ background: PATTERN_HEX[p] }}
+                aria-hidden="true"
+              />
+              {p}
+            </span>
+          ))}
+        </div>
+      </div>
+      <div style={{ height: 360, width: '100%' }}>
+        <ReactECharts
+          option={option}
+          style={{ height: 360, width: '100%' }}
+          onEvents={handleEvents}
+          opts={{ renderer: 'canvas' }}
+          notMerge={true}
+        />
+      </div>
+    </div>
+  )
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -204,13 +390,13 @@ export default function RedesKnownDossier() {
       {/* Editorial header */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          {t('header.eyebrow')}
+          Inteligencia Artificial · Cola de Investigación
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
           {t('header.title')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
-          {t('header.description')}
+          Matriz de priorización: IPS vs puntuación de riesgo. Cada burbuja es un proveedor en vigilancia activa — clic para abrir su expediente.
         </p>
       </div>
 
@@ -303,6 +489,11 @@ export default function RedesKnownDossier() {
           })}
         </div>
       </div>
+
+      {/* Risk Intelligence Matrix — scatter plot */}
+      {!isLoading && filtered.length > 0 && (
+        <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
+      )}
 
       {/* Stats bar + view toggle */}
       {!isLoading && filtered.length > 0 && (

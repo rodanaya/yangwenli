@@ -62,14 +62,14 @@ describe('formatPercent', () => {
 })
 
 describe('Risk model version', () => {
-  it('is set to v6.5', () => {
-    expect(CURRENT_MODEL_VERSION).toBe('v6.5')
+  it('is set to v0.6.5', () => {
+    expect(CURRENT_MODEL_VERSION).toBe('v0.6.5')
   })
 })
 
-describe('Risk thresholds (v6.5)', () => {
-  it('defines correct v6.5 thresholds', () => {
-    // v6.5 risk score thresholds (OECD-calibrated, HR=13.49%)
+describe('Risk thresholds (v0.6.5)', () => {
+  it('defines correct v0.6.5 thresholds', () => {
+    // v0.6.5 risk score thresholds (OECD-calibrated, HR=13.49%)
     // Critical: >= 0.60 (strongest similarity to known corruption patterns)
     // High: >= 0.40 (strong similarity)
     // Medium: >= 0.25 (moderate similarity — actionable)
@@ -88,7 +88,7 @@ describe('Risk thresholds (v6.5)', () => {
   })
 })
 
-describe('getRiskLevel (v6.5 thresholds)', () => {
+describe('getRiskLevel (v0.6.5 thresholds)', () => {
   it('returns critical for scores >= 0.60', () => {
     expect(getRiskLevel(0.60)).toBe('critical')
     expect(getRiskLevel(0.75)).toBe('critical')

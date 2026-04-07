@@ -75,9 +75,9 @@ const MODEL_COEFFICIENTS: Coefficient[] = [
   { factor: 'price_ratio', beta: 0.2345, raw_beta: 0.2345, ci_lower: 0.210, ci_upper: 0.259, direction: 'positive' },
   { factor: 'network_member_count', beta: 0.1811, raw_beta: 0.1811, ci_lower: 0.165, ci_upper: 0.197, direction: 'positive' },
   { factor: 'same_day_count', beta: 0.0945, raw_beta: 0.0945, ci_lower: 0.082, ci_upper: 0.107, direction: 'positive' },
-  { factor: 'win_rate', beta: 0.0488, raw_beta: 0.0488, ci_lower: 0.038, ci_upper: 0.060, direction: 'positive', note: 'Active in v6.5' },
-  { factor: 'ad_period_days', beta: 0.0423, raw_beta: 0.0423, ci_lower: 0.030, ci_upper: 0.055, direction: 'positive', note: 'Active in v6.5' },
-  { factor: 'direct_award', beta: 0.0306, raw_beta: 0.0306, ci_lower: 0.020, ci_upper: 0.041, direction: 'positive', note: 'Active in v6.5' },
+  { factor: 'win_rate', beta: 0.0488, raw_beta: 0.0488, ci_lower: 0.038, ci_upper: 0.060, direction: 'positive', note: 'Active in v0.6.5' },
+  { factor: 'ad_period_days', beta: 0.0423, raw_beta: 0.0423, ci_lower: 0.030, ci_upper: 0.055, direction: 'positive', note: 'Active in v0.6.5' },
+  { factor: 'direct_award', beta: 0.0306, raw_beta: 0.0306, ci_lower: 0.020, ci_upper: 0.041, direction: 'positive', note: 'Active in v0.6.5' },
   { factor: 'single_bid', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
   { factor: 'sector_spread', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'Sign-constrained to zero' },
   { factor: 'industry_mismatch', beta: 0.000, raw_beta: 0.000, ci_lower: 0.000, ci_upper: 0.000, direction: 'zeroed', note: 'L1 regularized to zero' },
@@ -687,7 +687,7 @@ function FeatureWeightsRacetrack() {
           What Drives the Score
         </h3>
         <p className="text-xs text-text-muted mt-1">
-          v6.5 global model coefficients — 9 active features that determine risk
+          v0.6.5 global model coefficients — 9 active features that determine risk
         </p>
       </div>
 
@@ -805,7 +805,7 @@ function RiskDistributionStrip() {
           Where 3.1M Contracts Land
         </h3>
         <p className="text-xs text-text-muted mt-1">
-          Risk level distribution across all scored contracts (v6.5 OECD-calibrated)
+          Risk level distribution across all scored contracts (v0.6.5 OECD-calibrated)
         </p>
       </div>
 
@@ -1291,7 +1291,7 @@ export default function ModelTransparency() {
               <span className="font-semibold text-text-primary font-mono">
                 {modelCalibration
                   ? `${modelCalibration.model_version} (C=${modelCalibration.hyperparameters?.C ?? '0.01'})`
-                  : 'v6.5 (C=0.01)'}
+                  : 'v0.6.5 (C=0.01)'}
               </span>
             </div>
             <span className="text-text-muted/40">|</span>
@@ -1686,7 +1686,7 @@ export default function ModelTransparency() {
                 />
                 <RechartsTooltip content={<ComparisonTooltip />} cursor={{ fill: '#ffffff08' }} />
                 <Bar dataKey="v33" name="v3.3 (Checklist)" fill="#64748b" radius={[4, 4, 0, 0]} barSize={28} />
-                <Bar dataKey="v50" name="v6.5 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
+                <Bar dataKey="v50" name="v0.6.5 (Per-Sector)" fill="#58a6ff" radius={[4, 4, 0, 0]} barSize={28} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -2057,7 +2057,7 @@ export default function ModelTransparency() {
               { version: 'v3.3', date: 'Feb 2026', auc: '0.584', label: 'Weighted Checklist', desc: '8 base factors, IMF-aligned weights, interaction effects. AUC barely above random.', color: '#64748b' },
               { version: 'v4.0', date: 'Feb 2026', auc: '0.942', label: 'Statistical Framework', desc: 'Z-scores, Mahalanobis distance, Bayesian logistic regression. 12 features, PU-learning correction.', color: '#fb923c' },
               { version: 'v5.1', date: 'Feb 2026', auc: '0.957', label: 'Per-Sector Sub-Models', desc: '16 z-score features, 13 models (1 global + 12 sector). Temporal split inflated AUC due to vendor leakage.', color: '#3b82f6' },
-              { version: 'v6.5', date: 'Mar 2026', auc: '0.828', label: 'Curriculum Learning (Active)', desc: '748 GT cases (institution-scoped), 603 vendors. Windowed labels, FP exclusions (BAXTER, FRESENIUS, INFRA, PRAXAIR). HR=13.49% OECD compliant.', color: 'var(--color-accent)', active: true },
+              { version: 'v0.6.5', date: 'Mar 2026', auc: '0.828', label: 'Curriculum Learning (Active)', desc: '748 GT cases (institution-scoped), 603 vendors. Windowed labels, FP exclusions (BAXTER, FRESENIUS, INFRA, PRAXAIR). HR=13.49% OECD compliant.', color: 'var(--color-accent)', active: true },
             ].map((item) => (
               <div key={item.version} className="relative flex items-start gap-4 pb-5 last:pb-0">
                 <div

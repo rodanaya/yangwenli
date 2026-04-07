@@ -31,7 +31,7 @@ Built for investigative journalists, government auditors, and transparency resea
 | Validated procurement value | ~9.9T MXN |
 | Vendors tracked | 320,429 |
 | Institutions | 4,456 |
-| Active risk model | **v6.5** (per-sector calibrated, OECD-aligned) |
+| Active risk model | **v0.6.5** (per-sector calibrated, OECD-aligned) |
 | Train AUC-ROC | **0.798** (vendor-stratified holdout) |
 | Test AUC-ROC | **0.828** (vendor-stratified holdout) |
 | Ground truth cases | **748** (603 vendors, ~288K scoped contracts) |
@@ -130,14 +130,14 @@ rubli/
 | Sectors | `/sectors` | 12-sector taxonomy with treemap and sparkline trends |
 | Ground Truth | `/ground-truth` | 748 validated corruption cases and per-case detection rates |
 | Stories | `/journalists` | Pre-built investigative editorial narratives |
-| Model Transparency | `/model` | v6.5 coefficients, feature importance, per-sector sub-models |
+| Model Transparency | `/model` | v0.6.5 coefficients, feature importance, per-sector sub-models |
 | Methodology | `/methodology` | Full risk scoring methodology documentation |
 | Limitations | `/limitations` | Known blind spots, workarounds, what the model cannot detect |
 | API Explorer | `/api-explorer` | Interactive catalog of all 60+ backend endpoints |
 
 ---
 
-## Risk Model v6.5
+## Risk Model v0.6.5
 
 The active model uses **per-sector statistical risk scoring**. Scores measure similarity to documented corruption patterns, normalized by sector and year baselines.
 
@@ -189,9 +189,9 @@ Training cases include: IMSS Ghost Company Network, Segalmex Food Distribution, 
 | v4.0 | 0.951 | — (in-sample) | 9 | Z-score normalization, Mahalanobis |
 | v5.1 | 0.964 | 0.957 | 22 | Per-sector sub-models, PU-learning |
 | v6.4 | 0.840 | 0.863 | ~714 | Optuna TPE, windowed GT labels |
-| **v6.5** | **0.798** | **0.828** | **748** | Institution-scoped GT, FP exclusions, curriculum learning |
+| **v0.6.5** | **0.798** | **0.828** | **748** | Institution-scoped GT, FP exclusions, curriculum learning |
 
-*v6.5 AUC is lower than v5.1 because: (1) v5.1 had temporal leakage in vendor aggregates, (2) v6.5 uses vendor-stratified holdout (honest), (3) larger GT set includes harder cases.*
+*v0.6.5 AUC is lower than v5.1 because: (1) v5.1 had temporal leakage in vendor aggregates, (2) v0.6.5 uses vendor-stratified holdout (honest), (3) larger GT set includes harder cases.*
 
 ---
 
@@ -313,7 +313,7 @@ npm run build
 
 2. **Training bias toward large concentrated vendors** — IMSS, Segalmex, and COVID-19 cases account for ~79% of positive training contracts. Novel patterns from small-scale fraud are underdetected.
 
-3. **Ghost company blind spot (partial)** — Small shell companies (EFOS-type: few contracts, low concentration) score 0.28 avg vs. 0.85 for training-dominant cases. Partially addressed in v6.5, not fully solved.
+3. **Ghost company blind spot (partial)** — Small shell companies (EFOS-type: few contracts, low concentration) score 0.28 avg vs. 0.85 for training-dominant cases. Partially addressed in v0.6.5, not fully solved.
 
 4. **Vendor deduplication incomplete** — Same company appears under hundreds of name variants over 23 years. RFC is the primary key when available (0.1% pre-2010, 47% in 2023-2025).
 
@@ -327,7 +327,7 @@ Full interactive limitations: [rubli.xyz/limitations](https://rubli.xyz/limitati
 
 ## Methodology
 
-- [`docs/RISK_METHODOLOGY_v6.md`](docs/RISK_METHODOLOGY_v6.md) — v6.5 active model
+- [`docs/RISK_METHODOLOGY_v6.md`](docs/RISK_METHODOLOGY_v6.md) — v0.6.5 active model
 - [`docs/RISK_METHODOLOGY_v5.md`](docs/RISK_METHODOLOGY_v5.md) — v5.1 (preserved)
 - [`docs/RISK_METHODOLOGY_v4.md`](docs/RISK_METHODOLOGY_v4.md) — v4.0 (preserved)
 - [`docs/ARIA_SPEC.md`](docs/ARIA_SPEC.md) — ARIA pipeline specification

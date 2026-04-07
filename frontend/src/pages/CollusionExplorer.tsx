@@ -9,6 +9,8 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import ReactECharts from 'echarts-for-react'
+import type * as echarts from 'echarts'
 import {
   AlertTriangle,
   Users,
@@ -24,6 +26,7 @@ import {
   Search,
   X,
   Table2,
+  RotateCcw,
 } from 'lucide-react'
 import { collusionApi } from '@/api/client'
 import type { CollusionPair, CollusionStats } from '@/api/types'
@@ -280,6 +283,239 @@ function Filters({
       >
         {t('filters.reset')}
       </button>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Bid-Ring Network Graph (force-directed)
+// ---------------------------------------------------------------------------
+
+interface GraphNodeData {
+  id: string
+  name: string
+  vendorId: number
+  symbolSize: number
+  degree: number
+  maxRate: number
+  itemStyle: { color: string }
+  label: { show: boolean }
+}
+
+interface GraphEdgeData {
+  source: string
+  target: string
+  value: number
+  sharedCount: number
+  lineStyle: { width: number; color: string; opacity: number; curveness: number }
+}
+
+function buildGraphData(pairs: CollusionPair[]): {
+  nodes: GraphNodeData[]
+  edges: GraphEdgeData[]
+} {
+  // Take top 150 pairs by co_bid_rate (already sorted server-side, but be safe)
+  const top = [...pairs]
+    .sort((a, b) => b.co_bid_rate - a.co_bid_rate)
+    .slice(0, 150)
+
+  // Aggregate per-vendor degree + max rate
+  const nodeMap = new Map<
+    number,
+    { name: string; degree: number; maxRate: number }
+  >()
+  for (const p of top) {
+    const a = nodeMap.get(p.vendor_id_a)
+    if (a) {
+      a.degree += 1
+      a.maxRate = Math.max(a.maxRate, p.co_bid_rate)
+    } else {
+      nodeMap.set(p.vendor_id_a, {
+        name: p.vendor_name_a,
+        degree: 1,
+        maxRate: p.co_bid_rate,
+      })
+    }
+    const b = nodeMap.get(p.vendor_id_b)
+    if (b) {
+      b.degree += 1
+      b.maxRate = Math.max(b.maxRate, p.co_bid_rate)
+    } else {
+      nodeMap.set(p.vendor_id_b, {
+        name: p.vendor_name_b,
+        degree: 1,
+        maxRate: p.co_bid_rate,
+      })
+    }
+  }
+
+  const colorForRate = (rate: number): string => {
+    if (rate >= 80) return '#ef4444' // red-500
+    if (rate >= 50) return '#f97316' // orange-500
+    return '#f59e0b' // amber-500
+  }
+
+  const nodes: GraphNodeData[] = Array.from(nodeMap.entries()).map(
+    ([vendorId, info]) => {
+      const symbolSize = Math.max(
+        10,
+        Math.min(38, 10 + Math.sqrt(info.degree) * 7),
+      )
+      return {
+        id: `v-${vendorId}`,
+        name: info.name,
+        vendorId,
+        symbolSize,
+        degree: info.degree,
+        maxRate: info.maxRate,
+        itemStyle: { color: colorForRate(info.maxRate) },
+        label: { show: false },
+      }
+    },
+  )
+
+  const maxShared = Math.max(1, ...top.map((p) => p.shared_procedures))
+  const edges: GraphEdgeData[] = top.map((p) => {
+    const widthScale = Math.sqrt(p.shared_procedures / maxShared)
+    return {
+      source: `v-${p.vendor_id_a}`,
+      target: `v-${p.vendor_id_b}`,
+      value: Math.round(p.co_bid_rate * 10) / 10,
+      sharedCount: p.shared_procedures,
+      lineStyle: {
+        width: Math.max(1, widthScale * 5),
+        color: colorForRate(p.co_bid_rate),
+        opacity: 0.55,
+        curveness: 0.18,
+      },
+    }
+  })
+
+  return { nodes, edges }
+}
+
+interface BidRingGraphProps {
+  pairs: CollusionPair[]
+  loading: boolean
+  onNodeClick: (vendorId: number, vendorName: string) => void
+}
+
+function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
+  const chartRef = useRef<ReactECharts>(null)
+
+  const { nodes, edges } = useMemo(() => buildGraphData(pairs), [pairs])
+
+  const option = useMemo(() => {
+    return {
+      backgroundColor: 'transparent',
+      tooltip: {
+        trigger: 'item',
+        backgroundColor: '#0a0a0a',
+        borderColor: '#3f3f46',
+        textStyle: { color: '#f4f4f5', fontSize: 12 },
+        formatter: (params: {
+          dataType: string
+          data: GraphNodeData | (GraphEdgeData & { source: string; target: string })
+        }) => {
+          if (params.dataType === 'edge') {
+            const e = params.data as GraphEdgeData
+            const src = nodes.find((n) => n.id === e.source)?.name ?? e.source
+            const tgt = nodes.find((n) => n.id === e.target)?.name ?? e.target
+            return `<div style="max-width:280px"><b>${src}</b><br/>↔<br/><b>${tgt}</b><br/><br/>Co-bid rate: <b>${e.value}%</b><br/>Shared procedures: ${formatNumber(e.sharedCount)}</div>`
+          }
+          const n = params.data as GraphNodeData
+          return `<div style="max-width:280px"><b>${n.name}</b><br/>Suspicious pairs: ${n.degree}<br/>Max co-bid rate: ${n.maxRate.toFixed(1)}%</div>`
+        },
+      },
+      series: [
+        {
+          type: 'graph',
+          layout: 'force',
+          animation: true,
+          roam: true,
+          draggable: true,
+          label: {
+            show: false,
+            position: 'right',
+            fontSize: 11,
+            color: '#f4f4f5',
+          },
+          emphasis: {
+            focus: 'adjacency',
+            label: { show: true, fontSize: 11, color: '#f4f4f5' },
+            lineStyle: { width: 4 },
+          },
+          force: {
+            repulsion: 120,
+            gravity: 0.05,
+            edgeLength: [60, 180],
+            layoutAnimation: true,
+          },
+          lineStyle: { curveness: 0.2, opacity: 0.6 },
+          data: nodes,
+          links: edges,
+        },
+      ],
+    } as unknown as echarts.EChartsOption
+  }, [nodes, edges])
+
+  const handleEvents = useMemo(
+    () => ({
+      click: (params: { dataType?: string; data?: GraphNodeData }) => {
+        if (params.dataType !== 'node' || !params.data) return
+        onNodeClick(params.data.vendorId, params.data.name)
+      },
+    }),
+    [onNodeClick],
+  )
+
+  const handleReset = () => {
+    const inst = chartRef.current?.getEchartsInstance()
+    inst?.dispatchAction({ type: 'restore' })
+  }
+
+  return (
+    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 overflow-hidden mb-6">
+      <div className="flex items-center justify-between px-4 pt-3 pb-1">
+        <div>
+          <p className="font-mono text-[10px] tracking-[0.15em] uppercase text-zinc-500">
+            Bid-Ring Network
+          </p>
+          <p className="text-[11px] text-zinc-600 mt-0.5">
+            Top 150 suspicious pairs · drag to explore · hover to focus · click a node to filter
+          </p>
+        </div>
+        <button
+          type="button"
+          onClick={handleReset}
+          className="flex items-center gap-1.5 rounded-lg px-2.5 py-1 text-[10px] font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-500 hover:text-zinc-300 hover:border-zinc-700 transition-colors"
+          aria-label="Reset graph view"
+        >
+          <RotateCcw className="h-3 w-3" aria-hidden="true" />
+          Reset View
+        </button>
+      </div>
+      <div style={{ height: 420, width: '100%', position: 'relative' }}>
+        {loading || nodes.length === 0 ? (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-2 text-zinc-600">
+              <div className="h-6 w-6 border-2 border-zinc-700 border-t-amber-500 rounded-full animate-spin" />
+              <span className="text-[10px] font-mono uppercase tracking-wider">
+                {loading ? 'Loading network…' : 'No pairs available'}
+              </span>
+            </div>
+          </div>
+        ) : (
+          <ReactECharts
+            ref={chartRef}
+            option={option}
+            style={{ height: 420, width: '100%' }}
+            onEvents={handleEvents}
+            opts={{ renderer: 'canvas' }}
+            notMerge={true}
+          />
+        )}
+      </div>
     </div>
   )
 }
@@ -807,6 +1043,9 @@ export default function CollusionExplorer() {
   const [sortBy, setSortBy] = useState<SortField>(DEFAULT_SORT)
   const [page, setPage] = useState(1)
 
+  // Selected vendor (filtered from graph node click)
+  const [selectedVendor, setSelectedVendor] = useState<{ id: number; name: string } | null>(null)
+
   // Reset page when filters change
   const handleFlaggedOnly = (v: boolean) => { setFlaggedOnly(v); setPage(1) }
   const handleMinShared = (v: number) => { setMinShared(v); setPage(1) }
@@ -816,7 +1055,13 @@ export default function CollusionExplorer() {
     setMinShared(DEFAULT_MIN_SHARED)
     setSortBy(DEFAULT_SORT)
     setPage(1)
+    setSelectedVendor(null)
   }
+
+  const handleGraphNodeClick = useCallback((vendorId: number, vendorName: string) => {
+    setSelectedVendor({ id: vendorId, name: vendorName })
+    setPage(1)
+  }, [])
 
   const queryParams = useMemo(
     () => ({
@@ -846,13 +1091,39 @@ export default function CollusionExplorer() {
     staleTime: 30 * 60 * 1000,
   })
 
-  const pairs: CollusionPair[] = pairsData?.data ?? []
-  const pagination = pairsData?.pagination
-  const totalPages = pagination?.total_pages ?? 1
-  const total = pagination?.total ?? 0
+  // Separate broader fetch dedicated to feeding the network graph
+  // (top 100 by co_bid_rate, flagged-only, regardless of UI filters)
+  const { data: graphData, isLoading: graphLoading } = useQuery({
+    queryKey: ['collusion-pairs-graph'],
+    queryFn: () =>
+      collusionApi.getPairs({
+        is_potential_collusion: true,
+        min_shared_procedures: 10,
+        sort_by: 'co_bid_rate',
+        page: 1,
+        per_page: 100,
+      }),
+    staleTime: 30 * 60 * 1000,
+  })
+  const graphPairs: CollusionPair[] = graphData?.data ?? []
 
-  const showingFrom = total === 0 ? 0 : (page - 1) * DEFAULT_PER_PAGE + 1
-  const showingTo = Math.min(page * DEFAULT_PER_PAGE, total)
+  const rawPairs: CollusionPair[] = pairsData?.data ?? []
+  // Apply client-side selectedVendor filter (server doesn't support vendor filter)
+  const pairs: CollusionPair[] = useMemo(() => {
+    if (!selectedVendor) return rawPairs
+    return rawPairs.filter(
+      (p) =>
+        p.vendor_id_a === selectedVendor.id ||
+        p.vendor_id_b === selectedVendor.id,
+    )
+  }, [rawPairs, selectedVendor])
+
+  const pagination = pairsData?.pagination
+  const totalPages = selectedVendor ? 1 : pagination?.total_pages ?? 1
+  const total = selectedVendor ? pairs.length : pagination?.total ?? 0
+
+  const showingFrom = total === 0 ? 0 : selectedVendor ? 1 : (page - 1) * DEFAULT_PER_PAGE + 1
+  const showingTo = selectedVendor ? pairs.length : Math.min(page * DEFAULT_PER_PAGE, total)
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
@@ -860,7 +1131,7 @@ export default function CollusionExplorer() {
       <div className="border-b border-zinc-800 px-6 py-8">
         <div className="max-w-5xl mx-auto">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-            {t('editorial.section')}
+            Análisis de Colusión · Red de Connivencia
           </p>
           <h1
             className="text-3xl md:text-4xl font-bold text-zinc-100 leading-tight mb-3"
@@ -869,7 +1140,7 @@ export default function CollusionExplorer() {
             {t('title')}
           </h1>
           <p className="text-base text-zinc-400 leading-relaxed max-w-3xl">
-            {t('subtitle')}
+            Red de relaciones sospechosas entre proveedores. Nodos = proveedores, aristas = procedimientos compartidos. Haz clic en un nodo para investigar a sus cómplices.
           </p>
         </div>
       </div>
@@ -884,6 +1155,13 @@ export default function CollusionExplorer() {
         {/* ── Pattern Legend ── */}
         <PatternLegend />
 
+        {/* ── Bid-Ring Network Graph ── */}
+        <BidRingGraph
+          pairs={graphPairs}
+          loading={graphLoading}
+          onNodeClick={handleGraphNodeClick}
+        />
+
         {/* ── Filters ── */}
         <Filters
           flaggedOnly={flaggedOnly}
@@ -894,6 +1172,26 @@ export default function CollusionExplorer() {
           setSortBy={handleSortBy}
           onReset={handleReset}
         />
+
+        {/* ── Selected vendor filter chip ── */}
+        {selectedVendor && (
+          <div className="mb-4 flex items-center gap-2 flex-wrap" aria-live="polite">
+            <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
+              Viewing pairs for:
+            </span>
+            <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold max-w-md">
+              <span className="truncate">{selectedVendor.name}</span>
+              <button
+                type="button"
+                onClick={() => setSelectedVendor(null)}
+                className="hover:text-amber-100 transition-colors shrink-0"
+                aria-label="Clear vendor filter"
+              >
+                <X className="h-3 w-3" />
+              </button>
+            </span>
+          </div>
+        )}
 
         {/* ── Showing count ── */}
         {!pairsLoading && !pairsError && total > 0 && (

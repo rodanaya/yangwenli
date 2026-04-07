@@ -419,7 +419,7 @@ def _build_summary(conn) -> dict:
         }
     else:
         model = {
-            "version": "v6.5",
+            "version": "v0.6.5",
             "features": 9,
             "sub_models": 13,
             "auc": 0.828,
@@ -431,7 +431,7 @@ def _build_summary(conn) -> dict:
     # Lift from v4.0 comparison report (stable between retrainings)
     model["lift"] = 4.04
 
-    # Static model interpretation (v6.5 coefficients — 9 active features)
+    # Static model interpretation (v0.6.5 coefficients — 9 active features)
     model["top_predictors"] = [
         {"name": "price_volatility", "beta": 0.534, "direction": "positive"},
         {"name": "institution_diversity", "beta": -0.382, "direction": "negative"},

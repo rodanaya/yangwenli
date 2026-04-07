@@ -519,7 +519,7 @@ class VendorTrajectoryResponse(BaseModel):
     vendor_id: int
     vendor_name: str
     scores: Dict[str, Optional[float]]
-    model_versions: List[str] = ["v3.3", "v4.0", "v5.1", "v6.5"]
+    model_versions: List[str] = ["v3.3", "v4.0", "v5.1", "v0.6.5"]
     trajectory: List[Optional[float]] = []
 
 
@@ -2636,7 +2636,7 @@ def get_vendor_trajectory(
                 vendor_id=vendor_id,
                 vendor_name=vendor_row["name"],
                 scores=scores,
-                model_versions=["v3.3", "v4.0", "v5.1", "v6.5"],
+                model_versions=["v3.3", "v4.0", "v5.1", "v0.6.5"],
                 trajectory=trajectory,
             )
 

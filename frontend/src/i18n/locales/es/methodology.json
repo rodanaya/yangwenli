@@ -1,6 +1,6 @@
 {
   "pageTitle": "Metodología de Puntuación de Riesgo",
-  "pageSubtitle": "Modelo Estratificado por Proveedor v6.5 — 9 características activas, Optuna TPE, generalización honesta",
+  "pageSubtitle": "Modelo Estratificado por Proveedor v0.6.5 — 9 características activas, Optuna TPE, generalización honesta",
   "contents": "CONTENIDO",
   "sections": {
     "overview": "Descripción del Modelo",
@@ -14,7 +14,7 @@
     "references": "Referencias"
   },
   "overview": {
-    "description": "RUBLI v6.5 califica cada contrato con un indicador estadístico de riesgo usando regresión logística por sector entrenada en ~748 casos documentados (~603 proveedores). Las puntuaciones miden similitud con patrones de corrupción conocidos — el modelo usa validación estratificada por proveedor (ningún proveedor en entrenamiento y prueba simultáneamente).",
+    "description": "RUBLI v0.6.5 califica cada contrato con un indicador estadístico de riesgo usando regresión logística por sector entrenada en ~748 casos documentados (~603 proveedores). Las puntuaciones miden similitud con patrones de corrupción conocidos — el modelo usa validación estratificada por proveedor (ningún proveedor en entrenamiento y prueba simultáneamente).",
     "modelVersion": "Versión del modelo",
     "trainAUC": "AUC Entrenamiento",
     "testAUC": "AUC Prueba",
@@ -31,17 +31,17 @@
     "disclaimer": "Las puntuaciones de riesgo son indicadores estadísticos con intervalos de confianza del 95%. Una puntuación alta indica similitud con patrones de corrupción documentados — no constituye prueba."
   },
   "coefficients": {
-    "title": "Coeficientes del Modelo Global v6.5",
-    "subtitle": "16 características z-score (9 activas en v6.5) ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
+    "title": "Coeficientes del Modelo Global v0.6.5",
+    "subtitle": "16 características z-score (9 activas en v0.6.5) ordenadas por magnitud absoluta del coeficiente. Positivo = aumenta riesgo; negativo = disminuye riesgo."
   },
   "keyFindings": {
     "title": "Lo Que Aprendió el Modelo",
     "concentration": "La volatilidad de precios y la concentración dominan",
     "concentrationDetail": "La volatilidad de precios (+1.16) y la concentración de proveedores (+0.86) son los 2 principales predictores. Estos reflejan el patrón documentado de corrupción en México: grandes proveedores con tamaños de contrato variables capturando monopolios institucionales.",
     "directAward": "Las adjudicaciones directas aumentan el riesgo",
-    "directAwardDetail": "El coeficiente de adjudicación directa es +0.031 en v6.5, confirmando la corrección de signo de v5.1. Las adjudicaciones directas están consistentemente asociadas con casos documentados de corrupción en contrataciones mexicanas.",
+    "directAwardDetail": "El coeficiente de adjudicación directa es +0.031 en v0.6.5, confirmando la corrección de signo de v5.1. Las adjudicaciones directas están consistentemente asociadas con casos documentados de corrupción en contrataciones mexicanas.",
     "singleBidWeak": "Licitante único es una señal negativa",
-    "singleBidDetail": "Licitación única tiene un coeficiente de -0.065 en v6.5. Los proveedores conocidos como malos tienden a ganar a través de adjudicaciones directas en lugar de procedimientos competitivos con un solo licitante, lo que contradice la guía de la OCDE pero refleja los patrones de contratación federal mexicana.",
+    "singleBidDetail": "Licitación única tiene un coeficiente de -0.065 en v0.6.5. Los proveedores conocidos como malos tienden a ganar a través de adjudicaciones directas en lugar de procedimientos competitivos con un solo licitante, lo que contradice la guía de la OCDE pero refleja los patrones de contratación federal mexicana.",
     "coBiddingZero": "La co-licitación no provee señal",
     "coBiddingZeroDetail": "Regularizada a exactamente 0.000 en los 13 modelos. Los casos de entrenamiento involucran concentración, no anillos de colusión."
   },
@@ -64,14 +64,14 @@
     "mahalanobisDesc": "Mide qué tan inusual es el vector de características de un contrato en el espacio multidimensional. Reemplaza los 5 pares de interacción codificados del v3.3 con una matriz de covarianza completa que captura todas las relaciones por pares.",
     "mahalanobisFormula": "D²(z) = zᵀ Σ⁻¹ z",
     "perSector": "Regresión Logística por Sector",
-    "perSectorDesc": "v6.5 entrena 12 modelos dedicados (uno por sector) más un respaldo global. ElasticNet optimizado con Optuna (C=0.0100, l1_ratio=0.9673, casi puro L1) con división estratificada por proveedor 70/30.",
+    "perSectorDesc": "v0.6.5 entrena 12 modelos dedicados (uno por sector) más un respaldo global. ElasticNet optimizado con Optuna (C=0.0100, l1_ratio=0.9673, casi puro L1) con división estratificada por proveedor 70/30.",
     "perSectorFormula": "S(z) = σ(β₀ + βᵀz) / c, donde c = 0.300 (corrección PU)"
   },
   "modelComparison": {
-    "title": "Comparación de Modelos: v3.3 → v6.5",
+    "title": "Comparación de Modelos: v3.3 → v0.6.5",
     "metric": "Métrica",
     "v33": "v3.3",
-    "v50": "v6.5",
+    "v50": "v0.6.5",
     "improvement": "Mejora"
   },
   "v33": {
@@ -120,7 +120,7 @@
     "factorLift": "Lift de Factores vs Verdad Fundamental",
     "factorLiftDesc": "Con qué frecuencia adicional aparece cada factor de riesgo en casos documentados de corrupción vs la población general de contratos. Lift > 1.0 = sobrerrepresentado en contratos conocidos como malos.",
     "noFactorLift": "No hay datos de lift de factores disponibles.",
-    "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v6.5). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
+    "modelComparisonDesc": "Comparación de tasas de detección entre versiones de modelos (v3.3, v4.0, v0.6.5). Alto+ = puntuación >= 0.30, Crítico = puntuación >= 0.50.",
     "noModelComparison": "No hay datos de comparación de modelos disponibles. Ejecute validate_risk_model.py para generar resultados.",
     "tooltipLift": "Lift",
     "tooltipGtRate": "Tasa VF",
@@ -173,13 +173,13 @@
       "fallbackNote": "Los modelos por sector se aplican cuando el sector del contrato tiene 30+ contratos en los datos de entrenamiento. El modelo global se usa como respaldo."
     },
     "comparison": {
-      "title": "Comparación de Modelos: v3.3 vs v6.5",
-      "description": "El marco estratificado por proveedor (v6.5) supera significativamente a la lista de verificación ponderada (v3.3) en todas las métricas",
+      "title": "Comparación de Modelos: v3.3 vs v0.6.5",
+      "description": "El marco estratificado por proveedor (v0.6.5) supera significativamente a la lista de verificación ponderada (v3.3) en todas las métricas",
       "legendChecklist": "v3.3 Lista Ponderada",
-      "legendPerSector": "v6.5 Marco Estratificado por Proveedor",
+      "legendPerSector": "v0.6.5 Marco Estratificado por Proveedor",
       "tableMetric": "Métrica",
       "tableV33": "v3.3",
-      "tableV51": "v6.5",
+      "tableV51": "v0.6.5",
       "tableDelta": "Delta",
       "rowAuc": "AUC-ROC",
       "rowDetection": "Tasa de Detección (med+)",
@@ -204,7 +204,7 @@
       "sectionTitle": "Limitaciones Conocidas",
       "warning": "Ningún modelo es perfecto. Estas limitaciones se divulgan por transparencia. Una puntuación de riesgo alta indica una anomalía estadística consistente con patrones de corrupción — no constituye prueba de irregularidad.",
       "groundTruthConc": "Concentración de Verdad Fundamental",
-      "groundTruthConcDesc": "v6.5 expandió a ~748 casos y ~603 proveedores con un tope de 100 contratos de entrenamiento por proveedor. Aunque esto reduce el dominio de mega-casos, los sectores Salud y Agricultura aún contribuyen desproporcionadamente debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
+      "groundTruthConcDesc": "v0.6.5 expandió a ~748 casos y ~603 proveedores con un tope de 100 contratos de entrenamiento por proveedor. Aunque esto reduce el dominio de mega-casos, los sectores Salud y Agricultura aún contribuyen desproporcionadamente debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
       "smallCase": "Detección de Casos Pequeños",
       "smallCaseDesc": "Los casos con pocos contratos tienen tasas de detección más bajas: La Estafa Maestra (10 contratos, 0% alto+), Oceanografía (2 contratos, 50% detección). El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "noCausal": "Sin Afirmaciones Causales",
@@ -262,7 +262,7 @@
     "liftVsRandom": "Lift vs Aleatorio"
   },
   "sectionLabels": {
-    "overview": "Descripción del Modelo (v6.5)",
+    "overview": "Descripción del Modelo (v0.6.5)",
     "features": "Las Características (9 Activas)",
     "risk-evidence": "Base de Evidencia de Factores de Riesgo",
     "findings": "Hallazgos Clave",
@@ -306,7 +306,7 @@
     "overview": {
       "p1Start": "Cada puntuación de riesgo es un ",
       "p1StatisticalIndicator": "indicador estadístico de riesgo",
-      "p1End": " con intervalos de confianza del 95%. El modelo v6.5 usa validación estratificada por proveedor (ningún proveedor aparece en entrenamiento y prueba), produciendo un AUC de prueba honesto de 0.828. Una puntuación de 0.35 significa que las características de contratación del contrato se asemejan estrechamente a las de casos documentados de corrupción.",
+      "p1End": " con intervalos de confianza del 95%. El modelo v0.6.5 usa validación estratificada por proveedor (ningún proveedor aparece en entrenamiento y prueba), produciendo un AUC de prueba honesto de 0.828. Una puntuación de 0.35 significa que las características de contratación del contrato se asemejan estrechamente a las de casos documentados de corrupción.",
       "formulaLabel": "FÓRMULA DE PUNTUACIÓN",
       "formulaExpr": "S(z) = sigma(beta_0 + beta^T z) / c",
       "formulaDescStart": "Donde z = características z-score, beta = coeficientes aprendidos, sigma = sigmoide logística, c = corrección PU (0.300). S(z) es un ",
@@ -320,10 +320,10 @@
       "tableColCount": "Cantidad",
       "highRiskSummaryStart": "Tasa de alto riesgo: ",
       "highRiskSummaryValue": "25.3%",
-      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con ~748 casos documentados para obtener una tasa consistente con rangos internacionales de riesgo en contrataciones. v6.5 es el modelo activo (25 de marzo de 2026), usando validación estratificada por proveedor."
+      "highRiskSummaryEnd": " (crítico + alto). Umbrales calibrados con ~748 casos documentados para obtener una tasa consistente con rangos internacionales de riesgo en contrataciones. v0.6.5 es el modelo activo (25 de marzo de 2026), usando validación estratificada por proveedor."
     },
     "features": {
-      "p1": "Cada contrato se describe con 16 características z-score normalizadas por sector y año base. v6.5 usa 4 características de comportamiento añadidas en v5.0: price_volatility, institution_diversity, win_rate y sector_spread. El gráfico muestra los coeficientes ElasticNet aprendidos con validación cruzada. Coeficientes positivos aumentan la puntuación de riesgo; negativos la disminuyen.",
+      "p1": "Cada contrato se describe con 16 características z-score normalizadas por sector y año base. v0.6.5 usa 4 características de comportamiento añadidas en v5.0: price_volatility, institution_diversity, win_rate y sector_spread. El gráfico muestra los coeficientes ElasticNet aprendidos con validación cruzada. Coeficientes positivos aumentan la puntuación de riesgo; negativos la disminuyen.",
       "legendIncreasesRisk": "Aumenta el riesgo",
       "legendDecreasesRisk": "Disminuye el riesgo",
       "legendNoSignal": "Sin señal",
@@ -335,16 +335,16 @@
     "findings": {
       "finding1Label": "#1 PREDICTOR",
       "finding1Title": "La volatilidad de precios es el predictor más fuerte (+1.16)",
-      "finding1Body": "Los proveedores con tamaños de contrato muy variables siguen siendo la señal de corrupción más fuerte. Le sigue la concentración de proveedores (+0.86, duplicada desde v5.1) y la diversidad institucional (-0.44, protectora). El ratio de precio (+0.20) y la membresía en redes (+0.20) son ahora predictores positivos significativos. La tasa de adjudicación se volvió negativa (-0.06) en v6.5 por la diversidad ampliada del GT.",
+      "finding1Body": "Los proveedores con tamaños de contrato muy variables siguen siendo la señal de corrupción más fuerte. Le sigue la concentración de proveedores (+0.86, duplicada desde v5.1) y la diversidad institucional (-0.44, protectora). El ratio de precio (+0.20) y la membresía en redes (+0.20) son ahora predictores positivos significativos. La tasa de adjudicación se volvió negativa (-0.06) en v0.6.5 por la diversidad ampliada del GT.",
       "finding2Label": "CONTRAINTUITIVO",
-      "finding2Title": "Cambios de signo clave de v5.1 a v6.5",
+      "finding2Title": "Cambios de signo clave de v5.1 a v0.6.5",
       "finding2Item1Start": "",
       "finding2Item1Strong": "La tasa de adjudicación se volvió negativa",
       "finding2Item1End": " — El mayor cambio de signo. Muchos proveedores del GT reciben adjudicaciones directas en lugar de ganar procedimientos competitivos, por lo que tasas de adjudicación bajas ahora se correlacionan con el estado GT. Esto es una confusión, no una señal genuina de corrupción.",
       "finding2Item1Mono": "(beta = -0.056, era +0.727)",
       "finding2Item2Start": "",
       "finding2Item2Strong": "La dispersión sectorial se volvió positiva",
-      "finding2Item2End": " — En v5.1, operar en múltiples sectores era protector. En v6.5, los grandes proveedores GT como Edenred y Toka operan en varios sectores, causando que el modelo asocie dispersión sectorial con corrupción. Esto es un artefacto de etiquetado.",
+      "finding2Item2End": " — En v5.1, operar en múltiples sectores era protector. En v0.6.5, los grandes proveedores GT como Edenred y Toka operan en varios sectores, causando que el modelo asocie dispersión sectorial con corrupción. Esto es un artefacto de etiquetado.",
       "finding2Item2Mono": "(beta = +0.117, era -0.374)",
       "finding2Item3Start": "",
       "finding2Item3Strong": "La licitación única se volvió negativa",
@@ -369,7 +369,7 @@
       "tableColDetected": "Detectados",
       "tableColHighPlus": "Alto+",
       "tableColAvgScore": "Puntaje Promedio",
-      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v6.5 expandió la verdad fundamental a ~748 casos y ~603 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
+      "footnote": "*El Caso 9 (PEMEX Emilio Lozoya) comparte proveedores con el caso Odebrecht. Documentado como referencia pero no aporta datos de entrenamiento adicionales. La tabla muestra los 22 casos fundacionales originales de v5.1. v0.6.5 expandió la verdad fundamental a ~748 casos y ~603 proveedores mediante investigación sistemática de COMPRANET, referencias cruzadas con auditorías de la ASF e integración del EFOS del SAT.",
       "metricTestAuc": "AUC-ROC de Prueba",
       "metricTrainAuc": "AUC-ROC de Entrenamiento",
       "metricHighPlus": "Detección GT (alto+)",
@@ -389,14 +389,14 @@
       "logisticNote": "AUC Entrenamiento: 0.798, AUC Prueba: 0.828. La regularización near-L1 lleva las características no informativas a exactamente cero, produciendo un modelo más disperso y robusto que v5.1.",
       "puTitle": "Corrección PU-Learning (Elkan y Noto 2008)",
       "puP1Start": "Como los contratos no etiquetados no son necesariamente limpios (algunos pueden ser corruptos pero no detectados), aplicamos una corrección de aprendizaje Positivo-No Etiquetado: ",
-      "puNote": "v6.5 estimó c = 0.300 mediante el método holdout de Elkan & Noto en 13 modelos (1 global + 12 por sector). Esto refleja la heterogeneidad del GT ampliado (~603 proveedores con patrones diversos). Con c=0.300, las puntuaciones se reescalan ~3.3x y se limitan a 1.0. IMPORTANTE: El supuesto SCAR es estructuralmente violado — los casos conocidos son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción.",
+      "puNote": "v0.6.5 estimó c = 0.300 mediante el método holdout de Elkan & Noto en 13 modelos (1 global + 12 por sector). Esto refleja la heterogeneidad del GT ampliado (~603 proveedores con patrones diversos). Con c=0.300, las puntuaciones se reescalan ~3.3x y se limitan a 1.0. IMPORTANTE: El supuesto SCAR es estructuralmente violado — los casos conocidos son escándalos de alto perfil, no una muestra aleatoria de toda la corrupción.",
       "bootstrapTitle": "Intervalos de Confianza Bootstrap",
       "bootstrapP1": "Cada contrato recibe un intervalo de confianza del 95% de 500 remuestreos bootstrap de los datos de entrenamiento. Una puntuación de 0.35 [0.22, 0.48] significa: el indicador de riesgo es 0.35, pero dada la incertidumbre de los datos, podría ser tan bajo como 0.22 o tan alto como 0.48."
     },
     "v52layer": {
       "p1Start": "La ",
       "p1Strong": "capa analítica v5.2",
-      "p1End": " añade tres herramientas ML independientes sobre las puntuaciones de riesgo activas v6.5. Estas herramientas no reemplazan ni alteran ninguna puntuación de riesgo de contratos — proporcionan explicaciones adicionales y señales de validación cruzada.",
+      "p1End": " añade tres herramientas ML independientes sobre las puntuaciones de riesgo activas v0.6.5. Estas herramientas no reemplazan ni alteran ninguna puntuación de riesgo de contratos — proporcionan explicaciones adicionales y señales de validación cruzada.",
       "shapeTitle": "Explicaciones SHAP",
       "shapBadge": "456K proveedores",
       "shapBody": "Valores Shapley exactos (φᵢ = βᵢ × (zᵢ − E[zᵢ])) calculados para cada proveedor usando los coeficientes del modelo específico de su sector. Muestra cuáles de las 16 características z-score impulsaron la puntuación de riesgo hacia arriba o hacia abajo.",
@@ -417,14 +417,14 @@
       "aiConfirmedTitle": "Qué significa \"Confirmado por IA\"",
       "aiConfirmedStart": "Un contrato es ",
       "aiConfirmedStrong": "confirmado dualmente",
-      "aiConfirmedEnd": " cuando el modelo logístico supervisado v6.5 lo puntúa como riesgo alto o crítico y el ensemble PyOD no supervisado lo puntúa de forma independiente por encima del umbral de anomalía 0.50. Dos métodos completamente diferentes — uno entrenado en casos de corrupción etiquetados, otro sin etiquetas — coinciden en que este contrato es inusual. Esta convergencia reduce la tasa de falsos positivos para la clasificación de investigaciones.",
-      "noteStart": "Nota: v5.2 es una capa analítica — añade explicabilidad y validación cruzada. El modelo de riesgo activo es v6.5. Los valores ",
+      "aiConfirmedEnd": " cuando el modelo logístico supervisado v0.6.5 lo puntúa como riesgo alto o crítico y el ensemble PyOD no supervisado lo puntúa de forma independiente por encima del umbral de anomalía 0.50. Dos métodos completamente diferentes — uno entrenado en casos de corrupción etiquetados, otro sin etiquetas — coinciden en que este contrato es inusual. Esta convergencia reduce la tasa de falsos positivos para la clasificación de investigaciones.",
+      "noteStart": "Nota: v5.2 es una capa analítica — añade explicabilidad y validación cruzada. El modelo de riesgo activo es v0.6.5. Los valores ",
       "noteCode": "risk_score",
       "noteEnd": " de los contratos no son modificados por la capa v5.2."
     },
     "limitations": {
       "item1Title": "Concentración de verdad fundamental",
-      "item1Text": "v6.5 expandió a ~748 casos y ~603 proveedores (~288K contratos de entrenamiento) con un tope de 100 por proveedor. Aunque esto reduce drásticamente el dominio de mega-casos, los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
+      "item1Text": "v0.6.5 expandió a ~748 casos y ~603 proveedores (~288K contratos de entrenamiento) con un tope de 100 por proveedor. Aunque esto reduce drásticamente el dominio de mega-casos, los sectores Salud y Agricultura aún contribuyen desproporcionadamente datos de entrenamiento positivos debido a los ecosistemas IMSS, Segalmex y DICONSA/LICONSA.",
       "item2Title": "La detección de casos pequeños es más débil",
       "item2Text": "Los casos con pocos contratos (La Estafa Maestra: 10, Grupo Higa: 3, Oceanografía: 2) tienen tasas de detección más bajas. El modelo requiere suficiente volumen de contratos para detectar patrones de forma confiable.",
       "item3Title": "La calidad de datos varía por período",
@@ -444,10 +444,10 @@
       "p1Mono": "risk_score_v3",
       "bonusFactors": "Factores de bonificación adicionales: Co-licitación +5%, Hipótesis de Precio +5%, Discordancia de Industria +3%, Riesgo Institucional +3%. 5 pares de interacción con hasta +15% de bonificación. Puntuación limitada a 1.0.",
       "modelComparisonLabel": "COMPARACIÓN DE MODELOS",
-      "tableAriaLabel": "Comparación de modelos v3.3 vs v6.5",
+      "tableAriaLabel": "Comparación de modelos v3.3 vs v0.6.5",
       "tableColMetric": "Métrica",
       "tableColV33": "v3.3",
-      "tableColV60": "v6.5",
+      "tableColV60": "v0.6.5",
       "tableColChange": "Cambio"
     },
     "dataSources": {

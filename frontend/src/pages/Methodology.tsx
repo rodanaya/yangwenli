@@ -167,7 +167,7 @@ const MODEL_EVOLUTION_STEPS = [
     overlay: false,
   },
   {
-    version: 'v6.5',
+    version: 'v0.6.5',
     date: 'Mar 25, 2026',
     titleKey: 'v60Title',
     descKey: 'v60Desc',
@@ -858,7 +858,7 @@ export function Methodology() {
               </div>
 
               <p className="text-xs text-text-muted italic">
-                Train AUC 0.798 / Test AUC 0.828 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=13.49% OECD-compliant (within 2–15% benchmark). Model v6.5 active since March 25, 2026.
+                Train AUC 0.798 / Test AUC 0.828 — vendor-stratified 70/30 split, no vendor appears in both train and test sets. HR=13.49% OECD-compliant (within 2–15% benchmark). Model v0.6.5 active since March 25, 2026.
               </p>
             </div>
           </CollapsibleSection>
@@ -1230,7 +1230,7 @@ export function Methodology() {
                       { l: 'Contract modifications invisible', i: 'Infrastructure cost overruns untracked', f: 'Requires ASF audit data (Phase 6)' },
                       { l: 'Mexico concentration model', i: 'Bid-rotation collusion underdetected', f: 'Add collusion-ring ground truth' },
                       { l: 'PU learning SCAR assumption', i: 'c=0.3000 covers only scandal-similar corruption', f: 'Better labeled data from SAT, ASF' },
-                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v6.5 split', f: 'Point-in-time rolling features' },
+                      { l: 'Temporal feature leakage', i: 'Vendor aggregates use full history; mitigated by v0.6.5 split', f: 'Point-in-time rolling features' },
                     ] as const).map((row) => (
                       <tr key={row.l} className="hover:bg-accent/[0.03]">
                         <td className="px-3 py-2 text-text-primary">{row.l}</td>

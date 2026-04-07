@@ -1164,7 +1164,7 @@ def get_sector_model_coefficients(
     sector_id: int = Path(..., ge=1, le=12, description="Sector ID (1-12)"),
 ):
     """
-    Get v6.5 model coefficients for a sector.
+    Get v0.6.5 model coefficients for a sector.
 
     Returns the logistic regression coefficients for the sector-specific model
     (or the global model if this sector falls back to it).

@@ -362,7 +362,7 @@ def get_model_metadata():
             ).fetchone()
             if not row:
                 return {
-                    "version": "v6.5", "trained_at": "2026-03-25",
+                    "version": "v0.6.5", "trained_at": "2026-03-25",
                     "n_contracts": 3051294, "auc_test": 0.828,
                     "auc_train": 0.798, "pu_correction": 0.300,
                     "updated_at": "2026-03-25",
@@ -3605,7 +3605,7 @@ class PyODAgreementByLevel(BaseModel):
 
 
 class PyODAgreementResponse(BaseModel):
-    """Cross-model validation statistics comparing v6.5 risk scores with PyOD ensemble."""
+    """Cross-model validation statistics comparing v0.6.5 risk scores with PyOD ensemble."""
     total_contracts: int
     v51_high_risk: int
     v51_high_risk_pct: float
@@ -3621,10 +3621,10 @@ class PyODAgreementResponse(BaseModel):
 @router.get("/pyod-agreement", response_model=PyODAgreementResponse)
 def get_pyod_agreement():
     """
-    Cross-model validation statistics comparing v6.5 logistic risk scores against
+    Cross-model validation statistics comparing v0.6.5 logistic risk scores against
     the PyOD ensemble anomaly detector (iForest + COPOD).
 
-    Returns agreement rates, confirmation rate (how many v6.5 high-risk contracts
+    Returns agreement rates, confirmation rate (how many v0.6.5 high-risk contracts
     are also flagged by PyOD), and per-risk-level anomaly score breakdowns.
     Cached for 1 hour.
     """

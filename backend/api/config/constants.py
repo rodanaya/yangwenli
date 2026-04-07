@@ -28,7 +28,7 @@ RISK_THRESHOLDS_V4 = {
     'low': 0.0,
 }
 
-# v6.5 thresholds — recalibrated for PU-corrected scores (c=0.300)
+# v0.6.5 thresholds — recalibrated for PU-corrected scores (c=0.300)
 # PU correction: Elkan & Noto floor c=0.300
 # HR=13.49% OECD compliant (within 2-15% benchmark)
 # GT detection: vendor-stratified test AUC=0.828
@@ -43,8 +43,8 @@ RISK_THRESHOLDS_V6 = {
 RISK_THRESHOLDS_V5 = RISK_THRESHOLDS_V6
 
 # Active model version
-# v6.5: institution-scoped GT labels, structural FP exclusions, test AUC 0.828 (vendor-stratified)
-CURRENT_MODEL_VERSION = 'v6.5'
+# v0.6.5: institution-scoped GT labels, structural FP exclusions, test AUC 0.828 (vendor-stratified)
+CURRENT_MODEL_VERSION = 'v0.6.5'
 
 
 def get_risk_level(score: float, model_version: str = None) -> str:

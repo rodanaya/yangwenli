@@ -112,7 +112,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const parentPath = getParentPath(currentPath)
 
   return (
-    <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-border/40 bg-background/80 px-4 md:px-5 backdrop-blur-md">
+    <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-border/60 bg-background/85 px-4 md:px-5 backdrop-blur-xl">
       {/* Left — Hamburger (mobile) + Breadcrumb path */}
       <div className="flex items-center gap-1.5 min-w-0 text-sm">
         {/* Hamburger — mobile only */}
@@ -145,7 +145,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         >
           <Search className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
           <span className="flex-1 text-left truncate">{tc('header.searchPlaceholder')}</span>
-          <kbd className="flex-shrink-0 text-[10px] px-1 py-0.5 rounded bg-background border border-border/60 leading-none">⌘K</kbd>
+          <kbd className="flex-shrink-0 text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-background border border-border/60 text-text-muted leading-none tracking-tight">⌘K</kbd>
         </button>
         {/* Mobile: icon-only button */}
         <Tooltip>
@@ -199,17 +199,17 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <TooltipTrigger asChild>
               <button
                 className={cn(
-                  'hidden sm:flex items-center gap-1 h-7 px-1.5 rounded text-xs font-bold tracking-wide',
-                  'transition-colors hover:bg-sidebar-hover',
-                  qualityGrade === 'A' ? 'text-risk-low' :
-                  qualityGrade === 'B' ? 'text-accent' :
-                  qualityGrade === 'C' ? 'text-risk-medium' :
-                  'text-risk-high'
+                  'hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-md text-[10px] font-mono font-bold tracking-[0.08em] uppercase',
+                  'border transition-colors',
+                  qualityGrade === 'A' ? 'text-risk-low border-risk-low/30 bg-risk-low/[0.06] hover:bg-risk-low/10' :
+                  qualityGrade === 'B' ? 'text-accent border-accent/30 bg-accent/[0.06] hover:bg-accent/10' :
+                  qualityGrade === 'C' ? 'text-risk-medium border-risk-medium/30 bg-risk-medium/[0.06] hover:bg-risk-medium/10' :
+                  'text-risk-high border-risk-high/30 bg-risk-high/[0.06] hover:bg-risk-high/10'
                 )}
                 onClick={() => navigate('/settings?tab=quality')}
               >
                 <Database className="h-3 w-3" />
-                <span>{qualityGrade}</span>
+                <span>DQ&nbsp;{qualityGrade}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>
