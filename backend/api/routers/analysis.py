@@ -4001,6 +4001,7 @@ _PRICE_ANOMALIES_TTL = 1800  # 30 min
 
 
 @router.get("/price-anomalies")
+@_rate_limit("30/minute")
 def get_price_anomalies(
     sector_id: Optional[int] = Query(None, ge=1, le=12),
     min_z: float = Query(3.0, ge=1.0, le=10.0),

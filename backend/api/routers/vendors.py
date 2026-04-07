@@ -130,7 +130,7 @@ def list_vendors(
     min_contracts: Optional[int] = Query(None, ge=0, description="Minimum contract count"),
     min_value: Optional[float] = Query(None, ge=0, description="Minimum total contract value"),
     has_rfc: Optional[bool] = Query(None, description="Filter vendors with RFC"),
-    sort_by: str = Query("total_contracts", description="Sort field: total_contracts, total_value, avg_risk, name, direct_award_pct, high_risk_pct"),
+    sort_by: str = Query("total_contracts", pattern="^(total_contracts|total_value|total_value_mxn|avg_risk|avg_risk_score|name|direct_award_pct|high_risk_pct|single_bid_pct|pct_anomalous)$", description="Sort field"),
     sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
 ):
     """
