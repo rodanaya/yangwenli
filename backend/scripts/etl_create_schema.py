@@ -538,6 +538,7 @@ CREATE INDEX IF NOT EXISTS idx_contracts_institution_year ON contracts(instituti
 CREATE INDEX IF NOT EXISTS idx_contracts_sector_year_risk ON contracts(sector_id, contract_year, risk_level);
 CREATE INDEX IF NOT EXISTS idx_contracts_direct_single ON contracts(is_direct_award, is_single_bid);
 CREATE INDEX IF NOT EXISTS idx_contracts_procedure ON contracts(procedure_number);
+CREATE INDEX IF NOT EXISTS idx_contracts_sector_amount ON contracts(sector_id, amount_mxn);
 
 -- Transparency / publication delay index (column added by ETL pipeline when computing delays)
 CREATE INDEX IF NOT EXISTS idx_contracts_pub_delay ON contracts(publication_delay_days);

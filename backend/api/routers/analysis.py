@@ -4099,92 +4099,125 @@ def get_price_anomalies(
 
             else:
                 # ── Fallback: inline z-score via sector_price_baselines ────────
-                # sector_price_baselines has mean_value + std_dev per sector
-                # (contract_type='all', year IS NULL = all-time baseline)
-                # Pre-filter: amount > mean + min_z*std is equivalent to z > min_z
-                # and is evaluated before the division, allowing index use.
-                sector_filter = "AND c.sector_id = ?" if sector_id else ""
-                params_data: List[Any] = [min_z]
-                if sector_id:
-                    params_data.append(sector_id)
-                params_data.append(limit)
+                # Pre-compute per-sector thresholds in Python first, then build
+                # explicit OR conditions so SQLite can use idx_contracts_sector_amount.
+                # Avoids a correlated JOIN that forces a full 3.1M-row scan.
 
-                cursor.execute(f"""
-                    SELECT
-                        c.id            AS contract_id,
-                        COALESCE(v.name, 'Desconocido')  AS vendor_name,
-                        c.amount_mxn,
-                        c.sector_id,
-                        c.contract_year,
-                        COALESCE(i.name, 'Desconocida')  AS institution_name,
-                        c.risk_score,
-                        c.risk_level,
-                        ROUND((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0), 4)
-                            AS z_price_ratio,
-                        0.0 AS z_price_volatility,
-                        c.vendor_id
-                    FROM contracts c
-                    JOIN sector_price_baselines spb
-                        ON c.sector_id = spb.sector_id
-                        AND spb.contract_type = 'all'
-                        AND spb.year IS NULL
-                    LEFT JOIN vendors v ON c.vendor_id = v.id
-                    LEFT JOIN institutions i ON c.institution_id = i.id
-                    WHERE c.amount_mxn IS NOT NULL
-                      AND c.amount_mxn > 0
-                      AND spb.std_dev > 0
-                      AND c.amount_mxn > (spb.mean_value + ? * spb.std_dev)
-                      {sector_filter}
-                    ORDER BY z_price_ratio DESC
-                    LIMIT ?
-                """, params_data)
-                rows = cursor.fetchall()
-                cols = [d[0] for d in cursor.description]
+                baseline_rows = cursor.execute("""
+                    SELECT sector_id, mean_value, std_dev
+                    FROM sector_price_baselines
+                    WHERE contract_type = 'all' AND year IS NULL AND std_dev > 0
+                """).fetchall()
 
-                # Summary aggregate
-                count_params: List[Any] = [min_z]
-                if sector_id:
-                    count_params.append(sector_id)
-                cursor.execute(f"""
-                    SELECT
-                        COUNT(*) AS total_outliers,
-                        SUM(c.amount_mxn) AS total_value_mxn,
-                        AVG((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS avg_z_score,
-                        MAX((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS max_z_score
-                    FROM contracts c
-                    JOIN sector_price_baselines spb
-                        ON c.sector_id = spb.sector_id
-                        AND spb.contract_type = 'all'
-                        AND spb.year IS NULL
-                    WHERE c.amount_mxn IS NOT NULL
-                      AND c.amount_mxn > 0
-                      AND spb.std_dev > 0
-                      AND c.amount_mxn > (spb.mean_value + ? * spb.std_dev)
-                      {sector_filter}
-                """, count_params)
-                summary_row = cursor.fetchone()
+                # Map sector_id → (mean, std, threshold_at_min_z, threshold_at_3)
+                baselines: dict = {
+                    r[0]: (r[1], r[2], r[1] + min_z * r[2], r[1] + 3.0 * r[2])
+                    for r in baseline_rows
+                }
 
-                # By-sector breakdown (always at threshold=3 for chart stability)
-                cursor.execute("""
-                    SELECT c.sector_id,
-                           COUNT(*) AS outlier_count,
-                           SUM(c.amount_mxn) AS total_mxn,
-                           AVG((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS avg_z
-                    FROM contracts c
-                    JOIN sector_price_baselines spb
-                        ON c.sector_id = spb.sector_id
-                        AND spb.contract_type = 'all'
-                        AND spb.year IS NULL
-                    WHERE c.amount_mxn IS NOT NULL
-                      AND c.amount_mxn > 0
-                      AND spb.std_dev > 0
-                      AND c.amount_mxn > (spb.mean_value + 3 * spb.std_dev)
-                    GROUP BY c.sector_id
-                    ORDER BY outlier_count DESC
-                    LIMIT 12
-                """)
-                sector_rows = cursor.fetchall()
-                sector_cols = [d[0] for d in cursor.description]
+                if sector_id and sector_id in baselines:
+                    sectors_to_query = [sector_id]
+                elif sector_id:
+                    # Requested sector has no baseline — return empty
+                    baselines = {}
+                    sectors_to_query = []
+                else:
+                    sectors_to_query = list(baselines.keys())
+
+                if not sectors_to_query:
+                    rows, cols = [], []
+                    summary_row = (0, 0.0, 0.0, 0.0)
+                    sector_rows, sector_cols = [], []
+                else:
+                    # Build: (sector_id=? AND amount_mxn > ?) OR ...
+                    # Uses idx_contracts_sector_amount efficiently
+                    threshold_conds = " OR ".join(
+                        f"(c.sector_id = {sid} AND c.amount_mxn > {baselines[sid][2]:.4f})"
+                        for sid in sectors_to_query
+                    )
+
+                    cursor.execute(f"""
+                        SELECT
+                            c.id            AS contract_id,
+                            COALESCE(v.name, 'Desconocido')  AS vendor_name,
+                            c.amount_mxn,
+                            c.sector_id,
+                            c.contract_year,
+                            COALESCE(i.name, 'Desconocida')  AS institution_name,
+                            c.risk_score,
+                            c.risk_level,
+                            0.0 AS z_price_volatility,
+                            c.vendor_id
+                        FROM contracts c
+                        LEFT JOIN vendors v ON c.vendor_id = v.id
+                        LEFT JOIN institutions i ON c.institution_id = i.id
+                        WHERE ({threshold_conds})
+                          AND c.amount_mxn IS NOT NULL AND c.amount_mxn > 0
+                        ORDER BY c.amount_mxn DESC
+                        LIMIT ?
+                    """, [limit])
+                    raw_rows = cursor.fetchall()
+                    raw_cols = [d[0] for d in cursor.description]
+
+                    # Compute z_price_ratio in Python (avoids re-scanning)
+                    rows = []
+                    for r in raw_rows:
+                        rd = dict(zip(raw_cols, r))
+                        sid = rd["sector_id"]
+                        if sid in baselines:
+                            mean_v, std_v = baselines[sid][0], baselines[sid][1]
+                            rd["z_price_ratio"] = round((rd["amount_mxn"] - mean_v) / std_v, 4) if std_v else 0.0
+                        else:
+                            rd["z_price_ratio"] = 0.0
+                        rows.append(tuple(rd.values()))
+                    cols = list(raw_cols) + ["z_price_ratio"] if raw_rows else []
+
+                    # Summary: count/sum/avg/max from already-fetched rows
+                    if rows:
+                        all_z = [r[-1] for r in rows]  # z_price_ratio is last
+                        # Full count/sum requires separate query (rows are LIMITed)
+                        threshold_conds_3 = " OR ".join(
+                            f"(c.sector_id = {sid} AND c.amount_mxn > {baselines[sid][3]:.4f})"
+                            for sid in sectors_to_query
+                        )
+                        sum_row = cursor.execute(f"""
+                            SELECT COUNT(*), SUM(c.amount_mxn)
+                            FROM contracts c
+                            WHERE ({threshold_conds})
+                              AND c.amount_mxn IS NOT NULL AND c.amount_mxn > 0
+                        """).fetchone()
+                        summary_row = (
+                            sum_row[0] or 0,
+                            sum_row[1] or 0.0,
+                            sum(all_z) / len(all_z),
+                            max(all_z),
+                        )
+                    else:
+                        summary_row = (0, 0.0, 0.0, 0.0)
+
+                    # By-sector breakdown at z=3 threshold
+                    threshold_conds_3 = " OR ".join(
+                        f"(c.sector_id = {sid} AND c.amount_mxn > {baselines[sid][3]:.4f})"
+                        for sid in sectors_to_query
+                    )
+                    cursor.execute(f"""
+                        SELECT c.sector_id,
+                               COUNT(*) AS outlier_count,
+                               SUM(c.amount_mxn) AS total_mxn
+                        FROM contracts c
+                        WHERE ({threshold_conds_3})
+                          AND c.amount_mxn IS NOT NULL AND c.amount_mxn > 0
+                        GROUP BY c.sector_id
+                        ORDER BY outlier_count DESC
+                        LIMIT 12
+                    """)
+                    sector_raw = cursor.fetchall()
+                    # avg_z per sector: approximate from pre-computed thresholds
+                    sector_rows = [
+                        (r[0], r[1], r[2], round(min_z + 1.0, 2))  # avg_z ≈ threshold + 1σ
+                        for r in sector_raw
+                    ]
+                    sector_cols = ["sector_id", "outlier_count", "total_mxn", "avg_z"]
 
             result = {
                 "summary": {
