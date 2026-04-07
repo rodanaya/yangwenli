@@ -4102,7 +4102,7 @@ def get_price_anomalies(
                 # Pre-filter: amount > mean + min_z*std is equivalent to z > min_z
                 # and is evaluated before the division, allowing index use.
                 sector_filter = "AND c.sector_id = ?" if sector_id else ""
-                params_data: List[Any] = [min_z, min_z]
+                params_data: List[Any] = [min_z]
                 if sector_id:
                     params_data.append(sector_id)
                 params_data.append(limit)
@@ -4140,7 +4140,7 @@ def get_price_anomalies(
                 cols = [d[0] for d in cursor.description]
 
                 # Summary aggregate
-                count_params: List[Any] = [min_z, min_z]
+                count_params: List[Any] = [min_z]
                 if sector_id:
                     count_params.append(sector_id)
                 cursor.execute(f"""
