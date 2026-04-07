@@ -4008,7 +4008,10 @@ def get_price_anomalies(
 ):
     """
     Contracts with extreme price z-scores (statistical price outliers).
-    Uses contract_z_features.z_price_ratio — populated for all 3.1M contracts.
+
+    Primary source: contract_z_features.z_price_ratio (if table exists).
+    Fallback: inline z-score via sector_price_baselines.mean_value / std_dev,
+    which is always available and covers all 3.1M contracts.
     """
     cache_key = f"{sector_id}:{min_z}:{limit}"
     if cache_key in _price_anomalies_cache:
@@ -4020,83 +4023,178 @@ def get_price_anomalies(
         with get_db() as conn:
             cursor = conn.cursor()
 
-            sector_filter = "AND c.sector_id = ?" if sector_id else ""
-            params: List[Any] = [min_z]
-            if sector_id:
-                params.append(sector_id)
-            params.append(limit)
+            # Detect whether contract_z_features table exists
+            cursor.execute(
+                "SELECT name FROM sqlite_master WHERE type='table' AND name='contract_z_features'"
+            )
+            has_z_table = cursor.fetchone() is not None
 
-            cursor.execute(f"""
-                SELECT
-                    c.id as contract_id,
-                    COALESCE(v.name, 'Desconocido') as vendor_name,
-                    c.amount_mxn,
-                    c.sector_id,
-                    c.contract_year,
-                    COALESCE(inst.name, 'Desconocida') as institution_name,
-                    c.risk_score,
-                    c.risk_level,
-                    z.z_price_ratio,
-                    z.z_price_volatility,
-                    c.vendor_id
-                FROM contracts c
-                JOIN contract_z_features z ON c.id = z.contract_id
-                LEFT JOIN vendors v ON c.vendor_id = v.id
-                LEFT JOIN institutions inst ON c.institution_id = inst.id
-                WHERE z.z_price_ratio > ?
-                {sector_filter}
-                AND c.amount_mxn IS NOT NULL
-                AND c.amount_mxn > 0
-                ORDER BY z.z_price_ratio DESC
-                LIMIT ?
-            """, params)
-            rows = cursor.fetchall()
-            cols = [d[0] for d in cursor.description]
+            if has_z_table:
+                # ── Fast path: pre-computed z-scores ──────────────────────────
+                sector_filter = "AND c.sector_id = ?" if sector_id else ""
+                params: List[Any] = [min_z]
+                if sector_id:
+                    params.append(sector_id)
+                params.append(limit)
 
-            count_params: List[Any] = [min_z]
-            if sector_id:
-                count_params.append(sector_id)
-            cursor.execute(f"""
-                SELECT
-                    COUNT(*) as total_outliers,
-                    SUM(c.amount_mxn) as total_value_mxn,
-                    AVG(z.z_price_ratio) as avg_z_score,
-                    MAX(z.z_price_ratio) as max_z_score
-                FROM contracts c
-                JOIN contract_z_features z ON c.id = z.contract_id
-                WHERE z.z_price_ratio > ?
-                {sector_filter}
-                AND c.amount_mxn IS NOT NULL
-            """, count_params)
-            summary_row = cursor.fetchone()
+                cursor.execute(f"""
+                    SELECT
+                        c.id            AS contract_id,
+                        COALESCE(v.name, 'Desconocido')  AS vendor_name,
+                        c.amount_mxn,
+                        c.sector_id,
+                        c.contract_year,
+                        COALESCE(i.name, 'Desconocida')  AS institution_name,
+                        c.risk_score,
+                        c.risk_level,
+                        z.z_price_ratio,
+                        z.z_price_volatility,
+                        c.vendor_id
+                    FROM contracts c
+                    JOIN contract_z_features z ON c.id = z.contract_id
+                    LEFT JOIN vendors v ON c.vendor_id = v.id
+                    LEFT JOIN institutions i ON c.institution_id = i.id
+                    WHERE z.z_price_ratio > ?
+                    {sector_filter}
+                    AND c.amount_mxn IS NOT NULL AND c.amount_mxn > 0
+                    ORDER BY z.z_price_ratio DESC
+                    LIMIT ?
+                """, params)
+                rows = cursor.fetchall()
+                cols = [d[0] for d in cursor.description]
 
-            cursor.execute("""
-                SELECT
-                    c.sector_id,
-                    COUNT(*) as outlier_count,
-                    SUM(c.amount_mxn) as total_mxn,
-                    AVG(z.z_price_ratio) as avg_z
-                FROM contracts c
-                JOIN contract_z_features z ON c.id = z.contract_id
-                WHERE z.z_price_ratio > 3
-                AND c.amount_mxn IS NOT NULL
-                GROUP BY c.sector_id
-                ORDER BY outlier_count DESC
-                LIMIT 12
-            """)
-            sector_rows = cursor.fetchall()
-            sector_cols = [d[0] for d in cursor.description]
+                count_params: List[Any] = [min_z]
+                if sector_id:
+                    count_params.append(sector_id)
+                cursor.execute(f"""
+                    SELECT COUNT(*) AS total_outliers,
+                           SUM(c.amount_mxn) AS total_value_mxn,
+                           AVG(z.z_price_ratio) AS avg_z_score,
+                           MAX(z.z_price_ratio) AS max_z_score
+                    FROM contracts c
+                    JOIN contract_z_features z ON c.id = z.contract_id
+                    WHERE z.z_price_ratio > ?
+                    {sector_filter}
+                    AND c.amount_mxn IS NOT NULL
+                """, count_params)
+                summary_row = cursor.fetchone()
+
+                cursor.execute("""
+                    SELECT c.sector_id,
+                           COUNT(*)          AS outlier_count,
+                           SUM(c.amount_mxn) AS total_mxn,
+                           AVG(z.z_price_ratio) AS avg_z
+                    FROM contracts c
+                    JOIN contract_z_features z ON c.id = z.contract_id
+                    WHERE z.z_price_ratio > 3
+                    AND c.amount_mxn IS NOT NULL
+                    GROUP BY c.sector_id
+                    ORDER BY outlier_count DESC
+                    LIMIT 12
+                """)
+                sector_rows = cursor.fetchall()
+                sector_cols = [d[0] for d in cursor.description]
+
+            else:
+                # ── Fallback: inline z-score via sector_price_baselines ────────
+                # sector_price_baselines has mean_value + std_dev per sector
+                # (contract_type='all', year IS NULL = all-time baseline)
+                # Pre-filter: amount > mean + min_z*std is equivalent to z > min_z
+                # and is evaluated before the division, allowing index use.
+                sector_filter = "AND c.sector_id = ?" if sector_id else ""
+                params_data: List[Any] = [min_z, min_z]
+                if sector_id:
+                    params_data.append(sector_id)
+                params_data.append(limit)
+
+                cursor.execute(f"""
+                    SELECT
+                        c.id            AS contract_id,
+                        COALESCE(v.name, 'Desconocido')  AS vendor_name,
+                        c.amount_mxn,
+                        c.sector_id,
+                        c.contract_year,
+                        COALESCE(i.name, 'Desconocida')  AS institution_name,
+                        c.risk_score,
+                        c.risk_level,
+                        ROUND((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0), 4)
+                            AS z_price_ratio,
+                        0.0 AS z_price_volatility,
+                        c.vendor_id
+                    FROM contracts c
+                    JOIN sector_price_baselines spb
+                        ON c.sector_id = spb.sector_id
+                        AND spb.contract_type = 'all'
+                        AND spb.year IS NULL
+                    LEFT JOIN vendors v ON c.vendor_id = v.id
+                    LEFT JOIN institutions i ON c.institution_id = i.id
+                    WHERE c.amount_mxn IS NOT NULL
+                      AND c.amount_mxn > 0
+                      AND spb.std_dev > 0
+                      AND c.amount_mxn > (spb.mean_value + ? * spb.std_dev)
+                      {sector_filter}
+                    ORDER BY z_price_ratio DESC
+                    LIMIT ?
+                """, params_data)
+                rows = cursor.fetchall()
+                cols = [d[0] for d in cursor.description]
+
+                # Summary aggregate
+                count_params: List[Any] = [min_z, min_z]
+                if sector_id:
+                    count_params.append(sector_id)
+                cursor.execute(f"""
+                    SELECT
+                        COUNT(*) AS total_outliers,
+                        SUM(c.amount_mxn) AS total_value_mxn,
+                        AVG((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS avg_z_score,
+                        MAX((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS max_z_score
+                    FROM contracts c
+                    JOIN sector_price_baselines spb
+                        ON c.sector_id = spb.sector_id
+                        AND spb.contract_type = 'all'
+                        AND spb.year IS NULL
+                    WHERE c.amount_mxn IS NOT NULL
+                      AND c.amount_mxn > 0
+                      AND spb.std_dev > 0
+                      AND c.amount_mxn > (spb.mean_value + ? * spb.std_dev)
+                      {sector_filter}
+                """, count_params)
+                summary_row = cursor.fetchone()
+
+                # By-sector breakdown (always at threshold=3 for chart stability)
+                cursor.execute("""
+                    SELECT c.sector_id,
+                           COUNT(*) AS outlier_count,
+                           SUM(c.amount_mxn) AS total_mxn,
+                           AVG((c.amount_mxn - spb.mean_value) / NULLIF(spb.std_dev, 0)) AS avg_z
+                    FROM contracts c
+                    JOIN sector_price_baselines spb
+                        ON c.sector_id = spb.sector_id
+                        AND spb.contract_type = 'all'
+                        AND spb.year IS NULL
+                    WHERE c.amount_mxn IS NOT NULL
+                      AND c.amount_mxn > 0
+                      AND spb.std_dev > 0
+                      AND c.amount_mxn > (spb.mean_value + 3 * spb.std_dev)
+                    GROUP BY c.sector_id
+                    ORDER BY outlier_count DESC
+                    LIMIT 12
+                """)
+                sector_rows = cursor.fetchall()
+                sector_cols = [d[0] for d in cursor.description]
 
             result = {
                 "summary": {
                     "total_outliers": summary_row[0] or 0,
                     "total_value_mxn": summary_row[1] or 0,
-                    "avg_z_score": round(summary_row[2] or 0, 2),
-                    "max_z_score": round(summary_row[3] or 0, 2),
+                    "avg_z_score": round(float(summary_row[2] or 0), 2),
+                    "max_z_score": round(float(summary_row[3] or 0), 2),
                     "threshold_applied": min_z,
                     "methodology": (
-                        "Z-score = (amount - sector_year_mean) / sector_year_std. "
-                        "Values > 3 indicate contracts priced >3 standard deviations above the sector-year baseline."
+                        "Z-score = (amount - sector_mean) / sector_std. "
+                        "Values above threshold indicate contracts priced >N standard deviations "
+                        "above the sector baseline."
                     ),
                 },
                 "by_sector": [dict(zip(sector_cols, r)) for r in sector_rows],
@@ -4107,26 +4205,8 @@ def get_price_anomalies(
             return result
 
     except Exception as exc:
-        if "no such table" in str(exc).lower():
-            logger.warning("price-anomalies: %s (z-features not computed)", exc)
-            return {
-                "summary": {
-                    "total_outliers": 0,
-                    "total_value_mxn": 0,
-                    "avg_z_score": 0,
-                    "max_z_score": 0,
-                    "threshold_applied": min_z,
-                    "methodology": (
-                        "Z-score = (amount - sector_year_mean) / sector_year_std. "
-                        "Values > 3 indicate contracts priced >3 standard deviations above the sector-year baseline."
-                    ),
-                    "note": "Z-score features not yet computed. Run compute_z_features to enable this view.",
-                },
-                "by_sector": [],
-                "data": [],
-            }
         logger.error("price-anomalies error: %s", exc)
-        raise HTTPException(status_code=500, detail="Failed to fetch price anomalies")
+        raise HTTPException(status_code=500, detail=f"Failed to fetch price anomalies: {exc}")
 
 
 class AdminVendorEntry(BaseModel):
