@@ -124,6 +124,10 @@ export function SimpleTabs({
  * Slot marker — wrap each tab's content in this.
  * The `tabKey` prop is read by SimpleTabs to match the correct panel.
  */
-export function TabPanel({ children }: { tabKey: string; children: React.ReactNode }) {
-  return <>{children}</>
+export function TabPanel({ tabKey, children }: { tabKey: string; children: React.ReactNode }) {
+  return (
+    <div role="tabpanel" id={`panel-${tabKey}`} aria-labelledby={`tab-${tabKey}`}>
+      {children}
+    </div>
+  )
 }
