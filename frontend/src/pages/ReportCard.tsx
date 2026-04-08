@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -165,21 +165,6 @@ function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }
 }
 
 
-// Sector colours from project taxonomy
-const SECTOR_COLORS_MAP: Record<string, string> = {
-  salud:           '#dc2626',
-  educacion:       '#3b82f6',
-  infraestructura: '#ea580c',
-  energia:         '#eab308',
-  defensa:         '#1e3a5f',
-  tecnologia:      '#8b5cf6',
-  hacienda:        '#16a34a',
-  gobernacion:     '#be123c',
-  agricultura:     '#22c55e',
-  ambiente:        '#10b981',
-  trabajo:         '#f97316',
-  otros:           '#64748b',
-}
 
 // Sector display names (ES)
 const SECTOR_NAME_ES: Record<string, string> = {
@@ -265,10 +250,10 @@ function HeroImpactSection({
     (dist?.low?.count_pct ?? 0)
 
   const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
-    { key: 'critical', color: '#dc2626', label: 'Critical' },
-    { key: 'high',     color: '#ea580c', label: 'High'     },
-    { key: 'medium',   color: '#eab308', label: 'Medium'   },
-    { key: 'low',      color: '#22c55e', label: 'Low'      },
+    { key: 'critical', color: '#f87171', label: 'Critical' },
+    { key: 'high',     color: '#fb923c', label: 'High'     },
+    { key: 'medium',   color: '#fbbf24', label: 'Medium'   },
+    { key: 'low',      color: '#4ade80', label: 'Low'      },
   ]
 
   return (
@@ -585,10 +570,10 @@ function OECDContextPanel({ national }: { national: PHINational }) {
 // ---------------------------------------------------------------------------
 
 const RISK_LEVEL_COLORS = {
-  critical: '#dc2626',
-  high:     '#ea580c',
-  medium:   '#eab308',
-  low:      '#22c55e',
+  critical: '#f87171',
+  high:     '#fb923c',
+  medium:   '#fbbf24',
+  low:      '#4ade80',
 } as const
 
 function RiskBar({ dist }: { dist: RiskDistribution }) {
@@ -824,7 +809,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
         <div className="divide-y divide-zinc-800/60">
           {sorted.map((sector, idx) => {
             const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
-            const color = SECTOR_COLORS_MAP[sector.sector_name] ?? sectorMeta?.color ?? '#64748b'
+            const color = SECTOR_COLORS[sector.sector_name] ?? sectorMeta?.color ?? SECTOR_COLORS.otros
             const displayName = isES
               ? (SECTOR_NAME_ES[sector.sector_name] ?? sector.sector_name)
               : (sectorMeta?.name ?? sector.sector_name)

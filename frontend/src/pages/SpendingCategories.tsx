@@ -2064,7 +2064,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
                           >
                             <p className="font-bold text-text-primary text-[11px] max-w-[220px] whitespace-normal">{d.name}</p>
                             <div className="flex items-center gap-2">
@@ -2162,7 +2162,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
                           >
                             <p className="font-bold text-text-primary text-[11px] mb-1">{label}</p>
                             <p className="text-text-secondary mb-1.5">Total: <span className="font-bold text-text-primary">{formatCompactMXN(total)}</span></p>
@@ -2284,7 +2284,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
                           >
                             <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
                             <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
@@ -2412,7 +2412,7 @@ export default function SpendingCategories() {
                         return (
                           <div
                             className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
+                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
                           >
                             <p className="font-bold text-text-primary text-[11px]">{label}</p>
                             {payload.map((p, i) => (

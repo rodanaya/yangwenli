@@ -792,10 +792,10 @@ function RiskSeverityBar({
   const lowPct = Math.round((100 - criticalPct - highPct - mediumPct) * 10) / 10
 
   const segments: { label: string; pct: number; color: string }[] = [
-    { label: t('riskDist.critical', 'Critical'), pct: criticalPct, color: '#dc2626' },
-    { label: t('riskDist.high', 'High'), pct: highPct, color: '#ea580c' },
-    { label: t('riskDist.medium', 'Medium'), pct: mediumPct, color: '#eab308' },
-    { label: t('riskDist.low', 'Low'), pct: lowPct, color: '#16a34a' },
+    { label: t('riskDist.critical', 'Critical'), pct: criticalPct, color: '#f87171' },
+    { label: t('riskDist.high', 'High'), pct: highPct, color: '#fb923c' },
+    { label: t('riskDist.medium', 'Medium'), pct: mediumPct, color: '#fbbf24' },
+    { label: t('riskDist.low', 'Low'), pct: lowPct, color: '#4ade80' },
   ]
 
   return (

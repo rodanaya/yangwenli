@@ -28,17 +28,13 @@ import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { cn, formatNumber } from '@/lib/utils'
 import { analysisApi } from '@/api/client'
 import type { PoliticalCycleResponse, AdminBreakdownResponse } from '@/api/types'
+import { RISK_COLORS as CANONICAL_RISK_COLORS } from '@/lib/constants'
 
 // =============================================================================
 // Constants
 // =============================================================================
 
-const RISK_COLORS = {
-  critical: '#f87171',
-  high: '#fb923c',
-  medium: '#fbbf24',
-  low: '#4ade80',
-} as const
+const RISK_COLORS = CANONICAL_RISK_COLORS
 
 const ADMIN_COLORS: Record<string, string> = {
   Fox: '#3b82f6',

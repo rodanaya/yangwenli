@@ -227,7 +227,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     )}
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col border-r border-stone-800 bg-[#1a1714] z-50',
+        'fixed left-0 top-0 h-screen flex flex-col border-r border-stone-800 bg-sidebar z-50',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
@@ -267,7 +267,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-[#2a2420] ml-auto"
+            className="h-10 w-10 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-sidebar-hover ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >
@@ -356,7 +356,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <TooltipTrigger asChild>
               <button
                 onClick={() => setReportOpen(true)}
-                className="w-full flex justify-center items-center rounded-md py-1.5 text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
+                className="w-full flex justify-center items-center rounded-md py-1.5 text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors"
                 aria-label={t('reportIssue')}
               >
                 <MessageSquarePlus className="h-4 w-4" />
@@ -369,7 +369,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         ) : (
           <button
             onClick={() => setReportOpen(true)}
-            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-[#2a2420] transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors"
           >
             <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">{t('reportIssue')}</span>
@@ -387,7 +387,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               size="icon"
               onClick={onToggle}
               className={cn(
-                'h-7 w-7 text-stone-400 hover:text-white hover:bg-[#2a2420] hidden md:flex',
+                'h-7 w-7 text-stone-400 hover:text-white hover:bg-sidebar-hover hidden md:flex',
                 collapsed && 'mx-auto'
               )}
               aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
@@ -516,7 +516,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-[#1a1714] border-stone-700 text-stone-200">
+        <TooltipContent side="right" sideOffset={8} className="bg-sidebar border-stone-700 text-stone-200">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

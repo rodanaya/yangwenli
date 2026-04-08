@@ -1593,8 +1593,8 @@ export default function Administrations() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#18181b',
-                      border: '1px solid #3f3f46',
+                      backgroundColor: 'var(--color-background-card)',
+                      border: '1px solid var(--color-border)',
                       borderRadius: 8,
                       fontSize: 11,
                       fontFamily: 'var(--font-family-mono)',
@@ -2893,8 +2893,8 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#18181b',
-                    border: '1px solid #3f3f46',
+                    backgroundColor: 'var(--color-background-card)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 8,
                     fontSize: 11,
                     fontFamily: 'var(--font-family-mono)',
@@ -3027,8 +3027,8 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 />
                 <Tooltip
                   contentStyle={{
-                    backgroundColor: '#18181b',
-                    border: '1px solid #3f3f46',
+                    backgroundColor: 'var(--color-background-card)',
+                    border: '1px solid var(--color-border)',
                     borderRadius: 8,
                     fontSize: 11,
                     fontFamily: 'var(--font-family-mono)',
@@ -3230,8 +3230,8 @@ function PoliticalCycleView() {
                   />
                   <Tooltip
                     contentStyle={{
-                      backgroundColor: '#18181b',
-                      border: '1px solid #3f3f46',
+                      backgroundColor: 'var(--color-background-card)',
+                      border: '1px solid var(--color-border)',
                       borderRadius: 8,
                       fontSize: 11,
                       fontFamily: 'var(--font-family-mono)',

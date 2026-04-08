@@ -347,9 +347,9 @@ function buildGraphData(pairs: CollusionPair[]): {
   }
 
   const colorForRate = (rate: number): string => {
-    if (rate >= 80) return '#ef4444' // red-500
-    if (rate >= 50) return '#f97316' // orange-500
-    return '#f59e0b' // amber-500
+    if (rate >= 80) return '#f87171' // risk-critical
+    if (rate >= 50) return '#fb923c' // risk-high
+    return '#fbbf24' // risk-medium
   }
 
   const nodes: GraphNodeData[] = Array.from(nodeMap.entries()).map(

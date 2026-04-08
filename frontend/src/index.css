@@ -18,11 +18,11 @@
   --color-sector-trabajo: #f97316;
   --color-sector-otros: #64748b;
 
-  /* Risk Colors */
-  --color-risk-critical: #dc2626;
-  --color-risk-high: #ea580c;
-  --color-risk-medium: #d97706;
-  --color-risk-low: #16a34a;
+  /* Risk Colors — 400-series soft palette (canonical; matches constants.ts RISK_COLORS) */
+  --color-risk-critical: #f87171;
+  --color-risk-high: #fb923c;
+  --color-risk-medium: #fbbf24;
+  --color-risk-low: #4ade80;
 
   /* Light-first editorial palette (default) */
   --color-background: #faf9f6;
