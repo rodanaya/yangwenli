@@ -38,7 +38,7 @@ interface WeekColumn {
 // =============================================================================
 
 const AVAILABLE_YEARS = Array.from({ length: 2024 - 2015 + 1 }, (_, i) => 2024 - i)
-const DEFAULT_YEAR = 2024
+const DEFAULT_YEAR = new Date().getFullYear()
 const ELECTION_YEARS = new Set([2018, 2021, 2024]) // Federal election years in Mexico
 
 function formatLocalDate(dateStr: string, weekdaysLong: string[], monthsLong: string[]): string {

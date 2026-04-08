@@ -33,7 +33,7 @@ import {
 
 const FEATURED_YEARS = [2024, 2023, 2022, 2021, 2020] as const
 const ALL_YEARS = Array.from({ length: 2025 - 2002 + 1 }, (_, i) => 2025 - i)
-const DEFAULT_YEAR = 2024
+const DEFAULT_YEAR = new Date().getFullYear()
 
 interface SexenioInfo {
   president: string

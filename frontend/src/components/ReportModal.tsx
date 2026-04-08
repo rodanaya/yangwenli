@@ -45,18 +45,18 @@ function isVendorReport(
   return type === 'vendor'
 }
 
-/** Risk level color from score */
+/** Risk level color from score (v0.6.5 thresholds) */
 function riskColor(score: number): string {
-  if (score >= 0.5) return RISK_COLORS.critical
-  if (score >= 0.3) return RISK_COLORS.high
-  if (score >= 0.1) return RISK_COLORS.medium
+  if (score >= 0.60) return RISK_COLORS.critical
+  if (score >= 0.40) return RISK_COLORS.high
+  if (score >= 0.25) return RISK_COLORS.medium
   return RISK_COLORS.low
 }
 
 function riskLabel(score: number): string {
-  if (score >= 0.5) return 'Critical'
-  if (score >= 0.3) return 'High'
-  if (score >= 0.1) return 'Medium'
+  if (score >= 0.60) return 'Critical'
+  if (score >= 0.40) return 'High'
+  if (score >= 0.25) return 'Medium'
   return 'Low'
 }
 

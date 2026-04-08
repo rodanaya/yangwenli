@@ -42,16 +42,16 @@ const METRIC_LABELS: Record<CellMetric, string> = {
 function metricColor(value: number, metric: CellMetric): string {
   let t: number
   if (metric === 'risk') {
-    t = Math.min(value / 0.5, 1)
+    t = Math.min(value / 0.60, 1) // normalize to v0.6.5 critical threshold
   } else {
     t = Math.min(value / 100, 1)
   }
   if (t === 0) return 'transparent'
-  // Deep muted ramp that works on zinc-900 without being washed out
-  if (t < 0.15) return '#14532d' // deep green (matches RISK_COLORS.low family)
-  if (t < 0.35) return '#854d0e' // deep amber (matches RISK_COLORS.medium family)
-  if (t < 0.55) return '#9a3412' // deep orange (matches RISK_COLORS.high family)
-  return '#991b1b'               // deep red (matches RISK_COLORS.critical family)
+  // Deep muted ramp aligned to v0.6.5 thresholds: low<0.25, medium<0.40, high<0.60, critical>=0.60
+  if (t < 0.25) return '#14532d' // deep green (low)
+  if (t < 0.40) return '#854d0e' // deep amber (medium)
+  if (t < 0.60) return '#9a3412' // deep orange (high)
+  return '#991b1b'               // deep red (critical)
 }
 
 interface TooltipData {

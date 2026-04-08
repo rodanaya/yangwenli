@@ -79,8 +79,8 @@ export function buildVendorNarrative(
       riskText += ` Ranks in the ${riskProfile.risk_percentile.toFixed(0)}th percentile for risk.`
     }
 
-    const severity = vendor.avg_risk_score >= 0.5 ? 'critical' :
-      vendor.avg_risk_score >= 0.3 ? 'warning' : 'info'
+    const severity = vendor.avg_risk_score >= 0.60 ? 'critical' :
+      vendor.avg_risk_score >= 0.40 ? 'warning' : 'info'
     paragraphs.push({ text: riskText, severity })
   }
 

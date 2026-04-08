@@ -316,14 +316,17 @@ export default function StoryInfographic() {
   }, [idx])
 
   const prev = () => go((idx - 1 + SLIDES.length) % SLIDES.length)
-  const next = useCallback(() => go((idx + 1) % SLIDES.length), [go, idx])
+  const goNext = useCallback(() => {
+    setDirection(1)
+    setIdx(i => (i + 1) % SLIDES.length)
+  }, [])
 
-  // auto-advance
+  // auto-advance — goNext uses functional setIdx so interval never needs to reset on idx change
   useEffect(() => {
     if (!playing) { if (timerRef.current) clearInterval(timerRef.current); return }
-    timerRef.current = setInterval(next, AUTO_MS)
+    timerRef.current = setInterval(goNext, AUTO_MS)
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
-  }, [playing, next])
+  }, [playing, goNext])
 
   const slide = SLIDES[idx]
 
@@ -362,7 +365,7 @@ export default function StoryInfographic() {
             <button onClick={prev} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label="Anterior">
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button onClick={next} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label="Siguiente">
+            <button onClick={goNext} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label="Siguiente">
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

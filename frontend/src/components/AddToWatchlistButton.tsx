@@ -46,7 +46,8 @@ export function AddToWatchlistButton({
       queryClient.invalidateQueries({ queryKey: ['watchlist'] })
       setShowForm(false)
       setSuccess(true)
-      setTimeout(() => setSuccess(false), 3000)
+      const tid = setTimeout(() => setSuccess(false), 3000)
+      return () => clearTimeout(tid)
     },
     onError: () => {
       // Keep form open so user can retry

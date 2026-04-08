@@ -192,7 +192,7 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
 // =============================================================================
 
 const MIN_YEAR = 2002
-const MAX_YEAR = 2025
+const MAX_YEAR = new Date().getFullYear()
 
 // Sector options for filter dropdown
 const SECTOR_OPTIONS = [

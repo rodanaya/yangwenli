@@ -1,4 +1,4 @@
-import { useState, useMemo, useRef } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
@@ -2012,10 +2012,12 @@ function VendorTreemapLazy({ vendors, totalInstitutionValue }: {
   const [TreemapComp, setTreemapComp] = useState<React.ComponentType<any> | null>(null)
   const [loadError, setLoadError] = useState(false)
 
-  useMemo(() => {
+  useEffect(() => {
+    let cancelled = false
     import('@/components/charts/VendorConcentrationTreemap')
-      .then((mod) => setTreemapComp(() => mod.VendorConcentrationTreemap))
-      .catch(() => setLoadError(true))
+      .then((mod) => { if (!cancelled) setTreemapComp(() => mod.VendorConcentrationTreemap) })
+      .catch(() => { if (!cancelled) setLoadError(true) })
+    return () => { cancelled = true }
   }, [])
 
   if (loadError) {

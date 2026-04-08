@@ -19,14 +19,14 @@ const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct',
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
 // Risk color ramp — dark-mode optimized (transparent for no data, zinc-800 base)
+// Breakpoints aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
 function riskToColor(risk: number): string {
   if (risk === 0) return '#27272a'    // zinc-800 — no data
-  if (risk < 0.10) return '#166534'   // green-800
-  if (risk < 0.20) return '#365314'   // lime-800
-  if (risk < 0.30) return '#713f12'   // amber-900
-  if (risk < 0.40) return '#9a3412'   // orange-800
-  if (risk < 0.50) return '#b91c1c'   // red-700
-  return '#dc2626'                     // red-600 — critical
+  if (risk < 0.15) return '#166534'   // green-800 — low
+  if (risk < 0.25) return '#365314'   // lime-800 — low/medium boundary
+  if (risk < 0.40) return '#713f12'   // amber-900 — medium
+  if (risk < 0.60) return '#9a3412'   // orange-800 — high
+  return '#dc2626'                     // red-600 — critical (>=0.60)
 }
 
 function riskLabel(risk: number): string {

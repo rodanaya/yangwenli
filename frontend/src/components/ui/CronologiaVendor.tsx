@@ -25,7 +25,7 @@ interface CronologiaVendorProps {
 function riskBarColor(score: number): string {
   if (score >= 0.60) return '#f87171'   // critical — red
   if (score >= 0.40) return '#fb923c'   // high — orange
-  if (score >= 0.15) return '#fbbf24'   // medium — amber
+  if (score >= 0.25) return '#fbbf24'   // medium — amber (v0.6.5)
   return '#52525b'                       // low — zinc-600
 }
 

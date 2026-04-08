@@ -54,7 +54,7 @@ const RISK_COLORS: Record<string, string> = {
   unknown:  '#64748b',
 }
 
-const HIGH_RISK_THRESHOLD = 0.30
+const HIGH_RISK_THRESHOLD = 0.40 // v0.6.5: high >= 0.40
 
 // Human-readable labels for the legend
 const RISK_LEGEND_ENTRIES = [

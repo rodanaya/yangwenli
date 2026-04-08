@@ -55,10 +55,11 @@ export function AddToDossierButton({
     onSuccess: (_data, { dossierId }) => {
       queryClient.invalidateQueries({ queryKey: ['dossiers'] })
       setSuccess(dossierId)
-      setTimeout(() => {
+      const tid = setTimeout(() => {
         setSuccess(null)
         setOpen(false)
       }, 1500)
+      return () => clearTimeout(tid)
     },
     onError: (err) => {
       console.error('[AddToDossierButton] Failed to add item to dossier:', err)
