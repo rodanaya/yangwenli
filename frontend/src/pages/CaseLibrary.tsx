@@ -725,7 +725,7 @@ export default function CaseLibrary() {
                   key={cas.id}
                   cas={cas}
                   index={idx}
-                  onClick={() => navigate(`/cases/${cas.slug}`)}
+                  onClick={() => navigate(`/investigation/${cas.slug}`)}
                   onNavigate={navigate}
                 />
               ))}

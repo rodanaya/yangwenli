@@ -1687,9 +1687,9 @@ export default function SpendingCategories() {
             />
           </div>
 
-          {/* Year range */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">Año</label>
+          {/* Year range — applies to trend chart only */}
+          <div className="flex items-center gap-2" title="This year range applies to the spending trend chart only. Summary statistics and other charts cover all years 2002–2025.">
+            <label htmlFor="year-from" className="text-xs text-text-muted whitespace-nowrap">Tendencia: Año</label>
             <select
               id="year-from"
               value={yearFrom}

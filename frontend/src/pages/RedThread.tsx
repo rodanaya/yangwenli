@@ -1047,7 +1047,7 @@ export default function RedThread() {
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <AlertTriangle className="h-8 w-8 text-destructive" />
         <p className="text-text-muted">{t('errors.loadFailed')}</p>
-        <button onClick={() => navigate(-1)} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
@@ -1057,7 +1057,7 @@ export default function RedThread() {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <p className="text-text-muted">{t('errors.vendorNotFound')}</p>
-        <button onClick={() => navigate(-1)} className="text-[#dc2626] text-sm underline">
+        <button onClick={() => navigate('/aria')} className="text-[#dc2626] text-sm underline">
           {t('errors.goBack')}
         </button>
       </div>
@@ -1073,7 +1073,7 @@ export default function RedThread() {
       {/* Back nav */}
       <div className="sticky top-0 z-40 px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
         <button
-          onClick={() => navigate(-1)}
+          onClick={() => navigate('/aria')}
           className="flex items-center gap-2 text-text-muted hover:text-white transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />

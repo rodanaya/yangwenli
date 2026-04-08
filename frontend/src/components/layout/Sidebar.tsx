@@ -115,7 +115,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-      { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
+      { i18nKey: 'captureHeatmap', href: '/captura-heatmap', icon: Flame },
       { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
     ],
   },

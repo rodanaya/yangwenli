@@ -2823,7 +2823,7 @@ export function VendorProfile() {
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <BarChart3 className="h-4 w-4" />
-                        Rolling Activity (vendor_rolling_stats)
+                        Historical Activity
                       </CardTitle>
                     </CardHeader>
                     <CardContent>
@@ -2898,7 +2898,7 @@ export function VendorProfile() {
                       </div>
                       <p className="text-[10px] text-text-muted mt-1">
                         Cumulative value (bars, left axis) and competitive win rate % (line, right axis) by year.
-                        Source: vendor_rolling_stats point-in-time features.
+                        Point-in-time features computed from historical procurement activity.
                       </p>
                     </CardContent>
                   </Card>
@@ -4682,8 +4682,8 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
       <p className="text-xs text-text-muted border-t border-border/30 pt-4">
         External data is loaded from public registries and may be incomplete. SFP sanctions and RUPC data
         must be refreshed manually via backend scripts. ASF coverage depends on web scraping availability.
-        SAT Art. 69-B list updated monthly via <code className="font-mono">scripts/load_sat_efos.py</code>.
-        QQW data fetched via <code className="font-mono">scripts/fetch_qqw_data.py</code> (top 200 high-risk vendors).
+        SAT Art. 69-B list updated monthly from official registry data.
+        Additional high-risk vendor data is refreshed periodically.
       </p>
     </div>
   )

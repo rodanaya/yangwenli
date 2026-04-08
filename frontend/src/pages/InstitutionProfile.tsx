@@ -201,7 +201,7 @@ export function InstitutionProfile() {
   const { data: riskTimeline, isLoading: timelineLoading, error: timelineError } = useQuery({
     queryKey: ['institution', institutionId, 'risk-timeline'],
     queryFn: () => institutionApi.getRiskTimeline(institutionId),
-    enabled: !!institutionId,
+    enabled: !!institutionId && activeTab === 'risk',
     staleTime: 10 * 60 * 1000,
   })
 
@@ -233,14 +233,14 @@ export function InstitutionProfile() {
   const { data: vendorLoyalty, isLoading: loyaltyLoading, error: loyaltyError } = useQuery({
     queryKey: ['institution', institutionId, 'vendor-loyalty'],
     queryFn: () => institutionApi.getVendorLoyalty(institutionId, 10),
-    enabled: !!institutionId,
+    enabled: !!institutionId && activeTab === 'vendors',
     staleTime: 10 * 60 * 1000,
   })
 
   const { data: peerComparison, isLoading: peerLoading, error: peerError } = useQuery({
     queryKey: ['institution', institutionId, 'peer-comparison'],
     queryFn: () => institutionApi.getPeerComparison(institutionId),
-    enabled: !!institutionId,
+    enabled: !!institutionId && activeTab === 'risk',
     staleTime: 10 * 60 * 1000,
   })
 
@@ -271,14 +271,14 @@ export function InstitutionProfile() {
       const { data } = await api.get(`/institutions/${institutionId}/risk-waterfall`)
       return data
     },
-    enabled: !!institutionId,
+    enabled: !!institutionId && activeTab === 'risk',
     staleTime: 30 * 60 * 1000,
   })
 
   const { data: topCategories, isLoading: categoriesLoading } = useQuery({
     queryKey: ['institution', institutionId, 'top-categories'],
     queryFn: () => institutionApi.getTopCategories(institutionId, { limit: 8 }),
-    enabled: !!institutionId,
+    enabled: !!institutionId && activeTab === 'vendors',
     staleTime: 30 * 60 * 1000,
   })
 

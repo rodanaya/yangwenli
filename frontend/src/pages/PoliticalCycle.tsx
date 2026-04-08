@@ -492,15 +492,17 @@ interface AdminComparisonProps {
 
 function AdminComparisonSection({ data }: AdminComparisonProps) {
   const chartData = useMemo(
-    () =>
-      data.eras.map((era) => ({
+    () => {
+      const totalGtCases = data.eras.reduce((sum, e) => sum + (e.gt_case_count ?? 0), 0)
+      return data.eras.map((era) => ({
         name: era.era,
-        high_risk_pct: +(((era.gt_case_count ?? 0) / Math.max(1, 300)) * 100).toFixed(1),
+        high_risk_pct: +(((era.gt_case_count ?? 0) / Math.max(1, totalGtCases)) * 100).toFixed(1),
         gt_cases: era.gt_case_count,
         dec_spike: +era.dec_spike_pct.toFixed(1),
         hhi: +era.hhi.toFixed(4),
         est_fraud_mxn: era.est_fraud_mxn,
-      })),
+      }))
+    },
     [data.eras],
   )
 
