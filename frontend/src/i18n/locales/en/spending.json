@@ -3,7 +3,19 @@
     "trackingLabel": "SPENDING CATEGORIES",
     "subtitle": "What Mexico buys — spending categories from government procurement",
     "detail": "72 regex-based categories classify 3.1M contracts (2002-2025) by title with accent-aware matching. Coverage: ~84% specific, ~16% unclassified.",
-    "loading": "Loading spending category analysis…"
+    "loading": "Loading spending category analysis…",
+    "headline": "What the Government Buys: A Category Breakdown",
+    "analysisSubtitle": "Analysis of Partida budget codes revealing where public spending and corruption risk concentrate",
+    "categoriesTrackedLabel": "Spending categories tracked",
+    "categoriesAnnotation": "Partida budget codes, 2002–2025",
+    "highestRiskCategory": "Highest-risk category",
+    "highestValueCategory": "Highest-value category",
+    "sortByValue": "Highest spend",
+    "sortByValueHint": "By total amount",
+    "sortByRisk": "Highest risk",
+    "sortByRiskHint": "By average score",
+    "oecdLimit": "OECD limit",
+    "withinOecdLimit": "Within OECD limit"
   },
   "stats": {
     "totalCategories": "TOTAL CATEGORIES",
@@ -18,7 +30,8 @@
   "treemap": {
     "title": "Category Treemap by Value",
     "description": "Size represents total contract value. Colors indicate sector classification.",
-    "empty": "No category data available yet. Please contact your administrator."
+    "empty": "No category data available yet. Please contact your administrator.",
+    "hint": "Size = total value · Color = sector · Click a category to view its profile"
   },
   "table": {
     "title": "Top Categories",
@@ -35,6 +48,7 @@
     "colAvgRisk": "Avg Risk",
     "colDA": "DA%",
     "colTopVendor": "Top Vendor",
+    "colSector": "Sector",
     "empty": "No categories found. Category data may not be available yet.",
     "noPairData": "No vendor-institution data available for this category."
   },
@@ -55,6 +69,66 @@
     "amount": "Amount",
     "risk": "Risk",
     "totalAmount": "Total Amount",
-    "avgRisk": "Avg Risk"
+    "avgRisk": "Avg Risk",
+    "vendorInstitutionRelations": "Top vendor–institution relationships by value",
+    "viewFullProfile": "Full profile",
+    "viewContracts": "View contracts",
+    "viewCases": "Cases",
+    "viewCasesTitle": "View investigation cases in this sector",
+    "closePanel": "Close panel",
+    "mostExpensiveContracts": "Most expensive contracts",
+    "topVendor": "Top Vendor",
+    "singleBid": "single bid",
+    "directAwardShort": "direct award",
+    "singleBidShort": "single bid",
+    "directAwardLowCompetition": "direct award (low competition)"
+  },
+  "flags": {
+    "criticalRisk": "Critical risk — pattern matches documented corruption cases",
+    "highRisk": "High risk — review vendor concentration patterns",
+    "directAwardHigh": "direct award — {{multiple}}x OECD limit",
+    "directAwardExceeds": "direct award exceeds OECD limit (25%)",
+    "singleBidHigh": "single-bid tenders",
+    "narrativeHighDA": "This category combines {{riskLevel}} risk ({{riskPct}}%) with {{daPct}}% direct award — {{daMultiple}}x the OECD limit of 25%.",
+    "narrativeMedRisk": "Average {{riskLevel}} risk across {{contracts}} contracts worth {{value}}. Review concentration patterns.",
+    "narrativeHighDAOnly": "{{daPct}}% direct award — {{daMultiple}}x the OECD limit of 25%. Low competition in this category."
+  },
+  "subcategory": {
+    "sortAmount": "Amount",
+    "sortRisk": "Risk"
+  },
+  "filters": {
+    "allSectors": "All Sectors",
+    "searchPlaceholder": "Search category…",
+    "searchAriaLabel": "Search spending categories",
+    "categoriesCount": "{{count}} Categories",
+    "clearFilter": "Clear filter"
+  },
+  "banderasRojas": {
+    "title": "Red Flags",
+    "aboveAverage": "up to {{pct}}% above average."
+  },
+  "riskMap": {
+    "eyebrow": "RUBLI · Risk Map",
+    "title": "Risk vs. Value: The 72-Category Landscape",
+    "scatterDescription": "Each dot is a category. X axis = total spend 2002–2025. Y axis = average risk. Categories in the upper right require immediate attention.",
+    "quadrantLowHigh": "Low Value / High Risk",
+    "quadrantHighHigh": "High Value / High Risk",
+    "quadrantLowLow": "Low Value / Low Risk",
+    "quadrantHighLow": "High Value / Low Risk",
+    "axisSpend": "Spend",
+    "axisSpendLabel": "Total spend (MXN)",
+    "axisRisk": "Risk",
+    "axisRiskLabel": "Average risk",
+    "referenceLineLabel": "15% risk",
+    "tooltipSpend": "Spend:",
+    "tooltipRisk": "Risk:"
+  },
+  "sexenio": {
+    "eyebrow": "RUBLI · Federal Spending",
+    "title": "Spending by Administration: How Government Purchases Changed",
+    "description": "Cumulative federal spending in the 10 highest-value categories, broken down by presidential administration.",
+    "barChartHint": "Top 30 spending categories by total amount. Color = sector. Click a bar for detail.",
+    "filteredBy": "Trend filtered by:"
   }
 }

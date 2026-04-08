@@ -196,7 +196,7 @@ const MAX_YEAR = new Date().getFullYear()
 
 // Sector options for filter dropdown
 const SECTOR_OPTIONS = [
-  { code: '', label: 'Todos los Sectores' },
+  { code: '', label: 'All Sectors' },
   { code: 'salud', label: 'Salud' },
   { code: 'educacion', label: 'Educación' },
   { code: 'infraestructura', label: 'Infraestructura' },
@@ -259,7 +259,7 @@ function CategoryDetailPanel({
           <div className="min-w-0">
             <CardTitle className="text-sm font-bold text-text-primary truncate">{categoryName}</CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              Principales relaciones proveedor-institución por monto
+              {t('detail.vendorInstitutionRelations')}
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
@@ -268,29 +268,29 @@ function CategoryDetailPanel({
               className="flex items-center gap-1 text-xs text-amber-400 hover:text-amber-300 transition-colors border border-amber-500/30 px-2 py-1 rounded"
             >
               <ExternalLink className="h-3 w-3" />
-              Ver perfil completo
+              {t('detail.viewFullProfile')}
             </button>
             <button
               onClick={() => onNavigate(`/contracts?category_id=${categoryId}`)}
               className="flex items-center gap-1 text-xs text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded"
             >
               <ExternalLink className="h-3 w-3" />
-              Ver contratos
+              {t('detail.viewContracts')}
             </button>
             {sectorId && (
               <button
                 onClick={() => onNavigate(`/investigation?sector_id=${sectorId}`)}
                 className="flex items-center gap-1 text-xs text-[#f87171] hover:text-[#fca5a5] transition-colors border border-[#f87171]/30 px-2 py-1 rounded"
-                title="Ver casos de investigación en este sector"
+                title={t('detail.viewCasesTitle')}
               >
                 <ExternalLink className="h-3 w-3" />
-                Casos
+                {t('detail.viewCases')}
               </button>
             )}
             <button
               onClick={onClose}
               className="text-text-muted hover:text-text-primary transition-colors"
-              aria-label="Cerrar panel"
+              aria-label={t('detail.closePanel')}
             >
               <X className="h-4 w-4" />
             </button>
@@ -302,7 +302,7 @@ function CategoryDetailPanel({
         {(topContractsLoading || topContracts.length > 0) && (
           <div className="border-b border-border/20">
             <div className="px-4 py-2 bg-background-elevated/20 border-b border-border/10">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">Contratos más costosos</p>
+              <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">{t('detail.mostExpensiveContracts')}</p>
             </div>
             {topContractsLoading ? (
               <div className="space-y-1.5 p-3">
@@ -356,7 +356,7 @@ function CategoryDetailPanel({
               </div>
               <span className="w-20 text-right flex-shrink-0">{t('detail.amount')}</span>
               <span className="w-14 text-right flex-shrink-0 hidden md:block">{t('detail.contracts')}</span>
-              <span className="w-12 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
+              <span className="w-12 text-right flex-shrink-0 hidden lg:block">{t('detail.risk')}</span>
               <span className="w-12 text-right flex-shrink-0 hidden xl:block">AD%</span>
             </div>
             <div className="divide-y divide-border/10">
@@ -465,12 +465,12 @@ function CategorySummaryCard({
             className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded font-mono uppercase tracking-wider"
           >
             <ExternalLink className="h-3 w-3" />
-            Contratos
+            {t('detail.contracts')}
           </button>
           <button
             onClick={onClose}
             className="text-text-muted hover:text-text-primary transition-colors"
-            aria-label="Cerrar resumen"
+            aria-label={t('detail.closePanel')}
           >
             <X className="h-4 w-4" />
           </button>
@@ -558,7 +558,7 @@ function CategorySummaryCard({
 
         {/* Top Vendor */}
         <div className="bg-background-card px-4 py-3.5 col-span-2 md:col-span-1">
-          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Principal Proveedor</p>
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('detail.topVendor')}</p>
           {category.top_vendor ? (
             <button
               onClick={() => onNavigate(`/vendors/${category.top_vendor!.id}`)}
@@ -573,7 +573,7 @@ function CategorySummaryCard({
           {/* Single bid % */}
           {category.single_bid_pct > 0 && (
             <p className="text-[10px] text-text-muted/50 mt-1 font-mono">
-              {category.single_bid_pct.toFixed(0)}% licitaci{'ó'}n {'ú'}nica
+              {category.single_bid_pct.toFixed(0)}% {t('detail.singleBid')}
             </p>
           )}
         </div>
@@ -621,11 +621,11 @@ function CategorySummaryCard({
       {/* Risk Flags Checklist */}
       {(() => {
         const flags: string[] = []
-        if (category.direct_award_pct > 75) flags.push(`${category.direct_award_pct.toFixed(0)}% adj. directa — ${(category.direct_award_pct / 25).toFixed(1)}x límite OCDE`)
-        else if (category.direct_award_pct > 25) flags.push(`${category.direct_award_pct.toFixed(0)}% adj. directa excede límite OCDE (25%)`)
-        if (category.single_bid_pct > 25) flags.push(`${category.single_bid_pct.toFixed(0)}% licitaciones con un solo postor`)
-        if (category.avg_risk >= 0.60) flags.push('Riesgo crítico — patrón coincide con casos de corrupción documentados')
-        else if (category.avg_risk >= 0.40) flags.push('Riesgo alto — revisar patrones de concentración de proveedores')
+        if (category.direct_award_pct > 75) flags.push(`${category.direct_award_pct.toFixed(0)}% ${t('flags.directAwardHigh', { multiple: (category.direct_award_pct / 25).toFixed(1) })}`)
+        else if (category.direct_award_pct > 25) flags.push(`${category.direct_award_pct.toFixed(0)}% ${t('flags.directAwardExceeds')}`)
+        if (category.single_bid_pct > 25) flags.push(`${category.single_bid_pct.toFixed(0)}% ${t('flags.singleBidHigh')}`)
+        if (category.avg_risk >= 0.60) flags.push(t('flags.criticalRisk'))
+        else if (category.avg_risk >= 0.40) flags.push(t('flags.highRisk'))
         if (!flags.length) return null
         return (
           <div className="px-5 py-3 border-t border-red-500/20 bg-red-500/[0.04]">
@@ -650,10 +650,22 @@ function CategorySummaryCard({
           </p>
           <p className="text-sm text-zinc-200">
             {category.avg_risk >= 0.40 && isHighDA
-              ? `Esta categoría combina riesgo ${riskLevel} (${(category.avg_risk * 100).toFixed(0)}%) con ${category.direct_award_pct.toFixed(0)}% de adjudicación directa — ${(category.direct_award_pct / 25).toFixed(1)}x el límite OCDE de 25%.`
+              ? t('flags.narrativeHighDA', {
+                  riskLevel,
+                  riskPct: (category.avg_risk * 100).toFixed(0),
+                  daPct: category.direct_award_pct.toFixed(0),
+                  daMultiple: (category.direct_award_pct / 25).toFixed(1),
+                })
               : category.avg_risk >= 0.40
-                ? `Riesgo promedio ${riskLevel} en ${formatNumber(category.total_contracts)} contratos por ${formatCompactMXN(category.total_value)}. Revisar patrones de concentración.`
-                : `${category.direct_award_pct.toFixed(0)}% de adjudicación directa — ${(category.direct_award_pct / 25).toFixed(1)}x el límite OCDE de 25%. Baja competencia en esta categoría.`
+                ? t('flags.narrativeMedRisk', {
+                    riskLevel,
+                    contracts: formatNumber(category.total_contracts),
+                    value: formatCompactMXN(category.total_value),
+                  })
+                : t('flags.narrativeHighDAOnly', {
+                    daPct: category.direct_award_pct.toFixed(0),
+                    daMultiple: (category.direct_award_pct / 25).toFixed(1),
+                  })
             }
           </p>
         </div>
@@ -745,8 +757,8 @@ function SubcategoryPanel({
 
   const namedCount = sorted.filter(i => !i.is_catch_all).length
   const SORT_OPTS: { key: SubSort; label: string }[] = [
-    { key: 'value', label: 'Monto' },
-    { key: 'risk',  label: 'Riesgo' },
+    { key: 'value', label: t('subcategory.sortAmount') },
+    { key: 'risk',  label: t('subcategory.sortRisk') },
     { key: 'da',    label: 'AD%' },
     { key: 'sb',    label: 'LU%' },
   ]
@@ -840,7 +852,7 @@ function SubcategoryPanel({
                         </span>
                       )}
                       {isFlagged && (
-                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% adjudicación directa` : ''}${isHighDA && isHighSB ? ' · ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% licitación única` : ''}`}>
+                        <span title={`${isHighDA ? `${sub.direct_award_pct.toFixed(0)}% ${t('detail.directAwardShort')}` : ''}${isHighDA && isHighSB ? ' · ' : ''}${isHighSB ? `${sub.single_bid_pct.toFixed(0)}% ${t('detail.singleBidShort')}` : ''}`}>
                           <AlertTriangle className="h-2.5 w-2.5 text-amber-400 flex-shrink-0" />
                         </span>
                       )}
@@ -900,8 +912,8 @@ function SubcategoryPanel({
                         <AlertTriangle className="h-3 w-3 text-amber-400 flex-shrink-0" />
                         <span className="text-[11px] text-amber-300/80">
                           {[
-                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% adjudicación directa (baja competencia)`,
-                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% licitación única`,
+                            isHighDA && `${sub.direct_award_pct.toFixed(0)}% ${t('detail.directAwardLowCompetition')}`,
+                            isHighSB && `${sub.single_bid_pct.toFixed(0)}% ${t('detail.singleBidShort')}`,
                             sub.avg_risk >= RISK_THRESHOLDS.high && `riesgo promedio ${(sub.avg_risk * 100).toFixed(0)}%`,
                           ].filter(Boolean).join(' · ')}
                         </span>
@@ -991,6 +1003,7 @@ function TopFindingsBar({
   categories: CategoryStat[]
   onSelect: (id: number) => void
 }) {
+  const { t } = useTranslation('spending')
   const [view, setView] = useState<FindingView>('value')
 
   const top5 = useMemo(() => {
@@ -1004,8 +1017,8 @@ function TopFindingsBar({
   }, [categories, view])
 
   const VIEWS: { key: FindingView; label: string; hint: string }[] = [
-    { key: 'value', label: 'Mayor gasto', hint: 'Por monto total' },
-    { key: 'risk', label: 'Mayor riesgo', hint: 'Por score promedio' },
+    { key: 'value', label: t('hero.sortByValue'), hint: t('hero.sortByValueHint') },
+    { key: 'risk', label: t('hero.sortByRisk'), hint: t('hero.sortByRiskHint') },
     { key: 'da', label: 'Adj. directa', hint: '% sobre total' },
   ]
 
@@ -1030,7 +1043,7 @@ function TopFindingsBar({
     return {
       value: `${cat.direct_award_pct.toFixed(0)}%`,
       color: overLimit ? '#fb923c' : '#fafafa',
-      sub: overLimit ? `${(cat.direct_award_pct / 25).toFixed(1)}x límite OCDE` : 'Dentro de límite OCDE',
+      sub: overLimit ? `${(cat.direct_award_pct / 25).toFixed(1)}x ${t('hero.oecdLimit')}` : t('hero.withinOecdLimit'),
     }
   }
 
@@ -1460,8 +1473,8 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       <EditorialHeadline
         section="PARTIDAS PRESUPUESTARIAS"
-        headline="En Qué Gasta el Gobierno: Un Desglose por Categoría"
-        subtitle="Análisis de los códigos Partida que revelan dónde se concentra el gasto público y el riesgo de corrupción"
+        headline={t('hero.headline')}
+        subtitle={t('hero.analysisSubtitle')}
       />
 
       {/* ================================================================= */}
@@ -1470,15 +1483,15 @@ export default function SpendingCategories() {
       <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
         <HallazgoStat
           value={allCategories.length > 0 ? String(allCategories.length) : '—'}
-          label="Categorías de gasto rastreadas"
-          annotation="Códigos Partida presupuestal, 2002–2025"
+          label={t('hero.categoriesTrackedLabel')}
+          annotation={t('hero.categoriesAnnotation')}
           color="border-blue-500"
         />
         <HallazgoStat
           value={`${highestRiskPct}%`}
           label={highestRiskCat
-            ? `Riesgo promedio más alto: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
-            : 'Categoría de mayor riesgo'
+            ? `${t('hero.highestRiskCategory')}: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
+            : t('hero.highestRiskCategory')
           }
           annotation={highestRiskCat ? `${formatNumber(highestRiskCat.total_contracts)} contratos` : undefined}
           color="border-red-500"
@@ -1486,8 +1499,8 @@ export default function SpendingCategories() {
         <HallazgoStat
           value={topSpendCat ? formatCompactMXN(topSpendCat.total_value) : '—'}
           label={topSpendCat
-            ? `Mayor gasto: ${truncate(topSpendCat.name_es || topSpendCat.name_en, 35)}`
-            : 'Categoría líder en gasto'
+            ? `${t('hero.highestValueCategory')}: ${truncate(topSpendCat.name_es || topSpendCat.name_en, 35)}`
+            : t('hero.highestValueCategory')
           }
           annotation={topSpendCat ? `${formatNumber(topSpendCat.total_contracts)} contratos` : undefined}
           color="border-amber-500"
@@ -1512,7 +1525,7 @@ export default function SpendingCategories() {
                 {allCategories.length} categorías dimensionadas por gasto total
               </h2>
               <p className="text-xs text-text-muted mt-0.5">
-                Tamaño = monto total · Color = sector · Clic en una categoría para ver su perfil
+                {t('treemap.hint')}
               </p>
             </div>
             <FuentePill source="COMPRANET · 2002–2025" verified={true} />
@@ -1546,8 +1559,8 @@ export default function SpendingCategories() {
               De las {allCategories.length} categorías presupuestarias del gobierno federal,
               {' '}{banderasRojas.length > 0 && (
                 <>
-                  las de mayor riesgo muestran indicadores de corrupción
-                  hasta {highestRiskPct}% por encima del promedio.{' '}
+                  las de mayor riesgo muestran indicadores de corrupción{' '}
+                  {t('banderasRojas.aboveAverage', { pct: highestRiskPct })}{' '}
                 </>
               )}
               El desglose por código Partida revela dónde se concentra el gasto
@@ -1574,7 +1587,7 @@ export default function SpendingCategories() {
               className="text-lg font-bold text-text-primary tracking-tight"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              Banderas Rojas
+              {t('banderasRojas.title')}
             </h2>
             <span className="text-xs text-text-muted ml-2">
               Las 5 categorías con mayor riesgo promedio (min. 10 contratos)
@@ -1668,9 +1681,9 @@ export default function SpendingCategories() {
               type="text"
               value={searchQuery}
               onChange={e => setSearchQuery(e.target.value)}
-              placeholder="Buscar categoría…"
+              placeholder={t('filters.searchPlaceholder')}
               className="w-full h-8 pl-8 pr-3 rounded border border-border bg-background-card text-xs text-text-primary placeholder:text-text-muted/50 focus:outline-none focus:ring-1 focus:ring-accent"
-              aria-label="Buscar categorías de gasto"
+              aria-label={t('filters.searchAriaLabel')}
             />
           </div>
 
@@ -1706,7 +1719,9 @@ export default function SpendingCategories() {
               className="h-7 rounded border border-border bg-background-card px-2 text-xs text-text-primary focus:outline-none focus:ring-1 focus:ring-accent"
             >
               {SECTOR_OPTIONS.map(opt => (
-                <option key={opt.code} value={opt.code}>{opt.label}</option>
+                <option key={opt.code} value={opt.code}>
+                  {opt.code === '' ? t('filters.allSectors') : opt.label}
+                </option>
               ))}
             </select>
           </div>
@@ -1724,7 +1739,7 @@ export default function SpendingCategories() {
             className="text-base font-bold text-text-primary"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            {filteredCategories.length} Categorías{sectorFilter ? ` en ${getSectorNameEN(sectorFilter)}` : ''}
+            {t('filters.categoriesCount', { count: filteredCategories.length })}{sectorFilter ? ` en ${getSectorNameEN(sectorFilter)}` : ''}
           </h2>
           {stats && (
             <span className="text-xs text-text-muted">
@@ -1768,12 +1783,12 @@ export default function SpendingCategories() {
                     <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
                       <th className="px-3 py-2.5 text-left font-medium w-8">#</th>
                       <th className="px-3 py-2.5 text-left font-medium min-w-[200px]">Categoría</th>
-                      <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">Sector</th>
+                      <th className="px-3 py-2.5 text-left font-medium hidden md:table-cell">{t('table.colSector')}</th>
                       <th
                         className="px-3 py-2.5 text-right font-medium cursor-pointer hover:text-text-primary select-none whitespace-nowrap"
                         onClick={() => handleSort('total_contracts')}
                       >
-                        Contratos
+                        {t('table.colContracts')}
                         <SortIndicator field="total_contracts" sortField={sortField} sortDir={sortDir} />
                       </th>
                       <th
@@ -1955,18 +1970,17 @@ export default function SpendingCategories() {
         <div className="h-px bg-border mb-6" />
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Mapa de Riesgo
+            {t('riskMap.eyebrow')}
           </p>
           <h2
             id="risk-value-heading"
             className="text-xl font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Riesgo y valor: el panorama de las 72 categorías
+            {t('riskMap.title')}
           </h2>
           <p className="text-sm text-text-secondary mt-1 max-w-2xl leading-relaxed">
-            Cada punto es una categoría. Eje X = gasto total 2002–2025. Eje Y = riesgo promedio.
-            Las categorías arriba a la derecha requieren atención inmediata.
+            {t('riskMap.scatterDescription')}
           </p>
         </div>
         <Card>
@@ -2106,17 +2120,17 @@ export default function SpendingCategories() {
         <div className="h-px bg-border mb-6" />
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Gasto Federal
+            {t('sexenio.eyebrow')}
           </p>
           <h2
             id="sexenio-shifts-heading"
             className="text-xl font-bold text-text-primary leading-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Gasto por administración: cómo cambió lo que compra el gobierno
+            {t('sexenio.title')}
           </h2>
           <p className="text-sm text-text-secondary mt-1 max-w-2xl leading-relaxed">
-            Gasto federal acumulado en las 10 categorías de mayor valor, distribuido por sexenio presidencial.
+            {t('sexenio.description')}
           </p>
         </div>
         <Card>
@@ -2215,19 +2229,19 @@ export default function SpendingCategories() {
               {t('treemap.title')}
             </CardTitle>
             <CardDescription>
-              Top 30 categorías de gasto por monto total. Color = sector. Clic en una barra para detalle.
+              {t('sexenio.barChartHint')}
             </CardDescription>
           </CardHeader>
           <CardContent>
             {selectedCategoryName && (
               <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-text-muted">Tendencia filtrada por:</span>
+                <span className="text-xs text-text-muted">{t('sexenio.filteredBy')}</span>
                 <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
                   {selectedCategoryName}
                   <button
                     onClick={() => setSelectedCategoryId(null)}
                     className="ml-0.5 hover:text-amber-200"
-                    aria-label="Limpiar filtro"
+                    aria-label={t('filters.clearFilter')}
                   >
                     &times;
                   </button>

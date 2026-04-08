@@ -3,7 +3,19 @@
     "trackingLabel": "CATEGORÍAS DE GASTO",
     "subtitle": "Qué compra México — categorías de gasto en la contratación pública",
     "detail": "72 categorías basadas en expresiones regulares clasifican 3.1M de contratos (2002-2025) por título con coincidencia sensible a acentos. Cobertura: ~84% específica, ~16% sin clasificar.",
-    "loading": "Cargando análisis de categorías de gasto…"
+    "loading": "Cargando análisis de categorías de gasto…",
+    "headline": "En Qué Gasta el Gobierno: Un Desglose por Categoría",
+    "analysisSubtitle": "Análisis de los códigos Partida que revelan dónde se concentra el gasto público y el riesgo de corrupción",
+    "categoriesTrackedLabel": "Categorías de gasto rastreadas",
+    "categoriesAnnotation": "Códigos Partida presupuestal, 2002–2025",
+    "highestRiskCategory": "Categoría de mayor riesgo",
+    "highestValueCategory": "Categoría líder en gasto",
+    "sortByValue": "Mayor gasto",
+    "sortByValueHint": "Por monto total",
+    "sortByRisk": "Mayor riesgo",
+    "sortByRiskHint": "Por score promedio",
+    "oecdLimit": "límite OCDE",
+    "withinOecdLimit": "Dentro de límite OCDE"
   },
   "stats": {
     "totalCategories": "TOTAL CATEGORÍAS",
@@ -18,7 +30,8 @@
   "treemap": {
     "title": "Mapa de Árbol por Valor",
     "description": "El tamaño representa el valor total del contrato. Los colores indican la clasificación sectorial.",
-    "empty": "No hay datos de categorías disponibles aún. Por favor contacta al administrador."
+    "empty": "No hay datos de categorías disponibles aún. Por favor contacta al administrador.",
+    "hint": "Tamaño = monto total · Color = sector · Clic en una categoría para ver su perfil"
   },
   "table": {
     "title": "Principales Categorías",
@@ -35,6 +48,7 @@
     "colAvgRisk": "Riesgo Prom.",
     "colDA": "Adj. %",
     "colTopVendor": "Principal Proveedor",
+    "colSector": "Sector",
     "empty": "No se encontraron categorías. Los datos pueden no estar disponibles aún.",
     "noPairData": "No hay datos de proveedor-institución disponibles para esta categoría."
   },
@@ -55,6 +69,66 @@
     "amount": "Monto",
     "risk": "Riesgo",
     "totalAmount": "Monto Total",
-    "avgRisk": "Riesgo Promedio"
+    "avgRisk": "Riesgo Promedio",
+    "vendorInstitutionRelations": "Principales relaciones proveedor-institución por monto",
+    "viewFullProfile": "Perfil completo",
+    "viewContracts": "Ver contratos",
+    "viewCases": "Casos",
+    "viewCasesTitle": "Ver casos de investigación en este sector",
+    "closePanel": "Cerrar panel",
+    "mostExpensiveContracts": "Contratos más costosos",
+    "topVendor": "Principal Proveedor",
+    "singleBid": "licitación única",
+    "directAwardShort": "adjudicación directa",
+    "singleBidShort": "licitación única",
+    "directAwardLowCompetition": "adjudicación directa (baja competencia)"
+  },
+  "flags": {
+    "criticalRisk": "Riesgo crítico — patrón coincide con casos de corrupción documentados",
+    "highRisk": "Riesgo alto — revisar patrones de concentración de proveedores",
+    "directAwardHigh": "adj. directa — {{multiple}}x límite OCDE",
+    "directAwardExceeds": "adj. directa excede límite OCDE (25%)",
+    "singleBidHigh": "licitaciones con un solo postor",
+    "narrativeHighDA": "Esta categoría combina riesgo {{riskLevel}} ({{riskPct}}%) con {{daPct}}% de adjudicación directa — {{daMultiple}}x el límite OCDE de 25%.",
+    "narrativeMedRisk": "Riesgo promedio {{riskLevel}} en {{contracts}} contratos por {{value}}. Revisar patrones de concentración.",
+    "narrativeHighDAOnly": "{{daPct}}% de adjudicación directa — {{daMultiple}}x el límite OCDE de 25%. Baja competencia en esta categoría."
+  },
+  "subcategory": {
+    "sortAmount": "Monto",
+    "sortRisk": "Riesgo"
+  },
+  "filters": {
+    "allSectors": "Todos los Sectores",
+    "searchPlaceholder": "Buscar categoría…",
+    "searchAriaLabel": "Buscar categorías de gasto",
+    "categoriesCount": "{{count}} Categorías",
+    "clearFilter": "Limpiar filtro"
+  },
+  "banderasRojas": {
+    "title": "Banderas Rojas",
+    "aboveAverage": "hasta {{pct}}% por encima del promedio."
+  },
+  "riskMap": {
+    "eyebrow": "RUBLI · Mapa de Riesgo",
+    "title": "Riesgo y valor: el panorama de las 72 categorías",
+    "scatterDescription": "Cada punto es una categoría. Eje X = gasto total 2002–2025. Eje Y = riesgo promedio. Las categorías arriba a la derecha requieren atención inmediata.",
+    "quadrantLowHigh": "Bajo Valor / Alto Riesgo",
+    "quadrantHighHigh": "Alto Valor / Alto Riesgo",
+    "quadrantLowLow": "Bajo Valor / Bajo Riesgo",
+    "quadrantHighLow": "Alto Valor / Bajo Riesgo",
+    "axisSpend": "Gasto",
+    "axisSpendLabel": "Gasto total (MXN)",
+    "axisRisk": "Riesgo",
+    "axisRiskLabel": "Riesgo promedio",
+    "referenceLineLabel": "15% riesgo",
+    "tooltipSpend": "Gasto:",
+    "tooltipRisk": "Riesgo:"
+  },
+  "sexenio": {
+    "eyebrow": "RUBLI · Gasto Federal",
+    "title": "Gasto por administración: cómo cambió lo que compra el gobierno",
+    "description": "Gasto federal acumulado en las 10 categorías de mayor valor, distribuido por sexenio presidencial.",
+    "barChartHint": "Top 30 categorías de gasto por monto total. Color = sector. Clic en una barra para detalle.",
+    "filteredBy": "Tendencia filtrada por:"
   }
 }
