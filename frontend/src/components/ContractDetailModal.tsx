@@ -30,6 +30,7 @@ interface ContractDetailModalProps {
 
 export function ContractDetailModal({ contractId, open, onOpenChange }: ContractDetailModalProps) {
   const { t } = useTranslation('contracts')
+  const { t: tCommon } = useTranslation('common')
   const { data: contract, isLoading, error } = useQuery({
     queryKey: ['contract', contractId],
     queryFn: () => contractApi.getById(contractId!),
@@ -163,7 +164,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     </span>
                   ) : contract.risk_confidence ? (
                     <span className="text-xs text-text-muted">
-                      Confidence: {contract.risk_confidence}
+                      {tCommon('contractDetail.confidence', { value: contract.risk_confidence })}
                     </span>
                   ) : null}
                   {contract.risk_model_version && (
@@ -193,23 +194,23 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                 <div className="flex gap-2 flex-wrap">
                   {contract.is_direct_award && (
                     <Badge className="text-xs bg-risk-high/20 text-risk-high border border-risk-high/30">
-                      Direct Award
+                      {tCommon('contractDetail.flagDirectAward')}
                     </Badge>
                   )}
                   {contract.is_single_bid && (
                     <Badge className="text-xs bg-risk-critical/20 text-risk-critical border border-risk-critical/30">
-                      Single Bid
+                      {tCommon('contractDetail.flagSingleBid')}
                     </Badge>
                   )}
                   {contract.is_year_end && (
-                    <Badge variant="outline" className="text-xs">Year-End</Badge>
+                    <Badge variant="outline" className="text-xs">{tCommon('contractDetail.flagYearEnd')}</Badge>
                   )}
                   {contract.is_high_value && (
-                    <Badge variant="outline" className="text-xs">High Value</Badge>
+                    <Badge variant="outline" className="text-xs">{tCommon('contractDetail.flagHighValue')}</Badge>
                   )}
                   {contract.is_threshold_gaming && (
                     <Badge className="text-xs bg-amber-950/30 text-amber-400 border border-amber-500/30" title={`${((contract.threshold_proximity ?? 0) * 100).toFixed(1)}% below licitación pública threshold`}>
-                      Threshold Gaming
+                      {tCommon('contractDetail.flagThresholdGaming')}
                     </Badge>
                   )}
                 </div>
@@ -222,7 +223,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                     <div className="flex items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/40 border border-border/30">
                       <div className="flex-1">
                         <p className="text-[10px] text-text-muted uppercase tracking-wider mb-0.5">
-                          Anomaly Score <span className="normal-case font-normal">· PyOD cross-model</span>
+                          {tCommon('contractDetail.anomalyScore')} <span className="normal-case font-normal">· {tCommon('contractDetail.anomalyScoreSubtitle')}</span>
                         </p>
                         <div className="flex items-center gap-2">
                           <span className="text-sm font-mono font-medium text-text-primary tabular-nums">
@@ -233,7 +234,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                               <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                                 <path d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" strokeLinecap="round" strokeLinejoin="round"/>
                               </svg>
-                              AI Confirmed
+                              {tCommon('contractDetail.aiConfirmed')}
                             </Badge>
                           )}
                         </div>
@@ -250,8 +251,8 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                         </div>
                       </div>
                       <div className="text-right text-[10px] text-text-muted">
-                        <p>IForest+COPOD</p>
-                        <p>ensemble</p>
+                        <p>{tCommon('contractDetail.ensemble')}</p>
+                        <p>{tCommon('contractDetail.ensembleDetail')}</p>
                       </div>
                     </div>
                   )
@@ -269,16 +270,16 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
 
             {/* Section 3: Procurement Details */}
             <section>
-              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">Procurement</p>
+              <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-3">{tCommon('contractDetail.procurement')}</p>
               <div className="grid grid-cols-2 gap-2 text-sm">
-                <DetailRow label="Procedure" value={contract.procedure_type_normalized || contract.procedure_type} />
-                <DetailRow label="Contract Type" value={contract.contract_type_normalized || contract.contract_type} />
-                <DetailRow label="Publication" value={contract.publication_date ? formatDate(contract.publication_date) : undefined} />
-                <DetailRow label="Award" value={contract.award_date ? formatDate(contract.award_date) : undefined} />
-                <DetailRow label="Start" value={contract.start_date ? formatDate(contract.start_date) : undefined} />
-                <DetailRow label="End" value={contract.end_date ? formatDate(contract.end_date) : undefined} />
-                <DetailRow label="Sector" value={contract.sector_name} />
-                <DetailRow label="Status" value={contract.contract_status} />
+                <DetailRow label={tCommon('contractDetail.procedure')} value={contract.procedure_type_normalized || contract.procedure_type} />
+                <DetailRow label={tCommon('contractDetail.contractType')} value={contract.contract_type_normalized || contract.contract_type} />
+                <DetailRow label={tCommon('contractDetail.publication')} value={contract.publication_date ? formatDate(contract.publication_date) : undefined} />
+                <DetailRow label={tCommon('contractDetail.award')} value={contract.award_date ? formatDate(contract.award_date) : undefined} />
+                <DetailRow label={tCommon('contractDetail.start')} value={contract.start_date ? formatDate(contract.start_date) : undefined} />
+                <DetailRow label={tCommon('contractDetail.end')} value={contract.end_date ? formatDate(contract.end_date) : undefined} />
+                <DetailRow label={tCommon('contractDetail.sector')} value={contract.sector_name} />
+                <DetailRow label={tCommon('contractDetail.status')} value={contract.contract_status} />
               </div>
 
               {/* Political cycle context */}
@@ -294,7 +295,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
                 >
                   <ExternalLink className="h-3 w-3" />
-                  View on COMPRANET
+                  {tCommon('contractDetail.viewOnCompranet')}
                 </a>
               )}
             </section>
@@ -303,10 +304,10 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
             {(contract.data_quality_grade || contract.source_structure) && (
               <div className="flex items-center gap-3 text-xs text-text-muted border-t border-border pt-3">
                 {contract.data_quality_grade && (
-                  <span>Quality: {contract.data_quality_grade}</span>
+                  <span>{tCommon('contractDetail.qualityLabel', { grade: contract.data_quality_grade })}</span>
                 )}
                 {contract.source_structure && (
-                  <span>Source: Structure {contract.source_structure}</span>
+                  <span>{tCommon('contractDetail.sourceLabel', { structure: contract.source_structure })}</span>
                 )}
               </div>
             )}
@@ -328,6 +329,7 @@ function getAdministration(year?: number | null): string {
 }
 
 function PoliticalContextRow({ contract }: { contract: import('@/api/types').ContractDetail }) {
+  const { t: tCommon } = useTranslation('common')
   const delay = contract.publication_delay_days
   const isElection = contract.is_election_year
   const sexenioYear = contract.sexenio_year
@@ -343,7 +345,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
     <div className="mt-3 flex flex-wrap items-center gap-2 py-2 px-3 rounded-lg bg-background-elevated/30 border border-border/20">
       <div className="flex items-center gap-1 text-text-muted">
         <Clock className="h-3 w-3" aria-hidden="true" />
-        <span className="text-[10px] uppercase tracking-wider">Context</span>
+        <span className="text-[10px] uppercase tracking-wider">{tCommon('contractDetail.context')}</span>
       </div>
       {delay != null && (
         <span className={`text-xs font-mono tabular-nums ${delayColor}`} title="Days between publication and award">
@@ -361,7 +363,7 @@ function PoliticalContextRow({ contract }: { contract: import('@/api/types').Con
           title="Contract awarded during a federal election year"
         >
           <Zap className="h-2.5 w-2.5" aria-hidden="true" />
-          Election Year
+          {tCommon('contractDetail.electionYear')}
         </span>
       )}
     </div>

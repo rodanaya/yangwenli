@@ -1,0 +1,152 @@
+{
+  "chapters": {
+    "subject": "Sujeto",
+    "timeline": "Cronología",
+    "pattern": "Patrón",
+    "network": "Red",
+    "money": "Dinero",
+    "verdict": "Veredicto",
+    "headings": {
+      "subject": "Capítulo I · El Sujeto",
+      "timeline": "Capítulo II · La Cronología",
+      "pattern": "Capítulo III · El Patrón",
+      "network": "Capítulo IV · La Red",
+      "money": "Capítulo V · El Dinero",
+      "verdict": "Capítulo VI · El Veredicto"
+    }
+  },
+  "patterns": {
+    "P1": {
+      "label": "Monopolio de Mercado",
+      "description": "Concentra una proporción desproporcionada de contratos del sector — posible captura de mercado por medios no competitivos."
+    },
+    "P2": {
+      "label": "Empresa Fantasma",
+      "description": "Exhibe indicadores de empresa fachada: historial operativo corto, pocos contratos, adjudicaciones directas casi al 100%, presencia no verificable."
+    },
+    "P3": {
+      "label": "Intermediario",
+      "description": "Actúa como entidad de paso, ganando contratos fuera de su industria principal y probablemente revendiéndolos a proveedores reales."
+    },
+    "P4": {
+      "label": "Colusión en Licitaciones",
+      "description": "Múltiples proveedores muestran licitación coordinada — rotación, ofertas de cobertura, o asignación geográfica del mercado."
+    },
+    "P5": {
+      "label": "Manipulación de Precios",
+      "description": "Los valores de los contratos son estadísticamente anómalos vs. benchmarks del sector, indicando precios inflados."
+    },
+    "P6": {
+      "label": "Captura Institucional",
+      "description": "Recibe una proporción desproporcionada de una sola institución, típicamente mediante adjudicaciones directas."
+    },
+    "P7": {
+      "label": "Clúster de Red",
+      "description": "Integrado en una red de co-contratación, sugiriendo anillos coordinados de proveedores."
+    }
+  },
+  "subject": {
+    "riskBadge": "riesgo {{level}}",
+    "ariaTier": "Nivel ARIA {{tier}}",
+    "scrollHint": "Continuar",
+    "introText": "Este hilo de investigación sigue la historia de contratación de <1>{{name}}</1>, trazando los patrones, relaciones y flujos financieros que activaron la detección automatizada. Desplácese para seguir la evidencia."
+  },
+  "kpi": {
+    "totalValue": "Valor Total",
+    "contracts": "Contratos",
+    "directAwards": "Adjudicaciones Directas",
+    "highRisk": "Alto Riesgo"
+  },
+  "notes": {
+    "allContracts": "Todos los contratos adjudicados, 2002–2025",
+    "vsNational": "vs. ~48% promedio nacional",
+    "oecdBenchmark": "Referencia OCDE: 2–15%"
+  },
+  "timeline": {
+    "heading": "{{total}} Contratos, {{minYear}}–{{maxYear}}",
+    "dotDescription": "Cada punto es un año. El tamaño refleja el valor total. El color refleja el riesgo promedio. Pasa el cursor para más detalles.",
+    "legend": {
+      "sizeLabel": "Tamaño = valor anual de contratos"
+    },
+    "dotTooltip": "{{year}} · {{value}} · {{count}} contratos · riesgo prom. {{risk}}%"
+  },
+  "pattern": {
+    "heading": "Lo Que Encontró el Algoritmo",
+    "description": "Las puntuaciones de riesgo se construyen a partir de 16 características z-score normalizadas contra los promedios del sector. Estos son los factores que impulsaron la puntuación de este proveedor.",
+    "raisesRisk": "▲ aumenta el riesgo",
+    "lowersRisk": "▼ reduce el riesgo",
+    "noData": "Datos de atribución de características no disponibles para este proveedor.",
+    "shapNote": "Los valores positivos aumentan la puntuación de riesgo (rojo). Los negativos la reducen (verde). Los valores son contribuciones de características estilo SHAP: β_i × (z_i − E[z_i])."
+  },
+  "network": {
+    "heading": "Conexiones y Relaciones",
+    "description": "Las redes de proveedores revelan anillos de co-contratación, entidades compartidas y dependencias institucionales invisibles en el análisis contrato por contrato.",
+    "institutionsServed": "Instituciones Atendidas",
+    "sectorsActive": "Sectores Activos",
+    "institutionsNote": {
+      "few": "Muy pocas instituciones — posible captura institucional.",
+      "many": "Amplio alcance institucional — perfil de proveedor diversificado.",
+      "moderate": "Diversidad institucional moderada."
+    },
+    "sectorsNote": {
+      "single": "Presencia en un solo sector — típico de especialistas.",
+      "multi": "Actividad multisectorial — puede indicar comportamiento de intermediario.",
+      "moderate": "Proveedor multisectorial."
+    },
+    "coBiddingPartners": "Socios en Licitación",
+    "noCoBidders": "No se detectaron patrones de licitación coordinada.",
+    "sharedProcedures_one": "{{count}} procedimiento compartido",
+    "sharedProcedures_other": "{{count}} procedimientos compartidos",
+    "openNetworkGraph": "Abrir Gráfico de Red Completo",
+    "openNetworkGraphDesc": "Gráfico de fuerza dirigida interactivo con co-licitantes, entidades relacionadas y clústeres comunitarios.",
+    "coBidderAnalysis": "Análisis de Co-Licitantes",
+    "coBidderAnalysisDesc": "Proveedores que aparecen consistentemente en los mismos procedimientos — posibles anillos de coordinación."
+  },
+  "roles": {
+    "possibleDecoy": "Posible Señuelo",
+    "rotationPattern": "Patrón de Rotación",
+    "possibleAccomplice": "Posible Cómplice",
+    "coBidder": "Co-licitante"
+  },
+  "money": {
+    "heading": "{{value}} a lo Largo del Tiempo",
+    "description": "Valor anual de contratos y trayectoria de riesgo — a dónde fue el dinero y cuándo aumentó el riesgo.",
+    "peakByValue": "Año Pico por Valor",
+    "peakByRisk": "Año Pico por Riesgo",
+    "peakValueLabel": "{{year}} — {{value}}",
+    "peakRiskLabel": "{{year}} — {{pct}}% puntuación prom.",
+    "chartValueLabel": "Valor de Contratos por Año (millones MXN)",
+    "chartRiskLabel": "Puntuación de Riesgo Promedio por Año (%)",
+    "tooltipValue": "Valor",
+    "tooltipRisk": "Riesgo Prom.",
+    "riskNote": "Umbrales de riesgo: Crítico ≥60%, Alto ≥40%, Medio ≥25%. Referencia OCDE: 2–15% alto riesgo."
+  },
+  "verdict": {
+    "heading": "Resumen de Investigación",
+    "description": "Las señales estadísticas justifican atención. Una puntuación alta no es prueba de irregularidades — significa que este proveedor se asemeja estrechamente a patrones de corrupción documentados.",
+    "riskIndicatorScore": "Puntuación de Indicador de Riesgo",
+    "outOf100": "sobre 100",
+    "ariaIps": "IPS ARIA: {{ips}} · Nivel {{tier}}",
+    "efosLabel": "SAT EFOS Definitivo",
+    "sfpLabel": "Sancionado por SFP",
+    "groundTruthLabel": "En Casos de Referencia",
+    "ariaMemoTitle": "Memorándum de Inteligencia ARIA",
+    "fullVendorProfile": "Perfil Completo del Proveedor",
+    "exportPdf": "Exportar Informe PDF",
+    "addToWorkspace": "Agregar al Espacio de Trabajo",
+    "methodologyNote": "Las puntuaciones de riesgo miden la similitud con patrones de corrupción documentados en 3.1M contratos federales mexicanos (2002–2025). Las puntuaciones son indicadores estadísticos para la clasificación de investigaciones — no son prueba de irregularidades. Modelo v0.6.5, validación estratificada por proveedor, AUC 0.798 (entrenamiento) / 0.828 (prueba). Ver",
+    "methodologyLink": "metodología completa"
+  },
+  "nav": {
+    "back": "Atrás",
+    "redThread": "Hilo Rojo",
+    "fullProfile": "Perfil Completo"
+  },
+  "loading": "Construyendo hilo de investigación…",
+  "errors": {
+    "invalidId": "ID de proveedor no válido.",
+    "loadFailed": "No se pudo cargar la información. Intente de nuevo más tarde.",
+    "goBack": "Volver",
+    "vendorNotFound": "Proveedor no encontrado."
+  }
+}

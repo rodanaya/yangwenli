@@ -1,0 +1,97 @@
+{
+  "pageTitle": "Transparencia Institucional · Expedientes Individuales",
+  "pageSubtitle": "Explora la transparencia de {{total}} instituciones federales.",
+  "description": "Explora y filtra los expedientes. Cada institución se puntúa en apertura, precios, diversidad de proveedores, integridad del proceso y banderas externas.",
+  "note": "Calificaciones individuales, no promedio nacional",
+  "stats": {
+    "evaluated": "Instituciones Evaluadas",
+    "federal": "Instituciones del gobierno federal",
+    "best": "Mejor Institución",
+    "weakest": "Institución Más Débil",
+    "median": "Puntuación Mediana",
+    "outOf100": "de 100 puntos"
+  },
+  "tiers": {
+    "all": "Todos",
+    "Excelente": "Excelente",
+    "Satisfactorio": "Satisfactorio",
+    "Regular": "Regular",
+    "Deficiente": "Deficiente",
+    "Critico": "Crítico"
+  },
+  "pillars": {
+    "apert": "Apert",
+    "prec": "Prec",
+    "prov": "Prov",
+    "proc": "Proc",
+    "ext": "Ext",
+    "openness": "Apertura",
+    "pricing": "Precios",
+    "vendors": "Diversidad de Proveedores",
+    "process": "Integridad del Proceso",
+    "external": "Banderas Externas"
+  },
+  "filters": {
+    "byLevel": "Filtrar por nivel:",
+    "search": "Buscar instituciones…",
+    "go": "Ir",
+    "clear": "Limpiar",
+    "sort": "Ordenar:",
+    "sortScore": "Puntuación",
+    "sortPercentile": "Percentil",
+    "sortName": "Nombre"
+  },
+  "table": {
+    "score": "Puntuación",
+    "improving": "Mejorando",
+    "declining": "Deteriorando",
+    "stable": "Estable",
+    "percentile": "Percentil {{n}}",
+    "outOf": "/ 100",
+    "viewProfile": "Ver Perfil"
+  },
+  "distribution": {
+    "title": "Distribución por nivel de transparencia",
+    "subtitle": "Distribución por nivel — {{total}} instituciones",
+    "ariaLabel": "Distribución por nivel de transparencia"
+  },
+  "pillarsChart": {
+    "ariaLabel": "Puntuaciones por pilar"
+  },
+  "trend": {
+    "improving": "Mejorando",
+    "declining": "Deteriorando",
+    "stable": "Estable"
+  },
+  "footnotes": {
+    "title": "NOTA METODOLÓGICA",
+    "scoring": "Las calificaciones reflejan indicadores estadísticos de transparencia en contratación pública. Una calificación baja no es prueba de irregularidades, sino una señal para investigación adicional. Puntuación basada en COMPRANET (2002–2025), modelo de riesgo v0.6.5, metodología OCDE / FMI.",
+    "minContracts": "Instituciones con menos de 30 contratos pueden mostrar mayor variabilidad."
+  },
+  "pagination": {
+    "showing": "Mostrando {{from}} de {{total}} instituciones",
+    "previous": "Anterior",
+    "next": "Siguiente",
+    "pageLabel": "Página {{n}}",
+    "ariaLabel": "Paginación",
+    "withTier": " con nivel ",
+    "matching": " que coinciden con \""
+  },
+  "aria": {
+    "stats": "Estadísticas generales",
+    "distributionSection": "Distribución por nivel",
+    "filters": "Filtros",
+    "cards": "Tarjetas de instituciones",
+    "filterTier": "Filtrar nivel {{tier}}, {{count}} instituciones",
+    "sortBy": "Ordenar por {{label}} {{direction}}",
+    "sortDesc": "descendente",
+    "sortAsc": "ascendente",
+    "searchByName": "Buscar instituciones por nombre",
+    "clearSearch": "Limpiar búsqueda",
+    "clearFilters": "Limpiar todos los filtros",
+    "redAlerts": "{{count}} alertas rojas",
+    "profileLink": "Ver perfil de {{name}}"
+  },
+  "loading": "Cargando expedientes…",
+  "noResults": "Ninguna institución coincide con los filtros actuales."
+}

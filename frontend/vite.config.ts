@@ -113,6 +113,8 @@ export default defineConfig({
           'vendor-gsap': ['gsap'],
           // Framer Motion — used by RedThread and editorial components
           'vendor-motion': ['framer-motion'],
+          // ECharts — used by echarts-for-react components
+          'vendor-echarts': ['echarts', 'echarts-for-react'],
         },
       },
     },

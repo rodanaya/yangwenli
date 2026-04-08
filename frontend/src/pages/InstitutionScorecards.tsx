@@ -13,6 +13,7 @@
 import { useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import {
   Award,
   AlertTriangle,
@@ -151,30 +152,37 @@ const PILLAR_MAXES: Record<string, number> = {
 // Tier distribution bar (5-tier)
 // ---------------------------------------------------------------------------
 
-function TierDistributionBar({ distribution }: { distribution: Record<string, number> }) {
+interface TierDistributionBarProps {
+  distribution: Record<string, number>
+  t: (key: string, opts?: Record<string, unknown>) => string
+}
+
+function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
   const tiers = aggregateTiers(distribution)
-  const total = tiers.reduce((s, t) => s + t.count, 0)
+  const total = tiers.reduce((s, tier) => s + tier.count, 0)
   if (total === 0) return null
 
   return (
     <div className="space-y-3">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-        Distribucion por nivel — {formatNumber(total)} instituciones
+        {t('distribution.subtitle', { total: formatNumber(total) })}
       </p>
-      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label="Distribucion por nivel de transparencia">
+      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label={t('distribution.ariaLabel')}>
         {tiers.map(({ tier, count }) => {
           const pct = (count / total) * 100
           if (pct < 0.3) return null
+          const tierKey = tier.label as string
+          const displayLabel = t(`tiers.${tierKey}`)
           return (
             <div
               key={tier.label}
               className="relative flex items-center justify-center overflow-hidden"
               style={{ width: `${pct}%`, backgroundColor: tier.color, minWidth: '4px', opacity: 0.88 }}
-              title={`${tier.label}: ${count} (${pct.toFixed(1)}%)`}
+              title={`${displayLabel}: ${count} (${pct.toFixed(1)}%)`}
             >
               {pct > 8 && (
                 <span className="text-[9px] font-mono font-black text-black/70 leading-none select-none truncate px-1">
-                  {tier.label}
+                  {displayLabel}
                 </span>
               )}
             </div>
@@ -182,12 +190,14 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
         })}
       </div>
       <div className="flex flex-wrap gap-x-4 gap-y-1">
-        {tiers.filter((t) => t.count > 0).map(({ tier, count }) => {
+        {tiers.filter((tier) => tier.count > 0).map(({ tier, count }) => {
           const pct = ((count / total) * 100).toFixed(1)
+          const tierKey = tier.label as string
+          const displayLabel = t(`tiers.${tierKey}`)
           return (
             <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
-              <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
+              <span className="font-mono font-bold" style={{ color: tier.color }}>{displayLabel}</span>
               <span className="tabular-nums text-zinc-500">{formatNumber(count)}</span>
               <span className="tabular-nums text-zinc-600">({pct}%)</span>
             </span>
@@ -208,25 +218,26 @@ interface PillarBarsProps {
   vendors: number
   process: number
   external: number
+  t: (key: string) => string
 }
 
-function PillarBars({ openness, price, vendors, process, external }: PillarBarsProps) {
+function PillarBars({ openness, price, vendors, process, external, t }: PillarBarsProps) {
   const pillars = [
-    { key: 'openness', label: 'Apert', value: openness, max: PILLAR_MAXES.openness },
-    { key: 'price',    label: 'Prec',  value: price,    max: PILLAR_MAXES.price    },
-    { key: 'vendors',  label: 'Prov',  value: vendors,  max: PILLAR_MAXES.vendors  },
-    { key: 'process',  label: 'Proc',  value: process,  max: PILLAR_MAXES.process  },
-    { key: 'external', label: 'Ext',   value: external, max: PILLAR_MAXES.external },
+    { key: 'openness', labelKey: 'pillars.apert', value: openness, max: PILLAR_MAXES.openness },
+    { key: 'price',    labelKey: 'pillars.prec',  value: price,    max: PILLAR_MAXES.price    },
+    { key: 'vendors',  labelKey: 'pillars.prov',  value: vendors,  max: PILLAR_MAXES.vendors  },
+    { key: 'process',  labelKey: 'pillars.proc',  value: process,  max: PILLAR_MAXES.process  },
+    { key: 'external', labelKey: 'pillars.ext',   value: external, max: PILLAR_MAXES.external },
   ]
 
   return (
-    <div className="space-y-1" aria-label="Puntuaciones por pilar">
-      {pillars.map(({ key, label, value, max }) => {
+    <div className="space-y-1" aria-label={t('pillarsChart.ariaLabel')}>
+      {pillars.map(({ key, labelKey, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
         const color = pct > 70 ? '#4ade80' : pct > 40 ? '#fbbf24' : '#f87171'
         return (
           <div key={key} className="flex items-center gap-2">
-            <span className="text-[9px] font-mono text-zinc-600 w-8 flex-shrink-0">{label}</span>
+            <span className="text-[9px] font-mono text-zinc-600 w-8 flex-shrink-0">{t(labelKey)}</span>
             <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
               <div
                 className="h-full rounded-full transition-all duration-300"
@@ -247,10 +258,10 @@ function PillarBars({ openness, price, vendors, process, external }: PillarBarsP
 // Trend icon
 // ---------------------------------------------------------------------------
 
-function TrendIcon({ direction }: { direction: string | null }) {
-  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label="Mejorando" />
-  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label="Deteriorando" />
-  return <Minus className="h-3 w-3 text-zinc-600" aria-label="Estable" />
+function TrendIcon({ direction, t }: { direction: string | null; t: (key: string) => string }) {
+  if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label={t('trend.improving')} />
+  if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label={t('trend.declining')} />
+  return <Minus className="h-3 w-3 text-zinc-600" aria-label={t('trend.stable')} />
 }
 
 // ---------------------------------------------------------------------------
@@ -260,11 +271,13 @@ function TrendIcon({ direction }: { direction: string | null }) {
 interface InstitutionCardProps {
   item: InstitutionScorecardItem
   onNavigate: (id: number) => void
+  t: (key: string, opts?: Record<string, unknown>) => string
 }
 
-function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
+function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
   const tier = gradeToTier(item.grade)
   const hasRedSignals = (item.signal_count_red ?? 0) > 0
+  const tierKey = tier.label as string
 
   return (
     <article
@@ -289,7 +302,7 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
             >
               {item.total_score.toFixed(0)}
             </span>
-            <span className="text-[9px] text-zinc-600 font-mono mt-0.5">/ 100</span>
+            <span className="text-[9px] text-zinc-600 font-mono mt-0.5">{t('table.outOf')}</span>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
@@ -302,14 +315,14 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
                 color: tier.color,
               }}
             >
-              {tier.label}
+              {t(`tiers.${tierKey}`)}
             </span>
 
             {/* Red signal badge */}
             {hasRedSignals && (
               <span
                 className="flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold text-red-400 bg-red-500/10 border border-red-500/20"
-                aria-label={`${item.signal_count_red} alertas rojas`}
+                aria-label={t('aria.redAlerts', { count: item.signal_count_red })}
               >
                 <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
                 {item.signal_count_red}
@@ -334,10 +347,10 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
         {/* Percentile + trend */}
         <div className="flex items-center justify-between gap-2">
           <span className="text-[10px] text-zinc-400 font-mono tabular-nums">
-            Percentil {Math.round((item.national_percentile ?? 0) * 100)}
+            {t('table.percentile', { n: Math.round((item.national_percentile ?? 0) * 100) })}
           </span>
           <div className="flex items-center gap-1.5">
-            <TrendIcon direction={item.trend_direction} />
+            <TrendIcon direction={item.trend_direction} t={t} />
           </div>
         </div>
 
@@ -348,6 +361,7 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
           vendors={item.pillar_vendors}
           process={item.pillar_process}
           external={item.pillar_external}
+          t={t}
         />
 
         {/* Top risk driver */}
@@ -366,10 +380,10 @@ function InstitutionCard({ item, onNavigate }: InstitutionCardProps) {
         className="flex items-center justify-center gap-1.5 py-2 border-t text-[10px] font-semibold transition-colors focus:outline-none"
         style={{ borderColor: tier.border, color: tier.color }}
         onClick={(e) => { e.stopPropagation(); onNavigate(item.institution_id) }}
-        aria-label={`Ver perfil de ${item.institution_name}`}
+        aria-label={t('aria.profileLink', { name: item.institution_name })}
         tabIndex={-1}
       >
-        Ver Perfil
+        {t('table.viewProfile')}
       </button>
     </article>
   )
@@ -453,9 +467,10 @@ interface TierChipProps {
   active: boolean
   count: number
   onClick: () => void
+  t: (key: string, opts?: Record<string, unknown>) => string
 }
 
-function TierChip({ tierName, active, count, onClick }: TierChipProps) {
+function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
   const tier = TIER_MAP[tierName] ?? TIER_MAP.Critico
   return (
     <button
@@ -468,10 +483,10 @@ function TierChip({ tierName, active, count, onClick }: TierChipProps) {
         boxShadow: active ? `0 0 20px ${tier.color}60` : 'none',
       }}
       aria-pressed={active}
-      aria-label={`Filtrar nivel ${tierName}, ${count} instituciones`}
+      aria-label={t('aria.filterTier', { tier: tierName, count })}
     >
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? '#000' : tier.color }} aria-hidden="true" />
-      {tierName}
+      {t(`tiers.${tierName}`)}
       <span
         className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded"
         style={{
@@ -493,6 +508,7 @@ function TierChip({ tierName, active, count, onClick }: TierChipProps) {
 const PER_PAGE = 50
 
 export default function InstitutionScorecards() {
+  const { t } = useTranslation('institutionScorecards')
   const navigate = useNavigate()
   const [page, setPage] = useState(1)
   const [selectedTier, setSelectedTier] = useState<string | null>(null)
@@ -586,22 +602,20 @@ export default function InstitutionScorecards() {
           <div className="flex items-center gap-2 mb-3">
             <Award className="h-4 w-4 text-violet-400" aria-hidden="true" />
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-violet-400">
-              Transparencia Institucional · Expedientes Individuales
+              {t('pageTitle')}
             </p>
           </div>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-            Explora la transparencia de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones federales.
+            {t('pageSubtitle', { total: stats ? formatNumber(stats.total_scored) : '2,563' })}
           </h1>
           <p className="mt-4 text-base text-zinc-400 max-w-3xl leading-relaxed">
-            Explora y filtra las calificaciones de {stats ? formatNumber(stats.total_scored) : '2,563'} instituciones federales.
-            Cada tarjeta es un expediente independiente — basado en 5 pilares: apertura, precios, diversidad de proveedores,
-            proceso e incidencias externas.
+            {t('description')}
           </p>
           {/* Clarifying info badge */}
           <div className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-violet-500/10 border border-violet-500/25">
             <span className="h-1.5 w-1.5 rounded-full bg-violet-400" aria-hidden="true" />
             <span className="text-[11px] font-mono uppercase tracking-wide text-violet-300">
-              Calificaciones individuales, no promedio nacional
+              {t('note')}
             </span>
           </div>
         </div>
@@ -610,34 +624,34 @@ export default function InstitutionScorecards() {
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
 
         {/* -- STATS ROW -------------------------------------------------- */}
-        <section aria-label="Estadisticas generales">
+        <section aria-label={t('aria.stats')}>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
             {statsLoading ? (
               Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
             ) : (
               <>
                 <StatCard
-                  label="Instituciones Evaluadas"
+                  label={t('stats.evaluated')}
                   value={formatNumber(stats?.total_scored ?? 2563)}
-                  sub="Instituciones del gobierno federal"
+                  sub={t('stats.federal')}
                   accentColor="#6366f1"
                 />
                 <StatCard
-                  label="Mejor Institucion"
+                  label={t('stats.best')}
                   value={topScore != null ? topScore.toFixed(1) : '--'}
                   sub={topName.length > 40 ? topName.slice(0, 40) + '...' : topName}
                   accentColor="#34d399"
                 />
                 <StatCard
-                  label="Institucion Mas Debil"
+                  label={t('stats.weakest')}
                   value={worstScore != null ? worstScore.toFixed(1) : '--'}
                   sub={worstName.length > 40 ? worstName.slice(0, 40) + '...' : worstName}
                   accentColor="#dc2626"
                 />
                 <StatCard
-                  label="Puntuacion Mediana"
+                  label={t('stats.median')}
                   value={stats?.median_score != null ? stats.median_score.toFixed(1) : '--'}
-                  sub="de 100 puntos"
+                  sub={t('stats.outOf100')}
                   accentColor="#fbbf24"
                 />
               </>
@@ -648,7 +662,7 @@ export default function InstitutionScorecards() {
         {/* -- TIER DISTRIBUTION BAR -------------------------------------- */}
         <section
           className="rounded-xl border border-white/8 bg-zinc-900/60 p-5"
-          aria-label="Distribucion por nivel"
+          aria-label={t('aria.distributionSection')}
         >
           {statsLoading ? (
             <div className="space-y-3">
@@ -661,16 +675,16 @@ export default function InstitutionScorecards() {
               </div>
             </div>
           ) : (
-            <TierDistributionBar distribution={gradeDistribution} />
+            <TierDistributionBar distribution={gradeDistribution} t={t} />
           )}
         </section>
 
         {/* -- FILTER BAR ------------------------------------------------- */}
-        <section className="space-y-4" aria-label="Filtros">
+        <section className="space-y-4" aria-label={t('aria.filters')}>
           {/* Tier chips — prominent filter row */}
           <div className="flex flex-wrap items-center gap-2.5">
             <span className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-400 mr-1">
-              Filtrar por nivel:
+              {t('filters.byLevel')}
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
@@ -681,10 +695,10 @@ export default function InstitutionScorecards() {
               }`}
               aria-pressed={selectedTier === null}
             >
-              Todos
+              {t('tiers.all')}
             </button>
             {TIER_NAMES.map((tierName) => {
-              const tierData = tierDistribution.find(t => t.tier.label === tierName)
+              const tierData = tierDistribution.find(td => td.tier.label === tierName)
               return (
                 <TierChip
                   key={tierName}
@@ -692,6 +706,7 @@ export default function InstitutionScorecards() {
                   active={selectedTier === tierName}
                   count={tierData?.count ?? 0}
                   onClick={() => handleTierClick(tierName)}
+                  t={t}
                 />
               )
             })}
@@ -702,32 +717,38 @@ export default function InstitutionScorecards() {
             {/* Sort controls */}
             <div className="flex items-center gap-2">
               <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-500">
-                Ordenar:
+                {t('filters.sort')}
               </span>
               {(
                 [
-                  { key: 'total_score' as SortKey, label: 'Puntuacion' },
-                  { key: 'national_percentile' as SortKey, label: 'Percentil' },
-                  { key: 'institution_name' as SortKey, label: 'Nombre' },
+                  { key: 'total_score' as SortKey, labelKey: 'filters.sortScore' },
+                  { key: 'national_percentile' as SortKey, labelKey: 'filters.sortPercentile' },
+                  { key: 'institution_name' as SortKey, labelKey: 'filters.sortName' },
                 ] as const
-              ).map(({ key, label }) => (
-                <button
-                  key={key}
-                  onClick={() => handleSortChange(key)}
-                  className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
-                    sortBy === key
-                      ? 'bg-zinc-700 border-white/20 text-white'
-                      : 'bg-transparent border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
-                  }`}
-                  aria-pressed={sortBy === key}
-                  aria-label={`Ordenar por ${label} ${sortBy === key ? (sortOrder === 'desc' ? 'descendente' : 'ascendente') : ''}`}
-                >
-                  {label}
-                  {sortBy === key && (
-                    <span className="text-[9px]">{sortOrder === 'desc' ? '\u2193' : '\u2191'}</span>
-                  )}
-                </button>
-              ))}
+              ).map(({ key, labelKey }) => {
+                const label = t(labelKey)
+                const dirLabel = sortBy === key
+                  ? (sortOrder === 'desc' ? t('aria.sortDesc') : t('aria.sortAsc'))
+                  : ''
+                return (
+                  <button
+                    key={key}
+                    onClick={() => handleSortChange(key)}
+                    className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                      sortBy === key
+                        ? 'bg-zinc-700 border-white/20 text-white'
+                        : 'bg-transparent border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
+                    }`}
+                    aria-pressed={sortBy === key}
+                    aria-label={t('aria.sortBy', { label, direction: dirLabel })}
+                  >
+                    {label}
+                    {sortBy === key && (
+                      <span className="text-[9px]">{sortOrder === 'desc' ? '\u2193' : '\u2191'}</span>
+                    )}
+                  </button>
+                )
+              })}
             </div>
 
             {/* Search */}
@@ -741,25 +762,25 @@ export default function InstitutionScorecards() {
                   type="search"
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
-                  placeholder="Buscar instituciones..."
+                  placeholder={t('filters.search')}
                   className="w-full rounded-lg border border-white/10 bg-zinc-800/80 pl-8 pr-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-colors"
-                  aria-label="Buscar instituciones por nombre"
+                  aria-label={t('aria.searchByName')}
                 />
               </div>
               <button
                 type="submit"
                 className="rounded-lg border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-white/20 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               >
-                Ir
+                {t('filters.go')}
               </button>
               {search && (
                 <button
                   type="button"
                   onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
                   className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
-                  aria-label="Limpiar busqueda"
+                  aria-label={t('aria.clearSearch')}
                 >
-                  Limpiar
+                  {t('filters.clear')}
                 </button>
               )}
             </form>
@@ -771,22 +792,21 @@ export default function InstitutionScorecards() {
               <Skeleton className="h-3 w-40 inline-block" />
             ) : (
               <>
-                Mostrando{' '}
-                <span className="text-zinc-300 font-semibold">{formatNumber(Math.min(PER_PAGE, institutions.length))}</span>
-                {' '}de{' '}
-                <span className="text-zinc-300 font-semibold">{formatNumber(totalCount)}</span>
-                {' '}instituciones
+                {t('pagination.showing', {
+                  from: formatNumber(Math.min(PER_PAGE, institutions.length)),
+                  total: formatNumber(totalCount),
+                })}
                 {selectedTier && (
-                  <> con nivel <span className="font-bold" style={{ color: TIER_MAP[selectedTier]?.color ?? '#dc2626' }}>{selectedTier}</span></>
+                  <>{t('pagination.withTier')}<span className="font-bold" style={{ color: TIER_MAP[selectedTier]?.color ?? '#dc2626' }}>{t(`tiers.${selectedTier}`)}</span></>
                 )}
-                {search && <> que coinciden con &quot;<span className="text-zinc-300">{search}</span>&quot;</>}
+                {search && <>{t('pagination.matching')}<span className="text-zinc-300">{search}</span>&quot;</>}
               </>
             )}
           </p>
         </section>
 
         {/* -- CARD GRID -------------------------------------------------- */}
-        <section aria-label="Tarjetas de instituciones" aria-busy={listLoading}>
+        <section aria-label={t('aria.cards')} aria-busy={listLoading}>
           <div
             className={`grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 transition-opacity duration-200 ${isPlaceholderData ? 'opacity-60' : 'opacity-100'}`}
             role="list"
@@ -799,7 +819,7 @@ export default function InstitutionScorecards() {
                 ))
               : institutions.map((item) => (
                   <div role="listitem" key={item.institution_id}>
-                    <InstitutionCard item={item} onNavigate={handleNavigate} />
+                    <InstitutionCard item={item} onNavigate={handleNavigate} t={t} />
                   </div>
                 ))}
           </div>
@@ -811,12 +831,13 @@ export default function InstitutionScorecards() {
               className="rounded-xl border border-white/8 bg-zinc-900/60 p-12 text-center"
             >
               <Building2 className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm text-zinc-500">No se encontraron instituciones con esos filtros.</p>
+              <p className="text-sm text-zinc-500">{t('noResults')}</p>
               <button
                 onClick={() => { setSelectedTier(null); setSearch(''); setSearchInput(''); setPage(1) }}
                 className="mt-3 text-xs text-zinc-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
+                aria-label={t('aria.clearFilters')}
               >
-                Limpiar todos los filtros
+                {t('aria.clearFilters')}
               </button>
             </div>
           )}
@@ -826,16 +847,16 @@ export default function InstitutionScorecards() {
         {totalPages > 1 && (
           <nav
             className="flex items-center justify-between"
-            aria-label="Paginacion"
+            aria-label={t('pagination.ariaLabel')}
           >
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
               className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Pagina anterior"
+              aria-label={t('pagination.previous')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-              Anterior
+              {t('pagination.previous')}
             </button>
 
             <div className="flex items-center gap-1">
@@ -863,7 +884,7 @@ export default function InstitutionScorecards() {
                         ? 'bg-white text-zinc-900'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
                     }`}
-                    aria-label={`Pagina ${pageNum}`}
+                    aria-label={t('pagination.pageLabel', { n: pageNum })}
                     aria-current={pageNum === page ? 'page' : undefined}
                   >
                     {pageNum}
@@ -876,9 +897,9 @@ export default function InstitutionScorecards() {
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
               className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
-              aria-label="Pagina siguiente"
+              aria-label={t('pagination.next')}
             >
-              Siguiente
+              {t('pagination.next')}
               <ChevronRight className="h-4 w-4" aria-hidden="true" />
             </button>
           </nav>
@@ -887,13 +908,10 @@ export default function InstitutionScorecards() {
         {/* Footer note — context footnote */}
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400/70 mb-1">
-            NOTA METODOLOGICA
+            {t('footnotes.title')}
           </p>
           <p className="text-[11px] text-zinc-400 leading-relaxed">
-            Las calificaciones reflejan indicadores estadisticos de transparencia en contratacion publica.
-            Una calificacion baja no es prueba de irregularidades, sino una senal para investigacion adicional.
-            Puntuacion basada en COMPRANET (2002-2025), modelo de riesgo v6.5, metodologia OCDE / FMI.
-            Instituciones con menos de 30 contratos pueden mostrar mayor variabilidad.
+            {t('footnotes.scoring')} {t('footnotes.minContracts')}
           </p>
         </div>
 

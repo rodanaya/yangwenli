@@ -89,6 +89,12 @@ import esPoliticalcycle from './locales/es/politicalcycle.json'
 import enPoliticalcycle from './locales/en/politicalcycle.json'
 import esCategories from './locales/es/categories.json'
 import enCategories from './locales/en/categories.json'
+import esRedThread from './locales/es/redThread.json'
+import enRedThread from './locales/en/redThread.json'
+import esProcurementCalendar from './locales/es/procurementCalendar.json'
+import enProcurementCalendar from './locales/en/procurementCalendar.json'
+import esInstitutionScorecards from './locales/es/institutionScorecards.json'
+import enInstitutionScorecards from './locales/en/institutionScorecards.json'
 
 i18n
   .use(LanguageDetector)
@@ -124,6 +130,9 @@ i18n
         settings: esSettings,
         politicalcycle: esPoliticalcycle,
         categories: esCategories,
+        redThread: esRedThread,
+        procurementCalendar: esProcurementCalendar,
+        institutionScorecards: esInstitutionScorecards,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -154,6 +163,9 @@ i18n
         settings: enSettings,
         politicalcycle: enPoliticalcycle,
         categories: enCategories,
+        redThread: enRedThread,
+        procurementCalendar: enProcurementCalendar,
+        institutionScorecards: enInstitutionScorecards,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

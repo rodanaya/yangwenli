@@ -906,7 +906,7 @@ export default function TrendsTab() {
                     />
                     <Scatter data={sectorBubbleData} fill="#58a6ff">
                       {sectorBubbleData.map((entry, index) => (
-                        <Cell key={index} fill={entry.color} fillOpacity={0.7} stroke={entry.color} strokeWidth={1} />
+                        <Cell key={entry.code ?? entry.name ?? index} fill={entry.color} fillOpacity={0.7} stroke={entry.color} strokeWidth={1} />
                       ))}
                     </Scatter>
                   </ScatterChart>
@@ -1010,7 +1010,7 @@ export default function TrendsTab() {
                     <Bar yAxisId="left" dataKey="contracts" radius={[2, 2, 0, 0]}>
                       {monthlyChartData.map((entry, index) => (
                         <Cell
-                          key={index}
+                          key={entry.month ?? index}
                           fill={entry.isYearEnd ? RISK_COLORS.high : 'var(--color-accent)'}
                           opacity={0.7}
                         />

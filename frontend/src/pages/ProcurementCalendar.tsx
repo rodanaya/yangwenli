@@ -7,6 +7,7 @@
  */
 
 import { useMemo, useState, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import { AlertTriangle, TrendingUp, Info, Calendar, Zap } from 'lucide-react'
@@ -38,25 +39,13 @@ interface WeekColumn {
 
 const AVAILABLE_YEARS = Array.from({ length: 2024 - 2015 + 1 }, (_, i) => 2024 - i)
 const DEFAULT_YEAR = 2024
-const DAY_LABELS = ['Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb', 'Dom']
-const MONTH_NAMES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic']
 const ELECTION_YEARS = new Set([2018, 2021, 2024]) // Federal election years in Mexico
 
-const SPANISH_WEEKDAYS: Record<number, string> = {
-  0: 'Domingo', 1: 'Lunes', 2: 'Martes', 3: 'Miércoles',
-  4: 'Jueves', 5: 'Viernes', 6: 'Sábado',
-}
-const SPANISH_MONTHS_FULL: Record<number, string> = {
-  0: 'enero', 1: 'febrero', 2: 'marzo', 3: 'abril',
-  4: 'mayo', 5: 'junio', 6: 'julio', 7: 'agosto',
-  8: 'septiembre', 9: 'octubre', 10: 'noviembre', 11: 'diciembre',
-}
-
-function formatSpanishDate(dateStr: string): string {
+function formatLocalDate(dateStr: string, weekdaysLong: string[], monthsLong: string[]): string {
   const d = new Date(dateStr + 'T12:00:00Z')
-  const weekday = SPANISH_WEEKDAYS[d.getUTCDay()]
+  const weekday = weekdaysLong[d.getUTCDay()]
   const day = d.getUTCDate()
-  const month = SPANISH_MONTHS_FULL[d.getUTCMonth()]
+  const month = monthsLong[d.getUTCMonth()]
   const year = d.getUTCFullYear()
   return `${weekday}, ${day} de ${month} de ${year}`
 }
@@ -169,8 +158,12 @@ interface TooltipState {
 }
 
 function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
+  const { t } = useTranslation('procurementCalendar')
+  const weekdaysLong = t('weekdays.long', { returnObjects: true }) as string[]
+  const monthsLong = t('months.long', { returnObjects: true }) as string[]
+
   const { day, x, y } = state
-  const formatted = formatSpanishDate(day.date)
+  const formatted = formatLocalDate(day.date, weekdaysLong, monthsLong)
   const riskPct = (day.risk_rate * 100).toFixed(1)
 
   const d = new Date(day.date + 'T12:00:00Z')
@@ -186,15 +179,15 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
       <div className="bg-stone-900 border border-stone-700 rounded-md shadow-xl px-3 py-2.5 text-xs min-w-[220px]">
         <div className="font-semibold text-stone-200 mb-1.5">{formatted}</div>
         <div className="flex justify-between gap-4 text-stone-400">
-          <span>Contratos</span>
+          <span>{t('tooltip.contracts')}</span>
           <span className="text-stone-200 font-mono">{formatNumber(day.total_contracts)}</span>
         </div>
         <div className="flex justify-between gap-4 text-stone-400">
-          <span>Alto riesgo</span>
+          <span>{t('tooltip.highRisk')}</span>
           <span className="text-orange-300 font-mono">{formatNumber(day.high_risk_contracts)}</span>
         </div>
         <div className="flex justify-between gap-4 text-stone-400">
-          <span>Tasa de riesgo</span>
+          <span>{t('tooltip.riskRate')}</span>
           <span
             className={cn(
               'font-mono',
@@ -208,12 +201,12 @@ function DayTooltip({ state, year }: { state: TooltipState; year: number }) {
         </div>
         {isDecember && (
           <div className="mt-1.5 pt-1.5 border-t border-stone-700/60 text-orange-400/80 text-[10px]">
-            Diciembre: período de cierre presupuestal
+            {t('events.budgetClose')}
           </div>
         )}
         {isElectionYear && month >= 3 && month <= 5 && (
           <div className="mt-1.5 pt-1.5 border-t border-stone-700/60 text-amber-400/80 text-[10px]">
-            Período pre-electoral federal
+            {t('events.preElectoral')}
           </div>
         )}
       </div>
@@ -233,6 +226,10 @@ interface CalendarGridProps {
 }
 
 function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: CalendarGridProps) {
+  const { t } = useTranslation('procurementCalendar')
+  const dayLabels = t('weekdays.short', { returnObjects: true }) as string[]
+  const monthNames = t('months.short', { returnObjects: true }) as string[]
+
   const CELL = 11
   const GAP = 3
 
@@ -249,7 +246,7 @@ function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: Calend
                 className="text-[10px] text-stone-500 font-mono"
                 style={{ width: CELL + GAP, minWidth: CELL + GAP }}
               >
-                {mp ? MONTH_NAMES[mp.month] : ''}
+                {mp ? monthNames[mp.month] : ''}
               </div>
             )
           })}
@@ -259,7 +256,7 @@ function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: Calend
         <div className="flex gap-0">
           {/* Day labels */}
           <div className="flex flex-col gap-0 mr-1" style={{ gap: GAP }}>
-            {DAY_LABELS.map((label, i) => (
+            {dayLabels.map((label, i) => (
               <div
                 key={label}
                 className="text-[9px] text-stone-600 font-mono flex items-center justify-end pr-1"
@@ -298,7 +295,7 @@ function CalendarGrid({ weeks, monthPositions, maxContracts, onTooltip }: Calend
                       }}
                       onMouseLeave={() => onTooltip(null)}
                       role="gridcell"
-                      aria-label={`${day.date}: ${day.total_contracts} contratos, ${(day.risk_rate * 100).toFixed(1)}% alto riesgo`}
+                      aria-label={`${day.date}: ${day.total_contracts} ${t('tooltip.contracts').toLowerCase()}, ${(day.risk_rate * 100).toFixed(1)}% ${t('tooltip.highRisk').toLowerCase()}`}
                     />
                   )
                 })}
@@ -398,17 +395,19 @@ function computeStats(days: CalendarDay[]): YearStats {
 // =============================================================================
 
 function Legend() {
+  const { t } = useTranslation('procurementCalendar')
+
   const swatches: { label: string; color: string }[] = [
-    { label: 'Sin contratos', color: 'hsl(220, 10%, 11%)' },
-    { label: 'Riesgo bajo (<10%)', color: getDayColor(100, 0.05, 3000) },
-    { label: 'Riesgo medio (10-20%)', color: getDayColor(400, 0.15, 3000) },
-    { label: 'Riesgo alto (>20%)', color: getDayColor(800, 0.25, 3000) },
-    { label: 'Riesgo crítico (>30%)', color: getDayColor(2000, 0.38, 3000) },
+    { label: t('legend.noContracts'), color: 'hsl(220, 10%, 11%)' },
+    { label: t('legend.riskLow'), color: getDayColor(100, 0.05, 3000) },
+    { label: t('legend.riskMedium'), color: getDayColor(400, 0.15, 3000) },
+    { label: t('legend.riskHigh'), color: getDayColor(800, 0.25, 3000) },
+    { label: t('legend.riskCritical'), color: getDayColor(2000, 0.38, 3000) },
   ]
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
-      <span className="font-mono uppercase tracking-wider text-stone-600 text-[10px]">Nivel de riesgo</span>
+      <span className="font-mono uppercase tracking-wider text-stone-600 text-[10px]">{t('legend.riskLevel')}</span>
       {swatches.map((s) => (
         <div key={s.label} className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
@@ -419,7 +418,7 @@ function Legend() {
         <div className="w-2 h-2 rounded-sm bg-stone-800" />
         <div className="w-2.5 h-2.5 rounded-sm bg-stone-700" />
         <div className="w-3 h-3 rounded-sm bg-stone-500" />
-        <span>Actividad (más oscuro = más contratos)</span>
+        <span>{t('legend.activity')}</span>
       </div>
     </div>
   )
@@ -430,14 +429,16 @@ function Legend() {
 // =============================================================================
 
 function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
+  const { t } = useTranslation('procurementCalendar')
+
   if (!stats.hasDecemberData) {
     return (
       <div className="rounded-xl border border-stone-800 bg-stone-900/40 p-5">
         <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-stone-600 mb-1">
-          RUBLI &middot; Diciembre bajo la lupa
+          {t('decemberSection.title')}
         </p>
         <p className="text-sm text-stone-500 italic">
-          Datos de diciembre no disponibles para {year}. El año seleccionado puede tener datos parciales.
+          {t('decemberSection.noData', { year })}
         </p>
       </div>
     )
@@ -455,14 +456,14 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
   return (
     <div className="rounded-xl border border-orange-800/30 bg-orange-950/10 p-5 space-y-4">
       <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-500 mb-1">
-        RUBLI &middot; Diciembre bajo la lupa
+        {t('decemberSection.title')}
       </p>
       <p className="text-sm text-stone-400 leading-relaxed">
-        El cierre presupuestal de diciembre concentra contrataciones aceleradas.
-        En {year}, diciembre acumuló{' '}
-        <span className="text-stone-200 font-semibold">{formatNumber(stats.decemberContracts)}</span>{' '}
-        contratos frente a un promedio mensual de{' '}
-        <span className="text-stone-200 font-semibold">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>.
+        {t('decemberSection.subtitle', {
+          year,
+          dec: formatNumber(stats.decemberContracts),
+          avg: formatNumber(Math.round(stats.avgMonthlyContracts)),
+        })}
       </p>
 
       {/* Comparison bars */}
@@ -470,12 +471,12 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
         {/* Volume comparison */}
         <div className="space-y-2">
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600">
-            Volumen de contratos
+            {t('decemberSection.volume')}
           </div>
           <div className="space-y-1.5">
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-orange-400">Diciembre</span>
+                <span className="text-orange-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{formatNumber(stats.decemberContracts)}</span>
               </div>
               <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
@@ -487,7 +488,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-stone-500">Promedio mensual</span>
+                <span className="text-stone-500">{t('decemberSection.monthlyAvg')}</span>
                 <span className="text-stone-500 font-mono">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>
               </div>
               <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
@@ -503,12 +504,12 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
         {/* Risk comparison */}
         <div className="space-y-2">
           <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600">
-            Tasa de riesgo
+            {t('decemberSection.riskRate')}
           </div>
           <div className="space-y-1.5">
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-red-400">Diciembre</span>
+                <span className="text-red-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{decRiskPct}%</span>
               </div>
               <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
@@ -520,7 +521,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
-                <span className="text-stone-500">Resto del año</span>
+                <span className="text-stone-500">{t('decemberSection.restOfYear')}</span>
                 <span className="text-stone-500 font-mono">{annualRiskPct}%</span>
               </div>
               <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
@@ -542,6 +543,10 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
 // =============================================================================
 
 export default function ProcurementCalendar() {
+  const { t } = useTranslation('procurementCalendar')
+  const weekdaysLong = t('weekdays.long', { returnObjects: true }) as string[]
+  const monthsLong = t('months.long', { returnObjects: true }) as string[]
+
   const [year, setYear] = useState(DEFAULT_YEAR)
   const [tooltip, setTooltip] = useState<TooltipState | null>(null)
   const scrollRef = useRef<HTMLDivElement>(null)
@@ -576,9 +581,9 @@ export default function ProcurementCalendar() {
       <div className="border-b border-stone-800 px-6 py-5">
         <div className="max-w-6xl mx-auto">
           <EditorialHeadline
-            section="Calendario de Riesgo Presupuestal"
-            headline="El calendario del gasto sospechoso"
-            subtitle="Actividad contractual y nivel de riesgo por día. Los patrones de fin de año y año electoral revelan comportamientos sistemáticos."
+            section={t('section')}
+            headline={t('headline')}
+            subtitle={t('headlineSubtitle')}
             className="mb-2"
           />
         </div>
@@ -588,17 +593,13 @@ export default function ProcurementCalendar() {
         {/* Editorial lede */}
         <div className="max-w-3xl">
           <p className="text-sm text-stone-400 leading-relaxed">
-            Cada celda representa un día. Los colores indican el nivel de riesgo promedio
-            de los contratos adjudicados ese día: el rojo intenso señala días donde la
-            mayoría de contratos presentan factores de riesgo. Los patrones de diciembre
-            son especialmente reveladores &mdash; el &ldquo;subejercicio&rdquo; de fin de año concentra
-            contrataciones que en circunstancias normales habrían sido licitadas.
+            {t('lede')}
           </p>
         </div>
 
         {/* Year selector */}
         <div className="flex flex-wrap gap-2 items-center">
-          <span className="text-[10px] font-mono uppercase tracking-widest text-stone-600 mr-2">Año</span>
+          <span className="text-[10px] font-mono uppercase tracking-widest text-stone-600 mr-2">{t('yearLabel')}</span>
           {AVAILABLE_YEARS.map((y) => (
             <button
               key={y}
@@ -616,7 +617,7 @@ export default function ProcurementCalendar() {
               {ELECTION_YEARS.has(y) && <span className="ml-1 text-[9px] align-top text-amber-500">*</span>}
             </button>
           ))}
-          <span className="text-[9px] text-amber-600/70 font-mono ml-1">* año electoral</span>
+          <span className="text-[9px] text-amber-600/70 font-mono ml-1">{t('electionSuffix')}</span>
         </div>
 
         {/* Stats row */}
@@ -629,25 +630,25 @@ export default function ProcurementCalendar() {
         >
           <HallazgoStat
             value={isLoading ? '—' : formatNumber(stats.totalContracts)}
-            label={`Contratos en ${year}`}
+            label={t('stats.contractsInYear', { year })}
             color="border-blue-500"
           />
           <HallazgoStat
             value={isLoading ? '—' : formatNumber(stats.highRiskContracts)}
-            label="Contratos de alto riesgo"
+            label={t('stats.highRiskContracts')}
             color="border-red-500"
-            annotation={isLoading ? undefined : `${(stats.highRiskRate * 100).toFixed(1)}% del total`}
+            annotation={isLoading ? undefined : t('stats.ofTotal', { pct: (stats.highRiskRate * 100).toFixed(1) })}
           />
           <HallazgoStat
             value={
               isLoading || !stats.peakDay ? '—'
               : new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { month: 'short', day: 'numeric', timeZone: 'UTC' })
             }
-            label="Día más activo"
+            label={t('stats.mostActiveDay')}
             color="border-amber-500"
             annotation={
               isLoading || !stats.peakDay ? undefined
-              : `${formatNumber(stats.peakDay.total_contracts)} contratos`
+              : t('stats.contractsCount', { num: formatNumber(stats.peakDay.total_contracts) })
             }
           />
           <HallazgoStat
@@ -655,9 +656,9 @@ export default function ProcurementCalendar() {
               isLoading || !stats.decemberJanuaryRatio ? '—'
               : `${stats.decemberJanuaryRatio.toFixed(1)}x`
             }
-            label="Dic vs Ene contratos"
+            label={t('stats.decVsJan')}
             color="border-orange-500"
-            annotation="Indicador de cierre presupuestal"
+            annotation={t('stats.budgetCloseIndicator')}
           />
         </motion.div>
 
@@ -666,9 +667,7 @@ export default function ProcurementCalendar() {
           <div className="flex items-start gap-3 rounded-lg border border-amber-700/40 bg-amber-950/20 px-4 py-3">
             <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-300 leading-relaxed">
-              <span className="font-semibold">Año electoral federal</span> &mdash; Los contratos en período pre-electoral
-              pueden mostrar patrones atípicos de adjudicación directa. Compare los meses previos
-              a la elección con años no electorales.
+              <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
             </p>
           </div>
         )}
@@ -677,7 +676,7 @@ export default function ProcurementCalendar() {
         <div className="space-y-3">
           <div className="flex items-center justify-between">
             <h2 className="text-sm font-mono uppercase tracking-widest text-stone-500">
-              Actividad diaria {year}
+              {t('calendarHeader', { year })}
             </h2>
           </div>
 
@@ -689,13 +688,11 @@ export default function ProcurementCalendar() {
               <CalendarSkeleton />
             ) : isError ? (
               <div className="text-stone-500 text-sm py-8 text-center">
-                No se pudieron cargar los datos del calendario. COMPRANET puede estar temporalmente
-                no disponible &mdash; mostrando datos en caché si existen.
+                {t('error.load')}
               </div>
             ) : days.length === 0 ? (
               <div className="text-stone-500 text-sm py-8 text-center">
-                Sin datos disponibles para {year}. Los registros de COMPRANET para este año
-                aún no han sido procesados o el año está fuera del rango de cobertura (2015-2024).
+                {t('error.noData', { year })}
               </div>
             ) : (
               <CalendarGrid
@@ -723,13 +720,13 @@ export default function ProcurementCalendar() {
             {stats.peakDay && (
               <div className="border border-stone-800 bg-stone-900/40 rounded-lg p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600 mb-1">
-                  Día más activo
+                  {t('insights.mostActiveDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-stone-200">
                   {new Date(stats.peakDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                 </div>
                 <div className="text-[11px] text-stone-500">
-                  {formatNumber(stats.peakDay.total_contracts)} contratos
+                  {t('stats.contractsCount', { num: formatNumber(stats.peakDay.total_contracts) })}
                 </div>
               </div>
             )}
@@ -738,13 +735,13 @@ export default function ProcurementCalendar() {
             {stats.highestRiskDay && (
               <div className="border border-red-900/40 bg-red-950/10 rounded-lg p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-red-600 mb-1">
-                  Día de mayor riesgo
+                  {t('insights.peakRiskDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-red-400">
                   {(stats.highestRiskDay.risk_rate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-stone-500">
-                  {formatSpanishDate(stats.highestRiskDay.date).split(',')[0]},{' '}
+                  {formatLocalDate(stats.highestRiskDay.date, weekdaysLong, monthsLong).split(',')[0]},{' '}
                   {new Date(stats.highestRiskDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', { day: 'numeric', month: 'short', timeZone: 'UTC' })}
                 </div>
               </div>
@@ -754,13 +751,13 @@ export default function ProcurementCalendar() {
             {stats.hasDecemberData && (
               <div className="border border-orange-900/40 bg-orange-950/10 rounded-lg p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-orange-600 mb-1">
-                  Riesgo en diciembre
+                  {t('insights.decemberRisk')}
                 </div>
                 <div className="text-lg font-bold font-mono text-orange-400">
                   {(stats.decemberRiskRate * 100).toFixed(1)}%
                 </div>
                 <div className="text-[11px] text-stone-500">
-                  vs {(stats.nonDecemberRiskRate * 100).toFixed(1)}% resto del año
+                  {t('insights.vsRestOfYear', { pct: (stats.nonDecemberRiskRate * 100).toFixed(1) })}
                 </div>
               </div>
             )}
@@ -776,18 +773,18 @@ export default function ProcurementCalendar() {
                 'text-[10px] font-mono uppercase tracking-wider mb-1',
                 isElectionYear ? 'text-amber-600' : 'text-stone-600'
               )}>
-                Tipo de año
+                {t('insights.yearType')}
               </div>
               <div className={cn(
                 'text-lg font-bold font-mono',
                 isElectionYear ? 'text-amber-400' : 'text-stone-400'
               )}>
-                {isElectionYear ? 'Electoral' : 'Regular'}
+                {isElectionYear ? t('insights.electoral') : t('insights.regular')}
               </div>
               <div className="text-[11px] text-stone-500">
                 {isElectionYear
-                  ? 'Compare con años no electorales'
-                  : 'Sin elecciones federales'}
+                  ? t('insights.compareElectoral')
+                  : t('insights.noFederalElections')}
               </div>
             </div>
           </motion.div>
@@ -802,7 +799,7 @@ export default function ProcurementCalendar() {
             className="space-y-3"
           >
             <h3 className="text-[10px] font-mono uppercase tracking-widest text-stone-600">
-              Patrones detectados &mdash; {year}
+              {t('patterns.title', { year })}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* December spike annotation */}
@@ -811,10 +808,10 @@ export default function ProcurementCalendar() {
                   <TrendingUp className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-orange-300">
-                      Diciembre {year}: {formatNumber(stats.decemberContracts)} contratos
+                      {t('patterns.decemberSpike', { year, num: formatNumber(stats.decemberContracts) })}
                     </div>
                     <div className="text-xs text-stone-400 mt-0.5">
-                      {decemberSpikeRatio.toFixed(1)}x el promedio mensual &mdash; cierre presupuestal detectado
+                      {t('patterns.decemberSpikeDetail', { ratio: decemberSpikeRatio.toFixed(1) })}
                     </div>
                   </div>
                 </div>
@@ -826,11 +823,10 @@ export default function ProcurementCalendar() {
                   <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-amber-300">
-                      Patrón de año electoral
+                      {t('patterns.electionPattern')}
                     </div>
                     <div className="text-xs text-stone-400 mt-0.5">
-                      Elecciones federales en {year} &mdash; la contratación típicamente se
-                      acelera en los meses previos mientras los gobiernos en turno aceleran el gasto
+                      {t('patterns.electionDetail', { year })}
                     </div>
                   </div>
                 </div>
@@ -842,13 +838,18 @@ export default function ProcurementCalendar() {
                   <Info className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold">
-                      Día de mayor riesgo:{' '}
-                      {new Date(stats.highestRiskDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', {
-                        month: 'long', day: 'numeric', timeZone: 'UTC'
+                      {t('patterns.peakRiskDayLabel', {
+                        date: new Date(stats.highestRiskDay.date + 'T12:00:00Z').toLocaleDateString('es-MX', {
+                          month: 'long', day: 'numeric', timeZone: 'UTC'
+                        }),
                       })}
                     </div>
                     <div className="text-xs text-stone-400 mt-0.5">
-                      {(stats.highestRiskDay.risk_rate * 100).toFixed(1)}% tasa de riesgo &mdash; {formatNumber(stats.highestRiskDay.high_risk_contracts)} de {formatNumber(stats.highestRiskDay.total_contracts)} contratos marcados
+                      {t('patterns.peakRiskDayDetail', {
+                        pct: (stats.highestRiskDay.risk_rate * 100).toFixed(1),
+                        high: formatNumber(stats.highestRiskDay.high_risk_contracts),
+                        total: formatNumber(stats.highestRiskDay.total_contracts),
+                      })}
                     </div>
                   </div>
                 </div>
@@ -865,23 +866,20 @@ export default function ProcurementCalendar() {
         {/* Editorial findings callout */}
         <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 mb-2">
-            HALLAZGO
+            {t('finding.label')}
           </p>
           <p className="text-sm text-stone-300 leading-relaxed">
-            24 años consecutivos de picos de gasto en diciembre. El cierre presupuestal es estructural,
-            no accidental. Cada administración, sin importar el partido, agota el presupuesto restante
-            en diciembre &mdash; creando una ventana predecible de contratación acelerada y con menor
-            escrutinio que concentra una proporción desproporcionada de contratación de alto riesgo.
+            {t('finding.body')}
           </p>
           <p className="text-xs text-stone-500 mt-2 italic">
-            OCDE: La tasa de adjudicación directa en México supera el 80% &mdash; más de 3x el límite recomendado del 25%.
+            {t('finding.oecd')}
           </p>
         </div>
 
         {/* Source footnote */}
         <div className="text-[10px] text-stone-600 pt-2 border-t border-stone-800/50">
-          <Calendar className="w-3 h-3 inline-block mr-1 -mt-0.5" />
-          Fuente: COMPRANET &middot; 3.06M contratos (2002-2025) &middot; Modelo de riesgo v0.6.5 (AUC=0.828)
+          <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" />
+          {t('source')}
         </div>
       </div>
 

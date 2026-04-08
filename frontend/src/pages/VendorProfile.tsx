@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from 'react'
+import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -88,6 +89,7 @@ import { cn } from '@/lib/utils'
 import { motion, useInView } from 'framer-motion'
 import { slideUp, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
+import { ReportIssueDialog } from '@/components/ReportIssueDialog'
 
 // ============================================================================
 // ScrollSection — editorial scroll-reveal wrapper
@@ -139,52 +141,7 @@ const MODEL_COEFFICIENTS: Record<string, number> = {
 // ============================================================================
 // Simple Tabs implementation (no external dependency needed)
 // ============================================================================
-interface TabsProps {
-  defaultTab: string
-  tabs: Array<{ key: string; label: string; icon?: React.ElementType }>
-  children: React.ReactNode
-  onTabChange?: (tab: string) => void
-}
-
-function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
-  const [active, setActive] = useState(defaultTab)
-  const handleTabChange = (key: string) => {
-    setActive(key)
-    onTabChange?.(key)
-  }
-  return (
-    <div>
-      <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          return (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all',
-                active === tab.key
-                  ? 'border-accent text-accent bg-accent/5'
-                  : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-background-elevated/30'
-              )}
-            >
-              {Icon && <Icon className="h-3.5 w-3.5" />}
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
-      {/* Render only the active tab panel */}
-      {Array.isArray(children)
-        ? (children as React.ReactElement[]).find((c) => (c?.props as any)?.tabKey === active)
-        : children}
-    </div>
-  )
-}
-
-function TabPanel({ tabKey: _tabKey, children }: { tabKey: string; children: React.ReactNode }) {
-  return <div>{children}</div>
-}
+// SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
 // ============================================================================
 // PlainLanguageRiskCard — journalist-facing plain-English risk summary
@@ -197,46 +154,6 @@ interface PlainLanguageRiskCardProps {
   singleBidPct: number
   totalContracts: number
   totalValueMxn: number
-}
-
-function buildRiskSentence(
-  name: string,
-  directAwardPct: number,
-  singleBidPct: number,
-  avgRiskScore: number,
-): string {
-  const boldName = name
-
-  // Pick the strongest procurement signal
-  if (directAwardPct > 70) {
-    const multiple = (directAwardPct / 35).toFixed(1)
-    return `${boldName} bypasses competitive bidding on ${directAwardPct.toFixed(0)}% of contracts — ${multiple}× the national average of 35%.`
-  }
-
-  if (singleBidPct > 25) {
-    return `${boldName} wins ${singleBidPct.toFixed(0)}% of competitive bids unopposed — a single-bidder pattern consistent with market capture.`
-  }
-
-  // Fallback: reference ground truth similarity
-  const riskLevel = avgRiskScore >= 0.60 ? 'critical' : avgRiskScore >= 0.40 ? 'high' : 'medium'
-  const caseCount = riskLevel === 'critical' ? 9 : riskLevel === 'high' ? 6 : 3
-  return `${boldName} shows procurement patterns that closely resemble ${caseCount} documented corruption cases in the RUBLI ground truth database.`
-}
-
-function buildScaleSentence(totalValueMxn: number, totalContracts: number): string | null {
-  if (totalValueMxn > 1e9) {
-    const formatted =
-      totalValueMxn >= 1e12
-        ? `MXN ${(totalValueMxn / 1e12).toFixed(1)}T`
-        : totalValueMxn >= 1e9
-          ? `MXN ${(totalValueMxn / 1e9).toFixed(1)}B`
-          : `MXN ${(totalValueMxn / 1e6).toFixed(0)}M`
-    return `Total contract value of ${formatted} places it among Mexico's highest-value government suppliers.`
-  }
-  if (totalContracts > 500) {
-    return `${totalContracts.toLocaleString()} contracts over its procurement history suggests deep institutional relationships.`
-  }
-  return null
 }
 
 function PlainLanguageRiskCard({
@@ -252,8 +169,29 @@ function PlainLanguageRiskCard({
   if (avgRiskScore < 0.25) return null
 
   const displayName = vendorName
-  const mainSentence = buildRiskSentence(displayName, directAwardPct, singleBidPct, avgRiskScore)
-  const scaleSentence = buildScaleSentence(totalValueMxn, totalContracts)
+  const mainSentence = (() => {
+    if (directAwardPct > 70) {
+      const multiple = (directAwardPct / 35).toFixed(1)
+      return t('plainLanguage.riskSentence.highDirectAward', { name: displayName, pct: directAwardPct.toFixed(0), multiple })
+    }
+    if (singleBidPct > 25) {
+      return t('plainLanguage.riskSentence.highSingleBid', { name: displayName, pct: singleBidPct.toFixed(0) })
+    }
+    const caseCount = avgRiskScore >= 0.60 ? 9 : avgRiskScore >= 0.40 ? 6 : 3
+    return t('plainLanguage.riskSentence.highRiskPattern', { name: displayName, count: caseCount })
+  })()
+  const scaleSentence = (() => {
+    if (totalValueMxn > 1e9) {
+      const amount = totalValueMxn >= 1e12
+        ? `MXN ${(totalValueMxn / 1e12).toFixed(1)}T`
+        : `MXN ${(totalValueMxn / 1e9).toFixed(1)}B`
+      return t('plainLanguage.scaleSentence.highValue', { amount })
+    }
+    if (totalContracts > 500) {
+      return t('plainLanguage.scaleSentence.highCount', { total: totalContracts.toLocaleString() })
+    }
+    return null
+  })()
 
   // Build key signal pills
   const signals: string[] = [
@@ -843,6 +781,8 @@ export function VendorProfile() {
 
   // RFC copy button state
   const [rfcCopied, setRfcCopied] = useState(false)
+  // Dispute dialog state
+  const [disputeOpen, setDisputeOpen] = useState(false)
   // CSV export loading state for the header button
   const [csvExporting, setCsvExporting] = useState(false)
 
@@ -855,7 +795,7 @@ export function VendorProfile() {
   })
 
   // Fetch vendor risk profile
-  const { data: riskProfile, isLoading: riskLoading } = useQuery({
+  const { data: riskProfile, isLoading: riskLoading, isError: riskProfileError } = useQuery({
     queryKey: ['vendor', vendorId, 'risk-profile'],
     queryFn: () => vendorApi.getRiskProfile(vendorId),
     enabled: !!vendorId,
@@ -863,23 +803,15 @@ export function VendorProfile() {
   })
 
   // Fetch vendor's contracts — server-side paginated
-  const { data: contracts, isLoading: contractsLoading } = useQuery({
+  const { data: contracts, isLoading: contractsLoading, isError: contractsError } = useQuery({
     queryKey: ['vendor', vendorId, 'contracts', contractPage],
     queryFn: () => vendorApi.getContracts(vendorId, { per_page: CONTRACTS_PER_PAGE, page: contractPage }),
     enabled: !!vendorId,
     staleTime: 2 * 60 * 1000,
   })
 
-  // Fetch larger batch for chart visualizations (separate from table pagination)
-  const { data: contractsForCharts } = useQuery({
-    queryKey: ['vendor', vendorId, 'contracts-charts'],
-    queryFn: () => vendorApi.getContracts(vendorId, { per_page: 100 }),
-    enabled: !!vendorId,
-    staleTime: 5 * 60 * 1000,
-  })
-
   // Fetch vendor's institutions
-  const { data: institutions, isLoading: institutionsLoading } = useQuery({
+  const { data: institutions, isLoading: institutionsLoading, isError: institutionsError } = useQuery({
     queryKey: ['vendor', vendorId, 'institutions'],
     queryFn: () => vendorApi.getInstitutions(vendorId),
     enabled: !!vendorId,
@@ -965,11 +897,11 @@ export function VendorProfile() {
     staleTime: 30 * 60 * 1000,
   })
 
-  // Fetch v5.2 SHAP explanation — deferred until user opens Risk tab
+  // Fetch v5.2 SHAP explanation — eager load so it's available on Overview tab
   const { data: shapData, isError: shapError } = useQuery({
     queryKey: ['vendor', vendorId, 'shap-v52'],
     queryFn: () => vendorApi.getShap(vendorId),
-    enabled: !!vendorId && activeTab === 'risk',
+    enabled: !!vendorId,
     staleTime: 60 * 60 * 1000, // 1 hour — SHAP values don't change often
     retry: false, // 404 = no SHAP data for this vendor, don't retry
   })
@@ -1038,7 +970,7 @@ export function VendorProfile() {
         .sort((a, b) => a.year - b.year)
     }
     // Fallback to chart contracts
-    const src = contractsForCharts?.data ?? contracts?.data
+    const src = contracts?.data
     if (!src?.length) return []
     const yearMap = new Map<number, { sum: number; count: number }>()
     for (const c of src) {
@@ -1052,20 +984,20 @@ export function VendorProfile() {
     return Array.from(yearMap.entries())
       .map(([year, { sum, count }]) => ({ year, avg: sum / count }))
       .sort((a, b) => a.year - b.year)
-  }, [lifecycleData, contractsForCharts, contracts])
+  }, [lifecycleData, contracts])
 
   // Unique years from lifecycle or chart contracts for the year filter dropdown
   const contractYears = useMemo<number[]>(() => {
     if (lifecycleData?.timeline?.length) {
       return lifecycleData.timeline.map((y) => y.year).sort((a, b) => b - a)
     }
-    const src = contractsForCharts?.data ?? contracts?.data
+    const src = contracts?.data
     if (!src?.length) return []
     const years = Array.from(
       new Set(src.map((c) => c.contract_year).filter((y): y is number => y != null))
     )
     return years.sort((a, b) => b - a)
-  }, [lifecycleData, contractsForCharts, contracts])
+  }, [lifecycleData, contracts])
 
   // Risk level counts for the risk filter tabs
   const riskLevelCounts = useMemo(() => {
@@ -1536,6 +1468,14 @@ export function VendorProfile() {
         centerName={toTitleCase(vendor.name)}
       />
 
+      <ReportIssueDialog
+        open={disputeOpen}
+        onOpenChange={setDisputeOpen}
+        initialCategory="data_correction"
+        initialSubject={`[Vendor: ${toTitleCase(vendor.name)}] Data correction request`}
+        feedbackPayload={{ entity_type: 'vendor', entity_id: vendorId, feedback_type: 'not_suspicious' }}
+      />
+
       {/* Investigation Lede — newspaper-style opener */}
       <InvestigationLede
         riskLevel={riskLevel}
@@ -1903,6 +1843,10 @@ export function VendorProfile() {
                 <CardContent>
                   {riskLoading ? (
                     <Skeleton className="h-48" />
+                  ) : riskProfileError ? (
+                    <div className="flex items-center justify-center h-48 text-sm text-text-muted">
+                      {t('risk.couldNotLoad')}
+                    </div>
                   ) : riskProfile?.avg_risk_score !== undefined ? (
                     <RiskGauge
                       score={riskProfile.avg_risk_score}
@@ -1915,6 +1859,56 @@ export function VendorProfile() {
                   ) : null}
                 </CardContent>
               </Card>
+
+              {/* Score Drivers — compact SHAP summary on Overview tab */}
+              {shapData && !shapError && shapData.top_risk_factors.length > 0 && (
+                <Card className="fern-card">
+                  <CardHeader className="pb-2">
+                    <CardTitle className="text-sm flex items-center gap-2">
+                      <span>{t('cards.scoreDrivers', 'Score Drivers')}</span>
+                      <InfoTooltip termKey="riskScoreDisclaimer" size={13} />
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-2">
+                    {shapData.top_risk_factors.slice(0, 3).map((f) => (
+                      <div key={f.factor}>
+                        <div className="flex justify-between text-xs mb-0.5">
+                          <span className="text-text-secondary capitalize">{f.factor.replace(/_/g, ' ')}</span>
+                          <span className="text-risk-high font-mono">+{f.shap.toFixed(3)}</span>
+                        </div>
+                        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-gradient-to-r from-amber-600 to-red-500"
+                            style={{ width: `${Math.min((f.shap / (shapData.top_risk_factors[0]?.shap || 0.01)) * 100, 100)}%` }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    {shapData.top_protect_factors.length > 0 && (
+                      <div className="pt-1">
+                        <div className="flex justify-between text-xs mb-0.5">
+                          <span className="text-text-muted capitalize">{shapData.top_protect_factors[0].factor.replace(/_/g, ' ')} <span className="text-emerald-500/60">(protective)</span></span>
+                          <span className="text-emerald-400 font-mono">{shapData.top_protect_factors[0].shap.toFixed(3)}</span>
+                        </div>
+                      </div>
+                    )}
+                    <div className="mt-1 flex items-center justify-between">
+                      <button
+                        onClick={() => setActiveTab('risk')}
+                        className="text-[10px] text-accent hover:text-white transition-colors"
+                      >
+                        {t('cards.viewFullAnalysis', 'View full risk analysis →')}
+                      </button>
+                      <button
+                        onClick={() => setDisputeOpen(true)}
+                        className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
+                      >
+                        {t('cards.disputeFinding', 'Dispute this finding')}
+                      </button>
+                    </div>
+                  </CardContent>
+                </Card>
+              )}
 
               {/* Procurement Integrity Score */}
               {scorecard && (
@@ -2320,6 +2314,10 @@ export function VendorProfile() {
                         <Skeleton key={i} className="h-12" />
                       ))}
                     </div>
+                  ) : contractsError ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-text-muted">
+                      {t('risk.couldNotLoad')}
+                    </div>
                   ) : contracts?.data.length ? (
                     <ScrollArea className="h-[300px]">
                       <div className="divide-y divide-border">
@@ -2348,6 +2346,10 @@ export function VendorProfile() {
                       {[...Array(5)].map((_, i) => (
                         <Skeleton key={i} className="h-10" />
                       ))}
+                    </div>
+                  ) : institutionsError ? (
+                    <div className="flex items-center justify-center h-32 text-sm text-text-muted">
+                      {t('risk.couldNotLoad')}
                     </div>
                   ) : institutions?.data?.length ? (
                     <>
@@ -2600,6 +2602,10 @@ export function VendorProfile() {
                 <CardContent>
                   {riskLoading ? (
                     <Skeleton className="h-48" />
+                  ) : riskProfileError ? (
+                    <div className="flex items-center justify-center h-48 text-sm text-text-muted">
+                      {t('risk.couldNotLoad')}
+                    </div>
                   ) : riskProfile?.avg_risk_score !== undefined ? (
                     <RiskGauge
                       score={riskProfile.avg_risk_score}
@@ -3320,11 +3326,11 @@ export function VendorProfile() {
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                {contractsLoading && !contractsForCharts ? (
+                {contractsLoading ? (
                   <Skeleton className="h-[220px]" />
-                ) : (contractsForCharts?.data ?? contracts?.data)?.length ? (
+                ) : (contracts?.data)?.length ? (
                   <ActivityCalendar
-                    contracts={contractsForCharts?.data ?? contracts?.data ?? []}
+                    contracts={contracts?.data ?? []}
                     sectorColor={sectorColor}
                   />
                 ) : (
@@ -3341,18 +3347,18 @@ export function VendorProfile() {
 
               {/* Donut charts row — uses larger chart dataset */}
               <VendorContractBreakdown
-                contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
+                contracts={(contracts?.data ?? []).map((c) => ({
                   procedure_type: c.procedure_type ?? null,
                   risk_level: c.risk_level ?? null,
                   amount_mxn: c.amount_mxn ?? 0,
                 }))}
-                loading={contractsLoading && !contractsForCharts}
+                loading={contractsLoading}
               />
 
               {/* Timeline + Risk Matrix side by side — uses larger chart dataset */}
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 <VendorContractTimeline
-                  contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
+                  contracts={(contracts?.data ?? []).map((c) => ({
                     id: c.id,
                     title: c.title ?? '',
                     amount_mxn: c.amount_mxn ?? 0,
@@ -3366,7 +3372,7 @@ export function VendorProfile() {
                   vendorName={vendor?.name ?? ''}
                 />
                 <VendorContractRiskMatrix
-                  contracts={(contractsForCharts?.data ?? contracts?.data ?? []).map((c) => ({
+                  contracts={(contracts?.data ?? []).map((c) => ({
                     id: c.id,
                     title: c.title ?? '',
                     amount_mxn: c.amount_mxn ?? 0,
@@ -3511,6 +3517,10 @@ export function VendorProfile() {
                     {[...Array(8)].map((_, i) => (
                       <Skeleton key={i} className="h-12" />
                     ))}
+                  </div>
+                ) : contractsError ? (
+                  <div className="flex items-center justify-center h-32 text-sm text-text-muted">
+                    {t('risk.couldNotLoad')}
                   </div>
                 ) : filteredContracts.length > 0 ? (
                   <ScrollArea className="h-[400px]">

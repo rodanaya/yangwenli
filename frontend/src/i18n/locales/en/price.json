@@ -64,5 +64,9 @@
   "spendingCategories": "Spending Categories",
   "extremeCasesAriaLabel": "Most extreme overpricing cases",
   "extremeCasesSubtitle": "Contracts with the greatest deviation from their sector and year median. A factor of 8.3× means the government paid 8.3 times the typical price.",
-  "anomalyCountLabel": "{{countLabel}} anomalous contracts"
+  "anomalyCountLabel": "{{countLabel}} anomalous contracts",
+  "contracts": "Contracts",
+  "anomalousContractsByYear": "Contracts with anomalous pricing by year (2015–2025)",
+  "contractsAwardedAtAnomalousPrice": "Contracts awarded at statistically anomalous prices",
+  "anomalousContracts": "Anomalous Contracts"
 }

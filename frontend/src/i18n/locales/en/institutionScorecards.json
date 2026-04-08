@@ -1,0 +1,97 @@
+{
+  "pageTitle": "Institutional Transparency · Individual Scorecards",
+  "pageSubtitle": "Explore the transparency of {{total}} federal institutions.",
+  "description": "Explore and filter scorecards. Each institution is scored on openness, pricing, vendor diversity, process integrity, and external flags.",
+  "note": "Individual scorecards, not the national average",
+  "stats": {
+    "evaluated": "Institutions Evaluated",
+    "federal": "Federal government institutions",
+    "best": "Best Institution",
+    "weakest": "Weakest Institution",
+    "median": "Median Score",
+    "outOf100": "out of 100 points"
+  },
+  "tiers": {
+    "all": "All",
+    "Excelente": "Excellent",
+    "Satisfactorio": "Satisfactory",
+    "Regular": "Regular",
+    "Deficiente": "Deficient",
+    "Critico": "Critical"
+  },
+  "pillars": {
+    "apert": "Open",
+    "prec": "Price",
+    "prov": "Vendor",
+    "proc": "Process",
+    "ext": "External",
+    "openness": "Openness",
+    "pricing": "Pricing",
+    "vendors": "Vendor Diversity",
+    "process": "Process Integrity",
+    "external": "External Flags"
+  },
+  "filters": {
+    "byLevel": "Filter by level:",
+    "search": "Search institutions…",
+    "go": "Go",
+    "clear": "Clear",
+    "sort": "Sort:",
+    "sortScore": "Score",
+    "sortPercentile": "Percentile",
+    "sortName": "Name"
+  },
+  "table": {
+    "score": "Score",
+    "improving": "Improving",
+    "declining": "Declining",
+    "stable": "Stable",
+    "percentile": "Percentile {{n}}",
+    "outOf": "/ 100",
+    "viewProfile": "View Profile"
+  },
+  "distribution": {
+    "title": "Distribution by transparency level",
+    "subtitle": "Distribution by level — {{total}} institutions",
+    "ariaLabel": "Distribution by transparency level"
+  },
+  "pillarsChart": {
+    "ariaLabel": "Pillar scores"
+  },
+  "trend": {
+    "improving": "Improving",
+    "declining": "Declining",
+    "stable": "Stable"
+  },
+  "footnotes": {
+    "title": "METHODOLOGICAL NOTE",
+    "scoring": "Scores reflect statistical transparency indicators in public procurement. A low score is not proof of irregularities, but a signal for further investigation. Score based on COMPRANET (2002–2025), risk model v0.6.5, OECD / IMF methodology.",
+    "minContracts": "Institutions with fewer than 30 contracts may show greater variability."
+  },
+  "pagination": {
+    "showing": "Showing {{from}} of {{total}} institutions",
+    "previous": "Previous",
+    "next": "Next",
+    "pageLabel": "Page {{n}}",
+    "ariaLabel": "Pagination",
+    "withTier": " with level ",
+    "matching": " matching \""
+  },
+  "aria": {
+    "stats": "General statistics",
+    "distributionSection": "Distribution by level",
+    "filters": "Filters",
+    "cards": "Institution cards",
+    "filterTier": "Filter level {{tier}}, {{count}} institutions",
+    "sortBy": "Sort by {{label}} {{direction}}",
+    "sortDesc": "descending",
+    "sortAsc": "ascending",
+    "searchByName": "Search institutions by name",
+    "clearSearch": "Clear search",
+    "clearFilters": "Clear all filters",
+    "redAlerts": "{{count}} red alerts",
+    "profileLink": "View profile of {{name}}"
+  },
+  "loading": "Loading scorecards…",
+  "noResults": "No institutions match the current filters."
+}

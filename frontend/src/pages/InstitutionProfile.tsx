@@ -1,4 +1,5 @@
 import { useState, useMemo, useRef } from 'react'
+import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
@@ -76,53 +77,7 @@ import {
   ReferenceLine,
 } from '@/components/charts'
 
-// ---- SimpleTabs (same pattern as VendorProfile) ----
-
-interface TabsProps {
-  defaultTab: string
-  tabs: Array<{ key: string; label: string; icon?: React.ElementType }>
-  children: React.ReactNode
-  onTabChange?: (tab: string) => void
-}
-
-function SimpleTabs({ defaultTab, tabs, children, onTabChange }: TabsProps) {
-  const [active, setActive] = useState(defaultTab)
-  const handleTabChange = (key: string) => {
-    setActive(key)
-    onTabChange?.(key)
-  }
-  return (
-    <div>
-      <div className="flex gap-1 border-b border-border mb-6 overflow-x-auto">
-        {tabs.map((tab) => {
-          const Icon = tab.icon
-          return (
-            <button
-              key={tab.key}
-              onClick={() => handleTabChange(tab.key)}
-              className={cn(
-                'flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium whitespace-nowrap border-b-2 transition-all',
-                active === tab.key
-                  ? 'border-accent text-accent bg-accent/5'
-                  : 'border-transparent text-text-muted hover:text-text-secondary hover:bg-background-elevated/30'
-              )}
-            >
-              {Icon && <Icon className="h-3.5 w-3.5" />}
-              {tab.label}
-            </button>
-          )
-        })}
-      </div>
-      {Array.isArray(children)
-        ? (children as React.ReactElement[]).find((c) => (c?.props as any)?.tabKey === active)
-        : children}
-    </div>
-  )
-}
-
-function TabPanel({ tabKey: _tabKey, children }: { tabKey: string; children: React.ReactNode }) {
-  return <div>{children}</div>
-}
+// SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
 // ---- Risk level palette ----
 const LEVEL_COLORS: Record<string, string> = {
@@ -133,13 +88,7 @@ const LEVEL_COLORS: Record<string, string> = {
   unknown: '#64748b',
 }
 
-const LEVEL_LABELS: Record<string, string> = {
-  critical: 'Crítico',
-  high: 'Alto',
-  medium: 'Medio',
-  low: 'Bajo',
-  unknown: 'Desconocido',
-}
+// LEVEL_LABELS is now built dynamically via t() in the component
 
 // ---- Officials types ----
 interface OfficialProfile {
@@ -162,46 +111,9 @@ interface OfficialsResponse {
   data_available: boolean
 }
 
-// ---- Institution type label map ----
-const INSTITUTION_TYPE_LABELS: Record<string, string> = {
-  secretaria: 'Secretaria de Estado',
-  organo_desconcentrado: 'Organo Desconcentrado',
-  entidad_paraestatal: 'Entidad Paraestatal',
-  empresa_productiva: 'Empresa Productiva del Estado',
-  organo_autonomo: 'Organo Autonomo',
-  poder_judicial: 'Poder Judicial',
-  poder_legislativo: 'Poder Legislativo',
-}
+// getInstitutionTypeLabel is defined inside the component to access t()
 
-function getInstitutionTypeLabel(type: string | null | undefined): string {
-  if (!type) return 'Institucion Federal'
-  return INSTITUTION_TYPE_LABELS[type] || type.replace(/_/g, ' ')
-}
-
-// ---- Build editorial lede text ----
-function buildEditorialLedeText(inst: {
-  name: string
-  avg_risk_score?: number | null
-  direct_award_pct?: number | null
-  direct_award_rate?: number | null
-  total_contracts?: number | null
-  total_amount_mxn?: number | null
-  vendor_count?: number | null
-}, topVendorName?: string, topVendorPct?: number): string {
-  const score = inst.avg_risk_score ?? 0
-  const daPct = inst.direct_award_pct ?? inst.direct_award_rate ?? 0
-  const instName = toTitleCase(inst.name)
-
-  if (score >= RISK_THRESHOLDS.high && daPct > 60 && topVendorName && topVendorPct && topVendorPct > 15) {
-    return `${instName} muestra patrones consistentes con la captura institucional: el ${daPct.toFixed(0)}% de sus contratos fueron adjudicados directamente, y su proveedor principal — ${toTitleCase(topVendorName)} — acapara el ${topVendorPct.toFixed(1)}% del gasto total. En ${(inst.total_contracts ?? 0).toLocaleString('es-MX')} contratos analizados, el indice de riesgo promedio alcanza ${(score * 100).toFixed(1)}%, por encima del umbral de alerta.`
-  }
-
-  if (score >= RISK_THRESHOLDS.medium) {
-    return `${instName} registra un indice de riesgo de ${(score * 100).toFixed(1)}% sobre ${(inst.total_contracts ?? 0).toLocaleString('es-MX')} contratos evaluados. Con ${daPct.toFixed(0)}% de adjudicaciones directas, la institucion se ubica en zona de atencion segun los estandares de la OCDE para la contratacion publica.`
-  }
-
-  return `${instName} opera con un perfil de riesgo bajo (${(score * 100).toFixed(1)}%) sobre ${(inst.total_contracts ?? 0).toLocaleString('es-MX')} contratos analizados. Su tasa de adjudicacion directa (${daPct.toFixed(0)}%) se encuentra dentro de los parametros normales para instituciones de su tipo.`
-}
+// buildEditorialLedeText is defined inside the component to access t()
 
 
 // ---- Main component ----
@@ -209,6 +121,56 @@ function buildEditorialLedeText(inst: {
 export function InstitutionProfile() {
   const { t } = useTranslation('institutions')
   const { id } = useParams<{ id: string }>()
+
+  // ---- Localized label maps ----
+  const LEVEL_LABELS: Record<string, string> = {
+    critical: t('profile.riskLevels.critical'),
+    high: t('profile.riskLevels.high'),
+    medium: t('profile.riskLevels.medium'),
+    low: t('profile.riskLevels.low'),
+    unknown: t('profile.riskLevels.unknown'),
+  }
+
+  const INSTITUTION_TYPE_KEY_MAP: Record<string, string> = {
+    secretaria: 'secretaria',
+    organo_desconcentrado: 'organoDesconcentrado',
+    entidad_paraestatal: 'entidadParaestatal',
+    empresa_productiva: 'empresaProductiva',
+    organo_autonomo: 'organoAutonomo',
+    poder_judicial: 'poderJudicial',
+    poder_legislativo: 'poderLegislativo',
+  }
+
+  function getInstitutionTypeLabel(type: string | null | undefined): string {
+    if (!type) return t('profile.institutionTypeLabels.default')
+    const key = INSTITUTION_TYPE_KEY_MAP[type]
+    if (key) return t(`profile.institutionTypeLabels.${key}`)
+    return type.replace(/_/g, ' ')
+  }
+
+  function buildEditorialLedeText(inst: {
+    name: string
+    avg_risk_score?: number | null
+    direct_award_pct?: number | null
+    direct_award_rate?: number | null
+    total_contracts?: number | null
+    total_amount_mxn?: number | null
+    vendor_count?: number | null
+  }, topVendorName?: string, topVendorPct?: number): string {
+    const score = inst.avg_risk_score ?? 0
+    const daPct = inst.direct_award_pct ?? inst.direct_award_rate ?? 0
+    const instName = toTitleCase(inst.name)
+
+    if (score >= RISK_THRESHOLDS.high && daPct > 60 && topVendorName && topVendorPct && topVendorPct > 15) {
+      return `${instName} ${t('profile.editorialLedeCapture', { daPct: daPct.toFixed(0), topVendor: toTitleCase(topVendorName), topVendorPct: topVendorPct.toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), score: (score * 100).toFixed(1) })}`
+    }
+
+    if (score >= RISK_THRESHOLDS.medium) {
+      return `${instName} ${t('profile.editorialLedeMedium', { score: (score * 100).toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), daPct: daPct.toFixed(0) })}`
+    }
+
+    return `${instName} ${t('profile.editorialLedeLow', { score: (score * 100).toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), daPct: daPct.toFixed(0) })}`
+  }
   const institutionId = Number(id)
   const [selectedContractId, setSelectedContractId] = useState<number | null>(null)
   const [isDetailOpen, setIsDetailOpen] = useState(false)
@@ -478,7 +440,7 @@ export function InstitutionProfile() {
         <Link to="/institutions/health">
           <Button variant="outline">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Volver a Instituciones
+            {t('profile.backToInstitutions')}
           </Button>
         </Link>
       </div>
@@ -505,7 +467,7 @@ export function InstitutionProfile() {
       <nav className="flex items-center gap-2 text-xs text-text-muted" aria-label="Breadcrumb">
         <Link to="/institutions/health" className="hover:text-accent transition-colors flex items-center gap-1">
           <ArrowLeft className="h-3 w-3" />
-          Instituciones
+          {t('profile.breadcrumb')}
         </Link>
         <ChevronRight className="h-3 w-3" />
         <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
@@ -538,7 +500,7 @@ export function InstitutionProfile() {
           )}
           {groundTruthStatusError ? null : groundTruthStatus?.is_ground_truth_related ? (
             <Badge variant="critical" className="text-xs px-1.5 py-0 h-4">
-              Caso documentado: {groundTruthStatus.case_name}
+              {t('profile.documentedCase', { caseName: groundTruthStatus.case_name })}
             </Badge>
           ) : null}
         </div>
@@ -557,7 +519,7 @@ export function InstitutionProfile() {
           const group = getInstitutionGroup(institution.name)
           return group ? (
             <p className="text-sm text-text-muted mb-2">
-              Parte de{' '}
+              {t('profile.partOf')}{' '}
               <span className="font-medium" style={{ color: group.color }}>{group.name}</span>
             </p>
           ) : null
@@ -571,18 +533,18 @@ export function InstitutionProfile() {
             className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 transition-colors font-medium"
           >
             <Network className="h-3.5 w-3.5" />
-            Red de Proveedores
+            {t('profile.networkButton')}
           </button>
           <Link to={`/contracts?institution_id=${institutionId}`}>
             <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
               <FileText className="h-3.5 w-3.5" />
-              Todos los Contratos
+              {t('profile.allContractsButton')}
             </button>
           </Link>
           <Link to={`/institutions/compare?a=${institutionId}`}>
             <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
               <GitCompare className="h-3.5 w-3.5" />
-              Comparar
+              {t('profile.compareButton')}
             </button>
           </Link>
           <GenerateReportButton
@@ -617,9 +579,9 @@ export function InstitutionProfile() {
 
       {/* ---- EDITORIAL HEADLINE ---- */}
       <EditorialHeadline
-        section="PERFIL INSTITUCIONAL"
+        section={t('profile.editorialSection')}
         headline={toTitleCase(institution.name)}
-        subtitle={`${getInstitutionTypeLabel(institution.institution_type)}${sectorName ? ` / Sector ${sectorName}` : ''}`}
+        subtitle={`${getInstitutionTypeLabel(institution.institution_type)}${sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}`}
       />
 
       {/* ---- HALLAZGO STAT ROW ---- */}
@@ -633,7 +595,7 @@ export function InstitutionProfile() {
         <motion.div variants={staggerItem}>
           <HallazgoStat
             value={formatNumber(totalContracts)}
-            label="contratos analizados"
+            label={t('profile.hallazgoLabels.contractsAnalyzed')}
             annotation="2002-2025, COMPRANET"
             color="border-accent"
           />
@@ -641,7 +603,7 @@ export function InstitutionProfile() {
         <motion.div variants={staggerItem}>
           <HallazgoStat
             value={formatCompactMXN(totalValue)}
-            label="gasto total acumulado"
+            label={t('profile.hallazgoLabels.totalAccumulatedSpend')}
             annotation={formatCompactUSD(totalValue)}
             color="border-accent"
           />
@@ -649,24 +611,33 @@ export function InstitutionProfile() {
         <motion.div variants={staggerItem}>
           <HallazgoStat
             value={`${(riskScore * 100).toFixed(1)}%`}
-            label="indice de riesgo promedio"
-            annotation={riskLevel === 'critical' ? 'Zona critica' : riskLevel === 'high' ? 'Zona de alerta' : riskLevel === 'medium' ? 'Atencion moderada' : 'Dentro de norma'}
+            label={t('profile.hallazgoLabels.avgRiskIndex')}
+            annotation={
+              riskLevel === 'critical' ? t('profile.riskAnnotations.critical') :
+              riskLevel === 'high' ? t('profile.riskAnnotations.high') :
+              riskLevel === 'medium' ? t('profile.riskAnnotations.medium') :
+              t('profile.riskAnnotations.low')
+            }
             color={riskLevel === 'critical' ? 'border-red-500' : riskLevel === 'high' ? 'border-orange-500' : riskLevel === 'medium' ? 'border-yellow-500' : 'border-green-500'}
           />
         </motion.div>
         <motion.div variants={staggerItem}>
           <HallazgoStat
             value={`${daPct.toFixed(0)}%`}
-            label="adjudicacion directa"
-            annotation={daPct > 74 ? 'Por encima del promedio nacional (74%)' : 'Dentro del rango nacional'}
+            label={t('profile.hallazgoLabels.directAward')}
+            annotation={daPct > 74 ? t('profile.directAwardAnnotation.aboveAverage') : t('profile.directAwardAnnotation.withinRange')}
             color={daPct > 80 ? 'border-red-500' : daPct > 60 ? 'border-orange-500' : 'border-green-500'}
           />
         </motion.div>
         <motion.div variants={staggerItem}>
           <HallazgoStat
             value={formatNumber(vendorCount)}
-            label="proveedores unicos"
-            annotation={vendorCount < 50 ? 'Baja diversidad' : vendorCount > 500 ? 'Alta diversidad' : 'Diversidad moderada'}
+            label={t('profile.hallazgoLabels.uniqueVendors')}
+            annotation={
+              vendorCount < 50 ? t('profile.vendorDiversity.low') :
+              vendorCount > 500 ? t('profile.vendorDiversity.high') :
+              t('profile.vendorDiversity.moderate')
+            }
             color="border-zinc-500"
           />
         </motion.div>
@@ -705,10 +676,10 @@ export function InstitutionProfile() {
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0 mt-0.5" aria-hidden="true" />
           <div className="min-w-0">
             <p className="text-xs font-bold text-risk-critical uppercase tracking-wider font-mono mb-0.5">
-              Caso de corrupcion documentado
+              {t('profile.groundTruth.bannerLabel')}
             </p>
             <p className="text-xs text-text-secondary leading-relaxed">
-              Esta institucion tiene contratos de proveedores identificados en{' '}
+              {t('profile.groundTruth.bannerText')}{' '}
               <span className="font-semibold text-risk-critical">
                 {groundTruthStatus.case_name}
               </span>
@@ -716,7 +687,7 @@ export function InstitutionProfile() {
                 <> ({groundTruthStatus.case_type.replace(/_/g, ' ')})</>
               )}
               {groundTruthStatus.contract_count != null && groundTruthStatus.contract_count > 0 && (
-                <> — {formatNumber(groundTruthStatus.contract_count)} contrato{groundTruthStatus.contract_count !== 1 ? 's' : ''} senalado{groundTruthStatus.contract_count !== 1 ? 's' : ''}</>
+                <> — {formatNumber(groundTruthStatus.contract_count)} {t('profile.groundTruth.contractsFlagged')}</>
               )}.
             </p>
           </div>
@@ -728,12 +699,12 @@ export function InstitutionProfile() {
         defaultTab="overview"
         onTabChange={setActiveTab}
         tabs={[
-          { key: 'overview', label: 'Panorama', icon: BarChart3 },
-          { key: 'risk', label: 'Riesgo', icon: Shield },
-          { key: 'vendors', label: 'Proveedores', icon: Users },
-          { key: 'officials', label: 'Funcionarios', icon: UserCheck },
-          { key: 'history', label: 'Historial', icon: Clock },
-          { key: 'external', label: 'Externo', icon: Globe },
+          { key: 'overview', label: t('profile.tabs.overview'), icon: BarChart3 },
+          { key: 'risk', label: t('profile.tabs.risk'), icon: Shield },
+          { key: 'vendors', label: t('profile.tabs.vendors'), icon: Users },
+          { key: 'officials', label: t('profile.tabs.officials'), icon: UserCheck },
+          { key: 'history', label: t('profile.tabs.history'), icon: Clock },
+          { key: 'external', label: t('profile.tabs.external'), icon: Globe },
         ]}
       >
 
@@ -745,7 +716,7 @@ export function InstitutionProfile() {
               <div className="flex items-center gap-2 px-1 mb-2">
                 <Brain className="h-3.5 w-3.5 text-accent" />
                 <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
-                  Resumen de inteligencia
+                  {t('profile.overview.intelligenceBrief')}
                 </span>
               </div>
               <NarrativeCard
@@ -770,7 +741,7 @@ export function InstitutionProfile() {
                   <CardHeader className="pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Shield className="h-3.5 w-3.5 text-accent" />
-                      Distribucion de riesgo
+                      {t('profile.overview.riskDistribution')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4">
@@ -833,24 +804,24 @@ export function InstitutionProfile() {
                   <CardHeader className="pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Building2 className="h-3.5 w-3.5 text-accent" />
-                      Ficha tecnica
+                      {t('profile.overview.institutionDetails')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4 space-y-2">
-                    <DetailRow label="Tipo" value={getInstitutionTypeLabel(institution.institution_type)} />
-                    <DetailRow label="Tamano" value={institution.size_tier} />
-                    <DetailRow label="Autonomia" value={institution.autonomy_level} />
-                    <DetailRow label="Alcance" value={institution.geographic_scope} />
-                    <DetailRow label="Calidad de datos" value={institution.data_quality_grade} />
+                    <DetailRow label={t('profile.overview.detailType')} value={getInstitutionTypeLabel(institution.institution_type)} />
+                    <DetailRow label={t('profile.overview.detailSize')} value={institution.size_tier} />
+                    <DetailRow label={t('profile.overview.detailAutonomy')} value={institution.autonomy_level} />
+                    <DetailRow label={t('profile.overview.detailScope')} value={institution.geographic_scope} />
+                    <DetailRow label={t('profile.overview.detailDataQuality')} value={institution.data_quality_grade} />
                     {institution.avg_contract_value != null && (
-                      <DetailRow label="Contrato promedio" value={formatCompactMXN(institution.avg_contract_value)} />
+                      <DetailRow label={t('profile.overview.detailAvgContract')} value={formatCompactMXN(institution.avg_contract_value)} />
                     )}
                     {riskProfile != null && (
                       <>
                         <div className="pt-1 border-t border-border/30" />
-                        <DetailRow label="Riesgo base" value={formatPercentSafe(riskProfile.risk_baseline, true)} valueColor={riskColor} />
-                        <DetailRow label="Ajuste por tamano" value={`${riskProfile.size_risk_adjustment >= 0 ? '+' : ''}${(riskProfile.size_risk_adjustment * 100).toFixed(0)}pp`} />
-                        <DetailRow label="Riesgo por autonomia" value={formatPercentSafe(riskProfile.autonomy_risk_baseline, true)} />
+                        <DetailRow label={t('profile.overview.detailBaseRisk')} value={formatPercentSafe(riskProfile.risk_baseline, true)} valueColor={riskColor} />
+                        <DetailRow label={t('profile.overview.detailSizeAdjustment')} value={`${riskProfile.size_risk_adjustment >= 0 ? '+' : ''}${(riskProfile.size_risk_adjustment * 100).toFixed(0)}pp`} />
+                        <DetailRow label={t('profile.overview.detailAutonomyRisk')} value={formatPercentSafe(riskProfile.autonomy_risk_baseline, true)} />
                       </>
                     )}
                   </CardContent>
@@ -864,7 +835,7 @@ export function InstitutionProfile() {
                   <CardHeader className="pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <Users className="h-3.5 w-3.5 text-accent" />
-                      Principales proveedores por gasto
+                      {t('profile.overview.topVendors')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4">
@@ -894,13 +865,13 @@ export function InstitutionProfile() {
                       onClick={() => { setSelectedContractId(topContract.id); setIsDetailOpen(true) }}
                       role="button"
                       tabIndex={0}
-                      aria-label={`Contrato mas sospechoso: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
+                      aria-label={`${t('profile.overview.mostSuspiciousContract')}: ${(topContract as any).description ?? (topContract as any).procedure_number ?? topContract.title}`}
                       onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { setSelectedContractId(topContract.id); setIsDetailOpen(true) } }}
                     >
                       <CardHeader className="pb-2 pt-4">
                         <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase font-mono" style={{ color: contractColor }}>
                           <AlertTriangle className="h-3.5 w-3.5" />
-                          Contrato mas sospechoso
+                          {t('profile.overview.mostSuspiciousContract')}
                         </CardTitle>
                       </CardHeader>
                       <CardContent className="pb-4 space-y-2">
@@ -908,14 +879,14 @@ export function InstitutionProfile() {
                           {topContract.title ?? `Contrato #${topContract.id}`}
                         </p>
                         <div className="flex flex-wrap items-center gap-3 text-xs font-mono">
-                          <span className="font-bold" style={{ color: contractColor }}>Riesgo: {(contractRiskScore * 100).toFixed(1)}%</span>
+                          <span className="font-bold" style={{ color: contractColor }}>{t('profile.overview.riskLabel')} {(contractRiskScore * 100).toFixed(1)}%</span>
                           {topContract.amount_mxn != null && <span className="text-text-secondary">{formatCompactMXN(topContract.amount_mxn)}</span>}
                           {topContract.vendor_name && <span className="text-text-muted truncate max-w-[200px]" title={topContract.vendor_name}>{topContract.vendor_name}</span>}
                           {topContract.contract_year && <span className="text-text-muted">{topContract.contract_year}</span>}
-                          {topContract.is_direct_award && <span className="text-risk-high">Adj. Directa</span>}
-                          {topContract.is_single_bid && <span className="text-risk-critical">Licitante Unico</span>}
+                          {topContract.is_direct_award && <span className="text-risk-high">{t('profile.overview.directAward')}</span>}
+                          {topContract.is_single_bid && <span className="text-risk-critical">{t('profile.overview.singleBidder')}</span>}
                         </div>
-                        <p className="text-[10px] text-text-muted/60 italic">Clic para ver detalles completos</p>
+                        <p className="text-[10px] text-text-muted/60 italic">{t('profile.overview.clickForDetails')}</p>
                       </CardContent>
                     </div>
                   )
@@ -934,7 +905,7 @@ export function InstitutionProfile() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <TrendingUp className="h-3.5 w-3.5 text-accent" />
-                    Trayectoria de riesgo
+                    {t('profile.risk.trajectory')}
                   </CardTitle>
                   {timelineTrend && (
                     <div className={cn(
@@ -946,8 +917,8 @@ export function InstitutionProfile() {
                       {timelineTrend.direction === 'up' ? <TrendingUp className="h-3 w-3" /> :
                        timelineTrend.direction === 'down' ? <TrendingDown className="h-3 w-3" /> :
                        <Minus className="h-3 w-3" />}
-                      {timelineTrend.direction === 'up' ? 'Empeorando' :
-                       timelineTrend.direction === 'down' ? 'Mejorando' : 'Estable'}
+                      {timelineTrend.direction === 'up' ? t('profile.risk.trendUp') :
+                       timelineTrend.direction === 'down' ? t('profile.risk.trendDown') : t('profile.risk.trendStable')}
                     </div>
                   )}
                 </div>

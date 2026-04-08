@@ -12,6 +12,8 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { TableExportButton } from '@/components/TableExportButton'
+import { CitationBlock } from '@/components/CitationBlock'
+import { ShareButton } from '@/components/ShareButton'
 import { CaseLeadButton } from '@/components/CaseLeadDialog'
 import {
   AlertCircle, Search, X, Eye, EyeOff, Activity,
@@ -531,7 +533,10 @@ export default function CaseLibrary() {
             {t('pageTitle')}
           </h1>
         </div>
-        <CaseLeadButton className="shrink-0 mt-1" />
+        <div className="flex items-center gap-2 shrink-0 mt-1">
+          <ShareButton label="Compartir" />
+          <CaseLeadButton />
+        </div>
       </div>
       <p className="text-sm text-zinc-400 max-w-2xl mb-8 leading-relaxed">
         {t('hero.subhead')}
@@ -728,6 +733,8 @@ export default function CaseLibrary() {
           )}
         </>
       )}
+
+      <CitationBlock context="43 documented corruption cases" className="mt-2" />
     </div>
   )
 }

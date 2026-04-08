@@ -46,5 +46,15 @@
   "errors": {
     "loadCategories": "Error al cargar las categorías de gasto",
     "checkConnection": "Verifique su conexión e intente de nuevo."
+  },
+  "detail": {
+    "contracts": "Contratos",
+    "highRiskContracts": "Contratos alto riesgo",
+    "institution": "Institución",
+    "vendor": "Proveedor",
+    "amount": "Monto",
+    "risk": "Riesgo",
+    "totalAmount": "Monto Total",
+    "avgRisk": "Riesgo Promedio"
   }
 }

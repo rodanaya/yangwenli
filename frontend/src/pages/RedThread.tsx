@@ -16,6 +16,8 @@
 import { useRef, useState, useCallback, useEffect } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
 import {
   AreaChart,
@@ -50,23 +52,28 @@ import {
 
 // ─── Constants ─────────────────────────────────────────────────────────────
 
-const CHAPTERS = [
-  { id: 'subject',  label: 'Subject',  icon: Building2 },
-  { id: 'timeline', label: 'Timeline', icon: Clock },
-  { id: 'pattern',  label: 'Pattern',  icon: AlertTriangle },
-  { id: 'network',  label: 'Network',  icon: GitBranch },
-  { id: 'money',    label: 'Money',    icon: DollarSign },
-  { id: 'verdict',  label: 'Verdict',  icon: Gavel },
-] as const
+const CHAPTER_IDS = ['subject', 'timeline', 'pattern', 'network', 'money', 'verdict'] as const
+type ChapterId = typeof CHAPTER_IDS[number]
 
-const PATTERN_META: Record<string, { label: string; color: string; bg: string; description: string }> = {
-  P1: { label: 'Market Monopoly',      color: '#f87171', bg: 'rgba(248,113,113,0.1)',  description: 'Holds a disproportionate share of sector contracts — potential market capture through non-competitive means.' },
-  P2: { label: 'Ghost Company',        color: '#c084fc', bg: 'rgba(192,132,252,0.1)', description: 'Exhibits shell-company indicators: short operating history, few contracts, near-100% direct awards, unverifiable presence.' },
-  P3: { label: 'Intermediary',         color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  description: 'Acts as a pass-through entity, winning contracts outside its primary industry and likely reselling to actual providers.' },
-  P4: { label: 'Bid Rigging',          color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  description: 'Multiple vendors show coordinated bidding — rotation, cover bids, or geographic market allocation.' },
-  P5: { label: 'Price Manipulation',   color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  description: 'Contract values are statistically anomalous vs. sector benchmarks, indicating inflated pricing.' },
-  P6: { label: 'Institutional Capture',color: '#f472b6', bg: 'rgba(244,114,182,0.1)', description: 'Receives a disproportionate share from a single institution, typically through direct awards.' },
-  P7: { label: 'Network Cluster',      color: '#34d399', bg: 'rgba(52,211,153,0.1)',  description: 'Embedded in a co-contracting network, suggesting coordinated vendor rings.' },
+const CHAPTER_ICONS: Record<ChapterId, React.ElementType> = {
+  subject:  Building2,
+  timeline: Clock,
+  pattern:  AlertTriangle,
+  network:  GitBranch,
+  money:    DollarSign,
+  verdict:  Gavel,
+}
+
+function getPatternMeta(t: TFunction): Record<string, { label: string; color: string; bg: string; description: string }> {
+  return {
+    P1: { label: t('patterns.P1.label'), color: '#f87171', bg: 'rgba(248,113,113,0.1)',  description: t('patterns.P1.description') },
+    P2: { label: t('patterns.P2.label'), color: '#c084fc', bg: 'rgba(192,132,252,0.1)', description: t('patterns.P2.description') },
+    P3: { label: t('patterns.P3.label'), color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  description: t('patterns.P3.description') },
+    P4: { label: t('patterns.P4.label'), color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  description: t('patterns.P4.description') },
+    P5: { label: t('patterns.P5.label'), color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  description: t('patterns.P5.description') },
+    P6: { label: t('patterns.P6.label'), color: '#f472b6', bg: 'rgba(244,114,182,0.1)', description: t('patterns.P6.description') },
+    P7: { label: t('patterns.P7.label'), color: '#34d399', bg: 'rgba(52,211,153,0.1)',  description: t('patterns.P7.description') },
+  }
 }
 
 const RISK_DOT_COLORS: Record<string, string> = {
@@ -106,9 +113,10 @@ function AnnotationNote({ children }: { children: React.ReactNode }) {
 
 // ─── Chapter 1: The Subject ─────────────────────────────────────────────────
 
-function ChapterSubject({ vendor, aria }: {
+function ChapterSubject({ vendor, aria, t }: {
   vendor: { name: string; total_value_mxn: number; total_contracts: number; primary_sector_name?: string; avg_risk_score?: number; first_contract_year?: number; last_contract_year?: number; high_risk_pct: number; direct_award_pct: number }
   aria: { ips_final: number; ips_tier: number; primary_sector_name?: string | null } | null
+  t: TFunction
 }) {
   // Fallback to ARIA sector when vendor object has no primary_sector_name
   const sectorName = vendor.primary_sector_name ?? aria?.primary_sector_name ?? null
@@ -121,7 +129,7 @@ function ChapterSubject({ vendor, aria }: {
 
   return (
     <section id="chapter-subject" className="min-h-screen flex flex-col justify-center py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>Chapter I · The Subject</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.subject')}</ChapterLabel>
 
       <motion.h1
         initial={{ opacity: 0, y: 40 }}
@@ -151,11 +159,11 @@ function ChapterSubject({ vendor, aria }: {
           className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest"
           style={{ backgroundColor: riskColor + '22', color: riskColor, border: `1px solid ${riskColor}44` }}
         >
-          {riskLevel} risk
+          {t('subject.riskBadge', { level: riskLevel })}
         </span>
         {aria && (
           <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-red-950 text-red-300 border border-red-800">
-            ARIA Tier {aria.ips_tier}
+            {t('subject.ariaTier', { tier: aria.ips_tier })}
           </span>
         )}
       </motion.div>
@@ -169,24 +177,24 @@ function ChapterSubject({ vendor, aria }: {
       >
         {[
           {
-            label: 'Total Value',
+            label: t('kpi.totalValue'),
             value: formatCompactMXN(vendor.total_value_mxn),
-            note: 'All contracts awarded, 2002–2025',
+            note: t('notes.allContracts'),
           },
           {
-            label: 'Contracts',
+            label: t('kpi.contracts'),
             value: formatNumber(vendor.total_contracts),
             note: `${vendor.first_contract_year ?? '?'} – ${vendor.last_contract_year ?? '?'}`,
           },
           {
-            label: 'Direct Awards',
+            label: t('kpi.directAwards'),
             value: `${Math.round(vendor.direct_award_pct)}%`,
-            note: 'vs. ~48% national average',
+            note: t('notes.vsNational'),
           },
           {
-            label: 'High-Risk',
+            label: t('kpi.highRisk'),
             value: `${Math.round(vendor.high_risk_pct)}%`,
-            note: 'OECD benchmark: 2–15%',
+            note: t('notes.oecdBenchmark'),
           },
         ].map((s) => (
           <div key={s.label} className="bg-background border border-border rounded-xl p-5">
@@ -202,11 +210,17 @@ function ChapterSubject({ vendor, aria }: {
         animate={{ opacity: 1 }}
         transition={{ delay: 0.7, duration: 0.6 }}
         className="text-text-muted text-lg leading-relaxed max-w-2xl"
-      >
-        This investigation thread follows the procurement history of{' '}
-        <strong className="text-white">{vendor.name}</strong>, tracing the patterns, relationships,
-        and financial flows that triggered automated detection. Scroll to follow the evidence.
-      </motion.p>
+        // introText uses {{name}} placeholder — vendor.name is escaped to prevent XSS
+        dangerouslySetInnerHTML={{
+          __html: t('subject.introText', {
+            name: `<strong class="text-white">${vendor.name
+              .replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')}</strong>`,
+          }),
+        }}
+      />
 
       <motion.div
         initial={{ opacity: 0 }}
@@ -215,7 +229,7 @@ function ChapterSubject({ vendor, aria }: {
         className="mt-16 flex items-center gap-2 text-text-secondary"
       >
         <ChevronDown className="w-4 h-4 animate-bounce" />
-        <span className="text-xs tracking-widest uppercase">Continue</span>
+        <span className="text-xs tracking-widest uppercase">{t('subject.scrollHint')}</span>
       </motion.div>
     </section>
   )
@@ -223,33 +237,34 @@ function ChapterSubject({ vendor, aria }: {
 
 // ─── Chapter 2: The Timeline ────────────────────────────────────────────────
 
-function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline }: {
+function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, timeline, t }: {
   totalContracts?: number
   vendorFirstYear?: number
   vendorLastYear?: number
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  t: TFunction
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-20% 0px' })
 
   // Use year-aggregate timeline data (covers ALL years, not just 100 most-recent contracts)
   const sortedTimeline = [...timeline].sort((a, b) => a.year - b.year)
-  const years = sortedTimeline.map((t) => t.year)
+  const years = sortedTimeline.map((item) => item.year)
   const minYear = years[0] ?? vendorFirstYear ?? 2010
   const maxYear = years[years.length - 1] ?? vendorLastYear ?? 2025
-  const displayTotal = totalContracts ?? sortedTimeline.reduce((s, t) => s + t.contract_count, 0)
+  const displayTotal = totalContracts ?? sortedTimeline.reduce((s, item) => s + item.contract_count, 0)
 
   // Normalize dot sizes: log scale, 10px–44px based on total_value per year
-  const maxValue = Math.max(...sortedTimeline.map((t) => t.total_value), 1)
+  const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
 
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
-      <ChapterLabel>Chapter II · The Timeline</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.timeline')}</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        {formatNumber(displayTotal)} Contracts, {minYear}–{maxYear}
+        {t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       </h2>
       <p className="text-zinc-400 mb-12 max-w-xl">
-        Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.
+        {t('timeline.dotDescription')}
       </p>
 
       <div ref={ref} className="relative">
@@ -262,17 +277,17 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
         {/* Dot field — one dot per year, spread across timeline */}
         <div className="relative h-48 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden px-4 py-2">
-          {sortedTimeline.map((t, idx) => {
-            const xPct = maxYear > minYear ? ((t.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
-            const risk = t.avg_risk_score ?? 0
+          {sortedTimeline.map((item, idx) => {
+            const xPct = maxYear > minYear ? ((item.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
+            const risk = item.avg_risk_score ?? 0
             const level = getRiskLevel(risk)
-            const size = Math.max(10, Math.min(44, 10 + (Math.log(t.total_value + 1) / Math.log(maxValue + 1)) * 34))
+            const size = Math.max(10, Math.min(44, 10 + (Math.log(item.total_value + 1) / Math.log(maxValue + 1)) * 34))
             // Deterministic y jitter by year index
             const sinVal = Math.sin(idx * 137.508 + 1.618) * 10000
             const yPct = 15 + (sinVal - Math.floor(sinVal)) * 70
             return (
               <motion.div
-                key={t.year}
+                key={item.year}
                 initial={{ opacity: 0, scale: 0 }}
                 animate={inView ? { opacity: 0.9, scale: 1 } : {}}
                 transition={{ delay: idx * 0.04, duration: 0.35, ease: 'backOut' }}
@@ -287,7 +302,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
                   boxShadow: risk > 0.6 ? `0 0 8px 2px ${RISK_DOT_COLORS[level]}55` : 'none',
                   zIndex: Math.round(size),
                 }}
-                title={`${t.year} · ${formatCompactMXN(t.total_value)} · ${t.contract_count} contracts · avg risk ${(risk * 100).toFixed(0)}%`}
+                title={`${item.year} · ${formatCompactMXN(item.total_value)} · ${item.contract_count} contracts · avg risk ${(risk * 100).toFixed(0)}%`}
               />
             )
           })}
@@ -302,7 +317,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
             </div>
           ))}
           <div className="ml-auto text-xs text-zinc-600">
-            Size = annual contract value
+            {t('timeline.legend.sizeLabel')}
           </div>
         </div>
       </div>
@@ -311,15 +326,15 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
       {/* Yearly breakdown cards — from timeline aggregates */}
       <div className="grid grid-cols-3 md:grid-cols-6 gap-3 mt-8">
-        {sortedTimeline.slice(-12).map((t) => {
-          const risk = t.avg_risk_score ?? 0
+        {sortedTimeline.slice(-12).map((item) => {
+          const risk = item.avg_risk_score ?? 0
           const pctHigh = risk * 100
           return (
-            <div key={t.year} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
-              <p className="text-xs text-zinc-500 mb-1">{t.year}</p>
-              <p className="text-sm font-bold text-white tabular-nums">{formatCompactMXN(t.total_value)}</p>
+            <div key={item.year} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+              <p className="text-xs text-zinc-500 mb-1">{item.year}</p>
+              <p className="text-sm font-bold text-white tabular-nums">{formatCompactMXN(item.total_value)}</p>
               <p className="text-xs mt-0.5 tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
-                {t.contract_count} · {Math.round(pctHigh)}% risk
+                {item.contract_count} · {Math.round(pctHigh)}% risk
               </p>
             </div>
           )
@@ -331,13 +346,15 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
 // ─── Chapter 3: The Pattern ─────────────────────────────────────────────────
 
-function ChapterPattern({ waterfall, ariaPattern }: {
+function ChapterPattern({ waterfall, ariaPattern, t }: {
   waterfall: Array<{ feature: string; contribution: number; z_score: number; label_en: string }>
   ariaPattern: string | null
+  t: TFunction
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-15% 0px' })
 
+  const PATTERN_META = getPatternMeta(t)
   const meta = ariaPattern ? PATTERN_META[ariaPattern] : null
 
   // Sort: positive contributions first (drivers), then protective factors
@@ -351,12 +368,12 @@ function ChapterPattern({ waterfall, ariaPattern }: {
 
   return (
     <section id="chapter-pattern" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>Chapter III · The Pattern</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.pattern')}</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        What the Algorithm Found
+        {t('pattern.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
-        Risk scores are built from 16 z-score features normalized against sector baselines. These are the factors that drove this vendor's score.
+        {t('pattern.description')}
       </p>
 
       {/* ARIA pattern badge */}
@@ -418,7 +435,7 @@ function ChapterPattern({ waterfall, ariaPattern }: {
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs text-zinc-500">
-                    {isPositive ? '▲ raises risk' : '▼ lowers risk'}
+                    {isPositive ? t('pattern.raisesRisk') : t('pattern.lowersRisk')}
                   </span>
                   <span
                     className="text-sm font-mono font-bold tabular-nums"
@@ -434,12 +451,11 @@ function ChapterPattern({ waterfall, ariaPattern }: {
       </div>
 
       {safeWaterfall.length === 0 && (
-        <div className="text-text-secondary text-sm italic">Feature attribution data not available for this vendor.</div>
+        <div className="text-text-secondary text-sm italic">{t('pattern.noData')}</div>
       )}
 
       <p className="text-xs text-text-muted italic mt-6 leading-relaxed">
-        Positive values increase risk score (red). Negative values reduce it (green). Values are SHAP-style
-        feature contributions: β_i × (z_i − E[z_i]).
+        {t('pattern.shapNote')}
       </p>
     </section>
   )
@@ -447,63 +463,63 @@ function ChapterPattern({ waterfall, ariaPattern }: {
 
 // ─── Chapter 4: The Network ─────────────────────────────────────────────────
 
-function classifyRole(coBidder: { win_count: number; co_bid_count: number }): {
+function classifyRole(coBidder: { win_count: number; co_bid_count: number }, t: TFunction): {
   label: string
   color: string
   bg: string
 } {
   const winRate = coBidder.co_bid_count > 0 ? coBidder.win_count / coBidder.co_bid_count : 0
-  if (winRate < 0.15) return { label: 'Possible Decoy', color: '#f87171', bg: 'rgba(248,113,113,0.12)' }
-  if (winRate >= 0.3 && winRate <= 0.7) return { label: 'Rotation Pattern', color: '#fb923c', bg: 'rgba(251,146,60,0.12)' }
-  if (winRate > 0.6) return { label: 'Possible Accomplice', color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' }
-  return { label: 'Co-bidder', color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
+  if (winRate < 0.15) return { label: t('roles.possibleDecoy'),     color: '#f87171', bg: 'rgba(248,113,113,0.12)' }
+  if (winRate >= 0.3 && winRate <= 0.7) return { label: t('roles.rotationPattern'),  color: '#fb923c', bg: 'rgba(251,146,60,0.12)' }
+  if (winRate > 0.6)  return { label: t('roles.possibleAccomplice'), color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' }
+  return { label: t('roles.coBidder'), color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
 }
 
-function ChapterNetwork({ vendorId, vendor, coBidders }: {
+function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   vendorId: number
   vendor: { name: string; total_institutions: number; sectors_count: number }
   coBidders: Array<{ vendor_id: number; vendor_name: string; co_bid_count: number; win_count: number; loss_count: number; same_winner_ratio: number; relationship_strength: string }> | null
+  t: TFunction
 }) {
   return (
     <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>Chapter IV · The Network</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.network')}</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        Connections & Relationships
+        {t('network.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
-        Vendor networks reveal co-contracting rings, shared entities, and institutional dependencies
-        invisible in contract-by-contract analysis.
+        {t('network.description')}
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-background border border-border rounded-xl p-6">
-          <p className="editorial-label text-text-muted mb-2">Institutions Served</p>
+          <p className="editorial-label text-text-muted mb-2">{t('network.institutionsServed')}</p>
           <p className="text-2xl font-bold text-white tabular-nums">{formatNumber(vendor.total_institutions)}</p>
           <AnnotationNote>
             {vendor.total_institutions <= 3
-              ? 'Very few institutions — possible institutional capture.'
+              ? t('network.institutionsNote.few')
               : vendor.total_institutions >= 20
-              ? 'Wide institutional reach — diversified vendor profile.'
-              : 'Moderate institutional diversity.'}
+              ? t('network.institutionsNote.many')
+              : t('network.institutionsNote.moderate')}
           </AnnotationNote>
         </div>
 
         <div className="bg-background border border-border rounded-xl p-6">
-          <p className="editorial-label text-text-muted mb-2">Sectors Active</p>
+          <p className="editorial-label text-text-muted mb-2">{t('network.sectorsActive')}</p>
           <p className="text-2xl font-bold text-white tabular-nums">{vendor.sectors_count}</p>
           <AnnotationNote>
             {vendor.sectors_count <= 1
-              ? 'Single-sector presence — typical for specialists.'
+              ? t('network.sectorsNote.single')
               : vendor.sectors_count >= 5
-              ? 'Cross-sector activity — may indicate intermediary behavior.'
-              : 'Multi-sector vendor.'}
+              ? t('network.sectorsNote.multi')
+              : t('network.sectorsNote.moderate')}
           </AnnotationNote>
         </div>
       </div>
 
       {/* Co-bidding partners */}
       <div className="mb-10">
-        <p className="editorial-label text-text-muted mb-4">Co-Bidding Partners</p>
+        <p className="editorial-label text-text-muted mb-4">{t('network.coBiddingPartners')}</p>
         {coBidders === null ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
@@ -511,11 +527,11 @@ function ChapterNetwork({ vendorId, vendor, coBidders }: {
             ))}
           </div>
         ) : coBidders.length === 0 ? (
-          <p className="text-text-muted text-sm italic">No coordinated bidding patterns detected.</p>
+          <p className="text-text-muted text-sm italic">{t('network.noCoBidders')}</p>
         ) : (
           <ul className="space-y-2">
             {coBidders.slice(0, 5).map((cb) => {
-              const role = classifyRole(cb)
+              const role = classifyRole(cb, t)
               return (
                 <li key={cb.vendor_id}>
                   <Link
@@ -527,7 +543,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders }: {
                         {cb.vendor_name}
                       </p>
                       <p className="text-text-muted text-xs mt-0.5">
-                        {cb.co_bid_count} shared procedure{cb.co_bid_count !== 1 ? 's' : ''}
+                        {t('network.sharedProcedures', { count: cb.co_bid_count })}
                       </p>
                     </div>
                     <span
@@ -554,9 +570,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders }: {
           <GitBranch className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
-          <p className="text-white font-semibold mb-1">Open Full Network Graph</p>
+          <p className="text-white font-semibold mb-1">{t('network.openNetworkGraph')}</p>
           <p className="text-text-muted text-sm">
-            Interactive force-directed graph showing co-bidders, related entities, and community clusters.
+            {t('network.openNetworkGraphDesc')}
           </p>
         </div>
         <ExternalLink className="w-4 h-4 text-text-secondary group-hover:text-text-muted transition-colors flex-shrink-0" />
@@ -571,9 +587,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders }: {
           <Building2 className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
-          <p className="text-white font-semibold mb-1">Co-Bidder Analysis</p>
+          <p className="text-white font-semibold mb-1">{t('network.coBidderAnalysis')}</p>
           <p className="text-text-muted text-sm">
-            Vendors that consistently appear in the same procedures — potential coordination rings.
+            {t('network.coBidderAnalysisDesc')}
           </p>
         </div>
         <ExternalLink className="w-4 h-4 text-text-secondary group-hover:text-text-muted transition-colors flex-shrink-0" />
@@ -584,44 +600,45 @@ function ChapterNetwork({ vendorId, vendor, coBidders }: {
 
 // ─── Chapter 5: The Money ───────────────────────────────────────────────────
 
-function ChapterMoney({ timeline }: {
+function ChapterMoney({ timeline, t }: {
   timeline: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
+  t: TFunction
 }) {
   const ref = useRef<HTMLDivElement>(null)
   const inView = useInView(ref, { once: true, margin: '-15% 0px' })
 
-  const chartData = timeline.map((t) => ({
-    year: t.year,
-    value: t.total_value / 1e6, // in millions
-    risk: (t.avg_risk_score ?? 0) * 100,
-    contracts: t.contract_count,
+  const chartData = timeline.map((item) => ({
+    year: item.year,
+    value: item.total_value / 1e6, // in millions
+    risk: (item.avg_risk_score ?? 0) * 100,
+    contracts: item.contract_count,
   }))
 
-  const totalValue = timeline.reduce((s, t) => s + t.total_value, 0)
-  const peakYear = timeline.reduce((max, t) => t.total_value > (max.total_value ?? 0) ? t : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
-  const peakRiskYear = timeline.reduce((max, t) => (t.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? t : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
+  const totalValue = timeline.reduce((s, item) => s + item.total_value, 0)
+  const peakYear = timeline.reduce((max, item) => item.total_value > (max.total_value ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
+  const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
 
   return (
     <section id="chapter-money" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>Chapter V · The Money</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.money')}</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        {formatCompactMXN(totalValue)} Over Time
+        {t('money.heading', { value: formatCompactMXN(totalValue) })}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
-        Annual contract value and risk trajectory — where the money went, and when the risk spiked.
+        {t('money.description')}
       </p>
 
       {/* Annotations */}
       {peakYear && (
         <div className="flex flex-wrap gap-4 mb-8">
           <div className="bg-background border border-border rounded-lg px-4 py-3">
-            <p className="editorial-label text-text-muted mb-1">Peak Year by Value</p>
-            <p className="text-white font-bold">{peakYear.year} — {formatCompactMXN(peakYear.total_value)}</p>
+            <p className="editorial-label text-text-muted mb-1">{t('money.peakByValue')}</p>
+            <p className="text-white font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
           </div>
           {peakRiskYear && (
             <div className="bg-background border border-red-900/50 rounded-lg px-4 py-3">
-              <p className="editorial-label text-red-500 mb-1">Peak Year by Risk</p>
-              <p className="text-white font-bold">{peakRiskYear.year} — {((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1)}% avg score</p>
+              <p className="editorial-label text-red-500 mb-1">{t('money.peakByRisk')}</p>
+              <p className="text-white font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
           )}
         </div>
@@ -629,7 +646,7 @@ function ChapterMoney({ timeline }: {
 
       {/* Area chart: contract value over time */}
       <div ref={ref} className="bg-background border border-border rounded-xl p-6 mb-6">
-        <p className="editorial-label text-text-muted mb-4">Contract Value by Year (MXN millions)</p>
+        <p className="editorial-label text-text-muted mb-4">{t('money.chartValueLabel')}</p>
         <AnimatePresence>
           {inView && (
             <motion.div
@@ -652,7 +669,7 @@ function ChapterMoney({ timeline }: {
                     contentStyle={{ background: '#1c1c1e', border: '1px solid #3f3f46', borderRadius: 8, fontSize: 12 }}
                     labelStyle={{ color: '#e5e7eb' }}
                     itemStyle={{ color: '#dc2626' }}
-                    formatter={(v: unknown) => [`${(v as number).toFixed(1)}M MXN`, 'Value']}
+                    formatter={(v: unknown) => [`${(v as number).toFixed(1)}M MXN`, t('money.tooltipValue')]}
                   />
                   <Area type="monotone" dataKey="value" stroke="#dc2626" strokeWidth={2} fill="url(#valueGrad)" />
                 </AreaChart>
@@ -665,7 +682,7 @@ function ChapterMoney({ timeline }: {
       {/* Bar chart: avg risk score by year */}
       {chartData.some((d) => d.risk > 0) && (
         <div className="bg-background border border-border rounded-xl p-6">
-          <p className="editorial-label text-text-muted mb-4">Average Risk Score by Year (%)</p>
+          <p className="editorial-label text-text-muted mb-4">{t('money.chartRiskLabel')}</p>
           <div className="h-40">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
@@ -674,7 +691,7 @@ function ChapterMoney({ timeline }: {
                 <Tooltip
                   contentStyle={{ background: '#1c1c1e', border: '1px solid #3f3f46', borderRadius: 8, fontSize: 12 }}
                   labelStyle={{ color: '#e5e7eb' }}
-                  formatter={(v: unknown) => [`${(v as number).toFixed(1)}%`, 'Avg Risk']}
+                  formatter={(v: unknown) => [`${(v as number).toFixed(1)}%`, t('money.tooltipRisk')]}
                 />
                 <Bar dataKey="risk" radius={[3, 3, 0, 0]}>
                   {chartData.map((entry, index) => (
@@ -688,7 +705,7 @@ function ChapterMoney({ timeline }: {
             </ResponsiveContainer>
           </div>
           <AnnotationNote>
-            Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. OECD benchmark: 2–15% high-risk.
+            {t('money.riskNote')}
           </AnnotationNote>
         </div>
       )}
@@ -702,6 +719,7 @@ function ChapterVerdict({
   vendorId,
   vendor,
   aria,
+  t,
 }: {
   vendorId: number
   vendor: { name: string; avg_risk_score?: number; in_ground_truth?: boolean }
@@ -715,32 +733,33 @@ function ChapterVerdict({
     in_ground_truth: boolean
     memo_text?: string | null
   } | null
+  t: TFunction
 }) {
   const navigate = useNavigate()
+  const PATTERN_META = getPatternMeta(t)
   const riskLevel = getRiskLevel(vendor.avg_risk_score ?? 0)
   const riskColor = RISK_DOT_COLORS[riskLevel]
   const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
 
   return (
     <section id="chapter-verdict" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>Chapter VI · The Verdict</ChapterLabel>
+      <ChapterLabel>{t('chapters.headings.verdict')}</ChapterLabel>
       <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
-        Investigation Summary
+        {t('verdict.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
-        Statistical signals warrant attention. A high score is not proof of wrongdoing — it means
-        this vendor closely resembles documented corruption patterns.
+        {t('verdict.description')}
       </p>
 
       {/* Score card */}
       <div className="bg-background border border-border rounded-2xl p-8 mb-8">
         <div className="flex items-start justify-between mb-6">
           <div>
-            <p className="editorial-label text-text-muted mb-2">Risk Indicator Score</p>
+            <p className="editorial-label text-text-muted mb-2">{t('verdict.riskIndicatorScore')}</p>
             <p className="font-serif text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
               {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
             </p>
-            <p className="text-text-muted text-sm mt-1">out of 100</p>
+            <p className="text-text-muted text-sm mt-1">{t('verdict.outOf100')}</p>
           </div>
           <div className="text-right">
             <span
@@ -751,7 +770,7 @@ function ChapterVerdict({
             </span>
             {aria && (
               <p className="text-text-muted text-xs mt-2">
-                ARIA IPS: {(aria.ips_final * 100).toFixed(0)} · Tier {aria.ips_tier}
+                {t('verdict.ariaIps', { ips: (aria.ips_final * 100).toFixed(0), tier: aria.ips_tier })}
               </p>
             )}
           </div>
@@ -762,17 +781,17 @@ function ChapterVerdict({
           <div className="flex flex-wrap gap-2 mb-6">
             {aria.is_efos_definitivo && (
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-950 text-red-300 border border-red-800 flex items-center gap-1.5">
-                <Shield className="w-3 h-3" /> SAT EFOS Definitivo
+                <Shield className="w-3 h-3" /> {t('verdict.efosLabel')}
               </span>
             )}
             {aria.is_sfp_sanctioned && (
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-orange-950 text-orange-300 border border-orange-800 flex items-center gap-1.5">
-                <Gavel className="w-3 h-3" /> SFP Sanctioned
+                <Gavel className="w-3 h-3" /> {t('verdict.sfpLabel')}
               </span>
             )}
             {aria.in_ground_truth && (
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-purple-950 text-purple-300 border border-purple-800 flex items-center gap-1.5">
-                <Zap className="w-3 h-3" /> In Ground Truth Cases
+                <Zap className="w-3 h-3" /> {t('verdict.groundTruthLabel')}
               </span>
             )}
           </div>
@@ -790,7 +809,7 @@ function ChapterVerdict({
         {/* ARIA memo */}
         {aria?.memo_text && (
           <div className="border-l-2 border-[var(--color-accent)] pl-4 mt-4">
-            <p className="editorial-label text-text-muted mb-2">ARIA Intelligence Memo</p>
+            <p className="editorial-label text-text-muted mb-2">{t('verdict.ariaMemoTitle')}</p>
             <div className="text-text-primary text-sm leading-relaxed space-y-1.5">
               {aria.memo_text.split('\n').map((line, i) => {
                 if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-white text-sm mt-3">{line.slice(4)}</h4>
@@ -829,7 +848,7 @@ function ChapterVerdict({
           className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-white font-semibold rounded-xl px-5 py-3.5 transition-colors"
         >
           <Building2 className="w-4 h-4" />
-          Full Vendor Profile
+          {t('verdict.fullVendorProfile')}
         </button>
 
         <button
@@ -842,7 +861,7 @@ function ChapterVerdict({
           className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-xl px-5 py-3.5 transition-colors border border-border"
         >
           <Download className="w-4 h-4" />
-          Export PDF Briefing
+          {t('verdict.exportPdf')}
         </button>
 
         <Link
@@ -850,7 +869,7 @@ function ChapterVerdict({
           className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-xl px-5 py-3.5 transition-colors border border-border"
         >
           <BookmarkPlus className="w-4 h-4" />
-          Add to Workspace
+          {t('verdict.addToWorkspace')}
         </Link>
       </div>
 
@@ -859,9 +878,9 @@ function ChapterVerdict({
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary leading-relaxed">
-            <strong className="text-text-muted">Methodology note:</strong> Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See{' '}
+            <strong className="text-text-muted">{t('verdict.methodologyNote')}</strong>{' '}
             <Link to="/methodology" className="text-text-muted underline hover:text-text-primary">
-              full methodology
+              {t('verdict.methodologyLink')}
             </Link>.
           </p>
         </div>
@@ -898,10 +917,10 @@ function RedThreadLine({ progress }: { progress: number }) {
 
 // ─── Chapter Navigation Dots ────────────────────────────────────────────────
 
-function ChapterNav({ active }: { active: number }) {
+function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id: string; label: string; icon: React.ElementType }> }) {
   return (
     <div className="fixed right-5 top-1/2 -translate-y-1/2 z-50 flex flex-col gap-3">
-      {CHAPTERS.map((ch, idx) => (
+      {chapters.map((ch, idx) => (
         <a
           key={ch.id}
           href={`#chapter-${ch.id}`}
@@ -928,12 +947,12 @@ function ChapterNav({ active }: { active: number }) {
 
 // ─── Loading State ──────────────────────────────────────────────────────────
 
-function ThreadSkeleton() {
+function ThreadSkeleton({ label }: { label: string }) {
   return (
     <div className="flex items-center justify-center min-h-screen">
       <div className="text-center">
         <div className="w-1 h-16 bg-[#dc2626] mx-auto mb-6 animate-pulse rounded-full" />
-        <p className="text-text-muted text-sm animate-pulse">Building investigation thread…</p>
+        <p className="text-text-muted text-sm animate-pulse">{label}</p>
       </div>
     </div>
   )
@@ -944,6 +963,7 @@ function ThreadSkeleton() {
 export default function RedThread() {
   const { vendorId } = useParams<{ vendorId: string }>()
   const navigate = useNavigate()
+  const { t } = useTranslation('redThread')
   const id = Number(vendorId)
 
   const containerRef = useRef<HTMLDivElement>(null)
@@ -951,12 +971,19 @@ export default function RedThread() {
 
   const { scrollYProgress } = useScroll()
 
+  // Build chapter list from translation keys
+  const chapters = CHAPTER_IDS.map((chId) => ({
+    id: chId,
+    label: t(`chapters.${chId}`),
+    icon: CHAPTER_ICONS[chId],
+  }))
+
   // Track active chapter by scroll position (simple approach)
   const handleScroll = useCallback(() => {
-    const chapters = CHAPTERS.map((ch) => document.getElementById(`chapter-${ch.id}`))
+    const chapterEls = CHAPTER_IDS.map((chId) => document.getElementById(`chapter-${chId}`))
     const scrollY = window.scrollY + window.innerHeight / 2
     let active = 0
-    chapters.forEach((el, idx) => {
+    chapterEls.forEach((el, idx) => {
       if (el && el.offsetTop <= scrollY) active = idx
     })
     setActiveChapter(active)
@@ -1009,19 +1036,19 @@ export default function RedThread() {
   if (isNaN(id)) {
     return (
       <div className="flex items-center justify-center min-h-screen text-text-muted">
-        Invalid vendor ID.
+        {t('errors.invalidId')}
       </div>
     )
   }
 
-  if (vendorLoading) return <ThreadSkeleton />
+  if (vendorLoading) return <ThreadSkeleton label={t('loading')} />
   if (vendorError) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
         <AlertTriangle className="h-8 w-8 text-destructive" />
-        <p className="text-text-muted">No se pudo cargar la información. Intente de nuevo más tarde.</p>
+        <p className="text-text-muted">{t('errors.loadFailed')}</p>
         <button onClick={() => navigate(-1)} className="text-[#dc2626] text-sm underline">
-          Go back
+          {t('errors.goBack')}
         </button>
       </div>
     )
@@ -1029,9 +1056,9 @@ export default function RedThread() {
   if (!vendor) {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
-        <p className="text-text-muted">Vendor not found.</p>
+        <p className="text-text-muted">{t('errors.vendorNotFound')}</p>
         <button onClick={() => navigate(-1)} className="text-[#dc2626] text-sm underline">
-          Go back
+          {t('errors.goBack')}
         </button>
       </div>
     )
@@ -1041,7 +1068,7 @@ export default function RedThread() {
     <div ref={containerRef} className="relative min-h-screen bg-[var(--color-background)]">
       {/* Fixed elements */}
       <RedThreadLine progress={scrollPct} />
-      <ChapterNav active={activeChapter} />
+      <ChapterNav active={activeChapter} chapters={chapters} />
 
       {/* Back nav */}
       <div className="sticky top-0 z-40 px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
@@ -1050,11 +1077,11 @@ export default function RedThread() {
           className="flex items-center gap-2 text-text-muted hover:text-white transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
-          Back
+          {t('nav.back')}
         </button>
         <div className="flex items-center gap-3">
           <div className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
-          <span className="text-xs text-text-secondary uppercase tracking-widest">Red Thread</span>
+          <span className="text-xs text-text-secondary uppercase tracking-widest">{t('nav.redThread')}</span>
           <span className="text-xs text-text-muted">·</span>
           <span className="text-xs text-text-muted max-w-[200px] truncate">{vendor.name}</span>
         </div>
@@ -1062,7 +1089,7 @@ export default function RedThread() {
           to={`/vendors/${id}`}
           className="text-xs text-text-secondary hover:text-text-primary transition-colors flex items-center gap-1"
         >
-          Full Profile <ExternalLink className="w-3 h-3" />
+          {t('nav.fullProfile')} <ExternalLink className="w-3 h-3" />
         </Link>
       </div>
 
@@ -1071,6 +1098,7 @@ export default function RedThread() {
         <ChapterSubject
           vendor={vendor}
           aria={aria ? { ips_final: aria.ips_final, ips_tier: aria.ips_tier, primary_sector_name: aria.primary_sector_name } : null}
+          t={t}
         />
 
         <ChapterDivider />
@@ -1080,6 +1108,7 @@ export default function RedThread() {
           vendorFirstYear={vendor.first_contract_year}
           vendorLastYear={vendor.last_contract_year}
           timeline={timeline?.timeline ?? []}
+          t={t}
         />
 
         <ChapterDivider />
@@ -1087,6 +1116,7 @@ export default function RedThread() {
         <ChapterPattern
           waterfall={waterfall ?? []}
           ariaPattern={aria?.primary_pattern ?? null}
+          t={t}
         />
 
         <ChapterDivider />
@@ -1099,17 +1129,19 @@ export default function RedThread() {
             sectors_count: vendor.sectors_count,
           }}
           coBidders={coBidders?.co_bidders ?? null}
+          t={t}
         />
 
         <ChapterDivider />
 
         <ChapterMoney
-          timeline={(timeline?.timeline ?? []).map((t) => ({
-            year: t.year,
-            avg_risk_score: t.avg_risk_score,
-            contract_count: t.contract_count,
-            total_value: t.total_value,
+          timeline={(timeline?.timeline ?? []).map((item) => ({
+            year: item.year,
+            avg_risk_score: item.avg_risk_score,
+            contract_count: item.contract_count,
+            total_value: item.total_value,
           }))}
+          t={t}
         />
 
         <ChapterDivider />
@@ -1131,6 +1163,7 @@ export default function RedThread() {
             in_ground_truth: aria.in_ground_truth,
             memo_text: aria.memo_text,
           } : null}
+          t={t}
         />
       </div>
 

@@ -7,7 +7,7 @@
 # Prerequisites:
 #   1. Copy .env.prod.example → .env.prod and set CORS_ORIGINS + ACME_EMAIL
 #   2. Ensure backend/RUBLI_DEPLOY.db exists (run: python backend/scripts/create_deploy_db.py)
-#   3. Point rubli.site DNS A record → server IP before starting (Caddy needs domain reachable)
+#   3. Point rubli.xyz DNS A record → server IP before starting (Caddy needs domain reachable)
 
 services:
   backend:
@@ -20,7 +20,7 @@ services:
     environment:
       - PYTHONPATH=/app
       - DATABASE_PATH=/app/RUBLI_DEPLOY.db
-      # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.site,http://37.60.232.109)
+      # Set CORS_ORIGINS in .env.prod (e.g. https://rubli.xyz,http://37.60.232.109)
       # IMPORTANT: if CORS_ORIGINS is unset the backend Python fallback applies
       # (localhost:3009 only).  Always set this in .env.prod for production.
       - CORS_ORIGINS=${CORS_ORIGINS}
@@ -106,7 +106,7 @@ services:
       - caddy_data:/data        # Persists TLS certificates across restarts
       - caddy_config:/config
     environment:
-      - ACME_EMAIL=${ACME_EMAIL:-admin@rubli.site}
+      - ACME_EMAIL=${ACME_EMAIL:-admin@rubli.xyz}
     depends_on:
       - frontend
     restart: unless-stopped

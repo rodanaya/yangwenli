@@ -64,5 +64,9 @@
   "spendingCategories": "Categorías de Gasto",
   "extremeCasesAriaLabel": "Casos más extremos de sobreprecios",
   "extremeCasesSubtitle": "Los contratos con mayor desviación respecto a la mediana de su sector y año. Un factor de 8.3× significa que el gobierno pagó 8.3 veces el precio típico.",
-  "anomalyCountLabel": "{{countLabel}} contratos anómalos"
+  "anomalyCountLabel": "{{countLabel}} contratos anómalos",
+  "contracts": "Contratos",
+  "anomalousContractsByYear": "Contratos con precio anómalo por año (2015-2025)",
+  "contractsAwardedAtAnomalousPrice": "Contratos adjudicados a precios estadísticamente anómalos",
+  "anomalousContracts": "Contratos anómalos"
 }

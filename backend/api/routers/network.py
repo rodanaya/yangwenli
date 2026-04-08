@@ -9,7 +9,7 @@ import logging
 import threading
 import time
 from typing import Optional, List, Dict, Any
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request
 from pydantic import BaseModel, Field
 
 from ..dependencies import get_db
@@ -17,6 +17,23 @@ from ..config.constants import MAX_CONTRACT_VALUE
 from ..services.network_service import network_service
 
 logger = logging.getLogger(__name__)
+
+# Optional rate limiting - gracefully degrade if slowapi not installed
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    _network_limiter = Limiter(key_func=get_remote_address)
+    _NETWORK_RATE_LIMITING = True
+except ImportError:
+    _network_limiter = None
+    _NETWORK_RATE_LIMITING = False
+
+
+def _rate_limit(limit_string: str):
+    """Rate limit decorator that degrades gracefully if slowapi is missing."""
+    if _NETWORK_RATE_LIMITING and _network_limiter:
+        return _network_limiter.limit(limit_string)
+    return lambda f: f
 
 
 # Thread-safe cache for expensive network queries
@@ -540,7 +557,9 @@ class CommunitiesResponse(BaseModel):
 
 
 @router.get("/communities", response_model=CommunitiesResponse)
+@_rate_limit("20/minute")
 def get_communities(
+    request: Request,
     min_size: int = Query(3, ge=2, description="Minimum community size"),
     min_avg_risk: float = Query(0.0, ge=0, le=1, description="Minimum average risk score"),
     sector_id: Optional[int] = Query(None, ge=1, le=12, description="Filter by sector"),

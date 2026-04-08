@@ -34,6 +34,7 @@ import type { CollusionPair, CollusionStats } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SharedContractsModal } from '@/components/SharedContractsModal'
+import { TableExportButton } from '@/components/TableExportButton'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -805,6 +806,19 @@ function CollusionPairsTable() {
 
       {/* Controls row */}
       <div className="flex flex-wrap items-end gap-3 mb-4">
+        {/* Export */}
+        {tableData?.data && tableData.data.length > 0 && (
+          <TableExportButton
+            data={tableData.data.map((p: CollusionPair) => ({
+              vendor_name_a: p.vendor_name_a,
+              vendor_name_b: p.vendor_name_b,
+              shared_procedures: p.shared_procedures,
+              co_bid_rate: p.co_bid_rate,
+              is_potential_collusion: p.is_potential_collusion ? 'yes' : 'no',
+            }))}
+            filename="collusion-pairs"
+          />
+        )}
         {/* Search */}
         <div className="relative flex-1 min-w-48 max-w-xs">
           <label htmlFor="table-search" className="sr-only">

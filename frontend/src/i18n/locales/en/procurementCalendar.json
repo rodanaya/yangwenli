@@ -1,0 +1,91 @@
+{
+  "pageTitle": "Procurement Calendar",
+  "pageSubtitle": "Contract activity by day — risk and volume heatmap",
+  "section": "Budget Risk Calendar",
+  "headline": "The calendar of suspicious spending",
+  "headlineSubtitle": "Contract activity and risk level by day. Year-end and election-year patterns reveal systematic behavior.",
+  "lede": "Each cell represents one day. Colors indicate the average risk level of contracts awarded that day: deep red marks days where most contracts show risk factors. December patterns are especially revealing — year-end \"budget dumps\" concentrate contracts that under normal circumstances would have gone through competitive bidding.",
+  "yearLabel": "Year",
+  "electionSuffix": "* election year",
+  "weekdays": {
+    "short": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+    "long": ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"]
+  },
+  "months": {
+    "short": ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"],
+    "long": ["january", "february", "march", "april", "may", "june", "july", "august", "september", "october", "november", "december"]
+  },
+  "tooltip": {
+    "contracts": "Contracts",
+    "highRisk": "High-risk",
+    "riskRate": "Risk rate"
+  },
+  "events": {
+    "budgetClose": "December: budget year-end period",
+    "preElectoral": "Federal pre-election period"
+  },
+  "legend": {
+    "riskLevel": "Risk level",
+    "noContracts": "No contracts",
+    "riskLow": "Low risk (<10%)",
+    "riskMedium": "Medium risk (10–20%)",
+    "riskHigh": "High risk (>20%)",
+    "riskCritical": "Critical risk (>30%)",
+    "activity": "Activity (darker = more contracts)"
+  },
+  "stats": {
+    "contractsInYear": "Contracts in {{year}}",
+    "highRiskContracts": "High-risk contracts",
+    "ofTotal": "{{pct}}% of total",
+    "mostActiveDay": "Most active day",
+    "contractsCount": "{{num}} contracts",
+    "decVsJan": "Dec vs Jan contracts",
+    "budgetCloseIndicator": "Budget close indicator"
+  },
+  "electionBanner": {
+    "title": "Federal election year",
+    "body": "Contracts in the pre-election period may show atypical patterns of direct award. Compare the months preceding the election with non-election years."
+  },
+  "calendarHeader": "Daily activity {{year}}",
+  "error": {
+    "load": "Calendar data could not be loaded. COMPRANET may be temporarily unavailable — showing cached data if available.",
+    "noData": "No data available for {{year}}. COMPRANET records for this year have not yet been processed or the year is outside the coverage range (2015–2024)."
+  },
+  "insights": {
+    "mostActiveDay": "Most active day",
+    "peakRiskDay": "Peak risk day",
+    "decemberRisk": "December risk rate",
+    "vsRestOfYear": "vs {{pct}}% rest of year",
+    "yearType": "Year type",
+    "electoral": "Electoral",
+    "regular": "Regular",
+    "compareElectoral": "Compare with non-election years",
+    "noFederalElections": "No federal elections"
+  },
+  "patterns": {
+    "title": "Detected patterns — {{year}}",
+    "decemberSpike": "December {{year}}: {{num}} contracts",
+    "decemberSpikeDetail": "{{ratio}}x the monthly average — budget close detected",
+    "electionPattern": "Election year pattern",
+    "electionDetail": "Federal elections in {{year}} — contracting typically accelerates in the months preceding the election as outgoing governments rush spending",
+    "peakRiskDayLabel": "Peak risk day: {{date}}",
+    "peakRiskDayDetail": "{{pct}}% risk rate — {{high}} of {{total}} contracts flagged"
+  },
+  "decemberSection": {
+    "title": "RUBLI · December Under the Microscope",
+    "noData": "December data not available for {{year}}. The selected year may have partial data.",
+    "subtitle": "December's budget close concentrates accelerated contracting. In {{year}}, December accumulated <strong>{{dec}}</strong> contracts against a monthly average of <strong>{{avg}}</strong>.",
+    "volume": "Contract Volume",
+    "december": "December",
+    "monthlyAvg": "Monthly Average",
+    "restOfYear": "Rest of year",
+    "riskRate": "Risk Rate",
+    "peakRiskDay": "Peak Risk Day"
+  },
+  "finding": {
+    "label": "FINDING",
+    "body": "24 consecutive years of spending spikes in December. The budget close is structural, not accidental. Every administration, regardless of party, exhausts remaining budget in December — creating a predictable window of accelerated, lower-scrutiny contracting that concentrates a disproportionate share of high-risk awards.",
+    "oecd": "OECD: Mexico's direct award rate exceeds 80% — more than 3x the recommended limit of 25%."
+  },
+  "source": "Source: COMPRANET · 3.06M contracts (2002–2025) · Risk model v0.6.5 (AUC=0.828)"
+}

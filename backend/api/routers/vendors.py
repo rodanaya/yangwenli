@@ -15,7 +15,7 @@ import sqlite3
 import threading
 from datetime import datetime, timedelta
 from typing import Optional, List, Any, Dict
-from fastapi import APIRouter, HTTPException, Query, Path
+from fastapi import APIRouter, HTTPException, Query, Path, Request
 from fastapi.responses import StreamingResponse
 from collections import Counter
 from pydantic import BaseModel
@@ -49,6 +49,23 @@ from ..services.vendor_service import vendor_service
 logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/vendors", tags=["vendors"])
+
+# Optional rate limiting - gracefully degrade if slowapi not installed
+try:
+    from slowapi import Limiter
+    from slowapi.util import get_remote_address
+    _vendors_limiter = Limiter(key_func=get_remote_address)
+    _VENDORS_RATE_LIMITING = True
+except ImportError:
+    _vendors_limiter = None
+    _VENDORS_RATE_LIMITING = False
+
+
+def _rate_limit(limit_string: str):
+    """Rate limit decorator that degrades gracefully if slowapi is missing."""
+    if _VENDORS_RATE_LIMITING and _vendors_limiter:
+        return _vendors_limiter.limit(limit_string)
+    return lambda f: f
 
 # Simple TTL cache for expensive aggregate endpoints
 _vendor_cache: Dict[str, Dict[str, Any]] = {}
@@ -121,7 +138,9 @@ class VendorSHAPResponse(BaseModel):
 # =============================================================================
 
 @router.get("", response_model=VendorListResponse)
+@_rate_limit("60/minute")
 def list_vendors(
+    request: Request,
     page: int = Query(1, ge=1, description="Page number (1-indexed)"),
     per_page: int = Query(50, ge=1, le=100, description="Items per page (max 100)"),
     search: Optional[str] = Query(None, min_length=2, description="Search vendor name or RFC"),
@@ -2345,8 +2364,9 @@ def list_verified_vendors(
             params.append(industry_code)
 
         if search:
-            conditions.append("v.name LIKE ?")
-            params.append(f"%{search}%")
+            search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+            conditions.append("v.name LIKE ? ESCAPE '\\\\'")
+            params.append(f"%{search_escaped}%")
 
         if min_confidence:
             conditions.append("vc.industry_confidence >= ?")

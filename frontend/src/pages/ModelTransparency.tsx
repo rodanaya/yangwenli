@@ -17,6 +17,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { SectionDescription } from '@/components/SectionDescription'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
+import { CitationBlock } from '@/components/CitationBlock'
 import { cn, formatNumber } from '@/lib/utils'
 import { RISK_COLORS, RISK_THRESHOLDS, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
@@ -641,14 +642,15 @@ function DriftMonitorSection() {
 // ============================================================================
 
 const RACETRACK_FEATURES = [
-  { name: 'Price Volatility', coeff: 1.857, direction: 'risk' as const },
-  { name: 'Price Ratio', coeff: 0.391, direction: 'risk' as const },
-  { name: 'Vendor Concentration', coeff: 0.238, direction: 'risk' as const },
-  { name: 'Network Members', coeff: 0.187, direction: 'risk' as const },
-  { name: 'Same-Day Contracts', coeff: 0.111, direction: 'risk' as const },
-  { name: 'Single Bid', coeff: 0.098, direction: 'risk' as const },
-  { name: 'Ad Period Days', coeff: 0.042, direction: 'risk' as const },
-  { name: 'Institution Diversity', coeff: 0.468, direction: 'protect' as const },
+  { name: 'Price Volatility', coeff: 0.5343, direction: 'risk' as const },
+  { name: 'Vendor Concentration', coeff: 0.3749, direction: 'risk' as const },
+  { name: 'Institution Diversity', coeff: 0.3821, direction: 'protect' as const },
+  { name: 'Price Ratio', coeff: 0.2345, direction: 'risk' as const },
+  { name: 'Network Members', coeff: 0.1811, direction: 'risk' as const },
+  { name: 'Same-Day Contracts', coeff: 0.0945, direction: 'risk' as const },
+  { name: 'Win Rate', coeff: 0.0488, direction: 'risk' as const },
+  { name: 'Ad Period Days', coeff: 0.0423, direction: 'risk' as const },
+  { name: 'Direct Award', coeff: 0.0306, direction: 'risk' as const },
 ]
 
 function FeatureWeightsRacetrack() {
@@ -2287,6 +2289,8 @@ export default function ModelTransparency() {
           </div>
         </CardContent>
       </Card>
+
+      <CitationBlock context="Model v0.6.5 — AUC 0.828, 3.1M contracts" className="mt-2" />
     </div>
   )
 }

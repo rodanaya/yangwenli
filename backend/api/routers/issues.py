@@ -78,7 +78,10 @@ class IssueOut(BaseModel):
 # ---------------------------------------------------------------------------
 
 @router.post("", response_model=IssueOut, status_code=201)
-def submit_issue(body: IssueIn, _: None = Depends(require_write_key)):
+def submit_issue(body: IssueIn):
+    # No auth required — anonymous public feedback form. Any visitor can submit
+    # a bug report or wrong-data alert. Rate limiting at the reverse-proxy level
+    # (nginx/Caddy) is the appropriate spam control here, not API key auth.
     """Submit a new issue report (bug, wrong data, feature request, other)."""
     if body.category not in VALID_CATEGORIES:
         raise HTTPException(
@@ -122,6 +125,9 @@ def list_issues(
     category: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=500),
 ):
+    # NOTE: No auth on this GET intentionally (dev/internal tool), but user
+    # emails are included in the response.  If this endpoint is ever exposed
+    # publicly, add Depends(require_write_key) here.
     """List submitted issues (admin view)."""
     try:
         with get_db() as conn:

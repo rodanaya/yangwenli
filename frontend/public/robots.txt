@@ -1,2 +1,5 @@
 User-agent: *
 Allow: /
+
+# Sitemap (if generated in future)
+# Sitemap: https://rubli.xyz/sitemap.xml

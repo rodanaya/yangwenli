@@ -123,6 +123,7 @@
     "loadAnalysis": "Cargar análisis",
     "loadAnalysisHint": "Haz clic en «Cargar análisis» para obtener observaciones generadas por IA sobre los patrones de este proveedor.",
     "couldNotLoad": "No se pudo cargar esta sección. Intenta actualizar la página.",
+    "noPatternInsights": "No hay análisis de patrones disponibles para este proveedor.",
     "couldNotLoadPeerComparison": "No se pudieron cargar los datos de comparación entre pares. Intenta actualizar.",
     "fingerprint": "HUELLA DE RIESGO",
     "fingerprintSubtitle": "Firma de riesgo única · Área proporcional a la contribución SHAP de cada factor",
@@ -276,5 +277,17 @@
   "nameVariantsMore": "+{{count}} más",
   "rfcCopied": "RFC copiado",
   "copyRfc": "Copiar RFC",
-  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado"
+  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado",
+  "plainLanguage": {
+    "riskSentence": {
+      "highDirectAward": "{{name}} evita la licitación competitiva en el {{pct}}% de sus contratos — {{multiple}}× el promedio nacional del 35%.",
+      "highSingleBid": "{{name}} gana el {{pct}}% de las licitaciones competitivas sin oposición — patrón de licitante único consistente con captura de mercado.",
+      "highRiskPattern": "{{name}} muestra patrones de contratación que se asemejan estrechamente a {{count}} casos de corrupción documentados en la base de datos RUBLI.",
+      "default": "El perfil de contratación de {{name}} amerita un examen más detallado."
+    },
+    "scaleSentence": {
+      "highValue": "El valor total de contratos de {{amount}} lo ubica entre los proveedores de mayor valor del gobierno mexicano.",
+      "highCount": "{{total}} contratos a lo largo de su historia de contratación sugieren relaciones institucionales profundas."
+    }
+  }
 }

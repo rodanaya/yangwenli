@@ -18,6 +18,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useState, useMemo } from 'react'
+import { TableExportButton } from '@/components/TableExportButton'
+import { CitationBlock } from '@/components/CitationBlock'
+import { ShareButton } from '@/components/ShareButton'
 import {
   BarChart,
   Bar,
@@ -445,6 +448,7 @@ function AnomalyTimelineSection({
   contracts: PriceAnomalyContract[]
   loading: boolean
 }) {
+  const { t } = useTranslation('price')
   const yearData = useMemo(() => {
     if (!contracts.length) return []
     const yearMap = new Map<number, { year: number; count: number; total_z: number; total_value: number }>()
@@ -481,7 +485,7 @@ function AnomalyTimelineSection({
           className="text-lg font-bold text-zinc-100"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
-          Contratos con precio anomalo por ano (2015-2025)
+          {t('anomalousContractsByYear')}
         </h2>
       </div>
       <ResponsiveContainer width="100%" height={200}>
@@ -659,15 +663,18 @@ export default function PriceIntelligence() {
           RUBLI &middot; Inteligencia de precios
         </p>
 
-        {/* Page title */}
-        <h1
-          className="text-2xl md:text-3xl font-bold text-zinc-100 leading-tight mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          Mercado en la Sombra
-        </h1>
+        {/* Page title + share */}
+        <div className="flex items-start justify-between gap-4">
+          <h1
+            className="text-2xl md:text-3xl font-bold text-zinc-100 leading-tight mb-1"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            Mercado en la Sombra
+          </h1>
+          <ShareButton label="Compartir" className="mt-1 flex-shrink-0" />
+        </div>
         <p className="text-sm text-zinc-500 mb-4">
-          Contratos adjudicados a precios estadisticamente anomalos
+          {t('contractsAwardedAtAnomalousPrice')}
         </p>
 
         {/* Source pills */}
@@ -747,7 +754,7 @@ export default function PriceIntelligence() {
                       {formatNumber(summary.total_outliers)}
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                      Contratos anomalos
+                      {t('anomalousContracts')}
                     </div>
                   </div>
 
@@ -970,13 +977,32 @@ export default function PriceIntelligence() {
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
             RUBLI &middot; Casos extremos
           </p>
-          <h2
-            className="text-xl font-bold text-zinc-100"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {t('topAnomaliesTitle')}
-          </h2>
-          <p className="text-sm text-zinc-500 mt-1">{t('extremeCasesSubtitle')}</p>
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h2
+                className="text-xl font-bold text-zinc-100"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {t('topAnomaliesTitle')}
+              </h2>
+              <p className="text-sm text-zinc-500 mt-1">{t('extremeCasesSubtitle')}</p>
+            </div>
+            {allContracts.length > 0 && (
+              <TableExportButton
+                data={allContracts.map(c => ({
+                  contract_id: c.contract_id,
+                  vendor_name: c.vendor_name,
+                  institution_name: c.institution_name,
+                  amount_mxn: c.amount_mxn,
+                  sector_id: c.sector_id,
+                  year: c.contract_year,
+                  z_price_ratio: c.z_price_ratio,
+                  risk_level: c.risk_level,
+                }))}
+                filename="price-anomalies"
+              />
+            )}
+          </div>
         </div>
 
         {loading ? (
@@ -1061,6 +1087,8 @@ export default function PriceIntelligence() {
       {/* SECTION 7: Methodology                                             */}
       {/* ================================================================== */}
       <MethodologySection t={t} />
+
+      <CitationBlock context="Price anomaly analysis — 7,090 anomalies" className="mt-2" />
     </div>
   )
 }

@@ -90,8 +90,9 @@ class QueryBuilder:
                 for the LIKE pattern if needed.
         """
         if search and columns:
-            pattern = f"%{search}%"
-            like_clauses = [f"{col} LIKE ?" for col in columns]
+            search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
+            pattern = f"%{search_escaped}%"
+            like_clauses = [f"{col} LIKE ? ESCAPE '\\\\'" for col in columns]
             all_clauses = like_clauses[:]
             all_params = [pattern] * len(columns)
             if extra_subquery:

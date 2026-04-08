@@ -346,7 +346,37 @@
     "errorLoadingConcentration": "Error al cargar el mapa de concentración.",
     "noContractsTooltip": "Sin contratos",
     "contractsRiskTooltip": "{{count}} contratos · riesgo {{risk}}%",
-    "untitled": "Sin título"
+    "untitled": "Sin título",
+    "institutionTypeLabels": {
+      "default": "Entidad Gubernamental",
+      "secretaria": "Secretaría",
+      "organoDesconcentrado": "Órgano Desconcentrado",
+      "entidadParaestatal": "Entidad Paraestatal",
+      "empresaProductiva": "Empresa Productiva del Estado",
+      "organoAutonomo": "Órgano Autónomo",
+      "poderJudicial": "Poder Judicial",
+      "poderLegislativo": "Poder Legislativo"
+    },
+    "editorialLedeCapture": "adjudicó el {{daPct}}% de sus contratos de forma directa — sin licitación competitiva. {{topVendor}} acapara el {{topVendorPct}}% del valor de compras en {{totalContracts}} contratos. Puntuación de riesgo promedio: {{score}}%.",
+    "editorialLedeMedium": "registra una puntuación de riesgo promedio de {{score}}% en {{totalContracts}} contratos, con el {{daPct}}% adjudicado directamente. Los patrones de compra merecen mayor escrutinio.",
+    "editorialLedeLow": "muestra una puntuación de riesgo promedio de {{score}}% en {{totalContracts}} contratos. Tasa de adjudicación directa: {{daPct}}%. No se detectaron anomalías críticas."
+  },
+  "drawer": {
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "totalSpend": "Gasto Total",
+    "aiRiskScore": "Puntuación de Riesgo IA",
+    "noTrajectory": "Sin datos de trayectoria",
+    "noSignificantRisk": "No se detectaron indicadores de riesgo significativos",
+    "noAsfFindings": "Sin hallazgos ASF en registro",
+    "aiIntelligence": "Inteligencia IA",
+    "relationshipNetwork": "Red de Relaciones",
+    "riskTrajectory": "Trayectoria de Riesgo",
+    "asfFindings": "Hallazgos ASF",
+    "vendorProfile": "Perfil del Proveedor",
+    "institutionProfile": "Perfil de la Institución",
+    "ariaLabel": "Perfil de entidad",
+    "closeAriaLabel": "Cerrar panel de perfil"
   },
   "compare": {
     "section": "COMPARATIVA INSTITUCIONAL",

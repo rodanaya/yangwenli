@@ -349,13 +349,13 @@ function CategoryDetailPanel({
               <span className="w-4 flex-shrink-0">#</span>
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <User className="h-3 w-3 flex-shrink-0" />
-                <span>Proveedor</span>
+                <span>{t('detail.vendor')}</span>
                 <span className="text-text-muted/30">&rarr;</span>
                 <Building2 className="h-3 w-3 flex-shrink-0" />
-                <span>Institución</span>
+                <span>{t('detail.institution')}</span>
               </div>
-              <span className="w-20 text-right flex-shrink-0">Monto</span>
-              <span className="w-14 text-right flex-shrink-0 hidden md:block">Contratos</span>
+              <span className="w-20 text-right flex-shrink-0">{t('detail.amount')}</span>
+              <span className="w-14 text-right flex-shrink-0 hidden md:block">{t('detail.contracts')}</span>
               <span className="w-12 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
               <span className="w-12 text-right flex-shrink-0 hidden xl:block">AD%</span>
             </div>
@@ -432,6 +432,7 @@ function CategorySummaryCard({
   onNavigate: (path: string) => void
   trendItems?: TrendItem[]
 }) {
+  const { t } = useTranslation('spending')
   const riskLevel = getRiskLevelFromScore(category.avg_risk)
   const riskColor = RISK_COLORS[riskLevel]
   const sectorColor = category.sector_code ? (SECTOR_COLORS[category.sector_code] || '#64748b') : '#64748b'
@@ -480,7 +481,7 @@ function CategorySummaryCard({
       <div className="grid grid-cols-2 md:grid-cols-5 gap-px bg-border/10">
         {/* Total Value */}
         <div className="bg-background-card px-4 py-3.5">
-          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Monto Total</p>
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('detail.totalAmount')}</p>
           <p className="text-xl font-mono font-bold text-text-primary leading-tight">
             {formatCompactMXN(category.total_value)}
           </p>
@@ -488,7 +489,7 @@ function CategorySummaryCard({
 
         {/* Contract Count */}
         <div className="bg-background-card px-4 py-3.5">
-          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Contratos</p>
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('detail.contracts')}</p>
           <p className="text-xl font-mono font-bold text-text-primary leading-tight">
             {formatNumber(category.total_contracts)}
           </p>
@@ -499,7 +500,7 @@ function CategorySummaryCard({
 
         {/* Avg Risk */}
         <div className="bg-background-card px-4 py-3.5">
-          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Riesgo Promedio</p>
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('detail.avgRisk')}</p>
           <div className="flex items-baseline gap-2">
             <p className="text-xl font-mono font-bold leading-tight" style={{ color: riskColor }}>
               {(category.avg_risk * 100).toFixed(1)}%
@@ -698,6 +699,7 @@ function SubcategoryPanel({
   loading: boolean
   onNavigate: (path: string) => void
 }) {
+  const { t } = useTranslation('spending')
   const [expandedId, setExpandedId] = useState<number | null>(null)
   const [subSort, setSubSort] = useState<SubSort>('value')
 
@@ -907,7 +909,7 @@ function SubcategoryPanel({
                     )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Contratos</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('detail.contracts')}</p>
                         <p className="text-sm font-mono font-bold text-text-primary">{formatNumber(sub.total_contracts)}</p>
                       </div>
                       {sub.year_min != null && sub.year_max != null && (

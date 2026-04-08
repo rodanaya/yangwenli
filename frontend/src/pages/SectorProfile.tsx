@@ -449,7 +449,7 @@ function RiskDonut({
               endAngle={-270}
             >
               {pieData.map((entry, index) => (
-                <Cell key={index} fill={entry.color} stroke="transparent" />
+                <Cell key={entry.name ?? index} fill={entry.color} stroke="transparent" />
               ))}
             </Pie>
             <RechartsTooltip

@@ -346,7 +346,37 @@
     "errorLoadingConcentration": "Error loading concentration map.",
     "noContractsTooltip": "No contracts",
     "contractsRiskTooltip": "{{count}} contracts · risk {{risk}}%",
-    "untitled": "Untitled"
+    "untitled": "Untitled",
+    "institutionTypeLabels": {
+      "default": "Government Entity",
+      "secretaria": "Ministry",
+      "organoDesconcentrado": "Deconcentrated Body",
+      "entidadParaestatal": "State-Owned Entity",
+      "empresaProductiva": "Productive State Enterprise",
+      "organoAutonomo": "Autonomous Body",
+      "poderJudicial": "Judicial Branch",
+      "poderLegislativo": "Legislative Branch"
+    },
+    "editorialLedeCapture": "awarded {{daPct}}% of its contracts directly — bypassing competitive bidding. {{topVendor}} captures {{topVendorPct}}% of procurement value across {{totalContracts}} contracts. Average risk score: {{score}}%.",
+    "editorialLedeMedium": "registers an average risk score of {{score}}% across {{totalContracts}} contracts, with {{daPct}}% awarded directly. Procurement patterns warrant closer scrutiny.",
+    "editorialLedeLow": "shows an average risk score of {{score}}% across {{totalContracts}} contracts. Direct award rate: {{daPct}}%. No critical anomalies detected."
+  },
+  "drawer": {
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "totalSpend": "Total Spend",
+    "aiRiskScore": "AI Risk Score",
+    "noTrajectory": "No trajectory data",
+    "noSignificantRisk": "No significant risk indicators detected",
+    "noAsfFindings": "No ASF findings on record",
+    "aiIntelligence": "AI Intelligence",
+    "relationshipNetwork": "Relationship Network",
+    "riskTrajectory": "Risk Trajectory",
+    "asfFindings": "ASF Findings",
+    "vendorProfile": "Vendor Profile",
+    "institutionProfile": "Institution Profile",
+    "ariaLabel": "Entity profile",
+    "closeAriaLabel": "Close profile drawer"
   },
   "compare": {
     "section": "INSTITUTIONAL COMPARISON",

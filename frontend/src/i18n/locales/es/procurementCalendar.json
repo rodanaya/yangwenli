@@ -1,0 +1,91 @@
+{
+  "pageTitle": "Calendario de Contrataciones",
+  "pageSubtitle": "Actividad contractual por día — mapa de calor de riesgo y volumen",
+  "section": "Calendario de Riesgo Presupuestal",
+  "headline": "El calendario del gasto sospechoso",
+  "headlineSubtitle": "Actividad contractual y nivel de riesgo por día. Los patrones de fin de año y año electoral revelan comportamientos sistemáticos.",
+  "lede": "Cada celda representa un día. Los colores indican el nivel de riesgo promedio de los contratos adjudicados ese día: el rojo intenso señala días donde la mayoría de contratos presentan factores de riesgo. Los patrones de diciembre son especialmente reveladores — el \"subejercicio\" de fin de año concentra contrataciones que en circunstancias normales habrían sido licitadas.",
+  "yearLabel": "Año",
+  "electionSuffix": "* año electoral",
+  "weekdays": {
+    "short": ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"],
+    "long": ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"]
+  },
+  "months": {
+    "short": ["Ene", "Feb", "Mar", "Abr", "May", "Jun", "Jul", "Ago", "Sep", "Oct", "Nov", "Dic"],
+    "long": ["enero", "febrero", "marzo", "abril", "mayo", "junio", "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre"]
+  },
+  "tooltip": {
+    "contracts": "Contratos",
+    "highRisk": "Alto riesgo",
+    "riskRate": "Tasa de riesgo"
+  },
+  "events": {
+    "budgetClose": "Diciembre: período de cierre presupuestal",
+    "preElectoral": "Período pre-electoral federal"
+  },
+  "legend": {
+    "riskLevel": "Nivel de riesgo",
+    "noContracts": "Sin contratos",
+    "riskLow": "Riesgo bajo (<10%)",
+    "riskMedium": "Riesgo medio (10–20%)",
+    "riskHigh": "Riesgo alto (>20%)",
+    "riskCritical": "Riesgo crítico (>30%)",
+    "activity": "Actividad (más oscuro = más contratos)"
+  },
+  "stats": {
+    "contractsInYear": "Contratos en {{year}}",
+    "highRiskContracts": "Contratos de alto riesgo",
+    "ofTotal": "{{pct}}% del total",
+    "mostActiveDay": "Día más activo",
+    "contractsCount": "{{num}} contratos",
+    "decVsJan": "Dic vs Ene contratos",
+    "budgetCloseIndicator": "Indicador de cierre presupuestal"
+  },
+  "electionBanner": {
+    "title": "Año electoral federal",
+    "body": "Los contratos en período pre-electoral pueden mostrar patrones atípicos de adjudicación directa. Compare los meses previos a la elección con años no electorales."
+  },
+  "calendarHeader": "Actividad diaria {{year}}",
+  "error": {
+    "load": "No se pudieron cargar los datos del calendario. COMPRANET puede estar temporalmente no disponible — mostrando datos en caché si existen.",
+    "noData": "Sin datos disponibles para {{year}}. Los registros de COMPRANET para este año aún no han sido procesados o el año está fuera del rango de cobertura (2015-2024)."
+  },
+  "insights": {
+    "mostActiveDay": "Día más activo",
+    "peakRiskDay": "Día de mayor riesgo",
+    "decemberRisk": "Riesgo en diciembre",
+    "vsRestOfYear": "vs {{pct}}% resto del año",
+    "yearType": "Tipo de año",
+    "electoral": "Electoral",
+    "regular": "Regular",
+    "compareElectoral": "Compare con años no electorales",
+    "noFederalElections": "Sin elecciones federales"
+  },
+  "patterns": {
+    "title": "Patrones detectados — {{year}}",
+    "decemberSpike": "Diciembre {{year}}: {{num}} contratos",
+    "decemberSpikeDetail": "{{ratio}}x el promedio mensual — cierre presupuestal detectado",
+    "electionPattern": "Patrón de año electoral",
+    "electionDetail": "Elecciones federales en {{year}} — la contratación típicamente se acelera en los meses previos mientras los gobiernos en turno aceleran el gasto",
+    "peakRiskDayLabel": "Día de mayor riesgo: {{date}}",
+    "peakRiskDayDetail": "{{pct}}% tasa de riesgo — {{high}} de {{total}} contratos marcados"
+  },
+  "decemberSection": {
+    "title": "RUBLI · Diciembre bajo la lupa",
+    "noData": "Datos de diciembre no disponibles para {{year}}. El año seleccionado puede tener datos parciales.",
+    "subtitle": "El cierre presupuestal de diciembre concentra contrataciones aceleradas. En {{year}}, diciembre acumuló <strong>{{dec}}</strong> contratos frente a un promedio mensual de <strong>{{avg}}</strong>.",
+    "volume": "Volumen de contratos",
+    "december": "Diciembre",
+    "monthlyAvg": "Promedio mensual",
+    "restOfYear": "Resto del año",
+    "riskRate": "Tasa de riesgo",
+    "peakRiskDay": "Día de mayor riesgo"
+  },
+  "finding": {
+    "label": "HALLAZGO",
+    "body": "24 años consecutivos de picos de gasto en diciembre. El cierre presupuestal es estructural, no accidental. Cada administración, sin importar el partido, agota el presupuesto restante en diciembre — creando una ventana predecible de contratación acelerada y con menor escrutinio que concentra una proporción desproporcionada de contratación de alto riesgo.",
+    "oecd": "OCDE: La tasa de adjudicación directa en México supera el 80% — más de 3x el límite recomendado del 25%."
+  },
+  "source": "Fuente: COMPRANET · 3.06M contratos (2002-2025) · Modelo de riesgo v0.6.5 (AUC=0.828)"
+}

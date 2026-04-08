@@ -123,6 +123,7 @@
     "loadAnalysis": "Load analysis",
     "loadAnalysisHint": "Click \"Load analysis\" to fetch AI-generated pattern insights for this vendor.",
     "couldNotLoad": "Could not load this section. Try refreshing.",
+    "noPatternInsights": "No pattern insights available for this vendor.",
     "couldNotLoadPeerComparison": "Could not load peer comparison data. Try refreshing.",
     "fingerprint": "RISK FINGERPRINT",
     "fingerprintSubtitle": "Unique risk signature · Area proportional to each factor's SHAP contribution",
@@ -276,5 +277,17 @@
   "nameVariantsMore": "+{{count}} more",
   "rfcCopied": "RFC copied",
   "copyRfc": "Copy RFC",
-  "vendorGroupTooltip": "This vendor belongs to a related network group"
+  "vendorGroupTooltip": "This vendor belongs to a related network group",
+  "plainLanguage": {
+    "riskSentence": {
+      "highDirectAward": "{{name}} bypasses competitive bidding on {{pct}}% of contracts — {{multiple}}× the national average of 35%.",
+      "highSingleBid": "{{name}} wins {{pct}}% of competitive bids unopposed — a single-bidder pattern consistent with market capture.",
+      "highRiskPattern": "{{name}} shows procurement patterns that closely resemble {{count}} documented corruption cases in the RUBLI ground truth database.",
+      "default": "{{name}}'s procurement profile warrants closer examination."
+    },
+    "scaleSentence": {
+      "highValue": "Total contract value of {{amount}} places it among Mexico's highest-value government suppliers.",
+      "highCount": "{{total}} contracts over its procurement history suggests deep institutional relationships."
+    }
+  }
 }

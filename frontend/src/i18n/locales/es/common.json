@@ -409,5 +409,50 @@
   },
   "backToAriaQueue": "Volver a Cola ARIA",
   "backToCollusion": "Volver a Pares Coludidos",
-  "backToInstitutions": "Volver a Instituciones"
+  "backToInstitutions": "Volver a Instituciones",
+  "share": {
+    "title": "Compartir",
+    "copied": "¡Copiado!",
+    "whatsapp": "WhatsApp",
+    "postOnX": "Publicar en X",
+    "copyLink": "Copiar enlace",
+    "template": "🔍 {{summary}} — RUBLI Inteligencia de Contrataciones: {{url}}"
+  },
+  "errors": {
+    "couldNotLoad": "No se pudo cargar esta sección. Intenta refrescar la página.",
+    "failedToSubmit": "Error al enviar — por favor intenta de nuevo.",
+    "failedToLoad": "Error al cargar los datos.",
+    "noData": "Sin datos disponibles.",
+    "noResults": "Ningún resultado coincide con los filtros actuales."
+  },
+  "reportIssue": {
+    "title": "Reportar un problema",
+    "categoryLabel": "Categoría",
+    "subjectLabel": "Asunto",
+    "subjectPlaceholder": "Resumen breve del problema",
+    "descriptionLabel": "Descripción",
+    "descriptionPlaceholder": "¿Qué ocurrió? ¿Qué esperabas? Incluye IDs o valores relevantes.",
+    "emailLabel": "Correo electrónico",
+    "emailPlaceholder": "tu@ejemplo.com",
+    "emailNote": "(opcional — para seguimiento)",
+    "pageCapture": "La página actual se capturará automáticamente:",
+    "success": "Gracias, lo recibimos.",
+    "successDetail": "Lo revisaremos. Si dejaste un correo, te contactaremos cuando se resuelva.",
+    "btnClose": "Cerrar",
+    "btnCancel": "Cancelar",
+    "btnSend": "Enviar reporte",
+    "btnSending": "Enviando…",
+    "categories": {
+      "bug": "Error técnico",
+      "bugDesc": "Página rota, gráfica no carga, mensaje de error",
+      "wrongData": "Dato incorrecto",
+      "wrongDataDesc": "Monto erróneo, nombre de proveedor incorrecto, registro faltante",
+      "dispute": "Impugnar un hallazgo",
+      "disputeDesc": "Contestar un puntaje de riesgo o bandera que consideras incorrecto",
+      "feature": "Solicitud de función",
+      "featureDesc": "Nueva gráfica, filtro, formato de exportación o análisis",
+      "other": "Otro",
+      "otherDesc": "Comentarios generales o cualquier otra cosa"
+    }
+  }
 }

@@ -1,4 +1,4 @@
-import { lazy } from 'react'
+import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
@@ -16,7 +16,9 @@ import {
   GenericPageSkeleton,
 } from '@/components/LoadingSkeleton'
 import { EntityDrawerProvider } from '@/contexts/EntityDrawerContext'
-import { EntityProfileDrawer } from '@/components/EntityProfileDrawer'
+const EntityProfileDrawer = lazy(() =>
+  import('@/components/EntityProfileDrawer').then(m => ({ default: m.EntityProfileDrawer }))
+)
 
 // Lazy load all page components for code splitting
 const Intro = lazy(() => import('@/pages/Intro'))
@@ -110,6 +112,10 @@ function App() {
                 path="report-card"
                 element={<Navigate to="/institutions?tab=reporte" replace />}
               />
+              {/* Institution URL aliases — various guessed routes all land on /institutions */}
+              <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
+              <Route path="league" element={<Navigate to="/institutions" replace />} />
+              <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
               <Route
                 path="executive-summary"
                 element={
@@ -463,7 +469,9 @@ function App() {
               <Route path="*" element={<NotFound />} />
             </Route>
           </Routes>
-          <EntityProfileDrawer />
+          <Suspense fallback={null}>
+            <EntityProfileDrawer />
+          </Suspense>
           </NuqsAdapter>
           </BrowserRouter>
           </EntityDrawerProvider>

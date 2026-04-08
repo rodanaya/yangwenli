@@ -46,5 +46,15 @@
   "errors": {
     "loadCategories": "Error loading spending categories",
     "checkConnection": "Check your connection and try again."
+  },
+  "detail": {
+    "contracts": "Contracts",
+    "highRiskContracts": "High-Risk Contracts",
+    "institution": "Institution",
+    "vendor": "Vendor",
+    "amount": "Amount",
+    "risk": "Risk",
+    "totalAmount": "Total Amount",
+    "avgRisk": "Avg Risk"
   }
 }

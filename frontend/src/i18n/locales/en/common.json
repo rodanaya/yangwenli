@@ -409,5 +409,50 @@
   },
   "backToAriaQueue": "Back to ARIA Queue",
   "backToCollusion": "Back to Collusion Pairs",
-  "backToInstitutions": "Back to Institutions"
+  "backToInstitutions": "Back to Institutions",
+  "share": {
+    "title": "Share",
+    "copied": "Copied!",
+    "whatsapp": "WhatsApp",
+    "postOnX": "Post on X",
+    "copyLink": "Copy link",
+    "template": "🔍 {{summary}} — RUBLI Procurement Intelligence: {{url}}"
+  },
+  "errors": {
+    "couldNotLoad": "Could not load this section. Try refreshing.",
+    "failedToSubmit": "Failed to submit — please try again.",
+    "failedToLoad": "Failed to load data.",
+    "noData": "No data available.",
+    "noResults": "No results match the current filters."
+  },
+  "reportIssue": {
+    "title": "Report an issue",
+    "categoryLabel": "Category",
+    "subjectLabel": "Subject",
+    "subjectPlaceholder": "Short summary of the issue",
+    "descriptionLabel": "Description",
+    "descriptionPlaceholder": "What happened? What were you expecting? Include any relevant IDs or values.",
+    "emailLabel": "Email",
+    "emailPlaceholder": "you@example.com",
+    "emailNote": "(optional — for follow-up)",
+    "pageCapture": "Current page will be captured automatically:",
+    "success": "Thanks, we received it.",
+    "successDetail": "We'll look into it. If you left an email we'll follow up when it's resolved.",
+    "btnClose": "Close",
+    "btnCancel": "Cancel",
+    "btnSend": "Send report",
+    "btnSending": "Sending…",
+    "categories": {
+      "bug": "Bug",
+      "bugDesc": "Page broken, chart not loading, error message",
+      "wrongData": "Wrong data",
+      "wrongDataDesc": "Incorrect amount, wrong vendor name, missing record",
+      "dispute": "Dispute a finding",
+      "disputeDesc": "Contest a risk score or flag that you believe is incorrect",
+      "feature": "Feature request",
+      "featureDesc": "New chart, filter, export format, or analysis",
+      "other": "Other",
+      "otherDesc": "General feedback or anything else"
+    }
+  }
 }

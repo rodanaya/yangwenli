@@ -1531,7 +1531,11 @@ export default function Intro() {
                 const sectorColor = SECTOR_COLORS[sectorKey] ?? '#64748b'
                 const amountB = contract.amount_mxn >= 1_000_000_000
                   ? `$${(contract.amount_mxn / 1_000_000_000).toFixed(1)}B`
-                  : `$${(contract.amount_mxn / 1_000_000).toFixed(0)}M`
+                  : contract.amount_mxn >= 1_000_000
+                  ? `$${(contract.amount_mxn / 1_000_000).toFixed(0)}M`
+                  : contract.amount_mxn >= 1_000
+                  ? `$${(contract.amount_mxn / 1_000).toFixed(0)}K`
+                  : `$${contract.amount_mxn?.toFixed(0) ?? '?'}`
                 return (
                   <button
                     key={contract.id}

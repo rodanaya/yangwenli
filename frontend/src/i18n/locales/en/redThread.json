@@ -1,0 +1,152 @@
+{
+  "chapters": {
+    "subject": "Subject",
+    "timeline": "Timeline",
+    "pattern": "Pattern",
+    "network": "Network",
+    "money": "Money",
+    "verdict": "Verdict",
+    "headings": {
+      "subject": "Chapter I · The Subject",
+      "timeline": "Chapter II · The Timeline",
+      "pattern": "Chapter III · The Pattern",
+      "network": "Chapter IV · The Network",
+      "money": "Chapter V · The Money",
+      "verdict": "Chapter VI · The Verdict"
+    }
+  },
+  "patterns": {
+    "P1": {
+      "label": "Market Monopoly",
+      "description": "Holds a disproportionate share of sector contracts — potential market capture through non-competitive means."
+    },
+    "P2": {
+      "label": "Ghost Company",
+      "description": "Exhibits shell-company indicators: short operating history, few contracts, near-100% direct awards, unverifiable presence."
+    },
+    "P3": {
+      "label": "Intermediary",
+      "description": "Acts as a pass-through entity, winning contracts outside its primary industry and likely reselling to actual providers."
+    },
+    "P4": {
+      "label": "Bid Rigging",
+      "description": "Multiple vendors show coordinated bidding — rotation, cover bids, or geographic market allocation."
+    },
+    "P5": {
+      "label": "Price Manipulation",
+      "description": "Contract values are statistically anomalous vs. sector benchmarks, indicating inflated pricing."
+    },
+    "P6": {
+      "label": "Institutional Capture",
+      "description": "Receives a disproportionate share from a single institution, typically through direct awards."
+    },
+    "P7": {
+      "label": "Network Cluster",
+      "description": "Embedded in a co-contracting network, suggesting coordinated vendor rings."
+    }
+  },
+  "subject": {
+    "riskBadge": "{{level}} risk",
+    "ariaTier": "ARIA Tier {{tier}}",
+    "scrollHint": "Continue",
+    "introText": "This investigation thread follows the procurement history of <1>{{name}}</1>, tracing the patterns, relationships, and financial flows that triggered automated detection. Scroll to follow the evidence."
+  },
+  "kpi": {
+    "totalValue": "Total Value",
+    "contracts": "Contracts",
+    "directAwards": "Direct Awards",
+    "highRisk": "High-Risk"
+  },
+  "notes": {
+    "allContracts": "All contracts awarded, 2002–2025",
+    "vsNational": "vs. ~48% national average",
+    "oecdBenchmark": "OECD benchmark: 2–15%"
+  },
+  "timeline": {
+    "heading": "{{total}} Contracts, {{minYear}}–{{maxYear}}",
+    "dotDescription": "Each dot is one year. Size reflects total value. Color reflects average risk. Hover for details.",
+    "legend": {
+      "sizeLabel": "Size = annual contract value"
+    },
+    "dotTooltip": "{{year}} · {{value}} · {{count}} contracts · avg risk {{risk}}%"
+  },
+  "pattern": {
+    "heading": "What the Algorithm Found",
+    "description": "Risk scores are built from 16 z-score features normalized against sector baselines. These are the factors that drove this vendor's score.",
+    "raisesRisk": "▲ raises risk",
+    "lowersRisk": "▼ lowers risk",
+    "noData": "Feature attribution data not available for this vendor.",
+    "shapNote": "Positive values increase risk score (red). Negative values reduce it (green). Values are SHAP-style feature contributions: β_i × (z_i − E[z_i])."
+  },
+  "network": {
+    "heading": "Connections & Relationships",
+    "description": "Vendor networks reveal co-contracting rings, shared entities, and institutional dependencies invisible in contract-by-contract analysis.",
+    "institutionsServed": "Institutions Served",
+    "sectorsActive": "Sectors Active",
+    "institutionsNote": {
+      "few": "Very few institutions — possible institutional capture.",
+      "many": "Wide institutional reach — diversified vendor profile.",
+      "moderate": "Moderate institutional diversity."
+    },
+    "sectorsNote": {
+      "single": "Single-sector presence — typical for specialists.",
+      "multi": "Cross-sector activity — may indicate intermediary behavior.",
+      "moderate": "Multi-sector vendor."
+    },
+    "coBiddingPartners": "Co-Bidding Partners",
+    "noCoBidders": "No coordinated bidding patterns detected.",
+    "sharedProcedures_one": "{{count}} shared procedure",
+    "sharedProcedures_other": "{{count}} shared procedures",
+    "openNetworkGraph": "Open Full Network Graph",
+    "openNetworkGraphDesc": "Interactive force-directed graph showing co-bidders, related entities, and community clusters.",
+    "coBidderAnalysis": "Co-Bidder Analysis",
+    "coBidderAnalysisDesc": "Vendors that consistently appear in the same procedures — potential coordination rings."
+  },
+  "roles": {
+    "possibleDecoy": "Possible Decoy",
+    "rotationPattern": "Rotation Pattern",
+    "possibleAccomplice": "Possible Accomplice",
+    "coBidder": "Co-bidder"
+  },
+  "money": {
+    "heading": "{{value}} Over Time",
+    "description": "Annual contract value and risk trajectory — where the money went, and when the risk spiked.",
+    "peakByValue": "Peak Year by Value",
+    "peakByRisk": "Peak Year by Risk",
+    "peakValueLabel": "{{year}} — {{value}}",
+    "peakRiskLabel": "{{year}} — {{pct}}% avg score",
+    "chartValueLabel": "Contract Value by Year (MXN millions)",
+    "chartRiskLabel": "Average Risk Score by Year (%)",
+    "tooltipValue": "Value",
+    "tooltipRisk": "Avg Risk",
+    "riskNote": "Risk thresholds: Critical ≥60%, High ≥40%, Medium ≥25%. OECD benchmark: 2–15% high-risk."
+  },
+  "verdict": {
+    "heading": "Investigation Summary",
+    "description": "Statistical signals warrant attention. A high score is not proof of wrongdoing — it means this vendor closely resembles documented corruption patterns.",
+    "riskIndicatorScore": "Risk Indicator Score",
+    "outOf100": "out of 100",
+    "ariaIps": "ARIA IPS: {{ips}} · Tier {{tier}}",
+    "efosLabel": "SAT EFOS Definitivo",
+    "sfpLabel": "SFP Sanctioned",
+    "groundTruthLabel": "In Ground Truth Cases",
+    "ariaMemoTitle": "ARIA Intelligence Memo",
+    "fullVendorProfile": "Full Vendor Profile",
+    "exportPdf": "Export PDF Briefing",
+    "addToWorkspace": "Add to Workspace",
+    "methodologyNote": "Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v0.6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See",
+    "methodologyLink": "full methodology"
+  },
+  "nav": {
+    "back": "Back",
+    "redThread": "Red Thread",
+    "fullProfile": "Full Profile"
+  },
+  "loading": "Building investigation thread…",
+  "errors": {
+    "invalidId": "Invalid vendor ID.",
+    "loadFailed": "Could not load information. Please try again later.",
+    "goBack": "Go back",
+    "vendorNotFound": "Vendor not found."
+  }
+}

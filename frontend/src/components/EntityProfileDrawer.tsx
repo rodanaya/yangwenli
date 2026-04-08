@@ -7,6 +7,7 @@
  */
 
 import { lazy, Suspense } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   LineChart,
@@ -67,10 +68,11 @@ function RiskSparkline({
   points: RiskTimelinePoint[]
   latestScore: number | null | undefined
 }) {
+  const { t } = useTranslation('institutions')
   if (points.length === 0) {
     return (
       <div className="flex items-center justify-center h-20 text-xs text-text-muted">
-        No trajectory data
+        {t('drawer.noTrajectory')}
       </div>
     )
   }
@@ -124,6 +126,8 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 // ---------------------------------------------------------------------------
 
 function VendorDrawerContent({ vendorId }: { vendorId: number }) {
+  const { t } = useTranslation('institutions')
+  const { t: tCommon } = useTranslation('common')
   const { data: vendor, isLoading: vendorLoading } = useQuery({
     queryKey: ['entity-drawer-vendor', vendorId],
     queryFn: () => vendorApi.getById(vendorId),
@@ -197,7 +201,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
         </div>
       ) : vendor ? (
         <div className="space-y-1">
-          <p className="text-xs text-text-muted uppercase tracking-wider">Vendor</p>
+          <p className="text-xs text-text-muted uppercase tracking-wider">{t('drawer.vendor')}</p>
           <h3 className="text-sm font-bold text-text-primary leading-snug">{vendorName}</h3>
           {vendor.rfc && (
             <p className="text-xs text-text-muted font-mono">RFC: {vendor.rfc}</p>
@@ -206,7 +210,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             <div className="flex items-center gap-2 mt-1.5">
               <RiskBadge score={avgScore} className="text-xs" />
               <span className="text-xs text-text-muted">
-                AI Risk Score: {(avgScore * 100).toFixed(0)}%
+                {t('drawer.aiRiskScore')}: {(avgScore * 100).toFixed(0)}%
               </span>
             </div>
           )}
@@ -222,13 +226,13 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
       ) : vendor ? (
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded bg-background-elevated p-2.5">
-            <p className="text-xs text-text-muted mb-0.5">Contracts</p>
+            <p className="text-xs text-text-muted mb-0.5">{tCommon('contracts')}</p>
             <p className="text-sm font-semibold tabular-nums">
               {formatNumber(vendor.total_contracts)}
             </p>
           </div>
           <div className="rounded bg-background-elevated p-2.5">
-            <p className="text-xs text-text-muted mb-0.5">Total Value</p>
+            <p className="text-xs text-text-muted mb-0.5">{tCommon('totalValue')}</p>
             <p className="text-sm font-semibold tabular-nums">
               {formatCompactMXN(vendor.total_value_mxn)}
             </p>
@@ -239,7 +243,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
       {/* AI Intelligence */}
       {(aiSummary || aiInsights.length > 0) && (
         <div>
-          <SectionHeader>AI Intelligence</SectionHeader>
+          <SectionHeader>{t('drawer.aiIntelligence')}</SectionHeader>
           {aiSummary && (
             <p className="text-xs text-text-secondary leading-relaxed mb-2">{aiSummary}</p>
           )}
@@ -254,7 +258,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             </ul>
           ) : (
             <p className="text-xs text-text-muted italic">
-              No significant risk indicators detected.
+              {t('drawer.noSignificantRisk')}
             </p>
           )}
         </div>
@@ -262,7 +266,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
 
       {/* Relationship Network */}
       <div>
-        <SectionHeader>Relationship Network</SectionHeader>
+        <SectionHeader>{t('drawer.relationshipNetwork')}</SectionHeader>
         <Suspense
           fallback={
             <div
@@ -283,7 +287,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
       {/* Risk Trajectory */}
       {timelinePoints.length > 0 && (
         <div>
-          <SectionHeader>Risk Trajectory</SectionHeader>
+          <SectionHeader>{t('drawer.riskTrajectory')}</SectionHeader>
           <RiskSparkline points={timelinePoints} latestScore={avgScore} />
           <div className="flex items-center justify-between text-xs text-text-muted mt-0.5">
             <span>{timelinePoints[0]?.year}</span>
@@ -294,7 +298,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
 
       {/* ASF Findings */}
       <div>
-        <SectionHeader>ASF Findings</SectionHeader>
+        <SectionHeader>{t('drawer.asfFindings')}</SectionHeader>
         {asfCases.length > 0 ? (
           <ul className="space-y-1">
             {asfCases.slice(0, 5).map((c, i) => (
@@ -344,6 +348,7 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
 // ---------------------------------------------------------------------------
 
 function InstitutionDrawerContent({ institutionId }: { institutionId: number }) {
+  const { t } = useTranslation('institutions')
   const { data: institution, isLoading } = useQuery({
     queryKey: ['entity-drawer-institution', institutionId],
     queryFn: () => institutionApi.getById(institutionId),
@@ -433,7 +438,7 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
 
       {/* Relationship Network */}
       <div>
-        <SectionHeader>Relationship Network</SectionHeader>
+        <SectionHeader>{t('drawer.relationshipNetwork')}</SectionHeader>
         <Suspense
           fallback={
             <div
@@ -454,7 +459,7 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
       {/* Risk Trajectory */}
       {timelinePoints.length > 0 && (
         <div>
-          <SectionHeader>Risk Trajectory</SectionHeader>
+          <SectionHeader>{t('drawer.riskTrajectory')}</SectionHeader>
           <RiskSparkline points={timelinePoints} latestScore={avgScore} />
           <div className="flex items-center justify-between text-xs text-text-muted mt-0.5">
             <span>{timelinePoints[0]?.year}</span>

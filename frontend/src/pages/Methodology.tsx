@@ -25,6 +25,7 @@ import {
   Printer,
 } from 'lucide-react'
 import { RiskFactorTable } from '@/components/RiskExplainer'
+import { CitationBlock } from '@/components/CitationBlock'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
 import {
   BarChart,
@@ -1288,6 +1289,8 @@ export function Methodology() {
         {/* Sidebar: Table of Contents */}
         <TableOfContents />
       </div>
+
+      <CitationBlock context="RUBLI methodology — v0.6.5 risk model" className="mt-2" />
     </div>
   )
 }

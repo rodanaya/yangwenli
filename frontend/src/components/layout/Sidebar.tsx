@@ -29,6 +29,9 @@ import {
   Network,
   Flame,
   Activity,
+  Search,
+  Newspaper,
+  Map,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -74,6 +77,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
       { i18nKey: 'network', href: '/network', icon: Network },
+      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
@@ -85,10 +89,14 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
+      { i18nKey: 'states', href: '/states', icon: Map },
       // Institution health trio — grouped for clarity
       { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
       { i18nKey: 'scorecards', href: '/scorecards', icon: Award },
+      // Model documentation — grouped with analysis for discoverability
+      { i18nKey: 'model', href: '/model', icon: FlaskConical },
+      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
     ],
   },
   {
@@ -105,18 +113,17 @@ const NAV_SECTIONS: NavSectionDef[] = [
     // Raw data & exploration
     sectionKey: 'sections.data',
     items: [
+      { i18nKey: 'explore', href: '/explore', icon: Search },
       { i18nKey: 'contracts', href: '/contracts', icon: FileText },
       { i18nKey: 'captureHeatmap', href: '/money-flow', icon: Flame },
       { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
     ],
   },
   {
-    // Model & tooling — internal/technical
+    // ARIA & tooling — investigation platform
     sectionKey: 'sections.platform',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
-      { i18nKey: 'model', href: '/model', icon: FlaskConical },
-      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
       { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },
@@ -299,6 +306,21 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               })}
             </NavSection>
           ))}
+          {/* API Explorer — external link, opens in new tab */}
+          {!isCollapsed && (
+            <div className="px-2 pt-1">
+              <a
+                href="/api/v1/docs"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-white/[0.025] transition-all duration-100"
+              >
+                <Activity className="h-4 w-4 flex-shrink-0 text-stone-500 group-hover:text-stone-300" aria-hidden="true" />
+                <span className="truncate">{t('apiExplorer')}</span>
+                <svg className="ml-auto h-3 w-3 opacity-40 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
+              </a>
+            </div>
+          )}
         </nav>
       </ScrollArea>
 

@@ -24,6 +24,7 @@ import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTORS, RISK_COLORS } from '@/lib/constants'
 import { analysisApi } from '@/api/client'
 import type { YearOverYearChange, ComparePeriodResponse, PoliticalCycleResponse } from '@/api/types'
+import { TableExportButton } from '@/components/TableExportButton'
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -63,6 +64,7 @@ import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
 import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
+import { ShareButton } from '@/components/ShareButton'
 
 // =============================================================================
 // Constants
@@ -757,30 +759,35 @@ export default function Administrations() {
     queryKey: ['analysis', 'year-over-year'],
     queryFn: () => analysisApi.getYearOverYear(),
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const { data: sectorYearResp, isLoading: syLoading } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const { data: eventsResp } = useQuery({
     queryKey: ['analysis', 'temporal-events'],
     queryFn: () => analysisApi.getTemporalEvents(),
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
   const { data: breaksResp } = useQuery({
     queryKey: ['analysis', 'structural-breaks'],
     queryFn: () => analysisApi.getStructuralBreaks(),
     staleTime: 30 * 60 * 1000,
+    retry: false,
   })
 
   const { data: breakdownResp, isLoading: breakdownLoading } = useQuery({
     queryKey: ['analysis', 'admin-breakdown'],
     queryFn: () => analysisApi.getAdminBreakdown(),
     staleTime: 60 * 60 * 1000,
+    retry: false,
   })
 
   const yoyData = yoyResp?.data ?? []
@@ -1027,9 +1034,12 @@ export default function Administrations() {
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
           {t('classifiedHeader.eyebrow')}
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
-          {t('classifiedHeader.title')}
-        </h1>
+        <div className="flex items-start justify-between gap-4">
+          <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
+            {t('classifiedHeader.title')}
+          </h1>
+          <ShareButton label="Compartir" className="flex-shrink-0 mt-1" />
+        </div>
         <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
           {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
         </p>
@@ -1474,12 +1484,25 @@ export default function Administrations() {
         {/* L2: Administration Comparison Table */}
         <div className="card-elevated">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('comparisonTable')}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-1">
-              {t('comparisonTableDesc')}
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="text-sm font-mono text-text-primary">
+                  {t('comparisonTable')}
+                </CardTitle>
+                <p className="text-xs text-text-muted mt-1">
+                  {t('comparisonTableDesc')}
+                </p>
+              </div>
+              <TableExportButton
+                filename="rubli-administraciones-comparativa.csv"
+                data={ADMIN_METRIC_KEYS.map((metric) => {
+                  const row: Record<string, unknown> = { metric: t(metric.labelKey) }
+                  adminAggs.forEach((a) => { row[a.name] = a.contracts > 0 ? metric.format(a[metric.key] as number) : '—' })
+                  return row
+                })}
+                className="shrink-0"
+              />
+            </div>
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
@@ -1703,13 +1726,28 @@ export default function Administrations() {
         <ScrollReveal direction="fade">
         <div className="card-elevated">
           <CardHeader className="pb-2">
-            <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('evidenceLabel')}</div>
-            <CardTitle className="text-sm font-mono text-text-primary">
-              {t('sectorProfile', { admin: selectedAdmin })}
-            </CardTitle>
-            <p className="text-xs text-text-muted mt-1">
-              {t('heatmapSubtitle')}
-            </p>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('evidenceLabel')}</div>
+                <CardTitle className="text-sm font-mono text-text-primary">
+                  {t('sectorProfile', { admin: selectedAdmin })}
+                </CardTitle>
+                <p className="text-xs text-text-muted mt-1">
+                  {t('heatmapSubtitle')}
+                </p>
+              </div>
+              <TableExportButton
+                filename="rubli-administraciones-sectores.csv"
+                data={sectorHeatmap.filter((s) => s.contracts > 0).map((s) => ({
+                  sector: s.name,
+                  direct_award_pct: s.da.toFixed(1) + '%',
+                  single_bid_pct: s.sb.toFixed(1) + '%',
+                  high_risk_pct: s.hr.toFixed(1) + '%',
+                  avg_risk: (s.risk * 100).toFixed(1) + '%',
+                }))}
+                className="shrink-0"
+              />
+            </div>
           </CardHeader>
           <CardContent className="overflow-x-auto">
             <table className="w-full text-xs font-mono">

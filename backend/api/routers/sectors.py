@@ -604,7 +604,8 @@ def get_sector_trends(
 # =============================================================================
 
 @router.get("/analysis/overview", response_model=AnalysisOverview)
-def get_analysis_overview():
+@rate_limit("30/minute")
+def get_analysis_overview(request: Request):
     """
     Get high-level analysis overview.
 
