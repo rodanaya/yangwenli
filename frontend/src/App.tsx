@@ -33,13 +33,13 @@ const SectorProfile = lazy(() => import('@/pages/SectorProfile'))
 const Settings = lazy(() => import('@/pages/Settings'))
 const RedesKnownDossier = lazy(() => import('@/pages/RedesKnownDossier'))
 const Administrations = lazy(() => import('@/pages/Administrations'))
-const GroundTruth = lazy(() => import('@/pages/GroundTruth'))
-const InstitutionHealth = lazy(() => import('@/pages/InstitutionHealth'))
+// GroundTruth redirects to /model (exposes internal DB names to users)
+// InstitutionHealth redirects to /institutions (merged as tab)
 const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
 const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
-const ExecutiveSummary = lazy(() => import('@/pages/ExecutiveSummary'))
+// ExecutiveSummary removed — hardcoded stale data + named company risk scores (legal risk)
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 // Limitations removed — /limitations redirects to /methodology
@@ -64,7 +64,7 @@ const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
-const PoliticalCycle = lazy(() => import('@/pages/PoliticalCycle'))
+// PoliticalCycle redirects to /administrations (same API, administrations is superset)
 
 // First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
 function FirstVisitRedirect() {
@@ -116,14 +116,7 @@ function App() {
               <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
               <Route path="league" element={<Navigate to="/institutions" replace />} />
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
-              <Route
-                path="executive-summary"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <ExecutiveSummary />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="executive-summary" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="dashboard"
                 element={
@@ -132,7 +125,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="executive" element={<Navigate to="/executive-summary" replace />} />
+              <Route path="executive" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="explore"
                 element={
@@ -257,14 +250,7 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="ground-truth"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <GroundTruth />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="ground-truth" element={<Navigate to="/model" replace />} />
               <Route path="state-expenditure" element={<Navigate to="/administrations" replace />} />
               <Route path="state-expenditure/:code" element={<Navigate to="/administrations" replace />} />
               <Route
@@ -284,14 +270,7 @@ function App() {
                 }
               />
               <Route path="temporal" element={<Navigate to="/administrations" replace />} />
-              <Route
-                path="institutions/health"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <InstitutionHealth />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="institutions/health" element={<Navigate to="/institutions" replace />} />
               <Route
                 path="price-analysis"
                 element={
@@ -345,7 +324,7 @@ function App() {
               <Route path="red-flags" element={<Navigate to="/dashboard" replace />} />
               <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
               <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
-              <Route path="institution-health" element={<Navigate to="/institutions/health" replace />} />
+              <Route path="institution-health" element={<Navigate to="/institutions" replace />} />
 
               <Route
                 path="vendors/compare"
@@ -415,14 +394,7 @@ function App() {
                 element={<Navigate to="/institutions?tab=fichas" replace />}
               />
 
-              <Route
-                path="political-cycle"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <PoliticalCycle />
-                  </SuspenseBoundary>
-                }
-              />
+              <Route path="political-cycle" element={<Navigate to="/administrations" replace />} />
 
               {/* Redirects from old routes */}
               <Route path="vendors" element={<Navigate to="/explore?tab=vendors" replace />} />

@@ -6,7 +6,6 @@ import { cn } from '@/lib/utils'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   LayoutDashboard,
-  FileText,
   BarChart3,
   BookOpen,
   Settings,
@@ -15,19 +14,15 @@ import {
   Library,
   Briefcase,
   X,
-  FlaskConical,
   MessageSquarePlus,
   Shield,
-  Award,
   History,
   CalendarDays,
   Building2,
   GitMerge,
   TrendingUp,
   Layers,
-  ShieldCheck,
   Network,
-  Flame,
   Activity,
   Search,
   Newspaper,
@@ -90,12 +85,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'states', href: '/states', icon: Map },
-      // Institution health trio — grouped for clarity
-      { i18nKey: 'reportCard', href: '/report-card', icon: ShieldCheck },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'scorecards', href: '/scorecards', icon: Award },
-      // Model documentation — grouped with analysis for discoverability
-      { i18nKey: 'model', href: '/model', icon: FlaskConical },
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
     ],
   },
@@ -105,8 +95,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
     items: [
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
       { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
-      { i18nKey: 'politicalCycle', href: '/political-cycle', icon: Activity },
-      { i18nKey: 'executiveSummary', href: '/executive-summary', icon: Award },
     ],
   },
   {
@@ -114,9 +102,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.data',
     items: [
       { i18nKey: 'explore', href: '/explore', icon: Search },
-      { i18nKey: 'contracts', href: '/contracts', icon: FileText },
-      { i18nKey: 'captureHeatmap', href: '/captura-heatmap', icon: Flame },
-      { i18nKey: 'procurementCalendar', href: '/procurement-calendar', icon: CalendarDays },
     ],
   },
   {
