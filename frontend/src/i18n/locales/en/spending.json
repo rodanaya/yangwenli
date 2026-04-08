@@ -15,7 +15,11 @@
     "sortByRisk": "Highest risk",
     "sortByRiskHint": "By average score",
     "oecdLimit": "OECD limit",
-    "withinOecdLimit": "Within OECD limit"
+    "withinOecdLimit": "Within OECD limit",
+    "contracts": "{{count}} contracts",
+    "contractsLabel": "contracts",
+    "treemapEyebrow": "RUBLI · Spending Map",
+    "treemapTitle": "{{count}} categories sized by total spend"
   },
   "stats": {
     "totalCategories": "TOTAL CATEGORIES",
@@ -50,7 +54,15 @@
     "colTopVendor": "Top Vendor",
     "colSector": "Sector",
     "empty": "No categories found. Category data may not be available yet.",
-    "noPairData": "No vendor-institution data available for this category."
+    "noPairData": "No vendor-institution data available for this category.",
+    "colAmount": "Amount (MXN)",
+    "colRisk": "Risk",
+    "colTrend": "Trend",
+    "avgRiskLabel": "avg risk",
+    "viewProfileAriaLabel": "View profile of {{name}}",
+    "viewProfileShort": "View full profile",
+    "noResults": "No categories found with current filters.",
+    "selectedClickDeselect": "Selected — click to deselect"
   },
   "trends": {
     "title": "Spending Trends — Top 5 Categories",
@@ -81,7 +93,13 @@
     "singleBid": "single bid",
     "directAwardShort": "direct award",
     "singleBidShort": "single bid",
-    "directAwardLowCompetition": "direct award (low competition)"
+    "directAwardLowCompetition": "direct award (low competition)",
+    "avg": "avg",
+    "directAwardLabel": "Direct Award",
+    "oecdLimit": "OECD: max 25%",
+    "spendTrend": "Spending Trend ({{from}}–{{to}})",
+    "riskIndicators": "RISK INDICATORS",
+    "finding": "FINDING"
   },
   "flags": {
     "criticalRisk": "Critical risk — pattern matches documented corruption cases",
@@ -95,18 +113,45 @@
   },
   "subcategory": {
     "sortAmount": "Amount",
-    "sortRisk": "Risk"
+    "sortRisk": "Risk",
+    "title": "What's Being Purchased",
+    "titleWithCategory": "What's Being Purchased — {{name}}",
+    "description": "{{count}} subcategories · {{name}} · click a row to expand",
+    "sortLabel": "Sort",
+    "colDA": "DA%",
+    "colSB": "SB%",
+    "classifiedPct": "{{pct}}% of spend classified in subcategories",
+    "unclassifiedPct": "{{pct}}% unclassified",
+    "colSubcategory": "Subcategory",
+    "colAmount": "Amount",
+    "colRisk": "Risk",
+    "other": "other",
+    "avgRisk": "avg risk",
+    "activeYears": "Active Years",
+    "directAward": "Direct Award",
+    "singleBid": "Single Bid",
+    "topVendor": "Top Vendor",
+    "exampleTitles": "Example Contract Titles"
   },
   "filters": {
     "allSectors": "All Sectors",
     "searchPlaceholder": "Search category…",
     "searchAriaLabel": "Search spending categories",
     "categoriesCount": "{{count}} Categories",
-    "clearFilter": "Clear filter"
+    "clearFilter": "Clear filter",
+    "trendYearLabel": "Trend: Year",
+    "yearTo": "to",
+    "sectorLabel": "Sector",
+    "selectedCategory": "Selected:",
+    "viewDetails": "View details ↓",
+    "deselectCategory": "Deselect category",
+    "tableHint": "Click any row to view subcategories, top vendors and institutional breakdowns."
   },
   "banderasRojas": {
     "title": "Red Flags",
-    "aboveAverage": "up to {{pct}}% above average."
+    "aboveAverage": "up to {{pct}}% above average.",
+    "subtitle": "The 5 highest-risk categories (min. 10 contracts)",
+    "contracts": "{{count}} contracts"
   },
   "riskMap": {
     "eyebrow": "RUBLI · Risk Map",
@@ -129,6 +174,48 @@
     "title": "Spending by Administration: How Government Purchases Changed",
     "description": "Cumulative federal spending in the 10 highest-value categories, broken down by presidential administration.",
     "barChartHint": "Top 30 spending categories by total amount. Color = sector. Click a bar for detail.",
-    "filteredBy": "Trend filtered by:"
+    "filteredBy": "Trend filtered by:",
+    "total": "Total:",
+    "noData": "No administration data available.",
+    "footnote": "Sheinbaum = 2025 partial. Fox includes partial COMPRANET data.",
+    "barChartShowing": "Showing: {{name}}",
+    "all": "All"
+  },
+  "topFindings": {
+    "eyebrow": "RUBLI · Dynamic Ranking",
+    "title": "The Five Categories That Matter",
+    "contracts": "{{count}} contracts",
+    "sortDA": "Direct Award",
+    "sortDAHint": "% of total"
+  },
+  "lede": {
+    "text": "Of the {{count}} federal spending categories, those with the highest risk show corruption indicators up to {{pct}}% above average. The breakdown by Partida budget code reveals where spending concentrates and which goods and services show the most suspicious patterns."
+  },
+  "scatter": {
+    "sectorFallback": "other",
+    "contracts": "{{count}} contracts",
+    "clickToView": "Click to view profile",
+    "noData": "No category data available for the risk quadrant."
+  },
+  "seeAlso": {
+    "label": "See Also",
+    "priceAnalysis": "Price Anomaly Analysis"
+  },
+  "impacto": {
+    "text": "Medicine and medical equipment categories represent a substantial share of health sector spending — and show elevated risk indicators."
+  },
+  "sectors": {
+    "salud": "Health",
+    "educacion": "Education",
+    "infraestructura": "Infrastructure",
+    "energia": "Energy",
+    "defensa": "Defense",
+    "tecnologia": "Technology",
+    "hacienda": "Finance",
+    "gobernacion": "Interior",
+    "agricultura": "Agriculture",
+    "ambiente": "Environment",
+    "trabajo": "Labor",
+    "otros": "Other"
   }
 }

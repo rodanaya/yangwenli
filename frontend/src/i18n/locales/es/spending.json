@@ -15,7 +15,11 @@
     "sortByRisk": "Mayor riesgo",
     "sortByRiskHint": "Por score promedio",
     "oecdLimit": "límite OCDE",
-    "withinOecdLimit": "Dentro de límite OCDE"
+    "withinOecdLimit": "Dentro de límite OCDE",
+    "contracts": "{{count}} contratos",
+    "contractsLabel": "contratos",
+    "treemapEyebrow": "RUBLI · Mapa de Gasto",
+    "treemapTitle": "{{count}} categorías dimensionadas por gasto total"
   },
   "stats": {
     "totalCategories": "TOTAL CATEGORÍAS",
@@ -50,7 +54,15 @@
     "colTopVendor": "Principal Proveedor",
     "colSector": "Sector",
     "empty": "No se encontraron categorías. Los datos pueden no estar disponibles aún.",
-    "noPairData": "No hay datos de proveedor-institución disponibles para esta categoría."
+    "noPairData": "No hay datos de proveedor-institución disponibles para esta categoría.",
+    "colAmount": "Monto (MXN)",
+    "colRisk": "Riesgo",
+    "colTrend": "Tendencia",
+    "avgRiskLabel": "riesgo prom.",
+    "viewProfileAriaLabel": "Ver perfil de {{name}}",
+    "viewProfileShort": "Ver perfil completo",
+    "noResults": "No se encontraron categorías con los filtros actuales.",
+    "selectedClickDeselect": "Seleccionado — clic para deseleccionar"
   },
   "trends": {
     "title": "Tendencias de Gasto — Top 5 Categorías",
@@ -81,7 +93,13 @@
     "singleBid": "licitación única",
     "directAwardShort": "adjudicación directa",
     "singleBidShort": "licitación única",
-    "directAwardLowCompetition": "adjudicación directa (baja competencia)"
+    "directAwardLowCompetition": "adjudicación directa (baja competencia)",
+    "avg": "prom.",
+    "directAwardLabel": "Adj. Directa",
+    "oecdLimit": "OCDE: máx 25%",
+    "spendTrend": "Tendencia de gasto ({{from}}–{{to}})",
+    "riskIndicators": "INDICADORES DE RIESGO",
+    "finding": "HALLAZGO"
   },
   "flags": {
     "criticalRisk": "Riesgo crítico — patrón coincide con casos de corrupción documentados",
@@ -95,18 +113,45 @@
   },
   "subcategory": {
     "sortAmount": "Monto",
-    "sortRisk": "Riesgo"
+    "sortRisk": "Riesgo",
+    "title": "Qué se Compró",
+    "titleWithCategory": "Qué se Compró — {{name}}",
+    "description": "{{count}} subcategorías · {{name}} · haga clic en una fila para expandir",
+    "sortLabel": "Ordenar",
+    "colDA": "AD%",
+    "colSB": "LU%",
+    "classifiedPct": "{{pct}}% del gasto categorizado en subcategorías",
+    "unclassifiedPct": "{{pct}}% sin clasificar",
+    "colSubcategory": "Subcategoría",
+    "colAmount": "Monto",
+    "colRisk": "Riesgo",
+    "other": "otros",
+    "avgRisk": "riesgo promedio",
+    "activeYears": "Años activo",
+    "directAward": "Adj. Directa",
+    "singleBid": "Licit. Única",
+    "topVendor": "Principal proveedor",
+    "exampleTitles": "Títulos de contratos ejemplo"
   },
   "filters": {
     "allSectors": "Todos los Sectores",
     "searchPlaceholder": "Buscar categoría…",
     "searchAriaLabel": "Buscar categorías de gasto",
     "categoriesCount": "{{count}} Categorías",
-    "clearFilter": "Limpiar filtro"
+    "clearFilter": "Limpiar filtro",
+    "trendYearLabel": "Tendencia: Año",
+    "yearTo": "a",
+    "sectorLabel": "Sector",
+    "selectedCategory": "Seleccionado:",
+    "viewDetails": "Ver detalles ↓",
+    "deselectCategory": "Deseleccionar categoría",
+    "tableHint": "Haga clic en cualquier fila para ver subcategorías, principales proveedores y desgloses institucionales."
   },
   "banderasRojas": {
     "title": "Banderas Rojas",
-    "aboveAverage": "hasta {{pct}}% por encima del promedio."
+    "aboveAverage": "hasta {{pct}}% por encima del promedio.",
+    "subtitle": "Las 5 categorías con mayor riesgo promedio (mín. 10 contratos)",
+    "contracts": "{{count}} contratos"
   },
   "riskMap": {
     "eyebrow": "RUBLI · Mapa de Riesgo",
@@ -129,6 +174,48 @@
     "title": "Gasto por administración: cómo cambió lo que compra el gobierno",
     "description": "Gasto federal acumulado en las 10 categorías de mayor valor, distribuido por sexenio presidencial.",
     "barChartHint": "Top 30 categorías de gasto por monto total. Color = sector. Clic en una barra para detalle.",
-    "filteredBy": "Tendencia filtrada por:"
+    "filteredBy": "Tendencia filtrada por:",
+    "total": "Total:",
+    "noData": "Sin datos de sexenio disponibles.",
+    "footnote": "Sheinbaum = 2025 parcial. Fox incluye parte del dato COMPRANET.",
+    "barChartShowing": "Mostrando: {{name}}",
+    "all": "Todos"
+  },
+  "topFindings": {
+    "eyebrow": "RUBLI · Ranking Dinámico",
+    "title": "Las Cinco Categorías que Importan",
+    "contracts": "{{count}} contratos",
+    "sortDA": "Adj. directa",
+    "sortDAHint": "% sobre total"
+  },
+  "lede": {
+    "text": "De las {{count}} categorías presupuestarias del gobierno federal, las de mayor riesgo muestran indicadores de corrupción hasta {{pct}}% por encima del promedio. El desglose por código Partida revela dónde se concentra el gasto y qué tipos de bienes y servicios presentan los patrones más sospechosos."
+  },
+  "scatter": {
+    "sectorFallback": "otros",
+    "contracts": "{{count}} contratos",
+    "clickToView": "Clic para ver perfil",
+    "noData": "Sin datos de categorías para el cuadrante de riesgo."
+  },
+  "seeAlso": {
+    "label": "Ver también",
+    "priceAnalysis": "Análisis de Precios Anómalos"
+  },
+  "impacto": {
+    "text": "Las categorías de medicamentos y equipo médico representan una parte sustancial del gasto en salud — y presentan indicadores de riesgo elevados."
+  },
+  "sectors": {
+    "salud": "Salud",
+    "educacion": "Educación",
+    "infraestructura": "Infraestructura",
+    "energia": "Energía",
+    "defensa": "Defensa",
+    "tecnologia": "Tecnología",
+    "hacienda": "Hacienda",
+    "gobernacion": "Gobernación",
+    "agricultura": "Agricultura",
+    "ambiente": "Medio Ambiente",
+    "trabajo": "Trabajo",
+    "otros": "Otros"
   }
 }

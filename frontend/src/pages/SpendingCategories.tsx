@@ -194,22 +194,7 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
 const MIN_YEAR = 2002
 const MAX_YEAR = new Date().getFullYear()
 
-// Sector options for filter dropdown
-const SECTOR_OPTIONS = [
-  { code: '', label: 'All Sectors' },
-  { code: 'salud', label: 'Salud' },
-  { code: 'educacion', label: 'Educación' },
-  { code: 'infraestructura', label: 'Infraestructura' },
-  { code: 'energia', label: 'Energía' },
-  { code: 'defensa', label: 'Defensa' },
-  { code: 'tecnologia', label: 'Tecnología' },
-  { code: 'hacienda', label: 'Hacienda' },
-  { code: 'gobernacion', label: 'Gobernación' },
-  { code: 'agricultura', label: 'Agricultura' },
-  { code: 'ambiente', label: 'Medio Ambiente' },
-  { code: 'trabajo', label: 'Trabajo' },
-  { code: 'otros', label: 'Otros' },
-]
+// SECTOR_OPTIONS is now defined inside the main component so it can use t()
 
 // =============================================================================
 // Vendor x Institution Panel
@@ -494,7 +479,7 @@ function CategorySummaryCard({
             {formatNumber(category.total_contracts)}
           </p>
           <p className="text-[10px] text-text-muted/50 mt-0.5 font-mono">
-            ~{formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0)} prom.
+            ~{formatCompactMXN(category.total_contracts > 0 ? category.total_value / category.total_contracts : 0)} {t('detail.avg')}
           </p>
         </div>
 
@@ -526,7 +511,7 @@ function CategorySummaryCard({
 
         {/* Direct Award % */}
         <div className="bg-background-card px-4 py-3.5">
-          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">Adj. Directa</p>
+          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('detail.directAwardLabel')}</p>
           <p
             className="text-xl font-mono font-bold leading-tight"
             style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
@@ -535,7 +520,7 @@ function CategorySummaryCard({
           </p>
           {isOECDViolation && (
             <p className="text-[10px] text-cyan-400 mt-0.5 font-mono">
-              OCDE: max 25%
+              {t('detail.oecdLimit')}
             </p>
           )}
           {/* DA bar */}
@@ -551,7 +536,7 @@ function CategorySummaryCard({
             <div
               className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
               style={{ left: '25%' }}
-              title="OCDE max 25%"
+              title={t('detail.oecdLimit')}
             />
           </div>
         </div>
@@ -589,7 +574,7 @@ function CategorySummaryCard({
         return (
           <div className="px-5 py-3 border-t border-border/20">
             <div className="flex items-center justify-between mb-2">
-              <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60">Tendencia de gasto ({last5[0].year}–{last5[last5.length - 1].year})</p>
+              <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60">{t('detail.spendTrend', { from: last5[0].year, to: last5[last5.length - 1].year })}</p>
               {yoy !== null && (
                 <span className={cn(
                   'text-xs font-mono font-bold',
@@ -629,7 +614,7 @@ function CategorySummaryCard({
         if (!flags.length) return null
         return (
           <div className="px-5 py-3 border-t border-red-500/20 bg-red-500/[0.04]">
-            <p className="text-[9px] font-mono uppercase tracking-wide text-red-400 mb-1.5">INDICADORES DE RIESGO</p>
+            <p className="text-[9px] font-mono uppercase tracking-wide text-red-400 mb-1.5">{t('detail.riskIndicators')}</p>
             <ul className="space-y-1">
               {flags.map((f, i) => (
                 <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
@@ -646,7 +631,7 @@ function CategorySummaryCard({
       {(category.avg_risk >= 0.40 || isHighDA) && (
         <div className="px-5 py-3 border-t border-amber-500/20 bg-amber-500/5">
           <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
-            HALLAZGO
+            {t('detail.finding')}
           </p>
           <p className="text-sm text-zinc-200">
             {category.avg_risk >= 0.40 && isHighDA
@@ -741,7 +726,7 @@ function SubcategoryPanel({
         <CardHeader className="pb-2">
           <CardTitle className="text-sm flex items-center gap-2">
             <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-            Qué se compró &mdash; {categoryName}
+            {t('subcategory.titleWithCategory', { name: categoryName })}
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -759,8 +744,8 @@ function SubcategoryPanel({
   const SORT_OPTS: { key: SubSort; label: string }[] = [
     { key: 'value', label: t('subcategory.sortAmount') },
     { key: 'risk',  label: t('subcategory.sortRisk') },
-    { key: 'da',    label: 'AD%' },
-    { key: 'sb',    label: 'LU%' },
+    { key: 'da',    label: t('subcategory.colDA') },
+    { key: 'sb',    label: t('subcategory.colSB') },
   ]
 
   return (
@@ -770,14 +755,14 @@ function SubcategoryPanel({
           <div>
             <CardTitle className="text-sm flex items-center gap-2">
               <BarChart3 className="h-3.5 w-3.5 text-blue-400" />
-              Qué se compró
+              {t('subcategory.title')}
             </CardTitle>
             <CardDescription className="text-xs mt-0.5">
-              {namedCount} subcategorías &middot; {categoryName} &middot; haga clic en una fila para expandir
+              {t('subcategory.description', { count: namedCount, name: categoryName })}
             </CardDescription>
           </div>
           <div className="flex items-center gap-0.5 flex-shrink-0">
-            <span className="text-[9px] text-text-muted/50 font-mono uppercase mr-1.5">Ordenar</span>
+            <span className="text-[9px] text-text-muted/50 font-mono uppercase mr-1.5">{t('subcategory.sortLabel')}</span>
             {SORT_OPTS.map(opt => (
               <button
                 key={opt.key}
@@ -796,8 +781,8 @@ function SubcategoryPanel({
         </div>
         <div className="mt-2.5">
           <div className="flex items-center justify-between text-[10px] font-mono text-text-muted/60 mb-1">
-            <span>{classifiedPct.toFixed(0)}% del gasto categorizado en subcategorías</span>
-            <span className="text-text-muted/40">{catchAllPct.toFixed(0)}% sin clasificar</span>
+            <span>{t('subcategory.classifiedPct', { pct: classifiedPct.toFixed(0) })}</span>
+            <span className="text-text-muted/40">{t('subcategory.unclassifiedPct', { pct: catchAllPct.toFixed(0) })}</span>
           </div>
           <div className="h-1.5 bg-border/20 rounded-full overflow-hidden flex">
             <div
@@ -814,10 +799,10 @@ function SubcategoryPanel({
 
       <CardContent className="p-0">
         <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
-          <div className="flex-1 min-w-0">Subcategoría</div>
-          <span className="w-20 text-right flex-shrink-0">Monto</span>
+          <div className="flex-1 min-w-0">{t('subcategory.colSubcategory')}</div>
+          <span className="w-20 text-right flex-shrink-0">{t('subcategory.colAmount')}</span>
           <span className="w-12 text-right flex-shrink-0">%</span>
-          <span className="w-10 text-right flex-shrink-0 hidden lg:block">Riesgo</span>
+          <span className="w-10 text-right flex-shrink-0 hidden lg:block">{t('subcategory.colRisk')}</span>
           <span className="w-10 text-right flex-shrink-0 hidden xl:block">AD%</span>
           <span className="w-4 flex-shrink-0" />
         </div>
@@ -848,7 +833,7 @@ function SubcategoryPanel({
                     <div className="text-xs font-medium text-text-primary mb-1.5 flex items-center gap-1.5">
                       {sub.is_catch_all && (
                         <span className="text-[9px] font-mono bg-background-elevated px-1 py-0.5 rounded text-text-muted/50 uppercase tracking-wider flex-shrink-0">
-                          otros
+                          {t('subcategory.other')}
                         </span>
                       )}
                       {isFlagged && (
@@ -914,7 +899,7 @@ function SubcategoryPanel({
                           {[
                             isHighDA && `${sub.direct_award_pct.toFixed(0)}% ${t('detail.directAwardLowCompetition')}`,
                             isHighSB && `${sub.single_bid_pct.toFixed(0)}% ${t('detail.singleBidShort')}`,
-                            sub.avg_risk >= RISK_THRESHOLDS.high && `riesgo promedio ${(sub.avg_risk * 100).toFixed(0)}%`,
+                            sub.avg_risk >= RISK_THRESHOLDS.high && `${t('subcategory.avgRisk')} ${(sub.avg_risk * 100).toFixed(0)}%`,
                           ].filter(Boolean).join(' · ')}
                         </span>
                       </div>
@@ -926,12 +911,12 @@ function SubcategoryPanel({
                       </div>
                       {sub.year_min != null && sub.year_max != null && (
                         <div>
-                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Años activo</p>
+                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.activeYears')}</p>
                           <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}–{sub.year_max}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Adj. Directa</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.directAward')}</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
@@ -940,7 +925,7 @@ function SubcategoryPanel({
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">Licit. Única</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.singleBid')}</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighSB ? '#fb923c' : 'var(--color-text-primary)' }}
@@ -951,7 +936,7 @@ function SubcategoryPanel({
                     </div>
                     {sub.top_vendor_name && (
                       <div className="mb-3 flex items-center gap-2">
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">Principal proveedor</p>
+                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">{t('subcategory.topVendor')}</p>
                         {sub.top_vendor_id ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); onNavigate(`/vendors/${sub.top_vendor_id}`) }}
@@ -968,7 +953,7 @@ function SubcategoryPanel({
                     {sub.example_titles.length > 0 && (
                       <div>
                         <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-1.5">
-                          Títulos de contratos ejemplo
+                          {t('subcategory.exampleTitles')}
                         </p>
                         <div className="space-y-1.5">
                           {sub.example_titles.slice(0, 4).map((title, i) => (
@@ -1019,7 +1004,7 @@ function TopFindingsBar({
   const VIEWS: { key: FindingView; label: string; hint: string }[] = [
     { key: 'value', label: t('hero.sortByValue'), hint: t('hero.sortByValueHint') },
     { key: 'risk', label: t('hero.sortByRisk'), hint: t('hero.sortByRiskHint') },
-    { key: 'da', label: 'Adj. directa', hint: '% sobre total' },
+    { key: 'da', label: t('topFindings.sortDA'), hint: t('topFindings.sortDAHint') },
   ]
 
   const getMetric = (cat: CategoryStat): { value: string; color: string; sub: string } => {
@@ -1027,7 +1012,7 @@ function TopFindingsBar({
       return {
         value: formatCompactMXN(cat.total_value),
         color: '#fafafa',
-        sub: `${formatNumber(cat.total_contracts)} contratos`,
+        sub: t('topFindings.contracts', { count: formatNumber(cat.total_contracts) }),
       }
     }
     if (view === 'risk') {
@@ -1052,14 +1037,14 @@ function TopFindingsBar({
       <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
         <div>
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI · Ranking dinámico
+            {t('topFindings.eyebrow')}
           </p>
           <h2
             id="top-findings-heading"
             className="text-lg font-bold text-text-primary tracking-tight"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Las cinco categorías que importan
+            {t('topFindings.title')}
           </h2>
         </div>
         <div className="flex items-center gap-1 bg-background-card border border-border/40 rounded p-0.5">
@@ -1131,7 +1116,25 @@ function TopFindingsBar({
 
 export default function SpendingCategories() {
   const navigate = useNavigate()
-  const { t } = useTranslation('spending')
+  const { t, i18n } = useTranslation('spending')
+  const catName = (c: { name_en: string; name_es: string }) =>
+    i18n.language === 'en' ? (c.name_en || c.name_es) : (c.name_es || c.name_en)
+
+  const SECTOR_OPTIONS = [
+    { code: '', label: t('filters.allSectors') },
+    { code: 'salud', label: t('sectors.salud') },
+    { code: 'educacion', label: t('sectors.educacion') },
+    { code: 'infraestructura', label: t('sectors.infraestructura') },
+    { code: 'energia', label: t('sectors.energia') },
+    { code: 'defensa', label: t('sectors.defensa') },
+    { code: 'tecnologia', label: t('sectors.tecnologia') },
+    { code: 'hacienda', label: t('sectors.hacienda') },
+    { code: 'gobernacion', label: t('sectors.gobernacion') },
+    { code: 'agricultura', label: t('sectors.agricultura') },
+    { code: 'ambiente', label: t('sectors.ambiente') },
+    { code: 'trabajo', label: t('sectors.trabajo') },
+    { code: 'otros', label: t('sectors.otros') },
+  ]
   const [sectorFilter, setSectorFilter] = useState<string>('')
   const [yearFrom, setYearFrom] = useState(2010)
   const [yearTo, setYearTo] = useState(2025)
