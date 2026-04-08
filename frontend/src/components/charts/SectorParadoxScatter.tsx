@@ -148,7 +148,7 @@ export function SectorParadoxScatter() {
   const maxBillions = scatterData.reduce((m, s) => Math.max(m, s.totalBillions), 1)
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-4" role="img" aria-label="Scatter chart: sector risk vs direct award rate, bubble size represents total contract value">
       {/* Size legend */}
       <div className="flex items-center gap-4 text-xs text-zinc-500 font-mono">
         <span className="font-medium">Bubble size = total contract value</span>

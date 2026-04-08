@@ -32,11 +32,11 @@ function riskToColor(score: number): string {
   return RISK_COLORS.low
 }
 
-export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _totalInstitutionValue, maxItems = 15, height = 320 }: Props) {
+export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue: _totalInstitutionValue, maxItems = 15, height = 320 }: Props) {
   const navigate = useNavigate()
 
   const { treeData, otherNode } = useMemo(() => {
-    const sorted = [...vendors].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
+    const sorted = [...(vendors ?? [])].sort((a, b) => b.total_value_mxn - a.total_value_mxn)
     const topN = sorted.slice(0, maxItems)
     const rest = sorted.slice(maxItems)
 
@@ -154,6 +154,14 @@ export function VendorConcentrationTreemap({ vendors, totalInstitutionValue: _to
       }
     },
   }), [navigate])
+
+  if (!allData.length) {
+    return (
+      <div className="flex items-center justify-center text-xs text-zinc-500 py-8">
+        No vendor concentration data available
+      </div>
+    )
+  }
 
   return (
     <ReactECharts

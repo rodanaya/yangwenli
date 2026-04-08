@@ -51,7 +51,8 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
     }
     setCopied(true)
     setOpen(false)
-    setTimeout(() => setCopied(false), 2000)
+    const tid = setTimeout(() => setCopied(false), 2000)
+    return () => clearTimeout(tid)
   }
 
   function handleWhatsApp() {

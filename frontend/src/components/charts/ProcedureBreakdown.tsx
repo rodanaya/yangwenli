@@ -57,7 +57,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   }, [data])
 
   return (
-    <div style={{ height: `${height}px` }}>
+    <div role="img" aria-label="Procedure type breakdown by sector: direct award, single bid, and open tender percentages" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" onClick={(data: any) => {
           if (onSectorClick && data?.activePayload?.[0]?.payload?.code) {

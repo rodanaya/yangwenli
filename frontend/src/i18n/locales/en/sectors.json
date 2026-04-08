@@ -240,5 +240,10 @@
     "co_bid_high": "Vendor co-bids in >80% of procedures with a partner",
     "co_bid_med": "Vendor co-bids in 50–80% of procedures with a partner",
     "price_hyp": "Statistical outlier flagged by IQR price model"
+  },
+  "charts": {
+    "allSectors": "All Sectors",
+    "trendTitle": "Sector Risk Trend",
+    "noTrendData": "No trend data available for the selected sectors"
   }
 }

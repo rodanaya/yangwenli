@@ -28,11 +28,11 @@ interface Props {
   height?: number
 }
 
-export function CategoryTreemap({ categories, height = 480 }: Props) {
+export function CategoryTreemap({ categories = [], height = 480 }: Props) {
   const navigate = useNavigate()
 
   const data = useMemo(() => {
-    return categories
+    return (categories ?? [])
       .filter((c) => c.total_value > 0)
       .sort((a, b) => b.total_value - a.total_value)
       .map((c) => {

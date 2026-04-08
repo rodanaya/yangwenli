@@ -132,6 +132,7 @@ export function AdminRiskTrajectory({ administrations, metric, loading }: Props)
   }
 
   return (
+    <div role="img" aria-label="Administration risk trajectory over 6-year terms">
     <ResponsiveContainer width="100%" height={260}>
       <LineChart data={chartData} margin={{ top: 8, right: 16, left: 0, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
@@ -174,5 +175,6 @@ export function AdminRiskTrajectory({ administrations, metric, loading }: Props)
         ))}
       </LineChart>
     </ResponsiveContainer>
+    </div>
   )
 }

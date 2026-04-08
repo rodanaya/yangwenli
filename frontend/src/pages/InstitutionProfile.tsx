@@ -1112,7 +1112,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Calendar className="h-3.5 w-3.5 text-accent" />
-                  Proveedores de larga data
+                  {t('profile.longestTenuredVendors', 'Long-tenured Vendors')}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1127,7 +1127,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
-                  Diversidad de proveedores (HHI)
+                  {t('profile.supplierDiversity', 'Supplier Diversity (HHI)')}
                   <Badge variant="secondary" className="text-[10px] px-1.5 py-0 h-4 ml-2">
                     {institution.supplier_diversity.concentration_level.toUpperCase()}
                   </Badge>

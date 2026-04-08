@@ -67,7 +67,7 @@ export const StackedAreaChart = memo(function StackedAreaChart({
   }
 
   return (
-    <div style={{ height: `${height}px` }}>
+    <div role="img" aria-label="Stacked area chart of risk distribution by year" style={{ height: `${height}px` }}>
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} onClick={handleClick} style={{ cursor: onYearClick ? 'pointer' : 'default' }}>
           <CartesianGrid

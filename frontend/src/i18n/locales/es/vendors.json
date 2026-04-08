@@ -194,8 +194,18 @@
     "protectiveFactors": "Factores protectores (reducen el riesgo):"
   },
   "plainLanguage": {
-    "whatThisMeans": "Qué Significa Esto",
-    "forReporters": "para periodistas"
+    "riskSentence": {
+      "highDirectAward": "{{name}} evita la licitación competitiva en el {{pct}}% de sus contratos — {{multiple}}× el promedio nacional del 35%.",
+      "highSingleBid": "{{name}} gana el {{pct}}% de las licitaciones competitivas sin oposición — patrón de licitante único consistente con captura de mercado.",
+      "highRiskPattern": "{{name}} muestra patrones de contratación que se asemejan estrechamente a {{count}} casos de corrupción documentados en la base de datos RUBLI.",
+      "default": "El perfil de contratación de {{name}} amerita un examen más detallado."
+    },
+    "scaleSentence": {
+      "highValue": "El valor total de contratos de {{amount}} lo ubica entre los proveedores de mayor valor del gobierno mexicano.",
+      "highCount": "{{total}} contratos a lo largo de su historia de contratación sugieren relaciones institucionales profundas."
+    },
+    "whatThisMeans": "Qué significa esto",
+    "forReporters": "Para periodistas"
   },
   "noContributingFactors": "No se encontraron factores de riesgo contribuyentes.",
   "untitledContract": "Sin título",
@@ -277,17 +287,5 @@
   "nameVariantsMore": "+{{count}} más",
   "rfcCopied": "RFC copiado",
   "copyRfc": "Copiar RFC",
-  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado",
-  "plainLanguage": {
-    "riskSentence": {
-      "highDirectAward": "{{name}} evita la licitación competitiva en el {{pct}}% de sus contratos — {{multiple}}× el promedio nacional del 35%.",
-      "highSingleBid": "{{name}} gana el {{pct}}% de las licitaciones competitivas sin oposición — patrón de licitante único consistente con captura de mercado.",
-      "highRiskPattern": "{{name}} muestra patrones de contratación que se asemejan estrechamente a {{count}} casos de corrupción documentados en la base de datos RUBLI.",
-      "default": "El perfil de contratación de {{name}} amerita un examen más detallado."
-    },
-    "scaleSentence": {
-      "highValue": "El valor total de contratos de {{amount}} lo ubica entre los proveedores de mayor valor del gobierno mexicano.",
-      "highCount": "{{total}} contratos a lo largo de su historia de contratación sugieren relaciones institucionales profundas."
-    }
-  }
+  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado"
 }

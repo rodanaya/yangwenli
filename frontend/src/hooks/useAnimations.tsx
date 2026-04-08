@@ -104,8 +104,7 @@ export function useCountUp(target: number, duration = 1800, decimals = 0) {
     // If the element is already in view (e.g. data loaded after mount while
     // element was visible), run immediately instead of waiting for observer.
     if (inViewRef.current) {
-      runAnimation()
-      return
+      return runAnimation()
     }
 
     const observer = new IntersectionObserver(
@@ -162,23 +161,26 @@ export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
   useEffect(() => {
     const el = ref.current
     if (!el) return
+    let t1: ReturnType<typeof setTimeout>
+    let t2: ReturnType<typeof setTimeout>
+    let t3: ReturnType<typeof setTimeout>
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting) {
-          setTimeout(() => {
+          observer.disconnect()
+          t1 = setTimeout(() => {
             setWidth(Math.min(pct * 1.03, 100)) // overshoot 3%
-            setTimeout(() => {
+            t2 = setTimeout(() => {
               setWidth(pct) // settle back
-              setTimeout(() => setShowShimmer(true), 300)
+              t3 = setTimeout(() => setShowShimmer(true), 300)
             }, 600)
           }, delay)
-          observer.disconnect()
         }
       },
       { threshold: 0.1 }
     )
     observer.observe(el)
-    return () => observer.disconnect()
+    return () => { observer.disconnect(); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [pct, delay])
   return (
     <div ref={ref} className={`flex-1 ${height} bg-surface-raised rounded overflow-hidden`}>

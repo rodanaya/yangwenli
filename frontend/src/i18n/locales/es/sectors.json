@@ -240,5 +240,10 @@
     "co_bid_high": "El proveedor co-licita en más del 80% de los procedimientos con un socio",
     "co_bid_med": "El proveedor co-licita en el 50–80% de los procedimientos con un socio",
     "price_hyp": "Valor atípico estadístico detectado por el modelo de precios IQR"
+  },
+  "charts": {
+    "allSectors": "Todos los Sectores",
+    "trendTitle": "Tendencia de Riesgo por Sector",
+    "noTrendData": "No hay datos de tendencia disponibles para los sectores seleccionados"
   }
 }
