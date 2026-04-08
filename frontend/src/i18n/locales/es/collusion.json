@@ -52,7 +52,13 @@
     "sharedProc": "procedimientos compartidos",
     "coBidRate": "tasa de co-oferta",
     "viewProfile": "Ver perfil",
-    "connection": "conexi\u00f3n"
+    "connection": "conexi\u00f3n",
+    "sharedContracts": "Contratos Compartidos",
+    "investigationThread": "Hilo de Investigaci\u00f3n",
+    "totalProcedures": "procedimientos en total",
+    "vendorA": "Proveedor A",
+    "vendorB": "Proveedor B",
+    "suspectedBidRigging": "Connivencia Sospechosa"
   },
   "pagination": {
     "previous": "Anterior",

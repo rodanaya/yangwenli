@@ -52,7 +52,13 @@
     "sharedProc": "shared procedures",
     "coBidRate": "co-bid rate",
     "viewProfile": "View profile",
-    "connection": "connection"
+    "connection": "connection",
+    "sharedContracts": "Shared Contracts",
+    "investigationThread": "Investigation Thread",
+    "totalProcedures": "total procedures",
+    "vendorA": "Vendor A",
+    "vendorB": "Vendor B",
+    "suspectedBidRigging": "Suspected Bid Rigging"
   },
   "pagination": {
     "previous": "Previous",

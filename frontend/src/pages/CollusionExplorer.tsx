@@ -23,9 +23,7 @@ import {
   Shield,
   MapPin,
   HelpCircle,
-  Search,
   X,
-  Table2,
   RotateCcw,
   FileText,
 } from 'lucide-react'
@@ -34,7 +32,6 @@ import type { CollusionPair, CollusionStats } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SharedContractsModal } from '@/components/SharedContractsModal'
-import { TableExportButton } from '@/components/TableExportButton'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -46,13 +43,6 @@ const DEFAULT_MIN_SHARED = 10
 const DEFAULT_SORT: SortField = 'shared_procedures'
 const DEFAULT_PER_PAGE = 50
 
-// Co-bid rate severity
-function rateClass(rate: number): { text: string; bg: string; border: string; dot: string } {
-  if (rate >= 80) return { text: 'text-red-400', bg: 'bg-red-500/10', border: 'border-red-500/20', dot: 'bg-red-500' }
-  if (rate >= 50) return { text: 'text-orange-400', bg: 'bg-orange-500/10', border: 'border-orange-500/20', dot: 'bg-orange-500' }
-  return { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' }
-}
-
 // ---------------------------------------------------------------------------
 // Methodology Callout
 // ---------------------------------------------------------------------------
@@ -60,14 +50,17 @@ function rateClass(rate: number): { text: string; bg: string; border: string; do
 function MethodologyCallout() {
   const { t } = useTranslation('collusion')
   return (
-    <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-8">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-2">
+    <details className="mb-8 group">
+      <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors select-none">
+        <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
         {t('methodology.title')}
-      </p>
-      <p className="text-sm text-zinc-300 leading-relaxed">
-        {t('methodology.body')}
-      </p>
-    </div>
+      </summary>
+      <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
+        <p className="text-sm text-zinc-300 leading-relaxed">
+          {t('methodology.body')}
+        </p>
+      </div>
+    </details>
   )
 }
 
@@ -181,11 +174,12 @@ function PatternLegend() {
   ]
 
   return (
-    <div className="mb-8">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+    <details className="mb-8 group">
+      <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 hover:text-zinc-300 transition-colors select-none">
+        <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
         {t('patterns.title')}
-      </p>
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+      </summary>
+      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
         {patterns.map((p) => (
           <div key={p.name} className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
             <div className="flex items-center gap-2 mb-1">
@@ -196,7 +190,7 @@ function PatternLegend() {
           </div>
         ))}
       </div>
-    </div>
+    </details>
   )
 }
 
@@ -535,111 +529,142 @@ interface PairCardProps {
 function PairCard({ pair, onViewContracts }: PairCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('collusion')
-  const rc = rateClass(pair.co_bid_rate)
+
+  // Accent colors based on rate severity
+  const rate = pair.co_bid_rate
+  const accentBar =
+    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
+  const accentText =
+    rate >= 80 ? 'text-red-400' : rate >= 50 ? 'text-orange-400' : 'text-amber-400'
+  const accentBorder =
+    rate >= 80
+      ? 'border-red-500/20'
+      : rate >= 50
+        ? 'border-orange-500/20'
+        : 'border-amber-500/20'
+  const accentBg =
+    rate >= 80
+      ? 'bg-red-500/5'
+      : rate >= 50
+        ? 'bg-orange-500/5'
+        : 'bg-amber-500/5'
+  const rateBarFill =
+    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900/80 transition-colors p-4">
-      {/* Top row: vendor A <---> vendor B with rate in center */}
-      <div className="flex items-start gap-3">
-        {/* Vendor A */}
-        <div className="flex-1 min-w-0">
+    <div className="relative rounded-xl border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900/80 transition-colors overflow-hidden flex flex-col">
+      {/* Left accent bar */}
+      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${accentBar}`} aria-hidden="true" />
+
+      {/* Top banner: flagged status */}
+      {pair.is_potential_collusion && (
+        <div className="flex items-center justify-between gap-2 px-4 py-2 bg-red-500/5 border-b border-red-500/10">
+          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-red-400">
+            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+            {t('pairCard.suspectedBidRigging')}
+          </span>
+          <span className="text-[10px] font-mono text-zinc-500">
+            <span className="font-bold text-zinc-300">{formatNumber(pair.shared_procedures)}</span>
+            {' '}
+            {t('pairCard.sharedProc')}
+          </span>
+        </div>
+      )}
+
+      {/* Vendor A block */}
+      <div className="relative px-4 pt-4 pb-3">
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+            {t('pairCard.vendorA')}
+          </span>
           <button
             type="button"
             onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-            className="text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors truncate block max-w-full text-left"
-            title={pair.vendor_name_a}
+            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
+            aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_a}`}
           >
-            {pair.vendor_name_a}
+            {t('pairCard.viewProfile')}
+            <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
           </button>
-          <span className="text-[10px] font-mono text-zinc-600">
-            {formatNumber(pair.vendor_a_procedures)} {t('table.proceduresLabel')}
-          </span>
         </div>
-
-        {/* Connection indicator */}
-        <div className="flex flex-col items-center pt-0.5 shrink-0">
-          <div className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1 ${rc.bg} border ${rc.border}`}>
-            <span className={`h-1.5 w-1.5 rounded-full ${rc.dot} ${pair.co_bid_rate >= 80 ? 'animate-pulse' : ''}`} />
-            <span className={`text-lg font-mono font-bold ${rc.text}`}>
-              {pair.co_bid_rate.toFixed(1)}%
-            </span>
-          </div>
-          <span className="text-[9px] font-mono uppercase tracking-widest text-zinc-600 mt-1">
-            {t('pairCard.coBidRate')}
-          </span>
-        </div>
-
-        {/* Vendor B */}
-        <div className="flex-1 min-w-0 text-right">
-          <button
-            type="button"
-            onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-            className="text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors truncate block max-w-full text-right ml-auto"
-            title={pair.vendor_name_b}
-          >
-            {pair.vendor_name_b}
-          </button>
-          <span className="text-[10px] font-mono text-zinc-600">
-            {formatNumber(pair.vendor_b_procedures)} {t('table.proceduresLabel')}
-          </span>
+        <button
+          type="button"
+          onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
+          className="block text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors text-left leading-snug"
+        >
+          {pair.vendor_name_a}
+        </button>
+        <div className="text-[10px] font-mono text-zinc-600 mt-1">
+          {formatNumber(pair.vendor_a_procedures)} {t('pairCard.totalProcedures')}
         </div>
       </div>
 
-      {/* Bottom row: shared procedures + status + links */}
-      <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800/60">
-        <div className="flex items-center gap-4">
-          <div>
-            <span className="text-xl font-mono font-bold text-zinc-200">
-              {formatNumber(pair.shared_procedures)}
-            </span>
-            <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 ml-1.5">
-              {t('pairCard.sharedProc')}
-            </span>
-          </div>
-
-          {pair.is_potential_collusion && (
-            <span className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/20 text-red-400">
-              <AlertTriangle className="h-2.5 w-2.5" aria-hidden="true" />
-              {t('table.flagged')}
-            </span>
-          )}
+      {/* Rate bridge */}
+      <div className={`mx-4 my-2 rounded-lg border ${accentBorder} ${accentBg} px-4 py-3`}>
+        <div className="flex items-baseline justify-between gap-2">
+          <span className={`text-2xl font-mono font-bold ${accentText}`}>
+            {rate.toFixed(1)}%
+          </span>
+          <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+            {t('pairCard.coBidRate')}
+          </span>
         </div>
+        <div className="mt-2 w-full bg-zinc-800 h-2 rounded-full overflow-hidden" aria-hidden="true">
+          <div
+            className={`h-2 ${rateBarFill} rounded-full`}
+            style={{ width: `${Math.min(rate, 100)}%` }}
+          />
+        </div>
+      </div>
 
-        <div className="flex items-center gap-3">
-          {pair.is_potential_collusion && (
-            <button
-              type="button"
-              onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
-              className="flex items-center gap-1 px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors"
-            >
-              Thread
-            </button>
-          )}
-          <button
-            type="button"
-            onClick={() => onViewContracts(pair.vendor_id_a, pair.vendor_id_b, pair.vendor_name_a, pair.vendor_name_b)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium bg-amber-500/10 hover:bg-amber-500/20 text-amber-400 border border-amber-500/20 rounded-lg transition-colors"
-          >
-            <FileText className="w-3.5 h-3.5" aria-hidden="true" />
-            Ver contratos
-          </button>
-          <button
-            type="button"
-            onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors"
-          >
-            <ExternalLink className="h-2.5 w-2.5" />
-            A
-          </button>
+      {/* Vendor B block */}
+      <div className="relative px-4 pt-3 pb-3">
+        <div className="flex items-start justify-between gap-3 mb-1">
+          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+            {t('pairCard.vendorB')}
+          </span>
           <button
             type="button"
             onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors"
+            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
+            aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_b}`}
           >
-            <ExternalLink className="h-2.5 w-2.5" />
-            B
+            {t('pairCard.viewProfile')}
+            <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
           </button>
         </div>
+        <button
+          type="button"
+          onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
+          className="block text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors text-left leading-snug"
+        >
+          {pair.vendor_name_b}
+        </button>
+        <div className="text-[10px] font-mono text-zinc-600 mt-1">
+          {formatNumber(pair.vendor_b_procedures)} {t('pairCard.totalProcedures')}
+        </div>
+      </div>
+
+      {/* Action strip */}
+      <div className="mt-auto flex items-center justify-between gap-2 border-t border-zinc-800/60 px-4 py-3">
+        <button
+          type="button"
+          onClick={() => onViewContracts(pair.vendor_id_a, pair.vendor_id_b, pair.vendor_name_a, pair.vendor_name_b)}
+          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wide bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg transition-colors"
+        >
+          <FileText className="w-3 h-3" aria-hidden="true" />
+          {t('pairCard.sharedContracts')}
+        </button>
+        {pair.is_potential_collusion && (
+          <button
+            type="button"
+            onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wide bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-colors"
+          >
+            {t('pairCard.investigationThread')}
+            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+          </button>
+        )}
       </div>
     </div>
   )
@@ -690,377 +715,6 @@ function ErrorState() {
 }
 
 // ---------------------------------------------------------------------------
-// Co-Bid Rate Bar
-// ---------------------------------------------------------------------------
-
-function CoBidRateBar({ rate }: { rate: number }) {
-  const color =
-    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
-  return (
-    <div className="flex items-center gap-2">
-      <div className="w-16 bg-zinc-800 rounded-full h-1.5 shrink-0">
-        <div
-          className={`h-1.5 rounded-full ${color}`}
-          style={{ width: `${Math.min(rate, 100)}%` }}
-          role="presentation"
-        />
-      </div>
-      <span className="tabular-nums">{rate.toFixed(1)}%</span>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Collusion Pairs Table
-// ---------------------------------------------------------------------------
-
-const TABLE_PER_PAGE = 25
-
-function CollusionPairsTable() {
-  const navigate = useNavigate()
-
-  const [tablePage, setTablePage] = useState(1)
-  const [tableSort, setTableSort] = useState<SortField>('co_bid_rate')
-  const [tableMinShared, setTableMinShared] = useState(5)
-  const [searchTerm, setSearchTerm] = useState('')
-  const [debouncedSearch, setDebouncedSearch] = useState('')
-  const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
-
-  const handleSearch = useCallback((value: string) => {
-    setSearchTerm(value)
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(() => {
-      setDebouncedSearch(value)
-      setTablePage(1)
-    }, 300)
-  }, [])
-
-  const handleClearSearch = () => {
-    setSearchTerm('')
-    setDebouncedSearch('')
-    setTablePage(1)
-  }
-
-  const tableQueryParams = useMemo(
-    () => ({
-      is_potential_collusion: undefined as boolean | undefined,
-      min_shared_procedures: tableMinShared,
-      sort_by: tableSort,
-      page: tablePage,
-      per_page: TABLE_PER_PAGE,
-    }),
-    [tableMinShared, tableSort, tablePage],
-  )
-
-  const { data: tableData, isLoading: tableLoading, isError: tableError } = useQuery({
-    queryKey: ['collusion-pairs-table', tableQueryParams],
-    queryFn: () => collusionApi.getPairs(tableQueryParams),
-    staleTime: 10 * 60 * 1000,
-    placeholderData: (prev) => prev,
-  })
-
-  const allPairs: CollusionPair[] = tableData?.data ?? []
-  const tablePagination = tableData?.pagination
-  const tableTotalPages = tablePagination?.total_pages ?? 1
-  const tableTotal = tablePagination?.total ?? 0
-
-  // Client-side search filter on current page
-  const filteredPairs = useMemo(() => {
-    if (!debouncedSearch.trim()) return allPairs
-    const q = debouncedSearch.toLowerCase()
-    return allPairs.filter(
-      (p) =>
-        p.vendor_name_a.toLowerCase().includes(q) ||
-        p.vendor_name_b.toLowerCase().includes(q),
-    )
-  }, [allPairs, debouncedSearch])
-
-  const tablePageOffset = (tablePage - 1) * TABLE_PER_PAGE
-
-  return (
-    <section
-      aria-labelledby="pairs-table-heading"
-      className="mt-14 pt-10 border-t border-zinc-800"
-    >
-      {/* Section header */}
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-1">
-          <Table2 className="h-4 w-4 text-zinc-500" aria-hidden="true" />
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-            Investigative View
-          </p>
-        </div>
-        <h2
-          id="pairs-table-heading"
-          className="text-2xl font-bold text-zinc-100 mb-2"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          8,701 Suspected Collusion Pairs
-        </h2>
-        <p className="text-sm text-zinc-400 max-w-2xl leading-relaxed">
-          Vendor pairs that bid together in more than 50% of their procedures —
-          the statistical signature of bid rigging. Use this table to find, copy,
-          and share specific vendor names for investigation.
-        </p>
-      </div>
-
-      {/* Controls row */}
-      <div className="flex flex-wrap items-end gap-3 mb-4">
-        {/* Export */}
-        {tableData?.data && tableData.data.length > 0 && (
-          <TableExportButton
-            data={tableData.data.map((p: CollusionPair) => ({
-              vendor_name_a: p.vendor_name_a,
-              vendor_name_b: p.vendor_name_b,
-              shared_procedures: p.shared_procedures,
-              co_bid_rate: p.co_bid_rate,
-              is_potential_collusion: p.is_potential_collusion ? 'yes' : 'no',
-            }))}
-            filename="collusion-pairs"
-          />
-        )}
-        {/* Search */}
-        <div className="relative flex-1 min-w-48 max-w-xs">
-          <label htmlFor="table-search" className="sr-only">
-            Filter by vendor name
-          </label>
-          <Search
-            className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none"
-            aria-hidden="true"
-          />
-          <input
-            id="table-search"
-            type="search"
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            placeholder="Filter by vendor name..."
-            className="w-full rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm pl-8 pr-8 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50 placeholder:text-zinc-600"
-          />
-          {searchTerm && (
-            <button
-              type="button"
-              onClick={handleClearSearch}
-              className="absolute right-2 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors"
-              aria-label="Clear search"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
-          )}
-        </div>
-
-        {/* Sort */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="table-sort" className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 whitespace-nowrap">
-            Sort
-          </label>
-          <select
-            id="table-sort"
-            value={tableSort}
-            onChange={(e) => { setTableSort(e.target.value as SortField); setTablePage(1) }}
-            className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-          >
-            <option value="co_bid_rate">Co-Bid Rate</option>
-            <option value="shared_procedures">Shared Procedures</option>
-          </select>
-        </div>
-
-        {/* Min shared */}
-        <div className="flex items-center gap-2">
-          <label htmlFor="table-min-shared" className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 whitespace-nowrap">
-            Min shared
-          </label>
-          <input
-            id="table-min-shared"
-            type="number"
-            min={1}
-            max={500}
-            value={tableMinShared}
-            onChange={(e) => { setTableMinShared(Math.max(1, Number(e.target.value))); setTablePage(1) }}
-            className="w-20 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-mono px-2 py-1.5 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
-          />
-        </div>
-      </div>
-
-      {/* Search scope note */}
-      {debouncedSearch && (
-        <p className="text-[10px] font-mono text-zinc-600 mb-3" aria-live="polite">
-          Filtering {filteredPairs.length} of {allPairs.length} results on this page. Adjust sort/min-shared to search broader data.
-        </p>
-      )}
-
-      {/* Table */}
-      {tableLoading ? (
-        <div className="space-y-2">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-10 rounded-lg" />
-          ))}
-        </div>
-      ) : tableError ? (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-6 text-center">
-          <AlertTriangle className="h-6 w-6 text-red-400 mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm text-red-300">Failed to load collusion pairs table.</p>
-        </div>
-      ) : filteredPairs.length === 0 ? (
-        <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-6 text-center">
-          <Users className="h-6 w-6 text-zinc-700 mx-auto mb-2" aria-hidden="true" />
-          <p className="text-sm text-zinc-400">No pairs match current filters.</p>
-        </div>
-      ) : (
-        <div className="overflow-x-auto rounded-xl border border-zinc-800">
-          <table className="w-full text-sm" aria-label="Collusion pairs">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/80">
-                <th
-                  scope="col"
-                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-12"
-                >
-                  #
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5"
-                >
-                  Vendor A
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5"
-                >
-                  Vendor B
-                </th>
-                <th
-                  scope="col"
-                  className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-40"
-                >
-                  Co-Bid Rate
-                </th>
-                <th
-                  scope="col"
-                  className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-24"
-                >
-                  Shared
-                </th>
-                <th
-                  scope="col"
-                  className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-3 py-2.5 w-24"
-                >
-                  Flag
-                </th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-zinc-800/60">
-              {filteredPairs.map((pair, idx) => (
-                <tr
-                  key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                  className="hover:bg-zinc-900/60 transition-colors"
-                >
-                  {/* Rank */}
-                  <td className="px-3 py-2.5 text-[11px] font-mono text-zinc-600 tabular-nums">
-                    {tablePageOffset + idx + 1}
-                  </td>
-
-                  {/* Vendor A */}
-                  <td className="px-3 py-2.5 max-w-[220px]">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-                      className="text-xs font-medium text-zinc-200 hover:text-blue-400 transition-colors text-left truncate block max-w-full"
-                      title={pair.vendor_name_a}
-                    >
-                      {pair.vendor_name_a}
-                    </button>
-                    <span className="text-[10px] font-mono text-zinc-600">
-                      {formatNumber(pair.vendor_a_procedures)} proc.
-                    </span>
-                  </td>
-
-                  {/* Vendor B */}
-                  <td className="px-3 py-2.5 max-w-[220px]">
-                    <button
-                      type="button"
-                      onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-                      className="text-xs font-medium text-zinc-200 hover:text-blue-400 transition-colors text-left truncate block max-w-full"
-                      title={pair.vendor_name_b}
-                    >
-                      {pair.vendor_name_b}
-                    </button>
-                    <span className="text-[10px] font-mono text-zinc-600">
-                      {formatNumber(pair.vendor_b_procedures)} proc.
-                    </span>
-                  </td>
-
-                  {/* Co-bid rate bar */}
-                  <td className="px-3 py-2.5 text-xs font-mono text-zinc-300">
-                    <CoBidRateBar rate={pair.co_bid_rate} />
-                  </td>
-
-                  {/* Shared procedures */}
-                  <td className="px-3 py-2.5 text-right text-xs font-mono font-semibold text-zinc-200 tabular-nums">
-                    {formatNumber(pair.shared_procedures)}
-                  </td>
-
-                  {/* Collusion flag */}
-                  <td className="px-3 py-2.5 text-center">
-                    {pair.is_potential_collusion ? (
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider bg-red-500/10 border border-red-500/20 text-red-400">
-                        <AlertTriangle className="h-2 w-2" aria-hidden="true" />
-                        Flagged
-                      </span>
-                    ) : (
-                      <span className="inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[9px] font-mono uppercase tracking-wider bg-zinc-800 border border-zinc-700 text-zinc-500">
-                        Watch
-                      </span>
-                    )}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      )}
-
-      {/* Table Pagination */}
-      {tableTotalPages > 1 && !debouncedSearch && (
-        <div
-          className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800"
-          role="navigation"
-          aria-label="Table pagination"
-        >
-          <button
-            type="button"
-            onClick={() => setTablePage((p) => Math.max(1, p - 1))}
-            disabled={tablePage <= 1}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-            Prev
-          </button>
-
-          <span className="text-[10px] font-mono text-zinc-600" aria-live="polite">
-            Page {tablePage} of {tableTotalPages} &middot; {formatNumber(tableTotal)} pairs
-          </span>
-
-          <button
-            type="button"
-            onClick={() => setTablePage((p) => Math.min(tableTotalPages, p + 1))}
-            disabled={tablePage >= tableTotalPages}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-          >
-            Next
-            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        </div>
-      )}
-
-      {/* Journalist tip */}
-      <p className="text-[10px] text-zinc-700 mt-6">
-        Tip: Click any vendor name to open their full profile. Vendor pairs with co-bid rate &gt;80% and &gt;50 shared procedures warrant immediate investigation.
-      </p>
-    </section>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Main Component
 // ---------------------------------------------------------------------------
 
@@ -1071,6 +725,7 @@ export default function CollusionExplorer() {
   const [minShared, setMinShared] = useState(DEFAULT_MIN_SHARED)
   const [sortBy, setSortBy] = useState<SortField>(DEFAULT_SORT)
   const [page, setPage] = useState(1)
+  const [showGraph, setShowGraph] = useState(false)
 
   // Selected vendor (filtered from graph node click)
   const [selectedVendor, setSelectedVendor] = useState<{ id: number; name: string } | null>(null)
@@ -1199,12 +854,33 @@ export default function CollusionExplorer() {
         {/* ── Pattern Legend ── */}
         <PatternLegend />
 
-        {/* ── Bid-Ring Network Graph ── */}
-        <BidRingGraph
-          pairs={graphPairs}
-          loading={graphLoading}
-          onNodeClick={handleGraphNodeClick}
-        />
+        {/* ── Bid-Ring Network Graph (collapsible) ── */}
+        <button
+          type="button"
+          onClick={() => setShowGraph((v) => !v)}
+          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition-colors mb-6"
+          aria-expanded={showGraph}
+        >
+          <div className="text-left">
+            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+              Bid-Ring Network
+            </span>
+            <span className="text-[11px] text-zinc-600 ml-3">
+              Top 150 suspicious pairs — interactive graph
+            </span>
+          </div>
+          <ChevronRight
+            className={`h-4 w-4 text-zinc-500 transition-transform ${showGraph ? 'rotate-90' : ''}`}
+            aria-hidden="true"
+          />
+        </button>
+        {showGraph && (
+          <BidRingGraph
+            pairs={graphPairs}
+            loading={graphLoading}
+            onNodeClick={handleGraphNodeClick}
+          />
+        )}
 
         {/* ── Filters ── */}
         <Filters
@@ -1256,7 +932,7 @@ export default function CollusionExplorer() {
         ) : pairs.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="space-y-3">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {pairs.map((pair) => (
               <PairCard
                 key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
@@ -1301,9 +977,6 @@ export default function CollusionExplorer() {
             </button>
           </div>
         )}
-
-        {/* ── Collusion Pairs Table ── */}
-        <CollusionPairsTable />
 
         {/* ── Source footnote ── */}
         <p className="text-[10px] text-zinc-700 mt-8 text-center">
