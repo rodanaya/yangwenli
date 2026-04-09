@@ -16,7 +16,7 @@ import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 // RiskScoreDisclaimer import removed — distribution section removed
 import RedaccionWidget from '@/components/ui/RedaccionWidget'
 import StoryInfographic from '@/components/ui/StoryInfographic'
-import { analysisApi, investigationApi, phiApi, ariaApi } from '@/api/client'
+import { analysisApi, phiApi, ariaApi } from '@/api/client'
 import type { AriaQueueItem, FastDashboardData } from '@/api/types'
 import type { ExecutiveCaseDetail } from '@/api/types'
 import {
@@ -1584,12 +1584,6 @@ export function Dashboard() {
     refetchOnWindowFocus: false,
   })
 
-  const { data: _topInvestigationCase } = useQuery({
-    queryKey: ['investigation', 'top-1-dashboard'],
-    queryFn: () => investigationApi.getTopCases(1),
-    staleTime: 30 * 60 * 1000,
-  })
-
   const { data: sectorYearData } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
@@ -1769,47 +1763,6 @@ export function Dashboard() {
         criticalCount={criticalCount}
         loading={dashLoading || !overview}
       />
-
-      {/* ================================================================ */}
-      {/* KEY FINDINGS SIGNAL STRIP — 3 live stats                       */}
-      {/* ================================================================ */}
-      {!kpiLoading && overview && (
-        <div className="bg-background-elevated border-y border-border grid grid-cols-1 sm:grid-cols-3 divide-y sm:divide-y-0 divide-x-0 sm:divide-x divide-border py-6 px-4 sm:px-8">
-          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
-            <span className="text-4xl font-bold font-mono" style={{ color: '#f59e0b' }}>
-              {overview.direct_award_pct != null ? `${overview.direct_award_pct.toFixed(1)}%` : '—'}
-            </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripDirectAward')}</span>
-          </div>
-          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
-            <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
-              {criticalHighValue > 0 ? formatCompactMXN(criticalHighValue) : '—'}
-            </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskValue')}</span>
-          </div>
-          <div className="flex flex-col items-center justify-center text-center px-4 py-3 sm:py-0">
-            <span className="text-4xl font-bold font-mono" style={{ color: '#dc2626' }}>
-              {criticalHighContractPct > 0 ? `${criticalHighContractPct.toFixed(1)}%` : '—'}
-            </span>
-            <span className="text-xs text-text-muted uppercase tracking-wide mt-1">{t('signalStripHighRiskRate')}</span>
-            {criticalHighContractPct > 0 && (
-              <span className={`mt-1.5 inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-medium ${
-                criticalHighContractPct >= 2 && criticalHighContractPct <= 15
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : criticalHighContractPct > 15
-                  ? 'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                  : 'bg-blue-500/10 text-blue-400 border border-blue-500/20'
-              }`}>
-                {criticalHighContractPct >= 2 && criticalHighContractPct <= 15
-                  ? t('oecdWithinRange')
-                  : criticalHighContractPct > 15
-                  ? t('oecdAboveLimit')
-                  : t('oecdBelowMin')}
-              </span>
-            )}
-          </div>
-        </div>
-      )}
 
       {/* ================================================================ */}
       {/* PERIOD TREND CHART — avg risk score 2002–2025                   */}
@@ -2623,7 +2576,7 @@ export function Dashboard() {
         icon={Shield}
         action={
           <button
-            onClick={() => navigate('/executive-summary')}
+            onClick={() => navigate('/model')}
             className="text-xs text-accent flex items-center gap-1 hover:underline"
           >
             {t('fullAnalysis')} <ArrowUpRight className="h-3 w-3" />

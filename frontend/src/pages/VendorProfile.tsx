@@ -90,6 +90,7 @@ import { motion, useInView } from 'framer-motion'
 import { slideUp, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 import { ReportIssueDialog } from '@/components/ReportIssueDialog'
+import { ShareButton } from '@/components/ShareButton'
 
 // ============================================================================
 // ScrollSection — editorial scroll-reveal wrapper
@@ -1381,6 +1382,7 @@ export function VendorProfile() {
             <BarChart3 className="h-3.5 w-3.5" />
             {t('compare')}
           </button>
+          <ShareButton label={t('share', 'Compartir')} className="flex-shrink-0" />
           <button
             onClick={async () => {
               setCsvExporting(true)
@@ -2590,35 +2592,8 @@ export function VendorProfile() {
         {/* TAB 2: Risk Analysis */}
         <TabPanel tabKey="risk">
           <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left: Gauge + Trend */}
+            {/* Left: Trend */}
             <div className="space-y-6">
-              <Card className="fern-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    {t('risk.riskScore')} <InfoTooltip termKey="riskScore" size={13} />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {riskLoading ? (
-                    <Skeleton className="h-48" />
-                  ) : riskProfileError ? (
-                    <div className="flex items-center justify-center h-48 text-sm text-text-muted">
-                      {t('risk.couldNotLoad')}
-                    </div>
-                  ) : riskProfile?.avg_risk_score !== undefined ? (
-                    <RiskGauge
-                      score={riskProfile.avg_risk_score}
-                      riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
-                      riskPercentile={riskProfile.risk_percentile}
-                      riskTrend={riskProfile.risk_trend}
-                      lower={riskProfile.risk_confidence_lower}
-                      upper={riskProfile.risk_confidence_upper}
-                    />
-                  ) : null}
-                </CardContent>
-              </Card>
-
               {/* Risk Trend Mini-Chart */}
               {riskTrendData.length > 1 && (
                 <Card className="fern-card">

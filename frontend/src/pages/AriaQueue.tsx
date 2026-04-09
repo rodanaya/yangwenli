@@ -14,6 +14,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
+import { TableExportButton } from '@/components/TableExportButton'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
@@ -1646,15 +1647,23 @@ export default function AriaPage() {
                 <p className="text-xs text-text-muted font-mono">{formatNumber(totalLeads)} {t('leads.vendorCount')}</p>
               )}
             </div>
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
-              <input
-                type="text"
-                placeholder={t('leads.searchPlaceholder')}
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                className="pl-9 pr-3 py-2 text-sm bg-background-elevated border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/60 w-64 font-mono"
+            <div className="flex items-center gap-2">
+              {/* Search */}
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
+                <input
+                  type="text"
+                  placeholder={t('leads.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  className="pl-9 pr-3 py-2 text-sm bg-background-elevated border border-border rounded-lg text-text-primary placeholder-text-muted focus:outline-none focus:border-accent/60 w-64 font-mono"
+                />
+              </div>
+              <TableExportButton
+                data={leadsItems as unknown as Record<string, unknown>[]}
+                filename="aria-queue"
+                showXlsx={true}
+                disabled={leadsItems.length === 0}
               />
             </div>
           </div>

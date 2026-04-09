@@ -11,7 +11,7 @@
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useQuery } from '@tanstack/react-query'
+import { useQuery, useQueries } from '@tanstack/react-query'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -322,15 +322,14 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
     [sectors]
   )
 
-  // Fetch trends for each of the top 6 sectors
-  const trendQueries = top6.map((s) =>
-    // eslint-disable-next-line react-hooks/rules-of-hooks
-    useQuery({
+  // Fetch trends for each of the top 6 sectors using useQueries (rules-of-hooks safe)
+  const trendQueries = useQueries({
+    queries: top6.map((s) => ({
       queryKey: ['sector', 'trends', s.sector_id],
       queryFn: () => sectorApi.getTrends(s.sector_id),
       staleTime: 10 * 60 * 1000,
-    })
-  )
+    })),
+  })
 
   const isLoadingTrends = trendQueries.some((q) => q.isLoading)
 

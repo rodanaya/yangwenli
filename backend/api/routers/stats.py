@@ -367,11 +367,15 @@ def get_fast_dashboard(response: Response):
                            COUNT(DISTINCT vendor_id) as vendors,
                            COUNT(DISTINCT institution_id) as institutions,
                            COALESCE(AVG(risk_score), 0) as avg_risk,
-                           SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) as hr
+                           SUM(CASE WHEN risk_level IN ('critical', 'high') THEN 1 ELSE 0 END) as hr,
+                           SUM(CASE WHEN is_direct_award = 1 THEN 1 ELSE 0 END) as da,
+                           SUM(CASE WHEN is_single_bid = 1 THEN 1 ELSE 0 END) as sb
                     FROM contracts
                 """).fetchone()
                 if ov_row and ov_row["tc"] > 0:
                     hr_pct = round(ov_row["hr"] * 100.0 / ov_row["tc"], 2) if ov_row["tc"] > 0 else 0
+                    da_pct = round(ov_row["da"] * 100.0 / ov_row["tc"], 2) if ov_row["tc"] > 0 else 0
+                    sb_pct = round(ov_row["sb"] * 100.0 / ov_row["tc"], 2) if ov_row["tc"] > 0 else 0
                     overview = {
                         "total_contracts": ov_row["tc"],
                         "total_value_mxn": ov_row["tv"],
@@ -380,8 +384,8 @@ def get_fast_dashboard(response: Response):
                         "avg_risk_score": round(ov_row["avg_risk"], 4),
                         "high_risk_contracts": ov_row["hr"],
                         "high_risk_pct": hr_pct,
-                        "direct_award_pct": 0,
-                        "single_bid_pct": 0,
+                        "direct_award_pct": da_pct,
+                        "single_bid_pct": sb_pct,
                         "min_year": 2002,
                         "max_year": 2025,
                     }

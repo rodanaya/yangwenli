@@ -1202,7 +1202,7 @@ export default function Intro() {
               <ArrowRight className="h-4 w-4" aria-hidden="true" />
             </button>
             <button
-              onClick={() => goToApp('/executive-summary')}
+              onClick={() => goToApp('/dashboard')}
               className="flex items-center gap-2 px-6 py-3.5 rounded-xl font-semibold text-sm transition-all duration-200 hover:bg-white/5 focus:outline-none focus:ring-2 focus:ring-white/20"
               style={{ border: '1px solid rgba(255,255,255,0.2)', color: 'rgba(255,255,255,0.8)' }}
             >
