@@ -2365,7 +2365,7 @@ def list_verified_vendors(
 
         if search:
             search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
-            conditions.append("v.name LIKE ? ESCAPE '\\\\'")
+            conditions.append("v.name LIKE ? ESCAPE '\\'")
             params.append(f"%{search_escaped}%")
 
         if min_confidence:

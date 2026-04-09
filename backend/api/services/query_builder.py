@@ -92,7 +92,7 @@ class QueryBuilder:
         if search and columns:
             search_escaped = search.replace('\\', '\\\\').replace('%', '\\%').replace('_', '\\_')
             pattern = f"%{search_escaped}%"
-            like_clauses = [f"{col} LIKE ? ESCAPE '\\\\'" for col in columns]
+            like_clauses = [f"{col} LIKE ? ESCAPE '\\'" for col in columns]
             all_clauses = like_clauses[:]
             all_params = [pattern] * len(columns)
             if extra_subquery:
