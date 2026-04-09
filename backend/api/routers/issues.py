@@ -124,10 +124,8 @@ def list_issues(
     status: Optional[str] = Query(None),
     category: Optional[str] = Query(None),
     limit: int = Query(100, ge=1, le=500),
+    _: None = Depends(require_write_key),
 ):
-    # NOTE: No auth on this GET intentionally (dev/internal tool), but user
-    # emails are included in the response.  If this endpoint is ever exposed
-    # publicly, add Depends(require_write_key) here.
     """List submitted issues (admin view)."""
     try:
         with get_db() as conn:

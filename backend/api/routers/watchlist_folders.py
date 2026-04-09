@@ -102,7 +102,7 @@ def _ensure_tables(conn: sqlite3.Connection):
 # =============================================================================
 
 @router.get("", response_model=List[FolderResponse])
-def list_folders():
+def list_folders(_: None = Depends(require_write_key)):
     """List all investigation folders."""
     with get_db() as conn:
         _ensure_tables(conn)
@@ -214,7 +214,7 @@ def delete_folder(folder_id: int = Path(..., description="Folder ID"), _: None =
 
 
 @router.get("/export/{folder_id}", response_model=FolderExportResponse)
-def export_folder(folder_id: int = Path(..., description="Folder ID")):
+def export_folder(folder_id: int = Path(..., description="Folder ID"), _: None = Depends(require_write_key)):
     """Export folder watchlist items as a JSON dossier."""
     with get_db() as conn:
         _ensure_tables(conn)

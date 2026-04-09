@@ -19,7 +19,7 @@ vizsga.rubli.xyz {
     reverse_proxy magyar:8000
 }
 
-# Fallback: serve plain HTTP on bare IP while DNS is propagating
+# Bare-IP fallback: redirect all plain-HTTP requests to the canonical domain
 :80 {
-    reverse_proxy frontend:80
+    redir https://rubli.xyz{uri} permanent
 }

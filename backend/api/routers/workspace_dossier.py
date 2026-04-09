@@ -49,7 +49,7 @@ class DossierItemOut(BaseModel):
 # ── Dossier CRUD ─────────────────────────────────────────────────────────────
 
 @router.get("", response_model=List[DossierOut])
-def list_dossiers(status: Optional[str] = None):
+def list_dossiers(status: Optional[str] = None, _: None = Depends(require_write_key)):
     with get_db() as conn:
         where = "WHERE d.status = ?" if status else ""
         params = (status,) if status else ()
@@ -126,7 +126,7 @@ def create_dossier(body: DossierIn, _: None = Depends(require_write_key)):
         return dict(row)
 
 @router.get("/{dossier_id}", response_model=DossierOut)
-def get_dossier(dossier_id: int):
+def get_dossier(dossier_id: int, _: None = Depends(require_write_key)):
     with get_db() as conn:
         row = conn.execute("""
             SELECT d.*, COUNT(di.id) as item_count
@@ -171,7 +171,7 @@ def delete_dossier(dossier_id: int, _: None = Depends(require_write_key)):
 # ── Dossier Items ─────────────────────────────────────────────────────────────
 
 @router.get("/{dossier_id}/items", response_model=List[DossierItemOut])
-def list_items(dossier_id: int):
+def list_items(dossier_id: int, _: None = Depends(require_write_key)):
     with get_db() as conn:
         rows = conn.execute(
             "SELECT * FROM dossier_items WHERE dossier_id=? ORDER BY created_at",
@@ -205,7 +205,7 @@ def remove_item(dossier_id: int, item_id: int, _: None = Depends(require_write_k
         conn.commit()
 
 @router.get("/{dossier_id}/export")
-def export_dossier(dossier_id: int):
+def export_dossier(dossier_id: int, _: None = Depends(require_write_key)):
     """Export dossier with all items as a JSON file download."""
     with get_db() as conn:
         dossier = conn.execute(

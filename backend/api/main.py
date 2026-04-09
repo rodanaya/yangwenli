@@ -42,8 +42,15 @@ from .dependencies import verify_database_exists
 from .middleware import RequestLoggingMiddleware, register_error_handlers
 
 # Create rate limiter instance (if available)
+# Use X-Forwarded-For when behind Caddy reverse proxy; fall back to remote address
+def _get_real_ip(request) -> str:
+    forwarded_for = request.headers.get("x-forwarded-for")
+    if forwarded_for:
+        return forwarded_for.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
 if RATE_LIMITING_ENABLED:
-    limiter = Limiter(key_func=get_remote_address, default_limits=["100/minute"])
+    limiter = Limiter(key_func=_get_real_ip, default_limits=["100/minute"])
 else:
     limiter = None
 

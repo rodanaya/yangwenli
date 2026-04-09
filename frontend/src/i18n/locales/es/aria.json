@@ -278,8 +278,8 @@
   },
   "hero": {
     "headline": "{{vendorCount}} proveedores bajo vigilancia en 4 niveles de amenaza",
-    "subtitle": "ARIA monitorea proveedores de contratacion publica federal usando ML, deteccion de anomalias y cruce con registros externos. Comienza con Nivel 1 — los 320 casos mas criticos que requieren investigacion inmediata.",
-    "t1RequireShort": "Pistas criticas T1"
+    "subtitle": "ARIA monitorea proveedores de contratación pública federal usando ML, detección de anomalías y cruce con registros externos. Comienza con Nivel 1 — los 320 casos más críticos que requieren investigación inmediata.",
+    "t1RequireShort": "Pistas críticas T1"
   },
   "patternDesc": {
     "P1": "Un proveedor domina un mercado — >60% del gasto sectorial",
