@@ -69,7 +69,6 @@
       "contracts": "Contracts:",
       "risk": "Risk:"
     },
-    "concentrationMarketPrefix": "Top 3 hold ",
-    "concentrationMarketSuffix": " of market"
+    "concentrationMarket": "Top 3 hold {{pct}}% of market"
   }
 }
