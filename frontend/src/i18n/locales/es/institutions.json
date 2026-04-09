@@ -175,6 +175,7 @@
   },
   "profile": {
     "breadcrumb": "Instituciones",
+    "sectorLabel": "Sector",
     "notFound": "Institución no encontrada",
     "notFoundDesc": "La institución con ID {{id}} no pudo ser localizada.",
     "loadError": "Error al cargar la institución: {{message}}",
