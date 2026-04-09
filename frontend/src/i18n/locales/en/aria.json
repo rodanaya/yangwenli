@@ -67,7 +67,7 @@
   "impactHero": {
     "kicker": "ARIA · INTELLIGENCE ENGINE",
     "headline": "ARIA saw what auditors missed.",
-    "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against 22 documented corruption cases.",
+    "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against ~748 documented corruption cases.",
     "stat1Label": "Vendors under active surveillance",
     "stat2Label": "Critical alerts (Tier 1)",
     "stat3Label": "Threat levels by IPS score",

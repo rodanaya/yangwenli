@@ -67,7 +67,7 @@
   "impactHero": {
     "kicker": "ARIA · MOTOR DE INTELIGENCIA",
     "headline": "ARIA detectó lo que los auditores no vieron.",
-    "subhead": "Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra 22 casos documentados de corrupción.",
+    "subhead": "Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra ~748 casos documentados de corrupción.",
     "stat1Label": "Proveedores bajo vigilancia activa",
     "stat2Label": "Alertas críticas (Nivel 1)",
     "stat3Label": "Niveles de amenaza por score IPS",

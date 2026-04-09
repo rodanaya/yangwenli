@@ -11,7 +11,7 @@
   "contractsShowingRisk": "TASA DE ALTO RIESGO",
   "contractsFlaggedDetail": "{{num}} contratos señalados",
   "oecdBenchmark": "Referencia OCDE: 2-15%",
-  "detectionAccuracy": "PRECISIÓN DEL MODELO",
+  "detectionAccuracy": "PODER DISCRIMINATIVO (AUC)",
   "detectionDetail": "4x mejor que aleatorio",
   "statisticalFramework": "v6.5 Marco Por Sector",
   "directAwardRate": "ADJUDICACIÓN DIRECTA",

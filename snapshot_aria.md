@@ -1,0 +1,34 @@
+- generic [ref=e3]:
+  - link "Skip to main content" [ref=e4] [cursor=pointer]:
+    - /url: "#main-content"
+  - complementary [ref=e5]:
+    - generic [ref=e6]:
+      - img [ref=e8]
+      - generic [ref=e19]
+    - navigation "Main navigation" [ref=e27]:
+      - generic [ref=e28]
+      - generic [ref=e72]
+      - generic [ref=e121]
+      - generic [ref=e139]
+      - generic [ref=e150]
+      - link "API Explorer" [ref=e167] [cursor=pointer]:
+        - /url: /api/v1/docs
+    - generic [ref=e177]: 3.1M contracts indexed
+    - button "Report an issue" [ref=e179]:
+      - img [ref=e180]
+      - generic [ref=e182]: Report an issue
+    - generic [ref=e185]:
+      - button "ES" [ref=e186]
+      - button "Collapse sidebar" [ref=e187]
+  - generic [ref=e188]:
+    - banner [ref=e189]:
+      - generic [ref=e190]
+      - generic [ref=e194]
+    - generic [ref=e210]:
+      - img [ref=e212]
+      - paragraph [ref=e215]: RUBLI v2.1·Ground Truth expanded · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES
+      - button "Dismiss announcement" [ref=e216]
+    - main [ref=e220]
+    - contentinfo [ref=e467]:
+      - generic [ref=e468]
+      - group [ref=e471]

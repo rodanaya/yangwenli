@@ -40,8 +40,8 @@ services:
     deploy:
       resources:
         limits:
-          memory: 768M
-          cpus: '2'
+          memory: 1536M
+          cpus: '3'
     networks:
       - rubli-network
 
@@ -197,8 +197,8 @@ services:
           sleep $$wait_secs
           stamp=$$(date -u +%Y%m%d_%H%M%S)
           echo "$$(date -u) — Starting backup rubli_$${stamp}.db"
-          sqlite3 /db/RUBLI_DEPLOY.db ".backup /backups/rubli_$${stamp}.db" && \
-            echo "Backup complete: rubli_$${stamp}.db" || \
+          cp /db/RUBLI_DEPLOY.db "/backups/rubli_$${stamp}.db" && \
+            echo "Backup complete: rubli_$${stamp}.db ($(du -sh /backups/rubli_$${stamp}.db | cut -f1))" || \
             echo "Backup FAILED"
           # Rotate: keep only last 7 days
           find /backups -name 'rubli_*.db' -mtime +7 -delete 2>/dev/null || true

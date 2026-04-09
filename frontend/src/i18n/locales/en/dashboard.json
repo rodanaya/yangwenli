@@ -11,7 +11,7 @@
   "contractsShowingRisk": "HIGH-RISK RATE",
   "contractsFlaggedDetail": "{{num}} contracts flagged",
   "oecdBenchmark": "OECD benchmark: 2-15%",
-  "detectionAccuracy": "MODEL ACCURACY",
+  "detectionAccuracy": "DISCRIMINATION POWER (AUC)",
   "detectionDetail": "4x better than random",
   "statisticalFramework": "v6.5 Per-Sector Framework",
   "directAwardRate": "DIRECT AWARDS",
