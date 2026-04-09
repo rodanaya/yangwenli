@@ -184,7 +184,7 @@
   "topFindings": {
     "eyebrow": "RUBLI · Ranking Dinámico",
     "title": "Las Cinco Categorías que Importan",
-    "contracts": "{{count}} contratos",
+    "contracts": "{{n}} contratos",
     "sortDA": "Adj. directa",
     "sortDAHint": "% sobre total"
   },

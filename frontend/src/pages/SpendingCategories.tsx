@@ -1012,7 +1012,7 @@ function TopFindingsBar({
       return {
         value: formatCompactMXN(cat.total_value),
         color: '#fafafa',
-        sub: t('topFindings.contracts', { count: formatNumber(cat.total_contracts) }),
+        sub: t('topFindings.contracts', { n: formatNumber(cat.total_contracts) }),
       }
     }
     if (view === 'risk') {
@@ -1116,9 +1116,7 @@ function TopFindingsBar({
 
 export default function SpendingCategories() {
   const navigate = useNavigate()
-  const { t, i18n } = useTranslation('spending')
-  const catName = (c: { name_en: string; name_es: string }) =>
-    i18n.language === 'en' ? (c.name_en || c.name_es) : (c.name_es || c.name_en)
+  const { t } = useTranslation('spending')
 
   const SECTOR_OPTIONS = [
     { code: '', label: t('filters.allSectors') },

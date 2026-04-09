@@ -184,7 +184,7 @@
   "topFindings": {
     "eyebrow": "RUBLI · Dynamic Ranking",
     "title": "The Five Categories That Matter",
-    "contracts": "{{count}} contracts",
+    "contracts": "{{n}} contracts",
     "sortDA": "Direct Award",
     "sortDAHint": "% of total"
   },
