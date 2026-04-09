@@ -228,13 +228,15 @@ def _fallback_institution_scorecards(
     conn, page: int, per_page: int, sort_by: str, order: str,
     grade: Optional[str], sector: Optional[str],
     min_score: Optional[float], max_score: Optional[float],
-    search: Optional[str],
+    search: Optional[str], federal_only: bool = False,
 ) -> InstitutionScorecardListResponse:
     """Build institution scorecards from institution_stats when the
     institution_scorecards table is missing."""
     where_clauses = ["1=1"]
     params: list = []
 
+    if federal_only:
+        where_clauses.append("i.geographic_scope = 'federal'")
     if search:
         where_clauses.append("i.name LIKE ?")
         params.append(f"%{search}%")
@@ -401,6 +403,7 @@ def list_institution_scorecards(
     min_score: Optional[float] = Query(None, ge=0, le=100),
     max_score: Optional[float] = Query(None, ge=0, le=100),
     search: Optional[str] = Query(None),
+    federal_only: bool = Query(False),
 ):
     """Ranked list of institution scorecards."""
     with get_db() as conn:
@@ -410,12 +413,14 @@ def list_institution_scorecards(
         if not exists:
             return _fallback_institution_scorecards(
                 conn, page, per_page, sort_by, order,
-                grade, sector, min_score, max_score, search,
+                grade, sector, min_score, max_score, search, federal_only,
             )
 
         where_clauses = ["1=1"]
         params: list = []
 
+        if federal_only:
+            where_clauses.append("i.geographic_scope = 'federal'")
         if grade:
             where_clauses.append("s.grade = ?")
             params.append(grade)

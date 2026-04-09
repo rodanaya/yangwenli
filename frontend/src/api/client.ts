@@ -4,6 +4,7 @@
  */
 
 import axios, { type AxiosError, type AxiosInstance } from 'axios'
+import { toTitleCase } from '@/lib/utils'
 import type {
   ScandalListItem,
   ScandalDetail,
@@ -217,9 +218,28 @@ if (WRITE_KEY) {
   })
 }
 
+// Name-field normaliser — converts ALL-CAPS vendor/institution names to title case.
+// Applied once here so every component gets properly cased strings automatically.
+const NAME_FIELDS = new Set(['vendor_name', 'institution_name'])
+
+function normaliseName(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(normaliseName)
+  if (obj !== null && typeof obj === 'object') {
+    const out: Record<string, unknown> = {}
+    for (const [k, v] of Object.entries(obj as Record<string, unknown>)) {
+      out[k] = NAME_FIELDS.has(k) && typeof v === 'string' ? toTitleCase(v) : normaliseName(v)
+    }
+    return out
+  }
+  return obj
+}
+
 // Error handler
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.data) response.data = normaliseName(response.data)
+    return response
+  },
   (error: AxiosError) => {
     console.error('API Error:', error.response?.data || error.message)
     return Promise.reject(error)
@@ -2745,6 +2765,7 @@ export const scorecardApi = {
     min_score?: number
     max_score?: number
     search?: string
+    federal_only?: boolean
   } = {}) {
     const q = buildQueryParams(params)
     const { data } = await api.get(`/scorecards/institutions?${q}`)

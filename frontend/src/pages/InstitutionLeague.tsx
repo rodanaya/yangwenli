@@ -442,7 +442,7 @@ export default function InstitutionLeague() {
   })
 
   const { data: listData, isLoading, isError } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards', page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
+    queryKey: ['institution-scorecards-federal', page, sectorFilter, gradeFilter, search, sortBy, sortOrder],
     queryFn: () =>
       scorecardApi.getInstitutions({
         page,
@@ -452,6 +452,7 @@ export default function InstitutionLeague() {
         grade: gradeFilter || undefined,
         sector: sectorFilter || undefined,
         search: search || undefined,
+        federal_only: true,
       }),
     staleTime: 5 * 60 * 1000,
     placeholderData: (prev) => prev,
@@ -459,9 +460,9 @@ export default function InstitutionLeague() {
 
   // Top 3 for podium (first page, sorted by score desc, no filters)
   const { data: podiumData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-top3'],
+    queryKey: ['institution-scorecards-federal-top3'],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 3, sort_by: 'total_score', order: 'desc' }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 3, sort_by: 'total_score', order: 'desc', federal_only: true }),
     staleTime: 30 * 60 * 1000,
   })
 
@@ -553,6 +554,9 @@ export default function InstitutionLeague() {
             <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-yellow-400">
               Ranking Institucional · La Competencia por la Transparencia
             </p>
+            <span className="ml-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase bg-blue-900/60 text-blue-300 border border-blue-700/40">
+              Solo Federal
+            </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
             <div>
@@ -563,8 +567,8 @@ export default function InstitutionLeague() {
                 ¿Quién lidera la transparencia en México?
               </h1>
               <p className="text-zinc-400 text-sm mt-3 max-w-2xl leading-relaxed">
-                Clasificación competitiva de {statsData ? formatNumber(statsData.total_scored) : '2,563'} instituciones
-                federales. Puntuación de 0-100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
+                Clasificación competitiva de {formatNumber(total) || '—'} instituciones del gobierno federal.
+                Puntuación de 0–100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
                 Del primer lugar al último — sin excusas.
               </p>
             </div>
