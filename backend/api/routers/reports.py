@@ -343,33 +343,41 @@ def get_institution_report(
                     'vendors': row['vendors']
                 }
 
-            # Price hypotheses
-            cursor.execute("""
-                SELECT
-                    COUNT(*) as total,
-                    AVG(ph.confidence) as avg_conf,
-                    SUM(CASE WHEN ph.confidence >= 0.85 THEN 1 ELSE 0 END) as high_conf
-                FROM price_hypotheses ph
-                JOIN contracts c ON ph.contract_id = c.id
-                WHERE c.institution_id = ?
-            """, (institution_id,))
-            hyp = cursor.fetchone()
+            # Price hypotheses (table may not exist in deploy DB)
+            try:
+                cursor.execute("""
+                    SELECT
+                        COUNT(*) as total,
+                        AVG(ph.confidence) as avg_conf,
+                        SUM(CASE WHEN ph.confidence >= 0.85 THEN 1 ELSE 0 END) as high_conf
+                    FROM price_hypotheses ph
+                    JOIN contracts c ON ph.contract_id = c.id
+                    WHERE c.institution_id = ?
+                """, (institution_id,))
+                hyp = cursor.fetchone()
 
-            cursor.execute("""
-                SELECT ph.hypothesis_type, COUNT(*) as cnt
-                FROM price_hypotheses ph
-                JOIN contracts c ON ph.contract_id = c.id
-                WHERE c.institution_id = ?
-                GROUP BY ph.hypothesis_type
-            """, (institution_id,))
-            hyp_by_type = {row['hypothesis_type']: row['cnt'] for row in cursor.fetchall()}
+                cursor.execute("""
+                    SELECT ph.hypothesis_type, COUNT(*) as cnt
+                    FROM price_hypotheses ph
+                    JOIN contracts c ON ph.contract_id = c.id
+                    WHERE c.institution_id = ?
+                    GROUP BY ph.hypothesis_type
+                """, (institution_id,))
+                hyp_by_type = {row['hypothesis_type']: row['cnt'] for row in cursor.fetchall()}
 
-            price_hypotheses = PriceHypothesisSummary(
-                total_hypotheses=hyp['total'] or 0,
-                by_type=hyp_by_type,
-                avg_confidence=hyp['avg_conf'] or 0,
-                high_confidence_count=hyp['high_conf'] or 0
-            )
+                price_hypotheses = PriceHypothesisSummary(
+                    total_hypotheses=hyp['total'] or 0,
+                    by_type=hyp_by_type,
+                    avg_confidence=hyp['avg_conf'] or 0,
+                    high_confidence_count=hyp['high_conf'] or 0
+                )
+            except Exception:
+                price_hypotheses = PriceHypothesisSummary(
+                    total_hypotheses=0,
+                    by_type={},
+                    avg_confidence=0,
+                    high_confidence_count=0
+                )
 
             # Red flags
             flags = []

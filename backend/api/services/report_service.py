@@ -192,48 +192,56 @@ class ReportService(BaseService):
             "direct_award_pct": 100.0 * (risk_stats["direct_award"] or 0) / total,
         }
 
-        # --- Price hypotheses ---
-        hyp_stats = self._execute_one(
-            conn,
-            """
-            SELECT COUNT(*) as total, AVG(confidence) as avg_conf
-            FROM price_hypotheses WHERE vendor_id = ?
-            """,
-            (vendor_id,),
-        )
-
-        hyp_by_type = {
-            row["hypothesis_type"]: row["cnt"]
-            for row in self._execute_many(
+        # --- Price hypotheses (table may not exist in deploy DB) ---
+        try:
+            hyp_stats = self._execute_one(
                 conn,
                 """
-                SELECT hypothesis_type, COUNT(*) as cnt
+                SELECT COUNT(*) as total, AVG(confidence) as avg_conf
                 FROM price_hypotheses WHERE vendor_id = ?
-                GROUP BY hypothesis_type
                 """,
                 (vendor_id,),
             )
-        }
 
-        top_hypotheses = [
-            dict(row)
-            for row in self._execute_many(
-                conn,
-                """
-                SELECT hypothesis_id, hypothesis_type, confidence, explanation, amount_mxn
-                FROM price_hypotheses WHERE vendor_id = ?
-                ORDER BY confidence DESC LIMIT 5
-                """,
-                (vendor_id,),
-            )
-        ]
+            hyp_by_type = {
+                row["hypothesis_type"]: row["cnt"]
+                for row in self._execute_many(
+                    conn,
+                    """
+                    SELECT hypothesis_type, COUNT(*) as cnt
+                    FROM price_hypotheses WHERE vendor_id = ?
+                    GROUP BY hypothesis_type
+                    """,
+                    (vendor_id,),
+                )
+            }
 
-        price_hypotheses = {
-            "total_count": hyp_stats["total"] or 0,
-            "by_type": hyp_by_type,
-            "avg_confidence": hyp_stats["avg_conf"] or 0,
-            "top_hypotheses": top_hypotheses,
-        }
+            top_hypotheses = [
+                dict(row)
+                for row in self._execute_many(
+                    conn,
+                    """
+                    SELECT hypothesis_id, hypothesis_type, confidence, explanation, amount_mxn
+                    FROM price_hypotheses WHERE vendor_id = ?
+                    ORDER BY confidence DESC LIMIT 5
+                    """,
+                    (vendor_id,),
+                )
+            ]
+
+            price_hypotheses = {
+                "total_count": hyp_stats["total"] or 0,
+                "by_type": hyp_by_type,
+                "avg_confidence": hyp_stats["avg_conf"] or 0,
+                "top_hypotheses": top_hypotheses,
+            }
+        except Exception:
+            price_hypotheses = {
+                "total_count": 0,
+                "by_type": {},
+                "avg_confidence": 0,
+                "top_hypotheses": [],
+            }
 
         # --- Network connections ---
         inst_count_row = self._execute_one(
@@ -464,33 +472,41 @@ class ReportService(BaseService):
         ]
 
         # Price hypotheses
-        hyp = self._execute_one(
-            conn,
-            """
-            SELECT COUNT(*) as total, AVG(confidence) as avg_conf,
-                   SUM(CASE WHEN confidence >= 0.85 THEN 1 ELSE 0 END) as high_conf
-            FROM price_hypotheses WHERE sector_id = ?
-            """,
-            (sector_id,),
-        )
-        hyp_by_type = {
-            row["hypothesis_type"]: row["cnt"]
-            for row in self._execute_many(
+        try:
+            hyp = self._execute_one(
                 conn,
                 """
-                SELECT hypothesis_type, COUNT(*) as cnt
+                SELECT COUNT(*) as total, AVG(confidence) as avg_conf,
+                       SUM(CASE WHEN confidence >= 0.85 THEN 1 ELSE 0 END) as high_conf
                 FROM price_hypotheses WHERE sector_id = ?
-                GROUP BY hypothesis_type
                 """,
                 (sector_id,),
             )
-        }
-        price_hypotheses = {
-            "total_hypotheses": hyp["total"] or 0,
-            "by_type": hyp_by_type,
-            "avg_confidence": hyp["avg_conf"] or 0,
-            "high_confidence_count": hyp["high_conf"] or 0,
-        }
+            hyp_by_type = {
+                row["hypothesis_type"]: row["cnt"]
+                for row in self._execute_many(
+                    conn,
+                    """
+                    SELECT hypothesis_type, COUNT(*) as cnt
+                    FROM price_hypotheses WHERE sector_id = ?
+                    GROUP BY hypothesis_type
+                    """,
+                    (sector_id,),
+                )
+            }
+            price_hypotheses = {
+                "total_hypotheses": hyp["total"] or 0,
+                "by_type": hyp_by_type,
+                "avg_confidence": hyp["avg_conf"] or 0,
+                "high_confidence_count": hyp["high_conf"] or 0,
+            }
+        except Exception:
+            price_hypotheses = {
+                "total_hypotheses": 0,
+                "by_type": {},
+                "avg_confidence": 0,
+                "high_confidence_count": 0,
+            }
 
         # Year trends
         year_trends: dict[int, dict] = {}
