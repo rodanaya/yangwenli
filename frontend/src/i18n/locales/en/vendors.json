@@ -155,7 +155,9 @@
     "filterCritical": "Critical",
     "filterHigh": "High",
     "filterMedium": "Medium",
-    "filterLow": "Low"
+    "filterLow": "Low",
+    "contractsCount": "{{count}} contracts",
+    "avgRisk": "Risk: {{score}}"
   },
   "network": {
     "openNetworkGraph": "Open Network Graph",

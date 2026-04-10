@@ -155,7 +155,9 @@
     "filterCritical": "Crítico",
     "filterHigh": "Alto",
     "filterMedium": "Medio",
-    "filterLow": "Bajo"
+    "filterLow": "Bajo",
+    "contractsCount": "{{count}} contratos",
+    "avgRisk": "Riesgo: {{score}}"
   },
   "network": {
     "openNetworkGraph": "Abrir Gráfico de Red",

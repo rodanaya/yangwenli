@@ -1506,11 +1506,11 @@ function ContractRow({
         )}
 
         <div className="text-xs text-text-muted space-y-1">
-          {contract.contract_date && <p>Date: {formatDate(contract.contract_date)}</p>}
-          {contract.procedure_type && <p>Procedure: {contract.procedure_type}</p>}
-          {contract.contract_number && <p>Number: {contract.contract_number}</p>}
+          {contract.contract_date && <p>{t('columns.date')}: {formatDate(contract.contract_date)}</p>}
+          {contract.procedure_type && <p>{t('columns.procedure')}: {contract.procedure_type}</p>}
+          {contract.contract_number && <p>{t('detail.numberLabel')}: {contract.contract_number}</p>}
           {anomalyInfo && contract.mahalanobis_distance != null && (
-            <p>Anomaly: {anomalyInfo.label} (D²={contract.mahalanobis_distance.toFixed(2)})</p>
+            <p>{t('detail.anomalyLabel')}: {anomalyInfo.label} (D²={contract.mahalanobis_distance.toFixed(2)})</p>
           )}
         </div>
       </div>

@@ -1917,7 +1917,7 @@ export function VendorProfile() {
                 <Card className="fern-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
-                      <span>Calificación de Integridad</span>
+                      <span>{t('cards.integrityScore')}</span>
                       <GradeBadge10 grade={scorecard.grade} size="sm" />
                     </CardTitle>
                   </CardHeader>
@@ -2123,7 +2123,7 @@ export function VendorProfile() {
                   ) : aiError ? (
                       <div className="flex items-center gap-2 text-sm text-text-muted p-4">
                         <AlertTriangle className="h-4 w-4 text-amber-500 flex-shrink-0" />
-                        <span>Could not load this section. Try refreshing.</span>
+                        <span>{t('risk.couldNotLoad')}</span>
                       </div>
                     ) : aiLoading ? (
                       <div className="space-y-2">
@@ -3409,9 +3409,9 @@ export function VendorProfile() {
                         onChange={(e) => setContractSort(e.target.value as typeof contractSort)}
                         className="text-xs rounded border border-border/60 bg-background-elevated text-text-secondary px-2 py-1 focus:outline-none focus:border-accent/60"
                       >
-                        <option value="date_desc">Date (newest)</option>
-                        <option value="amount_desc">Amount (highest)</option>
-                        <option value="risk_desc">Risk Score (highest)</option>
+                        <option value="date_desc">{t('history.sortDateDesc')}</option>
+                        <option value="amount_desc">{t('history.sortAmountDesc')}</option>
+                        <option value="risk_desc">{t('history.sortRiskDesc')}</option>
                       </select>
                     </div>
 
@@ -4698,6 +4698,7 @@ function PeriodistaPanel({
   activeTab: string
   onExportCSV?: () => void
 }) {
+  const { t } = useTranslation('vendors')
   const [copiedLede, setCopiedLede] = useState(false)
 
   const { data: narrative, isLoading: narrativeLoading } = useQuery<VendorNarrativeResponse>({
@@ -4806,9 +4807,9 @@ function PeriodistaPanel({
                             <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
                               <p className="font-semibold text-text-primary mb-1">{d.year}</p>
                               <p className="text-text-secondary">{formatCompactMXN(d.total_value_mxn)}</p>
-                              <p className="text-text-muted">{d.contract_count} contratos</p>
+                              <p className="text-text-muted">{t('history.contractsCount', {count: d.contract_count})}</p>
                               {d.avg_risk_score != null && (
-                                <p className="text-text-muted">Riesgo: {d.avg_risk_score.toFixed(2)}</p>
+                                <p className="text-text-muted">{t('history.avgRisk', {score: d.avg_risk_score.toFixed(2)})}</p>
                               )}
                             </div>
                           )

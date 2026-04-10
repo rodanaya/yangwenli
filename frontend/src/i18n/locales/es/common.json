@@ -454,5 +454,24 @@
       "other": "Otro",
       "otherDesc": "Comentarios generales o cualquier otra cosa"
     }
+  },
+  "report": {
+    "generating": "Generando informe…",
+    "loadFailed": "Error al cargar el informe. Intente de nuevo.",
+    "generatedAt": "Generado: {{date}}",
+    "riskScore": "Puntuación de Riesgo",
+    "contracts": "Contratos",
+    "summary": "Resumen",
+    "riskIndicators": "Indicadores de Riesgo",
+    "disclaimer": "Aviso:",
+    "disclaimerText": "Generado por RUBLI v0.6.5 — Las puntuaciones de riesgo son indicadores estadísticos, no prueba de corrupción.",
+    "exportPdf": "Exportar PDF",
+    "print": "Imprimir",
+    "riskLabels": {
+      "critical": "Crítico",
+      "high": "Alto",
+      "medium": "Medio",
+      "low": "Bajo"
+    }
   }
 }

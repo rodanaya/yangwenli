@@ -78,7 +78,9 @@
     "overview": "Resumen",
     "riskAssessment": "Evaluación de Riesgo",
     "noRiskScore": "Sin puntuación de riesgo",
-    "errorLoading": "Error al cargar los detalles del contrato"
+    "errorLoading": "Error al cargar los detalles del contrato",
+    "numberLabel": "Número",
+    "anomalyLabel": "Anomalía"
   },
   "filters": {
     "heading": "Filtros",

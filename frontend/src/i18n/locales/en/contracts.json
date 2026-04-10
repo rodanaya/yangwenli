@@ -78,7 +78,9 @@
     "overview": "Overview",
     "riskAssessment": "Risk Assessment",
     "noRiskScore": "No risk score available",
-    "errorLoading": "Failed to load contract details"
+    "errorLoading": "Failed to load contract details",
+    "numberLabel": "Number",
+    "anomalyLabel": "Anomaly"
   },
   "filters": {
     "heading": "Filters",
