@@ -158,7 +158,7 @@ services:
           echo "$$(date -u '+%Y-%m-%d %H:%M:%S UTC') — Triggering ARIA daily pipeline via HTTP"
           wget -q -O - --header="X-Rubli-Key: $${RUBLI_WRITE_KEY}" \
                --post-data="" \
-               "$${BACKEND_URL}/api/v1/aria/run-pipeline" \
+               "$${BACKEND_URL}/api/v1/aria/run" \
             && echo "ARIA trigger sent" \
             || echo "ARIA HTTP trigger failed — check backend logs"
         done
