@@ -163,14 +163,12 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
                 cur = conn.execute(
                     """
                     SELECT c.id, c.title, c.amount_mxn, c.risk_level, c.contract_year
-                    FROM contracts_fts fts
-                    JOIN contracts c ON c.id = fts.rowid
-                    WHERE contracts_fts MATCH ?
-                      AND c.amount_mxn IS NOT NULL
-                      AND c.amount_mxn > 0
-                      AND c.amount_mxn <= 100000000000
-                    ORDER BY c.risk_score DESC
-                    LIMIT ?
+                    FROM contracts c
+                    WHERE c.id IN (
+                        SELECT rowid FROM contracts_fts
+                        WHERE contracts_fts MATCH ?
+                        LIMIT ?
+                    )
                     """,
                     (sanitize_fts_query(q), limit),
                 )
