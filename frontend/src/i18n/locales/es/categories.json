@@ -20,30 +20,30 @@
       "oecd": "OCDE: max 25%"
     },
     "sections": {
-      "timeline": "Evolucion Historica",
+      "timeline": "Evoluci\u00f3n Hist\u00f3rica",
       "timelineSubtitle": "Gasto anual y nivel de riesgo 2002-2025",
-      "byAdmin": "Por Administracion",
-      "byAdminSubtitle": "Evolucion por administracion presidencial",
-      "concentration": "Concentracion de Mercado",
-      "concentrationSubtitle": "Quien domina esta categoria?",
+      "byAdmin": "Por Administraci\u00f3n",
+      "byAdminSubtitle": "Evoluci\u00f3n por administraci\u00f3n presidencial",
+      "concentration": "Concentraci\u00f3n de Mercado",
+      "concentrationSubtitle": "\u00bfQui\u00e9n domina esta categor\u00eda?",
       "relations": "Relaciones",
-      "relationsSubtitle": "Principales pares proveedor-institucion",
+      "relationsSubtitle": "Principales pares proveedor-instituci\u00f3n",
       "contracts": "Contratos",
-      "contractsSubtitle": "Contratos mas costosos",
-      "subcategories": "Subcategorias",
-      "subcategoriesSubtitle": "Desglose por subcategoria",
+      "contractsSubtitle": "Contratos m\u00e1s costosos",
+      "subcategories": "Subcategor\u00edas",
+      "subcategoriesSubtitle": "Desglose por subcategor\u00eda",
       "eyebrow": "RUBLI · "
     },
     "table": {
       "vendor": "Proveedor",
-      "institution": "Institucion",
-      "share": "Participacion",
+      "institution": "Instituci\u00f3n",
+      "share": "Participaci\u00f3n",
       "amount": "Monto",
       "contracts": "Contratos",
       "risk": "Riesgo",
       "directAward": "AD%",
-      "description": "Descripcion",
-      "year": "Ano"
+      "description": "Descripci\u00f3n",
+      "year": "A\u00f1o"
     },
     "tooltip": {
       "spend": "Gasto",
@@ -55,13 +55,13 @@
       "noTrend": "Sin datos de tendencia para esta categoria.",
       "noAdmin": "Sin datos de sexenio para esta categoria.",
       "noVendors": "No hay datos de proveedores para esta categoria.",
-      "noRelations": "Sin datos de relaciones proveedor-institucion para esta categoria.",
+      "noRelations": "Sin datos de relaciones proveedor-instituci\u00f3n para esta categor\u00eda.",
       "noContracts": "Sin contratos disponibles para esta categoria.",
-      "noSubcategories": "Sin subcategorias disponibles."
+      "noSubcategories": "Sin subcategor\u00edas disponibles."
     },
     "actions": {
       "viewAll": "Ver todos los contratos",
-      "noTitle": "Sin descripcion"
+      "noTitle": "Sin descripci\u00f3n"
     },
     "footnote": "Sheinbaum = 2025 parcial. Fox incluye parte del dato COMPRANET.",
     "adminTooltip": {

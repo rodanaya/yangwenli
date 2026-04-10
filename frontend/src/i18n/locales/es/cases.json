@@ -203,59 +203,59 @@
   },
   "signals": {
     "ghost_company": [
-      "Alta concentracion de proveedor: un solo proveedor controlo una parte desproporcionada de los contratos del sector",
+      "Alta concentraci\u00f3n de proveedor: un solo proveedor control\u00f3 una parte desproporcionada de los contratos del sector",
       "Volatilidad de precios anormal: los montos de contratos variaron muy por fuera de la norma del sector",
-      "Anomalia en tasa de victorias: el proveedor gano casi el 100% de los procedimientos competitivos en los que participo"
+      "Anomal\u00eda en tasa de victorias: el proveedor gan\u00f3 casi el 100% de los procedimientos competitivos en los que particip\u00f3"
     ],
     "bid_rigging": [
-      "Patrones repetidos de co-oferta: el mismo grupo de proveedores aparecio junto en procedimientos secuenciales",
-      "Tasas de victorias alternadas: los proveedores se turnaron para ganar, consistente con rotacion de oferta",
-      "Brechas de precio sospechosamente pequenas: las ofertas perdedoras estaban justo por encima del ganador"
+      "Patrones repetidos de co-oferta: el mismo grupo de proveedores apareci\u00f3 junto en procedimientos secuenciales",
+      "Tasas de victorias alternadas: los proveedores se turnaron para ganar, consistente con rotaci\u00f3n de oferta",
+      "Brechas de precio sospechosamente peque\u00f1as: las ofertas perdedoras estaban justo por encima del ganador"
     ],
     "overpricing": [
-      "Valor atipico de ratio de precio: los montos de contratos fueron 3x o mas por encima de la mediana del sector",
-      "Alta confianza en hipotesis de precio: prueba estadistica IQR senalo sobreprecio extremo",
-      "Adjudicaciones repetidas a la misma institucion: el mismo proveedor gano repetidamente de la misma autoridad"
+      "Valor at\u00edpico de ratio de precio: los montos de contratos fueron 3x o m\u00e1s por encima de la mediana del sector",
+      "Alta confianza en hip\u00f3tesis de precio: prueba estad\u00edstica IQR se\u00f1al\u00f3 sobreprecio extremo",
+      "Adjudicaciones repetidas a la misma instituci\u00f3n: el mismo proveedor gan\u00f3 repetidamente de la misma autoridad"
     ],
     "conflict_of_interest": [
-      "Tasa de victorias anormalmente alta con una sola institucion",
-      "Discrepancia de industria: el sector declarado del proveedor no coincidio con la categoria del contrato",
-      "Periodos cortos de publicidad: tiempo limitado para que otros proveedores prepararan ofertas"
+      "Tasa de victorias anormalmente alta con una sola instituci\u00f3n",
+      "Discrepancia de industria: el sector declarado del proveedor no coincidi\u00f3 con la categor\u00eda del contrato",
+      "Per\u00edodos cortos de publicidad: tiempo limitado para que otros proveedores prepararan ofertas"
     ],
     "embezzlement": [
-      "Concentracion de contratos a fin de ano: contratos concentrados en gasto presupuestal de diciembre",
-      "Patrones de contratos el mismo dia: multiples contratos firmados simultaneamente al mismo proveedor",
-      "Division de umbrales: valores de contratos justo por debajo de umbrales legales para licitacion competitiva"
+      "Concentraci\u00f3n de contratos a fin de a\u00f1o: contratos concentrados en gasto presupuestal de diciembre",
+      "Patrones de contratos el mismo d\u00eda: m\u00faltiples contratos firmados simult\u00e1neamente al mismo proveedor",
+      "Divisi\u00f3n de umbrales: valores de contratos justo por debajo de umbrales legales para licitaci\u00f3n competitiva"
     ],
     "bribery": [
       "Discrepancia de industria: proveedor fuera del sector ganando contratos especializados",
-      "Centralidad de red: el proveedor aparecio en el centro de un cluster de relaciones de co-oferta",
-      "Anomalia en tasa de victorias: tasa de exito muy por encima de la linea base del sector"
+      "Centralidad de red: el proveedor apareci\u00f3 en el centro de un cl\u00faster de relaciones de co-oferta",
+      "Anomal\u00eda en tasa de victorias: tasa de \u00e9xito muy por encima de la l\u00ednea base del sector"
     ],
     "procurement_fraud": [
-      "Prevalencia de adjudicacion directa: contratos adjudicados sin procedimientos competitivos",
-      "Alta concentracion de proveedor en una sola institucion",
+      "Prevalencia de adjudicaci\u00f3n directa: contratos adjudicados sin procedimientos competitivos",
+      "Alta concentraci\u00f3n de proveedor en una sola instituci\u00f3n",
       "Volatilidad de precios anormal en contratos del mismo tipo"
     ],
     "monopoly": [
-      "Concentracion extrema de proveedor: un proveedor tuvo mas del 50% de todos los contratos del sector por valor",
-      "Tasa casi nula de oferta unica en procedimientos competitivos: no se detecto competencia real",
-      "Senal de diversidad institucional: el proveedor sirvio solo a una o dos autoridades contratantes"
+      "Concentraci\u00f3n extrema de proveedor: un proveedor tuvo m\u00e1s del 50% de todos los contratos del sector por valor",
+      "Tasa casi nula de oferta \u00fanica en procedimientos competitivos: no se detect\u00f3 competencia real",
+      "Se\u00f1al de diversidad institucional: el proveedor sirvi\u00f3 solo a una o dos autoridades contratantes"
     ],
     "emergency_fraud": [
-      "Periodos cortos de publicidad: procedimientos acelerados bajo justificacion de emergencia",
-      "Valores atipicos de ratio de precio: montos significativamente por encima de los benchmarks normales",
-      "Concentracion de adjudicacion directa: multiples contratos de emergencia al mismo proveedor simultaneamente"
+      "Per\u00edodos cortos de publicidad: procedimientos acelerados bajo justificaci\u00f3n de emergencia",
+      "Valores at\u00edpicos de ratio de precio: montos significativamente por encima de los benchmarks normales",
+      "Concentraci\u00f3n de adjudicaci\u00f3n directa: m\u00faltiples contratos de emergencia al mismo proveedor simult\u00e1neamente"
     ],
     "tender_rigging": [
-      "Concentracion de co-oferta: un grupo cerrado de proveedores domino el pool de procedimientos",
-      "Alta tasa de victorias con una sola institucion durante un periodo sostenido",
-      "Anomalia de precio: ofertas ganadoras consistentemente en el techo de los rangos aceptables"
+      "Concentraci\u00f3n de co-oferta: un grupo cerrado de proveedores domin\u00f3 el pool de procedimientos",
+      "Alta tasa de victorias con una sola instituci\u00f3n durante un per\u00edodo sostenido",
+      "Anomal\u00eda de precio: ofertas ganadoras consistentemente en el techo de los rangos aceptables"
     ],
     "other": [
-      "Anomalias estadisticas en concentracion de proveedor detectadas por el modelo de riesgo",
-      "Patrones de comportamiento consistentes con casos conocidos de corrupcion en el conjunto de entrenamiento",
-      "Multiples caracteristicas z-score por encima de las lineas base del sector simultaneamente"
+      "Anomal\u00edas estad\u00edsticas en concentraci\u00f3n de proveedor detectadas por el modelo de riesgo",
+      "Patrones de comportamiento consistentes con casos conocidos de corrupci\u00f3n en el conjunto de entrenamiento",
+      "M\u00faltiples caracter\u00edsticas z-score por encima de las l\u00edneas base del sector simult\u00e1neamente"
     ]
   }
 }
