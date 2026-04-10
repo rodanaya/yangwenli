@@ -562,7 +562,7 @@ export function Contracts() {
           Registro Nacional de Contratos Federales &middot; 2001–2025
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
-          El Registro Negro
+          {t('editorialTitle')}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
           <span><strong className="text-text-primary font-mono">3,049,988</strong> contratos</span>

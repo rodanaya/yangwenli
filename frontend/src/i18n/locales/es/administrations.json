@@ -2,7 +2,7 @@
   "title": "Análisis por Administración",
   "subtitle": "Análisis profundo de patrones de contratación en administraciones presidenciales mexicanas (2002–2025)",
   "dossier": {
-    "sectionLabel": "Expediente Presidencial",
+    "sectionLabel": "Resumen de Administraci\u00f3n",
     "politicalContext": "Contexto Político",
     "procurementFingerprint": "Huella de Contratación",
     "knownScandals": "Casos de Corrupción Documentados",
@@ -50,8 +50,8 @@
     "contexts": {
       "fox": "La victoria de Vicente Fox en 2000 rompió 71 años de hegemonía priista. Como primer presidente panista, su administración priorizó la transparencia económica y lanzó COMPRANET como plataforma digital de compras públicas, aunque heredó redes de clientelismo profundamente arraigadas.",
       "calderon": "Felipe Calderón ganó la controvertida elección de 2006 por un margen del 0.56%. Su administración lanzó una guerra militarizada contra el narcotráfico que reconfiguró el gasto federal, generando grandes contratos de emergencia exentos de licitación en los sectores de defensa y seguridad.",
-      "pena_nieto": "Enrique Peña Nieto regresó al poder en 2012 prometiendo modernización. Sus seis años produjeron algunos de los escándalos de corrupción más publicitados de México — Casa Blanca, La Estafa Maestra y Odebrecht-PEMEX — exponiendo el uso sistemático de la contratación pública con fines ilícitos.",
-      "amlo": "Andrés Manuel López Obrador ganó la elección de 2018 con el mayor margen de la historia moderna de México (53%). Su autollamada 'Cuarta Transformación' concentró paradójicamente el poder de contratación, alcanzando una tasa récord de adjudicaciones directas del 78.9% al tiempo que eludía la licitación competitiva en nombre de la austeridad y la anticorrupción.",
+      "pena_nieto": "Enrique Pe\u00f1a Nieto regres\u00f3 al poder en 2012 prometiendo modernizaci\u00f3n. Sus seis a\u00f1os registraron algunas de las investigaciones de corrupci\u00f3n m\u00e1s destacadas de M\u00e9xico \u2014 Casa Blanca, La Estafa Maestra y Odebrecht-PEMEX \u2014 que expusieron importantes brechas en la supervisi\u00f3n de la contrataci\u00f3n p\u00fablica.",
+      "amlo": "Andr\u00e9s Manuel L\u00f3pez Obrador gan\u00f3 la elecci\u00f3n de 2018 con el mayor margen de la historia moderna de M\u00e9xico (53%). Su autollamada 'Cuarta Transformaci\u00f3n' centraliz\u00f3 el poder de contrataci\u00f3n, alcanzando una tasa r\u00e9cord de adjudicaciones directas del 78.9% al tiempo que eludía la licitaci\u00f3n competitiva, citando metas de austeridad y anticorrupci\u00f3n.",
       "sheinbaum": "Claudia Sheinbaum, elegida en junio de 2024 con el 59% de los votos, es la primera presidenta de México. Científica del clima de formación, asumió el cargo el 1 de octubre de 2024, heredando las estructuras institucionales de AMLO. Sus primeros meses muestran una reducción direccional en las adjudicaciones directas, aunque los riesgos de continuidad siguen siendo elevados."
     }
   },
@@ -169,8 +169,8 @@
     "gtWarning": "Señalado en casos verificados"
   },
   "classifiedHeader": {
-    "eyebrow": "Informe Clasificado · RUBLI · Sistema Nacional de Transparencia",
-    "title": "Los Sexenios de la Sombra",
+    "eyebrow": "An\u00e1lisis Comparativo · RUBLI · Sistema Nacional de Transparencia",
+    "title": "Administraciones en Perfil Comparativo",
     "subtitle": "Análisis comparativo de riesgo en contratación pública federal · 2001–2025 · {{contracts}} contratos · ${{value}} MXN auditados",
     "highestRiskNote": "AMLO registró la tasa más alta de riesgo:",
     "lowestRiskNote": "EPN registró la más baja:"
@@ -244,7 +244,7 @@
     "title": "Mapa de Calor de Intensidad de Contratación",
     "subtitle": "% del gasto total de cada administración asignado por sector. Celdas más oscuras = mayor concentración del gasto en ese sector."
   },
-  "expedientes": "Expedientes Presidenciales",
+  "expedientes": "Perfiles de Administraci\u00f3n",
   "cardLabels": {
     "expediente": "Expediente",
     "contratos": "Contratos",

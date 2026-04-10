@@ -1,32 +1,33 @@
 {
   "title": "Contracts",
+  "editorialTitle": "Federal Contract Registry",
   "searchPlaceholder": "Search by title or contract number...",
   "guidance": "Select a preset to start investigating, or use filters to find specific contracts. Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.",
   "presets": {
     "sectionLabel": "Investigation Presets",
     "suspiciousMonopolies": {
-      "label": "Suspicious Monopolies",
-      "description": "Critical-risk single-bidder contracts — one vendor, no competition"
+      "label": "Single-Bidder Contracts",
+      "description": "Critical-risk single-bidder contracts — one vendor in a competitive procedure"
     },
     "decemberRush": {
       "label": "December Rush",
-      "description": "High-risk year-end contracts — budget dumps before fiscal close"
+      "description": "High-risk year-end contracts — elevated spending before fiscal close"
     },
     "priceManipulation": {
       "label": "Price Manipulation",
       "description": "Statistical price outliers — contracts priced far above sector norm"
     },
     "ghostCompanies": {
-      "label": "Ghost Companies",
-      "description": "Direct awards to out-of-industry vendors — classic ghost company pattern"
+      "label": "Industry Mismatch",
+      "description": "Direct awards to vendors operating outside their registered industry — a pattern associated with shell entities"
     },
     "networkClusters": {
       "label": "Network Clusters",
-      "description": "Critical-risk network member contracts — coordinated vendor groups"
+      "description": "Critical-risk network member contracts — vendors with high co-bidding activity"
     },
     "splitContracts": {
       "label": "Split Contracts",
-      "description": "Threshold splitting — multiple same-day contracts to dodge oversight limits"
+      "description": "Threshold splitting — multiple same-day contracts near oversight thresholds"
     },
     "mostAnomalous": {
       "label": "Most Anomalous",
@@ -34,7 +35,7 @@
     },
     "recentCritical": {
       "label": "Recent & Critical",
-      "description": "2024 critical-risk contracts — most recent suspicious activity"
+      "description": "2024 critical-risk contracts — most recent high-scoring results"
     },
     "biggestDirectAwards": {
       "label": "Biggest Direct Awards",

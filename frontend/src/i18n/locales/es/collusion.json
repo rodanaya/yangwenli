@@ -1,10 +1,10 @@
 {
-  "title": "Quienes licitan juntos, ganan juntos",
-  "subtitle": "Cuando los mismos proveedores aparecen repetidamente en las mismas licitaciones competitivas \u2014 y se turnan para ganar \u2014 deja de parecer competencia y empieza a parecer coordinaci\u00f3n.",
+  "title": "Patrones de Co-oferta en Contrataci\u00f3n Federal",
+  "subtitle": "Cuando los mismos proveedores aparecen repetidamente en las mismas licitaciones competitivas \u2014 y se turnan para ganar \u2014 emergen patrones estad\u00edsticos que justifican un an\u00e1lisis m\u00e1s detallado.",
   "stats": {
     "totalPairs": "Pares de Proveedores Analizados",
     "totalPairsSub": "pares \u00fanicos rastreados en todos los sectores",
-    "flaggedPairs": "Pares con Sospecha de Colusi\u00f3n",
+    "flaggedPairs": "Pares con Alta Tasa de Co-oferta",
     "flaggedPairsSub": "tasa de co-oferta superior al 50% con 10+ procedimientos compartidos",
     "sharedProcedures": "Procedimientos Compartidos",
     "sharedProceduresSub": "total de eventos de co-oferta entre pares marcados",
@@ -12,17 +12,17 @@
     "maxRateSub": "entre todos los pares analizados"
   },
   "methodology": {
-    "title": "C\u00f3mo RUBLI detecta la manipulaci\u00f3n de licitaciones",
-    "body": "Analizamos cada licitaci\u00f3n competitiva en COMPRANET para encontrar pares de proveedores que ofertan en los mismos procedimientos a tasas anormalmente altas. Una tasa de co-oferta superior al 50% con 10+ procedimientos compartidos sugiere coordinaci\u00f3n \u2014 especialmente combinada con baja varianza en tasa de victoria (rotaci\u00f3n de ofertas) o un proveedor que pierde consistentemente (oferta de cobertura). Estos patrones son invisibles en contratos individuales pero emergen claramente a escala."
+    "title": "C\u00f3mo RUBLI identifica patrones de co-oferta",
+    "body": "Analizamos cada licitaci\u00f3n competitiva en COMPRANET para encontrar pares de proveedores que ofertan en los mismos procedimientos a tasas anormalmente altas. Una tasa de co-oferta superior al 50% con 10+ procedimientos compartidos es una anomal\u00eda estad\u00edstica que puede justificar una investigaci\u00f3n adicional. Estos patrones son invisibles en contratos individuales pero emergen claramente a escala. Una tasa alta de co-oferta no es prueba de coordinaci\u00f3n \u2014 es una se\u00f1al para seguimiento investigativo."
   },
   "patterns": {
-    "title": "Patrones de Colusi\u00f3n",
+    "title": "Patrones de Co-oferta",
     "bidRotation": "Rotaci\u00f3n de Ofertas",
-    "bidRotationDesc": "Los proveedores se turnan para ganar \u2014 A gana la ronda 1, B gana la ronda 2. Las tasas de victoria son casi iguales.",
+    "bidRotationDesc": "Patr\u00f3n consistente con rotaci\u00f3n: los proveedores alternan victorias \u2014 A gana la ronda 1, B gana la ronda 2. Las tasas de victoria son casi iguales.",
     "coverBidding": "Oferta de Cobertura",
-    "coverBiddingDesc": "Un proveedor siempre pierde, presentando ofertas deliberadamente altas para crear la apariencia de competencia.",
+    "coverBiddingDesc": "Patr\u00f3n consistente con oferta de cobertura: un proveedor consistentemente no gana, mientras el otro gana repetidamente en procedimientos compartidos.",
     "marketAllocation": "Asignaci\u00f3n de Mercado",
-    "marketAllocationDesc": "Los proveedores dividen contratos por geograf\u00eda, instituci\u00f3n o periodo \u2014 nunca compitiendo en el territorio del otro.",
+    "marketAllocationDesc": "Patr\u00f3n consistente con asignaci\u00f3n de mercado: los proveedores aparecen en segmentos distintos sin competir entre s\u00ed.",
     "unknown": "En Revisi\u00f3n",
     "unknownDesc": "Patr\u00f3n detectado pero a\u00fan no clasificado \u2014 requiere investigaci\u00f3n adicional."
   },
@@ -46,7 +46,7 @@
   },
   "tooltip": {
     "coBidRateTitle": "\u00bfQu\u00e9 es la Tasa de Co-oferta?",
-    "coBidRateBody": "La tasa de co-oferta es el porcentaje de procedimientos en los que ambos proveedores presentaron ofertas simult\u00e1neamente. Tasas superiores al 70% combinadas con un alto volumen de procedimientos compartidos pueden indicar licitaci\u00f3n coordinada \u2014 donde los proveedores colusionan para influir en qui\u00e9n gana."
+    "coBidRateBody": "La tasa de co-oferta es el porcentaje de procedimientos en los que ambos proveedores presentaron ofertas simult\u00e1neamente. Tasas superiores al 70% combinadas con un alto volumen de procedimientos compartidos son una anomal\u00eda estad\u00edstica que puede indicar licitaci\u00f3n coordinada \u2014 un patr\u00f3n que justifica seguimiento investigativo pero no es evidencia concluyente de coordinaci\u00f3n."
   },
   "pairCard": {
     "sharedProc": "procedimientos compartidos",
@@ -58,7 +58,7 @@
     "totalProcedures": "procedimientos en total",
     "vendorA": "Proveedor A",
     "vendorB": "Proveedor B",
-    "suspectedBidRigging": "Connivencia Sospechosa"
+    "suspectedBidRigging": "Alerta de Alta Co-oferta"
   },
   "pagination": {
     "previous": "Anterior",
@@ -70,14 +70,14 @@
     "title": "Ning\u00fan par coincide con los filtros actuales",
     "body": "Intenta reducir el umbral m\u00ednimo de procedimientos compartidos o desactivar el filtro de solo marcados. Los pares con menos de 10 procedimientos compartidos se excluyen por defecto porque la co-oferta aislada es comportamiento normal del mercado."
   },
-  "loading": "Cargando datos de colusi\u00f3n...",
+  "loading": "Cargando datos de co-oferta...",
   "error": {
     "title": "Datos de co-oferta de COMPRANET no disponibles",
     "body": "El endpoint de an\u00e1lisis de colusi\u00f3n devolvi\u00f3 un error. Esto puede indicar que la tabla co_bidding_stats necesita ser reconstruida. Int\u00e9ntalo de nuevo o revisa los logs del backend."
   },
   "editorial": {
-    "section": "RUBLI \u00b7 Inteligencia de Colusi\u00f3n",
-    "headline": "Quienes licitan juntos, ganan juntos",
-    "badge": "MANIPULACI\u00d3N DE LICITACIONES"
+    "section": "RUBLI \u00b7 An\u00e1lisis de Co-oferta",
+    "headline": "Patrones de Co-oferta en Contrataci\u00f3n Federal",
+    "badge": "AN\u00c1LISIS DE CO-OFERTA"
   }
 }

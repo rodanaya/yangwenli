@@ -15,8 +15,8 @@
   "dossierCount": "{{filtered}} / {{total}} expedientes",
   "header": {
     "eyebrow": "Análisis de Redes · ARIA Nivel 1 y Nivel 2",
-    "title": "La Red Invisible",
-    "description": "Redes de corrupción documentadas en contratación pública federal. Proveedores en vigilancia máxima (Nivel 1). Patrones identificados por sistema ARIA."
+    "title": "Redes Documentadas de Proveedores",
+    "description": "Redes documentadas de proveedores en contratación pública federal. Proveedores en el nivel de prioridad más alto (Nivel 1). Patrones identificados por sistema ARIA."
   },
   "filters": {
     "searchPlaceholder": "Buscar proveedor...",

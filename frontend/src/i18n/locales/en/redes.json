@@ -15,8 +15,8 @@
   "dossierCount": "{{filtered}} / {{total}} dossiers",
   "header": {
     "eyebrow": "Network Analysis · ARIA Tier 1 and Tier 2",
-    "title": "The Invisible Network",
-    "description": "Documented corruption networks in federal public procurement. Vendors under maximum surveillance (Tier 1). Patterns identified by ARIA system."
+    "title": "Documented Vendor Networks",
+    "description": "Documented vendor networks in federal public procurement. Vendors at highest priority level (Tier 1). Patterns identified by ARIA system."
   },
   "filters": {
     "searchPlaceholder": "Search vendor...",

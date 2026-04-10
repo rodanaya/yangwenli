@@ -1,40 +1,41 @@
 {
   "title": "Contratos",
+  "editorialTitle": "Registro Federal de Contratos",
   "searchPlaceholder": "Buscar por título o número de contrato...",
   "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
   "presets": {
     "sectionLabel": "Presets de Investigación",
     "suspiciousMonopolies": {
-      "label": "Monopolios Sospechosos",
-      "description": "Contratos de riesgo crítico con un solo licitante — un proveedor, sin competencia"
+      "label": "Contratos con Un Solo Licitante",
+      "description": "Contratos de riesgo crítico con un solo licitante — un proveedor en procedimiento competitivo"
     },
     "decemberRush": {
       "label": "Prisa de Diciembre",
-      "description": "Contratos de alto riesgo de fin de año — vaciado presupuestal antes del cierre fiscal"
+      "description": "Contratos de alto riesgo de fin de año — gasto elevado antes del cierre fiscal"
     },
     "priceManipulation": {
       "label": "Manipulación de Precios",
       "description": "Valores atípicos estadísticos de precios — contratos muy por encima de la norma sectorial"
     },
     "ghostCompanies": {
-      "label": "Empresas Fantasma",
-      "description": "Adjudicaciones directas a proveedores fuera de sector — patrón clásico de empresa fantasma"
+      "label": "Discrepancia de Sector",
+      "description": "Adjudicaciones directas a proveedores fuera de su sector registrado — patr\u00f3n asociado a entidades sin operaciones reales"
     },
     "networkClusters": {
       "label": "Grupos en Red",
-      "description": "Contratos de riesgo crítico de miembros de red — grupos coordinados de proveedores"
+      "description": "Contratos de riesgo cr\u00edtico de miembros de red — proveedores con alta actividad de co-oferta"
     },
     "splitContracts": {
       "label": "Contratos Fraccionados",
-      "description": "Fraccionamiento de umbrales — múltiples contratos el mismo día para evadir límites de supervisión"
+      "description": "Fraccionamiento de umbrales — m\u00faltiples contratos el mismo d\u00eda cercanos a l\u00edmites de supervisi\u00f3n"
     },
     "mostAnomalous": {
       "label": "Más Anómalos",
       "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalanobis en todas las dimensiones de riesgo"
     },
     "recentCritical": {
-      "label": "Recientes y Críticos",
-      "description": "Contratos de riesgo crítico de 2024 — actividad sospechosa más reciente"
+      "label": "Recientes y Cr\u00edticos",
+      "description": "Contratos de riesgo cr\u00edtico de 2024 — resultados de alta puntuaci\u00f3n m\u00e1s recientes"
     },
     "biggestDirectAwards": {
       "label": "Mayores Adj. Directas",

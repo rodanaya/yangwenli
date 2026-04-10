@@ -2,7 +2,7 @@
   "title": "Administration Analysis",
   "subtitle": "Deep dive into procurement patterns across Mexican presidential administrations (2002–2025)",
   "dossier": {
-    "sectionLabel": "Presidential Dossier",
+    "sectionLabel": "Administration Summary",
     "politicalContext": "Political Context",
     "procurementFingerprint": "Procurement Fingerprint",
     "knownScandals": "Known Corruption Cases",
@@ -50,8 +50,8 @@
     "contexts": {
       "fox": "Vicente Fox's 2000 victory broke 71 years of PRI rule. As the first PAN president, his administration prioritized economic transparency and launched COMPRANET as a digital procurement platform — but inherited deeply entrenched patronage networks.",
       "calderon": "Felipe Calderón won a disputed 2006 election by a margin of 0.56%. His administration launched a militarized 'war on drugs' that reshaped federal spending, driving large emergency-exempt contracts in defense and security sectors.",
-      "pena_nieto": "Enrique Peña Nieto's PRI returned to power in 2012 promising modernization. His six years produced some of Mexico's most publicized corruption scandals — Casa Blanca, La Estafa Maestra, and Odebrecht-PEMEX — exposing systematic misuse of government contracting.",
-      "amlo": "Andrés Manuel López Obrador won the 2018 election by the largest margin in modern Mexican history (53%). His self-described 'Fourth Transformation' paradoxically centralized procurement power, reaching a record 78.9% direct award rate while bypassing competitive bidding in the name of austerity and anti-corruption.",
+      "pena_nieto": "Enrique Peña Nieto's PRI returned to power in 2012 promising modernization. His six years saw some of Mexico's most high-profile corruption investigations — Casa Blanca, La Estafa Maestra, and Odebrecht-PEMEX — which exposed significant gaps in procurement oversight.",
+      "amlo": "Andrés Manuel López Obrador won the 2018 election by the largest margin in modern Mexican history (53%). His self-described 'Fourth Transformation' centralized procurement power, reaching a record 78.9% direct award rate while bypassing competitive bidding, citing austerity and anti-corruption goals.",
       "sheinbaum": "Claudia Sheinbaum, elected June 2024 with 59% of the vote, is Mexico's first female president. A climate scientist by training, she took office October 1, 2024, inheriting AMLO's institutional structures. Her first months show a directional decline in direct awards, though continuity risks remain high."
     }
   },
@@ -144,7 +144,7 @@
       "headline": "Peña Nieto: La Estafa Maestra and the Ghost Company Era",
       "findings": "The Peña Nieto administration (2012–2017) oversaw approximately 680,000 contracts worth 2.8 trillion MXN, with an average risk score of 0.30 — the highest of any pre-AMLO administration. This period saw the emergence of \"La Estafa Maestra\": a network of shell companies funneling public funds through universities and state agencies, ultimately diverting an estimated 7.7 billion MXN. The Casa Blanca conflict-of-interest scandal linked presidential family members directly to government contractors Grupo Higa and Constructora Teya.",
       "keyRisk": "Ghost company infrastructure: procurement was systematically routed through entities with no real operations, exploiting regulatory gaps in subcontracting oversight that COMPRANET data alone cannot fully expose.",
-      "legacy": "The Peña Nieto era established the modern archetype of institutional procurement fraud in Mexico — not through crude theft, but through layered subcontracting schemes that took years of auditing by the ASF and investigative journalists to partially unravel."
+      "legacy": "The Peña Nieto era produced documented cases that exposed significant gaps in procurement oversight — layered subcontracting schemes that took years of auditing by the ASF and investigative journalists to partially unravel."
     },
     "amlo": {
       "headline": "AMLO: 78.9% Direct Awards — Highest in the Modern Record",
@@ -169,8 +169,8 @@
     "gtWarning": "Flagged in ground truth"
   },
   "classifiedHeader": {
-    "eyebrow": "Classified Report · RUBLI · National Transparency System",
-    "title": "The Administrations in Shadow",
+    "eyebrow": "Comparative Analysis · RUBLI · National Transparency System",
+    "title": "Administrations in Comparative Profile",
     "subtitle": "Comparative risk analysis of federal public procurement · 2001–2025 · {{contracts}} contracts · ${{value}} MXN audited",
     "highestRiskNote": "AMLO recorded the highest high-risk rate:",
     "lowestRiskNote": "EPN recorded the lowest:"
@@ -244,7 +244,7 @@
     "title": "Procurement Intensity Heatmap",
     "subtitle": "% of each administration's total spend allocated per sector. Darker cells = higher concentration of procurement spend in that sector."
   },
-  "expedientes": "Presidential Dossiers",
+  "expedientes": "Administration Profiles",
   "cardLabels": {
     "expediente": "Dossier",
     "contratos": "Contracts",
