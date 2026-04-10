@@ -119,7 +119,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-7 w-7 flex-shrink-0 md:hidden mr-1"
+          className="h-10 w-10 flex-shrink-0 md:hidden mr-1"
           onClick={onMenuClick}
           aria-label={tc('header.openMenu')}
         >

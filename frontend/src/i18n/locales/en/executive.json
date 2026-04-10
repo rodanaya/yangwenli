@@ -114,7 +114,7 @@
   },
 
   "s1": {
-    "title": "The Threat",
+    "title": "The Risk Landscape",
     "p1": "Of the {{totalValue}} in analyzed procurement, an estimated <bold>{{valueAtRisk}}</bold> — {{pct}}% of all value — sits in contracts flagged as high or critical risk. To put this in context, Mexico's entire annual federal education budget is approximately 400 billion pesos. The value at risk in this dataset is roughly equivalent to {{years}} years of education spending.",
     "p2": "Risk is not evenly distributed. The bulk of flagged value concentrates in a small number of high-value contracts from dominant vendors in health, infrastructure, and energy. The remaining {{remainingPct}}% of value falls in medium or low risk categories — not clean, but less urgently suspicious.",
     "riskDistLabel": "RISK DISTRIBUTION BY VALUE",
@@ -132,7 +132,7 @@
   },
 
   "s2": {
-    "title": "The Proof",
+    "title": "Model Validation",
     "p1": "Any model can flag contracts. The question is whether it flags the right ones. We validated our model against {{cases}} documented Mexican corruption cases spanning {{contracts}} contracts from {{vendors}} matched vendors. These are not hypothetical — they are cases that led to criminal investigations, arrests, and public scandal. The model was asked: would you have flagged these?",
     "p2": "The answer: <bold>yes, in {{detectionRate}}% of cases</bold> (at medium risk or above). The model achieves an AUC-ROC of {{auc}}, meaning it correctly ranks a randomly chosen corrupt contract above a clean one {{aucPct}}% of the time.",
     "detectionLabel": "HIGH+ DETECTION RATE BY CASE",

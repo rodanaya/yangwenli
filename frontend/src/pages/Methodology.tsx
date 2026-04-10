@@ -1208,7 +1208,7 @@ export function Methodology() {
 
               {/* Summary table */}
               <div className="overflow-x-auto">
-                <table className="w-full text-xs">
+                <table className="w-full text-xs" aria-label="Model limitations summary">
                   <thead className="border-b border-border">
                     <tr>
                       <th className="px-3 py-2.5 text-left text-text-muted font-medium">Limitation</th>

@@ -530,13 +530,13 @@ function ActivityCalendar({
 
 // Plain-English explanations for each risk factor, shown in factor bars
 const FACTOR_EXPLANATIONS: Record<string, string> = {
-  price_volatility: 'This vendor\'s contract amounts vary wildly — a hallmark of fraudulent invoicing.',
+  price_volatility: 'This vendor\'s contract amounts vary significantly above sector norms — the strongest predictor of corruption risk in the v0.6.5 model.',
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
   sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v0.6.5 model.',
   industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
-  same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with threshold-splitting fraud.',
+  same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with potential threshold splitting.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
   single_bid: 'This vendor frequently wins procedures where it was the only bidder, suggesting deterred competition.',
   network_member_count: 'This vendor belongs to a network of related entities that bid together.',

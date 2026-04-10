@@ -38,7 +38,7 @@
   "ctaPanels": {
     "ariaLabel": "Navigation entry points",
     "headline": "Start your investigation",
-    "sub": "Choose where to begin — every entry point leads to evidence.",
+    "sub": "Choose where to begin — every entry point leads to data.",
     "cases": {
       "title": "Investigate a case",
       "desc": "~748 documented corruption cases with linked contracts and vendors"
@@ -76,7 +76,7 @@
     "vendors": "vendors profiled",
     "sectors": "federal sectors",
     "years": "2002 - 2025",
-    "label": "THE SCALE OF THE PROBLEM",
+    "label": "THE SCALE OF THE DATA",
     "headline": "23 years of public spending data",
     "contractsAnalyzed": "contracts analyzed",
     "yearsOfData": "years of data (2002-2025)",
@@ -155,7 +155,7 @@
     "yearsOfContracts": "years of contracts",
     "riskScore": "Risk Score",
     "ariaLabel": "Featured documented case",
-    "description": "This pharmaceutical company received government contracts with {{directAwardPct}}% direct awards. The risk model assigns a score of {{riskScore}} — the highest possible — indicating its contracting pattern almost perfectly matches documented fraud cases.",
+    "description": "This pharmaceutical company received government contracts with {{directAwardPct}}% direct awards. The risk model assigns a score of {{riskScore}} — the highest possible — indicating its contracting pattern closely resembles documented corruption cases.",
     "cta": "See full investigation"
   },
   "footer": {

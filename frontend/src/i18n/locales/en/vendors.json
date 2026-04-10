@@ -73,7 +73,7 @@
     "avgContract": "Avg Contract",
     "sectors": "Sectors",
     "aiPatternAnalysis": "AI Pattern Analysis",
-    "knownScandals": "Known Scandals",
+    "knownScandals": "Documented Cases",
     "vendorSummary": "Summary",
     "primarySector": "Primary Sector",
     "yearsActive": "Years Active",
@@ -166,22 +166,22 @@
     "clusteringCoefficient": "Clustering Coefficient",
     "closedTriangles": "Closed Triangles",
     "biddingTrianglesDetected": "Bidding triangles detected",
-    "highClustering": "High clustering — possible cartel structure",
+    "highClustering": "High clustering — tightly connected bidding group",
     "moderateClustering": "Moderate clustering",
     "lowClustering": "Low clustering",
-    "highClusteringAlert": "High network clustering detected. This vendor's bidding partners form a tightly connected group, consistent with coordinated bid-rigging. See co-bidding patterns below.",
+    "highClusteringAlert": "High network clustering detected. This vendor's bidding partners form a tightly connected group. See co-bidding patterns below.",
     "rolesLabel": "Roles:",
-    "roleDecoy": "🔴 Decoy — bids but never wins",
+    "roleDecoy": "🔴 Cover bidder — bids but rarely wins",
     "roleRotation": "🟠 Rotation — vendors take turns winning",
-    "roleAccomplice": "🟡 Accomplice — both win frequently together"
+    "roleAccomplice": "🟡 Frequent co-winner — both win frequently together"
   },
   "flags": {
     "highDirectAward": "{{pct}}% of contracts were direct awards (bypassed competitive tendering)",
     "highSingleBid": "{{pct}}% of competitive procedures had only this vendor bidding",
-    "suspiciousCoBidding": "Suspicious co-bidding patterns detected (heuristic analysis — not included in the v6.5 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
+    "suspiciousCoBidding": "Notable co-bidding patterns detected (heuristic analysis — not included in the v6.5 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
     "highClustering": "High network clustering ({{pct}}%) — bidding partners form a tightly-knit group",
     "primaryDriver": "Primary driver: {{factor}} (z={{z}} — {{z}} SDs above sector average)",
-    "sectionLabel": "WHY THIS VENDOR IS FLAGGED",
+    "sectionLabel": "RISK INDICATORS FOR THIS VENDOR",
     "disclaimer": "Flags are statistical risk indicators, not proof of wrongdoing. Use for investigation triage only."
   },
   "waterfall": {
@@ -280,7 +280,7 @@
     "riskScoreLabel": "Risk Score (v6.5)"
   },
   "groundTruthBanner": {
-    "appearsIn": "This vendor appears in {{count}} documented corruption case(s)",
+    "appearsIn": "This vendor appears in {{count}} documented procurement irregularity case(s)",
     "trainingSetNote": "This vendor is part of RUBLI's ground truth training set — contracts matching documented corruption patterns."
   },
   "sectorPercentile": "Top {{pct}}% in sector",

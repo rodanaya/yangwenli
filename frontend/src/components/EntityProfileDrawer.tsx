@@ -6,7 +6,7 @@
  * NetworkMiniGraph is lazy-loaded so the ECharts bundle only loads on demand.
  */
 
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
@@ -502,9 +502,51 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
 // Main drawer component
 // ---------------------------------------------------------------------------
 
+// Focusable element selectors for Tab cycling
+const FOCUSABLE_SELECTORS = [
+  'a[href]',
+  'button:not([disabled])',
+  'input:not([disabled])',
+  'select:not([disabled])',
+  'textarea:not([disabled])',
+  '[tabindex]:not([tabindex="-1"])',
+].join(', ')
+
 export function EntityProfileDrawer() {
   const { state, close } = useEntityDrawer()
   const isOpen = state.entityId !== null && state.entityType !== null
+  const panelRef = useRef<HTMLElement>(null)
+
+  // Move focus into the drawer when it opens
+  useEffect(() => {
+    if (isOpen && panelRef.current) {
+      const first = panelRef.current.querySelector<HTMLElement>(FOCUSABLE_SELECTORS)
+      first?.focus()
+    }
+  }, [isOpen])
+
+  // Trap Tab/Shift-Tab focus within the drawer while it is open
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLElement>) => {
+    if (!isOpen || e.key !== 'Tab') return
+    if (!panelRef.current) return
+    const focusable = Array.from(
+      panelRef.current.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTORS)
+    ).filter((el) => !el.closest('[inert]'))
+    if (focusable.length === 0) return
+    const first = focusable[0]
+    const last = focusable[focusable.length - 1]
+    if (e.shiftKey) {
+      if (document.activeElement === first) {
+        e.preventDefault()
+        last.focus()
+      }
+    } else {
+      if (document.activeElement === last) {
+        e.preventDefault()
+        first.focus()
+      }
+    }
+  }, [isOpen])
 
   return (
     <>
@@ -522,11 +564,13 @@ export function EntityProfileDrawer() {
 
       {/* Drawer panel */}
       <aside
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Entity profile"
         aria-hidden={!isOpen}
         inert={!isOpen || undefined}
+        onKeyDown={handleKeyDown}
         className="fixed top-0 right-0 h-full z-50 bg-background-card border-l border-border shadow-2xl flex flex-col"
         style={{
           width: 420,

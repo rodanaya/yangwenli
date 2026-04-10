@@ -25,7 +25,7 @@
   "executive": "Executive Summary",
   "dashboard": "Dashboard",
   "explore": "Explore",
-  "patterns": "Fraud Patterns",
+  "patterns": "Risk Patterns",
   "procurementIntelligence": "Procurement Intelligence",
   "temporal": "Timeline",
   "administrations": "Administrations",
@@ -78,7 +78,7 @@
   "contractsIndexedShort": "3.1M indexed",
   "reportIssue": "Report an issue",
   "institutionHealth": "Institution Health",
-  "collusion": "Collusion Pairs",
+  "collusion": "Co-Bidding Pairs",
   "procurementCalendar": "Procurement Calendar",
   "scorecards": "Institution Transparency"
 }

@@ -1,8 +1,8 @@
 {
   "title": "Biblioteca de Casos",
-  "pageTitle": "La Galería de Crímenes",
-  "pageSubhead": "Archivo de Corrupción — México 2001-2025",
-  "pageDesc": "{{count}} casos documentados de corrupción en contratación pública federal. Cada expediente representa miles de millones de pesos desviados del erario.",
+  "pageTitle": "Casos Documentados de Corrupción",
+  "pageSubhead": "Archivo de Casos — México 2001-2025",
+  "pageDesc": "{{count}} casos documentados de irregularidades en contratación pública federal. Cada expediente reúne contratos con patrones estadísticos similares a los de casos confirmados de corrupción.",
   "sortedByImpact": "ordenados por impacto",
   "sortBy": "Ordenar por",
   "sortOptions": {

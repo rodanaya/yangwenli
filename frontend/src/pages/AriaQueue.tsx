@@ -1263,9 +1263,9 @@ export default function AriaPage() {
           {/* Editorial headline */}
           <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 mb-5">
             <div className="flex-1">
-              <h1 className="text-2xl sm:text-3xl font-bold font-serif text-zinc-100 leading-tight mb-1.5">
+              <h2 className="text-2xl sm:text-3xl font-bold font-serif text-zinc-100 leading-tight mb-1.5">
                 {t('hero.headline', { vendorCount: stats?.queue_total != null ? formatNumber(stats.queue_total) : '318,441' })}
-              </h1>
+              </h2>
               <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
                 {t('hero.subtitle')}
               </p>
@@ -1717,7 +1717,7 @@ export default function AriaPage() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full">
+                <table className="w-full" aria-label="Vendor investigation queue">
                   <thead>
                     <tr className="border-b border-border bg-background-elevated/50">
                       <th className="px-4 py-3 text-left text-[10px] font-mono font-bold text-text-muted uppercase tracking-wider">

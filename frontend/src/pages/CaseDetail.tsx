@@ -916,7 +916,7 @@ export default function CaseDetail() {
           </p>
           <p className="text-[11px] text-text-muted mb-3">{t('detail.evidenceTrailSubtitle')}</p>
           <div className="rounded-lg border border-border/40 overflow-x-auto">
-            <table className="w-full text-xs">
+            <table className="w-full text-xs" aria-label="Case evidence contracts">
               <thead>
                 <tr className="border-b border-border/40 bg-card/60">
                   <th className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">

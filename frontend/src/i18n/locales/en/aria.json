@@ -1,5 +1,5 @@
 {
-  "pageTitle": "ARIA Intelligence Briefing",
+  "pageTitle": "ARIA Risk Assessment Queue",
   "pageSubtitle": "Automated Risk Investigation Algorithm — curated procurement risk intelligence",
   "stats": {
     "totalLeads": "Total Leads",
@@ -11,8 +11,8 @@
     "newVendorRisk": "new high-risk vendors",
     "newVendorRiskSub": "ghost company signals",
     "lastRun": "Last pipeline run: {{date}}",
-    "vendorsSurveillance": "vendors under surveillance",
-    "vendorsUnderSurveillance": "vendors under surveillance",
+    "vendorsSurveillance": "vendors under active monitoring",
+    "vendorsUnderSurveillance": "vendors under active monitoring",
     "elevatedValueRisk": "value at elevated risk",
     "valueAtRisk": "value at risk",
     "efosOnList": "on EFOS List (SAT)",
@@ -60,17 +60,17 @@
     "name": "MEDIUM"
   },
   "tier4": {
-    "description": "Passive surveillance — automated alerts",
+    "description": "Passive monitoring — automated alerts",
     "label": "TIER 4",
     "name": "LOW"
   },
   "impactHero": {
     "kicker": "ARIA · INTELLIGENCE ENGINE",
-    "headline": "ARIA saw what auditors missed.",
+    "headline": "ARIA: Automated Procurement Risk Assessment.",
     "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against ~748 documented corruption cases.",
-    "stat1Label": "Vendors under active surveillance",
+    "stat1Label": "Vendors under active monitoring",
     "stat2Label": "Critical alerts (Tier 1)",
-    "stat3Label": "Threat levels by IPS score",
+    "stat3Label": "Priority levels by IPS score",
     "pipelineTitle": "HOW ARIA WORKS",
     "step1Label": "ML SCORING",
     "step1Body": "v0.6.5 logistic model: 9 statistical factors per contract",
@@ -198,23 +198,23 @@
   "header": {
     "systemLabel": "ARIA System · Procurement Intelligence",
     "live": "LIVE",
-    "title": "Intelligence Center",
-    "subtitle": "{{count}} vendors under active surveillance. Automated risk detection system for federal public contracting.",
+    "title": "Risk Assessment Center",
+    "subtitle": "{{count}} vendors under active monitoring. Automated risk assessment system for federal public contracting.",
     "statusActive": "Active",
     "t1Require": "T1 vendors require immediate investigation",
     "lastUpdated": "Last updated"
   },
   "editorial": {
-    "section": "RUBLI INTELLIGENCE",
+    "section": "RUBLI RISK ANALYSIS",
     "headline": "Investigation Briefing",
-    "subtitle": "Automated investigation queue with threat-level prioritization"
+    "subtitle": "Automated investigation queue with priority-level classification"
   },
   "situationReport": "Situation Report",
   "methodology": {
     "title": "How does ARIA work?",
     "body": "ARIA combines ML risk score (v6.5), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
   },
-  "threatLevels": "Threat Levels",
+  "threatLevels": "Priority Levels",
   "vendorCard": {
     "disclaimer": "ⓘ Statistical risk indicator — not a legal determination"
   },
@@ -277,7 +277,7 @@
     "noSearchResults": "No vendors found for \"{{query}}\""
   },
   "hero": {
-    "headline": "{{vendorCount}} vendors under surveillance across 4 threat tiers",
+    "headline": "{{vendorCount}} vendors monitored across 4 priority tiers",
     "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 320 most critical cases requiring immediate investigation.",
     "t1RequireShort": "T1 critical leads"
   },

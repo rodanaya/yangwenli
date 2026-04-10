@@ -1779,7 +1779,7 @@ export default function SpendingCategories() {
               </div>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[700px] text-xs" role="table">
+                <table className="w-full min-w-[700px] text-xs" role="table" aria-label="Spending categories summary">
                   <thead>
                     <tr className="border-b border-border bg-background-elevated/30 text-text-muted">
                       <th className="px-3 py-2.5 text-left font-medium w-8">#</th>

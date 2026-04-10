@@ -13,7 +13,7 @@
  *  7. Action area: change status / add evidence / promote
  */
 
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
@@ -394,18 +394,64 @@ export function InvestigationCaseDetail() {
             </div>
             {detail.narrative && (
               <div className="text-sm text-text-secondary leading-relaxed space-y-1.5">
-                {detail.narrative.split('\n').map((line, i) => {
-                  if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>
-                  if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>
-                  if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>
-                  if (line.trim() === '') return <div key={i} className="h-1" />
-                  const parts = line.split(/\*\*(.+?)\*\*/g)
-                  return (
-                    <p key={i}>
-                      {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
-                    </p>
-                  )
-                })}
+                {(() => {
+                  const lines = detail.narrative.split('\n')
+                  const elements: React.ReactNode[] = []
+                  let i = 0
+                  while (i < lines.length) {
+                    const line = lines[i]
+                    // Pipe table: collect consecutive pipe lines
+                    if (line.trim().startsWith('|')) {
+                      const tableLines: string[] = []
+                      while (i < lines.length && lines[i].trim().startsWith('|')) {
+                        tableLines.push(lines[i])
+                        i++
+                      }
+                      // Filter out separator rows (---|---) and parse
+                      const rows = tableLines.filter(l => !/^\s*\|[\s\-|:]+\|\s*$/.test(l))
+                      if (rows.length > 0) {
+                        const parseCells = (row: string) =>
+                          row.replace(/^\||\|$/g, '').split('|').map(c => c.trim())
+                        const [headerRow, ...bodyRows] = rows
+                        elements.push(
+                          <div key={`table-${i}`} className="overflow-x-auto my-3">
+                            <table className="w-full text-xs border-collapse">
+                              <thead>
+                                <tr>
+                                  {parseCells(headerRow).map((cell, ci) => (
+                                    <th key={ci} className="px-3 py-1.5 text-left font-semibold text-text-primary border border-border/40 bg-background-elevated">{cell}</th>
+                                  ))}
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {bodyRows.map((row, ri) => (
+                                  <tr key={ri} className="even:bg-background-elevated/40">
+                                    {parseCells(row).map((cell, ci) => (
+                                      <td key={ci} className="px-3 py-1.5 border border-border/40">{cell}</td>
+                                    ))}
+                                  </tr>
+                                ))}
+                              </tbody>
+                            </table>
+                          </div>
+                        )
+                      }
+                      continue
+                    }
+                    if (line.startsWith('### ')) { elements.push(<h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>); i++; continue }
+                    if (line.startsWith('## ')) { elements.push(<h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>); i++; continue }
+                    if (line.startsWith('# ')) { elements.push(<h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>); i++; continue }
+                    if (line.trim() === '') { elements.push(<div key={i} className="h-1" />); i++; continue }
+                    const parts = line.split(/\*\*(.+?)\*\*/g)
+                    elements.push(
+                      <p key={i}>
+                        {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
+                      </p>
+                    )
+                    i++
+                  }
+                  return elements
+                })()}
               </div>
             )}
             {detail.summary && detail.summary !== detail.narrative && (

@@ -1189,7 +1189,7 @@ export function Investigation() {
                 </span>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full text-sm">
+                <table className="w-full text-sm" aria-label="Investigation cases">
                   <thead className="border-b border-border/40 bg-background-elevated/60">
                     <tr>
                       <SortHeader label={t('queue.priority') || 'Priority'} field="priority" sortKey={sortKey} sortDir={sortDir} onSort={handleSort} />

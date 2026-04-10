@@ -1215,7 +1215,7 @@ export function InstitutionProfile() {
             ) : (
               <div className="card-elevated overflow-hidden">
                 <div className="overflow-x-auto">
-                  <table className="w-full text-xs">
+                  <table className="w-full text-xs" aria-label="Institution officials and contract activity">
                     <thead>
                       <tr className="border-b border-border/50">
                         {([
@@ -1765,7 +1765,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
   const displayYears = allYears.slice(-8)
   const topVendors = vendorLoyalty.vendors.slice(0, 8)
   return (
-    <table className="w-full border-separate" style={{ borderSpacing: 2 }}>
+    <table className="w-full border-separate" style={{ borderSpacing: 2 }} aria-label="Vendor loyalty over time">
       <thead>
         <tr>
           <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">Proveedor</th>

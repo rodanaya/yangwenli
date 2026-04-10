@@ -88,20 +88,15 @@ export function MainLayout() {
           </AnimatePresence>
         </main>
 
-        {/* Footer — hidden on mobile (bottom nav replaces it) */}
-        <footer className="hidden md:block border-t border-border/30 px-5 py-2.5">
-          <div className="flex items-center justify-between text-xs text-text-muted font-mono tracking-wide">
+        {/* Footer */}
+        <footer className="border-t border-border/30 px-5 py-2.5 pb-20 md:pb-2.5">
+          <div className="hidden md:flex items-center justify-between text-xs text-text-muted font-mono tracking-wide mb-1.5">
             <span>{t('footerBrand')} • {t('footerTagline')}</span>
             <span>{t('footerStats')}</span>
           </div>
-          <details className="mt-1.5">
-            <summary className="text-[10px] text-text-muted/70 cursor-pointer hover:text-text-muted transition-colors select-none list-none font-mono">
-              ▸ {t('aboutDataToggle')}
-            </summary>
-            <p className="mt-1 text-[10px] text-text-muted/70 leading-relaxed max-w-3xl">
-              {t('aboutData')}
-            </p>
-          </details>
+          <p className="text-[10px] text-text-muted/70 leading-relaxed max-w-3xl">
+            {t('aboutData')}
+          </p>
         </footer>
       </div>
 

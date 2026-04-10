@@ -1506,7 +1506,7 @@ export default function Administrations() {
           </CardHeader>
           <CardContent>
             <div className="overflow-x-auto">
-              <table className="w-full text-sm">
+              <table className="w-full text-sm" aria-label="Administration comparison metrics">
                 <thead>
                   <tr>
                     <th className="data-cell-header text-left">{t('table.metric')}</th>
@@ -1750,7 +1750,7 @@ export default function Administrations() {
             </div>
           </CardHeader>
           <CardContent className="overflow-x-auto">
-            <table className="w-full text-xs font-mono">
+            <table className="w-full text-xs font-mono" aria-label="Sector risk metrics by administration">
               <thead>
                 <tr>
                   <th className="data-cell-header text-left">{t('heatmap.sector')}</th>
@@ -2662,7 +2662,7 @@ function AdminSectorMatrix({
         </div>
       </CardHeader>
       <CardContent className="overflow-x-auto">
-        <table className="border-separate" style={{ borderSpacing: 3 }}>
+        <table className="border-separate" style={{ borderSpacing: 3 }} aria-label="Administration sector comparison matrix">
           <thead>
             <tr>
               <th className="text-left pr-3 pb-1 text-[10px] text-text-muted font-normal w-24 whitespace-nowrap">

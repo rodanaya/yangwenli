@@ -854,7 +854,7 @@ export function Watchlist() {
                 ) : (
                   /* Table */
                   <div className="overflow-x-auto">
-                    <table className="w-full text-sm">
+                    <table className="w-full text-sm" aria-label="Watchlist vendors">
                       <thead>
                         <tr className="border-b border-border text-xs text-text-muted">
                           <th className="text-left px-4 py-3 font-medium">{t('columns.entity')}</th>

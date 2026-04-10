@@ -16,7 +16,7 @@
   },
   "sections": {
     "pipeline": "Validation Pipeline",
-    "confirmed": "Confirmed Investigation Targets",
+    "confirmed": "Corroborated Cases",
     "confirmedSubtitle": "Externally validated through news reports, ASF audits, and legal proceedings",
     "allCases": "All Investigation Cases",
     "bySector": "Cases by Sector"
@@ -191,7 +191,7 @@
   "card": {
     "priority": "PRIORITY {{n}}",
     "contracts": "contracts",
-    "estLoss": "Est. Loss",
+    "estLoss": "Value at Risk",
     "atRisk": "At Risk",
     "avgRisk": "Avg Risk",
     "criticalPct": "Critical",
@@ -211,11 +211,11 @@
   "kpi": {
     "openCases": "Open Cases",
     "totalAtRisk": "Total At Risk",
-    "estLosses": "Est. Losses",
+    "estLosses": "Value at Risk",
     "sectorsAffected": "Sectors Affected"
   },
   "sidebar": {
-    "estTotalLoss": "Est. Total Loss",
+    "estTotalLoss": "Total Value at Risk",
     "acrossCases": "across {{n}} cases",
     "signalRadar": "Signal Radar",
     "sectors": "Sectors",
@@ -319,7 +319,7 @@
     "value": "Value",
     "avgRisk": "Avg Risk"
   },
-  "suspicionScore": "Suspicion Score",
+  "suspicionScore": "Risk Score",
   "totalValue": "Total Value",
   "credibility": {
     "low": "Low credibility",

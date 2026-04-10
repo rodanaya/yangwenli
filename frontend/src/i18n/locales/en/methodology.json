@@ -138,7 +138,7 @@
     "data-sources": "Data Sources",
     "references": "References"
   },
-  "pageHeadline": "How We Detect Corruption",
+  "pageHeadline": "How We Score Procurement Risk",
   "pageSubline": "Statistical analysis of 3.1M Mexican government procurement contracts",
   "groundTruth": {
     "pageTitle": "Ground Truth War Room",
