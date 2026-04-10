@@ -49,7 +49,7 @@
     "riskBadge": "riesgo {{level}}",
     "ariaTier": "Nivel ARIA {{tier}}",
     "scrollHint": "Continuar",
-    "introText": "Este hilo de investigación sigue la historia de contratación de <1>{{name}}</1>, trazando los patrones, relaciones y flujos financieros que activaron la detección automatizada. Desplácese para seguir la evidencia."
+    "introText": "Este hilo de investigación sigue la historia de contratación de {{name}}, trazando los patrones, relaciones y flujos financieros que activaron la detección automatizada. Desplácese para seguir la evidencia."
   },
   "kpi": {
     "totalValue": "Valor Total",

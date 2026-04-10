@@ -49,7 +49,7 @@
     "riskBadge": "{{level}} risk",
     "ariaTier": "ARIA Tier {{tier}}",
     "scrollHint": "Continue",
-    "introText": "This investigation thread follows the procurement history of <1>{{name}}</1>, tracing the patterns, relationships, and financial flows that triggered automated detection. Scroll to follow the evidence."
+    "introText": "This investigation thread follows the procurement history of {{name}}, tracing the patterns, relationships, and financial flows that triggered automated detection. Scroll to follow the evidence."
   },
   "kpi": {
     "totalValue": "Total Value",
