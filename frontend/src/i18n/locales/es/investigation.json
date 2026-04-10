@@ -319,7 +319,7 @@
     "value": "Valor",
     "avgRisk": "Riesgo Prom."
   },
-  "suspicionScore": "Puntuación de Sospecha",
+  "suspicionScore": "Puntuación de Riesgo",
   "totalValue": "Valor Total",
   "credibility": {
     "low": "Credibilidad baja",

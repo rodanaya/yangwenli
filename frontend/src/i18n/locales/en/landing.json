@@ -20,11 +20,11 @@
     "explore": "Explore",
     "scrollLabel": "Scroll to learn more",
     "discover": "Discover",
-    "heroSubtitle": "Mexican federal procurement data analyzed by machine learning to detect corruption patterns across 12 government sectors",
+    "heroSubtitle": "Mexican federal procurement data analyzed by machine learning to identify risk patterns across 12 government sectors",
     "riskDisclaimer": "Risk scores indicate statistical similarity to documented corruption patterns — not proof of wrongdoing.",
     "riskDisclaimerLink": "See Methodology",
     "storyHook1": "23 years of Mexican government contracts.",
-    "storyHook2": "One platform to investigate them.",
+    "storyHook2": "One platform to analyze them.",
     "storySubtitle": "RUBLI analyzes 3.1 million federal procurement contracts using machine learning to surface corruption patterns, ghost companies, and market manipulation.",
     "statContracts": "federal contracts",
     "statValue": "validated spend",
@@ -62,7 +62,7 @@
     "ariaLabel": "Sector risk rate chart"
   },
   "recentFlags": {
-    "label": "Live intelligence",
+    "label": "Live alerts",
     "headline": "Latest critical flags",
     "viewAll": "View all critical",
     "ariaLabel": "Recent critical risk contracts",
@@ -125,8 +125,8 @@
     "seeFullReport": "See the Full Report"
   },
   "aria": {
-    "label": "AUTOMATED INVESTIGATION",
-    "headline": "Intelligence Briefing",
+    "label": "AUTOMATED RISK ANALYSIS",
+    "headline": "Risk Analysis Briefing",
     "body": "Our 9-module Automated Risk Investigation Algorithm classifies 318K vendors into investigation tiers, detects monopoly, ghost company, and institutional capture patterns, and cross-references against SAT, SFP, and ASF registries.",
     "cta": "Open ARIA Briefing",
     "vendorsScreened": "Vendors screened",

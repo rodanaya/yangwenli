@@ -65,7 +65,7 @@
     "name": "LOW"
   },
   "impactHero": {
-    "kicker": "ARIA · INTELLIGENCE ENGINE",
+    "kicker": "ARIA · AUTOMATED RISK ANALYSIS",
     "headline": "ARIA: Automated Procurement Risk Assessment.",
     "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against ~748 documented corruption cases.",
     "stat1Label": "Vendors under active monitoring",
@@ -194,22 +194,22 @@
     "promoteToGT": "↑ Add to Ground Truth",
     "alreadyInGT": "Already in Ground Truth"
   },
-  "intelligenceDetails": "Intelligence Details",
+  "intelligenceDetails": "Analysis Details",
   "header": {
-    "systemLabel": "ARIA System · Procurement Intelligence",
+    "systemLabel": "ARIA System · Procurement Risk Analysis",
     "live": "LIVE",
     "title": "Risk Assessment Center",
     "subtitle": "{{count}} vendors under active monitoring. Automated risk assessment system for federal public contracting.",
     "statusActive": "Active",
-    "t1Require": "T1 vendors require immediate investigation",
+    "t1Require": "T1 vendors are prioritized for review",
     "lastUpdated": "Last updated"
   },
   "editorial": {
     "section": "RUBLI RISK ANALYSIS",
-    "headline": "Investigation Briefing",
-    "subtitle": "Automated investigation queue with priority-level classification"
+    "headline": "Risk Analysis Briefing",
+    "subtitle": "Automated risk queue with priority-level classification"
   },
-  "situationReport": "Situation Report",
+  "situationReport": "Status Report",
   "methodology": {
     "title": "How does ARIA work?",
     "body": "ARIA combines ML risk score (v6.5), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
@@ -278,7 +278,7 @@
   },
   "hero": {
     "headline": "{{vendorCount}} vendors monitored across 4 priority tiers",
-    "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 320 most critical cases requiring immediate investigation.",
+    "subtitle": "ARIA monitors federal procurement vendors using ML risk scoring, anomaly detection, and external registry cross-referencing. Start with Tier 1 — the 320 highest-priority cases for review.",
     "t1RequireShort": "T1 critical leads"
   },
   "patternDesc": {
@@ -299,9 +299,9 @@
   "explainer": {
     "kicker": "ARIA · Automated Risk Investigation Algorithm",
     "body": "ARIA combines nine analysis modules — v6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",
-    "t1Label": "Immediate investigation",
+    "t1Label": "Highest priority review",
     "t2Label": "Priority review",
     "t3Label": "Active monitoring",
-    "t4Label": "Passive surveillance"
+    "t4Label": "Passive monitoring"
   }
 }

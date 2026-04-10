@@ -1069,7 +1069,7 @@ function GroundTruthDetection() {
 
       <p className="text-[11px] text-text-muted border-t border-border/30 pt-3 mt-4">
         Detection rate = contracts scored Medium or above. The model identifies 99%+ of contracts
-        from major documented scandals — validating that learned patterns generalize to real fraud.
+        from major documented irregularity cases — validating that learned patterns generalize beyond training data.
       </p>
     </div>
   )

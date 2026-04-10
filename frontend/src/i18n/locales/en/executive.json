@@ -22,7 +22,7 @@
   "header": {
     "badge": "EXECUTIVE SUMMARY",
     "dateline": "March 2026  |  RUBLI Intelligence Platform",
-    "title": "9.9 Trillion Pesos Under the Microscope",
+    "title": "9.9 Trillion Pesos in Federal Procurement: A Statistical Analysis",
     "subtitle": "A Comprehensive Analysis of Mexican Federal Procurement, 2002-2025",
     "lead": "Between 2002 and 2025, the Mexican federal government awarded {{totalContracts}} public procurement contracts worth a combined {{totalValue}} — roughly {{totalValueUSD}}. This report presents the findings of a systematic, AI-driven analysis of every one of those contracts. Using a 9-feature per-sector risk model validated against ~748 documented corruption cases (~603 vendors), we identified patterns consistent with fraud, collusion, and abuse in contracts worth an estimated {{valueAtRisk}} — {{pct}}% of all procurement value. These findings do not constitute proof of wrongdoing. They are statistical signals that warrant investigation.",
     "contracts": "Contracts",
@@ -65,7 +65,7 @@
     "gapText": "The law requires open competition above threshold. In practice, 71% of all federal contracts across 23 years skip open competition — either through direct award or restricted tender. Three mechanisms explain the gap: contracts are split to stay below thresholds (threshold splitting); emergency exceptions are invoked broadly; and the 2025 reform now explicitly allows direct awards when contract content is classified as reserved information, embedding opacity directly into the legal framework.",
     "oversightTitle": "The Oversight Architecture",
     "oversightText": "Three institutions were designed to enforce transparency. COMPRANET (1996–2025) was the mandatory federal procurement portal — every purchase above threshold was required to be published there. INAI was the independent transparency watchdog — citizens and journalists could appeal to it when agencies refused information requests. The ASF (Auditoría Superior de la Federación) is the federal audit court with independent review powers over contract execution. Of these three, only ASF retains full operational independence.",
-    "crisisTitle": "2024–2025: The Infrastructure Is Being Dismantled",
+    "crisisTitle": "2024–2025: Changes to Transparency Infrastructure",
     "crisisText": "In August 2024 — before any law changed — 1.9 million contracts from 2012–2023 (4.7 trillion MXN) were removed without public announcement from COMPRANET's public interface. In December 2024, INAI was constitutionally abolished and replaced by 'Transparencia para el Pueblo,' an agency housed within the executive branch it was created to oversee, operating on roughly 2% of INAI's former budget. In April 2025, Congress voted 68–23 to formally abolish COMPRANET and replace it with ComprasMX — a platform that shares its architecture with Tianguis Digital, the procurement system used during Sheinbaum's time as Mexico City head of government, which disclosed no contracts in that period. The new law includes a 5-year data retention clause that analysts estimate would eventually remove records of 2.6 million contracts worth 9.9 trillion MXN from official public access.",
     "crisisNote": "The 3.1 million contracts in this database were captured before these changes. They represent a historical record that is becoming progressively harder to access through official channels. Independent archiving is the only safeguard.",
     "sources": "Sources: Mexicanos Contra la Corrupción y la Impunidad (MCCI) · Fundar Centro de Análisis e Investigación · IMCO · Proceso · Diario Oficial de la Federación (April 16, 2025)"
@@ -418,8 +418,8 @@
     "highRisk": "High Risk",
     "highRiskSub": "Priority investigation",
     "criticalRisk": "Critical Risk",
-    "criticalRiskSub": "Immediate action required",
-    "criticalNote": "{{pct}}% · {{contracts}} contracts · Immediate investigation"
+    "criticalRiskSub": "Recommended for priority review",
+    "criticalNote": "{{pct}}% · {{contracts}} contracts · Priority review recommended"
   },
   "heroSubtitle": "Mexico's Procurement Record",
   "pullQuote1": "One in eight contracts shows statistical patterns consistent with procurement fraud.",
@@ -587,14 +587,14 @@
   },
 
   "aria": {
-    "sectionTitle": "ARIA: {{totalVendors}} Vendors Under Surveillance",
+    "sectionTitle": "ARIA: {{totalVendors}} Vendors Analyzed",
     "description": "The Automated Risk Investigation Algorithm (ARIA) triages all {{totalVendors}} vendors into four priority tiers using a composite Intelligence Priority Score (IPS) that combines risk scores, anomaly detection, financial scale, and external registry flags.",
     "tierValueLabel": "{{value}} total value",
     "tierAvgIps": "avg IPS {{ips}}",
     "tier1Label": "TIER 1 — IMMEDIATE INVESTIGATION",
-    "tier1Body": "<strong>320 vendors</strong> controlling <strong>MX$1.98T</strong> in contracts have been flagged for immediate investigation. Average IPS: 0.846.",
+    "tier1Body": "<strong>320 vendors</strong> controlling <strong>MX$1.98T</strong> in contracts are ranked Tier 1 for priority review. Average IPS: 0.846.",
     "topVendorsHeader": "TOP ARIA T1 VENDORS BY IPS",
-    "patternsHeader": "CORRUPTION PATTERNS DETECTED",
+    "patternsHeader": "RISK PATTERNS DETECTED",
     "p6CaptureNote": "P6 Institutional Capture dominates: 15,923 vendors concentrate contracts from single institutions",
     "exploreQueue": "Explore full ARIA queue"
   },

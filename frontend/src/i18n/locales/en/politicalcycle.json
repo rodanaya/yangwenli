@@ -1,6 +1,6 @@
 {
-  "section": "Political Cycle Intelligence",
-  "headline": "When Does Corruption Peak? Inside Mexico's 6-Year Procurement Cycle",
+  "section": "Political Cycle Analysis",
+  "headline": "Procurement Risk Across Mexico's 6-Year Political Cycle",
   "subtitle": "23 years of federal contracts reveal a structural pattern: the final year of every administration sees dramatically different procurement behavior — and it repeats across every president, every party.",
   "keyFinding": {
     "label": "Key Finding",
@@ -58,7 +58,7 @@
     "error": "Election year effect data could not be loaded."
   },
   "admin": {
-    "heading": "Presidential Accountability",
+    "heading": "Procurement by Administration",
     "description": "Key procurement metrics by administration — Fox, Calderón, Peña Nieto, AMLO, Sheinbaum. Documented corruption cases and vendor concentration (HHI) by era.",
     "table": {
       "administration": "Administration",

@@ -535,7 +535,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
   sector_spread: 'This vendor operates across fewer sectors than its peers (negative z-score). Vendors with more diversified sector activity are associated with lower risk in the v0.6.5 model.',
-  industry_mismatch: 'This vendor won contracts outside its core industry — a potential shell company indicator.',
+  industry_mismatch: 'This vendor won contracts outside its declared industry sector — a statistical anomaly worth examining.',
   same_day_count: 'Multiple contracts were awarded to this vendor on the same day, consistent with potential threshold splitting.',
   direct_award: 'A high share of this vendor\'s contracts were awarded directly, bypassing competitive tendering.',
   single_bid: 'This vendor frequently wins procedures where it was the only bidder, suggesting deterred competition.',
@@ -544,7 +544,7 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
   price_ratio: 'Contract amounts are significantly above the sector median price for comparable goods/services.',
   ad_period_days: 'Procurement advertisements were unusually brief, limiting time for competitors to prepare bids.',
   price_hyp_confidence: 'Statistical analysis flags this vendor\'s prices as statistical outliers using IQR method.',
-  co_bid_rate: 'This vendor frequently bids in the same procedures as other vendors in a coordinated pattern.',
+  co_bid_rate: 'This vendor frequently bids in the same procedures as other vendors. Note: co_bid_rate has zero coefficient in model v0.6.5 and does not affect the risk score.',
   institution_risk: 'This vendor primarily contracts with institution types that have historically higher irregularity rates.',
 }
 
@@ -3579,7 +3579,7 @@ export function VendorProfile() {
                 <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-red-300">
                   <span className="font-semibold">High network clustering detected.</span>{' '}
-                  This vendor&apos;s bidding partners form a tightly connected group, consistent with coordinated bid-rigging. See co-bidding patterns below.
+                  This vendor&apos;s bidding partners form a tightly connected group, consistent with coordinated bidding patterns. See co-bidding analysis below.
                 </p>
               </div>
             )}

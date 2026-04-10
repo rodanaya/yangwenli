@@ -101,8 +101,8 @@
   "diagnostico": {
     "reportLabel": "Diagnostic Report · 12 Sectors · 2001–2025",
     "title": "The National Diagnostic",
-    "subtitleDynamic": "Systemic risk analysis by sector in federal public procurement. {{count}} sectors under surveillance. Results based on {{contracts}} contracts.",
-    "subtitleFallback": "Systemic risk analysis by sector in federal public procurement. 12 sectors under surveillance. Results based on 3.05 million contracts.",
+    "subtitleDynamic": "Systemic risk analysis by sector in federal public procurement. {{count}} sectors analyzed. Results based on {{contracts}} contracts.",
+    "subtitleFallback": "Systemic risk analysis by sector in federal public procurement. 12 sectors analyzed. Results based on 3.05 million contracts.",
     "hallazgoLabel": "Key Finding",
     "hallazgoText": "The <strong>Health</strong> sector carries the highest absolute risk: ghost-company networks in IMSS, ISSSTE, and COVID-19 emergency purchases represent over $200B MXN in high-risk contracts.",
     "signosVitales": "VITAL SIGNS",

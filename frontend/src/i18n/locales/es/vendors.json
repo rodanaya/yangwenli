@@ -169,11 +169,11 @@
     "highClustering": "Alta agrupación — posible estructura de cartel",
     "moderateClustering": "Agrupación moderada",
     "lowClustering": "Baja agrupación",
-    "highClusteringAlert": "Alta concentración de red detectada. Los socios licitadores de este proveedor forman un grupo muy cohesionado, lo cual es consistente con acuerdo de precios colusorio. Ver patrones de co-licitación a continuación.",
+    "highClusteringAlert": "Alta concentración de red detectada. Los socios licitadores de este proveedor forman un grupo muy cohesionado. Ver patrones de co-licitación a continuación.",
     "rolesLabel": "Roles:",
-    "roleDecoy": "🔴 Señuelo — licita pero nunca gana",
+    "roleDecoy": "🔴 Oferente de cobertura — rara vez gana",
     "roleRotation": "🟠 Rotación — los proveedores se turnan para ganar",
-    "roleAccomplice": "🟡 Cómplice — ambos ganan frecuentemente juntos"
+    "roleAccomplice": "🟡 Co-ganador frecuente — ambos ganan frecuentemente juntos"
   },
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",

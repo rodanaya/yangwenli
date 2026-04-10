@@ -69,7 +69,7 @@
   },
   "networkRisk": {
     "title": "Network Risk",
-    "description": "Risk from vendor relationships — companies that share addresses, legal representatives, or consistently bid together. Network membership can indicate shell company networks or bid-rigging cartels."
+    "description": "Risk from vendor relationships — companies that share addresses, legal representatives, or consistently bid together. Network membership can indicate shell company networks or coordinated bidding patterns."
   },
   "confidenceInterval": {
     "title": "Confidence Interval",
@@ -113,7 +113,7 @@
   },
   "comprasmx": {
     "title": "ComprasMX",
-    "description": "CompraNet's replacement platform, launched April 18, 2025. Built on the same technical architecture as 'Tianguis Digital,' Mexico City's procurement platform during Sheinbaum's tenure as head of government — which disclosed no contracts during that period. The new platform operates under a 5-year data retention rule that could eventually remove historical contract records from public access."
+    "description": "CompraNet's replacement platform, launched April 18, 2025. Built on the same technical architecture as 'Tianguis Digital,' Mexico City's procurement system previously used during Sheinbaum's tenure as head of government. The new platform operates under a 5-year data retention rule that could eventually remove historical contract records from public access."
   },
   "sector": {
     "title": "Sector",

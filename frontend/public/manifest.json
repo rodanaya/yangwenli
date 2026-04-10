@@ -1,7 +1,7 @@
 {
   "name": "RUBLI — Procurement Intelligence",
   "short_name": "RUBLI",
-  "description": "AI-powered corruption detection platform for Mexican government procurement",
+  "description": "AI-powered procurement risk analysis platform for Mexican government contracting",
   "start_url": "/",
   "display": "standalone",
   "orientation": "portrait",

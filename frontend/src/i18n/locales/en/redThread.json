@@ -5,14 +5,14 @@
     "pattern": "Pattern",
     "network": "Network",
     "money": "Money",
-    "verdict": "Verdict",
+    "verdict": "Summary",
     "headings": {
       "subject": "Chapter I · The Subject",
       "timeline": "Chapter II · The Timeline",
       "pattern": "Chapter III · The Pattern",
       "network": "Chapter IV · The Network",
       "money": "Chapter V · The Money",
-      "verdict": "Chapter VI · The Verdict"
+      "verdict": "Chapter VI · The Summary"
     }
   },
   "patterns": {
@@ -49,7 +49,7 @@
     "riskBadge": "{{level}} risk",
     "ariaTier": "ARIA Tier {{tier}}",
     "scrollHint": "Continue",
-    "introText": "This investigation thread follows the procurement history of {{name}}, tracing the patterns, relationships, and financial flows that triggered automated detection. Scroll to follow the evidence."
+    "introText": "This analysis thread follows the procurement history of {{name}}, tracing the patterns, relationships, and financial flows that triggered automated detection. Scroll to explore the analysis."
   },
   "kpi": {
     "totalValue": "Total Value",
@@ -103,9 +103,9 @@
     "coBidderAnalysisDesc": "Vendors that consistently appear in the same procedures — potential coordination rings."
   },
   "roles": {
-    "possibleDecoy": "Possible Decoy",
+    "possibleDecoy": "Low-Activity Co-Bidder",
     "rotationPattern": "Rotation Pattern",
-    "possibleAccomplice": "Possible Accomplice",
+    "possibleAccomplice": "Associated Vendor",
     "coBidder": "Co-bidder"
   },
   "money": {

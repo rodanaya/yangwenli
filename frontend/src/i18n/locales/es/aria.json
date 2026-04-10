@@ -65,12 +65,12 @@
     "name": "BAJO"
   },
   "impactHero": {
-    "kicker": "ARIA · MOTOR DE INTELIGENCIA",
-    "headline": "ARIA detectó lo que los auditores no vieron.",
+    "kicker": "ARIA · ANÁLISIS AUTOMATIZADO DE RIESGO",
+    "headline": "ARIA: Evaluación Automatizada de Riesgo en Contrataciones.",
     "subhead": "Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra ~748 casos documentados de corrupción.",
     "stat1Label": "Proveedores bajo vigilancia activa",
     "stat2Label": "Alertas críticas (Nivel 1)",
-    "stat3Label": "Niveles de amenaza por score IPS",
+    "stat3Label": "Niveles de prioridad por score IPS",
     "pipelineTitle": "CÓMO FUNCIONA ARIA",
     "step1Label": "ML SCORING",
     "step1Body": "v0.6.5 logistic model: 9 factores estadísticos por contrato",
@@ -194,27 +194,27 @@
     "promoteToGT": "↑ Añadir a Ground Truth",
     "alreadyInGT": "Ya en Ground Truth"
   },
-  "intelligenceDetails": "Detalles de Inteligencia",
+  "intelligenceDetails": "Detalles del Análisis",
   "header": {
-    "systemLabel": "Sistema ARIA · Inteligencia de Adquisiciones",
+    "systemLabel": "Sistema ARIA · Análisis de Riesgo en Adquisiciones",
     "live": "EN VIVO",
     "title": "Centro de Inteligencia",
     "subtitle": "{{count}} proveedores bajo vigilancia activa. Sistema automatizado de detección de riesgo en contratación pública federal.",
     "statusActive": "Activo",
-    "t1Require": "proveedores T1 requieren investigación inmediata",
+    "t1Require": "proveedores T1 son prioritarios para revisión",
     "lastUpdated": "Última actualización"
   },
   "editorial": {
     "section": "INTELIGENCIA RUBLI",
-    "headline": "Briefing de Investigación",
-    "subtitle": "Cola de investigación automatizada con priorización por nivel de amenaza"
+    "headline": "Briefing de Análisis de Riesgo",
+    "subtitle": "Cola automatizada de riesgo con priorización por nivel"
   },
-  "situationReport": "Estado de Situación",
+  "situationReport": "Estado del Sistema",
   "methodology": {
     "title": "¿Cómo funciona ARIA?",
     "body": "ARIA combina score de riesgo ML (v6.5), detección de anomalías PyOD, y cruce con registros externos (SAT EFOS, SFP, RUPC) para priorizar investigaciones. IPS = Integrated Priority Score."
   },
-  "threatLevels": "Niveles de Amenaza",
+  "threatLevels": "Niveles de Prioridad",
   "vendorCard": {
     "disclaimer": "ⓘ Indicador estadístico de riesgo — no es una determinación legal"
   },
@@ -278,7 +278,7 @@
   },
   "hero": {
     "headline": "{{vendorCount}} proveedores bajo vigilancia en 4 niveles de amenaza",
-    "subtitle": "ARIA monitorea proveedores de contratación pública federal usando ML, detección de anomalías y cruce con registros externos. Comienza con Nivel 1 — los 320 casos más críticos que requieren investigación inmediata.",
+    "subtitle": "ARIA monitorea proveedores de contratación pública federal usando ML, detección de anomalías y cruce con registros externos. Comienza con Nivel 1 — los 320 casos de mayor prioridad para revisión.",
     "t1RequireShort": "Pistas críticas T1"
   },
   "patternDesc": {
@@ -293,10 +293,10 @@
   "explainer": {
     "kicker": "ARIA · Algoritmo Automatizado de Investigación de Riesgos",
     "body": "ARIA combina nueve módulos de análisis — puntuación de riesgo v6.5, detección de anomalías PyOD, análisis de redes de co-licitación, y cruce con registros externos (SAT EFOS, SFP, ASF) — para clasificar a los >318K proveedores en cuatro niveles de prioridad de investigación. Los proveedores T1 son los 320 casos más críticos: todos muestran múltiples señales de alarma simultáneas.",
-    "t1Label": "Investigación inmediata",
+    "t1Label": "Revisión prioritaria máxima",
     "t2Label": "Revisión prioritaria",
     "t3Label": "Monitoreo activo",
-    "t4Label": "Vigilancia pasiva"
+    "t4Label": "Monitoreo pasivo"
   },
   "connectionError": {
     "title": "Error de Conexión",
