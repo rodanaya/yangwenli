@@ -1158,7 +1158,12 @@ function SectorGroupedCategories({
           : 0
         return { sectorCode, cats: [...cats].sort(comparators[sortField]), totalValue, totalContracts, avgRisk }
       })
-      .sort((a, b) => b.totalValue - a.totalValue)
+      .sort((a, b) => {
+        // Pin "otros" (catch-all) to the bottom regardless of value
+        if (a.sectorCode === 'otros') return 1
+        if (b.sectorCode === 'otros') return -1
+        return b.totalValue - a.totalValue
+      })
   }, [categories, sortField, sortDir])
 
   const [expandedSectors, setExpandedSectors] = useState<Set<string>>(() => new Set(grouped.map(g => g.sectorCode)))
