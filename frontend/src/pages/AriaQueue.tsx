@@ -540,7 +540,7 @@ function ThreatLevelCard({
       <div className="text-[10px] tracking-[0.15em] uppercase font-semibold text-text-muted mt-0.5">
         {t(config.nameKey)}
       </div>
-      <div className="text-xs text-text-muted/70 mt-1.5">
+      <div className="text-xs text-text-muted/70 mt-1.5 line-clamp-3">
         {t(config.descKey)}
       </div>
       {(avgRisk != null || valueAtRisk != null) && (

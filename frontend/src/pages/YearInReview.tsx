@@ -179,6 +179,8 @@ function HeroBannerStats({
               <span
                 className="text-2xl sm:text-3xl font-black tabular-nums leading-none"
                 style={{ color: s.color, fontFamily: 'var(--font-family-serif)' }}
+                aria-live="polite"
+                aria-atomic="true"
               >
                 {s.value}
               </span>
