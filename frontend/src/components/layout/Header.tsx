@@ -256,17 +256,28 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   )
 }
 
+// Map of parent route → entity type label for numeric-ID child routes
+const ENTITY_TYPE_LABELS: Record<string, string> = {
+  vendors: 'Vendor Profile',
+  institutions: 'Institution Profile',
+  sectors: 'Sector Profile',
+  categories: 'Category',
+  cases: 'Case Detail',
+  investigation: 'Investigation',
+}
+
 function getBreadcrumbTitle(path: string): string {
   const parts = path.split('/').filter(Boolean)
   if (parts.length === 0) return 'Dashboard'
 
   const lastPart = parts[parts.length - 1]
   if (/^\d+$/.test(lastPart)) {
+    const parentSegment = parts.length >= 2 ? parts[parts.length - 2] : ''
+    const entityLabel = ENTITY_TYPE_LABELS[parentSegment]
+    if (entityLabel) return entityLabel
     const parentRoute = parts.slice(0, -1).join('/')
     const parentKey = ROUTE_I18N_KEYS[`/${parentRoute}`]
-    if (parentKey) {
-      return `#${lastPart}`
-    }
+    if (parentKey) return `#${lastPart}`
   }
 
   return lastPart.charAt(0).toUpperCase() + lastPart.slice(1)

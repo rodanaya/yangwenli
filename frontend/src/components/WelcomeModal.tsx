@@ -242,10 +242,11 @@ export function WelcomeModal() {
               <button
                 key={i}
                 onClick={() => setStep(i)}
-                className={`h-1.5 rounded-full transition-all ${
+                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c41e3a] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0d0f0e] ${
                   i === step ? 'w-6 bg-[#c41e3a]' : 'w-1.5 bg-[#2a2d2c] hover:bg-[#6a6560]/40'
                 }`}
                 aria-label={`Paso ${i + 1}`}
+                aria-pressed={i === step}
               />
             ))}
           </div>
