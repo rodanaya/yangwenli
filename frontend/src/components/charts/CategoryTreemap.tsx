@@ -26,9 +26,10 @@ interface TreemapCategory {
 interface Props {
   categories: TreemapCategory[]
   height?: number
+  lang?: string
 }
 
-export function CategoryTreemap({ categories = [], height = 480 }: Props) {
+export function CategoryTreemap({ categories = [], height = 480, lang }: Props) {
   const navigate = useNavigate()
 
   const data = useMemo(() => {
@@ -37,8 +38,9 @@ export function CategoryTreemap({ categories = [], height = 480 }: Props) {
       .sort((a, b) => b.total_value - a.total_value)
       .map((c) => {
         const color = c.sector_code ? SECTOR_COLORS[c.sector_code] ?? '#64748b' : '#64748b'
+        const name = lang === 'en' ? (c.name_en || c.name_es) : (c.name_es || c.name_en)
         return {
-          name: c.name_es || c.name_en,
+          name,
           value: c.total_value,
           categoryId: c.category_id,
           sectorCode: c.sector_code,
@@ -53,7 +55,7 @@ export function CategoryTreemap({ categories = [], height = 480 }: Props) {
           },
         }
       })
-  }, [categories])
+  }, [categories, lang])
 
   const option = useMemo(
     () => ({
@@ -82,11 +84,11 @@ export function CategoryTreemap({ categories = [], height = 480 }: Props) {
             <div style="font-size:12px;line-height:1.65;color:#f4f4f5;max-width:260px">
               <div style="font-weight:700;font-size:13px;color:#fafafa;margin-bottom:4px;font-family:ui-serif,Georgia,serif">${info.name}</div>
               <div style="color:#71717a;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${sector}</div>
-              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">Valor:</span><span style="color:#fafafa;font-weight:600">${formatCompactMXN(d.value)}</span></div>
-              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">Contratos:</span><span style="color:#fafafa">${formatNumber(d.contractCount)}</span></div>
-              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">Riesgo prom.:</span><span style="color:${riskColor};font-weight:600">${riskPct}%</span></div>
-              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">Adj. directa:</span><span style="color:${daOverLimit ? '#fb923c' : '#fafafa'};font-weight:600">${da.toFixed(0)}%${daOverLimit ? ' ⚠' : ''}</span></div>
-              <div style="color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;margin-top:8px;border-top:1px solid #27272a;padding-top:6px">Clic para ver perfil →</div>
+              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Value' : 'Valor'}:</span><span style="color:#fafafa;font-weight:600">${formatCompactMXN(d.value)}</span></div>
+              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Contracts' : 'Contratos'}:</span><span style="color:#fafafa">${formatNumber(d.contractCount)}</span></div>
+              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Avg risk' : 'Riesgo prom.'}:</span><span style="color:${riskColor};font-weight:600">${riskPct}%</span></div>
+              <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Direct award' : 'Adj. directa'}:</span><span style="color:${daOverLimit ? '#fb923c' : '#fafafa'};font-weight:600">${da.toFixed(0)}%${daOverLimit ? ' ⚠' : ''}</span></div>
+              <div style="color:#f59e0b;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;margin-top:8px;border-top:1px solid #27272a;padding-top:6px">${lang === 'en' ? 'Click to view profile →' : 'Clic para ver perfil →'}</div>
             </div>
           `
         },
@@ -147,7 +149,7 @@ export function CategoryTreemap({ categories = [], height = 480 }: Props) {
         },
       ],
     }),
-    [data],
+    [data, lang],
   )
 
   const onEvents = useMemo(
@@ -166,7 +168,7 @@ export function CategoryTreemap({ categories = [], height = 480 }: Props) {
         className="flex items-center justify-center border border-border/30 rounded-lg bg-background-card"
         style={{ height: `${height}px` }}
       >
-        <p className="text-xs text-text-muted font-mono">Sin datos de categorías</p>
+        <p className="text-xs text-text-muted font-mono">{lang === 'en' ? 'No category data' : 'Sin datos de categorías'}</p>
       </div>
     )
   }
