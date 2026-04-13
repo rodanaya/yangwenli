@@ -476,7 +476,7 @@ def get_watchlist_stats(_: None = Depends(require_write_key)):
 
 
 @router.get("/alerts/check")
-def check_alerts(_: None = Depends(require_write_key)):
+def check_alerts():
     """
     Return watchlist items whose current risk score has reached or exceeded
     their configured alert threshold (4.3C Alert System).

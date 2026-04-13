@@ -4303,7 +4303,7 @@ def get_admin_breakdown(response: Response):
             vendor_rows = conn.execute(
                 """
                 SELECT
-                    v.vendor_name,
+                    v.name AS vendor_name,
                     SUM(c.amount_mxn) AS total_mxn,
                     COUNT(*) AS contracts,
                     AVG(c.risk_score) AS avg_risk
