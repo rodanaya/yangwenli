@@ -12,7 +12,7 @@
 INDEX=/usr/share/nginx/html/index.html
 
 # Escape the write key for safe JSON embedding (strip quotes, newlines)
-WRITE_KEY=$(printf '%s' "${RUBLI_WRITE_KEY:-}" | tr -d '"' | tr -d "'" | tr -d '\n')
+WRITE_KEY=$(printf '%s' "${RUBLI_WRITE_KEY:-}" | tr -d '"' | tr -d "'" | tr -d '\n' | tr -d '|' | tr -d '&' | tr -d '\\')
 
 # Build the inline config script
 CONFIG_SCRIPT="<script>window.__RUBLI_CONFIG__ = { writeKey: \"${WRITE_KEY}\" };</script>"

@@ -530,7 +530,7 @@ function ActivityCalendar({
 
 // Plain-English explanations for each risk factor, shown in factor bars
 const FACTOR_EXPLANATIONS: Record<string, string> = {
-  price_volatility: 'This vendor\'s contract amounts vary significantly above sector norms — the strongest predictor of corruption risk in the v0.6.5 model.',
+  price_volatility: 'This vendor\'s contract amounts vary significantly above sector norms — the strongest statistical signal in the v0.6.5 model.',
   vendor_concentration: 'This vendor holds an unusually large share of its sector\'s total contract value.',
   win_rate: 'This vendor wins contracts at a rate far above what would be expected by chance.',
   institution_diversity: 'This vendor serves fewer institutions than average (negative z-score). The model treats narrow buyer dependence as a risk signal — vendors with broad institutional reach are associated with lower risk.',
@@ -4549,7 +4549,7 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
                 )}
                 <p className="text-xs text-text-muted mt-1">
                   {isEFOSDefinitivo
-                    ? "Confirmed ghost company — invoices from this vendor are presumed fraudulent under Art. 69-B CFF."
+                    ? "Confirmed ghost company — invoices from this vendor are confirmed to simulate operations under Art. 69-B CFF."
                     : flags.sat_efos!.stage === 'presunto'
                     ? "Under review as presumed ghost company (Art. 69-B CFF)."
                     : flags.sat_efos!.stage === 'favorecido'

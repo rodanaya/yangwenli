@@ -105,10 +105,9 @@ def _get_db_info() -> dict:
 
     return {
         "connected": connected,
-        "db_path": str(_DB_PATH),
         "contract_count": contract_count,
         "size_mb": size_mb,
-        "error": error,
+        "error": "Database error" if error else None,
     }
 
 
@@ -153,7 +152,6 @@ async def health_check():
     Structured response fields:
     - status: "ok" | "unhealthy"
     - db_connected: bool
-    - db_path: resolved path to the active database file
     - contract_count: total contracts from precomputed_stats (fast lookup)
     - uptime_seconds: seconds since the API process started
     - version: API version string
@@ -177,7 +175,6 @@ async def health_check():
     body: dict = {
         "status": status,
         "db_connected": db["connected"],
-        "db_path": db["db_path"],
         "contract_count": db["contract_count"],
         "uptime_seconds": uptime_seconds,
         "version": API_VERSION,
