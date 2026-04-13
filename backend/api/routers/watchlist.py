@@ -216,7 +216,6 @@ def list_watchlist_items(
     item_type: Optional[str] = Query(None, description="Filter by type"),
     priority: Optional[str] = Query(None, description="Filter by priority"),
     folder_id: Optional[int] = Query(None, description="Filter by investigation folder ID"),
-    _: None = Depends(require_write_key),
 ):
     """
     List all watchlist items.
@@ -432,7 +431,7 @@ def _invalidate_watchlist_stats_cache():
 
 
 @router.get("/stats", response_model=WatchlistStatsResponse)
-def get_watchlist_stats(_: None = Depends(require_write_key)):
+def get_watchlist_stats():
     """Get watchlist statistics."""
     global _watchlist_stats_cache, _watchlist_stats_cache_ts
 
@@ -534,7 +533,7 @@ def check_alerts():
 
 
 @router.get("/{watchlist_id}", response_model=WatchlistItem)
-def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
+def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item ID")):
     """Get a specific watchlist item."""
     try:
         with get_db() as conn:
@@ -573,7 +572,7 @@ def get_watchlist_item(watchlist_id: int = Path(..., description="Watchlist item
 
 
 @router.get("/{watchlist_id}/changes")
-def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist item ID"), _: None = Depends(require_write_key)):
+def get_watchlist_changes(watchlist_id: int = Path(..., description="Watchlist item ID")):
     """
     Returns current risk score vs score at creation, and recent contract activity.
 
