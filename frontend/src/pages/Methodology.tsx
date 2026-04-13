@@ -1174,7 +1174,7 @@ export function Methodology() {
 
           {/* Section 10: Known Limitations */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="limitations" title="Known Limitations" icon={AlertTriangle} defaultOpen={false}>
+          <CollapsibleSection id="limitations" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
             <div className="space-y-6">
               <p className="text-xs text-text-secondary leading-relaxed">
                 These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform.
