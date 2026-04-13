@@ -93,14 +93,14 @@ const ADMIN_DISPLAY: Record<string, string> = {
 
 const ADMIN_ORDER = ['Fox', 'Calderon', 'Pena Nieto', 'AMLO', 'Sheinbaum']
 
-function getConcentrationBadge(label: string) {
+function getConcentrationBadge(label: string, t: (key: string) => string) {
   switch (label) {
     case 'highly_concentrated':
-      return { text: 'Altamente concentrado', color: '#f87171', bg: 'rgba(248,113,113,0.1)' }
+      return { text: t('profile.concentration.high'), color: '#f87171', bg: 'rgba(248,113,113,0.1)' }
     case 'moderately_concentrated':
-      return { text: 'Moderadamente concentrado', color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' }
+      return { text: t('profile.concentration.moderate'), color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' }
     default:
-      return { text: 'Competitivo', color: '#4ade80', bg: 'rgba(74,222,128,0.1)' }
+      return { text: t('profile.concentration.competitive'), color: '#4ade80', bg: 'rgba(74,222,128,0.1)' }
   }
 }
 
@@ -548,7 +548,7 @@ export default function CategoryProfile() {
               <CardHeader className="pb-2">
                 <div className="flex items-center gap-3 flex-wrap">
                   {(() => {
-                    const badge = getConcentrationBadge(topVendorsData.concentration_label)
+                    const badge = getConcentrationBadge(topVendorsData.concentration_label, t)
                     return (
                       <span
                         className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider"

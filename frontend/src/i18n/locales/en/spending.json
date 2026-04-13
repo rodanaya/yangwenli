@@ -218,5 +218,11 @@
     "ambiente": "Environment",
     "trabajo": "Labor",
     "otros": "Other"
+  },
+  "ceroComp": {
+    "competitive": "Competitive",
+    "directAward": "Direct Award",
+    "belowOecd": "{{n}}pp below OECD target",
+    "meetsOecd": "Meets OECD target"
   }
 }

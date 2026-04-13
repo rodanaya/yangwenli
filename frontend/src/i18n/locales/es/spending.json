@@ -218,5 +218,11 @@
     "ambiente": "Medio Ambiente",
     "trabajo": "Trabajo",
     "otros": "Otros"
+  },
+  "ceroComp": {
+    "competitive": "Competitivo",
+    "directAward": "Adj. Directa",
+    "belowOecd": "{{n}}pp debajo de meta OCDE",
+    "meetsOecd": "Cumple meta OCDE"
   }
 }

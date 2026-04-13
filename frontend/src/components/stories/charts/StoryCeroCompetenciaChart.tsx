@@ -10,6 +10,7 @@ import {
   ReferenceLine,
   Cell,
 } from 'recharts'
+import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
 const OECD_COLOR = '#22d3ee'
@@ -56,6 +57,7 @@ interface PayloadEntry {
 }
 
 function DarkTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
+  const { t } = useTranslation('spending')
   if (!active || !payload?.length) return null
   const d = payload[0].payload
   const da = (100 - d.competitive).toFixed(1)
@@ -65,13 +67,13 @@ function DarkTooltip({ active, payload }: { active?: boolean; payload?: PayloadE
       <p className="font-mono text-xs font-semibold text-zinc-100">{d.sector}</p>
       <div className="mt-1 space-y-0.5">
         <p className="text-zinc-400 text-xs">
-          Competitivo: <span className="text-zinc-100 font-bold">{d.competitive}%</span>
+          {t('ceroComp.competitive')}: <span className="text-zinc-100 font-bold">{d.competitive}%</span>
         </p>
         <p className="text-red-400 text-xs">
-          Adj. Directa: <span className="font-bold">{da}%</span>
+          {t('ceroComp.directAward')}: <span className="font-bold">{da}%</span>
         </p>
         <p className="text-cyan-400 text-[10px] font-mono">
-          {oecdGap > 0 ? `${oecdGap.toFixed(0)}pp debajo de meta OCDE` : 'Cumple meta OCDE'}
+          {oecdGap > 0 ? t('ceroComp.belowOecd', { n: oecdGap.toFixed(0) }) : t('ceroComp.meetsOecd')}
         </p>
       </div>
     </div>

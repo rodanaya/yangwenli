@@ -41,11 +41,11 @@ import { InstitutionLogoBanner } from '@/components/InstitutionBadge'
 const COLOR_A = '#06b6d4' // cyan
 const COLOR_B = '#a78bfa' // violet
 
-const HHI_LABELS: Record<string, { label: string; color: string }> = {
-  captura: { label: 'Captura', color: '#dc2626' },
-  high: { label: 'Concentrado', color: '#f97316' },
-  medium: { label: 'Moderado', color: '#eab308' },
-  low: { label: 'Competitivo', color: '#22c55e' },
+const HHI_COLORS: Record<string, string> = {
+  captura: '#dc2626',
+  high: '#f97316',
+  medium: '#eab308',
+  low: '#22c55e',
 }
 
 function getHHILevel(hhi: number): string {
@@ -271,12 +271,13 @@ function VeredictoHeader({
   instA: InstitutionDetailResponse
   instB: InstitutionDetailResponse
 }) {
+  const { t } = useTranslation('institutions')
   const hhiA = instA.supplier_diversity?.hhi_current_year ?? 0
   const hhiB = instB.supplier_diversity?.hhi_current_year ?? 0
   const levelA = getHHILevel(hhiA)
   const levelB = getHHILevel(hhiB)
-  const infoA = HHI_LABELS[levelA]
-  const infoB = HHI_LABELS[levelB]
+  const infoA = { label: t(`compare.hhi.${levelA}`), color: HHI_COLORS[levelA] }
+  const infoB = { label: t(`compare.hhi.${levelB}`), color: HHI_COLORS[levelB] }
 
   // Narrative
   const ratio = hhiB > 0 ? hhiA / hhiB : 0
