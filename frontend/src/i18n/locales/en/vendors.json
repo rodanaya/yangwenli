@@ -215,7 +215,7 @@
   "priceVolatility": {
     "title": "Price Volatility",
     "zscore": "z-score vs. sector",
-    "description": "This vendor's contract amounts vary significantly more than sector peers — a top predictor of corruption risk in the v6.5 model."
+    "description": "This vendor's contract amounts vary significantly more than sector peers — the strongest statistical signal in the v0.6.5 model."
   },
   "ghostRisk": {
     "title": "Ghost Company Risk",
@@ -255,7 +255,7 @@
     "expires": "Expires",
     "asfNotFound": "No ASF audit findings on record. ASF data coverage is limited to scraped records.",
     "efosNotFound": "Not found on SAT Art. 69-B EFOS/EDOS ghost company list.",
-    "efosConfirmed": "Confirmed ghost company — invoices from this vendor are presumed fraudulent under Art. 69-B CFF.",
+    "efosConfirmed": "Confirmed ghost company — invoices from this vendor are confirmed to simulate operations under Art. 69-B CFF.",
     "efosPresunto": "Under review as presumed ghost company (Art. 69-B CFF).",
     "efosFavorecido": "Received invoices from a confirmed ghost company.",
     "efosDesvirtuado": "Successfully challenged Art. 69-B classification.",
