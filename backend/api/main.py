@@ -390,6 +390,9 @@ app.include_router(stories_router)    # Story endpoints for journalist investiga
 # Health router — registered before the inline /health decorator so it takes precedence.
 # Provides fast health check (<100ms) using precomputed_stats instead of COUNT(*).
 app.include_router(health_router)  # No prefix — endpoint defines /health directly
+# Also register at the /api/v1 prefix so external monitors that follow the
+# documented path (/api/v1/health) get the same response.
+app.include_router(health_router, prefix="/api/v1", include_in_schema=False)
 
 
 def _get_latest_backup_info() -> dict | None:

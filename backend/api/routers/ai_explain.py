@@ -64,6 +64,7 @@ def explain_contract(contract_id: int):
                    c.contract_date, c.is_direct_award, c.is_single_bid,
                    c.risk_confidence_lower, c.risk_confidence_upper,
                    v.name as vendor_name, v.rfc as vendor_rfc,
+                   v.is_individual as vendor_is_individual,
                    i.name as institution_name,
                    s.name as sector_name
             FROM contracts c
@@ -127,7 +128,7 @@ def explain_contract(contract_id: int):
         f"- Titulo: {contract['title'] or 'Sin titulo'}\n"
         f"- Institucion: {contract['institution_name'] or 'No especificada'}\n"
         f"- Proveedor: {contract['vendor_name'] or 'No especificado'} "
-        f"(RFC: {contract['vendor_rfc'] or 'N/A'})\n"
+        f"(RFC: {'[PERSONA FISICA]' if contract['vendor_is_individual'] else (contract['vendor_rfc'] or 'N/A')})\n"
         f"- Monto: {amount_str}\n"
         f"- Fecha: {contract['contract_date'] or 'No especificada'}\n"
         f"- Procedimiento: {procedure}\n"

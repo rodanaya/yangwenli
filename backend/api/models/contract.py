@@ -3,7 +3,7 @@ Pydantic models for contract endpoints.
 """
 from datetime import date
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ContractBase(BaseModel):
@@ -45,6 +45,13 @@ class ContractListItem(ContractBase):
     risk_model_version: Optional[str] = None
     exception_article: Optional[str] = None
 
+    @model_validator(mode='after')
+    def mask_individual_rfc(self) -> 'ContractListItem':
+        """Mask RFC for natural persons (PII — first 4 chars derived from name)."""
+        if self.vendor_is_individual:
+            self.vendor_rfc = None
+        return self
+
 
 class ContractDetail(ContractBase):
     """Full contract detail response."""
@@ -56,9 +63,17 @@ class ContractDetail(ContractBase):
     vendor_id: Optional[int] = None
     vendor_name: Optional[str] = None
     vendor_rfc: Optional[str] = None
+    vendor_is_individual: Optional[bool] = None
     institution_id: Optional[int] = None
     institution_name: Optional[str] = None
     institution_type: Optional[str] = None
+
+    @model_validator(mode='after')
+    def mask_individual_rfc(self) -> 'ContractDetail':
+        """Mask RFC for natural persons (PII — first 4 chars derived from name)."""
+        if self.vendor_is_individual:
+            self.vendor_rfc = None
+        return self
 
     # Contract details
     description: Optional[str] = None

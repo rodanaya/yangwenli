@@ -188,6 +188,7 @@ class ContractService(BaseService):
                 s.name_es as sector_name,
                 v.name as vendor_name,
                 v.rfc as vendor_rfc,
+                v.is_individual as vendor_is_individual,
                 i.name as institution_name,
                 i.institution_type as institution_type
             FROM contracts c
@@ -220,6 +221,7 @@ class ContractService(BaseService):
                 s.name_es as sector_name,
                 v.name as vendor_name,
                 v.rfc as vendor_rfc,
+                v.is_individual as vendor_is_individual,
                 i.name as institution_name,
                 i.institution_type as institution_type
             FROM contracts c
