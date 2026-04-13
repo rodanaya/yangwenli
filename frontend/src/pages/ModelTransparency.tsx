@@ -1471,7 +1471,7 @@ export default function ModelTransparency() {
             </select>
           </div>
 
-          <div ref={coeffChartRef} className="h-[560px]">
+          <div ref={coeffChartRef} className="h-[560px]" role="img" aria-label="Bar chart showing model coefficient values by feature for the selected sector">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={coefficientData}
@@ -1667,7 +1667,7 @@ export default function ModelTransparency() {
         </CardHeader>
         <CardContent>
           {/* Side-by-side comparison chart */}
-          <div ref={comparisonChartRef} className="h-[280px]">
+          <div ref={comparisonChartRef} className="h-[280px]" role="img" aria-label="Bar chart comparing high-risk rates across model versions">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart
                 data={comparisonData}
@@ -1906,7 +1906,7 @@ export default function ModelTransparency() {
             </div>
           ) : (
             <>
-              <div ref={procedureChartRef} className="h-[260px]">
+              <div ref={procedureChartRef} className="h-[260px]" role="img" aria-label="Line chart showing average risk score by procedure type over time">
                 <ResponsiveContainer width="100%" height="100%">
                   <LineChart
                     data={procedureRiskData.data}

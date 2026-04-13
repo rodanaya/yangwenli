@@ -138,6 +138,7 @@ function SectorRiskChart({
   if (!data.length) return null
 
   return (
+    <div role="img" aria-label="Bar chart showing anomalous contract counts by sector">
     <ResponsiveContainer width="100%" height={280}>
       <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
         <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#3f3f46" />
@@ -180,6 +181,7 @@ function SectorRiskChart({
         </Bar>
       </BarChart>
     </ResponsiveContainer>
+    </div>
   )
 }
 
@@ -488,6 +490,7 @@ function AnomalyTimelineSection({
           {t('anomalousContractsByYear')}
         </h2>
       </div>
+      <div role="img" aria-label="Bar chart showing anomalous contracts by year">
       <ResponsiveContainer width="100%" height={200}>
         <BarChart data={yearData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
@@ -526,6 +529,7 @@ function AnomalyTimelineSection({
           </Bar>
         </BarChart>
       </ResponsiveContainer>
+      </div>
     </section>
   )
 }

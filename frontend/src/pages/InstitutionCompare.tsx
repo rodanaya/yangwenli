@@ -643,7 +643,7 @@ function RiskDistribution({
           <span> Base: {formatNumber(totalA)} vs {formatNumber(totalB)} contratos.</span>
         )}
       </p>
-      <div className="h-[260px] rounded-lg border border-border/40 bg-zinc-900/30 p-4">
+      <div className="h-[260px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Bar chart comparing risk level distribution between two institutions">
         <ResponsiveContainer width="100%" height="100%">
           <BarChart data={chartData} barGap={2} barCategoryGap="20%">
             <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
@@ -715,7 +715,7 @@ function ComparisonRadar({
       <p className="text-xs text-text-muted mb-4">
         Comparacion normalizada de 6 dimensiones de contratacion. 100% corresponde al valor mas alto entre ambas instituciones.
       </p>
-      <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4">
+      <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
             <PolarGrid stroke="#27272a" />

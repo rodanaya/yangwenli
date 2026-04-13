@@ -363,7 +363,7 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
   }
 
   return (
-    <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+    <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         Tendencia temporal
       </p>
@@ -587,7 +587,7 @@ export function Sectors() {
         {!isLoading && sectors.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
             {/* OECD Competition Gap Bar Chart */}
-            <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+            <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4" role="img" aria-label="Bar chart comparing direct award rates by sector against the OECD 25% benchmark">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
                 Brecha de competencia
               </p>

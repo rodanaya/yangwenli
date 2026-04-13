@@ -365,7 +365,7 @@ export default function CategoryProfile() {
             {trendsLoading ? (
               <ChartSkeleton height={320} type="area" />
             ) : timelineData.length > 0 ? (
-              <div style={{ height: 320 }}>
+              <div style={{ height: 320 }} role="img" aria-label="Area chart showing contract value and risk score trends over time">
                 <ResponsiveContainer width="100%" height="100%">
                   <ComposedChart data={timelineData} margin={{ top: 10, right: 40, bottom: 20, left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
@@ -464,7 +464,7 @@ export default function CategoryProfile() {
             {sexenioLoading ? (
               <ChartSkeleton height={280} />
             ) : sexenioBarData.length > 0 && sexenioBarData.some(d => d.value > 0) ? (
-              <div style={{ height: 280 }}>
+              <div style={{ height: 280 }} role="img" aria-label="Bar chart showing contract value by presidential administration">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart data={sexenioBarData} margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
                     <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
@@ -855,7 +855,7 @@ export default function CategoryProfile() {
               {subcategoryLoading ? (
                 <ChartSkeleton height={320} />
               ) : subcatBarData.length > 0 ? (
-                <div style={{ height: Math.max(200, subcatBarData.length * 28 + 60) }}>
+                <div style={{ height: Math.max(200, subcatBarData.length * 28 + 60) }} role="img" aria-label="Bar chart showing contract value by subcategory">
                   <ResponsiveContainer width="100%" height="100%">
                     <BarChart
                       layout="vertical"

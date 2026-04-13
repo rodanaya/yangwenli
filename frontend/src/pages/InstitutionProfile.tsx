@@ -1434,6 +1434,7 @@ export function InstitutionProfile() {
                         <div className="text-xs text-text-muted">Tasa de solventacion</div>
                       </div>
                     </div>
+                    <div role="img" aria-label="Chart showing audit findings and recovery rate over time">
                     <ResponsiveContainer width="100%" height={160}>
                       <ComposedChart data={asfData.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
@@ -1451,6 +1452,7 @@ export function InstitutionProfile() {
                         <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
                       </ComposedChart>
                     </ResponsiveContainer>
+                    </div>
                   </div>
                 )}
               </CardContent>
@@ -1607,7 +1609,7 @@ function RiskTimelineChart({
   }))
 
   return (
-    <div className="h-40">
+    <div className="h-40" role="img" aria-label="Area chart showing contract value trend over time">
       <ResponsiveContainer width="100%" height="100%">
         <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
           <defs>
@@ -1669,7 +1671,7 @@ function SpendingOverTimeChart({ data }: {
   }
 
   return (
-    <div className="h-56">
+    <div className="h-56" role="img" aria-label="Chart showing contract value and risk score trends over time">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
@@ -1907,7 +1909,7 @@ function HHITrendChart({ history }: {
   }))
 
   return (
-    <div className="h-48">
+    <div className="h-48" role="img" aria-label="Chart showing vendor concentration and market share trends over time">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
           <defs>
@@ -1971,7 +1973,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
   }))
 
   return (
-    <div className="h-40">
+    <div className="h-40" role="img" aria-label="Chart showing audit observations and risk score over time">
       <ResponsiveContainer width="100%" height="100%">
         <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />

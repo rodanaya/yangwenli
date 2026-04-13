@@ -274,7 +274,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   })), [t])
 
   return (
-    <div className="h-[520px]">
+    <div className="h-[520px]" role="img" aria-label="Bar chart showing model coefficient values by feature">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 60 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} opacity={0.3} />
@@ -326,7 +326,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
     })), [t])
 
   return (
-    <div className="h-[280px]">
+    <div className="h-[280px]" role="img" aria-label="Bar chart showing risk factor weights in the v3.3 model">
       <ResponsiveContainer width="100%" height="100%">
         <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 40 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} opacity={0.3} />

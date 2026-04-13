@@ -301,7 +301,7 @@ function ComparisonRadar({
   }))
 
   return (
-    <div className="h-[320px]">
+    <div className="h-[320px]" role="img" aria-label="Radar chart comparing risk profile dimensions between two vendors">
       <ResponsiveContainer width="100%" height="100%">
         <RadarChart data={merged} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
           <PolarGrid stroke="#1e293b" />
