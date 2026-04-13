@@ -62,6 +62,7 @@
     "viewProfileAriaLabel": "Ver perfil de {{name}}",
     "viewProfileShort": "Ver perfil completo",
     "noResults": "No se encontraron categorías con los filtros actuales.",
+    "selected": "Seleccionado",
     "selectedClickDeselect": "Seleccionado — clic para deseleccionar"
   },
   "trends": {

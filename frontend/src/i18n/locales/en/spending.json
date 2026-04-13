@@ -62,6 +62,7 @@
     "viewProfileAriaLabel": "View profile of {{name}}",
     "viewProfileShort": "View full profile",
     "noResults": "No categories found with current filters.",
+    "selected": "Selected",
     "selectedClickDeselect": "Selected — click to deselect"
   },
   "trends": {

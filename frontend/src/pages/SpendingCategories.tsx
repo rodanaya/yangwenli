@@ -117,6 +117,11 @@ function truncate(text: string, maxLen: number): string {
   return text.length > maxLen ? text.slice(0, maxLen - 1) + '…' : text
 }
 
+/** Pick the right locale name from API objects that carry both name_es and name_en */
+function localeName(cat: { name_en: string; name_es: string }, lang: string): string {
+  return lang === 'en' ? (cat.name_en || cat.name_es) : (cat.name_es || cat.name_en)
+}
+
 function getRiskColor(score: number): string {
   const level = getRiskLevelFromScore(score)
   return RISK_COLORS[level]
@@ -417,7 +422,7 @@ function CategorySummaryCard({
   onNavigate: (path: string) => void
   trendItems?: TrendItem[]
 }) {
-  const { t } = useTranslation('spending')
+  const { t, i18n } = useTranslation('spending')
   const riskLevel = getRiskLevelFromScore(category.avg_risk)
   const riskColor = RISK_COLORS[riskLevel]
   const sectorColor = category.sector_code ? (SECTOR_COLORS[category.sector_code] || '#64748b') : '#64748b'
@@ -436,7 +441,7 @@ function CategorySummaryCard({
             />
           )}
           <h3 className="text-sm font-bold text-text-primary truncate" style={{ fontFamily: 'var(--font-family-serif)' }}>
-            {category.name_es || category.name_en}
+            {localeName(category, i18n.language)}
           </h3>
           {category.sector_code && (
             <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60 px-1.5 py-0.5 rounded bg-background-elevated/50 flex-shrink-0">
@@ -988,7 +993,7 @@ function TopFindingsBar({
   categories: CategoryStat[]
   onSelect: (id: number) => void
 }) {
-  const { t } = useTranslation('spending')
+  const { t, i18n } = useTranslation('spending')
   const [view, setView] = useState<FindingView>('value')
 
   const top5 = useMemo(() => {
@@ -1091,7 +1096,7 @@ function TopFindingsBar({
                 className="text-xs font-semibold text-text-primary leading-snug mb-2 group-hover:text-accent transition-colors"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
-                {truncate(cat.name_es || cat.name_en, 50)}
+                {truncate(localeName(cat, i18n.language), 50)}
               </p>
               <p
                 className="text-xl font-mono font-bold tabular-nums leading-tight"
@@ -1116,7 +1121,7 @@ function TopFindingsBar({
 
 export default function SpendingCategories() {
   const navigate = useNavigate()
-  const { t } = useTranslation('spending')
+  const { t, i18n } = useTranslation('spending')
 
   const SECTOR_OPTIONS = [
     { code: '', label: t('filters.allSectors') },
@@ -1349,7 +1354,7 @@ export default function SpendingCategories() {
       .filter(c => c.total_value > 0 && c.avg_risk > 0)
       .map(c => ({
         category_id: c.category_id,
-        name: c.name_es || c.name_en,
+        name: localeName(c, i18n.language),
         total_value: c.total_value,
         avg_risk: c.avg_risk,
         total_contracts: c.total_contracts,
@@ -1391,7 +1396,7 @@ export default function SpendingCategories() {
 
     for (const cat of sexenioData.data) {
       if (!top10Ids.has(cat.category_id)) continue
-      const catKey = (cat.name_es || cat.name_en).slice(0, 20)
+      const catKey = localeName(cat, i18n.language).slice(0, 20)
       for (const [rawAdmin, vals] of Object.entries(cat.administrations)) {
         const admin = ADMIN_DISPLAY[rawAdmin] ?? rawAdmin
         if (!adminTotals.has(admin)) continue
@@ -1411,7 +1416,7 @@ export default function SpendingCategories() {
       .sort((a, b) => b.total_value - a.total_value)
       .slice(0, 10)
       .map(c => ({
-        key: (c.name_es || c.name_en).slice(0, 20),
+        key: localeName(c, i18n.language).slice(0, 20),
         color: c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : '#64748b',
       }))
   }, [allCategories])
@@ -1491,19 +1496,19 @@ export default function SpendingCategories() {
         <HallazgoStat
           value={`${highestRiskPct}%`}
           label={highestRiskCat
-            ? `${t('hero.highestRiskCategory')}: ${truncate(highestRiskCat.name_es || highestRiskCat.name_en, 35)}`
+            ? `${t('hero.highestRiskCategory')}: ${truncate(localeName(highestRiskCat, i18n.language), 35)}`
             : t('hero.highestRiskCategory')
           }
-          annotation={highestRiskCat ? `${formatNumber(highestRiskCat.total_contracts)} contratos` : undefined}
+          annotation={highestRiskCat ? t('hero.contracts', { count: formatNumber(highestRiskCat.total_contracts) }) : undefined}
           color="border-red-500"
         />
         <HallazgoStat
           value={topSpendCat ? formatCompactMXN(topSpendCat.total_value) : '—'}
           label={topSpendCat
-            ? `${t('hero.highestValueCategory')}: ${truncate(topSpendCat.name_es || topSpendCat.name_en, 35)}`
+            ? `${t('hero.highestValueCategory')}: ${truncate(localeName(topSpendCat, i18n.language), 35)}`
             : t('hero.highestValueCategory')
           }
-          annotation={topSpendCat ? `${formatNumber(topSpendCat.total_contracts)} contratos` : undefined}
+          annotation={topSpendCat ? t('hero.contracts', { count: formatNumber(topSpendCat.total_contracts) }) : undefined}
           color="border-amber-500"
         />
       </div>
@@ -1628,7 +1633,7 @@ export default function SpendingCategories() {
                         />
                       )}
                       <span className="text-sm font-semibold text-text-primary truncate group-hover:text-accent transition-colors">
-                        {cat.name_es || cat.name_en}
+                        {localeName(cat, i18n.language)}
                       </span>
                     </div>
                     <div className="flex items-center gap-3 mt-0.5 text-xs text-text-muted">
@@ -1751,8 +1756,8 @@ export default function SpendingCategories() {
 
         {selectedCategoryId !== null && selectedCategory && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/5 border border-accent/20 mb-3 text-xs animate-in fade-in duration-200">
-            <span className="font-mono text-text-muted/60 uppercase tracking-wider text-[10px] flex-shrink-0">Seleccionado:</span>
-            <span className="font-semibold text-accent truncate flex-1">{selectedCategory.name_es || selectedCategory.name_en}</span>
+            <span className="font-mono text-text-muted/60 uppercase tracking-wider text-[10px] flex-shrink-0">{t('table.selected')}:</span>
+            <span className="font-semibold text-accent truncate flex-1">{localeName(selectedCategory, i18n.language)}</span>
             <button
               onClick={() => setTimeout(() => detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)}
               className="flex items-center gap-1 px-2 py-0.5 rounded border border-accent/30 text-accent hover:bg-accent/10 transition-colors whitespace-nowrap flex-shrink-0 font-mono"
@@ -1843,7 +1848,7 @@ export default function SpendingCategories() {
                                 />
                               )}
                               <span className="text-text-primary font-medium truncate max-w-[280px]">
-                                {cat.name_es || cat.name_en}
+                                {localeName(cat, i18n.language)}
                               </span>
                             </div>
                           </td>
@@ -1901,8 +1906,8 @@ export default function SpendingCategories() {
                             <button
                               onClick={(e) => { e.stopPropagation(); navigate(`/categories/${cat.category_id}`) }}
                               className="text-text-muted hover:text-accent transition-colors p-0.5"
-                              aria-label={`Ver perfil de ${cat.name_es || cat.name_en}`}
-                              title="Ver perfil completo"
+                              aria-label={t('table.viewProfileAriaLabel', { name: localeName(cat, i18n.language) })}
+                              title={t('table.viewProfileShort')}
                             >
                               <ArrowUpRight className="h-3.5 w-3.5" />
                             </button>
