@@ -141,7 +141,7 @@ function NavSection({
 
 export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const location = useLocation()
-  const { t } = useTranslation('nav')
+  const { t, i18n } = useTranslation('nav')
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
@@ -366,7 +366,26 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       <div className="border-t border-border p-2">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
-            {!isCollapsed && <LanguageToggle />}
+            {isCollapsed ? (
+              <Tooltip>
+                <TooltipTrigger asChild>
+                  <button
+                    onClick={() => i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es')}
+                    className="h-7 w-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
+                    aria-label={i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
+                  >
+                    <span className="text-[10px] font-bold font-mono">
+                      {i18n.language === 'es' ? 'EN' : 'ES'}
+                    </span>
+                  </button>
+                </TooltipTrigger>
+                <TooltipContent side="right" sideOffset={8}>
+                  <p className="text-xs">{i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}</p>
+                </TooltipContent>
+              </Tooltip>
+            ) : (
+              <LanguageToggle />
+            )}
             <Button
               variant="ghost"
               size="icon"
