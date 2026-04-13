@@ -249,6 +249,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
       )}
 
       <CommandInput
+        autoFocus
         placeholder={t('cmdPalette.inputPlaceholder')}
         value={query}
         onValueChange={setQuery}

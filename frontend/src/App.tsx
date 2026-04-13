@@ -1,6 +1,6 @@
 import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
 import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -65,6 +65,12 @@ const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 // PoliticalCycle redirects to /administrations (same API, administrations is superset)
+
+// Redirect /sector/:id → /sectors/:id (singular alias)
+function SectorRedirect() {
+  const { id } = useParams<{ id: string }>()
+  return <Navigate to={`/sectors/${id}`} replace />
+}
 
 // First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
 function FirstVisitRedirect() {
@@ -374,6 +380,9 @@ function App() {
                 }
               />
 
+              {/* Route aliases — singular/plural spelling variants */}
+              <Route path="sector" element={<Navigate to="/sectors" replace />} />
+              <Route path="sector/:id" element={<SectorRedirect />} />
               <Route path="telescope" element={<Navigate to="/sectors" replace />} />
 
               <Route path="seismograph" element={<Navigate to="/administrations" replace />} />

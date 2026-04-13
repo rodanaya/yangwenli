@@ -8,7 +8,6 @@ import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { ScrollArea } from '@/components/ui/scroll-area'
 import {
   cn,
   formatCompactMXN,
@@ -1028,8 +1027,9 @@ export function Contracts() {
                 scroll →
               </p>
             </div>
-            <div className="overflow-x-auto">
-            <ScrollArea className="h-[600px]">
+            {/* overflow-x-auto + overflow-y-auto: plain div avoids Radix ScrollArea's
+                overflow-hidden root which clips the min-w content on mobile */}
+            <div className="overflow-x-auto overflow-y-auto h-[600px]">
               <div className="min-w-[700px]">
               <table className="w-full" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
@@ -1103,7 +1103,6 @@ export function Contracts() {
                 </tbody>
               </table>
               </div>
-            </ScrollArea>
             </div>
             </ExpandableProvider>
           )}
