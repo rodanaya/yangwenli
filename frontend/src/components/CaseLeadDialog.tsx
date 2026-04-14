@@ -206,8 +206,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
           </DialogHeader>
 
           <p className="text-xs text-text-muted -mt-2 mb-3">
-            Have information about suspected procurement fraud? Share it with our research team.
-            All submissions are confidential and used only for risk model improvement.
+            {t('caseLeadDialog.submitDesc')}
           </p>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -218,7 +217,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
               </label>
               <Input
                 id="cl-caseName"
-                placeholder="e.g. ABC Construcciones SA de CV or IMSS Contract Irregularity 2020"
+                placeholder={t('caseLeadDialog.caseNamePlaceholder')}
                 value={form.caseName}
                 onChange={handleChange('caseName')}
                 className="h-8 text-sm"
@@ -227,7 +226,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 aria-describedby="cl-caseName-hint"
               />
               <p id="cl-caseName-hint" className="text-[10px] text-text-muted mt-0.5">
-                Vendor name, institution, or descriptive case title
+                {t('caseLeadDialog.vendorHint')}
               </p>
             </div>
 
@@ -242,7 +241,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                   onValueChange={handleSelectChange('fraudType')}
                 >
                   <SelectTrigger id="cl-fraudType" className="h-8 text-xs" aria-required="true">
-                    <SelectValue placeholder="Select type…" />
+                    <SelectValue placeholder={t('caseLeadDialog.selectTypePlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {FRAUD_TYPE_VALUES.map((value) => (
@@ -261,10 +260,10 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                   onValueChange={handleSelectChange('sectorId')}
                 >
                   <SelectTrigger id="cl-sector" className="h-8 text-xs">
-                    <SelectValue placeholder="Select sector…" />
+                    <SelectValue placeholder={t('caseLeadDialog.selectSectorPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="unknown">Unknown / Multiple</SelectItem>
+                    <SelectItem value="unknown">{t('caseLeadDialog.unknownSector')}</SelectItem>
                     {SECTORS.map((s) => (
                       <SelectItem key={s.id} value={String(s.id)}>
                         {ts(s.code)}
@@ -312,12 +311,12 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
             {/* Evidence */}
             <div>
               <label htmlFor="cl-evidence" className="block text-xs font-medium text-text-secondary mb-1">
-                Evidence description <span className="text-risk-critical" aria-hidden="true">*</span>
-                <span className="text-text-muted ml-1 font-normal">(min. 50 characters)</span>
+                {t('caseLeadDialog.evidenceLabel')} <span className="text-risk-critical" aria-hidden="true">*</span>
+                <span className="text-text-muted ml-1 font-normal">{t('caseLeadDialog.evidenceMin')}</span>
               </label>
               <Textarea
                 id="cl-evidence"
-                placeholder="Describe the suspected fraud pattern, what you observed, any supporting data or patterns…"
+                placeholder={t('caseLeadDialog.evidencePlaceholder')}
                 value={form.evidence}
                 onChange={handleChange('evidence')}
                 className="text-sm resize-none min-h-[80px]"
@@ -329,18 +328,18 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 id="cl-evidence-counter"
                 className={`text-[10px] mt-0.5 ${form.evidence.length < 50 && form.evidence.length > 0 ? 'text-risk-high' : 'text-text-muted'}`}
               >
-                {form.evidence.length} / 50 min. characters
+                {t('caseLeadDialog.evidenceCounter', { count: form.evidence.length })}
               </p>
             </div>
 
             {/* Source */}
             <div>
               <label htmlFor="cl-source" className="block text-xs font-medium text-text-secondary mb-1">
-                Source <span className="text-text-muted font-normal">(optional)</span>
+                {t('caseLeadDialog.sourceLabel')} <span className="text-text-muted font-normal">{t('caseLeadDialog.optional')}</span>
               </label>
               <Input
                 id="cl-source"
-                placeholder="ASF audit number, news article URL, document reference…"
+                placeholder={t('caseLeadDialog.sourcePlaceholder')}
                 value={form.source}
                 onChange={handleChange('source')}
                 className="h-8 text-sm"
@@ -350,19 +349,19 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
             {/* Contact email */}
             <div>
               <label htmlFor="cl-email" className="block text-xs font-medium text-text-secondary mb-1">
-                Contact email <span className="text-text-muted font-normal">(optional, for follow-up)</span>
+                {t('caseLeadDialog.emailLabel')} <span className="text-text-muted font-normal">{t('caseLeadDialog.emailOptional')}</span>
               </label>
               <Input
                 id="cl-email"
                 type="email"
-                placeholder="analyst@example.org"
+                placeholder={t('caseLeadDialog.emailPlaceholder')}
                 value={form.contactEmail}
                 onChange={handleChange('contactEmail')}
                 className="h-8 text-sm"
                 aria-describedby="cl-email-hint"
               />
               <p id="cl-email-hint" className="text-[10px] text-text-muted mt-0.5">
-                Only used to send you updates on this case lead. Never shared publicly.
+                {t('caseLeadDialog.emailPrivacy')}
               </p>
             </div>
 
@@ -384,7 +383,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 role="status"
               >
                 <Check className="h-3.5 w-3.5 shrink-0" aria-hidden="true" />
-                Case lead submitted — our team will investigate
+                {t('caseLeadDialog.successInline')}
               </div>
             )}
 
@@ -397,7 +396,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 onClick={() => handleOpenChange(false)}
                 disabled={submitState === 'loading'}
               >
-                Cancel
+                {t('caseLeadDialog.cancelBtn')}
               </Button>
               <Button
                 type="submit"
@@ -412,7 +411,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 ) : (
                   <Send className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
                 )}
-                {submitState === 'success' ? 'Submitted' : 'Submit Lead'}
+                {submitState === 'success' ? t('caseLeadDialog.submittedBtn') : t('caseLeadDialog.submitLeadBtn')}
               </Button>
             </div>
           </form>
@@ -445,6 +444,7 @@ interface CaseLeadButtonProps {
 }
 
 export function CaseLeadButton({ variant = 'outline', size = 'sm', className }: CaseLeadButtonProps) {
+  const { t } = useTranslation('common')
   const [open, setOpen] = useState(false)
   return (
     <>
@@ -453,10 +453,10 @@ export function CaseLeadButton({ variant = 'outline', size = 'sm', className }: 
         size={size}
         className={className}
         onClick={() => setOpen(true)}
-        aria-label="Submit a case lead"
+        aria-label={t('caseLeadDialog.triggerBtn')}
       >
         <Plus className="h-3.5 w-3.5 mr-1.5" aria-hidden="true" />
-        Submit a Case Lead
+        {t('caseLeadDialog.triggerBtn')}
       </Button>
       <CaseLeadDialog open={open} onOpenChange={setOpen} />
     </>

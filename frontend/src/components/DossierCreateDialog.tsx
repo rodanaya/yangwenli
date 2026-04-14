@@ -41,6 +41,7 @@ interface DossierCreateDialogProps {
 
 export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: DossierCreateDialogProps) {
   const { t } = useTranslation('common')
+  const { t: tw } = useTranslation('workspace')
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
   const [color, setColor] = useState('#3b82f6')
@@ -70,7 +71,7 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
 
           {/* Quick-start templates */}
           <div>
-            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">Quick Start</p>
+            <p className="text-[10px] font-bold uppercase tracking-widest text-text-muted/80 mb-2">{tw('dossierCreate.quickStart')}</p>
             <div className="flex flex-wrap gap-1.5">
               {QUICK_TEMPLATES.map((tpl) => (
                 <button
@@ -105,11 +106,11 @@ export function DossierCreateDialog({ open, onOpenChange, onSubmit, loading }: D
               <div className="flex items-center gap-1.5 mb-1">
                 <FolderOpen className="h-3 w-3 text-accent shrink-0" />
                 <span className="font-semibold text-[11px] truncate text-text-primary">
-                  {name || 'New Dossier'}
+                  {name || tw('dossierCreate.previewDefault')}
                 </span>
               </div>
               <p className="text-[10px] text-text-muted line-clamp-2 leading-relaxed">
-                {description || 'No description'}
+                {description || tw('dossierCreate.noDescription')}
               </p>
             </div>
           </div>

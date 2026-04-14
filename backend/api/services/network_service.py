@@ -370,13 +370,8 @@ class NetworkService(BaseService):
                 vgf.community_id,
                 vgf.community_size,
                 vgf.community_avg_risk,
-                COUNT(DISTINCT c.sector_id) as sector_count,
-                SUM(DISTINCT CASE WHEN vgf.betweenness_centrality > 0
-                    THEN vgf.vendor_id ELSE NULL END) as hub_count
+                COUNT(CASE WHEN vgf.betweenness_centrality > 0 THEN 1 END) as hub_count
             FROM vendor_graph_features vgf
-            LEFT JOIN contracts c ON vgf.vendor_id = c.vendor_id
-                AND COALESCE(c.amount_mxn, 0) <= {_MAX_CONTRACT_VALUE}
-                {' AND c.sector_id = ' + str(sector_id) if sector_id else ''}
             WHERE {where}
             GROUP BY vgf.community_id
             ORDER BY vgf.community_avg_risk DESC, vgf.community_size DESC

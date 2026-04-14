@@ -70,5 +70,30 @@
   },
   "search": {
     "noResults": "No results for \"{{query}}\""
+  },
+  "annotationPin": {
+    "editTitle": "Edit Note",
+    "addTitle": "Add Note",
+    "editAria": "Edit annotation for {{name}}",
+    "addAria": "Add annotation for {{name}}",
+    "editHover": "Edit note",
+    "addHover": "Add note",
+    "placeholder": "Add your investigation notes here…",
+    "overLimit": "{{count}} over limit",
+    "charsLeft": "{{count}} chars left",
+    "delete": "Delete",
+    "cancel": "Cancel",
+    "save": "Save"
+  },
+  "folderSidebar": {
+    "allItems": "All items",
+    "namePlaceholder": "Folder name",
+    "create": "Create",
+    "newFolder": "New Folder"
+  },
+  "dossierCreate": {
+    "quickStart": "Quick Start",
+    "previewDefault": "New Dossier",
+    "noDescription": "No description"
   }
 }

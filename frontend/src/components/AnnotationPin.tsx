@@ -4,6 +4,7 @@
  * Route to /annotations page lists all saved notes.
  */
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import * as Dialog from '@radix-ui/react-dialog'
 import { StickyNote, X, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -56,6 +57,7 @@ interface AnnotationPinProps {
 }
 
 export function AnnotationPin({ entityType, entityId, entityName, className }: AnnotationPinProps) {
+  const { t } = useTranslation('workspace')
   const [open, setOpen] = useState(false)
   const [text, setText] = useState('')
 
@@ -89,8 +91,8 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
       <Dialog.Trigger asChild>
         <button
           className={`inline-flex items-center justify-center rounded transition-colors hover:bg-background-elevated focus:outline-none focus-visible:ring-1 focus-visible:ring-accent ${className ?? 'h-6 w-6'}`}
-          aria-label={hasAnnotation ? `Edit annotation for ${entityName ?? entityType}` : `Add annotation for ${entityName ?? entityType}`}
-          title={hasAnnotation ? 'Edit note' : 'Add note'}
+          aria-label={hasAnnotation ? t('annotationPin.editAria', { name: entityName ?? entityType }) : t('annotationPin.addAria', { name: entityName ?? entityType })}
+          title={hasAnnotation ? t('annotationPin.editHover') : t('annotationPin.addHover')}
         >
           <StickyNote
             className="h-3.5 w-3.5"
@@ -110,7 +112,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
           <div className="flex items-start justify-between mb-3">
             <div>
               <Dialog.Title className="text-sm font-semibold text-text-primary">
-                {hasAnnotation && text === existing ? 'Edit Note' : 'Add Note'}
+                {hasAnnotation && text === existing ? t('annotationPin.editTitle') : t('annotationPin.addTitle')}
               </Dialog.Title>
               {entityName && (
                 <p id="annotation-dialog-desc" className="text-xs text-text-muted mt-0.5 truncate max-w-[260px]">
@@ -132,7 +134,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder="Add your investigation notes here…"
+            placeholder={t('annotationPin.placeholder')}
             rows={4}
             className="w-full rounded-md border border-border bg-background-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-muted/50 resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label="Annotation text"
@@ -141,7 +143,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
 
           {/* Char count */}
           <p className={`text-right text-[10px] mt-1 ${overLimit ? 'text-red-400' : 'text-text-muted/50'}`}>
-            {overLimit ? `${Math.abs(charsLeft)} over limit` : `${charsLeft} chars left`}
+            {overLimit ? t('annotationPin.overLimit', { count: Math.abs(charsLeft) }) : t('annotationPin.charsLeft', { count: charsLeft })}
           </p>
 
           {/* Actions */}
@@ -155,7 +157,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
                 aria-label="Delete annotation"
               >
                 <Trash2 className="h-3.5 w-3.5" />
-                Delete
+                {t('annotationPin.delete')}
               </Button>
             ) : (
               <span />
@@ -163,16 +165,16 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
             <div className="flex items-center gap-2">
               <Dialog.Close asChild>
                 <Button variant="ghost" size="sm">
-                  Cancel
+                  {t('annotationPin.cancel')}
                 </Button>
               </Dialog.Close>
               <Button
                 size="sm"
                 onClick={handleSave}
                 disabled={overLimit || text.trim() === existing}
-                aria-label="Save annotation"
+                aria-label={t('annotationPin.save')}
               >
-                Save
+                {t('annotationPin.save')}
               </Button>
             </div>
           </div>

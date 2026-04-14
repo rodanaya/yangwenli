@@ -119,7 +119,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <Button
           variant="ghost"
           size="icon"
-          className="h-10 w-10 flex-shrink-0 md:hidden mr-1"
+          className="h-11 w-11 flex-shrink-0 md:hidden mr-1"
           onClick={onMenuClick}
           aria-label={tc('header.openMenu')}
         >
@@ -153,7 +153,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 lg:hidden"
+              className="h-9 w-9 lg:hidden"
               onClick={() => setSearchOpen(true)}
               aria-label="Open search (Ctrl+K)"
             >
@@ -176,7 +176,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7 relative"
+              className="h-9 w-9 relative"
               onClick={() => navigate('/methodology')}
               aria-label={tc('header.alertsLabel', { count: alertCount })}
             >
@@ -240,7 +240,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <Button
               variant="ghost"
               size="icon"
-              className="h-7 w-7"
+              className="h-9 w-9"
               onClick={toggleTheme}
               aria-label={theme === 'dark' ? tc('header.switchToLight') : tc('header.switchToDark')}
             >

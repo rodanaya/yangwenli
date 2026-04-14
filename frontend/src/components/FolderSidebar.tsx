@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { FolderOpen, Plus, Trash2, X } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
@@ -36,6 +37,7 @@ export function FolderSidebar({
   onDeleteFolder,
   className,
 }: FolderSidebarProps) {
+  const { t } = useTranslation('workspace')
   const [creating, setCreating] = useState(false)
   const [newName, setNewName] = useState('')
   const [newColor, setNewColor] = useState(FOLDER_COLORS[0])
@@ -62,7 +64,7 @@ export function FolderSidebar({
         )}
       >
         <FolderOpen className="h-3.5 w-3.5" />
-        <span className="flex-1 text-left">All items</span>
+        <span className="flex-1 text-left">{t('folderSidebar.allItems')}</span>
       </button>
 
       {/* Folder list */}
@@ -120,7 +122,7 @@ export function FolderSidebar({
               if (e.key === 'Enter') handleCreate()
               if (e.key === 'Escape') setCreating(false)
             }}
-            placeholder="Folder name"
+            placeholder={t('folderSidebar.namePlaceholder')}
             className="w-full rounded bg-background-elevated px-2 py-1 text-xs text-text-primary outline-none focus:ring-1 focus:ring-accent"
             autoFocus
           />
@@ -143,7 +145,7 @@ export function FolderSidebar({
               onClick={handleCreate}
               className="flex-1 rounded bg-accent px-2 py-1 text-[11px] text-white hover:bg-accent-hover"
             >
-              Create
+              {t('folderSidebar.create')}
             </button>
             <button
               onClick={() => setCreating(false)}
@@ -160,7 +162,7 @@ export function FolderSidebar({
           className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-xs text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
         >
           <Plus className="h-3.5 w-3.5" />
-          New Folder
+          {t('folderSidebar.newFolder')}
         </button>
       )}
     </div>

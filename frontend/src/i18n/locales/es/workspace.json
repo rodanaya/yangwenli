@@ -70,5 +70,30 @@
   },
   "search": {
     "noResults": "Sin resultados para \"{{query}}\""
+  },
+  "annotationPin": {
+    "editTitle": "Editar Nota",
+    "addTitle": "Agregar Nota",
+    "editAria": "Editar anotación de {{name}}",
+    "addAria": "Agregar anotación de {{name}}",
+    "editHover": "Editar nota",
+    "addHover": "Agregar nota",
+    "placeholder": "Escribe tus notas de investigación aquí…",
+    "overLimit": "{{count}} sobre el límite",
+    "charsLeft": "{{count}} caracteres restantes",
+    "delete": "Eliminar",
+    "cancel": "Cancelar",
+    "save": "Guardar"
+  },
+  "folderSidebar": {
+    "allItems": "Todos los elementos",
+    "namePlaceholder": "Nombre de carpeta",
+    "create": "Crear",
+    "newFolder": "Nueva Carpeta"
+  },
+  "dossierCreate": {
+    "quickStart": "Inicio Rápido",
+    "previewDefault": "Nuevo Dossier",
+    "noDescription": "Sin descripción"
   }
 }
