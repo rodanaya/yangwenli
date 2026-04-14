@@ -15,8 +15,8 @@
       "totalSpend": "Total Spend",
       "directAward": "Direct Award",
       "singleBid": "Single Bid",
-      "avgRisk": "Avg Risk",
-      "highRisk": "High Risk",
+      "avgRisk": "Avg Risk Score",
+      "highRisk": "High-Risk Rate",
       "vendors": "Active Vendors"
     },
     "severityLabels": {
@@ -249,7 +249,7 @@
     "expediente": "Dossier",
     "contratos": "Contracts",
     "gastoTotal": "Total Spend",
-    "altoRiesgo": "High Risk"
+    "altoRiesgo": "High-Risk Rate"
   },
   "keyRisk": "Key Risk",
   "legacy": "Legacy",

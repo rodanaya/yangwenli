@@ -253,7 +253,7 @@
   },
   "efficiencyStats": {
     "reviewed": "Reviewed",
-    "confirmationRate": "Confirmation rate",
+    "confirmationRate": "of reviewed leads corroborated",
     "confirmationRateTooltip": "Share of reviewed vendors where the risk lead was corroborated by external evidence (news, ASF audits, court records)",
     "t1Complete": "T1 complete"
   },

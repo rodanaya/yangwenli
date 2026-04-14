@@ -15,8 +15,8 @@
       "totalSpend": "Gasto Total",
       "directAward": "Adj. Directa",
       "singleBid": "Lic. Única",
-      "avgRisk": "Riesgo Prom.",
-      "highRisk": "Alto Riesgo",
+      "avgRisk": "Puntaje Riesgo",
+      "highRisk": "Tasa Alto Riesgo",
       "vendors": "Proveedores Activos"
     },
     "severityLabels": {
@@ -249,7 +249,7 @@
     "expediente": "Expediente",
     "contratos": "Contratos",
     "gastoTotal": "Gasto Total",
-    "altoRiesgo": "Alto Riesgo"
+    "altoRiesgo": "Tasa Alto Riesgo"
   },
   "keyRisk": "Riesgo Clave",
   "legacy": "Legado",

@@ -253,7 +253,7 @@
   },
   "efficiencyStats": {
     "reviewed": "Revisados",
-    "confirmationRate": "Tasa confirmación",
+    "confirmationRate": "de señales corroboradas",
     "confirmationRateTooltip": "Porcentaje de proveedores revisados donde la señal de riesgo fue corroborada con evidencia externa (noticias, auditorías ASF, registros judiciales)",
     "t1Complete": "T1 completo"
   },
