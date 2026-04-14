@@ -47,7 +47,7 @@
   "filterBySector": "Filtrar por sector",
   "filterAriaLabel": "Filtro de sector",
   "allSectors": "Todos",
-  "statsOutliers": "Total outliers",
+  "statsOutliers": "Total de anomalías",
   "statsValueAtRisk": "Valor en riesgo",
   "statsAvgZ": "Z-score prom.",
   "statsMaxZ": "Z-score máx.",
