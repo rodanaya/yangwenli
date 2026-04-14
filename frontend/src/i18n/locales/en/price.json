@@ -68,5 +68,8 @@
   "contracts": "Contracts",
   "anomalousContractsByYear": "Contracts with anomalous pricing by year (2015–2025)",
   "contractsAwardedAtAnomalousPrice": "Contracts awarded at statistically anomalous prices",
-  "anomalousContracts": "Anomalous Contracts"
+  "anomalousContracts": "Anomalous Contracts",
+  "pageKicker": "RUBLI · Price Intelligence",
+  "pageTitle": "The Shadow Market",
+  "share": "Share"
 }

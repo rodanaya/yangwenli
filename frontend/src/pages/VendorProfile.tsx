@@ -1483,10 +1483,10 @@ export function VendorProfile() {
         riskLevel={riskLevel}
         topFinding={
           (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50
-            ? `${(vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0)}% adjudicación directa`
+            ? t('lede.directAward', { pct: (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0) })
             : riskLevel === 'critical' || riskLevel === 'high'
-              ? `Riesgo ${riskLevel} detectado por modelo v0.6.5`
-              : `${vendor.total_contracts.toLocaleString()} contratos analizados`
+              ? t('lede.riskDetected', { level: riskLevel })
+              : t('lede.contractsAnalyzed', { n: vendor.total_contracts.toLocaleString() })
         }
         sector={vendor.primary_sector_name ?? ''}
         yearsActive={
@@ -2930,7 +2930,7 @@ export function VendorProfile() {
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
-                      Evolucion del Modelo
+                      {t('modelEvolution')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
@@ -2966,7 +2966,7 @@ export function VendorProfile() {
                               </div>
                               {score != null && level && (
                                 <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color }}>
-                                  {level === 'critical' ? 'CRIT' : level === 'high' ? 'ALTO' : level === 'medium' ? 'MED' : 'BAJO'}
+                                  {level === 'critical' ? t('riskBadge.critical') : level === 'high' ? t('riskBadge.high') : level === 'medium' ? t('riskBadge.medium') : t('riskBadge.low')}
                                 </span>
                               )}
                             </div>

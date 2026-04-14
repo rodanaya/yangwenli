@@ -780,13 +780,13 @@ export function Investigation() {
       {!casesLoading && topLeads.length > 0 && (
         <section className="py-6 mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            RUBLI &middot; Casos prioritarios
+            {t('topLeads.kicker')}
           </p>
           <h2
             style={{ fontFamily: 'var(--font-family-serif)' }}
             className="text-xl font-bold text-text-primary mb-4"
           >
-            Tres pistas que merecen tu atención
+            {t('topLeads.title')}
           </h2>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -802,16 +802,16 @@ export function Investigation() {
 
               // Construct "why it matters" dynamically
               const whyParts: string[] = []
-              if (lead.suspicion_score >= 0.6) whyParts.push('Riesgo critico detectado por el modelo')
-              if (lead.total_contracts > 50) whyParts.push(`${formatNumber(lead.total_contracts)} contratos en patron anomalo`)
-              if (lead.vendor_count === 1) whyParts.push('Proveedor unico — posible monopolio')
-              else if (lead.vendor_count > 1) whyParts.push(`${lead.vendor_count} proveedores vinculados`)
-              if (lead.signals_triggered.includes('high_direct_award_rate')) whyParts.push('Alta tasa de adjudicacion directa')
-              if (lead.signals_triggered.includes('multiple_price_anomalies')) whyParts.push('Anomalias de precio recurrentes')
-              if (lead.signals_triggered.includes('corporate_group_pattern')) whyParts.push('Patron de grupo corporativo')
+              if (lead.suspicion_score >= 0.6) whyParts.push(t('topLeads.criticalRisk'))
+              if (lead.total_contracts > 50) whyParts.push(t('topLeads.contractsInPattern', { n: formatNumber(lead.total_contracts) }))
+              if (lead.vendor_count === 1) whyParts.push(t('topLeads.singleVendor'))
+              else if (lead.vendor_count > 1) whyParts.push(t('topLeads.linkedVendors', { n: lead.vendor_count }))
+              if (lead.signals_triggered.includes('high_direct_award_rate')) whyParts.push(t('topLeads.highDA'))
+              if (lead.signals_triggered.includes('multiple_price_anomalies')) whyParts.push(t('topLeads.priceAnomalies'))
+              if (lead.signals_triggered.includes('corporate_group_pattern')) whyParts.push(t('topLeads.corporateGroup'))
               if (whyParts.length === 0) {
                 const scorePct = (lead.suspicion_score * 100).toFixed(0)
-                whyParts.push(`Puntuacion de riesgo ${scorePct}/100 — sector ${getSectorNameEN(lead.sector_name)}`)
+                whyParts.push(t('topLeads.riskScore', { pct: scorePct, sector: getSectorNameEN(lead.sector_name) }))
               }
 
               return (
@@ -832,7 +832,7 @@ export function Investigation() {
                         PRIORITY_BADGE[priority.level]
                       )}>
                         <span className="h-1.5 w-1.5 rounded-full bg-current animate-pulse" />
-                        {priority.level === 'critical' ? 'CRITICO' : priority.level === 'high' ? 'ALTO' : 'MEDIO'}
+                        {priority.level === 'critical' ? t('topLeads.badgeCritical') : priority.level === 'high' ? t('topLeads.badgeHigh') : t('topLeads.badgeMedium')}
                       </span>
                     </div>
 
@@ -847,7 +847,7 @@ export function Investigation() {
                     {/* Why it matters */}
                     <div className="mb-3">
                       <p className="text-[9px] font-mono font-bold uppercase tracking-widest text-text-muted/50 mb-1">
-                        Por que importa
+                        {t('topLeads.whyItMatters')}
                       </p>
                       <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
                         {whyParts.slice(0, 3).join('. ')}.

@@ -330,5 +330,21 @@
   "methodology": {
     "kicker": "How these cases are generated",
     "body": "Each case represents a cluster of statistically anomalous contracts, detected by the PyOD ensemble (IForest + COPOD) and confirmed by v6.5 risk score > 0.60. \"Corroborated\" cases have been verified against external sources (ASF, SFP, investigative journalism). \"Pending\" cases are active leads without external verification yet."
+  },
+  "topLeads": {
+    "kicker": "RUBLI · Priority Cases",
+    "title": "Three leads worth your attention",
+    "whyItMatters": "Why it matters",
+    "criticalRisk": "Critical risk detected by model",
+    "contractsInPattern": "{{n}} contracts in anomalous pattern",
+    "singleVendor": "Single vendor — possible monopoly",
+    "linkedVendors": "{{n}} linked vendors",
+    "highDA": "High direct award rate",
+    "priceAnomalies": "Recurring price anomalies",
+    "corporateGroup": "Corporate group pattern",
+    "riskScore": "Risk score {{pct}}/100 — {{sector}} sector",
+    "badgeCritical": "CRITICAL",
+    "badgeHigh": "HIGH",
+    "badgeMedium": "MEDIUM"
   }
 }

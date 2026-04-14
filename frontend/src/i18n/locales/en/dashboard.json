@@ -263,5 +263,10 @@
   "oecdWithinRange": "✓ Within OECD 2-15%",
   "oecdAboveLimit": "↑ Above OECD 15% limit",
   "oecdBelowMin": "↓ Below OECD 2% floor",
-  "oecdUpperThresholdLabel": "OECD 15% limit"
+  "oecdUpperThresholdLabel": "OECD 15% limit",
+  "storyCarouselTitle": "The Story in Data",
+  "pauseCarousel": "Pause",
+  "playCarousel": "Play",
+  "prevSlide": "Previous",
+  "nextSlide": "Next"
 }

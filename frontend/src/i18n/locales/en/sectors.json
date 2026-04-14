@@ -245,5 +245,18 @@
     "allSectors": "All Sectors",
     "trendTitle": "Sector Risk Trend",
     "noTrendData": "No trend data available for the selected sectors"
+  },
+  "finding": {
+    "kicker": "RUBLI · Key Finding",
+    "headline": "The {{sector}} sector has the highest procurement risk in Mexico",
+    "avgRiskLeader": "avg risk — top sector",
+    "totalContracted": "total contracted value",
+    "ofTwelve": "of 12",
+    "sectorsExceedOECD": "sectors exceed OECD 25% limit",
+    "competitionGapLabel": "Competition gap",
+    "directAwardVsOECD": "Direct award vs. OECD 25% limit",
+    "tooltipDirectAward": "Direct award:",
+    "tooltipAboveOECD": "{{x}}x above OECD limit",
+    "tooltipWithinOECD": "Within OECD limit"
   }
 }

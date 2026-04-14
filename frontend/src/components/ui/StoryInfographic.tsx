@@ -9,6 +9,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
+import { useTranslation } from 'react-i18next'
 
 // ---------------------------------------------------------------------------
 // Slide definitions — static data, no API needed
@@ -305,6 +306,7 @@ function StatNumber({ slide, active }: { slide: Slide; active: boolean }) {
 // ---------------------------------------------------------------------------
 
 export default function StoryInfographic() {
+  const { t } = useTranslation('dashboard')
   const [idx, setIdx] = useState(0)
   const [playing, setPlaying] = useState(true)
   const [direction, setDirection] = useState(1)
@@ -352,20 +354,20 @@ export default function StoryInfographic() {
         {/* Header row */}
         <div className="flex items-center justify-between mb-4">
           <span className="text-[10px] font-bold tracking-[0.15em] text-zinc-500 uppercase font-mono">
-            La Historia en Datos
+            {t('storyCarouselTitle')}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPlaying(p => !p)}
               className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
-              aria-label={playing ? 'Pausar' : 'Reproducir'}
+              aria-label={playing ? t('pauseCarousel') : t('playCarousel')}
             >
               {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
             </button>
-            <button onClick={prev} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label="Anterior">
+            <button onClick={prev} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label={t('prevSlide')}>
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button onClick={goNext} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label="Siguiente">
+            <button onClick={goNext} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label={t('nextSlide')}>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>

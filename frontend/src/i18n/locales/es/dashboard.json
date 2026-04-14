@@ -263,5 +263,10 @@
   "oecdWithinRange": "✓ Dentro del rango OCDE 2-15%",
   "oecdAboveLimit": "↑ Por encima del límite OCDE 15%",
   "oecdBelowMin": "↓ Por debajo del mínimo OCDE 2%",
-  "oecdUpperThresholdLabel": "Límite OCDE 15%"
+  "oecdUpperThresholdLabel": "Límite OCDE 15%",
+  "storyCarouselTitle": "La Historia en Datos",
+  "pauseCarousel": "Pausar",
+  "playCarousel": "Reproducir",
+  "prevSlide": "Anterior",
+  "nextSlide": "Siguiente"
 }

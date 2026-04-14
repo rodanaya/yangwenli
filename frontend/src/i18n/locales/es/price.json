@@ -68,5 +68,8 @@
   "contracts": "Contratos",
   "anomalousContractsByYear": "Contratos con precio anómalo por año (2015-2025)",
   "contractsAwardedAtAnomalousPrice": "Contratos adjudicados a precios estadísticamente anómalos",
-  "anomalousContracts": "Contratos anómalos"
+  "anomalousContracts": "Contratos anómalos",
+  "pageKicker": "RUBLI · Inteligencia de Precios",
+  "pageTitle": "Mercado en la Sombra",
+  "share": "Compartir"
 }

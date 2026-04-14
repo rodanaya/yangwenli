@@ -425,6 +425,15 @@
     "noData": "No data available.",
     "noResults": "No results match the current filters."
   },
+  "impacto": {
+    "label": "This amount is equivalent to:",
+    "imssAnnualSalaries": "IMSS annual salaries",
+    "ruralSchools": "rural schools",
+    "ruralHospitals": "rural hospitals",
+    "equippedAmbulances": "equipped ambulances",
+    "classroomsBuilt": "classrooms built",
+    "basicEducationYears": "years of basic education"
+  },
   "reportIssue": {
     "title": "Report an issue",
     "categoryLabel": "Category",

@@ -289,5 +289,17 @@
   "nameVariantsMore": "+{{count}} más",
   "rfcCopied": "RFC copiado",
   "copyRfc": "Copiar RFC",
-  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado"
+  "vendorGroupTooltip": "Este proveedor pertenece a un grupo de red relacionado",
+  "riskBadge": {
+    "critical": "CRIT",
+    "high": "ALTO",
+    "medium": "MED",
+    "low": "BAJO"
+  },
+  "modelEvolution": "Evolución del Modelo",
+  "lede": {
+    "directAward": "{{pct}}% adjudicación directa",
+    "riskDetected": "Riesgo {{level}} detectado por modelo v0.6.5",
+    "contractsAnalyzed": "{{n}} contratos analizados"
+  }
 }

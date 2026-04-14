@@ -330,5 +330,21 @@
   "methodology": {
     "kicker": "Cómo se generan estos casos",
     "body": "Cada caso representa un clúster de contratos estadísticamente anómalos, detectados por el ensemble PyOD (IForest + COPOD) y confirmados por puntuación de riesgo v6.5 > 0.60. Los casos \"corroborados\" han sido verificados contra fuentes externas (ASF, SFP, periodismo de investigación). Los casos \"pendientes\" son leads activos sin verificación externa aún."
+  },
+  "topLeads": {
+    "kicker": "RUBLI · Casos Prioritarios",
+    "title": "Tres pistas que merecen tu atención",
+    "whyItMatters": "Por qué importa",
+    "criticalRisk": "Riesgo crítico detectado por el modelo",
+    "contractsInPattern": "{{n}} contratos en patrón anómalo",
+    "singleVendor": "Proveedor único — posible monopolio",
+    "linkedVendors": "{{n}} proveedores vinculados",
+    "highDA": "Alta tasa de adjudicación directa",
+    "priceAnomalies": "Anomalías de precio recurrentes",
+    "corporateGroup": "Patrón de grupo corporativo",
+    "riskScore": "Puntuación de riesgo {{pct}}/100 — sector {{sector}}",
+    "badgeCritical": "CRÍTICO",
+    "badgeHigh": "ALTO",
+    "badgeMedium": "MEDIO"
   }
 }

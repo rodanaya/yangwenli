@@ -28,6 +28,15 @@
   "totalValue": "Valor total",
   "totalContracts": "Total de contratos",
   "avgRisk": "Riesgo promedio",
+  "impacto": {
+    "label": "Este monto equivale a:",
+    "imssAnnualSalaries": "salarios anuales IMSS",
+    "ruralSchools": "escuelas rurales",
+    "ruralHospitals": "hospitales rurales",
+    "equippedAmbulances": "ambulancias equipadas",
+    "classroomsBuilt": "aulas construidas",
+    "basicEducationYears": "años de educación básica"
+  },
   "viewDetails": "Ver detalles",
   "exportCSV": "Exportar CSV",
   "exportExcel": "Exportar Excel",

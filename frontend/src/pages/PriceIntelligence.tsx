@@ -664,7 +664,7 @@ export default function PriceIntelligence() {
       <header>
         {/* Overline */}
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
-          RUBLI &middot; Inteligencia de precios
+          {t('pageKicker')}
         </p>
 
         {/* Page title + share */}
@@ -673,9 +673,9 @@ export default function PriceIntelligence() {
             className="text-2xl md:text-3xl font-bold text-zinc-100 leading-tight mb-1"
             style={{ fontFamily: 'var(--font-family-serif)' }}
           >
-            Mercado en la Sombra
+            {t('pageTitle')}
           </h1>
-          <ShareButton label="Compartir" className="mt-1 flex-shrink-0" />
+          <ShareButton label={t('share')} className="mt-1 flex-shrink-0" />
         </div>
         <p className="text-sm text-zinc-500 mb-4">
           {t('contractsAwardedAtAnomalousPrice')}

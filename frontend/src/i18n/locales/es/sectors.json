@@ -245,5 +245,18 @@
     "allSectors": "Todos los Sectores",
     "trendTitle": "Tendencia de Riesgo por Sector",
     "noTrendData": "No hay datos de tendencia disponibles para los sectores seleccionados"
+  },
+  "finding": {
+    "kicker": "RUBLI · Hallazgo Principal",
+    "headline": "El sector {{sector}} concentra el mayor riesgo de contratación pública en México",
+    "avgRiskLeader": "riesgo promedio — sector líder",
+    "totalContracted": "valor total contratado",
+    "ofTwelve": "de 12",
+    "sectorsExceedOECD": "sectores exceden límite OCDE (25%)",
+    "competitionGapLabel": "Brecha de competencia",
+    "directAwardVsOECD": "Adj. directa vs. límite OCDE (25%)",
+    "tooltipDirectAward": "Adj. directa:",
+    "tooltipAboveOECD": "{{x}}x sobre límite OCDE",
+    "tooltipWithinOECD": "Dentro del límite OCDE"
   }
 }

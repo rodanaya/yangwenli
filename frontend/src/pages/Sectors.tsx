@@ -545,13 +545,13 @@ export function Sectors() {
           return (
             <div className="mb-8 border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-5">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
-                RUBLI &middot; Hallazgo principal
+                {t('finding.kicker')}
               </p>
               <h2
                 className="text-lg font-bold text-white leading-snug mb-4 max-w-2xl"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
-                El sector {t(topRiskSector.sector_code)} concentra el mayor riesgo de contratacion publica en Mexico
+                {t('finding.headline', { sector: t(topRiskSector.sector_code) })}
               </h2>
               <div className="flex flex-wrap gap-4">
                 <div className="border-l-2 border-red-500 pl-3 py-0.5">
@@ -559,7 +559,7 @@ export function Sectors() {
                     {(topRiskSector.avg_risk_score * 100).toFixed(1)}%
                   </div>
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    riesgo promedio sector lider
+                    {t('finding.avgRiskLeader')}
                   </div>
                 </div>
                 <div className="border-l-2 border-amber-500 pl-3 py-0.5">
@@ -567,15 +567,15 @@ export function Sectors() {
                     {formatSpend(totalValue)}
                   </div>
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    valor total contratado
+                    {t('finding.totalContracted')}
                   </div>
                 </div>
                 <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
                   <div className="text-xl font-mono font-bold text-cyan-400">
-                    {exceedingOECD} de 12
+                    {exceedingOECD} {t('finding.ofTwelve')}
                   </div>
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    sectores exceden limite OCDE (25%)
+                    {t('finding.sectorsExceedOECD')}
                   </div>
                 </div>
               </div>
@@ -589,10 +589,10 @@ export function Sectors() {
             {/* OECD Competition Gap Bar Chart */}
             <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4" role="img" aria-label="Bar chart comparing direct award rates by sector against the OECD 25% benchmark">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-                Brecha de competencia
+                {t('finding.competitionGapLabel')}
               </p>
               <h3 className="text-sm font-bold text-white mb-3">
-                Adjudicacion directa vs. limite OCDE (25%)
+                {t('finding.directAwardVsOECD')}
               </h3>
               <ResponsiveContainer width="100%" height={220}>
                 <BarChart
@@ -628,8 +628,8 @@ export function Sectors() {
                       return (
                         <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
                           <p className="text-white font-semibold">{d.name}</p>
-                          <p className="text-zinc-400">Adj. directa: <span className="text-orange-400 font-bold">{d.da_pct.toFixed(1)}%</span></p>
-                          <p className="text-zinc-500">{d.da_pct > 25 ? `${(d.da_pct / 25).toFixed(1)}x sobre limite OCDE` : 'Dentro del limite OCDE'}</p>
+                          <p className="text-zinc-400">{t('finding.tooltipDirectAward')} <span className="text-orange-400 font-bold">{d.da_pct.toFixed(1)}%</span></p>
+                          <p className="text-zinc-500">{d.da_pct > 25 ? t('finding.tooltipAboveOECD', { x: (d.da_pct / 25).toFixed(1) }) : t('finding.tooltipWithinOECD')}</p>
                         </div>
                       )
                     }}
