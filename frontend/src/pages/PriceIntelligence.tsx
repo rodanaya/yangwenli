@@ -739,16 +739,15 @@ export default function PriceIntelligence() {
                 <p
                   className="text-base md:text-lg text-zinc-200 leading-relaxed max-w-3xl"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
-                >
-                  <strong className="text-orange-400">{formatNumber(summary.total_outliers)}</strong> contratos
-                  federales, por un monto de{' '}
-                  <strong className="text-red-400">{formatCompactMXN(summary.total_value_mxn)}</strong>, fueron
-                  adjudicados a precios estadisticamente anomalos &mdash; definidos como aquellos{' '}
-                  <strong className="text-amber-400">
-                    {avgZ.toFixed(1)} desviaciones estandar
-                  </strong>{' '}
-                  por encima del precio de mercado en su sector.
-                </p>
+                  dangerouslySetInnerHTML={{
+                    __html: t('kpiLede', {
+                      count: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
+                      value: `<strong class="text-red-400">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
+                      z: `<strong class="text-amber-400">${avgZ.toFixed(1)}</strong>`,
+                      interpolation: { escapeValue: false },
+                    })
+                  }}
+                />
 
                 {/* 5-KPI strip */}
                 <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
@@ -768,7 +767,7 @@ export default function PriceIntelligence() {
                       {formatCompactMXN(summary.total_value_mxn)}
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                      Valor en riesgo
+                      {t('kpiValueAtRisk')}
                     </div>
                   </div>
 
@@ -778,7 +777,7 @@ export default function PriceIntelligence() {
                       +{avgZ.toFixed(1)}&sigma;
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                      Desviacion promedio
+                      {t('kpiAvgDeviation')}
                     </div>
                   </div>
 
@@ -788,10 +787,10 @@ export default function PriceIntelligence() {
                       {formatCompactMXN(estimatedSavings)}
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                      Sobrevaloracion est.{' '}
+                      {t('kpiOverpricingEst')}{' '}
                       <MetodologiaTooltip
-                        title="Sobrevaloracion estimada"
-                        body={`Calculo: valor_total x (1 - 1/z_promedio) = ${formatCompactMXN(summary.total_value_mxn)} x ${estimatedOverpayPct.toFixed(0)}%. Es una aproximacion estadistica, no un monto confirmado.`}
+                        title={t('overpricingTooltipTitle')}
+                        body={t('overpricingTooltipBody', { value: formatCompactMXN(summary.total_value_mxn), pct: estimatedOverpayPct.toFixed(0) })}
                         link="/methodology"
                       />
                     </div>
@@ -806,7 +805,7 @@ export default function PriceIntelligence() {
                       {topSector ? formatNumber(topSector.count) : '--'}
                     </div>
                     <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                      {topSector?.name ?? 'Sector mas afectado'}
+                      {topSector?.name ?? t('kpiTopSectorFallback')}
                     </div>
                   </div>
                 </div>
@@ -817,8 +816,7 @@ export default function PriceIntelligence() {
           <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/40 p-6 text-center">
             <AlertTriangle className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
             <p className="text-sm text-zinc-500">
-              No se encontraron anomalias de precio con el umbral actual.
-              Intente reducir el Z-score minimo.
+              {t('noAnomaliesAtThreshold')}
             </p>
           </div>
         )}

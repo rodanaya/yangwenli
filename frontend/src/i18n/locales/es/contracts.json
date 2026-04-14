@@ -146,5 +146,12 @@
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo"
+  },
+  "statsBar": {
+    "contracts": "contratos",
+    "audited": "MXN auditados",
+    "atCriticalRisk": "en riesgo crítico",
+    "directAwardRate": "adjudicación directa",
+    "pageKicker": "Registro Nacional de Contratos Federales · 2001–2025"
   }
 }

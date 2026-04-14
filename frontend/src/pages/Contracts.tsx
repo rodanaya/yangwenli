@@ -558,17 +558,17 @@ export function Contracts() {
       {/* ── EL REGISTRO NEGRO HEADER ── */}
       <motion.div className="border-b border-border pb-6 mb-3" variants={fadeIn} initial="initial" animate="animate">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Registro Nacional de Contratos Federales &middot; 2001–2025
+          {t('statsBar.pageKicker')}
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
           {t('editorialTitle')}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
-          <span><strong className="text-text-primary font-mono">3,049,988</strong> contratos</span>
-          <span><strong className="text-text-primary font-mono">$9.87T</strong> MXN auditados</span>
-          <span><strong className="text-risk-critical font-mono">133,522</strong> en riesgo cr&iacute;tico</span>
-          <span><strong className="text-risk-high font-mono">65.3%</strong> adjudicaci&oacute;n directa</span>
-          <FuentePill source="COMPRANET" count={3049988} countLabel="contratos" verified={true} />
+          <span><strong className="text-text-primary font-mono">3,049,988</strong> {t('statsBar.contracts')}</span>
+          <span><strong className="text-text-primary font-mono">$9.87T</strong> {t('statsBar.audited')}</span>
+          <span><strong className="text-risk-critical font-mono">133,522</strong> {t('statsBar.atCriticalRisk')}</span>
+          <span><strong className="text-risk-high font-mono">65.3%</strong> {t('statsBar.directAwardRate')}</span>
+          <FuentePill source="COMPRANET" count={3049988} countLabel={t('statsBar.contracts')} verified={true} />
         </div>
       </motion.div>
 

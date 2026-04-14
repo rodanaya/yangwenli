@@ -331,6 +331,12 @@
     "kicker": "How these cases are generated",
     "body": "Each case represents a cluster of statistically anomalous contracts, detected by the PyOD ensemble (IForest + COPOD) and confirmed by v6.5 risk score > 0.60. \"Corroborated\" cases have been verified against external sources (ASF, SFP, investigative journalism). \"Pending\" cases are active leads without external verification yet."
   },
+  "pipeline": {
+    "detected": "DETECTED",
+    "investigating": "INVESTIGATING",
+    "corroborated": "CORROBORATED",
+    "archived": "ARCHIVED"
+  },
   "topLeads": {
     "kicker": "RUBLI · Priority Cases",
     "title": "Three leads worth your attention",

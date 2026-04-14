@@ -146,5 +146,12 @@
     "high": "High",
     "medium": "Medium",
     "low": "Low"
+  },
+  "statsBar": {
+    "contracts": "contracts",
+    "audited": "MXN audited",
+    "atCriticalRisk": "at critical risk",
+    "directAwardRate": "direct award",
+    "pageKicker": "Federal Contracts Registry · 2001–2025"
   }
 }

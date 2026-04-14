@@ -71,5 +71,13 @@
   "anomalousContracts": "Contratos anómalos",
   "pageKicker": "RUBLI · Inteligencia de Precios",
   "pageTitle": "Mercado en la Sombra",
-  "share": "Compartir"
+  "share": "Compartir",
+  "kpiLede": "{{count}} contratos federales, por un monto de {{value}}, fueron adjudicados a precios estadísticamente anómalos — definidos como aquellos {{z}} desviaciones estándar por encima del precio de mercado en su sector.",
+  "kpiValueAtRisk": "Valor en riesgo",
+  "kpiAvgDeviation": "Desviación promedio",
+  "kpiOverpricingEst": "Sobrevalorización est.",
+  "kpiTopSectorFallback": "Sector más afectado",
+  "overpricingTooltipTitle": "Sobrevalorización estimada",
+  "overpricingTooltipBody": "Cálculo: valor_total × (1 − 1/z_promedio) = {{value}} × {{pct}}%. Es una aproximación estadística, no un monto confirmado.",
+  "noAnomaliesAtThreshold": "No se encontraron anomalías de precio con el umbral actual. Intente reducir el Z-score mínimo."
 }

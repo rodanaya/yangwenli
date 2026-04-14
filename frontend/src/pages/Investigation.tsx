@@ -752,10 +752,10 @@ export function Investigation() {
       {!casesLoading && allCases.length > 0 && (
         <div className="flex items-center gap-0 py-4 border-b border-border mb-0 overflow-x-auto">
           {[
-            { label: 'DETECTADOS', count: pipelineCounts.detected, color: 'text-amber-400' },
-            { label: 'INVESTIGANDO', count: pipelineCounts.investigating, color: 'text-blue-400' },
-            { label: 'CORROBORADOS', count: pipelineCounts.corroborated, color: 'text-emerald-400' },
-            { label: 'ARCHIVADOS', count: pipelineCounts.archived, color: 'text-zinc-500' },
+            { label: t('pipeline.detected'), count: pipelineCounts.detected, color: 'text-amber-400' },
+            { label: t('pipeline.investigating'), count: pipelineCounts.investigating, color: 'text-blue-400' },
+            { label: t('pipeline.corroborated'), count: pipelineCounts.corroborated, color: 'text-emerald-400' },
+            { label: t('pipeline.archived'), count: pipelineCounts.archived, color: 'text-zinc-500' },
           ].map((stage, i) => (
             <div key={stage.label} className="flex items-center flex-shrink-0">
               {i > 0 && (
