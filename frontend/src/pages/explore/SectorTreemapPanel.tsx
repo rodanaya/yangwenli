@@ -43,23 +43,28 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
           riskRate,
         }
       })
-      .sort((a, b) => b.value - a.value)
-  }, [data, ts])
+      .sort((a, b) => viewMode === 'value' ? b.value - a.value : b.riskRate - a.riskRate)
+  }, [data, ts, viewMode])
 
-  const totalValue = useMemo(() => cells.reduce((s, c) => s + c.value, 0), [cells])
+  const maxValue = useMemo(() => Math.max(...cells.map(c => c.value), 1), [cells])
   const maxRiskRate = useMemo(() => Math.max(...cells.map(c => c.riskRate), 0.001), [cells])
 
   if (isLoading) {
     return (
       <div>
-        <div className="flex items-center justify-between mb-2">
-          <div className="text-xs font-medium text-text-muted uppercase tracking-wider">
-            {t('treemap.sectorsByValue')}
-          </div>
+        <div className="flex items-center justify-between mb-3">
+          <Skeleton className="h-3 w-32" />
           <Skeleton className="h-5 w-28" />
         </div>
-        <div className="grid grid-cols-4 gap-1 h-28">
-          {[...Array(12)].map((_, i) => <Skeleton key={i} className="h-full rounded" />)}
+        <div className="space-y-2">
+          {[...Array(8)].map((_, i) => (
+            <div key={i} className="flex items-center gap-2">
+              <Skeleton className="h-2.5 w-2.5 rounded-full flex-shrink-0" />
+              <Skeleton className="h-3 w-20 flex-shrink-0" />
+              <Skeleton className="h-4 rounded flex-1" style={{ width: `${70 - i * 6}%` }} />
+              <Skeleton className="h-3 w-12 flex-shrink-0" />
+            </div>
+          ))}
         </div>
       </div>
     )
@@ -67,7 +72,7 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
 
   return (
     <div>
-      <div className="flex items-center justify-between mb-2">
+      <div className="flex items-center justify-between mb-3">
         <span className="text-xs font-medium text-text-muted uppercase tracking-wider">
           {t('treemap.sectorsByValue')}
         </span>
@@ -107,77 +112,82 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
         </div>
       </div>
 
-      <div className="flex flex-wrap gap-1" style={{ minHeight: '6rem' }}>
-        {cells.map(cell => {
-          const pct = totalValue > 0 ? cell.value / totalValue : 0
+      {/* Ranked horizontal bar chart */}
+      <div className="space-y-[3px]">
+        {cells.map((cell, idx) => {
           const isSelected = selectedSectorId === cell.id
           const isDimmed = selectedSectorId != null && !isSelected
-          const minW = Math.max(pct * 100, 7)
-          const riskBarWidth = maxRiskRate > 0 ? (cell.riskRate / maxRiskRate) * 100 : 0
-          const riskOverlayOpacity = viewMode === 'risk' ? Math.min(cell.riskRate * 7, 0.70) : 0
+          const barPct = viewMode === 'value'
+            ? (cell.value / maxValue) * 100
+            : (cell.riskRate / maxRiskRate) * 100
+          const metricLabel = viewMode === 'value'
+            ? formatCompactMXN(cell.value)
+            : `${(cell.riskRate * 100).toFixed(1)}%`
+          const isRiskMode = viewMode === 'risk'
+          // Risk color gradient: low rates stay accent, high rates shift toward red-orange
+          const barColor = isRiskMode
+            ? cell.riskRate > 0.18 ? '#f87171'
+              : cell.riskRate > 0.12 ? '#fb923c'
+              : cell.riskRate > 0.08 ? '#fbbf24'
+              : 'var(--color-accent, #6366f1)'
+            : cell.color
 
           return (
             <button
               key={cell.id}
               onClick={() => onSectorClick(isSelected ? undefined : cell.id)}
-              title={`${cell.name}: ${formatCompactMXN(cell.value)} · ${(cell.riskRate * 100).toFixed(1)}% high-risk rate`}
               className={cn(
-                'relative flex flex-col justify-between p-2 rounded text-left transition-all cursor-pointer overflow-hidden',
+                'w-full flex items-center gap-2 px-1.5 py-1 rounded transition-all text-left group',
                 isSelected
-                  ? 'ring-2 ring-white/70 scale-[1.03] shadow-lg z-10'
-                  : 'hover:scale-[1.015] hover:shadow-md',
-                isDimmed ? 'opacity-20' : 'opacity-90 hover:opacity-100'
+                  ? 'bg-background-elevated ring-1 ring-border/60'
+                  : 'hover:bg-background-elevated/50',
+                isDimmed ? 'opacity-30' : 'opacity-100'
               )}
-              style={{
-                backgroundColor: cell.color,
-                flexBasis: `${minW}%`,
-                flexGrow: pct * 100,
-                minHeight: '6rem',
-                maxHeight: '7.5rem',
-              }}
               aria-pressed={isSelected}
-              aria-label={`${cell.name} sector, ${formatCompactMXN(cell.value)}, ${(cell.riskRate * 100).toFixed(1)}% high-risk`}
+              aria-label={`${cell.name} sector, ${metricLabel}`}
             >
-              {/* Risk heat overlay for risk mode */}
-              <div
-                className="absolute inset-0 rounded pointer-events-none transition-opacity duration-300"
-                style={{ backgroundColor: `rgba(248,113,113,${riskOverlayOpacity})` }}
+              {/* Rank */}
+              <span className="text-[9px] font-mono text-text-muted/50 w-3 flex-shrink-0 text-right">
+                {idx + 1}
+              </span>
+
+              {/* Sector color dot */}
+              <span
+                className="h-2 w-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: cell.color }}
               />
 
-              {/* Top: name + count */}
-              <div className="relative z-10">
-                <span className="text-[10px] font-bold text-white/95 leading-tight truncate block">
-                  {cell.name}
-                </span>
-                <span className="text-[9px] text-white/60 leading-tight block mt-0.5">
-                  {formatNumber(cell.contracts)}
-                </span>
+              {/* Sector name */}
+              <span className={cn(
+                'text-[11px] font-medium truncate flex-shrink-0 w-24',
+                isSelected ? 'text-text-primary' : 'text-text-secondary group-hover:text-text-primary'
+              )}>
+                {cell.name}
+              </span>
+
+              {/* Bar track */}
+              <div className="flex-1 h-[6px] rounded-full bg-border/20 overflow-hidden min-w-0">
+                <div
+                  className="h-full rounded-full transition-all duration-300"
+                  style={{
+                    width: `${barPct}%`,
+                    backgroundColor: barColor,
+                    opacity: 0.85,
+                  }}
+                />
               </div>
 
-              {/* Bottom: primary metric + risk bar */}
-              <div className="relative z-10 mt-1">
-                <div className="flex items-end justify-between mb-1">
-                  {viewMode === 'value' ? (
-                    <span className="text-[9px] font-semibold text-white/80 truncate">
-                      {formatCompactMXN(cell.value)}
-                    </span>
-                  ) : (
-                    <span className="text-[9px] font-bold text-white/95">
-                      {(cell.riskRate * 100).toFixed(1)}% HR
-                    </span>
-                  )}
-                </div>
-                {/* Normalized risk bar */}
-                <div className="h-[3px] rounded-full bg-black/25 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-300"
-                    style={{
-                      width: `${riskBarWidth}%`,
-                      backgroundColor: viewMode === 'risk' ? '#fca5a5' : 'rgba(255,255,255,0.60)',
-                    }}
-                  />
-                </div>
-              </div>
+              {/* Metric label */}
+              <span className="text-[10px] font-mono text-text-muted flex-shrink-0 w-16 text-right">
+                {metricLabel}
+              </span>
+
+              {/* Contract count (secondary, only in value mode) */}
+              {viewMode === 'value' && (
+                <span className="text-[9px] text-text-muted/50 flex-shrink-0 w-14 text-right hidden lg:block">
+                  {formatNumber(cell.contracts)}
+                </span>
+              )}
             </button>
           )
         })}
