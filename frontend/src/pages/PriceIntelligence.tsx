@@ -254,7 +254,7 @@ function ExtremeCaseCard({
       <div className="flex items-center justify-between pt-2 border-t border-zinc-700/40">
         <Link
           to={`/contracts/${contract.contract_id}`}
-          className="inline-flex items-center gap-1 text-xs text-blue-400 hover:underline"
+          className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors"
           aria-label={`Ver detalle del contrato ${contract.contract_id}`}
         >
           {t('viewContract')}
@@ -263,7 +263,7 @@ function ExtremeCaseCard({
         {contract.vendor_id && (
           <Link
             to={`/vendors/${contract.vendor_id}`}
-            className="inline-flex items-center gap-1 text-xs text-zinc-500 hover:text-blue-400 hover:underline"
+            className="inline-flex items-center gap-1 text-xs text-zinc-600 hover:text-zinc-400 transition-colors"
           >
             {t('vendorProfile')}
           </Link>

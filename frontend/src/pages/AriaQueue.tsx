@@ -717,7 +717,7 @@ function SpotlightCard({ item, index, t }: { item: AriaQueueItem; index: number;
             </div>
             <div className="shrink-0 text-right">
               <div className={cn('text-2xl font-bold font-mono', IPS_TEXT_COLOR(ips))}>
-                {Math.round(ips * 100)}
+                {(ips * 100).toFixed(1)}
               </div>
               <div className="text-[10px] text-text-muted uppercase tracking-wider">IPS</div>
             </div>
@@ -872,8 +872,8 @@ function LeadRow({
         <td className="px-4 py-3 hidden lg:table-cell">
           <div className="flex items-center gap-2">
             <IpsBar score={ips} />
-            <span className={cn('text-sm font-bold font-mono w-8', IPS_TEXT_COLOR(ips))}>
-              {Math.round(ips * 100)}
+            <span className={cn('text-sm font-bold font-mono w-10', IPS_TEXT_COLOR(ips))}>
+              {(ips * 100).toFixed(1)}
             </span>
           </div>
         </td>
