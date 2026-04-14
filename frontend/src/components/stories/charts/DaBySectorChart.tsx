@@ -96,7 +96,7 @@ export function DaBySectorChart() {
             type="number"
             domain={[0, 100]}
             ticks={[0, 25, 50, 75, 100]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v}%`}
@@ -105,7 +105,7 @@ export function DaBySectorChart() {
             type="category"
             dataKey="sector"
             width={95}
-            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
           />
@@ -119,7 +119,7 @@ export function DaBySectorChart() {
               value: 'OCDE 25%',
               fill: OECD_COLOR,
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideTopRight',
             }}
           />

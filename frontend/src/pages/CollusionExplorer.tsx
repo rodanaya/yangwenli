@@ -16,7 +16,6 @@ import {
   Users,
   GitMerge,
   ArrowUpDown,
-  ExternalLink,
   ChevronLeft,
   ChevronRight,
   Repeat,
@@ -530,139 +529,90 @@ function PairCard({ pair, onViewContracts }: PairCardProps) {
   const navigate = useNavigate()
   const { t } = useTranslation('collusion')
 
-  // Accent colors based on rate severity
   const rate = pair.co_bid_rate
-  const accentBar =
-    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
-  const accentText =
-    rate >= 80 ? 'text-red-400' : rate >= 50 ? 'text-orange-400' : 'text-amber-400'
-  const accentBorder =
-    rate >= 80
-      ? 'border-red-500/20'
-      : rate >= 50
-        ? 'border-orange-500/20'
-        : 'border-amber-500/20'
-  const accentBg =
-    rate >= 80
-      ? 'bg-red-500/5'
-      : rate >= 50
-        ? 'bg-orange-500/5'
-        : 'bg-amber-500/5'
-  const rateBarFill =
-    rate >= 80 ? 'bg-red-500' : rate >= 50 ? 'bg-orange-500' : 'bg-amber-500'
+  const isHigh = rate >= 80
+  const isMid = rate >= 50
+  const accentBar = isHigh ? 'bg-red-500' : isMid ? 'bg-orange-500' : 'bg-amber-500'
+  const accentText = isHigh ? 'text-red-400' : isMid ? 'text-orange-400' : 'text-amber-400'
+  const accentBorder = isHigh ? 'border-red-500/15' : isMid ? 'border-orange-500/15' : 'border-amber-500/15'
 
   return (
-    <div className="relative rounded-xl border border-zinc-800 bg-zinc-900/60 hover:bg-zinc-900/80 transition-colors overflow-hidden flex flex-col">
+    <div className={`relative flex items-center gap-0 rounded-lg border ${accentBorder} bg-zinc-900/50 hover:bg-zinc-900/80 transition-colors overflow-hidden`}>
       {/* Left accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-[3px] ${accentBar}`} aria-hidden="true" />
+      <div className={`absolute left-0 top-0 bottom-0 w-[2px] ${accentBar}`} aria-hidden="true" />
 
-      {/* Top banner: flagged status */}
-      {pair.is_potential_collusion && (
-        <div className="flex items-center justify-between gap-2 px-4 py-2 bg-red-500/5 border-b border-red-500/10">
-          <span className="inline-flex items-center gap-1.5 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-red-400">
-            <AlertTriangle className="h-3 w-3" aria-hidden="true" />
-            {t('pairCard.suspectedBidRigging')}
-          </span>
-          <span className="text-[10px] font-mono text-zinc-500">
-            <span className="font-bold text-zinc-300">{formatNumber(pair.shared_procedures)}</span>
-            {' '}
-            {t('pairCard.sharedProc')}
-          </span>
-        </div>
-      )}
+      {/* Vendors + rate */}
+      <div className="flex items-center gap-3 pl-4 pr-2 py-2.5 flex-1 min-w-0">
+        {pair.is_potential_collusion && (
+          <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0" aria-hidden="true" />
+        )}
 
-      {/* Vendor A block */}
-      <div className="relative px-4 pt-4 pb-3">
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-            {t('pairCard.vendorA')}
-          </span>
-          <button
-            type="button"
-            onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
-            aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_a}`}
-          >
-            {t('pairCard.viewProfile')}
-            <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
-          </button>
-        </div>
+        {/* Vendor A */}
         <button
           type="button"
           onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-          className="block text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors text-left leading-snug"
+          className="min-w-0 text-left group flex-1"
+          aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_a}`}
         >
-          {pair.vendor_name_a}
+          <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-none mb-0.5">A</div>
+          <div className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors truncate leading-snug">
+            {pair.vendor_name_a}
+          </div>
+          <div className="text-[9px] font-mono text-zinc-600 leading-none mt-0.5">
+            {formatNumber(pair.vendor_a_procedures)}
+          </div>
         </button>
-        <div className="text-[10px] font-mono text-zinc-600 mt-1">
-          {formatNumber(pair.vendor_a_procedures)} {t('pairCard.totalProcedures')}
-        </div>
-      </div>
 
-      {/* Rate bridge */}
-      <div className={`mx-4 my-2 rounded-lg border ${accentBorder} ${accentBg} px-4 py-3`}>
-        <div className="flex items-baseline justify-between gap-2">
-          <span className={`text-2xl font-mono font-bold ${accentText}`}>
-            {rate.toFixed(1)}%
+        {/* Rate column */}
+        <div className="flex flex-col items-center shrink-0 gap-0.5 px-1">
+          <span className={`text-sm font-mono font-bold ${accentText} leading-none`}>
+            {rate.toFixed(0)}%
           </span>
-          <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-zinc-500">
-            {t('pairCard.coBidRate')}
+          <div className="w-10 h-1 bg-zinc-800 rounded-full overflow-hidden mt-0.5">
+            <div className={`h-full ${accentBar} rounded-full`} style={{ width: `${Math.min(rate, 100)}%` }} />
+          </div>
+          <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-wide mt-0.5">
+            {formatNumber(pair.shared_procedures)}
           </span>
         </div>
-        <div className="mt-2 w-full bg-zinc-800 h-2 rounded-full overflow-hidden" aria-hidden="true">
-          <div
-            className={`h-2 ${rateBarFill} rounded-full`}
-            style={{ width: `${Math.min(rate, 100)}%` }}
-          />
-        </div>
-      </div>
 
-      {/* Vendor B block */}
-      <div className="relative px-4 pt-3 pb-3">
-        <div className="flex items-start justify-between gap-3 mb-1">
-          <span className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-            {t('pairCard.vendorB')}
-          </span>
-          <button
-            type="button"
-            onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-            className="flex items-center gap-1 text-[10px] font-mono uppercase tracking-wide text-zinc-500 hover:text-amber-400 transition-colors shrink-0"
-            aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_b}`}
-          >
-            {t('pairCard.viewProfile')}
-            <ExternalLink className="h-2.5 w-2.5" aria-hidden="true" />
-          </button>
-        </div>
+        {/* Vendor B */}
         <button
           type="button"
           onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-          className="block text-sm font-semibold text-zinc-100 hover:text-blue-400 transition-colors text-left leading-snug"
+          className="min-w-0 text-left group flex-1"
+          aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_b}`}
         >
-          {pair.vendor_name_b}
+          <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-none mb-0.5">B</div>
+          <div className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors truncate leading-snug">
+            {pair.vendor_name_b}
+          </div>
+          <div className="text-[9px] font-mono text-zinc-600 leading-none mt-0.5">
+            {formatNumber(pair.vendor_b_procedures)}
+          </div>
         </button>
-        <div className="text-[10px] font-mono text-zinc-600 mt-1">
-          {formatNumber(pair.vendor_b_procedures)} {t('pairCard.totalProcedures')}
-        </div>
       </div>
 
-      {/* Action strip */}
-      <div className="mt-auto flex items-center justify-between gap-2 border-t border-zinc-800/60 px-4 py-3">
+      {/* Action icons */}
+      <div className="flex items-center gap-0.5 pr-2 shrink-0">
         <button
           type="button"
           onClick={() => onViewContracts(pair.vendor_id_a, pair.vendor_id_b, pair.vendor_name_a, pair.vendor_name_b)}
-          className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wide bg-zinc-800 hover:bg-zinc-700 text-zinc-200 border border-zinc-700 rounded-lg transition-colors"
+          className="p-1.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
+          title={t('pairCard.sharedContracts')}
+          aria-label={t('pairCard.sharedContracts')}
         >
-          <FileText className="w-3 h-3" aria-hidden="true" />
-          {t('pairCard.sharedContracts')}
+          <FileText className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
         {pair.is_potential_collusion && (
           <button
             type="button"
             onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-[11px] font-mono uppercase tracking-wide bg-red-500/10 hover:bg-red-500/20 text-red-400 border border-red-500/20 rounded-lg transition-colors"
+            className="p-1.5 rounded text-red-400/70 hover:text-red-300 hover:bg-red-500/10 transition-colors"
+            title={t('pairCard.investigationThread')}
+            aria-label={t('pairCard.investigationThread')}
           >
-            {t('pairCard.investigationThread')}
-            <ChevronRight className="h-3 w-3" aria-hidden="true" />
+            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
           </button>
         )}
       </div>

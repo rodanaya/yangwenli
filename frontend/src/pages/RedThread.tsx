@@ -136,7 +136,7 @@ function ChapterSubject({ vendor, aria, t }: {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
         className="font-serif text-2xl md:text-3xl font-bold text-white leading-tight mb-8"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        style={{ fontFamily: 'var(--font-family-serif)' }}
       >
         {vendor.name}
       </motion.h1>
@@ -260,7 +260,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
       <ChapterLabel>{t('chapters.headings.timeline')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
         {t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
       </h2>
       <p className="text-zinc-400 mb-12 max-w-xl">
@@ -369,7 +369,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
   return (
     <section id="chapter-pattern" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.pattern')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
         {t('pattern.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -484,7 +484,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   return (
     <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.network')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
         {t('network.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -621,7 +621,7 @@ function ChapterMoney({ timeline, t }: {
   return (
     <section id="chapter-money" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.money')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
         {t('money.heading', { value: formatCompactMXN(totalValue) })}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -744,7 +744,7 @@ function ChapterVerdict({
   return (
     <section id="chapter-verdict" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.verdict')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
         {t('verdict.heading')}
       </h2>
       <p className="text-text-muted mb-10 max-w-xl">
@@ -756,7 +756,7 @@ function ChapterVerdict({
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="editorial-label text-text-muted mb-2">{t('verdict.riskIndicatorScore')}</p>
-            <p className="font-serif text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: "'Playfair Display', Georgia, serif" }}>
+            <p className="font-serif text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: 'var(--font-family-serif)' }}>
               {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
             </p>
             <p className="text-text-muted text-sm mt-1">{t('verdict.outOf100')}</p>

@@ -148,7 +148,7 @@ function PetalLabel({
       textAnchor={textAnchor}
       fill={color}
       fontSize="9"
-      fontFamily="ui-monospace, SFMono-Regular, 'Cascadia Code', monospace"
+      fontFamily="'JetBrains Mono', ui-monospace, monospace"
       opacity={0.85}
     >
       {lines.map((line, i) => (
@@ -411,7 +411,7 @@ export default function VendorFingerprintChart({
             fill="white"
             fontSize="11"
             fontWeight="700"
-            fontFamily="ui-monospace, SFMono-Regular, 'Cascadia Code', monospace"
+            fontFamily="'JetBrains Mono', ui-monospace, monospace"
           >
             {(riskScore * 100).toFixed(0)}
           </text>

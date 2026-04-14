@@ -91,14 +91,14 @@ export function MonthlySpendingChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
           <XAxis
             dataKey="mes"
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: GRID_COLOR }}
           />
           <YAxis
             domain={[0, 80]}
             ticks={[0, 20, 40, 60, 80]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={28}
@@ -113,7 +113,7 @@ export function MonthlySpendingChart() {
               value: `Prom. $${AVG}B`,
               fill: '#a1a1aa',
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideTopRight',
             }}
           />

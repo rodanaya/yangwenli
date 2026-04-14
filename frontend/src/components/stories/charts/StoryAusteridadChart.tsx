@@ -107,7 +107,7 @@ export function StoryAusteridadChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="era"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
           />
@@ -116,7 +116,7 @@ export function StoryAusteridadChart() {
             yAxisId="spend"
             orientation="left"
             domain={[0, 4]}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v.toFixed(1)}T`}
@@ -126,7 +126,7 @@ export function StoryAusteridadChart() {
             yAxisId="da"
             orientation="right"
             domain={[0, 100]}
-            tick={{ fill: '#dc2626', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#dc2626', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v}%`}
@@ -148,7 +148,7 @@ export function StoryAusteridadChart() {
               fill: '#a1a1aa',
               fontSize: 10,
               fontWeight: 500,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
             }}
           >
             {data.map((_entry, index) => (

@@ -83,7 +83,7 @@ export function VendorConcentrationChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="vendor"
-            tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
             angle={-25}
@@ -93,7 +93,7 @@ export function VendorConcentrationChart() {
           />
           <YAxis
             domain={[0, 14]}
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v}%`}
@@ -113,7 +113,7 @@ export function VendorConcentrationChart() {
               value: 'OECD: 5% concentration limit',
               fill: '#22d3ee',
               fontSize: 9,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideTopRight',
             }}
           />

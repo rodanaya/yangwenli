@@ -99,7 +99,7 @@ interface TrendYear {
 // Constants
 // ---------------------------------------------------------------------------
 
-const SERIF = "'Playfair Display', Georgia, serif"
+const SERIF = 'var(--font-family-serif)'
 
 // ---------------------------------------------------------------------------
 // Mexican traffic-light system (semaforo) -- replaces US letter grades

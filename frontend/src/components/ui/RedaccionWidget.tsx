@@ -100,7 +100,7 @@ export default function RedaccionWidget() {
               <Link
                 to={`/thread/${story.vendorId}`}
                 className="block text-sm font-bold text-white hover:text-zinc-200 transition-colors leading-snug"
-                style={{ fontFamily: 'Georgia, "Times New Roman", serif' }}
+                style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {story.vendorName.length > 60
                   ? story.vendorName.slice(0, 57) + '...'

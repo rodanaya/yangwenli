@@ -99,13 +99,13 @@ export function ThresholdSplittingChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="contrato"
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
           />
           <YAxis
             domain={[1380, 1520]}
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `$${v}M`}
@@ -125,7 +125,7 @@ export function ThresholdSplittingChart() {
               value: `Supervision threshold: $${THRESHOLD}M`,
               fill: RISK_COLORS.critical,
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideTopRight',
             }}
           />

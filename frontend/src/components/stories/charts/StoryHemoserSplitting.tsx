@@ -86,12 +86,12 @@ export function StoryHemoserSplitting() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
           />
           <YAxis
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}K`}
@@ -112,7 +112,7 @@ export function StoryHemoserSplitting() {
               formatter: (v: unknown) => `${(Number(v) / 1000).toFixed(1)}K`,
               fill: '#71717a',
               fontSize: 9,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
             }}
           >
             {data.map((entry, index) => (

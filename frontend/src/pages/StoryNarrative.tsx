@@ -84,7 +84,7 @@ const TYPE_TO_CHART_ID: Record<string, string> = {
 
 const OUTLET_ACCENT: Record<string, string> = {
   longform: '#1a1714',
-  investigative: '#c41e3a',
+  investigative: '#d4922a',
   data_analysis: '#2563eb',
   rubli: '#dc2626',
 }
@@ -246,7 +246,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           initial="initial"
           animate="animate"
           className="text-2xl sm:text-3xl font-bold text-white leading-[1.08] mb-5"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {story.headline}
         </motion.h1>
@@ -377,7 +377,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
 
         <h3
           className="text-xl font-bold text-zinc-200 mb-4"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.methodology')}
         </h3>
@@ -452,7 +452,7 @@ function RelatedSection({ story }: { story: StoryDef }) {
       >
         <h3
           className="text-xl font-bold text-zinc-200 mb-6"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.investigateMore')}
         </h3>
@@ -509,7 +509,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
       <section className="max-w-prose mx-auto px-4 sm:px-0 my-12">
         <h3
           className="text-lg font-bold text-zinc-300 mb-4"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.viewOnPlatform')}
         </h3>

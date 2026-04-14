@@ -133,7 +133,7 @@ export function DataInfographics() {
           <div>
             <h2
               className="text-xl font-bold text-white"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('infographics.sectionTitle')}
             </h2>

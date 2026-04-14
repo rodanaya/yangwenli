@@ -100,7 +100,7 @@ export function StoryGraneroVacio() {
           <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
           <XAxis
             type="number"
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
             tickFormatter={(v: number) => `${v.toFixed(1)}B`}
@@ -109,7 +109,7 @@ export function StoryGraneroVacio() {
           <YAxis
             type="category"
             dataKey="shortName"
-            tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={105}
@@ -132,7 +132,7 @@ export function StoryGraneroVacio() {
               },
               fill: '#71717a',
               fontSize: 9,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
             }}
           >
             {sortedData.map((entry, index) => (

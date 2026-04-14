@@ -77,7 +77,7 @@ export function GradeBadge10({
     <span
       title={GRADE_LABELS[grade] ?? grade}
       className={`inline-flex items-center justify-center rounded-lg font-bold flex-shrink-0 ${sizeClasses}`}
-      style={{ fontFamily: '"Georgia", serif', backgroundColor: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+      style={{ fontFamily: 'var(--font-family-serif)', backgroundColor: c.bg, color: c.text, border: `1px solid ${c.border}` }}
     >
       {grade}
     </span>

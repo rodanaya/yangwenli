@@ -4665,7 +4665,7 @@ function PeriodistaPanel({
     <div className="space-y-8">
       {/* 1. Narrativa del proveedor */}
       <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
           Narrativa
         </h3>
 
@@ -4751,7 +4751,7 @@ function PeriodistaPanel({
 
       {/* 2. Casos similares */}
       <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
           Casos similares
         </h3>
 
@@ -4808,7 +4808,7 @@ function PeriodistaPanel({
       {/* 3. Parrafo para periodista */}
       {ledeParagraph && (
         <div>
-          <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: "'Playfair Display', Georgia, serif" }}>
+          <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
             Parrafo para periodista
           </h3>
           <div className="bg-background-elevated border border-border rounded-xl p-5">

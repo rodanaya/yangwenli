@@ -71,7 +71,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
           />
           <XAxis
             type="number"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "var(--font-family-mono)" }}
             axisLine={{ stroke: '#3f3f46' }}
             tickLine={false}
             tickFormatter={(v) => `${v}%`}
@@ -80,7 +80,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
           <YAxis
             type="category"
             dataKey="name"
-            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: "var(--font-family-mono)" }}
             axisLine={{ stroke: '#3f3f46' }}
             tickLine={false}
             width={90}
@@ -116,7 +116,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             verticalAlign="bottom"
             height={36}
             formatter={(value) => (
-              <span style={{ color: '#71717a', fontSize: 11, fontFamily: "ui-monospace, 'SF Mono', monospace" }}>{value}</span>
+              <span style={{ color: '#71717a', fontSize: 11, fontFamily: "var(--font-family-mono)" }}>{value}</span>
             )}
           />
           <Bar

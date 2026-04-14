@@ -138,13 +138,13 @@ export function AdminRiskTrajectory({ administrations, metric, loading }: Props)
         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
         <XAxis
           dataKey="termYear"
-          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}
+          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)', fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}
           axisLine={{ stroke: 'rgba(255,255,255,0.15)' }}
           tickLine={false}
         />
         <YAxis
           tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)', fontFamily: 'monospace' }}
+          tick={{ fontSize: 11, fill: 'rgba(255,255,255,0.5)', fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}
           axisLine={false}
           tickLine={false}
           width={40}

@@ -122,7 +122,7 @@ export function DaRateTrendChart() {
           <ReferenceArea x1="2019" x2="2023" fill={AMLO_COLOR} fillOpacity={0.06} />
           <XAxis
             dataKey="year"
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: GRID_COLOR }}
             interval={2}
@@ -130,7 +130,7 @@ export function DaRateTrendChart() {
           <YAxis
             domain={[20, 90]}
             ticks={[25, 40, 60, 80]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={32}
@@ -146,7 +146,7 @@ export function DaRateTrendChart() {
               value: 'OCDE max 25%',
               fill: OECD_COLOR,
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideBottomRight',
             }}
           />

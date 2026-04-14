@@ -82,7 +82,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
       borderColor: '#3f3f46',
       textStyle: {
         color: '#f4f4f5',
-        fontFamily: "ui-monospace, 'SF Mono', monospace",
+        fontFamily: "var(--font-family-mono)",
         fontSize: 12,
       },
       formatter: (info: any) => {
@@ -120,13 +120,13 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
             color: '#f4f4f5',
             fontWeight: 'bold',
             lineHeight: 14,
-            fontFamily: "ui-monospace, 'SF Mono', monospace",
+            fontFamily: "var(--font-family-mono)",
           },
           value: {
             fontSize: 9,
             color: '#a1a1aa',
             lineHeight: 12,
-            fontFamily: "ui-monospace, 'SF Mono', monospace",
+            fontFamily: "var(--font-family-mono)",
           },
         },
         padding: [4, 6],

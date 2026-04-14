@@ -106,7 +106,7 @@ export function SexenioComparisonChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
           <XAxis
             dataKey="metric"
-            tick={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             interval={0}
@@ -114,7 +114,7 @@ export function SexenioComparisonChart() {
           <YAxis
             domain={[0, 85]}
             ticks={[0, 25, 50, 75]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={28}
@@ -143,7 +143,7 @@ export function SexenioComparisonChart() {
             <LabelList
               dataKey="amlo"
               position="top"
-              style={{ fill: AMLO_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace', fontWeight: 600 }}
+              style={{ fill: AMLO_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)', fontWeight: 600 }}
               formatter={(v) => `${v}%`}
             />
           </Bar>

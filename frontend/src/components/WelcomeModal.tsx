@@ -196,23 +196,28 @@ export function WelcomeModal() {
 
   return (
     <Dialog open={open} onOpenChange={(v) => { if (!v) handleDismiss() }}>
-      <DialogContent size="md" className="dark bg-[#0d0f0e] border-[#2a2d2c]">
+      <DialogContent size="md" className="dark bg-[#060911] border-[#1c2238]">
         {/* Editorial header */}
-        <DialogHeader className="border-b border-[#2a2d2c] pb-4">
+        <DialogHeader className="border-b border-[#1c2238] pb-4">
           <div className="flex items-center gap-3 mb-1">
-            {/* Bauhaus half-circle mark */}
+            {/* Heliocentric mark */}
             <svg width="20" height="20" viewBox="0 0 32 32" fill="none" aria-hidden="true" className="flex-shrink-0">
-              <circle cx="16" cy="16" r="13" stroke="#c41e3a" strokeWidth="2"/>
-              <path d="M 16 3 A 13 13 0 0 0 16 29 Z" fill="#c41e3a"/>
+              <ellipse cx="16" cy="16" rx="11" ry="3.5" stroke="#d4922a" strokeWidth="0.6" opacity="0.5" transform="rotate(-20 16 16)" fill="none"/>
+              <circle cx="16" cy="16" r="4" fill="#d4922a" opacity="0.08"/>
+              <circle cx="16" cy="16" r="2.8" fill="#d4922a" opacity="0.13"/>
+              <circle cx="16" cy="16" r="2.2" fill="#b07c1e"/>
+              <circle cx="16" cy="16" r="1.5" fill="#d4922a"/>
+              <circle cx="16" cy="16" r="0.9" fill="#f0b840"/>
+              <circle cx="26.3" cy="12.2" r="1.0" fill="#6d7fa8" opacity="0.8"/>
             </svg>
             <div>
               <DialogTitle className="flex items-center gap-2 leading-none">
                 <span className="text-white font-black text-xl tracking-tight">RUBLI</span>
-                <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">v0.2.5</span>
+                <span className="text-[9px] font-bold text-[#d4922a] bg-[#d4922a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">v0.2.5</span>
               </DialogTitle>
             </div>
           </div>
-          <DialogDescription className="text-[#6a6560] text-xs leading-relaxed font-mono mt-1">
+          <DialogDescription className="text-[#5a6280] text-xs leading-relaxed font-mono mt-1">
             Red Unificada de Búsqueda de Licitaciones Irregulares — inteligencia procuratoria impulsada por IA
           </DialogDescription>
         </DialogHeader>
@@ -223,10 +228,10 @@ export function WelcomeModal() {
             <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentStep.bgColor} mb-4 border border-white/5`}>
               <Icon className={`h-8 w-8 ${currentStep.color}`} />
             </div>
-            <h3 className="text-lg font-semibold text-[#f0ede8] mb-2">
+            <h3 className="text-lg font-semibold text-[#e6e9f4] mb-2">
               {t(currentStep.titleKey)}
             </h3>
-            <p className="text-sm text-[#6a6560] leading-relaxed max-w-md">
+            <p className="text-sm text-[#5a6280] leading-relaxed max-w-md">
               {t(currentStep.descKey)}
             </p>
 
@@ -242,8 +247,8 @@ export function WelcomeModal() {
               <button
                 key={i}
                 onClick={() => setStep(i)}
-                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#c41e3a] focus-visible:ring-offset-1 focus-visible:ring-offset-[#0d0f0e] ${
-                  i === step ? 'w-6 bg-[#c41e3a]' : 'w-1.5 bg-[#2a2d2c] hover:bg-[#6a6560]/40'
+                className={`h-1.5 rounded-full transition-all focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-[#d4922a] focus-visible:ring-offset-1 focus-visible:ring-offset-[#060911] ${
+                  i === step ? 'w-6 bg-[#d4922a]' : 'w-1.5 bg-[#1c2238] hover:bg-[#5a6280]/40'
                 }`}
                 aria-label={`Paso ${i + 1}`}
                 aria-pressed={i === step}
@@ -252,12 +257,12 @@ export function WelcomeModal() {
           </div>
         </div>
 
-        <DialogFooter className="border-t border-[#2a2d2c] pt-4">
+        <DialogFooter className="border-t border-[#1c2238] pt-4">
           <div className="flex items-center justify-between w-full">
             <Button
               variant="ghost"
               onClick={handleDismiss}
-              className="text-xs text-[#6a6560] hover:text-[#9a9590] hover:bg-[#1a1d1c]"
+              className="text-xs text-[#5a6280] hover:text-[#8d97b8] hover:bg-[#131828]"
             >
               {t('welcome.skip')}
             </Button>
@@ -267,7 +272,7 @@ export function WelcomeModal() {
                   variant="outline"
                   size="sm"
                   onClick={() => setStep(step - 1)}
-                  className="border-[#2a2d2c] bg-transparent text-[#9a9590] hover:bg-[#1a1d1c] hover:text-[#f0ede8]"
+                  className="border-[#1c2238] bg-transparent text-[#8d97b8] hover:bg-[#131828] hover:text-[#e6e9f4]"
                 >
                   <ChevronLeft className="h-4 w-4" />
                 </Button>
@@ -276,7 +281,7 @@ export function WelcomeModal() {
                 <Button
                   onClick={handleGetStarted}
                   size="sm"
-                  className="bg-[#c41e3a] hover:bg-[#a31830] text-white border-0"
+                  className="bg-[#d4922a] hover:bg-[#b07c1e] text-white border-0"
                 >
                   {t('welcome.getStarted')} <ArrowRight className="h-4 w-4 ml-1" />
                 </Button>
@@ -284,7 +289,7 @@ export function WelcomeModal() {
                 <Button
                   onClick={() => setStep(step + 1)}
                   size="sm"
-                  className="bg-[#c41e3a] hover:bg-[#a31830] text-white border-0"
+                  className="bg-[#d4922a] hover:bg-[#b07c1e] text-white border-0"
                 >
                   {t('welcome.next')} <ChevronRight className="h-4 w-4 ml-1" />
                 </Button>

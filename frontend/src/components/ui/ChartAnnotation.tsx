@@ -77,7 +77,7 @@ export function ChartAnnotation({
         style={{
           fill: color,
           fontSize: 10,
-          fontFamily: 'var(--font-mono, ui-monospace, monospace)',
+          fontFamily: 'var(--font-family-mono)',
           fontVariant: 'all-small-caps',
           letterSpacing: '0.04em',
           fontWeight: 600,

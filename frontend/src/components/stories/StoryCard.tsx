@@ -16,7 +16,7 @@ const TYPE_LABELS: Record<StoryType, string> = {
 
 const OUTLET_ACCENT: Record<OutletType, string> = {
   longform: '#1a1714',
-  investigative: '#c41e3a',
+  investigative: '#d4922a',
   data_analysis: '#2563eb',
   rubli: '#dc2626',
 }
@@ -95,7 +95,7 @@ export function StoryCard(props: StoryCardProps) {
       {/* Headline */}
       <h3
         className="text-lg font-bold text-white leading-tight line-clamp-2"
-        style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+        style={{ fontFamily: 'var(--font-family-serif)' }}
       >
         {headline}
       </h3>

@@ -172,7 +172,7 @@ export function SectorParadoxScatter() {
               name="Direct Award %"
               domain={[25, 100]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "var(--font-family-mono)" }}
               axisLine={{ stroke: '#3f3f46' }}
               tickLine={false}
               label={{
@@ -189,7 +189,7 @@ export function SectorParadoxScatter() {
               name="High-Risk %"
               domain={[0, 35]}
               tickFormatter={v => `${v}%`}
-              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+              tick={{ fontSize: 10, fill: '#71717a', fontFamily: "var(--font-family-mono)" }}
               axisLine={{ stroke: '#3f3f46' }}
               tickLine={false}
               label={{

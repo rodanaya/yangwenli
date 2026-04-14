@@ -100,13 +100,13 @@ export function CovidEmergencyChart() {
               value: 'COVID-19',
               fill: '#71717a',
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'insideTop',
             }}
           />
           <XAxis
             dataKey="year"
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: GRID_COLOR }}
           />
@@ -114,7 +114,7 @@ export function CovidEmergencyChart() {
             yAxisId="left"
             domain={[70, 85]}
             ticks={[70, 75, 80, 85]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={32}
@@ -125,7 +125,7 @@ export function CovidEmergencyChart() {
             orientation="right"
             domain={[14, 22]}
             ticks={[14, 16, 18, 20, 22]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={32}

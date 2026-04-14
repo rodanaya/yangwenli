@@ -136,7 +136,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
         height={height}
         role="img"
         aria-label={`Slope chart comparing sector high-risk rates: ${periodALabel} vs ${periodBLabel}`}
-        style={{ fontFamily: 'var(--font-mono, ui-monospace, monospace)' }}
+        style={{ fontFamily: 'var(--font-family-mono)' }}
       >
         {/* Background */}
         <rect x="0" y="0" width={svgWidth} height={height} fill="transparent" />

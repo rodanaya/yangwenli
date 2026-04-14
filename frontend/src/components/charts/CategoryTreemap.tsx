@@ -67,7 +67,7 @@ export function CategoryTreemap({ categories = [], height = 480, lang }: Props) 
         padding: [10, 12],
         textStyle: {
           color: '#f4f4f5',
-          fontFamily: "ui-monospace, 'SF Mono', monospace",
+          fontFamily: "var(--font-family-mono)",
           fontSize: 12,
         },
         formatter: (info: any) => {
@@ -82,7 +82,7 @@ export function CategoryTreemap({ categories = [], height = 480, lang }: Props) 
           const sector = d.sectorCode ?? '—'
           return `
             <div style="font-size:12px;line-height:1.65;color:#f4f4f5;max-width:260px">
-              <div style="font-weight:700;font-size:13px;color:#fafafa;margin-bottom:4px;font-family:ui-serif,Georgia,serif">${info.name}</div>
+              <div style="font-weight:700;font-size:13px;color:#fafafa;margin-bottom:4px;font-family:var(--font-family-serif)">${info.name}</div>
               <div style="color:#71717a;font-size:10px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:6px">${sector}</div>
               <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Value' : 'Valor'}:</span><span style="color:#fafafa;font-weight:600">${formatCompactMXN(d.value)}</span></div>
               <div style="display:flex;justify-content:space-between;gap:12px"><span style="color:#a1a1aa">${lang === 'en' ? 'Contracts' : 'Contratos'}:</span><span style="color:#fafafa">${formatNumber(d.contractCount)}</span></div>
@@ -114,13 +114,13 @@ export function CategoryTreemap({ categories = [], height = 480, lang }: Props) 
                 color: '#fafafa',
                 fontWeight: 'bold',
                 lineHeight: 15,
-                fontFamily: 'ui-serif, Georgia, serif',
+                fontFamily: 'var(--font-family-serif)',
               },
               value: {
                 fontSize: 10,
                 color: 'rgba(255,255,255,0.75)',
                 lineHeight: 13,
-                fontFamily: "ui-monospace, 'SF Mono', monospace",
+                fontFamily: "var(--font-family-mono)",
               },
             },
             padding: [5, 7],

@@ -90,14 +90,14 @@ export function AmloEraComparisonChart() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
           <XAxis
             dataKey="era"
-            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
           />
           <YAxis
             domain={[0, 90]}
             ticks={[0, 25, 50, 75]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             width={32}
@@ -127,7 +127,7 @@ export function AmloEraComparisonChart() {
             <LabelList
               dataKey="peak"
               position="top"
-              style={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+              style={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
               formatter={(v) => `${v}%`}
             />
           </Bar>

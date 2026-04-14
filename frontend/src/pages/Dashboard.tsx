@@ -118,7 +118,7 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
       className="relative overflow-hidden rounded-xl px-5 py-4"
       style={{
         background: 'linear-gradient(135deg, rgba(10,10,10,0.97) 0%, rgba(20,10,15,0.97) 100%)',
-        border: '1px solid rgba(196,30,58,0.15)',
+        border: '1px solid rgba(212,146,42,0.15)',
       }}
     >
       <p className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted/80 uppercase mb-2">
@@ -130,8 +130,8 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
           fontSize: 'clamp(1.4rem, 3vw, 2rem)',
           fontFamily: 'var(--font-family-mono)',
           background: reduced
-            ? '#c41e3a'
-            : 'linear-gradient(90deg, #c41e3a 0%, #f97316 30%, #c41e3a 60%, #f97316 100%)',
+            ? '#d4922a'
+            : 'linear-gradient(90deg, #d4922a 0%, #f97316 30%, #d4922a 60%, #f97316 100%)',
           backgroundSize: '200% 100%',
           WebkitBackgroundClip: 'text',
           backgroundClip: 'text',
@@ -142,12 +142,12 @@ function HeroStatBar({ value, loading }: { value: string; loading: boolean }) {
         {loading ? '\u2014' : value}
       </p>
       {/* Crimson line drawing from 0 to 100% */}
-      <div className="mt-4 h-[2px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(196,30,58,0.1)' }}>
+      <div className="mt-4 h-[2px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(212,146,42,0.1)' }}>
         <div
           className="h-full rounded-full"
           style={{
             width: `${lineWidth}%`,
-            background: 'linear-gradient(90deg, #c41e3a, #f97316)',
+            background: 'linear-gradient(90deg, #d4922a, #f97316)',
             transition: reduced ? 'none' : 'width 1.8s cubic-bezier(0.16, 1, 0.3, 1)',
           }}
         />
@@ -264,12 +264,12 @@ function SectionDivider() {
 
   return (
     <div ref={ref} className="py-1">
-      <div className="h-[1px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(196,30,58,0.08)' }}>
+      <div className="h-[1px] w-full rounded-full overflow-hidden" style={{ background: 'rgba(212,146,42,0.08)' }}>
         <div
           className="h-full rounded-full"
           style={{
             width: isInView ? '100%' : '0%',
-            background: 'linear-gradient(90deg, #c41e3a 0%, #f97316 50%, transparent 100%)',
+            background: 'linear-gradient(90deg, #d4922a 0%, #f97316 50%, transparent 100%)',
             transition: reduced ? 'none' : 'width 1.2s cubic-bezier(0.16, 1, 0.3, 1)',
             opacity: 0.5,
           }}
@@ -1195,8 +1195,8 @@ function RiskTicker() {
       <div
         style={{
           overflow: 'hidden',
-          borderTop: '1px solid rgba(196,30,58,0.3)',
-          borderBottom: '1px solid rgba(196,30,58,0.3)',
+          borderTop: '1px solid rgba(212,146,42,0.3)',
+          borderBottom: '1px solid rgba(212,146,42,0.3)',
           background: 'rgba(10,10,10,0.95)',
           padding: '6px 0',
           textAlign: 'center',
@@ -1204,7 +1204,7 @@ function RiskTicker() {
         role="marquee"
         aria-label="High-risk vendor alerts"
       >
-        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'monospace', letterSpacing: '0.1em' }}>
+        <span style={{ color: 'rgba(255,255,255,0.4)', fontSize: '11px', fontFamily: 'var(--font-family-mono)', letterSpacing: '0.1em' }}>
           {t('ariaTickerLoading')}
         </span>
       </div>
@@ -1216,8 +1216,8 @@ function RiskTicker() {
     <div
       style={{
         overflow: 'hidden',
-        borderTop: '1px solid rgba(196,30,58,0.3)',
-        borderBottom: '1px solid rgba(196,30,58,0.3)',
+        borderTop: '1px solid rgba(212,146,42,0.3)',
+        borderBottom: '1px solid rgba(212,146,42,0.3)',
         background: 'rgba(10,10,10,0.95)',
         padding: '6px 0',
       }}
@@ -1227,12 +1227,12 @@ function RiskTicker() {
       <div style={{ display: 'flex', whiteSpace: 'nowrap', animation: 'tickerScroll 80s linear infinite' }}>
         {doubled.map((item, i) => (
           <span key={i} style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', marginRight: '48px' }}>
-            <span style={{ color: '#c41e3a', fontSize: '9px', fontWeight: 700 }}>&#9650; {t('ariaRisk')}</span>
-            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', fontFamily: 'monospace' }}>{item.name}</span>
-            <span style={{ color: item.level === 'critical' ? '#ef4444' : '#f97316', fontSize: '11px', fontWeight: 700, fontFamily: 'monospace' }}>{item.score}</span>
+            <span style={{ color: '#d4922a', fontSize: '9px', fontWeight: 700 }}>&#9650; {t('ariaRisk')}</span>
+            <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '11px', fontWeight: 600, letterSpacing: '0.05em', fontFamily: 'var(--font-family-mono)' }}>{item.name}</span>
+            <span style={{ color: item.level === 'critical' ? '#ef4444' : '#f97316', fontSize: '11px', fontWeight: 700, fontFamily: 'var(--font-family-mono)' }}>{item.score}</span>
             {item.pattern && (
               <span style={{
-                fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'monospace',
+                fontSize: '8px', fontWeight: 700, letterSpacing: '0.08em', fontFamily: 'var(--font-family-mono)',
                 padding: '1px 4px', borderRadius: '3px',
                 backgroundColor: `${PATTERN_COLORS[item.pattern] ?? '#64748b'}30`,
                 color: PATTERN_COLORS[item.pattern] ?? '#64748b',
@@ -1242,7 +1242,7 @@ function RiskTicker() {
             <span style={{ color: 'rgba(255,255,255,0.55)', fontSize: '10px' }}>{item.amount}</span>
             <span style={{ color: 'rgba(255,255,255,0.2)', fontSize: '10px' }}>&#183;</span>
             <span style={{ color: 'rgba(255,255,255,0.3)', fontSize: '9px', letterSpacing: '0.08em' }}>{item.sector}</span>
-            <span style={{ color: 'rgba(196,30,58,0.3)', marginLeft: '24px' }}>|</span>
+            <span style={{ color: 'rgba(212,146,42,0.3)', marginLeft: '24px' }}>|</span>
           </span>
         ))}
       </div>
@@ -1278,7 +1278,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
 
   return (
     <div ref={heroRef} style={{
-      background: 'radial-gradient(ellipse at 15% 60%, rgba(196,30,58,0.08) 0%, transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(37,99,235,0.05) 0%, transparent 55%), var(--color-background-base)',
+      background: 'radial-gradient(ellipse at 15% 60%, rgba(212,146,42,0.08) 0%, transparent 55%), radial-gradient(ellipse at 85% 20%, rgba(77,158,245,0.05) 0%, transparent 55%), var(--color-background-base)',
       padding: '24px 24px 20px',
       margin: '-24px -24px 0',
       position: 'relative',
@@ -1293,7 +1293,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
         pointerEvents: 'none',
       }} />
 
-      <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
+      <div className="dash-hero-label" style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.2em', color: '#d4922a', marginBottom: '16px', fontFamily: 'var(--font-family-mono)' }}>
         {t('heroSurveillanceLabel')} &middot; {t('modelVersionBadge')} &middot; {t('heroSurveillanceActive')}
       </div>
 
@@ -1328,7 +1328,7 @@ function DashboardCinematicHero({ overview, criticalHighContractPct, criticalCou
             borderRadius: '4px', textDecoration: 'none', fontFamily: 'var(--font-family-mono)',
             letterSpacing: '0.05em', transition: 'all 0.2s',
           }}
-          onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#c41e3a' }}
+          onMouseEnter={e => { e.currentTarget.style.color = 'white'; e.currentTarget.style.borderColor = '#d4922a' }}
           onMouseLeave={e => { e.currentTarget.style.color = 'rgba(255,255,255,0.7)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.15)' }}
           >
             {cta.label}
@@ -1377,9 +1377,9 @@ function InvestigationSpotlight() {
 
   return (
     <div style={{
-      border: '1px solid rgba(196,30,58,0.4)',
-      borderLeft: '4px solid #c41e3a',
-      background: 'linear-gradient(135deg, rgba(196,30,58,0.05) 0%, transparent 60%)',
+      border: '1px solid rgba(212,146,42,0.4)',
+      borderLeft: '4px solid #d4922a',
+      background: 'linear-gradient(135deg, rgba(212,146,42,0.05) 0%, transparent 60%)',
       borderRadius: '8px',
       padding: '20px 24px',
       display: 'grid',
@@ -1388,7 +1388,7 @@ function InvestigationSpotlight() {
       alignItems: 'center',
     }}>
       <div>
-        <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#c41e3a', marginBottom: '8px', fontFamily: 'var(--font-family-mono)' }}>
+        <div style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', color: '#d4922a', marginBottom: '8px', fontFamily: 'var(--font-family-mono)' }}>
           &#9650; {t('heroAriaT1Label')}
           {pattern && (
             <span style={{
@@ -1408,7 +1408,7 @@ function InvestigationSpotlight() {
         <div style={{ display: 'flex', gap: '12px' }}>
           {vendorId > 0 && (
             <Link to={`/vendors/${vendorId}`} style={{
-              fontSize: '12px', fontWeight: 600, color: '#c41e3a', textDecoration: 'none',
+              fontSize: '12px', fontWeight: 600, color: '#d4922a', textDecoration: 'none',
               fontFamily: 'var(--font-family-mono)', letterSpacing: '0.08em',
             }}>
               {t('heroOpenProfile')} &rarr;
@@ -1423,10 +1423,10 @@ function InvestigationSpotlight() {
         </div>
       </div>
       <div style={{ textAlign: 'center', flexShrink: 0 }}>
-        <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#c41e3a', lineHeight: 1, letterSpacing: '-0.04em' }}>
+        <div style={{ fontSize: '2rem', fontWeight: 800, fontFamily: 'var(--font-family-mono)', color: '#d4922a', lineHeight: 1, letterSpacing: '-0.04em' }}>
           {ipsScore.toFixed(3)}
         </div>
-        <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(196,30,58,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
+        <div style={{ fontSize: '9px', letterSpacing: '0.15em', color: 'rgba(212,146,42,0.7)', fontFamily: 'var(--font-family-mono)', marginTop: '4px' }}>
           {t('ipsScore')}
         </div>
       </div>
@@ -1824,9 +1824,9 @@ export function Dashboard() {
                 labelFormatter={(label: number) => t('tooltipYear', { year: label })}
               />
               {/* Early period annotation */}
-              <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: t('periodAnnotationEarly'), fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopLeft' }} />
+              <ReferenceArea x1={2002} x2={2010} fill="rgba(255,255,255,0.02)" label={{ value: t('periodAnnotationEarly'), fill: 'rgba(255,255,255,0.25)', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", position: 'insideTopLeft' }} />
               {/* Recent period annotation */}
-              <ReferenceArea x1={2021} x2={2025} fill="rgba(220,38,38,0.04)" label={{ value: t('periodAnnotationRecent'), fill: 'rgba(220,38,38,0.45)', fontSize: 9, fontFamily: 'monospace', position: 'insideTopRight' }} />
+              <ReferenceArea x1={2021} x2={2025} fill="rgba(220,38,38,0.04)" label={{ value: t('periodAnnotationRecent'), fill: 'rgba(220,38,38,0.45)', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", position: 'insideTopRight' }} />
               <Area
                 type="monotone"
                 dataKey="avgRiskPct"
@@ -1851,7 +1851,7 @@ export function Dashboard() {
                 stroke="#f59e0b"
                 strokeDasharray="4 4"
                 strokeWidth={1}
-                label={{ value: t('oecdUpperThresholdLabel'), position: 'insideTopRight', fontSize: 10, fill: '#f59e0b', fontFamily: 'monospace' }}
+                label={{ value: t('oecdUpperThresholdLabel'), position: 'insideTopRight', fontSize: 10, fill: '#f59e0b', fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}
               />
             </AreaChart>
           </ResponsiveContainer>

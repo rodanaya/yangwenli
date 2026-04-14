@@ -147,12 +147,12 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="year"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "var(--font-family-mono)" }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
           />
           <YAxis
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono)" }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => formatMetricValue(v, metric)}
@@ -164,7 +164,7 @@ export const AnnotatedAreaChart = memo(function AnnotatedAreaChart({
               border: '1px solid #3f3f46',
               borderRadius: '8px',
               fontSize: 12,
-              fontFamily: "ui-monospace, 'SF Mono', monospace",
+              fontFamily: "var(--font-family-mono)",
               color: '#f4f4f5',
             }}
             labelStyle={{ color: '#a1a1aa' }}

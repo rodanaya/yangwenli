@@ -77,7 +77,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     // Active investigation bureau — journalist-facing
     sectionKey: 'sections.investigate',
     items: [
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, isHero: true, heroColor: '#c41e3a', badgeSource: 'aria-t1' },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, isHero: true, heroColor: '#d4922a', badgeSource: 'aria-t1' },
       { i18nKey: 'theArchive', href: '/investigation', icon: FolderSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
@@ -215,20 +215,22 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
-      {/* Logo — tri-sector intelligence mark */}
+      {/* Logo — heliocentric intelligence mark */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <circle cx="16" cy="16" r="15.5" fill="#0d0f0e"/>
-            <path d="M16 16 L16 1 A15 15 0 0 1 28.99 23.5 Z" fill="#c41e3a" opacity="0.85"/>
-            <path d="M16 16 L28.99 23.5 A15 15 0 0 1 3.01 23.5 Z" fill="#16a34a" opacity="0.8"/>
-            <path d="M16 16 L3.01 23.5 A15 15 0 0 1 16 1 Z" fill="#eab308" opacity="0.6"/>
-            <circle cx="16" cy="16" r="15" stroke="#ffffff" strokeWidth="0.4" opacity="0.1"/>
-            <circle cx="16" cy="16" r="3" fill="#0d0f0e"/>
-            <circle cx="16" cy="16" r="2" fill="#ffffff" opacity="0.9"/>
-            <circle cx="16" cy="7.5" r="1.3" fill="#c41e3a"/>
-            <circle cx="23.36" cy="20.25" r="1.3" fill="#16a34a"/>
-            <circle cx="8.64" cy="20.25" r="1.3" fill="#eab308"/>
+            <ellipse cx="16" cy="16" rx="13.5" ry="4.2" stroke="#5a6280" strokeWidth="0.4" opacity="0.35" transform="rotate(-20 16 16)" fill="none"/>
+            <ellipse cx="16" cy="16" rx="8.5" ry="2.7" stroke="#4d9ef5" strokeWidth="0.45" opacity="0.4" transform="rotate(-20 16 16)" fill="none"/>
+            <ellipse cx="16" cy="16" rx="4.8" ry="1.5" stroke="#d4922a" strokeWidth="0.4" opacity="0.55" transform="rotate(-20 16 16)" fill="none"/>
+            <circle cx="16" cy="16" r="5" fill="#d4922a" opacity="0.05"/>
+            <circle cx="16" cy="16" r="3.5" fill="#d4922a" opacity="0.10"/>
+            <circle cx="16" cy="16" r="2.4" fill="#b07c1e"/>
+            <circle cx="16" cy="16" r="1.7" fill="#d4922a"/>
+            <circle cx="16" cy="16" r="1.0" fill="#f0b840"/>
+            <circle cx="15.5" cy="15.5" r="0.45" fill="#fff8e0" opacity="0.65"/>
+            <circle cx="28.5" cy="11.5" r="1.1" fill="#6d7fa8" opacity="0.8"/>
+            <circle cx="8.0" cy="18.9" r="0.85" fill="#4d9ef5" opacity="0.75"/>
+            <circle cx="20.2" cy="15.3" r="0.6" fill="#f97316" opacity="0.85"/>
           </svg>
         </div>
         {!isCollapsed && (

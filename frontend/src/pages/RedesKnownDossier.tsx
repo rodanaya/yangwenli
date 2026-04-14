@@ -181,7 +181,7 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         itemStyle: {
           color: PATTERN_HEX[pattern] ?? '#64748b',
           opacity: 0.78,
-          borderColor: '#0a0a0a',
+          borderColor: '#060911',
           borderWidth: 1,
         },
         emphasis: {
@@ -196,14 +196,14 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
       xAxis: {
         name: 'Avg Risk Score →',
         nameLocation: 'end',
-        nameTextStyle: { color: '#6b6560', fontSize: 11 },
+        nameTextStyle: { color: '#5a6280', fontSize: 11 },
         type: 'value',
         min: 0,
         max: 1,
-        splitLine: { lineStyle: { color: '#2a2d2c', type: 'dashed' } },
-        axisLine: { lineStyle: { color: '#3a3d3c' } },
+        splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#2a3350' } },
         axisLabel: {
-          color: '#6b6560',
+          color: '#5a6280',
           fontSize: 11,
           formatter: (v: number) => v.toFixed(1),
         },
@@ -211,17 +211,17 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
       yAxis: {
         name: 'IPS Score ↑',
         nameLocation: 'end',
-        nameTextStyle: { color: '#6b6560', fontSize: 11 },
+        nameTextStyle: { color: '#5a6280', fontSize: 11 },
         type: 'value',
         min: 0,
         max: 100,
-        splitLine: { lineStyle: { color: '#2a2d2c', type: 'dashed' } },
-        axisLine: { lineStyle: { color: '#3a3d3c' } },
-        axisLabel: { color: '#6b6560', fontSize: 11 },
+        splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
+        axisLine: { lineStyle: { color: '#2a3350' } },
+        axisLabel: { color: '#5a6280', fontSize: 11 },
       },
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#0a0a0a',
+        backgroundColor: '#060911',
         borderColor: '#3f3f46',
         textStyle: { color: '#f4f4f5', fontSize: 12 },
         formatter: (params: { data: ScatterPoint }) => {
@@ -231,10 +231,10 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         },
       },
       graphic: [
-        { type: 'text', left: '60%', top: '8%', style: { text: 'CRÍTICO', fill: '#dc2626', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
-        { type: 'text', left: '60%', top: '60%', style: { text: 'RIESGO', fill: '#ea580c', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
-        { type: 'text', left: '8%', top: '8%', style: { text: 'MONITOREO', fill: '#6b6560', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
-        { type: 'text', left: '8%', top: '60%', style: { text: 'BAJO', fill: '#6b6560', fontSize: 10, fontFamily: 'monospace', opacity: 0.5 } },
+        { type: 'text', left: '60%', top: '8%', style: { text: 'CRÍTICO', fill: '#dc2626', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
+        { type: 'text', left: '60%', top: '60%', style: { text: 'RIESGO', fill: '#ea580c', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
+        { type: 'text', left: '8%', top: '8%', style: { text: 'MONITOREO', fill: '#5a6280', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
+        { type: 'text', left: '8%', top: '60%', style: { text: 'BAJO', fill: '#5a6280', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
       ],
       series: [
         ...series,
@@ -243,7 +243,7 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
           markLine: {
             silent: true,
             symbol: 'none',
-            lineStyle: { color: '#3a3d3c', type: 'dashed', width: 1 },
+            lineStyle: { color: '#2a3350', type: 'dashed', width: 1 },
             label: { show: false },
             data: [
               { xAxis: 0.5 },

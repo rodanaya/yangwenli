@@ -35,10 +35,10 @@
   --color-text-secondary: #6b6560;
   --color-text-muted: #9c9490;
 
-  /* Primary accent — deep crimson (corruption / civic gravity) */
-  --color-accent: #c41e3a;
-  --color-accent-hover: #a31830;
-  --color-accent-glow: #c41e3a18;
+  /* Primary accent — amber gold (intelligence / investigative authority) */
+  --color-accent: #a06820;
+  --color-accent-hover: #835616;
+  --color-accent-glow: #a0682018;
 
   /* Secondary accent — blue for data & charts */
   --color-accent-data: #2563eb;
@@ -50,7 +50,7 @@
   --color-sidebar-active: #342e2a;
 
   /* Signal colors */
-  --color-signal-pulse: #c41e3a;
+  --color-signal-pulse: #a06820;
   --color-signal-live: #16a34a;
   --color-signal-warn: #d97706;
   --color-signal-danger: #dc2626;
@@ -132,26 +132,27 @@
     --border-color: rgba(255, 255, 255, 0.09);
     --border-color-strong: rgba(255, 255, 255, 0.16);
 
-    /* Frosted glass — dark variant */
-    --color-surface-glass: rgba(11, 13, 12, 0.90);
+    /* Frosted glass — cool midnight variant */
+    --color-surface-glass: rgba(6, 9, 17, 0.92);
 
-    --color-background: #0b0d0c;
-    --color-background-card: #121514;
-    --color-background-elevated: #181b1a;
-    --color-border: #262928;
-    --color-border-hover: #363938;
-    --color-text-primary: #f0ede8;
-    --color-text-secondary: #9a9590;
-    --color-text-muted: #6a6560;
-    --color-accent: #e8253f;
-    --color-accent-hover: #ff3855;
-    --color-accent-glow: #e8253f22;
+    /* Midnight Intelligence palette — cool blue-black foundations + amber-gold accent */
+    --color-background: #060911;
+    --color-background-card: #0c1020;
+    --color-background-elevated: #131828;
+    --color-border: #1c2238;
+    --color-border-hover: #2a3350;
+    --color-text-primary: #e6e9f4;
+    --color-text-secondary: #8d97b8;
+    --color-text-muted: #5a6280;
+    --color-accent: #d4922a;
+    --color-accent-hover: #e8a535;
+    --color-accent-glow: #d4922a30;
     --color-accent-data: #4d9ef5;
     --color-accent-data-glow: #4d9ef518;
-    --color-sidebar: #080a09;
-    --color-sidebar-hover: #121514;
-    --color-sidebar-active: #1a1d1c;
-    --color-signal-pulse: #e8253f;
+    --color-sidebar: #03050d;
+    --color-sidebar-hover: #0c1020;
+    --color-sidebar-active: #131828;
+    --color-signal-pulse: #d4922a;
     --color-signal-live: #3fb950;
     --color-signal-warn: #d29922;
     --color-signal-danger: #f85149;

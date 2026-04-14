@@ -23,9 +23,9 @@ const BIBTEX = `@misc{rubli2026,
   note         = {Open-source procurement analytics. 3.1M contracts 2002--2025. Risk model v0.6.5 (AUC=0.828).}
 }`
 
-const APA = `RUBLI Project. (2026). RUBLI: Mexican Federal Procurement Intelligence Platform (v2.1). Retrieved from ${APP_URL}`
+const APA = `RUBLI Project. (2026). RUBLI: Mexican Federal Procurement Intelligence Platform (v0.2.5). Retrieved from ${APP_URL}`
 
-const PLAIN = `Source: RUBLI Procurement Intelligence Platform (v2.1, 2026). Data from COMPRANET (SHCP), 3.1 million federal contracts 2002–2025. Risk scores are statistical similarity indicators, not legal determinations. Methodology: ${APP_URL}/methodology`
+const PLAIN = `Source: RUBLI Procurement Intelligence Platform (v0.2.5, 2026). Data from COMPRANET (SHCP), 3.1 million federal contracts 2002–2025. Risk scores are statistical similarity indicators, not legal determinations. Methodology: ${APP_URL}/methodology`
 
 function CopyButton({ text }: { text: string }) {
   const [copied, setCopied] = useState(false)

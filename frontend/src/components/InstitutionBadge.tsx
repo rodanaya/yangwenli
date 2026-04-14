@@ -59,7 +59,7 @@ export function InstitutionBadge({
             if (parent) {
               parent.style.background = group.color
               parent.style.borderRadius = '4px'
-              parent.innerHTML = `<span style="color:white;font-weight:700;font-size:${size * 0.3}px;font-family:monospace">${group.shortName}</span>`
+              parent.innerHTML = `<span style="color:white;font-weight:700;font-size:${size * 0.3}px;font-family:var(--font-family-mono)">${group.shortName}</span>`
             }
           }}
         />

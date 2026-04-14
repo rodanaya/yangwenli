@@ -185,7 +185,7 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
             <PolarGrid stroke="#3f3f46" />
             <PolarAngleAxis
               dataKey="axis"
-              tick={{ fill: '#71717a', fontSize: 9, fontFamily: "ui-monospace, 'SF Mono', monospace" }}
+              tick={{ fill: '#71717a', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace" }}
             />
             <Radar
               name={admin.shortName}

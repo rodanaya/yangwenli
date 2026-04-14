@@ -341,7 +341,7 @@ export default function StoryInfographic() {
   return (
     <div
       className="relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950"
-      style={{ fontFamily: 'system-ui, sans-serif' }}
+      style={{ fontFamily: 'var(--font-family-sans)' }}
     >
       {/* Colored top accent line */}
       <motion.div
@@ -389,7 +389,7 @@ export default function StoryInfographic() {
               <span className="text-[9px] font-mono text-zinc-600 tracking-widest uppercase">{slide.chapter}</span>
               <div
                 className="text-4xl sm:text-5xl font-black leading-none mt-1 mb-1"
-                style={{ color: slide.color, fontFamily: "'Playfair Display', Georgia, serif" }}
+                style={{ color: slide.color, fontFamily: 'var(--font-family-serif)' }}
               >
                 <StatNumber slide={slide} active={true} />
               </div>
@@ -399,7 +399,7 @@ export default function StoryInfographic() {
             {/* Headline */}
             <h3
               className="text-base sm:text-lg font-bold text-zinc-100 leading-snug mb-2"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {slide.headline}
             </h3>

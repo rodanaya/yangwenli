@@ -170,7 +170,7 @@ export function AdminSectorSunburst() {
                   dominantBaseline="middle"
                   fontSize={8}
                   fontWeight="700"
-                  fontFamily="ui-monospace, 'SF Mono', monospace"
+                  fontFamily="var(--font-family-mono)"
                   fill="#f4f4f5"
                   pointerEvents="none"
                 >
@@ -182,8 +182,8 @@ export function AdminSectorSunburst() {
         })}
 
         {/* Center label */}
-        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontFamily="ui-monospace, 'SF Mono', monospace" fill="#71717a">Total</text>
-        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fontFamily="ui-monospace, 'SF Mono', monospace" fill="#f4f4f5">
+        <text x={CX} y={CY - 6} textAnchor="middle" dominantBaseline="middle" fontSize={10} fontFamily="var(--font-family-mono)" fill="#71717a">Total</text>
+        <text x={CX} y={CY + 8} textAnchor="middle" dominantBaseline="middle" fontSize={9} fontWeight="700" fontFamily="var(--font-family-mono)" fill="#f4f4f5">
           {formatCompactMXN(grandTotal)}
         </text>
       </svg>

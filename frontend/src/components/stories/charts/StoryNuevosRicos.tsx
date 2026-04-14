@@ -82,13 +82,13 @@ export function StoryNuevosRicos() {
           <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
           <XAxis
             dataKey="era"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
           />
           <YAxis
             domain={[0, 95]}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
             tickFormatter={(v: number) => `${v}%`}
@@ -106,7 +106,7 @@ export function StoryNuevosRicos() {
               value: 'OCDE max 25%',
               fill: OECD_COLOR,
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'right',
             }}
           />
@@ -122,7 +122,7 @@ export function StoryNuevosRicos() {
               fill: '#f4f4f5',
               fontSize: 13,
               fontWeight: 700,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
             }}
           >
             {data.map((_entry, index) => (

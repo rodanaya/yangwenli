@@ -96,7 +96,7 @@ export function RiskBySectorChart() {
           <XAxis
             type="number"
             domain={[0, 25]}
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={{ stroke: '#3f3f46' }}
             tickFormatter={(v: number) => `${v}%`}
@@ -105,7 +105,7 @@ export function RiskBySectorChart() {
             type="category"
             dataKey="sector"
             width={100}
-            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'ui-monospace, monospace' }}
+            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
             tickLine={false}
             axisLine={false}
           />
@@ -123,7 +123,7 @@ export function RiskBySectorChart() {
               value: `Avg: ${OECD_AVG}%`,
               fill: '#22d3ee',
               fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
+              fontFamily: 'var(--font-family-mono)',
               position: 'top',
             }}
           />

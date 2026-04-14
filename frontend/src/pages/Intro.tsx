@@ -42,8 +42,8 @@ const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }>
   'F-': { text: '#fca5a5', bg: 'rgba(28,5,5,0.75)',      border: 'rgba(153,27,27,0.40)' },
 }
 
-const SERIF = "'Playfair Display', Georgia, serif"
-const CRIMSON = '#c41e3a'
+const SERIF = 'var(--font-family-serif)'
+const CRIMSON = '#d4922a'
 
 const GRADE_LABELS_EN: Record<string, string> = {
   'S': 'Excellent', 'A': 'Excellent', 'B+': 'Satisfactory', 'B': 'Satisfactory',
@@ -77,7 +77,7 @@ const GradientMeshBackground = memo(function GradientMeshBackground() {
           maxWidth: 600,
           maxHeight: 600,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(196,30,58,0.35) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(212,146,42,0.35) 0%, transparent 70%)',
           filter: 'blur(120px)',
           animation: 'meshOrb1 12s ease-in-out infinite alternate',
         }}
@@ -109,7 +109,7 @@ const GradientMeshBackground = memo(function GradientMeshBackground() {
           maxWidth: 500,
           maxHeight: 500,
           borderRadius: '50%',
-          background: 'radial-gradient(circle, rgba(196,30,58,0.2) 0%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(212,146,42,0.2) 0%, transparent 70%)',
           filter: 'blur(120px)',
           animation: 'meshOrb3 18s ease-in-out infinite alternate',
         }}
@@ -221,7 +221,7 @@ function useParticles(canvasRef: React.RefObject<HTMLCanvasElement | null>) {
 
         ctx.beginPath()
         ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2)
-        ctx.fillStyle = `rgba(196, 30, 58, ${fadeAlpha})`
+        ctx.fillStyle = `rgba(212, 146, 42, ${fadeAlpha})`
         ctx.fill()
       }
 
@@ -281,7 +281,7 @@ function SplitTextHero({ text, className, style }: { text: string; className?: s
           className="split-letter"
           style={{
             display: ch === ' ' ? 'inline' : 'inline-block',
-            textShadow: '0 0 30px rgba(196,30,58,0.4), 0 0 60px rgba(196,30,58,0.15)',
+            textShadow: '0 0 30px rgba(212,146,42,0.4), 0 0 60px rgba(212,146,42,0.15)',
           }}
         >
           {ch === ' ' ? ' ' : ch}
@@ -312,13 +312,13 @@ const CaseMarquee = memo(function CaseMarquee() {
   return (
     <div
       className="relative overflow-hidden py-4"
-      style={{ background: '#0a0c0b', borderTop: '1px solid rgba(196,30,58,0.15)', borderBottom: '1px solid rgba(196,30,58,0.15)' }}
+      style={{ background: '#060911', borderTop: '1px solid rgba(212,146,42,0.15)', borderBottom: '1px solid rgba(212,146,42,0.15)' }}
       aria-label={`Documented corruption cases: ${CORRUPTION_CASES.join(', ')}`}
       role="marquee"
     >
       {/* Fade edges */}
-      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20" style={{ background: 'linear-gradient(to right, #0a0c0b, transparent)' }} />
-      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20" style={{ background: 'linear-gradient(to left, #0a0c0b, transparent)' }} />
+      <div className="pointer-events-none absolute inset-y-0 left-0 z-10 w-20" style={{ background: 'linear-gradient(to right, #060911, transparent)' }} />
+      <div className="pointer-events-none absolute inset-y-0 right-0 z-10 w-20" style={{ background: 'linear-gradient(to left, #060911, transparent)' }} />
 
       <div
         className="flex whitespace-nowrap"
@@ -326,13 +326,13 @@ const CaseMarquee = memo(function CaseMarquee() {
       >
         <span
           className="text-sm font-mono font-bold tracking-[0.15em] uppercase"
-          style={{ color: 'rgba(196,30,58,0.6)' }}
+          style={{ color: 'rgba(212,146,42,0.6)' }}
         >
           {content}
         </span>
         <span
           className="text-sm font-mono font-bold tracking-[0.15em] uppercase"
-          style={{ color: 'rgba(196,30,58,0.6)' }}
+          style={{ color: 'rgba(212,146,42,0.6)' }}
         >
           {content}
         </span>
@@ -357,8 +357,8 @@ const ScanLine = memo(function ScanLine() {
           left: 0,
           right: 0,
           height: '2px',
-          background: 'linear-gradient(90deg, transparent 0%, rgba(196,30,58,0.6) 30%, rgba(196,30,58,0.8) 50%, rgba(196,30,58,0.6) 70%, transparent 100%)',
-          boxShadow: '0 0 15px 3px rgba(196,30,58,0.3), 0 0 30px 6px rgba(196,30,58,0.15)',
+          background: 'linear-gradient(90deg, transparent 0%, rgba(212,146,42,0.6) 30%, rgba(212,146,42,0.8) 50%, rgba(212,146,42,0.6) 70%, transparent 100%)',
+          boxShadow: '0 0 15px 3px rgba(212,146,42,0.3), 0 0 30px 6px rgba(212,146,42,0.15)',
           animation: 'introScanLine 4s ease-in-out infinite',
         }}
       />
@@ -560,7 +560,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
       const ch = s.h
 
       ctx.clearRect(0, 0, cw, ch)
-      ctx.fillStyle = '#0a0c0b'
+      ctx.fillStyle = '#060911'
       ctx.fillRect(0, 0, cw, ch)
 
       const t = time * 0.001
@@ -582,7 +582,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
         ctx.beginPath()
         ctx.moveTo(a.x, a.y)
         ctx.lineTo(b.x, b.y)
-        ctx.strokeStyle = e.isRisk ? 'rgba(196,30,58,0.15)' : 'rgba(255,255,255,0.06)'
+        ctx.strokeStyle = e.isRisk ? 'rgba(212,146,42,0.15)' : 'rgba(255,255,255,0.06)'
         ctx.lineWidth = 1
         ctx.stroke()
       }
@@ -605,7 +605,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
         const py = a.y + (b.y - a.y) * p.progress
         ctx.beginPath()
         ctx.arc(px, py, 2, 0, Math.PI * 2)
-        ctx.fillStyle = p.isRisk ? 'rgba(196,30,58,0.9)' : 'rgba(255,255,255,0.7)'
+        ctx.fillStyle = p.isRisk ? 'rgba(212,146,42,0.9)' : 'rgba(255,255,255,0.7)'
         ctx.fill()
       }
 
@@ -616,8 +616,8 @@ const NetworkCanvas = memo(function NetworkCanvas() {
           const pulse = Math.sin(t * 2 + n.pulsePhase) * 3
           const glowR = n.size + 6 + pulse
           const gradient = ctx.createRadialGradient(n.x, n.y, 0, n.x, n.y, glowR)
-          gradient.addColorStop(0, 'rgba(196,30,58,0.4)')
-          gradient.addColorStop(1, 'rgba(196,30,58,0)')
+          gradient.addColorStop(0, 'rgba(212,146,42,0.4)')
+          gradient.addColorStop(1, 'rgba(212,146,42,0.0)')
           ctx.beginPath()
           ctx.arc(n.x, n.y, glowR, 0, Math.PI * 2)
           ctx.fillStyle = gradient
@@ -625,7 +625,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
           // Core
           ctx.beginPath()
           ctx.arc(n.x, n.y, n.size + pulse * 0.3, 0, Math.PI * 2)
-          ctx.fillStyle = 'rgba(196,30,58,0.9)'
+          ctx.fillStyle = 'rgba(212,146,42,0.9)'
           ctx.fill()
         } else if (n.type === 'institution') {
           // Square
@@ -643,7 +643,7 @@ const NetworkCanvas = memo(function NetworkCanvas() {
 
       // Scan line
       s.scanY = (s.scanY + ch / (4 * 60)) % ch
-      ctx.fillStyle = 'rgba(196,30,58,0.08)'
+      ctx.fillStyle = 'rgba(212,146,42,0.08)'
       ctx.fillRect(0, s.scanY, cw, 1)
 
       animFrameRef.current = requestAnimationFrame(draw)
@@ -796,7 +796,7 @@ function LangToggle({ dark = false }: { dark?: boolean }) {
   const isEn = i18n.language.startsWith('en')
   const borderColor = dark ? 'rgba(255,255,255,0.15)' : '#e7e5e4'
   const bgBase = dark ? 'transparent' : 'white'
-  const activeBg = dark ? 'rgba(196,30,58,0.25)' : '#fef2f2'
+  const activeBg = dark ? 'rgba(212,146,42,0.25)' : '#fef9ee'
   const inactiveColor = dark ? 'rgba(255,255,255,0.4)' : '#a8a29e'
 
   return (
@@ -1070,7 +1070,7 @@ export default function Intro() {
       {/* ================================================================= */}
       <section
         className="min-h-screen flex flex-col items-center justify-center relative"
-        style={{ background: '#0a0c0b', color: '#fff' }}
+        style={{ background: '#060911', color: '#fff' }}
         aria-label="RUBLI platform introduction"
       >
         {/* Drop your video at frontend/public/hero.mp4 for cinematic background */}
@@ -1169,7 +1169,7 @@ export default function Intro() {
               <div className="text-center">
                 <span
                   className="block text-5xl sm:text-6xl lg:text-7xl font-black tabular-nums font-mono leading-none"
-                  style={{ color: CRIMSON, textShadow: '0 0 40px rgba(196,30,58,0.3)' }}
+                  style={{ color: CRIMSON, textShadow: '0 0 40px rgba(212,146,42,0.3)' }}
                 >
                   13.5%
                 </span>
@@ -1255,7 +1255,7 @@ export default function Intro() {
         {/* Credibility strip -- anchored to bottom of hero */}
         <div
           className="absolute bottom-0 left-0 right-0 z-20 py-3 text-center"
-          style={{ background: 'linear-gradient(to top, rgba(10,12,11,0.95), transparent)' }}
+          style={{ background: 'linear-gradient(to top, rgba(6,9,17,0.95), transparent)' }}
         >
           <p className="text-[10px] font-mono tracking-wide" style={{ color: 'rgba(255,255,255,0.25)' }}>
             {t('hero.credibility')}
@@ -1266,7 +1266,7 @@ export default function Intro() {
       {/* Risk score disclaimer */}
       <div
         className="w-full text-center py-3 px-6"
-        style={{ background: '#0a0c0b' }}
+        style={{ background: '#060911' }}
       >
         <p className="text-xs text-stone-500 leading-relaxed">
           {t('hero.riskDisclaimer')}{' '}
@@ -1284,13 +1284,13 @@ export default function Intro() {
       {/* ================================================================= */}
       <section
         className="px-6 sm:px-12 lg:px-24 py-16 sm:py-20"
-        style={{ background: '#0d0f0e' }}
+        style={{ background: '#060911' }}
         aria-label={t('ctaPanels.ariaLabel')}
       >
         <div className="max-w-5xl mx-auto">
           <h2
             className="text-2xl sm:text-3xl font-black mb-3 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#e6e9f4' }}
           >
             {t('ctaPanels.headline')}
           </h2>
@@ -1305,8 +1305,8 @@ export default function Intro() {
                 desc: t('ctaPanels.cases.desc'),
                 path: '/cases',
                 color: CRIMSON,
-                bg: 'rgba(196,30,58,0.08)',
-                border: 'rgba(196,30,58,0.25)',
+                bg: 'rgba(212,146,42,0.08)',
+                border: 'rgba(212,146,42,0.25)',
               },
               {
                 icon: TrendingUp,
@@ -1344,7 +1344,7 @@ export default function Intro() {
               >
                 <panel.icon className="h-6 w-6 flex-shrink-0" style={{ color: panel.color }} aria-hidden="true" />
                 <div>
-                  <span className="block text-sm font-bold mb-1" style={{ color: '#f0ede8' }}>
+                  <span className="block text-sm font-bold mb-1" style={{ color: '#e6e9f4' }}>
                     {panel.title}
                   </span>
                   <span className="text-xs leading-relaxed" style={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -1365,7 +1365,7 @@ export default function Intro() {
         id="section-scale"
         ref={s2Ref}
         className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#0d0f0e' }}
+        style={{ background: '#060911' }}
       >
         <div className="max-w-5xl mx-auto">
           {/* Header label */}
@@ -1378,7 +1378,7 @@ export default function Intro() {
 
           <h2
             className="gsap-reveal text-3xl sm:text-4xl font-black mb-12 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#e6e9f4' }}
           >
             {t('scale.headline')}
           </h2>
@@ -1412,7 +1412,7 @@ export default function Intro() {
                 })}
               </div>
               {/* Year labels (first, middle, last) */}
-              <div className="flex justify-between mt-2 text-xs" style={{ color: '#6a6560' }}>
+              <div className="flex justify-between mt-2 text-xs" style={{ color: '#5a6280' }}>
                 <span>{chartBars[0]?.year}</span>
                 <span>{chartBars[Math.floor(chartBars.length / 2)]?.year}</span>
                 <span>{chartBars[chartBars.length - 1]?.year}</span>
@@ -1425,30 +1425,30 @@ export default function Intro() {
             <StatCounter
               value={totalContracts}
               label={t('scale.contractsAnalyzed')}
-              color="#f0ede8"
-              labelColor="#6a6560"
+              color="#e6e9f4"
+              labelColor="#5a6280"
               inView={s2InView}
               duration={2200}
             />
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className="text-4xl sm:text-5xl font-black tabular-nums font-mono leading-none"
-                style={{ color: '#f0ede8' }}
+                style={{ color: '#e6e9f4' }}
               >
                 {yearsUp}
               </span>
-              <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
+              <span className="text-sm font-medium" style={{ color: '#5a6280' }}>
                 {t('scale.yearsOfData')}
               </span>
             </div>
             <div className="flex flex-col items-center gap-1.5">
               <span
                 className="text-4xl sm:text-5xl font-black tabular-nums font-mono leading-none"
-                style={{ color: '#f0ede8' }}
+                style={{ color: '#e6e9f4' }}
               >
                 ~{(valueTUp / 10).toFixed(1)}T
               </span>
-              <span className="text-sm font-medium" style={{ color: '#6a6560' }}>
+              <span className="text-sm font-medium" style={{ color: '#5a6280' }}>
                 {t('scale.mxnValue')}
               </span>
             </div>
@@ -1515,7 +1515,7 @@ export default function Intro() {
       {recentCriticalData?.data && recentCriticalData.data.length > 0 && (
         <section
           className="px-6 sm:px-12 lg:px-24 py-16"
-          style={{ background: '#0a0c0b' }}
+          style={{ background: '#060911' }}
           aria-label={t('recentFlags.ariaLabel')}
         >
           <div className="max-w-5xl mx-auto">
@@ -1527,7 +1527,7 @@ export default function Intro() {
                 >
                   {t('recentFlags.label')}
                 </span>
-                <h2 className="text-xl font-black" style={{ fontFamily: SERIF, color: '#f0ede8' }}>
+                <h2 className="text-xl font-black" style={{ fontFamily: SERIF, color: '#e6e9f4' }}>
                   {t('recentFlags.headline')}
                 </h2>
               </div>
@@ -1556,12 +1556,12 @@ export default function Intro() {
                     key={contract.id}
                     onClick={() => goToApp(`/contracts/${contract.id}`)}
                     className="flex items-start gap-4 rounded-xl p-4 text-left transition-all duration-200 hover:brightness-125 focus:outline-none focus:ring-2 focus:ring-red-400/20"
-                    style={{ backgroundColor: 'rgba(196,30,58,0.06)', border: '1px solid rgba(196,30,58,0.2)' }}
+                    style={{ backgroundColor: 'rgba(212,146,42,0.06)', border: '1px solid rgba(212,146,42,0.2)' }}
                     aria-label={`${t('recentFlags.ariaContract')}: ${contract.vendor_name ?? ''}`}
                   >
                     <AlertTriangle className="h-4 w-4 flex-shrink-0 mt-0.5" style={{ color: CRIMSON }} aria-hidden="true" />
                     <div className="flex-1 min-w-0">
-                      <span className="block text-sm font-semibold truncate" style={{ color: '#f0ede8' }}>
+                      <span className="block text-sm font-semibold truncate" style={{ color: '#e6e9f4' }}>
                         {contract.vendor_name ?? t('recentFlags.unknownVendor')}
                       </span>
                       <div className="flex items-center gap-2 mt-0.5 flex-wrap">
@@ -1586,7 +1586,7 @@ export default function Intro() {
                         )}
                       </div>
                     </div>
-                    <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 self-center" style={{ color: 'rgba(196,30,58,0.5)' }} aria-hidden="true" />
+                    <ArrowRight className="h-3.5 w-3.5 flex-shrink-0 self-center" style={{ color: 'rgba(212,146,42,0.5)' }} aria-hidden="true" />
                   </button>
                 )
               })}
@@ -1622,7 +1622,7 @@ export default function Intro() {
 
           <h2
             className="gsap-reveal text-3xl sm:text-4xl font-black mb-10 leading-tight"
-            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+            style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#e6e9f4' }}
           >
             {t('reportCard.headline')}
           </h2>
@@ -1630,7 +1630,7 @@ export default function Intro() {
           {/* Grade slot machine — only trigger once data is loaded to avoid stale fallback animation */}
           <div className="gsap-reveal mb-12">
             <GradeSlotMachine grade={nationalGrade} trigger={s5InView && phiSectors.length > 0} isEn={isEn} />
-            <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
+            <p className="mt-4 text-base" style={{ color: '#5a6280' }}>
               {t('reportCard.nationalGrade')}
             </p>
           </div>
@@ -1656,7 +1656,7 @@ export default function Intro() {
                       style={{ backgroundColor: sectorColor }}
                     />
                     <div className="flex-1 min-w-0">
-                      <span className="text-sm font-semibold truncate block" style={{ color: '#f0ede8' }}>
+                      <span className="text-sm font-semibold truncate block" style={{ color: '#e6e9f4' }}>
                         {name}
                       </span>
                     </div>
@@ -1703,7 +1703,7 @@ export default function Intro() {
       {/* ================================================================= */}
       <section
         className="px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#0d0f0e' }}
+        style={{ background: '#060911' }}
       >
         <div className="max-w-5xl mx-auto">
           <div className="flex flex-col lg:flex-row gap-12 lg:gap-16 items-center">
@@ -1717,7 +1717,7 @@ export default function Intro() {
               </span>
               <h2
                 className="text-3xl sm:text-4xl font-black mb-6 leading-tight"
-                style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#f0ede8' }}
+                style={{ fontFamily: SERIF, letterSpacing: '-0.02em', color: '#e6e9f4' }}
               >
                 ARIA {t('aria.headline')}
               </h2>
@@ -1769,7 +1769,7 @@ export default function Intro() {
                   style={{ backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.08)' }}
                 >
                   <item.icon className="h-5 w-5" style={{ color: item.color }} aria-hidden="true" />
-                  <span className="text-2xl font-black tabular-nums font-mono" style={{ color: '#f0ede8' }}>
+                  <span className="text-2xl font-black tabular-nums font-mono" style={{ color: '#e6e9f4' }}>
                     {item.stat}
                   </span>
                   <span className="text-xs font-medium" style={{ color: 'rgba(255,255,255,0.45)' }}>
@@ -1788,7 +1788,7 @@ export default function Intro() {
       <section
         ref={s6Ref}
         className="relative px-6 sm:px-12 lg:px-24 py-24 sm:py-32"
-        style={{ background: '#0a0c0b', color: '#fff' }}
+        style={{ background: '#060911', color: '#fff' }}
       >
         <div className="relative z-10 max-w-3xl mx-auto text-center">
           <h2
@@ -1835,7 +1835,7 @@ export default function Intro() {
           <button
             onClick={() => goToApp('/thread/36961')}
             className="gsap-reveal inline-flex items-center gap-2 mt-6 text-sm transition-colors hover:brightness-125"
-            style={{ color: 'rgba(196,30,58,0.75)' }}
+            style={{ color: 'rgba(212,146,42,0.75)' }}
           >
             <span style={{ color: CRIMSON }}>&#9679;</span>
             {t('cta.redThreadTeaser')}
@@ -1925,7 +1925,7 @@ const FeaturedCase = forwardRef<
               className="gsap-reveal text-xs font-bold tracking-[0.2em] uppercase block mb-6"
               style={{
                 color: CRIMSON,
-                fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, monospace',
+                fontFamily: "var(--font-family-mono)",
               }}
             >
               {t('featuredCase.label')}

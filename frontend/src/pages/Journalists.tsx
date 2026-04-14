@@ -174,7 +174,7 @@ function FeaturedStory({ story }: { story: StoryDef }) {
           <div className="flex-1 max-w-2xl">
             <h2
               className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white leading-[1.15] mb-4"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {story.headline}
             </h2>
@@ -267,7 +267,7 @@ function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () =>
         {/* Headline */}
         <h3
           className="text-lg font-bold text-white leading-tight line-clamp-2 group-hover:text-zinc-100"
-          style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+          style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {headline}
         </h3>
@@ -345,7 +345,7 @@ export default function Journalists() {
           {/* Main headline */}
           <h1
             className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] mb-4"
-            style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+            style={{ fontFamily: 'var(--font-family-serif)' }}
           >
             {storyCount} Investigations Into Mexican Federal Procurement
           </h1>
@@ -407,7 +407,7 @@ export default function Journalists() {
           <div className="flex items-center gap-3 mb-4">
             <h2
               className="text-lg font-bold text-white"
-              style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+              style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               All Investigations
             </h2>
@@ -480,7 +480,7 @@ export default function Journalists() {
                 </p>
                 <h3
                   className="text-xl font-bold text-white mb-3 flex items-center gap-1.5"
-                  style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {t('methodology.title')}
                   <MetodologiaTooltip
