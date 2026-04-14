@@ -1141,7 +1141,7 @@ export default function Intro() {
                 >
                   3.1M
                 </span>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <span className="text-xs font-mono font-bold uppercase tracking-[0.12em] mt-2 block" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   {t('hero.statContracts')}
                 </span>
               </div>
@@ -1157,7 +1157,7 @@ export default function Intro() {
                 >
                   $9.9T
                 </span>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <span className="text-xs font-mono font-bold uppercase tracking-[0.12em] mt-2 block" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   MXN {t('hero.statValue')}
                 </span>
               </div>
@@ -1173,10 +1173,10 @@ export default function Intro() {
                 >
                   13.5%
                 </span>
-                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mt-2 block" style={{ color: 'rgba(255,255,255,0.4)' }}>
+                <span className="text-xs font-mono font-bold uppercase tracking-[0.12em] mt-2 block" style={{ color: 'rgba(255,255,255,0.6)' }}>
                   {t('hero.statHighRisk')}
                 </span>
-                <span className="text-[11px] font-mono mt-0.5 block" style={{ color: '#22d3ee' }}>
+                <span className="text-xs font-mono mt-0.5 block" style={{ color: '#22d3ee' }}>
                   ({t('hero.statHighRiskContext')})
                 </span>
               </div>

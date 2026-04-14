@@ -1212,6 +1212,17 @@ function StatPill({ label, value, color }: { label: string; value: string; color
 }
 
 // =============================================================================
+function abbreviateProcedure(raw: string): string {
+  const s = raw.toUpperCase()
+  if (s.includes('ADJUDICACI')) return 'Adj. Directa'
+  if (s.includes('LICITACI') && s.includes('BLICA')) return 'Lic. Pública'
+  if (s.includes('INVITACI')) return 'Inv. 3 Pers.'
+  if (s.includes('ENTES P')) return 'Entes Públ.'
+  if (s.includes('PROYECTO')) return 'Proy. Conv.'
+  if (s.includes('OTRAS')) return 'Otras'
+  return raw.length > 18 ? raw.slice(0, 16) + '…' : raw
+}
+
 // Contract Row
 // =============================================================================
 
@@ -1388,8 +1399,8 @@ function ContractRow({
 
       {/* Procedure type */}
       <td className="px-3 py-2 max-w-[120px]">
-        <span className="text-xs text-text-muted truncate block" title={contract.procedure_type || ''}>
-          {contract.procedure_type || '—'}
+        <span className="text-xs text-text-muted block whitespace-nowrap" title={contract.procedure_type || ''}>
+          {contract.procedure_type ? abbreviateProcedure(contract.procedure_type) : '—'}
         </span>
       </td>
 
