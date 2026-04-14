@@ -1,5 +1,5 @@
 {
-  "pageTitle": "ARIA Risk Assessment Queue",
+  "pageTitle": "ARIA Investigation Queue",
   "pageSubtitle": "Automated Risk Investigation Algorithm — curated procurement risk intelligence",
   "stats": {
     "totalLeads": "Total Leads",
@@ -65,8 +65,8 @@
     "name": "LOW"
   },
   "impactHero": {
-    "kicker": "ARIA · AUTOMATED RISK ANALYSIS",
-    "headline": "ARIA: Automated Procurement Risk Assessment.",
+    "kicker": "ARIA · AUTOMATED RISK INVESTIGATION ALGORITHM",
+    "headline": "ARIA: Automated Risk Investigation Algorithm.",
     "subhead": "Machine learning identified risk patterns across 3.1 million contracts — comparing every vendor against ~748 documented corruption cases.",
     "stat1Label": "Vendors under active monitoring",
     "stat2Label": "Critical alerts (Tier 1)",

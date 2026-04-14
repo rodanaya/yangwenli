@@ -1523,6 +1523,7 @@ export function Dashboard() {
   const { open: openEntityDrawer } = useEntityDrawer()
   const { t } = useTranslation('dashboard')
   const { t: tc } = useTranslation('common')
+  const { t: ts } = useTranslation('sectors')
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -1648,7 +1649,7 @@ export function Dashboard() {
         const hrRate = ((s.high_risk_count || 0) + (s.critical_risk_count || 0)) / ct
         const daRate = (s.direct_award_count || 0) / ct
         return {
-          name: getSectorNameEN(s.code),
+          name: ts(s.code) || getSectorNameEN(s.code),
           code: s.code,
           id: s.id,
           valueAtRisk: hrRate * (s.total_value_mxn || 0),
@@ -1661,7 +1662,7 @@ export function Dashboard() {
         }
       })
       .sort((a, b) => b.valueAtRisk - a.valueAtRisk)
-  }, [sectors, phiGradeMap])
+  }, [sectors, phiGradeMap, ts])
 
   const riskTrajectory = useMemo(() => {
     const yearlyTrends = fastDashboard?.yearly_trends ?? (riskOverviewFallback?.yearly_trends as FastDashboardData['yearly_trends'] | undefined)

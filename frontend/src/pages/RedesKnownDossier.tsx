@@ -526,7 +526,7 @@ export default function RedesKnownDossier() {
               <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T1 Vendors</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-orange-400">{statsData?.latest_run?.tier2_count ?? statsBar.t2}</div>
+              <div className="text-lg font-mono font-bold text-orange-400">{statsData?.latest_run?.tier2_count ?? (tier2Data?.pagination?.total ?? statsBar.t2)}</div>
               <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T2 Vendors</div>
             </div>
             <div className="text-center">

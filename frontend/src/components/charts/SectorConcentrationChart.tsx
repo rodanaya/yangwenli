@@ -14,6 +14,11 @@ import { analysisApi } from '@/api/client'
 import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
+function useSectorName() {
+  const { t } = useTranslation('sectors')
+  return (code: string) => t(code) || getSectorNameEN(code)
+}
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface ConcentrationRow {
@@ -75,8 +80,8 @@ export default function SectorConcentrationChart({
   className,
   showTitle = true,
 }: SectorConcentrationChartProps) {
-  const { t, i18n } = useTranslation('common')
-  const isEn = i18n.language === 'en'
+  const { t } = useTranslation('common')
+  const getSectorName = useSectorName()
 
   function getConcentrationLevel(pct: number): { color: string; label: string } {
     return {
@@ -150,15 +155,15 @@ export default function SectorConcentrationChart({
               <li
                 key={row.sector_id}
                 className="flex items-center gap-3"
-                aria-label={`${isEn ? getSectorNameEN(row.sector_name) : row.sector_name}: ${pct.toFixed(1)}% — ${label}`}
+                aria-label={`${getSectorName(row.sector_name)}: ${pct.toFixed(1)}% — ${label}`}
               >
                 {/* Sector name with left border accent */}
                 <div
                   className="w-[140px] flex-shrink-0 pl-2 border-l-2 text-xs font-medium text-zinc-300 truncate"
                   style={{ borderColor: accentColor }}
-                  title={isEn ? getSectorNameEN(row.sector_name) : row.sector_name}
+                  title={getSectorName(row.sector_name)}
                 >
-                  {isEn ? getSectorNameEN(row.sector_name) : row.sector_name}
+                  {getSectorName(row.sector_name)}
                 </div>
 
                 {/* Bar track */}
