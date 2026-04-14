@@ -245,7 +245,7 @@ export function Dashboard() {
 
   // ARIA tier data
   const latestRun = ariaStats?.latest_run
-  const t1Count = latestRun?.tier1_count ?? 320
+  const t1Count = ariaT1?.pagination?.total ?? latestRun?.tier1_count ?? 320
   const t2Count = latestRun?.tier2_count ?? 1234
   const t3Count = latestRun?.tier3_count ?? 5016
   const t4Count = latestRun?.tier4_count ?? 311871

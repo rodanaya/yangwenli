@@ -511,33 +511,6 @@ export function Sectors() {
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* Editorial finding callout */}
-        <div className="mb-8">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            {t('editorial.kicker')}
-          </p>
-          <h1 className="text-2xl font-bold text-white leading-tight mb-2">
-            {t('editorial.headline')}
-          </h1>
-          <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl mb-4">
-            {t('editorial.body')}
-          </p>
-          <div className="flex flex-wrap gap-3">
-            <div className="border-l-2 border-red-500 pl-3 py-0.5">
-              <div className="text-xl font-mono font-bold text-red-500">93.5%</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat1Label')}</div>
-            </div>
-            <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-              <div className="text-xl font-mono font-bold text-amber-400">MXN 3.07B</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat2Label')}</div>
-            </div>
-            <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
-              <div className="text-xl font-mono font-bold text-cyan-400">3.3×</div>
-              <div className="text-[10px] text-zinc-500 uppercase tracking-wide">{t('editorial.stat3Label')}</div>
-            </div>
-          </div>
-        </div>
-
         {/* ── HERO FINDING STRIP ─────────────────────────────────────── */}
         {!isLoading && sectors.length > 0 && (() => {
           const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
@@ -562,16 +535,16 @@ export function Sectors() {
                     {t('finding.avgRiskLeader')}
                   </div>
                 </div>
-                <div className="border-l-2 border-amber-500 pl-3 py-0.5">
-                  <div className="text-xl font-mono font-bold text-amber-400">
+                <div className="border-l-2 border-orange-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-orange-400">
                     {formatSpend(totalValue)}
                   </div>
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
                     {t('finding.totalContracted')}
                   </div>
                 </div>
-                <div className="border-l-2 border-cyan-500 pl-3 py-0.5">
-                  <div className="text-xl font-mono font-bold text-cyan-400">
+                <div className="border-l-2 border-zinc-500 pl-3 py-0.5">
+                  <div className="text-xl font-mono font-bold text-zinc-300">
                     {exceedingOECD} {t('finding.ofTwelve')}
                   </div>
                   <div className="text-[10px] text-zinc-500 uppercase tracking-wide">

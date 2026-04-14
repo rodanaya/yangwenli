@@ -12,6 +12,7 @@ import { Link } from 'react-router-dom'
 import ReactECharts from 'echarts-for-react'
 import type * as echarts from 'echarts'
 import { Skeleton } from '@/components/ui/skeleton'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { ariaApi, vendorApi, networkApi } from '@/api/client'
 import type { AriaQueueItem, VendorDetailResponse } from '@/api/types'
 import { cn, formatCompactMXN, formatNumber, formatPercent, formatPercentSafe } from '@/lib/utils'
@@ -517,7 +518,9 @@ export default function RedesKnownDossier() {
 
       {/* Risk Intelligence Matrix — scatter plot */}
       {!isLoading && filtered.length > 0 && (
-        <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
+        <ErrorBoundary fallback={<div className="h-[480px] rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Visualization unavailable</div>}>
+          <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
+        </ErrorBoundary>
       )}
 
       {/* Stats bar + view toggle */}
