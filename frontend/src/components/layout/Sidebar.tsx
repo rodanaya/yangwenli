@@ -128,13 +128,13 @@ function NavSection({
     <div>
       {!collapsed && (
         <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[10px] font-semibold tracking-[0.08em] uppercase text-stone-500 font-mono select-none">
+          <span className="text-[10px] font-semibold tracking-[0.08em] uppercase text-white/28 font-mono select-none">
             {title}
           </span>
-          <div className="flex-1 h-px bg-stone-800/70" />
+          <div className="flex-1 h-px bg-white/[0.07]" />
         </div>
       )}
-      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-stone-800" />}
+      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-white/[0.08]" />}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -204,16 +204,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 
   return (
     <>
-    {mobileOpen && (
-      <div
-        className="fixed inset-0 z-40 bg-black/50 md:hidden"
-        onClick={onMobileClose}
-        aria-hidden="true"
-      />
-    )}
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col border-r border-stone-800 bg-sidebar z-50',
+        'fixed left-0 top-0 h-screen flex flex-col border-r border-border/40 bg-sidebar z-50',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
@@ -243,7 +236,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
-              <span className="text-[9px] font-bold font-mono text-[#c41e3a] bg-[#c41e3a]/15 border border-[#c41e3a]/25 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v2.1</span>
+              <span className="text-[9px] font-bold font-mono text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v0.2.5</span>
             </div>
             <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
           </div>
@@ -253,7 +246,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <Button
             variant="ghost"
             size="icon"
-            className="h-10 w-10 flex-shrink-0 md:hidden text-stone-300 hover:text-white hover:bg-sidebar-hover ml-auto"
+            className="h-10 w-10 flex-shrink-0 md:hidden text-white/70 hover:text-white hover:bg-sidebar-hover ml-auto"
             onClick={onMobileClose}
             aria-label={t('closeMenu')}
           >
@@ -299,9 +292,9 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 href="/api/v1/docs"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-white/[0.025] transition-all duration-100"
+                className="group flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-white/40 hover:text-white hover:bg-white/[0.025] transition-all duration-100"
               >
-                <Activity className="h-4 w-4 flex-shrink-0 text-stone-500 group-hover:text-stone-300" aria-hidden="true" />
+                <Activity className="h-4 w-4 flex-shrink-0 text-white/30 group-hover:text-white/70" aria-hidden="true" />
                 <span className="truncate">{t('apiExplorer')}</span>
                 <svg className="ml-auto h-3 w-3 opacity-40 flex-shrink-0" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" /></svg>
               </a>
@@ -316,7 +309,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
               <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981] flex-shrink-0" />
-              <span className="text-[10px] font-mono text-stone-500 tracking-wide">
+              <span className="text-[10px] font-mono text-white/30 tracking-wide">
                 {t('contractsIndexed')}
               </span>
             </div>
@@ -342,7 +335,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             <TooltipTrigger asChild>
               <button
                 onClick={() => setReportOpen(true)}
-                className="w-full flex justify-center items-center rounded-md py-1.5 text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors"
+                className="w-full flex justify-center items-center rounded-md py-1.5 text-white/40 hover:text-white hover:bg-sidebar-hover transition-colors"
                 aria-label={t('reportIssue')}
               >
                 <MessageSquarePlus className="h-4 w-4" />
@@ -355,7 +348,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         ) : (
           <button
             onClick={() => setReportOpen(true)}
-            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors"
+            className="w-full flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium text-white/40 hover:text-white hover:bg-sidebar-hover transition-colors"
           >
             <MessageSquarePlus className="h-4 w-4 flex-shrink-0" />
             <span className="truncate">{t('reportIssue')}</span>
@@ -372,7 +365,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 <TooltipTrigger asChild>
                   <button
                     onClick={() => i18n.changeLanguage(i18n.language === 'es' ? 'en' : 'es')}
-                    className="h-7 w-7 flex items-center justify-center rounded-md text-stone-400 hover:text-white hover:bg-sidebar-hover transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
+                    className="h-7 w-7 flex items-center justify-center rounded-md text-white/40 hover:text-white hover:bg-sidebar-hover transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500"
                     aria-label={i18n.language === 'es' ? 'Switch to English' : 'Cambiar a Español'}
                   >
                     <span className="text-[10px] font-bold font-mono">
@@ -392,7 +385,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
               size="icon"
               onClick={onToggle}
               className={cn(
-                'h-7 w-7 text-stone-400 hover:text-white hover:bg-sidebar-hover hidden md:flex',
+                'h-7 w-7 text-white/40 hover:text-white hover:bg-sidebar-hover hidden md:flex',
                 collapsed && 'mx-auto'
               )}
               aria-label={collapsed ? t('expandSidebar') : t('collapseSidebar')}
@@ -452,8 +445,8 @@ function SidebarNavItem({
         'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500',
         isActive
-          ? 'bg-white/[0.04] text-white ring-1 ring-inset ring-white/[0.06]'
-          : 'text-stone-300 hover:text-white hover:bg-white/[0.025]',
+          ? 'bg-white/[0.06] text-white ring-1 ring-inset ring-white/[0.08]'
+          : 'text-white/60 hover:text-white hover:bg-white/[0.03]',
         isHero && !isActive && 'font-semibold',
         isHero && isActive && 'font-semibold',
         !isHero && 'font-medium',
@@ -483,8 +476,8 @@ function SidebarNavItem({
         <Icon
           className={cn(
             'h-4 w-4 transition-colors',
-            isActive ? 'text-white' : 'text-stone-400 group-hover:text-stone-200',
-            isHero && !isActive && 'text-stone-200',
+            isActive ? 'text-white' : 'text-white/45 group-hover:text-white/80',
+            isHero && !isActive && 'text-white/70',
           )}
           aria-hidden="true"
         />
@@ -508,7 +501,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-stone-800 text-[10px] font-mono text-stone-400 px-1 border border-stone-700"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-white/[0.07] text-[10px] font-mono text-white/40 px-1 border border-white/[0.10]"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
@@ -521,7 +514,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-sidebar border-stone-700 text-stone-200">
+        <TooltipContent side="right" sideOffset={8} className="bg-sidebar border-border/60 text-white/80">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

@@ -29,7 +29,7 @@ export function MainLayout() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Subtle grid background — intelligence aesthetic */}
-      <div className="fixed inset-0 grid-pattern pointer-events-none opacity-40" aria-hidden="true" />
+      <div className="fixed inset-0 grid-pattern pointer-events-none opacity-[0.18]" aria-hidden="true" />
 
       {/* Skip to content link for keyboard users */}
       <a href="#main-content" className="skip-link">

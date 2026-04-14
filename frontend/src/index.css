@@ -88,25 +88,28 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    /* ─── v2.1 Design Tokens ──────────────────────────────────────────── */
+    /* ─── v0.2.5 Design Tokens ──────────────────────────────────────────── */
     /* Multi-layer shadows — light mode */
     --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
     --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.06);
     --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.07);
     --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.14), 0 8px 10px -6px rgb(0 0 0 / 0.06);
 
-    /* Card treatment */
+    /* Card treatment — unified 12px radius matches rounded-xl */
     --card-border: 1px solid rgba(0, 0, 0, 0.07);
-    --card-radius: 10px;
+    --card-radius: 0.75rem;
+
+    /* Frosted glass surfaces (header, overlays) */
+    --color-surface-glass: rgba(250, 249, 246, 0.88);
 
     /* Border refinements — light mode */
     --border-color: rgba(0, 0, 0, 0.09);
     --border-color-strong: rgba(0, 0, 0, 0.16);
 
-    /* Snappier transitions */
+    /* Transitions — snappy but unhurried */
     --transition-fast: 100ms ease;
-    --transition-base: 160ms ease;
-    --transition-slow: 260ms ease;
+    --transition-base: 140ms ease;
+    --transition-slow: 220ms ease;
   }
 
   html {
@@ -117,23 +120,26 @@
   html.dark {
     color-scheme: dark;
     /* Stronger shadows for dark mode (richer depth on dark surfaces) */
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.45), 0 1px 2px -1px rgb(0 0 0 / 0.35);
-    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.55), 0 2px 4px -2px rgb(0 0 0 / 0.40);
-    --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.65), 0 6px 8px -4px rgb(0 0 0 / 0.45);
-    --shadow-xl: 0 24px 32px -6px rgb(0 0 0 / 0.70), 0 10px 14px -6px rgb(0 0 0 / 0.50);
+    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.50), 0 1px 2px -1px rgb(0 0 0 / 0.40);
+    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.60), 0 2px 4px -2px rgb(0 0 0 / 0.45);
+    --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.70), 0 6px 8px -4px rgb(0 0 0 / 0.50);
+    --shadow-xl: 0 24px 32px -6px rgb(0 0 0 / 0.75), 0 10px 14px -6px rgb(0 0 0 / 0.55);
 
     /* Dark card border */
-    --card-border: 1px solid rgba(255, 255, 255, 0.06);
+    --card-border: 1px solid rgba(255, 255, 255, 0.07);
 
     /* Dark borders */
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-color-strong: rgba(255, 255, 255, 0.14);
+    --border-color: rgba(255, 255, 255, 0.09);
+    --border-color-strong: rgba(255, 255, 255, 0.16);
 
-    --color-background: #0d0f0e;
-    --color-background-card: #141716;
-    --color-background-elevated: #1a1d1c;
-    --color-border: #2a2d2c;
-    --color-border-hover: #3a3d3c;
+    /* Frosted glass — dark variant */
+    --color-surface-glass: rgba(11, 13, 12, 0.90);
+
+    --color-background: #0b0d0c;
+    --color-background-card: #121514;
+    --color-background-elevated: #181b1a;
+    --color-border: #262928;
+    --color-border-hover: #363938;
     --color-text-primary: #f0ede8;
     --color-text-secondary: #9a9590;
     --color-text-muted: #6a6560;
@@ -142,9 +148,9 @@
     --color-accent-glow: #e8253f22;
     --color-accent-data: #4d9ef5;
     --color-accent-data-glow: #4d9ef518;
-    --color-sidebar: #0a0c0b;
-    --color-sidebar-hover: #141716;
-    --color-sidebar-active: #1e2120;
+    --color-sidebar: #080a09;
+    --color-sidebar-hover: #121514;
+    --color-sidebar-active: #1a1d1c;
     --color-signal-pulse: #e8253f;
     --color-signal-live: #3fb950;
     --color-signal-warn: #d29922;
@@ -331,6 +337,7 @@
     background-size: 200% 100%;
   }
   @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+  /* Note: a second shimmer keyframe below (shimmerSweep) has been intentionally kept separate */
 
   .stagger-animate > * { opacity: 0; animation: fadeSlideUp 0.4s ease-out forwards; }
   .stagger-animate > *:nth-child(1) { animation-delay: 0ms; }
@@ -432,18 +439,15 @@
   html.dark .fern-card {
     background: var(--color-background-card);
     border-color: var(--color-border);
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.03) inset;
+    /* Subtle top-edge highlight for perceived depth */
+    box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 -1px 0 0 rgba(0,0,0,0.2) inset;
   }
   html.dark .fern-card:hover {
     border-color: var(--color-border-hover);
-    box-shadow: 0 0 20px -6px var(--color-accent-glow), 0 1px 0 0 rgba(255,255,255,0.04) inset;
+    box-shadow: 0 0 24px -6px var(--color-accent-glow), 0 1px 0 0 rgba(255,255,255,0.05) inset;
   }
 
-  /* Shimmer animation for loading states */
-  @keyframes shimmer {
-    0% { background-position: -200% 0; }
-    100% { background-position: 200% 0; }
-  }
+  /* Shimmer overlay for cards/panels — different from animate-shimmer (which sweeps the bg color) */
   .shimmer {
     background: linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.04) 50%, transparent 100%);
     background-size: 200% 100%;
@@ -626,7 +630,7 @@
 /* Typewriter cursor blink */
 .rc-typing-cursor {
   animation: rc-cursor-blink 0.6s step-end infinite;
-  color: #c41e3a;
+  color: var(--color-accent);
   font-weight: bold;
 }
 @keyframes rc-cursor-blink {
