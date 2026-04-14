@@ -154,9 +154,10 @@ export default function StateExplorer() {
 
   if (error) {
     return (
-      <div className="p-6">
-        <p className="text-red-400 text-sm font-mono">
-          Failed to load states data. Please try again.
+      <div className="flex items-center gap-3 m-6 p-4 rounded-lg border border-destructive/30 bg-destructive/5">
+        <span className="text-destructive text-lg" aria-hidden="true">⚠</span>
+        <p className="text-sm text-text-secondary">
+          Failed to load state expenditure data. Please try again.
         </p>
       </div>
     )
