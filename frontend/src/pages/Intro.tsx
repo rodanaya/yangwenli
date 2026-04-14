@@ -45,6 +45,17 @@ const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }>
 const SERIF = "'Playfair Display', Georgia, serif"
 const CRIMSON = '#c41e3a'
 
+const GRADE_LABELS_EN: Record<string, string> = {
+  'S': 'Excellent', 'A': 'Excellent', 'B+': 'Satisfactory', 'B': 'Satisfactory',
+  'C+': 'Fair', 'C': 'Fair', 'D': 'Deficient', 'D-': 'Deficient',
+  'F': 'Critical', 'F-': 'Critical',
+}
+const GRADE_LABELS_ES: Record<string, string> = {
+  'S': 'Excelente', 'A': 'Excelente', 'B+': 'Satisfactorio', 'B': 'Satisfactorio',
+  'C+': 'Regular', 'C': 'Regular', 'D': 'Deficiente', 'D-': 'Deficiente',
+  'F': 'Crítico', 'F-': 'Crítico',
+}
+
 // ---------------------------------------------------------------------------
 // GradientMeshBackground -- 3 animated radial-gradient orbs
 // ---------------------------------------------------------------------------
@@ -726,7 +737,7 @@ function StatCounter({
 // ---------------------------------------------------------------------------
 // GradeSlotMachine -- animates through letters before landing
 // ---------------------------------------------------------------------------
-function GradeSlotMachine({ grade, trigger }: { grade: string; trigger: boolean }) {
+function GradeSlotMachine({ grade, trigger, isEn }: { grade: string; trigger: boolean; isEn: boolean }) {
   const letters = ['A', 'B', 'C', 'D', 'F']
   const [current, setCurrent] = useState(0)
   const [done, setDone] = useState(false)
@@ -748,6 +759,9 @@ function GradeSlotMachine({ grade, trigger }: { grade: string; trigger: boolean 
 
   const displayLetter = done ? grade : letters[current]
   const gradeStyle = GRADE_COLORS[displayLetter] || GRADE_COLORS.F
+  const displayLabel = done
+    ? ((isEn ? GRADE_LABELS_EN : GRADE_LABELS_ES)[grade] ?? grade)
+    : displayLetter
 
   return (
     <AnimatePresence mode="wait">
@@ -757,17 +771,18 @@ function GradeSlotMachine({ grade, trigger }: { grade: string; trigger: boolean 
         animate={{ y: 0, opacity: 1 }}
         exit={{ y: -20, opacity: 0 }}
         transition={{ duration: 0.06 }}
-        className="w-28 h-28 sm:w-36 sm:h-36 rounded-2xl flex items-center justify-center mx-auto"
+        className="w-36 h-28 sm:w-48 sm:h-36 rounded-2xl flex items-center justify-center mx-auto"
         style={{
           fontFamily: SERIF,
-          fontSize: '5rem',
+          fontSize: done ? '2.8rem' : '5rem',
           fontWeight: 900,
           color: gradeStyle.text,
           backgroundColor: gradeStyle.bg,
           border: `3px solid ${gradeStyle.border}`,
+          transition: 'font-size 0.3s ease',
         }}
       >
-        {displayLetter}
+        {displayLabel}
       </motion.div>
     </AnimatePresence>
   )
@@ -1614,7 +1629,7 @@ export default function Intro() {
 
           {/* Grade slot machine */}
           <div className="gsap-reveal mb-12">
-            <GradeSlotMachine grade={nationalGrade} trigger={s5InView} />
+            <GradeSlotMachine grade={nationalGrade} trigger={s5InView} isEn={isEn} />
             <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
               {t('reportCard.nationalGrade')}
             </p>
@@ -1646,15 +1661,15 @@ export default function Intro() {
                       </span>
                     </div>
                     <div
-                      className="w-10 h-10 rounded-lg flex items-center justify-center text-lg font-black flex-shrink-0"
+                      className="px-2 py-1 rounded-lg flex items-center justify-center text-[10px] font-bold uppercase tracking-wide flex-shrink-0 text-center"
                       style={{
-                        fontFamily: SERIF,
                         color: gradeStyle.text,
                         backgroundColor: gradeStyle.bg,
                         border: `1px solid ${gradeStyle.border}`,
+                        minWidth: '5rem',
                       }}
                     >
-                      {sector.grade}
+                      {(isEn ? GRADE_LABELS_EN : GRADE_LABELS_ES)[sector.grade] ?? sector.grade}
                     </div>
                   </div>
                 )
