@@ -46,7 +46,13 @@
     "sameWinner": "mismo ganador",
     "ofTime": "de las veces",
     "involves": "Involucra:",
-    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v0.6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado."
+    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v0.6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado.",
+    "roleDecoy": "Señuelo",
+    "roleDominant": "Dominante",
+    "roleRotation": "Rotación",
+    "roleModerate": "Co-licitante",
+    "thisVendorWinsLabel": "Este proveedor",
+    "partnerWinsLabel": "Socio"
   },
   "groundTruth": {
     "documentedIn": "Documentado en",

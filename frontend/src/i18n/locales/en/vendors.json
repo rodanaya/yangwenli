@@ -46,7 +46,13 @@
     "sameWinner": "same winner",
     "ofTime": "of time",
     "involves": "Involves:",
-    "heuristicNote": "This is a separate heuristic analysis. The v0.6.5 ML risk score assigns co_bid_rate a coefficient of 0.000 — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score."
+    "heuristicNote": "This is a separate heuristic analysis. The v0.6.5 ML risk score assigns co_bid_rate a coefficient of 0.000 — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.",
+    "roleDecoy": "Decoy",
+    "roleDominant": "Dominant",
+    "roleRotation": "Rotation",
+    "roleModerate": "Co-bidder",
+    "thisVendorWinsLabel": "This vendor",
+    "partnerWinsLabel": "Partner"
   },
   "groundTruth": {
     "documentedIn": "Documented in",
