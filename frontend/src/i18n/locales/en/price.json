@@ -72,7 +72,7 @@
   "pageKicker": "RUBLI · Price Intelligence",
   "pageTitle": "The Shadow Market",
   "share": "Share",
-  "kpiLede": "{{count}} federal contracts worth {{value}} were awarded at statistically anomalous prices — defined as {{z}} standard deviations above the sector market median.",
+  "kpiLede": "{{n}} federal contracts worth {{value}} were awarded at statistically anomalous prices — defined as {{z}} standard deviations above the sector market median.",
   "kpiValueAtRisk": "Value at risk",
   "kpiAvgDeviation": "Avg. deviation",
   "kpiOverpricingEst": "Est. overpricing",

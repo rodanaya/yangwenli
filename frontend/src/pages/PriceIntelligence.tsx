@@ -741,7 +741,7 @@ export default function PriceIntelligence() {
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                   dangerouslySetInnerHTML={{
                     __html: t('kpiLede', {
-                      count: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
+                      n: `<strong class="text-orange-400">${formatNumber(summary.total_outliers)}</strong>`,
                       value: `<strong class="text-red-400">${formatCompactMXN(summary.total_value_mxn)}</strong>`,
                       z: `<strong class="text-amber-400">${avgZ.toFixed(1)}</strong>`,
                       interpolation: { escapeValue: false },

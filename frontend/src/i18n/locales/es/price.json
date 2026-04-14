@@ -72,7 +72,7 @@
   "pageKicker": "RUBLI · Inteligencia de Precios",
   "pageTitle": "Mercado en la Sombra",
   "share": "Compartir",
-  "kpiLede": "{{count}} contratos federales, por un monto de {{value}}, fueron adjudicados a precios estadísticamente anómalos — definidos como aquellos {{z}} desviaciones estándar por encima del precio de mercado en su sector.",
+  "kpiLede": "{{n}} contratos federales, por un monto de {{value}}, fueron adjudicados a precios estadísticamente anómalos — definidos como aquellos {{z}} desviaciones estándar por encima del precio de mercado en su sector.",
   "kpiValueAtRisk": "Valor en riesgo",
   "kpiAvgDeviation": "Desviación promedio",
   "kpiOverpricingEst": "Sobrevalorización est.",
