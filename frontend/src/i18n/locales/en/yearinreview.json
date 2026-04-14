@@ -37,7 +37,8 @@
     "subtitle": "Highest-value vendors in selected year",
     "rank": "Rank",
     "vendor": "Vendor",
-    "value": "Total Value"
+    "value": "Total Value",
+    "limitedCoverage": "Vendor ID coverage is limited for this period — only {{count}} providers identified."
   },
   "topRiskVendors": {
     "sectionLabel": "Highest-Risk Vendors",

@@ -755,7 +755,7 @@ export default function Administrations() {
   const [trajectoryMetric, setTrajectoryMetric] = useState<'avg_risk' | 'direct_award_pct' | 'high_risk_pct'>('avg_risk')
 
   // Data queries
-  const { data: yoyResp, isLoading: yoyLoading } = useQuery({
+  const { data: yoyResp, isLoading: yoyLoading, isError: yoyError } = useQuery({
     queryKey: ['analysis', 'year-over-year'],
     queryFn: () => analysisApi.getYearOverYear(),
     staleTime: 5 * 60 * 1000,
@@ -1011,6 +1011,7 @@ export default function Administrations() {
   }, [sectorYearData, selectedMeta, ts])
 
   const isLoading = yoyLoading || syLoading
+  const hasNoData = !isLoading && yoyData.length === 0
 
   if (isLoading) {
     return (
@@ -1023,6 +1024,25 @@ export default function Administrations() {
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-20" />)}
         </div>
         <Skeleton className="h-80" />
+      </div>
+    )
+  }
+
+  if (yoyError || hasNoData) {
+    return (
+      <div className="flex items-center justify-center min-h-[60vh] p-6">
+        <div className="text-center max-w-md space-y-4">
+          <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
+            <span className="text-destructive text-xl">⚠</span>
+          </div>
+          <h2 className="text-xl font-bold text-text-primary">{t('loadError', 'Data unavailable')}</h2>
+          <p className="text-sm text-text-secondary leading-relaxed">
+            {t('loadErrorDetail', 'The server may be temporarily unavailable. Administration data will appear once the connection is restored.')}
+          </p>
+          <p className="text-[10px] tracking-[0.2em] uppercase text-text-muted">
+            RUBLI — {t('classifiedHeader.eyebrow', 'Political cycle analysis')}
+          </p>
+        </div>
       </div>
     )
   }

@@ -16,6 +16,7 @@ import {
   X,
   MessageSquarePlus,
   Shield,
+  FolderSearch,
   History,
   CalendarDays,
   Building2,
@@ -65,19 +66,28 @@ interface NavSectionDef {
 
 const NAV_SECTIONS: NavSectionDef[] = [
   {
+    // Summaries & overviews — most common entry points
+    sectionKey: 'sections.overview',
+    items: [
+      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
+    ],
+  },
+  {
     // Active investigation bureau — journalist-facing
     sectionKey: 'sections.investigate',
     items: [
-      { i18nKey: 'investigation', href: '/investigation', icon: Shield, isHero: true, heroColor: '#c41e3a' },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, isHero: true, heroColor: '#c41e3a', badgeSource: 'aria-t1' },
+      { i18nKey: 'theArchive', href: '/investigation', icon: FolderSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
+      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
       { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
       { i18nKey: 'network', href: '/network', icon: Network },
-      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
       { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
   {
-    // Editorial centerpieces — where the stories are
+    // Editorial analysis — data-driven stories
     sectionKey: 'sections.analysis',
     items: [
       { i18nKey: 'categories', href: '/categories', icon: Layers, isHero: true, heroColor: '#8b5cf6' },
@@ -86,15 +96,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'states', href: '/states', icon: Map },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
-      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-    ],
-  },
-  {
-    // Summaries & overviews
-    sectionKey: 'sections.overview',
-    items: [
-      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
     ],
   },
   {
@@ -105,10 +106,10 @@ const NAV_SECTIONS: NavSectionDef[] = [
     ],
   },
   {
-    // ARIA & tooling — investigation platform
+    // Platform meta — methodology & settings
     sectionKey: 'sections.platform',
     items: [
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
       { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },

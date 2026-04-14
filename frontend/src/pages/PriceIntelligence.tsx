@@ -647,7 +647,7 @@ export default function PriceIntelligence() {
         <div className="flex items-center gap-3 p-6 text-zinc-400 border border-zinc-700/60 rounded-lg bg-zinc-900/40">
           <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
           <div>
-            <p className="text-sm font-semibold text-zinc-200">COMPRANET: datos no disponibles</p>
+            <p className="text-sm font-semibold text-zinc-200">{t('compranetUnavailableTitle')}</p>
             <p className="text-xs text-zinc-500 mt-0.5">{t('errorMessage')}</p>
           </div>
         </div>
@@ -705,26 +705,20 @@ export default function PriceIntelligence() {
               <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
                 <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-emerald-400 mb-1">
-                  Sistema saludable
+                  {t('healthySystemLabel')}
                 </p>
                 <h2
                   className="text-lg md:text-xl font-bold text-zinc-100 mb-2"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
-                  No se detectaron anomalias estadisticas significativas
+                  {t('healthySystemTitle')}
                 </h2>
-                <p className="text-sm text-zinc-300 leading-relaxed">
-                  Con el umbral actual de{' '}
-                  <strong className="text-emerald-300">z &ge; {zThreshold.toFixed(1)}&sigma;</strong>,
-                  ningun contrato federal supera el limite de deteccion. El sistema de precios
-                  publicos esta dentro de rangos esperados en los sectores analizados.
-                </p>
-                <p className="text-xs text-zinc-500 mt-3 leading-relaxed">
-                  <strong className="text-zinc-400">Nota metodologica:</strong> el umbral z &ge; 3.0&sigma;
-                  es conservador por diseno &mdash; solo detecta valores extremos. Reduzca el umbral
-                  en el slider de abajo para ver anomalias moderadas (z &ge; 2.0&sigma;) que pueden
-                  reflejar patrones de sobreprecio menos obvios.
-                </p>
+                <p className="text-sm text-zinc-300 leading-relaxed"
+                   dangerouslySetInnerHTML={{ __html: t('healthySystemBody', { threshold: zThreshold.toFixed(1) }) }}
+                />
+                <p className="text-xs text-zinc-500 mt-3 leading-relaxed"
+                   dangerouslySetInnerHTML={{ __html: t('healthySystemNote') }}
+                />
               </div>
             </div>
           </div>

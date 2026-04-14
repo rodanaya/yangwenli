@@ -428,6 +428,7 @@ function ExportTab() {
 // ============================================================================
 
 function DataQualityTab() {
+  const { t } = useTranslation('settings')
   const { data, isLoading, error } = useQuery({
     queryKey: ['data-quality'],
     queryFn: () => analysisApi.getDataQuality(),
@@ -456,7 +457,7 @@ function DataQualityTab() {
     return (
       <Card>
         <CardContent className="p-8 text-center text-text-muted">
-          <p>Failed to load data quality metrics</p>
+          <p>{t('dataQuality.loadError', 'Failed to load data quality metrics')}</p>
           <p className="text-sm">{(error as Error).message}</p>
         </CardContent>
       </Card>
@@ -750,6 +751,7 @@ interface BulkExportSectionProps {
 }
 
 function BulkExportSection({ onSuccess, onError }: BulkExportSectionProps) {
+  const { t } = useTranslation('settings')
   const [loadingKey, setLoadingKey] = useState<string | null>(null)
 
   const handleHighRiskCSV = async () => {
@@ -826,9 +828,9 @@ function BulkExportSection({ onSuccess, onError }: BulkExportSectionProps) {
       <CardHeader>
         <CardTitle className="flex items-center gap-2 text-base">
           <Archive className="h-4 w-4" aria-hidden="true" />
-          Bulk Export
+          {t('export.bulkExportTitle')}
         </CardTitle>
-        <CardDescription>Quick exports for common investigation workflows</CardDescription>
+        <CardDescription>{t('export.bulkExportDesc')}</CardDescription>
       </CardHeader>
       <CardContent>
         <div className="space-y-3">

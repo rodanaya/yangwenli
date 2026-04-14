@@ -461,7 +461,7 @@ export default function Journalists() {
               >
                 <AlertTriangle className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
                 <p className="text-sm text-zinc-500">
-                  No investigations match this filter. Try "All Investigations" to see the full archive.
+                  {t('filters.noStories')}
                 </p>
               </motion.div>
             )}

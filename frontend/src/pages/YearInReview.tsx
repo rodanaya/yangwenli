@@ -1119,37 +1119,12 @@ export default function YearInReview() {
       />
 
       {/* ------------------------------------------------------------------ */}
-      {/* 1. Hero Banner — prominent year display                             */}
+      {/* 1. Year selector                                                    */}
       {/* ------------------------------------------------------------------ */}
-      <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 pt-8 pb-6">
-        {/* Large watermark year */}
-        <div
-          className="absolute right-4 top-1/2 -translate-y-1/2 text-[120px] font-black leading-none select-none pointer-events-none tabular-nums"
-          style={{
-            fontFamily: "var(--font-family-serif)",
-            color: 'rgba(255,255,255,0.04)',
-          }}
-          aria-hidden="true"
-        >
-          {validYear}
-        </div>
-
+      <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
         <div className="relative z-10">
-          <p className="text-[10px] uppercase tracking-[0.35em] text-text-muted mb-2">
-            {t('edition')}
-          </p>
-          <h1
-            className="text-4xl sm:text-5xl font-black text-text-primary leading-none mb-3"
-            style={{ fontFamily: "var(--font-family-serif)" }}
-          >
-            {validYear}
-          </h1>
-          <p className="text-base text-text-secondary max-w-xl">
-            {t('title')} — {t('subtitle')}
-          </p>
-
-          {/* Featured year pills inside hero */}
-          <div className="flex items-center gap-2 flex-wrap mt-5">
+          {/* Featured year pills */}
+          <div className="flex items-center gap-2 flex-wrap">
             <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
             <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
               {t('yearSelector')}:
@@ -1500,22 +1475,29 @@ export default function YearInReview() {
             {t('noData')}
           </div>
         ) : (
-          <motion.div
-            className="space-y-2"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-          >
-            {(vendorsResp?.data ?? []).slice(0, 5).map((v, i) => (
-              <motion.div key={v.vendor_id} variants={staggerItem}>
-                <VendorRankCard
-                  vendor={v}
-                  rank={i + 1}
-                  onClick={() => navigate(`/vendors/${v.vendor_id}`)}
-                />
-              </motion.div>
-            ))}
-          </motion.div>
+          <>
+            <motion.div
+              className="space-y-2"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              {(vendorsResp?.data ?? []).slice(0, 5).map((v, i) => (
+                <motion.div key={v.vendor_id} variants={staggerItem}>
+                  <VendorRankCard
+                    vendor={v}
+                    rank={i + 1}
+                    onClick={() => navigate(`/vendors/${v.vendor_id}`)}
+                  />
+                </motion.div>
+              ))}
+            </motion.div>
+            {(vendorsResp?.data ?? []).length < 5 && (
+              <p className="mt-3 text-xs text-text-muted italic">
+                {t('topVendors.limitedCoverage', { count: (vendorsResp?.data ?? []).length })}
+              </p>
+            )}
+          </>
         )}
       </div>
 

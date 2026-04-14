@@ -79,5 +79,10 @@
   "kpiTopSectorFallback": "Sector más afectado",
   "overpricingTooltipTitle": "Sobrevalorización estimada",
   "overpricingTooltipBody": "Cálculo: valor_total × (1 − 1/z_promedio) = {{value}} × {{pct}}%. Es una aproximación estadística, no un monto confirmado.",
-  "noAnomaliesAtThreshold": "No se encontraron anomalías de precio con el umbral actual. Intente reducir el Z-score mínimo."
+  "noAnomaliesAtThreshold": "No se encontraron anomalías de precio con el umbral actual. Intente reducir el Z-score mínimo.",
+  "healthySystemLabel": "SISTEMA SALUDABLE",
+  "healthySystemTitle": "No se detectaron anomalías estadísticas significativas",
+  "healthySystemBody": "Con el umbral actual de <strong>z ≥ {{threshold}}σ</strong>, ningún contrato federal supera el límite de detección. El sistema de precios públicos está dentro de rangos esperados en los sectores analizados.",
+  "healthySystemNote": "<strong>Nota metodológica:</strong> el umbral z ≥ 3.0σ es conservador por diseño — solo detecta valores extremos. Reduzca el umbral en el slider de abajo para ver anomalías moderadas (z ≥ 2.0σ) que pueden reflejar patrones de sobreprecio menos obvios.",
+  "compranetUnavailableTitle": "COMPRANET: datos no disponibles"
 }

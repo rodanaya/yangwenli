@@ -1007,13 +1007,13 @@ export default function Intro() {
       triggers.push(st)
     }
 
-    // Section 6 (CTA) - theatrical
+    // Section 6 (CTA) - theatrical (trigger as soon as section enters viewport)
     if (s6Ref.current) {
       const children6 = s6Ref.current.querySelectorAll('.gsap-reveal')
       gsap.set(children6, { opacity: 0, y: 80 })
       const st6 = ScrollTrigger.create({
         trigger: s6Ref.current,
-        start: 'top 80%',
+        start: 'top bottom',
         once: true,
         onEnter: () => {
           gsap.to(children6, {

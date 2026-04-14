@@ -823,12 +823,12 @@ export function Watchlist() {
                     return (
                       <div className="p-12 text-center text-text-muted">
                         <Crosshair className="h-12 w-12 mx-auto mb-4 text-accent opacity-30" />
-                        <p className="text-sm font-medium mb-1 text-text-primary">Your investigation workspace is empty</p>
+                        <p className="text-sm font-medium mb-1 text-text-primary">{t('workspaceEmpty.title')}</p>
                         <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
-                          Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.
+                          {t('workspaceEmpty.description')}
                         </p>
                         <p className="text-xs text-text-muted/70 max-w-xs mx-auto mb-5">
-                          Use the <Eye className="h-3 w-3 inline mx-0.5" /> icon on any vendor or institution profile to start tracking.
+                          <Eye className="h-3 w-3 inline mx-0.5" /> {t('workspaceEmpty.hint')}
                         </p>
                         <div className="flex justify-center gap-2">
                           <Button

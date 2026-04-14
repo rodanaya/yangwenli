@@ -26,6 +26,11 @@
     }
   },
   "export": {
+    "bulkExportTitle": "Bulk Export",
+    "bulkExportDesc": "Quick exports for common investigation workflows",
+    "dataQuality": {
+      "loadError": "Failed to load data quality metrics"
+    },
     "limitsTitle": "Export Limits",
     "limitsDescription": "Exports are limited to {{count}} records by default. For larger exports, please contact the administrator or use the API directly.",
     "contracts": {

@@ -26,6 +26,11 @@
     }
   },
   "export": {
+    "bulkExportTitle": "Exportación Masiva",
+    "bulkExportDesc": "Exportaciones rápidas para flujos de investigación comunes",
+    "dataQuality": {
+      "loadError": "Error al cargar métricas de calidad de datos"
+    },
     "limitsTitle": "Límites de Exportación",
     "limitsDescription": "Las exportaciones están limitadas a {{count}} registros por defecto. Para exportaciones más grandes, contacte al administrador o use la API directamente.",
     "contracts": {

@@ -37,7 +37,8 @@
     "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
     "rank": "Posición",
     "vendor": "Proveedor",
-    "value": "Valor Total"
+    "value": "Valor Total",
+    "limitedCoverage": "La cobertura de RFCs es limitada en años anteriores — solo {{count}} proveedores identificados."
   },
   "topRiskVendors": {
     "sectionLabel": "Proveedores de Mayor Riesgo",

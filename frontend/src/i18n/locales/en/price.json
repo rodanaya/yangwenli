@@ -79,5 +79,10 @@
   "kpiTopSectorFallback": "Top affected sector",
   "overpricingTooltipTitle": "Estimated overpricing",
   "overpricingTooltipBody": "Calculation: total_value × (1 − 1/avg_z) = {{value}} × {{pct}}%. This is a statistical approximation, not a confirmed amount.",
-  "noAnomaliesAtThreshold": "No price anomalies found at the current threshold. Try lowering the minimum Z-score."
+  "noAnomaliesAtThreshold": "No price anomalies found at the current threshold. Try lowering the minimum Z-score.",
+  "healthySystemLabel": "HEALTHY SYSTEM",
+  "healthySystemTitle": "No significant statistical anomalies detected",
+  "healthySystemBody": "At the current threshold of <strong>z ≥ {{threshold}}σ</strong>, no federal contract exceeds the detection limit. Public procurement prices are within expected ranges across the analysed sectors.",
+  "healthySystemNote": "<strong>Methodological note:</strong> a z ≥ 3.0σ threshold is conservative by design — it only catches extreme values. Lower the threshold on the slider below to see moderate anomalies (z ≥ 2.0σ) that may reflect less obvious overpricing patterns.",
+  "compranetUnavailableTitle": "COMPRANET: data unavailable"
 }

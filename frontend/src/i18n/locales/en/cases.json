@@ -187,7 +187,9 @@
     "timelineDismissed": "Case dismissed",
     "timelineLegalResolution": "Legal resolution"
   },
+  "share": "Share",
   "loadError": "Failed to load cases.",
+  "loadErrorDetail": "The server may be temporarily unavailable. Data will appear once the connection is restored.",
   "resultCount": "{{count}} cases",
   "noResultsHint": "Try broadening your search or removing filters. The current combination may be too narrow.",
   "noResultsExplain": "No documented cases match \"{{query}}\". This doesn't mean there is no corruption in this area — it means we haven't yet documented a case matching these criteria.",

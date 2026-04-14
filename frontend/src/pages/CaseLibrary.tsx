@@ -534,7 +534,7 @@ export default function CaseLibrary() {
           </h1>
         </div>
         <div className="flex items-center gap-2 shrink-0 mt-1">
-          <ShareButton label="Compartir" />
+          <ShareButton label={t('share')} />
           <CaseLeadButton />
         </div>
       </div>
