@@ -260,6 +260,7 @@
   "periodAnnotationEarly": "~24.5% prom.",
   "periodAnnotationRecent": "~31.4% prom.",
   "periodTrendAriaLabel": "Gráfico de área que muestra la puntuación de riesgo promedio y la tasa de alto riesgo por año de 2002 a 2025",
+  "periodTrendDataQualityNote": "⚠ Datos pre-2010 (Estructura A): cobertura RFC 0.1% — las puntuaciones son estimaciones direccionales únicamente, no comparables con períodos posteriores.",
   "oecdWithinRange": "✓ Dentro del rango OCDE 2-15%",
   "oecdAboveLimit": "↑ Por encima del límite OCDE 15%",
   "oecdBelowMin": "↓ Por debajo del mínimo OCDE 2%",

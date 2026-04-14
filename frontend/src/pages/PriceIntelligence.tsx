@@ -697,7 +697,18 @@ export default function PriceIntelligence() {
 
         {/* Hero lede */}
         {loading ? (
-          <Skeleton className="h-24 w-full" />
+          <div className="space-y-3">
+            <Skeleton className="h-6 w-3/4" />
+            <Skeleton className="h-4 w-full" />
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mt-2">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <div key={i} className="border-l-2 border-zinc-700 pl-3 py-0.5">
+                  <Skeleton className="h-7 w-16 mb-1" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              ))}
+            </div>
+          </div>
         ) : summary && summary.total_outliers === 0 ? (
           // --- HEALTHY SYSTEM: no anomalies detected at current threshold -----
           <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 max-w-3xl">

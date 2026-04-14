@@ -189,6 +189,8 @@ export function InstitutionProfile() {
     queryFn: () => institutionApi.getById(institutionId),
     enabled: !!(institutionId && Number.isFinite(institutionId)),
     staleTime: 5 * 60 * 1000,
+    retry: false,
+    gcTime: 10 * 60 * 1000,
   })
 
   const { data: riskProfile, isLoading: riskProfileLoading, error: riskProfileError } = useQuery({
@@ -419,10 +421,18 @@ export function InstitutionProfile() {
   // ---- Loading / error states ----
   // Guard: if institutionId is invalid, skip straight to error state
   const isValidId = Number.isFinite(institutionId) && institutionId > 0
+  const [loadTimedOut, setLoadTimedOut] = useState(false)
+  const isCurrentlyLoading = isValidId && (institutionLoading || (institutionPending && !institutionError))
+  useEffect(() => {
+    if (!isCurrentlyLoading) { setLoadTimedOut(false); return }
+    const timer = setTimeout(() => setLoadTimedOut(true), 10000)
+    return () => clearTimeout(timer)
+  }, [isCurrentlyLoading])
+
   // Use isPending (no data yet) OR isLoading (first fetch in progress) to cover
   // all initial-mount scenarios in TanStack Query v5.  Only show skeleton when
   // the query is actually enabled (valid ID) — otherwise fall through to error.
-  if (isValidId && (institutionLoading || (institutionPending && !institutionError))) return <InstitutionProfileSkeleton />
+  if (isCurrentlyLoading && !loadTimedOut) return <InstitutionProfileSkeleton />
 
   if (institutionError || !institution) {
     return (

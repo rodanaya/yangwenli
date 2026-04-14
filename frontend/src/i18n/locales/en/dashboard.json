@@ -260,6 +260,7 @@
   "periodAnnotationEarly": "~24.5% avg",
   "periodAnnotationRecent": "~31.4% avg",
   "periodTrendAriaLabel": "Area chart showing average contract risk score and high-risk rate by year from 2002 to 2025",
+  "periodTrendDataQualityNote": "⚠ Pre-2010 data (Structure A): 0.1% RFC coverage — risk scores are directional estimates only, not comparable to later periods.",
   "oecdWithinRange": "✓ Within OECD 2-15%",
   "oecdAboveLimit": "↑ Above OECD 15% limit",
   "oecdBelowMin": "↓ Below OECD 2% floor",

@@ -1866,6 +1866,9 @@ export function Dashboard() {
               <span className="text-xs text-text-muted">{t('legendHighRiskRate')}</span>
             </div>
           </div>
+          <p className="text-[10px] text-text-muted/50 mt-2 leading-snug max-w-2xl">
+            {t('periodTrendDataQualityNote')}
+          </p>
         </div>
       )}
 

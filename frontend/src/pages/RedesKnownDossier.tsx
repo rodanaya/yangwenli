@@ -4,7 +4,7 @@
  * Intelligence dossier of known corruption networks in Mexico's procurement system.
  * Presents ARIA Tier 1 + Tier 2 vendors as investigation dossiers.
  */
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion, AnimatePresence, type Variants } from 'framer-motion'
@@ -351,6 +351,14 @@ export default function RedesKnownDossier() {
 
   const isLoading = loading1 || loading2 || loading3
 
+  // Timeout: if still loading after 8s, treat as error state
+  const [loadTimedOut, setLoadTimedOut] = useState(false)
+  useEffect(() => {
+    if (!isLoading) { setLoadTimedOut(false); return }
+    const timer = setTimeout(() => setLoadTimedOut(true), 8000)
+    return () => clearTimeout(timer)
+  }, [isLoading])
+
   // Merge and sort by IPS
   const dossiers = useMemo(() => {
     const items: AriaQueueItem[] = []
@@ -384,7 +392,7 @@ export default function RedesKnownDossier() {
     return result.slice(0, 40) // cap at 40 for perf
   }, [dossiers, patternFilter, searchTerm])
 
-  const error = !isLoading && dossiers.length === 0 && !tier1Data && !tier2Data && !tier3Data
+  const error = loadTimedOut || (!isLoading && dossiers.length === 0 && !tier1Data && !tier2Data && !tier3Data)
 
   // Stats bar computations derived from filtered results
   const statsBar = useMemo(() => {
@@ -572,7 +580,7 @@ export default function RedesKnownDossier() {
       )}
 
       {/* Loading */}
-      {isLoading && (
+      {isLoading && !loadTimedOut && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 8 }).map((_, i) => (
             <Skeleton key={i} className="h-44 rounded-xl" />

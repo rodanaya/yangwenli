@@ -318,7 +318,16 @@ def list_cases(
             where_clauses.append("ic.priority = ?")
             params.append(priority)
 
-        where_sql = "WHERE " + " AND ".join(where_clauses) if where_clauses else ""
+        # Always exclude cases whose primary vendor is a known structural false positive
+        fp_exclusion = """
+            NOT EXISTS (
+                SELECT 1 FROM case_vendors cv2
+                JOIN ground_truth_vendors gtv ON gtv.vendor_id = cv2.vendor_id
+                WHERE cv2.case_id = ic.id AND gtv.is_false_positive = 1
+            )
+        """
+        where_clauses.append(fp_exclusion)
+        where_sql = "WHERE " + " AND ".join(where_clauses)
 
         # Count total
         cursor.execute(f"""
