@@ -538,7 +538,7 @@ export function Methodology() {
       <div className="flex items-start justify-between">
         <div>
           <div className="editorial-rule mb-3">
-            <span className="editorial-label text-accent">FUNDAMENTOS METODOLOGICOS</span>
+            <span className="editorial-label text-accent">{t('kicker')}</span>
           </div>
           <h1 className="text-editorial-h1 text-text-primary flex items-center gap-3">
             <BookOpen className="h-6 w-6 text-accent" />

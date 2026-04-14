@@ -3,6 +3,30 @@
  * Used by ReportCard, VendorProfile, and InstitutionProfile pages.
  */
 
+/** Convert a raw API enum string (e.g. "low_risk", "pillar_conduct") to a readable label */
+function formatRiskDriver(raw: string): string {
+  const MAP: Record<string, string> = {
+    pillar_risk_signal: 'ML Signal',
+    pillar_conduct: 'Conduct',
+    pillar_spread: 'Diversification',
+    pillar_behavior: 'Patterns',
+    pillar_flags: 'External Alerts',
+    pillar_openness: 'Openness',
+    pillar_price: 'Price Integrity',
+    pillar_vendors: 'Vendor Independence',
+    pillar_process: 'Transparency',
+    pillar_external: 'External Alerts',
+    low_risk: 'Low Risk Score',
+    high_risk: 'High Risk Score',
+    critical_risk: 'Critical Risk Score',
+    vendor_concentration: 'Vendor Concentration',
+    price_volatility: 'Price Volatility',
+    single_bid: 'Single Bidding',
+    direct_award: 'Direct Award',
+  }
+  return MAP[raw] ?? raw.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
+}
+
 export const GRADE10_COLORS: Record<string, { bg: string; text: string; border: string; bar: string }> = {
   'S':  { bg: '#f0fdf4', text: '#047857', border: '#6ee7b7', bar: '#10b981' },
   'A':  { bg: '#f0fdf4', text: '#16a34a', border: '#bbf7d0', bar: '#22c55e' },
@@ -136,7 +160,7 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
       </div>
       {sc.top_risk_driver && (
         <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
-          ↓ Mayor brecha: <span className="font-medium" style={{ color: c.text }}>{sc.top_risk_driver}</span>
+          ↓ Gap: <span className="font-medium" style={{ color: c.text }}>{formatRiskDriver(sc.top_risk_driver)}</span>
         </div>
       )}
     </div>
@@ -193,7 +217,7 @@ export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData 
       </div>
       {sc.top_risk_driver && (
         <div className="text-[11px] pt-1 border-t" style={{ borderColor: c.border, color: 'var(--color-text-muted)' }}>
-          ↓ Mayor brecha: <span className="font-medium" style={{ color: c.text }}>{sc.top_risk_driver}</span>
+          ↓ Gap: <span className="font-medium" style={{ color: c.text }}>{formatRiskDriver(sc.top_risk_driver)}</span>
         </div>
       )}
     </div>

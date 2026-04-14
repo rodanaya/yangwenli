@@ -1890,7 +1890,7 @@ export function Dashboard() {
             className="text-[10px] font-mono text-text-muted/70 cursor-help"
             title={t('aucExplanation')}
           >
-            {modelMeta?.version ?? CURRENT_MODEL_VERSION} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.828'}
+            {(modelMeta?.version === 'v6.5' ? 'v0.6.5' : (modelMeta?.version ?? CURRENT_MODEL_VERSION))} | AUC {modelMeta?.auc_test?.toFixed(3) ?? '0.828'}
           </span>
         </div>
       </div>

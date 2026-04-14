@@ -980,7 +980,7 @@ export default function CollusionExplorer() {
 
         {/* ── Source footnote ── */}
         <p className="text-[10px] text-zinc-700 mt-8 text-center">
-          COMPRANET 2010-2025 &middot; co_bidding_stats &middot; RUBLI v6.5
+          COMPRANET 2010-2025 &middot; co_bidding_stats &middot; RUBLI v0.6.5
         </p>
       </div>
 

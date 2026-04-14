@@ -1331,7 +1331,7 @@ export default function AriaPage() {
                       <strong className="text-zinc-300 font-mono">{formatNumber(stats.reviewed_count)}</strong>{' '}
                       {t('efficiencyStats.reviewed')}
                     </span>
-                    <span className="text-green-400/80">
+                    <span className="text-green-400/80" title={t('efficiencyStats.confirmationRateTooltip')}>
                       <strong className="font-mono">{confirmPct}%</strong>{' '}
                       {t('efficiencyStats.confirmationRate')}
                     </span>

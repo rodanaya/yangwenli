@@ -480,7 +480,7 @@ export function Sectors() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           <p className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
-            COMPRANET 2002–2025 · v6.5 RISK MODEL
+            COMPRANET 2002–2025 · v0.6.5 RISK MODEL
           </p>
           <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
             {t('page.title')}

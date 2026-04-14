@@ -937,7 +937,7 @@ export default function InstitutionLeague() {
 
         {/* Source footnote */}
         <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
-          RUBLI Indice de Salud de Contrataciones v6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
+          RUBLI Indice de Salud de Contrataciones v0.6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
         </p>
       </div>
     </div>

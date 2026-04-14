@@ -1695,7 +1695,7 @@ export default function SpendingCategories() {
       {/* 1. Editorial Headline                                             */}
       {/* ================================================================= */}
       <EditorialHeadline
-        section="PARTIDAS PRESUPUESTARIAS"
+        section={t('hero.trackingLabel')}
         headline={t('hero.headline')}
         subtitle={t('hero.analysisSubtitle')}
       />

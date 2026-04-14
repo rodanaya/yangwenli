@@ -381,7 +381,7 @@ export default function Journalists() {
 
           {/* Source line */}
           <p className="text-[10px] text-zinc-600 font-mono">
-            Source: COMPRANET (Secretaria de Hacienda) | Risk model v6.5 (AUC 0.828) | {t('masthead.lastUpdated')}
+            Source: COMPRANET (Secretaria de Hacienda) | Risk model v0.6.5 (AUC 0.828) | {t('masthead.lastUpdated')}
           </p>
         </motion.header>
 

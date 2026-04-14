@@ -1,6 +1,7 @@
 {
   "pageTitle": "Metodología de Puntuación de Riesgo",
   "pageSubtitle": "Modelo Estratificado por Proveedor v0.6.5 — 9 características activas, Optuna TPE, generalización honesta",
+  "kicker": "FUNDAMENTOS METODOLÓGICOS",
   "contents": "CONTENIDO",
   "sections": {
     "overview": "Descripción del Modelo",

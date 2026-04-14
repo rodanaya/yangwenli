@@ -212,7 +212,7 @@
   "situationReport": "Status Report",
   "methodology": {
     "title": "How does ARIA work?",
-    "body": "ARIA combines ML risk score (v6.5), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
+    "body": "ARIA combines ML risk score (v0.6.5), PyOD anomaly detection, and cross-referencing with external registries (SAT EFOS, SFP, RUPC) to prioritize investigations. IPS = Integrated Priority Score."
   },
   "threatLevels": "Priority Levels",
   "vendorCard": {
@@ -254,6 +254,7 @@
   "efficiencyStats": {
     "reviewed": "Reviewed",
     "confirmationRate": "Confirmation rate",
+    "confirmationRateTooltip": "Share of reviewed vendors where the risk lead was corroborated by external evidence (news, ASF audits, court records)",
     "t1Complete": "T1 complete"
   },
   "ariaReview": {
@@ -298,7 +299,7 @@
   },
   "explainer": {
     "kicker": "ARIA · Automated Risk Investigation Algorithm",
-    "body": "ARIA combines nine analysis modules — v6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",
+    "body": "ARIA combines nine analysis modules — v0.6.5 risk scoring, PyOD anomaly detection, co-bidding network analysis, and cross-referencing with external registries (SAT EFOS, SFP, ASF) — to classify 318K+ vendors into four investigation priority levels. T1 vendors are the 320 most critical cases: all show multiple simultaneous warning signals.",
     "t1Label": "Highest priority review",
     "t2Label": "Priority review",
     "t3Label": "Active monitoring",

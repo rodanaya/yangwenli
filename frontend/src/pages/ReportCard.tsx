@@ -1241,7 +1241,7 @@ function ReportCard() {
 
         {/* Source footnote */}
         <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
-          RUBLI v6.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
+          RUBLI v0.6.5 · COMPRANET 2002-2025 · 3.06M contracts · MX$9.88T validated
         </p>
       </div>
     </main>

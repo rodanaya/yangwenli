@@ -11,7 +11,7 @@
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
-import { SECTOR_COLORS } from '@/lib/constants'
+import { SECTOR_COLORS, getSectorNameEN } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
 // ── Types ─────────────────────────────────────────────────────────────────────
@@ -75,7 +75,8 @@ export default function SectorConcentrationChart({
   className,
   showTitle = true,
 }: SectorConcentrationChartProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const isEn = i18n.language === 'en'
 
   function getConcentrationLevel(pct: number): { color: string; label: string } {
     return {
@@ -109,7 +110,7 @@ export default function SectorConcentrationChart({
       {showTitle && (
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 leading-none mb-1">
-            RUBLI v6.5 · 3.06M contratos · 2002–2025
+            {t('charts.sectorConcentration.footnote')}
           </p>
           <h2
             id="sector-concentration-title"
@@ -139,7 +140,7 @@ export default function SectorConcentrationChart({
       )}
 
       {!isLoading && !isError && sorted.length > 0 && (
-        <ul className="space-y-2.5" role="list" aria-label="Concentración de mercado por sector">
+        <ul className="space-y-2.5" role="list" aria-label={t('charts.sectorConcentration.ariaList')}>
           {sorted.map((row) => {
             const { color: barColor, label } = getConcentrationLevel(row.metric_value)
             const accentColor = getSectorColor(row.sector_name)
@@ -149,15 +150,15 @@ export default function SectorConcentrationChart({
               <li
                 key={row.sector_id}
                 className="flex items-center gap-3"
-                aria-label={`${row.sector_name}: ${pct.toFixed(1)}% — ${label}`}
+                aria-label={`${isEn ? getSectorNameEN(row.sector_name) : row.sector_name}: ${pct.toFixed(1)}% — ${label}`}
               >
                 {/* Sector name with left border accent */}
                 <div
                   className="w-[140px] flex-shrink-0 pl-2 border-l-2 text-xs font-medium text-zinc-300 truncate"
                   style={{ borderColor: accentColor }}
-                  title={row.sector_name}
+                  title={isEn ? getSectorNameEN(row.sector_name) : row.sector_name}
                 >
-                  {row.sector_name}
+                  {isEn ? getSectorNameEN(row.sector_name) : row.sector_name}
                 </div>
 
                 {/* Bar track */}
@@ -167,7 +168,7 @@ export default function SectorConcentrationChart({
                   aria-valuenow={pct}
                   aria-valuemin={0}
                   aria-valuemax={100}
-                  aria-label={`${pct.toFixed(1)}% concentración`}
+                  aria-label={t('charts.sectorConcentration.concentrationAriaLabel', { pct: pct.toFixed(1) })}
                 >
                   <div
                     className="h-full rounded-sm transition-all duration-700"
@@ -204,10 +205,10 @@ export default function SectorConcentrationChart({
       {!isLoading && !isError && sorted.length > 0 && (
         <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-x-4 gap-y-1">
           {[
-            { color: '#dc2626', label: 'Alta ≥75%' },
-            { color: '#ea580c', label: 'Moderada ≥50%' },
-            { color: '#eab308', label: 'Baja ≥30%' },
-            { color: '#16a34a', label: 'Competitiva <30%' },
+            { color: '#dc2626', label: t('charts.sectorConcentration.legendHigh') },
+            { color: '#ea580c', label: t('charts.sectorConcentration.legendModerate') },
+            { color: '#eab308', label: t('charts.sectorConcentration.legendLow') },
+            { color: '#16a34a', label: t('charts.sectorConcentration.legendCompetitive') },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <div className="h-2 w-3 rounded-sm" style={{ backgroundColor: color, opacity: 0.85 }} />
@@ -219,7 +220,7 @@ export default function SectorConcentrationChart({
 
       {/* Footnote */}
       <p className="mt-3 text-[10px] text-zinc-600 leading-snug">
-        Fuente: RUBLI v6.5 · 3.06M contratos · 2002-2025
+        {t('charts.sectorConcentration.footnote')}
       </p>
     </section>
   )
