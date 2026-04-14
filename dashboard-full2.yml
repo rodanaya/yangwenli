@@ -1,0 +1,226 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Saltar al contenido principal" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e8]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e21]: RUBLI
+            - generic [ref=e22]: v2.1
+          - paragraph [ref=e23]: Transparencia en Contrataciones
+      - navigation "Main navigation" [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e30]: INVESTIGAR
+          - generic [ref=e32]:
+            - link "Investigación" [ref=e33] [cursor=pointer]:
+              - /url: /investigation
+              - img [ref=e36]
+              - generic [ref=e38]: Investigación
+            - link "Casos 43 items" [ref=e39] [cursor=pointer]:
+              - /url: /cases
+              - img [ref=e41]
+              - generic [ref=e43]: Casos
+              - generic "43 items" [ref=e44]: "43"
+            - link "Pares Coludidos" [ref=e45] [cursor=pointer]:
+              - /url: /collusion
+              - img [ref=e47]
+              - generic [ref=e51]: Pares Coludidos
+            - link "Redes" [ref=e52] [cursor=pointer]:
+              - /url: /network
+              - img [ref=e54]
+              - generic [ref=e59]: Redes
+            - link "Investigaciones" [ref=e60] [cursor=pointer]:
+              - /url: /journalists
+              - img [ref=e62]
+              - generic [ref=e65]: Investigaciones
+            - link "Espacio de Trabajo" [ref=e66] [cursor=pointer]:
+              - /url: /workspace
+              - img [ref=e68]
+              - generic [ref=e71]: Espacio de Trabajo
+        - generic [ref=e72]:
+          - generic [ref=e74]: ANÁLISIS
+          - generic [ref=e76]:
+            - link "Categorías de Gasto" [ref=e77] [cursor=pointer]:
+              - /url: /categories
+              - img [ref=e80]
+              - generic [ref=e84]: Categorías de Gasto
+            - link "Sectores" [ref=e85] [cursor=pointer]:
+              - /url: /sectors
+              - img [ref=e87]
+              - generic [ref=e89]: Sectores
+            - link "Análisis de Precios" [ref=e90] [cursor=pointer]:
+              - /url: /price-analysis
+              - img [ref=e92]
+              - generic [ref=e95]: Análisis de Precios
+            - link "Administraciones" [ref=e96] [cursor=pointer]:
+              - /url: /administrations
+              - img [ref=e98]
+              - generic [ref=e102]: Administraciones
+            - link "Explorador de Estados" [ref=e103] [cursor=pointer]:
+              - /url: /states
+              - img [ref=e105]
+              - generic [ref=e107]: Explorador de Estados
+            - link "Ranking Institucional" [ref=e108] [cursor=pointer]:
+              - /url: /institutions
+              - img [ref=e110]
+              - generic [ref=e114]: Ranking Institucional
+            - link "Metodología" [ref=e115] [cursor=pointer]:
+              - /url: /methodology
+              - img [ref=e117]
+              - generic [ref=e119]: Metodología
+        - generic [ref=e120]:
+          - generic [ref=e122]: RESUMEN
+          - generic [ref=e124]:
+            - link "Panel" [ref=e125] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e127]
+              - generic [ref=e132]: Panel
+            - link "Año en Revisión" [ref=e133] [cursor=pointer]:
+              - /url: /year-in-review
+              - img [ref=e135]
+              - generic [ref=e137]: Año en Revisión
+        - generic [ref=e138]:
+          - generic [ref=e140]: DATOS
+          - link "Explorar" [ref=e143] [cursor=pointer]:
+            - /url: /explore
+            - img [ref=e145]
+            - generic [ref=e148]: Explorar
+        - generic [ref=e149]:
+          - generic [ref=e151]: PLATAFORMA
+          - generic [ref=e153]:
+            - link "Cola de Riesgo" [ref=e154] [cursor=pointer]:
+              - /url: /aria
+              - img [ref=e157]
+              - generic [ref=e159]: Cola de Riesgo
+            - link "Configuración" [ref=e160] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e162]
+              - generic [ref=e165]: Configuración
+        - link "Explorador de API" [ref=e167] [cursor=pointer]:
+          - /url: /api/v1/docs
+          - img [ref=e168]
+          - generic [ref=e170]: Explorador de API
+          - img [ref=e171]
+      - generic [ref=e177]: 3.1M contratos indexados
+      - button "Reportar un problema" [ref=e179]:
+        - img [ref=e180]
+        - generic [ref=e182]: Reportar un problema
+      - generic [ref=e185]:
+        - button "EN" [ref=e186]:
+          - img
+          - text: EN
+        - button "Contraer barra lateral" [ref=e187]:
+          - img
+    - generic [ref=e188]:
+      - banner [ref=e189]:
+        - generic [ref=e190]:
+          - generic [ref=e191]: Home
+          - generic [ref=e192]: /
+          - generic [ref=e193]: Cola de Riesgo
+        - generic [ref=e194]:
+          - button "Open search (Ctrl+K)" [ref=e195]:
+            - img [ref=e196]
+            - generic [ref=e199]: Buscar proveedores, casos...
+            - generic [ref=e200]: ⌘K
+          - button "6 alertas de alto riesgo" [ref=e202]:
+            - img
+            - generic [ref=e203]: "6"
+          - generic [ref=e204]:
+            - img [ref=e205]
+            - generic [ref=e207]: EN VIVO
+          - button "Cambiar a modo claro" [ref=e209]:
+            - img
+      - generic [ref=e210]:
+        - img [ref=e212]
+        - paragraph [ref=e215]: RUBLI v2.1·Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES
+        - button "Cerrar anuncio" [ref=e216]:
+          - img [ref=e217]
+      - main [ref=e220]:
+        - generic [ref=e248]:
+          - 'region "ARIA: Evaluación Automatizada de Riesgo en Contrataciones." [ref=e249]':
+            - generic [ref=e251]:
+              - paragraph [ref=e256]: ARIA · ANÁLISIS AUTOMATIZADO DE RIESGO
+              - 'heading "ARIA: Evaluación Automatizada de Riesgo en Contrataciones." [level=1] [ref=e257]'
+              - paragraph [ref=e258]: Algoritmos de aprendizaje automático identificaron patrones de riesgo en 3.1 millones de contratos — comparando cada proveedor contra ~748 casos documentados de corrupción.
+              - generic [ref=e259]:
+                - generic [ref=e260]
+                - generic [ref=e263]
+                - generic [ref=e266]
+              - generic [ref=e269]:
+                - paragraph [ref=e270]: CÓMO FUNCIONA ARIA
+                - list [ref=e271]
+          - generic [ref=e304]:
+            - paragraph [ref=e305]: ARIA · Algoritmo Automatizado de Investigación de Riesgos
+            - generic [ref=e306]:
+              - generic [ref=e307]:
+                - heading "318,441 proveedores bajo vigilancia en 4 niveles de amenaza" [level=2] [ref=e308]
+                - paragraph [ref=e309]: ARIA monitorea proveedores de contratación pública federal usando ML, detección de anomalías y cruce con registros externos. Comienza con Nivel 1 — los 320 casos de mayor prioridad para revisión.
+              - generic [ref=e310]:
+                - generic [ref=e313]: 320 T1
+                - generic [ref=e314]: "Última actualización: 13 de abril de 2026"
+            - generic [ref=e315]:
+              - generic [ref=e316]:
+                - generic [ref=e317]: 318K
+                - generic [ref=e318]: proveedores bajo vigilancia
+              - generic [ref=e319]:
+                - generic [ref=e320]: $0
+                - generic [ref=e321]: valor en riesgo
+              - generic [ref=e322]:
+                - generic [ref=e323]: "0"
+                - generic [ref=e324]: en lista EFOS
+              - generic [ref=e325]:
+                - generic [ref=e326]: "320"
+                - generic [ref=e327]: Pistas críticas T1
+          - generic [ref=e328]:
+            - generic [ref=e329]:
+              - generic [ref=e330]:
+                - generic [ref=e331]: 📄
+                - generic [ref=e332]: COMPRANET
+                - generic [ref=e333]: ✓ verificado
+              - generic [ref=e334]:
+                - generic [ref=e335]: 📄
+                - generic [ref=e336]: SAT EFOS
+                - generic [ref=e337]: · 13,960 Contratos
+              - button "¿Cómo funciona ARIA?" [ref=e339] [cursor=pointer]: "?"
+            - generic [ref=e341]:
+              - img [ref=e342]
+              - paragraph [ref=e344]: Niveles de Prioridad
+            - generic [ref=e352]:
+              - generic [ref=e353]:
+                - img [ref=e354]
+                - paragraph [ref=e357]: Pistas Prioritarias — Nivel 1
+              - paragraph [ref=e359]: Proveedores prioritarios según la Puntuación de Prioridad de Investigación
+            - complementary "POR QUÉ IMPORTA" [ref=e369]:
+              - paragraph [ref=e371]: POR QUÉ IMPORTA
+              - paragraph [ref=e372]: Los métodos tradicionales de auditoría revisan el 0.1% de los contratos. ARIA puntúa el 100%. Los 320 proveedores en Nivel 1 concentran patrones estadísticos que coinciden con los casos de corrupción más graves documentados en México.
+            - generic [ref=e373]:
+              - generic [ref=e374]:
+                - generic [ref=e376]
+                - generic [ref=e383]
+              - generic [ref=e393]:
+                - generic [ref=e394]: "Revisión:"
+                - button "Todos" [ref=e395]
+                - button "Pendiente" [ref=e396]
+                - button "En revisión" [ref=e397]
+                - button "Confirmado" [ref=e398]
+                - button "Descartado" [ref=e399]
+            - generic [ref=e413]:
+              - img [ref=e414]
+              - generic [ref=e417]:
+                - paragraph [ref=e418]: Acerca de ARIA
+                - paragraph [ref=e419]: El Algoritmo Automatizado de Investigación de Riesgo (ARIA) combina puntuaciones de riesgo de ML, detección de anomalías, clasificación de patrones y referencias cruzadas de registros externos (EFOS, SFP, RUPC) para clasificar proveedores según la Puntuación de Prioridad de Investigación (IPS). Las notas editoriales se generan previamente mediante síntesis asistida por LLM de señales de contratación.
+                - paragraph [ref=e420]: Las puntuaciones de IPS son indicadores de riesgo, no veredictos de corrupción. Las puntuaciones altas indican similitud estadística con patrones de corrupción documentados y justifican una investigación más profunda.
+      - contentinfo [ref=e243]:
+        - generic [ref=e244]:
+          - generic [ref=e245]: RUBLI 2.1 • Plataforma de Transparencia en Contrataciones
+          - generic [ref=e246]: 3.1M contratos · 9.9T MXN · 2002-2025
+        - paragraph [ref=e247]: "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 748 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia"
+  - dialog [ref=e421]:
+    - generic [ref=e422]:
+      - generic [ref=e423]:
+        - img [ref=e424]
+        - generic [ref=e428]: Institution Profile
+      - button [ref=e429]:
+        - img [ref=e430]

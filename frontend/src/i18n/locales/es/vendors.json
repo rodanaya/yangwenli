@@ -46,7 +46,7 @@
     "sameWinner": "mismo ganador",
     "ofTime": "de las veces",
     "involves": "Involucra:",
-    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado."
+    "heuristicNote": "Este es un análisis heurístico independiente. El puntaje de riesgo ML v0.6.5 asigna a co_bid_rate un coeficiente de 0.000 — los patrones de co-licitación no discriminaron entre proveedores corruptos y limpios en los datos de entrenamiento y no contribuyen al puntaje de riesgo mostrado."
   },
   "groundTruth": {
     "documentedIn": "Documentado en",
@@ -104,8 +104,8 @@
     "maxD2": "D² Máximo",
     "anomalousContracts": "Contratos Anómalos",
     "chiSquaredNote": "Basado en prueba chi-cuadrado (k=12, p<0.05)",
-    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v6.5)",
-    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v6.5)",
+    "riskFactorContribution": "Contribución de Factores de Riesgo (Puntuaciones Z v0.6.5)",
+    "riskFactorContributionFallback": "Contribución de Factores de Riesgo (Modelo v0.6.5)",
     "riskFactorDetails": "Detalles de Factores de Riesgo",
     "noRiskFactorData": "No hay datos de factores de riesgo disponibles",
     "noRiskFactors": "No hay factores de riesgo disponibles",
@@ -118,7 +118,7 @@
     "counterfactual": "¿Qué Pasaría Si…?",
     "counterfactualSubtitle": "Puntaje estimado si cada factor estuviera en el promedio del sector (z=0).",
     "counterfactualAtAvg": "Si z = 0 (promedio del sector)",
-    "counterfactualFootnote": "Simulación basada en el modelo v6.5 (PU c={{c}}, intercepto={{intercept}})",
+    "counterfactualFootnote": "Simulación basada en el modelo v0.6.5 (PU c={{c}}, intercepto={{intercept}})",
     "noSignificantFactors": "No hay factores significativos para analizar.",
     "loadAnalysis": "Cargar análisis",
     "loadAnalysisHint": "Haz clic en «Cargar análisis» para obtener observaciones generadas por IA sobre los patrones de este proveedor.",
@@ -178,7 +178,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% de contratos fueron adjudicaciones directas (sin licitación competitiva)",
     "highSingleBid": "{{pct}}% de los procedimientos competitivos tuvieron solo este proveedor licitando",
-    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v6.5, que asigna co_bid_rate un coeficiente de 0.000)",
+    "suspiciousCoBidding": "Patrones sospechosos de co-licitación detectados (análisis heurístico — no incluido en el puntaje ML v0.6.5, que asigna co_bid_rate un coeficiente de 0.000)",
     "highClustering": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido",
     "primaryDriver": "Factor principal: {{factor}} (z={{z}} — {{z}} desviaciones estándar sobre el promedio sectorial)",
     "sectionLabel": "POR QUÉ ESTE PROVEEDOR ESTÁ MARCADO",
@@ -215,7 +215,7 @@
   "priceVolatility": {
     "title": "Volatilidad de Precios",
     "zscore": "z-score vs. sector",
-    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v6.5."
+    "description": "Los montos de contratos de este proveedor varían significativamente más que sus pares sectoriales — el principal predictor de riesgo de corrupción en el modelo v0.6.5."
   },
   "ghostRisk": {
     "title": "Riesgo de Empresa Fantasma",
@@ -277,7 +277,7 @@
     "signals": "Señales",
     "burstScore": "Puntaje de Ráfaga",
     "fpPenalty": "Penalización por Falso Positivo",
-    "riskScoreLabel": "Puntaje de Riesgo (v6.5)"
+    "riskScoreLabel": "Puntaje de Riesgo (v0.6.5)"
   },
   "groundTruthBanner": {
     "appearsIn": "Este proveedor aparece en {{count}} caso(s) de corrupción documentado(s)",

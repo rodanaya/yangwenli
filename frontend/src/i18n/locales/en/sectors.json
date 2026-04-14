@@ -111,12 +111,12 @@
     "gastoTotal": "Total Spend",
     "riesgoPromedio": "Avg Risk",
     "mayorGasto": "Top Sector",
-    "sourceFootnote": "Source: COMPRANET 2002–2025, risk model v6.5 · Values normalized min-max per metric"
+    "sourceFootnote": "Source: COMPRANET 2002–2025, risk model v0.6.5 · Values normalized min-max per metric"
   },
   "editorial": {
     "kicker": "RUBLI · Sector Analysis · 2002-2025",
     "headline": "Where risk concentrates in federal spending",
-    "body": "12 sectors. 3.06 million contracts. MXN 9.88 trillion. The v6.5 model assigns risk scores to each contract using 9 statistical indicators calibrated against 748 documented corruption cases. Agriculture leads: 93.5% direct awards, 0.369 average risk.",
+    "body": "12 sectors. 3.06 million contracts. MXN 9.88 trillion. The v0.6.5 model assigns risk scores to each contract using 9 statistical indicators calibrated against 748 documented corruption cases. Agriculture leads: 93.5% direct awards, 0.369 average risk.",
     "stat1Label": "DA in Agriculture · AMLO 2019-24",
     "stat2Label": "value at risk · health sector",
     "stat3Label": "above OECD 25% limit"

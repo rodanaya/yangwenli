@@ -105,7 +105,7 @@
     "methodology": "Metodología",
     "methodologyP1": "Este análisis fue producido por la plataforma RUBLI, que procesa",
     "methodologyP2": "contratos federales registrados en COMPRANET entre 2002 y 2025.",
-    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v6.5 (AUC 0.828, split por proveedor), entrenado con 748 casos documentados de corrupción y 603 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
+    "methodologyP3": "Los puntajes de riesgo son generados por el modelo v0.6.5 (AUC 0.828, split por proveedor), entrenado con 748 casos documentados de corrupción y 603 proveedores vinculados. Los puntajes miden similitud con patrones de corrupción documentada — no constituyen prueba de irregularidad.",
     "methodologyP4": "Todas las cifras provienen de datos públicos de COMPRANET. Los cálculos de adjudicación directa se basan en el campo procedure_type del registro oficial. Las clasificaciones sectoriales usan la taxonomía de 12 sectores de RUBLI basada en códigos de ramo presupuestal.",
     "nextSteps": "Próximos pasos para periodistas",
     "fullMethodology": "Metodología completa",
@@ -301,7 +301,7 @@
     "legendIncreasesRisk": "Aumenta el riesgo",
     "legendDecreasesRisk": "Reduce el riesgo (protector)",
     "legendNegligible": "Insignificante / regularizado a cero",
-    "legendCoefficients": "Coeficientes del modelo ElasticNet v6.5 (C=0.01, l1_ratio=0.9673)"
+    "legendCoefficients": "Coeficientes del modelo ElasticNet v0.6.5 (C=0.01, l1_ratio=0.9673)"
   },
   "sanctions": {
     "onListSingular": "En {{count}} lista de sanciones:",
@@ -343,7 +343,7 @@
       "subtitle": "% de contratos adjudicados a los 3 proveedores principales por sector",
       "skeletonAriaLabel": "Cargando concentración de mercado",
       "noData": "sin datos",
-      "footnote": "Fuente: RUBLI v6.5 · 3.06M contratos · 2002-2025",
+      "footnote": "Fuente: RUBLI v0.6.5 · 3.06M contratos · 2002-2025",
       "ariaList": "Concentración de mercado por sector",
       "levelHigh": "ALTA",
       "levelModerate": "MODERADA",

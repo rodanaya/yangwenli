@@ -11,7 +11,7 @@
     "metricHighRisk": "High-risk contracts",
     "metricDirectAward": "Direct award rate",
     "metricAriaLabel": "Select comparison metric",
-    "dataSource": "Source: COMPRANET 2001–2025 · RUBLI v6.5"
+    "dataSource": "Source: COMPRANET 2001–2025 · RUBLI v0.6.5"
   },
   "insights": {
     "heading": "Key findings",

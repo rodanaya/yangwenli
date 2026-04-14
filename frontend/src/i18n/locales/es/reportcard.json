@@ -2,7 +2,7 @@
   "pageEyebrow": "Integridad Procuratoria",
   "pageTitle": "Salud de la Contratación Pública",
   "pageSubtitle": "¿Qué tan bien maneja México el gasto p��blico federal?",
-  "pageSubtitleV2": "Evaluación basada en indicadores OCDE y modelo de riesgo v6.5",
+  "pageSubtitleV2": "Evaluación basada en indicadores OCDE y modelo de riesgo v0.6.5",
 
   "heroGradeLabel": "Calificación General",
   "heroHeadline_good": "Compras públicas de México: {{grade}} — Buen desempeño según est��ndares internacionales",
@@ -50,7 +50,7 @@
   "trendSince": "Tendencia desde {{year}}",
 
   "methodologyLink": "¿Cómo se calcula esto?",
-  "methodologyNote": "Este reporte usa el Índice de Salud de Compras Públicas (PHI) y el modelo de riesgo RUBLI v6.5. Las calificaciones reflejan tasas de competencia, licitaciones con un solo postor, concentración de proveedores y alertas externas. Todos los datos provienen de COMPRANET, el registro oficial de compras de México.",
+  "methodologyNote": "Este reporte usa el Índice de Salud de Compras Públicas (PHI) y el modelo de riesgo RUBLI v0.6.5. Las calificaciones reflejan tasas de competencia, licitaciones con un solo postor, concentración de proveedores y alertas externas. Todos los datos provienen de COMPRANET, el registro oficial de compras de México.",
   "sourcesLabel": "Fuentes: COMPRANET · Benchmarks OCDE · FMI CRI · Registro EFOS del SAT",
 
   "loading": "Cargando datos de compras...",

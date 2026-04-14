@@ -128,7 +128,7 @@
     "highRiskContracts": "High-risk contracts",
     "directAwards": "Direct awards",
     "singleBidders": "Single bidders",
-    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.031 in v6.5), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v6.5."
+    "p3": "A counterintuitive finding: <bold>direct awards are not the primary risk signal</bold>. In our model, direct award procedures carry only a slightly positive coefficient (+0.031 in v0.6.5), providing minimal discriminating signal. The real red flag is not how a contract is awarded, but <bold>who keeps winning</bold>. Price volatility — vendors with wildly varying contract sizes — is the strongest single predictor of corruption in v0.6.5."
   },
 
   "s2": {
@@ -216,7 +216,7 @@
 
   "s8": {
     "title": "How We Know",
-    "p1": "The v6.5 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 9 active features (16 z-score features computed, 9 non-zero after ElasticNet regularization) normalized against sector and year baselines, with logistic regression trained on {{contracts}} known-bad contracts.",
+    "p1": "The v0.6.5 model transforms procurement analysis from a weighted indicator checklist to a <bold>statistical risk scoring framework</bold>. Every contract receives a score measuring similarity to documented corruption patterns, derived from 9 active features (16 z-score features computed, 9 non-zero after ElasticNet regularization) normalized against sector and year baselines, with logistic regression trained on {{contracts}} known-bad contracts.",
     "discriminationPower": "Discrimination power",
     "calibrationQuality": "Calibration quality",
     "vsRandom": "vs random baseline",
@@ -233,7 +233,7 @@
       "groundTruth": {
         "title": "Ground Truth Concentration",
         "text": "While ground truth has been expanded to ~748 cases (~603 vendors) across all 12 sectors, the three largest cases (IMSS, Segalmex, COVID) still contribute a disproportionate share of training contracts. The model excels at detecting concentration-based fraud but may underdetect novel corruption schemes.",
-        "mitigation": "v6.5 expanded to ~748 documented cases via systematic COMPRANET scanning and ASF cross-referencing. Per-sector models and per-vendor caps (100 contracts max) reduce concentration bias."
+        "mitigation": "v0.6.5 expanded to ~748 documented cases via systematic COMPRANET scanning and ASF cross-referencing. Per-sector models and per-vendor caps (100 contracts max) reduce concentration bias."
       },
       "dataQuality": {
         "title": "Data Quality Degrades with Age",
@@ -262,7 +262,7 @@
       },
       "temporalLeakage": {
         "title": "Vendor Features Use Future Data",
-        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. v6.5 mitigates the validation impact with vendor-stratified splitting (AUC 0.828), but the underlying feature leakage in vendor aggregates persists.",
+        "text": "Vendor-level features (concentration, win rate, price volatility) are currently computed using full 2002–2025 history. A 2019 contract's vendor concentration score includes 2020–2025 activity. v0.6.5 mitigates the validation impact with vendor-stratified splitting (AUC 0.828), but the underlying feature leakage in vendor aggregates persists.",
         "mitigation": "Point-in-time rolling aggregates planned for future release. Vendor-stratified split prevents the model from memorizing individual vendor patterns."
       }
     },
@@ -310,7 +310,7 @@
   },
 
   "topFraudSignals": {
-    "header": "Top 3 risk indicators — model coefficients (v6.5)",
+    "header": "Top 3 risk indicators — model coefficients (v0.6.5)",
     "s1": {
       "signal": "Price Volatility",
       "detail": "The single strongest predictor (β = +0.534). Vendors whose contract amounts swing wildly across institutions — a hallmark of pricing manipulation rather than legitimate market fluctuation.",
@@ -391,7 +391,7 @@
 
   "statBombs": {
     "highRiskRate": "High-Risk Rate",
-    "highRiskRateSub": "OECD-calibrated \u00b7 v6.5",
+    "highRiskRateSub": "OECD-calibrated \u00b7 v0.6.5",
     "highRiskRateContext": "Calibrated to OECD 2-15% benchmark. Contracts flagged critical or high risk by a 9-feature per-sector model.",
     "highCritical": "High/Critical Contracts",
     "highCriticalSub": "{{pct}}% of all 3.1M contracts",
@@ -400,13 +400,13 @@
     "yearsCoveredSub": "2002 - 2025 \u00b7 3.1M contracts",
     "yearsCoveredContext": "Four distinct data structures, from lowest-quality early records to near-complete 2023-2025 filings.",
     "modelAuc": "Model AUC",
-    "modelAucSub": "Vendor-stratified split \u00b7 v6.5",
+    "modelAucSub": "Vendor-stratified split \u00b7 v0.6.5",
     "modelAucContext": "AUC 0.828: if given one contract from a confirmed corruption case and one random contract, the model correctly identifies the corrupt one 82.8 times out of 100.",
     "documentedCases": "Documented Cases",
     "documentedCasesSub": "Ground truth for corruption detection",
     "documentedCasesContext": "Spanning ghost companies, bid rigging, overpricing, bribery, and institutional capture across all 12 sectors.",
     "dualConfirmed": "Dual-Confirmed",
-    "dualConfirmedSub": "v6.5 model AND PyOD ML \u00b7 unsupervised cross-validation",
+    "dualConfirmedSub": "v0.6.5 model AND PyOD ML \u00b7 unsupervised cross-validation",
     "dualConfirmedContext": "Contracts flagged by both the supervised risk model and unsupervised anomaly detection independently."
   },
   "funnel": {
@@ -425,7 +425,7 @@
   "pullQuote1": "One in eight contracts shows statistical patterns consistent with procurement fraud.",
   "pullQuote2": "The procurement system's greatest vulnerability is not any single contract — it is the structural concentration of public spending in vendors that operate without meaningful competition.",
   "sourceLabel": "About this analysis",
-  "sourceBody": "Based on the RUBLI v6.5 risk model (AUC=0.828, HR ~13%). Scores indicate similarity to documented corruption patterns, not proof of irregularity.",
+  "sourceBody": "Based on the RUBLI v0.6.5 risk model (AUC=0.828, HR ~13%). Scores indicate similarity to documented corruption patterns, not proof of irregularity.",
   "tableHeader": "Investigation records",
   "filterLabel": "Investigation filters",
   "riskInfographic": {
@@ -517,7 +517,7 @@
   "methodology": {
     "overline": "RUBLI · Methodology",
     "title": "How does this work?",
-    "p1": "RUBLI applies a <bold>per-sector logistic regression model</bold> (v6.5, AUC 0.828) trained on 748 documented corruption cases to score every federal contract in COMPRANET. The model uses 9 statistical features — from price volatility to vendor concentration — normalized against sector-year baselines so a direct award in Defensa is not treated the same as one in Educacion.",
+    "p1": "RUBLI applies a <bold>per-sector logistic regression model</bold> (v0.6.5, AUC 0.828) trained on 748 documented corruption cases to score every federal contract in COMPRANET. The model uses 9 statistical features — from price volatility to vendor concentration — normalized against sector-year baselines so a direct award in Defensa is not treated the same as one in Educacion.",
     "p2": "Risk scores are <bold>investigation leads, not verdicts</bold>. A score of 0.60 means the contract resembles known corruption patterns — it does not mean 60% chance of fraud. All data is from public COMPRANET records. No FOIA required.",
     "link": "Full methodology & model transparency"
   },
@@ -578,7 +578,7 @@
   "historicalTrend": {
     "overline": "HIGH-RISK RATE BY YEAR",
     "headline": "Risk nearly doubled: 12% in 2015 to 18% in 2022",
-    "footnote": "Percentage of contracts scored critical + high by RUBLI v6.5",
+    "footnote": "Percentage of contracts scored critical + high by RUBLI v0.6.5",
     "legendPreAmlo": "2015-2018 Pre-AMLO",
     "legendAmlo": "2019-2024 AMLO/Sheinbaum",
     "legendPeak": "Peak years (\u226518%)",
@@ -610,7 +610,7 @@
     "body": "<salud>Salud</salud> leads with <mono>MX$369B</mono> at risk (12% rate on MX$3.07T budget). <energia>Energ\u00eda</energia> follows at <mono>MX$264B</mono>, then <infraestructura>Infraestructura</infraestructura> at <mono>MX$213B</mono>. <agricultura>Agricultura</agricultura>'s 29.8% rate looks alarming but its smaller budget means only MX$95B at risk \u2014 less than a quarter of Salud.",
     "chartHeader": "ABSOLUTE VALUE AT RISK (Critical + High, MXN)",
     "oecdRef": "OECD max: 15% high-risk rate",
-    "sortedFootnote": "Sorted by high-risk rate (critical + high \u00b7 Source: COMPRANET 2002-2025 \u00b7 RUBLI v6.5"
+    "sortedFootnote": "Sorted by high-risk rate (critical + high \u00b7 Source: COMPRANET 2002-2025 \u00b7 RUBLI v0.6.5"
   },
 
   "whatThisMeans": {

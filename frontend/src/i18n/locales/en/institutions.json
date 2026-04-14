@@ -74,7 +74,7 @@
     "hhiLegendCompetitiveLong": "Competitive < 0.10",
     "topVendorLabel": "Top vendor",
     "methodologySection": "METHODOLOGY NOTE",
-    "methodologyText": "Risk scores are computed using RUBLI model v6.5: a calibrated logistic regression with 9 statistical indicators (price volatility, vendor concentration, direct awards, among others), normalized by sector and year. A score is not proof of corruption — it measures similarity to documented patterns of irregularities in Mexican public procurement. Concentration is measured with the Herfindahl-Hirschman Index (HHI): a value above 0.25 indicates a single vendor dominates that institution's purchasing.",
+    "methodologyText": "Risk scores are computed using RUBLI model v0.6.5: a calibrated logistic regression with 9 statistical indicators (price volatility, vendor concentration, direct awards, among others), normalized by sector and year. A score is not proof of corruption — it measures similarity to documented patterns of irregularities in Mexican public procurement. Concentration is measured with the Herfindahl-Hirschman Index (HHI): a value above 0.25 indicates a single vendor dominates that institution's purchasing.",
     "riskLevelCritical": "Critical",
     "riskLevelHigh": "High",
     "riskLevelMedium": "Medium",

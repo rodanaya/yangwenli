@@ -88,7 +88,7 @@
     "level5": {
       "label": "Level 5",
       "title": "Model Documentation",
-      "description": "Static v6.5 model coefficients — not live contract data. Key findings from per-sector risk model (AUC 0.828)"
+      "description": "Static v0.6.5 model coefficients — not live contract data. Key findings from per-sector risk model (AUC 0.828)"
     },
     "level6": {
       "label": "Level 6",

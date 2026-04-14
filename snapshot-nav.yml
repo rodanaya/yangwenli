@@ -1,0 +1,131 @@
+- generic [ref=e2]:
+  - generic [ref=e3]:
+    - link "Skip to main content" [ref=e4] [cursor=pointer]:
+      - /url: "#main-content"
+    - complementary [ref=e5]:
+      - generic [ref=e6]:
+        - img [ref=e8]
+        - generic [ref=e19]:
+          - generic [ref=e20]:
+            - generic [ref=e21]: RUBLI
+            - generic [ref=e22]: v2.1
+          - paragraph [ref=e23]: Procurement Transparency
+      - navigation "Main navigation" [ref=e27]:
+        - generic [ref=e28]:
+          - generic [ref=e30]: INVESTIGATE
+          - generic [ref=e32]:
+            - link "Investigation" [ref=e33] [cursor=pointer]:
+              - /url: /investigation
+            - link "Cases 43 items" [ref=e269] [cursor=pointer]:
+              - /url: /cases
+            - link "Co-Bidding Pairs" [ref=e44] [cursor=pointer]:
+              - /url: /collusion
+            - link "Networks" [ref=e51] [cursor=pointer]:
+              - /url: /network
+            - link "Investigations" [ref=e59] [cursor=pointer]:
+              - /url: /journalists
+            - link "Workspace" [ref=e65] [cursor=pointer]:
+              - /url: /workspace
+        - generic [ref=e71]:
+          - generic [ref=e73]: ANALYSIS
+          - generic [ref=e75]:
+            - link "Spending Categories" [ref=e76] [cursor=pointer]:
+              - /url: /categories
+            - link "Sectors" [ref=e84] [cursor=pointer]:
+              - /url: /sectors
+            - link "Price Analysis" [ref=e89] [cursor=pointer]:
+              - /url: /price-analysis
+            - link "Administrations" [ref=e95] [cursor=pointer]:
+              - /url: /administrations
+            - link "States Explorer" [ref=e102] [cursor=pointer]:
+              - /url: /states
+            - link "Institution Ranking" [ref=e107] [cursor=pointer]:
+              - /url: /institutions
+            - link "Methodology" [ref=e114] [cursor=pointer]:
+              - /url: /methodology
+        - generic [ref=e119]:
+          - generic [ref=e121]: OVERVIEW
+          - generic [ref=e123]:
+            - link "Dashboard" [ref=e124] [cursor=pointer]:
+              - /url: /dashboard
+            - link "Year in Review" [ref=e132] [cursor=pointer]:
+              - /url: /year-in-review
+        - generic [ref=e137]:
+          - generic [ref=e139]: DATA
+          - link "Explore" [ref=e142] [cursor=pointer]:
+            - /url: /explore
+            - img [ref=e144]
+            - generic [ref=e147]: Explore
+        - generic [ref=e148]:
+          - generic [ref=e150]: PLATFORM
+          - generic [ref=e152]:
+            - link "Risk Queue" [ref=e153] [cursor=pointer]:
+              - /url: /aria
+            - link "Settings" [ref=e159] [cursor=pointer]:
+              - /url: /settings
+        - link "API Explorer" [ref=e166] [cursor=pointer]:
+          - /url: /api/v1/docs
+          - img [ref=e167]
+          - generic [ref=e169]: API Explorer
+          - img [ref=e170]
+      - generic [ref=e176]: 3.1M contracts indexed
+      - button "Report an issue" [ref=e178]:
+        - img [ref=e179]
+        - generic [ref=e181]: Report an issue
+      - generic [ref=e184]:
+        - button "ES" [ref=e185]:
+          - img
+          - text: ES
+        - button "Collapse sidebar" [ref=e186]:
+          - img
+    - generic [ref=e187]:
+      - banner [ref=e188]:
+        - generic [ref=e189]:
+          - generic [ref=e190]: Home
+          - generic [ref=e191]: /
+          - generic [ref=e192]: Risk Queue
+        - generic [ref=e193]:
+          - button "Open search (Ctrl+K)" [ref=e194]:
+            - img [ref=e195]
+            - generic [ref=e198]: Search vendors, cases...
+            - generic [ref=e199]: ⌘K
+          - button "6 high-risk alerts" [ref=e201]:
+            - img
+            - generic [ref=e202]: "6"
+          - generic [ref=e203]:
+            - img [ref=e204]
+            - generic [ref=e206]: LIVE
+          - button "Switch to light mode" [ref=e208]:
+            - img
+      - generic [ref=e209]:
+        - img [ref=e211]
+        - paragraph [ref=e214]: RUBLI v2.1·Ground Truth expanded · Red Thread narratives · ARIA Intelligence Briefing — now bilingual EN/ES
+        - button "Dismiss announcement" [ref=e215]:
+          - img [ref=e216]
+      - main [ref=e219]:
+        - generic [ref=e271]:
+          - 'region "ARIA: Automated Procurement Risk Assessment." [ref=e272]':
+            - generic [ref=e274]
+          - generic [ref=e327]:
+            - paragraph [ref=e328]: ARIA · Automated Risk Investigation Algorithm
+            - generic [ref=e329]
+            - generic [ref=e338]
+          - generic [ref=e351]:
+            - generic [ref=e352]
+            - generic [ref=e364]
+            - generic [ref=e375]
+            - complementary "WHY IT MATTERS" [ref=e392]
+            - generic [ref=e396]
+            - generic [ref=e436]
+      - contentinfo [ref=e264]:
+        - generic [ref=e265]:
+          - generic [ref=e266]: RUBLI 2.1 • Procurement Transparency Platform
+          - generic [ref=e267]: 3.1M contracts · 9.9T MXN · 2002-2025
+        - paragraph [ref=e268]: "Risk scores are computed by a machine learning model trained on 748 documented corruption cases in Mexican federal procurement (2002–2025). Scores measure statistical similarity to known cases — they are not legal determinations or proof of wrongdoing. Source: COMPRANET (SHCP). Methodology: rubli.mx/methodology"
+  - dialog [ref=e444]:
+    - generic [ref=e445]:
+      - generic [ref=e446]:
+        - img [ref=e447]
+        - generic [ref=e451]: Institution Profile
+      - button [ref=e452]:
+        - img [ref=e453]

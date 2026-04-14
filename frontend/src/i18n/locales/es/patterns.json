@@ -88,7 +88,7 @@
     "level5": {
       "label": "Nivel 5",
       "title": "Documentación del Modelo",
-      "description": "Coeficientes estáticos del modelo v6.5 — no son datos en tiempo real. Hallazgos clave del modelo de riesgo por sector (AUC 0.828)"
+      "description": "Coeficientes estáticos del modelo v0.6.5 — no son datos en tiempo real. Hallazgos clave del modelo de riesgo por sector (AUC 0.828)"
     },
     "level6": {
       "label": "Nivel 6",

@@ -137,7 +137,7 @@
       "label": "Inconclusive",
       "desc": "The pattern is flagged but you found no external evidence yet. Leave for monitoring or pass to another investigator."
     },
-    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v6.5 model retraining, improving future detection."
+    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v0.6.5 model retraining, improving future detection."
   },
   "vendorReport": {
     "title": "Vendor Report",
@@ -329,7 +329,7 @@
   "highPriority": "High Priority",
   "methodology": {
     "kicker": "How these cases are generated",
-    "body": "Each case represents a cluster of statistically anomalous contracts, detected by the PyOD ensemble (IForest + COPOD) and confirmed by v6.5 risk score > 0.60. \"Corroborated\" cases have been verified against external sources (ASF, SFP, investigative journalism). \"Pending\" cases are active leads without external verification yet."
+    "body": "Each case represents a cluster of statistically anomalous contracts, detected by the PyOD ensemble (IForest + COPOD) and confirmed by v0.6.5 risk score > 0.60. \"Corroborated\" cases have been verified against external sources (ASF, SFP, investigative journalism). \"Pending\" cases are active leads without external verification yet."
   },
   "pipeline": {
     "detected": "DETECTED",

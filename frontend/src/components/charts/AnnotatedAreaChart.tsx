@@ -21,7 +21,7 @@ import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { getLocale } from '@/lib/utils'
 import type { SectorYearItem } from '@/api/types'
 
-const DATA_SOURCE = 'Source: RUBLI analysis · COMPRANET data 2002–2025 · Risk model v6.5'
+const DATA_SOURCE = 'Source: RUBLI analysis · COMPRANET data 2002–2025 · Risk model v0.6.5'
 
 interface AnnotatedAreaChartProps {
   /** Raw sector-year breakdown items */

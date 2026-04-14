@@ -1,0 +1,45 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link "Saltar al contenido principal" [ref=e288] [cursor=pointer]:
+        - /url: "#main-content"
+      - complementary [ref=e5]:
+        - generic [ref=e6]:
+          - img [ref=e8]
+          - generic [ref=e19]
+        - navigation "Main navigation" [ref=e27]:
+          - generic [ref=e28]
+          - generic [ref=e72]
+          - generic [ref=e120]
+          - generic [ref=e139]
+          - generic [ref=e150]
+          - link "Explorador de API" [ref=e307] [cursor=pointer]:
+            - /url: /api/v1/docs
+        - generic [ref=e177]: 3.1M contratos indexados
+        - button "Reportar un problema" [ref=e308]:
+          - img [ref=e180]
+          - generic [ref=e182]: Reportar un problema
+        - generic [ref=e185]:
+          - button "EN" [ref=e309]
+          - button "Contraer barra lateral" [ref=e310]
+      - generic [ref=e188]:
+        - banner [ref=e189]:
+          - generic [ref=e190]
+          - generic [ref=e194]
+        - generic [ref=e210]:
+          - img [ref=e212]
+          - paragraph [ref=e215]: RUBLI v2.1·Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES
+          - button "Cerrar anuncio" [ref=e313]
+        - main [ref=e220]:
+          - generic [ref=e314]
+        - contentinfo [ref=e283]:
+          - generic [ref=e284]
+          - paragraph [ref=e287]: "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 748 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia"
+    - dialog [ref=e1462]:
+      - generic [ref=e1463]:
+        - generic [ref=e1464]:
+          - img [ref=e1465]
+          - generic [ref=e1469]: Institution Profile
+        - button [ref=e1470]:
+          - img [ref=e1471]
+  - generic [ref=e1475]: Health

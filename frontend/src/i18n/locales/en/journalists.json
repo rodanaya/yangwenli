@@ -55,7 +55,7 @@
     "description": "All investigations are based on 3,051,294 federal contracts (2002–2025) from COMPRANET. Risk scoring uses logistic regression trained on 748 documented corruption cases. All data, methodology and code are open source.",
     "viewMethodology": "View methodology",
     "downloadData": "Download data",
-    "tooltipTitle": "Risk model v6.5",
+    "tooltipTitle": "Risk model v0.6.5",
     "tooltipBody": "Logistic regression with 9 active features, 1 global + 12 per-sector models, AUC=0.828. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
   },
   "stories": {
@@ -172,7 +172,7 @@
     "atlas-del-riesgo": {
       "headline": "Risk Atlas: The Sectors Where Corruption Leaves the Most Traces",
       "subheadline": "RUBLI's model identifies 184,031 contracts with critical-level risk signals. Health and agriculture lead in risk rate; infrastructure leads in amount.",
-      "statLabel": "contracts at critical risk level (v6.5, threshold ≥0.60)"
+      "statLabel": "contracts at critical risk level (v0.6.5, threshold ≥0.60)"
     },
     "la-herencia-envenenada": {
       "headline": "The 2018–2024 Procurement Record: Direct Awards, Threshold-Splitting, and Transparency",

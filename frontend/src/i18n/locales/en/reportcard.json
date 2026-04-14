@@ -2,7 +2,7 @@
   "pageEyebrow": "Procurement Integrity",
   "pageTitle": "Procurement Health Index",
   "pageSubtitle": "How well does Mexico's federal government manage public spending?",
-  "pageSubtitleV2": "Assessment based on OECD indicators and risk model v6.5",
+  "pageSubtitleV2": "Assessment based on OECD indicators and risk model v0.6.5",
 
   "heroGradeLabel": "Overall Score",
   "heroHeadline_good": "Mexico's procurement: {{grade}} — Performing well by international standards",
@@ -50,7 +50,7 @@
   "trendSince": "Trend since {{year}}",
 
   "methodologyLink": "How is this calculated?",
-  "methodologyNote": "This report uses the Procurement Health Index (PHI) and the RUBLI AI risk model (v6.5). Grades reflect competition rates, single-bidder tenders, vendor concentration, and external red flags. All data comes from COMPRANET, Mexico's official procurement registry.",
+  "methodologyNote": "This report uses the Procurement Health Index (PHI) and the RUBLI AI risk model (v0.6.5). Grades reflect competition rates, single-bidder tenders, vendor concentration, and external red flags. All data comes from COMPRANET, Mexico's official procurement registry.",
   "sourcesLabel": "Sources: COMPRANET · OECD Procurement Benchmarks · IMF CRI · SAT EFOS Registry",
 
   "loading": "Loading procurement data...",

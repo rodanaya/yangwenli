@@ -46,7 +46,7 @@
     "sameWinner": "same winner",
     "ofTime": "of time",
     "involves": "Involves:",
-    "heuristicNote": "This is a separate heuristic analysis. The v6.5 ML risk score assigns co_bid_rate a coefficient of 0.000 — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score."
+    "heuristicNote": "This is a separate heuristic analysis. The v0.6.5 ML risk score assigns co_bid_rate a coefficient of 0.000 — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score."
   },
   "groundTruth": {
     "documentedIn": "Documented in",
@@ -104,8 +104,8 @@
     "maxD2": "Max D²",
     "anomalousContracts": "Anomalous Contracts",
     "chiSquaredNote": "Based on chi-squared test (k=12, p<0.05)",
-    "riskFactorContribution": "Risk Factor Contribution (v6.5 Z-Scores)",
-    "riskFactorContributionFallback": "Risk Factor Contribution (v6.5 Model)",
+    "riskFactorContribution": "Risk Factor Contribution (v0.6.5 Z-Scores)",
+    "riskFactorContributionFallback": "Risk Factor Contribution (v0.6.5 Model)",
     "riskFactorDetails": "Risk Factor Details",
     "noRiskFactorData": "No risk factor data available",
     "noRiskFactors": "No risk factors available",
@@ -118,7 +118,7 @@
     "counterfactual": "What If…?",
     "counterfactualSubtitle": "Estimated score if each factor were at sector average (z=0).",
     "counterfactualAtAvg": "If z = 0 (sector average)",
-    "counterfactualFootnote": "Simulation based on model v6.5 (PU c={{c}}, intercept={{intercept}})",
+    "counterfactualFootnote": "Simulation based on model v0.6.5 (PU c={{c}}, intercept={{intercept}})",
     "noSignificantFactors": "No significant factors to analyze.",
     "loadAnalysis": "Load analysis",
     "loadAnalysisHint": "Click \"Load analysis\" to fetch AI-generated pattern insights for this vendor.",
@@ -178,7 +178,7 @@
   "flags": {
     "highDirectAward": "{{pct}}% of contracts were direct awards (bypassed competitive tendering)",
     "highSingleBid": "{{pct}}% of competitive procedures had only this vendor bidding",
-    "suspiciousCoBidding": "Notable co-bidding patterns detected (heuristic analysis — not included in the v6.5 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
+    "suspiciousCoBidding": "Notable co-bidding patterns detected (heuristic analysis — not included in the v0.6.5 ML risk score, which assigns co_bid_rate a coefficient of 0.000)",
     "highClustering": "High network clustering ({{pct}}%) — bidding partners form a tightly-knit group",
     "primaryDriver": "Primary driver: {{factor}} (z={{z}} — {{z}} SDs above sector average)",
     "sectionLabel": "RISK INDICATORS FOR THIS VENDOR",
@@ -277,7 +277,7 @@
     "signals": "Signals",
     "burstScore": "Burst Score",
     "fpPenalty": "FP Penalty",
-    "riskScoreLabel": "Risk Score (v6.5)"
+    "riskScoreLabel": "Risk Score (v0.6.5)"
   },
   "groundTruthBanner": {
     "appearsIn": "This vendor appears in {{count}} documented procurement irregularity case(s)",

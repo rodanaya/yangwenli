@@ -137,7 +137,7 @@
       "label": "Inconcluso",
       "desc": "El patrón está marcado pero aún no encontraste evidencia externa. Déjalo en seguimiento o pásalo a otro investigador."
     },
-    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v6.5, mejorando la detección futura."
+    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v0.6.5, mejorando la detección futura."
   },
   "vendorReport": {
     "title": "Reporte de Proveedor",
@@ -329,7 +329,7 @@
   "highPriority": "Alta Prioridad",
   "methodology": {
     "kicker": "Cómo se generan estos casos",
-    "body": "Cada caso representa un clúster de contratos estadísticamente anómalos, detectados por el ensemble PyOD (IForest + COPOD) y confirmados por puntuación de riesgo v6.5 > 0.60. Los casos \"corroborados\" han sido verificados contra fuentes externas (ASF, SFP, periodismo de investigación). Los casos \"pendientes\" son leads activos sin verificación externa aún."
+    "body": "Cada caso representa un clúster de contratos estadísticamente anómalos, detectados por el ensemble PyOD (IForest + COPOD) y confirmados por puntuación de riesgo v0.6.5 > 0.60. Los casos \"corroborados\" han sido verificados contra fuentes externas (ASF, SFP, periodismo de investigación). Los casos \"pendientes\" son leads activos sin verificación externa aún."
   },
   "pipeline": {
     "detected": "DETECTADOS",

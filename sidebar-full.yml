@@ -1,0 +1,338 @@
+- generic [active] [ref=e1]:
+  - generic [ref=e2]:
+    - generic [ref=e3]:
+      - link "Saltar al contenido principal" [ref=e4] [cursor=pointer]:
+        - /url: "#main-content"
+      - complementary [ref=e5]:
+        - img [ref=e8]
+        - navigation "Main navigation" [ref=e22]:
+          - generic [ref=e25]:
+            - link [ref=e26] [cursor=pointer]:
+              - /url: /investigation
+              - img [ref=e28]
+            - link [ref=e30] [cursor=pointer]:
+              - /url: /cases
+              - img [ref=e32]
+            - link [ref=e35] [cursor=pointer]:
+              - /url: /collusion
+              - img [ref=e37]
+            - link [ref=e41] [cursor=pointer]:
+              - /url: /network
+              - img [ref=e43]
+            - link [ref=e48] [cursor=pointer]:
+              - /url: /journalists
+              - img [ref=e50]
+            - link [ref=e53] [cursor=pointer]:
+              - /url: /workspace
+              - img [ref=e55]
+          - generic [ref=e60]:
+            - link [ref=e61] [cursor=pointer]:
+              - /url: /categories
+              - img [ref=e63]
+            - link [ref=e67] [cursor=pointer]:
+              - /url: /sectors
+              - img [ref=e69]
+            - link [ref=e71] [cursor=pointer]:
+              - /url: /price-analysis
+              - img [ref=e73]
+            - link [ref=e76] [cursor=pointer]:
+              - /url: /administrations
+              - img [ref=e78]
+            - link [ref=e82] [cursor=pointer]:
+              - /url: /states
+              - img [ref=e84]
+            - link [ref=e86] [cursor=pointer]:
+              - /url: /institutions
+              - img [ref=e88]
+            - link [ref=e92] [cursor=pointer]:
+              - /url: /methodology
+              - img [ref=e94]
+          - generic [ref=e98]:
+            - link [ref=e99] [cursor=pointer]:
+              - /url: /dashboard
+              - img [ref=e101]
+            - link [ref=e106] [cursor=pointer]:
+              - /url: /year-in-review
+              - img [ref=e108]
+          - link [ref=e113] [cursor=pointer]:
+            - /url: /explore
+            - img [ref=e115]
+          - generic [ref=e120]:
+            - link [ref=e121] [cursor=pointer]:
+              - /url: /aria
+              - img [ref=e123]
+            - link [ref=e125] [cursor=pointer]:
+              - /url: /settings
+              - img [ref=e127]
+        - button "Reportar un problema" [ref=e134]:
+          - img [ref=e135]
+      - generic [ref=e138]:
+        - banner [ref=e139]:
+          - generic [ref=e140]:
+            - button "Abrir menú" [ref=e141]:
+              - img
+            - generic [ref=e142]: Panel
+          - generic [ref=e143]:
+            - button "Open search (Ctrl+K)" [ref=e144]:
+              - img
+            - button "6 alertas de alto riesgo" [ref=e145]:
+              - img
+              - generic [ref=e146]: "6"
+            - button "Cambiar a modo claro" [ref=e147]:
+              - img
+        - generic [ref=e148]:
+          - img [ref=e150]
+          - paragraph [ref=e153]: RUBLI v2.1·Verdad Fundamental expandida · Narrativas Red Thread · Informe ARIA — ahora bilingüe EN/ES
+          - button "Cerrar anuncio" [ref=e154]:
+            - img [ref=e155]
+        - main [ref=e158]:
+          - generic [ref=e250]:
+            - marquee "High-risk vendor alerts" [ref=e251]: Pipeline ARIA cargando...
+            - paragraph [ref=e253]: 3.1M contratos federales analizados (2002–2025) — 413K marcados como alto o riesgo crítico.
+            - generic [ref=e254]:
+              - paragraph [ref=e255]: EN CONTRATOS DE ALTO RIESGO
+              - paragraph [ref=e256]: 6.6T MXN
+            - paragraph [ref=e259]: ≈ 66% del presupuesto federal anual de México
+            - generic [ref=e260]:
+              - generic [ref=e261]: ANÁLISIS DE CONTRATACIONES · RUBLI v6.5 · ACTIVO
+              - heading "3,058,286 contratos analizados" [level=1] [ref=e262]:
+                - text: 3,058,286 contratos
+                - text: analizados
+              - generic [ref=e263]:
+                - generic [ref=e264]
+                - generic [ref=e267]
+                - generic [ref=e270]
+              - generic [ref=e273]:
+                - link "→ Investigar proveedores" [ref=e274] [cursor=pointer]:
+                  - /url: /aria
+                - link "→ Casos documentados" [ref=e275] [cursor=pointer]:
+                  - /url: /cases
+                - link "→ Tarjeta de calificación" [ref=e276] [cursor=pointer]:
+                  - /url: /report-card
+            - generic [ref=e277]:
+              - generic [ref=e278]:
+                - paragraph [ref=e279]: Tendencia de Riesgo 2002–2025 — Puntuación de Riesgo Promedio por Año
+                - paragraph [ref=e280]: Puntuación de riesgo promedio (%) · RUBLI v6.5 · 3M contratos
+              - img "Gráfico de área que muestra la puntuación de riesgo promedio y la tasa de alto riesgo por año de 2002 a 2025" [ref=e281]:
+                - application [ref=e284]
+              - generic [ref=e336]:
+                - generic [ref=e339]: Puntuación de Riesgo Prom.
+                - generic [ref=e342]: Tasa de Alto Riesgo
+            - region "Concentración de Mercado" [ref=e343]:
+              - generic [ref=e344]:
+                - paragraph [ref=e345]: RUBLI v6.5 · 3.06M contratos · 2002–2025
+                - heading "Concentración de Mercado" [level=2] [ref=e346]
+                - paragraph [ref=e347]: "% de contratos adjudicados a los 3 proveedores principales por sector"
+              - generic "Cargando concentración de mercado" [ref=e348]
+              - paragraph [ref=e397]: "Fuente: RUBLI v6.5 · 3.06M contratos · 2002-2025"
+            - generic [ref=e398]:
+              - generic [ref=e399]: PANORAMA NACIONAL
+              - generic [ref=e400]:
+                - status "DATOS EN VIVO" [ref=e401]
+                - generic [ref=e408]
+                - 'generic "AUC 0.828: si se presentan un contrato de un caso confirmado de corrupción y un contrato aleatorio, el modelo identifica correctamente el corrupto 83 de cada 100 veces." [ref=e412]': v6.0 | AUC 0.828
+            - button "184,031 contratos de riesgo crítico detectados" [ref=e413]:
+              - img [ref=e416]
+              - paragraph [ref=e418]: 184,031 contratos de riesgo crítico detectados
+              - img [ref=e419]
+            - generic [ref=e424]:
+              - generic [ref=e425]:
+                - paragraph [ref=e426]: 6.0%
+                - paragraph [ref=e427]: Critical
+              - generic [ref=e428]:
+                - paragraph [ref=e429]: 7.5%
+                - paragraph [ref=e430]: High
+              - generic [ref=e431]:
+                - paragraph [ref=e432]: 26.9%
+                - paragraph [ref=e433]: Medium
+              - generic [ref=e434]:
+                - paragraph [ref=e435]: 59.4%
+                - paragraph [ref=e436]: Low
+            - generic [ref=e450]:
+              - generic [ref=e451]:
+                - generic [ref=e452]: La Historia en Datos
+                - generic [ref=e453]
+              - generic [ref=e464]:
+                - generic [ref=e465]
+                - heading "El año más opaco en 23 años de datos" [level=3] [ref=e469]
+                - paragraph [ref=e470]: En el último año completo del gobierno de López Obrador, 82 de cada 100 pesos contratados fueron a empresas que no tuvieron que competir. Es 3.3 veces el límite recomendado por la OCDE.
+                - generic [ref=e472]
+                - generic [ref=e500]: "Fuente: COMPRANET 2002-2025 · RUBLI v6.5"
+              - generic [ref=e501]:
+                - button "Ir a diapositiva 1" [ref=e502]
+                - button "Ir a diapositiva 2" [ref=e504]
+                - button "Ir a diapositiva 3" [ref=e505]
+                - button "Ir a diapositiva 4" [ref=e506]
+                - button "Ir a diapositiva 5" [ref=e507]
+            - generic [ref=e510]:
+              - 'button "ADJUDICACIÓN DIRECTA 0.0% Referencia OCDE: 20-30%" [ref=e512] [cursor=pointer]':
+                - generic [ref=e513]
+                - paragraph [ref=e518]: 0.0%
+                - paragraph [ref=e520]: "Referencia OCDE: 20-30%"
+              - 'button "LICITACIÓN ÚNICA 0.0% Alerta OCDE: >15%" [ref=e522] [cursor=pointer]':
+                - generic [ref=e523]
+                - paragraph [ref=e527]: 0.0%
+                - paragraph [ref=e529]: "Alerta OCDE: >15%"
+              - button "Principales Proveedores 0 3,058,286 contratos | 2002-2025" [ref=e531] [cursor=pointer]:
+                - generic [ref=e532]
+                - paragraph [ref=e539]: "0"
+                - paragraph [ref=e541]: 3,058,286 contratos | 2002-2025
+              - button "PODER DISCRIMINATIVO (AUC) 0.0% 4x mejor que aleatorio Mini sparkline trend chart for highRiskPct" [ref=e543] [cursor=pointer]:
+                - generic [ref=e544]
+                - paragraph [ref=e548]: 0.0%
+                - generic [ref=e549]
+            - generic [ref=e551]:
+              - generic [ref=e554]:
+                - generic [ref=e555]
+                - paragraph [ref=e559]: +0.8%
+                - paragraph [ref=e560]: mayor riesgo en años electorales
+              - generic [ref=e563]:
+                - generic [ref=e564]
+                - paragraph [ref=e568]: 1,037
+                - paragraph [ref=e569]: proveedores 2022+ con riesgo alto (>0.40)
+            - generic [ref=e572]:
+              - generic [ref=e573]:
+                - img [ref=e574]
+                - paragraph [ref=e576]: Comparación Sexenial
+              - generic [ref=e577]:
+                - generic [ref=e578]
+                - generic [ref=e582]
+              - paragraph [ref=e586]:
+                - img [ref=e587]
+                - text: Sheinbaum -0.56pp vs AMLO
+            - generic [ref=e590]:
+              - button "Riesgo crítico 184,031" [ref=e591]:
+                - img [ref=e593]
+                - generic [ref=e595]
+              - button "Gasto de diciembre 52,637" [ref=e598]:
+                - img [ref=e600]
+                - generic [ref=e602]
+              - button "Contratos divididos 247,946" [ref=e605]:
+                - img [ref=e607]
+                - generic [ref=e613]
+              - button "Co-licitación 1,485,424" [ref=e616]:
+                - img [ref=e618]
+                - generic [ref=e623]
+              - button "Anomalías de precio 17,373" [ref=e626]:
+                - img [ref=e628]
+                - generic [ref=e631]
+            - generic [ref=e634]:
+              - generic [ref=e635]:
+                - img [ref=e636]
+                - heading "Historias Destacadas" [level=2] [ref=e641]
+              - generic [ref=e642]:
+                - generic [ref=e644] [cursor=pointer]
+                - generic [ref=e653] [cursor=pointer]
+                - generic [ref=e662] [cursor=pointer]
+            - generic [ref=e675]:
+              - generic [ref=e676]:
+                - generic [ref=e677]
+                - generic [ref=e683]
+              - img "Composed chart showing contract count and total value by year, with administration period bands" [ref=e688]:
+                - generic [ref=e689]: Composed chart showing annual contract count and total value from 2002 to 2025, with shaded regions for each presidential administration period.
+                - application [ref=e692]
+                - generic [ref=e784]
+            - generic [ref=e797]:
+              - generic [ref=e799]:
+                - generic [ref=e800]
+                - paragraph [ref=e804]: Prima de riesgo mensual vs. promedio del resto del año
+              - generic [ref=e806]:
+                - generic [ref=e807]
+                - paragraph [ref=e844]: Los contratos de diciembre muestran riesgo elevado — la presión presupuestal impulsa el gasto de fin de año
+            - generic [ref=e848]:
+              - generic [ref=e849]:
+                - generic [ref=e850]
+                - generic [ref=e864]
+              - generic [ref=e873]:
+                - generic [ref=e874]
+                - generic [ref=e886]
+            - generic [ref=e927]:
+              - generic [ref=e928]:
+                - generic [ref=e929]
+                - button "Análisis completo" [ref=e935]
+              - generic [ref=e940]:
+                - generic [ref=e1540]
+                - generic [ref=e1544]
+                - generic [ref=e1585]
+            - generic [ref=e947]:
+              - generic [ref=e948]:
+                - img [ref=e949]
+                - heading "Sectores por Valor de Contrato" [level=2] [ref=e951]
+              - application [ref=e954]:
+                - generic [ref=e978]
+            - generic [ref=e1007]:
+              - generic [ref=e1008]:
+                - img [ref=e1009]
+                - heading "12 Sectores Federales" [level=2] [ref=e1013]
+              - generic [ref=e1014]:
+                - button "Health Contratos 1,084,780 Alto riesgo 12.0% Valor 3.1T MXN" [ref=e1016]
+                - button "Energy Contratos 313,005 Alto riesgo 13.5% Valor 2.0T MXN" [ref=e1034]
+                - button "Infrastructure Contratos 321,731 Alto riesgo 8.7% Valor 2.4T MXN" [ref=e1052]
+                - button "Agriculture Contratos 446,648 Alto riesgo 29.8% Valor 317.6B MXN" [ref=e1070]
+                - button "Treasury Contratos 134,065 Alto riesgo 9.3% Valor 618.9B MXN" [ref=e1088]
+                - button "Defense Contratos 78,701 Alto riesgo 14.5% Valor 280.5B MXN" [ref=e1106]
+                - button "Governance Contratos 118,875 Alto riesgo 8.0% Valor 316.6B MXN" [ref=e1124]
+                - button "Environment Contratos 91,938 Alto riesgo 8.3% Valor 290.6B MXN" [ref=e1142]
+                - button "Labor Contratos 48,155 Alto riesgo 24.7% Valor 97.1B MXN" [ref=e1160]
+                - button "Education Contratos 333,110 Alto riesgo 4.7% Valor 371.0B MXN" [ref=e1178]
+                - button "Technology Contratos 51,946 Alto riesgo 11.4% Valor 81.7B MXN" [ref=e1196]
+                - button "Other Contratos 28,340 Alto riesgo 16.6% Valor 41.0B MXN" [ref=e1214]
+            - generic [ref=e1232]:
+              - img [ref=e1234]
+              - generic [ref=e1236]:
+                - paragraph [ref=e1237]: Contexto de Investigación
+                - paragraph [ref=e1238]: La Plataforma de Esta Base de Datos Fue Abolida en Abril 2025
+                - paragraph [ref=e1239]: COMPRANET — el portal de contrataciones federales y fuente de los 3.1M contratos aquí — fue abolido por el Congreso el 10 de abril de 2025. Antes de cualquier cambio legal, 1.9 millones de contratos de 2012–2023 ya habían sido eliminados del acceso público en agosto de 2024. El INAI, organismo independiente de transparencia, fue eliminado constitucionalmente en diciembre de 2024. Los 3.1M contratos de esta base de datos fueron capturados antes de estos cambios y pueden ser uno de los registros más completos del historial de contrataciones federales de México.
+                - generic [ref=e1240]
+            - generic [ref=e1247]:
+              - generic [ref=e1249]:
+                - generic [ref=e1250]
+                - generic [ref=e1256]
+              - generic [ref=e1290]:
+                - generic [ref=e1291]
+                - paragraph [ref=e1295]: Top proveedores por administracion presidencial — ordenados por valor total
+                - generic [ref=e1296]
+                - generic [ref=e1305]
+            - generic [ref=e1341]:
+              - paragraph [ref=e1342]: REDACCION RUBLI
+              - link "Ver todos los casos" [ref=e1357] [cursor=pointer]:
+                - /url: /aria
+                - img [ref=e1358]
+                - text: Ver todos los casos
+            - generic [ref=e1360]:
+              - heading "Inicia tu Investigación" [level=2] [ref=e1361]
+              - paragraph [ref=e1362]: Estas son las herramientas. Busca cualquier proveedor, institución o contrato. Construye tu propia investigación.
+              - generic [ref=e1363]:
+                - button "Sigue el Dinero ¿A dónde van los $9.9T MXN? Explora 72 categorías de gasto y 12 sectores con puntuación de riesgo IA en cada nivel. Explorar categorías" [ref=e1364]
+                - button "Busca Cualquier Contrato Busca 3.1M contratos por nombre de proveedor, institución o descripción. Cada resultado incluye su puntuación de riesgo IA. Abrir búsqueda de contratos" [ref=e1375]
+                - button "Abre una Investigación Comienza desde una sospecha — un proveedor, institución o patrón — y construye un caso documentado con herramientas de análisis IA. Abrir gestor de casos" [ref=e1388]
+        - contentinfo [ref=e221]:
+          - paragraph [ref=e222]: "Los puntajes de riesgo son calculados por un modelo de aprendizaje automático entrenado en 748 casos documentados de corrupción en compras federales mexicanas (2002–2025). Los puntajes miden la similitud estadística con casos conocidos — no son determinaciones legales ni prueba de ilegalidad. Fuente: COMPRANET (SHCP). Metodología: rubli.mx/metodologia"
+      - navigation "INVESTIGAR" [ref=e223]:
+        - link "Panel" [ref=e224] [cursor=pointer]:
+          - /url: /dashboard
+          - img [ref=e225]
+          - generic [ref=e230]: Panel
+        - link "Cola de Riesgo" [ref=e231] [cursor=pointer]:
+          - /url: /aria
+          - img [ref=e232]
+          - generic [ref=e234]: Cola de Riesgo
+        - link "Sectores" [ref=e235] [cursor=pointer]:
+          - /url: /sectors
+          - img [ref=e236]
+          - generic [ref=e238]: Sectores
+        - link "Redes" [ref=e239] [cursor=pointer]:
+          - /url: /network
+          - img [ref=e240]
+          - generic [ref=e245]: Redes
+        - button "Abrir menú" [ref=e246]:
+          - img [ref=e247]
+          - generic [ref=e248]: Más
+    - dialog [ref=e1398]:
+      - generic [ref=e1399]:
+        - generic [ref=e1400]:
+          - img [ref=e1401]
+          - generic [ref=e1405]: Institution Profile
+        - button [ref=e1406]:
+          - img [ref=e1407]
+  - generic [ref=e1411]: Health

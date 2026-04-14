@@ -41,7 +41,7 @@
   },
   "aucRoc": {
     "title": "AUC-ROC",
-    "description": "Area Under the Receiver Operating Curve — measures how well the model distinguishes corrupt from clean contracts. 0.5 = random guessing, 1.0 = perfect. Our v6.5 model achieves 0.828 (test AUC, vendor-stratified)."
+    "description": "Area Under the Receiver Operating Curve — measures how well the model distinguishes corrupt from clean contracts. 0.5 = random guessing, 1.0 = perfect. Our v0.6.5 model achieves 0.828 (test AUC, vendor-stratified)."
   },
   "industryMismatch": {
     "title": "Industry Mismatch",

@@ -74,7 +74,7 @@
     "hhiLegendCompetitiveLong": "Competitiva < 0.10",
     "topVendorLabel": "top proveedor",
     "methodologySection": "NOTA METODOLÓGICA",
-    "methodologyText": "Los puntajes de riesgo se calculan con el modelo v6.5 de RUBLI: una regresión logística calibrada con 9 indicadores estadísticos (volatilidad de precios, concentración de proveedores, adjudicación directa, entre otros), normalizada por sector y año. El puntaje no es prueba de corrupción — es un indicador de similitud con patrones documentados de irregularidades en la contratación pública mexicana. La concentración se mide con el Índice Herfindahl-Hirschman (HHI): un valor superior a 0.25 indica que un solo proveedor domina las compras de esa institución.",
+    "methodologyText": "Los puntajes de riesgo se calculan con el modelo v0.6.5 de RUBLI: una regresión logística calibrada con 9 indicadores estadísticos (volatilidad de precios, concentración de proveedores, adjudicación directa, entre otros), normalizada por sector y año. El puntaje no es prueba de corrupción — es un indicador de similitud con patrones documentados de irregularidades en la contratación pública mexicana. La concentración se mide con el Índice Herfindahl-Hirschman (HHI): un valor superior a 0.25 indica que un solo proveedor domina las compras de esa institución.",
     "riskLevelCritical": "Crítico",
     "riskLevelHigh": "Alto",
     "riskLevelMedium": "Medio",

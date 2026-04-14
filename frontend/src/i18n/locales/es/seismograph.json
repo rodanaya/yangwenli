@@ -11,7 +11,7 @@
     "metricHighRisk": "Contratos alto riesgo",
     "metricDirectAward": "Adj. directas",
     "metricAriaLabel": "Seleccionar métrica de comparación",
-    "dataSource": "Fuente: COMPRANET 2001–2025 · RUBLI v6.5"
+    "dataSource": "Fuente: COMPRANET 2001–2025 · RUBLI v0.6.5"
   },
   "insights": {
     "heading": "Hallazgos clave",

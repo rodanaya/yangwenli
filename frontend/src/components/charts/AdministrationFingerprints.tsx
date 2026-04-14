@@ -257,7 +257,7 @@ export default function AdministrationFingerprints() {
       {/* Section header — editorial overline */}
       <div>
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-          RUBLI v6.5 · Procurement Governance
+          RUBLI v0.6.5 · Procurement Governance
         </p>
         <h2 className="text-base font-bold text-zinc-100 font-mono tracking-tight">
           {t('fingerprints.title')}

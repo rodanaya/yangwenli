@@ -55,7 +55,7 @@
     "description": "Todas las investigaciones se basan en 3,051,294 contratos federales (2002–2025) de COMPRANET. El modelo de riesgo usa regresión logística entrenada con 748 casos documentados de corrupción. Los datos, la metodología y el código son de acceso abierto.",
     "viewMethodology": "Ver metodología",
     "downloadData": "Descargar datos",
-    "tooltipTitle": "Modelo de riesgo v6.5",
+    "tooltipTitle": "Modelo de riesgo v0.6.5",
     "tooltipBody": "Regresión logística con 9 características activas, 13 sub-modelos sectoriales, AUC=0.828. Entrenado con 748 casos documentados de corrupción. PU-learning (Elkan & Noto 2008)."
   },
   "stories": {
@@ -172,7 +172,7 @@
     "atlas-del-riesgo": {
       "headline": "Atlas del Riesgo",
       "subheadline": "El modelo RUBLI identifica 184,031 contratos con señales de alerta crítica. Salud y agricultura concentran el riesgo más alto.",
-      "statLabel": "contratos en nivel crítico de riesgo (v6.5, umbral >= 0.60)"
+      "statLabel": "contratos en nivel crítico de riesgo (v0.6.5, umbral >= 0.60)"
     },
     "la-herencia-envenenada": {
       "headline": "La Herencia Envenenada",

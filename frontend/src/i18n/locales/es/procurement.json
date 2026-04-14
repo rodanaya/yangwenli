@@ -33,7 +33,7 @@
   },
   "recentCritical": {
     "title": "Contratos Críticos Recientes",
-    "description": "Contratos más recientes con puntaje crítico (≥ 0.60) según el modelo de riesgo v6.5. Cada uno es interactivo.",
+    "description": "Contratos más recientes con puntaje crítico (≥ 0.60) según el modelo de riesgo v0.6.5. Cada uno es interactivo.",
     "allCritical": "Todos los críticos",
     "empty": "No se encontraron contratos críticos",
     "showAll": "Mostrar los {{count}} contratos",

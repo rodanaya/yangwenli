@@ -128,7 +128,7 @@
     "highRiskContracts": "Contratos de alto riesgo",
     "directAwards": "Adjudicaciones directas",
     "singleBidders": "Licitantes \u00fanicos",
-    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.031 en v6.5), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v6.5."
+    "p3": "Un hallazgo contraintuitivo: <bold>las adjudicaciones directas no son la principal se\u00f1al de riesgo</bold>. En nuestro modelo, los procedimientos de adjudicaci\u00f3n directa tienen solo un coeficiente ligeramente positivo (+0.031 en v0.6.5), proporcionando m\u00ednima capacidad discriminatoria. La verdadera se\u00f1al de alerta no es c\u00f3mo se adjudica un contrato, sino <bold>qui\u00e9n sigue ganando</bold>. La volatilidad de precios \u2014 proveedores con montos de contratos que var\u00edan dr\u00e1sticamente \u2014 es el predictor individual m\u00e1s fuerte de corrupci\u00f3n en v0.6.5."
   },
 
   "s2": {
@@ -216,7 +216,7 @@
 
   "s8": {
     "title": "C\u00f3mo lo Sabemos",
-    "p1": "El modelo v6.5 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de indicadores estadísticos de riesgo</bold>. Cada contrato recibe una puntuaci\u00f3n que refleja su similitud con patrones de corrupción documentados, derivada de 9 variables activas (16 z-scores calculados, 9 con coeficiente no nulo tras regularización ElasticNet) normalizadas por sector y año, con regresión logística entrenada con {{contracts}} contratos confirmados como irregulares.",
+    "p1": "El modelo v0.6.5 transforma el an\u00e1lisis de contrataci\u00f3n de una lista de verificaci\u00f3n de indicadores ponderados a un <bold>marco de indicadores estadísticos de riesgo</bold>. Cada contrato recibe una puntuaci\u00f3n que refleja su similitud con patrones de corrupción documentados, derivada de 9 variables activas (16 z-scores calculados, 9 con coeficiente no nulo tras regularización ElasticNet) normalizadas por sector y año, con regresión logística entrenada con {{contracts}} contratos confirmados como irregulares.",
     "discriminationPower": "Poder discriminatorio",
     "calibrationQuality": "Calidad de calibraci\u00f3n",
     "vsRandom": "vs l\u00ednea base aleatoria",
@@ -233,7 +233,7 @@
       "groundTruth": {
         "title": "Concentraci\u00f3n de Verdad Base",
         "text": "Aunque la verdad de campo se ha expandido a ~748 casos (~603 proveedores) en los 12 sectores, los tres casos m\u00e1s grandes (IMSS, Segalmex, COVID) a\u00fan contribuyen una proporci\u00f3n desproporcionada de contratos de entrenamiento. El modelo sobresale detectando fraude basado en concentraci\u00f3n, pero puede subdetectar esquemas de corrupci\u00f3n novedosos.",
-        "mitigation": "v6.5 se expandi\u00f3 a ~748 casos documentados mediante escaneo sistem\u00e1tico de COMPRANET y referencias cruzadas con la ASF. Los modelos por sector y l\u00edmites de 100 contratos por proveedor reducen el sesgo de concentraci\u00f3n."
+        "mitigation": "v0.6.5 se expandi\u00f3 a ~748 casos documentados mediante escaneo sistem\u00e1tico de COMPRANET y referencias cruzadas con la ASF. Los modelos por sector y l\u00edmites de 100 contratos por proveedor reducen el sesgo de concentraci\u00f3n."
       },
       "dataQuality": {
         "title": "La Calidad de Datos se Degrada con el Tiempo",
@@ -262,7 +262,7 @@
       },
       "temporalLeakage": {
         "title": "Las Variables de Proveedores Usan Datos Futuros",
-        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. v6.5 mitiga el impacto en validaci\u00f3n con divisi\u00f3n estratificada por proveedor (AUC 0.828), pero la filtraci\u00f3n temporal subyacente en los agregados de proveedores persiste.",
+        "text": "Las variables a nivel de proveedor (concentraci\u00f3n, tasa de adjudicaci\u00f3n, volatilidad de precios) se calculan actualmente usando el historial completo 2002–2025. La concentraci\u00f3n de un contrato de 2019 incluye actividad de 2020–2025. v0.6.5 mitiga el impacto en validaci\u00f3n con divisi\u00f3n estratificada por proveedor (AUC 0.828), pero la filtraci\u00f3n temporal subyacente en los agregados de proveedores persiste.",
         "mitigation": "Agregados rodantes en tiempo real planificados para versiones futuras. La divisi\u00f3n estratificada por proveedor evita que el modelo memorice patrones individuales."
       }
     },
@@ -310,7 +310,7 @@
   },
 
   "topFraudSignals": {
-    "header": "Top 3 indicadores de riesgo — coeficientes del modelo (v6.5)",
+    "header": "Top 3 indicadores de riesgo — coeficientes del modelo (v0.6.5)",
     "s1": {
       "signal": "Volatilidad de Precios",
       "detail": "El predictor individual más fuerte (β = +0.534). Proveedores cuyos montos de contratos varían drásticamente entre instituciones — sello distintivo de manipulación de precios, no de fluctuación legítima de mercado.",
@@ -391,7 +391,7 @@
 
   "statBombs": {
     "highRiskRate": "Tasa de Alto Riesgo",
-    "highRiskRateSub": "Calibrado OCDE \u00b7 v6.5",
+    "highRiskRateSub": "Calibrado OCDE \u00b7 v0.6.5",
     "highRiskRateContext": "Calibrado al benchmark OCDE 2-15%. Contratos marcados como riesgo cr\u00edtico o alto por un modelo de 9 variables activas por sector.",
     "highCritical": "Contratos Alto/Critico",
     "highCriticalSub": "{{pct}}% de los 3.1M contratos",
@@ -400,13 +400,13 @@
     "yearsCoveredSub": "2002 - 2025 \u00b7 3.1M contratos",
     "yearsCoveredContext": "Cuatro estructuras de datos distintas, desde registros tempranos de baja calidad hasta declaraciones casi completas de 2023-2025.",
     "modelAuc": "AUC del Modelo",
-    "modelAucSub": "Divisi\u00f3n estratificada \u00b7 v6.5",
+    "modelAucSub": "Divisi\u00f3n estratificada \u00b7 v0.6.5",
     "modelAucContext": "AUC 0.828: si se presentan un contrato de un caso confirmado de corrupci\u00f3n y un contrato aleatorio, el modelo identifica correctamente el corrupto 82.8 de cada 100 veces.",
     "documentedCases": "Casos Documentados",
     "documentedCasesSub": "Verdad base para deteccion de corrupcion",
     "documentedCasesContext": "Abarcando empresas fantasma, manipulacion de licitaciones, sobreprecio, soborno y captura institucional en los 12 sectores.",
     "dualConfirmed": "Doble Confirmacion",
-    "dualConfirmedSub": "Modelo v6.5 Y PyOD ML \u00b7 validaci\u00f3n cruzada no supervisada",
+    "dualConfirmedSub": "Modelo v0.6.5 Y PyOD ML \u00b7 validaci\u00f3n cruzada no supervisada",
     "dualConfirmedContext": "Contratos marcados tanto por el modelo supervisado de riesgo como por deteccion de anomalias no supervisada de forma independiente."
   },
   "funnel": {
@@ -425,7 +425,7 @@
   "pullQuote1": "Uno de cada ocho contratos muestra patrones estadísticos consistentes con fraude en contrataciones.",
   "pullQuote2": "La mayor vulnerabilidad del sistema de contrataciones no es ningún contrato individual — es la concentración estructural del gasto público en proveedores que operan sin competencia real.",
   "sourceLabel": "Sobre este análisis",
-  "sourceBody": "Basado en el modelo de riesgo RUBLI v6.5 (AUC=0.828, HR ~13%). Las puntuaciones indican similitud con patrones de corrupci\u00f3n documentados, no son prueba de irregularidad.",
+  "sourceBody": "Basado en el modelo de riesgo RUBLI v0.6.5 (AUC=0.828, HR ~13%). Las puntuaciones indican similitud con patrones de corrupci\u00f3n documentados, no son prueba de irregularidad.",
   "tableHeader": "Registro de investigaciones",
   "filterLabel": "Filtros de investigación",
   "riskInfographic": {
@@ -517,7 +517,7 @@
   "methodology": {
     "overline": "RUBLI · Metodología",
     "title": "¿Cómo funciona esto?",
-    "p1": "RUBLI aplica un <bold>modelo de regresión logística por sector</bold> (v6.5, AUC 0.828) entrenado con 748 casos documentados de corrupción para puntuar cada contrato federal en COMPRANET. El modelo usa 9 variables estadísticas — desde volatilidad de precios hasta concentración de proveedores — normalizadas frente a líneas base por sector y año.",
+    "p1": "RUBLI aplica un <bold>modelo de regresión logística por sector</bold> (v0.6.5, AUC 0.828) entrenado con 748 casos documentados de corrupción para puntuar cada contrato federal en COMPRANET. El modelo usa 9 variables estadísticas — desde volatilidad de precios hasta concentración de proveedores — normalizadas frente a líneas base por sector y año.",
     "p2": "Las puntuaciones de riesgo son <bold>pistas de investigación, no condenas</bold>. Una puntuación de 0.60 significa que el contrato se asemeja a patrones de corrupción conocidos — no que tenga 60% de probabilidad de fraude. Todos los datos son registros públicos de COMPRANET. No se requiere FOIA.",
     "link": "Metodología completa y transparencia del modelo"
   },
@@ -578,7 +578,7 @@
   "historicalTrend": {
     "overline": "TASA DE ALTO RIESGO POR AÑO",
     "headline": "El riesgo casi se duplicó: 12% en 2015 a 18% en 2022",
-    "footnote": "Porcentaje de contratos clasificados como crítico + alto por RUBLI v6.5",
+    "footnote": "Porcentaje de contratos clasificados como crítico + alto por RUBLI v0.6.5",
     "legendPreAmlo": "2015-2018 Pre-AMLO",
     "legendAmlo": "2019-2024 AMLO/Sheinbaum",
     "legendPeak": "Años pico (\u226518%)",
@@ -610,7 +610,7 @@
     "body": "<salud>Salud</salud> lidera con <mono>MX$369B</mono> en riesgo (tasa del 12% sobre presupuesto de MX$3.07B). <energia>Energ\u00eda</energia> le sigue con <mono>MX$264B</mono>, luego <infraestructura>Infraestructura</infraestructura> con <mono>MX$213B</mono>. La tasa del 29.8% de <agricultura>Agricultura</agricultura> parece alarmante, pero su presupuesto menor implica solo MX$95B en riesgo — menos de la cuarta parte de Salud.",
     "chartHeader": "VALOR ABSOLUTO EN RIESGO (Crítico + Alto, MXN)",
     "oecdRef": "OCDE máx: 15% tasa de alto riesgo",
-    "sortedFootnote": "Ordenado por tasa de alto riesgo (crítico + alto) · Fuente: COMPRANET 2002-2025 · RUBLI v6.5"
+    "sortedFootnote": "Ordenado por tasa de alto riesgo (crítico + alto) · Fuente: COMPRANET 2002-2025 · RUBLI v0.6.5"
   },
 
   "whatThisMeans": {

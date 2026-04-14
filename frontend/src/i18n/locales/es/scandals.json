@@ -11,7 +11,7 @@
   "filterHintSuffix": "Ordenar por impacto financiero estimado",
   "editorial": {
     "kicker": "RUBLI · Casos Documentados de Corrupción · 2001-2025",
-    "lede": "43 casos de fraude en contratación pública federal mexicana, documentados por periodistas, auditores y fiscales. Clasificados por impacto financiero estimado. Tres patrones dominan: empresas fantasma (40%), sobreprecio (28%), y colusión en licitaciones (21%). Los casos verificados alimentan el modelo de riesgo v6.5 — cada empresa documentada aquí hace el modelo más preciso.",
+    "lede": "43 casos de fraude en contratación pública federal mexicana, documentados por periodistas, auditores y fiscales. Clasificados por impacto financiero estimado. Tres patrones dominan: empresas fantasma (40%), sobreprecio (28%), y colusión en licitaciones (21%). Los casos verificados alimentan el modelo de riesgo v0.6.5 — cada empresa documentada aquí hace el modelo más preciso.",
     "statusProcessed": "Procesado judicialmente",
     "statusInvestigated": "Bajo investigación",
     "statusDataOnly": "Solo datos RUBLI"

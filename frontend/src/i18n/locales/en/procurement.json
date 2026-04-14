@@ -33,7 +33,7 @@
   },
   "recentCritical": {
     "title": "Recent Critical-Risk Contracts",
-    "description": "Most recent contracts scored critical (≥ 0.60) by the v6.5 risk model. Each is clickable.",
+    "description": "Most recent contracts scored critical (≥ 0.60) by the v0.6.5 risk model. Each is clickable.",
     "allCritical": "All critical",
     "empty": "No critical contracts found",
     "showAll": "Show all {{count}} contracts",

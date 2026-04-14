@@ -38,7 +38,7 @@
   "methodologyPara2Title": "IQR method (Tukey):",
   "methodologyPara2": "Additionally, the system uses the interquartile range (IQR) method to detect outliers. The alert threshold is set at Q3 + 1.5× IQR (statistical outlier) and Q3 + 3.0× IQR (extreme overpricing).",
   "methodologyPara3Title": "price_volatility:",
-  "methodologyPara3": "Measures the variance of a vendor's contract amounts relative to sector norms. High volatility suggests inconsistent pricing or selective manipulation. It is the strongest predictor in the v6.5 risk model (coefficient +0.53).",
+  "methodologyPara3": "Measures the variance of a vendor's contract amounts relative to sector norms. High volatility suggests inconsistent pricing or selective manipulation. It is the strongest predictor in the v0.6.5 risk model (coefficient +0.53).",
   "methodologyDisclaimer": "Risk scores are statistical indicators that measure similarity to documented corruption patterns. A high score does not constitute proof of irregularity.",
   "viewFullMethodology": "View full methodology",
   "zThresholdLabel": "Min Z-Score:",
