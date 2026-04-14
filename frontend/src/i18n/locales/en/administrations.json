@@ -357,5 +357,6 @@
     "metricDA": "Direct Award %",
     "metricHR": "High Risk %",
     "metricSB": "Single Bid %"
-  }
+  },
+  "share": "Share"
 }

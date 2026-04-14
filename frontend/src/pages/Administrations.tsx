@@ -1058,7 +1058,7 @@ export default function Administrations() {
           <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
             {t('classifiedHeader.title')}
           </h1>
-          <ShareButton label="Compartir" className="flex-shrink-0 mt-1" />
+          <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
         </div>
         <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
           {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}

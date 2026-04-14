@@ -297,6 +297,7 @@
     "low": "LOW"
   },
   "modelEvolution": "Model Evolution",
+  "share": "Share",
   "lede": {
     "directAward": "{{pct}}% direct award",
     "riskDetected": "{{level}} risk detected by model v0.6.5",

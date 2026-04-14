@@ -1382,7 +1382,7 @@ export function VendorProfile() {
             <BarChart3 className="h-3.5 w-3.5" />
             {t('compare')}
           </button>
-          <ShareButton label={t('share', 'Compartir')} className="flex-shrink-0" />
+          <ShareButton label={t('share', 'Share')} className="flex-shrink-0" />
           <button
             onClick={async () => {
               setCsvExporting(true)
