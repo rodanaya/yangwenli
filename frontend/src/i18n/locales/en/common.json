@@ -425,6 +425,20 @@
     "noData": "No data available.",
     "noResults": "No results match the current filters."
   },
+  "emptyState": {
+    "errorTitle": "Something went wrong",
+    "networkError": "Unable to connect to the server. Please check your connection.",
+    "unexpectedError": "An unexpected error occurred.",
+    "tryAgain": "Try again",
+    "slowTitle": "Loading is taking longer than expected",
+    "slowDesc": "The data might still be loading. You can wait or try again.",
+    "comingSoonTitle": "{{name}} Coming Soon",
+    "comingSoonDesc": "This feature is currently under development and will be available in a future update.",
+    "noFoundTitle": "No {{name}} found",
+    "noFoundDesc": "No {{name}} are available in the database.",
+    "adjustFilters": "Try adjusting your filters to see more results.",
+    "clearAllFilters": "Clear all filters"
+  },
   "impacto": {
     "label": "This amount is equivalent to:",
     "imssAnnualSalaries": "IMSS annual salaries",

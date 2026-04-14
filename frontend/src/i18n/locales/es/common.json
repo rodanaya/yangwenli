@@ -427,6 +427,20 @@
     "copyLink": "Copiar enlace",
     "template": "🔍 {{summary}} — RUBLI Inteligencia de Contrataciones: {{url}}"
   },
+  "emptyState": {
+    "errorTitle": "Algo salió mal",
+    "networkError": "No se puede conectar al servidor. Por favor verifica tu conexión.",
+    "unexpectedError": "Ocurrió un error inesperado.",
+    "tryAgain": "Intentar de nuevo",
+    "slowTitle": "La carga está tardando más de lo esperado",
+    "slowDesc": "Los datos aún podrían estar cargando. Puedes esperar o intentar de nuevo.",
+    "comingSoonTitle": "{{name}} próximamente",
+    "comingSoonDesc": "Esta función está en desarrollo y estará disponible en una actualización futura.",
+    "noFoundTitle": "No se encontraron {{name}}",
+    "noFoundDesc": "No hay {{name}} disponibles en la base de datos.",
+    "adjustFilters": "Intenta ajustar los filtros para ver más resultados.",
+    "clearAllFilters": "Limpiar todos los filtros"
+  },
   "errors": {
     "couldNotLoad": "No se pudo cargar esta sección. Intenta refrescar la página.",
     "failedToSubmit": "Error al enviar — por favor intenta de nuevo.",

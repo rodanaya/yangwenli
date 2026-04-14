@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { motion } from 'framer-motion'
 import { fadeIn } from '@/lib/animations'
+import { useTranslation } from 'react-i18next'
 
 // SVG Illustrations for different states
 const NoDataIllustration = () => (
@@ -192,16 +193,17 @@ export function NoResultsState({
   hasFilters?: boolean
   onClearFilters?: () => void
 }) {
+  const { t } = useTranslation('common')
   return (
     <EmptyState
       variant="no-results"
-      title={`No ${entityName} found`}
+      title={t('emptyState.noFoundTitle', { name: entityName })}
       description={
         hasFilters
-          ? 'Try adjusting your filters to see more results.'
-          : `No ${entityName} are available in the database.`
+          ? t('emptyState.adjustFilters')
+          : t('emptyState.noFoundDesc', { name: entityName })
       }
-      actionLabel={hasFilters ? 'Clear all filters' : undefined}
+      actionLabel={hasFilters ? t('emptyState.clearAllFilters') : undefined}
       onAction={onClearFilters}
     />
   )
@@ -216,16 +218,17 @@ export function ErrorState({
   onRetry?: () => void
   loading?: boolean
 }) {
+  const { t } = useTranslation('common')
   return (
     <EmptyState
       variant="error"
-      title="Something went wrong"
+      title={t('emptyState.errorTitle')}
       description={
         message === 'Network Error'
-          ? 'Unable to connect to server. Please check if the backend is running.'
-          : message || 'An unexpected error occurred.'
+          ? t('emptyState.networkError')
+          : message || t('emptyState.unexpectedError')
       }
-      actionLabel="Try again"
+      actionLabel={t('emptyState.tryAgain')}
       onAction={onRetry}
       loading={loading}
     />
@@ -237,12 +240,13 @@ export function LoadingTimeoutState({
 }: {
   onRetry?: () => void
 }) {
+  const { t } = useTranslation('common')
   return (
     <EmptyState
       variant="error"
-      title="Loading is taking longer than expected"
-      description="The data might still be loading. You can wait or try again."
-      actionLabel="Retry"
+      title={t('emptyState.slowTitle')}
+      description={t('emptyState.slowDesc')}
+      actionLabel={t('retry')}
       onAction={onRetry}
     />
   )
@@ -253,11 +257,12 @@ export function ComingSoonState({
 }: {
   featureName: string
 }) {
+  const { t } = useTranslation('common')
   return (
     <EmptyState
       variant="coming-soon"
-      title={`${featureName} Coming Soon`}
-      description="This feature is currently under development and will be available in a future update."
+      title={t('emptyState.comingSoonTitle', { name: featureName })}
+      description={t('emptyState.comingSoonDesc')}
     />
   )
 }
