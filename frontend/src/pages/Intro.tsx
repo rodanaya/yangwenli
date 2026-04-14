@@ -1627,9 +1627,9 @@ export default function Intro() {
             {t('reportCard.headline')}
           </h2>
 
-          {/* Grade slot machine */}
+          {/* Grade slot machine — only trigger once data is loaded to avoid stale fallback animation */}
           <div className="gsap-reveal mb-12">
-            <GradeSlotMachine grade={nationalGrade} trigger={s5InView} isEn={isEn} />
+            <GradeSlotMachine grade={nationalGrade} trigger={s5InView && phiSectors.length > 0} isEn={isEn} />
             <p className="mt-4 text-base" style={{ color: '#6a6560' }}>
               {t('reportCard.nationalGrade')}
             </p>

@@ -757,7 +757,7 @@ export function Investigation() {
             { label: t('pipeline.corroborated'), count: pipelineCounts.corroborated, color: 'text-emerald-400' },
             { label: t('pipeline.archived'), count: pipelineCounts.archived, color: 'text-zinc-500' },
           ].map((stage, i) => (
-            <div key={stage.label} className="flex items-center flex-shrink-0">
+            <div key={stage.label} className={cn('flex items-center flex-shrink-0', stage.count === 0 && 'opacity-40')}>
               {i > 0 && (
                 <span className="text-zinc-700 mx-2 text-xs select-none" aria-hidden="true">&rarr;</span>
               )}
