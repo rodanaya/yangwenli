@@ -1037,18 +1037,18 @@ export function InstitutionProfile() {
                   <CardHeader className="pb-2 pt-4">
                     <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                       <AlertTriangle className="h-3.5 w-3.5 text-accent" />
-                      Metodo de contratacion vs promedio nacional
+                      {t('benchmarks.procurementMethod')}
                     </CardTitle>
                   </CardHeader>
                   <CardContent className="pb-4 space-y-3">
                     {directAwardPct != null && (
-                      <BenchmarkBar label="Adjudicacion directa" value={directAwardPct} benchmark={NATIONAL_DA_BENCHMARK} diff={daDiff} highThreshold={10} />
+                      <BenchmarkBar label={t('benchmarks.directAwardLabel')} value={directAwardPct} benchmark={NATIONAL_DA_BENCHMARK} diff={daDiff} highThreshold={10} />
                     )}
                     {singleBidPct != null && (
-                      <BenchmarkBar label="Licitante unico" value={singleBidPct} benchmark={NATIONAL_SB_BENCHMARK} diff={sbDiff} highThreshold={5} />
+                      <BenchmarkBar label={t('benchmarks.singleBidLabel')} value={singleBidPct} benchmark={NATIONAL_SB_BENCHMARK} diff={sbDiff} highThreshold={5} />
                     )}
                     <p className="text-[10px] text-text-muted/60 pt-1 border-t border-border/20">
-                      Linea vertical = promedio nacional. Tasas superiores al promedio aumentan el riesgo de corrupcion.
+                      {t('benchmarks.benchmarkNote')}
                     </p>
                   </CardContent>
                 </div>

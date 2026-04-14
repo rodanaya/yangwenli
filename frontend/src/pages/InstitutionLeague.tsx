@@ -603,16 +603,16 @@ export default function InstitutionLeague() {
               role="region"
               aria-label="Estadisticas generales"
             >
-              <StatCard label="Instituciones Evaluadas" value={formatNumber(statsData.total_scored)} />
-              <StatCard label="Puntuacion Mediana" value={statsData.median_score.toFixed(1)} sub="de 100" />
+              <StatCard label={t('stats.totalScored')} value={formatNumber(statsData.total_scored)} />
+              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub="/ 100" />
               <StatCard
-                label="Mejor Institucion"
+                label={t('stats.topPerformer')}
                 value={statsData.top_institution_score?.toFixed(1) ?? '--'}
                 sub={statsData.top_institution_name ?? undefined}
                 onClick={statsData.top_institution_id ? () => navigate(`/institutions/${statsData.top_institution_id}`) : undefined}
               />
               <StatCard
-                label="Institucion Mas Debil"
+                label={t('stats.worstPerformer')}
                 value={statsData.worst_institution_score?.toFixed(1) ?? '--'}
                 sub={statsData.worst_institution_name ?? undefined}
                 accent="red"
@@ -674,7 +674,7 @@ export default function InstitutionLeague() {
               onChange={(e) => updateParams({ sector: e.target.value || undefined, page: '1' })}
               className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600"
             >
-              <option value="">Todos los sectores</option>
+              <option value="">{t('filters.allSectors')}</option>
               {sectorOptions.map((s) => (
                 <option key={s.value} value={s.value}>{s.label}</option>
               ))}
@@ -758,7 +758,7 @@ export default function InstitutionLeague() {
                     </th>
                     <th className="px-3 py-2.5 text-left">
                       <SortHeader
-                        label="Institucion"
+                        label={t('columns.institution')}
                         sortKey="institution_name"
                         currentKey={sortBy}
                         currentDir={sortOrder}
@@ -767,7 +767,7 @@ export default function InstitutionLeague() {
                     </th>
                     <th className="px-3 py-2.5 text-left w-32">
                       <SortHeader
-                        label="Puntuacion"
+                        label={t('columns.score')}
                         sortKey="total_score"
                         currentKey={sortBy}
                         currentDir={sortOrder}
@@ -776,22 +776,22 @@ export default function InstitutionLeague() {
                     </th>
                     <th className="px-3 py-2.5 text-center w-28">
                       <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
-                        Nivel
+                        {t('columns.grade')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-left hidden sm:table-cell w-32">
                       <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
-                        Pilares
+                        {t('pillarsLabel', 'Pillars')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-center w-16 hidden sm:table-cell">
                       <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
-                        Tend.
+                        {t('columns.trend')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-left hidden md:table-cell w-28">
                       <SortHeader
-                        label="Percentil"
+                        label={t('columns.percentile')}
                         sortKey="national_percentile"
                         currentKey={sortBy}
                         currentDir={sortOrder}

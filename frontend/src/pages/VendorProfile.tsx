@@ -1683,7 +1683,7 @@ export function VendorProfile() {
           </CardHeader>
           <CardContent>
             <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              ⚠ This is a <strong>separate heuristic analysis</strong>. The v0.6.5 ML risk score assigns <code>co_bid_rate</code> a coefficient of <strong>0.000</strong> — co-bidding patterns did not discriminate corrupt from clean vendors in the training data and do not contribute to the displayed risk score.
+              ⚠ {t('coBidding.heuristicNote')}
             </div>
             <p className="text-sm text-text-muted mb-4">
               {t('coBidding.description')}

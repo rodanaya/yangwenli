@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { ScrollReveal } from '@/hooks/useAnimations'
 
 interface CompetitionIndexWidgetProps {
@@ -122,6 +123,7 @@ function AnimatedGauge({
 }
 
 export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetProps) {
+  const { t } = useTranslation('dashboard')
   const competitionIndex = 100 - daPct
   const oecdTarget = 75
   const gap = oecdTarget - competitionIndex
@@ -149,32 +151,32 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
             value={competitionIndex}
             maxValue={100}
             color={gaugeColor}
-            label={`México ${year}`}
-            sublabel="México"
+            label={`${t('competition.mexicoLabel')} ${year}`}
+            sublabel={t('competition.mexicoLabel')}
           />
           <AnimatedGauge
             value={oecdTarget}
             maxValue={100}
             color="#4ade80"
-            label="OCDE mínimo"
-            sublabel="OCDE"
+            label={t('competition.oecdMin')}
+            sublabel="OECD"
           />
         </div>
 
         <div className="mt-4 text-center space-y-1.5">
           <p className="text-xs text-text-muted font-mono tabular-nums">
             <span style={{ color: gaugeColor }} className="font-bold">
-              México: {competitionIndex.toFixed(0)}%
+              {t('competition.mexicoLabel')}: {competitionIndex.toFixed(0)}%
             </span>
             <span className="mx-2 text-border">|</span>
-            <span className="text-green-400 font-bold">OCDE mínimo: {oecdTarget}%</span>
+            <span className="text-green-400 font-bold">{t('competition.oecdMin')}: {oecdTarget}%</span>
           </p>
           {gap > 0 && (
             <p
               className="text-sm font-black font-mono tabular-nums"
               style={{ color: '#f87171' }}
             >
-              Brecha: {gap.toFixed(0)} puntos
+              {t('competition.gapLabel')}: {gap.toFixed(0)} pts
             </p>
           )}
         </div>

@@ -995,7 +995,7 @@ export default function InstitutionCompare() {
           <div className="flex flex-col md:flex-row items-stretch gap-6 mb-6">
             <InstitutionSearchInput
               id="inst-a-search"
-              label="Institucion A"
+              label={t('compare.institutionA')}
               query={queryA}
               setQuery={setQueryA}
               selectedId={selectedA}
@@ -1005,7 +1005,7 @@ export default function InstitutionCompare() {
             />
             <InstitutionSearchInput
               id="inst-b-search"
-              label="Institucion B"
+              label={t('compare.institutionB')}
               query={queryB}
               setQuery={setQueryB}
               selectedId={selectedB}

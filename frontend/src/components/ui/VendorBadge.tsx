@@ -43,7 +43,7 @@ export function VendorBadge({ isEfos, efosStage, isSfp }: VendorBadgeProps) {
       {isSfp && (
         <span
           className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-orange-950/60 text-orange-300 border border-orange-700 shrink-0"
-          title="Proveedor sancionado por la Secretaría de la Función Pública (SFP)"
+          title="Sanctioned by SFP (Secretaría de la Función Pública)"
           aria-label="SFP sanctioned"
         >
           SFP

@@ -881,13 +881,13 @@ function RiskDistributionStrip() {
           <div
             className="absolute top-0 bottom-0 w-px"
             style={{ left: '2%', backgroundColor: '#16a34a' }}
-            title="OECD mín 2%"
+            title="OECD min 2%"
           />
           {/* OECD max marker at 15% */}
           <div
             className="absolute top-0 bottom-0 w-px"
             style={{ left: '15%', backgroundColor: '#16a34a' }}
-            title="OECD máx 15%"
+            title="OECD max 15%"
           />
         </div>
         <div className="flex items-center gap-4 text-[10px] text-text-muted">
