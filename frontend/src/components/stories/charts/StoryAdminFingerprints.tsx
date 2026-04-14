@@ -87,7 +87,7 @@ export function StoryAdminFingerprints() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600">
-        Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v6.5 model · 5 administrations
+        Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v0.6.5 model · 5 administrations
       </p>
     </motion.div>
   )

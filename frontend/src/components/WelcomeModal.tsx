@@ -208,7 +208,7 @@ export function WelcomeModal() {
             <div>
               <DialogTitle className="flex items-center gap-2 leading-none">
                 <span className="text-white font-black text-xl tracking-tight">RUBLI</span>
-                <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">2.1</span>
+                <span className="text-[9px] font-bold text-[#c41e3a] bg-[#c41e3a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">v0.2.5</span>
               </DialogTitle>
             </div>
           </div>

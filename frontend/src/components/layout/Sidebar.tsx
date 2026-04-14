@@ -27,7 +27,7 @@ import {
   Activity,
   Search,
   Newspaper,
-  Map,
+
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -94,7 +94,6 @@ const NAV_SECTIONS: NavSectionDef[] = [
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
-      { i18nKey: 'states', href: '/states', icon: Map },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
     ],
   },

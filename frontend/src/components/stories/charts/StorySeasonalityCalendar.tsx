@@ -70,7 +70,7 @@ export function StorySeasonalityCalendar() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600">
-        Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v6.5 risk scores
+        Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v0.6.5 risk scores
       </p>
     </motion.div>
   )

@@ -33,7 +33,7 @@ export function StorySectorRiskHeatmap() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v6.5 · Administration boundaries from INE records
+        Source: COMPRANET 2002-2025 · RUBLI v0.6.5 · Administration boundaries from INE records
       </p>
     </motion.div>
   )

@@ -55,6 +55,7 @@
     "monopoly": "Monopoly",
     "emergency_fraud": "Emergency Fraud",
     "tender_rigging": "Tender Rigging",
+    "infrastructure_overrun": "Infrastructure Overrun",
     "other": "Other"
   },
   "administrations": {
@@ -66,6 +67,7 @@
   },
   "legalStatuses": {
     "investigation": "Under investigation",
+    "ongoing": "Ongoing",
     "prosecuted": "Prosecuted",
     "convicted": "Convicted",
     "acquitted": "Acquitted",

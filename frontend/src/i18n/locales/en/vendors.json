@@ -305,8 +305,16 @@
   "modelEvolution": "Model Evolution",
   "share": "Share",
   "lede": {
+    "eyebrow": "VENDOR PROFILE",
     "directAward": "{{pct}}% direct award",
     "riskDetected": "{{level}} risk detected by model v0.6.5",
-    "contractsAnalyzed": "{{n}} contracts analyzed"
+    "contractsAnalyzed": "{{n}} contracts analyzed",
+    "contractsSuffix": "Total: {{value}} · {{n}} contracts",
+    "riskLabels": {
+      "critical": "CRITICAL",
+      "high": "HIGH",
+      "medium": "MEDIUM",
+      "low": "LOW"
+    }
   }
 }

@@ -2,6 +2,7 @@
  * InvestigationLede — Newspaper-style page opener for investigations.
  * Shows above the main content like a newspaper article lede.
  */
+import { useTranslation } from 'react-i18next'
 import { RISK_COLORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 
@@ -15,13 +16,6 @@ interface InvestigationLedeProps {
   className?: string
 }
 
-const RISK_LABELS: Record<string, string> = {
-  critical: 'CRITICO',
-  high: 'ALTO',
-  medium: 'MEDIO',
-  low: 'BAJO',
-}
-
 export default function InvestigationLede({
   riskLevel,
   topFinding,
@@ -31,6 +25,7 @@ export default function InvestigationLede({
   contractCount,
   className,
 }: InvestigationLedeProps) {
+  const { t } = useTranslation('vendors')
   const borderColor = RISK_COLORS[riskLevel] ?? RISK_COLORS.low
   const badgeBg = `${borderColor}20`
 
@@ -44,14 +39,14 @@ export default function InvestigationLede({
     >
       {/* Section eyebrow */}
       <p className="text-xs tracking-wider text-zinc-400 mb-1.5">
-        PERFIL DE VENDEDOR
+        {t('lede.eyebrow')}
         {sector && <> &middot; {sector.toUpperCase()}</>}
         {yearsActive && <> &middot; {yearsActive}</>}
       </p>
 
       {/* Lede sentence */}
       <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
-        {topFinding} en {contractCount.toLocaleString()} contratos &middot; Total: {totalValue}
+        {topFinding} &middot; {t('lede.contractsSuffix', { n: contractCount.toLocaleString(), value: totalValue })}
       </p>
 
       {/* Risk badge */}
@@ -67,7 +62,7 @@ export default function InvestigationLede({
           className="w-1.5 h-1.5 rounded-full"
           style={{ backgroundColor: borderColor }}
         />
-        {RISK_LABELS[riskLevel] ?? riskLevel.toUpperCase()}
+        {t(`lede.riskLabels.${riskLevel}`, { defaultValue: riskLevel.toUpperCase() })}
       </span>
     </div>
   )

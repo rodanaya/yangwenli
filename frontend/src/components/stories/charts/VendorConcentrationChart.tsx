@@ -150,7 +150,7 @@ export function VendorConcentrationChart() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v6.5 risk model
+        Source: COMPRANET 2002-2025 · RUBLI v0.6.5 risk model
       </p>
     </motion.div>
   )

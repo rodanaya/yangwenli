@@ -333,13 +333,13 @@ function CaseCard({
             variant="outline"
             className={`text-[10px] px-2 py-0.5 font-bold uppercase tracking-wide rounded-full ${FRAUD_TYPE_COLORS[cas.fraud_type] ?? ''}`}
           >
-            {t(`fraudTypes.${cas.fraud_type}`)}
+            {t(`fraudTypes.${cas.fraud_type?.toLowerCase()}`)}
           </Badge>
 
           {/* Legal status pill with dot */}
           <span className={`inline-flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full ${legalStyle.bg} ${legalStyle.text}`}>
             <span className={`h-1.5 w-1.5 rounded-full ${legalStyle.dot}`} />
-            {t(`legalStatuses.${cas.legal_status}`)}
+            {t(`legalStatuses.${cas.legal_status?.toLowerCase()}`)}
           </span>
         </div>
 

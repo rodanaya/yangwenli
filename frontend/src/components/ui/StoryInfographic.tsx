@@ -46,7 +46,7 @@ const SLIDES: Slide[] = [
     visual: 'bar-trend',
     visualData: [62.7, 68.4, 73.1, 76.2, 77.8, 78.1, 80.0, 79.1, 81.9],
     visualLabels: ["'10", "'13", "'16", "'18", "'19", "'20", "'21", "'22", "'23"],
-    source: 'COMPRANET 2002-2025 · RUBLI v6.5',
+    source: 'COMPRANET 2002-2025 · RUBLI v0.6.5',
   },
   {
     id: 'ghost-companies',
@@ -94,12 +94,12 @@ const SLIDES: Slide[] = [
     statRaw: 412845,
     statLabel: 'contratos en nivel crítico o alto riesgo',
     headline: 'Un sistema que señala. Faltan manos que investiguen.',
-    body: 'El modelo RUBLI v6.5 (AUC 0.828) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización.',
+    body: 'El modelo RUBLI v0.6.5 (AUC 0.828) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización.',
     color: '#dc2626',
     visual: 'ring',
     visualData: [6.0, 7.5, 26.8, 59.7],
     visualLabels: ['Crítico 6.0%', 'Alto 7.5%', 'Medio 26.8%', 'Bajo 59.7%'],
-    source: 'RUBLI modelo v6.5 · 3,051,294 contratos',
+    source: 'RUBLI modelo v0.6.5 · 3,051,294 contratos',
   },
 ]
 

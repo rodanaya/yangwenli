@@ -51,10 +51,10 @@ const INFOGRAPHICS: Infographic[] = [
     title_es: 'Distribución de Riesgo: 412,845 Contratos Críticos',
     title_en: 'Risk Distribution: 412,845 Critical Contracts',
     caption_es:
-      'De 3.05 millones de contratos federales, 412,845 (13.49%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v6.5 — entrenado con 748 casos documentados.',
+      'De 3.05 millones de contratos federales, 412,845 (13.49%) presentan patrones de alto o crítico riesgo de corrupción según el modelo RUBLI v0.6.5 — entrenado con 748 casos documentados.',
     caption_en:
-      'Of 3.05 million federal contracts, 412,845 (13.49%) show high or critical corruption risk patterns per the RUBLI v6.5 model — trained on 748 documented cases.',
-    source: 'RUBLI v6.5 · AUC=0.828 · HR=13.49% (OECD 2–15% compliant)',
+      'Of 3.05 million federal contracts, 412,845 (13.49%) show high or critical corruption risk patterns per the RUBLI v0.6.5 model — trained on 748 documented cases.',
+    source: 'RUBLI v0.6.5 · AUC=0.828 · HR=13.49% (OECD 2–15% compliant)',
     tag_es: 'Modelo de Riesgo',
     tag_en: 'Risk Model',
     tagColor: '#f87171',
@@ -96,7 +96,7 @@ const INFOGRAPHICS: Infographic[] = [
       '2020 marcó el máximo histórico con 18.2% de contratos de alto riesgo — superando el umbral OCDE del 15%. Las compras de emergencia por COVID-19 dispararon patrones anómalos. Desde 2021 hay descenso, llegando a 9.2% en 2024.',
     caption_en:
       '2020 set the all-time record with 18.2% high-risk contracts — exceeding the 15% OECD threshold. COVID-19 emergency procurement triggered anomalous patterns. Since 2021, the rate has declined to 9.2% in 2024.',
-    source: 'RUBLI v6.5 · Contracts rated high or critical risk 2013–2024',
+    source: 'RUBLI v0.6.5 · Contracts rated high or critical risk 2013–2024',
     tag_es: 'Tendencia',
     tag_en: 'Trend',
     tagColor: '#10b981',

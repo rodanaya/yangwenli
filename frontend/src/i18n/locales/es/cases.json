@@ -55,6 +55,7 @@
     "monopoly": "Monopolio",
     "emergency_fraud": "Fraude de Emergencia",
     "tender_rigging": "Manipulación de Concurso",
+    "infrastructure_overrun": "Sobrecosto de Infraestructura",
     "other": "Otro"
   },
   "administrations": {
@@ -66,6 +67,7 @@
   },
   "legalStatuses": {
     "investigation": "En investigación",
+    "ongoing": "En curso",
     "prosecuted": "Procesado",
     "convicted": "Condenado",
     "acquitted": "Absuelto",

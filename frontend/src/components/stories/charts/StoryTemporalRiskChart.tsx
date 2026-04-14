@@ -37,7 +37,7 @@ export function StoryTemporalRiskChart() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-2 font-mono">
-        Source: COMPRANET 2010-2025 · RUBLI v6.5 risk model · Scandal dates from public record
+        Source: COMPRANET 2010-2025 · RUBLI v0.6.5 risk model · Scandal dates from public record
       </p>
     </motion.div>
   )

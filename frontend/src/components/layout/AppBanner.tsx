@@ -23,10 +23,10 @@ export function AppBanner() {
         aria-hidden="true"
       />
       <Sparkles className="h-3.5 w-3.5 text-accent flex-shrink-0" />
-      <p className="flex-1 text-[11px] text-accent font-medium tracking-tight leading-tight">
+      <p className="flex-1 text-[11px] text-accent font-medium tracking-tight leading-tight min-w-0">
         <span className="font-bold font-mono uppercase tracking-[0.08em] mr-1.5">RUBLI&nbsp;v0.2.5</span>
-        <span className="text-accent/70 mx-1.5">·</span>
-        {t('banner')}
+        <span className="text-accent/70 mx-1.5 hidden sm:inline">·</span>
+        <span className="hidden sm:inline">{t('banner')}</span>
       </p>
       <button
         onClick={dismiss}

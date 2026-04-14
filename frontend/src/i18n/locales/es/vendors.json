@@ -305,8 +305,16 @@
   "modelEvolution": "Evolución del Modelo",
   "share": "Compartir",
   "lede": {
+    "eyebrow": "PERFIL DE VENDEDOR",
     "directAward": "{{pct}}% adjudicación directa",
     "riskDetected": "Riesgo {{level}} detectado por modelo v0.6.5",
-    "contractsAnalyzed": "{{n}} contratos analizados"
+    "contractsAnalyzed": "{{n}} contratos analizados",
+    "contractsSuffix": "Total: {{value}} · {{n}} contratos",
+    "riskLabels": {
+      "critical": "CRÍTICO",
+      "high": "ALTO",
+      "medium": "MEDIO",
+      "low": "BAJO"
+    }
   }
 }
