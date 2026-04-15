@@ -6,7 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { RiskBadge, Badge } from '@/components/ui/badge'
+import { RiskBadge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
@@ -87,7 +87,6 @@ import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
 import { motion, useInView } from 'framer-motion'
-import { slideUp, staggerItem } from '@/lib/animations'
 import { RiskWhisker } from '@/components/ui/risk-whisker'
 import { ReportIssueDialog } from '@/components/ReportIssueDialog'
 import { ShareButton } from '@/components/ShareButton'
@@ -207,10 +206,7 @@ function PlainLanguageRiskCard({
   ]
 
   return (
-    <div
-      className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4"
-      style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 80ms both' }}
-    >
+    <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -1135,11 +1131,10 @@ export function VendorProfile() {
   const isGroundTruth = groundTruthStatus?.is_known_bad && (groundTruthStatus.cases?.length ?? 0) > 0
 
   return (
-    <div className="space-y-6 stagger-animate">
+    <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
       {/* ── TOP-OF-PAGE CRITICAL ALERT — shown above everything for EFOS/GT vendors ── */}
       {(isEfosDefinitivo || isGroundTruth) && (
-        <div className="rounded-lg border-2 border-red-500 bg-red-950/60 px-4 py-3 flex items-center gap-3"
-          style={{ animation: 'vpSlideIn 300ms cubic-bezier(0.16,1,0.3,1) both' }}>
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-red-500/40 bg-red-950/30">
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/30 border border-red-500/60 flex items-center justify-center">
             <AlertTriangle className="h-4 w-4 text-red-300" />
           </div>
@@ -1166,8 +1161,7 @@ export function VendorProfile() {
         </div>
       )}
       {(isEfosPresunto || isSfpSanctioned) && !isEfosDefinitivo && !isGroundTruth && (
-        <div className="rounded-lg border border-amber-500/60 bg-amber-950/40 px-4 py-3 flex items-center gap-3"
-          style={{ animation: 'vpSlideIn 300ms cubic-bezier(0.16,1,0.3,1) both' }}>
+        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-950/20">
           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
           <p className="text-sm text-amber-300 flex-1">
             {isEfosPresunto && 'SAT EFOS Presunto — Listed as alleged ghost company (investigation ongoing).'}
@@ -1175,190 +1169,328 @@ export function VendorProfile() {
           </p>
         </div>
       )}
-      <style>{`
-        @keyframes vpSlideIn {
-          from { opacity: 0; transform: translateY(-12px); filter: blur(3px); }
-          to   { opacity: 1; transform: translateY(0);     filter: blur(0px); }
-        }
-        @keyframes vpFadeUp {
-          from { opacity: 0; transform: translateY(10px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-        @keyframes narrativeHeaderSlideUp {
-          from { opacity: 0; transform: translateY(30px); }
-          to   { opacity: 1; transform: translateY(0); }
-        }
-      `}</style>
       {fromAria && (
-        <div className="px-6 pt-4">
-          <Link to="/aria" className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors">
+        <div>
+          <Link to="/aria" className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors font-mono">
             <ChevronLeft className="w-3.5 h-3.5" />
             {tc('backToAriaQueue')}
           </Link>
         </div>
       )}
-      {/* Hero Header — Obsidian Intelligence */}
-      <motion.div
-        className="fern-card p-5 relative overflow-hidden"
-        style={{
-          borderLeftWidth: '4px',
-          borderLeftColor: riskColor,
-          animation: 'vpSlideIn 600ms cubic-bezier(0.16, 1, 0.3, 1) both',
-        }}
-        variants={slideUp}
-        initial="initial"
-        animate="animate"
-      >
-        {/* Risk glow effect */}
-        <div
-          className="absolute top-0 right-0 w-48 h-48 rounded-full blur-3xl opacity-10 pointer-events-none"
-          style={{ backgroundColor: riskColor }}
-        />
-        <div className="flex items-center gap-4 relative">
-          <Link to="/explore?tab=vendors">
-            <Button variant="ghost" size="sm">
-              <ArrowLeft className="h-4 w-4" />
-            </Button>
-          </Link>
-          <div className="flex items-center gap-3">
-            <div
-              className="flex h-14 w-14 items-center justify-center rounded-xl border"
+      {/* ── EDITORIAL HERO HEADER ─────────────────────────────── */}
+      <header>
+        {/* Kicker + risk badge */}
+        <div className="flex items-start justify-between gap-4 mb-3">
+          <p
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]"
+            style={{ color: 'var(--color-accent)' }}
+          >
+            RUBLI · {t('vendorProfile', 'VENDOR PROFILE')}
+          </p>
+          {vendor.avg_risk_score !== undefined && (
+            <span
+              className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded flex-shrink-0"
               style={{
-                backgroundColor: `${riskColor}10`,
-                borderColor: `${riskColor}30`,
                 color: riskColor,
-                boxShadow: `0 0 20px ${riskColor}15`,
+                border: `1px solid ${riskColor}40`,
+                background: `${riskColor}10`,
               }}
             >
-              <Users className="h-7 w-7" />
-            </div>
-            <div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <h1 className="text-gradient text-xl font-bold font-mono tracking-tight">{toTitleCase(vendor.name)}</h1>
-                {/* F2: Ground truth badge */}
-                {groundTruthStatus?.is_known_bad && groundTruthStatus.cases?.map((c) => (
+              {riskLevel} risk
+            </span>
+          )}
+        </div>
+
+        {/* Back link + vendor name */}
+        <div className="flex items-start gap-3 mb-2">
+          <Link
+            to="/explore?tab=vendors"
+            className="shrink-0 mt-2 p-1 rounded text-text-muted hover:text-text-primary transition-colors"
+            aria-label={t('backToVendors')}
+          >
+            <ArrowLeft className="h-4 w-4" />
+          </Link>
+          <div className="min-w-0 flex-1">
+            <h1
+              className="leading-tight font-bold"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(1.6rem, 4vw, 2.5rem)',
+                color: 'var(--color-text-primary)',
+                letterSpacing: '-0.01em',
+              }}
+            >
+              {toTitleCase(vendor.name)}
+            </h1>
+
+            {/* Ground truth case links */}
+            {groundTruthStatus?.is_known_bad && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {groundTruthStatus.cases?.map((c) => (
                   <Link
                     key={c.case_id}
                     to={`/cases/${c.scandal_slug}`}
-                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40 hover:bg-red-500/30 transition-colors"
+                    className="text-xs px-2 py-0.5 rounded font-medium"
+                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
                   >
-                    Documented: {c.case_name}
+                    ⚠ {c.case_name}
                   </Link>
                 ))}
-                {groundTruthError && (
-                  <span className="ml-1 px-2 py-0.5 text-xs text-text-muted flex items-center gap-1">
-                    <AlertTriangle className="h-3 w-3 text-amber-500" />
-                    {t('groundTruth.couldNotCheck')}
-                  </span>
-                )}
-                {/* SFP/EFOS badges (fallback when no ground truth) */}
-                {!groundTruthStatus?.is_known_bad && externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
-                  <span className="ml-2 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40">
+              </div>
+            )}
+            {groundTruthError && (
+              <span className="mt-1 text-xs text-text-muted flex items-center gap-1">
+                <AlertTriangle className="h-3 w-3 text-amber-500" />
+                {t('groundTruth.couldNotCheck')}
+              </span>
+            )}
+
+            {/* SFP/EFOS badges (when no ground truth) */}
+            {!groundTruthStatus?.is_known_bad && (
+              <div className="flex flex-wrap gap-2 mt-2">
+                {externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
+                  <span
+                    className="text-xs px-2 py-0.5 rounded font-medium"
+                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
+                  >
                     {t('badges.sfpSanctioned')}
                   </span>
                 )}
-                {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'definitivo' && (
+                {externalFlags?.sat_efos?.stage === 'definitivo' && (
                   <span
-                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-red-500/20 text-red-300 rounded-full border border-red-500/40 cursor-help"
-                    title="Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation."
+                    className="text-xs px-2 py-0.5 rounded font-medium"
+                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
                   >
                     {t('badges.efosStageDef')}
                   </span>
                 )}
-                {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'presunto' && (
+                {externalFlags?.sat_efos?.stage === 'presunto' && (
                   <span
-                    className="ml-1 px-2 py-0.5 text-xs font-medium bg-amber-500/20 text-amber-300 rounded-full border border-amber-500/40 cursor-help"
-                    title="Definitivo: Tax authority has formally confirmed this is a ghost company. Presunto: Under investigation."
+                    className="text-xs px-2 py-0.5 rounded font-medium"
+                    style={{ background: '#eab30820', color: '#fde68a', border: '1px solid #eab30840' }}
                   >
-                    SAT EFOS Presunto (Alleged)
+                    SAT EFOS Presunto
                   </span>
                 )}
               </div>
-              <div className="flex items-center gap-2 text-sm text-text-muted">
-                {vendor.rfc && (
-                  <span className="inline-flex items-center gap-1">
-                    <span className="font-mono">{vendor.rfc}</span>
-                    <button
-                      onClick={() => {
-                        navigator.clipboard.writeText(vendor.rfc!).then(() => {
-                          setRfcCopied(true)
-                          setTimeout(() => setRfcCopied(false), 1500)
-                        }).catch(() => {})
-                      }}
-                      className="p-0.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
-                      aria-label={rfcCopied ? 'RFC copiado' : 'Copiar RFC'}
-                      title={rfcCopied ? '¡Copiado!' : 'Copiar RFC'}
-                    >
-                      {rfcCopied
-                        ? <Check className="h-3 w-3 text-green-400" />
-                        : <Copy className="h-3 w-3" />
-                      }
-                    </button>
-                  </span>
-                )}
-                {vendor.primary_sector_name && (
-                  <>
-                    <span>·</span>
-                    <Badge
-                      className="text-xs border"
-                      style={{
-                        backgroundColor: `${sectorColor}20`,
-                        color: sectorColor,
-                        borderColor: `${sectorColor}40`,
-                      }}
-                    >
-                      {vendor.primary_sector_name}
-                    </Badge>
-                  </>
-                )}
-                {vendor.industry_name && (
-                  <>
-                    <span>·</span>
-                    <span>{vendor.industry_name}</span>
-                  </>
-                )}
-                {vendor.group_name && (
-                  <>
-                    <span>·</span>
-                    <span
-                      className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-xs font-medium bg-amber-500/15 text-amber-300 border border-amber-500/30"
-                      title="This vendor belongs to a related network group"
-                    >
-                      <Users className="h-2.5 w-2.5" />
-                      {vendor.group_name}
-                    </span>
-                  </>
-                )}
-              </div>
-              {vendor.name_variants && vendor.name_variants.length > 0 && (
-                <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
-                  <span className="text-xs text-text-muted">{t('alsoKnownAs')}</span>
-                  {vendor.name_variants.slice(0, 5).map((v) => (
-                    <span
-                      key={v.variant_name}
-                      className="inline-flex items-center px-1.5 py-0.5 rounded text-xs bg-background-elevated border border-border/30 text-text-secondary"
-                      title={`Source: ${v.source}`}
-                    >
-                      {v.variant_name}
-                    </span>
-                  ))}
-                  {vendor.name_variants.length > 5 && (
-                    <span className="text-xs text-text-muted">
-                      +{vendor.name_variants.length - 5} more
-                    </span>
-                  )}
-                  <span className="text-xs text-text-muted/50 ml-1">
-                    · QuiénEsQuién.Wiki
-                  </span>
-                </div>
-              )}
-            </div>
+            )}
           </div>
         </div>
-        <div className="flex flex-wrap items-center gap-2">
+
+        {/* Metadata: RFC · Sector · Industry · Group */}
+        <div className="flex items-center gap-2 flex-wrap text-sm text-text-muted ml-8 mb-3">
+          {vendor.rfc && (
+            <span className="inline-flex items-center gap-1">
+              <span className="font-mono text-xs text-text-secondary">{vendor.rfc}</span>
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(vendor.rfc!).then(() => {
+                    setRfcCopied(true)
+                    setTimeout(() => setRfcCopied(false), 1500)
+                  }).catch(() => {})
+                }}
+                className="p-0.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
+                aria-label={rfcCopied ? 'RFC copiado' : 'Copiar RFC'}
+                title={rfcCopied ? '¡Copiado!' : 'Copiar RFC'}
+              >
+                {rfcCopied
+                  ? <Check className="h-3 w-3 text-green-400" />
+                  : <Copy className="h-3 w-3" />
+                }
+              </button>
+            </span>
+          )}
+          {vendor.primary_sector_name && (
+            <>
+              <span className="text-text-muted/30">·</span>
+              <span
+                className="text-xs px-2 py-0.5 rounded"
+                style={{
+                  background: `${sectorColor}20`,
+                  color: sectorColor,
+                  border: `1px solid ${sectorColor}40`,
+                }}
+              >
+                {vendor.primary_sector_name}
+              </span>
+            </>
+          )}
+          {vendor.industry_name && (
+            <>
+              <span className="text-text-muted/30">·</span>
+              <span className="text-xs text-text-muted">{vendor.industry_name}</span>
+            </>
+          )}
+          {vendor.group_name && (
+            <>
+              <span className="text-text-muted/30">·</span>
+              <span
+                className="text-xs px-1.5 py-0.5 rounded font-medium inline-flex items-center gap-1"
+                style={{ background: '#eab30815', color: '#fde68a', border: '1px solid #eab30830' }}
+              >
+                <Users className="h-2.5 w-2.5" />
+                {vendor.group_name}
+              </span>
+            </>
+          )}
+        </div>
+
+        {/* Name variants */}
+        {vendor.name_variants && vendor.name_variants.length > 0 && (
+          <div className="flex flex-wrap items-center gap-1.5 ml-8 mb-4">
+            <span className="text-xs text-text-muted/60">{t('alsoKnownAs')}</span>
+            {vendor.name_variants.slice(0, 5).map((v) => (
+              <span
+                key={v.variant_name}
+                className="text-xs px-1.5 py-0.5 rounded font-mono"
+                style={{
+                  background: 'var(--color-background-elevated)',
+                  border: '1px solid var(--color-border)',
+                  color: 'var(--color-text-secondary)',
+                }}
+                title={`Source: ${v.source}`}
+              >
+                {v.variant_name}
+              </span>
+            ))}
+            {vendor.name_variants.length > 5 && (
+              <span className="text-xs text-text-muted/60">+{vendor.name_variants.length - 5} more</span>
+            )}
+            <span className="text-[10px] text-text-muted/40 ml-1">· QuiénEsQuién.Wiki</span>
+          </div>
+        )}
+
+        {/* Hero stats — editorial large numbers */}
+        <div
+          className="flex flex-wrap gap-x-8 gap-y-4 ml-8 py-5 mb-4"
+          style={{ borderBottom: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)' }}
+        >
+          <div>
+            <div
+              className="font-mono font-bold tabular-nums leading-none"
+              style={{
+                fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                color: 'var(--color-text-primary)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {vendor.total_contracts.toLocaleString()}
+            </div>
+            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
+              {t('kpi.totalContracts', 'Total Contracts')}
+            </p>
+          </div>
+
+          <div>
+            <div
+              className="font-mono font-bold tabular-nums leading-none"
+              style={{
+                fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                color: 'var(--color-accent)',
+                letterSpacing: '-0.02em',
+              }}
+            >
+              {formatCompactMXN(vendor.total_value_mxn)}
+            </div>
+            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
+              {t('kpi.totalValue', 'Contract Value')}
+            </p>
+          </div>
+
+          {vendor.total_institutions !== undefined && (
+            <div>
+              <div
+                className="font-mono font-bold tabular-nums leading-none"
+                style={{
+                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {vendor.total_institutions}
+              </div>
+              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
+                {t('kpi.institutions', 'Agencies Served')}
+              </p>
+            </div>
+          )}
+
+          {vendor.avg_risk_score !== undefined && (
+            <div>
+              <div
+                className="font-mono font-bold tabular-nums leading-none"
+                style={{
+                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                  color: riskColor,
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {((vendor.avg_risk_score) * 100).toFixed(0)}
+                <span className="text-sm font-normal text-text-muted/60 ml-1">/100</span>
+              </div>
+              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
+                {t('kpi.riskScore', 'Risk Score')}
+              </p>
+              {vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null && (
+                <p className="text-[9px] font-mono text-text-muted/50 tabular-nums mt-0.5">
+                  CI {(vendor.avg_confidence_lower * 100).toFixed(0)}–{(vendor.avg_confidence_upper * 100).toFixed(0)}%
+                </p>
+              )}
+              {vendor.sector_risk_percentile != null && vendor.sector_risk_percentile >= 70 && (
+                <p className="text-[9px] font-mono mt-0.5" style={{ color: RISK_COLORS.high }}>
+                  {t('sectorPercentile', { pct: 100 - vendor.sector_risk_percentile })}
+                </p>
+              )}
+            </div>
+          )}
+
+          {vendor.first_contract_year && vendor.last_contract_year && (
+            <div>
+              <div
+                className="font-mono font-bold tabular-nums leading-none"
+                style={{
+                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                  color: 'var(--color-text-secondary)',
+                  letterSpacing: '-0.02em',
+                }}
+              >
+                {vendor.years_active ?? (vendor.last_contract_year - vendor.first_contract_year + 1)}
+              </div>
+              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
+                {t('kpi.yearsActive', 'Years Active')} · {vendor.first_contract_year}–{vendor.last_contract_year}
+              </p>
+            </div>
+          )}
+
+          {scorecard && (
+            <div className="flex items-start gap-2">
+              <GradeBadge10 grade={scorecard.grade} size="md" />
+              <div>
+                <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                  {t('integrityGrade', 'Integrity Grade')}
+                </p>
+                <p className="text-[10px] font-mono text-text-muted/60">{scorecard.grade_label}</p>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Action buttons */}
+        <div className="flex flex-wrap items-center gap-2 ml-8">
+          <button
+            onClick={() => navigate(`/thread/${vendorId}`)}
+            className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-colors"
+            style={{ background: '#dc2626', color: 'white' }}
+            title="Open scroll-driven investigation narrative"
+            aria-label="Open Red Thread investigation narrative"
+          >
+            <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
+            {t('readInvestigation', 'Read the Investigation')}
+          </button>
           <button
             onClick={() => setNetworkOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            style={{ background: 'var(--color-background-elevated)' }}
           >
             <Network className="h-3.5 w-3.5" />
             {t('viewNetwork')}
@@ -1368,7 +1500,8 @@ export function VendorProfile() {
               onClick={() => navigate(
                 `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
               )}
-              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+              style={{ background: 'var(--color-background-elevated)' }}
             >
               <SlidersHorizontal className="h-3.5 w-3.5" />
               {t('findSimilar')}
@@ -1376,7 +1509,8 @@ export function VendorProfile() {
           )}
           <button
             onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+            style={{ background: 'var(--color-background-elevated)' }}
             aria-label={t('compare')}
           >
             <BarChart3 className="h-3.5 w-3.5" />
@@ -1389,21 +1523,12 @@ export function VendorProfile() {
               try { await exportContractsCSV() } finally { setCsvExporting(false) }
             }}
             disabled={csvExporting}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
+            style={{ background: 'var(--color-background-elevated)' }}
             aria-label={t('exportCSV')}
-            title={t('exportCSV')}
           >
             <Download className="h-3.5 w-3.5" />
             {csvExporting ? t('exporting') : t('exportCSV')}
-          </button>
-          <button
-            onClick={() => navigate(`/thread/${vendorId}`)}
-            className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#dc2626] hover:bg-red-700 text-white text-sm font-semibold transition-colors shadow-[0_0_12px_rgba(220,38,38,0.35)] hover:shadow-[0_0_20px_rgba(220,38,38,0.5)]"
-            title="Open scroll-driven investigation narrative"
-            aria-label="Open Red Thread investigation narrative"
-          >
-            <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
-            Read the Investigation
           </button>
           <GenerateReportButton
             reportType="vendor"
@@ -1422,35 +1547,18 @@ export function VendorProfile() {
             entityName={toTitleCase(vendor.name)}
           />
           {vendor.avg_risk_score !== undefined && (
-            <div className="flex flex-col items-end gap-0.5">
-              <div className="flex items-center gap-1">
-                <RiskBadge score={vendor.avg_risk_score} className="text-base px-3 py-1" />
-                <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
-              </div>
-              {/* #33 — CI range */}
-              {vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null && (
-                <span className="text-[10px] text-text-muted font-mono tabular-nums">
-                  {t('confidenceInterval', {
-                    lo: (vendor.avg_confidence_lower * 100).toFixed(0),
-                    hi: (vendor.avg_confidence_upper * 100).toFixed(0),
-                  })}
-                </span>
-              )}
-              {/* #34 — sector percentile */}
-              {vendor.sector_risk_percentile != null && vendor.sector_risk_percentile >= 70 && (
-                <span className="text-[10px] font-semibold text-risk-high tabular-nums">
-                  {t('sectorPercentile', { pct: 100 - vendor.sector_risk_percentile })}
-                </span>
-              )}
-            </div>
+            <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
           )}
-          {scorecard && (
-            <div className="flex items-center gap-1" title={`Integridad: ${scorecard.grade_label} (${scorecard.total_score.toFixed(0)}/100)`}>
-              <GradeBadge10 grade={scorecard.grade} size="md" />
-            </div>
-          )}
+          <button
+            onClick={() => setDisputeOpen(true)}
+            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-muted/60 hover:text-text-secondary transition-colors ml-auto"
+            style={{ background: 'var(--color-background-elevated)' }}
+          >
+            <AlertTriangle className="h-3 w-3" />
+            {t('disputeScore', 'Report issue')}
+          </button>
         </div>
-      </motion.div>
+      </header>
 
       {/* PlainLanguageRiskCard — journalist plain-English summary */}
       <PlainLanguageRiskCard
@@ -1560,12 +1668,12 @@ export function VendorProfile() {
 
         return (
           <div
-            className="fern-card p-4"
-            style={{ animation: 'vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) 100ms both' }}
+            className="rounded-lg p-4"
+            style={{ border: '1px solid var(--color-border)', background: 'var(--color-background-elevated)' }}
           >
-            <div className="editorial-rule mb-3">
-              <span className="editorial-label">{t('flags.sectionLabel')}</span>
-            </div>
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
+              {t('flags.sectionLabel')}
+            </p>
             <div className="space-y-2">
               {flags.map((flag, i) => (
                 <div key={i} className={`flex items-start gap-2 text-sm ${
@@ -1585,85 +1693,60 @@ export function VendorProfile() {
         )
       })()}
 
-      {/* KPI Row — scroll-triggered stagger + F7 Percentile Badges */}
-      <motion.div
-        className="grid gap-4 md:grid-cols-2 lg:grid-cols-5"
-        initial={{ opacity: 0, y: -12 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.45, ease: [0.25, 0.46, 0.45, 0.94] }}
-      >
-        <motion.div variants={staggerItem}>
-          <ScrollReveal delay={0} direction="up">
-            <KPICard
-              title={t('kpi.totalContracts')}
-              value={vendor.total_contracts}
-              icon={FileText}
-              subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
-              percentileBadge={(() => {
-                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
-                const item = pc?.metrics?.find((p) => p.metric === 'contract_count')
-                return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
-              })()}
-            />
-          </ScrollReveal>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <ScrollReveal delay={80} direction="up">
-            <KPICard
-              title={t('kpi.totalValue')}
-              value={vendor.total_value_mxn}
-              icon={DollarSign}
-              format="currency"
-              subtitle={formatCompactUSD(vendor.total_value_mxn)}
-              percentileBadge={(() => {
-                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
-                const item = pc?.metrics?.find((p) => p.metric === 'total_value')
-                return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
-              })()}
-            />
-          </ScrollReveal>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <ScrollReveal delay={160} direction="up">
-            <KPICard
-              title={t('kpi.institutions')}
-              value={vendor.total_institutions}
-              icon={Building2}
-              subtitle={t('kpi.uniqueAgencies')}
-            />
-          </ScrollReveal>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <ScrollReveal delay={240} direction="up">
-            <KPICard
-              title={t('kpi.highRisk')}
-              value={vendor.high_risk_pct}
-              icon={AlertTriangle}
-              format="percent_100"
-              variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
-              percentileBadge={(() => {
-                const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
-                const item = pc?.metrics?.find((p) => p.metric === 'risk_score')
-                return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
-              })()}
-            />
-          </ScrollReveal>
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <ScrollReveal delay={320} direction="up">
-            <KPICard
-              title={t('kpi.yearsActive')}
-              value={vendor.years_active}
-              icon={Activity}
-              subtitle={
-                vendor.first_contract_year && vendor.last_contract_year
-                  ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
-                  : t('kpi.yearsOfActivity')
-              }
-            />
-          </ScrollReveal>
-        </motion.div>
-      </motion.div>
+      {/* KPI Row — F7 Percentile Badges */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
+        <KPICard
+          title={t('kpi.totalContracts')}
+          value={vendor.total_contracts}
+          icon={FileText}
+          subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
+          percentileBadge={(() => {
+            const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+            const item = pc?.metrics?.find((p) => p.metric === 'contract_count')
+            return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
+          })()}
+        />
+        <KPICard
+          title={t('kpi.totalValue')}
+          value={vendor.total_value_mxn}
+          icon={DollarSign}
+          format="currency"
+          subtitle={formatCompactUSD(vendor.total_value_mxn)}
+          percentileBadge={(() => {
+            const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+            const item = pc?.metrics?.find((p) => p.metric === 'total_value')
+            return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
+          })()}
+        />
+        <KPICard
+          title={t('kpi.institutions')}
+          value={vendor.total_institutions}
+          icon={Building2}
+          subtitle={t('kpi.uniqueAgencies')}
+        />
+        <KPICard
+          title={t('kpi.highRisk')}
+          value={vendor.high_risk_pct}
+          icon={AlertTriangle}
+          format="percent_100"
+          variant={vendor.high_risk_pct > 20 ? 'critical' : vendor.high_risk_pct > 10 ? 'warning' : 'default'}
+          percentileBadge={(() => {
+            const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
+            const item = pc?.metrics?.find((p) => p.metric === 'risk_score')
+            return item ? <PercentileBadge percentile={item.percentile} metric="risk score" sector={vendor.primary_sector_name || undefined} /> : undefined
+          })()}
+        />
+        <KPICard
+          title={t('kpi.yearsActive')}
+          value={vendor.years_active}
+          icon={Activity}
+          subtitle={
+            vendor.first_contract_year && vendor.last_contract_year
+              ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
+              : t('kpi.yearsOfActivity')
+          }
+        />
+      </div>
 
       {peerComparisonError && (
         <div className="flex items-center gap-2 text-sm text-text-muted px-1">
@@ -1674,28 +1757,24 @@ export function VendorProfile() {
 
       {/* Co-Bidding Alert (v3.2) */}
       {!coBiddersLoading && hasCoBiddingRisk && (
-        <Card className="border-amber-500/50 bg-amber-500/5 animate-slide-up">
-          <CardContent className="pt-4 pb-4">
-            <div className="flex items-start gap-3">
-              <div className="shrink-0 mt-0.5 h-8 w-8 rounded-full bg-amber-500/15 flex items-center justify-center">
-                <Users className="h-4 w-4 text-amber-400" />
-              </div>
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap mb-1">
-                  <span className="text-sm font-bold text-amber-400">{t('coBidding.title')}</span>
-                  <InfoTooltip termKey="cobidding" size={13} />
-                  {coBidders?.suspicious_patterns?.length ? (
-                    <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">
-                      {coBidders.suspicious_patterns.length} {t('coBidding.suspiciousPatterns')}
-                    </span>
-                  ) : null}
-                </div>
-                <p className="text-xs text-text-muted">{t('coBidding.description')}</p>
-                <p className="text-[10px] text-amber-300/50 mt-1.5">⚠ {t('coBidding.heuristicNote')}</p>
-              </div>
+        <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+          <div className="shrink-0 mt-0.5 h-8 w-8 rounded-full bg-amber-500/15 flex items-center justify-center">
+            <Users className="h-4 w-4 text-amber-400" />
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-2 flex-wrap mb-1">
+              <span className="text-sm font-bold text-amber-400">{t('coBidding.title')}</span>
+              <InfoTooltip termKey="cobidding" size={13} />
+              {coBidders?.suspicious_patterns?.length ? (
+                <span className="text-[11px] px-1.5 py-0.5 rounded-full bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono">
+                  {coBidders.suspicious_patterns.length} {t('coBidding.suspiciousPatterns')}
+                </span>
+              ) : null}
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-xs text-text-muted">{t('coBidding.description')}</p>
+            <p className="text-[10px] text-amber-300/50 mt-1.5">⚠ {t('coBidding.heuristicNote')}</p>
+          </div>
+        </div>
       )}
 
       {/* F2: Ground truth known-bad banner — prominent alert above KPIs */}
@@ -3974,23 +4053,29 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
             ? formatPercentSafe(value, false)
             : formatNumber(Math.round(animValue))
 
-  const borderClass =
-    variant === 'critical' ? 'border-risk-critical/40' :
-    variant === 'warning' ? 'border-risk-high/30' :
-    undefined
+  const borderColor =
+    variant === 'critical' ? `${RISK_COLORS.critical}40` :
+    variant === 'warning' ? `${RISK_COLORS.high}30` :
+    'var(--color-border)'
 
-  const iconBg =
-    variant === 'critical' ? 'bg-risk-critical/10 text-risk-critical' :
-    variant === 'warning' ? 'bg-risk-high/10 text-risk-high' :
-    'bg-accent/10 text-accent'
+  const numberColor =
+    variant === 'critical' ? RISK_COLORS.critical :
+    variant === 'warning' ? RISK_COLORS.high :
+    'var(--color-text-primary)'
 
   return (
-    <div className={`fern-card p-4 ${borderClass || ''}`}>
-      <div className="flex items-center justify-between">
-        <div className="space-y-1">
-          <p className="editorial-label">{title}</p>
-          <div className="flex items-center gap-1.5">
-            <p className="pull-stat tabular-nums">
+    <div
+      className="rounded-lg p-4"
+      style={{ border: `1px solid ${borderColor}`, background: 'var(--color-background-elevated)' }}
+    >
+      <div className="flex items-start justify-between gap-3">
+        <div className="space-y-1 min-w-0 flex-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">{title}</p>
+          <div className="flex items-center gap-1.5 flex-wrap">
+            <p
+              className="text-2xl font-mono font-bold tabular-nums leading-none"
+              style={{ color: numberColor, letterSpacing: '-0.02em' }}
+            >
               {format === 'number'
                 ? <span ref={countRef}>{formattedValue}</span>
                 : formattedValue
@@ -4000,8 +4085,8 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
           </div>
           {subtitle && <p className="text-xs text-text-muted">{subtitle}</p>}
         </div>
-        <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${iconBg}`}>
-          <Icon className="h-5 w-5" />
+        <div className="shrink-0 opacity-40">
+          <Icon className="h-4 w-4 text-text-muted" />
         </div>
       </div>
     </div>
