@@ -237,7 +237,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="min-w-0">
             <div className="flex items-center gap-2">
               <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
-              <span className="text-[9px] font-bold font-mono text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v0.2.5</span>
+              <span className="text-[9px] font-bold font-mono text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v0.6.5</span>
             </div>
             <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
           </div>

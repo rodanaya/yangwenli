@@ -746,10 +746,10 @@ function FeatureWeightsRacetrack() {
 // ============================================================================
 
 const DISTRIBUTION_SEGMENTS = [
-  { label: 'Low', pct: 74.44, count: 2_271_247, color: '#16a34a' },
-  { label: 'Medium', pct: 16.34, count: 498_432, color: '#eab308' },
-  { label: 'High', pct: 4.85, count: 148_043, color: '#ea580c' },
-  { label: 'Critical', pct: 4.38, count: 133_572, color: '#dc2626' },
+  { label: 'Low', pct: 59.39, count: 1_817_198, color: '#16a34a' },
+  { label: 'Medium', pct: 26.84, count: 821_251, color: '#eab308' },
+  { label: 'High', pct: 7.48, count: 228_814, color: '#ea580c' },
+  { label: 'Critical', pct: 6.01, count: 184_031, color: '#dc2626' },
 ]
 
 function useCountUpEffect(target: number, duration: number, active: boolean): number {

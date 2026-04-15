@@ -4,6 +4,7 @@
  */
 
 import { useState, useRef, useCallback, useEffect } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { X, FileText, AlertTriangle, Building2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react'
 import { collusionApi, type SharedContract } from '@/api/client'
@@ -48,6 +49,7 @@ export function SharedContractsModal({
   vendorBName,
   onClose,
 }: SharedContractsModalProps) {
+  const { t } = useTranslation('common')
   const [page, setPage] = useState(1)
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -167,8 +169,8 @@ export function SharedContractsModal({
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <AlertTriangle className="h-7 w-7 text-red-400" aria-hidden="true" />
-              <p className="text-sm text-red-300 font-medium">Error al cargar contratos</p>
-              <p className="text-xs text-zinc-500">Intenta de nuevo más tarde</p>
+              <p className="text-sm text-red-300 font-medium">{t('errors.failedToLoad')}</p>
+              <p className="text-xs text-zinc-500">{t('errors.couldNotLoad')}</p>
             </div>
           ) : contracts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">

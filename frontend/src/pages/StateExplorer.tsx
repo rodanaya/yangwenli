@@ -17,6 +17,7 @@ import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
+import { getRiskLevelFromScore } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -24,17 +25,6 @@ import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 
 type SortKey = 'avg_risk_score' | 'total_value_mxn' | 'contract_count' | 'direct_award_rate'
 type SortDir = 'asc' | 'desc'
-
-// ---------------------------------------------------------------------------
-// Risk helpers
-// ---------------------------------------------------------------------------
-
-function getRiskLevel(score: number): 'critical' | 'high' | 'medium' | 'low' {
-  if (score >= 0.35) return 'critical'
-  if (score >= 0.25) return 'high'
-  if (score >= 0.20) return 'medium'
-  return 'low'
-}
 
 const RISK_STYLES: Record<string, string> = {
   critical: 'bg-red-900/30 text-red-400 border border-red-800/40',
@@ -307,7 +297,7 @@ export default function StateExplorer() {
             </thead>
             <tbody>
               {filtered.map((state, idx) => {
-                const risk = getRiskLevel(state.avg_risk_score)
+                const risk = getRiskLevelFromScore(state.avg_risk_score)
                 const grade = getGrade(state.avg_risk_score)
                 return (
                   <tr
