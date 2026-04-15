@@ -370,7 +370,8 @@ class NetworkService(BaseService):
                 vgf.community_id,
                 vgf.community_size,
                 vgf.community_avg_risk,
-                COUNT(CASE WHEN vgf.betweenness_centrality > 0 THEN 1 END) as hub_count
+                COUNT(CASE WHEN vgf.betweenness_centrality > 0 THEN 1 END) as hub_count,
+                0 as sector_count
             FROM vendor_graph_features vgf
             WHERE {where}
             GROUP BY vgf.community_id

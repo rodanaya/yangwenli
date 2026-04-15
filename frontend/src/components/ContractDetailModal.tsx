@@ -174,6 +174,16 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   )}
                 </div>
 
+                {/* Disclaimer for high/critical risk */}
+                {(contract.risk_level === 'high' || contract.risk_level === 'critical') && (
+                  <div className="flex items-start gap-1.5 px-3 py-2 rounded-lg bg-amber-500/5 border border-amber-500/20">
+                    <span className="text-amber-400/80 mt-0.5 flex-shrink-0 text-sm">⚠️</span>
+                    <p className="text-[10px] text-text-muted leading-relaxed">
+                      {t('riskScoreTooltipBody')}
+                    </p>
+                  </div>
+                )}
+
                 {contract.risk_factors && contract.risk_factors.length > 0 && (
                   <div className="space-y-1.5">
                     {contract.risk_factors.map((factor) => {
