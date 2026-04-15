@@ -296,6 +296,7 @@
   "sectorChartSubhead": "Puntuación de riesgo promedio por sector, basada en el modelo v0.6.5 en 3.1M contratos. Barras más altas indican mayor concentración de patrones similares a corrupción documentada.",
   "sectorChartAriaLabel": "Gráfico de barras horizontales mostrando puntuación de riesgo promedio por sector federal",
   "sectorChartSource": "Fuente: modelo de riesgo RUBLI v0.6.5, 3,051,294 contratos (2002-2025). Las puntuaciones son indicadores estadísticos, no probabilidades de corrupción.",
+  "sectorChartDataQualityNote": "La calidad de datos varía por período: los contratos 2002–2010 tienen 0.1% de cobertura RFC de proveedores (menor calidad) — los promedios sectoriales de esa era son estimaciones direccionales. La cobertura mejora a 15.7% (2010–2017), 30.3% (2018–2022) y 47.4% (2023–2025).",
   "ctaAria": "Comenzar con Nivel 1",
   "ctaAriaDesc": "{{count}} proveedores señalados como críticos por ARIA. Comience aquí.",
   "ctaAriaLink": "Abrir cola ARIA",

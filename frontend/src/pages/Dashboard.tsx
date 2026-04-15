@@ -15,6 +15,7 @@ import {
   Search,
   Crosshair,
   FileSearch,
+  Info,
 } from 'lucide-react'
 import {
   ResponsiveContainer,
@@ -143,6 +144,19 @@ function SectorRiskBarChart({ sectors, loading }: SectorRiskBarChartProps) {
       <p className="text-[10px] text-text-muted/60 mt-2 font-mono">
         {t('sectorChartSource', 'Source: RUBLI v0.6.5 risk model, 3,051,294 contracts (2002-2025). Risk scores are statistical indicators, not corruption probabilities.')}
       </p>
+      {/* Data quality annotation */}
+      <div
+        className="flex items-start gap-2 mt-3 px-3 py-2 rounded"
+        style={{
+          background: 'var(--color-background-elevated)',
+          border: '1px solid var(--color-border)',
+        }}
+      >
+        <Info className="h-3 w-3 text-text-muted/50 flex-shrink-0 mt-0.5" />
+        <p className="text-[10px] font-mono text-text-muted/60 leading-relaxed">
+          {t('sectorChartDataQualityNote', 'Data quality varies by period: 2002–2010 contracts have 0.1% vendor RFC coverage (lowest quality) — sector averages for that era are directional estimates. Coverage improves to 15.7% (2010–2017), 30.3% (2018–2022), and 47.4% (2023–2025).')}
+        </p>
+      </div>
     </div>
   )
 }

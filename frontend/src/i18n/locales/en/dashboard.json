@@ -296,6 +296,7 @@
   "sectorChartSubhead": "Average risk score per sector, based on v0.6.5 model across 3.1M contracts. Higher bars indicate greater concentration of known-corruption-like patterns.",
   "sectorChartAriaLabel": "Horizontal bar chart showing average risk score by federal sector",
   "sectorChartSource": "Source: RUBLI v0.6.5 risk model, 3,051,294 contracts (2002-2025). Risk scores are statistical indicators, not corruption probabilities.",
+  "sectorChartDataQualityNote": "Data quality varies by period: 2002–2010 contracts have 0.1% vendor RFC coverage (lowest quality) — sector averages for that era are directional estimates. Coverage improves to 15.7% (2010–2017), 30.3% (2018–2022), and 47.4% (2023–2025).",
   "ctaAria": "Begin with Tier 1",
   "ctaAriaDesc": "{{count}} vendors flagged critical by ARIA. Start here.",
   "ctaAriaLink": "Open ARIA queue",
