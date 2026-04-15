@@ -170,7 +170,7 @@ Calibrated probabilities P(corrupt|z) with confidence intervals. **AUC-ROC: 0.94
 **Interaction effects**: 5 pairs, up to +15% bonus. Score capped at 1.0.
 **Risk Levels**: Critical (>=0.50), High (0.35-0.50), Medium (0.20-0.35), Low (<0.20)
 
-For methodology details, see @docs/RISK_METHODOLOGY_v6.md (v6.4, active), @docs/RISK_METHODOLOGY_v5.md (v5.1, preserved), @docs/RISK_METHODOLOGY_v4.md (v4.0), @docs/RISK_METHODOLOGY.md (v3.3), and @docs/MODEL_COMPARISON_REPORT.md (v3.3 vs v4.0 comparison)
+For methodology details, see @docs/RISK_METHODOLOGY_v6.md (v0.6.5, active), @docs/RISK_METHODOLOGY_v5.md (v5.1, preserved), @docs/RISK_METHODOLOGY_v4.md (v4.0), @docs/RISK_METHODOLOGY.md (v3.3), and @docs/MODEL_COMPARISON_REPORT.md (v3.3 vs v4.0 comparison)
 
 ---
 

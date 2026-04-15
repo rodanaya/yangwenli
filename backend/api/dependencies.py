@@ -8,19 +8,33 @@ from typing import Generator
 from fastapi import Header, HTTPException, status
 
 # Write-key auth — set RUBLI_WRITE_KEY env var to enable.
-# If the variable is empty/unset the check is bypassed (dev mode).
+# In production (RUBLI_ENV != "dev"), missing key fails closed with 503.
+# In dev mode, missing key bypasses auth for ergonomics.
 WRITE_API_KEY = os.environ.get("RUBLI_WRITE_KEY", "")
+RUBLI_ENV = os.environ.get("RUBLI_ENV", "dev").lower()
+_IS_DEV = RUBLI_ENV in ("dev", "development", "local", "test")
 
 
 def require_write_key(x_rubli_key: str = Header(default="")) -> None:
     """Require API key for state-changing endpoints.
 
-    If RUBLI_WRITE_KEY env var is not set, auth is disabled (dev mode).
-    In production set RUBLI_WRITE_KEY to a strong random string and send
-    the value in the ``X-Rubli-Key`` request header.
+    Behavior:
+      - Dev mode (RUBLI_ENV=dev or unset): if RUBLI_WRITE_KEY is empty, auth is
+        bypassed for ergonomics.
+      - Production (RUBLI_ENV != dev): if RUBLI_WRITE_KEY is missing/empty,
+        the endpoint fails closed with HTTP 503 (misconfiguration).
+      - In all environments, when the key is set, X-Rubli-Key must match.
     """
     if not WRITE_API_KEY:
-        return  # Dev mode: key not configured, skip auth
+        if _IS_DEV:
+            return  # Dev mode: key not configured, skip auth
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail=(
+                "Write endpoint disabled: RUBLI_WRITE_KEY is not configured. "
+                "Set the environment variable to enable state-changing endpoints."
+            ),
+        )
     if x_rubli_key != WRITE_API_KEY:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,

@@ -234,7 +234,7 @@ function InstitutionPreviewCard({
       </div>
       <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/30">
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Contratos</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">Contracts</p>
           <p className="text-sm font-bold text-text-primary tabular-nums">
             {formatNumber(institution.total_contracts ?? 0)}
           </p>

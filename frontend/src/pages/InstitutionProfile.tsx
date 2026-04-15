@@ -1666,6 +1666,7 @@ function RiskTimelineChart({
 function SpendingOverTimeChart({ data }: {
   data: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
 }) {
+  const { t } = useTranslation('institutions')
   const chartData = data.map((pt) => ({
     year: pt.year,
     valueBillions: pt.total_value / 1e9,
@@ -1713,7 +1714,7 @@ function SpendingOverTimeChart({ data }: {
               <rect key={idx} fill={barColor(entry.riskPct)} />
             ))}
           </Bar>
-          <Line yAxisId="right" type="monotone" dataKey="contracts" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} name="Contratos" />
+          <Line yAxisId="right" type="monotone" dataKey="contracts" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} name={t('columns.contracts')} />
         </ComposedChart>
       </ResponsiveContainer>
     </div>
@@ -2006,7 +2007,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
               return null
             }}
           />
-          <Bar yAxisId="left" dataKey="contracts" fill="var(--color-accent-data)" opacity={0.4} name="Contratos" radius={[2, 2, 0, 0]} />
+          <Bar yAxisId="left" dataKey="contracts" fill="var(--color-accent-data)" opacity={0.4} name={t('columns.contracts')} radius={[2, 2, 0, 0]} />
           <Line yAxisId="right" type="monotone" dataKey="asfObs" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} name="ASF Observations" />
         </ComposedChart>
       </ResponsiveContainer>

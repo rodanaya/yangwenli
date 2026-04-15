@@ -13,7 +13,7 @@
     "totalValue": "TOTAL VALUE",
     "totalValueDetail": "Contract spending",
     "avgRiskScore": "AVG RISK SCORE",
-    "avgRiskScoreDetail": "Mean risk score",
+    "avgRiskScoreDetail": "Average risk indicator",
     "decemberSpike": "DECEMBER SPIKE",
     "decemberSpikeDetail": "Dec vs avg month"
   },

@@ -329,6 +329,25 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         )}
       </div>
 
+      {/* Legal footer links — only visible in expanded mode */}
+      {!isCollapsed && (
+        <div className="px-3 pb-1 flex items-center gap-3">
+          <a
+            href="/privacy"
+            className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
+          >
+            Privacy
+          </a>
+          <span className="text-white/15 text-[10px]" aria-hidden="true">·</span>
+          <a
+            href="/terms"
+            className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
+          >
+            Terms
+          </a>
+        </div>
+      )}
+
       {/* Report an issue button */}
       <div className="px-2 pb-1">
         {isCollapsed ? (

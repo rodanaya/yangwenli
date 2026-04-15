@@ -44,6 +44,17 @@ def parse_risk_factors(factors_str: str | None) -> list[str]:
     return [f.strip() for f in factors_str.split(",") if f.strip()]
 
 
+def _mask_personal_rfc(rfc: str | None) -> str | None:
+    """Mask 13-char persona física RFCs (PII under LFPDPPP).
+
+    12-char = persona moral (company) → public, pass through.
+    13-char = persona física (individual) → null out.
+    """
+    if not rfc:
+        return rfc
+    return None if len(rfc.strip()) == 13 else rfc
+
+
 class ContractService(BaseService):
     """Business logic for contract queries."""
 
@@ -164,7 +175,7 @@ class ContractService(BaseService):
             "is_direct_award": bool(row["is_direct_award"]),
             "is_single_bid": bool(row["is_single_bid"]),
             "vendor_name": row["vendor_name"],
-            "vendor_rfc": row["vendor_rfc"],
+            "vendor_rfc": _mask_personal_rfc(row["vendor_rfc"]),
             "vendor_is_individual": bool(row["vendor_is_individual"]) if row["vendor_is_individual"] is not None else None,
             "institution_name": row["institution_name"],
             "procedure_type": row["procedure_type"],

@@ -20,8 +20,25 @@ from fastapi.responses import StreamingResponse
 from collections import Counter
 from pydantic import BaseModel
 
-from ..dependencies import get_db
+from ..dependencies import get_db, require_write_key
 from ..config.constants import MAX_CONTRACT_VALUE
+
+
+def _mask_personal_rfc(rfc: Optional[str]) -> Optional[str]:
+    """Mask 13-character RFCs (persona física = personal PII).
+
+    Mexican RFC format:
+      - 12 chars (4 letters + 6 digits + 2 alphanumeric) = persona moral (company, public)
+      - 13 chars (4 letters + 6 digits + 3 alphanumeric) = persona física (individual, PII)
+
+    Returns None for personal RFCs, passes through company RFCs and empty values.
+    """
+    if not rfc:
+        return rfc
+    cleaned = rfc.strip().upper()
+    if len(cleaned) == 13:
+        return None
+    return rfc
 from ..models.vendor import (
     VendorClassificationResponse,
     VerifiedVendorResponse,
@@ -283,7 +300,7 @@ def compare_vendors(
             items.append(VendorComparisonItem(
                 id=row["id"],
                 name=row["name"],
-                rfc=row["rfc"],
+                rfc=_mask_personal_rfc(row["rfc"]),
                 total_contracts=total_contracts,
                 total_value_mxn=total_value,
                 avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
@@ -335,7 +352,7 @@ def get_top_vendors_all(
                     rank=i + 1,
                     vendor_id=row["id"],
                     vendor_name=row["name"],
-                    rfc=row["rfc"],
+                    rfc=_mask_personal_rfc(row["rfc"]),
                     metric_value=row["metric_value"] or 0,
                     total_contracts=row["total_contracts"],
                     total_value_mxn=row["total_value_mxn"],
@@ -361,7 +378,7 @@ def get_top_vendors_all(
                 rank=i + 1,
                 vendor_id=row["id"],
                 vendor_name=row["name"],
-                rfc=row["rfc"],
+                rfc=_mask_personal_rfc(row["rfc"]),
                 metric_value=row["metric_value"] or 0,
                 total_contracts=row["total_contracts"],
                 total_value_mxn=row["total_value_mxn"],
@@ -418,7 +435,7 @@ def get_top_vendors(
                             rank=i + 1,
                             vendor_id=v["vendor_id"],
                             vendor_name=v["vendor_name"],
-                            rfc=v.get("rfc"),
+                            rfc=_mask_personal_rfc(v.get("rfc")),
                             metric_value=v.get("total_value_mxn", 0),
                             total_contracts=v.get("total_contracts", 0),
                             total_value_mxn=v.get("total_value_mxn", 0),
@@ -453,7 +470,7 @@ def get_top_vendors(
             vendors = [
                 VendorTopItem(
                     rank=i + 1, vendor_id=row["id"], vendor_name=row["name"],
-                    rfc=row["rfc"], metric_value=row["metric_value"] or 0,
+                    rfc=_mask_personal_rfc(row["rfc"]), metric_value=row["metric_value"] or 0,
                     total_contracts=row["total_contracts"],
                     total_value_mxn=row["total_value_mxn"],
                     avg_risk_score=row["avg_risk_score"],
@@ -516,7 +533,7 @@ def get_top_vendors(
         vendors = [
             VendorTopItem(
                 rank=i + 1, vendor_id=row["id"], vendor_name=row["name"],
-                rfc=row["rfc"], metric_value=row["metric_value"] or 0,
+                rfc=_mask_personal_rfc(row["rfc"]), metric_value=row["metric_value"] or 0,
                 total_contracts=row["total_contracts"],
                 total_value_mxn=row["total_value_mxn"],
                 avg_risk_score=round(row["avg_risk_score"], 4) if row["avg_risk_score"] else None,
@@ -721,7 +738,7 @@ def get_vendor(
             logger.debug("Institution tenure query failed for vendor %s: %s", vendor_id, e)
             top_institutions = []
 
-        # Check EFOS ghost company and SFP sanctions flags via RFC match
+        # Check EFOS ghost company and SFP sanctions flags via RFC match (use raw rfc for DB lookups)
         vendor_rfc = detail.get("rfc")
         is_efos_ghost = False
         is_sfp_sanctioned = False
@@ -888,7 +905,7 @@ def get_vendor(
         return VendorDetailResponse(
             id=detail["id"],
             name=detail["name"],
-            rfc=detail.get("rfc"),
+            rfc=_mask_personal_rfc(detail.get("rfc")),
             name_normalized=detail.get("name_normalized"),
             phonetic_code=extra["phonetic_code"] if extra else None,
             industry_id=extra["industry_id"] if extra else None,
@@ -1472,7 +1489,7 @@ def get_vendor_related(
 
             for row in cursor.fetchall():
                 related.append(VendorRelatedItem(
-                    vendor_id=row["id"], vendor_name=row["name"], rfc=row["rfc"],
+                    vendor_id=row["id"], vendor_name=row["name"], rfc=_mask_personal_rfc(row["rfc"]),
                     relationship_type="same_group", similarity_score=1.0,
                     total_contracts=row["total_contracts"],
                     total_value_mxn=row["total_value_mxn"],
@@ -1498,7 +1515,7 @@ def get_vendor_related(
             for row in cursor.fetchall():
                 if not any(r.vendor_id == row["id"] for r in related):
                     related.append(VendorRelatedItem(
-                        vendor_id=row["id"], vendor_name=row["name"], rfc=row["rfc"],
+                        vendor_id=row["id"], vendor_name=row["name"], rfc=_mask_personal_rfc(row["rfc"]),
                         relationship_type="shared_rfc_root", similarity_score=0.9,
                         total_contracts=row["total_contracts"],
                         total_value_mxn=row["total_value_mxn"],
@@ -1524,7 +1541,7 @@ def get_vendor_related(
                 for row in cursor.fetchall():
                     if not any(r.vendor_id == row["id"] for r in related):
                         related.append(VendorRelatedItem(
-                            vendor_id=row["id"], vendor_name=row["name"], rfc=row["rfc"],
+                            vendor_id=row["id"], vendor_name=row["name"], rfc=_mask_personal_rfc(row["rfc"]),
                             relationship_type="similar_name", similarity_score=0.7,
                             total_contracts=row["total_contracts"],
                             total_value_mxn=row["total_value_mxn"],
@@ -2417,7 +2434,7 @@ def list_verified_vendors(
             VerifiedVendorResponse(
                 vendor_id=row["vendor_id"],
                 vendor_name=row["vendor_name"],
-                rfc=row["rfc"],
+                rfc=_mask_personal_rfc(row["rfc"]),
                 industry_id=row["industry_id"],
                 industry_code=row["industry_code"],
                 industry_name=row["industry_name"],

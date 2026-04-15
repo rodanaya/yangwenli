@@ -13,7 +13,7 @@
     "totalValue": "VALOR TOTAL",
     "totalValueDetail": "Gasto en contratos",
     "avgRiskScore": "RIESGO PROMEDIO",
-    "avgRiskScoreDetail": "Probabilidad media de corrupción",
+    "avgRiskScoreDetail": "Indicador promedio de riesgo",
     "decemberSpike": "PICO DE DICIEMBRE",
     "decemberSpikeDetail": "Dic vs mes promedio"
   },

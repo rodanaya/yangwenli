@@ -261,6 +261,9 @@ def get_fast_dashboard(response: Response):
     This endpoint returns pre-computed aggregates that load in <100ms
     instead of 2-3 seconds per query. Stats are refreshed periodically.
     """
+    # Cache for 5 minutes at CDN/proxy level — precomputed_stats only changes
+    # when the scoring pipeline runs (daily at most).
+    response.headers["Cache-Control"] = "public, max-age=300, stale-while-revalidate=60"
     with get_db() as conn:
         cursor = conn.cursor()
 

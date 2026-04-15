@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
-import { QueryClient, QueryClientProvider, keepPreviousData } from '@tanstack/react-query'
+import { QueryClient, QueryClientProvider, QueryCache, keepPreviousData } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
 import { ToastProvider } from '@/components/ui/toast'
@@ -64,6 +64,8 @@ const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
 const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
 const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
+const Privacy = lazy(() => import('@/pages/Privacy'))
+const Terms = lazy(() => import('@/pages/Terms'))
 // PoliticalCycle redirects to /administrations (same API, administrations is superset)
 
 // Redirect /sector/:id → /sectors/:id (singular alias)
@@ -81,6 +83,14 @@ function FirstVisitRedirect() {
 
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
+  queryCache: new QueryCache({
+    // Global error handler — logs all query failures to console.
+    // Individual components can add their own error UI on top.
+    onError: (error: unknown) => {
+      const msg = error instanceof Error ? error.message : String(error);
+      console.error('[QueryClient]', msg);
+    },
+  }),
   defaultOptions: {
     queries: {
       staleTime: 5 * 60 * 1000, // 5 minutes - data considered fresh
@@ -445,6 +455,23 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <StateExplorer />
+                  </SuspenseBoundary>
+                }
+              />
+
+              <Route
+                path="privacy"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Privacy />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="terms"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Terms />
                   </SuspenseBoundary>
                 }
               />

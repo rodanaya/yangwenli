@@ -1,55 +1,58 @@
-# Risk Scoring Methodology v6.4 — Quick Reference
+# Risk Scoring Methodology v0.6.5 — Quick Reference
 
-**Active model** · Run ID: `CAL-v6.1-202603191034` · 3,051,294 contracts · 2002-2025
+**Active model** · Run ID: `CAL-v6.1-202603251039` · 3,051,294 contracts · 2002-2025
 > Full details: see `docs/RISK_METHODOLOGY_v6_full.md` (not auto-loaded)
 
 ---
 
-## Risk Levels & Thresholds (v6.4 OECD-calibrated)
+## Risk Levels & Thresholds (v0.6.5 OECD-calibrated)
 
 | Level | Threshold | Count | % | Action |
 |-------|-----------|-------|---|--------|
-| **Critical** | >= 0.60 | 133,572 | 4.38% | Immediate investigation |
-| **High** | >= 0.40 | 148,043 | 4.85% | Priority review |
-| **Medium** | >= 0.25 | 498,432 | 16.34% | Watch list |
-| **Low** | < 0.25 | 2,271,247 | 74.44% | Standard monitoring |
+| **Critical** | >= 0.60 | 184,031 | 6.01% | Immediate investigation |
+| **High** | >= 0.40 | 228,814 | 7.48% | Priority review |
+| **Medium** | >= 0.25 | 821,251 | 26.84% | Watch list |
+| **Low** | < 0.25 | 1,817,198 | 59.39% | Standard monitoring |
 
-**HR: 9.2%** ✓ OECD 2-15% compliant · C=0.01, 8 active features
+**HR: 13.49%** ✓ OECD 2-15% compliant · C=0.01, 9 active features
 
-**AUC metrics (two evaluation methods):**
-- **Internal validation AUC: 0.840** — vendor-stratified 70/30 hold-out; model never saw test-set vendor contracts during training
-- **Population discrimination AUC: 0.728** — all 295K GT-labeled contracts vs all 2.7M unlabeled; harder, more realistic; lower because SCAR assumption is violated (GT cases are high-profile scandals, not a random sample of all corruption)
+> Note: HR=13.49% exceeds the 9% OECD calibration target because ghost companion score boosts (+403K contracts) were applied after OECD intercept calibration. The boosts are a deliberate design decision; see pipeline notes below.
 
-Both are valid. The 0.840 measures generalization to new vendors from the *same* GT distribution. The 0.728 measures how well the model ranks any corrupt contract above any clean contract across the full population. Use 0.728 for external reporting; 0.840 for model iteration tracking.
+**AUC metrics:**
+- **Train AUC: 0.798** — vendor-stratified 70/30 hold-out (training set)
+- **Test AUC: 0.828** — vendor-stratified hold-out (test set, never seen during training)
+
+The test AUC exceeds train AUC because the cleaner GT labels (institution-scoped, windowed) reduced noise in the training data, and the test set happened to contain more structurally distinct corruption patterns.
 
 ---
 
 ## Model Architecture
 
-- **16 z-score features** (normalized against sector-year baselines)
+- **16 z-score features** (normalized against sector-year baselines); 9 active post-regularization
 - **13 models**: 1 global + 12 per-sector logistic regressions
-- **Sector fallback**: if n_positive < 500 OR sector AUC < 0.70 → uses global model
-- **PU-learning correction** (Elkan & Noto 2008), c = 0.3432
+- **Sector fallback**: if n_positive < 500 → uses global model (sectors 6, 11, 12)
+- **PU-learning correction** (Elkan & Noto 2008), c = 0.3000 (floor value)
 - **Hyperparams**: C=0.0100, l1_ratio=0.9673 (Optuna TPE, 150 trials; fixed for reproducibility)
-- **Ground truth**: 347 windowed cases · 507 vendors · ~315K contracts · all 12 sectors
+- **Ground truth**: 748 windowed/institution-scoped cases · 603 vendors · ~288K contracts
+- **Curriculum weights**: confirmed_corrupt=1.0, high=0.8, medium=0.5, low=0.2
 - **Split**: vendor-stratified 70/30 (no vendor in both train and test)
 
 ---
 
-## Global Coefficients (v6.4)
+## Global Coefficients (v0.6.5)
 
 | Feature | Coef | Interpretation |
 |---------|------|----------------|
-| price_volatility | +1.8566 | Vendor contract-size variance vs sector norm — strongest signal |
-| institution_diversity | -0.4679 | Distinct institutions served (protective — broad reach = legitimate) |
-| price_ratio | +0.3907 | Contract amount / sector median |
-| vendor_concentration | +0.2378 | Vendor value share within sector |
-| network_member_count | +0.1873 | Co-contracting network size |
-| same_day_count | +0.1114 | Threshold splitting signal |
-| single_bid | +0.0984 | Now active with C=0.01 (was zeroed with C=0.0013) |
-| ad_period_days | +0.0423 | Now active with C=0.01 (was zeroed with C=0.0013) |
-| win_rate | 0 | Zeroed (sign constraint) |
-| direct_award | 0 | Zeroed |
+| price_volatility | +0.5343 | Vendor contract-size variance vs sector norm — strongest signal |
+| institution_diversity | -0.3821 | Distinct institutions served (protective — broad reach = legitimate) |
+| vendor_concentration | +0.3749 | Vendor value share within sector |
+| price_ratio | +0.2345 | Contract amount / sector median |
+| network_member_count | +0.1811 | Co-contracting network size |
+| same_day_count | +0.0945 | Threshold splitting signal |
+| win_rate | +0.0488 | Vendor win rate vs sector baseline |
+| direct_award | +0.0306 | Direct award flag |
+| ad_period_days | +0.0423 | Publication period length |
+| single_bid | 0 | Regularized to zero |
 | sector_spread | 0 | Zeroed (sign constraint) |
 | co_bid_rate | 0 | Regularized to zero |
 | price_hyp_confidence | 0 | Regularized to zero |
@@ -57,9 +60,11 @@ Both are valid. The 0.840 measures generalization to new vendors from the *same*
 | industry_mismatch | 0 | Regularized to zero |
 | institution_risk | 0 | Regularized to zero |
 
-**Intercept**: -2.3880 · **Score formula**: `min(sigmoid(intercept + β·z) / 0.3432, 1.0)`
+**Intercept**: -2.3837 · **Score formula**: `min(sigmoid(intercept + β·z) / 0.3000, 1.0)` (then + ghost companion boost)
 
 > Z-scores are stored raw (for SHAP/PyOD); scoring clips to [-5, +5] SD before logit computation.
+
+**v0.6.5 improvements over v6.4**: institution-scoped GT labels (IMSS Ghost -85% noise, COVID -73%, Segalmex -17%); structural FPs excluded (BAXTER, FRESENIUS, INFRA SA DE CV, PRAXAIR = is_false_positive=1); vendor curriculum_weight overrides applied. price_volatility coefficient healthier (+0.53 vs +1.86 in v6.4), reducing vendor-size overfit.
 
 ---
 
@@ -67,7 +72,7 @@ Both are valid. The 0.840 measures generalization to new vendors from the *same*
 
 > Scores are **risk indicators** measuring similarity to documented corruption patterns — NOT calibrated corruption probabilities. A score of 0.60 means the contract resembles known corruption cases, not that it has a 60% chance of being corrupt. Use for investigation triage only.
 
-At threshold 0.60 (critical): precision=72%, recall=28% — 72% of flagged contracts share patterns with confirmed cases; 28% of all known-bad contracts are flagged.
+**Score ceiling**: ~95K contracts score exactly 1.0 due to PU correction with c=0.30 (floor). These are not all "equally corrupt" — they represent the highest-logit tail, ordered by Mahalanobis distance as a secondary sort.
 
 ---
 
@@ -75,33 +80,20 @@ At threshold 0.60 (critical): precision=72%, recall=28% — 72% of flagged contr
 
 | Limitation | Impact | Fixable? |
 |-----------|--------|----------|
-| SCAR violation (GT = high-profile scandals only) | Population AUC 0.728 vs internal 0.840; small-scale and unreported corruption underdetected | Partial (more GT diversity) |
+| SCAR violation (GT = high-profile scandals only) | Small-scale/unreported corruption underdetected | Partial (more GT diversity) |
 | Label noise (30-50% of positives) | Model learns vendor profiles, not corruption per se | Partial (contract-level scoping) |
 | Execution-phase fraud invisible | Infrastructure/construction underscored | Partial (needs ASF data) |
-| Sector model quality varies | Only Otros falls back to global model (n<500) | Addressed by AUC-based fallback |
-| 97K contracts at score=1.0 | PU correction (÷0.3432) amplifies high logit past 1.0 | By design; PU floor fix possible |
+| ~95K contracts at score=1.0 | PU correction (÷0.30) amplifies high logit past 1.0; ordered by Mahalanobis as tiebreaker | By design |
+| Ghost companion boost raises HR above calibration target | HR=13.49% vs 9% target | By design; documented |
 | New vendor blind spot | 2022+ vendors: ghost companion heuristic partially addresses | Partial |
 
 Full limitation analysis: `docs/RISK_METHODOLOGY_v6_full.md`
 
 ---
 
-## Per-Sector AUC (v6.4)
+## Per-Sector Models (v0.6.5)
 
-| Sector | n_positive | AUC | Model used |
-|--------|-----------|-----|------------|
-| Salud | 15,220 | 0.881 | sector |
-| Educacion | 3,065 | 0.911 | sector |
-| Infraestructura | 1,518 | 0.911 | sector |
-| Energia | 1,129 | 0.888 | sector |
-| Defensa | 743 | 0.869 | sector |
-| Tecnologia | 459 | 0.901 | sector |
-| Hacienda | 1,552 | 0.916 | sector |
-| Gobernacion | 1,209 | 0.872 | sector |
-| Agricultura | 3,130 | 0.872 | sector |
-| Ambiente | 372 | 0.895 | sector |
-| Trabajo | 500 | 0.908 | sector |
-| Otros | 253 | 0.857 | **global fallback** (n_positive < 500) |
+Sectors 6 (Tecnología), 11 (Trabajo), 12 (Otros) fall back to global model (n_positive < 500).
 
 ---
 
@@ -109,13 +101,13 @@ Full limitation analysis: `docs/RISK_METHODOLOGY_v6_full.md`
 
 | Column | Description |
 |--------|-------------|
-| `risk_score` | Active v6.4 score |
+| `risk_score` | Active v0.6.5 score |
 | `risk_score_v5` | Preserved v5.1 scores |
 | `risk_score_v4` | Preserved v4.0 scores |
 | `risk_score_v3` | Preserved v3.3 scores |
 | `risk_level` | critical/high/medium/low |
 | `risk_confidence_lower/upper` | 95% CI bounds |
-| `risk_model_version` | 'v6.0' |
+| `risk_model_version` | 'v6.5' |
 
 ---
 
@@ -125,9 +117,11 @@ Full limitation analysis: `docs/RISK_METHODOLOGY_v6_full.md`
 cd backend
 python -m scripts.compute_z_features                                              # ~45min on 3.1M
 python scripts/calibrate_risk_model_v6_enhanced.py --force-C 0.0100 --force-l1-ratio 0.9673
-python scripts/_oecd_calibrate_intercept.py                                        # calibrate to 9% HR
-python scripts/_score_v6_now.py
+python scripts/_oecd_calibrate_intercept.py                                        # calibrate to ~9% HR (pre-boost)
+python scripts/_score_v6_now.py                                                    # applies ghost companion boosts
 python -m scripts.precompute_stats
 ```
+
+> **DO NOT run `_score_v6_now.py`** without verifying calibration sanity (intercept < -0.5, PU c > 0.30).
 
 *Scores are statistical risk indicators. High score ≠ proof of wrongdoing.*

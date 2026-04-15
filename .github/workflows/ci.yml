@@ -36,11 +36,13 @@ jobs:
           cache-dependency-path: backend/requirements.txt
       - name: Install dependencies
         run: pip install -r backend/requirements.txt
-      - name: Run tests (unit + fast API, skip DB-heavy scoring tests)
+      - name: Run tests
         run: |
           cd backend
           python -m pytest tests/ -q --tb=short -p no:cacheprovider \
-            --ignore=tests/test_scoring.py \
             -x --timeout=120
         env:
           CI: true
+          # test_scoring.py requires the full 3.1M-row DB which is not in CI.
+          # Tests in that file are skipped automatically when DB is absent
+          # (conftest.py marks them with pytest.mark.skipif(not DB_PATH.exists())).

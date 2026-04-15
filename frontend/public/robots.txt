@@ -1,4 +1,7 @@
 User-agent: *
+Disallow: /vendors/
+Disallow: /explore/
+Disallow: /aria/
 Allow: /
 
 # Sitemap (if generated in future)
