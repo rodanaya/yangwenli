@@ -342,56 +342,77 @@ export function Dashboard() {
           </p>
         )}
 
-        {/* Three hero stats */}
-        <div className="flex flex-wrap gap-x-10 gap-y-4">
+        {/* Three hero stats — editorial serif style */}
+        <div className="flex flex-wrap gap-x-12 gap-y-6 mt-2">
           {/* T1 Vendors */}
-          <div>
+          <div className="min-w-[120px]">
             <div
-              className="font-mono font-bold tabular-nums leading-none"
               style={{
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2.8rem, 5vw, 4.5rem)',
+                fontWeight: 700,
                 color: RISK_COLORS.critical,
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
               }}
             >
-              {kpiLoading ? '--' : formatNumber(t1Count)}
+              {kpiLoading ? (
+                <Skeleton className="h-16 w-24 inline-block" />
+              ) : formatNumber(t1Count)}
             </div>
-            <p className="text-xs text-text-muted mt-1 uppercase tracking-wide font-mono">
+            <p className="text-xs text-text-muted mt-2 font-mono uppercase tracking-[0.12em]">
               {t('heroStatT1', 'T1 Critical Vendors')}
+            </p>
+            <p className="text-[10px] text-text-muted/50 mt-0.5 max-w-[180px] leading-snug">
+              {t('heroStatT1Sub', 'Require immediate investigation')}
             </p>
           </div>
 
           {/* Value at Risk */}
-          <div>
+          <div className="min-w-[140px]">
             <div
-              className="font-mono font-bold tabular-nums leading-none"
               style={{
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2.8rem, 5vw, 4.5rem)',
+                fontWeight: 700,
                 color: 'var(--color-accent)',
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
               }}
             >
-              {kpiLoading ? '--' : formatCompactMXN(criticalHighValue || ariaElevatedValue)}
+              {kpiLoading ? (
+                <Skeleton className="h-16 w-32 inline-block" />
+              ) : formatCompactMXN(criticalHighValue || ariaElevatedValue)}
             </div>
-            <p className="text-xs text-text-muted mt-1 uppercase tracking-wide font-mono">
-              {t('heroStatValueAtRisk', 'Value at Risk (High + Critical)')}
+            <p className="text-xs text-text-muted mt-2 font-mono uppercase tracking-[0.12em]">
+              {t('heroStatValueAtRisk', 'Value at Risk')}
+            </p>
+            <p className="text-[10px] text-text-muted/50 mt-0.5 max-w-[180px] leading-snug">
+              {t('heroStatValueAtRiskSub', 'In high & critical contracts')}
             </p>
           </div>
 
-          {/* Last Updated */}
-          <div>
+          {/* Model AUC */}
+          <div className="min-w-[100px]">
             <div
-              className="font-mono font-bold tabular-nums leading-none"
               style={{
-                fontSize: 'clamp(2rem, 4vw, 3.5rem)',
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2.8rem, 5vw, 4.5rem)',
+                fontWeight: 700,
                 color: 'var(--color-text-secondary)',
-                letterSpacing: '-0.03em',
+                letterSpacing: '-0.04em',
+                lineHeight: 1,
               }}
             >
-              {kpiLoading ? '--' : `${(((modelMeta?.auc_test ?? 0.828) * 100)).toFixed(1)}%`}
+              {kpiLoading ? (
+                <Skeleton className="h-16 w-20 inline-block" />
+              ) : `${(((modelMeta?.auc_test ?? 0.828) * 100)).toFixed(1)}%`}
             </div>
-            <p className="text-xs text-text-muted mt-1 uppercase tracking-wide font-mono">
-              {t('heroStatAuc', 'Model AUC (discrimination power)')}
+            <p className="text-xs text-text-muted mt-2 font-mono uppercase tracking-[0.12em]">
+              {t('heroStatAuc', 'Model Accuracy')}
+            </p>
+            <p className="text-[10px] text-text-muted/50 mt-0.5 max-w-[180px] leading-snug">
+              {t('heroStatAucSub', 'Vendor-stratified test AUC')}
             </p>
           </div>
         </div>

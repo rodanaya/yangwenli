@@ -1512,20 +1512,21 @@ export default function SpendingCategories() {
 
   // Trend chart data
   const trendChartData = useMemo(() => {
-    if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; data: Record<number, number> }> }
+    if (!trendsData?.data) return { years: [] as number[], series: [] as Array<{ name: string; sector_code: string | null; data: Record<number, number> }> }
     const items: TrendItem[] = trendsData.data
     const sortedByValue = [...filteredCategories].sort((a, b) => b.total_value - a.total_value)
     const targetIds = selectedCategoryId
       ? [selectedCategoryId]
       : (trendCount === null ? sortedByValue : sortedByValue.slice(0, trendCount)).map(c => c.category_id)
     const yearSet = new Set<number>()
-    const seriesMap = new Map<number, { name: string; data: Record<number, number> }>()
+    const seriesMap = new Map<number, { name: string; sector_code: string | null; data: Record<number, number> }>()
 
     for (const item of items) {
       if (!targetIds.includes(item.category_id)) continue
       yearSet.add(item.year)
       if (!seriesMap.has(item.category_id)) {
-        seriesMap.set(item.category_id, { name: localeName(item, i18n.language), data: {} })
+        const cat = filteredCategories.find(c => c.category_id === item.category_id)
+        seriesMap.set(item.category_id, { name: localeName(item, i18n.language), sector_code: cat?.sector_code ?? null, data: {} })
       }
       const entry = seriesMap.get(item.category_id)
       if (entry) {
@@ -1535,8 +1536,6 @@ export default function SpendingCategories() {
 
     return { years: Array.from(yearSet).sort(), series: Array.from(seriesMap.values()) }
   }, [trendsData, filteredCategories, selectedCategoryId, trendCount, i18n.language])
-
-  const TREND_COLORS = ['#3b82f6', '#f97316', '#8b5cf6', '#16a34a', '#dc2626']
 
   // Sparkline data
   const categorySparklines = useMemo(() => {
@@ -2516,20 +2515,23 @@ export default function SpendingCategories() {
                         </span>
                       )}
                     />
-                    {trendChartData.series.map((series, idx) => (
-                      <Line
-                        key={series.name}
-                        type="monotone"
-                        data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
-                        dataKey="value"
-                        name={series.name}
-                        stroke={TREND_COLORS[idx % TREND_COLORS.length]}
-                        strokeWidth={2.5}
-                        dot={{ r: 3, fill: TREND_COLORS[idx % TREND_COLORS.length], strokeWidth: 0 }}
-                        activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
-                        connectNulls={false}
-                      />
-                    ))}
+                    {trendChartData.series.map((series) => {
+                      const lineColor = series.sector_code ? (SECTOR_COLORS[series.sector_code] ?? '#64748b') : '#64748b'
+                      return (
+                        <Line
+                          key={series.name}
+                          type="monotone"
+                          data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
+                          dataKey="value"
+                          name={series.name}
+                          stroke={lineColor}
+                          strokeWidth={2.5}
+                          dot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
+                          activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
+                          connectNulls={false}
+                        />
+                      )
+                    })}
                   </LineChart>
                 </ResponsiveContainer>
               </div>

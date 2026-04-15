@@ -71,7 +71,7 @@ function MethodologyCallout() {
 function HeroStats({ stats, loading }: { stats: CollusionStats | undefined; loading: boolean }) {
   const { t } = useTranslation('collusion')
 
-  if (loading || !stats) {
+  if (loading) {
     return (
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {Array.from({ length: 4 }).map((_, i) => (
@@ -79,6 +79,14 @@ function HeroStats({ stats, loading }: { stats: CollusionStats | undefined; load
         ))}
       </div>
     )
+  }
+
+  // Safe defaults — API may return null fields or empty object
+  const safe = {
+    total_pairs: stats?.total_pairs ?? 0,
+    potential_collusion_count: stats?.potential_collusion_count ?? 0,
+    total_shared_procedures: stats?.total_shared_procedures ?? 0,
+    max_co_bid_rate: stats?.max_co_bid_rate ?? 0,
   }
 
   const items: Array<{
@@ -89,26 +97,26 @@ function HeroStats({ stats, loading }: { stats: CollusionStats | undefined; load
     accent?: boolean
   }> = [
     {
-      value: formatNumber(stats.total_pairs),
+      value: formatNumber(safe.total_pairs),
       label: t('stats.totalPairs'),
       sub: t('stats.totalPairsSub'),
       icon: Users,
     },
     {
-      value: formatNumber(stats.potential_collusion_count),
+      value: formatNumber(safe.potential_collusion_count),
       label: t('stats.flaggedPairs'),
       sub: t('stats.flaggedPairsSub'),
       icon: AlertTriangle,
       accent: true,
     },
     {
-      value: formatNumber(stats.total_shared_procedures),
+      value: formatNumber(safe.total_shared_procedures),
       label: t('stats.sharedProcedures'),
       sub: t('stats.sharedProceduresSub'),
       icon: GitMerge,
     },
     {
-      value: `${stats.max_co_bid_rate.toFixed(1)}%`,
+      value: `${safe.max_co_bid_rate.toFixed(1)}%`,
       label: t('stats.maxRate'),
       sub: t('stats.maxRateSub'),
       icon: ArrowUpDown,

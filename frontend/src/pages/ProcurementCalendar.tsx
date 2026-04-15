@@ -479,7 +479,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-orange-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{formatNumber(stats.decemberContracts)}</span>
               </div>
-              <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
+              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-orange-500 rounded-full transition-all duration-700"
                   style={{ width: `${decBarWidth}%` }}
@@ -491,7 +491,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-stone-500">{t('decemberSection.monthlyAvg')}</span>
                 <span className="text-stone-500 font-mono">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>
               </div>
-              <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
+              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-stone-600 rounded-full transition-all duration-700"
                   style={{ width: `${avgBarWidth}%` }}
@@ -512,7 +512,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-red-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{decRiskPct}%</span>
               </div>
-              <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
+              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
                 <div
                   className="h-full bg-red-500 rounded-full transition-all duration-700"
                   style={{ width: `${decRiskBarWidth}%` }}

@@ -4,11 +4,11 @@
  * Uses the existing /network/graph endpoint and ECharts graph series.
  */
 
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useCallback } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
-import { Share2 } from 'lucide-react'
+import { Share2, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react'
 import {
   Dialog,
   DialogContent,
@@ -62,6 +62,8 @@ export function NetworkGraphModal({
 }: NetworkGraphModalProps) {
   const navigate = useNavigate()
   const [depth, setDepth] = useState<1 | 2>(1)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const chartRef = useRef<any>(null)
 
   const queryParams =
     centerType === 'vendor'
@@ -74,6 +76,27 @@ export function NetworkGraphModal({
     enabled: open,
     staleTime: 5 * 60 * 1000,
   })
+
+  // Zoom controls — dispatch to ECharts instance
+  const handleZoomIn = useCallback(() => {
+    const chart = chartRef.current?.getEchartsInstance?.()
+    if (!chart) return
+    chart.dispatchAction({ type: 'graphRoam', zoom: 1.3 })
+  }, [])
+
+  const handleZoomOut = useCallback(() => {
+    const chart = chartRef.current?.getEchartsInstance?.()
+    if (!chart) return
+    chart.dispatchAction({ type: 'graphRoam', zoom: 0.75 })
+  }, [])
+
+  const handleReset = useCallback(() => {
+    const chart = chartRef.current?.getEchartsInstance?.()
+    if (!chart) return
+    chart.dispatchAction({ type: 'graphRoam', zoom: 1 })
+    chart.setOption({ series: [{ zoom: 1, center: undefined }] }, false)
+    chart.resize()
+  }, [])
 
   const option = useMemo(() => {
     if (!data) return {}
@@ -117,7 +140,10 @@ export function NetworkGraphModal({
           formatter: truncate(node.name),
           fontSize: 10,
           position: 'bottom' as const,
-          color: 'var(--color-text-muted)',
+          // Explicit light text so labels are readable on the dark canvas
+          color: '#cbd5e1',
+          textBorderColor: '#0f172a',
+          textBorderWidth: 2,
         },
       }
     })
@@ -139,18 +165,18 @@ export function NetworkGraphModal({
       backgroundColor: 'transparent',
       tooltip: {
         trigger: 'item',
-        backgroundColor: 'var(--color-background)',
-        borderColor: 'var(--color-border)',
-        textStyle: { color: 'var(--color-text-primary)', fontSize: 12 },
+        backgroundColor: '#0f172a',
+        borderColor: '#334155',
+        textStyle: { color: '#f1f5f9', fontSize: 12 },
         formatter: (params: { dataType: string; data: { name: string; contracts?: number; value?: number; avg_risk?: number; risk_score?: number | null } }) => {
           if (params.dataType === 'node') {
             const { name, contracts, value, risk_score } = params.data
-            const riskPct = risk_score != null ? ` • Risk: ${(risk_score * 100).toFixed(0)}%` : ''
+            const riskPct = risk_score != null ? ` · Risk: ${(risk_score * 100).toFixed(0)}%` : ''
             return `<strong>${name}</strong><br/>${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
           }
           if (params.dataType === 'edge') {
             const { contracts, value, avg_risk } = params.data
-            const riskPct = avg_risk != null ? ` • Avg risk: ${(avg_risk * 100).toFixed(0)}%` : ''
+            const riskPct = avg_risk != null ? ` · Avg risk: ${(avg_risk * 100).toFixed(0)}%` : ''
             return `${formatNumber(contracts ?? 0)} contracts<br/>${formatCompactMXN(value ?? 0)}${riskPct}`
           }
           return ''
@@ -216,26 +242,59 @@ export function NetworkGraphModal({
               Network: {centerName ?? `${centerType} ${centerId}`}
             </DialogTitle>
           </div>
-          <div className="flex items-center gap-1 mr-6">
-            <span className="text-xs text-text-muted mr-1">Depth:</span>
-            {([1, 2] as const).map((d) => (
-              <button
-                key={d}
-                onClick={() => setDepth(d)}
-                className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
-                  depth === d
-                    ? 'bg-accent text-white'
-                    : 'bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40'
-                }`}
-              >
-                {d}-hop
-              </button>
-            ))}
+          <div className="flex items-center gap-3 mr-6">
+            {/* Depth selector */}
+            <div className="flex items-center gap-1">
+              <span className="text-xs text-text-muted mr-1">Depth:</span>
+              {([1, 2] as const).map((d) => (
+                <button
+                  key={d}
+                  onClick={() => setDepth(d)}
+                  className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
+                    depth === d
+                      ? 'bg-accent text-white'
+                      : 'bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40'
+                  }`}
+                >
+                  {d}-hop
+                </button>
+              ))}
+            </div>
+
+            {/* Zoom controls */}
+            {!isLoading && !isEmpty && data && (
+              <div className="flex items-center gap-1 border-l border-border/30 pl-3">
+                <button
+                  onClick={handleZoomIn}
+                  className="p-1.5 rounded border border-border/40 text-text-muted hover:text-text-primary hover:border-border/70 transition-colors bg-background-elevated"
+                  aria-label="Zoom in"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handleZoomOut}
+                  className="p-1.5 rounded border border-border/40 text-text-muted hover:text-text-primary hover:border-border/70 transition-colors bg-background-elevated"
+                  aria-label="Zoom out"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="w-3.5 h-3.5" />
+                </button>
+                <button
+                  onClick={handleReset}
+                  className="p-1.5 rounded border border-border/40 text-text-muted hover:text-text-primary hover:border-border/70 transition-colors bg-background-elevated"
+                  aria-label="Reset zoom"
+                  title="Reset zoom"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </DialogHeader>
 
         {/* Body */}
-        <div className="flex-1 px-6 py-4" style={{ minHeight: '60vh' }}>
+        <div className="relative flex-1 px-6 py-4" style={{ minHeight: '60vh' }}>
           {isLoading && (
             <div className="space-y-3 pt-4">
               <Skeleton className="h-4 w-2/3" />
@@ -251,36 +310,76 @@ export function NetworkGraphModal({
           )}
 
           {!isLoading && !isEmpty && data && (
-            <ReactECharts
-              option={option}
-              style={{ height: '62vh', width: '100%' }}
-              onEvents={{ click: handleNodeClick }}
-              opts={{ renderer: 'svg' }}
-            />
+            <>
+              <ReactECharts
+                ref={chartRef}
+                option={option}
+                style={{ height: '62vh', width: '100%' }}
+                onEvents={{ click: handleNodeClick }}
+                opts={{ renderer: 'svg' }}
+              />
+
+              {/* Floating zoom hint */}
+              <div className="absolute bottom-6 right-8 text-[10px] text-text-muted/40 pointer-events-none select-none">
+                Scroll or pinch to zoom · Drag to pan · Click node to navigate
+              </div>
+            </>
           )}
         </div>
 
         {/* Footer / Legend */}
         {!isLoading && !isEmpty && data && (
-          <div className="px-6 pb-4 pt-2 border-t border-border/40 flex items-center justify-between flex-wrap gap-2">
-            <div className="flex items-center gap-4 text-xs text-text-muted flex-wrap">
-              <span className="flex items-center gap-1">
-                <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" />
-                Institution
-              </span>
-              {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
-                <span key={level} className="flex items-center gap-1 capitalize">
-                  <span
-                    className="inline-block w-3 h-3 rounded-full"
-                    style={{ backgroundColor: RISK_COLORS[level] }}
-                  />
-                  {level} vendor
-                </span>
-              ))}
+          <div className="px-6 pb-5 pt-3 border-t border-border/40">
+            <div className="flex items-start justify-between flex-wrap gap-3">
+              {/* Left: node color legend */}
+              <div className="space-y-2">
+                <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted/50 mb-1">
+                  Leyenda
+                </p>
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" aria-hidden="true" />
+                    Institución
+                  </span>
+                  {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
+                    <span key={level} className="flex items-center gap-1.5 capitalize">
+                      <span
+                        className="inline-block w-3 h-3 rounded-full"
+                        style={{ backgroundColor: RISK_COLORS[level] }}
+                        aria-hidden="true"
+                      />
+                      {level === 'critical' ? 'Crítico' : level === 'high' ? 'Alto' : level === 'medium' ? 'Medio' : 'Bajo'}
+                    </span>
+                  ))}
+                </div>
+
+                {/* Edge / size legend */}
+                <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-muted/60 mt-1">
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block h-px w-6 bg-[#f87171]/60 border-t-2 border-[#f87171]/60" aria-hidden="true" />
+                    Conexión de alto riesgo
+                  </span>
+                  <span className="flex items-center gap-1.5">
+                    <span className="inline-block h-px w-6 bg-[#475569]/60 border-t-2 border-[#475569]/60" aria-hidden="true" />
+                    Conexión normal
+                  </span>
+                  <span className="text-text-muted/40">
+                    Tamaño de nodo = valor contractual
+                  </span>
+                </div>
+              </div>
+
+              {/* Right: node/edge count */}
+              <div className="text-xs text-text-muted/50 text-right">
+                <span className="font-mono">{data.total_nodes}</span> nodos ·{' '}
+                <span className="font-mono">{data.total_links}</span> conexiones
+                {data.total_nodes >= 60 && (
+                  <span className="block text-[10px] text-amber-500/60 mt-0.5">
+                    Mostrando top 60 nodos por valor
+                  </span>
+                )}
+              </div>
             </div>
-            <span className="text-xs text-text-muted">
-              {data.total_nodes} nodes · {data.total_links} connections · Click to navigate
-            </span>
           </div>
         )}
       </DialogContent>

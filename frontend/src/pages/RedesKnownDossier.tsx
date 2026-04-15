@@ -195,40 +195,55 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
       backgroundColor: 'transparent',
       grid: { left: 60, right: 30, top: 40, bottom: 50 },
       xAxis: {
-        name: 'Avg Risk Score →',
+        name: 'Riesgo promedio →',
         nameLocation: 'end',
-        nameTextStyle: { color: '#5a6280', fontSize: 11 },
+        nameTextStyle: { color: '#7c8db5', fontSize: 11 },
         type: 'value',
         min: 0,
         max: 1,
         splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
         axisLine: { lineStyle: { color: '#2a3350' } },
         axisLabel: {
-          color: '#5a6280',
+          color: '#7c8db5',
           fontSize: 11,
           formatter: (v: number) => v.toFixed(1),
         },
       },
       yAxis: {
-        name: 'IPS Score ↑',
+        name: 'IPS ↑',
         nameLocation: 'end',
-        nameTextStyle: { color: '#5a6280', fontSize: 11 },
+        nameTextStyle: { color: '#7c8db5', fontSize: 11 },
         type: 'value',
         min: 0,
         max: 100,
         splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
         axisLine: { lineStyle: { color: '#2a3350' } },
-        axisLabel: { color: '#5a6280', fontSize: 11 },
+        axisLabel: { color: '#7c8db5', fontSize: 11 },
       },
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#060911',
-        borderColor: '#3f3f46',
-        textStyle: { color: '#f4f4f5', fontSize: 12 },
+        backgroundColor: '#0d1117',
+        borderColor: '#2a3350',
+        padding: [8, 12],
+        textStyle: { color: '#e2e8f0', fontSize: 12, lineHeight: 20 },
         formatter: (params: { data: ScatterPoint }) => {
           const [riskScore, ipsScore, totalVal, name, , pattern, tier] = params.data
           const patternDisplay = PATTERN_LABELS[pattern] ?? pattern
-          return `<div style="max-width:280px"><b>${name}</b><br/>IPS: <b>${ipsScore.toFixed(1)}</b> · Tier ${tier}<br/>Risk: <b>${(riskScore * 100).toFixed(0)}%</b><br/>Patrón: ${patternDisplay}<br/>Value: MX$${(totalVal / 1e9).toFixed(2)}B</div>`
+          const riskColor = riskScore >= 0.6 ? '#f87171' : riskScore >= 0.4 ? '#fb923c' : riskScore >= 0.25 ? '#fbbf24' : '#4ade80'
+          return [
+            `<div style="max-width:260px;line-height:1.5">`,
+            `<div style="font-weight:700;font-size:13px;margin-bottom:4px">${name}</div>`,
+            `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#94a3b8">`,
+            `<span>IPS <b style="color:#e2e8f0">${ipsScore.toFixed(1)}</b></span>`,
+            `<span>Tier <b style="color:#e2e8f0">${tier}</b></span>`,
+            `<span>Riesgo <b style="color:${riskColor}">${(riskScore * 100).toFixed(0)}%</b></span>`,
+            `</div>`,
+            `<div style="font-size:11px;color:#64748b;margin-top:3px">`,
+            `${patternDisplay} · MX$${totalVal >= 1e9 ? (totalVal / 1e9).toFixed(2) + 'B' : (totalVal / 1e6).toFixed(0) + 'M'}`,
+            `</div>`,
+            `<div style="font-size:10px;color:#475569;margin-top:2px">Clic para abrir expediente</div>`,
+            `</div>`,
+          ].join('')
         },
       },
       graphic: [
@@ -273,31 +288,17 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
 
   return (
     <div className="rounded-xl border border-white/10 bg-surface-card/40 overflow-hidden mb-6">
-      <div className="flex items-start justify-between px-4 pt-3 pb-2 gap-4 flex-wrap">
-        <div>
-          <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-muted">
-            Matriz de Investigación
-          </p>
-          <p className="text-[11px] text-text-muted/60 mt-0.5">
-            IPS vs riesgo · tamaño = valor contractual · clic para abrir expediente
-          </p>
-        </div>
-        <div className="flex items-center gap-1.5 flex-wrap">
-          {ALL_PATTERNS.map((p) => (
-            <span
-              key={p}
-              className="inline-flex items-center gap-1 text-[9px] font-mono text-text-muted/70 px-1.5 py-0.5 rounded border border-white/10 bg-white/5"
-            >
-              <span
-                className="h-2 w-2 rounded-full"
-                style={{ background: PATTERN_HEX[p] }}
-                aria-hidden="true"
-              />
-              {p} {PATTERN_LABELS[p] ?? p}
-            </span>
-          ))}
-        </div>
+      {/* Header row */}
+      <div className="px-4 pt-3 pb-2 border-b border-white/8">
+        <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-muted">
+          Matriz de Investigación
+        </p>
+        <p className="text-[11px] text-text-muted/60 mt-0.5">
+          Clic en cualquier punto para abrir el expediente del proveedor
+        </p>
       </div>
+
+      {/* Chart */}
       <div style={{ height: 480, width: '100%' }}>
         <ReactECharts
           option={option}
@@ -306,6 +307,72 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
           opts={{ renderer: 'canvas' }}
           notMerge={true}
         />
+      </div>
+
+      {/* Legend footer */}
+      <div className="px-4 py-3 border-t border-white/8 flex flex-wrap items-start gap-x-6 gap-y-2">
+        {/* Pattern colors */}
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
+            Color = Patrón de corrupción
+          </p>
+          <div className="flex flex-wrap gap-x-3 gap-y-1">
+            {ALL_PATTERNS.map((p) => (
+              <span
+                key={p}
+                className="inline-flex items-center gap-1 text-[10px] text-text-muted/70"
+              >
+                <span
+                  className="h-2.5 w-2.5 rounded-full shrink-0"
+                  style={{ background: PATTERN_HEX[p] }}
+                  aria-hidden="true"
+                />
+                <span className="font-mono font-bold">{p}</span>{' '}
+                <span>{PATTERN_LABELS[p] ?? p}</span>
+              </span>
+            ))}
+          </div>
+        </div>
+
+        {/* Node size reference */}
+        <div>
+          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
+            Tamaño = Valor contractual
+          </p>
+          <div className="flex items-end gap-2">
+            {[
+              { r: 5, label: '&lt;1B' },
+              { r: 9, label: '5B' },
+              { r: 14, label: '20B+' },
+            ].map(({ r, label }) => (
+              <span key={label} className="flex flex-col items-center gap-0.5">
+                <span
+                  className="rounded-full bg-white/25"
+                  style={{ width: r * 2, height: r * 2, display: 'inline-block' }}
+                  aria-hidden="true"
+                />
+                <span
+                  className="text-[9px] text-text-muted/50 font-mono"
+                  dangerouslySetInnerHTML={{ __html: label }}
+                />
+              </span>
+            ))}
+            <span className="text-[9px] text-text-muted/40 mb-4">MXN</span>
+          </div>
+        </div>
+
+        {/* Axes guide */}
+        <div className="ml-auto text-right">
+          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
+            Ejes
+          </p>
+          <p className="text-[10px] text-text-muted/60">
+            X: Puntuación de riesgo promedio (0 → 1)
+          </p>
+          <p className="text-[10px] text-text-muted/60">
+            Y: IPS — Índice de Prioridad de Investigación (0 → 100)
+          </p>
+        </div>
       </div>
     </div>
   )

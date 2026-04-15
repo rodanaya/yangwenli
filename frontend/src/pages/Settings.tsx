@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
+import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useSearchParams } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
@@ -119,19 +119,29 @@ export function Settings() {
 
   return (
     <div className="space-y-6">
-      {/* Page Header */}
-      <motion.div
-        variants={fadeIn}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
-      >
-        <h2 className="text-lg font-bold tracking-tight flex items-center gap-2 font-mono">
-          <SettingsIcon className="h-4.5 w-4.5 text-accent" />
-          <span className="text-gradient">{t('pageTitle')}</span>
-        </h2>
-        <p className="text-xs text-text-muted mt-0.5">{t('pageDescription')}</p>
-      </motion.div>
+      {/* Editorial Page Header */}
+      <header className="pb-5 border-b border-zinc-800/60">
+        <p
+          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
+          style={{ color: 'var(--color-accent)' }}
+        >
+          RUBLI · {t('pageTitle', 'Platform Settings')}
+        </p>
+        <h1
+          className="leading-tight font-bold mb-2"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontSize: 'clamp(1.6rem, 3.5vw, 2.2rem)',
+            letterSpacing: '-0.01em',
+            color: 'var(--color-text-primary)',
+          }}
+        >
+          {t('pageTitle', 'Platform Settings')}
+        </h1>
+        <p className="text-sm text-zinc-400 max-w-xl">
+          {t('pageDescription', 'Export data, review quality metrics, and configure platform preferences.')}
+        </p>
+      </header>
 
       {/* Tab Bar */}
       <div className="flex gap-1 border-b border-border pb-0" role="tablist">

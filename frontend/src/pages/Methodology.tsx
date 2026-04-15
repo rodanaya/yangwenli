@@ -213,12 +213,14 @@ function CollapsibleSection({
   title,
   icon: Icon,
   defaultOpen = true,
+  number,
   children,
 }: {
   id: string
   title: string
   icon: React.ElementType
   defaultOpen?: boolean
+  number?: string
   children: React.ReactNode
 }) {
   const [isOpen, setIsOpen] = useState(defaultOpen)
@@ -226,24 +228,46 @@ function CollapsibleSection({
   return (
     <section id={id} className="scroll-mt-20">
       <div className="fern-card">
-        <div className="px-5 pt-4 pb-2">
+        <div className="px-6 pt-5 pb-3">
           <button
             type="button"
-            className="w-full flex items-center gap-2 cursor-pointer select-none text-left"
+            className="w-full flex items-baseline gap-4 cursor-pointer select-none text-left group"
             onClick={() => setIsOpen(!isOpen)}
             aria-expanded={isOpen}
             aria-controls={`section-content-${id}`}
           >
-            <Icon className="h-4 w-4 text-accent" aria-hidden="true" />
-            <span className="flex-1 text-sm font-semibold text-text-primary">{title}</span>
+            {number && (
+              <span
+                className="font-mono text-[11px] font-bold tracking-[0.2em] text-accent shrink-0 pt-0.5"
+                aria-hidden="true"
+              >
+                {number}
+              </span>
+            )}
+            <span className="flex-1 flex items-center gap-2">
+              <Icon className="h-4 w-4 text-accent/70 shrink-0" aria-hidden="true" />
+              <span
+                className="text-lg font-bold text-text-primary leading-tight group-hover:text-accent transition-colors"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {title}
+              </span>
+            </span>
             {isOpen ? (
-              <ChevronDown className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <ChevronDown className="h-4 w-4 text-text-muted shrink-0 self-center" aria-hidden="true" />
             ) : (
-              <ChevronRight className="h-4 w-4 text-text-muted" aria-hidden="true" />
+              <ChevronRight className="h-4 w-4 text-text-muted shrink-0 self-center" aria-hidden="true" />
             )}
           </button>
         </div>
-        {isOpen && <div id={`section-content-${id}`} className="px-5 pb-5">{children}</div>}
+        {isOpen && (
+          <div
+            id={`section-content-${id}`}
+            className="px-6 pb-6 pt-4 border-t border-border/30 leading-relaxed"
+          >
+            {children}
+          </div>
+        )}
       </div>
     </section>
   )
@@ -251,6 +275,39 @@ function CollapsibleSection({
 
 function Mono({ children }: { children: React.ReactNode }) {
   return <span className="font-mono text-accent">{children}</span>
+}
+
+/**
+ * PullQuote — editorial blockquote with left amber border and large serif number.
+ * Used to highlight key statistics (AUC, HR, case count) inside sections.
+ */
+function PullQuote({
+  stat,
+  label,
+  source,
+}: {
+  stat: string
+  label: string
+  source?: string
+}) {
+  return (
+    <blockquote className="my-5 border-l-2 border-accent pl-5 py-2">
+      <div
+        className="text-4xl font-bold text-accent leading-none tracking-tight"
+        style={{ fontFamily: 'var(--font-family-serif)' }}
+      >
+        {stat}
+      </div>
+      <div className="mt-2 text-xs uppercase tracking-[0.15em] text-text-secondary font-medium">
+        {label}
+      </div>
+      {source && (
+        <div className="mt-1 text-[10px] font-mono text-text-muted">
+          {source}
+        </div>
+      )}
+    </blockquote>
+  )
 }
 
 function Formula({ children }: { children: React.ReactNode }) {
@@ -534,44 +591,71 @@ export function Methodology() {
   const { t } = useTranslation('methodology')
   return (
     <div className="space-y-5">
-      {/* Page Header */}
-      <div className="flex items-start justify-between">
-        <div>
-          <div className="editorial-rule mb-3">
-            <span className="editorial-label text-accent">{t('kicker')}</span>
+      {/* Editorial Hero */}
+      <header className="relative pt-4 pb-8 border-b border-border/50">
+        <div className="flex items-start justify-between gap-6">
+          <div className="max-w-3xl">
+            <div className="flex items-center gap-2 mb-4">
+              <BookOpen className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
+              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
+                RUBLI · {t('kicker')}
+              </span>
+            </div>
+            <h1
+              className="text-4xl md:text-5xl font-bold text-text-primary leading-[1.05] tracking-tight"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {t('pageHeadline')}
+            </h1>
+            <p
+              className="mt-5 text-base md:text-lg text-text-secondary leading-relaxed max-w-2xl"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {t('pageSubline')}
+            </p>
           </div>
-          <h1 className="text-editorial-h1 text-text-primary flex items-center gap-3">
-            <BookOpen className="h-6 w-6 text-accent" />
-            {t('pageHeadline')}
-          </h1>
-          <p className="text-sm text-text-muted mt-1.5 max-w-2xl">
-            {t('pageSubline')}
-          </p>
-          <div className="accent-rule mt-4" />
+          <button
+            onClick={() => window.print()}
+            className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
+            title="Export as PDF"
+          >
+            <Printer className="w-3.5 h-3.5" />
+            PDF
+          </button>
         </div>
-        <button
-          onClick={() => window.print()}
-          className="print:hidden flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-md bg-background-elevated/50 hover:bg-background-elevated border border-border text-text-muted hover:text-text-secondary transition-colors flex-shrink-0"
-          title="Export as PDF"
-        >
-          <Printer className="w-3.5 h-3.5" />
-          PDF
-        </button>
-      </div>
 
-      {/* Hero KPI badges */}
+        {/* Editorial pull-quotes: the three numbers that matter */}
+        <div className="mt-8 grid gap-5 sm:grid-cols-3">
+          <PullQuote
+            stat="0.828"
+            label="Test AUC"
+            source="Vendor-stratified 70/30 hold-out"
+          />
+          <PullQuote
+            stat="13.49%"
+            label="High-risk rate"
+            source="OECD benchmark: 2–15%"
+          />
+          <PullQuote
+            stat="748"
+            label="Ground-truth cases"
+            source="603 vendors · ~288K contracts"
+          />
+        </div>
+      </header>
+
+      {/* Supporting KPI badges (context below hero) */}
       <motion.div
         className="flex flex-wrap gap-2"
         variants={staggerContainer}
         initial="initial"
         whileInView="animate"
         viewport={{ once: true, margin: '-50px' }}
+        aria-label="Additional dataset context"
       >
         {(
           [
             t('kpiBadges.contracts'),
-            t('kpiBadges.auc'),
-            t('kpiBadges.cases'),
             t('kpiBadges.sectors'),
           ] as string[]
         ).map((label) => (
@@ -602,7 +686,7 @@ export function Methodology() {
 
           {/* Section 2: Model Overview */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="overview" title={t('sectionLabels.overview')} icon={Shield}>
+          <CollapsibleSection id="overview" number="01" title={t('sectionLabels.overview')} icon={Shield}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.overview.p1Start')}<strong className="text-text-primary">{t('body.overview.p1StatisticalIndicator')}</strong>{' '}
@@ -679,7 +763,7 @@ export function Methodology() {
 
           {/* Section 3: The 12 Features */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="features" title={t('sectionLabels.features')} icon={BarChart3}>
+          <CollapsibleSection id="features" number="02" title={t('sectionLabels.features')} icon={BarChart3}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.features.p1')}
@@ -711,7 +795,7 @@ export function Methodology() {
 
           {/* Section 3b: Risk Factor Evidence Base */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="risk-evidence" title={t('sectionLabels.risk-evidence')} icon={FlaskConical} defaultOpen={false}>
+          <CollapsibleSection id="risk-evidence" number="03" title={t('sectionLabels.risk-evidence')} icon={FlaskConical} defaultOpen={false}>
             <div className="space-y-3">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.riskEvidence.p1')}
@@ -723,7 +807,7 @@ export function Methodology() {
 
           {/* Section 4: Key Findings */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="findings" title={t('sectionLabels.findings')} icon={Brain}>
+          <CollapsibleSection id="findings" number="04" title={t('sectionLabels.findings')} icon={Brain}>
             <div className="space-y-4">
 
               {/* Finding 1: Vendor Concentration */}
@@ -793,7 +877,7 @@ export function Methodology() {
 
           {/* Section 5: Ground Truth Validation */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="validation" title={t('sectionLabels.validation')} icon={Target}>
+          <CollapsibleSection id="validation" number="05" title={t('sectionLabels.validation')} icon={Target}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.validation.p1Start')}<strong className="text-text-primary">{t('body.validation.p1Strong')}</strong>{t('body.validation.p1End')}
@@ -867,7 +951,7 @@ export function Methodology() {
 
           {/* Section 6: Statistical Methods */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="methods" title={t('sectionLabels.methods')} icon={Beaker}>
+          <CollapsibleSection id="methods" number="06" title={t('sectionLabels.methods')} icon={Beaker}>
             <div className="space-y-4">
 
               {/* Z-scores */}
@@ -933,7 +1017,7 @@ export function Methodology() {
 
           {/* Section 6b: v5.2 Analytical Layer */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="v52-layer" title={t('sectionLabels.v52-layer')} icon={FlaskConical}>
+          <CollapsibleSection id="v52-layer" number="07" title={t('sectionLabels.v52-layer')} icon={FlaskConical}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.v52layer.p1Start')}<strong className="text-text-primary">{t('body.v52layer.p1Strong')}</strong>{t('body.v52layer.p1End')}
@@ -1023,7 +1107,7 @@ export function Methodology() {
 
           {/* Section 7: Limitations */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="limitations" title={t('sectionLabels.limitations')} icon={AlertTriangle}>
+          <CollapsibleSection id="limitations" number="08" title={t('sectionLabels.limitations')} icon={AlertTriangle}>
             <div className="space-y-3">
               {(
                 [
@@ -1049,7 +1133,7 @@ export function Methodology() {
 
           {/* Section 8: Previous Model (v3.3) */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="v33" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
+          <CollapsibleSection id="v33" number="09" title={t('sectionLabels.v33')} icon={History} defaultOpen={false}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.v33section.p1Start')}<strong className="text-text-primary">{t('body.v33section.p1Strong')}</strong>{t('body.v33section.p1End')}<Mono>{t('body.v33section.p1Mono')}</Mono>{t('body.v33section.p1MonoEnd')}
@@ -1101,7 +1185,7 @@ export function Methodology() {
 
           {/* Section 9: Data Sources */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="data-sources" title={t('sectionLabels.data-sources')} icon={Database}>
+          <CollapsibleSection id="data-sources" number="10" title={t('sectionLabels.data-sources')} icon={Database}>
             <div className="space-y-4">
               <p className="text-xs text-text-secondary leading-relaxed">
                 {t('body.dataSources.p1Start')}<strong className="text-text-primary">{t('body.dataSources.p1Strong')}</strong>{t('body.dataSources.p1End')}
@@ -1174,7 +1258,7 @@ export function Methodology() {
 
           {/* Section 10: Known Limitations */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="limitations" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
+          <CollapsibleSection id="limitations" number="11" title={t('sectionLabels.limitations')} icon={AlertTriangle} defaultOpen={false}>
             <div className="space-y-6">
               <p className="text-xs text-text-secondary leading-relaxed">
                 These limitations are inherent to the data sources, modeling approach, and legal constraints of the platform.
@@ -1258,7 +1342,7 @@ export function Methodology() {
 
           {/* Section 11: References */}
           <motion.div variants={staggerItem}>
-          <CollapsibleSection id="references" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
+          <CollapsibleSection id="references" number="12" title={t('sectionLabels.references')} icon={FileText} defaultOpen={false}>
             <div className="space-y-2">
               <div className="flex justify-end mb-2">
                 <CopyCitationButton />

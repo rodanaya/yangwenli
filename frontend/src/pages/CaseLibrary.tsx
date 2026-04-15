@@ -545,6 +545,35 @@ export default function CaseLibrary() {
       {/* ── Hero Section ── */}
       <HeroSection />
 
+      {/* ── Editorial Pull-Quote — conviction stat ── */}
+      <div className="relative my-10 rounded-2xl overflow-hidden border border-zinc-800/60" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #0f0b05 100%)' }}>
+        <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(ellipse at 20% 50%, #d4922a 0%, transparent 60%)' }} />
+        <div className="relative px-8 py-10 flex flex-col sm:flex-row items-center sm:items-start gap-8">
+          <div className="flex-shrink-0 text-center sm:text-left">
+            <span
+              className="block tabular-nums font-black leading-none"
+              style={{ fontFamily: 'var(--font-family-serif)', fontSize: 'clamp(4rem, 10vw, 7rem)', color: '#d4922a', letterSpacing: '-0.04em' }}
+            >
+              7%
+            </span>
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-600 mb-2">
+              {t('impunity.kicker', 'THE ACCOUNTABILITY DEFICIT')}
+            </p>
+            <p
+              className="text-xl sm:text-2xl font-bold leading-snug mb-3"
+              style={{ fontFamily: 'var(--font-family-serif)', color: 'var(--color-text-primary)' }}
+            >
+              {t('impunity.headline', 'of documented corruption cases ended in conviction')}
+            </p>
+            <p className="text-sm text-zinc-400 leading-relaxed max-w-lg">
+              {t('impunity.body', 'MX$208B in identified fraud. 43 documented cases. 3 convictions. The rest: impunity, ongoing investigation, or dismissal. RUBLI tracks what official records do not.')}
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* ── Filter bar: editorial chips ── */}
       <div className="mb-8">
         <div className="flex items-center gap-2 mb-3">

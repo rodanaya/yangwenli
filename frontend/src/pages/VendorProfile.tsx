@@ -935,11 +935,11 @@ export function VendorProfile() {
     retry: false,
   })
 
-  // P14: ARIA investigation data — deferred until ARIA tab
+  // P14: ARIA investigation data — eager so Red Flags callout works at header level
   const { data: ariaData, isLoading: ariaLoading } = useQuery<AriaQueueItem>({
     queryKey: ['vendor', vendorId, 'aria-detail'],
     queryFn: () => ariaApi.getVendorDetail(vendorId),
-    enabled: !!vendorId && activeTab === 'aria',
+    enabled: !!vendorId,
     staleTime: 10 * 60 * 1000,
     retry: false,
   })
@@ -1177,6 +1177,84 @@ export function VendorProfile() {
           </Link>
         </div>
       )}
+      {/* ── RED FLAGS ARIA CALLOUT (T1 / T2 only) ─────────────── */}
+      {ariaData && (ariaData.ips_tier === 1 || ariaData.ips_tier === 2) && (() => {
+        const isCritical = ariaData.ips_tier === 1
+        const borderColor = isCritical ? '#dc2626' : '#ea580c'
+        const bgColor    = isCritical ? 'rgba(220,38,38,0.06)' : 'rgba(234,88,12,0.06)'
+        const textColor  = isCritical ? '#fca5a5' : '#fdba74'
+        const PATTERN_LABELS: Record<string, string> = {
+          P1: 'Monopoly capture — single vendor dominates sector spending',
+          P2: 'Ghost company network — pattern matches SAT-identified shell entities',
+          P3: 'Intermediary abuse — suspicious pass-through contract structure',
+          P4: 'Threshold splitting — multiple same-day contracts just below review limits',
+          P5: 'Single-bid concentration — repeated wins without competition',
+          P6: 'Institutional capture — abnormal dependency from a single agency',
+          P7: 'Disappeared vendor — active then abrupt cessation post-award',
+        }
+        const flags: { code: string; label: string }[] = []
+        if (ariaData.primary_pattern) {
+          flags.push({ code: ariaData.primary_pattern, label: PATTERN_LABELS[ariaData.primary_pattern] ?? ariaData.primary_pattern })
+        }
+        if (ariaData.is_efos_definitivo) flags.push({ code: 'EFOS', label: 'SAT-confirmed ghost company (EFOS Definitivo list)' })
+        if (ariaData.is_sfp_sanctioned) flags.push({ code: 'SFP', label: 'Federal comptroller sanction on record' })
+        if (ariaData.in_ground_truth)   flags.push({ code: 'GT',   label: 'Matches documented corruption case in RUBLI ground truth' })
+
+        return (
+          <div
+            className="rounded-xl border px-5 py-4 mb-1"
+            style={{ borderColor: `${borderColor}50`, background: bgColor }}
+          >
+            {/* Header row */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="h-4 w-4 shrink-0" style={{ color: borderColor }} />
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em]" style={{ color: borderColor }}>
+                  ARIA T{ariaData.ips_tier} · Investigation Priority
+                </span>
+              </div>
+              <span
+                className="text-xs font-mono font-bold px-2 py-0.5 rounded"
+                style={{ color: borderColor, background: `${borderColor}15`, border: `1px solid ${borderColor}40` }}
+              >
+                IPS {(ariaData.ips_final * 100).toFixed(0)}
+              </span>
+            </div>
+
+            {/* Flag list */}
+            {flags.length > 0 ? (
+              <ul className="space-y-1.5">
+                {flags.map((f) => (
+                  <li key={f.code} className="flex items-start gap-2 text-sm">
+                    <span
+                      className="mt-0.5 text-[9px] font-mono font-bold px-1.5 py-0.5 rounded shrink-0"
+                      style={{ color: textColor, background: `${borderColor}20`, border: `1px solid ${borderColor}30` }}
+                    >
+                      {f.code}
+                    </span>
+                    <span style={{ color: textColor }}>{f.label}</span>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-sm" style={{ color: textColor }}>
+                Elevated investigation priority based on composite risk indicators.
+              </p>
+            )}
+
+            {/* Confidence note */}
+            {ariaData.pattern_confidence > 0 && (
+              <p className="mt-3 text-[10px] font-mono text-zinc-500">
+                Pattern confidence: {(ariaData.pattern_confidence * 100).toFixed(0)}% ·{' '}
+                <Link to={`/aria?vendor=${vendorId}`} className="underline underline-offset-2 hover:text-zinc-300 transition-colors">
+                  View in ARIA queue →
+                </Link>
+              </p>
+            )}
+          </div>
+        )
+      })()}
+
       {/* ── EDITORIAL HERO HEADER ─────────────────────────────── */}
       <header>
         {/* Kicker + risk badge */}

@@ -821,33 +821,60 @@ export function Watchlist() {
                       )
                     }
                     return (
-                      <div className="p-12 text-center text-text-muted">
-                        <Crosshair className="h-12 w-12 mx-auto mb-4 text-accent opacity-30" />
-                        <p className="text-sm font-medium mb-1 text-text-primary">{t('workspaceEmpty.title')}</p>
-                        <p className="text-xs max-w-xs mx-auto mb-2 leading-relaxed">
-                          {t('workspaceEmpty.description')}
-                        </p>
-                        <p className="text-xs text-text-muted/70 max-w-xs mx-auto mb-5">
+                      <div className="p-8">
+                        {/* Onboarding header */}
+                        <div className="text-center mb-8">
+                          <Crosshair className="h-10 w-10 mx-auto mb-3 text-accent opacity-40" />
+                          <p className="text-base font-semibold text-text-primary mb-1">{t('workspaceEmpty.title')}</p>
+                          <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                            {t('workspaceEmpty.description')}
+                          </p>
+                        </div>
+                        {/* 3-column get-started guide */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 max-w-2xl mx-auto">
+                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                            <div className="text-2xl mb-2">🔍</div>
+                            <p className="text-xs font-semibold text-text-primary mb-1">Watch a vendor</p>
+                            <p className="text-[10px] text-text-muted leading-snug mb-3">Track risk changes for high-priority vendors in the ARIA queue</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-[10px]"
+                              onClick={() => navigate('/aria?tier=1')}
+                            >
+                              <Crosshair className="h-3 w-3 mr-1" /> Browse T1 Queue
+                            </Button>
+                          </div>
+                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                            <div className="text-2xl mb-2">📋</div>
+                            <p className="text-xs font-semibold text-text-primary mb-1">Explore contracts</p>
+                            <p className="text-[10px] text-text-muted leading-snug mb-3">Find vendors or institutions and click the eye icon to start tracking</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-[10px]"
+                              onClick={() => navigate('/explore?tab=vendors')}
+                            >
+                              <Search className="h-3 w-3 mr-1" /> Search vendors
+                            </Button>
+                          </div>
+                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                            <div className="text-2xl mb-2">📁</div>
+                            <p className="text-xs font-semibold text-text-primary mb-1">Open a case</p>
+                            <p className="text-[10px] text-text-muted leading-snug mb-3">Browse the 43 documented cases and track involved parties</p>
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="w-full text-[10px]"
+                              onClick={() => navigate('/cases')}
+                            >
+                              <FileText className="h-3 w-3 mr-1" /> View cases
+                            </Button>
+                          </div>
+                        </div>
+                        <p className="text-[10px] text-text-muted/50 text-center">
                           <Eye className="h-3 w-3 inline mx-0.5" /> {t('workspaceEmpty.hint')}
                         </p>
-                        <div className="flex justify-center gap-2">
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate('/explore?tab=vendors')}
-                          >
-                            <Search className="h-3.5 w-3.5 mr-1.5" />
-                            {t('browseVendors')}
-                          </Button>
-                          <Button
-                            variant="outline"
-                            size="sm"
-                            onClick={() => navigate('/explore?tab=institutions')}
-                          >
-                            <Building2 className="h-3.5 w-3.5 mr-1.5" />
-                            {t('browseInstitutions')}
-                          </Button>
-                        </div>
                       </div>
                     )
                   })()

@@ -828,7 +828,15 @@ export default function Intro() {
     }
   }, [navigate])
 
+  // Defer below-fold queries until hero has painted (avoids competing with hero KPIs on load)
+  const [belowFoldEnabled, setBelowFoldEnabled] = useState(false)
+  useEffect(() => {
+    const timer = setTimeout(() => setBelowFoldEnabled(true), 700)
+    return () => clearTimeout(timer)
+  }, [])
+
   // ---- Data fetching ----
+  // Hero query fires immediately — has static fallback values so it won't block paint
   const { data: fastDashboard } = useQuery<FastDashboardData>({
     queryKey: ['dashboard', 'fast'],
     queryFn: () => analysisApi.getFastDashboard(),
@@ -836,11 +844,13 @@ export default function Intro() {
     retry: 1,
   })
 
+  // Below-fold queries deferred 700ms — sector grades and recent critical contracts
   const { data: phiSectorsData } = useQuery<{ sectors: PHISector[] }>({
     queryKey: ['phi', 'sectors'],
     queryFn: () => phiApi.getSectors(),
     staleTime: 10 * 60 * 1000,
     retry: 1,
+    enabled: belowFoldEnabled,
   })
 
   const { data: recentCriticalData } = useQuery<ContractListResponse>({
@@ -848,6 +858,7 @@ export default function Intro() {
     queryFn: () => contractApi.getAll({ risk_level: 'critical', per_page: 3, sort_by: 'contract_date', sort_order: 'desc' }),
     staleTime: 15 * 60 * 1000,
     retry: 1,
+    enabled: belowFoldEnabled,
   })
 
   const goToApp = useCallback(

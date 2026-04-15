@@ -343,6 +343,10 @@ function App() {
               <Route path="detective-patterns" element={<Navigate to="/administrations" replace />} />
               <Route path="spending-categories" element={<Navigate to="/categories" replace />} />
               <Route path="institution-health" element={<Navigate to="/institutions" replace />} />
+              {/* Fix broken inbound links from docs/tours/external sources */}
+              <Route path="networks" element={<Navigate to="/network" replace />} />
+              <Route path="co-bidding" element={<Navigate to="/collusion" replace />} />
+              <Route path="spending" element={<Navigate to="/categories" replace />} />
 
               <Route
                 path="vendors/compare"
@@ -441,6 +445,8 @@ function App() {
               <Route path="cases-library" element={<Navigate to="/cases" replace />} />
 
               {/* Red Thread — scroll-driven investigation narrative */}
+              {/* Default to top T1 ARIA vendor: GRUPO FARMACOS ESPECIALIZADOS (id=29277, IPS=0.870, risk=0.983) */}
+              <Route path="thread" element={<Navigate to="/thread/29277" replace />} />
               <Route
                 path="thread/:vendorId"
                 element={

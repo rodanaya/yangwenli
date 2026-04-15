@@ -263,38 +263,57 @@ export function InvestigationCaseDetail() {
   return (
     <div className="space-y-6 pb-10">
 
-      {/* TOP BAR */}
+      {/* EDITORIAL CASE HEADER */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-2">
+        <div className="space-y-3 flex-1">
           {/* Back link */}
           <Link
             to="/investigation"
-            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors font-mono"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('caseDetail.backToQueue')}
           </Link>
 
-          {/* Title + badges */}
-          <div className="flex flex-wrap items-center gap-2">
-            <h1 className="text-xl font-bold text-text-primary leading-snug">
+          {/* Priority accent bar + title block */}
+          <div
+            className="pl-4 border-l-2"
+            style={{
+              borderColor: priority.level === 'critical' ? '#f87171'
+                : priority.level === 'high' ? '#fb923c'
+                : priority.level === 'medium' ? '#fbbf24'
+                : '#4ade80'
+            }}
+          >
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-accent)' }}>
+              RUBLI · Investigation Case
+            </p>
+            <h1
+              className="font-bold leading-tight mb-2"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(1.3rem, 3vw, 2rem)',
+                letterSpacing: '-0.01em',
+                color: 'var(--color-text-primary)',
+              }}
+            >
               {cleanTitle}
             </h1>
-          </div>
-          <div className="flex flex-wrap items-center gap-2">
-            <span className={cn(
-              'inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono tracking-wider uppercase border',
-              PRIORITY_BADGE[priority.level]
-            )}>
-              P{priority.n} {priority.level.toUpperCase()}
-            </span>
-            <StatusPill status={detail.validation_status} />
-            <span
-              className="text-xs font-medium px-1.5 py-0.5 rounded"
-              style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
-            >
-              {getSectorNameEN(detail.sector_name)}
-            </span>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className={cn(
+                'inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono tracking-wider uppercase border',
+                PRIORITY_BADGE[priority.level]
+              )}>
+                P{priority.n} {priority.level.toUpperCase()}
+              </span>
+              <StatusPill status={detail.validation_status} />
+              <span
+                className="text-xs font-medium px-1.5 py-0.5 rounded"
+                style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
+              >
+                {getSectorNameEN(detail.sector_name)}
+              </span>
+            </div>
           </div>
         </div>
 
