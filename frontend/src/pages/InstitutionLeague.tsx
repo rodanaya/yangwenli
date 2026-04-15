@@ -13,6 +13,7 @@ import { useMemo, useCallback, lazy, Suspense } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import {
   ArrowUp,
   ArrowDown,
@@ -517,9 +518,11 @@ export default function InstitutionLeague() {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <TabBar activeTab={activeTab} setTab={setTab} />
-        <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
-          <InstitutionScorecards />
-        </Suspense>
+        <ErrorBoundary fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+            <InstitutionScorecards />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     )
   }
@@ -528,9 +531,11 @@ export default function InstitutionLeague() {
     return (
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <TabBar activeTab={activeTab} setTab={setTab} />
-        <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
-          <ReportCard />
-        </Suspense>
+        <ErrorBoundary fallback={null}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+            <ReportCard />
+          </Suspense>
+        </ErrorBoundary>
       </div>
     )
   }

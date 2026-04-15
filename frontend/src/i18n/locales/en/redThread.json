@@ -134,7 +134,7 @@
     "fullVendorProfile": "Full Vendor Profile",
     "exportPdf": "Export PDF Briefing",
     "addToWorkspace": "Add to Workspace",
-    "methodologyNote": "Risk scores measure similarity to documented corruption patterns in 3.1M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v0.6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See",
+    "methodologyNote": "Risk scores measure similarity to documented corruption patterns in 3.05M Mexican federal contracts (2002–2025). Scores are statistical indicators for investigation triage — not proof of wrongdoing. Model v0.6.5, vendor-stratified validation, AUC 0.798 (train) / 0.828 (test). See",
     "methodologyLink": "full methodology"
   },
   "nav": {

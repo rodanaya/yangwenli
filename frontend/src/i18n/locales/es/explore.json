@@ -7,7 +7,7 @@
   },
   "page": {
     "title": "Explorar Contratos",
-    "subtitle": "Filtra cruzado entre 3.1M registros de contratación",
+    "subtitle": "Filtra cruzado entre 3.05M registros de contratación",
     "crossfilterHint": "Haz clic en cualquier panel para filtrar los demás — sector, rango de años y nivel de riesgo están interconectados",
     "clearAllFilters": "Limpiar todos los filtros",
     "searchPlaceholder": "Buscar {{entityType}}s…",

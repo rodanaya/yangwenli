@@ -7,7 +7,7 @@
   },
   "page": {
     "title": "Explore Contracts",
-    "subtitle": "Cross-filter 3.1M procurement records",
+    "subtitle": "Cross-filter 3.05M procurement records",
     "crossfilterHint": "Click any panel to filter all others — sector, time range, and risk level are cross-connected",
     "clearAllFilters": "Clear all filters",
     "searchPlaceholder": "Search {{entityType}}s…",

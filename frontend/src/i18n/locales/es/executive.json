@@ -394,10 +394,10 @@
     "highRiskRateSub": "Calibrado OCDE \u00b7 v0.6.5",
     "highRiskRateContext": "Calibrado al benchmark OCDE 2-15%. Contratos marcados como riesgo cr\u00edtico o alto por un modelo de 9 variables activas por sector.",
     "highCritical": "Contratos Alto/Critico",
-    "highCriticalSub": "{{pct}}% de los 3.1M contratos",
+    "highCriticalSub": "{{pct}}% de los 3.05M contratos",
     "highCriticalContext": "Cada contrato marcado comparte patrones estadisticos con casos documentados de corrupcion en 23 anos.",
     "yearsCovered": "Anos Cubiertos",
-    "yearsCoveredSub": "2002 - 2025 \u00b7 3.1M contratos",
+    "yearsCoveredSub": "2002 - 2025 \u00b7 3.05M contratos",
     "yearsCoveredContext": "Cuatro estructuras de datos distintas, desde registros tempranos de baja calidad hasta declaraciones casi completas de 2023-2025.",
     "modelAuc": "AUC del Modelo",
     "modelAucSub": "Divisi\u00f3n estratificada \u00b7 v0.6.5",
@@ -410,7 +410,7 @@
     "dualConfirmedContext": "Contratos marcados tanto por el modelo supervisado de riesgo como por deteccion de anomalias no supervisada de forma independiente."
   },
   "funnel": {
-    "title": "Estratificacion de Riesgo — 3.1M Contratos",
+    "title": "Estratificacion de Riesgo — 3.05M Contratos",
     "allContracts": "Todos los Contratos Federales",
     "allContractsSub": "2002-2025",
     "mediumRisk": "Riesgo Medio+",
@@ -429,7 +429,7 @@
   "tableHeader": "Registro de investigaciones",
   "filterLabel": "Filtros de investigación",
   "riskInfographic": {
-    "title": "Distribución de Niveles de Riesgo — 3.1M Contratos",
+    "title": "Distribución de Niveles de Riesgo — 3.05M Contratos",
     "immediate": "Investigación inmediata",
     "priority": "Revisión prioritaria",
     "watchList": "Lista de vigilancia",

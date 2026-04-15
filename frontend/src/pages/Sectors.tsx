@@ -12,6 +12,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useQuery, useQueries } from '@tanstack/react-query'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -657,28 +658,37 @@ export function Sectors() {
 
         {/* Grid */}
         {!error && (
-          <div
-            className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
-            role="list"
-            aria-label={t('page.title')}
-          >
-            {isLoading
-              ? Array.from({ length: 12 }).map((_, i) => (
-                  <div role="listitem" key={i}>
-                    <SectorCardSkeleton />
-                  </div>
-                ))
-              : sorted.map((sector, i) => (
-                  <div role="listitem" key={sector.sector_id}>
-                    <SectorCard sector={sector} rank={i + 1} />
-                  </div>
-                ))}
-          </div>
+          <>
+            {!isLoading && sorted.length === 0 && (
+              <div className="rounded-xl border border-border/30 bg-background-elevated/20 p-10 text-center text-sm text-text-muted">
+                {t('emptyState.noFoundDesc', { name: t('page.title', 'sectors') })}
+              </div>
+            )}
+            <div
+              className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4"
+              role="list"
+              aria-label={t('page.title')}
+            >
+              {isLoading
+                ? Array.from({ length: 12 }).map((_, i) => (
+                    <div role="listitem" key={i}>
+                      <SectorCardSkeleton />
+                    </div>
+                  ))
+                : sorted.map((sector, i) => (
+                    <div role="listitem" key={sector.sector_id}>
+                      <SectorCard sector={sector} rank={i + 1} />
+                    </div>
+                  ))}
+            </div>
+          </>
         )}
 
         {/* Market Concentration Chart */}
         <div className="mt-8">
-          <SectorConcentrationChart />
+          <ErrorBoundary fallback={null}>
+            <SectorConcentrationChart />
+          </ErrorBoundary>
         </div>
 
         {/* Model note footnote */}

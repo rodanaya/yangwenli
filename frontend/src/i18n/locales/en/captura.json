@@ -108,7 +108,7 @@
   },
   "methodology": {
     "title": "Methodology",
-    "content": "Calculated from 3.1M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a risk indicator per OECD procurement guidelines. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
+    "content": "Calculated from 3.05M procurement contracts (2002–2025) with amounts above 100K MXN. The capture percentage is the vendor's share of the institution's total procurement spend across all contract types. High concentration (>30%) is a risk indicator per OECD procurement guidelines. Cell color reflects the intensity of capture — deeper red means greater dependence on a single vendor."
   },
   "stats": {
     "topFlows": "TOP FLOWS ANALYZED",

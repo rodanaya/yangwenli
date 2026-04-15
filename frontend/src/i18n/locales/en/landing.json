@@ -1,7 +1,7 @@
 {
   "skip_to_app": "Skip to app",
   "hero": {
-    "headline": "3.1 Million Contracts. One Question:",
+    "headline": "3.05 Million Contracts. One Question:",
     "headline_accent": "Who Got Paid?",
     "sub": "RUBLI tracks every Mexican federal procurement contract since 2002. Powered by ML risk scoring, network analysis, and 748 documented corruption cases.",
     "cta_primary": "Explore the Data",
@@ -96,7 +96,7 @@
     "label": "HOW WE DETECT PATTERNS",
     "headline": "From raw data to risk intelligence",
     "step01Title": "Data",
-    "step01Body": "3.1M contracts from COMPRANET (2002-2025), cleaned and standardized",
+    "step01Body": "3.05M contracts from COMPRANET (2002-2025), cleaned and standardized",
     "step02Title": "16 Indicators",
     "step02Body": "Vendor concentration, atypical prices, direct awards, network patterns...",
     "step03Title": "ML Model",

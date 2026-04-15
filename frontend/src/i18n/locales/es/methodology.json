@@ -276,7 +276,7 @@
     "references": "Referencias"
   },
   "pageHeadline": "Cómo Detectamos Corrupción",
-  "pageSubline": "Análisis estadístico de 3.1M contratos del gobierno federal mexicano",
+  "pageSubline": "Análisis estadístico de 3.05M contratos del gobierno federal mexicano",
   "evolution": {
     "title": "Evolución del Modelo",
     "subtitle": "Del checklist ponderado por expertos (v3.3) al ML por sector con validación cruzada y explicabilidad (capa v5.2).",
@@ -298,7 +298,7 @@
     }
   },
   "kpiBadges": {
-    "contracts": "3.1M Contratos",
+    "contracts": "3.05M Contratos",
     "auc": "AUC 0.828",
     "cases": "~748 Casos Validados",
     "sectors": "12 Sectores"
@@ -404,7 +404,7 @@
       "shapWhere": "Perfil de Proveedor → Pestaña Riesgo → Panel Análisis SHAP",
       "pyodTitle": "Validación Cruzada PyOD",
       "pyodBadge": "9.3M puntuaciones",
-      "pyodBody": "Detección de anomalías por conjunto Isolation Forest + COPOD ejecutada independientemente en los 3.1M contratos. Una puntuación de ensemble alta significa que el contrato es un valor atípico estadístico incluso sin conocer la etiqueta de verdad fundamental.",
+      "pyodBody": "Detección de anomalías por conjunto Isolation Forest + COPOD ejecutada independientemente en los 3.05M contratos. Una puntuación de ensemble alta significa que el contrato es un valor atípico estadístico incluso sin conocer la etiqueta de verdad fundamental.",
       "pyodWhere": "Detalle de contrato → Insignia Confirmado por IA · Panel → Validación Cruzada · Explorar → Filtro Confirmado por IA",
       "driftTitle": "Monitoreo de Deriva",
       "driftBadge": "16 características",

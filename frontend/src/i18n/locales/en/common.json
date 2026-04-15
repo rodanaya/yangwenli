@@ -83,7 +83,7 @@
   "dismissBanner": "Dismiss announcement",
   "footerBrand": "RUBLI v0.6.5",
   "footerTagline": "Procurement Transparency Platform",
-  "footerStats": "3.1M contracts · 9.9T MXN · 2002-2025",
+  "footerStats": "3.05M contracts · 9.9T MXN · 2002-2025",
   "skipToContent": "Skip to main content",
   "verified": "verified",
   "readMethodology": "Read methodology →",
@@ -517,5 +517,37 @@
       "medium": "Medium",
       "low": "Low"
     }
+  },
+  "contractExplain": {
+    "explain": "Explain this risk score",
+    "generating": "Generating explanation...",
+    "notConfigured": "AI explanation not configured. Set ANTHROPIC_API_KEY on the server.",
+    "couldNotLoad": "Could not load explanation. Try again later."
+  },
+  "alertFeed": {
+    "recentAlerts": "Recent Alerts",
+    "failedToLoad": "Failed to load alerts",
+    "noAlerts": "No critical alerts in the last {{days}} days",
+    "unknownVendor": "Unknown vendor",
+    "viewAll": "View all investigations"
+  },
+  "temporal": {
+    "failedToLoad": "Failed to load risk trend data.",
+    "retry": "Retry",
+    "retryLive": "Retry live data",
+    "liveData": "Live data",
+    "estimated": "Estimated"
+  },
+  "heatmap": {
+    "avgRiskScore": "Avg Risk Score",
+    "highRiskPct": "High-Risk %",
+    "directAwardPct": "Direct Award %",
+    "legendLow": "Low",
+    "legendMedium": "Medium",
+    "legendHigh": "High",
+    "legendCritical": "Critical",
+    "noData": "No data",
+    "tooltipContracts": "Contracts",
+    "tooltipValue": "Value"
   }
 }

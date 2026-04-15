@@ -140,7 +140,7 @@
   },
   "kicker": "METHODOLOGICAL FOUNDATIONS",
   "pageHeadline": "How We Score Procurement Risk",
-  "pageSubline": "Statistical analysis of 3.1M Mexican government procurement contracts",
+  "pageSubline": "Statistical analysis of 3.05M Mexican government procurement contracts",
   "groundTruth": {
     "pageTitle": "Ground Truth War Room",
     "pageSubtitle": "Documented corruption cases validate the risk detection model",
@@ -298,7 +298,7 @@
     }
   },
   "kpiBadges": {
-    "contracts": "3.1M Contracts",
+    "contracts": "3.05M Contracts",
     "auc": "AUC 0.828",
     "cases": "~748 Cases Validated",
     "sectors": "12 Sectors"
@@ -404,7 +404,7 @@
       "shapWhere": "Vendor Profile → Risk tab → SHAP Analysis panel",
       "pyodTitle": "PyOD Cross-Validation",
       "pyodBadge": "9.3M scores",
-      "pyodBody": "Isolation Forest + COPOD ensemble anomaly detection run independently on all 3.1M contracts. A high ensemble score means the contract is a statistical outlier even without knowing the ground truth label.",
+      "pyodBody": "Isolation Forest + COPOD ensemble anomaly detection run independently on all 3.05M contracts. A high ensemble score means the contract is a statistical outlier even without knowing the ground truth label.",
       "pyodWhere": "Contract detail → AI Confirmed badge · Dashboard → Cross-Model Validation · Explore → AI Confirmed filter",
       "driftTitle": "Drift Monitoring",
       "driftBadge": "16 features",

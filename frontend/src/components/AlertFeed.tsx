@@ -5,6 +5,7 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { Bell } from 'lucide-react'
 import { alertsApi } from '@/api/client'
 import { getRiskLevelFromScore, RISK_COLORS } from '@/lib/constants'
@@ -29,6 +30,7 @@ interface AlertFeedProps {
 
 export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
   const navigate = useNavigate()
+  const { t } = useTranslation('common')
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['alerts', 'feed', days, limit],
@@ -56,7 +58,7 @@ export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
             </span>
           )}
         </div>
-        <span className="text-sm font-semibold text-text-primary">Recent Alerts</span>
+        <span className="text-sm font-semibold text-text-primary">{t('alertFeed.recentAlerts')}</span>
         <span className="text-[10px] text-text-muted font-mono ml-auto">{total} total</span>
       </div>
 
@@ -72,13 +74,13 @@ export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
 
         {error && (
           <div className="px-3 py-4 text-xs text-text-muted text-center">
-            Failed to load alerts
+            {t('alertFeed.failedToLoad')}
           </div>
         )}
 
         {!isLoading && !error && alerts.length === 0 && (
           <div className="px-3 py-6 text-xs text-text-muted text-center">
-            No critical alerts in the last {days} days
+            {t('alertFeed.noAlerts', { days })}
           </div>
         )}
 
@@ -111,7 +113,7 @@ export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
               {/* Details */}
               <div className="min-w-0 flex-1">
                 <div className="text-xs font-medium text-text-primary truncate">
-                  {alert.vendor_name ?? 'Unknown vendor'}
+                  {alert.vendor_name ?? t('alertFeed.unknownVendor')}
                 </div>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   {alert.amount_mxn != null && (
@@ -143,7 +145,7 @@ export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
             onClick={() => navigate('/aria')}
             className="text-[11px] text-accent hover:text-accent-hover transition-colors font-medium"
           >
-            View all investigations &rarr;
+            {t('alertFeed.viewAll')} →
           </button>
         </div>
       )}

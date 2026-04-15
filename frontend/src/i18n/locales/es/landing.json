@@ -1,7 +1,7 @@
 {
   "skip_to_app": "Ir a la app",
   "hero": {
-    "headline": "3.1 Millones de Contratos. Una Pregunta:",
+    "headline": "3.05 Millones de Contratos. Una Pregunta:",
     "headline_accent": "¿A Quién le Pagaron?",
     "sub": "RUBLI rastrea cada contrato de adquisiciones federales de México desde 2002. Con puntuación de riesgo por ML, análisis de redes y 748 casos documentados de corrupción.",
     "cta_primary": "Explorar los Datos",
@@ -96,7 +96,7 @@
     "label": "CÓMO DETECTAMOS PATRONES",
     "headline": "De datos crudos a inteligencia de riesgo",
     "step01Title": "Datos",
-    "step01Body": "3.1M contratos de COMPRANET (2002-2025), limpiados y estandarizados",
+    "step01Body": "3.05M contratos de COMPRANET (2002-2025), limpiados y estandarizados",
     "step02Title": "16 Indicadores",
     "step02Body": "Concentración de proveedores, precios atípicos, adjudicación directa, redes...",
     "step03Title": "Modelo ML",

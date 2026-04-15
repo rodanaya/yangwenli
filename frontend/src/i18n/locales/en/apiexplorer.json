@@ -13,5 +13,5 @@
   "endpointLabel_other": "{{count}} endpoints",
   "copied": "Copied!",
   "corsNote": "All endpoints support CORS from the RUBLI frontend. No authentication required for read-only endpoints.",
-  "dataNote": "Data covers 3.1M Mexican federal procurement contracts (2002\u20132025) from COMPRANET."
+  "dataNote": "Data covers 3.05M Mexican federal procurement contracts (2002\u20132025) from COMPRANET."
 }

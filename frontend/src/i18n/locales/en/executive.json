@@ -394,10 +394,10 @@
     "highRiskRateSub": "OECD-calibrated \u00b7 v0.6.5",
     "highRiskRateContext": "Calibrated to OECD 2-15% benchmark. Contracts flagged critical or high risk by a 9-feature per-sector model.",
     "highCritical": "High/Critical Contracts",
-    "highCriticalSub": "{{pct}}% of all 3.1M contracts",
+    "highCriticalSub": "{{pct}}% of all 3.05M contracts",
     "highCriticalContext": "Each flagged contract shares statistical patterns with documented corruption cases across 23 years.",
     "yearsCovered": "Years Covered",
-    "yearsCoveredSub": "2002 - 2025 \u00b7 3.1M contracts",
+    "yearsCoveredSub": "2002 - 2025 \u00b7 3.05M contracts",
     "yearsCoveredContext": "Four distinct data structures, from lowest-quality early records to near-complete 2023-2025 filings.",
     "modelAuc": "Model AUC",
     "modelAucSub": "Vendor-stratified split \u00b7 v0.6.5",
@@ -410,7 +410,7 @@
     "dualConfirmedContext": "Contracts flagged by both the supervised risk model and unsupervised anomaly detection independently."
   },
   "funnel": {
-    "title": "Risk Stratification — 3.1M Contracts",
+    "title": "Risk Stratification — 3.05M Contracts",
     "allContracts": "All Federal Contracts",
     "allContractsSub": "2002-2025",
     "mediumRisk": "Medium+ Risk",
@@ -429,7 +429,7 @@
   "tableHeader": "Investigation records",
   "filterLabel": "Investigation filters",
   "riskInfographic": {
-    "title": "Risk Level Distribution — 3.1M Contracts",
+    "title": "Risk Level Distribution — 3.05M Contracts",
     "immediate": "Immediate investigation",
     "priority": "Priority review",
     "watchList": "Watch list",

@@ -9,6 +9,7 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
+import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ReactECharts from 'echarts-for-react'
 import type * as echarts from 'echarts'
 import {
@@ -825,11 +826,13 @@ export default function CollusionExplorer() {
           />
         </button>
         {showGraph && (
-          <BidRingGraph
-            pairs={graphPairs}
-            loading={graphLoading}
-            onNodeClick={handleGraphNodeClick}
-          />
+          <ErrorBoundary fallback={<div className="h-64 rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Network graph unavailable</div>}>
+            <BidRingGraph
+              pairs={graphPairs}
+              loading={graphLoading}
+              onNodeClick={handleGraphNodeClick}
+            />
+          </ErrorBoundary>
         )}
 
         {/* ── Filters ── */}

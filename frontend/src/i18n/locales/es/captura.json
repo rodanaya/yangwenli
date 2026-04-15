@@ -108,7 +108,7 @@
   },
   "methodology": {
     "title": "Metodología",
-    "content": "Calculado sobre 3.1M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. Alta concentración (>30%) es un indicador de riesgo según las directrices de contratación de la OCDE. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
+    "content": "Calculado sobre 3.05M contratos de contratación pública (2002–2025) con montos superiores a 100K MXN. El porcentaje de captura es la participación del proveedor en el gasto total de la institución a través de todos los tipos de contrato. Alta concentración (>30%) es un indicador de riesgo según las directrices de contratación de la OCDE. El color de la celda refleja la intensidad de la captura — el rojo más profundo indica mayor dependencia de un solo proveedor."
   },
   "stats": {
     "topFlows": "FLUJOS ANALIZADOS",

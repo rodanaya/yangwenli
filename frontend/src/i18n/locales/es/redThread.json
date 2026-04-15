@@ -134,7 +134,7 @@
     "fullVendorProfile": "Perfil Completo del Proveedor",
     "exportPdf": "Exportar Informe PDF",
     "addToWorkspace": "Agregar al Espacio de Trabajo",
-    "methodologyNote": "Las puntuaciones de riesgo miden la similitud con patrones de corrupción documentados en 3.1M contratos federales mexicanos (2002–2025). Las puntuaciones son indicadores estadísticos para la clasificación de investigaciones — no son prueba de irregularidades. Modelo v0.6.5, validación estratificada por proveedor, AUC 0.798 (entrenamiento) / 0.828 (prueba). Ver",
+    "methodologyNote": "Las puntuaciones de riesgo miden la similitud con patrones de corrupción documentados en 3.05M contratos federales mexicanos (2002–2025). Las puntuaciones son indicadores estadísticos para la clasificación de investigaciones — no son prueba de irregularidades. Modelo v0.6.5, validación estratificada por proveedor, AUC 0.798 (entrenamiento) / 0.828 (prueba). Ver",
     "methodologyLink": "metodología completa"
   },
   "nav": {

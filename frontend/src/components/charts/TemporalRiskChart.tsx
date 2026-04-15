@@ -11,6 +11,7 @@
 
 import { memo, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import {
   ComposedChart,
   Area,
@@ -212,6 +213,7 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
   showScandals = true,
   className,
 }: TemporalRiskChartProps) {
+  const { t } = useTranslation('common')
   const gradId = 'temporalRiskGrad'
   const queryClient = useQueryClient()
 
@@ -278,12 +280,12 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           <p className="text-base font-bold text-text-primary">{title}</p>
         </div>
         <div className="flex flex-col items-center justify-center h-64 gap-3 text-center text-sm text-text-muted border border-border/30 rounded-lg bg-background-elevated/20">
-          <span>Failed to load risk trend data.</span>
+          <span>{t('temporal.failedToLoad', 'Failed to load risk trend data.')}</span>
           <button
             onClick={handleRetry}
             className="text-xs px-3 py-1.5 rounded border border-border/60 hover:border-accent/60 hover:text-accent transition-colors"
           >
-            Retry
+            {t('temporal.retry', 'Retry')}
           </button>
         </div>
       </div>
@@ -304,11 +306,11 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           {/* Data source badge */}
           {!isError && liveData ? (
             <span className="text-[10px] font-mono text-risk-low border border-risk-low/30 bg-risk-low/5 px-2 py-0.5 rounded">
-              Live data
+              {t('temporal.liveData', 'Live data')}
             </span>
           ) : (
             <span className="text-[10px] font-mono text-text-muted border border-border/30 bg-background-elevated/20 px-2 py-0.5 rounded">
-              Estimated
+              {t('temporal.estimated', 'Estimated')}
             </span>
           )}
 
@@ -326,11 +328,11 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
           {isError && (
             <button
               onClick={handleRetry}
-              title="Retry live data"
-              aria-label="Retry loading live data"
+              title={t('temporal.retryLive', 'Retry live data')}
+              aria-label={t('temporal.retryLive', 'Retry live data')}
               className="text-[10px] font-mono text-text-muted border border-border/30 px-2 py-0.5 rounded hover:text-accent hover:border-accent/40 transition-colors"
             >
-              Retry
+              {t('temporal.retry', 'Retry')}
             </button>
           )}
         </div>

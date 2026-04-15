@@ -198,7 +198,7 @@
     "singleBidPeak": "Pico: {{maxSB}}% · Máximo histórico de alto riesgo: {{maxHR}}%",
     "highRiskCard": "Tasa de Alto Riesgo",
     "highRiskDesc": "Contratos clasificados como riesgo crítico o alto por el modelo v0.6.5. Umbrales calibrados con ~748 casos documentados de corrupción.",
-    "highRiskAvg": "Riesgo promedio: {{val}}% en 3.1M de contratos",
+    "highRiskAvg": "Riesgo promedio: {{val}}% en 3.05M de contratos",
     "chartTitle": "Patrones Sistémicos — Cronología de 23 Años (2002–2025)",
     "nationalAvgLabel": "Prom. nacional 78%",
     "regimeShiftNote": "Líneas ámbar = cambios de régimen detectados estadísticamente (algoritmo PELT)",

@@ -2,7 +2,7 @@
   "hero": {
     "trackingLabel": "CATEGORÍAS DE GASTO",
     "subtitle": "Qué compra México — categorías de gasto en la contratación pública",
-    "detail": "72 categorías basadas en expresiones regulares clasifican 3.1M de contratos (2002-2025) por título con coincidencia sensible a acentos. Cobertura: ~84% específica, ~16% sin clasificar.",
+    "detail": "72 categorías basadas en expresiones regulares clasifican 3.05M de contratos (2002-2025) por título con coincidencia sensible a acentos. Cobertura: ~84% específica, ~16% sin clasificar.",
     "loading": "Cargando análisis de categorías de gasto…",
     "headline": "En Qué Gasta el Gobierno: Un Desglose por Categoría",
     "analysisSubtitle": "Análisis de los códigos Partida que revelan dónde se concentra el gasto público y el riesgo de corrupción",

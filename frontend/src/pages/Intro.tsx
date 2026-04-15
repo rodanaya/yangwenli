@@ -6,6 +6,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, ChevronDown, Shield, Search, BarChart3, FileWarning, Map, Users, TrendingUp, AlertTriangle, Clock } from 'lucide-react'
 import { analysisApi, phiApi, contractApi } from '@/api/client'
 import type { FastDashboardData, ContractListResponse } from '@/api/types'
+import { SECTOR_COLORS } from '@/lib/constants'
 import gsap from 'gsap'
 import { ScrollTrigger } from 'gsap/ScrollTrigger'
 
@@ -14,20 +15,6 @@ gsap.registerPlugin(ScrollTrigger)
 // ---------------------------------------------------------------------------
 // Constants
 // ---------------------------------------------------------------------------
-const SECTOR_COLORS: Record<string, string> = {
-  salud: '#dc2626',
-  educacion: '#3b82f6',
-  infraestructura: '#ea580c',
-  energia: '#eab308',
-  defensa: '#1e3a5f',
-  tecnologia: '#8b5cf6',
-  hacienda: '#16a34a',
-  gobernacion: '#be123c',
-  agricultura: '#22c55e',
-  ambiente: '#10b981',
-  trabajo: '#f97316',
-  otros: '#64748b',
-}
 
 const GRADE_COLORS: Record<string, { text: string; bg: string; border: string }> = {
   'S':  { text: '#34d399', bg: 'rgba(16,185,129,0.10)',  border: 'rgba(52,211,153,0.25)' },

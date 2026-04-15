@@ -11,6 +11,7 @@
 
 import { useMemo, useState, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, getLocale } from '@/lib/utils'
@@ -28,11 +29,8 @@ const ADMINS = [
 
 type CellMetric = 'risk' | 'high_risk_pct' | 'direct_award_pct'
 
-const METRIC_LABELS: Record<CellMetric, string> = {
-  risk: 'Avg Risk Score',
-  high_risk_pct: 'High-Risk %',
-  direct_award_pct: 'Direct Award %',
-}
+// METRIC_LABELS now computed inside component to support i18n
+type MetricLabels = Record<CellMetric, string>
 
 /**
  * Map a value to a risk-appropriate background color.
@@ -66,8 +64,15 @@ interface TooltipData {
 }
 
 export function SectorRiskHeatmap() {
+  const { t } = useTranslation('common')
   const [metric, setMetric] = useState<CellMetric>('risk')
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
+
+  const METRIC_LABELS: MetricLabels = {
+    risk: t('heatmap.avgRiskScore', 'Avg Risk Score'),
+    high_risk_pct: t('heatmap.highRiskPct', 'High-Risk %'),
+    direct_award_pct: t('heatmap.directAwardPct', 'Direct Award %'),
+  }
 
   const { data, isLoading } = useQuery({
     queryKey: ['sector-year-breakdown'],
@@ -258,10 +263,10 @@ export function SectorRiskHeatmap() {
               </span>
             </p>
             <p className="text-zinc-500 font-mono">
-              Contracts: <span className="text-zinc-300">{tooltip.contracts.toLocaleString(getLocale())}</span>
+              {t('heatmap.tooltipContracts', 'Contracts')}: <span className="text-zinc-300">{tooltip.contracts.toLocaleString(getLocale())}</span>
             </p>
             <p className="text-zinc-500 font-mono">
-              Value: <span className="text-zinc-300">{formatCompactMXN(tooltip.totalValue)}</span>
+              {t('heatmap.tooltipValue', 'Value')}: <span className="text-zinc-300">{formatCompactMXN(tooltip.totalValue)}</span>
             </p>
           </div>
         </div>
@@ -269,26 +274,26 @@ export function SectorRiskHeatmap() {
 
       {/* Color legend using RISK_COLORS */}
       <div className="flex items-center gap-3 pt-2 border-t border-zinc-800">
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">Low</span>
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
         <div className="flex gap-[2px]">
           {[
-            { color: '#14532d', label: 'Low' },
-            { color: '#854d0e', label: 'Medium' },
-            { color: '#9a3412', label: 'High' },
-            { color: '#991b1b', label: 'Critical' },
+            { color: '#14532d', labelKey: 'heatmap.legendLow', fallback: 'Low' },
+            { color: '#854d0e', labelKey: 'heatmap.legendMedium', fallback: 'Medium' },
+            { color: '#9a3412', labelKey: 'heatmap.legendHigh', fallback: 'High' },
+            { color: '#991b1b', labelKey: 'heatmap.legendCritical', fallback: 'Critical' },
           ].map((stop) => (
             <div
-              key={stop.label}
+              key={stop.labelKey}
               className="w-6 h-3 rounded-[1px]"
               style={{ backgroundColor: stop.color }}
-              title={stop.label}
+              title={t(stop.labelKey, stop.fallback)}
             />
           ))}
         </div>
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">High</span>
+        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">{t('heatmap.legendHigh', 'High')}</span>
         <div className="flex items-center gap-1 ml-3">
           <div className="w-4 h-3 rounded-[1px] bg-zinc-800" />
-          <span className="text-[10px] font-mono text-zinc-600">No data</span>
+          <span className="text-[10px] font-mono text-zinc-600">{t('heatmap.noData', 'No data')}</span>
         </div>
       </div>
     </div>

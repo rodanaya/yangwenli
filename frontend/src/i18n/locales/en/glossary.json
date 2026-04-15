@@ -97,7 +97,7 @@
   },
   "compranet": {
     "title": "COMPRANET",
-    "description": "Mexico's federal electronic procurement platform, operational since 1996 and mandatory for all purchases above threshold. Abolished by Congress on April 10, 2025, replaced by ComprasMX. Before the formal replacement, 1.9 million contracts from 2012–2023 were already removed from public access in August 2024. Source of all 3.1M contracts in this database."
+    "description": "Mexico's federal electronic procurement platform, operational since 1996 and mandatory for all purchases above threshold. Abolished by Congress on April 10, 2025, replaced by ComprasMX. Before the formal replacement, 1.9 million contracts from 2012–2023 were already removed from public access in August 2024. Source of all 3.05M contracts in this database."
   },
   "licitacionPublica": {
     "title": "Licitación Pública (Open Tender)",

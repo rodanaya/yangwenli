@@ -92,7 +92,7 @@
   "dismissBanner": "Cerrar anuncio",
   "footerBrand": "RUBLI v0.6.5",
   "footerTagline": "Plataforma de Transparencia en Contrataciones",
-  "footerStats": "3.1M contratos · 9.9T MXN · 2002-2025",
+  "footerStats": "3.05M contratos · 9.9T MXN · 2002-2025",
   "skipToContent": "Saltar al contenido principal",
   "verified": "verificado",
   "readMethodology": "Leer metodología →",
@@ -517,5 +517,37 @@
       "medium": "Medio",
       "low": "Bajo"
     }
+  },
+  "contractExplain": {
+    "explain": "Explicar esta puntuación de riesgo",
+    "generating": "Generando explicación...",
+    "notConfigured": "Explicación por IA no configurada. Establece ANTHROPIC_API_KEY en el servidor.",
+    "couldNotLoad": "No se pudo cargar la explicación. Intenta más tarde."
+  },
+  "alertFeed": {
+    "recentAlerts": "Alertas recientes",
+    "failedToLoad": "Error al cargar alertas",
+    "noAlerts": "Sin alertas críticas en los últimos {{days}} días",
+    "unknownVendor": "Proveedor desconocido",
+    "viewAll": "Ver todas las investigaciones"
+  },
+  "temporal": {
+    "failedToLoad": "Error al cargar datos de tendencia de riesgo.",
+    "retry": "Reintentar",
+    "retryLive": "Reintentar datos en vivo",
+    "liveData": "Datos en vivo",
+    "estimated": "Estimado"
+  },
+  "heatmap": {
+    "avgRiskScore": "Puntuación promedio de riesgo",
+    "highRiskPct": "% Alto Riesgo",
+    "directAwardPct": "% Adjudicación directa",
+    "legendLow": "Bajo",
+    "legendMedium": "Medio",
+    "legendHigh": "Alto",
+    "legendCritical": "Crítico",
+    "noData": "Sin datos",
+    "tooltipContracts": "Contratos",
+    "tooltipValue": "Valor"
   }
 }
