@@ -301,5 +301,34 @@
   "ctaAriaLink": "Abrir cola ARIA",
   "ctaSectors": "Explorar por Sector",
   "ctaSectorsDesc": "12 sectores federales con perfiles de riesgo, análisis de concentración y redes de proveedores.",
-  "ctaSectorsLink": "Ver sectores"
+  "ctaSectorsLink": "Ver sectores",
+  "stories": {
+    "source": "Fuente",
+    "goToSlide": "Ir a diapositiva {{n}}",
+    "daRecord": {
+      "statLabel": "de contratos sin licitación — 2023",
+      "headline": "El año más opaco en 23 años de datos",
+      "body": "En el último año completo del gobierno de López Obrador, 82 de cada 100 pesos contratados fueron a empresas que no tuvieron que competir. Es 3.3 veces el límite recomendado por la OCDE."
+    },
+    "ghostCompanies": {
+      "statLabel": "empresas fantasma identificadas post-2018",
+      "headline": "Nacieron con la 4T. Ganaron sin competir.",
+      "body": "Empresas constituidas después de 2018, sin historial previo de contratos federales, que obtuvieron más del 95 % de sus contratos por adjudicación directa y acumularon más de 10 millones de pesos cada una."
+    },
+    "segalmex": {
+      "statLabel": "MXN desaparecidos — SEGALMEX",
+      "headline": "El granero vacío de la Cuarta Transformación",
+      "body": "SEGALMEX, creada en 2019 para alimentar a los pobres, operó con una tasa de adjudicación directa del 93.4 %. La Auditoría Superior documentó un faltante de 15 mil millones de pesos. Los 22 proveedores principales promedian riesgo crítico en el modelo RUBLI."
+    },
+    "efos": {
+      "statLabel": "RFC en lista EFOS del SAT — facturación simulada",
+      "headline": "El SAT los confirmó. El gobierno los contrató igual.",
+      "body": "El artículo 69-B del Código Fiscal obliga a publicar las empresas que emiten facturas apócrifas. A marzo de 2026 hay 13,960 en estatus 'definitivo'. RUBLI identificó que decenas tenían contratos gubernamentales activos después de aparecer en la lista."
+    },
+    "riskModel": {
+      "statLabel": "contratos en nivel crítico o alto riesgo",
+      "headline": "Un sistema que señala. Faltan manos que investiguen.",
+      "body": "El modelo RUBLI v0.6.5 (AUC 0.828) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización."
+    }
+  }
 }

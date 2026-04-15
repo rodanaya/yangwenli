@@ -301,5 +301,34 @@
   "ctaAriaLink": "Open ARIA queue",
   "ctaSectors": "Explore by Sector",
   "ctaSectorsDesc": "12 federal sectors with risk profiles, concentration analysis, and vendor networks.",
-  "ctaSectorsLink": "View sectors"
+  "ctaSectorsLink": "View sectors",
+  "stories": {
+    "source": "Source",
+    "goToSlide": "Go to slide {{n}}",
+    "daRecord": {
+      "statLabel": "of contracts without competitive bidding — 2023",
+      "headline": "The most opaque year in 23 years of data",
+      "body": "In the final full year of López Obrador's government, 82 of every 100 pesos in contracts went to companies that faced no competition — 3.3 times the OECD's recommended limit of 25%."
+    },
+    "ghostCompanies": {
+      "statLabel": "ghost companies identified post-2018",
+      "headline": "Born in the 4T era. Won without competing.",
+      "body": "Companies incorporated after 2018, with no prior federal contracting history, obtained more than 95% of their contracts through direct award and each accumulated over 10 million pesos."
+    },
+    "segalmex": {
+      "statLabel": "MXN missing — SEGALMEX",
+      "headline": "The empty granary of the Fourth Transformation",
+      "body": "SEGALMEX, created in 2019 to feed the poor, operated with a 93.4% direct-award rate. The Superior Audit Office documented a 15 billion-peso shortfall. Its 22 main vendors average critical risk scores in the RUBLI model."
+    },
+    "efos": {
+      "statLabel": "RFCs on SAT EFOS list — fictitious invoicing",
+      "headline": "The SAT confirmed it. The government hired them anyway.",
+      "body": "Article 69-B of the Tax Code requires publishing companies that issue fictitious invoices. As of March 2026, 13,960 are in 'definitive' status. RUBLI found that dozens held active government contracts after appearing on the list."
+    },
+    "riskModel": {
+      "statLabel": "contracts at critical or high risk level",
+      "headline": "A system that flags. Investigators still needed.",
+      "body": "The RUBLI v0.6.5 model (AUC 0.828) assigns critical or high risk to 412,000 contracts. Each one is a lead. None is a verdict. They are the starting point for journalism and accountability."
+    }
+  }
 }

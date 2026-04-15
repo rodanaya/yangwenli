@@ -963,24 +963,15 @@ export default function Intro() {
 
     const triggers: ScrollTrigger[] = []
 
+    // Quiet sections: only trigger the setter (counter/slot animations).
+    // No opacity manipulation — content stays visible, avoiding dead-space on load.
     for (const { ref, setter } of quietSections) {
       if (!ref.current) continue
-      const children = ref.current.querySelectorAll('.gsap-reveal')
-      gsap.set(children, { opacity: 0, y: 0 })
       const st = ScrollTrigger.create({
         trigger: ref.current,
         start: 'top 80%',
         once: true,
-        onEnter: () => {
-          setter(true)
-          gsap.to(children, {
-            opacity: 1,
-            y: 0,
-            duration: 0.4,
-            ease: 'power1.out',
-            stagger: 0.06,
-          })
-        },
+        onEnter: () => { setter(true) },
       })
       triggers.push(st)
     }
@@ -988,44 +979,45 @@ export default function Intro() {
     for (const { ref, setter } of theatricalSections) {
       if (!ref.current) continue
       const children = ref.current.querySelectorAll('.gsap-reveal')
-      gsap.set(children, { opacity: 0, y: 80 })
-      const st = ScrollTrigger.create({
-        trigger: ref.current,
-        start: 'top 80%',
-        once: true,
-        onEnter: () => {
-          setter(true)
-          gsap.to(children, {
-            opacity: 1,
-            y: 0,
-            duration: 0.9,
-            ease: 'power3.out',
-            stagger: 0.12,
-          })
+      // immediateRender: false → elements stay at natural opacity until trigger fires
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: ref.current,
+          start: 'top 80%',
+          once: true,
+          onEnter: () => { setter(true) },
         },
       })
-      triggers.push(st)
+      tl.from(children, {
+        opacity: 0,
+        y: 40,
+        duration: 0.7,
+        ease: 'power2.out',
+        stagger: 0.1,
+        immediateRender: false,
+      })
+      if (tl.scrollTrigger) triggers.push(tl.scrollTrigger)
     }
 
-    // Section 6 (CTA) - theatrical (trigger as soon as section enters viewport)
+    // Section 6 (CTA) - theatrical, fires as soon as section enters viewport
     if (s6Ref.current) {
       const children6 = s6Ref.current.querySelectorAll('.gsap-reveal')
-      gsap.set(children6, { opacity: 0, y: 80 })
-      const st6 = ScrollTrigger.create({
-        trigger: s6Ref.current,
-        start: 'top bottom',
-        once: true,
-        onEnter: () => {
-          gsap.to(children6, {
-            opacity: 1,
-            y: 0,
-            duration: 0.9,
-            ease: 'power3.out',
-            stagger: 0.12,
-          })
+      const tl6 = gsap.timeline({
+        scrollTrigger: {
+          trigger: s6Ref.current,
+          start: 'top bottom',
+          once: true,
         },
       })
-      triggers.push(st6)
+      tl6.from(children6, {
+        opacity: 0,
+        y: 40,
+        duration: 0.7,
+        ease: 'power2.out',
+        stagger: 0.1,
+        immediateRender: false,
+      })
+      if (tl6.scrollTrigger) triggers.push(tl6.scrollTrigger)
     }
 
     return () => {
@@ -2033,9 +2025,8 @@ const FeaturedCase = forwardRef<
                     backgroundColor: 'rgba(255,255,255,0.04)',
                     borderLeft: `3px solid ${CRIMSON}`,
                     color: 'rgba(255,255,255,0.6)',
-                    opacity: inView ? 1 : 0,
                     transform: inView ? 'translateY(0)' : 'translateY(8px)',
-                    transition: `opacity 0.4s ease ${1.4 + i * 0.08}s, transform 0.4s ease ${1.4 + i * 0.08}s`,
+                    transition: `transform 0.4s ease ${1.4 + i * 0.08}s`,
                   }}
                 >
                   {pill}

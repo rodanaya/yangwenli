@@ -6,10 +6,11 @@
  * reveals, mini data visuals, auto-advance every 8s.
  */
 
-import { useState, useEffect, useRef, useCallback } from 'react'
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react'
 import { AnimatePresence, motion } from 'framer-motion'
 import { ChevronLeft, ChevronRight, Pause, Play } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import type { TFunction } from 'i18next'
 
 // ---------------------------------------------------------------------------
 // Slide definitions — static data, no API needed
@@ -32,76 +33,78 @@ interface Slide {
   source: string
 }
 
-const SLIDES: Slide[] = [
-  {
-    id: 'da-record',
-    chapter: '01 / 05',
-    statRaw: 81.9,
-    statSuffix: '%',
-    statDecimals: 1,
-    statLabel: 'de contratos sin licitación — 2023',
-    headline: 'El año más opaco en 23 años de datos',
-    body: 'En el último año completo del gobierno de López Obrador, 82 de cada 100 pesos contratados fueron a empresas que no tuvieron que competir. Es 3.3 veces el límite recomendado por la OCDE.',
-    color: '#ef4444',
-    visual: 'bar-trend',
-    visualData: [62.7, 68.4, 73.1, 76.2, 77.8, 78.1, 80.0, 79.1, 81.9],
-    visualLabels: ["'10", "'13", "'16", "'18", "'19", "'20", "'21", "'22", "'23"],
-    source: 'COMPRANET 2002-2025 · RUBLI v0.6.5',
-  },
-  {
-    id: 'ghost-companies',
-    chapter: '02 / 05',
-    statRaw: 1253,
-    statLabel: 'empresas fantasma identificadas post-2018',
-    headline: 'Nacieron con la 4T. Ganaron sin competir.',
-    body: 'Empresas constituidas después de 2018, sin historial previo de contratos federales, que obtuvieron más del 95 % de sus contratos por adjudicación directa y acumularon más de 10 millones de pesos cada una.',
-    color: '#f97316',
-    visual: 'dot-grid',
-    visualData: [1253],
-    source: 'Ghost Company Companion · RUBLI heurística',
-  },
-  {
-    id: 'segalmex',
-    chapter: '03 / 05',
-    statRaw: 15,
-    statPrefix: '$',
-    statSuffix: 'B',
-    statLabel: 'MXN desaparecidos — SEGALMEX',
-    headline: 'El granero vacío de la Cuarta Transformación',
-    body: 'SEGALMEX, creada en 2019 para alimentar a los pobres, operó con una tasa de adjudicación directa del 93.4 %. La Auditoría Superior documentó un faltante de 15 mil millones de pesos. Los 22 proveedores principales promedian riesgo crítico en el modelo RUBLI.',
-    color: '#eab308',
-    visual: 'bar-sector',
-    visualData: [93.4, 78.9, 80.0, 71.2, 65.3],
-    visualLabels: ['Agric.', 'Salud', 'Gob.', 'Infra.', 'Otros'],
-    source: 'ASF · COMPRANET · RUBLI caso #2',
-  },
-  {
-    id: 'efos',
-    chapter: '04 / 05',
-    statRaw: 13960,
-    statLabel: 'RFC en lista EFOS del SAT — facturación simulada',
-    headline: 'El SAT los confirmó. El gobierno los contrató igual.',
-    body: 'El artículo 69-B del Código Fiscal obliga a publicar las empresas que emiten facturas apócrifas. A marzo de 2026 hay 13,960 en estatus "definitivo". RUBLI identificó que decenas tenían contratos gubernamentales activos después de aparecer en la lista.',
-    color: '#8b5cf6',
-    visual: 'flag-list',
-    visualData: [13960, 544, 23704, 692],
-    visualLabels: ['EFOS SAT', 'SFP sancionados', 'RUPC excluidos', 'ASF observaciones'],
-    source: 'SAT art. 69-B · SFP · RUPC · ASF — marzo 2026',
-  },
-  {
-    id: 'risk-model',
-    chapter: '05 / 05',
-    statRaw: 412845,
-    statLabel: 'contratos en nivel crítico o alto riesgo',
-    headline: 'Un sistema que señala. Faltan manos que investiguen.',
-    body: 'El modelo RUBLI v0.6.5 (AUC 0.828) asigna riesgo crítico o alto a 412 mil contratos. Cada uno es una pista. Ninguno es un veredicto. Son el punto de partida para el periodismo y la fiscalización.',
-    color: '#dc2626',
-    visual: 'ring',
-    visualData: [6.0, 7.5, 26.8, 59.7],
-    visualLabels: ['Crítico 6.0%', 'Alto 7.5%', 'Medio 26.8%', 'Bajo 59.7%'],
-    source: 'RUBLI modelo v0.6.5 · 3,051,294 contratos',
-  },
-]
+function getSlides(t: TFunction): Slide[] {
+  return [
+    {
+      id: 'da-record',
+      chapter: '01 / 05',
+      statRaw: 81.9,
+      statSuffix: '%',
+      statDecimals: 1,
+      statLabel: t('stories.daRecord.statLabel'),
+      headline: t('stories.daRecord.headline'),
+      body: t('stories.daRecord.body'),
+      color: '#ef4444',
+      visual: 'bar-trend',
+      visualData: [62.7, 68.4, 73.1, 76.2, 77.8, 78.1, 80.0, 79.1, 81.9],
+      visualLabels: ["'10", "'13", "'16", "'18", "'19", "'20", "'21", "'22", "'23"],
+      source: 'COMPRANET 2002-2025 · RUBLI v0.6.5',
+    },
+    {
+      id: 'ghost-companies',
+      chapter: '02 / 05',
+      statRaw: 1253,
+      statLabel: t('stories.ghostCompanies.statLabel'),
+      headline: t('stories.ghostCompanies.headline'),
+      body: t('stories.ghostCompanies.body'),
+      color: '#f97316',
+      visual: 'dot-grid',
+      visualData: [1253],
+      source: 'Ghost Company Companion · RUBLI heurística',
+    },
+    {
+      id: 'segalmex',
+      chapter: '03 / 05',
+      statRaw: 15,
+      statPrefix: '$',
+      statSuffix: 'B',
+      statLabel: t('stories.segalmex.statLabel'),
+      headline: t('stories.segalmex.headline'),
+      body: t('stories.segalmex.body'),
+      color: '#eab308',
+      visual: 'bar-sector',
+      visualData: [93.4, 78.9, 80.0, 71.2, 65.3],
+      visualLabels: ['Agric.', 'Salud', 'Gob.', 'Infra.', 'Otros'],
+      source: 'ASF · COMPRANET · RUBLI caso #2',
+    },
+    {
+      id: 'efos',
+      chapter: '04 / 05',
+      statRaw: 13960,
+      statLabel: t('stories.efos.statLabel'),
+      headline: t('stories.efos.headline'),
+      body: t('stories.efos.body'),
+      color: '#8b5cf6',
+      visual: 'flag-list',
+      visualData: [13960, 544, 23704, 692],
+      visualLabels: ['EFOS SAT', 'SFP sancionados', 'RUPC excluidos', 'ASF observaciones'],
+      source: 'SAT art. 69-B · SFP · RUPC · ASF — marzo 2026',
+    },
+    {
+      id: 'risk-model',
+      chapter: '05 / 05',
+      statRaw: 412845,
+      statLabel: t('stories.riskModel.statLabel'),
+      headline: t('stories.riskModel.headline'),
+      body: t('stories.riskModel.body'),
+      color: '#dc2626',
+      visual: 'ring',
+      visualData: [6.0, 7.5, 26.8, 59.7],
+      visualLabels: ['Crítico 6.0%', 'Alto 7.5%', 'Medio 26.8%', 'Bajo 59.7%'],
+      source: 'RUBLI modelo v0.6.5 · 3,051,294 contratos',
+    },
+  ]
+}
 
 const RING_COLORS = ['#dc2626', '#ea580c', '#eab308', '#16a34a']
 const AUTO_MS = 8000
@@ -312,16 +315,18 @@ export default function StoryInfographic() {
   const [direction, setDirection] = useState(1)
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null)
 
+  const slides = useMemo(() => getSlides(t), [t])
+
   const go = useCallback((next: number) => {
     setDirection(next > idx ? 1 : -1)
     setIdx(next)
   }, [idx])
 
-  const prev = () => go((idx - 1 + SLIDES.length) % SLIDES.length)
+  const prev = () => go((idx - 1 + slides.length) % slides.length)
   const goNext = useCallback(() => {
     setDirection(1)
-    setIdx(i => (i + 1) % SLIDES.length)
-  }, [])
+    setIdx(i => (i + 1) % slides.length)
+  }, [slides.length])
 
   // auto-advance — goNext uses functional setIdx so interval never needs to reset on idx change
   useEffect(() => {
@@ -330,7 +335,7 @@ export default function StoryInfographic() {
     return () => { if (timerRef.current) clearInterval(timerRef.current) }
   }, [playing, goNext])
 
-  const slide = SLIDES[idx]
+  const slide = slides[idx]
 
   const variants = {
     enter:  (d: number) => ({ x: d > 0 ? 60 : -60, opacity: 0 }),
@@ -416,18 +421,18 @@ export default function StoryInfographic() {
 
             {/* Source */}
             <div className="text-[9px] text-zinc-700 font-mono border-t border-zinc-900 pt-2">
-              Fuente: {slide.source}
+              {t('stories.source')}: {slide.source}
             </div>
           </motion.div>
         </AnimatePresence>
 
         {/* Progress dots */}
         <div className="flex items-center justify-center gap-2 mt-4">
-          {SLIDES.map((s, i) => (
+          {slides.map((s, i) => (
             <button
               key={s.id}
               onClick={() => go(i)}
-              aria-label={`Ir a diapositiva ${i + 1}`}
+              aria-label={t('stories.goToSlide', { n: i + 1 })}
               className="relative h-1.5 rounded-full transition-all duration-300 overflow-hidden"
               style={{ width: i === idx ? 24 : 8, backgroundColor: 'rgba(255,255,255,0.12)' }}
             >
