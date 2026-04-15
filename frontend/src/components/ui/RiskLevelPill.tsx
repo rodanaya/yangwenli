@@ -27,10 +27,10 @@ const RISK_STYLES = {
     dot: '#fb923c',
   },
   medium: {
-    bg: 'bg-amber-500/15',
-    text: 'text-amber-400',
-    border: 'border-amber-500/25',
-    dot: '#fbbf24',
+    bg: 'bg-amber-100 dark:bg-amber-500/15',
+    text: 'text-amber-800 dark:text-amber-400',
+    border: 'border-amber-300 dark:border-amber-500/25',
+    dot: '#d97706',
   },
   low: {
     bg: 'bg-emerald-500/15',

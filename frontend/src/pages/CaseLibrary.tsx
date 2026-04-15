@@ -30,7 +30,7 @@ const FRAUD_TYPE_COLORS: Record<string, string> = {
   conflict_of_interest: 'border-purple-500/60 text-purple-400 bg-purple-500/10',
   embezzlement:         'border-rose-500/60 text-rose-400 bg-rose-500/10',
   bribery:              'border-pink-500/60 text-pink-400 bg-pink-500/10',
-  procurement_fraud:    'border-yellow-500/60 text-yellow-400 bg-yellow-500/10',
+  procurement_fraud:    'border-amber-400 text-amber-800 bg-amber-100/50 dark:border-yellow-500/60 dark:text-yellow-400 dark:bg-yellow-500/10',
   monopoly:             'border-blue-500/60 text-blue-400 bg-blue-500/10',
   emergency_fraud:      'border-cyan-500/60 text-cyan-400 bg-cyan-500/10',
   tender_rigging:       'border-indigo-500/60 text-indigo-400 bg-indigo-500/10',
@@ -123,7 +123,7 @@ function DropdownChip({
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+          <button type="button" className="fixed inset-0 z-40 cursor-default appearance-none bg-transparent border-none p-0" onClick={() => setOpen(false)} aria-label="Close filter" />
           <div className="absolute top-full left-0 mt-1 z-50 w-56 rounded-lg border border-zinc-700 bg-zinc-900 shadow-2xl py-1 max-h-64 overflow-y-auto">
             <button
               onClick={() => { onSelect(undefined); setOpen(false) }}
@@ -385,7 +385,7 @@ function CaseCard({
           )}
           <span className={`flex items-center gap-1 ${
             visibility === 'high' ? 'text-green-500' :
-            visibility === 'partial' ? 'text-yellow-500' : 'text-zinc-600'
+            visibility === 'partial' ? 'text-amber-700 dark:text-yellow-400' : 'text-zinc-600'
           }`}>
             <VisIcon className="h-3 w-3" />
             {visibility === 'high' ? t('card.compranetFull') :

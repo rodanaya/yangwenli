@@ -136,6 +136,7 @@
     "copyFailed": "Copy failed",
     "linkCopied": "Link copied"
   },
+  "pre2010Banner": "Contracts from 2002–2010 have limited data quality (RFC <1%). Risk indicators for this period are directional estimates only.",
   "empty": "No contracts found matching your filters.",
   "emptyInitial": "3.1 Million Contracts · 2002–2025",
   "emptyInitialDesc": "Search any contract, institution, or vendor name to begin. Or use the filters above to browse by sector, year, or risk level.",

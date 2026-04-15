@@ -17,14 +17,14 @@ import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
 // ── Severity colours ──────────────────────────────────────────────────────────
 const SEVERITY_COLORS: Record<number, string> = {
   1: 'bg-muted text-muted-foreground',
-  2: 'bg-yellow-500/20 text-yellow-400',
+  2: 'bg-amber-100 text-amber-800 dark:bg-yellow-500/20 dark:text-yellow-400',
   3: 'bg-orange-500/20 text-orange-400',
   4: 'bg-red-500/20 text-red-400',
 }
 
 const LEGAL_STATUS_COLORS: Record<string, string> = {
   impunity: 'border-red-500/50 text-red-400',
-  investigation: 'border-yellow-500/50 text-yellow-400',
+  investigation: 'border-amber-400 text-amber-800 dark:border-yellow-500/50 dark:text-yellow-400',
   prosecuted: 'border-orange-500/50 text-orange-400',
   convicted: 'border-green-500/50 text-green-400',
   acquitted: 'border-blue-500/50 text-blue-400',
@@ -40,7 +40,7 @@ const FRAUD_TYPE_COLORS: Record<string, { border: string; text: string; bg: stri
   conflict_of_interest: { border: 'border-violet-500/60', text: 'text-violet-400', bg: 'bg-violet-500/10' },
   embezzlement:         { border: 'border-amber-500/60',  text: 'text-amber-400',  bg: 'bg-amber-500/10' },
   bribery:              { border: 'border-rose-500/60',   text: 'text-rose-400',   bg: 'bg-rose-500/10' },
-  procurement_fraud:    { border: 'border-yellow-500/60', text: 'text-yellow-400', bg: 'bg-yellow-500/10' },
+  procurement_fraud:    { border: 'border-amber-400 dark:border-yellow-500/60', text: 'text-amber-800 dark:text-yellow-400', bg: 'bg-amber-100/50 dark:bg-yellow-500/10' },
   monopoly:             { border: 'border-blue-500/60',   text: 'text-blue-400',   bg: 'bg-blue-500/10' },
   emergency_fraud:      { border: 'border-cyan-500/60',   text: 'text-cyan-400',   bg: 'bg-cyan-500/10' },
   tender_rigging:       { border: 'border-indigo-500/60', text: 'text-indigo-400', bg: 'bg-indigo-500/10' },
@@ -250,7 +250,7 @@ function SimilarCaseCard({ cas, onClick }: { cas: { name_en: string; slug: strin
         <span className={cn('px-1.5 py-0.5 rounded font-bold',
           cas.severity >= 4 ? 'bg-red-500/20 text-red-400'
           : cas.severity >= 3 ? 'bg-orange-500/20 text-orange-400'
-          : 'bg-yellow-500/20 text-yellow-400'
+          : 'bg-amber-100 text-amber-800 dark:bg-yellow-500/20 dark:text-yellow-400'
         )}>
           {t(`severity.${cas.severity}`)}
         </span>

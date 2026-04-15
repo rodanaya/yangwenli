@@ -65,6 +65,27 @@ curl -s http://localhost:8001/api/v1/stats/database | python3 -m json.tool | gre
 
 ---
 
+## 3. Off-Site Backup (optional second copy)
+
+The `rubli-backup-cron` container creates daily on-VPS snapshots in the `rubli_backups` Docker volume (7-day rotation). To push copies off-site:
+
+```bash
+# Configure once (add to /etc/environment or .bashrc on the VPS):
+export RUBLI_BACKUP_BACKEND=s3          # or: rsync | rclone
+export RUBLI_S3_BUCKET=my-rubli-backups
+export AWS_ACCESS_KEY_ID=xxx
+export AWS_SECRET_ACCESS_KEY=yyy
+# export RUBLI_S3_ENDPOINT=https://xxx.r2.cloudflarestorage.com  # for R2/B2
+
+# Run manually or add to crontab (03:00 UTC daily):
+# 0 3 * * * /opt/rubli/scripts/offsite-backup.sh >> /var/log/rubli-offsite-backup.log 2>&1
+/opt/rubli/scripts/offsite-backup.sh
+```
+
+See `scripts/offsite-backup.sh` for full configuration options (S3, rsync, rclone).
+
+---
+
 ## 3. Full Service Restart
 
 ```bash

@@ -207,6 +207,10 @@ export function Contracts() {
   const [activePreset, setActivePreset] = useState<string | null>(null)
   // #9 — toggle for ensemble anomaly score column
   const [showAnomalyScore, setShowAnomalyScore] = useState(false)
+  // Pre-2010 data quality banner dismissal (sessionStorage so it resets per session)
+  const [pre2010Dismissed, setPre2010Dismissed] = useState(
+    () => sessionStorage.getItem('rubli_pre2010_dismissed') === '1'
+  )
   const { open: openEntityDrawer } = useEntityDrawer()
 
   const {
@@ -611,6 +615,28 @@ export function Contracts() {
           />
         </div>
       </div>
+
+      {/* Pre-2010 data quality banner — shown when year filter is ≤2010 or no year filter (includes 2002+ data) */}
+      {!pre2010Dismissed && (!filters.year || filters.year <= 2010) && (
+        <div
+          className="flex items-start gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-800"
+          role="alert"
+          aria-live="polite"
+        >
+          <span className="mt-0.5 text-base leading-none select-none" aria-hidden>ⓘ</span>
+          <p className="flex-1 text-xs leading-relaxed">{t('pre2010Banner')}</p>
+          <button
+            onClick={() => {
+              sessionStorage.setItem('rubli_pre2010_dismissed', '1')
+              setPre2010Dismissed(true)
+            }}
+            aria-label="Dismiss data quality notice"
+            className="ml-2 shrink-0 text-amber-600 hover:text-amber-800 transition-colors"
+          >
+            <X className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* Full-width search bar */}
       <div className="relative">

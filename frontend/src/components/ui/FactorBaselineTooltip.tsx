@@ -26,7 +26,7 @@ function getZScoreColor(z: number): string {
   const abs = Math.abs(z)
   if (abs > 3) return 'text-red-500'
   if (abs > 2) return 'text-red-400'
-  if (abs > 1) return 'text-yellow-500'
+  if (abs > 1) return 'text-amber-700 dark:text-yellow-400'
   return 'text-emerald-500'
 }
 
@@ -34,7 +34,7 @@ function getZScoreBg(z: number): string {
   const abs = Math.abs(z)
   if (abs > 3) return 'bg-red-500'
   if (abs > 2) return 'bg-red-400'
-  if (abs > 1) return 'bg-yellow-500'
+  if (abs > 1) return 'bg-amber-500'
   return 'bg-emerald-500'
 }
 

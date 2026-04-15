@@ -180,6 +180,14 @@ export function WelcomeModal() {
     }
   }, [location.pathname])
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') handleDismiss()
+    }
+    document.addEventListener('keydown', handleKeyDown)
+    return () => document.removeEventListener('keydown', handleKeyDown)
+  }, [])  // eslint-disable-line react-hooks/exhaustive-deps
+
   const handleDismiss = () => {
     localStorage.setItem(STORAGE_KEY, 'true')
     setOpen(false)

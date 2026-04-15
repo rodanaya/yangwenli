@@ -1,6 +1,8 @@
 /* Google Fonts loaded via <link> in index.html (non-blocking) */
 @import "tailwindcss";
 @plugin "@tailwindcss/typography";
+/* Enable class-based dark mode so dark: variants respond to html.dark */
+@custom-variant dark (&:where(.dark, .dark *));
 
 /* RUBLI Editorial Design System — Investigative Journalism Platform */
 @theme {

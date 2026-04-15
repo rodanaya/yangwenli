@@ -16,6 +16,18 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.gzip import GZipMiddleware
 
+import sentry_sdk
+
+_SENTRY_DSN = os.environ.get("SENTRY_DSN", "")
+if _SENTRY_DSN:
+    sentry_sdk.init(
+        dsn=_SENTRY_DSN,
+        traces_sample_rate=0.05,   # 5% of transactions
+        profiles_sample_rate=0.01,
+        environment=os.environ.get("RUBLI_ENV", "dev"),
+        release=os.environ.get("GIT_COMMIT", "unknown"),
+    )
+
 # Configure structured logging FIRST (before any logger calls)
 from .middleware.structlog_config import configure as configure_logging
 configure_logging()

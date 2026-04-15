@@ -136,6 +136,7 @@
     "copyFailed": "Error al copiar",
     "linkCopied": "Enlace copiado"
   },
+  "pre2010Banner": "Los contratos de 2002–2010 tienen cobertura limitada (RFC <1%). Los indicadores de riesgo para este período son estimaciones orientativas.",
   "empty": "No se encontraron contratos con los filtros seleccionados.",
   "emptyInitial": "3.1 Millones de Contratos · 2002–2025",
   "emptyInitialDesc": "Busque cualquier contrato, institución o nombre de proveedor para comenzar. O use los filtros de arriba para explorar por sector, año o nivel de riesgo.",

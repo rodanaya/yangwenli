@@ -53,7 +53,8 @@
     "recharts": "^3.6.0",
     "scrollama": "^3.2.0",
     "tailwind-merge": "^3.4.0",
-    "zustand": "^5.0.10"
+    "zustand": "^5.0.10",
+    "@sentry/react": "^8.0.0"
   },
   "overrides": {
     "d3-color": "^3.1.0"
