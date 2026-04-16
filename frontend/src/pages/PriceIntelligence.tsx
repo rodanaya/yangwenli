@@ -21,16 +21,7 @@ import { useState, useMemo } from 'react'
 import { TableExportButton } from '@/components/TableExportButton'
 import { CitationBlock } from '@/components/CitationBlock'
 import { ShareButton } from '@/components/ShareButton'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Cell,
-} from '@/components/charts'
+// Recharts removed — replaced with pure SVG field visualizations
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { FuentePill } from '@/components/ui/FuentePill'
@@ -125,10 +116,21 @@ interface SectorBarDatum {
   totalValue: number
 }
 
+// Seeded RNG (Mulberry32) for deterministic dot placement
+function _mul32(seed: number) {
+  let s = seed >>> 0
+  return () => {
+    s = (s + 0x6d2b79f5) >>> 0
+    let t = s
+    t = Math.imul(t ^ (t >>> 15), t | 1)
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
+  }
+}
+
 function SectorRiskChart({
   data,
   loading,
-  chartT,
 }: {
   data: SectorBarDatum[]
   loading: boolean
@@ -137,51 +139,85 @@ function SectorRiskChart({
   if (loading) return <Skeleton className="h-56 w-full" />
   if (!data.length) return null
 
+  // Scale dots: max sector gets 40 dots, others proportional
+  const maxCount = Math.max(...data.map((d) => d.count), 1)
+  const ROW_H   = 28
+  const ROW_GAP = 6
+  const LABEL_W = 110
+  const FIELD_W = 480
+  const svgH    = data.length * (ROW_H + ROW_GAP) + 8
+  const SVG_W   = LABEL_W + FIELD_W + 80
+
   return (
-    <div role="img" aria-label="Bar chart showing anomalous contract counts by sector">
-    <ResponsiveContainer width="100%" height={280}>
-      <BarChart data={data} layout="vertical" margin={{ top: 4, right: 16, left: 8, bottom: 4 }}>
-        <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#3f3f46" />
-        <XAxis
-          type="number"
-          tick={{ fontSize: 10, fill: '#94a3b8' }}
-          tickFormatter={(v: number) => formatNumber(v)}
-        />
-        <YAxis
-          type="category"
-          dataKey="name"
-          width={100}
-          tick={{ fontSize: 10, fill: '#94a3b8' }}
-        />
-        <RechartsTooltip
-          content={({ active, payload, label }) => {
-            if (!active || !payload?.length) return null
-            const d = payload[0]?.payload as SectorBarDatum | undefined
-            if (!d) return null
-            return (
-              <div className="bg-zinc-900 border border-zinc-700 rounded-md text-xs p-3 min-w-[160px]">
-                <p className="text-zinc-100 font-semibold mb-1">{label}</p>
-                <p className="text-zinc-400 m-0">
-                  {chartT('tableHeaderContracts')}: <strong className="text-orange-400">{formatNumber(d.count)}</strong>
-                </p>
-                <p className="text-zinc-400 m-0 mt-0.5">
-                  {chartT('tableHeaderAmount')}: <strong className="text-zinc-100">{formatCompactMXN(d.totalValue)}</strong>
-                </p>
-                <p className="text-zinc-400 m-0 mt-0.5">
-                  {chartT('statsAvgZ')}: <strong className="text-amber-400">+{(d.avgZ ?? 0).toFixed(1)}&sigma;</strong>
-                </p>
-              </div>
-            )
-          }}
-        />
-        <Bar dataKey="count" radius={[0, 3, 3, 0]} isAnimationActive>
-          {data.map((entry) => (
-            <Cell key={entry.code} fill={entry.color} />
-          ))}
-        </Bar>
-      </BarChart>
-    </ResponsiveContainer>
-    </div>
+    <svg
+      viewBox={`0 0 ${SVG_W} ${svgH}`}
+      width="100%"
+      role="img"
+      aria-label="Dot-density chart: anomalous contracts by sector"
+    >
+      {data.map((sector, rowIdx) => {
+        const y0 = rowIdx * (ROW_H + ROW_GAP) + 4
+        const cy = y0 + ROW_H / 2
+        const nDots = Math.max(1, Math.round((sector.count / maxCount) * 40))
+        const barW  = (sector.count / maxCount) * FIELD_W
+        const rng   = _mul32(rowIdx * 997 + 13)
+
+        // Dot radius driven by avgZ severity: 2–5σ → r 1.4, 5–8σ → r 1.9, >8σ → r 2.5
+        const baseR = sector.avgZ > 8 ? 2.5 : sector.avgZ > 5 ? 1.9 : 1.4
+
+        return (
+          <g key={sector.code}>
+            {/* Sector label */}
+            <text
+              x={LABEL_W - 8}
+              y={cy}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fontSize={9.5}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="#71717a"
+            >
+              {sector.name.length > 12 ? sector.name.slice(0, 12) + '…' : sector.name}
+            </text>
+
+            {/* Background field */}
+            <rect x={LABEL_W} y={y0 + 2} width={FIELD_W} height={ROW_H - 4}
+              fill="rgba(255,255,255,0.02)" rx={2} />
+
+            {/* Dots */}
+            {Array.from({ length: nDots }, (_, i) => {
+              const x = LABEL_W + (rng() * 0.95 + 0.025) * barW
+              const y = y0 + 4 + rng() * (ROW_H - 8)
+              // Color: sector color but with opacity driven by avgZ
+              const opacity = 0.5 + Math.min(0.45, (sector.avgZ - 2) * 0.08)
+              return (
+                <circle
+                  key={i}
+                  cx={x}
+                  cy={y}
+                  r={baseR * (0.7 + rng() * 0.6)}
+                  fill={sector.color}
+                  fillOpacity={opacity}
+                />
+              )
+            })}
+
+            {/* Count label */}
+            <text
+              x={LABEL_W + barW + 6}
+              y={cy}
+              dominantBaseline="middle"
+              fontSize={9}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill={sector.color}
+              fillOpacity={0.85}
+            >
+              {formatNumber(sector.count)}
+            </text>
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
@@ -490,46 +526,44 @@ function AnomalyTimelineSection({
           {t('anomalousContractsByYear')}
         </h2>
       </div>
-      <div role="img" aria-label="Bar chart showing anomalous contracts by year">
-      <ResponsiveContainer width="100%" height={200}>
-        <BarChart data={yearData} margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
-          <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#71717a' }} />
-          <YAxis tick={{ fontSize: 10, fill: '#71717a' }} />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.length) return null
-              const d = payload[0]?.payload as
-                | { year: number; count: number; avg_z: number; total_value: number }
-                | undefined
-              if (!d) return null
+      {/* Year outlier timeline — pure SVG, SexenioStratum-style columns */}
+      {(() => {
+        const W = 700; const H = 120; const PAD_L = 28; const PAD_B = 22; const PAD_T = 8
+        const fieldW = W - PAD_L - 8; const fieldH = H - PAD_T - PAD_B
+        const maxCount = Math.max(...yearData.map((d) => d.count), 1)
+        const colW = fieldW / yearData.length
+        return (
+          <svg viewBox={`0 0 ${W} ${H}`} width="100%"
+            role="img" aria-label="Outlier contract timeline by year">
+            {yearData.map((d, i) => {
+              const barH = Math.sqrt(d.count / maxCount) * fieldH
+              const x = PAD_L + i * colW
+              const y = PAD_T + (fieldH - barH)
+              const fill = d.avg_z > 5 ? '#ef4444' : d.avg_z > 3 ? '#f59e0b' : '#a16207'
+              const gap = 1.2
               return (
-                <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
-                  <p className="text-white font-semibold">{d.year}</p>
-                  <p className="text-zinc-400">
-                    Anomalias: <span className="text-orange-400 font-bold">{d.count}</span>
-                  </p>
-                  <p className="text-zinc-400">
-                    Valor: <span className="text-zinc-200">{formatCompactMXN(d.total_value)}</span>
-                  </p>
-                  <p className="text-zinc-400">
-                    Z-score prom: <span className="text-amber-400">+{d.avg_z.toFixed(1)}&sigma;</span>
-                  </p>
-                </div>
+                <g key={d.year}>
+                  <rect x={x + gap / 2} y={y} width={colW - gap} height={barH}
+                    fill={fill} fillOpacity={0.80} rx={1} />
+                  {(i % 4 === 0 || i === yearData.length - 1) && (
+                    <text x={x + colW / 2} y={H - 6} textAnchor="middle"
+                      fontSize={7.5} fontFamily="var(--font-family-mono, monospace)"
+                      fill="#52525b">
+                      {d.year}
+                    </text>
+                  )}
+                </g>
               )
-            }}
-          />
-          <Bar dataKey="count" radius={[3, 3, 0, 0]}>
-            {yearData.map((entry) => (
-              <Cell
-                key={entry.year}
-                fill={entry.avg_z > 5 ? '#f87171' : entry.avg_z > 3 ? '#fb923c' : '#fbbf24'}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-      </div>
+            })}
+            <line x1={PAD_L} y1={H - PAD_B} x2={W - 8} y2={H - PAD_B}
+              stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
+            <text x={PAD_L - 4} y={PAD_T + fieldH / 2} fontSize={7}
+              fontFamily="var(--font-family-mono, monospace)" fill="#3f3f46"
+              textAnchor="middle" transform={`rotate(-90,${PAD_L - 4},${PAD_T + fieldH / 2})`}
+              opacity={0.6}>√ count</text>
+          </svg>
+        )
+      })()}
     </section>
   )
 }

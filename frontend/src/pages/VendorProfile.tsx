@@ -40,7 +40,6 @@ import {
   Area,
   BarChart,
   Bar,
-  LabelList,
   ComposedChart,
   Line,
   XAxis,
@@ -305,74 +304,83 @@ function RiskWaterfallChart({
     return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
   }
 
+  // ── Pure SVG horizontal waterfall ──────────────────────────────────────────
+  const ROW_H = 26
+  const LABEL_W = 100
+  const BAR_AREA = 180
+  const VAL_W = 54
+  const svgW = LABEL_W + BAR_AREA + VAL_W
+  const svgH = data.length * ROW_H + 6
+  const centerX = LABEL_W + BAR_AREA / 2
+
   return (
     <div>
       <p className="text-xs text-text-muted mb-3">
         {t('waterfall.description')}
       </p>
-      <div
-        className="h-[220px]"
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        width="100%"
         role="img"
-        aria-label="Bar chart showing contract value breakdown by category for this vendor"
+        aria-label="SHAP factor contribution waterfall"
       >
-        <span className="sr-only">Bar chart showing contract value breakdown by category for this vendor.</span>
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={data} margin={{ top: 10, right: 10, bottom: 30, left: 10 }}>
-            <XAxis
-              dataKey="name"
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
-              angle={-30}
-              textAnchor="end"
-              interval={0}
-            />
-            <YAxis
-              domain={[-maxVal * 1.1, maxVal * 1.1]}
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
-              tickFormatter={(v: number) => v.toFixed(2)}
-            />
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (active && payload?.[0]) {
-                  const d = payload[0].payload as WaterfallEntry
-                  return (
-                    <div className="chart-tooltip">
-                      <p className="font-medium text-zinc-200">{d.name}</p>
-                      <p className={d.isNegative ? 'text-risk-low' : 'text-risk-high'}>
-                        {d.contribution >= 0 ? '+' : ''}{d.contribution.toFixed(3)} {t('waterfall.contribution')}
-                      </p>
-                      {d.factorKey !== '__total__' && (
-                        <p className="text-zinc-400 mt-1">
-                          {t('waterfall.modelCoefficient')}: {MODEL_COEFFICIENTS[d.factorKey]?.toFixed(3) ?? 'n/a'}
-                        </p>
-                      )}
-                    </div>
-                  )
-                }
-                return null
-              }}
-            />
-            <ReferenceLine y={0} stroke="rgba(255,255,255,0.15)" strokeWidth={1} />
-            <Bar dataKey="contribution" radius={[0, 4, 4, 0]} barSize={10}>
-              {data.map((entry, i) => (
-                <Cell
-                  key={i}
-                  fill={barColor(entry)}
-                  fillOpacity={entry.factorKey === '__total__' ? 1 : 0.85}
-                />
-              ))}
-              <LabelList
-                dataKey="contribution"
-                position="right"
-                style={{ fontSize: 9, fill: 'rgba(148,163,184,0.8)' }}
-                formatter={(v: unknown) => {
-                  const n = Number(v)
-                  return n !== 0 ? (n >= 0 ? `+${n.toFixed(2)}` : n.toFixed(2)) : ''
-                }}
+        {/* Zero axis */}
+        <line
+          x1={centerX}
+          y1={0}
+          x2={centerX}
+          y2={svgH}
+          stroke="rgba(255,255,255,0.10)"
+          strokeWidth={1}
+        />
+        {data.map((entry, i) => {
+          const y = i * ROW_H
+          const color = barColor(entry)
+          const barPx = (Math.abs(entry.contribution) / maxVal) * (BAR_AREA / 2 - 4)
+          const isPos = entry.contribution >= 0
+          const x1 = isPos ? centerX : centerX - barPx
+
+          return (
+            <g key={entry.factorKey}>
+              {/* Factor label */}
+              <text
+                x={LABEL_W - 5}
+                y={y + ROW_H / 2 + 1}
+                fill="#a1a1aa"
+                fontSize={9}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontFamily="var(--font-family-mono, monospace)"
+              >
+                {entry.name.slice(0, 13)}
+              </text>
+              {/* Bar */}
+              <rect
+                x={x1}
+                y={y + ROW_H * 0.18}
+                width={Math.max(barPx, 2)}
+                height={ROW_H * 0.62}
+                fill={color}
+                fillOpacity={entry.factorKey === '__total__' ? 1.0 : 0.82}
+                rx={2}
               />
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+              {/* Value label */}
+              <text
+                x={isPos ? centerX + barPx + 4 : centerX - barPx - 4}
+                y={y + ROW_H / 2 + 1}
+                fill={color}
+                fontSize={8.5}
+                textAnchor={isPos ? 'start' : 'end'}
+                dominantBaseline="middle"
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight={entry.factorKey === '__total__' ? 'bold' : 'normal'}
+              >
+                {entry.contribution >= 0 ? '+' : ''}{entry.contribution.toFixed(3)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
       {/* Legend */}
       <div className="flex items-center gap-4 mt-1 justify-center">
         <div className="flex items-center gap-1.5">

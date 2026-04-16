@@ -37,7 +37,6 @@ import {
   Legend,
   ReferenceLine,
   ReferenceArea,
-  Cell,
 } from '@/components/charts'
 import {
   TrendingUp,
@@ -1590,113 +1589,134 @@ export default function Administrations() {
           </CardHeader>
           <CardContent>
             {selectedAgg && selectedAgg.years.length > 0 ? (
-              <ResponsiveContainer width="100%" height={320}>
-                <ComposedChart data={selectedAgg.years} margin={{ top: 5, right: 10, bottom: 5, left: 0 }}>
-                  <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="year"
-                    tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                  />
-                  <YAxis
-                    yAxisId="left"
-                    tick={{ fill: '#71717a', fontSize: 10 }}
-                    tickFormatter={(v: number) => formatNumber(v)}
-                    width={60}
-                  />
-                  <YAxis
-                    yAxisId="right"
-                    orientation="right"
-                    domain={[0, 100]}
-                    tick={{ fill: '#71717a', fontSize: 10 }}
-                    tickFormatter={(v: number) => `${v}%`}
-                    width={45}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--color-background-card)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontFamily: 'var(--font-family-mono)',
-                    }}
-                    formatter={(value: unknown, name?: string) => {
-                      const v = Number(value)
-                      const n = name ?? ''
-                      if (n === 'Contracts') return [formatNumber(v), n]
-                      return [`${v.toFixed(1)}%`, n]
-                    }}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
-                  <Bar
-                    yAxisId="left"
-                    dataKey="contracts"
-                    name="Contracts"
-                    radius={[3, 3, 0, 0]}
-                    maxBarSize={40}
-                  >
-                    {selectedAgg.years.map((yr) => (
-                      <Cell key={yr.year} fill={selectedMeta.color} fillOpacity={0.6} />
+              /* ── Pure SVG dual-axis chart: contract columns + pct polylines ── */
+              (() => {
+                const years = selectedAgg.years
+                const W = 620; const H = 310
+                const ML = 56; const MR = 46; const MT = 18; const MB = 34
+                const cW = W - ML - MR; const cH = H - MT - MB
+                const n = years.length
+                const colW = Math.max(4, (cW / n) * 0.72)
+                const maxC = Math.max(...years.map((y) => y.contracts), 1)
+                const xOf = (i: number) => ML + (i + 0.5) * (cW / n)
+                const colY = (c: number) => MT + cH - Math.sqrt(c / maxC) * cH * 0.62
+                const pctY = (p: number) => MT + cH - Math.max(0, Math.min(100, p)) / 100 * cH
+                const eventSet = new Set(adminBreaks.map((b) => b.year))
+                const lines: Array<{ key: string; pct: (y: typeof years[0]) => number; color: string; label: string }> = [
+                  { key: 'da', pct: (y) => y.direct_award_pct, color: '#3b82f6', label: 'Direct Award %' },
+                  { key: 'sb', pct: (y) => y.single_bid_pct, color: '#fbbf24', label: 'Single Bid %' },
+                  { key: 'hr', pct: (y) => y.high_risk_pct, color: RISK_COLORS.high, label: 'High Risk %' },
+                ]
+                return (
+                  <svg viewBox={`0 0 ${W} ${H}`} width="100%" role="img" aria-label="Yearly trends: contract volume and procurement risk indicators">
+                    {/* Left axis ticks */}
+                    {[0, 0.25, 0.5, 0.75, 1].map((f) => {
+                      const y = MT + cH * (1 - f * 0.62)
+                      const val = Math.round(Math.pow(f, 2) * maxC)
+                      return (
+                        <g key={f}>
+                          <line x1={ML - 3} y1={y} x2={ML} y2={y} stroke="#3f3f46" strokeWidth={1} />
+                          <text x={ML - 5} y={y + 1} fill="#52525b" fontSize={8} textAnchor="end" dominantBaseline="middle" fontFamily="monospace">{formatNumber(val)}</text>
+                        </g>
+                      )
+                    })}
+                    {/* Right axis ticks */}
+                    {[0, 25, 50, 75, 100].map((pct) => {
+                      const y = pctY(pct)
+                      return (
+                        <g key={pct}>
+                          <line x1={W - MR} y1={y} x2={W - MR + 3} y2={y} stroke="#3f3f46" strokeWidth={1} />
+                          <text x={W - MR + 5} y={y + 1} fill="#52525b" fontSize={8} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
+                          {/* Horizontal grid */}
+                          <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#27272a" strokeWidth={0.5} strokeDasharray="3 4" />
+                        </g>
+                      )
+                    })}
+                    {/* Left axis line */}
+                    <line x1={ML} y1={MT} x2={ML} y2={MT + cH} stroke="#3f3f46" strokeWidth={1} />
+                    {/* Right axis line */}
+                    <line x1={W - MR} y1={MT} x2={W - MR} y2={MT + cH} stroke="#3f3f46" strokeWidth={1} />
+                    {/* Bottom axis */}
+                    <line x1={ML} y1={MT + cH} x2={W - MR} y2={MT + cH} stroke="#3f3f46" strokeWidth={1} />
+
+                    {/* Contract volume columns */}
+                    {years.map((yr, i) => {
+                      const x = xOf(i); const top = colY(yr.contracts)
+                      return (
+                        <rect
+                          key={yr.year}
+                          x={x - colW / 2}
+                          y={top}
+                          width={colW}
+                          height={MT + cH - top}
+                          fill={selectedMeta.color}
+                          fillOpacity={eventSet.has(yr.year) ? 0.75 : 0.38}
+                          rx={1}
+                        />
+                      )
+                    })}
+
+                    {/* Event reference lines */}
+                    {adminEvents.slice(0, 8).map((ev) => {
+                      const i = years.findIndex((y) => y.year === ev.year)
+                      if (i < 0) return null
+                      const x = xOf(i)
+                      return (
+                        <g key={ev.id ?? ev.year}>
+                          <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#475569" strokeWidth={1} strokeDasharray="3 3" />
+                          <text x={x + 3} y={MT + 6} fill="#64748b" fontSize={8} fontFamily="monospace">{(ev.title ?? '').slice(0, 12)}</text>
+                        </g>
+                      )
+                    })}
+
+                    {/* Structural break lines */}
+                    {adminBreaks.map((b) => {
+                      const i = years.findIndex((y) => y.year === b.year)
+                      if (i < 0) return null
+                      const x = xOf(i)
+                      return (
+                        <g key={`brk-${b.year}-${b.metric}`}>
+                          <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 2" />
+                          <text x={x + 2} y={MT + 14} fill="#f59e0b" fontSize={9} fontFamily="monospace">⚡</text>
+                        </g>
+                      )
+                    })}
+
+                    {/* Pct polylines */}
+                    {lines.map((ln) => (
+                      <g key={ln.key}>
+                        <polyline
+                          points={years.map((yr, i) => `${xOf(i)},${pctY(ln.pct(yr))}`).join(' ')}
+                          fill="none"
+                          stroke={ln.color}
+                          strokeWidth={1.8}
+                          strokeLinejoin="round"
+                          strokeLinecap="round"
+                        />
+                        {years.map((yr, i) => (
+                          <circle key={i} cx={xOf(i)} cy={pctY(ln.pct(yr))} r={2.4} fill={ln.color} fillOpacity={0.9} />
+                        ))}
+                      </g>
                     ))}
-                  </Bar>
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="direct_award_pct"
-                    name="Direct Award %"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="single_bid_pct"
-                    name="Single Bid %"
-                    stroke="#fbbf24"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="high_risk_pct"
-                    name="High Risk %"
-                    stroke={RISK_COLORS.high}
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                  {adminEvents.slice(0, 8).map((event) => (
-                    <ReferenceLine
-                      key={event.id ?? event.year}
-                      yAxisId="left"
-                      x={event.year}
-                      stroke="#64748b"
-                      strokeDasharray="3 3"
-                      label={{
-                        value: (event.title ?? '').slice(0, 15),
-                        position: 'top',
-                        fontSize: 9,
-                        fill: '#64748b',
-                      }}
-                    />
-                  ))}
-                  {adminBreaks.map((b) => (
-                    <ReferenceLine
-                      key={`sb-${b.year}-${b.metric}`}
-                      yAxisId="left"
-                      x={b.year}
-                      stroke="#f59e0b"
-                      strokeDasharray="4 2"
-                      label={{
-                        value: '⚡',
-                        position: 'top',
-                        fontSize: 11,
-                        fill: '#f59e0b',
-                      }}
-                    />
-                  ))}
-                </ComposedChart>
-              </ResponsiveContainer>
+
+                    {/* Year labels */}
+                    {years.map((yr, i) => (
+                      <text key={yr.year} x={xOf(i)} y={H - 4} fill="#52525b" fontSize={9} textAnchor="middle" fontFamily="monospace">
+                        {yr.year}
+                      </text>
+                    ))}
+
+                    {/* Legend */}
+                    {lines.map((ln, i) => (
+                      <g key={ln.key} transform={`translate(${ML + i * 102}, ${MT - 3})`}>
+                        <line x1={0} y1={5} x2={14} y2={5} stroke={ln.color} strokeWidth={1.8} />
+                        <circle cx={7} cy={5} r={2.2} fill={ln.color} />
+                        <text x={17} y={9} fill="#71717a" fontSize={9} fontFamily="monospace">{ln.label}</text>
+                      </g>
+                    ))}
+                  </svg>
+                )
+              })()
             ) : (
               <div className="h-[320px] flex items-center justify-center text-text-muted text-sm">
                 {t('noData')}

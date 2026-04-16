@@ -25,6 +25,7 @@ import {
 import type { SectorStatistics, SectorTrend } from '@/api/types'
 import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
 import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
+import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import {
   BarChart,
   Bar,
@@ -107,33 +108,16 @@ interface MiniSparklineProps {
 
 function MiniSparkline({ sector }: MiniSparklineProps) {
   const total = sector.total_contracts || 1
-  // Risk colors only — sector color identity stays on the header strip, not on risk visuals
-  const bars = [
-    { pct: ((sector.critical_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.critical, label: 'Crit' },
-    { pct: ((sector.high_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.high, label: 'High' },
-    { pct: ((sector.medium_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.medium, label: 'Med' },
-    { pct: ((sector.low_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.low, label: 'Low' },
-  ]
-  const maxPct = Math.max(...bars.map((b) => b.pct), 1)
-
   return (
-    <div
-      className="flex items-end gap-0.5 h-8 flex-shrink-0"
-      aria-hidden="true"
-      title="Risk profile: Critical / High / Medium / Low"
-    >
-      {bars.map((b) => (
-        <div
-          key={b.label}
-          className="w-3 rounded-sm transition-all duration-500"
-          style={{
-            height: `${Math.max((b.pct / maxPct) * 100, 8)}%`,
-            backgroundColor: b.barColor,
-            opacity: b.label === 'Low' ? 0.5 : 0.85,
-          }}
-        />
-      ))}
-    </div>
+    <MiniRiskField
+      criticalPct={((sector.critical_risk_count ?? 0) / total) * 100}
+      highPct={((sector.high_risk_count ?? 0) / total) * 100}
+      mediumPct={((sector.medium_risk_count ?? 0) / total) * 100}
+      lowPct={((sector.low_risk_count ?? 0) / total) * 100}
+      seed={sector.sector_id ?? 7}
+      width={88}
+      height={32}
+    />
   )
 }
 

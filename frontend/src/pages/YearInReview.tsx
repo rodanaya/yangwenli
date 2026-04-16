@@ -13,9 +13,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
-  BarChart,
-  Bar,
-  Cell,
   ResponsiveContainer,
   XAxis,
   YAxis,
@@ -363,73 +360,90 @@ function SectorGrowthDiverging({
     growthPctClamped: Math.max(-300, Math.min(300, r.growthPct)),
   }))
 
+  // ── Pure SVG diverging dot chart ────────────────────────────────────────────
+  const ROW_H = 29
+  const DOT_AREA = 170
+  const LABEL_W = 94
+  const PCT_W = 48
+  const svgW = LABEL_W + DOT_AREA * 2 + PCT_W
+  const svgH = clamped.length * ROW_H + 22
+  const centerX = LABEL_W + DOT_AREA
+  const maxDots = 20
+
+  function h2(idx: number) {
+    let r = 0; let f = 0.5; let n = idx + 1
+    while (n > 0) { r += (n % 2) * f; n = Math.floor(n / 2); f *= 0.5 }
+    return r
+  }
+
   return (
-    <div className="h-[380px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart
-          data={clamped}
-          layout="vertical"
-          margin={{ top: 8, right: 60, bottom: 20, left: 110 }}
-        >
-          <XAxis
-            type="number"
-            domain={[-maxAbs * 1.15, maxAbs * 1.15]}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'ui-monospace, monospace' }}
-            tickFormatter={(v) => `${v > 0 ? '+' : ''}${v}%`}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickLine={{ stroke: '#3f3f46' }}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            axisLine={false}
-            tickLine={false}
-            width={100}
-          />
-          <ReferenceLine x={0} stroke="#52525b" strokeWidth={1.5} />
-          <RechartsTooltip
-            cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-            contentStyle={{
-              background: '#18181b',
-              border: '1px solid #3f3f46',
-              borderRadius: 6,
-              fontSize: 12,
-            }}
-            labelStyle={{ color: '#e4e4e7', fontWeight: 600 }}
-            formatter={((_value: unknown, _name: unknown, payload: unknown) => {
-              const pl = payload as { payload: SectorGrowthRow & { growthPct: number } }
-              const p = pl.payload
-              return [
-                `${p.growthPct > 0 ? '+' : ''}${p.growthPct.toFixed(1)}% (${formatCompactMXN(p.curVal)})`,
-                'YoY Change',
-              ]
-            }) as never}
-          />
-          <Bar
-            dataKey="growthPctClamped"
-            radius={[3, 3, 3, 3]}
-            label={{
-              position: 'right',
-              fill: '#a1a1aa',
-              fontSize: 10,
-              fontFamily: 'ui-monospace, monospace',
-              formatter: ((v: unknown) => {
-                const n = typeof v === 'number' ? v : Number(v ?? 0)
-                return `${n > 0 ? '+' : ''}${n.toFixed(0)}%`
-              }) as never,
-            }}
-          >
-            {clamped.map((entry) => (
-              <Cell
-                key={entry.id}
-                fill={entry.growthPct >= 0 ? '#4ade80' : '#f87171'}
-                fillOpacity={Math.min(0.85, 0.35 + Math.abs(entry.growthPct) / (maxAbs * 2))}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+    <div className="pt-1">
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        width="100%"
+        role="img"
+        aria-label="Sector year-over-year growth diverging dot chart"
+      >
+        {/* Header labels */}
+        <text x={LABEL_W + DOT_AREA * 0.5} y={9} fill="#3f3f46" fontSize={8} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + DOT_AREA * 1.5} y={9} fill="#3f3f46" fontSize={8} textAnchor="middle" fontFamily="monospace">growth →</text>
+
+        {/* Center zero axis */}
+        <line x1={centerX} y1={12} x2={centerX} y2={svgH - 8} stroke="#3f3f46" strokeWidth={1} />
+        <text x={centerX} y={svgH - 1} fill="#52525b" fontSize={8} textAnchor="middle" fontFamily="monospace">0%</text>
+
+        {clamped.map((row, ri) => {
+          const cy = 14 + ri * ROW_H + ROW_H / 2
+          const absG = Math.abs(row.growthPctClamped)
+          const nDots = Math.max(1, Math.round((absG / Math.max(maxAbs, 1)) * maxDots))
+          const isPos = row.growthPct >= 0
+          const color = isPos ? '#4ade80' : '#f87171'
+          const alpha = Math.min(0.90, 0.38 + absG / (maxAbs * 1.7))
+
+          const dots = Array.from({ length: nDots }, (_, di) => {
+            const xFrac = (di + 0.5) / maxDots
+            const yJitter = (h2(ri * 50 + di) - 0.5) * (ROW_H * 0.48)
+            const cx = isPos
+              ? centerX + 3 + xFrac * (DOT_AREA - 8)
+              : centerX - 3 - xFrac * (DOT_AREA - 8)
+            return { cx, cy: cy + yJitter }
+          })
+
+          return (
+            <g key={row.id}>
+              {/* Sector label */}
+              <text
+                x={LABEL_W - 6}
+                y={cy + 1}
+                fill="#a1a1aa"
+                fontSize={10}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontFamily="monospace"
+              >
+                {row.name.slice(0, 11)}
+              </text>
+              {/* Dots */}
+              {dots.map((d, di) => (
+                <circle key={di} cx={d.cx} cy={d.cy} r={2.0} fill={color} fillOpacity={alpha} />
+              ))}
+              {/* Pct label */}
+              <text
+                x={svgW - 3}
+                y={cy + 1}
+                fill={color}
+                fontSize={9}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontFamily="monospace"
+                fontWeight="bold"
+              >
+                {row.growthPct > 0 ? '+' : ''}{row.growthPct.toFixed(0)}%
+              </text>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }

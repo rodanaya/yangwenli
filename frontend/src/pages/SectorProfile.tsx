@@ -59,15 +59,13 @@ import {
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
-  Cell,
   AreaChart,
   Area,
-  PieChart,
-  Pie,
   LineChart,
   Line,
   ReferenceLine,
 } from '@/components/charts'
+import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
 
 // ── constants ────────────────────────────────────────────────────────────────
 
@@ -419,61 +417,23 @@ function RiskDonut({
   const highPlus = sorted[0].count + sorted[1].count
   const highPlusPct = total > 0 ? ((highPlus / total) * 100).toFixed(1) : '0'
 
-  const pieData = sorted.map((d) => ({
-    name: d.level.charAt(0).toUpperCase() + d.level.slice(1),
-    value: d.count,
-    color: RISK_COLORS[d.level as keyof typeof RISK_COLORS],
+  const ringRows: RiskRingRow[] = sorted.map((d) => ({
+    level: d.level as RiskRingRow['level'],
+    pct:   d.pct,
+    count: d.count,
   }))
 
   return (
     <div className="flex items-center gap-6">
-      <div
-        className="relative h-44 w-44 flex-shrink-0"
-        role="img"
-        aria-label="Risk distribution donut chart"
-      >
-        <span className="sr-only">
-          Donut chart showing the proportion of contracts at Critical, High, Medium, and Low risk levels.
-        </span>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              innerRadius={52}
-              outerRadius={76}
-              paddingAngle={2}
-              dataKey="value"
-              startAngle={90}
-              endAngle={-270}
-            >
-              {pieData.map((entry, index) => (
-                <Cell key={entry.name ?? index} fill={entry.color} stroke="transparent" />
-              ))}
-            </Pie>
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (active && payload?.length) {
-                  const d = payload[0].payload as { name: string; value: number; color: string }
-                  return (
-                    <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs">
-                      <p className="font-bold" style={{ color: d.color }}>
-                        {d.name}
-                      </p>
-                      <p className="text-text-muted">{formatNumber(d.value)} contracts</p>
-                    </div>
-                  )
-                }
-                return null
-              }}
-            />
-          </PieChart>
-        </ResponsiveContainer>
-        <div className="pointer-events-none absolute inset-0 flex flex-col items-center justify-center">
-          <span className="text-xl font-black tabular-nums text-white">{highPlusPct}%</span>
-          <span className="text-[10px] text-zinc-500 font-mono uppercase">high+</span>
-        </div>
+      <div className="relative flex-shrink-0" aria-label="Risk distribution ring field">
+        <RiskRingField
+          rows={ringRows}
+          size={176}
+          n={120}
+          centerLabel={`${highPlusPct}%`}
+          centerSublabel="high+"
+          seed={sorted[0]?.count ?? 42}
+        />
       </div>
 
       <div className="flex-1 space-y-3">

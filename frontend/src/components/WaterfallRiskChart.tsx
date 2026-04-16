@@ -1,15 +1,10 @@
+/**
+ * WaterfallRiskChart — pure SVG SHAP contribution bars.
+ *
+ * Horizontal diverging bars, positive = risk-increasing (red),
+ * negative = risk-protective (green). No Recharts dependency.
+ */
 import { useMemo } from 'react'
-import {
-  ComposedChart,
-  Bar,
-  Cell,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ReferenceLine,
-  ResponsiveContainer,
-} from 'recharts'
 import { cn } from '@/lib/utils'
 
 interface WaterfallFeature {
@@ -25,36 +20,6 @@ interface WaterfallRiskChartProps {
   baseScore?: number
   finalScore?: number
   className?: string
-}
-
-interface ChartItem {
-  label: string
-  contribution: number
-  feature: string
-  z_score: number
-  coefficient: number
-}
-
-function WaterfallTooltip({
-  active,
-  payload,
-}: {
-  active?: boolean
-  payload?: Array<{ payload: ChartItem }>
-}) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  return (
-    <div className="rounded-md border bg-background-card p-2 text-xs shadow-md">
-      <p className="font-medium text-text-primary">{d.label}</p>
-      <p className="text-text-muted">z-score: {d.z_score.toFixed(2)}</p>
-      <p className="text-text-muted">coefficient: {d.coefficient.toFixed(3)}</p>
-      <p className="font-medium" style={{ color: d.contribution >= 0 ? '#dc2626' : '#16a34a' }}>
-        contribution: {d.contribution >= 0 ? '+' : ''}
-        {d.contribution.toFixed(3)}
-      </p>
-    </div>
-  )
 }
 
 export function WaterfallRiskChart({
@@ -82,35 +47,97 @@ export function WaterfallRiskChart({
     )
   }
 
+  const maxVal = Math.max(...data.map((d) => Math.abs(d.contribution)), 0.1)
+
+  const ROW_H = 30
+  const LABEL_W = 126
+  const BAR_AREA = 164
+  const VAL_W = 58
+  const svgW = LABEL_W + BAR_AREA + VAL_W
+  const svgH = data.length * ROW_H + 6
+  const centerX = LABEL_W + BAR_AREA / 2
+
   return (
     <div className={cn('w-full', className)}>
-      <ResponsiveContainer width="100%" height={Math.max(200, data.length * 32 + 40)}>
-        <ComposedChart
-          layout="vertical"
-          data={data}
-          margin={{ top: 4, right: 20, bottom: 4, left: 120 }}
-        >
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--border)" opacity={0.3} />
-          <XAxis type="number" tick={{ fontSize: 11, fill: 'var(--text-muted)' }} />
-          <YAxis
-            type="category"
-            dataKey="label"
-            tick={{ fontSize: 11, fill: 'var(--text-secondary)' }}
-            width={115}
-          />
-          <Tooltip content={<WaterfallTooltip />} />
-          <ReferenceLine x={0} stroke="var(--text-muted)" strokeWidth={1} />
-          <Bar dataKey="contribution" barSize={18} radius={[0, 3, 3, 0]}>
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={entry.contribution >= 0 ? '#dc2626' : '#16a34a'}
-                fillOpacity={0.85}
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        width="100%"
+        height={Math.max(200, svgH)}
+        role="img"
+        aria-label="SHAP feature contribution chart"
+      >
+        {/* Zero axis */}
+        <line
+          x1={centerX}
+          y1={0}
+          x2={centerX}
+          y2={svgH}
+          stroke="rgba(255,255,255,0.08)"
+          strokeWidth={1}
+        />
+
+        {data.map((entry, i) => {
+          const y = i * ROW_H
+          const barPx = (Math.abs(entry.contribution) / maxVal) * (BAR_AREA / 2 - 5)
+          const isPos = entry.contribution >= 0
+          const color = isPos ? '#dc2626' : '#16a34a'
+          const x1 = isPos ? centerX : centerX - barPx
+
+          return (
+            <g key={entry.feature}>
+              {/* Feature label */}
+              <text
+                x={LABEL_W - 6}
+                y={y + ROW_H * 0.52}
+                fill="var(--color-text-secondary, #a1a1aa)"
+                fontSize={10}
+                textAnchor="end"
+                dominantBaseline="middle"
+                fontFamily="var(--font-family-mono, monospace)"
+              >
+                {entry.label.slice(0, 18)}
+              </text>
+
+              {/* z-score sublabel */}
+              <text
+                x={LABEL_W - 6}
+                y={y + ROW_H * 0.80}
+                fill="rgba(113,113,122,0.55)"
+                fontSize={7.5}
+                textAnchor="end"
+                dominantBaseline="auto"
+                fontFamily="var(--font-family-mono, monospace)"
+              >
+                z={entry.z_score.toFixed(2)}
+              </text>
+
+              {/* Contribution bar */}
+              <rect
+                x={x1}
+                y={y + ROW_H * 0.20}
+                width={Math.max(barPx, 2)}
+                height={ROW_H * 0.55}
+                fill={color}
+                fillOpacity={0.84}
+                rx={2}
               />
-            ))}
-          </Bar>
-        </ComposedChart>
-      </ResponsiveContainer>
+
+              {/* Value label */}
+              <text
+                x={isPos ? centerX + barPx + 5 : centerX - barPx - 5}
+                y={y + ROW_H * 0.52}
+                fill={color}
+                fontSize={9}
+                textAnchor={isPos ? 'start' : 'end'}
+                dominantBaseline="middle"
+                fontFamily="var(--font-family-mono, monospace)"
+              >
+                {isPos ? '+' : ''}{entry.contribution.toFixed(3)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }
