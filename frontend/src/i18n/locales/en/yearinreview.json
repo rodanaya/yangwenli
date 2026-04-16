@@ -127,5 +127,81 @@
   "editorial": {
     "kicker": "RUBLI · Annual Public Procurement Risk Report",
     "body": "Every year tells its own story of public spending. Here you will find the complete profile: who won, what it cost, which risk patterns dominated, and how it compares to the 2002-2025 historical average."
+  },
+  "sectorAll": {
+    "sectionLabel": "Full Sector Landscape",
+    "headline": "All 12 sectors in {{year}} — complete spending distribution",
+    "subtitle": "Total contracted value and contract count by sector. Click any bar to open the sector profile.",
+    "footerHint": "Click any sector to open its detailed profile"
+  },
+  "sectorGrowthFull": {
+    "sectionLabel": "Growth vs Contraction",
+    "headline": "Which sectors grew and which contracted vs {{prior}}",
+    "subtitle": "Year-over-year change in contracted value. Green = growth, red = contraction.",
+    "noComparison": "No prior-year data ({{prior}}) available for comparison."
+  },
+  "riskEvolution": {
+    "sectionLabel": "Risk Evolution",
+    "headline": "{{year}} risk profile vs historical average",
+    "subtitle": "Risk level distribution compared to the 2002-2025 average and the OECD threshold.",
+    "thisYear": "This year",
+    "historicalAvg": "2002-2025 average",
+    "oecdTarget": "OECD threshold (15%)",
+    "aboveOECD": "Above OECD threshold",
+    "belowOECD": "Within OECD range",
+    "verdictWorse": "{{pct}} pp above historical average — a riskier year",
+    "verdictBetter": "{{pct}} pp below historical average — a cleaner year",
+    "verdictEqual": "In line with historical average"
+  },
+  "procedureType": {
+    "sectionLabel": "Procedure Type",
+    "headline": "Direct award vs competitive bidding",
+    "subtitle": "In {{year}}, {{directPct}}% of contracts were awarded directly, without formal competition.",
+    "direct": "Direct Award",
+    "competitive": "Competitive",
+    "historicalContext": "The 2002-2025 historical average is {{avg}}%. OECD recommends under 25%.",
+    "oecdLimit": "OECD: max 25%"
+  },
+  "topVendorsFull": {
+    "sectionLabel": "Top Beneficiaries",
+    "headline": "The biggest vendors of {{year}}",
+    "subtitle": "Ranked by total contracted value. RFC coverage is limited before 2018.",
+    "showAll": "Show all {{count}} vendors",
+    "showLess": "Show less",
+    "rankColumn": "#",
+    "vendorColumn": "Vendor",
+    "valueColumn": "Value",
+    "contractsColumn": "Contracts",
+    "riskColumn": "Risk"
+  },
+  "notableRisks": {
+    "sectionLabel": "Notable Risk Contracts",
+    "headline": "The 10 highest-risk contracts in {{year}}",
+    "subtitle": "Contracts with the highest risk scores under model v0.6.5. Not proof of wrongdoing — these are investigation priorities.",
+    "viewContract": "View contract",
+    "noRiskContracts": "No high-risk contracts found for this year.",
+    "vendor": "Vendor",
+    "institution": "Institution",
+    "amount": "Amount",
+    "score": "Risk"
+  },
+  "monthly": {
+    "sectionLabel": "Month-by-Month Spending",
+    "headline": "When the money was spent in {{year}}",
+    "subtitle": "Monthly distribution of contracted spending. December is colored amber — the year-end spike is a classic red flag.",
+    "decemberSpike": "December spike",
+    "decemberSpikeNote": "{{pct}}% of annual spending concentrated in December — {{label}}",
+    "abnormal": "anomalous",
+    "elevated": "elevated",
+    "normal": "normal",
+    "monthLabel": "Month",
+    "valueLabel": "Spending",
+    "contractsLabel": "Contracts"
+  },
+  "sectionDivider": {
+    "overview": "Overview",
+    "patterns": "Patterns",
+    "actors": "Actors",
+    "deep": "Deep Dive"
   }
 }

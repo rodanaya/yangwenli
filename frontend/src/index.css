@@ -389,14 +389,62 @@
 
   /* ─── FERN EDITORIAL UTILITIES ─────────────────────────────────────────── */
 
-  /* Oversized stat number — the hero number in a Fern-style stat block */
+  /* ─── DATA TYPOGRAPHY SCALE (normalized) ──────────────────────────────────
+     One coherent system. No more ad-hoc clamp() values. Use these classes
+     consistently so numbers across the platform feel like one family.
+     All sizes are tabular-nums for column alignment.
+     ─────────────────────────────────────────────────────────────────────── */
+
   .stat-hero {
     font-family: var(--font-family-sans);
-    font-size: 3.75rem;
-    font-weight: 900;
+    font-size: 2.25rem;
+    font-weight: 700;
     line-height: 1;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
     font-variant-numeric: tabular-nums;
+  }
+
+  .stat-lg {
+    font-family: var(--font-family-sans);
+    font-size: 1.75rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-md {
+    font-family: var(--font-family-sans);
+    font-size: 1.375rem;
+    font-weight: 600;
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-sm {
+    font-family: var(--font-family-sans);
+    font-size: 1.125rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-xs {
+    font-family: var(--font-family-sans);
+    font-size: 0.9375rem;
+    font-weight: 600;
+    line-height: 1.2;
+    font-variant-numeric: tabular-nums;
+  }
+
+  .stat-label {
+    font-family: var(--font-family-sans);
+    font-size: 0.6875rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    opacity: 0.6;
   }
 
   /* Section divider with label — "SECTION NAME ────────────────" */

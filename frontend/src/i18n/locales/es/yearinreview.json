@@ -127,5 +127,81 @@
   "editorial": {
     "kicker": "RUBLI · Informe Anual de Riesgo en Contratación Pública",
     "body": "Cada año cuenta su propia historia de gasto público. Aquí encontrarás el perfil completo: quiénes ganaron, cuánto costó, qué patrones de riesgo dominaron, y cómo se compara con el promedio histórico 2002-2025."
+  },
+  "sectorAll": {
+    "sectionLabel": "Panorama Sectorial Completo",
+    "headline": "Los 12 sectores en {{year}} — distribución total del gasto",
+    "subtitle": "Valor contratado y número de contratos por sector. Haz clic en una barra para explorar ese sector a detalle.",
+    "footerHint": "Haz clic en cualquier sector para abrir su perfil detallado"
+  },
+  "sectorGrowthFull": {
+    "sectionLabel": "Crecimiento vs Contracción",
+    "headline": "Qué sectores crecieron y cuáles se contrajeron vs {{prior}}",
+    "subtitle": "Cambio porcentual interanual en valor contratado. Verde = crecimiento, rojo = contracción.",
+    "noComparison": "No hay datos del año anterior ({{prior}}) para comparar."
+  },
+  "riskEvolution": {
+    "sectionLabel": "Evolución del Riesgo",
+    "headline": "Perfil de riesgo de {{year}} vs promedio histórico",
+    "subtitle": "Distribución de niveles de riesgo comparada con el promedio 2002-2025 y el umbral OCDE.",
+    "thisYear": "Este año",
+    "historicalAvg": "Promedio 2002-2025",
+    "oecdTarget": "Umbral OCDE (15%)",
+    "aboveOECD": "Por encima del umbral OCDE",
+    "belowOECD": "Dentro del rango OCDE",
+    "verdictWorse": "{{pct}} pp por encima del promedio histórico — año más riesgoso",
+    "verdictBetter": "{{pct}} pp por debajo del promedio histórico — año más limpio",
+    "verdictEqual": "Alineado con el promedio histórico"
+  },
+  "procedureType": {
+    "sectionLabel": "Tipo de Procedimiento",
+    "headline": "Adjudicación directa vs licitación competitiva",
+    "subtitle": "En {{year}}, el {{directPct}}% de los contratos se adjudicaron directamente, sin competencia formal.",
+    "direct": "Adjudicación Directa",
+    "competitive": "Competitiva",
+    "historicalContext": "El promedio histórico 2002-2025 es {{avg}}%. La OCDE recomienda menos del 25%.",
+    "oecdLimit": "OCDE: max 25%"
+  },
+  "topVendorsFull": {
+    "sectionLabel": "Principales Beneficiarios",
+    "headline": "Los mayores proveedores de {{year}}",
+    "subtitle": "Ordenados por valor total contratado. Cobertura de RFC limitada antes de 2018.",
+    "showAll": "Ver los {{count}} proveedores",
+    "showLess": "Mostrar menos",
+    "rankColumn": "#",
+    "vendorColumn": "Proveedor",
+    "valueColumn": "Valor",
+    "contractsColumn": "Contratos",
+    "riskColumn": "Riesgo"
+  },
+  "notableRisks": {
+    "sectionLabel": "Contratos Notables por Riesgo",
+    "headline": "Los 10 contratos de mayor riesgo en {{year}}",
+    "subtitle": "Contratos con los puntajes de riesgo más altos según el modelo v0.6.5. No son prueba de irregularidad — son prioridades de investigación.",
+    "viewContract": "Ver contrato",
+    "noRiskContracts": "No se encontraron contratos de alto riesgo para este año.",
+    "vendor": "Proveedor",
+    "institution": "Institución",
+    "amount": "Monto",
+    "score": "Riesgo"
+  },
+  "monthly": {
+    "sectionLabel": "Gasto Mes por Mes",
+    "headline": "Cuándo se gastó el dinero en {{year}}",
+    "subtitle": "Distribución mensual del gasto contratado. Diciembre se colorea en ámbar — el pico de fin de año es una bandera roja clásica.",
+    "decemberSpike": "Pico de Diciembre",
+    "decemberSpikeNote": "{{pct}}% del gasto anual se concentró en diciembre — {{label}}",
+    "abnormal": "anómalo",
+    "elevated": "elevado",
+    "normal": "normal",
+    "monthLabel": "Mes",
+    "valueLabel": "Gasto",
+    "contractsLabel": "Contratos"
+  },
+  "sectionDivider": {
+    "overview": "Panorama",
+    "patterns": "Patrones",
+    "actors": "Actores",
+    "deep": "Análisis Profundo"
   }
 }
