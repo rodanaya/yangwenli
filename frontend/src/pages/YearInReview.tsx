@@ -254,7 +254,7 @@ function SectorDistributionFull({
         return {
           id: sector.id,
           code: sector.code,
-          name: sector.name,
+          name: sector.nameEN,
           color: sector.color,
           value: val,
           contracts: row?.contracts ?? 0,
@@ -402,7 +402,7 @@ function SectorGrowthDiverging({
               const p = pl.payload
               return [
                 `${p.growthPct > 0 ? '+' : ''}${p.growthPct.toFixed(1)}% (${formatCompactMXN(p.curVal)})`,
-                'Cambio YoY',
+                'YoY Change',
               ]
             }) as never}
           />
@@ -683,7 +683,7 @@ function ProcedureTypeSection({
             <AlertTriangle className="h-3.5 w-3.5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
             <p className="text-[11px] text-red-300/90 leading-relaxed">
               {t('findings.highDirectAward', { pct: directPct.toFixed(1) })}
-              {isAboveAvg && ` · ${(directPct - historicalAvg).toFixed(1)} pp vs promedio`}
+              {isAboveAvg && ` · ${(directPct - historicalAvg).toFixed(1)} pp vs avg`}
             </p>
           </div>
         )}
@@ -1117,7 +1117,7 @@ export default function YearInReview() {
       const growthPct = prevVal > 0 ? ((curVal - prevVal) / prevVal) * 100 : null
       return {
         id: sector.id,
-        name: sector.name,
+        name: sector.nameEN,
         code: sector.code,
         color: sector.color,
         curVal,

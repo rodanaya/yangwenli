@@ -25,6 +25,7 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
+import { getSectorNameEN } from '@/lib/constants'
 import {
   Shield,
   Search,
@@ -377,8 +378,8 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
   // Single-line subline: value · contracts · sector
   const sublineParts: string[] = []
   if (value > 0) sublineParts.push(formatCompactMXN(value))
-  if (contracts > 0) sublineParts.push(`${formatNumber(contracts)} ${t('rowLabels.contracts', { defaultValue: 'contratos' })}`)
-  if (sector) sublineParts.push(sector)
+  if (contracts > 0) sublineParts.push(`${formatNumber(contracts)} ${t('card.contracts', { defaultValue: 'contracts' })}`)
+  if (sector) sublineParts.push(getSectorNameEN(sector))
 
   const handleClick = () => {
     navigate(`/thread/${item.vendor_id}`)
@@ -421,7 +422,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
             {item.new_vendor_risk && (
               <span
                 className="shrink-0 inline-flex items-center"
-                title={t('badges.new', { defaultValue: 'Proveedor nuevo' })}
+                title={t('badges.new')}
               >
                 <Sparkles className="h-3 w-3 text-purple-400" />
               </span>
@@ -456,7 +457,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               'inline-flex items-baseline gap-0.5 px-2 py-1 rounded-md border tabular-nums',
               IPS_BG_COLOR(ips)
             )}
-            title={t('ipsBreakdown.title', { defaultValue: 'Índice de Prioridad de Investigación' })}
+            title={t('ipsBreakdown.title')}
           >
             <span className={cn('font-mono font-bold text-base leading-none', IPS_TEXT_COLOR(ips))}>
               {ipsPct}
@@ -470,8 +471,8 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           <button
             onClick={() => setReviewOpen((v) => !v)}
             className="hidden sm:inline-flex p-1.5 rounded text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
-            aria-label={t('reviewPopover.updateTitle', { defaultValue: 'Actualizar revisión' })}
-            title={t('reviewPopover.updateTitle', { defaultValue: 'Actualizar revisión' })}
+            aria-label={t('reviewPopover.updateTitle')}
+            title={t('reviewPopover.updateTitle')}
           >
             <ClipboardEdit className="h-3.5 w-3.5" />
           </button>
@@ -615,7 +616,7 @@ export default function AriaPage() {
               </p>
             </div>
             <h1 className="text-base font-semibold text-zinc-100 leading-none">
-              {t('queueSection.title', { defaultValue: 'Cola de Investigación' })}
+              {t('queueSection.title')}
             </h1>
           </div>
 
@@ -623,7 +624,7 @@ export default function AriaPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
             <input
               type="text"
-              placeholder={t('leads.searchPlaceholder', { defaultValue: 'Buscar proveedor…' })}
+              placeholder={t('leads.searchPlaceholder')}
               value={search}
               onChange={(e) => { setSearch(e.target.value); setPage(1) }}
               className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
@@ -640,7 +641,7 @@ export default function AriaPage() {
                   : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
               )}
             >
-              {t('filters.all', { defaultValue: 'Todos' })}
+              {t('filters.all')}
             </button>
             {TIER_CONFIG.map((cfg) => (
               <TierFilterPill
@@ -661,7 +662,7 @@ export default function AriaPage() {
         {/* 2. HERO STAT STRIP — 4 small numbers, no giant typography       */}
         {/* ============================================================== */}
         <section
-          aria-label={t('header.lastUpdated', { defaultValue: 'Resumen' })}
+          aria-label={t('header.lastUpdated')}
           className="border border-zinc-800 rounded-lg bg-zinc-900/30 px-4 py-3"
         >
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
@@ -674,7 +675,7 @@ export default function AriaPage() {
                     {stats?.queue_total != null ? formatNumber(stats.queue_total) : '—'}
                   </span>
                   <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('stats.vendorsUnderSurveillance', { defaultValue: 'vendors monitored' })}
+                    {t('stats.vendorsUnderSurveillance')}
                   </span>
                 </div>
 
@@ -683,7 +684,7 @@ export default function AriaPage() {
                     {formatNumber(tierCounts[1])}
                   </span>
                   <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('tier1.label', { defaultValue: 'críticos' })}
+                    {t('tier1.label')}
                   </span>
                 </div>
 
@@ -692,18 +693,18 @@ export default function AriaPage() {
                     {formatCompactMXN(elevatedValue)}
                   </span>
                   <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('stats.valueAtRisk', { defaultValue: 'en riesgo' })}
+                    {t('stats.valueAtRisk')}
                   </span>
                 </div>
 
                 <div className="ml-auto flex items-baseline gap-2">
                   <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
                   <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-mono">
-                    v0.6.5 · {lastRunAt ?? t('header.lastUpdated', { defaultValue: 'updated' })}
+                    v0.6.5 · {lastRunAt ?? t('header.lastUpdated')}
                   </span>
                   <MetodologiaTooltip
-                    title={t('methodology.title', { defaultValue: 'Metodología' })}
-                    body={t('methodology.body', { defaultValue: '' })}
+                    title={t('methodology.title')}
+                    body={t('methodology.body')}
                     link="/methodology"
                   />
                 </div>
@@ -715,15 +716,15 @@ export default function AriaPage() {
         {/* ============================================================== */}
         {/* 3. TIER NAVIGATION ROWS — horizontal bands, clickable           */}
         {/* ============================================================== */}
-        <section aria-label={t('threatLevels', { defaultValue: 'Niveles de amenaza' })}>
+        <section aria-label={t('threatLevels')}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-                {t('threatLevels', { defaultValue: 'Niveles de amenaza' })}
+                {t('threatLevels')}
               </p>
               <span className="text-[10px] text-zinc-600 font-mono">·</span>
               <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">
-                {t('tierCard.clickFilter', { defaultValue: 'Clic para filtrar' })}
+                {t('tierCard.clickFilter')}
               </p>
             </div>
           </div>
@@ -762,11 +763,11 @@ export default function AriaPage() {
         {/* 4. PATTERN FILTER CHIPS — compact, one line, optional           */}
         {/* ============================================================== */}
         {Object.keys(patternCounts).length > 0 && (
-          <section aria-label={t('patternSection.title', { defaultValue: 'Patrones' })}>
+          <section aria-label={t('patternSection.title')}>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-                {t('patternSection.title', { defaultValue: 'Patrones detectados' })}
+                {t('patternSection.title')}
               </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
@@ -792,7 +793,7 @@ export default function AriaPage() {
                 )}
               >
                 <Sparkles className="h-3 w-3" />
-                {t('filters.newVendorOnly', { defaultValue: 'Solo nuevos' })}
+                {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count != null && (
                   <span className="tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
                 )}
@@ -805,9 +806,9 @@ export default function AriaPage() {
                     ? 'bg-green-950/50 text-green-300 border-green-900'
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
                 )}
-                title={t('filters.novelOnlyTooltip', { defaultValue: 'Mostrar solo leads que no están en la base de casos documentados' })}
+                title={t('filters.novelOnlyTooltip')}
               >
-                {t('filters.novelOnly', { defaultValue: 'Fuera de GT' })}
+                {t('filters.novelOnly')}
               </button>
             </div>
           </section>
@@ -816,7 +817,7 @@ export default function AriaPage() {
         {/* ============================================================== */}
         {/* 5. INVESTIGATION LIST — one row per vendor, one action         */}
         {/* ============================================================== */}
-        <section id="aria-investigation-list" aria-label={t('queueSection.title', { defaultValue: 'Cola de investigación' })}>
+        <section id="aria-investigation-list" aria-label={t('queueSection.title')}>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
             <div>
               <div className="flex items-center gap-2">
@@ -832,14 +833,14 @@ export default function AriaPage() {
                       onClick={clearAll}
                       className="text-[10px] font-mono uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors"
                     >
-                      {t('filterBar.clearAll', { defaultValue: 'Limpiar' })} ({activeFilterCount})
+                      {t('filterBar.clearAll')} ({activeFilterCount})
                     </button>
                   </>
                 )}
               </div>
               {totalLeads > 0 && (
                 <p className="text-xs text-zinc-500 font-mono mt-1 tabular-nums">
-                  {formatNumber(totalLeads)} {t('leads.vendorCount', { defaultValue: 'proveedores' })}
+                  {formatNumber(totalLeads)} {t('leads.vendorCount')}
                 </p>
               )}
             </div>
@@ -856,7 +857,7 @@ export default function AriaPage() {
           {/* Review status filter — compact chip row */}
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
             <span className="text-[10px] uppercase tracking-wider font-mono text-zinc-500">
-              {t('table.review', { defaultValue: 'Revisión' })}
+              {t('table.review')}
             </span>
             {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
               const meta = s ? REVIEW_STATUS_META[s] : null
@@ -874,7 +875,7 @@ export default function AriaPage() {
                       : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
                   )}
                 >
-                  {s ? t('status.' + s) : t('reviewFilter.all', { defaultValue: 'Todos' })}
+                  {s ? t('status.' + s) : t('reviewFilter.all')}
                 </button>
               )
             })}

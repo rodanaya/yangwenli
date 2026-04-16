@@ -351,6 +351,7 @@
     "riskScore": "Risk score {{pct}}/100 — {{sector}} sector",
     "badgeCritical": "CRITICAL",
     "badgeHigh": "HIGH",
-    "badgeMedium": "MEDIUM"
+    "badgeMedium": "MEDIUM",
+    "viewCase": "View case"
   }
 }

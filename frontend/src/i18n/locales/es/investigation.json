@@ -351,6 +351,7 @@
     "riskScore": "Puntuación de riesgo {{pct}}/100 — sector {{sector}}",
     "badgeCritical": "CRÍTICO",
     "badgeHigh": "ALTO",
-    "badgeMedium": "MEDIO"
+    "badgeMedium": "MEDIO",
+    "viewCase": "Ver caso"
   }
 }
