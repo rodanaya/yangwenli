@@ -8,11 +8,15 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: 'bg-accent text-white hover:bg-accent-hover',
+        // Phase 1 canonical: neutral dark surface with light text — accessible default.
+        default: 'bg-zinc-800 text-zinc-100 hover:bg-zinc-700',
+        // Brand-amber action — dark text on amber bg for WCAG AA contrast.
+        primary: 'bg-amber-500 text-zinc-950 hover:bg-amber-400',
         destructive: 'bg-risk-critical text-white hover:bg-risk-critical/90',
         outline: 'border border-border bg-transparent hover:bg-background-elevated hover:text-text-primary',
         secondary: 'bg-background-elevated text-text-primary hover:bg-background-elevated/80',
-        ghost: 'hover:bg-background-elevated hover:text-text-primary',
+        // Phase 1 canonical ghost — fully transparent, no bg until hover.
+        ghost: 'bg-transparent text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800/50',
         link: 'text-accent underline-offset-4 hover:underline',
       },
       size: {

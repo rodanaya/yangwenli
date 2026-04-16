@@ -486,11 +486,12 @@ export function Contracts() {
   // Risk distribution histogram data computed from current page results
   const riskHistogram = useMemo(() => {
     if (!data?.data?.length) return null
+    // Phase 1 canonical palette — low uses zinc (no green) on a corruption platform.
     const buckets = [
-      { label: '0–0.25', min: 0, max: RISK_THRESHOLDS.medium, color: '#4ade80', count: 0 },
-      { label: '0.25–0.40', min: RISK_THRESHOLDS.medium, max: RISK_THRESHOLDS.high, color: '#fbbf24', count: 0 },
-      { label: '0.40–0.60', min: RISK_THRESHOLDS.high, max: RISK_THRESHOLDS.critical, color: '#fb923c', count: 0 },
-      { label: '0.60–1.0', min: RISK_THRESHOLDS.critical, max: 1.01, color: '#f87171', count: 0 },
+      { label: '0–0.25', min: 0, max: RISK_THRESHOLDS.medium, color: RISK_COLORS.low, count: 0 },
+      { label: '0.25–0.40', min: RISK_THRESHOLDS.medium, max: RISK_THRESHOLDS.high, color: RISK_COLORS.medium, count: 0 },
+      { label: '0.40–0.60', min: RISK_THRESHOLDS.high, max: RISK_THRESHOLDS.critical, color: RISK_COLORS.high, count: 0 },
+      { label: '0.60–1.0', min: RISK_THRESHOLDS.critical, max: 1.01, color: RISK_COLORS.critical, count: 0 },
     ]
     for (const c of data.data) {
       const score = c.risk_score ?? 0
@@ -675,10 +676,10 @@ export function Contracts() {
               title={t(preset.descriptionKey)}
               onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
               className={cn(
-                'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium whitespace-nowrap border transition-all',
+                'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition-colors',
                 isActive
-                  ? 'bg-accent/15 border-accent/40 text-accent'
-                  : 'bg-background-card border-border/50 text-text-muted hover:text-text-primary hover:border-border'
+                  ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-medium'
+                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border-zinc-700'
               )}
             >
               <Icon className="h-3 w-3" />
@@ -988,7 +989,7 @@ export function Contracts() {
               <button
                 key={tag.key}
                 onClick={() => removeFilterTag(tag.key)}
-                className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs bg-accent/10 text-accent border border-accent/20 hover:bg-accent/20 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs bg-amber-500/20 text-amber-400 border border-amber-500/40 hover:bg-amber-500/30 transition-colors"
                 title={`Remove ${tag.label} filter`}
               >
                 {tag.label}
@@ -1058,9 +1059,9 @@ export function Contracts() {
             <div className="overflow-x-auto overflow-y-auto h-[600px]">
               <div className="min-w-[700px]">
               <table className="w-full" role="table" aria-label="Contracts list">
-                <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b-2 border-border">
+                <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b border-border">
                   <tr>
-                    <th className="px-2 py-2.5 w-8" title={t('table.selectForCompare')}>
+                    <th className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
                       {compareIds.size > 0 && (
                         <button
                           onClick={clearCompare}
@@ -1072,13 +1073,13 @@ export function Contracts() {
                         </button>
                       )}
                     </th>
-                    <th className="px-2 py-2.5 w-8" />
+                    <th className="px-2 py-2 w-8" />
                     {/* Fix 4: Column headers via t() */}
                     {CONTRACT_COLUMN_DEFS.map((col) => (
                       <th
                         key={col.key}
                         className={cn(
-                          'px-3 py-2.5 text-xs font-semibold uppercase tracking-wider select-none',
+                          'px-3 py-2 text-[10px] font-semibold uppercase tracking-[0.08em] select-none',
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
@@ -1105,13 +1106,13 @@ export function Contracts() {
                     {/* #9 — optional ensemble anomaly score column header */}
                     {showAnomalyScore && (
                       <th
-                        className="px-3 py-2.5 text-right text-xs font-semibold uppercase tracking-wider text-purple-400 select-none whitespace-nowrap"
+                        className="px-3 py-2 text-right text-[10px] font-semibold uppercase tracking-[0.08em] text-purple-400 select-none whitespace-nowrap"
                         title="PyOD ensemble anomaly score (0-1). Higher = more anomalous by ML model."
                       >
                         PyOD
                       </th>
                     )}
-                    <th className="px-2 py-2.5 w-8" />
+                    <th className="px-2 py-2 w-8" />
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border/50">
@@ -1318,10 +1319,10 @@ function ContractRow({
                   style={{
                     width: `${Math.min(contract.risk_score * 100, 100)}%`,
                     backgroundColor:
-                      contract.risk_score >= 0.5 ? '#f87171'
-                      : contract.risk_score >= 0.3 ? '#fb923c'
-                      : contract.risk_score >= 0.1 ? '#fbbf24'
-                      : '#4ade80',
+                      contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
+                      : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
+                      : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
+                      : RISK_COLORS.low,
                   }}
                 />
               </div>

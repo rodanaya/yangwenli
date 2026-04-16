@@ -13,30 +13,32 @@ interface RiskLevelPillProps {
   score?: number
 }
 
+// Phase 1 canonical risk pill palette — see design tokens in src/index.css.
+// Critical=red-500, high=amber-500, medium=amber-800/zinc, low=zinc-500 (no green).
 const RISK_STYLES = {
   critical: {
     bg: 'bg-red-500/15',
     text: 'text-red-400',
-    border: 'border-red-500/25',
-    dot: '#f87171',
+    border: 'border-red-500/30',
+    dot: '#ef4444',
   },
   high: {
-    bg: 'bg-orange-500/15',
-    text: 'text-orange-400',
-    border: 'border-orange-500/25',
-    dot: '#fb923c',
+    bg: 'bg-amber-500/15',
+    text: 'text-amber-400',
+    border: 'border-amber-500/30',
+    dot: '#f59e0b',
   },
   medium: {
-    bg: 'bg-amber-100 dark:bg-amber-500/15',
-    text: 'text-amber-800 dark:text-amber-400',
-    border: 'border-amber-300 dark:border-amber-500/25',
-    dot: '#d97706',
+    bg: 'bg-amber-900/20',
+    text: 'text-amber-600',
+    border: 'border-amber-800/30',
+    dot: '#a16207',
   },
   low: {
-    bg: 'bg-emerald-500/15',
-    text: 'text-emerald-400',
-    border: 'border-emerald-500/25',
-    dot: '#4ade80',
+    bg: 'bg-zinc-800/50',
+    text: 'text-zinc-500',
+    border: 'border-zinc-700/30',
+    dot: '#71717a',
   },
 } as const
 

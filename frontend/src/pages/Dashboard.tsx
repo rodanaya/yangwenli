@@ -27,8 +27,6 @@ import {
   Bar,
   BarChart,
   Cell,
-  PieChart,
-  Pie,
   ReferenceLine,
 } from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
@@ -38,7 +36,7 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } fr
 //
 // Structure:
 // 1. EDITORIAL HERO — compact kicker + serif headline + inline stat strip
-// 2. RISK OVERVIEW — 2-column: sector bars (left) + risk distribution donut (right)
+// 2. RISK OVERVIEW — 2-column: sector bars (left) + risk distribution bars (right)
 // 3. ARIA TIER CARDS — 3 compact cards (T1 / T2 / T3) with left color border
 // 4. TOP PRIORITY LEAD — full-width vendor spotlight
 // 5. SECTOR TABLE — compact 12-sector comparison table
@@ -83,15 +81,15 @@ function SectorRiskChart({ sectors, loading }: { sectors: SectorChartRow[]; load
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <h3 className="text-sm font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+        <h3 className="text-sm font-bold text-text-primary">
           {t('editorial.sectorChartTitle', 'Risk by sector')}
         </h3>
         <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
           v0.6.5
         </span>
       </div>
-      <p className="text-[11px] text-text-muted mb-3 leading-relaxed">
-        {t('editorial.sectorChartSubtitle', 'Average score and % high/critical · v0.6.5 model')}
+      <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+        {t('editorial.sectorChartSubtitle', 'Average risk score and share flagged high/critical across the 12 federal sectors (v0.6.5 model).')}
       </p>
 
       <div role="img" aria-label="Horizontal bar chart of avg risk by sector">
@@ -138,21 +136,28 @@ function SectorRiskChart({ sectors, loading }: { sectors: SectorChartRow[]; load
             />
             <RechartsTooltip
               cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-              contentStyle={{
-                background: 'var(--color-background-elevated)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                fontSize: '11px',
-                fontFamily: 'var(--font-family-mono)',
-                padding: '8px 10px',
+              content={({ active, payload, label }) => {
+                if (!active || !payload || payload.length === 0) return null
+                return (
+                  <div className="chart-tooltip">
+                    <p className="font-medium text-zinc-200">{String(label)}</p>
+                    {payload.map((entry, i) => {
+                      const v = typeof entry.value === 'number' ? entry.value : Number(entry.value) || 0
+                      const lbl =
+                        entry.dataKey === 'avgRisk'
+                          ? t('editorial.sectorAvgLabel', 'Avg risk')
+                          : entry.dataKey === 'highCritPct'
+                            ? t('editorial.sectorHighCritLabel', '% High/Critical')
+                            : String(entry.dataKey)
+                      return (
+                        <p key={i} className="text-zinc-400">
+                          {lbl}: <span className="font-mono text-zinc-200">{v.toFixed(1)}%</span>
+                        </p>
+                      )
+                    })}
+                  </div>
+                )
               }}
-              formatter={(value, name) => {
-                const v = typeof value === 'number' ? value : Number(value) || 0
-                if (name === 'avgRisk') return [`${v.toFixed(1)}%`, t('editorial.sectorAvgLabel', 'Avg risk')] as [string, string]
-                if (name === 'highCritPct') return [`${v.toFixed(1)}%`, t('editorial.sectorHighCritLabel', '% High/Critical')] as [string, string]
-                return [String(value), String(name)] as [string, string]
-              }}
-              labelFormatter={(label: string) => label}
             />
             <Bar dataKey="avgRisk" radius={[0, 2, 2, 0]} isAnimationActive={false} barSize={14}>
               {chartData.map((entry) => (
@@ -189,7 +194,7 @@ function SectorRiskChart({ sectors, loading }: { sectors: SectorChartRow[]; load
 }
 
 // ============================================================================
-// RISK DISTRIBUTION DONUT — Critical/High/Medium/Low split
+// RISK DISTRIBUTION — horizontal bars: Critical/High/Medium/Low share
 // ============================================================================
 
 function RiskDistributionDonut({
@@ -228,72 +233,92 @@ function RiskDistributionDonut({
     [rows]
   )
 
-  const pieData = useMemo(
-    () => rows.map((r) => ({ name: r.label, value: r.pct, color: r.color })),
+  // Horizontal bar chart data: critical first (highest visual weight)
+  const barData = useMemo(
+    () => rows.map((r) => ({ name: r.label, level: r.level, value: r.pct, count: r.count, fill: r.color })),
     [rows]
   )
 
   return (
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-1">
-        <h3 className="text-sm font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+        <h3 className="text-sm font-bold text-text-primary">
           {t('editorial.riskDistTitle', 'Risk distribution')}
         </h3>
         <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
           {formatNumber(totalContracts)}
         </span>
       </div>
-      <p className="text-[11px] text-text-muted mb-3 leading-relaxed">
-        {t('editorial.riskDistSubtitle', '{{total}} contracts analyzed', {
+      <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+        {t('editorial.riskDistSubtitle', 'Share of {{total}} contracts at each risk level. High-risk = critical + high.', {
           total: formatNumber(totalContracts),
         })}
       </p>
 
-      {/* Donut */}
-      <div className="relative" style={{ height: 180 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={pieData}
-              cx="50%"
-              cy="50%"
-              innerRadius={52}
-              outerRadius={78}
-              paddingAngle={1}
-              dataKey="value"
-              stroke="var(--color-background)"
-              strokeWidth={2}
-              isAnimationActive={false}
-            >
-              {pieData.map((entry, i) => (
-                <Cell key={`cell-${i}`} fill={entry.color} />
-              ))}
-            </Pie>
+      {/* Hero stat — HR percent (replaces donut center) */}
+      <div className="flex items-baseline gap-3 mb-3 pb-3 border-b border-border/20">
+        <div className="stat-md font-mono" style={{ color: RISK_COLORS.critical }}>
+          {hrRate.toFixed(1)}%
+        </div>
+        <div className="text-[10px] font-mono uppercase tracking-wider text-text-muted/70 leading-tight">
+          {t('editorial.riskHrLabel', 'High-risk rate')}
+          <br />
+          <span className="text-text-muted/50">OECD 2–15%</span>
+        </div>
+      </div>
+
+      {/* Horizontal bar chart — replaces donut */}
+      <div role="img" aria-label="Horizontal bar chart of contracts by risk level">
+        <ResponsiveContainer width="100%" height={Math.max(120, barData.length * 32)}>
+          <BarChart
+            data={barData}
+            layout="vertical"
+            margin={{ top: 0, right: 48, bottom: 0, left: 4 }}
+          >
+            <CartesianGrid
+              strokeDasharray="2 4"
+              stroke="var(--color-border)"
+              horizontal={false}
+              opacity={0.3}
+            />
+            <XAxis
+              type="number"
+              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
+              tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+              axisLine={false}
+              tickLine={false}
+              domain={[0, 'auto']}
+            />
+            <YAxis
+              type="category"
+              dataKey="name"
+              width={72}
+              tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
+              axisLine={false}
+              tickLine={false}
+            />
             <RechartsTooltip
-              contentStyle={{
-                background: 'var(--color-background-elevated)',
-                border: '1px solid var(--color-border)',
-                borderRadius: '6px',
-                fontSize: '11px',
-                fontFamily: 'var(--font-family-mono)',
-                padding: '6px 8px',
-              }}
-              formatter={(value) => {
-                const v = typeof value === 'number' ? value : Number(value) || 0
-                return [`${v.toFixed(1)}%`, ''] as [string, string]
+              cursor={{ fill: 'rgba(255,255,255,0.03)' }}
+              content={({ active, payload }) => {
+                if (!active || !payload || payload.length === 0) return null
+                const p = payload[0].payload as { name: string; value: number; count: number }
+                return (
+                  <div className="chart-tooltip">
+                    <p className="font-medium text-zinc-200">{p.name}</p>
+                    <p className="text-zinc-400">
+                      <span className="font-mono text-zinc-200">{p.value.toFixed(1)}%</span> · {formatNumber(p.count)} contracts
+                    </p>
+                  </div>
+                )
               }}
             />
-          </PieChart>
+            <Bar dataKey="value" radius={[0, 2, 2, 0]} isAnimationActive={false} barSize={18}>
+              {barData.map((entry) => (
+                <Cell key={`risk-${entry.level}`} fill={entry.fill} />
+              ))}
+            </Bar>
+          </BarChart>
         </ResponsiveContainer>
-        {/* Center label */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-          <div className="stat-md font-mono" style={{ color: RISK_COLORS.critical }}>
-            {hrRate.toFixed(1)}%
-          </div>
-          <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted/70">
-            HR
-          </div>
-        </div>
       </div>
 
       {/* Count table */}
@@ -403,11 +428,11 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
     <div>
       <div className="flex items-baseline justify-between gap-3 mb-3">
         <div>
-          <h3 className="text-sm font-bold text-text-primary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          <h3 className="text-sm font-bold text-text-primary">
             {t('editorial.sectorTableTitle', 'Sector breakdown')}
           </h3>
-          <p className="text-[11px] text-text-muted mt-0.5">
-            {t('editorial.sectorTableSubtitle', '12 federal sectors ordered by total value')}
+          <p className="text-xs text-zinc-500 mt-0.5">
+            {t('editorial.sectorTableSubtitle', 'Contracts, total value and risk for each of the 12 federal sectors, ordered by spend.')}
           </p>
         </div>
       </div>
@@ -714,21 +739,21 @@ export function Dashboard() {
       {/* ================================================================ */}
       <section className="grid gap-6 lg:grid-cols-5">
         {/* Left: sector bar chart (~60%) */}
-        <div className="lg:col-span-3 rounded-lg border border-border/30 p-5 bg-background-elevated/10">
+        <div className="surface-card lg:col-span-3 p-5">
           <ErrorBoundary fallback={<SectionErrorFallback />}>
             <SectorRiskChart sectors={sectorChartRows} loading={dashLoading} />
           </ErrorBoundary>
         </div>
 
-        {/* Right: risk distribution donut (~40%) */}
-        <div className="lg:col-span-2 rounded-lg border border-border/30 p-5 bg-background-elevated/10">
+        {/* Right: risk distribution horizontal bar chart (~40%) */}
+        <div className="surface-card lg:col-span-2 p-5">
           <ErrorBoundary fallback={<SectionErrorFallback />}>
             {riskDist && overview ? (
               <RiskDistributionDonut data={riskDist} totalContracts={overview.total_contracts ?? 0} />
             ) : (
               <div className="space-y-3">
                 <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-[180px] w-full rounded-full" />
+                <Skeleton className="h-[180px] w-full rounded" />
                 <Skeleton className="h-24 w-full" />
               </div>
             )}
@@ -807,10 +832,7 @@ export function Dashboard() {
                 >
                   {t('editorial.spotlightKicker', 'PRIMARY INVESTIGATION TARGET')}
                 </p>
-                <p
-                  className="text-base font-bold text-text-primary mb-1"
-                  style={{ fontFamily: 'var(--font-family-serif)' }}
-                >
+                <p className="text-base font-bold text-text-primary mb-1">
                   {toTitleCase(topVendor.vendor_name)}
                 </p>
                 <p className="text-xs text-text-muted flex items-center gap-2 flex-wrap">
@@ -875,20 +897,14 @@ export function Dashboard() {
       {/* ================================================================ */}
       {/* 6. COMPRANET CONTEXT — editorial callout                          */}
       {/* ================================================================ */}
-      <section
-        className="rounded-lg p-5"
-        style={{
-          border: '1px solid var(--color-border)',
-          background: 'var(--color-background-elevated)',
-        }}
-      >
+      <section className="surface-card surface-card--elevated p-5">
         <div className="flex items-start gap-3">
           <AlertTriangle className="h-4 w-4 text-text-muted flex-shrink-0 mt-0.5" />
           <div className="min-w-0 flex-1">
             <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted mb-1">
               {t('compranetContextLabel')}
             </p>
-            <p className="text-sm font-semibold text-text-primary mb-2" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            <p className="text-sm font-semibold text-text-primary mb-2">
               {t('compranetContextTitle')}
             </p>
             <p className="text-xs text-text-muted leading-relaxed mb-3">

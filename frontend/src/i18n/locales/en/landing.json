@@ -61,6 +61,39 @@
     "cta": "Explore sectors",
     "ariaLabel": "Sector risk rate chart"
   },
+  "stories": {
+    "story1": {
+      "kicker": "FINDING 01",
+      "headline": "81.9% of contracts are awarded without competition.",
+      "body": "Direct award triples the OECD maximum (25%). The pattern is structural: in 2023, 9 out of every 10 pesos spent avoided public tender.",
+      "statLabel": "High-risk rate by sector",
+      "oecd_limit": "OECD maximum — we're at 81.9%",
+      "link": "Browse direct awards"
+    },
+    "story2": {
+      "kicker": "FINDING 02",
+      "headline": "184K contracts at critical risk.",
+      "body": "Our v0.6.5 model (AUC 0.828) flags 6% of contracts as critical — statistically similar to 748 documented corruption cases.",
+      "statLabel": "flagged high-risk value",
+      "link": "Explore risk"
+    },
+    "story3": {
+      "kicker": "FINDING 03",
+      "headline": "320 vendors under immediate investigation.",
+      "body": "ARIA — our automated intelligence engine — prioritizes T1 vendors: highest concentration, lowest institutional diversity, multiple capture signals.",
+      "statLabel": "Tier 1 · Under investigation",
+      "screened_label": "vendors screened by ARIA",
+      "link": "Open ARIA queue"
+    },
+    "worstSector": {
+      "label": "MOST VULNERABLE SECTOR",
+      "scores": "scores",
+      "on": "on procurement health —",
+      "subIndicators": "sub-indicators in red out of",
+      "evaluated": "evaluated.",
+      "viewReport": "View report"
+    }
+  },
   "recentFlags": {
     "label": "Live alerts",
     "headline": "Latest critical flags",
@@ -68,7 +101,10 @@
     "ariaLabel": "Recent critical risk contracts",
     "ariaContract": "Critical contract",
     "unknownVendor": "Unknown vendor",
-    "unknownSector": "Unknown sector"
+    "unknownSector": "Unknown sector",
+    "loading": "Loading recent data…",
+    "empty": "No critical contracts found.",
+    "error": "Could not load recent flags. Backend may be offline."
   },
   "scale": {
     "title": "The Scale of Federal Procurement",

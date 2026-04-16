@@ -20,11 +20,23 @@
   --color-sector-trabajo: #f97316;
   --color-sector-otros: #64748b;
 
-  /* Risk Colors — 400-series soft palette (canonical; matches constants.ts RISK_COLORS) */
-  --color-risk-critical: #f87171;
-  --color-risk-high: #fb923c;
-  --color-risk-medium: #fbbf24;
-  --color-risk-low: #4ade80;
+  /* Risk Colors — canonical Phase 1 palette (dark-first, no green for "low")
+     Rationale: green overclaims safety on a corruption platform — use neutral zinc
+     for the noise floor instead. Critical=red-500, high=amber-500, medium=amber-800. */
+  --color-risk-critical: #ef4444;
+  --color-risk-high: #f59e0b;
+  --color-risk-medium: #a16207;
+  --color-risk-low: #71717a;
+
+  /* Single canonical amber accent (Phase 1) */
+  --color-amber-500: #f59e0b;
+
+  /* Dark-first canonical surface tokens (Phase 1)
+     These are the source of truth for new .surface-card components.
+     Existing --color-background-* tokens remain for backward compatibility. */
+  --color-bg-base: #0a0a0b;
+  --color-bg-card: #111113;
+  --color-bg-elevated: #18181b;
 
   /* Light-first editorial palette (default) */
   --color-background: #faf9f6;
@@ -108,10 +120,10 @@
     --border-color: rgba(0, 0, 0, 0.09);
     --border-color-strong: rgba(0, 0, 0, 0.16);
 
-    /* Transitions — snappy but unhurried */
+    /* Transitions — Phase 1 canonical timing (snappy but unhurried) */
     --transition-fast: 100ms ease;
-    --transition-base: 140ms ease;
-    --transition-slow: 220ms ease;
+    --transition-base: 160ms ease;
+    --transition-slow: 260ms ease;
   }
 
   html {
@@ -134,8 +146,8 @@
     --border-color: rgba(255, 255, 255, 0.09);
     --border-color-strong: rgba(255, 255, 255, 0.16);
 
-    /* Frosted glass — cool midnight variant */
-    --color-surface-glass: rgba(6, 9, 17, 0.92);
+    /* Frosted glass — Phase 1 canonical (translucent zinc) */
+    --color-surface-glass: rgba(24, 24, 27, 0.7);
 
     /* Midnight Intelligence palette — cool blue-black foundations + amber-gold accent */
     --color-background: #060911;
@@ -143,9 +155,9 @@
     --color-background-elevated: #131828;
     --color-border: #1c2238;
     --color-border-hover: #2a3350;
-    --color-text-primary: #eaedfa;
-    --color-text-secondary: #a3aec9;
-    --color-text-muted: #7a85a0;
+    --color-text-primary: #fafafa;
+    --color-text-secondary: #a1a1aa;
+    --color-text-muted: #52525b;
     --color-accent: #d4922a;
     --color-accent-hover: #e8a535;
     --color-accent-glow: #d4922a30;
@@ -158,10 +170,21 @@
     --color-signal-live: #3fb950;
     --color-signal-warn: #d29922;
     --color-signal-danger: #f85149;
-    --color-risk-critical: #f87171;
-    --color-risk-high: #fb923c;
-    --color-risk-medium: #fbbf24;
-    --color-risk-low: #4ade80;
+
+    /* Phase 1 canonical risk palette — no green, muted medium */
+    --color-risk-critical: #ef4444;
+    --color-risk-high: #f59e0b;
+    --color-risk-medium: #a16207;
+    --color-risk-low: #71717a;
+
+    /* Phase 1 canonical surface tokens (dark-first source of truth) */
+    --color-bg-base: #0a0a0b;
+    --color-bg-card: #111113;
+    --color-bg-elevated: #18181b;
+
+    /* Phase 1 canonical border tokens */
+    --border-color: rgba(255, 255, 255, 0.08);
+    --border-color-strong: rgba(255, 255, 255, 0.15);
   }
 
   body {
@@ -284,7 +307,34 @@
   html.dark .risk-low { @apply bg-risk-low/15 text-risk-low border-risk-low/30; }
 
   .sector-badge { @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium; }
-  .chart-tooltip { @apply rounded-lg border border-border bg-background-card p-2 shadow-lg text-sm; }
+
+  /* Phase 1 canonical chart tooltip — dark zinc surface, used by Recharts */
+  .chart-tooltip {
+    background: #1c1c1f;
+    border: 1px solid rgba(255, 255, 255, 0.12);
+    border-radius: 0.375rem;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8125rem;
+    color: #e4e4e7;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+  }
+
+  /* Phase 1 canonical surface-card pattern — dark-first replacement for .card/.fern-card.
+     New code should prefer this. Existing classes are kept for backward compatibility. */
+  .surface-card {
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
+  }
+  .surface-card--elevated {
+    background: var(--color-bg-elevated);
+    border-color: var(--color-border-strong);
+  }
+  .surface-card--glass {
+    background: var(--color-surface-glass);
+    backdrop-filter: blur(12px);
+    border-color: var(--color-border);
+  }
 
   /* Live signal pulse */
   .signal-live {

@@ -8,12 +8,12 @@ import { analysisApi, phiApi, contractApi } from '@/api/client'
 import type { FastDashboardData, ContractListResponse, ContractListItem } from '@/api/types'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import ContractField from '@/components/ContractField'
 
 // ---------------------------------------------------------------------------
 // Design tokens
 // ---------------------------------------------------------------------------
 
-const SERIF = 'var(--font-family-serif)'
 const CRIMSON = '#d4922a'
 
 interface PHISector {
@@ -83,7 +83,7 @@ function StoryCard({
     >
       <p className="stat-label text-zinc-500">{kicker}</p>
 
-      <h3 className="text-[1.5rem] leading-tight font-semibold text-zinc-100" style={{ fontFamily: SERIF }}>
+      <h3 className="text-[1.125rem] leading-tight font-semibold text-zinc-100">
         {headline}
       </h3>
 
@@ -225,12 +225,27 @@ export default function Intro() {
             One headline. One subhead. Two CTAs. Three stats inline below.
             No particle canvas. No scan lines. No GSAP. Just the story.
             ===================================================================== */}
-        <section className="border-b border-zinc-900">
+        <section className="relative overflow-hidden border-b border-zinc-900">
+          {/* Particle backdrop — 800 contracts self-organizing by risk */}
+          <ContractField
+            className="absolute inset-0 h-full w-full"
+            ariaLabel="Animated field of 800 procurement contracts — most drift as low-risk grey, while 13.5% self-organize into amber and red clusters representing high-risk vendor networks"
+          />
+          {/* Left-side radial veil: keeps headline legible without hiding the
+              corruption clusters on the right. */}
+          <div
+            aria-hidden
+            className="pointer-events-none absolute inset-0"
+            style={{
+              background:
+                'radial-gradient(ellipse at 18% 50%, rgba(9,9,11,0.92) 0%, rgba(9,9,11,0.78) 32%, rgba(9,9,11,0.35) 62%, rgba(9,9,11,0) 88%)',
+            }}
+          />
           <motion.div
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="max-w-4xl mx-auto px-6 pt-20 pb-14 sm:pt-28 sm:pb-20"
+            className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-14 sm:pt-28 sm:pb-20"
           >
             {/* Kicker */}
             <p className="stat-label text-amber-500 mb-6 inline-flex items-center gap-2">
@@ -238,14 +253,13 @@ export default function Intro() {
               {t('hero.transparency')}
             </p>
 
-            {/* Editorial headline — serif, large but not screaming */}
+            {/* Editorial headline */}
             <h1
-              className="text-[2.5rem] sm:text-[3.25rem] lg:text-[3.75rem] leading-[1.05] font-semibold text-zinc-50 mb-6 tracking-[-0.02em]"
-              style={{ fontFamily: SERIF }}
+              className="text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.08] font-semibold text-zinc-50 mb-6 tracking-[-0.02em]"
             >
-              3.1 millones de contratos.
+              {t('hero.headline')}
               <br />
-              <span className="text-zinc-400">¿Cuántos son irregulares?</span>
+              <span className="text-zinc-400">{t('hero.headline_accent')}</span>
             </h1>
 
             {/* Subhead */}
@@ -315,8 +329,7 @@ export default function Intro() {
             <div className="max-w-3xl mb-12">
               <p className="stat-label text-zinc-500 mb-3">{t('ctaPanels.ariaLabel')}</p>
               <h2
-                className="text-[1.75rem] sm:text-[2.25rem] leading-tight font-semibold text-zinc-100 tracking-[-0.01em]"
-                style={{ fontFamily: SERIF }}
+                className="text-[1.375rem] sm:text-[1.75rem] leading-tight font-semibold text-zinc-100 tracking-[-0.01em]"
               >
                 {t('ctaPanels.headline')}
               </h2>
@@ -327,35 +340,35 @@ export default function Intro() {
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
               <StoryCard
-                kicker="HALLAZGO 01"
-                headline="81.9% de contratos se adjudican sin competencia."
-                body="La adjudicación directa triplica el límite máximo recomendado por la OCDE (25%). El patrón es estructural: en 2023, 9 de cada 10 pesos gastados evitaron licitación pública."
-                stat="81.9%"
-                statLabel={t('sectorTeaser.label')}
-                statColor="#f87171"
-                linkLabel="Ver compras directas"
+                kicker={t('stories.story1.kicker')}
+                headline={t('stories.story1.headline')}
+                body={t('stories.story1.body')}
+                stat="25%"
+                statLabel={t('stories.story1.oecd_limit')}
+                statColor="#71717a"
+                linkLabel={t('stories.story1.link')}
                 onClick={() => goToApp('/procedure-type')}
               />
 
               <StoryCard
-                kicker="HALLAZGO 02"
-                headline="184K contratos con riesgo crítico."
-                body="Nuestro modelo v0.6.5 (AUC 0.828) marca el 6% de contratos como críticos — patrones estadísticamente similares a 748 casos documentados de corrupción."
+                kicker={t('stories.story2.kicker')}
+                headline={t('stories.story2.headline')}
+                body={t('stories.story2.body')}
                 stat={formatCompactMXN(totalValueMxn * (highRiskPct / 100))}
-                statLabel={t('hero.statHighRisk')}
+                statLabel={t('stories.story2.statLabel')}
                 statColor={CRIMSON}
-                linkLabel="Explorar el riesgo"
+                linkLabel={t('stories.story2.link')}
                 onClick={() => goToApp('/risk')}
               />
 
               <StoryCard
-                kicker="HALLAZGO 03"
-                headline="320 proveedores bajo investigación inmediata."
-                body="ARIA — nuestro motor de inteligencia automática — prioriza los T1: proveedores con mayor concentración, menor diversidad institucional y señales múltiples de captura."
-                stat="320"
-                statLabel="Tier 1 · Investigación inmediata"
-                statColor="#fb923c"
-                linkLabel="Abrir cola ARIA"
+                kicker={t('stories.story3.kicker')}
+                headline={t('stories.story3.headline')}
+                body={t('stories.story3.body')}
+                stat="318K"
+                statLabel={t('stories.story3.screened_label')}
+                statColor="#71717a"
+                linkLabel={t('stories.story3.link')}
                 onClick={() => goToApp('/aria')}
               />
             </div>
@@ -365,22 +378,22 @@ export default function Intro() {
               <div className="mt-8 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 flex items-start gap-4">
                 <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
-                  <p className="stat-label text-amber-500 mb-1">SECTOR MÁS VULNERABLE</p>
+                  <p className="stat-label text-amber-500 mb-1">{t('stories.worstSector.label')}</p>
                   <p className="text-sm text-zinc-300">
                     <span className="capitalize font-semibold text-zinc-100">{worstSector.sector_name}</span>
-                    {' '}obtiene calificación{' '}
+                    {' '}{t('stories.worstSector.scores')}{' '}
                     <span className="font-mono font-bold" style={{ color: SECTOR_COLORS[worstSector.sector_name.toLowerCase()] ?? CRIMSON }}>
                       {worstSector.grade}
                     </span>
-                    {' '}en salud procuratoria —{' '}
-                    {worstSector.reds} sub-indicadores en rojo de {worstSector.reds + worstSector.yellows + worstSector.greens} evaluados.
+                    {' '}{t('stories.worstSector.on')}{' '}
+                    {worstSector.reds} {t('stories.worstSector.subIndicators')} {worstSector.reds + worstSector.yellows + worstSector.greens} {t('stories.worstSector.evaluated')}
                   </p>
                 </div>
                 <button
                   onClick={() => goToApp('/report-card')}
                   className="flex-shrink-0 text-xs font-semibold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
                 >
-                  Ver reporte
+                  {t('stories.worstSector.viewReport')}
                   <ArrowUpRight className="h-3 w-3" />
                 </button>
               </div>
@@ -390,135 +403,79 @@ export default function Intro() {
 
         {/* =====================================================================
             SECTION 3 — RECENT CRITICAL ALERTS
-            Simple list. Most recent first. Every row is clickable.
+            Only rendered when the backend is reachable and returns data.
+            Invisible on static/offline deployments — no error state shown.
             ===================================================================== */}
-        <section className="border-b border-zinc-900">
-          <div className="max-w-6xl mx-auto px-6 py-20">
-            <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
-              <div>
-                <p className="stat-label text-red-400 inline-flex items-center gap-2 mb-2">
-                  <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
-                  {t('recentFlags.label')}
-                </p>
-                <h2
-                  className="text-[1.75rem] sm:text-[2.25rem] leading-tight font-semibold text-zinc-100 tracking-[-0.01em]"
-                  style={{ fontFamily: SERIF }}
-                >
-                  {t('recentFlags.headline')}
-                </h2>
-              </div>
-              <button
-                onClick={() => goToApp('/contracts?risk_level=critical')}
-                className="text-xs font-semibold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
-              >
-                {t('recentFlags.viewAll')}
-                <ArrowRight className="h-3.5 w-3.5" />
-              </button>
-            </div>
-
-            <div className="rounded-xl border border-zinc-800 overflow-hidden divide-y divide-zinc-800">
-              {recentCritical.length === 0 && belowFoldEnabled && (
-                <div className="p-8 text-center text-sm text-zinc-500">
-                  Cargando datos recientes&hellip;
+        {recentCritical.length > 0 && (
+          <section className="border-b border-zinc-900">
+            <div className="max-w-6xl mx-auto px-6 py-20">
+              <div className="flex items-end justify-between mb-8 flex-wrap gap-4">
+                <div>
+                  <p className="stat-label text-red-400 inline-flex items-center gap-2 mb-2">
+                    <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse inline-block" />
+                    {t('recentFlags.label')}
+                  </p>
+                  <h2 className="text-[1.375rem] sm:text-[1.75rem] leading-tight font-semibold text-zinc-100 tracking-[-0.01em]">
+                    {t('recentFlags.headline')}
+                  </h2>
                 </div>
-              )}
-              {!belowFoldEnabled && (
-                <>
-                  {[0, 1, 2, 3].map(i => (
-                    <div key={i} className="p-5 flex items-center gap-4 animate-pulse">
-                      <div className="h-4 w-16 bg-zinc-800 rounded" />
-                      <div className="flex-1 h-4 bg-zinc-800 rounded" />
-                      <div className="h-4 w-24 bg-zinc-800 rounded" />
-                    </div>
-                  ))}
-                </>
-              )}
-              {recentCritical.slice(0, 5).map((c) => {
-                const sectorColor = c.sector_name
-                  ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'
-                  : '#64748b'
-                return (
-                  <button
-                    key={c.id}
-                    onClick={() => goToApp(`/contracts/${c.id}`)}
-                    className="w-full text-left p-5 flex items-center gap-4 hover:bg-zinc-900/50 transition-colors focus:outline-none focus:bg-zinc-900/70"
-                  >
-                    {/* Risk pill */}
-                    <div className="flex-shrink-0 w-20">
-                      <RiskPill level={c.risk_level as string || 'critical'} />
-                    </div>
+                <button
+                  onClick={() => goToApp('/contracts?risk_level=critical')}
+                  className="text-xs font-semibold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1"
+                >
+                  {t('recentFlags.viewAll')}
+                  <ArrowRight className="h-3.5 w-3.5" />
+                </button>
+              </div>
 
-                    {/* Vendor + title */}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold text-zinc-100 truncate">
-                        {c.vendor_name || t('recentFlags.unknownVendor')}
-                      </p>
-                      <p className="text-xs text-zinc-500 truncate mt-0.5">
-                        {c.title || c.institution_name || '—'}
-                      </p>
-                    </div>
-
-                    {/* Sector */}
-                    <div className="hidden md:flex flex-shrink-0 w-32 items-center gap-2">
-                      <span
-                        className="h-1.5 w-1.5 rounded-full flex-shrink-0"
-                        style={{ backgroundColor: sectorColor }}
-                      />
-                      <span className="text-xs text-zinc-400 capitalize truncate">
-                        {c.sector_name || t('recentFlags.unknownSector')}
-                      </span>
-                    </div>
-
-                    {/* Amount */}
-                    <div className="flex-shrink-0 text-right">
-                      <div className="stat-xs text-zinc-100">
-                        {formatCompactMXN(c.amount_mxn)}
+              <div className="rounded-xl border border-zinc-800 overflow-hidden divide-y divide-zinc-800">
+                {recentCritical.slice(0, 5).map((c) => {
+                  const sectorColor = c.sector_name
+                    ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'
+                    : '#64748b'
+                  return (
+                    <button
+                      key={c.id}
+                      onClick={() => goToApp(`/contracts/${c.id}`)}
+                      className="w-full text-left p-5 flex items-center gap-4 hover:bg-zinc-900/50 transition-colors focus:outline-none focus:bg-zinc-900/70"
+                    >
+                      <div className="flex-shrink-0 w-20">
+                        <RiskPill level={c.risk_level as string || 'critical'} />
                       </div>
-                      {c.contract_date && (
-                        <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
-                          {new Date(c.contract_date).toISOString().slice(0, 10)}
-                        </div>
-                      )}
-                    </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-semibold text-zinc-100 truncate">
+                          {c.vendor_name || t('recentFlags.unknownVendor')}
+                        </p>
+                        <p className="text-xs text-zinc-500 truncate mt-0.5">
+                          {c.title || c.institution_name || '—'}
+                        </p>
+                      </div>
+                      <div className="hidden md:flex flex-shrink-0 w-32 items-center gap-2">
+                        <span className="h-1.5 w-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: sectorColor }} />
+                        <span className="text-xs text-zinc-400 capitalize truncate">
+                          {c.sector_name || t('recentFlags.unknownSector')}
+                        </span>
+                      </div>
+                      <div className="flex-shrink-0 text-right">
+                        <div className="stat-xs text-zinc-100">{formatCompactMXN(c.amount_mxn)}</div>
+                        {c.contract_date && (
+                          <div className="text-[10px] font-mono text-zinc-500 mt-0.5">
+                            {new Date(c.contract_date).toISOString().slice(0, 10)}
+                          </div>
+                        )}
+                      </div>
+                      <ExternalLink className="h-3.5 w-3.5 text-zinc-600 flex-shrink-0" />
+                    </button>
+                  )
+                })}
+              </div>
 
-                    {/* Arrow */}
-                    <ExternalLink className="h-3.5 w-3.5 text-zinc-600 flex-shrink-0" />
-                  </button>
-                )
-              })}
+              <p className="mt-4 text-[11px] font-mono text-zinc-600 leading-relaxed max-w-2xl">
+                {t('hero.riskDisclaimer')}
+              </p>
             </div>
-
-            {/* Risk disclaimer — small mono */}
-            <p className="mt-4 text-[11px] font-mono text-zinc-600 leading-relaxed max-w-2xl">
-              {t('hero.riskDisclaimer')}
-            </p>
-          </div>
-        </section>
-
-        {/* =====================================================================
-            SECTION 4 — FINAL CTA
-            One sentence, one button. End of page.
-            ===================================================================== */}
-        <section>
-          <div className="max-w-4xl mx-auto px-6 py-24 text-center">
-            <h2
-              className="text-[1.75rem] sm:text-[2.5rem] leading-tight font-semibold text-zinc-100 mb-4 tracking-[-0.01em]"
-              style={{ fontFamily: SERIF }}
-            >
-              {t('cta.headline')}
-            </h2>
-            <p className="text-base text-zinc-400 leading-relaxed mb-8 max-w-2xl mx-auto">
-              {t('cta.body')}
-            </p>
-            <button
-              onClick={() => goToApp('/dashboard')}
-              className="inline-flex items-center gap-2 rounded-md px-6 py-3 text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-colors"
-            >
-              {t('hero.ctaInvestigate')}
-              <ArrowRight className="h-4 w-4" />
-            </button>
-          </div>
-        </section>
+          </section>
+        )}
       </main>
 
       {/* =====================================================================

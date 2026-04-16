@@ -56,12 +56,14 @@ export const SECTORS = [
   { id: 12, code: 'otros', name: 'Otros', nameEN: 'Other', color: '#64748b' },
 ] as const
 
-// Risk colors — Soft Red/Yellow/Green palette
+// Risk colors — Phase 1 canonical palette (no green for "low")
+// Rationale: green overclaims safety on a corruption platform — use neutral zinc
+// for the noise floor. Critical=red-500, high=amber-500, medium=amber-800, low=zinc-500.
 export const RISK_COLORS = {
-  critical: '#f87171',
-  high: '#fb923c',
-  medium: '#fbbf24',
-  low: '#4ade80',
+  critical: '#ef4444',
+  high: '#f59e0b',
+  medium: '#a16207',
+  low: '#71717a',
 } as const
 
 // Active risk model version (fallback — Dashboard fetches live from /analysis/model/metadata)

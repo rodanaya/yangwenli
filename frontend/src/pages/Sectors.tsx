@@ -103,16 +103,16 @@ function RiskBar({ sector }: RiskBarProps) {
 
 interface MiniSparklineProps {
   sector: SectorStatistics
-  color: string
 }
 
-function MiniSparkline({ sector, color }: MiniSparklineProps) {
+function MiniSparkline({ sector }: MiniSparklineProps) {
   const total = sector.total_contracts || 1
+  // Risk colors only — sector color identity stays on the header strip, not on risk visuals
   const bars = [
     { pct: ((sector.critical_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.critical, label: 'Crit' },
     { pct: ((sector.high_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.high, label: 'High' },
     { pct: ((sector.medium_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.medium, label: 'Med' },
-    { pct: ((sector.low_risk_count ?? 0) / total) * 100, barColor: color, label: 'Low' },
+    { pct: ((sector.low_risk_count ?? 0) / total) * 100, barColor: RISK_COLORS.low, label: 'Low' },
   ]
   const maxPct = Math.max(...bars.map((b) => b.pct), 1)
 
@@ -129,7 +129,7 @@ function MiniSparkline({ sector, color }: MiniSparklineProps) {
           style={{
             height: `${Math.max((b.pct / maxPct) * 100, 8)}%`,
             backgroundColor: b.barColor,
-            opacity: b.label === 'Low' ? 0.35 : 0.85,
+            opacity: b.label === 'Low' ? 0.5 : 0.85,
           }}
         />
       ))}
@@ -155,7 +155,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   return (
     <Link
       to={`/sectors/${sector.sector_id}`}
-      className="group flex flex-col rounded-xl border border-white/8 bg-zinc-900/60 hover:bg-zinc-800/70 hover:border-white/15 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="surface-card group flex flex-col hover:bg-zinc-800/70 hover:border-white/15 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       aria-label={`${t(sector.sector_code)} — ${formatSpend(sector.total_value_mxn)}, ${riskLevel} risk`}
     >
       {/* Full-width color header strip */}
@@ -180,8 +180,8 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             </h2>
           </div>
           <div className="flex items-center gap-1.5">
-            {/* OECD compliance badge */}
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'}`}>
+            {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
+            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-zinc-800/60 text-zinc-400 border border-zinc-700/50'}`}>
               OCDE {exceedsOECD ? '\u2717' : '\u2713'}
             </span>
             <RiskBadge level={riskLevel} />
@@ -198,7 +198,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
               {formatNumber(sector.total_contracts)} {t('card.contracts')}
             </p>
           </div>
-          <MiniSparkline sector={sector} color={color} />
+          <MiniSparkline sector={sector} />
         </div>
 
         {/* Vendor count + DA pct row */}
@@ -244,7 +244,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
 
 function SectorCardSkeleton() {
   return (
-    <div className="rounded-xl border border-white/8 bg-zinc-900/60 overflow-hidden">
+    <div className="surface-card overflow-hidden">
       <div className="h-1.5 w-full bg-zinc-800" />
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
@@ -356,7 +356,7 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
 
   if (isLoadingTrends) {
     return (
-      <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4">
+      <div className="surface-card p-4">
         <Skeleton className="h-5 w-48 mb-3" />
         <Skeleton className="h-[220px] w-full" />
       </div>
@@ -364,7 +364,7 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
   }
 
   return (
-    <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
+    <div className="surface-card p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         Tendencia temporal
       </p>
@@ -517,7 +517,7 @@ export function Sectors() {
           const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
           const exceedingOECD = sectors.filter((s) => (s.direct_award_pct ?? 0) > 25).length
           return (
-            <div className="mb-8 border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-5">
+            <div className="mb-8 surface-card p-4">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
                 {t('finding.kicker')}
               </p>
@@ -561,7 +561,7 @@ export function Sectors() {
         {!isLoading && sectors.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
             {/* OECD Competition Gap Bar Chart */}
-            <div className="border border-zinc-700/50 rounded-xl bg-zinc-900/60 p-4" role="img" aria-label="Bar chart comparing direct award rates by sector against the OECD 25% benchmark">
+            <div className="surface-card p-4" role="img" aria-label="Bar chart comparing direct award rates by sector against the OECD 25% benchmark">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
                 {t('finding.competitionGapLabel')}
               </p>

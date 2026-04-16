@@ -46,8 +46,6 @@ interface NavItem {
   title: string
   href: string
   icon: React.ElementType
-  isHero?: boolean
-  heroColor?: string
 }
 
 interface NavItemDef {
@@ -55,8 +53,6 @@ interface NavItemDef {
   href: string
   icon: React.ElementType
   badgeSource?: 'aria-t1' | 'watchlist' | 'cases'
-  isHero?: boolean
-  heroColor?: string
 }
 
 interface NavSectionDef {
@@ -77,7 +73,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     // Active investigation bureau — journalist-facing
     sectionKey: 'sections.investigate',
     items: [
-      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, isHero: true, heroColor: '#d4922a', badgeSource: 'aria-t1' },
+      { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
       { i18nKey: 'theArchive', href: '/investigation', icon: FolderSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
@@ -90,7 +86,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     // Editorial analysis — data-driven stories
     sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'categories', href: '/categories', icon: Layers, isHero: true, heroColor: '#8b5cf6' },
+      { i18nKey: 'categories', href: '/categories', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
       { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
       { i18nKey: 'administrations', href: '/administrations', icon: History },
@@ -126,14 +122,13 @@ function NavSection({
   return (
     <div>
       {!collapsed && (
-        <div className="mb-1.5 px-2 flex items-center gap-2">
-          <span className="text-[10px] font-semibold tracking-[0.08em] uppercase text-white/28 font-mono select-none">
+        <div className="mb-1.5 px-2">
+          <span className="text-[10px] font-semibold tracking-[0.1em] uppercase text-zinc-600 select-none">
             {title}
           </span>
-          <div className="flex-1 h-px bg-white/[0.07]" />
         </div>
       )}
-      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-white/[0.08]" />}
+      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-zinc-800" />}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -236,10 +231,10 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed && (
           <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <span className="text-white font-black text-lg tracking-tight leading-none">RUBLI</span>
-              <span className="text-[9px] font-bold font-mono text-accent bg-accent/10 border border-accent/20 px-1.5 py-0.5 rounded tracking-[0.08em] uppercase leading-none">v0.6.5</span>
+              <span className="text-zinc-100 font-bold text-lg tracking-tight leading-none">RUBLI</span>
+              <span className="text-zinc-600 font-mono text-[10px] leading-none">v0.6.5</span>
             </div>
-            <p className="text-[10px] text-white/35 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
+            <p className="text-[10px] text-zinc-600 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
           </div>
         )}
         {/* Mobile close button */}
@@ -267,8 +262,6 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                   title,
                   href: itemDef.href,
                   icon: itemDef.icon,
-                  isHero: itemDef.isHero,
-                  heroColor: itemDef.heroColor,
                 }
                 const isActive = getIsActive(itemDef.href, location.pathname)
                 const badge = getBadgeCount(itemDef.badgeSource)
@@ -309,8 +302,8 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
-              <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981] flex-shrink-0" />
-              <span className="text-[10px] font-mono text-white/30 tracking-wide">
+              <span className="h-1.5 w-1.5 rounded-full bg-amber-500 flex-shrink-0" />
+              <span className="text-[10px] font-mono text-zinc-600 tracking-wide">
                 {t('contractsIndexed')}
               </span>
             </div>
@@ -319,7 +312,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           <div className="flex justify-center py-1">
             <Tooltip>
               <TooltipTrigger asChild>
-                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 shadow-[0_0_4px_#10b981]" />
+                <span className="h-1.5 w-1.5 rounded-full bg-amber-500" />
               </TooltipTrigger>
               <TooltipContent side="right" sideOffset={8}>
                 <p className="text-xs font-mono">{t('contractsIndexedShort')}</p>
@@ -455,64 +448,41 @@ function SidebarNavItem({
   countBadge?: number
 }) {
   const Icon = item.icon
-  const isHero = item.isHero
-  const heroColor = item.heroColor
 
   const linkContent = (
     <NavLink
       to={item.href}
       className={cn(
-        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm transition-all duration-100',
+        'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500',
         isActive
-          ? 'bg-white/[0.06] text-white ring-1 ring-inset ring-white/[0.08]'
-          : 'text-white/60 hover:text-white hover:bg-white/[0.03]',
-        isHero && !isActive && 'font-semibold',
-        isHero && isActive && 'font-semibold',
-        !isHero && 'font-medium',
+          ? 'border-l-2 border-amber-500 bg-zinc-800/50 text-zinc-100'
+          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30',
         collapsed && 'justify-center px-0',
       )}
       aria-current={isActive ? 'page' : undefined}
     >
-      {/* Active item — 2px left accent bar */}
-      {isActive && !collapsed && (
-        <span
-          className="absolute left-0 top-1 bottom-1 w-[2px] rounded-r-full"
-          style={{ backgroundColor: isHero && heroColor ? heroColor : 'var(--color-accent)' }}
-          aria-hidden="true"
-        />
-      )}
-      {/* Hero left indicator bar (inactive heroes only) */}
-      {isHero && !isActive && !collapsed && (
-        <span
-          className="absolute left-0 top-1/2 -translate-y-1/2 w-[3px] h-4 rounded-r-full opacity-60"
-          style={{ backgroundColor: heroColor }}
-          aria-hidden="true"
-        />
-      )}
-
       {/* Icon -- show badge dot in collapsed mode */}
       <span className="relative flex-shrink-0">
         <Icon
           className={cn(
             'h-4 w-4 transition-colors',
-            isActive ? 'text-white' : 'text-white/45 group-hover:text-white/80',
-            isHero && !isActive && 'text-white/70',
+            isActive ? 'text-zinc-100' : 'text-zinc-500 group-hover:text-zinc-300',
           )}
           aria-hidden="true"
         />
         {badge > 0 && collapsed && (
-          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-500" aria-hidden="true" />
+          <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-amber-500" aria-hidden="true" />
         )}
         {countBadge > 0 && collapsed && badge === 0 && (
-          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-amber-500/60" aria-hidden="true" />
+          <span className="absolute -top-1 -right-1 h-1.5 w-1.5 rounded-full bg-zinc-500" aria-hidden="true" />
         )}
       </span>
       {!collapsed && <span className="truncate">{item.title}</span>}
       {/* Alert badge -- only visible in expanded mode */}
       {badge > 0 && !collapsed && (
         <span
-          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-orange-500 text-[10px] font-bold text-white px-1"
+          className="ml-auto flex h-4 min-w-[1rem] items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-zinc-950 px-1"
           aria-label={`${badge} alert${badge !== 1 ? 's' : ''}`}
         >
           {badge > 9 ? '9+' : badge}
@@ -521,7 +491,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-white/[0.07] text-[10px] font-mono text-white/40 px-1 border border-white/[0.10]"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded bg-zinc-800 text-[10px] font-mono text-zinc-500 px-1 border border-zinc-700"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}

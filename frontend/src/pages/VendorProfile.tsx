@@ -52,8 +52,6 @@ import {
   ReferenceLine,
   ReferenceArea,
   Legend as RechartsLegend,
-  PieChart,
-  Pie,
 } from '@/components/charts'
 import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 import {
@@ -303,7 +301,7 @@ function RiskWaterfallChart({
 
   const barColor = (entry: WaterfallEntry) => {
     if (entry.factorKey === '__total__') return RISK_COLORS[getRiskLevel(riskScore)]
-    if (entry.isNegative) return '#4ade80'
+    if (entry.isNegative) return '#71717a'
     return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
   }
 
@@ -337,13 +335,13 @@ function RiskWaterfallChart({
                 if (active && payload?.[0]) {
                   const d = payload[0].payload as WaterfallEntry
                   return (
-                    <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                      <p className="font-semibold text-text-primary mb-1">{d.name}</p>
+                    <div className="chart-tooltip">
+                      <p className="font-medium text-zinc-200">{d.name}</p>
                       <p className={d.isNegative ? 'text-risk-low' : 'text-risk-high'}>
                         {d.contribution >= 0 ? '+' : ''}{d.contribution.toFixed(3)} {t('waterfall.contribution')}
                       </p>
                       {d.factorKey !== '__total__' && (
-                        <p className="text-text-muted mt-1">
+                        <p className="text-zinc-400 mt-1">
                           {t('waterfall.modelCoefficient')}: {MODEL_COEFFICIENTS[d.factorKey]?.toFixed(3) ?? 'n/a'}
                         </p>
                       )}
@@ -1938,7 +1936,7 @@ export function VendorProfile() {
             <ScrollReveal direction="up" delay={0}>
             <div className="space-y-6">
               {/* Risk Score Gauge */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Shield className="h-4 w-4" />
@@ -1967,7 +1965,7 @@ export function VendorProfile() {
 
               {/* Score Drivers — compact SHAP summary on Overview tab */}
               {shapData && !shapError && shapData.top_risk_factors.length > 0 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <span>{t('cards.scoreDrivers', 'Score Drivers')}</span>
@@ -2017,7 +2015,7 @@ export function VendorProfile() {
 
               {/* Procurement Integrity Score */}
               {scorecard && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <span>{t('cards.integrityScore')}</span>
@@ -2031,7 +2029,7 @@ export function VendorProfile() {
               )}
 
               {/* Procurement Patterns */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="text-sm">{t('cards.procurementPatterns')}</CardTitle>
                 </CardHeader>
@@ -2059,7 +2057,7 @@ export function VendorProfile() {
 
               {/* #24 — Price Volatility KPI */}
               {vendor.avg_z_price_volatility != null && Math.abs(vendor.avg_z_price_volatility) > 0.5 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
@@ -2087,7 +2085,7 @@ export function VendorProfile() {
 
               {/* #27 — Ghost company risk */}
               {(vendor.new_vendor_risk_score ?? 0) > 0.40 && (
-                <Card className="fern-card border-amber-500/20">
+                <Card className="surface-card border-amber-500/20">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <AlertTriangle className="h-4 w-4 text-amber-400" />
@@ -2119,7 +2117,7 @@ export function VendorProfile() {
               {/* #28 — Year-end concentration */}
               {vendor.year_end_pct != null && vendor.year_end_sector_avg != null &&
                 vendor.year_end_pct > vendor.year_end_sector_avg * 1.5 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -2155,7 +2153,7 @@ export function VendorProfile() {
                 const protectFactors = (shapData?.top_protect_factors ?? []) as Array<{ factor: string; shap: number; label?: string }>
                 if (protectFactors.length === 0) return null
                 return (
-                  <Card className="fern-card border-green-500/20">
+                  <Card className="surface-card border-green-500/20">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <ShieldCheck className="h-4 w-4 text-green-400" />
@@ -2200,7 +2198,7 @@ export function VendorProfile() {
             <ScrollReveal direction="up" delay={120} className="lg:col-span-2">
             <div className="space-y-6">
               {/* AI Pattern Analysis — lazy loaded on demand */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2">
@@ -2259,7 +2257,7 @@ export function VendorProfile() {
                 const scandals = linkedScandals as any
                 if (!scandals?.scandals?.length) return null
                 return (
-                  <Card className="fern-card border-red-500/20">
+                  <Card className="surface-card border-red-500/20">
                     <CardHeader>
                       <CardTitle className="flex items-center gap-2 text-sm">
                         <AlertTriangle className="h-4 w-4 text-red-400" />
@@ -2362,7 +2360,7 @@ export function VendorProfile() {
               })()}
 
               {/* Vendor Summary */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <BarChart3 className="h-4 w-4" />
@@ -2382,7 +2380,7 @@ export function VendorProfile() {
               </Card>
 
               {/* Recent Contracts */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader className="flex flex-row items-center justify-between">
                   <CardTitle className="flex items-center gap-2">
                     <FileText className="h-4 w-4" />
@@ -2438,7 +2436,7 @@ export function VendorProfile() {
               </Card>
 
               {/* Top Institutions */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Building2 className="h-4 w-4" />
@@ -2487,52 +2485,61 @@ export function VendorProfile() {
                             : []),
                         ]
                         const totalPieValue = pieData.reduce((s, d) => s + d.value, 0)
+                        const barHeight = Math.max(180, pieData.length * 28)
                         return (
                           <div className="mt-4">
                             <p className="text-xs text-text-muted mb-2">Value share by institution</p>
                             <div
-                              className="h-[180px]"
+                              style={{ height: `${barHeight}px` }}
                               role="img"
-                              aria-label="Pie chart showing contract value share by institution"
+                              aria-label="Horizontal bar chart showing contract value share by institution"
                             >
-                              <span className="sr-only">Pie chart showing contract value distribution across institutions for this vendor.</span>
+                              <span className="sr-only">Horizontal bar chart showing contract value distribution across institutions for this vendor.</span>
                               <ResponsiveContainer width="100%" height="100%">
-                                <PieChart>
-                                  <Pie
-                                    data={pieData}
-                                    dataKey="value"
-                                    nameKey="name"
-                                    cx="40%"
-                                    cy="50%"
-                                    innerRadius={44}
-                                    outerRadius={72}
-                                    paddingAngle={2}
-                                  >
-                                    {pieData.map((entry, idx) => (
-                                      <Cell key={idx} fill={entry.color} />
-                                    ))}
-                                  </Pie>
+                                <BarChart
+                                  data={pieData}
+                                  layout="vertical"
+                                  margin={{ top: 4, right: 8, bottom: 4, left: 8 }}
+                                >
+                                  <XAxis
+                                    type="number"
+                                    hide
+                                    domain={[0, 'dataMax']}
+                                  />
+                                  <YAxis
+                                    type="category"
+                                    dataKey="name"
+                                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+                                    width={140}
+                                    interval={0}
+                                  />
                                   <RechartsTooltip
+                                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
                                     content={({ active, payload }) => {
                                       if (active && payload?.[0]) {
                                         const d = payload[0].payload as { name: string; value: number }
                                         const pct = totalPieValue > 0 ? ((d.value / totalPieValue) * 100).toFixed(1) : '0'
                                         return (
-                                          <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg max-w-[200px]">
-                                            <p className="font-semibold text-text-primary mb-0.5 break-words">{d.name}</p>
-                                            <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
-                                            <p className="text-text-muted">{pct}% of total</p>
+                                          <div className="chart-tooltip max-w-[220px]">
+                                            <p className="font-medium text-zinc-200 mb-0.5 break-words">{d.name}</p>
+                                            <p className="text-zinc-400">{formatCompactMXN(d.value)}</p>
+                                            <p className="text-zinc-400">{pct}% of total</p>
                                           </div>
                                         )
                                       }
                                       return null
                                     }}
                                   />
-                                </PieChart>
+                                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={14}>
+                                    {pieData.map((entry, idx) => (
+                                      <Cell key={idx} fill={entry.color} />
+                                    ))}
+                                  </Bar>
+                                </BarChart>
                               </ResponsiveContainer>
                             </div>
-                            {/* Inline legend */}
-                            <div className="flex flex-col gap-0.5 mt-1">
+                            {/* Inline legend with percentage share */}
+                            <div className="flex flex-col gap-0.5 mt-2">
                               {pieData.map((entry, idx) => (
                                 <div key={idx} className="flex items-center gap-1.5 text-[10px] text-text-muted">
                                   <span
@@ -2559,7 +2566,7 @@ export function VendorProfile() {
 
               {/* Institutional Tenure (Coviello & Gagliarducci 2017) */}
               {vendor.top_institutions && vendor.top_institutions.length > 0 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                       <Building2 className="h-4 w-4" />
@@ -2601,7 +2608,7 @@ export function VendorProfile() {
 
               {/* Sector × Institution Footprint */}
               {footprintError && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-sm">
                       <BarChart3 className="h-4 w-4" />
@@ -2617,7 +2624,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {footprintData && footprintData.footprint.length > 0 && (
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2 text-sm">
                     <BarChart3 className="h-4 w-4" />
@@ -2699,7 +2706,7 @@ export function VendorProfile() {
             <div className="space-y-6">
               {/* Risk Trend Mini-Chart */}
               {riskTrendData.length > 1 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Activity className="h-4 w-4" />
@@ -2732,9 +2739,9 @@ export function VendorProfile() {
                               if (active && payload?.[0]) {
                                 const d = payload[0].payload
                                 return (
-                                  <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
-                                    <span className="font-medium">{d.year}</span>
-                                    <span className="ml-2 tabular-nums">{(d.avg * 100).toFixed(1)}%</span>
+                                  <div className="chart-tooltip">
+                                    <p className="font-medium text-zinc-200">{d.year}</p>
+                                    <p className="text-zinc-400 tabular-nums">{(d.avg * 100).toFixed(1)}%</p>
                                   </div>
                                 )
                               }
@@ -2786,7 +2793,7 @@ export function VendorProfile() {
 
               {/* Vendor Lifecycle Chart */}
               {lifecycleError && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2802,7 +2809,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {lifecycleData && lifecycleData.timeline.length > 1 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -2837,12 +2844,18 @@ export function VendorProfile() {
                             width={32}
                           />
                           <RechartsTooltip
+                            wrapperClassName="chart-tooltip-wrapper"
                             contentStyle={{
-                              backgroundColor: 'var(--color-card)',
-                              border: '1px solid var(--color-border)',
-                              borderRadius: 6,
-                              fontSize: 10,
+                              background: '#1c1c1f',
+                              border: '1px solid rgba(255,255,255,0.12)',
+                              borderRadius: '0.375rem',
+                              padding: '0.5rem 0.75rem',
+                              fontSize: '0.8125rem',
+                              color: '#e4e4e7',
+                              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
                             }}
+                            itemStyle={{ color: '#a1a1aa' }}
+                            labelStyle={{ color: '#e4e4e7', fontWeight: 500 }}
                             formatter={(value: unknown, name?: string) => {
                               if (name === 'Risk') return [`${(Number(value) * 100).toFixed(1)}%`, name]
                               return [Number(value).toLocaleString(), name ?? '']
@@ -2897,7 +2910,7 @@ export function VendorProfile() {
                   }))
                 if (chartData.length < 2) return null
                 return (
-                  <Card className="fern-card">
+                  <Card className="surface-card">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm flex items-center gap-2">
                         <BarChart3 className="h-4 w-4" />
@@ -2937,15 +2950,15 @@ export function VendorProfile() {
                                 if (active && payload?.length) {
                                   const d = payload[0]?.payload as { year: number; total_value_m: number; win_rate: number | null }
                                   return (
-                                    <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg space-y-0.5">
-                                      <span className="font-medium">{d.year}</span>
-                                      <div className="text-text-muted">
-                                        Value: <span className="text-text-primary tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
-                                      </div>
+                                    <div className="chart-tooltip space-y-0.5">
+                                      <p className="font-medium text-zinc-200">{d.year}</p>
+                                      <p className="text-zinc-400">
+                                        Value: <span className="text-zinc-200 tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
+                                      </p>
                                       {d.win_rate != null && (
-                                        <div className="text-text-muted">
-                                          Win rate: <span className="text-text-primary tabular-nums">{d.win_rate}%</span>
-                                        </div>
+                                        <p className="text-zinc-400">
+                                          Win rate: <span className="text-zinc-200 tabular-nums">{d.win_rate}%</span>
+                                        </p>
                                       )}
                                     </div>
                                   )
@@ -3029,7 +3042,7 @@ export function VendorProfile() {
 
               {/* P9: Model Evolution Badge — v3.3 → v4.0 → v5.1 → v6.4 trajectory */}
               {trajectoryData?.scores && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <TrendingUp className="h-4 w-4" />
@@ -3089,7 +3102,7 @@ export function VendorProfile() {
                       const absDelta = Math.abs(delta)
                       const verdict = absDelta < 0.05 ? 'stable' : delta > 0 ? 'worsening' : 'improving'
                       const verdictLabel = verdict === 'worsening' ? 'Riesgo creciente' : verdict === 'improving' ? 'Riesgo decreciente' : 'Riesgo estable'
-                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? '#4ade80' : 'var(--color-text-muted)'
+                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? '#71717a' : 'var(--color-text-muted)'
                       return (
                         <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
                           {verdict === 'worsening' && <TrendingUp className="h-3 w-3" style={{ color: verdictColor }} />}
@@ -3114,7 +3127,7 @@ export function VendorProfile() {
             <div className="lg:col-span-2 space-y-6">
               {/* F1: WaterfallRiskChart (proper component with z-score data) */}
               {waterfallData && waterfallData.length >= 3 && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -3127,7 +3140,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {waterfallError && !waterfallData && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -3143,7 +3156,7 @@ export function VendorProfile() {
                 </Card>
               )}
               {waterfallLoading && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader>
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -3158,7 +3171,7 @@ export function VendorProfile() {
 
               {/* SHAP-based factor chart (per-vendor exact values) — preferred over global-coefficient fallback */}
               {!waterfallData?.length && !waterfallLoading && (
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="text-sm flex items-center gap-2">
                     <Brain className="h-4 w-4 text-accent" />
@@ -3213,7 +3226,7 @@ export function VendorProfile() {
 
               {/* La Huella Digital — Nightingale rose corruption fingerprint */}
               {shapData && (
-                <div className="fern-card p-4">
+                <div className="surface-card p-4">
                   <div className="editorial-rule mb-1">
                     <span className="editorial-label">LA HUELLA DIGITAL</span>
                   </div>
@@ -3237,7 +3250,7 @@ export function VendorProfile() {
 
               {/* Top 3 Contributing Factors — bar summary */}
               {waterfallData && waterfallData.length >= 1 && (
-                <div className="fern-card p-4">
+                <div className="surface-card p-4">
                   <div className="editorial-rule mb-1">
                     <span className="editorial-label">FACTORES PRINCIPALES</span>
                   </div>
@@ -3264,7 +3277,7 @@ export function VendorProfile() {
               )}
 
               {/* Risk Factor List */}
-              <Card className="fern-card">
+              <Card className="surface-card">
                 <CardHeader>
                   <CardTitle className="text-sm">{t('risk.riskFactorDetails')}</CardTitle>
                 </CardHeader>
@@ -3285,7 +3298,7 @@ export function VendorProfile() {
 
               {/* P15: Counterfactual "What If?" panel */}
               {waterfallData && waterfallData.length >= 2 && riskProfile?.avg_risk_score != null && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <Crosshair className="h-4 w-4 text-accent" />
@@ -3307,7 +3320,7 @@ export function VendorProfile() {
 
               {/* #32 — Contract Size Histogram */}
               {histogramData && histogramData.buckets.some((b) => b.count > 0) && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <BarChart3 className="h-4 w-4" />
@@ -3340,9 +3353,9 @@ export function VendorProfile() {
                               if (active && payload?.[0]) {
                                 const d = payload[0].payload as { bucket: string; count: number }
                                 return (
-                                  <div className="rounded border border-border bg-background-card px-2 py-1 text-xs shadow-lg">
-                                    <span className="font-medium">{d.bucket}</span>
-                                    <span className="ml-2 tabular-nums">{d.count.toLocaleString()} contracts</span>
+                                  <div className="chart-tooltip">
+                                    <p className="font-medium text-zinc-200">{d.bucket}</p>
+                                    <p className="text-zinc-400 tabular-nums">{d.count.toLocaleString()} contracts</p>
                                   </div>
                                 )
                               }
@@ -3396,7 +3409,7 @@ export function VendorProfile() {
             />
 
             {/* Activity Calendar */}
-            <Card className="fern-card">
+            <Card className="surface-card">
               <CardHeader>
                 <CardTitle className="flex items-center gap-2">
                   <Activity className="h-4 w-4" />
@@ -3466,7 +3479,7 @@ export function VendorProfile() {
             </div>
 
             {/* Full Contracts Table with filter bar */}
-            <Card className="fern-card">
+            <Card className="surface-card">
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle className="flex items-center gap-2">
                   <FileText className="h-4 w-4" />
@@ -3693,7 +3706,7 @@ export function VendorProfile() {
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
               </div>
             ) : hasCoBiddingRisk ? (
-              <Card className="fern-card border-amber-500/40 bg-amber-500/[0.02]">
+              <Card className="surface-card border-amber-500/40 bg-amber-500/[0.02]">
                 <CardHeader className="pb-3">
                   <div className="flex items-center justify-between">
                     <CardTitle className="flex items-center gap-2 text-amber-400">
@@ -3872,7 +3885,7 @@ export function VendorProfile() {
               </Card>
             ) : (
               !coBiddersLoading && (
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardContent className="p-8 text-center text-text-muted">
                     <Users className="h-8 w-8 mx-auto mb-2 opacity-30" />
                     <p className="text-sm">{t('coBidding.noPatternsTitle')}</p>
@@ -3883,7 +3896,7 @@ export function VendorProfile() {
             )}
 
             {/* Open Full Network Graph */}
-            <Card className="fern-card">
+            <Card className="surface-card">
               <CardContent className="p-6 text-center">
                 <p className="text-sm text-text-muted mb-4">
                   {t('network.networkGraphDescription')}
@@ -3967,7 +3980,7 @@ export function VendorProfile() {
                 </div>
 
                 {/* IPS Breakdown */}
-                <Card className="fern-card">
+                <Card className="surface-card">
                   <CardHeader className="pb-2">
                     <CardTitle className="text-sm flex items-center gap-2">
                       <SlidersHorizontal className="h-4 w-4" />
@@ -4006,7 +4019,7 @@ export function VendorProfile() {
                 <div className="grid gap-4 md:grid-cols-2">
                   {/* Pattern confidences */}
                   {ariaData.pattern_confidences && Object.keys(ariaData.pattern_confidences).length > 0 && (
-                    <Card className="fern-card">
+                    <Card className="surface-card">
                       <CardHeader className="pb-2">
                         <CardTitle className="text-sm">Pattern Confidences</CardTitle>
                       </CardHeader>
@@ -4032,7 +4045,7 @@ export function VendorProfile() {
                   )}
 
                   {/* Burst score + FP penalty */}
-                  <Card className="fern-card">
+                  <Card className="surface-card">
                     <CardHeader className="pb-2">
                       <CardTitle className="text-sm">Signals</CardTitle>
                     </CardHeader>
@@ -4883,12 +4896,12 @@ function PeriodistaPanel({
                         if (active && payload?.[0]) {
                           const d = payload[0].payload as { year: number; total_value_mxn: number; contract_count: number; avg_risk_score: number | null }
                           return (
-                            <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                              <p className="font-semibold text-text-primary mb-1">{d.year}</p>
-                              <p className="text-text-secondary">{formatCompactMXN(d.total_value_mxn)}</p>
-                              <p className="text-text-muted">{t('history.contractsCount', {count: d.contract_count})}</p>
+                            <div className="chart-tooltip">
+                              <p className="font-medium text-zinc-200">{d.year}</p>
+                              <p className="text-zinc-400">{formatCompactMXN(d.total_value_mxn)}</p>
+                              <p className="text-zinc-400">{t('history.contractsCount', {count: d.contract_count})}</p>
                               {d.avg_risk_score != null && (
-                                <p className="text-text-muted">{t('history.avgRisk', {score: d.avg_risk_score.toFixed(2)})}</p>
+                                <p className="text-zinc-400">{t('history.avgRisk', {score: d.avg_risk_score.toFixed(2)})}</p>
                               )}
                             </div>
                           )

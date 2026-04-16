@@ -22,7 +22,6 @@ import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { ariaApi } from '@/api/client'
 import { TableExportButton } from '@/components/TableExportButton'
 import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
-import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorNameEN } from '@/lib/constants'
@@ -45,28 +44,33 @@ import {
 
 type PatternKey = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
 
+// Phase 1 design system: collapse 7 pattern colors → 3 semantic families.
+//   red    = monopoly / capture (P1, P6) — structural risk
+//   amber  = ghost / intermediary (P2, P3, P7) — vendor opacity
+//   zinc   = everything else (P4, P5) — neutral / pattern unknown
 const PATTERN_META: Record<PatternKey, { text: string; bg: string; border: string; dot: string }> = {
-  P1: { text: 'text-red-300',    bg: 'bg-red-950/50',    border: 'border-red-900',    dot: 'bg-red-500' },
-  P2: { text: 'text-purple-300', bg: 'bg-purple-950/50', border: 'border-purple-900', dot: 'bg-purple-500' },
-  P3: { text: 'text-orange-300', bg: 'bg-orange-950/50', border: 'border-orange-900', dot: 'bg-orange-500' },
-  P4: { text: 'text-yellow-300', bg: 'bg-yellow-950/50', border: 'border-yellow-900', dot: 'bg-yellow-500' },
-  P5: { text: 'text-blue-300',   bg: 'bg-blue-950/50',   border: 'border-blue-900',   dot: 'bg-blue-500' },
-  P6: { text: 'text-pink-300',   bg: 'bg-pink-950/50',   border: 'border-pink-900',   dot: 'bg-pink-500' },
-  P7: { text: 'text-zinc-400',   bg: 'bg-zinc-900/50',   border: 'border-zinc-800',   dot: 'bg-zinc-500' },
+  P1: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
+  P2: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
+  P3: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
+  P4: { text: 'text-zinc-400',  bg: 'bg-zinc-800/50',  border: 'border-zinc-700/30',  dot: 'bg-zinc-500' },
+  P5: { text: 'text-zinc-400',  bg: 'bg-zinc-800/50',  border: 'border-zinc-700/30',  dot: 'bg-zinc-500' },
+  P6: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
+  P7: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
 }
 
+// IPS pill color mirrors risk severity bands (critical/high/medium/low).
 const IPS_TEXT_COLOR = (score: number) => {
-  if (score >= 0.75) return 'text-red-400'
-  if (score >= 0.50) return 'text-orange-400'
-  if (score >= 0.30) return 'text-yellow-400'
-  return 'text-blue-400'
+  if (score >= 0.75) return 'text-red-400'   // critical
+  if (score >= 0.50) return 'text-amber-400' // high
+  if (score >= 0.30) return 'text-zinc-300'  // medium
+  return 'text-zinc-500'                      // low
 }
 
 const IPS_BG_COLOR = (score: number) => {
-  if (score >= 0.75) return 'bg-red-500/15 border-red-500/30'
-  if (score >= 0.50) return 'bg-orange-500/15 border-orange-500/30'
-  if (score >= 0.30) return 'bg-yellow-500/15 border-yellow-500/30'
-  return 'bg-blue-500/15 border-blue-500/30'
+  if (score >= 0.75) return 'bg-red-500/10 border-red-500/20'
+  if (score >= 0.50) return 'bg-amber-500/10 border-amber-500/20'
+  if (score >= 0.30) return 'bg-zinc-800/50 border-zinc-700/30'
+  return 'bg-zinc-900/50 border-zinc-800'
 }
 
 type TierConfig = {
@@ -80,19 +84,22 @@ type TierConfig = {
   descKey: string
 }
 
+// Tier accent: T1 critical=red, T2 high=amber, T3 medium=zinc-400, T4 low=zinc-600
 const TIER_CONFIG: TierConfig[] = [
-  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', accent: 'border-l-red-500',    textColor: 'text-red-400',    pillBg: 'bg-red-500/15',    pillText: 'text-red-300',    descKey: 'tier1.description' },
-  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', accent: 'border-l-orange-500', textColor: 'text-orange-400', pillBg: 'bg-orange-500/15', pillText: 'text-orange-300', descKey: 'tier2.description' },
-  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', accent: 'border-l-amber-500',  textColor: 'text-amber-400',  pillBg: 'bg-amber-500/15',  pillText: 'text-amber-300',  descKey: 'tier3.description' },
-  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', accent: 'border-l-blue-600',   textColor: 'text-blue-400',   pillBg: 'bg-blue-500/15',   pillText: 'text-blue-300',   descKey: 'tier4.description' },
+  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', accent: 'border-l-red-500',   textColor: 'text-red-400',   pillBg: 'bg-red-500/10',   pillText: 'text-red-400',   descKey: 'tier1.description' },
+  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', accent: 'border-l-amber-500', textColor: 'text-amber-400', pillBg: 'bg-amber-500/10', pillText: 'text-amber-400', descKey: 'tier2.description' },
+  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', accent: 'border-l-zinc-500',  textColor: 'text-zinc-400',  pillBg: 'bg-zinc-800/50',  pillText: 'text-zinc-400',  descKey: 'tier3.description' },
+  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', accent: 'border-l-zinc-700',  textColor: 'text-zinc-600',  pillBg: 'bg-zinc-900/50',  pillText: 'text-zinc-500',  descKey: 'tier4.description' },
 ]
 
 type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
 
+// Phase 1: review status pills use the canonical 3-color system (red/amber/zinc).
+// "confirmed" no longer uses green — confirmed-corrupt is a critical finding, not a "safe" state.
 const REVIEW_STATUS_META: Record<ReviewStatus, { className: string }> = {
   pending:   { className: 'bg-zinc-800/60 text-zinc-400 border-zinc-700' },
-  reviewing: { className: 'bg-orange-950/60 text-orange-400 border-orange-800' },
-  confirmed: { className: 'bg-green-950/60 text-green-400 border-green-800' },
+  reviewing: { className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
+  confirmed: { className: 'bg-red-500/10 text-red-400 border-red-500/20' },
   dismissed: { className: 'bg-zinc-900/60 text-zinc-500 border-zinc-800' },
 }
 
@@ -338,13 +345,13 @@ function ReviewPopover({
         <button
           onClick={() => promoteMutation.mutate()}
           disabled={promoteMutation.isPending || promoteMutation.isSuccess}
-          className="w-full py-1.5 rounded text-xs font-medium border border-green-700 text-green-400 hover:bg-green-950/40 disabled:opacity-50 transition-colors"
+          className="w-full py-1.5 rounded text-xs font-medium border border-amber-500/30 text-amber-400 hover:bg-amber-500/10 disabled:opacity-50 transition-colors"
         >
           {promoteMutation.isPending ? t('reviewPopover.promoting') : promoteMutation.isSuccess ? t('reviewPopover.promotedToGT') : t('reviewPopover.promoteToGT')}
         </button>
       )}
       {inGroundTruth && (
-        <p className="text-[10px] text-green-500/70 text-center">{t('reviewPopover.alreadyInGT')}</p>
+        <p className="text-[10px] text-zinc-500 text-center">{t('reviewPopover.alreadyInGT')}</p>
       )}
       {(mutation.isError || promoteMutation.isError) && (
         <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
@@ -398,7 +405,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 sm:gap-4 px-4 py-3 rounded-md border border-zinc-800 border-l-4 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer',
+          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-md border border-zinc-800 border-l-4 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer',
           tierCfg.accent
         )}
       >
@@ -424,7 +431,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
                 className="shrink-0 inline-flex items-center"
                 title={t('badges.new')}
               >
-                <Sparkles className="h-3 w-3 text-purple-400" />
+                <Sparkles className="h-3 w-3 text-amber-400" />
               </span>
             )}
           </div>
@@ -698,7 +705,7 @@ export default function AriaPage() {
                 </div>
 
                 <div className="ml-auto flex items-baseline gap-2">
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-green-500" />
+                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
                   <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-mono">
                     v0.6.5 · {lastRunAt ?? t('header.lastUpdated')}
                   </span>
@@ -788,7 +795,7 @@ export default function AriaPage() {
                 className={cn(
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors',
                   newVendorOnly
-                    ? 'bg-purple-950/50 text-purple-300 border-purple-900'
+                    ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
                 )}
               >
@@ -803,7 +810,7 @@ export default function AriaPage() {
                 className={cn(
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors',
                   novelOnly
-                    ? 'bg-green-950/50 text-green-300 border-green-900'
+                    ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
                 )}
                 title={t('filters.novelOnlyTooltip')}
@@ -888,22 +895,20 @@ export default function AriaPage() {
               ))}
             </div>
           ) : leadsItems.length === 0 ? (
-            <Card className="border border-zinc-800 bg-zinc-900/30">
-              <CardContent className="p-10 text-center">
-                <Search className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
-                <p className="text-sm font-medium text-zinc-300 mb-1">
-                  {search ? t('emptyState.noSearchResults', { query: search }) : t('leads.empty', { defaultValue: 'Sin resultados' })}
-                </p>
-                {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearAll}
-                    className="mt-3 px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
-                  >
-                    {t('filterBar.clearAll', { defaultValue: 'Limpiar filtros' })}
-                  </button>
-                )}
-              </CardContent>
-            </Card>
+            <div className="surface-card p-10 text-center">
+              <Search className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
+              <p className="text-sm font-medium text-zinc-300 mb-1">
+                {search ? t('emptyState.noSearchResults', { query: search }) : t('leads.empty', { defaultValue: 'Sin resultados' })}
+              </p>
+              {activeFilterCount > 0 && (
+                <button
+                  onClick={clearAll}
+                  className="mt-3 px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
+                >
+                  {t('filterBar.clearAll', { defaultValue: 'Limpiar filtros' })}
+                </button>
+              )}
+            </div>
           ) : (
             <motion.div
               variants={staggerContainer}

@@ -61,6 +61,39 @@
     "cta": "Explorar sectores",
     "ariaLabel": "Gráfica de tasa de riesgo por sector"
   },
+  "stories": {
+    "story1": {
+      "kicker": "HALLAZGO 01",
+      "headline": "81.9% de contratos se adjudican sin competencia.",
+      "body": "La adjudicación directa triplica el límite máximo recomendado por la OCDE (25%). El patrón es estructural: en 2023, 9 de cada 10 pesos gastados evitaron licitación pública.",
+      "statLabel": "Tasa de riesgo alto por sector",
+      "oecd_limit": "Límite OCDE — estamos al 81.9%",
+      "link": "Ver compras directas"
+    },
+    "story2": {
+      "kicker": "HALLAZGO 02",
+      "headline": "184K contratos con riesgo crítico.",
+      "body": "Nuestro modelo v0.6.5 (AUC 0.828) marca el 6% de contratos como críticos — patrones estadísticamente similares a 748 casos documentados de corrupción.",
+      "statLabel": "valor en riesgo alto detectado",
+      "link": "Explorar el riesgo"
+    },
+    "story3": {
+      "kicker": "HALLAZGO 03",
+      "headline": "320 proveedores bajo investigación inmediata.",
+      "body": "ARIA — nuestro motor de inteligencia automática — prioriza los T1: proveedores con mayor concentración, menor diversidad institucional y señales múltiples de captura.",
+      "statLabel": "Tier 1 · Investigación inmediata",
+      "screened_label": "proveedores evaluados por ARIA",
+      "link": "Abrir cola ARIA"
+    },
+    "worstSector": {
+      "label": "SECTOR MÁS VULNERABLE",
+      "scores": "obtiene calificación",
+      "on": "en salud procuratoria —",
+      "subIndicators": "sub-indicadores en rojo de",
+      "evaluated": "evaluados.",
+      "viewReport": "Ver reporte"
+    }
+  },
   "recentFlags": {
     "label": "Inteligencia en vivo",
     "headline": "Últimas alertas críticas",
@@ -68,7 +101,10 @@
     "ariaLabel": "Contratos recientes de riesgo crítico",
     "ariaContract": "Contrato crítico",
     "unknownVendor": "Proveedor desconocido",
-    "unknownSector": "Sector desconocido"
+    "unknownSector": "Sector desconocido",
+    "loading": "Cargando datos recientes…",
+    "empty": "No se encontraron contratos críticos.",
+    "error": "No se pudieron cargar las alertas. El backend puede estar desconectado."
   },
   "scale": {
     "title": "La Escala de las Adquisiciones Federales",

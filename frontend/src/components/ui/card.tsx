@@ -41,4 +41,41 @@ const CardFooter = React.forwardRef<HTMLDivElement, React.HTMLAttributes<HTMLDiv
 )
 CardFooter.displayName = 'CardFooter'
 
+/**
+ * SurfaceCard — Phase 1 canonical card surface.
+ * Uses dark-first --color-bg-card / --color-bg-elevated tokens via .surface-card classes.
+ * Prefer this over Card for new pages migrating to the unified design system.
+ *
+ * Variants:
+ *  - default: bg-card + subtle border
+ *  - elevated: bg-elevated + stronger border
+ *  - glass: translucent surface with backdrop-blur (for headers/overlays)
+ */
+type SurfaceCardProps = React.HTMLAttributes<HTMLDivElement> & {
+  elevated?: boolean
+  glass?: boolean
+}
+
+export function SurfaceCard({
+  children,
+  className,
+  elevated,
+  glass,
+  ...props
+}: SurfaceCardProps) {
+  return (
+    <div
+      className={cn(
+        'surface-card',
+        elevated && 'surface-card--elevated',
+        glass && 'surface-card--glass',
+        className
+      )}
+      {...props}
+    >
+      {children}
+    </div>
+  )
+}
+
 export { Card, CardHeader, CardFooter, CardTitle, CardDescription, CardContent }

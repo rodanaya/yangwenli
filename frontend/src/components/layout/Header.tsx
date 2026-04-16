@@ -8,7 +8,6 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import { CommandPalette } from '@/components/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { analysisApi } from '@/api/client'
-import { cn } from '@/lib/utils'
 
 // Route path → nav i18n key mapping
 const ROUTE_I18N_KEYS: Record<string, string> = {
@@ -112,7 +111,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const parentPath = getParentPath(currentPath)
 
   return (
-    <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-border/60 bg-background/85 px-4 md:px-5 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-zinc-900 bg-background/85 px-4 md:px-5 backdrop-blur-xl">
       {/* Left — Hamburger (mobile) + Breadcrumb path */}
       <div className="flex items-center gap-1.5 min-w-0 text-sm">
         {/* Hamburger — mobile only */}
@@ -198,14 +197,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className={cn(
-                  'hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-md text-[10px] font-mono font-bold tracking-[0.08em] uppercase',
-                  'border transition-colors',
-                  qualityGrade === 'A' ? 'text-risk-low border-risk-low/30 bg-risk-low/[0.06] hover:bg-risk-low/10' :
-                  qualityGrade === 'B' ? 'text-accent border-accent/30 bg-accent/[0.06] hover:bg-accent/10' :
-                  qualityGrade === 'C' ? 'text-risk-medium border-risk-medium/30 bg-risk-medium/[0.06] hover:bg-risk-medium/10' :
-                  'text-risk-high border-risk-high/30 bg-risk-high/[0.06] hover:bg-risk-high/10'
-                )}
+                className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded text-[11px] font-mono text-zinc-300 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-colors"
                 onClick={() => navigate('/settings?tab=quality')}
               >
                 <Database className="h-3 w-3" />
@@ -222,7 +214,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <Tooltip>
           <TooltipTrigger asChild>
             <div className="hidden sm:flex items-center gap-1 h-7 px-1.5 text-xs text-text-muted">
-              <Activity className="h-3 w-3 text-signal-live" />
+              <Activity className="h-3 w-3 text-amber-500" />
               <span className="font-mono">{tc('header.live')}</span>
             </div>
           </TooltipTrigger>

@@ -96,13 +96,9 @@ interface TrendYear {
 }
 
 // ---------------------------------------------------------------------------
-// Constants
-// ---------------------------------------------------------------------------
-
-const SERIF = 'var(--font-family-serif)'
-
-// ---------------------------------------------------------------------------
 // Mexican traffic-light system (semaforo) -- replaces US letter grades
+// Colors: neutral zinc tones for "good" grades (a corruption platform should
+// not use green to imply confidence), amber/red for problematic ones.
 // ---------------------------------------------------------------------------
 
 interface MexicanGrade {
@@ -119,27 +115,34 @@ function gradeToMexican(grade: string, _score?: number): MexicanGrade {
   switch (grade) {
     case 'S':
     case 'A':
-      return { label: 'Excelente', labelEN: 'Excellent', color: '#16a34a', bg: 'rgba(22,163,74,0.08)', border: 'rgba(22,163,74,0.25)', semaforo: 'verde', tier: 'good' }
+      // Excelente -- neutral light zinc (no green, avoid false confidence)
+      return { label: 'Excelente', labelEN: 'Excellent', color: '#d4d4d8', bg: 'rgba(212,212,216,0.06)', border: 'rgba(212,212,216,0.20)', semaforo: 'verde', tier: 'good' }
     case 'B+':
     case 'B':
-      return { label: 'Satisfactorio', labelEN: 'Satisfactory', color: '#0d9488', bg: 'rgba(13,148,136,0.08)', border: 'rgba(13,148,136,0.25)', semaforo: 'verde', tier: 'ok' }
+      // Satisfactorio -- mid zinc
+      return { label: 'Satisfactorio', labelEN: 'Satisfactory', color: '#a1a1aa', bg: 'rgba(161,161,170,0.06)', border: 'rgba(161,161,170,0.20)', semaforo: 'verde', tier: 'ok' }
     case 'C+':
     case 'C':
-      return { label: 'Regular', labelEN: 'Fair', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'amarillo', tier: 'poor' }
+      // Regular -- amber
+      return { label: 'Regular', labelEN: 'Fair', color: '#f59e0b', bg: 'rgba(245,158,11,0.08)', border: 'rgba(245,158,11,0.25)', semaforo: 'amarillo', tier: 'poor' }
     case 'D':
     case 'D-':
-      return { label: 'Deficiente', labelEN: 'Deficient', color: '#ea580c', bg: 'rgba(234,88,12,0.08)', border: 'rgba(234,88,12,0.25)', semaforo: 'rojo', tier: 'bad' }
+      // Deficiente -- darker amber
+      return { label: 'Deficiente', labelEN: 'Deficient', color: '#d97706', bg: 'rgba(217,119,6,0.08)', border: 'rgba(217,119,6,0.25)', semaforo: 'rojo', tier: 'bad' }
     default:
-      return { label: 'Critico', labelEN: 'Critical', color: '#dc2626', bg: 'rgba(220,38,38,0.10)', border: 'rgba(220,38,38,0.25)', semaforo: 'rojo', tier: 'bad' }
+      // Critico -- red
+      return { label: 'Critico', labelEN: 'Critical', color: '#ef4444', bg: 'rgba(239,68,68,0.10)', border: 'rgba(239,68,68,0.25)', semaforo: 'rojo', tier: 'bad' }
   }
 }
 
-/** Semaforo (traffic light) indicator -- 3 stacked CSS circles */
+/** Semaforo (traffic light) indicator -- 3 stacked CSS circles
+ *  Note: keeps semaforo green for the visual metaphor (verde light is conventional),
+ *  but grade text colors elsewhere use neutral zinc to avoid false confidence. */
 function SemaforoIndicator({ active }: { active: 'verde' | 'amarillo' | 'rojo' }) {
   const lights: Array<{ key: 'verde' | 'amarillo' | 'rojo'; color: string }> = [
-    { key: 'verde', color: '#16a34a' },
-    { key: 'amarillo', color: '#d97706' },
-    { key: 'rojo', color: '#dc2626' },
+    { key: 'verde', color: '#a1a1aa' },
+    { key: 'amarillo', color: '#f59e0b' },
+    { key: 'rojo', color: '#ef4444' },
   ]
   return (
     <div
@@ -250,15 +253,15 @@ function HeroImpactSection({
     (dist?.low?.count_pct ?? 0)
 
   const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
-    { key: 'critical', color: '#f87171', label: 'Critical' },
-    { key: 'high',     color: '#fb923c', label: 'High'     },
-    { key: 'medium',   color: '#fbbf24', label: 'Medium'   },
-    { key: 'low',      color: '#4ade80', label: 'Low'      },
+    { key: 'critical', color: '#ef4444', label: 'Critical' },
+    { key: 'high',     color: '#f59e0b', label: 'High'     },
+    { key: 'medium',   color: '#a16207', label: 'Medium'   },
+    { key: 'low',      color: '#71717a', label: 'Low'      },
   ]
 
   return (
     <motion.section
-      className="mb-8 rounded-xl overflow-hidden bg-zinc-900 border border-zinc-800"
+      className="mb-8 surface-card overflow-hidden"
       initial={{ opacity: 0, y: -16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.55, ease: 'easeOut' }}
@@ -279,7 +282,7 @@ function HeroImpactSection({
 
         {/* Stat 2 -- critical contracts */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-red-400">
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-red-500">
             {criticalCountLabel}
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
@@ -289,7 +292,7 @@ function HeroImpactSection({
 
         {/* Stat 3 -- high-risk rate */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-orange-400">
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-amber-500">
             {highRiskRate}%
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
@@ -300,7 +303,7 @@ function HeroImpactSection({
 
         {/* Stat 4 -- sectors graded */}
         <div className="px-6 py-5 flex flex-col gap-1">
-          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-violet-400">
+          <span className="text-2xl md:text-3xl font-bold font-mono leading-none tabular-nums text-zinc-100">
             12
           </span>
           <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-1">
@@ -407,9 +410,8 @@ function HeroSection({
               {/* Extra-large numeric score — national index hero */}
               <div className="flex items-baseline gap-1">
                 <motion.span
-                  className="leading-none font-black tabular-nums"
+                  className="leading-none font-black font-mono tabular-nums"
                   style={{
-                    fontFamily: SERIF,
                     fontSize: '7.5rem',
                     color: mx.color,
                     textShadow: `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
@@ -427,7 +429,7 @@ function HeroSection({
                   {Math.round(score)}
                 </motion.span>
                 <span
-                  className="text-3xl font-bold"
+                  className="text-3xl font-bold font-mono"
                   style={{ color: mx.color, opacity: 0.5 }}
                 >
                   /100
@@ -464,10 +466,7 @@ function HeroSection({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <h1
-              className="text-2xl md:text-3xl font-bold leading-snug mb-3 text-zinc-100"
-              style={{ fontFamily: SERIF }}
-            >
+            <h1 className="text-2xl md:text-3xl font-serif font-bold leading-snug mb-3 text-zinc-100">
               {headline}
             </h1>
 
@@ -485,7 +484,7 @@ function HeroSection({
               <div className="mt-3 inline-flex items-center gap-2">
                 <span
                   className="inline-block w-2.5 h-2.5 rounded-full"
-                  style={{ backgroundColor: highRiskPct > 15 ? '#dc2626' : highRiskPct > 10 ? '#f97316' : '#16a34a' }}
+                  style={{ backgroundColor: highRiskPct > 15 ? '#ef4444' : highRiskPct > 10 ? '#f59e0b' : '#a1a1aa' }}
                   aria-hidden="true"
                 />
                 <span className="text-sm font-medium text-zinc-300">
@@ -535,7 +534,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
                 {t('oecdDABenchmark')}
               </p>
               {daRate != null && (
-                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: daRate > 25 ? '#dc2626' : '#16a34a' }}>
+                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: daRate > 25 ? '#ef4444' : '#a1a1aa' }}>
                   {t('oecdMexicoDA', { pct: daRate.toFixed(1) })}
                 </p>
               )}
@@ -553,7 +552,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
                 {t('oecdSBBenchmark')}
               </p>
               {sbRate != null && (
-                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: sbRate > 15 ? '#dc2626' : '#16a34a' }}>
+                <p className="text-sm font-mono font-bold mt-0.5" style={{ color: sbRate > 15 ? '#ef4444' : '#a1a1aa' }}>
                   {t('oecdMexicoSB', { pct: sbRate.toFixed(1) })}
                 </p>
               )}
@@ -570,10 +569,10 @@ function OECDContextPanel({ national }: { national: PHINational }) {
 // ---------------------------------------------------------------------------
 
 const RISK_LEVEL_COLORS = {
-  critical: '#f87171',
-  high:     '#fb923c',
-  medium:   '#fbbf24',
-  low:      '#4ade80',
+  critical: '#ef4444',
+  high:     '#f59e0b',
+  medium:   '#a16207',
+  low:      '#71717a',
 } as const
 
 function RiskBar({ dist }: { dist: RiskDistribution }) {
@@ -664,21 +663,21 @@ function KeyMetrics({
       title: oneIn !== null ? t('metricRiskTitle', { n: oneIn }) : '--',
       subtitle: t('metricRiskSubtitle'),
       note: t('metricRiskNote'),
-      accent: '#dc2626',
+      accent: '#ef4444',
     },
     {
       id: 'value',
       title: valueTrillions !== null ? t('metricValueTitle', { value: valueTrillions }) : '--',
       subtitle: t('metricValueSubtitle'),
       note: t('metricValueNote', { contracts: contractsFormatted ?? '3.1M' }),
-      accent: '#3b82f6',
+      accent: '#22d3ee',
     },
     {
       id: 'cases',
       title: t('metricCasesTitle', { count: gtCasesCount }),
       subtitle: t('metricCasesSubtitle'),
       note: t('metricCasesNote'),
-      accent: '#16a34a',
+      accent: '#f59e0b',
     },
   ]
 
@@ -693,10 +692,10 @@ function KeyMetrics({
         <motion.div
           key={m.id}
           variants={cardItemVariants}
-          className="rounded-xl p-5 bg-zinc-900 border border-zinc-800"
+          className="surface-card p-5"
           style={{ borderLeftWidth: 3, borderLeftColor: m.accent }}
         >
-          <p className="text-lg md:text-xl font-bold leading-tight mb-2 text-zinc-100" style={{ fontFamily: SERIF }}>
+          <p className="text-lg md:text-xl font-bold leading-tight mb-2 text-zinc-100">
             {m.title}
           </p>
           <p className="text-sm leading-relaxed mb-3 text-zinc-400">
@@ -738,7 +737,7 @@ function WhatThisMeans({
 
   return (
     <section className="mb-10">
-      <h2 className="text-lg font-bold mb-4 text-zinc-100" style={{ fontFamily: SERIF }}>
+      <h2 className="text-lg font-serif font-bold mb-4 text-zinc-100">
         {t('whatThisMeansTitle')}
       </h2>
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
@@ -798,14 +797,14 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
 
   return (
     <section className="mb-10">
-      <h2 className="text-lg font-bold mb-1 text-zinc-100" style={{ fontFamily: SERIF }}>
+      <h2 className="text-lg font-serif font-bold mb-1 text-zinc-100">
         {t('sectorTitle')}
       </h2>
       <p className="text-sm mb-5 text-zinc-500">
         {t('sectorSubtitle')}
       </p>
 
-      <div className="rounded-xl overflow-hidden border border-zinc-800 bg-zinc-900">
+      <div className="surface-card overflow-hidden">
         <div className="divide-y divide-zinc-800/60">
           {sorted.map((sector, idx) => {
             const sectorMeta = SECTORS.find((s) => s.id === sector.sector_id)
@@ -879,7 +878,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                   {/* Pct label */}
                   <span
                     className="text-sm font-bold font-mono tabular-nums w-14 text-right flex-shrink-0"
-                    style={{ color: combinedPct > 20 ? '#dc2626' : combinedPct > 10 ? '#f97316' : '#a1a1aa' }}
+                    style={{ color: combinedPct > 20 ? '#ef4444' : combinedPct > 10 ? '#f59e0b' : '#a1a1aa' }}
                   >
                     {combinedPct.toFixed(1)}%
                   </span>
@@ -952,20 +951,20 @@ function TrendSection() {
   }, [years])
 
   const trendConfig = {
-    improving: { icon: '\u2191', color: '#16a34a', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
+    improving: { icon: '\u2191', color: '#a1a1aa', labelKey: 'trendImproving', sentenceKey: 'trendSentence_improving' },
     stable:    { icon: '\u2192', color: '#6b7280', labelKey: 'trendStable',    sentenceKey: 'trendSentence_stable'    },
-    worsening: { icon: '\u2193', color: '#dc2626', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
+    worsening: { icon: '\u2193', color: '#ef4444', labelKey: 'trendWorsening', sentenceKey: 'trendSentence_worsening' },
   }[trendDirection]
 
   const earliestYear = years.length > 0 ? years[0].year : 2010
 
   return (
     <section className="mb-10">
-      <h2 className="text-lg font-bold mb-4 text-zinc-100" style={{ fontFamily: SERIF }}>
+      <h2 className="text-lg font-serif font-bold mb-4 text-zinc-100">
         {t('trendTitle')}
       </h2>
 
-      <div className="rounded-xl p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6 border border-zinc-800 bg-zinc-900">
+      <div className="surface-card p-6 flex flex-col sm:flex-row items-center sm:items-start gap-6">
         {/* Big arrow */}
         <div className="flex-shrink-0 text-center">
           <span
@@ -1035,7 +1034,7 @@ function MethodologyFooter() {
 
   return (
     <section className="mt-12 mb-8">
-      <div className="rounded-xl p-5 border border-zinc-800 bg-zinc-900">
+      <div className="surface-card p-5">
         <p className="text-xs leading-relaxed mb-3 text-zinc-400">
           {t('methodologyNote')}
         </p>
@@ -1187,7 +1186,7 @@ function ReportCard() {
               Salud del Sistema · Índice Nacional de Integridad
             </p>
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-zinc-100" style={{ fontFamily: SERIF }}>
+          <h1 className="text-3xl md:text-4xl font-serif font-bold text-zinc-100">
             {t('pageTitle')}
           </h1>
           <p className="text-sm mt-2 text-zinc-400 max-w-2xl leading-relaxed">
