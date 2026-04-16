@@ -21,6 +21,8 @@ import {
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
 import { RiskStrata, type RiskStrataRow } from '@/components/charts/RiskStrata'
 import { SectorMarimekko, type SectorMarimekkoRow } from '@/components/charts/SectorMarimekko'
+import { SexenioStratum, type SexenioYearRow } from '@/components/charts/SexenioStratum'
+import { ConcentrationConstellation, type ConstellationRiskRow } from '@/components/charts/ConcentrationConstellation'
 
 // ============================================================================
 // Dashboard: Data-Rich Editorial Intelligence Brief
@@ -374,6 +376,33 @@ export function Dashboard() {
     [sectorRows]
   )
 
+  // SexenioStratum: map yearly_trends → SexenioYearRow[]
+  const sexenioRows: SexenioYearRow[] = useMemo(() => {
+    const trends = fastDashboard?.yearly_trends
+    if (!trends?.length) return []
+    return trends.map((t) => ({
+      year:          t.year,
+      value_mxn:     t.value_mxn ?? t.total_value ?? 0,
+      avg_risk:      t.avg_risk ?? 0,
+      high_risk_pct: t.high_risk_pct ?? 0,
+      contracts:     t.contracts ?? 0,
+    }))
+  }, [fastDashboard?.yearly_trends])
+
+  // ConcentrationConstellation: map risk_distribution → ConstellationRiskRow[]
+  const constellationRows: ConstellationRiskRow[] = useMemo(() => {
+    if (!riskDist) return []
+    return riskDist
+      .filter((d): d is typeof d & { risk_level: ConstellationRiskRow['level'] } =>
+        ['critical', 'high', 'medium', 'low'].includes(d.risk_level)
+      )
+      .map((d) => ({
+        level: d.risk_level as ConstellationRiskRow['level'],
+        count: d.count,
+        pct:   d.percentage,
+      }))
+  }, [riskDist])
+
   // ARIA tier data
   const latestRun = ariaStats?.latest_run
   const t1Count = ariaT1?.pagination?.total ?? latestRun?.tier1_count ?? 320
@@ -494,6 +523,53 @@ export function Dashboard() {
           </div>
         </div>
       </header>
+
+      {/* ================================================================ */}
+      {/* 2a. SEXENIO STRATUM — 23-year horizontal timeline                 */}
+      {/* ================================================================ */}
+      {sexenioRows.length > 0 && (
+        <section className="surface-card p-5">
+          <ErrorBoundary fallback={<SectionErrorFallback />}>
+            <div className="flex items-baseline justify-between gap-3 mb-1">
+              <h3 className="text-sm font-bold text-text-primary">
+                {t('editorial.sexenioTitle', '23 years of federal procurement')}
+              </h3>
+              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                {t('editorial.sexenioRange', '2002–2025')}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
+            </p>
+            <SexenioStratum rows={sexenioRows} />
+          </ErrorBoundary>
+        </section>
+      )}
+
+      {/* ================================================================ */}
+      {/* 2b. CONCENTRATION CONSTELLATION — risk dot field                  */}
+      {/* ================================================================ */}
+      {constellationRows.length > 0 && overview && (
+        <section className="surface-card p-5">
+          <ErrorBoundary fallback={<SectionErrorFallback />}>
+            <div className="flex items-baseline justify-between gap-3 mb-1">
+              <h3 className="text-sm font-bold text-text-primary">
+                {t('editorial.constellationTitle', 'Risk concentration field')}
+              </h3>
+              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                {formatNumber(overview.total_contracts)}
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              {t('editorial.constellationSubtitle', 'Each dot represents a cluster of contracts. Critical-risk contracts self-organize into 3 networks — the same geometry as documented corruption patterns.')}
+            </p>
+            <ConcentrationConstellation
+              rows={constellationRows}
+              totalContracts={overview.total_contracts ?? 0}
+            />
+          </ErrorBoundary>
+        </section>
+      )}
 
       {/* ================================================================ */}
       {/* 2. RISK OVERVIEW — 2-column grid                                  */}
