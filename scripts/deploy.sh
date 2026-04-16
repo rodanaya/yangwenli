@@ -83,27 +83,26 @@ ssh "$REMOTE" "
   fi
 "
 
-echo "[4/6] Uploading deploy database (~2.4GB, this will take a while)..."
-rsync -avz --progress \
-  backend/RUBLI_DEPLOY.db \
-  "${REMOTE}:${REMOTE_DIR}/backend/RUBLI_DEPLOY.db"
+echo "[4/6] Uploading deploy database (~3.9GB, this will take a while)..."
+if command -v rsync &>/dev/null; then
+  rsync -avz --progress \
+    backend/RUBLI_DEPLOY.db \
+    "${REMOTE}:${REMOTE_DIR}/backend/RUBLI_DEPLOY.db"
+else
+  echo "  rsync not found — using scp (slower, no delta)"
+  scp -o ServerAliveInterval=30 -o ServerAliveCountMax=20 \
+    backend/RUBLI_DEPLOY.db \
+    "${REMOTE}:${REMOTE_DIR}/backend/RUBLI_DEPLOY.db"
+fi
 
-echo "[5/6] Uploading project files..."
-rsync -avz --progress \
-  --exclude='backend/RUBLI_NORMALIZED.db*' \
-  --exclude='backend/RUBLI_DEPLOY.db' \
-  --exclude='backend/*.db.backup*' \
-  --exclude='backend/*.db.currency_backup*' \
-  --exclude='backend/original_data/' \
-  --exclude='frontend/node_modules/' \
-  --exclude='frontend/dist/' \
-  --exclude='.git/' \
-  --exclude='*.pyc' \
-  --exclude='__pycache__/' \
-  . \
-  "${REMOTE}:${REMOTE_DIR}/"
+echo "[5/6] Uploading project files via git pull..."
+# Use git push/pull for source code (faster than scp on Windows where rsync is unavailable)
+git push origin HEAD:main 2>/dev/null || true
+ssh "$REMOTE" "cd ${REMOTE_DIR} && git pull origin main 2>&1 | tail -5"
 
+# Upload .env.prod and fix any Windows encoding issues
 scp .env.prod "${REMOTE}:${REMOTE_DIR}/.env.prod"
+ssh "$REMOTE" "cd ${REMOTE_DIR} && tr -d '\0' < .env.prod > .env.prod.clean && mv .env.prod.clean .env.prod && sed -i 's/\r//' .env.prod"
 
 echo "[6/6] Building and starting containers on server..."
 ssh "$REMOTE" "
