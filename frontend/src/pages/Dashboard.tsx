@@ -18,18 +18,9 @@ import {
   Info,
   ChevronRight,
 } from 'lucide-react'
-import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  CartesianGrid,
-  Bar,
-  BarChart,
-  Cell,
-  ReferenceLine,
-} from '@/components/charts'
 import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } from '@/lib/constants'
+import { RiskStrata, type RiskStrataRow } from '@/components/charts/RiskStrata'
+import { SectorMarimekko, type SectorMarimekkoRow } from '@/components/charts/SectorMarimekko'
 
 // ============================================================================
 // Dashboard: Data-Rich Editorial Intelligence Brief
@@ -44,160 +35,10 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } fr
 // ============================================================================
 
 // ============================================================================
-// SECTOR RISK CHART — grouped horizontal bars: avg risk + % high/critical
+// RISK DISTRIBUTION — geological strata column (RiskStrata)
 // ============================================================================
 
-interface SectorChartRow {
-  name: string
-  code: string
-  avgRisk: number      // 0-100 (pct-scaled for readability)
-  highCritPct: number  // 0-100
-  contracts: number
-  totalValue: number
-  fill: string
-}
-
-function SectorRiskChart({ sectors, loading }: { sectors: SectorChartRow[]; loading: boolean }) {
-  const { t } = useTranslation('dashboard')
-
-  const { chartData, avgRiskMean } = useMemo(() => {
-    const sorted = [...sectors].sort((a, b) => b.avgRisk - a.avgRisk)
-    const mean = sorted.length > 0
-      ? sorted.reduce((s, d) => s + d.avgRisk, 0) / sorted.length
-      : 0
-    return { chartData: sorted, avgRiskMean: mean }
-  }, [sectors])
-
-  if (loading) {
-    return (
-      <div className="space-y-3">
-        <Skeleton className="h-4 w-48" />
-        <Skeleton className="h-[380px] w-full rounded" />
-      </div>
-    )
-  }
-  if (chartData.length === 0) return null
-
-  return (
-    <div>
-      <div className="flex items-baseline justify-between gap-3 mb-1">
-        <h3 className="text-sm font-bold text-text-primary">
-          {t('editorial.sectorChartTitle', 'Risk by sector')}
-        </h3>
-        <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
-          v0.6.5
-        </span>
-      </div>
-      <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-        {t('editorial.sectorChartSubtitle', 'Average risk score and share flagged high/critical across the 12 federal sectors (v0.6.5 model).')}
-      </p>
-
-      <div role="img" aria-label="Horizontal bar chart of avg risk by sector">
-        <ResponsiveContainer width="100%" height={360}>
-          <BarChart
-            data={chartData}
-            layout="vertical"
-            margin={{ top: 0, right: 50, bottom: 0, left: 4 }}
-          >
-            <CartesianGrid
-              strokeDasharray="2 4"
-              stroke="var(--color-border)"
-              horizontal={false}
-              opacity={0.3}
-            />
-            <XAxis
-              type="number"
-              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-              axisLine={false}
-              tickLine={false}
-              domain={[0, 'auto']}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={104}
-              tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <ReferenceLine
-              x={avgRiskMean}
-              stroke="var(--color-text-muted)"
-              strokeDasharray="3 3"
-              strokeWidth={1}
-              label={{
-                value: t('editorial.sectorAvgReference', 'Global average'),
-                position: 'top',
-                fill: 'var(--color-text-muted)',
-                fontSize: 9,
-                fontFamily: 'var(--font-family-mono)',
-              }}
-            />
-            <RechartsTooltip
-              cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-              content={({ active, payload, label }) => {
-                if (!active || !payload || payload.length === 0) return null
-                return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium text-zinc-200">{String(label)}</p>
-                    {payload.map((entry, i) => {
-                      const v = typeof entry.value === 'number' ? entry.value : Number(entry.value) || 0
-                      const lbl =
-                        entry.dataKey === 'avgRisk'
-                          ? t('editorial.sectorAvgLabel', 'Avg risk')
-                          : entry.dataKey === 'highCritPct'
-                            ? t('editorial.sectorHighCritLabel', '% High/Critical')
-                            : String(entry.dataKey)
-                      return (
-                        <p key={i} className="text-zinc-400">
-                          {lbl}: <span className="font-mono text-zinc-200">{v.toFixed(1)}%</span>
-                        </p>
-                      )
-                    })}
-                  </div>
-                )
-              }}
-            />
-            <Bar dataKey="avgRisk" radius={[0, 2, 2, 0]} isAnimationActive={false} barSize={14}>
-              {chartData.map((entry) => (
-                <Cell key={`avg-${entry.code}`} fill={entry.fill} fillOpacity={0.9} />
-              ))}
-            </Bar>
-            <Bar dataKey="highCritPct" radius={[0, 2, 2, 0]} isAnimationActive={false} barSize={6}>
-              {chartData.map((entry) => (
-                <Cell key={`hc-${entry.code}`} fill={entry.fill} fillOpacity={0.35} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Legend + source */}
-      <div className="flex items-center justify-between mt-2 gap-3 flex-wrap">
-        <div className="flex items-center gap-4 text-[10px] font-mono text-text-muted">
-          <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-text-secondary/70" />
-            <span>{t('editorial.sectorAvgLabel', 'Avg risk')}</span>
-          </div>
-          <div className="flex items-center gap-1.5">
-            <div className="h-2.5 w-2.5 rounded-sm bg-text-secondary/30" />
-            <span>{t('editorial.sectorHighCritLabel', '% High/Critical')}</span>
-          </div>
-        </div>
-        <p className="text-[10px] text-text-muted/50 font-mono">
-          {t('editorial.sectorChartSource', 'Source: RUBLI v0.6.5 · 3,051,294 contracts (2002-2025)')}
-        </p>
-      </div>
-    </div>
-  )
-}
-
-// ============================================================================
-// RISK DISTRIBUTION — horizontal bars: Critical/High/Medium/Low share
-// ============================================================================
-
-function RiskDistributionDonut({
+function RiskDistributionPanel({
   data,
   totalContracts,
 }: {
@@ -206,37 +47,28 @@ function RiskDistributionDonut({
 }) {
   const { t } = useTranslation('dashboard')
 
-  const rows = useMemo(() => {
+  const strataRows = useMemo((): RiskStrataRow[] => {
     const order = ['critical', 'high', 'medium', 'low'] as const
-    return order
-      .map((level) => {
-        const item = data.find((d) => d.risk_level === level)
-        const labelKeys: Record<typeof order[number], string> = {
-          critical: 'editorial.riskCritical',
-          high: 'editorial.riskHigh',
-          medium: 'editorial.riskMedium',
-          low: 'editorial.riskLow',
-        }
-        return {
-          level,
-          label: t(labelKeys[level], level.charAt(0).toUpperCase() + level.slice(1)),
-          pct: item?.percentage ?? 0,
-          count: item?.count ?? 0,
-          color: RISK_COLORS[level],
-        }
-      })
-      .filter((r) => r.pct > 0)
+    const labelKeys: Record<typeof order[number], string> = {
+      critical: 'editorial.riskCritical',
+      high:     'editorial.riskHigh',
+      medium:   'editorial.riskMedium',
+      low:      'editorial.riskLow',
+    }
+    return order.map((level) => {
+      const item = data.find((d) => d.risk_level === level)
+      return {
+        level,
+        label: t(labelKeys[level], level.charAt(0).toUpperCase() + level.slice(1)),
+        pct: item?.percentage ?? 0,
+        count: item?.count ?? 0,
+      }
+    })
   }, [data, t])
 
   const hrRate = useMemo(
-    () => rows.filter((r) => r.level === 'critical' || r.level === 'high').reduce((s, r) => s + r.pct, 0),
-    [rows]
-  )
-
-  // Horizontal bar chart data: critical first (highest visual weight)
-  const barData = useMemo(
-    () => rows.map((r) => ({ name: r.label, level: r.level, value: r.pct, count: r.count, fill: r.color })),
-    [rows]
+    () => strataRows.filter((r) => r.level === 'critical' || r.level === 'high').reduce((s, r) => s + r.pct, 0),
+    [strataRows]
   )
 
   return (
@@ -255,94 +87,13 @@ function RiskDistributionDonut({
         })}
       </p>
 
-      {/* Hero stat — HR percent (replaces donut center) */}
-      <div className="flex items-baseline gap-3 mb-3 pb-3 border-b border-border/20">
-        <div className="stat-md font-mono" style={{ color: RISK_COLORS.critical }}>
-          {hrRate.toFixed(1)}%
-        </div>
-        <div className="text-[10px] font-mono uppercase tracking-wider text-text-muted/70 leading-tight">
-          {t('editorial.riskHrLabel', 'High-risk rate')}
-          <br />
-          <span className="text-text-muted/50">OECD 2–15%</span>
-        </div>
-      </div>
+      <RiskStrata
+        rows={strataRows}
+        totalContracts={totalContracts}
+        hrRate={hrRate}
+      />
 
-      {/* Horizontal bar chart — replaces donut */}
-      <div role="img" aria-label="Horizontal bar chart of contracts by risk level">
-        <ResponsiveContainer width="100%" height={Math.max(120, barData.length * 32)}>
-          <BarChart
-            data={barData}
-            layout="vertical"
-            margin={{ top: 0, right: 48, bottom: 0, left: 4 }}
-          >
-            <CartesianGrid
-              strokeDasharray="2 4"
-              stroke="var(--color-border)"
-              horizontal={false}
-              opacity={0.3}
-            />
-            <XAxis
-              type="number"
-              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-              tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-              axisLine={false}
-              tickLine={false}
-              domain={[0, 'auto']}
-            />
-            <YAxis
-              type="category"
-              dataKey="name"
-              width={72}
-              tick={{ fill: 'var(--color-text-secondary)', fontSize: 11 }}
-              axisLine={false}
-              tickLine={false}
-            />
-            <RechartsTooltip
-              cursor={{ fill: 'rgba(255,255,255,0.03)' }}
-              content={({ active, payload }) => {
-                if (!active || !payload || payload.length === 0) return null
-                const p = payload[0].payload as { name: string; value: number; count: number }
-                return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium text-zinc-200">{p.name}</p>
-                    <p className="text-zinc-400">
-                      <span className="font-mono text-zinc-200">{p.value.toFixed(1)}%</span> · {formatNumber(p.count)} contracts
-                    </p>
-                  </div>
-                )
-              }}
-            />
-            <Bar dataKey="value" radius={[0, 2, 2, 0]} isAnimationActive={false} barSize={18}>
-              {barData.map((entry) => (
-                <Cell key={`risk-${entry.level}`} fill={entry.fill} />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
-
-      {/* Count table */}
-      <div className="mt-3 space-y-1.5">
-        {rows.map((r) => (
-          <div
-            key={r.level}
-            className="flex items-center justify-between py-1 border-b border-border/20 last:border-b-0"
-          >
-            <div className="flex items-center gap-2 min-w-0">
-              <div className="h-2.5 w-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: r.color }} />
-              <span className="text-xs text-text-secondary truncate">{r.label}</span>
-            </div>
-            <div className="flex items-center gap-3 flex-shrink-0 font-mono text-[11px]">
-              <span className="text-text-muted tabular-nums">{formatNumber(r.count)}</span>
-              <span className="text-text-primary tabular-nums w-12 text-right font-semibold">
-                {r.pct.toFixed(1)}%
-              </span>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <p className="text-[10px] text-text-muted/60 mt-3 font-mono">
+      <p className="text-[10px] text-text-muted/60 mt-2 font-mono">
         {t('editorial.riskOecdNote', 'High-risk: {{rate}}% · OECD 2-15%', { rate: hrRate.toFixed(1) })}
       </p>
     </div>
@@ -594,18 +345,28 @@ export function Dashboard() {
       })
   }, [sectorsRaw, ts])
 
-  const sectorChartRows: SectorChartRow[] = useMemo(
+  const marimekkoRows: SectorMarimekkoRow[] = useMemo(
     () =>
-      sectorRows.map((s) => ({
-        name: s.name,
-        code: s.code,
-        avgRisk: +(s.avgRisk * 100).toFixed(1),
-        highCritPct: +s.highCritPct.toFixed(1),
-        contracts: s.contracts,
-        totalValue: s.totalValue,
-        fill: SECTOR_COLORS[s.code] ?? '#64748b',
-      })),
-    [sectorRows]
+      sectorRows.map((s) => {
+        const ct = s.contracts || 1
+        const raw = sectorsRaw?.find((r) => r.code === s.code)
+        const critPct = ((raw?.critical_risk_count ?? 0) / ct) * 100
+        const highPct = ((raw?.high_risk_count ?? 0) / ct) * 100
+        const medPct  = ((raw?.medium_risk_count ?? 0) / ct) * 100
+        const lowPct  = Math.max(0, 100 - critPct - highPct - medPct)
+        return {
+          code: s.code,
+          name: s.name,
+          totalValue: s.totalValue,
+          criticalPct: +critPct.toFixed(1),
+          highPct:     +highPct.toFixed(1),
+          mediumPct:   +medPct.toFixed(1),
+          lowPct:      +lowPct.toFixed(1),
+          color:       SECTOR_COLORS[s.code] ?? '#64748b',
+          avgRisk:     s.avgRisk,
+        }
+      }),
+    [sectorRows, sectorsRaw]
   )
 
   const sectorTableRows: SectorTableRow[] = useMemo(
@@ -738,23 +499,48 @@ export function Dashboard() {
       {/* 2. RISK OVERVIEW — 2-column grid                                  */}
       {/* ================================================================ */}
       <section className="grid gap-6 lg:grid-cols-5">
-        {/* Left: sector bar chart (~60%) */}
+        {/* Left: Marimekko sector spend × risk chart (~60%) */}
         <div className="surface-card lg:col-span-3 p-5">
           <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <SectorRiskChart sectors={sectorChartRows} loading={dashLoading} />
+            <div>
+              <div className="flex items-baseline justify-between gap-3 mb-1">
+                <h3 className="text-sm font-bold text-text-primary">
+                  {t('editorial.sectorChartTitle', 'Risk by sector')}
+                </h3>
+                <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
+                  v0.6.5
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                {t('editorial.sectorChartSubtitle', 'Bar width = total contract value. Fill = risk composition. Sorted by spend.')}
+              </p>
+              {dashLoading ? (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-48" />
+                  <Skeleton className="h-[320px] w-full rounded" />
+                </div>
+              ) : (
+                <SectorMarimekko
+                  sectors={marimekkoRows}
+                  onSectorClick={(code) => navigate(`/sectors/${code}`)}
+                />
+              )}
+              <p className="text-[10px] text-text-muted/50 font-mono mt-2 text-right">
+                {t('editorial.sectorChartSource', 'Source: RUBLI v0.6.5 · 3,051,294 contracts (2002-2025)')}
+              </p>
+            </div>
           </ErrorBoundary>
         </div>
 
-        {/* Right: risk distribution horizontal bar chart (~40%) */}
+        {/* Right: risk distribution geological strata (~40%) */}
         <div className="surface-card lg:col-span-2 p-5">
           <ErrorBoundary fallback={<SectionErrorFallback />}>
             {riskDist && overview ? (
-              <RiskDistributionDonut data={riskDist} totalContracts={overview.total_contracts ?? 0} />
+              <RiskDistributionPanel data={riskDist} totalContracts={overview.total_contracts ?? 0} />
             ) : (
               <div className="space-y-3">
                 <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-[180px] w-full rounded" />
-                <Skeleton className="h-24 w-full" />
+                <Skeleton className="h-[280px] w-full rounded" />
               </div>
             )}
           </ErrorBoundary>
