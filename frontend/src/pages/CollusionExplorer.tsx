@@ -1,8 +1,9 @@
 /**
  * COLLUSION EXPLORER — Bid-Rigging Pattern Analysis
  *
- * Editorial redesign: methodology explainer, hero stats, pair cards with
- * connection visualization, pattern legend, contextual empty/error states.
+ * Editorial redesign (Duet commit B): lede card for the most striking pair,
+ * single-column dossier stack for everything else, dossier ↔ network toggle
+ * so the graph is secondary evidence rather than the main show.
  */
 
 import { useState, useMemo, useRef, useCallback } from 'react'
@@ -18,10 +19,6 @@ import {
   ArrowUpDown,
   ChevronLeft,
   ChevronRight,
-  Repeat,
-  Shield,
-  MapPin,
-  HelpCircle,
   X,
   RotateCcw,
 } from 'lucide-react'
@@ -31,6 +28,11 @@ import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SharedContractsModal } from '@/components/SharedContractsModal'
 import { PairDossierRow } from '@/components/collusion/PairDossierRow'
+import { FeaturedDuet, pickFeaturedPair } from '@/components/collusion/FeaturedDuet'
+import {
+  computePairMetrics,
+  patternAccent,
+} from '@/lib/collusion/inferPattern'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -41,27 +43,6 @@ type SortField = 'shared_procedures' | 'co_bid_rate'
 const DEFAULT_MIN_SHARED = 10
 const DEFAULT_SORT: SortField = 'shared_procedures'
 const DEFAULT_PER_PAGE = 50
-
-// ---------------------------------------------------------------------------
-// Methodology Callout
-// ---------------------------------------------------------------------------
-
-function MethodologyCallout() {
-  const { t } = useTranslation('collusion')
-  return (
-    <details className="mb-8 group">
-      <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors select-none">
-        <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-        {t('methodology.title')}
-      </summary>
-      <div className="mt-3 rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
-        <p className="text-sm text-zinc-300 leading-relaxed">
-          {t('methodology.body')}
-        </p>
-      </div>
-    </details>
-  )
-}
 
 // ---------------------------------------------------------------------------
 // Hero Stats Strip
@@ -158,46 +139,6 @@ function HeroStats({ stats, loading }: { stats: CollusionStats | undefined; load
         </div>
       ))}
     </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Pattern Legend
-// ---------------------------------------------------------------------------
-
-function PatternLegend() {
-  const { t } = useTranslation('collusion')
-
-  const patterns: Array<{
-    icon: React.ElementType
-    name: string
-    desc: string
-    color: string
-  }> = [
-    { icon: Repeat, name: t('patterns.bidRotation'), desc: t('patterns.bidRotationDesc'), color: 'text-red-400' },
-    { icon: Shield, name: t('patterns.coverBidding'), desc: t('patterns.coverBiddingDesc'), color: 'text-orange-400' },
-    { icon: MapPin, name: t('patterns.marketAllocation'), desc: t('patterns.marketAllocationDesc'), color: 'text-amber-400' },
-    { icon: HelpCircle, name: t('patterns.unknown'), desc: t('patterns.unknownDesc'), color: 'text-zinc-400' },
-  ]
-
-  return (
-    <details className="mb-8 group">
-      <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 hover:text-zinc-300 transition-colors select-none">
-        <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
-        {t('patterns.title')}
-      </summary>
-      <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
-        {patterns.map((p) => (
-          <div key={p.name} className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
-            <div className="flex items-center gap-2 mb-1">
-              <p.icon className={`h-3.5 w-3.5 ${p.color}`} aria-hidden="true" />
-              <span className={`text-xs font-semibold ${p.color}`}>{p.name}</span>
-            </div>
-            <p className="text-[11px] text-zinc-500 leading-relaxed">{p.desc}</p>
-          </div>
-        ))}
-      </div>
-    </details>
   )
 }
 
@@ -323,40 +264,47 @@ function buildGraphData(pairs: CollusionPair[]): {
     .sort((a, b) => b.co_bid_rate - a.co_bid_rate)
     .slice(0, 150)
 
-  // Aggregate per-vendor degree + max rate
+  // Aggregate per-vendor degree + strongest pattern accent seen for that vendor.
+  // A vendor that participates in even one `cover` pair is more alarming than
+  // a vendor whose only edges are `rotation`, so we keep the most severe accent.
+  const severity: Record<string, number> = {
+    mutual: 4,
+    cover: 3,
+    rotation: 2,
+    unknown: 1,
+  }
   const nodeMap = new Map<
     number,
-    { name: string; degree: number; maxRate: number }
+    { name: string; degree: number; maxRate: number; accent: string; sev: number }
   >()
-  for (const p of top) {
-    const a = nodeMap.get(p.vendor_id_a)
-    if (a) {
-      a.degree += 1
-      a.maxRate = Math.max(a.maxRate, p.co_bid_rate)
-    } else {
-      nodeMap.set(p.vendor_id_a, {
-        name: p.vendor_name_a,
-        degree: 1,
-        maxRate: p.co_bid_rate,
-      })
-    }
-    const b = nodeMap.get(p.vendor_id_b)
-    if (b) {
-      b.degree += 1
-      b.maxRate = Math.max(b.maxRate, p.co_bid_rate)
-    } else {
-      nodeMap.set(p.vendor_id_b, {
-        name: p.vendor_name_b,
-        degree: 1,
-        maxRate: p.co_bid_rate,
-      })
-    }
+  const accentFor = (p: CollusionPair): { color: string; sev: number } => {
+    const m = computePairMetrics(p)
+    return { color: patternAccent(m.pattern), sev: severity[m.pattern] ?? 1 }
   }
 
-  const colorForRate = (rate: number): string => {
-    if (rate >= 80) return '#f87171' // risk-critical
-    if (rate >= 50) return '#fb923c' // risk-high
-    return '#fbbf24' // risk-medium
+  for (const p of top) {
+    const { color, sev } = accentFor(p)
+    const upsert = (id: number, name: string) => {
+      const prev = nodeMap.get(id)
+      if (prev) {
+        prev.degree += 1
+        prev.maxRate = Math.max(prev.maxRate, p.co_bid_rate)
+        if (sev > prev.sev) {
+          prev.sev = sev
+          prev.accent = color
+        }
+      } else {
+        nodeMap.set(id, {
+          name,
+          degree: 1,
+          maxRate: p.co_bid_rate,
+          accent: color,
+          sev,
+        })
+      }
+    }
+    upsert(p.vendor_id_a, p.vendor_name_a)
+    upsert(p.vendor_id_b, p.vendor_name_b)
   }
 
   const nodes: GraphNodeData[] = Array.from(nodeMap.entries()).map(
@@ -372,7 +320,7 @@ function buildGraphData(pairs: CollusionPair[]): {
         symbolSize,
         degree: info.degree,
         maxRate: info.maxRate,
-        itemStyle: { color: colorForRate(info.maxRate) },
+        itemStyle: { color: info.accent },
         label: { show: false },
       }
     },
@@ -380,6 +328,7 @@ function buildGraphData(pairs: CollusionPair[]): {
 
   const maxShared = Math.max(1, ...top.map((p) => p.shared_procedures))
   const edges: GraphEdgeData[] = top.map((p) => {
+    const { color } = accentFor(p)
     const widthScale = Math.sqrt(p.shared_procedures / maxShared)
     return {
       source: `v-${p.vendor_id_a}`,
@@ -388,7 +337,7 @@ function buildGraphData(pairs: CollusionPair[]): {
       sharedCount: p.shared_procedures,
       lineStyle: {
         width: Math.max(1, widthScale * 5),
-        color: colorForRate(p.co_bid_rate),
+        color,
         opacity: 0.55,
         curveness: 0.18,
       },
@@ -579,7 +528,8 @@ export default function CollusionExplorer() {
   const [minShared, setMinShared] = useState(DEFAULT_MIN_SHARED)
   const [sortBy, setSortBy] = useState<SortField>(DEFAULT_SORT)
   const [page, setPage] = useState(1)
-  const [showGraph, setShowGraph] = useState(false)
+  // 'dossier' = editorial stack (default), 'red' = force-directed network
+  const [viewMode, setViewMode] = useState<'dossier' | 'red'>('dossier')
 
   // Selected vendor (filtered from graph node click)
   const [selectedVendor, setSelectedVendor] = useState<{ id: number; name: string } | null>(null)
@@ -678,6 +628,9 @@ export default function CollusionExplorer() {
   const showingFrom = total === 0 ? 0 : selectedVendor ? 1 : (page - 1) * DEFAULT_PER_PAGE + 1
   const showingTo = selectedVendor ? pairs.length : Math.min(page * DEFAULT_PER_PAGE, total)
 
+  // Pick the most striking pair to feature as the page lede.
+  const featuredPair = useMemo(() => pickFeaturedPair(rawPairs), [rawPairs])
+
   const editorialDate = useMemo(
     () =>
       new Date().toLocaleDateString('es-MX', {
@@ -735,37 +688,72 @@ export default function CollusionExplorer() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* ── Methodology ── */}
-        <MethodologyCallout />
-
         {/* ── Hero Stats ── */}
         <HeroStats stats={stats} loading={statsLoading} />
 
-        {/* ── Pattern Legend ── */}
-        <PatternLegend />
+        {/* ── Featured Duet (lede) — shown only on page 1, dossier mode, no vendor filter ── */}
+        {viewMode === 'dossier' &&
+          page === 1 &&
+          !selectedVendor &&
+          !pairsLoading &&
+          !pairsError &&
+          featuredPair && (
+            <FeaturedDuet
+              pair={featuredPair}
+              onViewContracts={handleViewContracts}
+            />
+          )}
 
-        {/* ── Bid-Ring Network Graph (collapsible) ── */}
-        <button
-          type="button"
-          onClick={() => setShowGraph((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition-colors mb-6"
-          aria-expanded={showGraph}
-        >
-          <div className="text-left">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-              Bid-Ring Network
-            </span>
-            <span className="text-[11px] text-zinc-600 ml-3">
-              Top 150 suspicious pairs — interactive graph
-            </span>
+        {/* ── View Mode Toggle ── */}
+        <div className="mb-6 flex items-center justify-between gap-4 flex-wrap">
+          <div
+            role="tablist"
+            aria-label={t('viewMode.label', { defaultValue: 'Modo de vista' })}
+            className="inline-flex rounded-lg border border-[rgba(255,255,255,0.08)] bg-zinc-900/40 p-0.5"
+          >
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'dossier'}
+              onClick={() => setViewMode('dossier')}
+              className={`px-3.5 py-1.5 text-[10px] font-mono uppercase tracking-[0.15em] rounded transition-colors ${
+                viewMode === 'dossier'
+                  ? 'bg-zinc-800 text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {t('viewMode.dossier', { defaultValue: 'Dosier' })}
+            </button>
+            <button
+              type="button"
+              role="tab"
+              aria-selected={viewMode === 'red'}
+              onClick={() => setViewMode('red')}
+              className={`px-3.5 py-1.5 text-[10px] font-mono uppercase tracking-[0.15em] rounded transition-colors ${
+                viewMode === 'red'
+                  ? 'bg-zinc-800 text-zinc-100'
+                  : 'text-zinc-500 hover:text-zinc-300'
+              }`}
+            >
+              {t('viewMode.network', { defaultValue: 'Red' })}
+            </button>
           </div>
-          <ChevronRight
-            className={`h-4 w-4 text-zinc-500 transition-transform ${showGraph ? 'rotate-90' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-        {showGraph && (
-          <ErrorBoundary fallback={<div className="h-64 rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Network graph unavailable</div>}>
+          <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em]">
+            {viewMode === 'dossier'
+              ? t('viewMode.dossierHint', { defaultValue: 'Lista editorial · una pareja por fila' })
+              : t('viewMode.networkHint', { defaultValue: 'Top 150 parejas · arrastra para explorar' })}
+          </span>
+        </div>
+
+        {/* ── Network View (when active) ── */}
+        {viewMode === 'red' && (
+          <ErrorBoundary
+            fallback={
+              <div className="h-64 rounded-xl border border-[rgba(255,255,255,0.08)] flex items-center justify-center text-xs text-zinc-500">
+                Network graph unavailable
+              </div>
+            }
+          >
             <BidRingGraph
               pairs={graphPairs}
               loading={graphLoading}
@@ -774,83 +762,97 @@ export default function CollusionExplorer() {
           </ErrorBoundary>
         )}
 
-        {/* ── Filters ── */}
-        <Filters
-          flaggedOnly={flaggedOnly}
-          setFlaggedOnly={handleFlaggedOnly}
-          minShared={minShared}
-          setMinShared={handleMinShared}
-          sortBy={sortBy}
-          setSortBy={handleSortBy}
-          onReset={handleReset}
-        />
+        {/* ── Dossier mode: Filters + Rows ── */}
+        {viewMode === 'dossier' && (
+          <>
+            <Filters
+              flaggedOnly={flaggedOnly}
+              setFlaggedOnly={handleFlaggedOnly}
+              minShared={minShared}
+              setMinShared={handleMinShared}
+              sortBy={sortBy}
+              setSortBy={handleSortBy}
+              onReset={handleReset}
+            />
 
-        {/* ── Selected vendor filter chip ── */}
-        {selectedVendor && (
-          <div className="mb-4 flex items-center gap-2 flex-wrap" aria-live="polite">
-            <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
-              Viewing pairs for:
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold max-w-md">
-              <span className="truncate">{selectedVendor.name}</span>
-              <button
-                type="button"
-                onClick={() => setSelectedVendor(null)}
-                className="hover:text-amber-100 transition-colors shrink-0"
-                aria-label="Clear vendor filter"
+            {/* ── Selected vendor filter chip ── */}
+            {selectedVendor && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap" aria-live="polite">
+                <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
+                  {t('selectedVendor.viewing', { defaultValue: 'Viewing pairs for:' })}
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold max-w-md">
+                  <span className="truncate">{selectedVendor.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVendor(null)}
+                    className="hover:text-amber-100 transition-colors shrink-0"
+                    aria-label={t('selectedVendor.clear', { defaultValue: 'Clear vendor filter' })}
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              </div>
+            )}
+
+            {/* ── Showing count ── */}
+            {!pairsLoading && !pairsError && total > 0 && (
+              <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 mb-4" aria-live="polite">
+                {t('pagination.showing', {
+                  from: showingFrom,
+                  to: showingTo,
+                  total: formatNumber(total),
+                })}
+              </p>
+            )}
+
+            {/* ── Dossier Rows ── */}
+            {pairsLoading ? (
+              <CardSkeleton />
+            ) : pairsError ? (
+              <ErrorState />
+            ) : pairs.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div
+                role="list"
+                aria-label={t('dossier.listAria', { defaultValue: 'Parejas de proveedores sospechosos' })}
+                className="border-t border-[rgba(255,255,255,0.06)]"
               >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          </div>
+                {pairs.map((pair, idx) => {
+                  const rank = (page - 1) * DEFAULT_PER_PAGE + idx + 1
+                  // Skip the featured pair in the list — it's already the lede.
+                  if (
+                    page === 1 &&
+                    !selectedVendor &&
+                    featuredPair &&
+                    pair.vendor_id_a === featuredPair.vendor_id_a &&
+                    pair.vendor_id_b === featuredPair.vendor_id_b
+                  ) {
+                    return null
+                  }
+                  // Next 4 rows after the lede get the full deck treatment;
+                  // the remainder render as compact act-strip rows.
+                  const isHeadline = page === 1 && idx < 5
+                  return (
+                    <PairDossierRow
+                      key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
+                      pair={pair}
+                      rank={rank}
+                      variant={isHeadline ? 'full' : 'compact'}
+                      onViewContracts={handleViewContracts}
+                    />
+                  )
+                })}
+              </div>
+            )}
+          </>
         )}
 
-        {/* ── Showing count ── */}
-        {!pairsLoading && !pairsError && total > 0 && (
-          <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 mb-4" aria-live="polite">
-            {t('pagination.showing', {
-              from: showingFrom,
-              to: showingTo,
-              total: formatNumber(total),
-            })}
-          </p>
-        )}
-
-        {/* ── Dossier Rows ── */}
-        {pairsLoading ? (
-          <CardSkeleton />
-        ) : pairsError ? (
-          <ErrorState />
-        ) : pairs.length === 0 ? (
-          <EmptyState />
-        ) : (
+        {/* ── Pagination (dossier mode only) ── */}
+        {viewMode === 'dossier' && totalPages > 1 && (
           <div
-            role="list"
-            aria-label="Parejas de proveedores sospechosos"
-            className="border-t border-[rgba(255,255,255,0.06)]"
-          >
-            {pairs.map((pair, idx) => {
-              const rank = (page - 1) * DEFAULT_PER_PAGE + idx + 1
-              // Top-5 of the first page get the full deck treatment; the rest
-              // render as compact act-strip rows so the page stays scannable.
-              const isHeadline = page === 1 && idx < 5
-              return (
-                <PairDossierRow
-                  key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                  pair={pair}
-                  rank={rank}
-                  variant={isHeadline ? 'full' : 'compact'}
-                  onViewContracts={handleViewContracts}
-                />
-              )
-            })}
-          </div>
-        )}
-
-        {/* ── Pagination ── */}
-        {totalPages > 1 && (
-          <div
-            className="flex items-center justify-between mt-8 pt-4 border-t border-zinc-800"
+            className="flex items-center justify-between mt-8 pt-4 border-t border-[rgba(255,255,255,0.08)]"
             role="navigation"
             aria-label="Pagination"
           >
