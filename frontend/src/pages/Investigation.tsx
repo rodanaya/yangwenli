@@ -533,50 +533,69 @@ export function Investigation() {
     )
   }
 
+  const editorialDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
+  }).toUpperCase().replace(/,/g, ' ·')
+
   return (
     <div className="space-y-0">
       {/* ================================================================
-          PAGE HEADER — Editorial investigation hub
+          EDITORIAL MASTHEAD
           ================================================================ */}
-      <div className="border-b border-border pb-4 mb-0">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2 font-mono">
-          {t('headerTracking')}
+      <header className="space-y-4 border-b border-[rgba(255,255,255,0.08)] pb-6 mb-6">
+        <div className="flex items-center justify-between text-[10px] font-mono tracking-[0.18em] text-zinc-500">
+          <div className="flex items-center gap-3">
+            <ShieldAlert className="h-3 w-3 text-amber-400" aria-hidden />
+            <span className="font-bold text-zinc-400">{t('headerTracking')}</span>
+            <span className="text-zinc-700">·</span>
+            <span>{editorialDate}</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-2">
+            <span className="relative inline-flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-400" />
+            </span>
+            <span>{t('header.activeMonitor', { defaultValue: 'ACTIVE INVESTIGATION DESK' })}</span>
+          </div>
         </div>
-        <h1
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-          className="text-3xl font-bold text-text-primary mb-1"
-        >
-          {t('headerTitle')}
-        </h1>
-        <p className="text-sm text-text-secondary max-w-2xl leading-relaxed">
-          {t('headerDesc')}
-        </p>
-      </div>
+
+        <div className="space-y-2 max-w-4xl">
+          <span className="text-kicker text-kicker--investigation">
+            {t('header.kicker', { defaultValue: 'CASE FILES' })}
+          </span>
+          <h1 className="text-editorial-display text-zinc-50">
+            {t('headerTitle')}
+          </h1>
+          <p className="text-deck text-zinc-400 max-w-3xl">
+            {t('headerDesc')}
+          </p>
+        </div>
+      </header>
 
       {/* ================================================================
-          KPI STRIP (compact)
+          KPI STRIP — editorial figures
           ================================================================ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="card p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.openCases')}</div>
-          <div className="text-2xl font-black font-mono text-text-primary tabular-nums">{allCases.length}</div>
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-0 gap-y-4 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5 mb-6">
+        <div className="px-4 sm:px-6 first:pl-0 space-y-1">
+          <div className="text-kicker text-zinc-500">{t('kpi.openCases')}</div>
+          <div className="text-display-num text-zinc-50">{formatNumber(allCases.length)}</div>
         </div>
-        <div className="card p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.totalAtRisk')}</div>
-          <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
+        <div className="px-4 sm:px-6 space-y-1">
+          <div className="text-kicker text-zinc-500">{t('kpi.totalAtRisk')}</div>
+          <div className="text-display-num text-zinc-50">
             {formatCompactMXN(allCases.reduce((s, c) => s + c.total_value_mxn, 0))}
           </div>
         </div>
-        <div className="card p-3 border-risk-high/20 bg-risk-high/[0.04]">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.estLosses')}</div>
-          <div className="text-2xl font-black font-mono text-risk-high tabular-nums">
+        <div className="px-4 sm:px-6 space-y-1">
+          <div className="text-kicker text-kicker--investigation">{t('kpi.estLosses')}</div>
+          <div className="text-display-num text-red-400">
             {formatCompactMXN(allCases.reduce((s, c) => s + (c.estimated_loss_mxn || 0), 0))}
           </div>
         </div>
-        <div className="card p-3">
-          <div className="text-[9px] font-mono uppercase tracking-widest text-text-muted/60 mb-1">{t('kpi.sectorsAffected')}</div>
-          <div className="text-2xl font-black font-mono text-text-primary tabular-nums">
-            {new Set(allCases.map((c) => c.sector_name)).size}
+        <div className="px-4 sm:px-6 space-y-1">
+          <div className="text-kicker text-zinc-500">{t('kpi.sectorsAffected')}</div>
+          <div className="text-display-num text-zinc-50">
+            {formatNumber(new Set(allCases.map((c) => c.sector_name)).size)}
           </div>
         </div>
       </div>
@@ -585,8 +604,10 @@ export function Investigation() {
           FILTROS DE INVESTIGACION
           ================================================================ */}
       <div className="mb-6 space-y-3">
-        <div className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
-          {t('filterHeader')}
+        <div className="editorial-kicker-rule">
+          <Filter className="h-3 w-3 text-zinc-500" aria-hidden />
+          <span className="text-kicker text-zinc-500">{t('filterHeader')}</span>
+          <span className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" aria-hidden />
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
