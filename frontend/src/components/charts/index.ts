@@ -11,6 +11,17 @@ export { StackedAreaChart } from './StackedArea'
 export { AlertPanel } from './AlertPanel'
 export { ProcedureBreakdown } from './ProcedureBreakdown'
 
+// Editorial particle-grammar primitives (pure SVG, deterministic)
+export { MiniRiskField } from './MiniRiskField'
+export { RiskRingField } from './RiskRingField'
+export { ConcentrationConstellation } from './ConcentrationConstellation'
+export { RiskHorizon } from './RiskHorizon'
+export { VendorGravity } from './VendorGravity'
+export { FlowParticle } from './FlowParticle'
+export { CalendarCorpus } from './CalendarCorpus'
+export { RiskTopography } from './RiskTopography'
+export { CaseDossierStrip } from './CaseDossierStrip'
+
 // Re-export all Recharts components used across the project
 export {
   ResponsiveContainer,
