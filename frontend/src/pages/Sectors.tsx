@@ -464,13 +464,42 @@ export function Sectors() {
         />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-          <p className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
-            COMPRANET 2002–2025 · v0.6.5 RISK MODEL
+          {/* Dateline strip */}
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-zinc-300">RUBLI</span>
+            </span>
+            <span className="text-zinc-700">·</span>
+            <span>Sectores</span>
+            <span className="text-zinc-700">·</span>
+            <span className="tabular-nums">COMPRANET 2002–2025</span>
+            <span className="text-zinc-700">·</span>
+            <span className="tabular-nums">v0.6.5</span>
+          </div>
+          <p className="text-kicker text-kicker--investigation mb-3">
+            {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
           </p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+          <h1
+            className="text-white leading-[1.02]"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.035em',
+            }}
+          >
             {t('page.title')}
           </h1>
-          <p className="mt-3 text-base text-zinc-400 max-w-2xl">
+          <p
+            className="mt-4 max-w-2xl text-zinc-300"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontStyle: 'italic',
+              fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
+              lineHeight: 1.55,
+            }}
+          >
             {subtitleText}
           </p>
 
