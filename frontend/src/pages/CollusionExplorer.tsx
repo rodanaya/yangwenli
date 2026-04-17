@@ -8,7 +8,6 @@
 import { useState, useMemo, useRef, useCallback } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import ReactECharts from 'echarts-for-react'
 import type * as echarts from 'echarts'
@@ -25,13 +24,13 @@ import {
   HelpCircle,
   X,
   RotateCcw,
-  FileText,
 } from 'lucide-react'
 import { collusionApi } from '@/api/client'
 import type { CollusionPair, CollusionStats } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SharedContractsModal } from '@/components/SharedContractsModal'
+import { PairDossierRow } from '@/components/collusion/PairDossierRow'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -526,118 +525,14 @@ function BidRingGraph({ pairs, loading, onNodeClick }: BidRingGraphProps) {
 }
 
 // ---------------------------------------------------------------------------
-// Pair Card
-// ---------------------------------------------------------------------------
-
-interface PairCardProps {
-  pair: CollusionPair
-  onViewContracts: (vendorAId: number, vendorBId: number, vendorAName: string, vendorBName: string) => void
-}
-
-function PairCard({ pair, onViewContracts }: PairCardProps) {
-  const navigate = useNavigate()
-  const { t } = useTranslation('collusion')
-
-  const rate = pair.co_bid_rate
-  const isHigh = rate >= 80
-  const isMid = rate >= 50
-  const accentBar = isHigh ? 'bg-red-500' : isMid ? 'bg-orange-500' : 'bg-amber-500'
-  const accentText = isHigh ? 'text-red-400' : isMid ? 'text-orange-400' : 'text-amber-400'
-  const accentBorder = isHigh ? 'border-red-500/15' : isMid ? 'border-orange-500/15' : 'border-amber-500/15'
-
-  return (
-    <div className={`relative flex items-center gap-0 rounded-lg border ${accentBorder} bg-zinc-900/50 hover:bg-zinc-900/80 transition-colors overflow-hidden`}>
-      {/* Left accent bar */}
-      <div className={`absolute left-0 top-0 bottom-0 w-[2px] ${accentBar}`} aria-hidden="true" />
-
-      {/* Vendors + rate */}
-      <div className="flex items-center gap-3 pl-4 pr-2 py-2.5 flex-1 min-w-0">
-        {pair.is_potential_collusion && (
-          <AlertTriangle className="h-3.5 w-3.5 text-red-400 shrink-0" aria-hidden="true" />
-        )}
-
-        {/* Vendor A */}
-        <button
-          type="button"
-          onClick={() => navigate(`/vendors/${pair.vendor_id_a}`)}
-          className="min-w-0 text-left group flex-1"
-          aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_a}`}
-        >
-          <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-none mb-0.5">A</div>
-          <div className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors truncate leading-snug">
-            {pair.vendor_name_a}
-          </div>
-          <div className="text-[9px] font-mono text-zinc-600 leading-none mt-0.5">
-            {formatNumber(pair.vendor_a_procedures)}
-          </div>
-        </button>
-
-        {/* Rate column */}
-        <div className="flex flex-col items-center shrink-0 gap-0.5 px-1">
-          <span className={`text-sm font-mono font-bold ${accentText} leading-none`}>
-            {rate.toFixed(0)}%
-          </span>
-          <div className="w-10 h-1 bg-zinc-800 rounded-full overflow-hidden mt-0.5">
-            <div className={`h-full ${accentBar} rounded-full`} style={{ width: `${Math.min(rate, 100)}%` }} />
-          </div>
-          <span className="text-[8px] font-mono text-zinc-600 uppercase tracking-wide mt-0.5">
-            {formatNumber(pair.shared_procedures)}
-          </span>
-        </div>
-
-        {/* Vendor B */}
-        <button
-          type="button"
-          onClick={() => navigate(`/vendors/${pair.vendor_id_b}`)}
-          className="min-w-0 text-left group flex-1"
-          aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_b}`}
-        >
-          <div className="text-[9px] font-mono text-zinc-500 uppercase tracking-wider leading-none mb-0.5">B</div>
-          <div className="text-xs font-medium text-zinc-200 group-hover:text-accent transition-colors truncate leading-snug">
-            {pair.vendor_name_b}
-          </div>
-          <div className="text-[9px] font-mono text-zinc-600 leading-none mt-0.5">
-            {formatNumber(pair.vendor_b_procedures)}
-          </div>
-        </button>
-      </div>
-
-      {/* Action icons */}
-      <div className="flex items-center gap-0.5 pr-2 shrink-0">
-        <button
-          type="button"
-          onClick={() => onViewContracts(pair.vendor_id_a, pair.vendor_id_b, pair.vendor_name_a, pair.vendor_name_b)}
-          className="p-1.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
-          title={t('pairCard.sharedContracts')}
-          aria-label={t('pairCard.sharedContracts')}
-        >
-          <FileText className="w-3.5 h-3.5" aria-hidden="true" />
-        </button>
-        {pair.is_potential_collusion && (
-          <button
-            type="button"
-            onClick={() => navigate(`/thread/${pair.vendor_id_a}`)}
-            className="p-1.5 rounded text-red-400/70 hover:text-red-300 hover:bg-red-500/10 transition-colors"
-            title={t('pairCard.investigationThread')}
-            aria-label={t('pairCard.investigationThread')}
-          >
-            <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-          </button>
-        )}
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Card Skeleton
+// Dossier Skeleton — matches the vertical rhythm of PairDossierRow
 // ---------------------------------------------------------------------------
 
 function CardSkeleton() {
   return (
-    <div className="space-y-3">
+    <div className="space-y-0 border-t border-[rgba(255,255,255,0.06)]">
       {Array.from({ length: 8 }).map((_, i) => (
-        <Skeleton key={i} className="h-28 rounded-xl" />
+        <Skeleton key={i} className="h-[108px] rounded-none border-b border-[rgba(255,255,255,0.06)]" />
       ))}
     </div>
   )
@@ -783,22 +678,58 @@ export default function CollusionExplorer() {
   const showingFrom = total === 0 ? 0 : selectedVendor ? 1 : (page - 1) * DEFAULT_PER_PAGE + 1
   const showingTo = selectedVendor ? pairs.length : Math.min(page * DEFAULT_PER_PAGE, total)
 
+  const editorialDate = useMemo(
+    () =>
+      new Date().toLocaleDateString('es-MX', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      }),
+    [],
+  )
+
+  const flaggedCount = stats?.potential_collusion_count ?? 0
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* ── Editorial Header ── */}
-      <div className="border-b border-zinc-800 px-6 py-8">
+      {/* ── Editorial Masthead ── */}
+      <div className="border-b border-[rgba(255,255,255,0.08)] px-6 py-10">
         <div className="max-w-5xl mx-auto">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-            Análisis de Colusión · Red de Connivencia
+          {/* Dateline strip */}
+          <div className="flex items-center gap-3 mb-5 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-60" />
+              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-red-500" />
+            </span>
+            <span className="capitalize">{editorialDate}</span>
+            <span className="text-zinc-700">·</span>
+            <span>Modelo v0.6.5</span>
+            <span className="text-zinc-700">·</span>
+            <span>Pares analizados {formatNumber(stats?.total_pairs ?? 0)}</span>
+          </div>
+
+          {/* Kicker with rule */}
+          <p className="text-kicker text-kicker--investigation editorial-kicker-rule mb-3">
+            Dossier · Colusión entre proveedores
           </p>
-          <h1
-            className="text-3xl md:text-4xl font-bold text-zinc-100 leading-tight mb-3"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
+
+          {/* Serif display headline */}
+          <h1 className="text-editorial-display mb-4">
             {t('title')}
           </h1>
-          <p className="text-base text-zinc-400 leading-relaxed max-w-3xl">
-            Red de relaciones sospechosas entre proveedores. Nodos = proveedores, aristas = procedimientos compartidos. Haz clic en un nodo para investigar a sus cómplices.
+
+          {/* Italic deck */}
+          <p className="text-deck max-w-3xl mb-4">
+            Cada fila es una pareja de proveedores que comparecen juntos en las
+            mismas licitaciones. La punta de flecha muestra quién depende de
+            quién: a mayor asimetría, mayor evidencia de licitación de cobertura.
+          </p>
+
+          {/* Byline */}
+          <p className="text-byline">
+            Por RUBLI · {formatNumber(flaggedCount)} parejas marcadas como potencialmente coludidas ·
+            Fuente: COMPRANET 2010–2025
           </p>
         </div>
       </div>
@@ -885,7 +816,7 @@ export default function CollusionExplorer() {
           </p>
         )}
 
-        {/* ── Pair Cards ── */}
+        {/* ── Dossier Rows ── */}
         {pairsLoading ? (
           <CardSkeleton />
         ) : pairsError ? (
@@ -893,14 +824,26 @@ export default function CollusionExplorer() {
         ) : pairs.length === 0 ? (
           <EmptyState />
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pairs.map((pair) => (
-              <PairCard
-                key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                pair={pair}
-                onViewContracts={handleViewContracts}
-              />
-            ))}
+          <div
+            role="list"
+            aria-label="Parejas de proveedores sospechosos"
+            className="border-t border-[rgba(255,255,255,0.06)]"
+          >
+            {pairs.map((pair, idx) => {
+              const rank = (page - 1) * DEFAULT_PER_PAGE + idx + 1
+              // Top-5 of the first page get the full deck treatment; the rest
+              // render as compact act-strip rows so the page stays scannable.
+              const isHeadline = page === 1 && idx < 5
+              return (
+                <PairDossierRow
+                  key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
+                  pair={pair}
+                  rank={rank}
+                  variant={isHeadline ? 'full' : 'compact'}
+                  onViewContracts={handleViewContracts}
+                />
+              )
+            })}
           </div>
         )}
 
