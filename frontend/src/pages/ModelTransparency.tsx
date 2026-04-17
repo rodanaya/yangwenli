@@ -782,7 +782,7 @@ export default function ModelTransparency() {
             letterSpacing: '-0.025em',
           }}
         >
-          Model Transparency
+          Transparencia del modelo
         </h1>
         <p
           className="mt-3 max-w-3xl text-zinc-300"
@@ -793,8 +793,8 @@ export default function ModelTransparency() {
             lineHeight: 1.55,
           }}
         >
-          How we score {formatNumber(nContracts)} Mexican federal procurement
-          contracts for corruption risk — the features, the math, and the paper trail.
+          Cómo calificamos {formatNumber(nContracts)} contratos del gobierno federal
+          mexicano por riesgo de corrupción — las variables, las matemáticas, y el rastro auditable.
         </p>
         <div className="flex flex-wrap items-center gap-4 mt-5">
           <span
