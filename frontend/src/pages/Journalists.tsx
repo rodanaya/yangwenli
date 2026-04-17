@@ -337,21 +337,44 @@ export default function Journalists() {
           animate="animate"
           className="pt-12 sm:pt-16 pb-8"
         >
-          {/* Overline */}
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-            RUBLI Investigations
-          </p>
+          {/* Dateline */}
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-zinc-300">RUBLI</span>
+            </span>
+            <span className="text-zinc-700">·</span>
+            <span>Investigations · Desk</span>
+            <span className="text-zinc-700">·</span>
+            <span className="tabular-nums">v0.6.5</span>
+          </div>
+
+          {/* Kicker */}
+          <p className="text-kicker text-kicker--investigation mb-3">RUBLI Investigations</p>
 
           {/* Main headline */}
           <h1
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] mb-4"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-white leading-[1.05] mb-4"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.035em',
+            }}
           >
             {storyCount} Investigations Into Mexican Federal Procurement
           </h1>
 
-          {/* Mission statement */}
-          <p className="text-base sm:text-lg text-zinc-400 leading-relaxed max-w-3xl mb-6">
+          {/* Italic-serif deck */}
+          <p
+            className="text-zinc-300 max-w-3xl mb-6"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontStyle: 'italic',
+              fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
+              lineHeight: 1.55,
+            }}
+          >
             Every investigation is built from real data: 3,051,294 federal contracts (2002-2025)
             scored by a machine learning model trained on 748 documented corruption cases.
             The numbers are the starting point. The stories are what they reveal.

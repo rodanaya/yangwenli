@@ -520,27 +520,50 @@ export default function CaseLibrary() {
 
   return (
     <div className="p-6 max-w-6xl mx-auto">
-      {/* ── Page header ── */}
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            {t('pageSubhead')}
-          </p>
-          <h1
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-            className="text-2xl sm:text-3xl font-bold text-zinc-100 leading-tight"
-          >
-            {t('pageTitle')}
-          </h1>
+      {/* ── Editorial masthead ── */}
+      <header className="mb-8 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Archivo · Casos documentados</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
         </div>
-        <div className="flex items-center gap-2 shrink-0 mt-1">
-          <ShareButton label={t('share')} />
-          <CaseLeadButton />
+        <div className="flex items-start justify-between gap-4">
+          <div className="flex-1">
+            <p className="text-kicker text-kicker--investigation mb-3">{t('pageSubhead')}</p>
+            <h1
+              className="text-zinc-50 leading-[1.05]"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {t('pageTitle')}
+            </h1>
+            <p
+              className="mt-3 max-w-2xl text-zinc-300"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontStyle: 'italic',
+                fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
+                lineHeight: 1.55,
+              }}
+            >
+              {t('hero.subhead')}
+            </p>
+          </div>
+          <div className="flex items-center gap-2 shrink-0 mt-1">
+            <ShareButton label={t('share')} />
+            <CaseLeadButton />
+          </div>
         </div>
-      </div>
-      <p className="text-sm text-zinc-400 max-w-2xl mb-8 leading-relaxed">
-        {t('hero.subhead')}
-      </p>
+      </header>
 
       {/* ── Hero Section ── */}
       <HeroSection />

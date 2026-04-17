@@ -395,8 +395,34 @@ export default function CaseDetail() {
           )}
         </div>
 
+        {/* Dateline strip above headline */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mt-3 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Caso · Archivo</span>
+          {data.ground_truth_case_id != null && (
+            <>
+              <span className="text-zinc-700">·</span>
+              <span className="text-amber-500">ML-linked</span>
+            </>
+          )}
+        </div>
+
         <div className="flex items-start justify-between gap-3">
-          <h1 className="text-2xl font-bold font-mono text-text-primary">{name}</h1>
+          <h1
+            className="text-text-primary leading-[1.05]"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+            }}
+          >
+            {name}
+          </h1>
           <AddToDossierButton
             entityType="note"
             entityId={data.id}
