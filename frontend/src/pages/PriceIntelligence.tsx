@@ -27,6 +27,7 @@ import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { api } from '@/api/client'
 import {
@@ -274,10 +275,10 @@ function ExtremeCaseCard({
             className="hover:underline text-blue-400"
             title={contract.vendor_name}
           >
-            {contract.vendor_name}
+            {formatVendorName(contract.vendor_name, 40)}
           </Link>
         ) : (
-          contract.vendor_name
+          formatVendorName(contract.vendor_name, 40)
         )}
       </p>
 
@@ -422,8 +423,9 @@ function ReincidentesSection({
                     <Link
                       to={`/vendors/${v.vendor_id}`}
                       className="text-xs font-medium text-zinc-200 hover:underline truncate block"
+                      title={v.vendor_name}
                     >
-                      {v.vendor_name}
+                      {formatVendorName(v.vendor_name, 40)}
                     </Link>
                   </td>
                   <td className="py-2 px-3">
@@ -696,22 +698,47 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
 
       <header>
+        {/* Dateline strip — newspaper masthead grammar */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Investigación · Precios anómalos</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+        </div>
+
         {/* Overline */}
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
+        <p className="text-kicker text-kicker--investigation mb-3">
           {t('pageKicker')}
         </p>
 
         {/* Page title + share */}
         <div className="flex items-start justify-between gap-4">
           <h1
-            className="text-2xl md:text-3xl font-bold text-zinc-100 leading-tight mb-1"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
+            className="text-zinc-50 leading-[1.05]"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              fontWeight: 700,
+              letterSpacing: '-0.025em',
+            }}
           >
             {t('pageTitle')}
           </h1>
           <ShareButton label={t('share')} className="mt-1 flex-shrink-0" />
         </div>
-        <p className="text-sm text-zinc-500 mb-4">
+        <p
+          className="mt-3 max-w-2xl text-zinc-300 mb-4"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
+            lineHeight: 1.55,
+          }}
+        >
           {t('contractsAwardedAtAnomalousPrice')}
         </p>
 
