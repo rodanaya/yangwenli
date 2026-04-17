@@ -263,52 +263,58 @@ export function InvestigationCaseDetail() {
   return (
     <div className="space-y-6 pb-10">
 
-      {/* EDITORIAL CASE HEADER */}
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="space-y-3 flex-1">
-          {/* Back link */}
-          <Link
-            to="/investigation"
-            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors font-mono"
-          >
-            <ArrowLeft className="h-3.5 w-3.5" />
-            {t('caseDetail.backToQueue')}
-          </Link>
+      {/* EDITORIAL CASE FILE MASTHEAD */}
+      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-[rgba(255,255,255,0.08)] pb-6">
+        <div className="space-y-4 flex-1 min-w-0">
+          {/* Dateline strip */}
+          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono tracking-[0.18em] text-zinc-500">
+            <Link
+              to="/investigation"
+              className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors"
+            >
+              <ArrowLeft className="h-3 w-3" />
+              {t('caseDetail.backToQueue')}
+            </Link>
+            <span className="text-zinc-700">·</span>
+            <span className="font-bold text-zinc-400">CASE FILE #{detail.id}</span>
+            <span className="text-zinc-700">·</span>
+            <span className="uppercase">RUBLI INVESTIGATION DESK</span>
+          </div>
 
-          {/* Priority accent bar + title block */}
+          {/* Priority accent bar + serif title block */}
           <div
-            className="pl-4 border-l-2"
+            className="pl-5 border-l-[3px]"
             style={{
-              borderColor: priority.level === 'critical' ? '#f87171'
-                : priority.level === 'high' ? '#fb923c'
-                : priority.level === 'medium' ? '#fbbf24'
-                : '#4ade80'
+              borderColor: priority.level === 'critical' ? '#ef4444'
+                : priority.level === 'high' ? '#f59e0b'
+                : priority.level === 'medium' ? '#a16207'
+                : '#71717a',
             }}
           >
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] mb-1" style={{ color: 'var(--color-accent)' }}>
-              RUBLI · Investigation Case
-            </p>
+            <span className="text-kicker text-kicker--investigation">
+              {t('caseDetail.kicker', { defaultValue: 'INVESTIGATION CASE' })}
+            </span>
             <h1
-              className="font-bold leading-tight mb-2"
+              className="text-zinc-50 font-bold leading-[1.05] mt-1.5 mb-3"
               style={{
                 fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(1.3rem, 3vw, 2rem)',
-                letterSpacing: '-0.01em',
-                color: 'var(--color-text-primary)',
+                fontSize: 'clamp(1.625rem, 3.4vw, 2.5rem)',
+                letterSpacing: '-0.022em',
+                fontFeatureSettings: '"ss01", "kern"',
               }}
             >
               {cleanTitle}
             </h1>
             <div className="flex flex-wrap items-center gap-2">
               <span className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded text-xs font-bold font-mono tracking-wider uppercase border',
+                'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-[0.14em] uppercase border',
                 PRIORITY_BADGE[priority.level]
               )}>
-                P{priority.n} {priority.level.toUpperCase()}
+                P{priority.n} · {priority.level.toUpperCase()}
               </span>
               <StatusPill status={detail.validation_status} />
               <span
-                className="text-xs font-medium px-1.5 py-0.5 rounded"
+                className="text-[11px] font-medium px-2 py-0.5 rounded font-mono uppercase tracking-wider"
                 style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
               >
                 {getSectorNameEN(detail.sector_name)}
@@ -373,34 +379,28 @@ export function InvestigationCaseDetail() {
             </Button>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* SECTION 1 — SUMMARY CARDS */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-text-muted mb-1">{t('cases.columns.contractCount')}</p>
-            <p className="text-2xl font-bold text-text-primary tabular-nums">
-              {formatNumber(detail.total_contracts)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-text-muted mb-1">{t('totalValue')}</p>
-            <p className="text-2xl font-bold text-text-primary tabular-nums font-mono">
-              {formatCompactMXN(detail.total_value_mxn)}
-            </p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="pt-4 pb-4">
-            <p className="text-xs text-text-muted mb-1">{t('suspicionScore')}</p>
-            <p className={cn('text-2xl font-bold tabular-nums font-mono', SCORE_COLOR[priority.level])}>
-              {(detail.suspicion_score * 100).toFixed(1)}%
-            </p>
-          </CardContent>
-        </Card>
+      {/* SECTION 1 — EDITORIAL FIGURES */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5">
+        <div className="px-4 sm:px-6 first:pl-0 space-y-1">
+          <div className="text-kicker text-zinc-500">{t('cases.columns.contractCount')}</div>
+          <div className="text-display-num text-zinc-50">
+            {formatNumber(detail.total_contracts)}
+          </div>
+        </div>
+        <div className="px-4 sm:px-6 space-y-1">
+          <div className="text-kicker text-zinc-500">{t('totalValue')}</div>
+          <div className="text-display-num text-zinc-50">
+            {formatCompactMXN(detail.total_value_mxn)}
+          </div>
+        </div>
+        <div className="px-4 sm:px-6 space-y-1">
+          <div className="text-kicker text-kicker--investigation">{t('suspicionScore')}</div>
+          <div className={cn('text-display-num', SCORE_COLOR[priority.level])}>
+            {(detail.suspicion_score * 100).toFixed(1)}<span className="text-2xl">%</span>
+          </div>
+        </div>
       </div>
 
       {/* SECTION 2 — NARRATIVE */}

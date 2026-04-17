@@ -213,14 +213,14 @@
    */
   .text-display {
     font-size: var(--font-size-display);
-    line-height: 1.05;
+    line-height: 1.02;
     font-weight: 700;
-    letter-spacing: -0.025em;
+    letter-spacing: -0.035em;
   }
 
-  h1, .text-h1 { font-size: var(--font-size-h1); line-height: 1.15; font-weight: 600; letter-spacing: -0.015em; }
-  h2, .text-h2 { font-size: var(--font-size-h2); line-height: 1.3; font-weight: 600; }
-  h3, .text-h3 { font-size: var(--font-size-h3); line-height: 1.4; font-weight: 500; }
+  h1, .text-h1 { font-size: var(--font-size-h1); line-height: 1.08; font-weight: 700; letter-spacing: -0.025em; }
+  h2, .text-h2 { font-size: var(--font-size-h2); line-height: 1.2; font-weight: 600; letter-spacing: -0.015em; }
+  h3, .text-h3 { font-size: var(--font-size-h3); line-height: 1.3; font-weight: 600; letter-spacing: -0.01em; }
   p, .text-body { font-size: var(--font-size-body); line-height: 1.6; font-weight: 400; }
   .text-small { font-size: var(--font-size-small); line-height: 1.5; font-weight: 400; }
   .text-tiny { font-size: var(--font-size-tiny); line-height: 1.5; font-weight: 400; }
@@ -244,26 +244,129 @@
 
   .text-editorial-display {
     font-family: var(--font-family-serif);
-    font-size: 3.5rem;
-    font-weight: 700;
-    line-height: 1.08;
-    letter-spacing: -0.025em;
+    font-size: clamp(2.75rem, 5vw, 4rem);
+    font-weight: 800;
+    line-height: 1.02;
+    letter-spacing: -0.035em;
+    font-feature-settings: "ss01", "ss03", "kern";
   }
 
   .text-editorial-h1 {
     font-family: var(--font-family-serif);
-    font-size: 2.5rem;
+    font-size: clamp(2rem, 3.5vw, 2.75rem);
     font-weight: 700;
-    line-height: 1.15;
-    letter-spacing: -0.02em;
+    line-height: 1.08;
+    letter-spacing: -0.025em;
   }
 
   .text-editorial-h2 {
     font-family: var(--font-family-serif);
     font-size: 1.875rem;
     font-weight: 600;
-    line-height: 1.2;
+    line-height: 1.15;
+    letter-spacing: -0.02em;
+  }
+
+  /* ─── EDITORIAL HIERARCHY (commit 4) ─────────────────────────────── */
+
+  /* Kicker — small mono caps above a headline */
+  .text-kicker {
+    font-family: var(--font-family-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* Kicker variants by category */
+  .text-kicker--investigation { color: #ef4444; }
+  .text-kicker--analysis { color: var(--color-accent); }
+  .text-kicker--data { color: var(--color-accent-data); }
+
+  /* Deck — subtitle/sub-headline below a headline (sans, italic-light feel) */
+  .text-deck {
+    font-family: var(--font-family-serif);
+    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    font-weight: 400;
+    line-height: 1.45;
+    letter-spacing: -0.005em;
+    color: var(--color-text-secondary);
+    font-style: italic;
+  }
+
+  /* Byline — author/date row, mono caps separated by middots */
+  .text-byline {
+    font-family: var(--font-family-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* Lede — first paragraph styling, slightly larger */
+  .text-lede {
+    font-family: var(--font-family-serif);
+    font-size: 1.1875rem;
+    line-height: 1.55;
+    color: var(--color-text-primary);
+    font-weight: 400;
+  }
+
+  /* Drop-cap — first letter of a story */
+  .drop-cap::first-letter {
+    font-family: var(--font-family-serif);
+    float: left;
+    font-size: 4.25rem;
+    font-weight: 800;
+    line-height: 0.85;
+    padding: 0.35rem 0.6rem 0 0;
+    margin-top: 0.15rem;
+    color: var(--color-accent);
+    letter-spacing: -0.03em;
+  }
+  html.dark .drop-cap::first-letter {
+    color: #d4922a;
+  }
+
+  /* Pull-quote — large serif blockquote */
+  .text-pullquote {
+    font-family: var(--font-family-serif);
+    font-size: clamp(1.5rem, 2.5vw, 2rem);
+    font-weight: 400;
+    line-height: 1.25;
     letter-spacing: -0.015em;
+    font-style: italic;
+    color: var(--color-text-primary);
+    border-left: 3px solid var(--color-accent);
+    padding-left: 1.25rem;
+    margin: 1.5rem 0;
+  }
+
+  /* Section kicker rule — kicker + hairline rule combo */
+  .editorial-kicker-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.875rem;
+  }
+  .editorial-kicker-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: var(--border-color);
+  }
+
+  /* Display number — hero stat as serif, NYT/FT feel */
+  .text-display-num {
+    font-family: var(--font-family-serif);
+    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    font-weight: 800;
+    line-height: 0.95;
+    letter-spacing: -0.04em;
+    font-variant-numeric: tabular-nums;
   }
 
   /* Cards — clean editorial surfaces */

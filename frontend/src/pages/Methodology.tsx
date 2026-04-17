@@ -8,7 +8,6 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
 import {
-  BookOpen,
   ChevronDown,
   ChevronRight,
   Shield,
@@ -293,18 +292,24 @@ function PullQuote({
   source?: string
 }) {
   return (
-    <blockquote className="my-5 border-l-2 border-accent pl-5 py-2">
+    <blockquote className="my-3 pl-5 py-1" style={{ borderLeft: '2px solid var(--color-accent)' }}>
       <div
-        className="text-4xl font-bold text-accent leading-none tracking-tight"
-        style={{ fontFamily: 'var(--font-family-serif)' }}
+        className="tabular-nums leading-none"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          color: 'var(--color-accent)',
+        }}
       >
         {stat}
       </div>
-      <div className="mt-2 text-xs uppercase tracking-[0.15em] text-text-secondary font-medium">
+      <div className="mt-2 text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary">
         {label}
       </div>
       {source && (
-        <div className="mt-1 text-[10px] font-mono text-text-muted">
+        <div className="mt-1 text-[10px] font-mono text-text-muted leading-relaxed">
           {source}
         </div>
       )}
@@ -606,24 +611,39 @@ export function Methodology() {
     <Act number="I" label="THE MODEL">
     <div className="space-y-5">
       {/* Editorial Hero */}
-      <header className="relative pt-4 pb-8 border-b border-border/50">
+      <header className="relative pt-4 pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-start justify-between gap-6">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-2 mb-4">
-              <BookOpen className="h-3.5 w-3.5 text-accent" aria-hidden="true" />
-              <span className="font-mono text-[10px] font-bold uppercase tracking-[0.2em] text-accent">
-                RUBLI · {t('kicker')}
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+              <span className="inline-flex items-center gap-1.5">
+                <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+                <span className="text-zinc-300">RUBLI</span>
               </span>
+              <span className="text-zinc-700">·</span>
+              <span>{t('kicker')}</span>
+              <span className="text-zinc-700">·</span>
+              <span className="tabular-nums">v0.6.5</span>
             </div>
+            <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>
             <h1
-              className="text-4xl md:text-5xl font-bold text-text-primary leading-[1.05] tracking-tight"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="text-text-primary leading-[1.05]"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+              }}
             >
               {t('pageHeadline')}
             </h1>
             <p
-              className="mt-5 text-base md:text-lg text-text-secondary leading-relaxed max-w-2xl"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
+              className="mt-4 text-text-secondary max-w-2xl"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontStyle: 'italic',
+                fontSize: 'clamp(1rem, 1.3vw, 1.2rem)',
+                lineHeight: 1.55,
+              }}
             >
               {t('pageSubline')}
             </p>

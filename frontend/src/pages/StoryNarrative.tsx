@@ -245,18 +245,26 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={slideUp}
           initial="initial"
           animate="animate"
-          className="text-2xl sm:text-3xl font-bold text-white leading-[1.08] mb-5"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
+          className="font-bold text-white leading-[1.05] mb-5"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontSize: 'clamp(2rem, 5vw, 3.75rem)',
+            letterSpacing: '-0.03em',
+          }}
         >
           {story.headline}
         </motion.h1>
 
-        {/* Subheadline */}
+        {/* Subheadline (deck) */}
         <motion.p
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-2xl mb-8"
+          className="italic text-zinc-300 leading-[1.55] max-w-2xl mb-8"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
+          }}
         >
           {story.subheadline}
         </motion.p>
@@ -283,7 +291,15 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1], delay: 0.3 }}
           className="mb-8"
         >
-          <div className={cn('text-2xl sm:text-3xl font-bold tracking-tight', story.leadStat.color)}>
+          <div
+            className={cn('font-bold tabular-nums', story.leadStat.color)}
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2rem, 4vw, 3rem)',
+              letterSpacing: '-0.02em',
+              lineHeight: 1.1,
+            }}
+          >
             {parsed ? (
               <AnimatedNumber
                 value={parsed.numeric}

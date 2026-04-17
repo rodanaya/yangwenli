@@ -26,6 +26,7 @@ import type { SectorStatistics, SectorTrend } from '@/api/types'
 import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
 import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
+import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import {
   BarChart,
   Bar,
@@ -464,13 +465,42 @@ export function Sectors() {
         />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-          <p className="text-xs font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-3">
-            COMPRANET 2002–2025 · v0.6.5 RISK MODEL
+          {/* Dateline strip */}
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
+            <span className="inline-flex items-center gap-1.5">
+              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+              <span className="text-zinc-300">RUBLI</span>
+            </span>
+            <span className="text-zinc-700">·</span>
+            <span>Sectores</span>
+            <span className="text-zinc-700">·</span>
+            <span className="tabular-nums">COMPRANET 2002–2025</span>
+            <span className="text-zinc-700">·</span>
+            <span className="tabular-nums">v0.6.5</span>
+          </div>
+          <p className="text-kicker text-kicker--investigation mb-3">
+            {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
           </p>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
+          <h1
+            className="text-white leading-[1.02]"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.035em',
+            }}
+          >
             {t('page.title')}
           </h1>
-          <p className="mt-3 text-base text-zinc-400 max-w-2xl">
+          <p
+            className="mt-4 max-w-2xl text-zinc-300"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontStyle: 'italic',
+              fontSize: 'clamp(1rem, 1.4vw, 1.2rem)',
+              lineHeight: 1.55,
+            }}
+          >
             {subtitleText}
           </p>
 
@@ -496,48 +526,34 @@ export function Sectors() {
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-        {/* ── HERO FINDING STRIP ─────────────────────────────────────── */}
+        {/* ── HERO FINDING — editorial lede ─────────────────────────── */}
         {!isLoading && sectors.length > 0 && (() => {
           const topRiskSector = [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score)[0]
           const exceedingOECD = sectors.filter((s) => (s.direct_award_pct ?? 0) > 25).length
+          const topSectorColor = SECTOR_COLORS[topRiskSector.sector_code] ?? '#dc2626'
+          const topSectorName = t(topRiskSector.sector_code) as string
+          const topRiskPct = (topRiskSector.avg_risk_score * 100).toFixed(1)
+          const topDaPct = (topRiskSector.direct_award_pct ?? 0).toFixed(0)
           return (
-            <div className="mb-8 surface-card p-4">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
-                {t('finding.kicker')}
-              </p>
-              <h2
-                className="text-lg font-bold text-white leading-snug mb-4 max-w-2xl"
-                style={{ fontFamily: 'var(--font-family-serif)' }}
-              >
-                {t('finding.headline', { sector: t(topRiskSector.sector_code) })}
-              </h2>
-              <div className="flex flex-wrap gap-4">
-                <div className="border-l-2 border-red-500 pl-3 py-0.5">
-                  <div className="text-xl font-mono font-bold text-red-500">
-                    {(topRiskSector.avg_risk_score * 100).toFixed(1)}%
-                  </div>
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    {t('finding.avgRiskLeader')}
-                  </div>
-                </div>
-                <div className="border-l-2 border-orange-500 pl-3 py-0.5">
-                  <div className="text-xl font-mono font-bold text-orange-400">
-                    {formatSpend(totalValue)}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    {t('finding.totalContracted')}
-                  </div>
-                </div>
-                <div className="border-l-2 border-zinc-500 pl-3 py-0.5">
-                  <div className="text-xl font-mono font-bold text-zinc-300">
-                    {exceedingOECD} {t('finding.ofTwelve')}
-                  </div>
-                  <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
-                    {t('finding.sectorsExceedOECD')}
-                  </div>
-                </div>
-              </div>
-            </div>
+            <FeaturedFinding
+              kicker={`Lede sectorial · ${topSectorName.toUpperCase()}`}
+              accent={topSectorColor}
+              headline={
+                <>
+                  <span style={{ color: topSectorColor }}>{topSectorName}</span>
+                  {' '}encabeza el riesgo con{' '}
+                  <span className="tabular-nums">{topRiskPct}%</span>
+                  {' '}de riesgo promedio
+                </>
+              }
+              deck={`${exceedingOECD} de 12 sectores rebasan el umbral OCDE del 25% en adjudicación directa. El líder combina ${topRiskPct}% de riesgo con ${topDaPct}% de contratos adjudicados sin concurso.`}
+              meta={[
+                { label: 'Riesgo promedio líder', value: `${topRiskPct}%`, accent: true },
+                { label: 'Valor total 2002–2025', value: formatSpend(totalValue) },
+                { label: 'Contratos', value: formatNumber(totalContracts) },
+                { label: 'Sectores > OCDE 25%', value: `${exceedingOECD} / 12` },
+              ]}
+            />
           )
         })()}
 

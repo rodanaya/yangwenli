@@ -66,6 +66,7 @@ import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
 import { ShareButton } from '@/components/ShareButton'
+import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 
 // =============================================================================
 // Constants
@@ -893,6 +894,20 @@ export default function Administrations() {
     return result
   }, [adminAggs])
 
+  // Biggest cross-sexenio swing — drives the FeaturedComparison lede
+  const headlineTransition = useMemo(() => {
+    if (transitions.length === 0) return null
+    // Rank by absolute direct-award delta (most story-worthy signal)
+    const ranked = [...transitions].sort(
+      (a, b) => Math.abs(b.dDA.value) - Math.abs(a.dDA.value)
+    )
+    const top = ranked[0]
+    const prev = adminAggs.find((a) => a.name === top.from)
+    const curr = adminAggs.find((a) => a.name === top.to)
+    if (!prev || !curr) return null
+    return { top, prev, curr }
+  }, [transitions, adminAggs])
+
   // Live Admin × Sector Matrix — computed from sectorYearData (all administrations at once)
   const liveAdminSectorMatrix = useMemo(() => {
     if (sectorYearData.length === 0) return null
@@ -1067,20 +1082,47 @@ export default function Administrations() {
     >
       <Act number="I" label="THE FIELD">
     <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
-      {/* ── CLASSIFIED HEADER ── */}
-      <div className="border-b border-border pb-6 mb-2">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
-          {t('classifiedHeader.eyebrow')}
+      {/* ── EDITORIAL MASTHEAD ── */}
+      <header className="border-b pb-8 mb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {/* Dateline */}
+        <div
+          className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span>RUBLI</span>
+          <span aria-hidden>·</span>
+          <span>{t('classifiedHeader.eyebrow', 'Political cycle analysis')}</span>
+          <span aria-hidden>·</span>
+          <span className="tabular-nums">v0.6.5</span>
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
-            {t('classifiedHeader.title')}
-          </h1>
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="text-kicker text-kicker--investigation mb-3">
+              {t('classifiedHeader.eyebrow')}
+            </div>
+            <h1
+              className="font-bold text-text-primary leading-[1.05] mb-4"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {t('classifiedHeader.title')}
+            </h1>
+            <p
+              className="italic text-text-secondary leading-[1.55] max-w-2xl"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
+              }}
+            >
+              {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
+            </p>
+          </div>
           <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
         </div>
-        <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
-          {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
-        </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
@@ -1091,7 +1133,7 @@ export default function Administrations() {
             <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Data source + methodology */}
       <div className="flex flex-wrap items-center gap-3 mb-2">
@@ -1201,6 +1243,38 @@ export default function Administrations() {
 
       {activeTab === 'overview' && (
       <>
+
+      {/* Editorial lede — biggest cross-sexenio swing in direct-award share */}
+      {headlineTransition && (() => {
+        const { top, prev, curr } = headlineTransition
+        const deltaValue = top.dDA.value
+        const direction = deltaValue > 0 ? 'subió' : 'cayó'
+        const absDelta = Math.abs(deltaValue).toFixed(1)
+        const accent = deltaValue > 0 ? '#f87171' : '#4ade80'
+        return (
+          <FeaturedComparison
+            kicker={`Hallazgo sexenal · Adjudicación directa ${direction} ${absDelta} pp`}
+            accent={accent}
+            entityA={{
+              name: prev.name,
+              subtitle: `${prev.directAwardPct.toFixed(1)}% DA · ${formatNumber(prev.contracts)} contratos`,
+              share: prev.directAwardPct,
+            }}
+            entityB={{
+              name: curr.name,
+              subtitle: `${curr.directAwardPct.toFixed(1)}% DA · ${formatNumber(curr.contracts)} contratos`,
+              share: curr.directAwardPct,
+            }}
+            centerLabel={`${deltaValue > 0 ? '+' : ''}${deltaValue.toFixed(1)} pp`}
+            deck={`El traspaso de ${prev.name} a ${curr.name} trajo el mayor giro en contratación sin concurso del periodo analizado: la adjudicación directa ${direction} de ${prev.directAwardPct.toFixed(1)}% a ${curr.directAwardPct.toFixed(1)}% — una señal de cómo cambia la competencia cuando cambia el régimen.`}
+            action={{
+              label: `Ver expediente de ${curr.name}`,
+              onClick: () => setSelectedAdmin(curr.name),
+            }}
+            tintColor={top.toColor}
+          />
+        )
+      })()}
 
       {/* L0: EXPEDIENTES PRESIDENCIALES */}
       <div className="mb-2">
