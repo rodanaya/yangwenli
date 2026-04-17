@@ -1048,20 +1048,47 @@ export default function Administrations() {
 
   return (
     <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
-      {/* ── CLASSIFIED HEADER ── */}
-      <div className="border-b border-border pb-6 mb-2">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
-          {t('classifiedHeader.eyebrow')}
+      {/* ── EDITORIAL MASTHEAD ── */}
+      <header className="border-b pb-8 mb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
+        {/* Dateline */}
+        <div
+          className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span>RUBLI</span>
+          <span aria-hidden>·</span>
+          <span>{t('classifiedHeader.eyebrow', 'Political cycle analysis')}</span>
+          <span aria-hidden>·</span>
+          <span className="tabular-nums">v0.6.5</span>
         </div>
-        <div className="flex items-start justify-between gap-4">
-          <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
-            {t('classifiedHeader.title')}
-          </h1>
+        <div className="flex items-start justify-between gap-6">
+          <div className="flex-1 min-w-0">
+            <div className="text-kicker text-kicker--investigation mb-3">
+              {t('classifiedHeader.eyebrow')}
+            </div>
+            <h1
+              className="font-bold text-text-primary leading-[1.05] mb-4"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {t('classifiedHeader.title')}
+            </h1>
+            <p
+              className="italic text-text-secondary leading-[1.55] max-w-2xl"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
+              }}
+            >
+              {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
+            </p>
+          </div>
           <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
         </div>
-        <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
-          {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
-        </p>
         <div className="mt-4 flex flex-wrap items-center gap-4">
           <div className="flex items-center gap-2 text-xs text-text-muted">
             <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
@@ -1072,7 +1099,7 @@ export default function Administrations() {
             <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Data source + methodology */}
       <div className="flex flex-wrap items-center gap-3 mb-2">

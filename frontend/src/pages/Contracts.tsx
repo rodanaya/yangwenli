@@ -560,12 +560,36 @@ export function Contracts() {
 
   return (
     <div className="space-y-3">
-      {/* ── EL REGISTRO NEGRO HEADER ── */}
-      <motion.div className="border-b border-border pb-6 mb-3" variants={fadeIn} initial="initial" animate="animate">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
+      {/* ── EL REGISTRO NEGRO MASTHEAD ── */}
+      <motion.header
+        className="border-b pb-8 mb-3"
+        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
+        variants={fadeIn}
+        initial="initial"
+        animate="animate"
+      >
+        <div
+          className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
+          style={{ color: 'rgba(255,255,255,0.55)' }}
+        >
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span>RUBLI</span>
+          <span aria-hidden>·</span>
+          <span>{t('statsBar.pageKicker')}</span>
+          <span aria-hidden>·</span>
+          <span className="tabular-nums">v0.6.5</span>
+        </div>
+        <div className="text-kicker text-kicker--investigation mb-3">
           {t('statsBar.pageKicker')}
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
+        <h1
+          className="font-bold text-text-primary leading-[1.05] mb-4"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontSize: 'clamp(2rem, 4vw, 3rem)',
+            letterSpacing: '-0.025em',
+          }}
+        >
           {t('editorialTitle')}
         </h1>
         <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
@@ -575,7 +599,7 @@ export function Contracts() {
           <span><strong className="text-risk-high font-mono">65.3%</strong> {t('statsBar.directAwardRate')}</span>
           <FuentePill source="COMPRANET" count={3049988} countLabel={t('statsBar.contracts')} verified={true} />
         </div>
-      </motion.div>
+      </motion.header>
 
       {/* Subheader: live count + actions */}
       <div className="flex items-center justify-between">
