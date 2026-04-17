@@ -478,6 +478,16 @@ export default function InstitutionLeague() {
   // Whether filters are active (don't show podium when filtered)
   const hasFilters = !!(sectorFilter || gradeFilter || search)
 
+  const editorialDate = useMemo(
+    () =>
+      new Date().toLocaleDateString('es-MX', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      }).toUpperCase(),
+    [],
+  )
+
   // Editorial headline from stats
   const editorialHeadline = useMemo(() => {
     if (!statsData?.grade_distribution) return null
@@ -543,60 +553,67 @@ export default function InstitutionLeague() {
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <TabBar activeTab={activeTab} setTab={setTab} />
-      {/* Page header — DRAMATIC COMPETITIVE HERO */}
-      <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
-        {/* Stadium-style stripe background */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(234,179,8,0.4) 80px, rgba(234,179,8,0.4) 81px)`,
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Crown className="h-4 w-4 text-yellow-400" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-yellow-400">
-              Ranking Institucional · La Competencia por la Transparencia
-            </p>
-            <span className="ml-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase bg-blue-900/60 text-blue-300 border border-blue-700/40">
-              Solo Federal
+      {/* Editorial masthead — NYT/Economist dateline + kicker + serif display */}
+      <header className="border-b border-[rgba(255,255,255,0.08)]">
+        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-6 space-y-4">
+          {/* Dateline strip */}
+          <div className="flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+            <Crown className="h-3.5 w-3.5 text-amber-500/80" aria-hidden="true" />
+            <span className="text-zinc-500">RUBLI</span>
+            <span className="text-zinc-700">·</span>
+            <span className="text-amber-500/80">RANKING INSTITUCIONAL</span>
+            <span className="text-zinc-700">·</span>
+            <span className="text-zinc-500">{editorialDate}</span>
+            <span className="text-zinc-700 hidden sm:inline">·</span>
+            <span className="text-zinc-500 hidden sm:inline">SOLO FEDERAL</span>
+            <span className="ml-auto flex items-center gap-1.5 text-[9px] text-zinc-500">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+              </span>
+              MODEL v0.6.5
             </span>
           </div>
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-            <div>
-              <h1
-                className="text-3xl sm:text-4xl md:text-5xl font-black font-serif text-white leading-[1.05] tracking-tight"
-                style={{ textShadow: '0 0 60px rgba(234,179,8,0.15)' }}
-              >
-                ¿Quién lidera la transparencia en México?
-              </h1>
-              <p className="text-zinc-400 text-sm mt-3 max-w-2xl leading-relaxed">
-                Clasificación competitiva de {formatNumber(total) || '—'} instituciones del gobierno federal.
-                Puntuación de 0–100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
-                Del primer lugar al último — sin excusas.
-              </p>
-            </div>
-            <Medal className="h-10 w-10 text-yellow-500/60 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
+
+          {/* Kicker + serif headline + italic deck */}
+          <div className="space-y-3">
+            <span className="text-kicker text-kicker--analysis">
+              {t('kicker', { defaultValue: 'La Competencia por la Transparencia' })}
+            </span>
+            <h1 className="text-editorial-display text-zinc-50">
+              ¿Quién lidera la transparencia en México?
+            </h1>
+            <p className="text-deck text-zinc-400 max-w-3xl">
+              Clasificación de {formatNumber(total) || '—'} instituciones del gobierno federal — puntaje 0–100 sobre
+              cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al
+              último, sin excusas.
+            </p>
+            <p className="text-byline text-zinc-500">
+              POR EL EQUIPO DE ANÁLISIS DE RUBLI · {formatNumber(total) || '—'} INSTITUCIONES EVALUADAS
+            </p>
           </div>
 
-          {/* Editorial finding headline -- urgent red when failing institutions exist */}
+          {/* Hallazgo pullquote — editorial finding */}
           {editorialHeadline && (
-            <div className={`mt-5 pl-5 py-3 rounded-r-lg ${
-              failingCount > 0
-                ? 'border-l-4 border-red-500 bg-red-950/30'
-                : 'border-l-4 border-amber-500 bg-amber-950/20'
-            }`}>
-              <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
-                failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
-              }`}>
+            <blockquote
+              className={`mt-4 pl-5 py-3 border-l-2 ${
+                failingCount > 0
+                  ? 'border-red-500/70'
+                  : 'border-amber-500/60'
+              }`}
+            >
+              <span
+                className={`text-kicker block mb-1 ${
+                  failingCount > 0 ? 'text-kicker--investigation' : 'text-kicker--analysis'
+                }`}
+              >
                 HALLAZGO
-              </p>
-              <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
-            </div>
+              </span>
+              <p className="text-pullquote text-zinc-100 max-w-3xl">{editorialHeadline}</p>
+            </blockquote>
           )}
         </div>
-      </div>
+      </header>
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
