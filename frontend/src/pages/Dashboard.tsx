@@ -441,85 +441,93 @@ export function Dashboard() {
       )}
 
       {/* ================================================================ */}
-      {/* 1. EDITORIAL HERO — compact                                       */}
+      {/* 1. EDITORIAL MASTHEAD — NYT/Economist dateline + kicker + serif    */}
       {/* ================================================================ */}
-      <header className="border-b border-border/30 pb-6">
-        <p
-          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2.5"
-          style={{ color: 'var(--color-accent)' }}
-        >
-          {t('editorial.kicker', 'RUBLI · INTELLIGENCE BRIEF')}
-        </p>
-
-        {/* Headline — constrained serif, 2rem max */}
-        {kpiLoading ? (
-          <Skeleton className="h-9 w-3/4 mb-3" />
-        ) : (
-          <h1
-            className="leading-[1.1] mb-3 max-w-3xl"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontSize: 'clamp(1.5rem, 2.6vw, 2rem)',
-              fontWeight: 700,
-              color: 'var(--color-text-primary)',
-              letterSpacing: '-0.015em',
-            }}
-          >
-            {t('editorial.headline', '{{value}} vendors require immediate investigation', {
-              value: formatNumber(t1Count),
-            })}
-          </h1>
-        )}
-
-        {kpiLoading ? (
-          <Skeleton className="h-4 w-2/3 mb-5" />
-        ) : (
-          <p className="text-sm leading-relaxed mb-5 max-w-3xl text-text-secondary">
-            {t('editorial.subhead', {
-              totalValue: formatCompactMXN(overview?.total_value_mxn ?? 0),
-              riskValue: formatCompactMXN(criticalHighValue || ariaElevatedValue),
-              contracts: formatNumber(overview?.total_contracts ?? 0),
-              defaultValue: 'RUBLI analyzed {{contracts}} federal contracts worth {{totalValue}} (2002-2025). {{riskValue}} sits in contracts flagged high or critical risk — patterns consistent with documented corruption cases.',
-            })}
-          </p>
-        )}
-
-        {/* Inline stat strip — compact, single row */}
-        <div className="flex items-center gap-x-6 gap-y-3 flex-wrap text-sm">
-          <div className="flex items-baseline gap-2">
-            <span className="stat-md font-mono" style={{ color: RISK_COLORS.critical }}>
-              {kpiLoading ? '—' : formatNumber(t1Count)}
+      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6 space-y-4">
+        {/* Dateline strip */}
+        <div className="flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
+          <span className="text-zinc-500">RUBLI</span>
+          <span className="text-zinc-700">·</span>
+          <span className="text-[color:var(--color-accent)]">INTELLIGENCE BRIEF</span>
+          <span className="text-zinc-700">·</span>
+          <span className="text-zinc-500">
+            {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
+          </span>
+          <span className="ml-auto flex items-center gap-1.5 text-[9px] text-zinc-500">
+            <span className="relative flex h-1.5 w-1.5">
+              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
             </span>
-            <span className="stat-label text-text-muted">
-              {t('editorial.stripT1', 'T1 Critical')}
-            </span>
-          </div>
-          <span className="text-text-muted/30 font-mono text-xs">·</span>
-          <div className="flex items-baseline gap-2">
-            <span className="stat-md font-mono" style={{ color: 'var(--color-accent)' }}>
-              {kpiLoading ? '—' : formatCompactMXN(criticalHighValue || ariaElevatedValue)}
-            </span>
-            <span className="stat-label text-text-muted">
-              {t('editorial.stripValue', 'at risk')}
-            </span>
-          </div>
-          <span className="text-text-muted/30 font-mono text-xs">·</span>
-          <div className="flex items-baseline gap-2">
-            <span className="stat-md font-mono text-text-secondary">
-              {`${(modelAuc * 100).toFixed(1)}%`}
-            </span>
-            <span className="stat-label text-text-muted">
-              {t('editorial.stripModel', 'AUC {{auc}}', { auc: modelAuc.toFixed(3) })}
-            </span>
-          </div>
-          <div className="ml-auto flex items-center gap-2 text-[10px] font-mono text-text-muted/60">
-            <span>{modelVersion}</span>
+            <span>MODEL {modelVersion}</span>
             {lastUpdated && (
               <>
-                <span>·</span>
+                <span className="text-zinc-700">·</span>
                 <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
               </>
             )}
+          </span>
+        </div>
+
+        {/* Kicker + serif display + italic deck */}
+        <div className="space-y-3">
+          <span className="text-kicker text-kicker--investigation">
+            {t('editorial.kickerInvestigation', { defaultValue: 'The Week in Procurement Risk' })}
+          </span>
+          {kpiLoading ? (
+            <Skeleton className="h-12 w-3/4" />
+          ) : (
+            <h1 className="text-editorial-display text-zinc-50 max-w-4xl">
+              {t('editorial.headline', '{{value}} vendors require immediate investigation', {
+                value: formatNumber(t1Count),
+              })}
+            </h1>
+          )}
+
+          {kpiLoading ? (
+            <Skeleton className="h-5 w-2/3" />
+          ) : (
+            <p className="text-deck text-zinc-400 max-w-3xl">
+              {t('editorial.subhead', {
+                totalValue: formatCompactMXN(overview?.total_value_mxn ?? 0),
+                riskValue: formatCompactMXN(criticalHighValue || ariaElevatedValue),
+                contracts: formatNumber(overview?.total_contracts ?? 0),
+                defaultValue: 'RUBLI analyzed {{contracts}} federal contracts worth {{totalValue}} (2002-2025). {{riskValue}} sits in contracts flagged high or critical risk — patterns consistent with documented corruption cases.',
+              })}
+            </p>
+          )}
+          <p className="text-byline text-zinc-500">
+            BY THE RUBLI RESEARCH DESK · {formatNumber(overview?.total_contracts ?? 0)} CONTRACTS REVIEWED
+          </p>
+        </div>
+
+        {/* Editorial figure strip — 3 figures divided by hairlines */}
+        <div className="grid grid-cols-3 gap-x-0 gap-y-4 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5">
+          <div className="px-4 sm:px-6 first:pl-0 space-y-1">
+            <div className="text-kicker text-kicker--investigation">{t('editorial.stripT1', 'T1 Critical')}</div>
+            <div className="text-display-num" style={{ color: RISK_COLORS.critical }}>
+              {kpiLoading ? '—' : formatNumber(t1Count)}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
+              {t('editorial.stripT1Sub', { defaultValue: 'vendors in priority queue' })}
+            </div>
+          </div>
+          <div className="px-4 sm:px-6 space-y-1">
+            <div className="text-kicker text-kicker--analysis">{t('editorial.stripValue', 'at risk')}</div>
+            <div className="text-display-num text-zinc-50">
+              {kpiLoading ? '—' : formatCompactMXN(criticalHighValue || ariaElevatedValue)}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
+              {t('editorial.stripValueSub', { defaultValue: 'in high + critical contracts' })}
+            </div>
+          </div>
+          <div className="px-4 sm:px-6 space-y-1">
+            <div className="text-kicker text-kicker--data">{t('editorial.stripModel', 'AUC {{auc}}', { auc: modelAuc.toFixed(3) })}</div>
+            <div className="text-display-num text-zinc-50">
+              {`${(modelAuc * 100).toFixed(1)}%`}
+            </div>
+            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
+              {t('editorial.stripModelSub', { defaultValue: 'test-set discrimination' })}
+            </div>
           </div>
         </div>
       </header>
