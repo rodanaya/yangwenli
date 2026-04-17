@@ -14,6 +14,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import {
   ArrowUp,
   ArrowDown,
@@ -29,8 +31,7 @@ import {
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
-import { formatNumber } from '@/lib/utils'
-import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
+import { formatNumber, formatCompactMXN } from '@/lib/utils'
 
 const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
 const ReportCard = lazy(() => import('./ReportCard'))
@@ -479,16 +480,6 @@ export default function InstitutionLeague() {
   // Whether filters are active (don't show podium when filtered)
   const hasFilters = !!(sectorFilter || gradeFilter || search)
 
-  const editorialDate = useMemo(
-    () =>
-      new Date().toLocaleDateString('es-MX', {
-        day: 'numeric',
-        month: 'long',
-        year: 'numeric',
-      }).toUpperCase(),
-    [],
-  )
-
   // Editorial headline from stats
   const editorialHeadline = useMemo(() => {
     if (!statsData?.grade_distribution) return null
@@ -551,70 +542,81 @@ export default function InstitutionLeague() {
     )
   }
 
+  const totalInstitutions = statsData?.total_scored ?? 0
+  const highRiskInstitutions = failingCount
+  const totalSpend = 0
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <TabBar activeTab={activeTab} setTab={setTab} />
-      {/* Editorial masthead — NYT/Economist dateline + kicker + serif display */}
-      <header className="border-b border-[rgba(255,255,255,0.08)]">
-        <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-8 pb-6 space-y-4">
-          {/* Dateline strip */}
-          <div className="flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
-            <Crown className="h-3.5 w-3.5 text-amber-500/80" aria-hidden="true" />
-            <span className="text-zinc-500">RUBLI</span>
-            <span className="text-zinc-700">·</span>
-            <span className="text-amber-500/80">RANKING INSTITUCIONAL</span>
-            <span className="text-zinc-700">·</span>
-            <span className="text-zinc-500">{editorialDate}</span>
-            <span className="text-zinc-700 hidden sm:inline">·</span>
-            <span className="text-zinc-500 hidden sm:inline">SOLO FEDERAL</span>
-            <span className="ml-auto flex items-center gap-1.5 text-[9px] text-zinc-500">
-              <span className="relative flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
-                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
-              </span>
-              MODEL v0.6.5
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
+        <EditorialPageShell
+          kicker="INSTITUTIONS · RANKING INSTITUCIONAL"
+          headline="Which agencies spend the most — and risk the most."
+          paragraph="Federal institutions ranked by procurement volume and risk profile. Each institution's spending patterns are measured against documented corruption signatures. High-risk institutions are those whose vendor portfolios most closely resemble known-corrupt procurement."
+          stats={isLoading ? undefined : [
+            { value: formatNumber(totalInstitutions), label: 'Institutions' },
+            { value: formatNumber(highRiskInstitutions), label: 'High-risk', color: 'var(--color-risk-high)' },
+            { value: totalSpend ? formatCompactMXN(totalSpend) : '—', label: 'Total spend', color: 'var(--color-accent)' },
+            { value: '23 yrs', label: 'Coverage' },
+          ]}
+          loading={isLoading}
+        >
+          <Act number="I" label="THE RANKING">
+      {/* Page header — DRAMATIC COMPETITIVE HERO */}
+      <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
+        {/* Stadium-style stripe background */}
+        <div
+          className="absolute inset-0 opacity-[0.04]"
+          style={{
+            backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(234,179,8,0.4) 80px, rgba(234,179,8,0.4) 81px)`,
+          }}
+          aria-hidden="true"
+        />
+        <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-10">
+          <div className="flex items-center gap-2 mb-3">
+            <Crown className="h-4 w-4 text-yellow-400" aria-hidden="true" />
+            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-yellow-400">
+              Ranking Institucional · La Competencia por la Transparencia
+            </p>
+            <span className="ml-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase bg-blue-900/60 text-blue-300 border border-blue-700/40">
+              Solo Federal
             </span>
           </div>
-
-          {/* Kicker + serif headline + italic deck */}
-          <div className="space-y-3">
-            <span className="text-kicker text-kicker--analysis">
-              {t('kicker', { defaultValue: 'La Competencia por la Transparencia' })}
-            </span>
-            <h1 className="text-editorial-display text-zinc-50">
-              ¿Quién lidera la transparencia en México?
-            </h1>
-            <p className="text-deck text-zinc-400 max-w-3xl">
-              Clasificación de {formatNumber(total) || '—'} instituciones del gobierno federal — puntaje 0–100 sobre
-              cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al
-              último, sin excusas.
-            </p>
-            <p className="text-byline text-zinc-500">
-              POR EL EQUIPO DE ANÁLISIS DE RUBLI · {formatNumber(total) || '—'} INSTITUCIONES EVALUADAS
-            </p>
-          </div>
-
-          {/* Hallazgo pullquote — editorial finding */}
-          {editorialHeadline && (
-            <blockquote
-              className={`mt-4 pl-5 py-3 border-l-2 ${
-                failingCount > 0
-                  ? 'border-red-500/70'
-                  : 'border-amber-500/60'
-              }`}
-            >
-              <span
-                className={`text-kicker block mb-1 ${
-                  failingCount > 0 ? 'text-kicker--investigation' : 'text-kicker--analysis'
-                }`}
+          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
+            <div>
+              <h1
+                className="text-3xl sm:text-4xl md:text-5xl font-black font-serif text-white leading-[1.05] tracking-tight"
+                style={{ textShadow: '0 0 60px rgba(234,179,8,0.15)' }}
               >
+                ¿Quién lidera la transparencia en México?
+              </h1>
+              <p className="text-zinc-400 text-sm mt-3 max-w-2xl leading-relaxed">
+                Clasificación competitiva de {formatNumber(total) || '—'} instituciones del gobierno federal.
+                Puntuación de 0–100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
+                Del primer lugar al último — sin excusas.
+              </p>
+            </div>
+            <Medal className="h-10 w-10 text-yellow-500/60 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
+          </div>
+
+          {/* Editorial finding headline -- urgent red when failing institutions exist */}
+          {editorialHeadline && (
+            <div className={`mt-5 pl-5 py-3 rounded-r-lg ${
+              failingCount > 0
+                ? 'border-l-4 border-red-500 bg-red-950/30'
+                : 'border-l-4 border-amber-500 bg-amber-950/20'
+            }`}>
+              <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
+                failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
+              }`}>
                 HALLAZGO
-              </span>
-              <p className="text-pullquote text-zinc-100 max-w-3xl">{editorialHeadline}</p>
-            </blockquote>
+              </p>
+              <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
+            </div>
           )}
         </div>
-      </header>
+      </div>
 
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
 
@@ -649,35 +651,6 @@ export default function InstitutionLeague() {
               </div>
             )}
           </div>
-        )}
-
-        {/* Editorial comparative lede — #1 vs worst */}
-        {!hasFilters && statsData && statsData.top_institution_name && statsData.worst_institution_name &&
-          statsData.top_institution_score != null && statsData.worst_institution_score != null && (
-          <FeaturedComparison
-            kicker={`Contraste nacional · ${(statsData.top_institution_score - statsData.worst_institution_score).toFixed(1)} puntos de distancia`}
-            accent="#d4922a"
-            entityA={{
-              name: statsData.top_institution_name,
-              subtitle: `${statsData.top_institution_score.toFixed(1)} / 100 · #1 nacional`,
-              share: statsData.top_institution_score,
-              onClick: statsData.top_institution_id
-                ? () => navigate(`/institutions/${statsData.top_institution_id}`)
-                : undefined,
-              title: statsData.top_institution_name,
-            }}
-            entityB={{
-              name: statsData.worst_institution_name,
-              subtitle: `${statsData.worst_institution_score.toFixed(1)} / 100 · último lugar`,
-              share: statsData.worst_institution_score,
-              onClick: statsData.worst_institution_id
-                ? () => navigate(`/institutions/${statsData.worst_institution_id}`)
-                : undefined,
-              title: statsData.worst_institution_name,
-            }}
-            centerLabel={`${(statsData.top_institution_score - statsData.worst_institution_score).toFixed(1)} pts`}
-            deck={`En un extremo, una institución que publica, compite y audita. En el otro, una que opaca. La mediana nacional está en ${statsData.median_score.toFixed(1)} — más cerca del último lugar que del primero.`}
-          />
         )}
 
         {/* Podium -- only when no filters active */}
@@ -991,6 +964,9 @@ export default function InstitutionLeague() {
         <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
           RUBLI Indice de Salud de Contrataciones v0.6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
         </p>
+      </div>
+          </Act>
+        </EditorialPageShell>
       </div>
     </div>
   )

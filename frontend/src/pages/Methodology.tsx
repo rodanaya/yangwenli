@@ -1,4 +1,6 @@
 import { useState, memo, useMemo, useCallback, type ReactNode } from 'react'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
@@ -595,6 +597,18 @@ function TableOfContents() {
 export function Methodology() {
   const { t } = useTranslation('methodology')
   return (
+    <EditorialPageShell
+      kicker="METHODOLOGY · TRANSPARENCY REPORT"
+      headline="How we score corruption risk."
+      paragraph="RUBLI v0.6.5 uses a logistic regression model trained on 748 documented corruption cases to score 3.1 million procurement contracts. This page explains the methodology, limitations, and how to interpret scores for investigative purposes."
+      stats={[
+        { value: 'v0.6.5', label: 'Model version' },
+        { value: '0.828', label: 'Test AUC' },
+        { value: '13.49%', label: 'High-risk rate' },
+        { value: '748', label: 'Ground truth cases' },
+      ]}
+    >
+    <Act number="I" label="THE MODEL">
     <div className="space-y-5">
       {/* Editorial Hero */}
       <header className="relative pt-4 pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
@@ -1396,6 +1410,8 @@ export function Methodology() {
 
       <CitationBlock context="RUBLI methodology — v0.6.5 risk model" className="mt-2" />
     </div>
+    </Act>
+    </EditorialPageShell>
   )
 }
 

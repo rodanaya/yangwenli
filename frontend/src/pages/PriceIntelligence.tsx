@@ -22,6 +22,8 @@ import { TableExportButton } from '@/components/TableExportButton'
 import { CitationBlock } from '@/components/CitationBlock'
 import { ShareButton } from '@/components/ShareButton'
 // Recharts removed — replaced with pure SVG field visualizations
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { FuentePill } from '@/components/ui/FuentePill'
@@ -691,8 +693,41 @@ export default function PriceIntelligence() {
     )
   }
 
+  const heroAvgZ = summary?.avg_z_score ?? 0
+  const heroEstSavings = heroAvgZ > 1 ? (summary?.total_value_mxn ?? 0) * (1 - 1 / heroAvgZ) : 0
+
   return (
-    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6 space-y-8">
+    <div className="max-w-5xl mx-auto px-4 md:px-6 py-6">
+      <EditorialPageShell
+        kicker="PRICE INTELLIGENCE · MARKET ANOMALY DETECTION"
+        headline={<>When prices deviate, <em>corruption follows.</em></>}
+        paragraph="Price intelligence tracks statistical outliers across Mexico's federal procurement market — contracts priced beyond sector norms are investigated first."
+        severity="high"
+        loading={loading}
+        stats={[
+          {
+            value: summary ? formatNumber(summary.total_outliers) : '—',
+            label: 'anomalous contracts',
+            color: '#fb923c',
+          },
+          {
+            value: summary ? formatCompactMXN(summary.total_value_mxn) : '—',
+            label: 'value at risk',
+            color: '#f87171',
+          },
+          {
+            value: summary ? `+${(summary.avg_z_score ?? 0).toFixed(1)}σ` : '—',
+            label: 'avg deviation',
+            color: '#fbbf24',
+          },
+          {
+            value: heroEstSavings > 0 ? formatCompactMXN(heroEstSavings) : '—',
+            label: 'est. overpricing',
+            color: '#a78bfa',
+          },
+        ]}
+      >
+        <Act number="I" label="THE ANOMALIES">
       {/* ================================================================== */}
       {/* SECTION 1: Hero Lede + KPI Strip                                   */}
       {/* ================================================================== */}
@@ -1157,6 +1192,8 @@ export default function PriceIntelligence() {
       <MethodologySection t={t} />
 
       <CitationBlock context="Price anomaly analysis — 7,090 anomalies" className="mt-2" />
+        </Act>
+      </EditorialPageShell>
     </div>
   )
 }

@@ -14,6 +14,9 @@ import { AlertTriangle, TrendingUp, Info, Calendar, Zap } from 'lucide-react'
 import { analysisApi } from '@/api/client'
 import { cn, formatNumber } from '@/lib/utils'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
+import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // =============================================================================
 // Types
@@ -576,48 +579,47 @@ export default function ProcurementCalendar() {
 
   return (
     <div className="min-h-screen bg-stone-950 text-stone-200">
-      {/* Editorial masthead */}
-      <header className="px-6 pt-7 pb-6" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="max-w-6xl mx-auto">
-          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
-            <span className="inline-flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-zinc-300">RUBLI</span>
-            </span>
-            <span className="text-zinc-700">·</span>
-            <span>{t('section')}</span>
-            <span className="text-zinc-700">·</span>
-            <span className="tabular-nums">{year}</span>
-            <span className="text-zinc-700">·</span>
-            <span className="tabular-nums">v0.6.5</span>
-          </div>
-          <p className="text-kicker text-kicker--investigation mb-3">{t('section')}</p>
-          <h1
-            className="text-zinc-50 leading-[1.05]"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontSize: 'clamp(2rem, 4vw, 3rem)',
-              fontWeight: 700,
-              letterSpacing: '-0.025em',
-            }}
-          >
-            {t('headline')}
-          </h1>
-          <p
-            className="mt-3 max-w-2xl text-zinc-300"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontStyle: 'italic',
-              fontSize: 'clamp(0.95rem, 1.3vw, 1.1rem)',
-              lineHeight: 1.55,
-            }}
-          >
-            {t('headlineSubtitle')}
-          </p>
-        </div>
-      </header>
-
-      <div className="max-w-6xl mx-auto px-6 py-8 space-y-8">
+      <div className="max-w-6xl mx-auto px-6 py-8">
+      <EditorialPageShell
+        kicker="PROCUREMENT CALENDAR · TEMPORAL PATTERNS"
+        headline={<>Year-end spending reveals the <em>budget dump</em> pattern.</>}
+        paragraph="December concentrates an anomalous share of federal contracts — a pattern consistent with fiscal year-end pressure and reduced oversight."
+        severity="medium"
+        loading={isLoading}
+        stats={[
+          {
+            value: stats.totalContracts > 0 ? formatNumber(stats.totalContracts) : '—',
+            label: `contracts in ${year}`,
+            color: '#60a5fa',
+          },
+          {
+            value: stats.highRiskContracts > 0 ? formatNumber(stats.highRiskContracts) : '—',
+            label: 'high-risk contracts',
+            color: '#f87171',
+            sub: stats.totalContracts > 0 ? `${(stats.highRiskRate * 100).toFixed(1)}% of total` : undefined,
+          },
+          {
+            value: stats.hasDecemberData ? formatNumber(stats.decemberContracts) : '—',
+            label: 'december contracts',
+            color: '#fb923c',
+            sub: stats.decemberJanuaryRatio ? `${stats.decemberJanuaryRatio.toFixed(1)}x vs january` : undefined,
+          },
+          {
+            value: stats.hasDecemberData ? `${(stats.decemberRiskRate * 100).toFixed(1)}%` : '—',
+            label: 'december risk rate',
+            color: '#fbbf24',
+          },
+        ]}
+      >
+        <Act number="I" label="THE CALENDAR">
+      <div className="space-y-8">
+        {/* Existing in-page header (kept for sub-sections) */}
+        <EditorialHeadline
+          section={t('section')}
+          headline={t('headline')}
+          subtitle={t('headlineSubtitle')}
+          className="mb-2"
+        />
         {/* Editorial lede */}
         <div className="max-w-3xl">
           <p className="text-sm text-stone-400 leading-relaxed">
@@ -909,6 +911,9 @@ export default function ProcurementCalendar() {
           <Calendar className="w-3 h3 inline-block mr-1 -mt-0.5" />
           {t('source')}
         </div>
+      </div>
+        </Act>
+      </EditorialPageShell>
       </div>
 
       {/* Tooltip rendered at root level to avoid clipping */}

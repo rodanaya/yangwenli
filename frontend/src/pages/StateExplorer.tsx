@@ -18,6 +18,8 @@ import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { Skeleton } from '@/components/ui/skeleton'
 import { formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { getRiskLevelFromScore } from '@/lib/constants'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -155,7 +157,38 @@ export default function StateExplorer() {
 
   return (
     <div className="min-h-screen bg-[#1a1714] text-stone-200">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6 space-y-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
+      <EditorialPageShell
+        kicker="STATE EXPLORER · GEOGRAPHIC DISTRIBUTION"
+        headline={<>Mexico's 32 states, <em>one federal market.</em></>}
+        paragraph="Geographic distribution of federal contracts reveals regional concentration patterns and variation in competition levels across Mexico's territory."
+        severity="medium"
+        loading={isLoading}
+        stats={[
+          {
+            value: states.length > 0 ? formatNumber(states.length) : '—',
+            label: 'states analyzed',
+            color: '#94a3b8',
+          },
+          {
+            value: highestRisk ? `${(highestRisk.avg_risk_score * 100).toFixed(1)}%` : '—',
+            label: highestRisk ? `highest risk: ${highestRisk.state_name}` : 'highest risk',
+            color: '#f87171',
+          },
+          {
+            value: lowestRisk ? `${(lowestRisk.avg_risk_score * 100).toFixed(1)}%` : '—',
+            label: lowestRisk ? `lowest risk: ${lowestRisk.state_name}` : 'lowest risk',
+            color: '#4ade80',
+          },
+          {
+            value: totalValue > 0 ? formatCompactMXN(totalValue) : '—',
+            label: 'total value analyzed',
+            color: '#fbbf24',
+          },
+        ]}
+      >
+        <Act number="I" label="THE MAP">
+      <div className="space-y-8">
 
         {/* Header */}
         <EditorialHeadline
@@ -418,6 +451,9 @@ export default function StateExplorer() {
           ))}
           <span className="ml-4">DA = Direct Award Rate</span>
         </div>
+      </div>
+        </Act>
+      </EditorialPageShell>
       </div>
     </div>
   )

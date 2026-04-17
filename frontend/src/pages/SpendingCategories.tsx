@@ -54,7 +54,8 @@ import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { CategoryTreemap } from '@/components/charts/CategoryTreemap'
-import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -1690,6 +1691,36 @@ export default function SpendingCategories() {
   const highestRiskPct = highestRiskCat ? (highestRiskCat.avg_risk * 100).toFixed(0) : '0'
 
   return (
+    <EditorialPageShell
+      kicker="SPENDING CATEGORIES · PARTIDA ANALYSIS"
+      headline={<>Where the budget flows, <em>line by line.</em></>}
+      paragraph="Federal procurement organized by partida codes — Mexico's budget classification system — reveals concentration patterns invisible in sector-level analysis."
+      severity="medium"
+      loading={summaryLoading && !summaryData}
+      stats={[
+        {
+          value: allCategories.length > 0 ? formatNumber(allCategories.length) : '—',
+          label: 'categories tracked',
+          color: '#60a5fa',
+        },
+        {
+          value: stats ? formatCompactMXN(stats.totalValue) : '—',
+          label: 'total spend (filtered)',
+          color: '#fbbf24',
+        },
+        {
+          value: stats ? formatNumber(stats.totalContracts) : '—',
+          label: 'contracts',
+          color: '#a78bfa',
+        },
+        {
+          value: highestRiskCat ? `${highestRiskPct}%` : '—',
+          label: highestRiskCat ? `top risk: ${truncate(localeName(highestRiskCat, i18n.language), 22)}` : 'top risk category',
+          color: '#f87171',
+        },
+      ]}
+    >
+      <Act number="I" label="THE CATEGORIES">
     <div className="space-y-8">
       {/* ================================================================= */}
       {/* 1. Editorial Headline                                             */}
@@ -1729,32 +1760,6 @@ export default function SpendingCategories() {
           color="border-amber-500"
         />
       </div>
-
-      {/* ================================================================= */}
-      {/* 2.25 Dinero vs Riesgo — editorial duet                            */}
-      {/* ================================================================= */}
-      {topSpendCat && highestRiskCat && topSpendCat.category_id !== highestRiskCat.category_id && (
-        <FeaturedComparison
-          kicker={`Dinero vs Riesgo · ${formatCompactMXN(topSpendCat.total_value)} vs ${(highestRiskCat.avg_risk * 100).toFixed(0)}% riesgo`}
-          accent={highestRiskCat.sector_code ? (SECTOR_COLORS[highestRiskCat.sector_code] || '#d4922a') : '#d4922a'}
-          entityA={{
-            name: truncate(localeName(topSpendCat, i18n.language), 50),
-            subtitle: `${formatCompactMXN(topSpendCat.total_value)} · ${formatNumber(topSpendCat.total_contracts)} contratos`,
-            share: Math.min(100, (topSpendCat.total_value / (allCategories[0]?.total_value || topSpendCat.total_value)) * 100),
-            onClick: () => setSelectedCategoryId(topSpendCat.category_id),
-            title: localeName(topSpendCat, i18n.language),
-          }}
-          entityB={{
-            name: truncate(localeName(highestRiskCat, i18n.language), 50),
-            subtitle: `Riesgo ${(highestRiskCat.avg_risk * 100).toFixed(1)}% · ${formatNumber(highestRiskCat.total_contracts)} contratos`,
-            share: Math.min(100, highestRiskCat.avg_risk * 100),
-            onClick: () => setSelectedCategoryId(highestRiskCat.category_id),
-            title: localeName(highestRiskCat, i18n.language),
-          }}
-          centerLabel="CONTRASTE"
-          deck={`La categoría con más presupuesto público no es la más riesgosa. "${truncate(localeName(topSpendCat, i18n.language), 40)}" concentra el gasto, pero "${truncate(localeName(highestRiskCat, i18n.language), 40)}" concentra las banderas rojas — una desconexión que merece atención editorial.`}
-        />
-      )}
 
       {/* ================================================================= */}
       {/* 2.5 Category Treemap — hero visualization                         */}
@@ -2605,5 +2610,7 @@ export default function SpendingCategories() {
         </section>
       )}
     </div>
+      </Act>
+    </EditorialPageShell>
   )
 }

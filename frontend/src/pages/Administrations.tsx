@@ -12,6 +12,8 @@
 
 import { useMemo, useState, useRef, memo } from 'react'
 import { Link } from 'react-router-dom'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { useWikipediaImage } from '@/hooks/useWikipediaImage'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
@@ -1062,6 +1064,23 @@ export default function Administrations() {
   }
 
   return (
+    <EditorialPageShell
+      kicker="ADMINISTRATIONS · SEXENIO ANALYSIS"
+      headline={
+        <>Six administrations,{' '}
+          <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
+        </>
+      }
+      paragraph="A comparative analysis of federal procurement across six presidential administrations (2002-2025). Each administration's spending patterns, risk concentrations, and vendor relationships are measured using the same model — making cross-administration comparison possible for the first time."
+      stats={[
+        { value: '6', label: 'Administrations' },
+        { value: '2002–2025', label: 'Coverage' },
+        { value: '9.9T MXN', label: 'Total spend', color: 'var(--color-accent)' },
+        { value: '3.1M', label: 'Contracts' },
+      ]}
+      loading={isLoading ?? false}
+    >
+      <Act number="I" label="THE FIELD">
     <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
       {/* ── EDITORIAL MASTHEAD ── */}
       <header className="border-b pb-8 mb-2" style={{ borderColor: 'rgba(255,255,255,0.08)' }}>
@@ -2105,6 +2124,8 @@ export default function Administrations() {
       </> /* end overview tab */
       )}
     </div>
+      </Act>
+    </EditorialPageShell>
   )
 }
 

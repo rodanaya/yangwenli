@@ -46,7 +46,9 @@ import {
   Plus,
   Crosshair,
 } from 'lucide-react'
-import { formatDate } from '@/lib/utils'
+import { formatDate, formatNumber } from '@/lib/utils'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ============================================================================
 // Helper utilities
@@ -591,6 +593,17 @@ export function Watchlist() {
   }
 
   return (
+    <EditorialPageShell
+      kicker="WORKSPACE · INVESTIGATION DOSSIERS"
+      headline="Your active investigation files."
+      paragraph="Saved vendors, contracts, and case leads. Build dossiers by adding items from any page in the platform. Share dossiers with colleagues or export for reporting."
+      stats={[
+        { value: formatNumber(items.length), label: 'Items saved' },
+        { value: formatNumber(dossiers?.length ?? 0), label: 'Dossiers' },
+      ]}
+      loading={statsLoading}
+    >
+    <Act number="I" label="YOUR DOSSIERS">
     <div className="flex flex-col md:flex-row gap-4">
       {/* Folder sidebar */}
       <div className="w-full md:w-[200px] md:shrink-0 space-y-3">
@@ -1048,6 +1061,8 @@ export function Watchlist() {
         />
       )}
     </div>
+    </Act>
+    </EditorialPageShell>
   )
 }
 

@@ -8,6 +8,8 @@
  */
 
 import { useState, useMemo } from 'react'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { motion } from 'framer-motion'
 import { staggerContainer, staggerItem } from '@/lib/animations'
 import { useNavigate } from 'react-router-dom'
@@ -42,7 +44,6 @@ import {
   Search,
   Info,
 } from 'lucide-react'
-import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 
 // ============================================================================
 // TYPES
@@ -447,12 +448,6 @@ export function Investigation() {
 
   const allCases = casesData?.data || []
 
-  // Cover story — highest-suspicion case serves as the magazine-cover lede
-  const coverCase = useMemo(() => {
-    if (allCases.length === 0) return null
-    return [...allCases].sort((a, b) => b.suspicion_score - a.suspicion_score)[0] ?? null
-  }, [allCases])
-
   // Priority counts
   const priorityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 }
@@ -540,103 +535,38 @@ export function Investigation() {
     )
   }
 
-  const editorialDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  }).toUpperCase().replace(/,/g, ' ·')
+  const pendingCount = useMemo(() => statusCounts.pending, [statusCounts])
+  const corroboratedCount = useMemo(() => statusCounts.corroborated, [statusCounts])
+  const refutedCount = useMemo(() => statusCounts.refuted, [statusCounts])
+  const totalCases = allCases.length
 
   return (
-    <div className="space-y-0">
-      {/* ================================================================
-          EDITORIAL MASTHEAD
-          ================================================================ */}
-      <header className="space-y-4 border-b border-[rgba(255,255,255,0.08)] pb-6 mb-6">
-        <div className="flex items-center justify-between text-[10px] font-mono tracking-[0.18em] text-zinc-500">
-          <div className="flex items-center gap-3">
-            <ShieldAlert className="h-3 w-3 text-amber-400" aria-hidden />
-            <span className="font-bold text-zinc-400">{t('headerTracking')}</span>
-            <span className="text-zinc-700">·</span>
-            <span>{editorialDate}</span>
-          </div>
-          <div className="hidden sm:flex items-center gap-2">
-            <span className="relative inline-flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
-              <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-400" />
-            </span>
-            <span>{t('header.activeMonitor', { defaultValue: 'ACTIVE INVESTIGATION DESK' })}</span>
-          </div>
-        </div>
-
-        <div className="space-y-2 max-w-4xl">
-          <span className="text-kicker text-kicker--investigation">
-            {t('header.kicker', { defaultValue: 'CASE FILES' })}
-          </span>
-          <h1 className="text-editorial-display text-zinc-50">
-            {t('headerTitle')}
-          </h1>
-          <p className="text-deck text-zinc-400 max-w-3xl">
-            {t('headerDesc')}
-          </p>
-        </div>
-      </header>
-
-      {/* ================================================================
-          KPI STRIP — editorial figures
-          ================================================================ */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-x-0 gap-y-4 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5 mb-6">
-        <div className="px-4 sm:px-6 first:pl-0 space-y-1">
-          <div className="text-kicker text-zinc-500">{t('kpi.openCases')}</div>
-          <div className="text-display-num text-zinc-50">{formatNumber(allCases.length)}</div>
-        </div>
-        <div className="px-4 sm:px-6 space-y-1">
-          <div className="text-kicker text-zinc-500">{t('kpi.totalAtRisk')}</div>
-          <div className="text-display-num text-zinc-50">
-            {formatCompactMXN(allCases.reduce((s, c) => s + c.total_value_mxn, 0))}
-          </div>
-        </div>
-        <div className="px-4 sm:px-6 space-y-1">
-          <div className="text-kicker text-kicker--investigation">{t('kpi.estLosses')}</div>
-          <div className="text-display-num text-red-400">
-            {formatCompactMXN(allCases.reduce((s, c) => s + (c.estimated_loss_mxn || 0), 0))}
-          </div>
-        </div>
-        <div className="px-4 sm:px-6 space-y-1">
-          <div className="text-kicker text-zinc-500">{t('kpi.sectorsAffected')}</div>
-          <div className="text-display-num text-zinc-50">
-            {formatNumber(new Set(allCases.map((c) => c.sector_name)).size)}
-          </div>
-        </div>
-      </div>
-
-      {/* ================================================================
-          COVER STORY — magazine-style lede for highest-suspicion case
-          ================================================================ */}
-      {coverCase && (
-        <FeaturedFinding
-          kicker={`PORTADA · ${coverCase.case_id} · ${coverCase.sector_name.toUpperCase()}`}
-          accent={SECTOR_COLORS[coverCase.sector_name] || '#d4922a'}
-          headline={coverCase.title}
-          deck={`${coverCase.total_contracts.toLocaleString('es-MX')} contratos · ${coverCase.vendor_count} proveedores involucrados. Puntaje de sospecha ${(coverCase.suspicion_score * 100).toFixed(0)}/100 con ${coverCase.signals_triggered.length} señales de riesgo detectadas por el pipeline ML.`}
-          meta={[
-            { label: 'Valor total', value: formatCompactMXN(coverCase.total_value_mxn) },
-            { label: 'Pérdida estimada', value: formatCompactMXN(coverCase.estimated_loss_mxn || 0), accent: true },
-            { label: 'Señales', value: String(coverCase.signals_triggered.length) },
-            { label: 'Estado', value: coverCase.validation_status.toUpperCase() },
-          ]}
-          action={{
-            label: 'Abrir expediente completo',
-            onClick: () => navigate(`/investigation/${coverCase.case_id}`),
-          }}
-        />
-      )}
+    <EditorialPageShell
+      kicker="THE ARCHIVE · ML-GENERATED CASES"
+      headline={
+        <>
+          {casesLoading ? 'Loading cases...' : formatNumber(totalCases)}{' '}
+          cases await <span style={{ color: 'var(--color-risk-high)' }}>journalist verification.</span>
+        </>
+      }
+      paragraph="These are investigation cases generated by the RUBLI risk model. Each case identifies vendor patterns consistent with documented corruption. The pipeline moves from automated Detection through Research and Corroboration before cases become ground truth."
+      stats={casesLoading ? undefined : [
+        { value: formatNumber(totalCases), label: 'Total cases' },
+        { value: formatNumber(pendingCount), label: 'Pending', color: 'var(--color-risk-high)' },
+        { value: formatNumber(corroboratedCount), label: 'Corroborated', color: '#3fb950' },
+        { value: formatNumber(refutedCount), label: 'Refuted' },
+      ]}
+      loading={casesLoading}
+      severity="high"
+    >
+      <Act number="I" label="OPEN CASES">
 
       {/* ================================================================
           FILTROS DE INVESTIGACION
           ================================================================ */}
       <div className="mb-6 space-y-3">
-        <div className="editorial-kicker-rule">
-          <Filter className="h-3 w-3 text-zinc-500" aria-hidden />
-          <span className="text-kicker text-zinc-500">{t('filterHeader')}</span>
-          <span className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" aria-hidden />
+        <div className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
+          {t('filterHeader')}
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
@@ -836,7 +766,9 @@ export function Investigation() {
         </div>
       )}
       </div>
-    </div>
+
+      </Act>
+    </EditorialPageShell>
   )
 }
 

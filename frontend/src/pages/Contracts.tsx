@@ -2,7 +2,7 @@ import React, { useCallback, useMemo, useEffect, useState, useRef } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useSearchParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { fadeIn, slideUp } from '@/lib/animations'
+import { slideUp } from '@/lib/animations'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { useTranslation } from 'react-i18next'
 import { Card, CardContent } from '@/components/ui/card'
@@ -64,8 +64,9 @@ import { ContractDetailModal } from '@/components/ContractDetailModal'
 import { ContractCompareModal } from '@/components/ContractCompareModal'
 import { ExpandableProvider, ExpandableRow, ExpandChevron } from '@/components/ExpandableRow'
 import { parseFactorLabel, getFactorCategoryColor } from '@/lib/risk-factors'
-import { FuentePill } from '@/components/ui/FuentePill'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // =============================================================================
 // Configuration
@@ -559,47 +560,45 @@ export function Contracts() {
   // --- Render ---
 
   return (
-    <div className="space-y-3">
-      {/* ── EL REGISTRO NEGRO MASTHEAD ── */}
-      <motion.header
-        className="border-b pb-8 mb-3"
-        style={{ borderColor: 'rgba(255,255,255,0.08)' }}
-        variants={fadeIn}
-        initial="initial"
-        animate="animate"
-      >
-        <div
-          className="flex items-center gap-2 text-[10px] tracking-[0.2em] uppercase font-semibold mb-5"
-          style={{ color: 'rgba(255,255,255,0.55)' }}
-        >
-          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
-          <span>RUBLI</span>
-          <span aria-hidden>·</span>
-          <span>{t('statsBar.pageKicker')}</span>
-          <span aria-hidden>·</span>
-          <span className="tabular-nums">v0.6.5</span>
+    <EditorialPageShell
+      kicker="CONTRACTS · THE FEDERAL LEDGER"
+      headline="Every contract awarded since 2002, scored."
+      paragraph="Mexico's complete federal procurement record — 3.1 million contracts spanning 23 years, 12 sectors, and hundreds of institutions. Each contract is scored by the RUBLI v0.6.5 risk model trained on documented corruption cases."
+      stats={[
+        { value: formatNumber(3_051_294), label: 'Contracts indexed' },
+        { value: formatNumber(412_845), label: 'High-risk flagged', color: 'var(--color-risk-high)' },
+        { value: '13.5%', label: 'HR rate — OECD limit 15%' },
+        { value: '9.9T MXN', label: 'Total validated spend' },
+      ]}
+    >
+      {/* Investigation preset shelf */}
+      <div className="surface-card border border-border/50 rounded-lg p-4 mb-4">
+        <p className="lede-dateline mb-3">Investigation presets</p>
+        <div className="flex flex-wrap gap-2">
+          {CONTRACT_PRESET_DEFS.map((preset) => {
+            const Icon = preset.icon
+            const isActive = activePreset === preset.id
+            return (
+              <button
+                key={preset.id}
+                onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
+                title={t(preset.descriptionKey)}
+                className={cn(
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono tracking-wide transition-all',
+                  isActive
+                    ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
+                    : 'border-border/50 bg-background-elevated text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-background-elevated/80'
+                )}
+              >
+                <Icon className="h-3 w-3" />
+                {t(preset.labelKey)}
+              </button>
+            )
+          })}
         </div>
-        <div className="text-kicker text-kicker--investigation mb-3">
-          {t('statsBar.pageKicker')}
-        </div>
-        <h1
-          className="font-bold text-text-primary leading-[1.05] mb-4"
-          style={{
-            fontFamily: 'var(--font-family-serif)',
-            fontSize: 'clamp(2rem, 4vw, 3rem)',
-            letterSpacing: '-0.025em',
-          }}
-        >
-          {t('editorialTitle')}
-        </h1>
-        <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-text-muted">
-          <span><strong className="text-text-primary font-mono">3,049,988</strong> {t('statsBar.contracts')}</span>
-          <span><strong className="text-text-primary font-mono">$9.87T</strong> {t('statsBar.audited')}</span>
-          <span><strong className="text-risk-critical font-mono">133,522</strong> {t('statsBar.atCriticalRisk')}</span>
-          <span><strong className="text-risk-high font-mono">65.3%</strong> {t('statsBar.directAwardRate')}</span>
-          <FuentePill source="COMPRANET" count={3049988} countLabel={t('statsBar.contracts')} verified={true} />
-        </div>
-      </motion.header>
+      </div>
+
+      <Act number="I" label="THE LEDGER">
 
       {/* Subheader: live count + actions */}
       <div className="flex items-center justify-between">
@@ -1243,7 +1242,9 @@ export function Contracts() {
         onOpenChange={setIsCompareOpen}
         onViewDetail={(id) => { setSelectedContractId(id); setIsDetailOpen(true) }}
       />
-    </div>
+
+      </Act>
+    </EditorialPageShell>
   )
 }
 

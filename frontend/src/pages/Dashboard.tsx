@@ -23,6 +23,8 @@ import { RiskStrata, type RiskStrataRow } from '@/components/charts/RiskStrata'
 import { SectorMarimekko, type SectorMarimekkoRow } from '@/components/charts/SectorMarimekko'
 import { SexenioStratum, type SexenioYearRow } from '@/components/charts/SexenioStratum'
 import { ConcentrationConstellation, type ConstellationRiskRow } from '@/components/charts/ConcentrationConstellation'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ============================================================================
 // Dashboard: Data-Rich Editorial Intelligence Brief
@@ -420,11 +422,55 @@ export function Dashboard() {
   // ── Render ────────────────────────────────────────────────────────────────
 
   return (
-    <div className="max-w-7xl mx-auto px-4 py-6 space-y-8">
+    <EditorialPageShell
+      kicker={t('editorial.kicker', 'RUBLI · INTELLIGENCE BRIEF')}
+      headline={
+        <>
+          {t('editorial.headline', '{{value}} vendors require immediate investigation', {
+            value: formatNumber(t1Count),
+          })}
+        </>
+      }
+      paragraph={t('editorial.subhead', {
+        totalValue: formatCompactMXN(overview?.total_value_mxn ?? 0),
+        riskValue: formatCompactMXN(criticalHighValue || ariaElevatedValue),
+        contracts: formatNumber(overview?.total_contracts ?? 0),
+        defaultValue: 'RUBLI analyzed {{contracts}} federal contracts worth {{totalValue}} (2002-2025). {{riskValue}} sits in contracts flagged high or critical risk — patterns consistent with documented corruption cases.',
+      })}
+      stats={[
+        {
+          value: kpiLoading ? '—' : formatNumber(t1Count),
+          label: t('editorial.stripT1', 'T1 Critical'),
+          color: RISK_COLORS.critical,
+        },
+        {
+          value: kpiLoading ? '—' : formatCompactMXN(criticalHighValue || ariaElevatedValue),
+          label: t('editorial.stripValue', 'at risk'),
+          color: 'var(--color-accent)',
+        },
+        {
+          value: `${(modelAuc * 100).toFixed(1)}%`,
+          label: t('editorial.stripModel', 'AUC {{auc}}', { auc: modelAuc.toFixed(3) }),
+        },
+      ]}
+      meta={
+        <span className="flex items-center gap-2 text-[10px] font-mono text-text-muted/60">
+          <span>{modelVersion}</span>
+          {lastUpdated && (
+            <>
+              <span>·</span>
+              <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
+            </>
+          )}
+        </span>
+      }
+      loading={kpiLoading}
+      severity="critical"
+      className="max-w-7xl mx-auto px-4 py-6"
+    >
+      <div className="space-y-8">
 
-      {/* ================================================================ */}
-      {/* ERROR BANNER                                                     */}
-      {/* ================================================================ */}
+      {/* ERROR BANNER */}
       {dashError && (
         <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5">
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
@@ -441,328 +487,250 @@ export function Dashboard() {
       )}
 
       {/* ================================================================ */}
-      {/* 1. EDITORIAL MASTHEAD — NYT/Economist dateline + kicker + serif    */}
+      {/* ACT I — THE FIELD                                                */}
       {/* ================================================================ */}
-      <header className="border-b border-[rgba(255,255,255,0.08)] pb-6 space-y-4">
-        {/* Dateline strip */}
-        <div className="flex items-center gap-3 text-[10px] font-mono font-bold tracking-[0.18em] uppercase">
-          <span className="text-zinc-500">RUBLI</span>
-          <span className="text-zinc-700">·</span>
-          <span className="text-[color:var(--color-accent)]">INTELLIGENCE BRIEF</span>
-          <span className="text-zinc-700">·</span>
-          <span className="text-zinc-500">
-            {new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase()}
-          </span>
-          <span className="ml-auto flex items-center gap-1.5 text-[9px] text-zinc-500">
-            <span className="relative flex h-1.5 w-1.5">
-              <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-500 opacity-60 animate-ping" />
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-emerald-500" />
-            </span>
-            <span>MODEL {modelVersion}</span>
-            {lastUpdated && (
-              <>
-                <span className="text-zinc-700">·</span>
-                <span>{t('synced')} {lastUpdated.toUpperCase()}</span>
-              </>
-            )}
-          </span>
-        </div>
+      <Act number="I" label="THE FIELD">
 
-        {/* Kicker + serif display + italic deck */}
-        <div className="space-y-3">
-          <span className="text-kicker text-kicker--investigation">
-            {t('editorial.kickerInvestigation', { defaultValue: 'The Week in Procurement Risk' })}
-          </span>
-          {kpiLoading ? (
-            <Skeleton className="h-12 w-3/4" />
-          ) : (
-            <h1 className="text-editorial-display text-zinc-50 max-w-4xl">
-              {t('editorial.headline', '{{value}} vendors require immediate investigation', {
-                value: formatNumber(t1Count),
-              })}
-            </h1>
-          )}
-
-          {kpiLoading ? (
-            <Skeleton className="h-5 w-2/3" />
-          ) : (
-            <p className="text-deck text-zinc-400 max-w-3xl">
-              {t('editorial.subhead', {
-                totalValue: formatCompactMXN(overview?.total_value_mxn ?? 0),
-                riskValue: formatCompactMXN(criticalHighValue || ariaElevatedValue),
-                contracts: formatNumber(overview?.total_contracts ?? 0),
-                defaultValue: 'RUBLI analyzed {{contracts}} federal contracts worth {{totalValue}} (2002-2025). {{riskValue}} sits in contracts flagged high or critical risk — patterns consistent with documented corruption cases.',
-              })}
-            </p>
-          )}
-          <p className="text-byline text-zinc-500">
-            BY THE RUBLI RESEARCH DESK · {formatNumber(overview?.total_contracts ?? 0)} CONTRACTS REVIEWED
-          </p>
-        </div>
-
-        {/* Editorial figure strip — 3 figures divided by hairlines */}
-        <div className="grid grid-cols-3 gap-x-0 gap-y-4 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5">
-          <div className="px-4 sm:px-6 first:pl-0 space-y-1">
-            <div className="text-kicker text-kicker--investigation">{t('editorial.stripT1', 'T1 Critical')}</div>
-            <div className="text-display-num" style={{ color: RISK_COLORS.critical }}>
-              {kpiLoading ? '—' : formatNumber(t1Count)}
-            </div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
-              {t('editorial.stripT1Sub', { defaultValue: 'vendors in priority queue' })}
-            </div>
-          </div>
-          <div className="px-4 sm:px-6 space-y-1">
-            <div className="text-kicker text-kicker--analysis">{t('editorial.stripValue', 'at risk')}</div>
-            <div className="text-display-num text-zinc-50">
-              {kpiLoading ? '—' : formatCompactMXN(criticalHighValue || ariaElevatedValue)}
-            </div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
-              {t('editorial.stripValueSub', { defaultValue: 'in high + critical contracts' })}
-            </div>
-          </div>
-          <div className="px-4 sm:px-6 space-y-1">
-            <div className="text-kicker text-kicker--data">{t('editorial.stripModel', 'AUC {{auc}}', { auc: modelAuc.toFixed(3) })}</div>
-            <div className="text-display-num text-zinc-50">
-              {`${(modelAuc * 100).toFixed(1)}%`}
-            </div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em]">
-              {t('editorial.stripModelSub', { defaultValue: 'test-set discrimination' })}
-            </div>
-          </div>
-        </div>
-      </header>
-
-      {/* ================================================================ */}
-      {/* 2a. SEXENIO STRATUM — 23-year horizontal timeline                 */}
-      {/* ================================================================ */}
-      {sexenioRows.length > 0 && (
-        <section className="surface-card p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.sexenioTitle', '23 years of federal procurement')}
-              </h3>
-              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
-                {t('editorial.sexenioRange', '2002–2025')}
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-              {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
-            </p>
-            <SexenioStratum rows={sexenioRows} />
-          </ErrorBoundary>
-        </section>
-      )}
-
-      {/* ================================================================ */}
-      {/* 2b. CONCENTRATION CONSTELLATION — risk dot field                  */}
-      {/* ================================================================ */}
-      {constellationRows.length > 0 && overview && (
-        <section className="surface-card p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.constellationTitle', 'Risk concentration field')}
-              </h3>
-              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
-                {formatNumber(overview.total_contracts)}
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-              {t('editorial.constellationSubtitle', 'Each dot represents a cluster of contracts. Critical-risk contracts self-organize into 3 networks — the same geometry as documented corruption patterns.')}
-            </p>
-            <ConcentrationConstellation
-              rows={constellationRows}
-              totalContracts={overview.total_contracts ?? 0}
-            />
-          </ErrorBoundary>
-        </section>
-      )}
-
-      {/* ================================================================ */}
-      {/* 2. RISK OVERVIEW — 2-column grid                                  */}
-      {/* ================================================================ */}
-      <section className="grid gap-6 lg:grid-cols-5">
-        {/* Left: Marimekko sector spend × risk chart (~60%) */}
-        <div className="surface-card lg:col-span-3 p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <div>
+        {/* Sexenio Stratum — 23-year horizontal timeline */}
+        {sexenioRows.length > 0 && (
+          <section className="surface-card p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
               <div className="flex items-baseline justify-between gap-3 mb-1">
                 <h3 className="text-sm font-bold text-text-primary">
-                  {t('editorial.sectorChartTitle', 'Risk by sector')}
+                  {t('editorial.sexenioTitle', '23 years of federal procurement')}
                 </h3>
-                <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
-                  v0.6.5
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                  {t('editorial.sexenioRange', '2002–2025')}
                 </span>
               </div>
               <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                {t('editorial.sectorChartSubtitle', 'Bar width = total contract value. Fill = risk composition. Sorted by spend.')}
+                {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
               </p>
-              {dashLoading ? (
-                <div className="space-y-3">
-                  <Skeleton className="h-4 w-48" />
-                  <Skeleton className="h-[320px] w-full rounded" />
-                </div>
-              ) : (
-                <SectorMarimekko
-                  sectors={marimekkoRows}
-                  onSectorClick={(code) => navigate(`/sectors/${code}`)}
-                />
-              )}
-              <p className="text-[10px] text-text-muted/50 font-mono mt-2 text-right">
-                {t('editorial.sectorChartSource', 'Source: RUBLI v0.6.5 · 3,051,294 contracts (2002-2025)')}
-              </p>
-            </div>
-          </ErrorBoundary>
-        </div>
-
-        {/* Right: risk distribution geological strata (~40%) */}
-        <div className="surface-card lg:col-span-2 p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            {riskDist && overview ? (
-              <RiskDistributionPanel data={riskDist} totalContracts={overview.total_contracts ?? 0} />
-            ) : (
-              <div className="space-y-3">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="h-[280px] w-full rounded" />
-              </div>
-            )}
-          </ErrorBoundary>
-        </div>
-      </section>
-
-      {/* ================================================================ */}
-      {/* 3. ARIA TIER CARDS — 3 up (T1/T2/T3)                              */}
-      {/* ================================================================ */}
-      <section>
-        <div className="flex items-baseline justify-between gap-3 mb-3">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
-            {t('editorial.tierKicker', 'ARIA QUEUE · {{total}} VENDORS', {
-              total: formatNumber(ariaTotal),
-            })}
-          </p>
-          <Link
-            to="/aria"
-            className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 hover:underline"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            {t('editorial.viewQueue', 'View queue')}
-            <ArrowUpRight className="h-3 w-3" />
-          </Link>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          <TierCard
-            tier="T1"
-            label={t('editorial.riskCritical', 'Critical')}
-            count={t1Count}
-            color={RISK_COLORS.critical}
-            action={t('editorial.t1Action', 'Immediate investigation')}
-            onClick={() => navigate('/aria?tier=1')}
-          />
-          <TierCard
-            tier="T2"
-            label={t('editorial.riskHigh', 'High')}
-            count={t2Count}
-            color={RISK_COLORS.high}
-            action={t('editorial.t2Action', 'Priority review')}
-            onClick={() => navigate('/aria?tier=2')}
-          />
-          <TierCard
-            tier="T3"
-            label={t('editorial.riskMedium', 'Medium')}
-            count={t3Count}
-            color={RISK_COLORS.medium}
-            action={t('editorial.t3Action', 'Active surveillance')}
-            onClick={() => navigate('/aria?tier=3')}
-          />
-        </div>
-      </section>
-
-      {/* ================================================================ */}
-      {/* 4. TOP PRIORITY LEAD — vendor spotlight                           */}
-      {/* ================================================================ */}
-      <ErrorBoundary fallback={null}>
-        {topVendor && (
-          <section
-            className="rounded-lg p-5"
-            style={{
-              borderLeft: `3px solid var(--color-accent)`,
-              border: '1px solid var(--color-border)',
-              borderLeftWidth: '3px',
-              borderLeftColor: 'var(--color-accent)',
-              background: 'var(--color-accent-glow)',
-            }}
-          >
-            <div className="flex items-start gap-4 flex-wrap">
-              <div className="min-w-0 flex-1">
-                <p
-                  className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1.5"
-                  style={{ color: 'var(--color-accent)' }}
-                >
-                  {t('editorial.spotlightKicker', 'PRIMARY INVESTIGATION TARGET')}
-                </p>
-                <p className="text-base font-bold text-text-primary mb-1">
-                  {toTitleCase(topVendor.vendor_name)}
-                </p>
-                <p className="text-xs text-text-muted flex items-center gap-2 flex-wrap">
-                  <span>{formatNumber(topVendor.total_contracts)} {tc('contracts').toLowerCase()}</span>
-                  <span className="text-text-muted/40">·</span>
-                  <span className="font-mono">{formatCompactMXN(topVendor.total_value_mxn)}</span>
-                  {topVendor.primary_sector_name && (
-                    <>
-                      <span className="text-text-muted/40">·</span>
-                      <span>{toTitleCase(topVendor.primary_sector_name)}</span>
-                    </>
-                  )}
-                  {topVendor.primary_pattern && (
-                    <>
-                      <span className="text-text-muted/40">·</span>
-                      <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/40 bg-border/10">
-                        {topVendor.primary_pattern}
-                      </span>
-                    </>
-                  )}
-                </p>
-              </div>
-
-              <div className="flex items-center gap-5 flex-shrink-0">
-                <div className="text-right">
-                  <div className="stat-lg font-mono" style={{ color: RISK_COLORS.critical }}>
-                    {topVendor.ips_final.toFixed(3)}
-                  </div>
-                  <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted">
-                    {t('editorial.spotlightIps', 'IPS')}
-                  </div>
-                </div>
-                <Link
-                  to={`/vendors/${topVendor.vendor_id}`}
-                  className="text-xs font-mono font-semibold uppercase tracking-wider flex items-center gap-1 px-3 py-2 rounded border border-accent/40 hover:bg-accent/10 transition-colors"
-                  style={{ color: 'var(--color-accent)' }}
-                >
-                  {t('editorial.spotlightOpen', 'Open profile')}
-                  <ArrowUpRight className="h-3 w-3" />
-                </Link>
-              </div>
-            </div>
+              <SexenioStratum rows={sexenioRows} />
+            </ErrorBoundary>
           </section>
         )}
-      </ErrorBoundary>
+
+        {/* Concentration Constellation — risk dot field */}
+        {constellationRows.length > 0 && overview && (
+          <section className="surface-card p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <div className="flex items-baseline justify-between gap-3 mb-1">
+                <h3 className="text-sm font-bold text-text-primary">
+                  {t('editorial.constellationTitle', 'Risk concentration field')}
+                </h3>
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                  {formatNumber(overview.total_contracts)}
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                {t('editorial.constellationSubtitle', 'Each dot represents a cluster of contracts. Critical-risk contracts self-organize into 3 networks — the same geometry as documented corruption patterns.')}
+              </p>
+              <ConcentrationConstellation
+                rows={constellationRows}
+                totalContracts={overview.total_contracts ?? 0}
+              />
+            </ErrorBoundary>
+          </section>
+        )}
+
+      </Act>
 
       {/* ================================================================ */}
-      {/* 5. SECTOR TABLE — compact                                         */}
+      {/* ACT II — THE CONCENTRATION                                       */}
       {/* ================================================================ */}
-      <section>
-        <ErrorBoundary fallback={<SectionErrorFallback />}>
-          <SectorTable sectors={sectorTableRows} loading={dashLoading} />
-        </ErrorBoundary>
-        <div className="flex items-start gap-2 mt-3 px-3 py-2 rounded border border-border/30 bg-background-elevated/20">
-          <Info className="h-3 w-3 text-text-muted/50 flex-shrink-0 mt-0.5" />
-          <p className="text-[10px] font-mono text-text-muted/60 leading-relaxed">
-            {t('sectorChartDataQualityNote', 'Data quality varies by period: 2002–2010 contracts have 0.1% vendor RFC coverage (lowest quality) — sector averages for that era are directional estimates. Coverage improves to 15.7% (2010–2017), 30.3% (2018–2022), and 47.4% (2023–2025).')}
-          </p>
+      <Act number="II" label="THE CONCENTRATION">
+
+        <div className="grid gap-6 lg:grid-cols-5">
+          {/* Left: Marimekko sector spend × risk chart (~60%) */}
+          <div className="surface-card lg:col-span-3 p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <div>
+                <div className="flex items-baseline justify-between gap-3 mb-1">
+                  <h3 className="text-sm font-bold text-text-primary">
+                    {t('editorial.sectorChartTitle', 'Risk by sector')}
+                  </h3>
+                  <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
+                    v0.6.5
+                  </span>
+                </div>
+                <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                  {t('editorial.sectorChartSubtitle', 'Bar width = total contract value. Fill = risk composition. Sorted by spend.')}
+                </p>
+                {dashLoading ? (
+                  <div className="space-y-3">
+                    <Skeleton className="h-4 w-48" />
+                    <Skeleton className="h-[320px] w-full rounded" />
+                  </div>
+                ) : (
+                  <SectorMarimekko
+                    sectors={marimekkoRows}
+                    onSectorClick={(code) => navigate(`/sectors/${code}`)}
+                  />
+                )}
+                <p className="text-[10px] text-text-muted/50 font-mono mt-2 text-right">
+                  {t('editorial.sectorChartSource', 'Source: RUBLI v0.6.5 · 3,051,294 contracts (2002-2025)')}
+                </p>
+              </div>
+            </ErrorBoundary>
+          </div>
+
+          {/* Right: risk distribution geological strata (~40%) */}
+          <div className="surface-card lg:col-span-2 p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              {riskDist && overview ? (
+                <RiskDistributionPanel data={riskDist} totalContracts={overview.total_contracts ?? 0} />
+              ) : (
+                <div className="space-y-3">
+                  <Skeleton className="h-4 w-32" />
+                  <Skeleton className="h-[280px] w-full rounded" />
+                </div>
+              )}
+            </ErrorBoundary>
+          </div>
         </div>
-      </section>
+
+      </Act>
+
+      {/* ================================================================ */}
+      {/* ACT III — THE QUEUE                                              */}
+      {/* ================================================================ */}
+      <Act number="III" label="THE QUEUE">
+
+        {/* ARIA Tier Cards */}
+        <div>
+          <div className="flex items-baseline justify-between gap-3 mb-3">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+              {t('editorial.tierKicker', 'ARIA QUEUE · {{total}} VENDORS', {
+                total: formatNumber(ariaTotal),
+              })}
+            </p>
+            <Link
+              to="/aria"
+              className="text-[10px] font-mono uppercase tracking-wider flex items-center gap-1 hover:underline"
+              style={{ color: 'var(--color-accent)' }}
+            >
+              {t('editorial.viewQueue', 'View queue')}
+              <ArrowUpRight className="h-3 w-3" />
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <TierCard
+              tier="T1"
+              label={t('editorial.riskCritical', 'Critical')}
+              count={t1Count}
+              color={RISK_COLORS.critical}
+              action={t('editorial.t1Action', 'Immediate investigation')}
+              onClick={() => navigate('/aria?tier=1')}
+            />
+            <TierCard
+              tier="T2"
+              label={t('editorial.riskHigh', 'High')}
+              count={t2Count}
+              color={RISK_COLORS.high}
+              action={t('editorial.t2Action', 'Priority review')}
+              onClick={() => navigate('/aria?tier=2')}
+            />
+            <TierCard
+              tier="T3"
+              label={t('editorial.riskMedium', 'Medium')}
+              count={t3Count}
+              color={RISK_COLORS.medium}
+              action={t('editorial.t3Action', 'Active surveillance')}
+              onClick={() => navigate('/aria?tier=3')}
+            />
+          </div>
+        </div>
+
+        {/* Top Priority Lead — vendor spotlight */}
+        <ErrorBoundary fallback={null}>
+          {topVendor && (
+            <section
+              className="rounded-lg p-5"
+              style={{
+                borderLeft: `3px solid var(--color-accent)`,
+                border: '1px solid var(--color-border)',
+                borderLeftWidth: '3px',
+                borderLeftColor: 'var(--color-accent)',
+                background: 'var(--color-accent-glow)',
+              }}
+            >
+              <div className="flex items-start gap-4 flex-wrap">
+                <div className="min-w-0 flex-1">
+                  <p
+                    className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1.5"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    {t('editorial.spotlightKicker', 'PRIMARY INVESTIGATION TARGET')}
+                  </p>
+                  <p className="text-base font-bold text-text-primary mb-1">
+                    {toTitleCase(topVendor.vendor_name)}
+                  </p>
+                  <p className="text-xs text-text-muted flex items-center gap-2 flex-wrap">
+                    <span>{formatNumber(topVendor.total_contracts)} {tc('contracts').toLowerCase()}</span>
+                    <span className="text-text-muted/40">·</span>
+                    <span className="font-mono">{formatCompactMXN(topVendor.total_value_mxn)}</span>
+                    {topVendor.primary_sector_name && (
+                      <>
+                        <span className="text-text-muted/40">·</span>
+                        <span>{toTitleCase(topVendor.primary_sector_name)}</span>
+                      </>
+                    )}
+                    {topVendor.primary_pattern && (
+                      <>
+                        <span className="text-text-muted/40">·</span>
+                        <span className="font-mono text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded border border-border/40 bg-border/10">
+                          {topVendor.primary_pattern}
+                        </span>
+                      </>
+                    )}
+                  </p>
+                </div>
+
+                <div className="flex items-center gap-5 flex-shrink-0">
+                  <div className="text-right">
+                    <div className="stat-lg font-mono" style={{ color: RISK_COLORS.critical }}>
+                      {topVendor.ips_final.toFixed(3)}
+                    </div>
+                    <div className="text-[9px] font-mono uppercase tracking-wider text-text-muted">
+                      {t('editorial.spotlightIps', 'IPS')}
+                    </div>
+                  </div>
+                  <Link
+                    to={`/vendors/${topVendor.vendor_id}`}
+                    className="text-xs font-mono font-semibold uppercase tracking-wider flex items-center gap-1 px-3 py-2 rounded border border-accent/40 hover:bg-accent/10 transition-colors"
+                    style={{ color: 'var(--color-accent)' }}
+                  >
+                    {t('editorial.spotlightOpen', 'Open profile')}
+                    <ArrowUpRight className="h-3 w-3" />
+                  </Link>
+                </div>
+              </div>
+            </section>
+          )}
+        </ErrorBoundary>
+
+      </Act>
+
+      {/* ================================================================ */}
+      {/* ACT IV — THE TWELVE                                              */}
+      {/* ================================================================ */}
+      <Act number="IV" label="THE TWELVE">
+
+        <div>
+          <ErrorBoundary fallback={<SectionErrorFallback />}>
+            <SectorTable sectors={sectorTableRows} loading={dashLoading} />
+          </ErrorBoundary>
+          <div className="flex items-start gap-2 mt-3 px-3 py-2 rounded border border-border/30 bg-background-elevated/20">
+            <Info className="h-3 w-3 text-text-muted/50 flex-shrink-0 mt-0.5" />
+            <p className="text-[10px] font-mono text-text-muted/60 leading-relaxed">
+              {t('sectorChartDataQualityNote', 'Data quality varies by period: 2002–2010 contracts have 0.1% vendor RFC coverage (lowest quality) — sector averages for that era are directional estimates. Coverage improves to 15.7% (2010–2017), 30.3% (2018–2022), and 47.4% (2023–2025).')}
+            </p>
+          </div>
+        </div>
+
+      </Act>
 
       {/* ================================================================ */}
       {/* 6. COMPRANET CONTEXT — editorial callout                          */}
@@ -873,7 +841,9 @@ export function Dashboard() {
       <footer className="text-[10px] text-text-muted/40 font-mono text-center pb-4">
         RUBLI &middot; {formatNumber(overview?.total_contracts ?? 3051294)} {tc('contracts').toLowerCase()} &middot; 2002-2025 &middot; {modelVersion}
       </footer>
-    </div>
+
+      </div>
+    </EditorialPageShell>
   )
 }
 

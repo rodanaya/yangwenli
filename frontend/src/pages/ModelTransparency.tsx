@@ -6,6 +6,8 @@
  */
 
 import { useMemo } from 'react'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { useQuery } from '@tanstack/react-query'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { analysisApi } from '@/api/client'
@@ -754,7 +756,22 @@ export default function ModelTransparency() {
     { key: 'audit', label: 'Audit Trail', icon: History },
   ]
 
+  const isLoading = !modelMeta
+
   return (
+    <EditorialPageShell
+      kicker="MODEL TRANSPARENCY · GROUND TRUTH"
+      headline="The cases that teach the model what corruption looks like."
+      paragraph="The RUBLI risk model is trained on 748 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
+      stats={[
+        { value: '748', label: 'GT cases' },
+        { value: '603', label: 'Vendors' },
+        { value: '~288K', label: 'Contracts' },
+        { value: 'v0.6.5', label: 'Active model' },
+      ]}
+      loading={isLoading}
+    >
+    <Act number="I" label="GROUND TRUTH">
     <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-10">
       {/* ============================================================== */}
       {/* Editorial hero                                                  */}
@@ -832,5 +849,7 @@ export default function ModelTransparency() {
         </TabPanel>
       </SimpleTabs>
     </div>
+    </Act>
+    </EditorialPageShell>
   )
 }

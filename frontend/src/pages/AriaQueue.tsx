@@ -25,8 +25,9 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorNameEN } from '@/lib/constants'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import {
-  Shield,
   Search,
   ChevronRight,
   AlertTriangle,
@@ -35,7 +36,6 @@ import {
   ClipboardEdit,
   Check,
   X as XIcon,
-  Sparkles,
 } from 'lucide-react'
 
 // ============================================================================
@@ -165,8 +165,8 @@ function TierNavigationRow({
         'w-full text-left flex items-center gap-4 px-4 py-3 rounded-md border border-zinc-800 border-l-4 transition-all',
         tier.accent,
         isActive
-          ? 'bg-zinc-900 ring-1 ring-amber-500/40'
-          : 'bg-zinc-900/40 hover:bg-zinc-900/80'
+          ? 'bg-background-elevated border-opacity-100'
+          : 'bg-background-card/40 hover:bg-background-card/80'
       )}
       aria-pressed={isActive}
     >
@@ -427,11 +427,8 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               {item.vendor_name}
             </h3>
             {item.new_vendor_risk && (
-              <span
-                className="shrink-0 inline-flex items-center"
-                title={t('badges.new')}
-              >
-                <Sparkles className="h-3 w-3 text-amber-400" />
+              <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                NEW
               </span>
             )}
           </div>
@@ -607,156 +604,99 @@ export default function AriaPage() {
     )
   }
 
-  const editorialDate = new Date().toLocaleDateString('en-US', {
-    weekday: 'long', month: 'long', day: 'numeric', year: 'numeric',
-  }).toUpperCase().replace(/,/g, ' ·')
-
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-8">
-
-        {/* ============================================================== */}
-        {/* 1. EDITORIAL MASTHEAD                                          */}
-        {/* ============================================================== */}
-        <header className="space-y-4 border-b border-[rgba(255,255,255,0.08)] pb-6">
-          {/* Dateline strip */}
-          <div className="flex items-center justify-between text-[10px] font-mono tracking-[0.18em] text-zinc-500">
-            <div className="flex items-center gap-3">
-              <Shield className="h-3 w-3 text-amber-400" aria-hidden />
-              <span className="font-bold text-zinc-400">ARIA · INVESTIGATION DESK</span>
-              <span className="text-zinc-700">·</span>
-              <span>{editorialDate}</span>
-            </div>
-            <div className="hidden sm:flex items-center gap-2">
-              <span className="relative inline-flex h-1.5 w-1.5">
-                <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
-                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-amber-400" />
-              </span>
-              <span>MODEL v0.6.5 · {lastRunAt ?? t('header.lastUpdated')}</span>
-            </div>
-          </div>
-
-          {/* Kicker + serif headline + deck */}
-          <div className="space-y-2 max-w-4xl">
-            <span className="text-kicker text-kicker--investigation">
-              {t('queueSection.title')}
-            </span>
-            <h1 className="text-editorial-display text-zinc-50">
-              {t('header.headline', { defaultValue: 'The Investigation Queue' })}
-            </h1>
-            <p className="text-deck text-zinc-400 max-w-3xl">
-              {t('header.deck', {
-                defaultValue:
-                  'A living ledger of procurement vendors ranked by investigation priority — Tier 1 is the narrow top of a 318,441-vendor cohort.',
-              })}
-            </p>
-          </div>
-
-          {/* Byline + search + filter pills */}
-          <div className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4 pt-2">
-            <div className="text-byline text-zinc-500 shrink-0">
-              <span className="text-zinc-600">By</span>{' '}
-              <span className="text-zinc-300">The RUBLI Desk</span>
-            </div>
-
-            <div className="relative flex-1 lg:max-w-sm">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-              <input
-                type="text"
-                placeholder={t('leads.searchPlaceholder')}
-                value={search}
-                onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <EditorialPageShell
+          kicker={`ARIA QUEUE · ACTIVE INVESTIGATION BUREAU${lastRunAt ? ` · SYNCED ${lastRunAt.toUpperCase()}` : ''}`}
+          headline={
+            statsLoading ? 'Loading queue...' : (
+              <>
+                {formatNumber(tierCounts[1])} vendors trip every{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>corruption pattern</span>{' '}
+                in our model.
+              </>
+            )
+          }
+          paragraph={
+            statsLoading ? 'Loading...' : `These are the ${formatNumber(tierCounts[1])} highest-risk vendors in Mexican federal procurement. Each one matches the structural fingerprint of at least three documented corruption cases. ${elevatedValue > 0 ? formatCompactMXN(elevatedValue) + ' flows through their contracts.' : ''}`
+          }
+          stats={statsLoading ? undefined : [
+            { value: formatNumber(tierCounts[1]), label: 'T1 Critical', color: 'var(--color-risk-critical)' },
+            { value: formatNumber(tierCounts[2]), label: 'T2 High', color: 'var(--color-risk-high)' },
+            { value: formatNumber(tierCounts[3]), label: 'T3 Medium' },
+            { value: elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—', label: 'Value at risk', color: 'var(--color-accent)' },
+          ]}
+          loading={statsLoading}
+          severity="critical"
+          meta={
+            <span className="flex items-center gap-1.5">
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
+              v0.6.5
+              <MetodologiaTooltip
+                title={t('methodology.title')}
+                body={t('methodology.body')}
+                link="/methodology"
               />
-            </div>
-
-            <div className="flex items-center gap-1.5 flex-wrap">
-              <button
-                onClick={() => { setTierFilter(null); setPage(1) }}
-                className={cn(
-                  'inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
-                  tierFilter == null
-                    ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
-                    : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
-                )}
-              >
-                {t('filters.all')}
-              </button>
-              {TIER_CONFIG.map((cfg) => (
-                <TierFilterPill
-                  key={cfg.tier}
-                  tier={cfg}
-                  count={tierCounts[cfg.tier]}
-                  isActive={tierFilter === cfg.tier}
-                  onClick={() => {
-                    setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
-                    setPage(1)
-                  }}
+            </span>
+          }
+          actions={
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder={t('leads.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
                 />
-              ))}
-            </div>
-          </div>
-        </header>
-
-        {/* ============================================================== */}
-        {/* 2. HERO STAT STRIP — three editorial figures                   */}
-        {/* ============================================================== */}
-        <section
-          aria-label={t('header.lastUpdated')}
-          className="grid grid-cols-1 sm:grid-cols-3 gap-6 sm:gap-0 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5"
-        >
-          {statsLoading ? (
-            <div className="col-span-3">
-              <Skeleton className="h-16 w-full" />
-            </div>
-          ) : (
-            <>
-              <div className="sm:px-6 space-y-1 first:pl-0">
-                <div className="text-kicker text-zinc-500">{t('stats.vendorsUnderSurveillance')}</div>
-                <div className="text-display-num text-zinc-50">
-                  {stats?.queue_total != null ? formatNumber(stats.queue_total) : '—'}
-                </div>
-                <div className="text-[11px] text-zinc-600 font-mono">
-                  {t('stats.acrossPipeline', { defaultValue: 'across procurement pipeline' })}
-                </div>
               </div>
-              <div className="sm:px-6 space-y-1">
-                <div className="text-kicker text-kicker--investigation">{t('tier1.label')}</div>
-                <div className="text-display-num text-red-400">
-                  {formatNumber(tierCounts[1])}
-                </div>
-                <div className="text-[11px] text-zinc-600 font-mono">
-                  {t('stats.tier1Subtitle', { defaultValue: 'immediate investigation priority' })}
-                </div>
-              </div>
-              <div className="sm:px-6 space-y-1">
-                <div className="text-kicker text-kicker--analysis">{t('stats.valueAtRisk')}</div>
-                <div className="text-display-num text-amber-400">
-                  {formatCompactMXN(elevatedValue)}
-                </div>
-                <div className="text-[11px] text-zinc-600 font-mono flex items-center gap-1.5">
-                  <span>{t('stats.elevatedContracts', { defaultValue: 'elevated-risk contract value' })}</span>
-                  <MetodologiaTooltip
-                    title={t('methodology.title')}
-                    body={t('methodology.body')}
-                    link="/methodology"
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => { setTierFilter(null); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
+                    tierFilter == null
+                      ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
+                      : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+                  )}
+                >
+                  {t('filters.all')}
+                </button>
+                {TIER_CONFIG.map((cfg) => (
+                  <TierFilterPill
+                    key={cfg.tier}
+                    tier={cfg}
+                    count={tierCounts[cfg.tier]}
+                    isActive={tierFilter === cfg.tier}
+                    onClick={() => {
+                      setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
+                      setPage(1)
+                    }}
                   />
-                </div>
+                ))}
               </div>
-            </>
-          )}
-        </section>
+            </div>
+          }
+        >
+
+        <Act number="I" label="THE QUEUE">
 
         {/* ============================================================== */}
-        {/* 3. TIER NAVIGATION ROWS — horizontal bands, clickable           */}
+        {/* TIER NAVIGATION ROWS — horizontal bands, clickable              */}
         {/* ============================================================== */}
         <section aria-label={t('threatLevels')}>
-          <div className="editorial-kicker-rule mb-4">
-            <span className="text-kicker text-kicker--investigation">{t('threatLevels')}</span>
-            <span className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" aria-hidden />
-            <span className="text-[10px] font-mono uppercase tracking-[0.14em] text-zinc-600">
-              {t('tierCard.clickFilter')}
-            </span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+                {t('threatLevels')}
+              </p>
+              <span className="text-[10px] text-zinc-600 font-mono">·</span>
+              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">
+                {t('tierCard.clickFilter')}
+              </p>
+            </div>
           </div>
 
           {statsLoading ? (
@@ -794,10 +734,11 @@ export default function AriaPage() {
         {/* ============================================================== */}
         {Object.keys(patternCounts).length > 0 && (
           <section aria-label={t('patternSection.title')}>
-            <div className="editorial-kicker-rule mb-4">
-              <AlertTriangle className="h-3 w-3 text-orange-400" aria-hidden />
-              <span className="text-kicker text-kicker--analysis">{t('patternSection.title')}</span>
-              <span className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" aria-hidden />
+            <div className="flex items-center gap-2 mb-3">
+              <AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+                {t('patternSection.title')}
+              </p>
             </div>
             <div className="flex flex-wrap gap-1.5">
               {Object.entries(patternCounts).map(([pattern, count]) => (
@@ -821,7 +762,6 @@ export default function AriaPage() {
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
                 )}
               >
-                <Sparkles className="h-3 w-3" />
                 {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count != null && (
                   <span className="tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
@@ -844,26 +784,38 @@ export default function AriaPage() {
         )}
 
         {/* ============================================================== */}
-        {/* 5. INVESTIGATION LIST — one row per vendor, one action         */}
+        {/* HOW TO READ THIS QUEUE — methodology explainer                 */}
+        {/* ============================================================== */}
+        <div className="surface-card--evidence surface-card p-4 mb-4">
+          <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-accent block mb-1">How to read this queue</span>
+            Each row is a vendor ranked by IPS — the Investigation Priority Score. IPS combines risk score, anomaly signals, network centrality, and external registry matches (EFOS, SFP, RUPC). T1 vendors should be investigated immediately. Click any row to open the full dossier.
+          </p>
+        </div>
+
+        {/* ============================================================== */}
+        {/* INVESTIGATION LIST — one row per vendor, one action            */}
         {/* ============================================================== */}
         <section id="aria-investigation-list" aria-label={t('queueSection.title')}>
-          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-4">
-            <div className="flex-1">
-              <div className="editorial-kicker-rule mb-1">
-                <span className="text-kicker text-kicker--data">
+          <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
+            <div>
+              <div className="flex items-center gap-2">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
                   {tierFilter != null
                     ? t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)
                     : t('queueSection.title', { defaultValue: 'Cola completa' })}
-                </span>
+                </p>
                 {activeFilterCount > 0 && (
-                  <button
-                    onClick={clearAll}
-                    className="text-[10px] font-mono uppercase tracking-[0.14em] text-amber-400 hover:text-amber-300 transition-colors"
-                  >
-                    {t('filterBar.clearAll')} ({activeFilterCount})
-                  </button>
+                  <>
+                    <span className="text-[10px] text-zinc-600 font-mono">·</span>
+                    <button
+                      onClick={clearAll}
+                      className="text-[10px] font-mono uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors"
+                    >
+                      {t('filterBar.clearAll')} ({activeFilterCount})
+                    </button>
+                  </>
                 )}
-                <span className="flex-1 h-px bg-[rgba(255,255,255,0.08)]" aria-hidden />
               </div>
               {totalLeads > 0 && (
                 <p className="text-xs text-zinc-500 font-mono mt-1 tabular-nums">
@@ -969,23 +921,23 @@ export default function AriaPage() {
         {/* ============================================================== */}
         {/* 6. METHODOLOGY FOOTER — minimal                                */}
         {/* ============================================================== */}
-        <section className="border-t border-[rgba(255,255,255,0.08)] pt-6 mt-8">
-          <div className="flex items-start gap-4 max-w-3xl">
-            <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-1" aria-hidden />
-            <div className="space-y-2 leading-relaxed">
-              <div className="text-kicker text-zinc-500">
-                {t('about.title', { defaultValue: 'Sobre ARIA' })}
+        <section>
+          <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+            <div className="flex items-start gap-3">
+              <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
+              <div className="text-xs text-zinc-500 space-y-1 leading-relaxed">
+                <p className="font-mono uppercase tracking-wider text-[10px] font-bold text-zinc-400">
+                  {t('about.title', { defaultValue: 'Sobre ARIA' })}
+                </p>
+                <p>{t('about.description')}</p>
+                <p className="text-zinc-600">{t('about.disclaimer')}</p>
               </div>
-              <p className="text-sm text-zinc-400 font-serif italic leading-relaxed">
-                {t('about.description')}
-              </p>
-              <p className="text-xs text-zinc-600 font-mono tracking-wide">
-                {t('about.disclaimer')}
-              </p>
             </div>
           </div>
         </section>
 
+        </Act>
+        </EditorialPageShell>
       </div>
     </div>
   )

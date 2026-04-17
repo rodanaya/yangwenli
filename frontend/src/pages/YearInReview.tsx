@@ -23,6 +23,8 @@ import {
 } from 'recharts'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
@@ -90,25 +92,6 @@ function getRiskLevel(score: number): string {
   if (score >= 0.40) return 'high'
   if (score >= 0.25) return 'medium'
   return 'low'
-}
-
-// =============================================================================
-// Section divider — reusable editorial-style break
-// =============================================================================
-
-function SectionDivider({ label, number }: { label: string; number: string }) {
-  return (
-    <div className="flex items-center gap-4 mt-16 mb-4">
-      <span className="font-mono text-[10px] tracking-[0.3em] text-text-muted/60 font-bold">
-        {number}
-      </span>
-      <div className="h-px bg-border/40 flex-1" />
-      <span className="font-mono text-[10px] uppercase tracking-[0.3em] text-text-muted/80 font-bold">
-        {label}
-      </span>
-      <div className="h-px bg-border/40 flex-1" />
-    </div>
-  )
 }
 
 // =============================================================================
@@ -1196,544 +1179,565 @@ export default function YearInReview() {
   // =============================================================================
 
   return (
-    <div className="max-w-[1040px] mx-auto px-4 py-8 space-y-8">
-
-      {/* Editorial kicker */}
-      <div className="mb-6">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-          {t('editorial.kicker')}
-        </p>
-        <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
-          {t('editorial.body')}
-        </p>
-      </div>
-
-      {/* Hero */}
-      <HeroBannerStats
-        year={validYear}
-        contracts={yearRow?.contracts ?? 0}
-        totalValue={yearRow?.total_value ?? 0}
-        highRiskPct={yearRow?.high_risk_pct ?? 0}
-        isLoading={isLoading}
-      />
-
-      {/* Year selector */}
-      <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
-        <div className="flex items-center gap-2 flex-wrap">
-          <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
-          <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
-            {t('yearSelector')}:
-          </span>
-          {FEATURED_YEARS.map((y) => (
-            <button
-              key={y}
-              onClick={() => handleYearChange(y)}
-              className={cn(
-                'px-4 py-1.5 text-base font-bold transition-all rounded-sm',
-                y === validYear
-                  ? 'bg-text-primary text-background shadow-lg'
-                  : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border',
-              )}
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-              aria-current={y === validYear ? 'page' : undefined}
-              aria-label={t('goToYear', { year: y })}
-            >
-              {y}
-            </button>
-          ))}
-          <div className="relative flex items-center gap-1">
-            <select
-              value={validYear}
-              onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
-              className="appearance-none text-xs text-text-muted bg-transparent border border-border/30 rounded-sm py-1.5 pl-3 pr-6 cursor-pointer focus:outline-none focus:border-border hover:border-border transition-colors"
-              aria-label={t('yearSelector')}
-            >
-              {ALL_YEARS.map((y) => (
-                <option key={y} value={y}>
-                  {y}
-                </option>
-              ))}
-            </select>
-            <ChevronDown className="absolute right-1.5 h-3 w-3 text-text-muted pointer-events-none" aria-hidden="true" />
-          </div>
-        </div>
-      </div>
-
-      {/* Editorial headline */}
-      <motion.div variants={fadeIn} initial="initial" animate="animate">
-        <EditorialHeadline
-          section={`${t('annualReport')} ${validYear}`}
-          headline={`${validYear}: ${t('title')}`}
-          subtitle={dynamicSubtitle}
-        />
-      </motion.div>
-
-      {/* Lede */}
-      {yearRow && (
-        <motion.div variants={fadeIn} initial="initial" animate="animate">
-          <div className="border-l-[3px] border-text-muted/30 pl-5 py-2">
-            <p
-              className="text-base text-text-secondary leading-relaxed"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-            >
-              {ledeText}
-            </p>
-          </div>
-        </motion.div>
-      )}
-
-      {/* ====================================================================
-           SECTION 01 — OVERVIEW
-         ==================================================================== */}
-      <SectionDivider number="01" label={t('sectionDivider.overview')} />
-
-      {/* Big 5 HallazgoStats */}
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
-          {Array.from({ length: 5 }).map((_, i) => (
-            <Skeleton key={i} className="h-24" />
-          ))}
-        </div>
-      ) : yearRow ? (
-        <motion.div
-          className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6"
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-        >
-          <motion.div variants={staggerItem}>
-            <HallazgoStat
-              value={formatNumber(yearRow.contracts)}
-              label={t('heroStats.totalContracts')}
-              color="border-blue-500"
-            />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <HallazgoStat
-              value={formatCompactMXN(yearRow.total_value)}
-              label={t('heroStats.totalSpending')}
-              color="border-violet-500"
-            />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <HallazgoStat
-              value={`${yearRow.high_risk_pct.toFixed(1)}%`}
-              label={t('heroStats.highRiskRate')}
-              annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} ${t('contracts')}`}
-              color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
-            />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <HallazgoStat
-              value={topSector?.name ?? '--'}
-              label={t('heroStats.topSector')}
-              annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
-              color="border-amber-500"
-              className="[&>div:first-child]:text-2xl"
-            />
-          </motion.div>
-          <motion.div variants={staggerItem}>
-            <HallazgoStat
-              value={
-                spendingChangePct != null
-                  ? `${spendingChangePct > 0 ? '+' : ''}${spendingChangePct.toFixed(0)}%`
-                  : '--'
-              }
-              label={t('heroStats.yoyChange')}
-              annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
-              color={
-                spendingChangePct == null ? 'border-zinc-500'
-                  : spendingChangePct > 0 ? 'border-emerald-500'
-                    : 'border-red-500'
-              }
-            />
-          </motion.div>
-        </motion.div>
-      ) : (
-        <div className="py-8 text-center text-text-muted text-sm italic">{t('noData')}</div>
-      )}
-
-      {/* YoY Deltas strip */}
-      {yearRow && priorRow && (
-        <motion.div
-          className="grid grid-cols-2 sm:grid-cols-4 gap-3"
-          variants={fadeIn}
-          initial="initial"
-          animate="animate"
-        >
-          {[
-            {
-              label: t('heroStats.totalContracts'),
-              val: formatNumber(yearRow.contracts),
-              delta: priorRow.contracts > 0 ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100 : null,
-              suffix: '%',
-              invertColor: false,
-            },
-            {
-              label: t('heroStats.highRiskRate'),
-              val: `${yearRow.high_risk_pct.toFixed(1)}%`,
-              delta: yearRow.high_risk_pct - priorRow.high_risk_pct,
-              suffix: 'pp',
-              invertColor: true,
-            },
-            {
-              label: t('yoyDeltas.directAward'),
-              val: `${yearRow.direct_award_pct.toFixed(1)}%`,
-              delta: yearRow.direct_award_pct - priorRow.direct_award_pct,
-              suffix: 'pp',
-              invertColor: true,
-            },
-            {
-              label: t('yoyDeltas.avgRisk'),
-              val: yearRow.avg_risk.toFixed(3),
-              delta: (yearRow.avg_risk - priorRow.avg_risk) * 100,
-              suffix: 'pp',
-              invertColor: true,
-            },
-          ].map((item) => {
-            const isUp = item.delta != null && item.delta > 0
-            const color = item.delta == null
-              ? '#a1a1aa'
-              : item.invertColor
-                ? (isUp ? '#f87171' : '#4ade80')
-                : (isUp ? '#4ade80' : '#f87171')
-            const Icon = isUp ? TrendingUp : TrendingDown
-            return (
-              <div
-                key={item.label}
-                className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>
-                  <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{item.val}</p>
-                </div>
-                {item.delta != null && (
-                  <span
-                    className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0"
-                    style={{ color }}
-                  >
-                    <Icon className="h-3 w-3" aria-hidden="true" />
-                    {item.delta > 0 ? '+' : ''}
-                    {item.delta.toFixed(1)}
-                    {item.suffix}
-                  </span>
-                )}
-              </div>
-            )
-          })}
-        </motion.div>
-      )}
-
-      {/* Sexenio context */}
-      <motion.div
-        className="rounded-lg border px-5 py-4"
-        style={{
-          borderColor: `${sexenio.partyColor}30`,
-          backgroundColor: `${sexenio.partyColor}08`,
-        }}
-        variants={fadeIn}
-        initial="initial"
-        animate="animate"
+    <div className="max-w-[1040px] mx-auto px-4 py-8">
+      <EditorialPageShell
+        kicker={`ANNUAL REPORT · ${validYear}`}
+        headline={
+          <>A year in procurement:{' '}
+            <span style={{ color: 'var(--color-risk-high)' }}>{validYear}</span>
+          </>
+        }
+        paragraph={
+          yearRow
+            ? `${validYear} procurement data from Mexico's federal COMPRANET registry. ${formatNumber(yearRow.contracts)} contracts awarded, totaling ${formatCompactMXN(yearRow.total_value)}. High-risk rate: ${yearRow.high_risk_pct.toFixed(1)}%.`
+            : `${validYear} procurement data from Mexico's federal COMPRANET registry.`
+        }
+        stats={isLoading ? undefined : yearRow ? [
+          { value: validYear.toString(), label: 'Year' },
+          { value: formatNumber(yearRow.contracts), label: 'Contracts' },
+          { value: formatCompactMXN(yearRow.total_value), label: 'Total spend', color: 'var(--color-accent)' },
+          {
+            value: `${yearRow.high_risk_pct.toFixed(1)}%`,
+            label: 'High-risk',
+            color: yearRow.high_risk_pct >= 15 ? 'var(--color-risk-critical)' : 'var(--color-risk-high)',
+          },
+        ] : undefined}
+        loading={isLoading}
       >
-        <div className="flex items-center gap-3 mb-3">
-          <span
-            className="text-[10px] font-bold uppercase tracking-[0.2em]"
-            style={{ color: sexenio.color }}
-          >
-            {t('administrationBanner.title')}
-          </span>
-        </div>
-        <p className="text-sm text-text-secondary">
-          <span className="font-semibold text-text-primary">{sexenio.president}</span>
-          {' '}({sexenio.party}) &middot; {sexenio.period}
-        </p>
-        <div className="mt-3 flex items-center gap-2">
-          <div className="flex gap-1 flex-1">
-            {Array.from({ length: sexenio.totalYears }).map((_, i) => (
-              <div
-                key={i}
-                className="h-2 flex-1 rounded-sm transition-colors"
-                style={{
-                  backgroundColor: i < sexenio.yearInSexenio ? sexenio.color : 'rgba(255,255,255,0.08)',
-                }}
-              />
-            ))}
-          </div>
-          <span className="text-[10px] font-mono text-text-muted flex-shrink-0">
-            {t('sexenioYear', { current: sexenio.yearInSexenio, total: sexenio.totalYears })}
-          </span>
-        </div>
-      </motion.div>
+        {/* ── ACT I: HERO + YEAR SELECTOR ── */}
+        <Act number="I" label="THE YEAR IN NUMBERS" className="space-y-8">
 
-      {/* ====================================================================
-           SECTION 02 — PATTERNS (sector distribution, growth, risk, procedure)
-         ==================================================================== */}
-      <SectionDivider number="02" label={t('sectionDivider.patterns')} />
-
-      {/* Full sector distribution (ALL 12) */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          {t('sectorAll.sectionLabel')}
-        </p>
-        <p
-          className="text-lg font-bold text-text-primary mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {t('sectorAll.headline', { year: validYear })}
-        </p>
-        <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-          {t('sectorAll.subtitle')}
-        </p>
-
-        {syLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 12 }).map((_, i) => (
-              <Skeleton key={i} className="h-7" />
-            ))}
-          </div>
-        ) : (
-          <SectorDistributionFull
-            data={sectorYearData}
+          {/* Hero */}
+          <HeroBannerStats
             year={validYear}
-            onSectorClick={handleSectorClick}
+            contracts={yearRow?.contracts ?? 0}
+            totalValue={yearRow?.total_value ?? 0}
+            highRiskPct={yearRow?.high_risk_pct ?? 0}
+            isLoading={isLoading}
           />
-        )}
-      </div>
 
-      {/* Sector growth — diverging chart */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          {t('sectorGrowthFull.sectionLabel')}
-        </p>
-        <p
-          className="text-lg font-bold text-text-primary mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
-        </p>
-        <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-          {t('sectorGrowthFull.subtitle')}
-        </p>
+          {/* Year selector */}
+          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
+            <div className="flex items-center gap-2 flex-wrap">
+              <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
+              <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
+                {t('yearSelector')}:
+              </span>
+              {FEATURED_YEARS.map((y) => (
+                <button
+                  key={y}
+                  onClick={() => handleYearChange(y)}
+                  className={cn(
+                    'px-4 py-1.5 text-base font-bold transition-all rounded-sm',
+                    y === validYear
+                      ? 'bg-text-primary text-background shadow-lg'
+                      : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border',
+                  )}
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                  aria-current={y === validYear ? 'page' : undefined}
+                  aria-label={t('goToYear', { year: y })}
+                >
+                  {y}
+                </button>
+              ))}
+              <div className="relative flex items-center gap-1">
+                <select
+                  value={validYear}
+                  onChange={(e) => handleYearChange(parseInt(e.target.value, 10))}
+                  className="appearance-none text-xs text-text-muted bg-transparent border border-border/30 rounded-sm py-1.5 pl-3 pr-6 cursor-pointer focus:outline-none focus:border-border hover:border-border transition-colors"
+                  aria-label={t('yearSelector')}
+                >
+                  {ALL_YEARS.map((y) => (
+                    <option key={y} value={y}>
+                      {y}
+                    </option>
+                  ))}
+                </select>
+                <ChevronDown className="absolute right-1.5 h-3 w-3 text-text-muted pointer-events-none" aria-hidden="true" />
+              </div>
+            </div>
+          </div>
 
-        {syLoading ? (
-          <Skeleton className="h-[380px]" />
-        ) : sectorGrowthRows.some((r) => r.growthPct != null) ? (
-          <SectorGrowthDiverging rows={sectorGrowthRows} />
-        ) : (
-          <p className="py-8 text-sm text-text-muted italic text-center">
-            {t('sectorGrowthFull.noComparison', { prior: validYear - 1 })}
-          </p>
-        )}
-      </div>
+          {/* Editorial headline */}
+          <motion.div variants={fadeIn} initial="initial" animate="animate">
+            <EditorialHeadline
+              section={`${t('annualReport')} ${validYear}`}
+              headline={`${validYear}: ${t('title')}`}
+              subtitle={dynamicSubtitle}
+            />
+          </motion.div>
 
-      {/* Risk Evolution */}
-      {yearRow && yoyData.length > 0 && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-            {t('riskEvolution.sectionLabel')}
-          </p>
-          <p
-            className="text-lg font-bold text-text-primary mb-1"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {t('riskEvolution.headline', { year: validYear })}
-          </p>
-          <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-            {t('riskEvolution.subtitle')}
-          </p>
+          {/* Lede */}
+          {yearRow && (
+            <motion.div variants={fadeIn} initial="initial" animate="animate">
+              <div className="border-l-[3px] border-text-muted/30 pl-5 py-2">
+                <p
+                  className="text-base text-text-secondary leading-relaxed"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  {ledeText}
+                </p>
+              </div>
+            </motion.div>
+          )}
 
-          <RiskEvolution yearRow={yearRow} allYears={yoyData} validYear={validYear} />
-        </div>
-      )}
+          {/* Big 5 HallazgoStats */}
+          {isLoading ? (
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
+              {Array.from({ length: 5 }).map((_, i) => (
+                <Skeleton key={i} className="h-24" />
+              ))}
+            </div>
+          ) : yearRow ? (
+            <motion.div
+              className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6"
+              variants={staggerContainer}
+              initial="initial"
+              animate="animate"
+            >
+              <motion.div variants={staggerItem}>
+                <HallazgoStat
+                  value={formatNumber(yearRow.contracts)}
+                  label={t('heroStats.totalContracts')}
+                  color="border-blue-500"
+                />
+              </motion.div>
+              <motion.div variants={staggerItem}>
+                <HallazgoStat
+                  value={formatCompactMXN(yearRow.total_value)}
+                  label={t('heroStats.totalSpending')}
+                  color="border-violet-500"
+                />
+              </motion.div>
+              <motion.div variants={staggerItem}>
+                <HallazgoStat
+                  value={`${yearRow.high_risk_pct.toFixed(1)}%`}
+                  label={t('heroStats.highRiskRate')}
+                  annotation={`${formatNumber(Math.round((yearRow.high_risk_pct / 100) * yearRow.contracts))} ${t('contracts')}`}
+                  color={yearRow.high_risk_pct >= 15 ? 'border-red-500' : 'border-orange-500'}
+                />
+              </motion.div>
+              <motion.div variants={staggerItem}>
+                <HallazgoStat
+                  value={topSector?.name ?? '--'}
+                  label={t('heroStats.topSector')}
+                  annotation={topSector ? formatCompactMXN(topSector.value) : undefined}
+                  color="border-amber-500"
+                  className="[&>div:first-child]:text-2xl"
+                />
+              </motion.div>
+              <motion.div variants={staggerItem}>
+                <HallazgoStat
+                  value={
+                    spendingChangePct != null
+                      ? `${spendingChangePct > 0 ? '+' : ''}${spendingChangePct.toFixed(0)}%`
+                      : '--'
+                  }
+                  label={t('heroStats.yoyChange')}
+                  annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
+                  color={
+                    spendingChangePct == null ? 'border-zinc-500'
+                      : spendingChangePct > 0 ? 'border-emerald-500'
+                        : 'border-red-500'
+                  }
+                />
+              </motion.div>
+            </motion.div>
+          ) : (
+            <div className="py-8 text-center text-text-muted text-sm italic">{t('noData')}</div>
+          )}
 
-      {/* Procedure Type */}
-      {yearRow && yoyData.length > 0 && (
-        <div>
-          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-            {t('procedureType.sectionLabel')}
-          </p>
-          <p
-            className="text-lg font-bold text-text-primary mb-4"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {t('procedureType.headline')}
-          </p>
+          {/* YoY Deltas strip */}
+          {yearRow && priorRow && (
+            <motion.div
+              className="grid grid-cols-2 sm:grid-cols-4 gap-3"
+              variants={fadeIn}
+              initial="initial"
+              animate="animate"
+            >
+              {[
+                {
+                  label: t('heroStats.totalContracts'),
+                  val: formatNumber(yearRow.contracts),
+                  delta: priorRow.contracts > 0 ? ((yearRow.contracts - priorRow.contracts) / priorRow.contracts) * 100 : null,
+                  suffix: '%',
+                  invertColor: false,
+                },
+                {
+                  label: t('heroStats.highRiskRate'),
+                  val: `${yearRow.high_risk_pct.toFixed(1)}%`,
+                  delta: yearRow.high_risk_pct - priorRow.high_risk_pct,
+                  suffix: 'pp',
+                  invertColor: true,
+                },
+                {
+                  label: t('yoyDeltas.directAward'),
+                  val: `${yearRow.direct_award_pct.toFixed(1)}%`,
+                  delta: yearRow.direct_award_pct - priorRow.direct_award_pct,
+                  suffix: 'pp',
+                  invertColor: true,
+                },
+                {
+                  label: t('yoyDeltas.avgRisk'),
+                  val: yearRow.avg_risk.toFixed(3),
+                  delta: (yearRow.avg_risk - priorRow.avg_risk) * 100,
+                  suffix: 'pp',
+                  invertColor: true,
+                },
+              ].map((item) => {
+                const isUp = item.delta != null && item.delta > 0
+                const color = item.delta == null
+                  ? '#a1a1aa'
+                  : item.invertColor
+                    ? (isUp ? '#f87171' : '#4ade80')
+                    : (isUp ? '#4ade80' : '#f87171')
+                const Icon = isUp ? TrendingUp : TrendingDown
+                return (
+                  <div
+                    key={item.label}
+                    className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
+                  >
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>
+                      <p className="text-sm font-mono font-bold text-text-primary tabular-nums">{item.val}</p>
+                    </div>
+                    {item.delta != null && (
+                      <span
+                        className="flex items-center gap-0.5 text-xs font-mono font-bold flex-shrink-0"
+                        style={{ color }}
+                      >
+                        <Icon className="h-3 w-3" aria-hidden="true" />
+                        {item.delta > 0 ? '+' : ''}
+                        {item.delta.toFixed(1)}
+                        {item.suffix}
+                      </span>
+                    )}
+                  </div>
+                )
+              })}
+            </motion.div>
+          )}
 
-          <ProcedureTypeSection yearRow={yearRow} allYears={yoyData} validYear={validYear} />
-        </div>
-      )}
-
-      {/* Monthly spending */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          {t('monthly.sectionLabel')}
-        </p>
-        <p
-          className="text-lg font-bold text-text-primary mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {t('monthly.headline', { year: validYear })}
-        </p>
-        <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-          {t('monthly.subtitle')}
-        </p>
-
-        {monthlyLoading ? (
-          <Skeleton className="h-[280px]" />
-        ) : (
-          <MonthlySpending data={monthlyResp} year={validYear} />
-        )}
-      </div>
-
-      {/* ====================================================================
-           SECTION 03 — ACTORS (top vendors + spotlight)
-         ==================================================================== */}
-      <SectionDivider number="03" label={t('sectionDivider.actors')} />
-
-      {/* Spotlight — top vendor */}
-      {topVendor && !vendorsLoading && (
-        <motion.div variants={fadeIn} initial="initial" animate="animate">
-          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-3">
-            {t('spotlight.label')}
-          </p>
-          <div
-            className="rounded-lg border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
-            onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
-            role="button"
-            tabIndex={0}
-            onKeyDown={(e) => {
-              if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`)
+          {/* Sexenio context */}
+          <motion.div
+            className="rounded-lg border px-5 py-4"
+            style={{
+              borderColor: `${sexenio.partyColor}30`,
+              backgroundColor: `${sexenio.partyColor}08`,
             }}
+            variants={fadeIn}
+            initial="initial"
+            animate="animate"
           >
-            <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
-              {t('spotlight.topVendorLabel', { year: validYear })}
+            <div className="flex items-center gap-3 mb-3">
+              <span
+                className="text-[10px] font-bold uppercase tracking-[0.2em]"
+                style={{ color: sexenio.color }}
+              >
+                {t('administrationBanner.title')}
+              </span>
+            </div>
+            <p className="text-sm text-text-secondary">
+              <span className="font-semibold text-text-primary">{sexenio.president}</span>
+              {' '}({sexenio.party}) &middot; {sexenio.period}
             </p>
-            <h3
-              className="text-xl font-bold text-text-primary"
+            <div className="mt-3 flex items-center gap-2">
+              <div className="flex gap-1 flex-1">
+                {Array.from({ length: sexenio.totalYears }).map((_, i) => (
+                  <div
+                    key={i}
+                    className="h-2 flex-1 rounded-sm transition-colors"
+                    style={{
+                      backgroundColor: i < sexenio.yearInSexenio ? sexenio.color : 'rgba(255,255,255,0.08)',
+                    }}
+                  />
+                ))}
+              </div>
+              <span className="text-[10px] font-mono text-text-muted flex-shrink-0">
+                {t('sexenioYear', { current: sexenio.yearInSexenio, total: sexenio.totalYears })}
+              </span>
+            </div>
+          </motion.div>
+
+        </Act>
+
+        {/* ── ACT II: BY SECTOR ── */}
+        <Act number="II" label="BY SECTOR" className="space-y-8">
+
+          {/* Full sector distribution (ALL 12) */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              {t('sectorAll.sectionLabel')}
+            </p>
+            <p
+              className="text-lg font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              {topVendor.vendor_name}
-            </h3>
-            <div className="flex items-center gap-4 mt-2 flex-wrap">
-              <span className="text-sm font-mono text-text-secondary">
-                {formatCompactMXN(topVendor.metric_value)}
-              </span>
-              <span className="text-sm text-text-muted">
-                {formatNumber(topVendor.total_contracts)} {t('contracts')}
-              </span>
-              {(topVendor.avg_risk_score ?? 0) > 0 && (() => {
-                const score = topVendor.avg_risk_score ?? 0
-                const riskColor = getRiskLevelColor(getRiskLevel(score))
-                return (
-                  <span
-                    className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border"
-                    style={{
-                      color: riskColor,
-                      backgroundColor: `${riskColor}15`,
-                      borderColor: `${riskColor}30`,
-                    }}
-                  >
-                    {t('riskLabel')} {score.toFixed(2)}
-                  </span>
-                )
-              })()}
-            </div>
-            <ImpactoHumano amountMxn={topVendor.metric_value} className="mt-3" />
+              {t('sectorAll.headline', { year: validYear })}
+            </p>
+            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              {t('sectorAll.subtitle')}
+            </p>
+
+            {syLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 12 }).map((_, i) => (
+                  <Skeleton key={i} className="h-7" />
+                ))}
+              </div>
+            ) : (
+              <SectorDistributionFull
+                data={sectorYearData}
+                year={validYear}
+                onSectorClick={handleSectorClick}
+              />
+            )}
           </div>
-        </motion.div>
-      )}
 
-      {/* Top 20 Vendors */}
-      <div>
-        <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
-          {t('topVendorsFull.sectionLabel')}
-        </p>
-        <p
-          className="text-lg font-bold text-text-primary mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {t('topVendorsFull.headline', { year: validYear })}
-        </p>
-        <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-          {t('topVendorsFull.subtitle')}
-        </p>
-
-        {vendorsLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 10 }).map((_, i) => (
-              <Skeleton key={i} className="h-12" />
-            ))}
-          </div>
-        ) : (
-          <TopVendorsTable
-            vendors={vendorsResp?.data ?? []}
-            onVendorClick={(id) => navigate(`/vendors/${id}`)}
-          />
-        )}
-      </div>
-
-      {/* ====================================================================
-           SECTION 04 — DEEP DIVE (notable risk contracts)
-         ==================================================================== */}
-      <SectionDivider number="04" label={t('sectionDivider.deep')} />
-
-      <div>
-        <div className="flex items-center gap-2 mb-1">
-          <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
-          <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
-            {t('notableRisks.sectionLabel')}
-          </p>
-        </div>
-        <p
-          className="text-lg font-bold text-text-primary mb-1"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-        >
-          {t('notableRisks.headline', { year: validYear })}
-        </p>
-        <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-          {t('notableRisks.subtitle')}
-        </p>
-
-        {riskContractsLoading ? (
-          <div className="space-y-2">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <Skeleton key={i} className="h-20" />
-            ))}
-          </div>
-        ) : (
-          <NotableRiskContracts
-            contracts={(riskContractsResp?.data ?? []).slice(0, 10)}
-            onContractClick={(id) => navigate(`/contracts/${id}`)}
-          />
-        )}
-      </div>
-
-      {/* Full year navigation at bottom */}
-      <div className="mt-12">
-        <div className="h-px bg-border mb-4" />
-        <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted mb-3">
-          {t('allYears')}
-        </p>
-        <div className="flex flex-wrap gap-1.5" role="navigation" aria-label={t('allYears')}>
-          {ALL_YEARS.map((y) => (
-            <button
-              key={y}
-              onClick={() => handleYearChange(y)}
-              className={cn(
-                'px-2.5 py-1 rounded-sm text-xs font-mono transition-colors',
-                y === validYear
-                  ? 'bg-text-primary text-background font-bold'
-                  : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent',
-              )}
-              aria-current={y === validYear ? 'page' : undefined}
+          {/* Sector growth — diverging chart */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              {t('sectorGrowthFull.sectionLabel')}
+            </p>
+            <p
+              className="text-lg font-bold text-text-primary mb-1"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              {y}
-            </button>
-          ))}
-        </div>
-      </div>
+              {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
+            </p>
+            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              {t('sectorGrowthFull.subtitle')}
+            </p>
 
-      <div className="h-8" />
+            {syLoading ? (
+              <Skeleton className="h-[380px]" />
+            ) : sectorGrowthRows.some((r) => r.growthPct != null) ? (
+              <SectorGrowthDiverging rows={sectorGrowthRows} />
+            ) : (
+              <p className="py-8 text-sm text-text-muted italic text-center">
+                {t('sectorGrowthFull.noComparison', { prior: validYear - 1 })}
+              </p>
+            )}
+          </div>
+
+        </Act>
+
+        {/* ── ACT III: RISK & PROCEDURE ── */}
+        <Act number="III" label="RISK &amp; PROCEDURE" className="space-y-8">
+
+          {/* Risk Evolution */}
+          {yearRow && yoyData.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+                {t('riskEvolution.sectionLabel')}
+              </p>
+              <p
+                className="text-lg font-bold text-text-primary mb-1"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {t('riskEvolution.headline', { year: validYear })}
+              </p>
+              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+                {t('riskEvolution.subtitle')}
+              </p>
+
+              <RiskEvolution yearRow={yearRow} allYears={yoyData} validYear={validYear} />
+            </div>
+          )}
+
+          {/* Procedure Type */}
+          {yearRow && yoyData.length > 0 && (
+            <div>
+              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+                {t('procedureType.sectionLabel')}
+              </p>
+              <p
+                className="text-lg font-bold text-text-primary mb-4"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {t('procedureType.headline')}
+              </p>
+
+              <ProcedureTypeSection yearRow={yearRow} allYears={yoyData} validYear={validYear} />
+            </div>
+          )}
+
+        </Act>
+
+        {/* ── ACT IV: SPENDING CALENDAR ── */}
+        <Act number="IV" label="SPENDING CALENDAR" className="space-y-8">
+
+          {/* Monthly spending */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              {t('monthly.sectionLabel')}
+            </p>
+            <p
+              className="text-lg font-bold text-text-primary mb-1"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {t('monthly.headline', { year: validYear })}
+            </p>
+            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              {t('monthly.subtitle')}
+            </p>
+
+            {monthlyLoading ? (
+              <Skeleton className="h-[280px]" />
+            ) : (
+              <MonthlySpending data={monthlyResp} year={validYear} />
+            )}
+          </div>
+
+        </Act>
+
+        {/* ── ACT V: ACTORS & CONTRACTS ── */}
+        <Act number="V" label="ACTORS &amp; CONTRACTS" className="space-y-8">
+
+          {/* Spotlight — top vendor */}
+          {topVendor && !vendorsLoading && (
+            <motion.div variants={fadeIn} initial="initial" animate="animate">
+              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-3">
+                {t('spotlight.label')}
+              </p>
+              <div
+                className="rounded-lg border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
+                onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`)
+                }}
+              >
+                <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                  {t('spotlight.topVendorLabel', { year: validYear })}
+                </p>
+                <h3
+                  className="text-xl font-bold text-text-primary"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  {topVendor.vendor_name}
+                </h3>
+                <div className="flex items-center gap-4 mt-2 flex-wrap">
+                  <span className="text-sm font-mono text-text-secondary">
+                    {formatCompactMXN(topVendor.metric_value)}
+                  </span>
+                  <span className="text-sm text-text-muted">
+                    {formatNumber(topVendor.total_contracts)} {t('contracts')}
+                  </span>
+                  {(topVendor.avg_risk_score ?? 0) > 0 && (() => {
+                    const score = topVendor.avg_risk_score ?? 0
+                    const riskColor = getRiskLevelColor(getRiskLevel(score))
+                    return (
+                      <span
+                        className="text-[10px] font-bold font-mono px-2 py-0.5 rounded-full border"
+                        style={{
+                          color: riskColor,
+                          backgroundColor: `${riskColor}15`,
+                          borderColor: `${riskColor}30`,
+                        }}
+                      >
+                        {t('riskLabel')} {score.toFixed(2)}
+                      </span>
+                    )
+                  })()}
+                </div>
+                <ImpactoHumano amountMxn={topVendor.metric_value} className="mt-3" />
+              </div>
+            </motion.div>
+          )}
+
+          {/* Top 20 Vendors */}
+          <div>
+            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              {t('topVendorsFull.sectionLabel')}
+            </p>
+            <p
+              className="text-lg font-bold text-text-primary mb-1"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {t('topVendorsFull.headline', { year: validYear })}
+            </p>
+            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              {t('topVendorsFull.subtitle')}
+            </p>
+
+            {vendorsLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 10 }).map((_, i) => (
+                  <Skeleton key={i} className="h-12" />
+                ))}
+              </div>
+            ) : (
+              <TopVendorsTable
+                vendors={vendorsResp?.data ?? []}
+                onVendorClick={(id) => navigate(`/vendors/${id}`)}
+              />
+            )}
+          </div>
+
+          {/* Notable risk contracts */}
+          <div>
+            <div className="flex items-center gap-2 mb-1">
+              <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
+              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
+                {t('notableRisks.sectionLabel')}
+              </p>
+            </div>
+            <p
+              className="text-lg font-bold text-text-primary mb-1"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              {t('notableRisks.headline', { year: validYear })}
+            </p>
+            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+              {t('notableRisks.subtitle')}
+            </p>
+
+            {riskContractsLoading ? (
+              <div className="space-y-2">
+                {Array.from({ length: 5 }).map((_, i) => (
+                  <Skeleton key={i} className="h-20" />
+                ))}
+              </div>
+            ) : (
+              <NotableRiskContracts
+                contracts={(riskContractsResp?.data ?? []).slice(0, 10)}
+                onContractClick={(id) => navigate(`/contracts/${id}`)}
+              />
+            )}
+          </div>
+
+          {/* Full year navigation at bottom */}
+          <div className="mt-4">
+            <div className="h-px bg-border mb-4" />
+            <p className="text-[10px] uppercase tracking-[0.2em] text-text-muted mb-3">
+              {t('allYears')}
+            </p>
+            <div className="flex flex-wrap gap-1.5" role="navigation" aria-label={t('allYears')}>
+              {ALL_YEARS.map((y) => (
+                <button
+                  key={y}
+                  onClick={() => handleYearChange(y)}
+                  className={cn(
+                    'px-2.5 py-1 rounded-sm text-xs font-mono transition-colors',
+                    y === validYear
+                      ? 'bg-text-primary text-background font-bold'
+                      : 'text-text-muted hover:text-text-primary hover:bg-card-hover border border-transparent',
+                  )}
+                  aria-current={y === validYear ? 'page' : undefined}
+                >
+                  {y}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="h-8" />
+
+        </Act>
+
+      </EditorialPageShell>
     </div>
   )
 }
