@@ -40,8 +40,8 @@ import {
   getRiskLevelFromScore,
 } from '@/lib/constants'
 import { getSectorDescription } from '@/lib/sector-descriptions'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import {
-  BarChart3,
   Building2,
   Users,
   AlertTriangle,
@@ -365,7 +365,7 @@ function VendorTable({
                         to={`/vendors/${vendor.vendor_id}`}
                         className="font-medium text-text-primary hover:text-accent transition-colors"
                       >
-                        {toTitleCase(vendor.vendor_name ?? vendor.name ?? '')}
+                        {formatVendorName(vendor.vendor_name ?? vendor.name ?? '', 40)}
                       </Link>
                       <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden w-32">
                         <div
@@ -1194,80 +1194,94 @@ export function SectorProfile() {
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <header className="mx-4 sm:mx-6 mb-6">
-        <div className="relative rounded-2xl border border-white/8 bg-zinc-900/70 overflow-hidden">
-          {/* Color accent strip across the top */}
-          <div
-            className="h-1.5 w-full"
-            style={{ backgroundColor: sectorColor }}
-            aria-hidden="true"
-          />
+      {/* ── EDITORIAL HERO ──────────────────────────────────────────────────── */}
+      <header
+        className="mb-6 px-4 sm:px-6 py-7"
+        style={{
+          borderTop: '1px solid rgba(255,255,255,0.08)',
+          borderBottom: '1px solid rgba(255,255,255,0.08)',
+          borderLeft: `3px solid ${sectorColor}`,
+          background: `linear-gradient(180deg, ${hex(sectorColor, 0.05)} 0%, rgba(9,9,11,0) 70%)`,
+        }}
+      >
+        {/* Dateline strip */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Dossier · Sector</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+          <span className="text-zinc-700">·</span>
+          <span style={{ color: sectorColor }} className="font-semibold">{sector.code}</span>
+        </div>
 
-          <div className="p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          {/* Left: kicker + serif name + deck */}
+          <div className="min-w-0 flex-1">
+            <p
+              className="text-kicker mb-2"
+              style={{ color: sectorColor, letterSpacing: '0.18em', fontWeight: 700 }}
+            >
+              {t('profile.sectorProfile')}
+            </p>
+            <h1
+              className="text-white leading-[1.05] capitalize"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: 'clamp(2rem, 4vw, 3rem)',
+                fontWeight: 700,
+                letterSpacing: '-0.025em',
+              }}
+            >
+              {sector.name}
+            </h1>
+            <p
+              className="text-zinc-300 mt-3 max-w-2xl"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontStyle: 'italic',
+                fontSize: 'clamp(1rem, 1.4vw, 1.125rem)',
+                lineHeight: 1.55,
+              }}
+            >
+              {getSectorDescription(sector.code).short}
+            </p>
+          </div>
 
-              {/* Left: icon + name + description */}
-              <div className="flex items-start gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-xl shadow-lg flex-shrink-0"
-                  style={{
-                    backgroundColor: hex(sectorColor, 0.15),
-                    border: `1px solid ${hex(sectorColor, 0.3)}`,
-                  }}
-                >
-                  <BarChart3
-                    className="h-7 w-7"
-                    style={{ color: sectorColor }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-1">
-                    {t('profile.sectorProfile')}
-                  </p>
-                  <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight capitalize">
-                    {sector.name}
-                  </h1>
-                  <p className="text-sm text-zinc-400 mt-1.5 max-w-xl leading-relaxed">
-                    {getSectorDescription(sector.code).short}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: risk badge */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <RiskBadge level={riskLevel} />
-              </div>
-            </div>
-
-            {/* KPI row */}
-            {stats && (
-              <div
-                className="mt-6 pt-5 border-t border-white/8 grid grid-cols-2 sm:grid-cols-4 gap-5"
-                aria-label="Key sector statistics"
-              >
-                <StatChip
-                  label={t('profile.totalSpend')}
-                  value={formatCompactMXN(stats.total_value_mxn)}
-                />
-                <StatChip
-                  label={t('profile.contracts')}
-                  value={formatNumber(stats.total_contracts)}
-                />
-                <StatChip
-                  label={t('profile.highPlusCritical')}
-                  value={`${highRiskPct}%`}
-                  highlight={parseFloat(highRiskPct) > 15}
-                />
-                <StatChip
-                  label={t('profile.directAward')}
-                  value={formatPercentSafe(stats.direct_award_pct, false) ?? '-'}
-                />
-              </div>
-            )}
+          {/* Right: risk badge */}
+          <div className="flex items-start gap-3 flex-shrink-0 pt-1">
+            <RiskBadge level={riskLevel} />
           </div>
         </div>
+
+        {/* KPI row */}
+        {stats && (
+          <div
+            className="mt-6 pt-5 border-t border-[rgba(255,255,255,0.06)] grid grid-cols-2 sm:grid-cols-4 gap-5"
+            aria-label="Key sector statistics"
+          >
+            <StatChip
+              label={t('profile.totalSpend')}
+              value={formatCompactMXN(stats.total_value_mxn)}
+            />
+            <StatChip
+              label={t('profile.contracts')}
+              value={formatNumber(stats.total_contracts)}
+            />
+            <StatChip
+              label={t('profile.highPlusCritical')}
+              value={`${highRiskPct}%`}
+              highlight={parseFloat(highRiskPct) > 15}
+            />
+            <StatChip
+              label={t('profile.directAward')}
+              value={formatPercentSafe(stats.direct_award_pct, false) ?? '-'}
+            />
+          </div>
+        )}
       </header>
 
       {/* ── TABS ────────────────────────────────────────────────────────────── */}
