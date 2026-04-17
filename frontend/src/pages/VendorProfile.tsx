@@ -34,6 +34,7 @@ import InvestigationLede from '@/components/ui/InvestigationLede'
 import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem, ContractHistogramResponse } from '@/api/types'
 import {
   AreaChart,
@@ -1261,143 +1262,199 @@ export function VendorProfile() {
         )
       })()}
 
+      {/* ── DOSSIER FOLDER STRIP — case file kicker ─────────── */}
+      <div className="dossier-folder-strip">
+        CASE FILE · #{vendor?.id ?? '—'} · CLASSIFICATION: {(riskLevel ?? 'unassessed').toUpperCase()} · STATUS: {(ariaData?.review_status ?? 'pending').toUpperCase()}
+      </div>
+
       {/* ── EDITORIAL HERO HEADER ─────────────────────────────── */}
-      <header>
-        {/* Kicker + risk badge */}
-        <div className="flex items-start justify-between gap-4 mb-3">
-          <p
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]"
-            style={{ color: 'var(--color-accent)' }}
-          >
-            RUBLI · {t('vendorProfile', 'VENDOR PROFILE')}
-          </p>
-          {vendor.avg_risk_score !== undefined && (
-            <span
-              className="text-[10px] font-mono font-bold uppercase tracking-widest px-2 py-1 rounded flex-shrink-0"
-              style={{
-                color: riskColor,
-                border: `1px solid ${riskColor}40`,
-                background: `${riskColor}10`,
-              }}
-            >
-              {riskLevel} risk
-            </span>
-          )}
-        </div>
-
-        {/* Back link + vendor name */}
-        <div className="flex items-start gap-3 mb-2">
-          <Link
-            to="/explore?tab=vendors"
-            className="shrink-0 mt-2 p-1 rounded text-text-muted hover:text-text-primary transition-colors"
-            aria-label={t('backToVendors')}
-          >
-            <ArrowLeft className="h-4 w-4" />
-          </Link>
-          <div className="min-w-0 flex-1">
-            <h1
-              className="leading-tight font-bold"
-              style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(1.6rem, 4vw, 2.5rem)',
-                color: 'var(--color-text-primary)',
-                letterSpacing: '-0.01em',
-              }}
-            >
-              {toTitleCase(vendor.name)}
-            </h1>
-
-            {/* Ground truth case links */}
-            {groundTruthStatus?.is_known_bad && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {groundTruthStatus.cases?.map((c) => (
-                  <Link
-                    key={c.case_id}
-                    to={`/cases/${c.scandal_slug}`}
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
-                  >
-                    ⚠ {c.case_name}
-                  </Link>
-                ))}
-              </div>
+      <EditorialPageShell
+        kicker={`VENDOR DOSSIER · ${(vendor?.name ? toTitleCase(vendor.name) : 'LOADING...').toUpperCase()}`}
+        headline={
+          <>
+            {toTitleCase(vendor.name)}
+            {vendor.avg_risk_score !== undefined && vendor.avg_risk_score >= 0.40 && (
+              <>
+                {' '}—{' '}
+                <span style={{ color: riskColor }}>
+                  {((vendor.avg_risk_score) * 100).toFixed(0)}/100 risk
+                </span>
+              </>
             )}
-            {groundTruthError && (
-              <span className="mt-1 text-xs text-text-muted flex items-center gap-1">
-                <AlertTriangle className="h-3 w-3 text-amber-500" />
-                {t('groundTruth.couldNotCheck')}
+          </>
+        }
+        paragraph={(() => {
+          const narrative = buildVendorNarrative(vendor, riskProfile ?? null)
+          if (narrative.length > 0 && narrative[0].text) return narrative[0].text
+          const sectorTxt = vendor.primary_sector_name ?? 'multiple sectors'
+          const valTxt = formatCompactMXN(vendor.total_value_mxn)
+          const ctTxt = vendor.total_contracts.toLocaleString()
+          const riskTxt = vendor.avg_risk_score !== undefined
+            ? ` Risk score ${((vendor.avg_risk_score) * 100).toFixed(0)}/100 (${riskLevel}).`
+            : ''
+          return `${ctTxt} contracts totaling ${valTxt} in ${sectorTxt}.${riskTxt}`
+        })()}
+        stats={[
+          {
+            value: vendor.total_contracts.toLocaleString(),
+            label: t('kpi.totalContracts', 'Total Contracts'),
+            sub: vendor.first_contract_year && vendor.last_contract_year
+              ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
+              : undefined,
+          },
+          {
+            value: formatCompactMXN(vendor.total_value_mxn),
+            label: t('kpi.totalValue', 'Contract Value'),
+            color: 'var(--color-accent)',
+          },
+          ...(vendor.avg_risk_score !== undefined ? [{
+            value: `${((vendor.avg_risk_score) * 100).toFixed(0)}/100`,
+            label: t('kpi.riskScore', 'Risk Score'),
+            color: riskColor,
+            sub: vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null
+              ? `CI ${(vendor.avg_confidence_lower * 100).toFixed(0)}–${(vendor.avg_confidence_upper * 100).toFixed(0)}%`
+              : undefined,
+          }] : []),
+          {
+            value: (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0) + '%',
+            label: 'Direct Awards',
+            color: (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50 ? RISK_COLORS.high : undefined,
+            sub: 'OECD limit: 25%',
+          },
+        ]}
+        meta={
+          <span className="flex items-center gap-2">
+            {vendor.rfc && (
+              <span className="inline-flex items-center gap-1 normal-case tracking-normal">
+                <span className="font-mono text-[10px] text-text-secondary">{vendor.rfc}</span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(vendor.rfc!).then(() => {
+                      setRfcCopied(true)
+                      setTimeout(() => setRfcCopied(false), 1500)
+                    }).catch(() => {})
+                  }}
+                  className="p-0.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
+                  aria-label={rfcCopied ? 'RFC copiado' : 'Copiar RFC'}
+                  title={rfcCopied ? '¡Copiado!' : 'Copiar RFC'}
+                >
+                  {rfcCopied
+                    ? <Check className="h-3 w-3 text-green-400" />
+                    : <Copy className="h-3 w-3" />
+                  }
+                </button>
               </span>
             )}
-
-            {/* SFP/EFOS badges (when no ground truth) */}
-            {!groundTruthStatus?.is_known_bad && (
-              <div className="flex flex-wrap gap-2 mt-2">
-                {externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
-                  >
-                    {t('badges.sfpSanctioned')}
-                  </span>
-                )}
-                {externalFlags?.sat_efos?.stage === 'definitivo' && (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
-                  >
-                    {t('badges.efosStageDef')}
-                  </span>
-                )}
-                {externalFlags?.sat_efos?.stage === 'presunto' && (
-                  <span
-                    className="text-xs px-2 py-0.5 rounded font-medium"
-                    style={{ background: '#eab30820', color: '#fde68a', border: '1px solid #eab30840' }}
-                  >
-                    SAT EFOS Presunto
-                  </span>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Metadata: RFC · Sector · Industry · Group */}
-        <div className="flex items-center gap-2 flex-wrap text-sm text-text-muted ml-8 mb-3">
-          {vendor.rfc && (
-            <span className="inline-flex items-center gap-1">
-              <span className="font-mono text-xs text-text-secondary">{vendor.rfc}</span>
+            <span className="text-text-muted/30">·</span>
+            <span>v0.6.5</span>
+          </span>
+        }
+        severity={riskLevel === 'critical' ? 'critical' : riskLevel === 'high' ? 'high' : riskLevel === 'medium' ? 'medium' : 'low'}
+        actions={
+          <>
+            <Link
+              to="/explore?tab=vendors"
+              className="shrink-0 p-1 rounded text-text-muted hover:text-text-primary transition-colors"
+              aria-label={t('backToVendors')}
+            >
+              <ArrowLeft className="h-4 w-4" />
+            </Link>
+            <button
+              onClick={() => navigate(`/thread/${vendorId}`)}
+              className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-colors"
+              style={{ background: '#dc2626', color: 'white' }}
+              title="Open scroll-driven investigation narrative"
+              aria-label="Open Red Thread investigation narrative"
+            >
+              <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
+              {t('readInvestigation', 'Read the Investigation')}
+            </button>
+            <button
+              onClick={() => setNetworkOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+              style={{ background: 'var(--color-background-elevated)' }}
+            >
+              <Network className="h-3.5 w-3.5" />
+              {t('viewNetwork')}
+            </button>
+            {vendor.primary_sector_id && (
               <button
-                onClick={() => {
-                  navigator.clipboard.writeText(vendor.rfc!).then(() => {
-                    setRfcCopied(true)
-                    setTimeout(() => setRfcCopied(false), 1500)
-                  }).catch(() => {})
-                }}
-                className="p-0.5 rounded text-text-muted/50 hover:text-text-muted transition-colors"
-                aria-label={rfcCopied ? 'RFC copiado' : 'Copiar RFC'}
-                title={rfcCopied ? '¡Copiado!' : 'Copiar RFC'}
+                onClick={() => navigate(
+                  `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
+                )}
+                className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+                style={{ background: 'var(--color-background-elevated)' }}
               >
-                {rfcCopied
-                  ? <Check className="h-3 w-3 text-green-400" />
-                  : <Copy className="h-3 w-3" />
-                }
+                <SlidersHorizontal className="h-3.5 w-3.5" />
+                {t('findSimilar')}
               </button>
-            </span>
-          )}
+            )}
+            <button
+              onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+              style={{ background: 'var(--color-background-elevated)' }}
+              aria-label={t('compare')}
+            >
+              <BarChart3 className="h-3.5 w-3.5" />
+              {t('compare')}
+            </button>
+            <ShareButton label={t('share', 'Share')} className="flex-shrink-0" />
+            <button
+              onClick={async () => {
+                setCsvExporting(true)
+                try { await exportContractsCSV() } finally { setCsvExporting(false) }
+              }}
+              disabled={csvExporting}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
+              style={{ background: 'var(--color-background-elevated)' }}
+              aria-label={t('exportCSV')}
+            >
+              <Download className="h-3.5 w-3.5" />
+              {csvExporting ? t('exporting') : t('exportCSV')}
+            </button>
+            <GenerateReportButton
+              reportType="vendor"
+              entityId={vendorId}
+              entityName={toTitleCase(vendor.name)}
+            />
+            <AddToWatchlistButton
+              itemType="vendor"
+              itemId={vendorId}
+              itemName={toTitleCase(vendor.name)}
+              defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
+            />
+            <AddToDossierButton
+              entityType="vendor"
+              entityId={vendorId}
+              entityName={toTitleCase(vendor.name)}
+            />
+            {vendor.avg_risk_score !== undefined && (
+              <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
+            )}
+            <button
+              onClick={() => setDisputeOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-muted/60 hover:text-text-secondary transition-colors ml-auto"
+              style={{ background: 'var(--color-background-elevated)' }}
+            >
+              <AlertTriangle className="h-3 w-3" />
+              {t('disputeScore', 'Report issue')}
+            </button>
+          </>
+        }
+      >
+        {/* ── METADATA STRIP — sector, industry, group, name variants, GT ── */}
+        <div className="flex items-center gap-2 flex-wrap text-sm text-text-muted mb-4">
           {vendor.primary_sector_name && (
-            <>
-              <span className="text-text-muted/30">·</span>
-              <span
-                className="text-xs px-2 py-0.5 rounded"
-                style={{
-                  background: `${sectorColor}20`,
-                  color: sectorColor,
-                  border: `1px solid ${sectorColor}40`,
-                }}
-              >
-                {vendor.primary_sector_name}
-              </span>
-            </>
+            <span
+              className="text-xs px-2 py-0.5 rounded"
+              style={{
+                background: `${sectorColor}20`,
+                color: sectorColor,
+                border: `1px solid ${sectorColor}40`,
+              }}
+            >
+              {vendor.primary_sector_name}
+            </span>
           )}
           {vendor.industry_name && (
             <>
@@ -1417,11 +1474,64 @@ export function VendorProfile() {
               </span>
             </>
           )}
+          {scorecard && (
+            <>
+              <span className="text-text-muted/30">·</span>
+              <span className="inline-flex items-center gap-1.5">
+                <GradeBadge10 grade={scorecard.grade} size="md" />
+                <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                  {t('integrityGrade', 'Integrity Grade')}
+                </span>
+              </span>
+            </>
+          )}
+          {/* Ground truth case links */}
+          {groundTruthStatus?.is_known_bad && groundTruthStatus.cases?.map((c) => (
+            <Link
+              key={c.case_id}
+              to={`/cases/${c.scandal_slug}`}
+              className="text-xs px-2 py-0.5 rounded font-medium"
+              style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
+            >
+              ⚠ {c.case_name}
+            </Link>
+          ))}
+          {groundTruthError && (
+            <span className="text-xs text-text-muted flex items-center gap-1">
+              <AlertTriangle className="h-3 w-3 text-amber-500" />
+              {t('groundTruth.couldNotCheck')}
+            </span>
+          )}
+          {/* SFP/EFOS badges (when no ground truth) */}
+          {!groundTruthStatus?.is_known_bad && externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0 && (
+            <span
+              className="text-xs px-2 py-0.5 rounded font-medium"
+              style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
+            >
+              {t('badges.sfpSanctioned')}
+            </span>
+          )}
+          {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'definitivo' && (
+            <span
+              className="text-xs px-2 py-0.5 rounded font-medium"
+              style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
+            >
+              {t('badges.efosStageDef')}
+            </span>
+          )}
+          {!groundTruthStatus?.is_known_bad && externalFlags?.sat_efos?.stage === 'presunto' && (
+            <span
+              className="text-xs px-2 py-0.5 rounded font-medium"
+              style={{ background: '#eab30820', color: '#fde68a', border: '1px solid #eab30840' }}
+            >
+              SAT EFOS Presunto
+            </span>
+          )}
         </div>
 
         {/* Name variants */}
         {vendor.name_variants && vendor.name_variants.length > 0 && (
-          <div className="flex flex-wrap items-center gap-1.5 ml-8 mb-4">
+          <div className="flex flex-wrap items-center gap-1.5 mb-6">
             <span className="text-xs text-text-muted/60">{t('alsoKnownAs')}</span>
             {vendor.name_variants.slice(0, 5).map((v) => (
               <span
@@ -1443,206 +1553,6 @@ export function VendorProfile() {
             <span className="text-[10px] text-text-muted/40 ml-1">· QuiénEsQuién.Wiki</span>
           </div>
         )}
-
-        {/* Hero stats — editorial large numbers */}
-        <div
-          className="flex flex-wrap gap-x-8 gap-y-4 ml-8 py-5 mb-4"
-          style={{ borderBottom: '1px solid var(--color-border)', borderTop: '1px solid var(--color-border)' }}
-        >
-          <div>
-            <div
-              className="font-mono font-bold tabular-nums leading-none"
-              style={{
-                fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                color: 'var(--color-text-primary)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              {vendor.total_contracts.toLocaleString()}
-            </div>
-            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
-              {t('kpi.totalContracts', 'Total Contracts')}
-            </p>
-          </div>
-
-          <div>
-            <div
-              className="font-mono font-bold tabular-nums leading-none"
-              style={{
-                fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                color: 'var(--color-accent)',
-                letterSpacing: '-0.02em',
-              }}
-            >
-              {formatCompactMXN(vendor.total_value_mxn)}
-            </div>
-            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
-              {t('kpi.totalValue', 'Contract Value')}
-            </p>
-          </div>
-
-          {vendor.total_institutions !== undefined && (
-            <div>
-              <div
-                className="font-mono font-bold tabular-nums leading-none"
-                style={{
-                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                  color: 'var(--color-text-secondary)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                {vendor.total_institutions}
-              </div>
-              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
-                {t('kpi.institutions', 'Agencies Served')}
-              </p>
-            </div>
-          )}
-
-          {vendor.avg_risk_score !== undefined && (
-            <div>
-              <div
-                className="font-mono font-bold tabular-nums leading-none"
-                style={{
-                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                  color: riskColor,
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                {((vendor.avg_risk_score) * 100).toFixed(0)}
-                <span className="text-sm font-normal text-text-muted/60 ml-1">/100</span>
-              </div>
-              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
-                {t('kpi.riskScore', 'Risk Score')}
-              </p>
-              {vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null && (
-                <p className="text-[9px] font-mono text-text-muted/50 tabular-nums mt-0.5">
-                  CI {(vendor.avg_confidence_lower * 100).toFixed(0)}–{(vendor.avg_confidence_upper * 100).toFixed(0)}%
-                </p>
-              )}
-              {vendor.sector_risk_percentile != null && vendor.sector_risk_percentile >= 70 && (
-                <p className="text-[9px] font-mono mt-0.5" style={{ color: RISK_COLORS.high }}>
-                  {t('sectorPercentile', { pct: 100 - vendor.sector_risk_percentile })}
-                </p>
-              )}
-            </div>
-          )}
-
-          {vendor.first_contract_year && vendor.last_contract_year && (
-            <div>
-              <div
-                className="font-mono font-bold tabular-nums leading-none"
-                style={{
-                  fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
-                  color: 'var(--color-text-secondary)',
-                  letterSpacing: '-0.02em',
-                }}
-              >
-                {vendor.years_active ?? (vendor.last_contract_year - vendor.first_contract_year + 1)}
-              </div>
-              <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mt-1">
-                {t('kpi.yearsActive', 'Years Active')} · {vendor.first_contract_year}–{vendor.last_contract_year}
-              </p>
-            </div>
-          )}
-
-          {scorecard && (
-            <div className="flex items-start gap-2">
-              <GradeBadge10 grade={scorecard.grade} size="md" />
-              <div>
-                <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
-                  {t('integrityGrade', 'Integrity Grade')}
-                </p>
-                <p className="text-[10px] font-mono text-text-muted/60">{scorecard.grade_label}</p>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-2 ml-8">
-          <button
-            onClick={() => navigate(`/thread/${vendorId}`)}
-            className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-colors"
-            style={{ background: '#dc2626', color: 'white' }}
-            title="Open scroll-driven investigation narrative"
-            aria-label="Open Red Thread investigation narrative"
-          >
-            <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
-            {t('readInvestigation', 'Read the Investigation')}
-          </button>
-          <button
-            onClick={() => setNetworkOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
-            style={{ background: 'var(--color-background-elevated)' }}
-          >
-            <Network className="h-3.5 w-3.5" />
-            {t('viewNetwork')}
-          </button>
-          {vendor.primary_sector_id && (
-            <button
-              onClick={() => navigate(
-                `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
-              )}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
-              style={{ background: 'var(--color-background-elevated)' }}
-            >
-              <SlidersHorizontal className="h-3.5 w-3.5" />
-              {t('findSimilar')}
-            </button>
-          )}
-          <button
-            onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
-            style={{ background: 'var(--color-background-elevated)' }}
-            aria-label={t('compare')}
-          >
-            <BarChart3 className="h-3.5 w-3.5" />
-            {t('compare')}
-          </button>
-          <ShareButton label={t('share', 'Share')} className="flex-shrink-0" />
-          <button
-            onClick={async () => {
-              setCsvExporting(true)
-              try { await exportContractsCSV() } finally { setCsvExporting(false) }
-            }}
-            disabled={csvExporting}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
-            style={{ background: 'var(--color-background-elevated)' }}
-            aria-label={t('exportCSV')}
-          >
-            <Download className="h-3.5 w-3.5" />
-            {csvExporting ? t('exporting') : t('exportCSV')}
-          </button>
-          <GenerateReportButton
-            reportType="vendor"
-            entityId={vendorId}
-            entityName={toTitleCase(vendor.name)}
-          />
-          <AddToWatchlistButton
-            itemType="vendor"
-            itemId={vendorId}
-            itemName={toTitleCase(vendor.name)}
-            defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
-          />
-          <AddToDossierButton
-            entityType="vendor"
-            entityId={vendorId}
-            entityName={toTitleCase(vendor.name)}
-          />
-          {vendor.avg_risk_score !== undefined && (
-            <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
-          )}
-          <button
-            onClick={() => setDisputeOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-muted/60 hover:text-text-secondary transition-colors ml-auto"
-            style={{ background: 'var(--color-background-elevated)' }}
-          >
-            <AlertTriangle className="h-3 w-3" />
-            {t('disputeScore', 'Report issue')}
-          </button>
-        </div>
-      </header>
 
       {/* PlainLanguageRiskCard — journalist plain-English summary */}
       <PlainLanguageRiskCard
@@ -4117,6 +4027,7 @@ export function VendorProfile() {
         open={isDetailOpen}
         onOpenChange={setIsDetailOpen}
       />
+      </EditorialPageShell>
     </div>
   )
 }

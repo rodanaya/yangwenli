@@ -21,6 +21,8 @@ import { analysisApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, formatPercent } from '@/lib/utils'
 import { SECTORS } from '@/lib/constants'
 import { ArrowUpRight, Info } from 'lucide-react'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Hook: detect mobile viewport (below md = 768px)
@@ -628,8 +630,43 @@ export default function CapturaHeatmap() {
   // Render
   // ---------------------------------------------------------------------------
 
+  const severeCount = topCaptured.filter(r => r.pct >= 0.5).length
+  const heroPct = topCaptured.length > 0 ? topCaptured[0].pct : 0
+  const valueAtRisk = topCaptured.slice(0, 10).reduce((s, r) => s + r.value, 0)
+
   return (
-    <div className="space-y-6 max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto">
+    <EditorialPageShell
+      kicker="INSTITUTIONAL CAPTURE · CONCENTRATION ANALYSIS"
+      headline={<>Some institutions never diversify. <em>That's by design.</em></>}
+      paragraph="Institutional capture occurs when a single vendor dominates one agency's contracts over years — a structural red flag invisible in contract-by-contract analysis."
+      severity="critical"
+      loading={isLoading}
+      stats={[
+        {
+          value: topCaptured.length > 0 ? severeCount : '—',
+          label: 'severe captures (≥50%)',
+          color: '#f87171',
+        },
+        {
+          value: valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—',
+          label: 'value under capture',
+          color: '#fb923c',
+        },
+        {
+          value: heroPct > 0 ? `${(heroPct * 100).toFixed(1)}%` : '—',
+          label: topCaptured[0] ? `peak: ${truncName(topCaptured[0].institution, 22)}` : 'peak concentration',
+          color: '#fbbf24',
+        },
+        {
+          value: institutions.length > 0 ? formatNumber(institutions.length) : '—',
+          label: 'institutions analyzed',
+          color: '#a78bfa',
+        },
+      ]}
+    >
+      <Act number="I" label="THE CAPTURE FIELD">
+    <div className="space-y-6">
 
       {/* ===== Editorial header ===== */}
       <div className="border-b border-border pb-6 mb-8">
@@ -1082,6 +1119,9 @@ export default function CapturaHeatmap() {
         <h4 className="font-serif text-text-muted/70 text-sm">{t('methodology.title')}</h4>
         <p>{t('methodology.content')}</p>
       </div>
+    </div>
+      </Act>
+    </EditorialPageShell>
     </div>
   )
 }

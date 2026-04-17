@@ -21,8 +21,9 @@ import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
 import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
 import { RISK_COLORS, getRiskLevelFromScore, RISK_THRESHOLDS } from '@/lib/constants'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
-import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { NarrativeCard } from '@/components/NarrativeCard'
@@ -61,8 +62,6 @@ import {
   Globe,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
-import { motion } from 'framer-motion'
-import { staggerContainer, staggerItem } from '@/lib/animations'
 import {
   ResponsiveContainer,
   AreaChart,
@@ -460,7 +459,8 @@ export function InstitutionProfile() {
   const totalContracts = institution.total_contracts ?? riskProfile?.total_contracts ?? 0
   const totalValue = institution.total_amount_mxn ?? riskProfile?.total_value ?? 0
   const highRiskPct = institution.high_risk_percentage ?? institution.high_risk_pct
-  const vendorCount = institution.vendor_count ?? vendors?.total ?? 0
+  const _vendorCount = institution.vendor_count ?? vendors?.total ?? 0
+  void _vendorCount
   const daPct = institution.direct_award_pct ?? institution.direct_award_rate ?? 0
   const topVendor = vendors?.data?.[0]
   const topVendorPct = topVendor && totalValue > 0
@@ -587,75 +587,62 @@ export function InstitutionProfile() {
         centerName={toTitleCase(institution.name)}
       />
 
-      {/* ---- EDITORIAL HEADLINE ---- */}
-      <EditorialHeadline
-        section={t('profile.editorialSection')}
+      <EditorialPageShell
+        kicker={`INSTITUTION FILE · ${institution?.name?.toUpperCase() ?? 'LOADING...'}`}
         headline={toTitleCase(institution.name)}
-        subtitle={`${getInstitutionTypeLabel(institution.institution_type)}${sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}`}
-      />
-
-      {/* ---- HALLAZGO STAT ROW ---- */}
-      <motion.div
-        className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-x-8 gap-y-4"
-        variants={staggerContainer}
-        initial="initial"
-        whileInView="animate"
-        viewport={{ once: true }}
+        paragraph={
+          <>
+            This institution's procurement record spans 2002&ndash;2025 across {formatNumber(totalContracts)} contracts.
+            {' '}{getInstitutionTypeLabel(institution.institution_type)}
+            {sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}.
+            {' '}Patterns below reveal vendor concentration, direct-award rates, and risk signals
+            measured against documented corruption signatures.
+          </>
+        }
+        stats={[
+          {
+            value: formatNumber(totalContracts),
+            label: t('profile.hallazgoLabels.contractsAnalyzed'),
+            sub: '2002-2025, COMPRANET',
+          },
+          {
+            value: formatCompactMXN(totalValue),
+            label: t('profile.hallazgoLabels.totalAccumulatedSpend'),
+            color: 'var(--color-accent)',
+            sub: formatCompactUSD(totalValue),
+          },
+          {
+            value: `${(riskScore * 100).toFixed(1)}%`,
+            label: t('profile.hallazgoLabels.avgRiskIndex'),
+            color: riskLevel === 'critical' ? 'var(--color-risk-critical)' :
+                   riskLevel === 'high' ? 'var(--color-risk-high)' :
+                   riskLevel === 'medium' ? 'var(--color-risk-medium)' :
+                   'var(--color-risk-low)',
+            sub: 'OECD: 2-15%',
+          },
+          {
+            value: `${daPct.toFixed(0)}%`,
+            label: t('profile.hallazgoLabels.directAward'),
+            color: daPct > 80 ? 'var(--color-risk-critical)' : daPct > 60 ? 'var(--color-risk-high)' : undefined,
+            sub: 'OECD max: 25%',
+          },
+        ]}
+        meta={<>RUBLI · v0.6.5</>}
+        severity="medium"
       >
-        <motion.div variants={staggerItem}>
-          <HallazgoStat
-            value={formatNumber(totalContracts)}
-            label={t('profile.hallazgoLabels.contractsAnalyzed')}
-            annotation="2002-2025, COMPRANET"
-            color="border-accent"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HallazgoStat
-            value={formatCompactMXN(totalValue)}
-            label={t('profile.hallazgoLabels.totalAccumulatedSpend')}
-            annotation={formatCompactUSD(totalValue)}
-            color="border-accent"
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HallazgoStat
-            value={`${(riskScore * 100).toFixed(1)}%`}
-            label={t('profile.hallazgoLabels.avgRiskIndex')}
-            annotation={
-              riskLevel === 'critical' ? t('profile.riskAnnotations.critical') :
-              riskLevel === 'high' ? t('profile.riskAnnotations.high') :
-              riskLevel === 'medium' ? t('profile.riskAnnotations.medium') :
-              t('profile.riskAnnotations.low')
-            }
-            color={riskLevel === 'critical' ? 'border-red-500' : riskLevel === 'high' ? 'border-orange-500' : riskLevel === 'medium' ? 'border-yellow-500' : 'border-green-500'}
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HallazgoStat
-            value={`${daPct.toFixed(0)}%`}
-            label={t('profile.hallazgoLabels.directAward')}
-            annotation={daPct > 74 ? t('profile.directAwardAnnotation.aboveAverage') : t('profile.directAwardAnnotation.withinRange')}
-            color={daPct > 80 ? 'border-red-500' : daPct > 60 ? 'border-orange-500' : 'border-green-500'}
-          />
-        </motion.div>
-        <motion.div variants={staggerItem}>
-          <HallazgoStat
-            value={formatNumber(vendorCount)}
-            label={t('profile.hallazgoLabels.uniqueVendors')}
-            annotation={
-              vendorCount < 50 ? t('profile.vendorDiversity.low') :
-              vendorCount > 500 ? t('profile.vendorDiversity.high') :
-              t('profile.vendorDiversity.moderate')
-            }
-            color="border-zinc-500"
-          />
-        </motion.div>
-      </motion.div>
+
+      {/* ---- HIDDEN HEADLINE (kept for backward i18n / a11y links) ---- */}
+      <div className="sr-only">
+        <EditorialHeadline
+          section={t('profile.editorialSection')}
+          headline={toTitleCase(institution.name)}
+          subtitle={`${getInstitutionTypeLabel(institution.institution_type)}${sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}`}
+        />
+      </div>
 
       {/* ---- INVESTIGATION LEDE ---- */}
       <div
-        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary"
+        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary mb-6"
         style={{
           fontFamily: "var(--font-family-serif)",
           borderLeft: `3px solid ${riskColor}`,
@@ -673,7 +660,9 @@ export function InstitutionProfile() {
 
       {/* ---- IMPACTO HUMANO (for high-risk institutions) ---- */}
       {riskScore >= RISK_THRESHOLDS.medium && totalValue > 100_000_000 && (
-        <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
+        <div className="mb-6">
+          <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
+        </div>
       )}
 
       {/* ---- GROUND TRUTH WARNING BANNER ---- */}
@@ -705,6 +694,7 @@ export function InstitutionProfile() {
       )}
 
       {/* ---- TABBED CONTENT ---- */}
+      <Act number="I" label="EVIDENCIA · EXPEDIENTE INSTITUCIONAL">
       <SimpleTabs
         defaultTab="overview"
         onTabChange={setActiveTab}
@@ -1550,6 +1540,8 @@ export function InstitutionProfile() {
         </TabPanel>
 
       </SimpleTabs>
+      </Act>
+      </EditorialPageShell>
 
       <ContractDetailModal
         contractId={selectedContractId}

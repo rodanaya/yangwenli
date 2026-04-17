@@ -1,5 +1,7 @@
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useUrlSearch } from '@/hooks'
@@ -20,6 +22,7 @@ import {
   ArrowUpDown, ArrowRight, ChevronDown, Scale, Landmark
 } from 'lucide-react'
 import { RISK_COLORS, SECTORS } from '@/lib/constants'
+import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import { staggerContainer, staggerItem, slideUp } from '@/lib/animations'
 
 // ── Fraud type pill colours ──────────────────────────────────────────────────
@@ -518,29 +521,38 @@ export default function CaseLibrary() {
     }).filter(ls => ls.count == null || ls.count > 0)
   }, [stats, t])
 
+  const totalCasesShell = stats?.total_cases ?? data?.length ?? 0
+  const totalLoss = stats?.total_amount_mxn_low ?? 0
+  const vendorCount = stats?.gt_linked_count ?? 0
+  const sectorCount = stats?.cases_by_fraud_type?.length ?? 0
+
   return (
-    <div className="p-6 max-w-6xl mx-auto">
-      {/* ── Page header ── */}
-      <div className="flex items-start justify-between mb-2">
-        <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            {t('pageSubhead')}
-          </p>
-          <h1
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-            className="text-2xl sm:text-3xl font-bold text-zinc-100 leading-tight"
-          >
-            {t('pageTitle')}
-          </h1>
-        </div>
-        <div className="flex items-center gap-2 shrink-0 mt-1">
+    <EditorialPageShell
+      kicker="CASE LIBRARY · DOCUMENTED CORRUPTION"
+      headline={
+        <>
+          <span style={{ color: 'var(--color-risk-critical)' }}>{formatNumber(totalCasesShell)}</span>{' '}
+          documented corruption cases. A nation's trail of evidence.
+        </>
+      }
+      paragraph="This library contains documented corruption cases extracted from judicial records, journalism investigations, and official audits. Each case is matched to procurement contracts in COMPRANET and seeds the RUBLI risk model — so every new contract can be measured against what we already know."
+      stats={isLoading ? undefined : [
+        { value: formatNumber(totalCasesShell), label: 'Total cases', color: 'var(--color-risk-critical)' },
+        { value: formatCompactMXN(totalLoss), label: 'Est. losses', color: 'var(--color-accent)' },
+        { value: formatNumber(vendorCount), label: 'Vendors matched' },
+        { value: formatNumber(sectorCount), label: 'Sectors affected' },
+      ]}
+      loading={isLoading}
+      severity="critical"
+      actions={
+        <div className="flex items-center gap-2">
           <ShareButton label={t('share')} />
           <CaseLeadButton />
         </div>
-      </div>
-      <p className="text-sm text-zinc-400 max-w-2xl mb-8 leading-relaxed">
-        {t('hero.subhead')}
-      </p>
+      }
+    >
+      <Act number="I" label="THE CASES">
+      <div className="p-6 max-w-6xl mx-auto">
 
       {/* ── Hero Section ── */}
       <HeroSection />
@@ -764,6 +776,9 @@ export default function CaseLibrary() {
       )}
 
       <CitationBlock context="43 documented corruption cases" className="mt-2" />
-    </div>
+      </div>
+
+      </Act>
+    </EditorialPageShell>
   )
 }

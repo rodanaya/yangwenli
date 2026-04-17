@@ -25,8 +25,9 @@ import type { AriaQueueItem, AriaStatsResponse } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { getSectorNameEN } from '@/lib/constants'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import {
-  Shield,
   Search,
   ChevronRight,
   AlertTriangle,
@@ -35,7 +36,6 @@ import {
   ClipboardEdit,
   Check,
   X as XIcon,
-  Sparkles,
 } from 'lucide-react'
 
 // ============================================================================
@@ -165,8 +165,8 @@ function TierNavigationRow({
         'w-full text-left flex items-center gap-4 px-4 py-3 rounded-md border border-zinc-800 border-l-4 transition-all',
         tier.accent,
         isActive
-          ? 'bg-zinc-900 ring-1 ring-amber-500/40'
-          : 'bg-zinc-900/40 hover:bg-zinc-900/80'
+          ? 'bg-background-elevated border-opacity-100'
+          : 'bg-background-card/40 hover:bg-background-card/80'
       )}
       aria-pressed={isActive}
     >
@@ -427,11 +427,8 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               {item.vendor_name}
             </h3>
             {item.new_vendor_risk && (
-              <span
-                className="shrink-0 inline-flex items-center"
-                title={t('badges.new')}
-              >
-                <Sparkles className="h-3 w-3 text-amber-400" />
+              <span className="shrink-0 font-mono text-[9px] font-bold tracking-widest uppercase text-amber-400 bg-amber-500/10 border border-amber-500/20 px-1.5 py-0.5 rounded">
+                NEW
               </span>
             )}
           </div>
@@ -609,119 +606,85 @@ export default function AriaPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8 space-y-6">
-
-        {/* ============================================================== */}
-        {/* 1. HEADER — one row: title · search · tier filter pills        */}
-        {/* ============================================================== */}
-        <header className="flex flex-col lg:flex-row lg:items-center gap-3 lg:gap-4">
-          <div className="flex items-center gap-3 shrink-0">
-            <div className="flex items-center gap-2">
-              <Shield className="h-4 w-4 text-amber-400" />
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500">
-                ARIA
-              </p>
-            </div>
-            <h1 className="text-base font-semibold text-zinc-100 leading-none">
-              {t('queueSection.title')}
-            </h1>
-          </div>
-
-          <div className="relative flex-1 lg:max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
-            <input
-              type="text"
-              placeholder={t('leads.searchPlaceholder')}
-              value={search}
-              onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
-            />
-          </div>
-
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button
-              onClick={() => { setTierFilter(null); setPage(1) }}
-              className={cn(
-                'inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
-                tierFilter == null
-                  ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
-                  : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
-              )}
-            >
-              {t('filters.all')}
-            </button>
-            {TIER_CONFIG.map((cfg) => (
-              <TierFilterPill
-                key={cfg.tier}
-                tier={cfg}
-                count={tierCounts[cfg.tier]}
-                isActive={tierFilter === cfg.tier}
-                onClick={() => {
-                  setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
-                  setPage(1)
-                }}
-              />
-            ))}
-          </div>
-        </header>
-
-        {/* ============================================================== */}
-        {/* 2. HERO STAT STRIP — 4 small numbers, no giant typography       */}
-        {/* ============================================================== */}
-        <section
-          aria-label={t('header.lastUpdated')}
-          className="border border-zinc-800 rounded-lg bg-zinc-900/30 px-4 py-3"
-        >
-          <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2">
-            {statsLoading ? (
-              <Skeleton className="h-6 w-full max-w-xl" />
-            ) : (
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+        <EditorialPageShell
+          kicker={`ARIA QUEUE · ACTIVE INVESTIGATION BUREAU${lastRunAt ? ` · SYNCED ${lastRunAt.toUpperCase()}` : ''}`}
+          headline={
+            statsLoading ? 'Loading queue...' : (
               <>
-                <div className="flex items-baseline gap-2">
-                  <span className="stat-sm tabular-nums text-zinc-100">
-                    {stats?.queue_total != null ? formatNumber(stats.queue_total) : '—'}
-                  </span>
-                  <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('stats.vendorsUnderSurveillance')}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-2">
-                  <span className="stat-sm tabular-nums text-red-400">
-                    {formatNumber(tierCounts[1])}
-                  </span>
-                  <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('tier1.label')}
-                  </span>
-                </div>
-
-                <div className="flex items-baseline gap-2">
-                  <span className="stat-sm tabular-nums text-amber-400">
-                    {formatCompactMXN(elevatedValue)}
-                  </span>
-                  <span className="text-[11px] text-zinc-500 uppercase tracking-wider">
-                    {t('stats.valueAtRisk')}
-                  </span>
-                </div>
-
-                <div className="ml-auto flex items-baseline gap-2">
-                  <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
-                  <span className="text-[11px] text-zinc-500 uppercase tracking-wider font-mono">
-                    v0.6.5 · {lastRunAt ?? t('header.lastUpdated')}
-                  </span>
-                  <MetodologiaTooltip
-                    title={t('methodology.title')}
-                    body={t('methodology.body')}
-                    link="/methodology"
-                  />
-                </div>
+                {formatNumber(tierCounts[1])} vendors trip every{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>corruption pattern</span>{' '}
+                in our model.
               </>
-            )}
-          </div>
-        </section>
+            )
+          }
+          paragraph={
+            statsLoading ? 'Loading...' : `These are the ${formatNumber(tierCounts[1])} highest-risk vendors in Mexican federal procurement. Each one matches the structural fingerprint of at least three documented corruption cases. ${elevatedValue > 0 ? formatCompactMXN(elevatedValue) + ' flows through their contracts.' : ''}`
+          }
+          stats={statsLoading ? undefined : [
+            { value: formatNumber(tierCounts[1]), label: 'T1 Critical', color: 'var(--color-risk-critical)' },
+            { value: formatNumber(tierCounts[2]), label: 'T2 High', color: 'var(--color-risk-high)' },
+            { value: formatNumber(tierCounts[3]), label: 'T3 Medium' },
+            { value: elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—', label: 'Value at risk', color: 'var(--color-accent)' },
+          ]}
+          loading={statsLoading}
+          severity="critical"
+          meta={
+            <span className="flex items-center gap-1.5">
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
+              v0.6.5
+              <MetodologiaTooltip
+                title={t('methodology.title')}
+                body={t('methodology.body')}
+                link="/methodology"
+              />
+            </span>
+          }
+          actions={
+            <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center">
+              <div className="relative flex-1 max-w-sm">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                <input
+                  type="text"
+                  placeholder={t('leads.searchPlaceholder')}
+                  value={search}
+                  onChange={(e) => { setSearch(e.target.value); setPage(1) }}
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
+                />
+              </div>
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <button
+                  onClick={() => { setTierFilter(null); setPage(1) }}
+                  className={cn(
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
+                    tierFilter == null
+                      ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
+                      : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+                  )}
+                >
+                  {t('filters.all')}
+                </button>
+                {TIER_CONFIG.map((cfg) => (
+                  <TierFilterPill
+                    key={cfg.tier}
+                    tier={cfg}
+                    count={tierCounts[cfg.tier]}
+                    isActive={tierFilter === cfg.tier}
+                    onClick={() => {
+                      setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
+                      setPage(1)
+                    }}
+                  />
+                ))}
+              </div>
+            </div>
+          }
+        >
+
+        <Act number="I" label="THE QUEUE">
 
         {/* ============================================================== */}
-        {/* 3. TIER NAVIGATION ROWS — horizontal bands, clickable           */}
+        {/* TIER NAVIGATION ROWS — horizontal bands, clickable              */}
         {/* ============================================================== */}
         <section aria-label={t('threatLevels')}>
           <div className="flex items-center justify-between mb-3">
@@ -799,7 +762,6 @@ export default function AriaPage() {
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
                 )}
               >
-                <Sparkles className="h-3 w-3" />
                 {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count != null && (
                   <span className="tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
@@ -822,7 +784,17 @@ export default function AriaPage() {
         )}
 
         {/* ============================================================== */}
-        {/* 5. INVESTIGATION LIST — one row per vendor, one action         */}
+        {/* HOW TO READ THIS QUEUE — methodology explainer                 */}
+        {/* ============================================================== */}
+        <div className="surface-card--evidence surface-card p-4 mb-4">
+          <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
+            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-accent block mb-1">How to read this queue</span>
+            Each row is a vendor ranked by IPS — the Investigation Priority Score. IPS combines risk score, anomaly signals, network centrality, and external registry matches (EFOS, SFP, RUPC). T1 vendors should be investigated immediately. Click any row to open the full dossier.
+          </p>
+        </div>
+
+        {/* ============================================================== */}
+        {/* INVESTIGATION LIST — one row per vendor, one action            */}
         {/* ============================================================== */}
         <section id="aria-investigation-list" aria-label={t('queueSection.title')}>
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
@@ -964,6 +936,8 @@ export default function AriaPage() {
           </div>
         </section>
 
+        </Act>
+        </EditorialPageShell>
       </div>
     </div>
   )

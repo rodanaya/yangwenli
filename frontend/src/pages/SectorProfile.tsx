@@ -17,6 +17,8 @@ import { useQuery } from '@tanstack/react-query'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import {
   cn,
   formatCompactMXN,
@@ -41,7 +43,6 @@ import {
 } from '@/lib/constants'
 import { getSectorDescription } from '@/lib/sector-descriptions'
 import {
-  BarChart3,
   Building2,
   Users,
   AlertTriangle,
@@ -124,30 +125,6 @@ const FACTOR_DESC: Record<string, string> = {
 type TabId = 'overview' | 'vendors' | 'risk'
 
 // ── Sub-components ────────────────────────────────────────────────────────────
-
-function StatChip({
-  label,
-  value,
-  highlight = false,
-}: {
-  label: string
-  value: string
-  highlight?: boolean
-}) {
-  return (
-    <div className="flex flex-col">
-      <span
-        className={cn(
-          'text-2xl font-black tabular-nums leading-none',
-          highlight ? 'text-risk-high' : 'text-white'
-        )}
-      >
-        {value}
-      </span>
-      <span className="text-[11px] text-zinc-400 mt-0.5">{label}</span>
-    </div>
-  )
-}
 
 function TrendArea({
   data,
@@ -1152,12 +1129,18 @@ export function SectorProfile() {
     { id: 'risk', label: t('profile.riskTab') },
   ]
 
+  // Editorial shell severity from sector risk level
+  const shellSeverity: 'critical' | 'high' | 'medium' | 'low' =
+    riskLevel === 'critical' ? 'critical' :
+    riskLevel === 'high' ? 'high' :
+    riskLevel === 'medium' ? 'medium' : 'low'
+
   return (
-    <article className="max-w-6xl mx-auto pb-12">
+    <article className="max-w-6xl mx-auto pb-12 px-4 sm:px-6 pt-4">
 
       {/* ── BREADCRUMB NAV ──────────────────────────────────────────────────── */}
       <nav
-        className="flex items-center justify-between px-4 sm:px-6 pt-4 pb-2"
+        className="flex items-center justify-between pb-4"
         aria-label="Sector navigation"
       >
         <Link
@@ -1194,84 +1177,51 @@ export function SectorProfile() {
         </div>
       </nav>
 
-      {/* ── HERO ────────────────────────────────────────────────────────────── */}
-      <header className="mx-4 sm:mx-6 mb-6">
-        <div className="relative rounded-2xl border border-white/8 bg-zinc-900/70 overflow-hidden">
-          {/* Color accent strip across the top */}
-          <div
-            className="h-1.5 w-full"
-            style={{ backgroundColor: sectorColor }}
-            aria-hidden="true"
-          />
-
-          <div className="p-6 sm:p-8">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-
-              {/* Left: icon + name + description */}
-              <div className="flex items-start gap-4">
-                <div
-                  className="flex h-14 w-14 items-center justify-center rounded-xl shadow-lg flex-shrink-0"
-                  style={{
-                    backgroundColor: hex(sectorColor, 0.15),
-                    border: `1px solid ${hex(sectorColor, 0.3)}`,
-                  }}
-                >
-                  <BarChart3
-                    className="h-7 w-7"
-                    style={{ color: sectorColor }}
-                    aria-hidden="true"
-                  />
-                </div>
-                <div>
-                  <p className="text-xs uppercase tracking-[0.2em] text-zinc-500 font-semibold mb-1">
-                    {t('profile.sectorProfile')}
-                  </p>
-                  <h1 className="text-2xl sm:text-3xl font-black text-white leading-tight capitalize">
-                    {sector.name}
-                  </h1>
-                  <p className="text-sm text-zinc-400 mt-1.5 max-w-xl leading-relaxed">
-                    {getSectorDescription(sector.code).short}
-                  </p>
-                </div>
-              </div>
-
-              {/* Right: risk badge */}
-              <div className="flex items-center gap-3 flex-shrink-0">
-                <RiskBadge level={riskLevel} />
-              </div>
-            </div>
-
-            {/* KPI row */}
-            {stats && (
-              <div
-                className="mt-6 pt-5 border-t border-white/8 grid grid-cols-2 sm:grid-cols-4 gap-5"
-                aria-label="Key sector statistics"
-              >
-                <StatChip
-                  label={t('profile.totalSpend')}
-                  value={formatCompactMXN(stats.total_value_mxn)}
-                />
-                <StatChip
-                  label={t('profile.contracts')}
-                  value={formatNumber(stats.total_contracts)}
-                />
-                <StatChip
-                  label={t('profile.highPlusCritical')}
-                  value={`${highRiskPct}%`}
-                  highlight={parseFloat(highRiskPct) > 15}
-                />
-                <StatChip
-                  label={t('profile.directAward')}
-                  value={formatPercentSafe(stats.direct_award_pct, false) ?? '-'}
-                />
-              </div>
-            )}
+      <EditorialPageShell
+        kicker={`SECTOR PROFILE · ${sector.name?.toUpperCase() ?? 'LOADING...'}`}
+        headline={
+          <>
+            The <span style={{ color: sectorColor }} className="capitalize">{sector.name}</span> sector
+          </>
+        }
+        paragraph={
+          <>
+            {getSectorDescription(sector.code).short} Procurement patterns in this sector reveal how
+            public spending concentrates among vendors, where competitive bidding gives way to direct
+            awards, and which institutions control the largest share of contract value.
+          </>
+        }
+        stats={stats ? [
+          { value: formatCompactMXN(stats.total_value_mxn), label: t('profile.totalSpend'), color: sectorColor },
+          { value: formatNumber(stats.total_contracts), label: t('profile.contracts') },
+          {
+            value: `${highRiskPct}%`,
+            label: t('profile.highPlusCritical'),
+            color: parseFloat(highRiskPct) > 15 ? 'var(--color-risk-high)' : undefined,
+            sub: 'OECD: 2-15%',
+          },
+          {
+            value: formatPercentSafe(stats.direct_award_pct, false) ?? '-',
+            label: t('profile.directAward'),
+            color: (stats.direct_award_pct ?? 0) > 70 ? 'var(--color-risk-high)' : undefined,
+            sub: 'OECD max: 25%',
+          },
+        ] : undefined}
+        meta={<>RUBLI · v0.6.5</>}
+        actions={
+          <div className="flex items-center gap-3">
+            <RiskBadge level={riskLevel} />
+            <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
+              {sector.code}
+            </span>
           </div>
-        </div>
-      </header>
+        }
+        severity={shellSeverity}
+      >
 
       {/* ── TABS ────────────────────────────────────────────────────────────── */}
-      <div className="px-4 sm:px-6">
+      <Act number="I" label="EVIDENCIA · ANÁLISIS DEL SECTOR">
+      <div>
         <div
           className="flex gap-1 rounded-xl bg-zinc-900/60 border border-white/8 p-1 mb-6"
           role="tablist"
@@ -1641,6 +1591,8 @@ export function SectorProfile() {
           )}
         </div>
       </div>
+      </Act>
+      </EditorialPageShell>
     </article>
   )
 }

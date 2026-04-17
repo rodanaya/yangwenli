@@ -54,6 +54,8 @@ import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { CategoryTreemap } from '@/components/charts/CategoryTreemap'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -1689,6 +1691,36 @@ export default function SpendingCategories() {
   const highestRiskPct = highestRiskCat ? (highestRiskCat.avg_risk * 100).toFixed(0) : '0'
 
   return (
+    <EditorialPageShell
+      kicker="SPENDING CATEGORIES · PARTIDA ANALYSIS"
+      headline={<>Where the budget flows, <em>line by line.</em></>}
+      paragraph="Federal procurement organized by partida codes — Mexico's budget classification system — reveals concentration patterns invisible in sector-level analysis."
+      severity="medium"
+      loading={summaryLoading && !summaryData}
+      stats={[
+        {
+          value: allCategories.length > 0 ? formatNumber(allCategories.length) : '—',
+          label: 'categories tracked',
+          color: '#60a5fa',
+        },
+        {
+          value: stats ? formatCompactMXN(stats.totalValue) : '—',
+          label: 'total spend (filtered)',
+          color: '#fbbf24',
+        },
+        {
+          value: stats ? formatNumber(stats.totalContracts) : '—',
+          label: 'contracts',
+          color: '#a78bfa',
+        },
+        {
+          value: highestRiskCat ? `${highestRiskPct}%` : '—',
+          label: highestRiskCat ? `top risk: ${truncate(localeName(highestRiskCat, i18n.language), 22)}` : 'top risk category',
+          color: '#f87171',
+        },
+      ]}
+    >
+      <Act number="I" label="THE CATEGORIES">
     <div className="space-y-8">
       {/* ================================================================= */}
       {/* 1. Editorial Headline                                             */}
@@ -2578,5 +2610,7 @@ export default function SpendingCategories() {
         </section>
       )}
     </div>
+      </Act>
+    </EditorialPageShell>
   )
 }

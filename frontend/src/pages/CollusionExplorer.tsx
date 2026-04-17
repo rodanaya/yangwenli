@@ -32,6 +32,8 @@ import type { CollusionPair, CollusionStats } from '@/api/types'
 import { formatNumber } from '@/lib/utils'
 import { Skeleton } from '@/components/ui/skeleton'
 import { SharedContractsModal } from '@/components/SharedContractsModal'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Constants
@@ -783,166 +785,173 @@ export default function CollusionExplorer() {
   const showingFrom = total === 0 ? 0 : selectedVendor ? 1 : (page - 1) * DEFAULT_PER_PAGE + 1
   const showingTo = selectedVendor ? pairs.length : Math.min(page * DEFAULT_PER_PAGE, total)
 
+  const safeStats = stats
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
-      {/* ── Editorial Header ── */}
-      <div className="border-b border-zinc-800 px-6 py-8">
-        <div className="max-w-5xl mx-auto">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-            Análisis de Colusión · Red de Connivencia
-          </p>
-          <h1
-            className="text-3xl md:text-4xl font-bold text-zinc-100 leading-tight mb-3"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {t('title')}
-          </h1>
-          <p className="text-base text-zinc-400 leading-relaxed max-w-3xl">
-            Red de relaciones sospechosas entre proveedores. Nodos = proveedores, aristas = procedimientos compartidos. Haz clic en un nodo para investigar a sus cómplices.
-          </p>
-        </div>
-      </div>
-
       <div className="max-w-5xl mx-auto px-4 py-8">
-        {/* ── Methodology ── */}
-        <MethodologyCallout />
-
-        {/* ── Hero Stats ── */}
-        <HeroStats stats={stats} loading={statsLoading} />
-
-        {/* ── Pattern Legend ── */}
-        <PatternLegend />
-
-        {/* ── Bid-Ring Network Graph (collapsible) ── */}
-        <button
-          type="button"
-          onClick={() => setShowGraph((v) => !v)}
-          className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition-colors mb-6"
-          aria-expanded={showGraph}
+        <EditorialPageShell
+          kicker="COLLUSION · CO-BIDDING ANALYSIS"
+          headline={
+            <>
+              Vendor pairs that bid together{' '}
+              <span style={{ color: 'var(--color-risk-critical)' }}>more often than chance allows.</span>
+            </>
+          }
+          paragraph="Co-bidding analysis identifies vendor pairs that consistently appear in the same procurement procedures. When two vendors share more than 40% of their procedures, the statistical probability of coincidence drops below 1%. These are the patterns consistent with bid rotation and cover bidding."
+          stats={statsLoading ? undefined : [
+            { value: formatNumber(safeStats?.total_pairs ?? 0), label: 'Vendor pairs' },
+            { value: formatNumber(safeStats?.potential_collusion_count ?? 0), label: 'Flagged', color: 'var(--color-risk-critical)' },
+            { value: `${(safeStats?.max_co_bid_rate ?? 0).toFixed(0)}%`, label: 'Max co-bid rate' },
+            { value: formatNumber(safeStats?.total_shared_procedures ?? 0), label: 'Shared procedures' },
+          ]}
+          loading={statsLoading}
+          severity="high"
         >
-          <div className="text-left">
-            <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-              Bid-Ring Network
-            </span>
-            <span className="text-[11px] text-zinc-600 ml-3">
-              Top 150 suspicious pairs — interactive graph
-            </span>
-          </div>
-          <ChevronRight
-            className={`h-4 w-4 text-zinc-500 transition-transform ${showGraph ? 'rotate-90' : ''}`}
-            aria-hidden="true"
-          />
-        </button>
-        {showGraph && (
-          <ErrorBoundary fallback={<div className="h-64 rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Network graph unavailable</div>}>
-            <BidRingGraph
-              pairs={graphPairs}
-              loading={graphLoading}
-              onNodeClick={handleGraphNodeClick}
-            />
-          </ErrorBoundary>
-        )}
+          <Act number="I" label="SUSPICIOUS PAIRS">
 
-        {/* ── Filters ── */}
-        <Filters
-          flaggedOnly={flaggedOnly}
-          setFlaggedOnly={handleFlaggedOnly}
-          minShared={minShared}
-          setMinShared={handleMinShared}
-          sortBy={sortBy}
-          setSortBy={handleSortBy}
-          onReset={handleReset}
-        />
+            {/* ── Methodology ── */}
+            <MethodologyCallout />
 
-        {/* ── Selected vendor filter chip ── */}
-        {selectedVendor && (
-          <div className="mb-4 flex items-center gap-2 flex-wrap" aria-live="polite">
-            <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
-              Viewing pairs for:
-            </span>
-            <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold max-w-md">
-              <span className="truncate">{selectedVendor.name}</span>
-              <button
-                type="button"
-                onClick={() => setSelectedVendor(null)}
-                className="hover:text-amber-100 transition-colors shrink-0"
-                aria-label="Clear vendor filter"
-              >
-                <X className="h-3 w-3" />
-              </button>
-            </span>
-          </div>
-        )}
+            {/* ── Hero Stats ── */}
+            <HeroStats stats={stats} loading={statsLoading} />
 
-        {/* ── Showing count ── */}
-        {!pairsLoading && !pairsError && total > 0 && (
-          <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 mb-4" aria-live="polite">
-            {t('pagination.showing', {
-              from: showingFrom,
-              to: showingTo,
-              total: formatNumber(total),
-            })}
-          </p>
-        )}
+            {/* ── Pattern Legend ── */}
+            <PatternLegend />
 
-        {/* ── Pair Cards ── */}
-        {pairsLoading ? (
-          <CardSkeleton />
-        ) : pairsError ? (
-          <ErrorState />
-        ) : pairs.length === 0 ? (
-          <EmptyState />
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {pairs.map((pair) => (
-              <PairCard
-                key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                pair={pair}
-                onViewContracts={handleViewContracts}
+            {/* ── Bid-Ring Network Graph (collapsible) ── */}
+            <button
+              type="button"
+              onClick={() => setShowGraph((v) => !v)}
+              className="w-full flex items-center justify-between px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/60 transition-colors mb-6"
+              aria-expanded={showGraph}
+            >
+              <div className="text-left">
+                <span className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+                  Bid-Ring Network
+                </span>
+                <span className="text-[11px] text-zinc-600 ml-3">
+                  Top 150 suspicious pairs — interactive graph
+                </span>
+              </div>
+              <ChevronRight
+                className={`h-4 w-4 text-zinc-500 transition-transform ${showGraph ? 'rotate-90' : ''}`}
+                aria-hidden="true"
               />
-            ))}
-          </div>
-        )}
-
-        {/* ── Pagination ── */}
-        {totalPages > 1 && (
-          <div
-            className="flex items-center justify-between mt-8 pt-4 border-t border-zinc-800"
-            role="navigation"
-            aria-label="Pagination"
-          >
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.max(1, p - 1))}
-              disabled={page <= 1}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              aria-label={t('pagination.previous')}
-            >
-              <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              {t('pagination.previous')}
             </button>
+            {showGraph && (
+              <ErrorBoundary fallback={<div className="h-64 rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Network graph unavailable</div>}>
+                <BidRingGraph
+                  pairs={graphPairs}
+                  loading={graphLoading}
+                  onNodeClick={handleGraphNodeClick}
+                />
+              </ErrorBoundary>
+            )}
 
-            <span className="text-[10px] font-mono text-zinc-600" aria-live="polite">
-              {t('pagination.pageOf', { page, total: totalPages })}
-            </span>
+            {/* ── Filters ── */}
+            <Filters
+              flaggedOnly={flaggedOnly}
+              setFlaggedOnly={handleFlaggedOnly}
+              minShared={minShared}
+              setMinShared={handleMinShared}
+              sortBy={sortBy}
+              setSortBy={handleSortBy}
+              onReset={handleReset}
+            />
 
-            <button
-              type="button"
-              onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-              disabled={page >= totalPages}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-              aria-label={t('pagination.next')}
-            >
-              {t('pagination.next')}
-              <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
-            </button>
-          </div>
-        )}
+            {/* ── Selected vendor filter chip ── */}
+            {selectedVendor && (
+              <div className="mb-4 flex items-center gap-2 flex-wrap" aria-live="polite">
+                <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
+                  Viewing pairs for:
+                </span>
+                <span className="inline-flex items-center gap-2 rounded-full px-3 py-1 bg-amber-500/10 border border-amber-500/30 text-amber-300 text-xs font-semibold max-w-md">
+                  <span className="truncate">{selectedVendor.name}</span>
+                  <button
+                    type="button"
+                    onClick={() => setSelectedVendor(null)}
+                    className="hover:text-amber-100 transition-colors shrink-0"
+                    aria-label="Clear vendor filter"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                </span>
+              </div>
+            )}
 
-        {/* ── Source footnote ── */}
-        <p className="text-[10px] text-zinc-700 mt-8 text-center">
-          COMPRANET 2010-2025 &middot; co_bidding_stats &middot; RUBLI v0.6.5
-        </p>
+            {/* ── Showing count ── */}
+            {!pairsLoading && !pairsError && total > 0 && (
+              <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 mb-4" aria-live="polite">
+                {t('pagination.showing', {
+                  from: showingFrom,
+                  to: showingTo,
+                  total: formatNumber(total),
+                })}
+              </p>
+            )}
+
+            {/* ── Pair Cards ── */}
+            {pairsLoading ? (
+              <CardSkeleton />
+            ) : pairsError ? (
+              <ErrorState />
+            ) : pairs.length === 0 ? (
+              <EmptyState />
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {pairs.map((pair) => (
+                  <PairCard
+                    key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
+                    pair={pair}
+                    onViewContracts={handleViewContracts}
+                  />
+                ))}
+              </div>
+            )}
+
+            {/* ── Pagination ── */}
+            {totalPages > 1 && (
+              <div
+                className="flex items-center justify-between mt-8 pt-4 border-t border-zinc-800"
+                role="navigation"
+                aria-label="Pagination"
+              >
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.max(1, p - 1))}
+                  disabled={page <= 1}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label={t('pagination.previous')}
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
+                  {t('pagination.previous')}
+                </button>
+
+                <span className="text-[10px] font-mono text-zinc-600" aria-live="polite">
+                  {t('pagination.pageOf', { page, total: totalPages })}
+                </span>
+
+                <button
+                  type="button"
+                  onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={page >= totalPages}
+                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  aria-label={t('pagination.next')}
+                >
+                  {t('pagination.next')}
+                  <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
+                </button>
+              </div>
+            )}
+
+            {/* ── Source footnote ── */}
+            <p className="text-[10px] text-zinc-700 mt-8 text-center">
+              COMPRANET 2010-2025 &middot; co_bidding_stats &middot; RUBLI v0.6.5
+            </p>
+
+          </Act>
+        </EditorialPageShell>
       </div>
 
       {/* ── Shared Contracts Modal ── */}

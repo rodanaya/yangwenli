@@ -14,6 +14,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 import {
   ArrowUp,
   ArrowDown,
@@ -29,7 +31,7 @@ import {
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
-import { formatNumber } from '@/lib/utils'
+import { formatNumber, formatCompactMXN } from '@/lib/utils'
 
 const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
 const ReportCard = lazy(() => import('./ReportCard'))
@@ -540,9 +542,27 @@ export default function InstitutionLeague() {
     )
   }
 
+  const totalInstitutions = statsData?.total_scored ?? 0
+  const highRiskInstitutions = failingCount
+  const totalSpend = 0
+
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <TabBar activeTab={activeTab} setTab={setTab} />
+      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
+        <EditorialPageShell
+          kicker="INSTITUTIONS · RANKING INSTITUCIONAL"
+          headline="Which agencies spend the most — and risk the most."
+          paragraph="Federal institutions ranked by procurement volume and risk profile. Each institution's spending patterns are measured against documented corruption signatures. High-risk institutions are those whose vendor portfolios most closely resemble known-corrupt procurement."
+          stats={isLoading ? undefined : [
+            { value: formatNumber(totalInstitutions), label: 'Institutions' },
+            { value: formatNumber(highRiskInstitutions), label: 'High-risk', color: 'var(--color-risk-high)' },
+            { value: totalSpend ? formatCompactMXN(totalSpend) : '—', label: 'Total spend', color: 'var(--color-accent)' },
+            { value: '23 yrs', label: 'Coverage' },
+          ]}
+          loading={isLoading}
+        >
+          <Act number="I" label="THE RANKING">
       {/* Page header — DRAMATIC COMPETITIVE HERO */}
       <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
         {/* Stadium-style stripe background */}
@@ -944,6 +964,9 @@ export default function InstitutionLeague() {
         <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
           RUBLI Indice de Salud de Contrataciones v0.6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
         </p>
+      </div>
+          </Act>
+        </EditorialPageShell>
       </div>
     </div>
   )
