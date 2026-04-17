@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
@@ -1263,13 +1264,29 @@ export function VendorProfile() {
 
       {/* ── EDITORIAL HERO HEADER ─────────────────────────────── */}
       <header>
+        {/* Dateline strip — newspaper masthead grammar */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-2 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Dossier · Proveedor</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+          {vendor.primary_sector_name && (
+            <>
+              <span className="text-zinc-700">·</span>
+              <span className="tabular-nums">{vendor.primary_sector_name}</span>
+            </>
+          )}
+        </div>
         {/* Kicker + risk badge */}
         <div className="flex items-start justify-between gap-4 mb-3">
           <p
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em]"
-            style={{ color: 'var(--color-accent)' }}
+            className="text-kicker text-kicker--investigation"
           >
-            RUBLI · {t('vendorProfile', 'VENDOR PROFILE')}
+            {t('vendorProfile', 'Vendor Profile')}
           </p>
           {vendor.avg_risk_score !== undefined && (
             <span
@@ -1304,7 +1321,7 @@ export function VendorProfile() {
                 letterSpacing: '-0.01em',
               }}
             >
-              {toTitleCase(vendor.name)}
+              {formatVendorName(vendor.name, 80)}
             </h1>
 
             {/* Ground truth case links */}
@@ -1617,18 +1634,18 @@ export function VendorProfile() {
           <GenerateReportButton
             reportType="vendor"
             entityId={vendorId}
-            entityName={toTitleCase(vendor.name)}
+            entityName={formatVendorName(vendor.name, 60)}
           />
           <AddToWatchlistButton
             itemType="vendor"
             itemId={vendorId}
-            itemName={toTitleCase(vendor.name)}
+            itemName={formatVendorName(vendor.name, 60)}
             defaultReason={`Risk score: ${((vendor.avg_risk_score ?? 0) * 100).toFixed(0)}%`}
           />
           <AddToDossierButton
             entityType="vendor"
             entityId={vendorId}
-            entityName={toTitleCase(vendor.name)}
+            entityName={formatVendorName(vendor.name, 60)}
           />
           {vendor.avg_risk_score !== undefined && (
             <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
@@ -1646,7 +1663,7 @@ export function VendorProfile() {
 
       {/* PlainLanguageRiskCard — journalist plain-English summary */}
       <PlainLanguageRiskCard
-        vendorName={toTitleCase(vendor.name)}
+        vendorName={formatVendorName(vendor.name, 60)}
         avgRiskScore={vendor.avg_risk_score ?? 0}
         directAwardPct={vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0}
         singleBidPct={vendor.single_bid_pct ?? 0}
@@ -1659,14 +1676,14 @@ export function VendorProfile() {
         onOpenChange={setNetworkOpen}
         centerType="vendor"
         centerId={vendorId}
-        centerName={toTitleCase(vendor.name)}
+        centerName={formatVendorName(vendor.name, 60)}
       />
 
       <ReportIssueDialog
         open={disputeOpen}
         onOpenChange={setDisputeOpen}
         initialCategory="data_correction"
-        initialSubject={`[Vendor: ${toTitleCase(vendor.name)}] Data correction request`}
+        initialSubject={`[Vendor: ${formatVendorName(vendor.name, 60)}] Data correction request`}
         feedbackPayload={{ entity_type: 'vendor', entity_id: vendorId, feedback_type: 'not_suspicious' }}
       />
 
@@ -1918,7 +1935,7 @@ export function VendorProfile() {
         return sanctions.length > 0 ? (
           <SanctionsAlertBanner
             sanctions={sanctions}
-            vendorName={toTitleCase(vendor.name)}
+            vendorName={formatVendorName(vendor.name, 60)}
           />
         ) : null
       })()}
@@ -2362,7 +2379,7 @@ export function VendorProfile() {
                 return (
                   <RedThreadPanel
                     items={items}
-                    entityName={toTitleCase(vendor.name)}
+                    entityName={formatVendorName(vendor.name, 60)}
                   />
                 )
               })()}
@@ -3407,7 +3424,7 @@ export function VendorProfile() {
           <div className="space-y-6">
             {/* Cronologia — year-by-year contract bar chart */}
             <CronologiaVendor
-              vendorName={toTitleCase(vendor.name)}
+              vendorName={formatVendorName(vendor.name, 60)}
               data={(lifecycleData?.timeline ?? []).map((y) => ({
                 year: y.year,
                 contractCount: y.contract_count,
@@ -3748,7 +3765,7 @@ export function VendorProfile() {
                             <div className="text-xs text-text-muted mt-0.5">{sp.description}</div>
                             {sp.vendors?.length > 0 && (
                               <div className="text-[11px] text-text-muted mt-1 font-mono">
-                                {t('coBidding.involves')} {sp.vendors.slice(0, 3).map(v => toTitleCase(v.name)).join(', ')}
+                                {t('coBidding.involves')} {sp.vendors.slice(0, 3).map(v => formatVendorName(v.name, 32)).join(', ')}
                                 {sp.vendors.length > 3 ? ` +${sp.vendors.length - 3}` : ''}
                               </div>
                             )}
@@ -3794,7 +3811,7 @@ export function VendorProfile() {
                                 to={`/vendors/${partner.vendor_id}`}
                                 className="text-sm font-medium hover:text-accent transition-colors leading-tight line-clamp-2 min-w-0"
                               >
-                                {toTitleCase(partner.vendor_name)}
+                                {formatVendorName(partner.vendor_name, 36)}
                               </Link>
                               <span className={cn('text-[10px] px-1.5 py-0.5 rounded border font-semibold shrink-0', roleStyles.badge)}>
                                 {roleStyles.label}
