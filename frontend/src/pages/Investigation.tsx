@@ -42,6 +42,7 @@ import {
   Search,
   Info,
 } from 'lucide-react'
+import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 
 // ============================================================================
 // TYPES
@@ -446,6 +447,12 @@ export function Investigation() {
 
   const allCases = casesData?.data || []
 
+  // Cover story — highest-suspicion case serves as the magazine-cover lede
+  const coverCase = useMemo(() => {
+    if (allCases.length === 0) return null
+    return [...allCases].sort((a, b) => b.suspicion_score - a.suspicion_score)[0] ?? null
+  }, [allCases])
+
   // Priority counts
   const priorityCounts = useMemo(() => {
     const counts = { critical: 0, high: 0, medium: 0, low: 0 }
@@ -599,6 +606,28 @@ export function Investigation() {
           </div>
         </div>
       </div>
+
+      {/* ================================================================
+          COVER STORY — magazine-style lede for highest-suspicion case
+          ================================================================ */}
+      {coverCase && (
+        <FeaturedFinding
+          kicker={`PORTADA · ${coverCase.case_id} · ${coverCase.sector_name.toUpperCase()}`}
+          accent={SECTOR_COLORS[coverCase.sector_name] || '#d4922a'}
+          headline={coverCase.title}
+          deck={`${coverCase.total_contracts.toLocaleString('es-MX')} contratos · ${coverCase.vendor_count} proveedores involucrados. Puntaje de sospecha ${(coverCase.suspicion_score * 100).toFixed(0)}/100 con ${coverCase.signals_triggered.length} señales de riesgo detectadas por el pipeline ML.`}
+          meta={[
+            { label: 'Valor total', value: formatCompactMXN(coverCase.total_value_mxn) },
+            { label: 'Pérdida estimada', value: formatCompactMXN(coverCase.estimated_loss_mxn || 0), accent: true },
+            { label: 'Señales', value: String(coverCase.signals_triggered.length) },
+            { label: 'Estado', value: coverCase.validation_status.toUpperCase() },
+          ]}
+          action={{
+            label: 'Abrir expediente completo',
+            onClick: () => navigate(`/investigation/${coverCase.case_id}`),
+          }}
+        />
+      )}
 
       {/* ================================================================
           FILTROS DE INVESTIGACION

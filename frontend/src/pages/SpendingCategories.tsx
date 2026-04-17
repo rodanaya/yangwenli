@@ -54,6 +54,7 @@ import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
 import { CategoryTreemap } from '@/components/charts/CategoryTreemap'
+import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 
 // Helper: map sector code string to integer sector_id for API queries
 function getSectorId(code: string | null): number | null {
@@ -1728,6 +1729,32 @@ export default function SpendingCategories() {
           color="border-amber-500"
         />
       </div>
+
+      {/* ================================================================= */}
+      {/* 2.25 Dinero vs Riesgo — editorial duet                            */}
+      {/* ================================================================= */}
+      {topSpendCat && highestRiskCat && topSpendCat.category_id !== highestRiskCat.category_id && (
+        <FeaturedComparison
+          kicker={`Dinero vs Riesgo · ${formatCompactMXN(topSpendCat.total_value)} vs ${(highestRiskCat.avg_risk * 100).toFixed(0)}% riesgo`}
+          accent={highestRiskCat.sector_code ? (SECTOR_COLORS[highestRiskCat.sector_code] || '#d4922a') : '#d4922a'}
+          entityA={{
+            name: truncate(localeName(topSpendCat, i18n.language), 50),
+            subtitle: `${formatCompactMXN(topSpendCat.total_value)} · ${formatNumber(topSpendCat.total_contracts)} contratos`,
+            share: Math.min(100, (topSpendCat.total_value / (allCategories[0]?.total_value || topSpendCat.total_value)) * 100),
+            onClick: () => setSelectedCategoryId(topSpendCat.category_id),
+            title: localeName(topSpendCat, i18n.language),
+          }}
+          entityB={{
+            name: truncate(localeName(highestRiskCat, i18n.language), 50),
+            subtitle: `Riesgo ${(highestRiskCat.avg_risk * 100).toFixed(1)}% · ${formatNumber(highestRiskCat.total_contracts)} contratos`,
+            share: Math.min(100, highestRiskCat.avg_risk * 100),
+            onClick: () => setSelectedCategoryId(highestRiskCat.category_id),
+            title: localeName(highestRiskCat, i18n.language),
+          }}
+          centerLabel="CONTRASTE"
+          deck={`La categoría con más presupuesto público no es la más riesgosa. "${truncate(localeName(topSpendCat, i18n.language), 40)}" concentra el gasto, pero "${truncate(localeName(highestRiskCat, i18n.language), 40)}" concentra las banderas rojas — una desconexión que merece atención editorial.`}
+        />
+      )}
 
       {/* ================================================================= */}
       {/* 2.5 Category Treemap — hero visualization                         */}

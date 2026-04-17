@@ -30,6 +30,7 @@ import {
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import { formatNumber } from '@/lib/utils'
+import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 
 const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
 const ReportCard = lazy(() => import('./ReportCard'))
@@ -648,6 +649,35 @@ export default function InstitutionLeague() {
               </div>
             )}
           </div>
+        )}
+
+        {/* Editorial comparative lede — #1 vs worst */}
+        {!hasFilters && statsData && statsData.top_institution_name && statsData.worst_institution_name &&
+          statsData.top_institution_score != null && statsData.worst_institution_score != null && (
+          <FeaturedComparison
+            kicker={`Contraste nacional · ${(statsData.top_institution_score - statsData.worst_institution_score).toFixed(1)} puntos de distancia`}
+            accent="#d4922a"
+            entityA={{
+              name: statsData.top_institution_name,
+              subtitle: `${statsData.top_institution_score.toFixed(1)} / 100 · #1 nacional`,
+              share: statsData.top_institution_score,
+              onClick: statsData.top_institution_id
+                ? () => navigate(`/institutions/${statsData.top_institution_id}`)
+                : undefined,
+              title: statsData.top_institution_name,
+            }}
+            entityB={{
+              name: statsData.worst_institution_name,
+              subtitle: `${statsData.worst_institution_score.toFixed(1)} / 100 · último lugar`,
+              share: statsData.worst_institution_score,
+              onClick: statsData.worst_institution_id
+                ? () => navigate(`/institutions/${statsData.worst_institution_id}`)
+                : undefined,
+              title: statsData.worst_institution_name,
+            }}
+            centerLabel={`${(statsData.top_institution_score - statsData.worst_institution_score).toFixed(1)} pts`}
+            deck={`En un extremo, una institución que publica, compite y audita. En el otro, una que opaca. La mediana nacional está en ${statsData.median_score.toFixed(1)} — más cerca del último lugar que del primero.`}
+          />
         )}
 
         {/* Podium -- only when no filters active */}

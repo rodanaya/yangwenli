@@ -64,6 +64,7 @@ import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
 import { ShareButton } from '@/components/ShareButton'
+import { FeaturedComparison } from '@/components/editorial/FeaturedComparison'
 
 // =============================================================================
 // Constants
@@ -891,6 +892,20 @@ export default function Administrations() {
     return result
   }, [adminAggs])
 
+  // Biggest cross-sexenio swing — drives the FeaturedComparison lede
+  const headlineTransition = useMemo(() => {
+    if (transitions.length === 0) return null
+    // Rank by absolute direct-award delta (most story-worthy signal)
+    const ranked = [...transitions].sort(
+      (a, b) => Math.abs(b.dDA.value) - Math.abs(a.dDA.value)
+    )
+    const top = ranked[0]
+    const prev = adminAggs.find((a) => a.name === top.from)
+    const curr = adminAggs.find((a) => a.name === top.to)
+    if (!prev || !curr) return null
+    return { top, prev, curr }
+  }, [transitions, adminAggs])
+
   // Live Admin × Sector Matrix — computed from sectorYearData (all administrations at once)
   const liveAdminSectorMatrix = useMemo(() => {
     if (sectorYearData.length === 0) return null
@@ -1209,6 +1224,38 @@ export default function Administrations() {
 
       {activeTab === 'overview' && (
       <>
+
+      {/* Editorial lede — biggest cross-sexenio swing in direct-award share */}
+      {headlineTransition && (() => {
+        const { top, prev, curr } = headlineTransition
+        const deltaValue = top.dDA.value
+        const direction = deltaValue > 0 ? 'subió' : 'cayó'
+        const absDelta = Math.abs(deltaValue).toFixed(1)
+        const accent = deltaValue > 0 ? '#f87171' : '#4ade80'
+        return (
+          <FeaturedComparison
+            kicker={`Hallazgo sexenal · Adjudicación directa ${direction} ${absDelta} pp`}
+            accent={accent}
+            entityA={{
+              name: prev.name,
+              subtitle: `${prev.directAwardPct.toFixed(1)}% DA · ${formatNumber(prev.contracts)} contratos`,
+              share: prev.directAwardPct,
+            }}
+            entityB={{
+              name: curr.name,
+              subtitle: `${curr.directAwardPct.toFixed(1)}% DA · ${formatNumber(curr.contracts)} contratos`,
+              share: curr.directAwardPct,
+            }}
+            centerLabel={`${deltaValue > 0 ? '+' : ''}${deltaValue.toFixed(1)} pp`}
+            deck={`El traspaso de ${prev.name} a ${curr.name} trajo el mayor giro en contratación sin concurso del periodo analizado: la adjudicación directa ${direction} de ${prev.directAwardPct.toFixed(1)}% a ${curr.directAwardPct.toFixed(1)}% — una señal de cómo cambia la competencia cuando cambia el régimen.`}
+            action={{
+              label: `Ver expediente de ${curr.name}`,
+              onClick: () => setSelectedAdmin(curr.name),
+            }}
+            tintColor={top.toColor}
+          />
+        )
+      })()}
 
       {/* L0: EXPEDIENTES PRESIDENCIALES */}
       <div className="mb-2">
