@@ -33,6 +33,7 @@ import {
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import {
   ArrowLeft,
   ExternalLink,
@@ -135,10 +136,15 @@ function ChapterSubject({ vendor, aria, t }: {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="font-serif text-2xl md:text-3xl font-bold text-white leading-tight mb-8"
-        style={{ fontFamily: 'var(--font-family-serif)' }}
+        className="font-serif font-bold text-white leading-[1.05] mb-8"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          fontSize: 'clamp(2rem, 4.5vw, 3.5rem)',
+          letterSpacing: '-0.025em',
+        }}
+        title={vendor.name}
       >
-        {vendor.name}
+        {formatVendorName(vendor.name, 70)}
       </motion.h1>
 
       <motion.div
@@ -213,7 +219,7 @@ function ChapterSubject({ vendor, aria, t }: {
         // introText uses {{name}} placeholder — vendor.name is escaped to prevent XSS
         dangerouslySetInnerHTML={{
           __html: t('subject.introText', {
-            name: `<strong class="text-white">${vendor.name
+            name: `<strong class="text-white">${formatVendorName(vendor.name, 60)
               .replace(/&/g, '&amp;')
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
@@ -539,8 +545,11 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
                     className="flex items-center gap-3 bg-background hover:bg-background-elevated border border-border rounded-xl px-4 py-3 transition-colors group"
                   >
                     <div className="flex-1 min-w-0">
-                      <p className="text-white text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors">
-                        {cb.vendor_name}
+                      <p
+                        className="text-white text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors"
+                        title={cb.vendor_name}
+                      >
+                        {formatVendorName(cb.vendor_name, 40)}
                       </p>
                       <p className="text-text-muted text-xs mt-0.5">
                         {t('network.sharedProcedures', { count: cb.co_bid_count })}
@@ -1083,7 +1092,7 @@ export default function RedThread() {
           <div className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
           <span className="text-xs text-text-secondary uppercase tracking-widest">{t('nav.redThread')}</span>
           <span className="text-xs text-text-muted">·</span>
-          <span className="text-xs text-text-muted max-w-[200px] truncate">{vendor.name}</span>
+          <span className="text-xs text-text-muted max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>
         </div>
         <Link
           to={`/vendors/${id}`}
