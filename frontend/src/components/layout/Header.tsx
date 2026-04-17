@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Search, Moon, Sun, Database, Activity, Shield, Menu } from 'lucide-react'
+import { Search, Moon, Sun, Database, Shield, Menu } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CommandPalette } from '@/components/CommandPalette'
@@ -110,27 +110,45 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const title = i18nKey ? t(i18nKey) : getBreadcrumbTitle(currentPath)
   const parentPath = getParentPath(currentPath)
 
+  // Editorial masthead date — "TUE · APR 17 · 2026"
+  const editorialDate = new Date().toLocaleDateString('en-US', {
+    weekday: 'short',
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).toUpperCase().replace(/,/g, ' ·')
+
   return (
-    <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-zinc-900 bg-background/85 px-4 md:px-5 backdrop-blur-xl">
-      {/* Left — Hamburger (mobile) + Breadcrumb path */}
-      <div className="flex items-center gap-1.5 min-w-0 text-sm">
+    <header className="sticky top-0 z-30 flex h-11 items-center justify-between border-b border-[rgba(255,255,255,0.08)] bg-background/85 px-4 md:px-5 backdrop-blur-xl">
+      {/* Left — Hamburger (mobile) + Editorial dateline + Breadcrumb */}
+      <div className="flex items-center gap-3 min-w-0 text-sm">
         {/* Hamburger — mobile only */}
         <Button
           variant="ghost"
           size="icon"
-          className="h-11 w-11 flex-shrink-0 md:hidden mr-1"
+          className="h-11 w-11 flex-shrink-0 md:hidden -ml-2"
           onClick={onMenuClick}
           aria-label={tc('header.openMenu')}
         >
           <Menu className="h-4 w-4 text-text-muted" />
         </Button>
-        {currentPath !== '/' && (
-          <>
-            <span className="text-text-muted hidden sm:inline">{parentPath}</span>
-            <span className="text-text-muted hidden sm:inline">/</span>
-          </>
-        )}
-        <span className="font-semibold text-text-primary truncate">{title}</span>
+        {/* Editorial dateline — Economist/NYT masthead feel */}
+        <span
+          className="hidden lg:inline-block text-[9.5px] tracking-[0.18em] text-zinc-500 font-mono select-none"
+          aria-hidden="true"
+        >
+          {editorialDate}
+        </span>
+        <div className="hidden lg:block h-3 w-px bg-[rgba(255,255,255,0.1)]" aria-hidden="true" />
+        <div className="flex items-center gap-1.5 min-w-0">
+          {currentPath !== '/' && (
+            <>
+              <span className="text-zinc-500 hidden sm:inline text-[10px] font-mono tracking-[0.1em] uppercase">{parentPath}</span>
+              <span className="text-zinc-700 hidden sm:inline">/</span>
+            </>
+          )}
+          <span className="font-semibold text-text-primary truncate tracking-tight">{title}</span>
+        </div>
       </div>
 
       {/* Right — Status indicators + actions */}
@@ -197,11 +215,12 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           <Tooltip>
             <TooltipTrigger asChild>
               <button
-                className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded text-[11px] font-mono text-zinc-300 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 transition-colors"
+                className="hidden sm:flex items-center gap-1.5 h-6 px-2 rounded-sm text-[10px] font-mono tracking-[0.1em] text-zinc-300 bg-[rgba(255,255,255,0.03)] border border-[rgba(255,255,255,0.1)] hover:border-[rgba(255,255,255,0.2)] hover:text-zinc-100 transition-colors"
                 onClick={() => navigate('/settings?tab=quality')}
               >
-                <Database className="h-3 w-3" />
-                <span>DQ&nbsp;{qualityGrade}</span>
+                <Database className="h-3 w-3 text-zinc-500" />
+                <span className="text-zinc-500">DQ</span>
+                <span className="text-amber-400 font-bold">{qualityGrade}</span>
               </button>
             </TooltipTrigger>
             <TooltipContent>
@@ -213,8 +232,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Live signal */}
         <Tooltip>
           <TooltipTrigger asChild>
-            <div className="hidden sm:flex items-center gap-1 h-7 px-1.5 text-xs text-text-muted">
-              <Activity className="h-3 w-3 text-amber-500" />
+            <div className="hidden sm:flex items-center gap-1.5 h-7 px-1.5 text-[10px] text-zinc-500 tracking-[0.1em] uppercase">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="absolute inline-flex h-full w-full rounded-full bg-amber-500 opacity-60 animate-ping" />
+                <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-amber-500" />
+              </span>
               <span className="font-mono">{tc('header.live')}</span>
             </div>
           </TooltipTrigger>

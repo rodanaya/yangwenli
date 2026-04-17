@@ -122,13 +122,14 @@ function NavSection({
   return (
     <div>
       {!collapsed && (
-        <div className="mb-1.5 px-2">
-          <span className="text-[10px] font-semibold tracking-[0.1em] uppercase text-zinc-600 select-none">
+        <div className="mb-2 mt-1 px-2.5 flex items-center gap-2">
+          <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-zinc-500 select-none font-mono">
             {title}
           </span>
+          <span className="flex-1 h-px bg-[rgba(255,255,255,0.06)]" aria-hidden="true" />
         </div>
       )}
-      {collapsed && <div className="mb-1 mx-auto w-4 h-px bg-zinc-800" />}
+      {collapsed && <div className="mb-1.5 mx-auto w-4 h-px bg-[rgba(255,255,255,0.1)]" />}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -230,11 +231,11 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         </div>
         {!isCollapsed && (
           <div className="min-w-0">
-            <div className="flex items-center gap-2">
-              <span className="text-zinc-100 font-bold text-lg tracking-tight leading-none">RUBLI</span>
-              <span className="text-zinc-600 font-mono text-[10px] leading-none">v0.6.5</span>
+            <div className="flex items-baseline gap-1.5">
+              <span className="text-zinc-100 font-bold text-lg tracking-[-0.02em] leading-none" style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}>RUBLI</span>
+              <span className="text-zinc-600 font-mono text-[9px] leading-none tracking-[0.05em]">v0.6.5</span>
             </div>
-            <p className="text-[10px] text-zinc-600 mt-0.5 truncate tracking-wide">{t('tagline')}</p>
+            <p className="text-[9px] text-zinc-500 mt-1 truncate tracking-[0.14em] uppercase font-mono">{t('tagline')}</p>
           </div>
         )}
         {/* Mobile close button */}
@@ -456,8 +457,8 @@ function SidebarNavItem({
         'group relative flex items-center gap-2.5 rounded-md px-2.5 py-1.5 text-sm font-medium transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-amber-500',
         isActive
-          ? 'border-l-2 border-amber-500 bg-zinc-800/50 text-zinc-100'
-          : 'text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/30',
+          ? 'border-l-[3px] border-amber-500 bg-[rgba(245,158,11,0.06)] text-zinc-50 pl-[calc(0.625rem-3px)]'
+          : 'text-zinc-400 hover:text-zinc-100 hover:bg-[rgba(255,255,255,0.03)]',
         collapsed && 'justify-center px-0',
       )}
       aria-current={isActive ? 'page' : undefined}
