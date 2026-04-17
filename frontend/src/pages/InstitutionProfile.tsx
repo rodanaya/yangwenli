@@ -17,6 +17,7 @@ import {
   toTitleCase,
   cn,
 } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
 import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
@@ -162,7 +163,7 @@ export function InstitutionProfile() {
     const instName = toTitleCase(inst.name)
 
     if (score >= RISK_THRESHOLDS.high && daPct > 60 && topVendorName && topVendorPct && topVendorPct > 15) {
-      return `${instName} ${t('profile.editorialLedeCapture', { daPct: daPct.toFixed(0), topVendor: toTitleCase(topVendorName), topVendorPct: topVendorPct.toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), score: (score * 100).toFixed(1) })}`
+      return `${instName} ${t('profile.editorialLedeCapture', { daPct: daPct.toFixed(0), topVendor: formatVendorName(topVendorName, 40), topVendorPct: topVendorPct.toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), score: (score * 100).toFixed(1) })}`
     }
 
     if (score >= RISK_THRESHOLDS.medium) {
@@ -485,6 +486,27 @@ export function InstitutionProfile() {
 
       {/* ---- EDITORIAL HERO ---- */}
       <header>
+        {/* Dateline strip — newspaper masthead grammar */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Dossier · Institución</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+          {institution.siglas && (
+            <>
+              <span className="text-zinc-700">·</span>
+              <span className="tabular-nums text-zinc-300">{institution.siglas}</span>
+            </>
+          )}
+        </div>
+        {/* Kicker */}
+        <p className="text-kicker text-kicker--investigation mb-3">
+          {t('profile.breadcrumb', 'Institution Profile')}
+        </p>
         {/* Institution type badge + sector */}
         <div className="flex items-center gap-2 mb-3">
           {institution.institution_type && (
@@ -1738,7 +1760,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
             <span className="text-xs font-mono text-text-muted w-4 text-right flex-shrink-0">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{toTitleCase(v.vendor_name)}</span>
+                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{formatVendorName(v.vendor_name, 40)}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs font-mono text-text-muted">{formatCompactMXN(v.total_value_mxn)}</span>
                   <span className="text-xs font-mono text-text-muted w-8 text-right">{pct.toFixed(0)}%</span>
@@ -2062,7 +2084,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
             {contract.vendor_name && (
               <>
                 <span>·</span>
-                <span className="truncate max-w-[120px]">{toTitleCase(contract.vendor_name)}</span>
+                <span className="truncate max-w-[120px]">{formatVendorName(contract.vendor_name, 24)}</span>
               </>
             )}
           </div>
