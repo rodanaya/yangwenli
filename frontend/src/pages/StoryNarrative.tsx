@@ -22,6 +22,8 @@ import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 import * as StoryCharts from '@/components/stories/charts'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Chart registry — maps chartId to component
@@ -586,17 +588,32 @@ export default function StoryNarrative() {
 
   if (!story) {
     return (
-      <div className="max-w-3xl mx-auto py-24 px-6 text-center">
-        <p className="text-2xl font-bold text-text-primary mb-4">{t('story.notFound', 'Story not found')}</p>
-        <p className="text-text-secondary mb-6">
-          {t('story.notFoundDetail', 'The story "{{slug}}" could not be found.', { slug })}
-        </p>
-        <button
-          onClick={() => navigate('/journalists')}
-          className="text-sm text-accent hover:underline underline-offset-4"
+      <div className="max-w-[1040px] mx-auto px-4 py-8">
+        <EditorialPageShell
+          kicker="INVESTIGATIVE NARRATIVES · ARCHIVE"
+          headline={
+            <>
+              {t('story.notFound', 'Story not found')}
+              <span className="block text-base font-normal mt-3 text-text-muted" style={{ fontFamily: 'var(--font-family-sans)' }}>
+                The requested investigation could not be located.
+              </span>
+            </>
+          }
+          paragraph={t('story.notFoundDetail', 'The story "{{slug}}" could not be found in the RUBLI narrative archive. Return to the journalism index to explore active investigations.', { slug })}
+          severity="high"
         >
-          {t('story.allStories')}
-        </button>
+          <Act number="I" label="RETURN TO INDEX">
+            <div className="flex flex-wrap items-center gap-3 pt-2">
+              <button
+                onClick={() => navigate('/journalists')}
+                className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide px-4 py-2 rounded-full border border-border hover:border-border-hover text-text-primary transition-colors"
+              >
+                <ArrowLeft className="h-3.5 w-3.5" />
+                {t('story.allStories')}
+              </button>
+            </div>
+          </Act>
+        </EditorialPageShell>
       </div>
     )
   }
@@ -621,35 +638,47 @@ export default function StoryNarrative() {
         </div>
       </div>
 
-      {/* Hero */}
+      {/* Hero — editorial lede with outlet badge + lead stat */}
       <StoryHero story={story} accentColor={accentColor} />
 
       {/* Chapter navigation dots */}
       <ChapterNav chapters={story.chapters} accentColor={accentColor} />
 
-      {/* Chapters */}
-      <main className="relative">
-        {story.chapters.map((chapter) => (
-          <ChapterSection
-            key={chapter.id}
-            chapter={chapter}
-            story={story}
-            accentColor={accentColor}
-          />
-        ))}
+      {/* ── ACT I: THE INVESTIGATION ── */}
+      <main className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-16">
+        <Act number="I" label="THE INVESTIGATION" className="space-y-0">
+          {story.chapters.map((chapter) => (
+            <ChapterSection
+              key={chapter.id}
+              chapter={chapter}
+              story={story}
+              accentColor={accentColor}
+            />
+          ))}
+        </Act>
       </main>
 
-      {/* Methodology */}
-      <MethodologySection story={story} />
+      {/* ── ACT II: THE METHODOLOGY ── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <Act number="II" label="THE METHODOLOGY" className="space-y-4">
+          <MethodologySection story={story} />
+        </Act>
+      </div>
 
-      {/* Share */}
-      <ShareBar story={story} />
+      {/* ── ACT III: FURTHER INQUIRY ── */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 pt-8">
+        <Act number="III" label="FURTHER INQUIRY" className="space-y-4">
+          <ShareBar story={story} />
+          <PlatformLinks story={story} />
+        </Act>
+      </div>
 
-      {/* Platform links */}
-      <PlatformLinks story={story} />
-
-      {/* Related stories */}
-      <RelatedSection story={story} />
+      {/* ── ACT IV: RELATED DOSSIERS ── */}
+      <div className="max-w-5xl mx-auto px-4 sm:px-6 pt-8">
+        <Act number="IV" label="RELATED DOSSIERS" className="space-y-4">
+          <RelatedSection story={story} />
+        </Act>
+      </div>
 
       {/* Footer spacer */}
       <div className="h-20" />

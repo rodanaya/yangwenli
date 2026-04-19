@@ -483,10 +483,10 @@ export function InstitutionProfile() {
         <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
       </nav>
 
-      {/* ---- EDITORIAL HERO ---- */}
+      {/* ---- EDITORIAL HERO (compact — full lede in EditorialPageShell below) ---- */}
       <header>
-        {/* Institution type badge + sector */}
-        <div className="flex items-center gap-2 mb-3">
+        {/* Institution badges row — compact, complements the shell */}
+        <div className="flex items-center gap-2 mb-3 flex-wrap">
           {institution.institution_type && (
             <span
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold uppercase tracking-wider border"
@@ -513,30 +513,21 @@ export function InstitutionProfile() {
               {t('profile.documentedCase', { caseName: groundTruthStatus.case_name })}
             </Badge>
           ) : null}
+          {(() => {
+            const group = getInstitutionGroup(institution.name)
+            return group ? (
+              <span className="text-xs text-text-muted">
+                {t('profile.partOf')}{' '}
+                <span className="font-medium" style={{ color: group.color }}>{group.name}</span>
+              </span>
+            ) : null
+          })()}
         </div>
 
-        {/* Large serif name */}
-        <h1
-          className="text-2xl font-bold text-text-primary leading-[1.1] tracking-tight mb-1"
-          style={{ fontFamily: "var(--font-family-serif)" }}
-        >
-          {toTitleCase(institution.name)}
-        </h1>
-
-        <InstitutionLogoBanner name={institution.name} height={28} className="mt-2 mb-3" enableWiki />
-
-        {(() => {
-          const group = getInstitutionGroup(institution.name)
-          return group ? (
-            <p className="text-sm text-text-muted mb-2">
-              {t('profile.partOf')}{' '}
-              <span className="font-medium" style={{ color: group.color }}>{group.name}</span>
-            </p>
-          ) : null
-        })()}
+        <InstitutionLogoBanner name={institution.name} height={28} className="mb-4" enableWiki />
 
         {/* Action bar */}
-        <div className="flex items-center gap-2 flex-wrap mt-4 pb-4 border-b border-border">
+        <div className="flex items-center gap-2 flex-wrap pb-4 border-b border-border">
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
           <button
             onClick={() => setNetworkOpen(true)}
@@ -588,22 +579,32 @@ export function InstitutionProfile() {
       />
 
       <EditorialPageShell
-        kicker={`INSTITUTION FILE · ${institution?.name?.toUpperCase() ?? 'LOADING...'}`}
-        headline={toTitleCase(institution.name)}
+        kicker={`EXPEDIENTE INSTITUCIONAL · ${institution?.siglas?.toUpperCase() ?? institution?.name?.toUpperCase()?.slice(0, 40) ?? ''}`}
+        headline={
+          <>
+            {toTitleCase(institution.name)}
+            {riskLevel === 'critical' && (
+              <span className="ml-3 align-middle inline-block text-xs font-mono font-bold px-2 py-0.5 rounded bg-risk-critical/15 text-risk-critical border border-risk-critical/30 tracking-wider uppercase">
+                Riesgo crítico
+              </span>
+            )}
+          </>
+        }
         paragraph={
           <>
-            This institution's procurement record spans 2002&ndash;2025 across {formatNumber(totalContracts)} contracts.
-            {' '}{getInstitutionTypeLabel(institution.institution_type)}
-            {sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}.
-            {' '}Patterns below reveal vendor concentration, direct-award rates, and risk signals
-            measured against documented corruption signatures.
+            {getInstitutionTypeLabel(institution.institution_type)}
+            {sectorName ? ` · Sector ${sectorName}` : ''}.
+            {' '}Registro de adquisiciones 2002–2025 con {formatNumber(totalContracts)} contratos
+            y gasto acumulado de {formatCompactMXN(totalValue)}.
+            {' '}Los patrones siguientes revelan concentración de proveedores,
+            tasa de adjudicación directa y señales de riesgo medidas contra corrupción documentada.
           </>
         }
         stats={[
           {
             value: formatNumber(totalContracts),
             label: t('profile.hallazgoLabels.contractsAnalyzed'),
-            sub: '2002-2025, COMPRANET',
+            sub: '2002–2025',
           },
           {
             value: formatCompactMXN(totalValue),
@@ -618,17 +619,17 @@ export function InstitutionProfile() {
                    riskLevel === 'high' ? 'var(--color-risk-high)' :
                    riskLevel === 'medium' ? 'var(--color-risk-medium)' :
                    'var(--color-risk-low)',
-            sub: 'OECD: 2-15%',
+            sub: 'OCDE: 2–15%',
           },
           {
             value: `${daPct.toFixed(0)}%`,
             label: t('profile.hallazgoLabels.directAward'),
             color: daPct > 80 ? 'var(--color-risk-critical)' : daPct > 60 ? 'var(--color-risk-high)' : undefined,
-            sub: 'OECD max: 25%',
+            sub: 'OCDE máx: 25%',
           },
         ]}
-        meta={<>RUBLI · v0.6.5</>}
-        severity="medium"
+        meta={<>RUBLI · v0.6.5 · COMPRANET</>}
+        severity={riskLevel === 'critical' ? 'critical' : riskLevel === 'high' ? 'high' : riskLevel === 'medium' ? 'medium' : 'low'}
       >
 
       {/* ---- HIDDEN HEADLINE (kept for backward i18n / a11y links) ---- */}
@@ -640,9 +641,12 @@ export function InstitutionProfile() {
         />
       </div>
 
+      {/* ═══ ACT I: EL HALLAZGO ═══ */}
+      <Act number="I" label="EL HALLAZGO">
+
       {/* ---- INVESTIGATION LEDE ---- */}
       <div
-        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary mb-6"
+        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary"
         style={{
           fontFamily: "var(--font-family-serif)",
           borderLeft: `3px solid ${riskColor}`,
@@ -660,9 +664,7 @@ export function InstitutionProfile() {
 
       {/* ---- IMPACTO HUMANO (for high-risk institutions) ---- */}
       {riskScore >= RISK_THRESHOLDS.medium && totalValue > 100_000_000 && (
-        <div className="mb-6">
-          <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
-        </div>
+        <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
       )}
 
       {/* ---- GROUND TRUTH WARNING BANNER ---- */}
@@ -693,8 +695,10 @@ export function InstitutionProfile() {
         </div>
       )}
 
-      {/* ---- TABBED CONTENT ---- */}
-      <Act number="I" label="EVIDENCIA · EXPEDIENTE INSTITUCIONAL">
+      </Act>
+
+      {/* ═══ ACT II: LA EVIDENCIA ═══ */}
+      <Act number="II" label="LA EVIDENCIA · EXPEDIENTE COMPLETO">
       <SimpleTabs
         defaultTab="overview"
         onTabChange={setActiveTab}

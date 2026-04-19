@@ -536,76 +536,69 @@ export default function ModelTransparency() {
 
   return (
     <EditorialPageShell
-      kicker="MODEL TRANSPARENCY · GROUND TRUTH"
-      headline="The cases that teach the model what corruption looks like."
-      paragraph="The RUBLI risk model is trained on 748 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
+      kicker={`MODEL TRANSPARENCY · ${modelMeta?.version ?? CURRENT_MODEL_VERSION}`}
+      headline={<>The <em>logistic regression</em> that teaches a machine what corruption looks like.</>}
+      paragraph={
+        <>
+          RUBLI scores {formatNumber(nContracts)} Mexican federal procurement contracts against
+          748 documented corruption cases — vendor-matched, institution-scoped, and time-windowed
+          to reduce label noise. This page opens the math, the coefficients, and the paper trail.
+        </>
+      }
+      severity="medium"
       stats={[
-        { value: '748', label: 'GT cases' },
-        { value: '603', label: 'Vendors' },
-        { value: '~288K', label: 'Contracts' },
-        { value: 'v0.6.5', label: 'Active model' },
+        { value: auc.toFixed(3), label: 'Test AUC', color: ACCENT, sub: 'Vendor-stratified hold-out' },
+        { value: '13.49%', label: 'High-Risk Rate', color: '#eab308', sub: 'OECD 2–15% range' },
+        { value: '748', label: 'GT Cases', sub: '603 vendors, 288K contracts' },
+        { value: '9', label: 'Active Features', sub: 'Of 16 after L1 regularization' },
       ]}
       loading={isLoading}
     >
-    <Act number="I" label="GROUND TRUTH">
-    <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-10">
-      {/* ============================================================== */}
-      {/* Editorial hero                                                  */}
-      {/* ============================================================== */}
-      <header className="border-b border-zinc-800 pb-8">
-        <div className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-4">
-          RUBLI · {modelMeta?.version ?? CURRENT_MODEL_VERSION} · LOGISTIC REGRESSION
-        </div>
-        <h1
-          className="text-4xl md:text-5xl font-bold tracking-tight text-zinc-50 leading-[1.05]"
-          style={{ fontFamily: 'ui-serif, Georgia, serif' }}
-        >
-          Model Transparency
-        </h1>
-        <p
-          className="text-lg md:text-xl text-zinc-400 leading-relaxed mt-4 max-w-3xl"
-          style={{ fontFamily: 'ui-serif, Georgia, serif' }}
-        >
-          How we score {formatNumber(nContracts)} Mexican federal procurement
-          contracts for corruption risk — the features, the math, and the paper trail.
-        </p>
-        <div className="flex flex-wrap items-center gap-4 mt-6">
-          <span
-            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono"
-            style={{
-              backgroundColor: `${ACCENT}1a`,
-              color: ACCENT,
-              border: `1px solid ${ACCENT}33`,
-            }}
-          >
-            <span
-              className="h-1.5 w-1.5 rounded-full animate-pulse"
-              style={{ backgroundColor: ACCENT }}
-            />
-            Live · AUC {auc.toFixed(3)}
-          </span>
-          <span className="text-[11px] font-mono uppercase tracking-wide text-zinc-500">
-            Trained {modelMeta?.trained_at ?? '2026-03-25'}
-          </span>
-        </div>
-      </header>
+      <div className="max-w-6xl mx-auto py-4 space-y-14">
+        <Act number="I" label="THE MODEL">
+          <div className="max-w-3xl">
+            <p className="text-sm text-zinc-400 leading-relaxed">
+              Three views into how RUBLI ranks {formatNumber(nContracts)} contracts by corruption
+              risk — a plain-language summary, the per-feature mathematics, and the version history
+              that lets you audit every score. Scores are triage signals for journalists and
+              auditors; they are never verdicts.
+            </p>
+            <div className="mt-4 flex flex-wrap items-center gap-3">
+              <span
+                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono"
+                style={{
+                  backgroundColor: `${ACCENT}1a`,
+                  color: ACCENT,
+                  border: `1px solid ${ACCENT}33`,
+                }}
+              >
+                <span
+                  className="h-1.5 w-1.5 rounded-full animate-pulse"
+                  style={{ backgroundColor: ACCENT }}
+                />
+                Live · AUC {auc.toFixed(3)}
+              </span>
+              <span className="text-[11px] font-mono uppercase tracking-wide text-zinc-500">
+                Trained {modelMeta?.trained_at ?? '2026-03-25'} · Run CAL-v6.1-202603251039
+              </span>
+            </div>
+          </div>
+        </Act>
 
-      {/* ============================================================== */}
-      {/* Tabs                                                            */}
-      {/* ============================================================== */}
-      <SimpleTabs tabs={tabs} defaultTab="summary">
-        <TabPanel tabKey="summary">
-          <SummaryTab auc={auc} nContracts={nContracts} />
-        </TabPanel>
-        <TabPanel tabKey="metrics">
-          <MetricsTab liveCoefficients={liveCoefficients} />
-        </TabPanel>
-        <TabPanel tabKey="audit">
-          <AuditTrailTab />
-        </TabPanel>
-      </SimpleTabs>
-    </div>
-    </Act>
+        <Act number="II" label="THE EVIDENCE">
+          <SimpleTabs tabs={tabs} defaultTab="summary">
+            <TabPanel tabKey="summary">
+              <SummaryTab auc={auc} nContracts={nContracts} />
+            </TabPanel>
+            <TabPanel tabKey="metrics">
+              <MetricsTab liveCoefficients={liveCoefficients} />
+            </TabPanel>
+            <TabPanel tabKey="audit">
+              <AuditTrailTab />
+            </TabPanel>
+          </SimpleTabs>
+        </Act>
+      </div>
     </EditorialPageShell>
   )
 }

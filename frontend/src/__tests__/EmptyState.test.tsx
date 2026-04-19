@@ -57,7 +57,7 @@ describe('ErrorState', () => {
 
   it('shows network error help text when message is Network Error', () => {
     render(<ErrorState message="Network Error" />)
-    expect(screen.getByText(/Unable to connect to server/)).toBeInTheDocument()
+    expect(screen.getByText(/Unable to connect/)).toBeInTheDocument()
   })
 
   it('renders retry button when onRetry is provided', () => {

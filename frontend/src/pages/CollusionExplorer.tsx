@@ -791,24 +791,25 @@ export default function CollusionExplorer() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <EditorialPageShell
-          kicker="COLLUSION · CO-BIDDING ANALYSIS"
+          kicker="NETWORK ANALYSIS · COLLUSION DETECTION"
           headline={
             <>
-              Vendor pairs that bid together{' '}
-              <span style={{ color: 'var(--color-risk-critical)' }}>more often than chance allows.</span>
+              They bid together.{' '}
+              <span style={{ color: 'var(--color-risk-critical)' }}>Over and over again.</span>
             </>
           }
-          paragraph="Co-bidding analysis identifies vendor pairs that consistently appear in the same procurement procedures. When two vendors share more than 40% of their procedures, the statistical probability of coincidence drops below 1%. These are the patterns consistent with bid rotation and cover bidding."
+          paragraph="A bidding ring looks like coincidence until you count. These vendor pairs appear in the same procurement procedures at rates chance alone cannot explain — in several cases, shoulder-to-shoulder in more than eight of every ten tenders they enter. That is not competition. That is a routine. And routines leave fingerprints."
           stats={statsLoading ? undefined : [
-            { value: formatNumber(safeStats?.total_pairs ?? 0), label: 'Vendor pairs' },
-            { value: formatNumber(safeStats?.potential_collusion_count ?? 0), label: 'Flagged', color: 'var(--color-risk-critical)' },
-            { value: `${(safeStats?.max_co_bid_rate ?? 0).toFixed(0)}%`, label: 'Max co-bid rate' },
+            { value: formatNumber(safeStats?.total_pairs ?? 0), label: 'Pairs mapped' },
+            { value: formatNumber(safeStats?.potential_collusion_count ?? 0), label: 'Flagged rings', color: 'var(--color-risk-critical)' },
+            { value: `${(safeStats?.max_co_bid_rate ?? 0).toFixed(0)}%`, label: 'Peak co-bid rate', sub: 'highest pair' },
             { value: formatNumber(safeStats?.total_shared_procedures ?? 0), label: 'Shared procedures' },
           ]}
           loading={statsLoading}
           severity="high"
+          meta={<>COMPRANET 2010&ndash;2025</>}
         >
-          <Act number="I" label="SUSPICIOUS PAIRS">
+          <Act number="I" label="THE METHOD" title="How the algorithm finds a ring.">
 
             {/* ── Methodology ── */}
             <MethodologyCallout />
@@ -818,6 +819,12 @@ export default function CollusionExplorer() {
 
             {/* ── Pattern Legend ── */}
             <PatternLegend />
+
+          </Act>
+
+          <div className="h-10" />
+
+          <Act number="II" label="THE NETWORK" title="Who bids with whom.">
 
             {/* ── Bid-Ring Network Graph (collapsible) ── */}
             <button
@@ -848,6 +855,12 @@ export default function CollusionExplorer() {
                 />
               </ErrorBoundary>
             )}
+
+          </Act>
+
+          <div className="h-10" />
+
+          <Act number="III" label="THE PAIRS" title="Each row: two vendors, one suspicious pattern.">
 
             {/* ── Filters ── */}
             <Filters

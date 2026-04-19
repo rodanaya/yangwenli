@@ -15,7 +15,6 @@ import { useQuery } from '@tanstack/react-query'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import {
-  Award,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
@@ -28,6 +27,8 @@ import {
 import { Skeleton } from '@/components/ui/skeleton'
 import { scorecardApi } from '@/api/client'
 import { formatNumber } from '@/lib/utils'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -425,40 +426,6 @@ function InstitutionCardSkeleton() {
 }
 
 // ---------------------------------------------------------------------------
-// Stat card (editorial HallazgoStat style)
-// ---------------------------------------------------------------------------
-
-interface StatCardProps {
-  label: string
-  value: string
-  sub?: string
-  accentColor?: string
-}
-
-function StatCard({ label, value, sub, accentColor = '#6366f1' }: StatCardProps) {
-  return (
-    <div
-      className="rounded-xl border border-white/8 bg-zinc-900/60 p-4 space-y-1"
-      style={{ borderLeftColor: accentColor, borderLeftWidth: '3px' }}
-    >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">{label}</p>
-      <p className="text-xl font-black tabular-nums text-white leading-none">{value}</p>
-      {sub && <p className="text-[10px] text-zinc-500 leading-snug">{sub}</p>}
-    </div>
-  )
-}
-
-function StatCardSkeleton() {
-  return (
-    <div className="rounded-xl border border-white/8 bg-zinc-900/60 p-4 space-y-2">
-      <Skeleton className="h-2.5 w-24" />
-      <Skeleton className="h-6 w-32" />
-      <Skeleton className="h-2 w-40" />
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
 // Tier filter chip
 // ---------------------------------------------------------------------------
 
@@ -583,101 +550,88 @@ export default function InstitutionScorecards() {
   const worstName = stats?.worst_institution_name ?? '--'
   const worstScore = stats?.worst_institution_score
 
+  const totalScored = stats?.total_scored ?? 2563
+
   return (
-    <div className="min-h-screen">
-      {/* -- DARK HEADER -------------------------------------------------- */}
-      <header className="relative bg-zinc-950 border-b border-white/8 overflow-hidden">
-        {/* Grid background */}
-        <div
-          className="absolute inset-0 opacity-[0.025]"
-          style={{
-            backgroundImage: `
-              repeating-linear-gradient(0deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px),
-              repeating-linear-gradient(90deg, transparent, transparent 40px, rgba(255,255,255,0.5) 40px, rgba(255,255,255,0.5) 41px)
-            `,
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-          <div className="flex items-center gap-2 mb-3">
-            <Award className="h-4 w-4 text-violet-400" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-violet-400">
-              {t('pageTitle')}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <EditorialPageShell
+        kicker="INSTITUTION SCORECARDS · ACCOUNTABILITY INDEX"
+        headline={<>Who governs Mexico&rsquo;s money?</>}
+        paragraph={
+          <>
+            {t('description')}{' '}
+            <span className="text-text-muted">
+              {formatNumber(totalScored)} institutions evaluated across five transparency pillars:
+              apertura, precio, proveedores, proceso y se&ntilde;ales externas.
+            </span>
+          </>
+        }
+        stats={statsLoading ? undefined : [
+          {
+            value: formatNumber(totalScored),
+            label: t('stats.evaluated'),
+            color: '#6366f1',
+            sub: t('stats.federal'),
+          },
+          {
+            value: topScore != null ? topScore.toFixed(1) : '--',
+            label: t('stats.best'),
+            color: '#34d399',
+            sub: topName.length > 32 ? topName.slice(0, 32) + '...' : topName,
+          },
+          {
+            value: worstScore != null ? worstScore.toFixed(1) : '--',
+            label: t('stats.weakest'),
+            color: '#dc2626',
+            sub: worstName.length > 32 ? worstName.slice(0, 32) + '...' : worstName,
+          },
+          {
+            value: stats?.median_score != null ? stats.median_score.toFixed(1) : '--',
+            label: t('stats.median'),
+            color: '#fbbf24',
+            sub: t('stats.outOf100'),
+          },
+        ]}
+        severity="high"
+        loading={statsLoading}
+      >
+
+        {/* ── ACT I: THE GRADES ── */}
+        <Act number="I" label="THE GRADES" className="space-y-6">
+
+          {/* Explainer context */}
+          <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 px-4 py-3">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-violet-400 mb-1">
+              HALLAZGO
+            </p>
+            <p className="text-sm text-text-secondary leading-relaxed">
+              {t('note')}
             </p>
           </div>
-          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-white leading-tight tracking-tight">
-            {t('pageSubtitle', { total: stats ? formatNumber(stats.total_scored) : '2,563' })}
-          </h1>
-          <p className="mt-4 text-base text-zinc-400 max-w-3xl leading-relaxed">
-            {t('description')}
-          </p>
-          {/* Clarifying info badge */}
-          <div className="mt-5 inline-flex items-center gap-2 rounded-full px-3 py-1.5 bg-violet-500/10 border border-violet-500/25">
-            <span className="h-1.5 w-1.5 rounded-full bg-violet-400" aria-hidden="true" />
-            <span className="text-[11px] font-mono uppercase tracking-wide text-violet-300">
-              {t('note')}
-            </span>
-          </div>
-        </div>
-      </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-
-        {/* -- STATS ROW -------------------------------------------------- */}
-        <section aria-label={t('aria.stats')}>
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+          {/* Tier distribution bar */}
+          <section
+            className="rounded-xl border border-white/8 bg-zinc-900/60 p-5"
+            aria-label={t('aria.distributionSection')}
+          >
             {statsLoading ? (
-              Array.from({ length: 4 }).map((_, i) => <StatCardSkeleton key={i} />)
-            ) : (
-              <>
-                <StatCard
-                  label={t('stats.evaluated')}
-                  value={formatNumber(stats?.total_scored ?? 2563)}
-                  sub={t('stats.federal')}
-                  accentColor="#6366f1"
-                />
-                <StatCard
-                  label={t('stats.best')}
-                  value={topScore != null ? topScore.toFixed(1) : '--'}
-                  sub={topName.length > 40 ? topName.slice(0, 40) + '...' : topName}
-                  accentColor="#34d399"
-                />
-                <StatCard
-                  label={t('stats.weakest')}
-                  value={worstScore != null ? worstScore.toFixed(1) : '--'}
-                  sub={worstName.length > 40 ? worstName.slice(0, 40) + '...' : worstName}
-                  accentColor="#dc2626"
-                />
-                <StatCard
-                  label={t('stats.median')}
-                  value={stats?.median_score != null ? stats.median_score.toFixed(1) : '--'}
-                  sub={t('stats.outOf100')}
-                  accentColor="#fbbf24"
-                />
-              </>
-            )}
-          </div>
-        </section>
-
-        {/* -- TIER DISTRIBUTION BAR -------------------------------------- */}
-        <section
-          className="rounded-xl border border-white/8 bg-zinc-900/60 p-5"
-          aria-label={t('aria.distributionSection')}
-        >
-          {statsLoading ? (
-            <div className="space-y-3">
-              <Skeleton className="h-2.5 w-48" />
-              <Skeleton className="h-7 w-full rounded-lg" />
-              <div className="flex gap-4 flex-wrap">
-                {Array.from({ length: 5 }).map((_, i) => (
-                  <Skeleton key={i} className="h-3 w-24" />
-                ))}
+              <div className="space-y-3">
+                <Skeleton className="h-2.5 w-48" />
+                <Skeleton className="h-7 w-full rounded-lg" />
+                <div className="flex gap-4 flex-wrap">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <Skeleton key={i} className="h-3 w-24" />
+                  ))}
+                </div>
               </div>
-            </div>
-          ) : (
-            <TierDistributionBar distribution={gradeDistribution} t={t} />
-          )}
-        </section>
+            ) : (
+              <TierDistributionBar distribution={gradeDistribution} t={t} />
+            )}
+          </section>
+        </Act>
+
+        {/* ── ACT II: THE COMPARISON ── */}
+        <Act number="II" label="THE COMPARISON" className="space-y-4 mt-10">
 
         {/* -- FILTER BAR ------------------------------------------------- */}
         <section className="space-y-4" aria-label={t('aria.filters')}>
@@ -843,6 +797,11 @@ export default function InstitutionScorecards() {
           )}
         </section>
 
+        </Act>
+
+        {/* ── ACT III: THE DEEPER RECORD ── */}
+        <Act number="III" label="THE DEEPER RECORD" className="space-y-4 mt-10">
+
         {/* -- PAGINATION ------------------------------------------------- */}
         {totalPages > 1 && (
           <nav
@@ -915,7 +874,9 @@ export default function InstitutionScorecards() {
           </p>
         </div>
 
-      </main>
+        </Act>
+
+      </EditorialPageShell>
     </div>
   )
 }

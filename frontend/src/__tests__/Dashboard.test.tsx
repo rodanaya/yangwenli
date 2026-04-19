@@ -49,6 +49,8 @@ vi.mock('recharts', () => ({
   CartesianGrid: () => null,
   AreaChart: ({ children }: any) => <div>{children}</div>,
   Area: () => null,
+  ScatterChart: ({ children }: any) => <div>{children}</div>,
+  Scatter: () => null,
 }))
 
 import { Dashboard } from '../pages/Dashboard'
@@ -69,23 +71,18 @@ function renderDashboard() {
 }
 
 describe('Dashboard', () => {
-  it('renders the Procurement Intelligence heading', () => {
+  it('renders source attribution always visible in Act I', () => {
     renderDashboard()
-    expect(screen.getByText(/PROCUREMENT INTELLIGENCE/)).toBeInTheDocument()
+    // Source attribution is always rendered regardless of loading state
+    expect(screen.getByText(/Source: RUBLI/)).toBeInTheDocument()
   })
 
-  it('renders key section headings', () => {
+  it('renders Act section dividers', () => {
     renderDashboard()
-    expect(screen.getByText('Risk Trajectory 2010-2025')).toBeInTheDocument()
-    expect(screen.getByText('Start Your Investigation')).toBeInTheDocument()
-    expect(screen.getByText('Top Vendors by Contract Value')).toBeInTheDocument()
-  })
-
-  it('renders action cards', () => {
-    renderDashboard()
-    expect(screen.getByText('Follow the Money')).toBeInTheDocument()
-    expect(screen.getByText('Search Any Contract')).toBeInTheDocument()
-    expect(screen.getByText('Open an Investigation')).toBeInTheDocument()
+    expect(screen.getByText('THE FIELD')).toBeInTheDocument()
+    expect(screen.getByText('THE CONCENTRATION')).toBeInTheDocument()
+    expect(screen.getByText('THE QUEUE')).toBeInTheDocument()
+    expect(screen.getByText('THE TWELVE')).toBeInTheDocument()
   })
 
   it('shows loading skeletons while data is being fetched', () => {
@@ -94,13 +91,22 @@ describe('Dashboard', () => {
     expect(skeletons.length).toBeGreaterThan(0)
   })
 
-  it('renders the validated against real corruption section', () => {
+  it('renders Act II sector analysis headline', () => {
     renderDashboard()
-    expect(screen.getByText('Validated Against Real Corruption')).toBeInTheDocument()
+    // h3 title is always rendered regardless of loading state
+    expect(screen.getByText(/Risk by sector/)).toBeInTheDocument()
   })
 
-  it('renders new dashboard section headings', () => {
+  it('renders Act II model version badge', () => {
     renderDashboard()
-    expect(screen.getByText('NATIONAL OVERVIEW')).toBeInTheDocument()
+    // v0.6.5 badge appears at least once (next to "Risk by sector" title)
+    expect(screen.getAllByText('v0.6.5').length).toBeGreaterThan(0)
+  })
+
+  it('renders ARIA risk tier labels', () => {
+    renderDashboard()
+    // "Critical" appears in both TierCard label and constellation description
+    expect(screen.getAllByText(/Critical/).length).toBeGreaterThan(0)
+    expect(screen.getAllByText(/High/).length).toBeGreaterThan(0)
   })
 })

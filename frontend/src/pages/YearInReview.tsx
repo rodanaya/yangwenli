@@ -1181,7 +1181,7 @@ export default function YearInReview() {
   return (
     <div className="max-w-[1040px] mx-auto px-4 py-8">
       <EditorialPageShell
-        kicker={`ANNUAL REPORT · ${validYear}`}
+        kicker={`YEAR IN REVIEW · ${validYear}`}
         headline={
           <>A year in procurement:{' '}
             <span style={{ color: 'var(--color-risk-high)' }}>{validYear}</span>
@@ -1202,6 +1202,7 @@ export default function YearInReview() {
             color: yearRow.high_risk_pct >= 15 ? 'var(--color-risk-critical)' : 'var(--color-risk-high)',
           },
         ] : undefined}
+        severity="medium"
         loading={isLoading}
       >
         {/* ── ACT I: HERO + YEAR SELECTOR ── */}

@@ -1050,57 +1050,43 @@ export default function Administrations() {
 
   return (
     <EditorialPageShell
-      kicker="ADMINISTRATIONS · SEXENIO ANALYSIS"
+      kicker="ADMINISTRATIONS · SEXENIO ANALYSIS · 2002–2025"
       headline={
         <>Six administrations,{' '}
           <span style={{ color: 'var(--color-risk-critical)' }}>one pattern.</span>
         </>
       }
-      paragraph="A comparative analysis of federal procurement across six presidential administrations (2002-2025). Each administration's spending patterns, risk concentrations, and vendor relationships are measured using the same model — making cross-administration comparison possible for the first time."
+      paragraph="A comparative analysis of federal procurement across six presidential administrations (2002–2025). Each administration's spending patterns, risk concentrations, and vendor relationships are measured against the same model — making cross-era comparison possible for the first time. AMLO's peak high-risk rate (15.82%) is more than three times the OECD upper bound of 5%."
       stats={[
         { value: '6', label: 'Administrations' },
         { value: '2002–2025', label: 'Coverage' },
         { value: '9.9T MXN', label: 'Total spend', color: 'var(--color-accent)' },
-        { value: '3.1M', label: 'Contracts' },
+        { value: '15.82%', label: 'Peak HR · AMLO', sub: '3.2× OECD', color: 'var(--color-risk-critical)' },
       ]}
+      meta="v0.6.5 · AUC 0.828"
+      severity="high"
       loading={isLoading ?? false}
     >
-      <Act number="I" label="THE FIELD">
     <div className="space-y-8 p-6 max-w-[1600px] mx-auto">
-      {/* ── CLASSIFIED HEADER ── */}
-      <div className="border-b border-border pb-6 mb-2">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted font-semibold mb-3">
-          {t('classifiedHeader.eyebrow')}
-        </div>
-        <div className="flex items-start justify-between gap-4">
-          <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary leading-tight mb-2">
-            {t('classifiedHeader.title')}
-          </h1>
-          <ShareButton label={t('share', 'Share')} className="flex-shrink-0 mt-1" />
-        </div>
-        <p className="text-base text-text-secondary leading-relaxed max-w-2xl">
-          {t('classifiedHeader.subtitle', { contracts: formatNumber(3049988), value: '9.87T' })}
-        </p>
-        <div className="mt-4 flex flex-wrap items-center gap-4">
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-critical animate-pulse" />
+      {/* Data source + methodology + share */}
+      <div className="flex flex-wrap items-center justify-between gap-3 -mt-2">
+        <div className="flex flex-wrap items-center gap-3">
+          <FuentePill source="COMPRANET" verified={true} />
+          <MetodologiaTooltip
+            title={t('narrative')}
+            body={t('comparisonTableDesc')}
+            link="/methodology"
+          />
+          <div className="flex items-center gap-2 text-[11px] text-text-muted font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
             <span>{t('classifiedHeader.highestRiskNote')} <strong className="text-risk-critical">15.82%</strong></span>
           </div>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span className="w-2 h-2 rounded-full bg-risk-low" />
+          <div className="flex items-center gap-2 text-[11px] text-text-muted font-mono">
+            <span className="w-1.5 h-1.5 rounded-full bg-risk-low" />
             <span>{t('classifiedHeader.lowestRiskNote')} <strong className="text-risk-low">3.84%</strong></span>
           </div>
         </div>
-      </div>
-
-      {/* Data source + methodology */}
-      <div className="flex flex-wrap items-center gap-3 mb-2">
-        <FuentePill source="COMPRANET" verified={true} />
-        <MetodologiaTooltip
-          title={t('narrative')}
-          body={t('comparisonTableDesc')}
-          link="/methodology"
-        />
+        <ShareButton label={t('share', 'Share')} className="flex-shrink-0" />
       </div>
 
       {/* Tab Switcher — standalone row */}
@@ -1152,16 +1138,13 @@ export default function Administrations() {
       </div>
 
       {activeTab === 'patterns' && (
-        <>
+        <Act number="I" label={t('tabs.patterns')}>
           <PatternsView yoyData={yoyData} allTimeAvg={allTimeAvg} isLoading={yoyLoading} />
 
           {/* Risk Trajectory by Term Year — all 5 administrations overlaid */}
           <div className="card mt-6">
             <CardHeader className="pb-2">
-              <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
-                {t('trajectoryChart.title')}
-              </div>
-              <CardTitle className="text-sm font-mono text-text-primary flex items-center justify-between flex-wrap gap-2">
+              <CardTitle className="text-base font-serif font-bold text-text-primary flex items-center justify-between flex-wrap gap-2">
                 {t('trajectoryChart.title')}
                 <div className="flex gap-1">
                   {(['avg_risk', 'direct_award_pct', 'high_risk_pct'] as const).map((m) => (
@@ -1192,24 +1175,26 @@ export default function Administrations() {
               />
             </CardContent>
           </div>
-        </>
+        </Act>
       )}
 
-      {activeTab === 'political' && <PoliticalCycleView />}
+      {activeTab === 'political' && (
+        <Act number="I" label={t('tabs.political')}>
+          <PoliticalCycleView />
+        </Act>
+      )}
 
-      {activeTab === 'compare' && <ComparePeriodView />}
+      {activeTab === 'compare' && (
+        <Act number="I" label={t('tabs.compare')}>
+          <ComparePeriodView />
+        </Act>
+      )}
 
       {activeTab === 'overview' && (
       <>
 
-      {/* L0: EXPEDIENTES PRESIDENCIALES */}
-      <div className="mb-2">
-        <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-3 flex items-center gap-2">
-          <span className="h-px flex-1 bg-border" />
-          {t('expedientes')}
-          <span className="h-px flex-1 bg-border" />
-        </div>
-      </div>
+      {/* ═══ ACT I: THE PRESIDENTS ═══ */}
+      <Act number="I" label={t('expedientes')}>
       <motion.div
         className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4"
         variants={staggerContainer}
@@ -1450,14 +1435,10 @@ export default function Administrations() {
         </motion.div>
       )}
 
-      {/* ── EL REGISTRO ── */}
-      <div className="mb-2 mt-4">
-        <div className="text-[10px] tracking-[0.2em] uppercase text-text-muted font-semibold mb-1 flex items-center gap-2">
-          <span className="h-px flex-1 bg-border" />
-          {t('evidenceSection.label')}
-          <span className="h-px flex-1 bg-border" />
-        </div>
-      </div>
+      </Act>
+
+      {/* ═══ ACT II: EL REGISTRO ═══ */}
+      <Act number="II" label={t('evidenceSection.label')}>
 
       {/* High-risk rate comparison — dramatic bar visualization */}
       <div className="bg-background-card rounded-lg border border-border/40 p-5 mb-4">
@@ -1524,7 +1505,7 @@ export default function Administrations() {
           <CardHeader className="pb-2">
             <div className="flex items-start justify-between gap-2">
               <div>
-                <CardTitle className="text-sm font-mono text-text-primary">
+                <CardTitle className="text-base font-serif font-bold text-text-primary">
                   {t('comparisonTable')}
                 </CardTitle>
                 <p className="text-xs text-text-muted mt-1">
@@ -1602,7 +1583,7 @@ export default function Administrations() {
         {/* L3: Yearly Deep Dive */}
         <div className="card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
+            <CardTitle className="text-base font-serif font-bold text-text-primary">
               {t('yearlyTrends', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
             </CardTitle>
           </CardHeader>
@@ -1772,6 +1753,11 @@ export default function Administrations() {
         </div>
       </div>
 
+      </Act>
+
+      {/* ═══ ACT III: LAS TRANSICIONES ═══ */}
+      <Act number="III" label="LAS TRANSICIONES">
+
       {/* Enhancement B: All-Administration Radar Comparison */}
       {adminAggs.length > 0 && (
         <ScrollReveal direction="fade">
@@ -1788,7 +1774,7 @@ export default function Administrations() {
             <div className="flex items-start justify-between gap-2">
               <div>
                 <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('evidenceLabel')}</div>
-                <CardTitle className="text-sm font-mono text-text-primary">
+                <CardTitle className="text-base font-serif font-bold text-text-primary">
                   {t('sectorProfile', { admin: selectedAdmin })}
                 </CardTitle>
                 <p className="text-xs text-text-muted mt-1">
@@ -1874,7 +1860,7 @@ export default function Administrations() {
         {/* L5: Transition Impact */}
         <div className="card">
           <CardHeader className="pb-2">
-            <CardTitle className="text-sm font-mono text-text-primary">
+            <CardTitle className="text-base font-serif font-bold text-text-primary">
               {t('transitionImpact')}
             </CardTitle>
             <p className="text-xs text-text-muted mt-1">
@@ -1988,11 +1974,15 @@ export default function Administrations() {
         onMetricChange={setMatrixMetric}
       />
 
+      </Act>
+
+      {/* ═══ ACT IV: THE RECORD ═══ */}
+      <Act number="IV" label={t('cronologiaLabel')}>
+
       {/* L6: Events Timeline */}
       <div className="card">
         <CardHeader className="pb-2">
-          <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">{t('cronologiaLabel')}</div>
-          <CardTitle className="text-sm font-mono text-text-primary">
+          <CardTitle className="text-base font-serif font-bold text-text-primary">
             {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
           </CardTitle>
           <p className="text-xs text-text-muted mt-1">
@@ -2034,7 +2024,7 @@ export default function Administrations() {
           <div className="text-[9px] tracking-[0.2em] uppercase font-semibold text-text-muted mb-1">
             {t('vendorSection.title')}
           </div>
-          <CardTitle className="text-sm font-mono text-text-primary">
+          <CardTitle className="text-base font-serif font-bold text-text-primary">
             {t('vendorSection.subtitle')}
           </CardTitle>
         </CardHeader>
@@ -2047,10 +2037,11 @@ export default function Administrations() {
         </CardContent>
       </div>
 
+      </Act>
+
       </> /* end overview tab */
       )}
     </div>
-      </Act>
     </EditorialPageShell>
   )
 }

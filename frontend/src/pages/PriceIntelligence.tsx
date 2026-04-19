@@ -981,6 +981,9 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
       {/* SECTION 2: Sector Breakdown                                        */}
       {/* ================================================================== */}
+      </Act>
+
+      <Act number="II" label="THE SECTORS">
       <section aria-label="Comparacion por sector">
         <div>
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
@@ -1048,6 +1051,9 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
       {/* SECTION 3: Extreme Cases                                           */}
       {/* ================================================================== */}
+      </Act>
+
+      <Act number="III" label="THE EXTREMES">
       <section aria-label={t('extremeCasesAriaLabel')}>
         <div className="mb-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
@@ -1104,6 +1110,9 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
       {/* SECTION 4: Repeat Offenders (only if >= 3 records)                 */}
       {/* ================================================================== */}
+      </Act>
+
+      <Act number="IV" label="THE PATTERNS">
       {showComputedSections && <ReincidentesSection contracts={allContracts} loading={loading} />}
 
       {/* ================================================================== */}
@@ -1162,6 +1171,9 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
       {/* SECTION 7: Methodology                                             */}
       {/* ================================================================== */}
+      </Act>
+
+      <Act number="V" label="THE METHOD">
       <MethodologySection t={t} />
 
       <CitationBlock context="Price anomaly analysis — 7,090 anomalies" className="mt-2" />

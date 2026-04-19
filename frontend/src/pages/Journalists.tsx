@@ -7,11 +7,13 @@ import { ArrowRight, Clock, BookOpen, Download, AlertTriangle } from 'lucide-rea
 import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
-import { staggerContainer, slideUp, staggerItem, fadeIn } from '@/lib/animations'
+import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { STORIES } from '@/lib/story-content'
 import type { StoryDef, StoryStatus } from '@/lib/story-content'
 import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
+import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
+import { Act } from '@/components/layout/Act'
 
 // ---------------------------------------------------------------------------
 // Constants & helpers
@@ -326,192 +328,173 @@ export default function Journalists() {
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-
-        {/* ================================================================ */}
-        {/* EDITORIAL MASTHEAD                                               */}
-        {/* ================================================================ */}
-        <motion.header
-          variants={slideUp}
-          initial="initial"
-          animate="animate"
-          className="pt-12 sm:pt-16 pb-8"
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-8">
+        <EditorialPageShell
+          kicker="FOR INVESTIGATORS · RUBLI NEWSROOM"
+          headline={
+            <>
+              {storyCount} investigations into Mexican federal procurement —
+              built for <em>reporters who follow the money.</em>
+            </>
+          }
+          paragraph={
+            <>
+              Every investigation here is built from real data: 3,051,294 federal contracts
+              (2002–2025) scored by a machine-learning model trained on 748 documented corruption
+              cases. The numbers are the starting point. The stories are what they reveal.
+            </>
+          }
+          severity="critical"
+          stats={[
+            {
+              value: <AnimatedNumber value={3051294} duration={2000} />,
+              label: t('hero.contractsLabel'),
+              color: '#fb7185',
+            },
+            {
+              value: <AnimatedNumber value={9.88} decimals={2} prefix="$" suffix="T" duration={1800} />,
+              label: t('hero.valueLabel'),
+              color: '#f59e0b',
+            },
+            {
+              value: <AnimatedNumber value={748} duration={1600} />,
+              label: t('hero.casesLabel'),
+            },
+            {
+              value: storyCount.toString(),
+              label: 'active investigations',
+            },
+          ]}
+          meta={`v0.6.5 · AUC 0.828 · ${t('masthead.lastUpdated')}`}
         >
-          {/* Overline */}
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-            RUBLI Investigations
-          </p>
+          <div className="space-y-14">
 
-          {/* Main headline */}
-          <h1
-            className="text-3xl sm:text-4xl lg:text-5xl font-bold text-white leading-[1.1] mb-4"
-            style={{ fontFamily: 'var(--font-family-serif)' }}
-          >
-            {storyCount} Investigations Into Mexican Federal Procurement
-          </h1>
+            {/* ============================================================ */}
+            {/* ACT I — FEATURED INVESTIGATION + BREAKING LEADS             */}
+            {/* ============================================================ */}
+            <Act number="I" label="THE FEATURED FILE">
+              <ScrollReveal>
+                <FeaturedStory story={featured} />
+              </ScrollReveal>
+              <BreakingStrip />
+            </Act>
 
-          {/* Mission statement */}
-          <p className="text-base sm:text-lg text-zinc-400 leading-relaxed max-w-3xl mb-6">
-            Every investigation is built from real data: 3,051,294 federal contracts (2002-2025)
-            scored by a machine learning model trained on 748 documented corruption cases.
-            The numbers are the starting point. The stories are what they reveal.
-          </p>
+            {/* ============================================================ */}
+            {/* ACT II — ALL INVESTIGATIONS                                 */}
+            {/* ============================================================ */}
+            <Act number="II" label="THE INVESTIGATIONS">
+              <div>
+                <div className="flex items-center gap-3 mb-4">
+                  <h2
+                    className="text-lg font-bold text-white"
+                    style={{ fontFamily: 'var(--font-family-serif)' }}
+                  >
+                    All Investigations
+                  </h2>
+                  <div className="h-px flex-1 bg-zinc-800" />
+                  <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
+                    {filtered.length} {filtered.length === 1 ? 'story' : 'stories'}
+                  </span>
+                </div>
 
-          {/* Stat strip — the three numbers that contextualize everything */}
-          <div className="flex flex-wrap gap-6 sm:gap-10 mb-6">
-            <div className="border-l-2 border-red-500 pl-3">
-              <div className="text-xl font-mono font-bold text-white tabular-nums">
-                <AnimatedNumber value={3051294} duration={2000} />
+                <div className="flex flex-wrap gap-2 mb-8">
+                  {TOPIC_FILTERS.map((f) => (
+                    <button
+                      key={f.id}
+                      onClick={() => setActiveTopic(f.id)}
+                      className={cn(
+                        'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all',
+                        activeTopic === f.id
+                          ? 'bg-zinc-100 text-zinc-900 font-semibold'
+                          : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
+                      )}
+                    >
+                      {f.label}
+                    </button>
+                  ))}
+                </div>
+
+                <AnimatePresence mode="wait">
+                  <motion.div
+                    key={activeTopic}
+                    variants={staggerContainer}
+                    initial="initial"
+                    animate="animate"
+                    exit={{ opacity: 0, transition: { duration: 0.15 } }}
+                    className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5"
+                  >
+                    {filtered.map((story) => (
+                      <InvestigationCard
+                        key={story.slug}
+                        story={story}
+                        onClick={() => navigate(`/stories/${story.slug}`)}
+                      />
+                    ))}
+                    {filtered.length === 0 && (
+                      <motion.div
+                        variants={fadeIn}
+                        className="col-span-full py-16 text-center"
+                      >
+                        <AlertTriangle className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
+                        <p className="text-sm text-zinc-500">
+                          {t('filters.noStories')}
+                        </p>
+                      </motion.div>
+                    )}
+                  </motion.div>
+                </AnimatePresence>
               </div>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.contractsLabel')}</p>
-            </div>
-            <div className="border-l-2 border-amber-500 pl-3">
-              <div className="text-xl font-mono font-bold text-white tabular-nums">
-                <AnimatedNumber value={9.88} decimals={2} prefix="$" suffix="T" duration={1800} />
-              </div>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.valueLabel')}</p>
-            </div>
-            <div className="border-l-2 border-zinc-600 pl-3">
-              <div className="text-xl font-mono font-bold text-white tabular-nums">
-                <AnimatedNumber value={748} duration={1600} />
-              </div>
-              <p className="text-[11px] text-zinc-500 mt-0.5">{t('hero.casesLabel')}</p>
-            </div>
+            </Act>
+
+            {/* ============================================================ */}
+            {/* ACT III — METHODOLOGY + DATA DOWNLOAD                       */}
+            {/* ============================================================ */}
+            <Act number="III" label="THE METHOD">
+              <ScrollReveal>
+                <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
+                  <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
+                    <div className="max-w-lg">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
+                        RUBLI Methodology
+                      </p>
+                      <h3
+                        className="text-xl font-bold text-white mb-3 flex items-center gap-1.5"
+                        style={{ fontFamily: 'var(--font-family-serif)' }}
+                      >
+                        {t('methodology.title')}
+                        <MetodologiaTooltip
+                          title={t('methodology.tooltipTitle')}
+                          body={t('methodology.tooltipBody')}
+                          link="/methodology"
+                        />
+                      </h3>
+                      <p className="text-sm text-zinc-400 leading-relaxed">
+                        {t('methodology.description')}
+                      </p>
+                    </div>
+                    <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0 sm:mt-6">
+                      <button
+                        onClick={() => navigate('/methodology')}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
+                      >
+                        <BookOpen className="h-4 w-4" />
+                        {t('methodology.viewMethodology')}
+                      </button>
+                      <button
+                        onClick={() => navigate('/settings?tab=export')}
+                        className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                      >
+                        <Download className="h-4 w-4" />
+                        {t('methodology.downloadData')}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </ScrollReveal>
+            </Act>
+
           </div>
-
-          {/* Source line */}
-          <p className="text-[10px] text-zinc-600 font-mono">
-            Source: COMPRANET (Secretaria de Hacienda) | Risk model v0.6.5 (AUC 0.828) | {t('masthead.lastUpdated')}
-          </p>
-        </motion.header>
-
-        {/* Crimson rule */}
-        <div className="h-[2px] w-full bg-gradient-to-r from-red-600 via-red-600/40 to-transparent mb-10" />
-
-        {/* ================================================================ */}
-        {/* FEATURED INVESTIGATION — hero card                              */}
-        {/* ================================================================ */}
-        <ScrollReveal className="mb-12">
-          <FeaturedStory story={featured} />
-        </ScrollReveal>
-
-        {/* ================================================================ */}
-        {/* BREAKING — live ARIA T1 strip                                    */}
-        {/* ================================================================ */}
-        <BreakingStrip />
-
-        {/* ================================================================ */}
-        {/* TOPIC FILTER BAR                                                 */}
-        {/* ================================================================ */}
-        <div className="mb-8">
-          <div className="flex items-center gap-3 mb-4">
-            <h2
-              className="text-lg font-bold text-white"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-            >
-              All Investigations
-            </h2>
-            <div className="h-px flex-1 bg-zinc-800" />
-            <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
-              {filtered.length} {filtered.length === 1 ? 'story' : 'stories'}
-            </span>
-          </div>
-
-          <div className="flex flex-wrap gap-2">
-            {TOPIC_FILTERS.map((f) => (
-              <button
-                key={f.id}
-                onClick={() => setActiveTopic(f.id)}
-                className={cn(
-                  'px-3.5 py-1.5 rounded-lg text-xs font-medium transition-all',
-                  activeTopic === f.id
-                    ? 'bg-zinc-100 text-zinc-900 font-semibold'
-                    : 'bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200 border border-zinc-800'
-                )}
-              >
-                {f.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* ================================================================ */}
-        {/* STORY GRID                                                       */}
-        {/* ================================================================ */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTopic}
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
-            exit={{ opacity: 0, transition: { duration: 0.15 } }}
-            className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5 mb-16"
-          >
-            {filtered.map((story) => (
-              <InvestigationCard
-                key={story.slug}
-                story={story}
-                onClick={() => navigate(`/stories/${story.slug}`)}
-              />
-            ))}
-            {filtered.length === 0 && (
-              <motion.div
-                variants={fadeIn}
-                className="col-span-full py-16 text-center"
-              >
-                <AlertTriangle className="h-8 w-8 text-zinc-700 mx-auto mb-3" />
-                <p className="text-sm text-zinc-500">
-                  {t('filters.noStories')}
-                </p>
-              </motion.div>
-            )}
-          </motion.div>
-        </AnimatePresence>
-
-        {/* ================================================================ */}
-        {/* METHODOLOGY FOOTER                                               */}
-        {/* ================================================================ */}
-        <ScrollReveal className="pb-16">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
-              <div className="max-w-lg">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
-                  RUBLI Methodology
-                </p>
-                <h3
-                  className="text-xl font-bold text-white mb-3 flex items-center gap-1.5"
-                  style={{ fontFamily: 'var(--font-family-serif)' }}
-                >
-                  {t('methodology.title')}
-                  <MetodologiaTooltip
-                    title={t('methodology.tooltipTitle')}
-                    body={t('methodology.tooltipBody')}
-                    link="/methodology"
-                  />
-                </h3>
-                <p className="text-sm text-zinc-400 leading-relaxed">
-                  {t('methodology.description')}
-                </p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0 sm:mt-6">
-                <button
-                  onClick={() => navigate('/methodology')}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
-                >
-                  <BookOpen className="h-4 w-4" />
-                  {t('methodology.viewMethodology')}
-                </button>
-                <button
-                  onClick={() => navigate('/settings?tab=export')}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
-                >
-                  <Download className="h-4 w-4" />
-                  {t('methodology.downloadData')}
-                </button>
-              </div>
-            </div>
-          </div>
-        </ScrollReveal>
+        </EditorialPageShell>
       </div>
     </div>
   )

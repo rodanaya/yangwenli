@@ -42,7 +42,7 @@ describe('Sidebar', () => {
 
   it('renders section headers when expanded', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('FRONT PAGE')).toBeInTheDocument()
+    expect(screen.getByText('OVERVIEW')).toBeInTheDocument()
     expect(screen.getByText('INVESTIGATE')).toBeInTheDocument()
     expect(screen.getByText('DATA')).toBeInTheDocument()
   })
@@ -51,15 +51,14 @@ describe('Sidebar', () => {
     renderSidebar({ collapsed: false })
     expect(screen.getByText('Dashboard')).toBeInTheDocument()
     expect(screen.getByText('Sectors')).toBeInTheDocument()
-    expect(screen.getByText('By Administration')).toBeInTheDocument()
+    expect(screen.getByText('Administrations')).toBeInTheDocument()
     expect(screen.getByText('Methodology')).toBeInTheDocument()
   })
 
   it('renders investigate nav items', () => {
     renderSidebar({ collapsed: false })
-    expect(screen.getByText('Investigation')).toBeInTheDocument()
-    expect(screen.getByText('Known Networks')).toBeInTheDocument()
-    expect(screen.getByText('Contracts')).toBeInTheDocument()
+    expect(screen.getByText('The Archive')).toBeInTheDocument()
+    expect(screen.getByText('Networks')).toBeInTheDocument()
     expect(screen.getByText('Cases')).toBeInTheDocument()
   })
 

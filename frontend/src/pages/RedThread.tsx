@@ -33,6 +33,8 @@ import {
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
+import { Act } from '@/components/layout/Act'
+import { Skeleton } from '@/components/ui/skeleton'
 import {
   ArrowLeft,
   ExternalLink,
@@ -99,6 +101,25 @@ function ChapterDivider() {
       <div className="h-px flex-1 bg-background-elevated" />
       <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-accent)]" />
       <div className="h-px flex-1 bg-background-elevated" />
+    </div>
+  )
+}
+
+/**
+ * ActBreak — editorial chapter transition. A numbered eyebrow with a single
+ * kicker line that frames what the next section will argue. Unlike
+ * ChapterDivider (decorative dot), this signals a new investigative act.
+ */
+function ActBreak({ number, label, beat }: { number: string; label: string; beat?: string }) {
+  return (
+    <div className="max-w-4xl mx-auto px-8 pt-8">
+      <Act number={number} label={label}>
+        {beat && (
+          <p className="text-sm text-text-muted italic leading-relaxed max-w-xl -mt-2">
+            {beat}
+          </p>
+        )}
+      </Act>
     </div>
   )
 }
@@ -949,10 +970,62 @@ function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id
 
 function ThreadSkeleton({ label }: { label: string }) {
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="text-center">
-        <div className="w-1 h-16 bg-[#dc2626] mx-auto mb-6 animate-pulse rounded-full" />
-        <p className="text-text-muted text-sm animate-pulse">{label}</p>
+    <div className="min-h-screen bg-[var(--color-background)]">
+      {/* Fixed thread line tease — builds anticipation */}
+      <div className="fixed left-0 top-0 bottom-0 w-[3px] pointer-events-none z-50" style={{ background: 'rgba(220,38,38,0.08)' }}>
+        <div className="absolute top-0 left-0 w-full h-1/3 bg-gradient-to-b from-[#dc2626] to-[#991b1b88] animate-pulse" />
+      </div>
+
+      {/* Sticky header tease */}
+      <div className="sticky top-0 z-40 px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
+        <Skeleton className="h-3 w-28" />
+        <div className="flex items-center gap-3">
+          <div className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
+          <span className="text-xs text-text-secondary uppercase tracking-widest">{label}</span>
+        </div>
+        <Skeleton className="h-3 w-24" />
+      </div>
+
+      {/* Page skeleton — mimics the six-chapter lede, timeline, and waterfall */}
+      <div className="pl-6 max-w-4xl mx-auto px-8 py-24 space-y-20">
+        {/* Subject lede */}
+        <section className="space-y-6">
+          <Skeleton className="h-3 w-40" />
+          <Skeleton className="h-10 w-3/4" />
+          <Skeleton className="h-10 w-1/2" />
+          <div className="flex flex-wrap gap-3">
+            <Skeleton className="h-6 w-24 rounded-full" />
+            <Skeleton className="h-6 w-20 rounded-full" />
+            <Skeleton className="h-6 w-28 rounded-full" />
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4">
+            {[1, 2, 3, 4].map((i) => (
+              <div key={i} className="bg-background border border-border rounded-xl p-5 space-y-2">
+                <Skeleton className="h-3 w-20" />
+                <Skeleton className="h-7 w-24" />
+                <Skeleton className="h-3 w-16" />
+              </div>
+            ))}
+          </div>
+          <Skeleton className="h-4 w-full max-w-2xl" />
+          <Skeleton className="h-4 w-5/6 max-w-2xl" />
+        </section>
+
+        {/* Timeline teaser */}
+        <section className="space-y-4">
+          <Skeleton className="h-3 w-32" />
+          <Skeleton className="h-7 w-2/3" />
+          <Skeleton className="h-48 w-full rounded-xl" />
+        </section>
+
+        {/* Pattern teaser */}
+        <section className="space-y-3">
+          <Skeleton className="h-3 w-28" />
+          <Skeleton className="h-7 w-1/2" />
+          {[1, 2, 3, 4, 5].map((i) => (
+            <Skeleton key={i} className="h-12 w-full rounded-lg" />
+          ))}
+        </section>
       </div>
     </div>
   )
@@ -1093,8 +1166,9 @@ export default function RedThread() {
         </Link>
       </div>
 
-      {/* Chapters */}
+      {/* Chapters — a scroll-driven investigation in six acts */}
       <div className="pl-6">
+        <ActBreak number="I" label="THE SUBJECT" beat="Every investigation starts with a name on the contract." />
         <ChapterSubject
           vendor={vendor}
           aria={aria ? { ips_final: aria.ips_final, ips_tier: aria.ips_tier, primary_sector_name: aria.primary_sector_name } : null}
@@ -1103,6 +1177,7 @@ export default function RedThread() {
 
         <ChapterDivider />
 
+        <ActBreak number="II" label="THE TIMELINE" beat="The paper trail, plotted year by year. Each dot is a contract awarded." />
         <ChapterTimeline
           totalContracts={vendor.total_contracts}
           vendorFirstYear={vendor.first_contract_year}
@@ -1113,6 +1188,7 @@ export default function RedThread() {
 
         <ChapterDivider />
 
+        <ActBreak number="III" label="THE PATTERN" beat="The algorithm's reasoning, decomposed. Which features tilted the verdict, and by how much." />
         <ChapterPattern
           waterfall={waterfall ?? []}
           ariaPattern={aria?.primary_pattern ?? null}
@@ -1121,6 +1197,7 @@ export default function RedThread() {
 
         <ChapterDivider />
 
+        <ActBreak number="IV" label="THE NETWORK" beat="Who bids alongside. Who never beats them. Which institutions keep paying." />
         <ChapterNetwork
           vendorId={id}
           vendor={{
@@ -1134,6 +1211,7 @@ export default function RedThread() {
 
         <ChapterDivider />
 
+        <ActBreak number="V" label="THE MONEY" beat="Peso by peso. The value curve and when the risk peaked." />
         <ChapterMoney
           timeline={(timeline?.timeline ?? []).map((item) => ({
             year: item.year,
@@ -1146,6 +1224,7 @@ export default function RedThread() {
 
         <ChapterDivider />
 
+        <ActBreak number="VI" label="THE VERDICT" beat="The model's score. The external registries. What to file, and what to ask next." />
         <ChapterVerdict
           vendorId={id}
           vendor={{

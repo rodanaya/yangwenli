@@ -31,7 +31,7 @@ import {
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
-import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { formatNumber } from '@/lib/utils'
 
 const InstitutionScorecards = lazy(() => import('./InstitutionScorecards'))
 const ReportCard = lazy(() => import('./ReportCard'))
@@ -544,81 +544,51 @@ export default function InstitutionLeague() {
 
   const totalInstitutions = statsData?.total_scored ?? 0
   const highRiskInstitutions = failingCount
-  const totalSpend = 0
 
   return (
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <TabBar activeTab={activeTab} setTab={setTab} />
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
         <EditorialPageShell
-          kicker="INSTITUTIONS · RANKING INSTITUCIONAL"
-          headline="Which agencies spend the most — and risk the most."
-          paragraph="Federal institutions ranked by procurement volume and risk profile. Each institution's spending patterns are measured against documented corruption signatures. High-risk institutions are those whose vendor portfolios most closely resemble known-corrupt procurement."
+          kicker="INSTITUCIONES · RANKING FEDERAL"
+          headline={
+            <>¿Quién lidera la transparencia{' '}
+              <span className="text-accent">en México?</span>
+            </>
+          }
+          paragraph={`Clasificación competitiva de ${formatNumber(totalInstitutions) || '—'} instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.`}
           stats={isLoading ? undefined : [
-            { value: formatNumber(totalInstitutions), label: 'Institutions' },
-            { value: formatNumber(highRiskInstitutions), label: 'High-risk', color: 'var(--color-risk-high)' },
-            { value: totalSpend ? formatCompactMXN(totalSpend) : '—', label: 'Total spend', color: 'var(--color-accent)' },
-            { value: '23 yrs', label: 'Coverage' },
+            { value: formatNumber(totalInstitutions), label: 'Instituciones evaluadas' },
+            { value: formatNumber(highRiskInstitutions), label: 'En nivel crítico', color: 'var(--color-risk-critical)' },
+            { value: statsData?.median_score?.toFixed(1) ?? '—', label: 'Puntuación mediana', sub: '/ 100' },
+            { value: '5', label: 'Niveles', sub: 'Excelente → Crítico' },
           ]}
+          meta="FEDERAL · 2002–2025"
+          severity={failingCount > 0 ? 'critical' : 'high'}
           loading={isLoading}
         >
-          <Act number="I" label="THE RANKING">
-      {/* Page header — DRAMATIC COMPETITIVE HERO */}
-      <div className="relative border-b border-zinc-800/60 bg-gradient-to-b from-yellow-950/20 via-zinc-900/50 to-zinc-950 overflow-hidden">
-        {/* Stadium-style stripe background */}
-        <div
-          className="absolute inset-0 opacity-[0.04]"
-          style={{
-            backgroundImage: `repeating-linear-gradient(90deg, transparent, transparent 80px, rgba(234,179,8,0.4) 80px, rgba(234,179,8,0.4) 81px)`,
-          }}
-          aria-hidden="true"
-        />
-        <div className="relative max-w-screen-xl mx-auto px-4 sm:px-6 py-10">
-          <div className="flex items-center gap-2 mb-3">
-            <Crown className="h-4 w-4 text-yellow-400" aria-hidden="true" />
-            <p className="text-[10px] font-mono font-bold tracking-[0.2em] uppercase text-yellow-400">
-              Ranking Institucional · La Competencia por la Transparencia
-            </p>
-            <span className="ml-2 px-2 py-0.5 rounded text-[9px] font-mono font-bold tracking-wider uppercase bg-blue-900/60 text-blue-300 border border-blue-700/40">
-              Solo Federal
-            </span>
-          </div>
-          <div className="flex flex-col sm:flex-row sm:items-end gap-4 justify-between">
-            <div>
-              <h1
-                className="text-3xl sm:text-4xl md:text-5xl font-black font-serif text-white leading-[1.05] tracking-tight"
-                style={{ textShadow: '0 0 60px rgba(234,179,8,0.15)' }}
-              >
-                ¿Quién lidera la transparencia en México?
-              </h1>
-              <p className="text-zinc-400 text-sm mt-3 max-w-2xl leading-relaxed">
-                Clasificación competitiva de {formatNumber(total) || '—'} instituciones del gobierno federal.
-                Puntuación de 0–100 basada en 5 pilares: apertura, precios, proveedores, proceso e incidencias externas.
-                Del primer lugar al último — sin excusas.
-              </p>
-            </div>
-            <Medal className="h-10 w-10 text-yellow-500/60 flex-shrink-0 self-start sm:self-auto" aria-hidden="true" />
-          </div>
-
-          {/* Editorial finding headline -- urgent red when failing institutions exist */}
-          {editorialHeadline && (
-            <div className={`mt-5 pl-5 py-3 rounded-r-lg ${
-              failingCount > 0
-                ? 'border-l-4 border-red-500 bg-red-950/30'
-                : 'border-l-4 border-amber-500 bg-amber-950/20'
+      {/* Editorial finding headline — urgent red when failing institutions exist */}
+      {editorialHeadline && (
+        <div className={`mb-6 pl-5 py-3 rounded-r-lg flex items-start gap-4 ${
+          failingCount > 0
+            ? 'border-l-4 border-red-500 bg-red-950/30'
+            : 'border-l-4 border-amber-500 bg-amber-950/20'
+        }`}>
+          <Crown className={`h-5 w-5 flex-shrink-0 mt-0.5 ${failingCount > 0 ? 'text-red-400' : 'text-amber-500'}`} aria-hidden="true" />
+          <div>
+            <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
+              failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
             }`}>
-              <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
-                failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
-              }`}>
-                HALLAZGO
-              </p>
-              <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
-            </div>
-          )}
+              HALLAZGO
+            </p>
+            <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
+          </div>
         </div>
-      </div>
+      )}
 
-      <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 space-y-6">
+      <div className="space-y-10"><Act number="I" label="LAS CABEZAS DE SERIE">
+
+      <div className="space-y-6">
 
         {/* Stats strip + tier distribution */}
         {statsData && (
@@ -655,13 +625,18 @@ export default function InstitutionLeague() {
 
         {/* Podium -- only when no filters active */}
         {!hasFilters && podiumItems.length >= 3 && (
-          <section aria-labelledby="podium-heading">
-            <h2
-              id="podium-heading"
-              className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-3"
-            >
-              Mejores Instituciones
-            </h2>
+          <section aria-labelledby="podium-heading" className="space-y-3">
+            <div>
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
+                Podio
+              </p>
+              <h2
+                id="podium-heading"
+                className="text-lg font-serif font-bold text-zinc-100 leading-tight"
+              >
+                Las tres instituciones más transparentes
+              </h2>
+            </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               {podiumItems.slice(0, 3).map((item, idx) => (
                 <PodiumCard
@@ -674,6 +649,12 @@ export default function InstitutionLeague() {
             </div>
           </section>
         )}
+
+        </div>
+      </Act>
+
+      <Act number="II" label="LA CLASIFICACIÓN COMPLETA">
+      <div className="space-y-6">
 
         {/* Filters row */}
         <div className="flex flex-wrap gap-3 items-center">
@@ -738,10 +719,15 @@ export default function InstitutionLeague() {
         </div>
 
         {/* Table */}
-        <section aria-labelledby="league-table-heading">
-          <h2 id="league-table-heading" className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-3">
-            Clasificacion Completa
-          </h2>
+        <section aria-labelledby="league-table-heading" className="space-y-3">
+          <div>
+            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
+              Tabla general
+            </p>
+            <h2 id="league-table-heading" className="text-lg font-serif font-bold text-zinc-100 leading-tight">
+              Clasificación completa — {formatNumber(total)} instituciones
+            </h2>
+          </div>
 
           {isError && (
             <div className="flex items-center gap-3 p-4 rounded-lg bg-red-950/40 border border-red-800/40 text-red-300 text-sm">
@@ -960,12 +946,14 @@ export default function InstitutionLeague() {
           )}
         </section>
 
+      </div>
+      </Act>
+
         {/* Source footnote */}
-        <p className="text-[10px] text-zinc-700 font-mono text-center pb-4">
+        <p className="text-[10px] text-zinc-700 font-mono text-center py-6 border-t border-zinc-800/40 mt-8">
           RUBLI Indice de Salud de Contrataciones v0.6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
         </p>
       </div>
-          </Act>
         </EditorialPageShell>
       </div>
     </div>
