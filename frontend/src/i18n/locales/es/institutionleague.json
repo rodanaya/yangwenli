@@ -2,17 +2,42 @@
   "eyebrow": "LIGA DE TRANSPARENCIA INSTITUCIONAL",
   "title": "Liga de Transparencia Institucional",
   "subtitle": "Clasificaciones basadas en tasa de competencia, licitaciones unicas, equidad de precios e indicadores de riesgo en {{total}} instituciones evaluadas",
+  "kicker": "INSTITUCIONES · RANKING FEDERAL",
+  "meta": "FEDERAL · 2002–2025 · v0.6.5",
+  "headline": {
+    "before": "¿Quién lidera la transparencia",
+    "accent": "en México?"
+  },
+  "lede": "Clasificación competitiva de {{total}} instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.",
+  "lede_none": "Clasificación competitiva de instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.",
   "podiumTitle": "Mejores Instituciones",
   "podiumSubtitle": "Instituciones con las puntuaciones de transparencia mas altas",
+  "podiumHeadline": "Las tres instituciones más transparentes",
+  "podiumKicker": "Podio",
+  "podiumAriaLabel": "#{{rank}}: {{name}}, puntuación {{score}}",
   "tableTitle": "Clasificacion Completa",
+  "tableKicker": "Tabla general",
+  "tableHeadline": "Clasificación completa — {{total}} instituciones",
+  "acts": {
+    "one": "LAS CABEZAS DE SERIE",
+    "two": "LA CLASIFICACIÓN COMPLETA"
+  },
+  "finding": {
+    "critical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{failing}} se encuentran en nivel Crítico.",
+    "normal": "Solo el {{pct}}% de las {{total}} instituciones evaluadas alcanza nivel Satisfactorio o superior."
+  },
   "filters": {
-    "searchPlaceholder": "Buscar instituciones...",
+    "searchPlaceholder": "Buscar instituciones…",
     "sectorLabel": "Sector",
     "allSectors": "Todos los sectores",
     "allGrades": "Todas las calificaciones",
+    "allTiers": "Todos los niveles",
     "minContracts": "Contratos minimos",
     "sortBy": "Ordenar por",
-    "adjustFilters": "Intenta ajustar los filtros o la busqueda."
+    "adjustFilters": "Intenta ajustar los filtros o la búsqueda.",
+    "search": "Buscar instituciones",
+    "tier": "Nivel",
+    "results": "{{num}} instituciones"
   },
   "stats": {
     "totalScored": "Instituciones Evaluadas",
@@ -22,19 +47,29 @@
     "gradeDistribution": "Distribucion de Calificaciones",
     "institutionsCount": "{{num}} instituciones",
     "scoreOutOf": "de 100",
+    "outOfHundred": "/ 100",
+    "evaluated": "Instituciones evaluadas",
+    "critical": "En nivel crítico",
+    "median": "Puntuación mediana",
+    "tiers": "Niveles",
+    "tiersRange": "Excelente → Crítico",
     "findingCritical": "Solo el {{pct}}% de instituciones obtiene B o superior. {{count}} estan senaladas como criticas.",
     "findingNormal": "Solo el {{pct}}% de instituciones obtiene B o superior entre {{total}} agencias evaluadas."
   },
+  "statsAriaLabel": "Estadísticas generales",
   "pagination": {
     "previous": "Anterior",
     "next": "Siguiente",
-    "pageOf": "Pagina {{page}} de {{total}}"
+    "pageOf": "Página {{page}} de {{total}}",
+    "ariaLabel": "Paginación",
+    "previousAriaLabel": "Página anterior",
+    "nextAriaLabel": "Página siguiente"
   },
   "hallazgo": "HALLAZGO",
   "columns": {
     "rank": "#",
     "institution": "Institucion",
-    "grade": "Calificacion",
+    "grade": "Nivel",
     "score": "Puntuacion",
     "sector": "Sector",
     "contracts": "Contratos",
@@ -43,6 +78,7 @@
     "pillarVendors": "Proveedores",
     "pillarProcess": "Proceso",
     "pillarExternal": "Externo",
+    "pillars": "Pilares",
     "trend": "Tendencia",
     "percentile": "Percentil Nacional"
   },
@@ -57,6 +93,17 @@
     "D-": "Riesgo Muy Alto",
     "F": "Critico",
     "F-": "Bandera Roja"
+  },
+  "tiers": {
+    "Excelente": "Excelente",
+    "Satisfactorio": "Satisfactorio",
+    "Regular": "Regular",
+    "Deficiente": "Deficiente",
+    "Critico": "Crítico"
+  },
+  "distribution": {
+    "title": "Distribución por nivel de transparencia",
+    "ariaLabel": "Distribución por nivel de transparencia"
   },
   "trend": {
     "improving": "Mejorando",
@@ -75,11 +122,18 @@
     "process": "Integridad del Proceso",
     "external": "Alertas Externas"
   },
+  "percentileLabel": "Percentil {{n}}",
+  "worstPerformerBadge": "Peor Desempeño",
+  "tableAriaLabel": "Ranking de instituciones",
+  "rowAriaLabel": "#{{rank}} {{name}}, puntuación {{score}}, nivel {{tier}}",
   "empty": "Ninguna institucion coincide con los filtros actuales.",
-  "loading": "Cargando clasificaciones institucionales...",
+  "loading": "Cargando clasificaciones institucionales…",
+  "loadingShort": "Cargando…",
   "error": "Error al cargar las clasificaciones. Por favor, intente de nuevo.",
   "viewProfile": "Ver perfil",
   "noSector": "Sin clasificar",
+  "sortAriaLabel": "Ordenar por {{label}}",
+  "methodologyFootnote": "RUBLI Índice de Salud de Contrataciones v0.6.5 · COMPRANET 2002–2025 · Metodología OCDE / FMI",
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Fichas",

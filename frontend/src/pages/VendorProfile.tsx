@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import { SimpleTabs, TabPanel } from '@/components/ui/SimpleTabs'
 import { useTranslation } from 'react-i18next'
 import { useParams, Link, useNavigate, useLocation } from 'react-router-dom'
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
-import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, formatCompactUSD, getRiskLevel } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, getRiskLevel } from '@/lib/utils'
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
@@ -24,13 +24,11 @@ import { AddToWatchlistButton } from '@/components/AddToWatchlistButton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
-import { NarrativeCard } from '@/components/NarrativeCard'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
 import VendorContractTimeline from '@/components/VendorContractTimeline'
 import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
 import VendorContractBreakdown from '@/components/VendorContractBreakdown'
-import InvestigationLede from '@/components/ui/InvestigationLede'
 import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
@@ -61,7 +59,6 @@ import {
   AlertTriangle,
   ArrowLeft,
   ExternalLink,
-  DollarSign,
   BarChart3,
   TrendingUp,
   SlidersHorizontal,
@@ -80,6 +77,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Target,
+  MoreHorizontal,
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import { ScrollReveal, useCountUp, AnimatedFill } from '@/hooks/useAnimations'
@@ -754,6 +752,55 @@ function CounterfactualPanel({
 }
 
 // ============================================================================
+// ActionOverflowMenu — secondary actions dropdown to declutter the header
+// ============================================================================
+function ActionOverflowMenu({ children, label = 'More actions' }: { children: React.ReactNode; label?: string }) {
+  const [open, setOpen] = useState(false)
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!open) return
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false)
+    }
+    function handleKey(e: KeyboardEvent) {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', handleClick)
+    document.addEventListener('keydown', handleKey)
+    return () => {
+      document.removeEventListener('mousedown', handleClick)
+      document.removeEventListener('keydown', handleKey)
+    }
+  }, [open])
+
+  return (
+    <div ref={ref} className="relative">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        aria-haspopup="menu"
+        aria-expanded={open}
+        aria-label={label}
+        className="flex items-center gap-1.5 px-2.5 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
+        style={{ background: 'var(--color-background-elevated)' }}
+      >
+        <MoreHorizontal className="h-3.5 w-3.5" />
+      </button>
+      {open && (
+        <div
+          role="menu"
+          onClick={() => setOpen(false)}
+          className="absolute right-0 top-full mt-1 z-30 min-w-[220px] rounded-md border border-border bg-background-card py-1"
+          style={{ boxShadow: '0 16px 40px -12px rgba(0,0,0,0.6)' }}
+        >
+          {children}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ============================================================================
 // Main VendorProfile component
 // ============================================================================
 
@@ -1359,6 +1406,8 @@ export function VendorProfile() {
             >
               <ArrowLeft className="h-4 w-4" />
             </Link>
+
+            {/* PRIMARY — the editorial call-to-read */}
             <button
               onClick={() => navigate(`/thread/${vendorId}`)}
               className="flex items-center gap-2 px-4 py-2 rounded text-sm font-semibold transition-colors"
@@ -1369,6 +1418,8 @@ export function VendorProfile() {
               <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
               {t('readInvestigation', 'Read the Investigation')}
             </button>
+
+            {/* Two quick-analysis jumps */}
             <button
               onClick={() => setNetworkOpen(true)}
               className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
@@ -1377,18 +1428,6 @@ export function VendorProfile() {
               <Network className="h-3.5 w-3.5" />
               {t('viewNetwork')}
             </button>
-            {vendor.primary_sector_id && (
-              <button
-                onClick={() => navigate(
-                  `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
-                )}
-                className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
-                style={{ background: 'var(--color-background-elevated)' }}
-              >
-                <SlidersHorizontal className="h-3.5 w-3.5" />
-                {t('findSimilar')}
-              </button>
-            )}
             <button
               onClick={() => navigate(`/vendors/compare?a=${vendorId}`)}
               className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors"
@@ -1398,25 +1437,8 @@ export function VendorProfile() {
               <BarChart3 className="h-3.5 w-3.5" />
               {t('compare')}
             </button>
-            <ShareButton label={t('share', 'Share')} className="flex-shrink-0" />
-            <button
-              onClick={async () => {
-                setCsvExporting(true)
-                try { await exportContractsCSV() } finally { setCsvExporting(false) }
-              }}
-              disabled={csvExporting}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40 transition-colors disabled:opacity-50"
-              style={{ background: 'var(--color-background-elevated)' }}
-              aria-label={t('exportCSV')}
-            >
-              <Download className="h-3.5 w-3.5" />
-              {csvExporting ? t('exporting') : t('exportCSV')}
-            </button>
-            <GenerateReportButton
-              reportType="vendor"
-              entityId={vendorId}
-              entityName={toTitleCase(vendor.name)}
-            />
+
+            {/* Case-file — watchlist + dossier, critical for journalists */}
             <AddToWatchlistButton
               itemType="vendor"
               itemId={vendorId}
@@ -1428,17 +1450,78 @@ export function VendorProfile() {
               entityId={vendorId}
               entityName={toTitleCase(vendor.name)}
             />
-            {vendor.avg_risk_score !== undefined && (
-              <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
-            )}
-            <button
-              onClick={() => setDisputeOpen(true)}
-              className="flex items-center gap-1.5 px-3 py-2 text-xs rounded border border-border/40 text-text-muted/60 hover:text-text-secondary transition-colors ml-auto"
-              style={{ background: 'var(--color-background-elevated)' }}
-            >
-              <AlertTriangle className="h-3 w-3" />
-              {t('disputeScore', 'Report issue')}
-            </button>
+
+            {/* Overflow — share, export, report, feedback, dispute */}
+            <ActionOverflowMenu>
+              <div className="px-3 py-1.5">
+                <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                  {t('share', 'Share')} &amp; Export
+                </p>
+              </div>
+              <div className="px-2 pb-1">
+                <ShareButton label={t('share', 'Share')} className="w-full justify-start" />
+              </div>
+              <button
+                role="menuitem"
+                onClick={async () => {
+                  setCsvExporting(true)
+                  try { await exportContractsCSV() } finally { setCsvExporting(false) }
+                }}
+                disabled={csvExporting}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:bg-background-elevated hover:text-accent transition-colors disabled:opacity-50"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {csvExporting ? t('exporting') : t('exportCSV')}
+              </button>
+              <div className="px-2 py-1">
+                <GenerateReportButton
+                  reportType="vendor"
+                  entityId={vendorId}
+                  entityName={toTitleCase(vendor.name)}
+                />
+              </div>
+
+              <div className="border-t border-border/40 my-1" />
+
+              <div className="px-3 py-1.5">
+                <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                  Analysis
+                </p>
+              </div>
+              {vendor.primary_sector_id && (
+                <button
+                  role="menuitem"
+                  onClick={() => navigate(
+                    `/contracts?sector_id=${vendor.primary_sector_id}&risk_level=high&sort_by=risk_score&sort_order=desc`
+                  )}
+                  className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:bg-background-elevated hover:text-accent transition-colors"
+                >
+                  <SlidersHorizontal className="h-3.5 w-3.5" />
+                  {t('findSimilar')}
+                </button>
+              )}
+
+              <div className="border-t border-border/40 my-1" />
+
+              <div className="px-3 py-1.5">
+                <p className="text-[9px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
+                  Feedback
+                </p>
+              </div>
+              {vendor.avg_risk_score !== undefined && (
+                <div className="px-2 pb-1">
+                  <RiskFeedbackButton entityType="vendor" entityId={vendorId} />
+                </div>
+              )}
+              <button
+                role="menuitem"
+                onClick={() => setDisputeOpen(true)}
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-text-muted hover:bg-background-elevated hover:text-text-secondary transition-colors"
+              >
+                <AlertTriangle className="h-3 w-3" />
+                {t('disputeScore', 'Report issue')}
+              </button>
+            </ActionOverflowMenu>
           </>
         }
       >
@@ -1554,16 +1637,6 @@ export function VendorProfile() {
           </div>
         )}
 
-      {/* PlainLanguageRiskCard — journalist plain-English summary */}
-      <PlainLanguageRiskCard
-        vendorName={toTitleCase(vendor.name)}
-        avgRiskScore={vendor.avg_risk_score ?? 0}
-        directAwardPct={vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0}
-        singleBidPct={vendor.single_bid_pct ?? 0}
-        totalContracts={vendor.total_contracts}
-        totalValueMxn={vendor.total_value_mxn}
-      />
-
       <NetworkGraphModal
         open={networkOpen}
         onOpenChange={setNetworkOpen}
@@ -1580,35 +1653,17 @@ export function VendorProfile() {
         feedbackPayload={{ entity_type: 'vendor', entity_id: vendorId, feedback_type: 'not_suspicious' }}
       />
 
-      {/* Investigation Lede — newspaper-style opener */}
-      <InvestigationLede
-        riskLevel={riskLevel}
-        topFinding={
-          (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0) > 50
-            ? t('lede.directAward', { pct: (vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0).toFixed(0) })
-            : riskLevel === 'critical' || riskLevel === 'high'
-              ? t('lede.riskDetected', { level: riskLevel })
-              : t('lede.contractsAnalyzed', { n: vendor.total_contracts.toLocaleString() })
-        }
-        sector={vendor.primary_sector_name ?? ''}
-        yearsActive={
-          vendor.first_contract_year && vendor.last_contract_year
-            ? `${vendor.first_contract_year}–${vendor.last_contract_year}`
-            : ''
-        }
-        totalValue={formatCompactMXN(vendor.total_value_mxn)}
-        contractCount={vendor.total_contracts}
+      {/* Plain-language risk explainer — renders only for medium+ vendors */}
+      <PlainLanguageRiskCard
+        vendorName={toTitleCase(vendor.name)}
+        avgRiskScore={vendor.avg_risk_score ?? 0}
+        directAwardPct={vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0}
+        singleBidPct={vendor.single_bid_pct ?? 0}
+        totalContracts={vendor.total_contracts}
+        totalValueMxn={vendor.total_value_mxn}
       />
 
-      {/* VendorNarrativeHeader removed — InvestigationLede above replaces it */}
-
-      {/* Narrative summary */}
-      <NarrativeCard
-        paragraphs={buildVendorNarrative(vendor, riskProfile ?? null)}
-        compact
-      />
-
-      {/* "Why is this vendor risky?" — red flags summary card */}
+      {/* "Why is this vendor risky?" — consolidated red-flags evidence block */}
       {(() => {
         const flags: Array<{ icon: string; text: string; severity: 'critical' | 'high' | 'medium' }> = []
         // Ground truth
@@ -1687,31 +1742,8 @@ export function VendorProfile() {
         )
       })()}
 
-      {/* KPI Row — F7 Percentile Badges */}
-      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
-        <KPICard
-          title={t('kpi.totalContracts')}
-          value={vendor.total_contracts}
-          icon={FileText}
-          subtitle={`${vendor.first_contract_year || '-'} – ${vendor.last_contract_year || '-'}`}
-          percentileBadge={(() => {
-            const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
-            const item = pc?.metrics?.find((p) => p.metric === 'contract_count')
-            return item ? <PercentileBadge percentile={item.percentile} metric="contracts" sector={vendor.primary_sector_name || undefined} /> : undefined
-          })()}
-        />
-        <KPICard
-          title={t('kpi.totalValue')}
-          value={vendor.total_value_mxn}
-          icon={DollarSign}
-          format="currency"
-          subtitle={formatCompactUSD(vendor.total_value_mxn)}
-          percentileBadge={(() => {
-            const pc = peerComparison as { metrics?: Array<{ metric: string; percentile: number }> } | undefined
-            const item = pc?.metrics?.find((p) => p.metric === 'total_value')
-            return item ? <PercentileBadge percentile={item.percentile} metric="total value" sector={vendor.primary_sector_name || undefined} /> : undefined
-          })()}
-        />
+      {/* Supplementary KPIs — unique metrics complementing the hero stat strip */}
+      <div className="grid gap-4 md:grid-cols-3">
         <KPICard
           title={t('kpi.institutions')}
           value={vendor.total_institutions}
@@ -1849,87 +1881,137 @@ export function VendorProfile() {
       >
         {/* TAB 1: Overview */}
         <TabPanel tabKey="overview">
-          <div className="grid gap-6 lg:grid-cols-3">
-            {/* Left Column - Risk Profile */}
-            <ScrollReveal direction="up" delay={0}>
-            <div className="space-y-6">
-              {/* Risk Score Gauge */}
-              <Card className="surface-card">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Shield className="h-4 w-4" />
-                    {t('cards.riskProfile')} <InfoTooltip termKey="riskScore" size={13} />
-                  </CardTitle>
-                </CardHeader>
-                <CardContent>
-                  {riskLoading ? (
-                    <Skeleton className="h-48" />
-                  ) : riskProfileError ? (
-                    <div className="flex items-center justify-center h-48 text-sm text-text-muted">
-                      {t('risk.couldNotLoad')}
-                    </div>
-                  ) : riskProfile?.avg_risk_score !== undefined ? (
-                    <RiskGauge
-                      score={riskProfile.avg_risk_score}
-                      riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
-                      riskPercentile={riskProfile.risk_percentile}
-                      riskTrend={riskProfile.risk_trend}
-                      lower={riskProfile.risk_confidence_lower}
-                      upper={riskProfile.risk_confidence_upper}
-                    />
-                  ) : null}
-                </CardContent>
-              </Card>
+          {/* ── HERO RISK PANEL — full-width editorial lede, shows gauge + top drivers side-by-side ── */}
+          <ScrollReveal direction="up" delay={0}>
+          <div
+            className="mb-6 rounded-lg p-5 md:p-6"
+            style={{
+              border: '1px solid var(--color-border)',
+              background: 'var(--color-background-elevated)',
+              borderLeft: riskProfile?.avg_risk_score != null && riskProfile.avg_risk_score >= 0.40
+                ? `3px solid ${riskColor}`
+                : '1px solid var(--color-border)',
+            }}
+          >
+            <div className="grid gap-6 md:grid-cols-[auto_1fr] items-start">
+              {/* Gauge — anchor left */}
+              <div className="flex flex-col items-center md:items-start">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3 flex items-center gap-1.5">
+                  <Shield className="h-3 w-3" />
+                  {t('cards.riskProfile')}
+                  <InfoTooltip termKey="riskScore" size={12} />
+                </p>
+                {riskLoading ? (
+                  <Skeleton className="h-48 w-48" />
+                ) : riskProfileError ? (
+                  <div className="flex items-center justify-center h-48 w-48 text-sm text-text-muted">
+                    {t('risk.couldNotLoad')}
+                  </div>
+                ) : riskProfile?.avg_risk_score !== undefined ? (
+                  <RiskGauge
+                    score={riskProfile.avg_risk_score}
+                    riskVsSectorAvg={riskProfile.risk_vs_sector_avg}
+                    riskPercentile={riskProfile.risk_percentile}
+                    riskTrend={riskProfile.risk_trend}
+                    lower={riskProfile.risk_confidence_lower}
+                    upper={riskProfile.risk_confidence_upper}
+                  />
+                ) : null}
+              </div>
 
-              {/* Score Drivers — compact SHAP summary on Overview tab */}
-              {shapData && !shapError && shapData.top_risk_factors.length > 0 && (
-                <Card className="surface-card">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <span>{t('cards.scoreDrivers', 'Score Drivers')}</span>
-                      <InfoTooltip termKey="riskScoreDisclaimer" size={13} />
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent className="space-y-2">
-                    {shapData.top_risk_factors.slice(0, 3).map((f) => (
-                      <div key={f.factor}>
-                        <div className="flex justify-between text-xs mb-0.5">
-                          <span className="text-text-secondary capitalize">{f.factor.replace(/_/g, ' ')}</span>
-                          <span className="text-risk-high font-mono">+{f.shap.toFixed(3)}</span>
-                        </div>
-                        <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full bg-gradient-to-r from-amber-600 to-red-500"
-                            style={{ width: `${Math.min((f.shap / (shapData.top_risk_factors[0]?.shap || 0.01)) * 100, 100)}%` }}
-                          />
-                        </div>
-                      </div>
-                    ))}
-                    {shapData.top_protect_factors.length > 0 && (
-                      <div className="pt-1">
-                        <div className="flex justify-between text-xs mb-0.5">
-                          <span className="text-text-muted capitalize">{shapData.top_protect_factors[0].factor.replace(/_/g, ' ')} <span className="text-emerald-500/60">(protective)</span></span>
-                          <span className="text-emerald-400 font-mono">{shapData.top_protect_factors[0].shap.toFixed(3)}</span>
-                        </div>
-                      </div>
-                    )}
-                    <div className="mt-1 flex items-center justify-between">
+              {/* Right column — editorial finding + top drivers */}
+              <div className="space-y-5">
+                {/* Editorial finding — the "ONE thing to know" */}
+                <div>
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                    Key Finding
+                  </p>
+                  <p
+                    className="text-xl md:text-2xl leading-tight"
+                    style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 700, letterSpacing: '-0.01em' }}
+                  >
+                    {(() => {
+                      const daPct = vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0
+                      const sbPct = vendor.single_bid_pct ?? 0
+                      const topShap = shapData?.top_risk_factors?.[0]
+                      if (isEfosDefinitivo) {
+                        return <>Confirmed <span style={{ color: riskColor }}>ghost company</span> (SAT Art. 69-B Definitivo).</>
+                      }
+                      if (isGroundTruth) {
+                        return <>Documented in <span style={{ color: riskColor }}>{(groundTruthStatus?.cases?.length ?? 0)} known corruption case{(groundTruthStatus?.cases?.length ?? 0) > 1 ? 's' : ''}</span>.</>
+                      }
+                      if (daPct > 70) {
+                        return <><span style={{ color: riskColor }}>{daPct.toFixed(0)}% direct awards</span> — {(daPct / 25).toFixed(1)}x the OECD limit of 25%.</>
+                      }
+                      if (topShap && topShap.shap > 0.15) {
+                        const label = topShap.factor.replace(/_/g, ' ')
+                        return <>Primary risk driver: <span style={{ color: riskColor }}>{label}</span> (SHAP +{topShap.shap.toFixed(2)}).</>
+                      }
+                      if (sbPct > 25) {
+                        return <><span style={{ color: riskColor }}>{sbPct.toFixed(0)}% single-bid procedures</span> — competition routinely deterred.</>
+                      }
+                      if (riskLevel === 'critical' || riskLevel === 'high') {
+                        return <>Procurement patterns match known <span style={{ color: riskColor }}>{riskLevel}-risk cases</span>.</>
+                      }
+                      return <>{vendor.total_contracts.toLocaleString()} contracts analyzed · no dominant risk driver.</>
+                    })()}
+                  </p>
+                </div>
+
+                {/* Top SHAP drivers — inline horizontal bars */}
+                {shapData && !shapError && shapData.top_risk_factors.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted">
+                        Top Score Drivers
+                        <span className="ml-2 text-[9px] font-normal text-text-muted/60 tracking-normal normal-case">SHAP per-vendor</span>
+                      </p>
                       <button
                         onClick={() => setActiveTab('risk')}
-                        className="text-[10px] text-accent hover:text-white transition-colors"
+                        className="text-[10px] font-mono uppercase tracking-wide text-accent hover:text-white transition-colors"
                       >
-                        {t('cards.viewFullAnalysis', 'View full risk analysis →')}
-                      </button>
-                      <button
-                        onClick={() => setDisputeOpen(true)}
-                        className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
-                      >
-                        {t('cards.disputeFinding', 'Dispute this finding')}
+                        Full analysis →
                       </button>
                     </div>
-                  </CardContent>
-                </Card>
-              )}
+                    <div className="space-y-2">
+                      {shapData.top_risk_factors.slice(0, 3).map((f) => (
+                        <div key={f.factor}>
+                          <div className="flex justify-between text-xs mb-1">
+                            <span className="text-text-secondary capitalize">{f.factor.replace(/_/g, ' ')}</span>
+                            <span className="text-risk-high font-mono tabular-nums">+{f.shap.toFixed(3)}</span>
+                          </div>
+                          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
+                            <div
+                              className="h-full rounded-full bg-gradient-to-r from-amber-600 to-red-500"
+                              style={{ width: `${Math.min((f.shap / (shapData.top_risk_factors[0]?.shap || 0.01)) * 100, 100)}%` }}
+                            />
+                          </div>
+                        </div>
+                      ))}
+                      {shapData.top_protect_factors.length > 0 && (
+                        <div className="pt-1">
+                          <div className="flex justify-between text-xs mb-0.5">
+                            <span className="text-text-muted capitalize">
+                              {shapData.top_protect_factors[0].factor.replace(/_/g, ' ')}
+                              <span className="text-emerald-500/60 ml-1">(protective)</span>
+                            </span>
+                            <span className="text-emerald-400 font-mono tabular-nums">{shapData.top_protect_factors[0].shap.toFixed(3)}</span>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+          </ScrollReveal>
+
+          <div className="grid gap-6 lg:grid-cols-3">
+            {/* Left Column - supporting panels */}
+            <ScrollReveal direction="up" delay={80}>
+            <div className="space-y-6">
+              {/* RiskGauge + ScoreDrivers moved into the hero panel above */}
 
               {/* Procurement Integrity Score */}
               {scorecard && (

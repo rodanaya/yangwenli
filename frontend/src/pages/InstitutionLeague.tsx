@@ -1,12 +1,16 @@
 /**
- * Ranking de Instituciones
+ * Institution Transparency League
  *
  * League-table style ranking of 2,563 scored institutions by their
  * overall transparency score (0-100) derived from 5 pillars:
  *   Openness, Price, Vendors, Process, External Alerts
  *
- * 5-tier Spanish system: Excelente / Satisfactorio / Regular / Deficiente / Critico
- * Editorial dark-mode design: zinc-900/950 palette, prominent numeric scores.
+ * 5-tier system (i18n-aware):
+ *   Excelente/Excellent, Satisfactorio/Satisfactory, Regular/Adequate,
+ *   Deficiente/Deficient, Critico/Critical
+ *
+ * Editorial dark-mode design: warm-stone palette, prominent numeric scores,
+ * crimson accent for accountability.
  */
 
 import { useMemo, useCallback, lazy, Suspense } from 'react'
@@ -94,68 +98,81 @@ type SortKey =
   | 'pillar_process'
   | 'pillar_external'
 
+type TierKey = 'Excelente' | 'Satisfactorio' | 'Regular' | 'Deficiente' | 'Critico'
+
 // ---------------------------------------------------------------------------
-// 5-tier Spanish system
+// 5-tier color system (color palette only — labels come from i18n)
 // ---------------------------------------------------------------------------
 
-interface TierInfo {
-  label: string
+interface TierStyle {
+  key: TierKey
   color: string
   bg: string
   border: string
   textClass: string
 }
 
-const TIER_MAP: Record<string, TierInfo> = {
-  Excelente:     { label: 'Excelente',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.30)',  textClass: 'text-green-400' },
-  Satisfactorio: { label: 'Satisfactorio', color: '#0d9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.30)', textClass: 'text-teal-400' },
-  Regular:       { label: 'Regular',       color: '#d97706', bg: 'rgba(217,119,6,0.12)',  border: 'rgba(217,119,6,0.30)',  textClass: 'text-amber-400' },
-  Deficiente:    { label: 'Deficiente',    color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.30)',  textClass: 'text-orange-400' },
-  Critico:       { label: 'Critico',       color: '#dc2626', bg: 'rgba(220,38,38,0.12)',  border: 'rgba(220,38,38,0.30)',  textClass: 'text-red-400' },
+interface TierInfo extends TierStyle {
+  label: string
 }
 
-/** Map any backend grade (S/A/B+/B/C+/C/D/D-/F/F-) to a 5-tier Spanish label */
-function gradeToTier(grade: string): TierInfo {
+const TIER_STYLES: Record<TierKey, TierStyle> = {
+  Excelente:     { key: 'Excelente',     color: '#16a34a', bg: 'rgba(22,163,74,0.12)',  border: 'rgba(22,163,74,0.30)',  textClass: 'text-green-400' },
+  Satisfactorio: { key: 'Satisfactorio', color: '#0d9488', bg: 'rgba(13,148,136,0.12)', border: 'rgba(13,148,136,0.30)', textClass: 'text-teal-400' },
+  Regular:       { key: 'Regular',       color: '#d97706', bg: 'rgba(217,119,6,0.12)',  border: 'rgba(217,119,6,0.30)',  textClass: 'text-amber-400' },
+  Deficiente:    { key: 'Deficiente',    color: '#ea580c', bg: 'rgba(234,88,12,0.12)',  border: 'rgba(234,88,12,0.30)',  textClass: 'text-orange-400' },
+  Critico:       { key: 'Critico',       color: '#dc2626', bg: 'rgba(220,38,38,0.12)',  border: 'rgba(220,38,38,0.30)',  textClass: 'text-red-400' },
+}
+
+const TIER_NAMES: readonly TierKey[] = ['Excelente', 'Satisfactorio', 'Regular', 'Deficiente', 'Critico'] as const
+
+/** Map any backend grade (S/A/B+/B/C+/C/D/D-/F/F-) to a 5-tier key */
+function gradeToTierKey(grade: string): TierKey {
   switch (grade) {
     case 'S':
     case 'A':
-      return TIER_MAP.Excelente
+      return 'Excelente'
     case 'B+':
     case 'B':
-      return TIER_MAP.Satisfactorio
+      return 'Satisfactorio'
     case 'C+':
     case 'C':
-      return TIER_MAP.Regular
+      return 'Regular'
     case 'D':
     case 'D-':
-      return TIER_MAP.Deficiente
+      return 'Deficiente'
     case 'F':
     case 'F-':
     default:
-      return TIER_MAP.Critico
+      return 'Critico'
   }
 }
 
-/** Aggregate 10-grade distribution into 5 tiers */
-function aggregateTiers(dist: Record<string, number>): Array<{ tier: TierInfo; count: number; grades: string[] }> {
-  return [
-    { tier: TIER_MAP.Excelente,     count: (dist['S'] ?? 0) + (dist['A'] ?? 0),   grades: ['S', 'A'] },
-    { tier: TIER_MAP.Satisfactorio, count: (dist['B+'] ?? 0) + (dist['B'] ?? 0),  grades: ['B+', 'B'] },
-    { tier: TIER_MAP.Regular,       count: (dist['C+'] ?? 0) + (dist['C'] ?? 0),  grades: ['C+', 'C'] },
-    { tier: TIER_MAP.Deficiente,    count: (dist['D'] ?? 0) + (dist['D-'] ?? 0),  grades: ['D', 'D-'] },
-    { tier: TIER_MAP.Critico,       count: (dist['F'] ?? 0) + (dist['F-'] ?? 0),  grades: ['F', 'F-'] },
-  ]
-}
-
 // Grades that map to each tier for filter purposes
-const TIER_GRADE_MAP: Record<string, string[]> = {
+const TIER_GRADE_MAP: Record<TierKey, string[]> = {
   Excelente:     ['S', 'A'],
   Satisfactorio: ['B+', 'B'],
   Regular:       ['C+', 'C'],
   Deficiente:    ['D', 'D-'],
   Critico:       ['F', 'F-'],
 }
-const TIER_NAMES = ['Excelente', 'Satisfactorio', 'Regular', 'Deficiente', 'Critico'] as const
+
+/** Hook that returns an i18n-aware tier-info resolver. */
+function useTierInfo() {
+  const { t } = useTranslation('institutionleague')
+  return useCallback((grade: string): TierInfo => {
+    const key = gradeToTierKey(grade)
+    return { ...TIER_STYLES[key], label: t(`tiers.${key}`) }
+  }, [t])
+}
+
+/** Hook that returns the full TierInfo for a given tier key. */
+function useTierByKey() {
+  const { t } = useTranslation('institutionleague')
+  return useCallback((key: TierKey): TierInfo => {
+    return { ...TIER_STYLES[key], label: t(`tiers.${key}`) }
+  }, [t])
+}
 
 // ---------------------------------------------------------------------------
 // Sub-components
@@ -218,23 +235,35 @@ function RiskDriverPill({ driver }: { driver: string }) {
 // ---------------------------------------------------------------------------
 
 function TierDistributionBar({ distribution }: { distribution: Record<string, number> }) {
-  const tiers = aggregateTiers(distribution)
+  const { t } = useTranslation('institutionleague')
+  const getTier = useTierByKey()
+
+  const tiers = useMemo(() => {
+    return TIER_NAMES.map((key) => {
+      const grades = TIER_GRADE_MAP[key]
+      const count = grades.reduce((sum, g) => sum + (distribution[g] ?? 0), 0)
+      return { tier: getTier(key), count }
+    })
+  }, [distribution, getTier])
+
   const total = tiers.reduce((s, t) => s + t.count, 0)
   if (total === 0) return null
+
+  const ariaLabel = t('distribution.ariaLabel')
 
   return (
     <div className="space-y-3">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-        Distribucion por nivel de transparencia
+        {t('distribution.title')}
       </p>
       {/* Stacked bar */}
-      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label="Distribucion por nivel de transparencia">
+      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label={ariaLabel}>
         {tiers.map(({ tier, count }) => {
           const pct = (count / total) * 100
           if (pct < 0.3) return null
           return (
             <div
-              key={tier.label}
+              key={tier.key}
               className="relative flex items-center justify-center overflow-hidden transition-all hover:opacity-100"
               style={{ width: `${pct}%`, backgroundColor: tier.color, minWidth: '4px', opacity: 0.9 }}
               title={`${tier.label}: ${count} (${pct.toFixed(1)}%)`}
@@ -253,7 +282,7 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
         {tiers.filter(t => t.count > 0).map(({ tier, count }) => {
           const pct = ((count / total) * 100).toFixed(1)
           return (
-            <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+            <span key={tier.key} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
               <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
               <span className="tabular-nums text-zinc-500">{count}</span>
@@ -271,7 +300,8 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
 // ---------------------------------------------------------------------------
 
 function TierBadge({ grade, size = 'sm' }: { grade: string; size?: 'sm' | 'md' }) {
-  const tier = gradeToTier(grade)
+  const getTier = useTierInfo()
+  const tier = getTier(grade)
   const sizeClass = size === 'md'
     ? 'px-2.5 py-1 text-[11px]'
     : 'px-2 py-0.5 text-[9px]'
@@ -298,7 +328,9 @@ function PodiumCard({
   item: InstitutionScorecardItem
   onNavigate: (id: number) => void
 }) {
-  const tier = gradeToTier(item.grade)
+  const { t } = useTranslation('institutionleague')
+  const getTier = useTierInfo()
+  const tier = getTier(item.grade)
   const podiumColors: Record<number, string> = {
     1: 'from-yellow-900/30 to-zinc-950/10 border-yellow-700/40',
     2: 'from-zinc-700/30 to-zinc-900/10 border-zinc-600/40',
@@ -324,7 +356,7 @@ function PodiumCard({
         ${topBorder[rank]}
         hover:border-zinc-500/60 transition-all text-left w-full group
       `}
-      aria-label={`#${rank}: ${item.institution_name}, puntuacion ${item.total_score}`}
+      aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
     >
       {rank === 1 && (
         <Crown
@@ -352,7 +384,7 @@ function PodiumCard({
       <div className="flex items-center gap-2 mt-auto">
         <TierBadge grade={item.grade} size="md" />
         <span className="text-zinc-500 text-[10px] font-mono tabular-nums">
-          Percentil {Math.round(item.national_percentile * 100)}
+          {t('percentileLabel', { n: Math.round(item.national_percentile * 100) })}
         </span>
       </div>
     </button>
@@ -378,12 +410,13 @@ function SortHeader({
   onSort: (k: SortKey) => void
   className?: string
 }) {
+  const { t } = useTranslation('institutionleague')
   const active = sortKey === currentKey
   return (
     <button
       onClick={() => onSort(sortKey)}
       className={`flex items-center gap-1 hover:text-white transition-colors ${active ? 'text-white' : 'text-zinc-500'} ${className}`}
-      aria-label={`Ordenar por ${label}`}
+      aria-label={t('sortAriaLabel', { label })}
     >
       <span className="text-[10px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
       {active ? (
@@ -407,6 +440,8 @@ export default function InstitutionLeague() {
   const { t } = useTranslation('institutionleague')
   const navigate = useNavigate()
   const [searchParams, setSearchParams] = useSearchParams()
+  const getTier = useTierInfo()
+  const getTierByKey = useTierByKey()
 
   // Filter / sort state from URL
   const page = Number(searchParams.get('page') || 1)
@@ -489,10 +524,10 @@ export default function InstitutionLeague() {
     const aboveBPct = totalScored > 0 ? ((aboveB / totalScored) * 100).toFixed(0) : '0'
     const failingCount = (dist['F'] ?? 0) + (dist['F-'] ?? 0)
     if (failingCount > 0) {
-      return `Solo el ${aboveBPct}% de instituciones alcanza nivel Satisfactorio o superior. ${failingCount} se encuentran en nivel Critico.`
+      return t('finding.critical', { pct: aboveBPct, failing: failingCount })
     }
-    return `Solo el ${aboveBPct}% de las ${formatNumber(totalScored)} instituciones evaluadas alcanza nivel Satisfactorio o superior.`
-  }, [statsData])
+    return t('finding.normal', { pct: aboveBPct, total: formatNumber(totalScored) })
+  }, [statsData, t])
 
   const failingCount = useMemo(() => {
     if (!statsData?.grade_distribution) return 0
@@ -521,7 +556,7 @@ export default function InstitutionLeague() {
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <TabBar activeTab={activeTab} setTab={setTab} />
         <ErrorBoundary fallback={null}>
-          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">{t('loadingShort')}</div>}>
             <InstitutionScorecards />
           </Suspense>
         </ErrorBoundary>
@@ -534,7 +569,7 @@ export default function InstitutionLeague() {
       <div className="min-h-screen bg-zinc-950 text-zinc-100">
         <TabBar activeTab={activeTab} setTab={setTab} />
         <ErrorBoundary fallback={null}>
-          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">Cargando...</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">{t('loadingShort')}</div>}>
             <ReportCard />
           </Suspense>
         </ErrorBoundary>
@@ -550,20 +585,24 @@ export default function InstitutionLeague() {
       <TabBar activeTab={activeTab} setTab={setTab} />
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
         <EditorialPageShell
-          kicker="INSTITUCIONES · RANKING FEDERAL"
+          kicker={t('kicker')}
           headline={
-            <>¿Quién lidera la transparencia{' '}
-              <span className="text-accent">en México?</span>
+            <>{t('headline.before')}{' '}
+              <span className="text-accent">{t('headline.accent')}</span>
             </>
           }
-          paragraph={`Clasificación competitiva de ${formatNumber(totalInstitutions) || '—'} instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.`}
+          paragraph={
+            totalInstitutions > 0
+              ? t('lede', { total: formatNumber(totalInstitutions) })
+              : t('lede_none')
+          }
           stats={isLoading ? undefined : [
-            { value: formatNumber(totalInstitutions), label: 'Instituciones evaluadas' },
-            { value: formatNumber(highRiskInstitutions), label: 'En nivel crítico', color: 'var(--color-risk-critical)' },
-            { value: statsData?.median_score?.toFixed(1) ?? '—', label: 'Puntuación mediana', sub: '/ 100' },
-            { value: '5', label: 'Niveles', sub: 'Excelente → Crítico' },
+            { value: formatNumber(totalInstitutions), label: t('stats.evaluated') },
+            { value: formatNumber(highRiskInstitutions), label: t('stats.critical'), color: 'var(--color-risk-critical)' },
+            { value: statsData?.median_score?.toFixed(1) ?? '—', label: t('stats.median'), sub: t('stats.outOfHundred') },
+            { value: '5', label: t('stats.tiers'), sub: t('stats.tiersRange') },
           ]}
-          meta="FEDERAL · 2002–2025"
+          meta={t('meta')}
           severity={failingCount > 0 ? 'critical' : 'high'}
           loading={isLoading}
         >
@@ -579,14 +618,14 @@ export default function InstitutionLeague() {
             <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
               failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
             }`}>
-              HALLAZGO
+              {t('hallazgo')}
             </p>
             <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
           </div>
         </div>
       )}
 
-      <div className="space-y-10"><Act number="I" label="LAS CABEZAS DE SERIE">
+      <div className="space-y-10"><Act number="I" label={t('acts.one')}>
 
       <div className="space-y-6">
 
@@ -596,10 +635,10 @@ export default function InstitutionLeague() {
             <div
               className="grid grid-cols-2 sm:grid-cols-4 gap-3"
               role="region"
-              aria-label="Estadisticas generales"
+              aria-label={t('statsAriaLabel')}
             >
               <StatCard label={t('stats.totalScored')} value={formatNumber(statsData.total_scored)} />
-              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub="/ 100" />
+              <StatCard label={t('stats.medianScore')} value={statsData.median_score.toFixed(1)} sub={t('stats.outOfHundred')} />
               <StatCard
                 label={t('stats.topPerformer')}
                 value={statsData.top_institution_score?.toFixed(1) ?? '--'}
@@ -628,13 +667,13 @@ export default function InstitutionLeague() {
           <section aria-labelledby="podium-heading" className="space-y-3">
             <div>
               <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
-                Podio
+                {t('podiumKicker')}
               </p>
               <h2
                 id="podium-heading"
                 className="text-lg font-serif font-bold text-zinc-100 leading-tight"
               >
-                Las tres instituciones más transparentes
+                {t('podiumHeadline')}
               </h2>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
@@ -653,27 +692,27 @@ export default function InstitutionLeague() {
         </div>
       </Act>
 
-      <Act number="II" label="LA CLASIFICACIÓN COMPLETA">
+      <Act number="II" label={t('acts.two')}>
       <div className="space-y-6">
 
         {/* Filters row */}
         <div className="flex flex-wrap gap-3 items-center">
           {/* Search */}
           <div className="relative flex-1 min-w-48">
-            <label htmlFor="league-search" className="sr-only">Buscar instituciones</label>
+            <label htmlFor="league-search" className="sr-only">{t('filters.search')}</label>
             <input
               id="league-search"
               type="search"
               value={search}
               onChange={(e) => updateParams({ q: e.target.value || undefined, page: '1' })}
-              placeholder="Buscar instituciones..."
+              placeholder={t('filters.searchPlaceholder')}
               className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 font-mono"
             />
           </div>
 
           {/* Sector filter */}
           <div>
-            <label htmlFor="sector-filter" className="sr-only">Sector</label>
+            <label htmlFor="sector-filter" className="sr-only">{t('filters.sectorLabel')}</label>
             <select
               id="sector-filter"
               value={sectorFilter}
@@ -687,14 +726,14 @@ export default function InstitutionLeague() {
             </select>
           </div>
 
-          {/* Tier filter (5-tier Spanish — sends first backend grade of the tier to API) */}
+          {/* Tier filter (5-tier — sends first backend grade of the tier to API) */}
           <div>
-            <label htmlFor="tier-filter" className="sr-only">Nivel</label>
+            <label htmlFor="tier-filter" className="sr-only">{t('filters.tier')}</label>
             <select
               id="tier-filter"
               value={activeTierName}
               onChange={(e) => {
-                const tierName = e.target.value
+                const tierName = e.target.value as TierKey | ''
                 // Send the first backend grade of the selected tier to the API
                 const grades = tierName ? TIER_GRADE_MAP[tierName] : undefined
                 const gradeVal = grades ? grades[0] : undefined
@@ -702,9 +741,9 @@ export default function InstitutionLeague() {
               }}
               className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600"
             >
-              <option value="">Todos los niveles</option>
+              <option value="">{t('filters.allTiers')}</option>
               {TIER_NAMES.map((tierName) => {
-                const tier = TIER_MAP[tierName]
+                const tier = getTierByKey(tierName)
                 return (
                   <option key={tierName} value={tierName}>{tier.label}</option>
                 )
@@ -714,7 +753,7 @@ export default function InstitutionLeague() {
 
           {/* Result count */}
           <span className="text-zinc-500 text-[10px] font-mono ml-auto tabular-nums tracking-wide">
-            {formatNumber(total)} instituciones
+            {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>
 
@@ -722,10 +761,10 @@ export default function InstitutionLeague() {
         <section aria-labelledby="league-table-heading" className="space-y-3">
           <div>
             <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
-              Tabla general
+              {t('tableKicker')}
             </p>
             <h2 id="league-table-heading" className="text-lg font-serif font-bold text-zinc-100 leading-tight">
-              Clasificación completa — {formatNumber(total)} instituciones
+              {t('tableHeadline', { total: formatNumber(total) })}
             </h2>
           </div>
 
@@ -752,14 +791,14 @@ export default function InstitutionLeague() {
             <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
               <p className="text-zinc-400 text-sm">{t('empty')}</p>
               <p className="text-zinc-600 text-xs mt-1">
-                Intenta ajustar los filtros o la busqueda.
+                {t('filters.adjustFilters')}
               </p>
             </div>
           )}
 
           {items.length > 0 && (
             <div className="overflow-x-auto rounded-xl border border-zinc-800">
-              <table className="w-full text-sm min-w-[900px]" role="grid" aria-label="Ranking de instituciones">
+              <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/80">
                     <th className="px-3 py-2.5 text-left w-10">
@@ -792,7 +831,7 @@ export default function InstitutionLeague() {
                     </th>
                     <th className="px-3 py-2.5 text-left hidden sm:table-cell w-32">
                       <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
-                        {t('pillarsLabel', 'Pillars')}
+                        {t('columns.pillars')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-center w-16 hidden sm:table-cell">
@@ -814,7 +853,7 @@ export default function InstitutionLeague() {
                 <tbody>
                   {items.map((item, idx) => {
                     const rank = firstItemRank + idx
-                    const tier = gradeToTier(item.grade)
+                    const tier = getTier(item.grade)
                     // Worst performers: bottom 5 when sorted by score ascending
                     const isWorstPerformer = sortBy === 'total_score' && sortOrder === 'asc' && idx < 5
                     // Top 3 medals (only visible when sorted by score descending on first page)
@@ -832,7 +871,7 @@ export default function InstitutionLeague() {
                         }`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         role="row"
-                        aria-label={`#${rank} ${item.institution_name}, puntuacion ${item.total_score}, nivel ${tier.label}`}
+                        aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
                         style={{ borderLeft: `4px solid ${tier.color}` }}
                       >
                         {/* Rank — large bold mono */}
@@ -854,7 +893,7 @@ export default function InstitutionLeague() {
                           </div>
                           {isWorstPerformer && (
                             <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-wider text-red-500 whitespace-nowrap">
-                              Peor Desempeño
+                              {t('worstPerformerBadge')}
                             </div>
                           )}
                         </td>
@@ -903,7 +942,7 @@ export default function InstitutionLeague() {
                         <td className="px-3 py-3 hidden md:table-cell">
                           <span className="text-zinc-400 text-xs font-mono tabular-nums">
                             {item.national_percentile !== null
-                              ? `Percentil ${Math.round(item.national_percentile * 100)}`
+                              ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
                           </span>
                         </td>
@@ -919,27 +958,27 @@ export default function InstitutionLeague() {
           {totalPages > 1 && (
             <nav
               className="flex items-center justify-between mt-4"
-              aria-label="Paginacion"
+              aria-label={t('pagination.ariaLabel')}
             >
               <button
                 disabled={page <= 1}
                 onClick={() => updateParams({ page: String(page - 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Pagina anterior"
+                aria-label={t('pagination.previousAriaLabel')}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-                Anterior
+                {t('pagination.previous')}
               </button>
               <span className="text-zinc-500 text-sm font-mono tabular-nums">
-                Pagina {page} de {totalPages}
+                {t('pagination.pageOf', { page, total: totalPages })}
               </span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => updateParams({ page: String(page + 1) })}
                 className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
-                aria-label="Pagina siguiente"
+                aria-label={t('pagination.nextAriaLabel')}
               >
-                Siguiente
+                {t('pagination.next')}
                 <ChevronRight className="h-4 w-4" aria-hidden="true" />
               </button>
             </nav>
@@ -951,7 +990,7 @@ export default function InstitutionLeague() {
 
         {/* Source footnote */}
         <p className="text-[10px] text-zinc-700 font-mono text-center py-6 border-t border-zinc-800/40 mt-8">
-          RUBLI Indice de Salud de Contrataciones v0.6.5 · COMPRANET 2002-2025 · Metodologia OCDE / FMI
+          {t('methodologyFootnote')}
         </p>
       </div>
         </EditorialPageShell>
@@ -965,10 +1004,11 @@ export default function InstitutionLeague() {
 // ---------------------------------------------------------------------------
 
 function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string) => void }) {
+  const { t } = useTranslation('institutionleague')
   const tabs = [
-    { id: 'ranking', label: 'Ranking' },
-    { id: 'fichas',  label: 'Fichas' },
-    { id: 'reporte', label: 'Reporte' },
+    { id: 'ranking', label: t('tabs.ranking') },
+    { id: 'fichas',  label: t('tabs.fichas') },
+    { id: 'reporte', label: t('tabs.reporte') },
   ]
   return (
     <div className="border-b border-zinc-800/60 bg-zinc-900/50 px-4 sm:px-6">

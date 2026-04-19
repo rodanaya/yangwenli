@@ -47,7 +47,7 @@ import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { FuentePill } from '@/components/ui/FuentePill'
-import { CategoryTreemap } from '@/components/charts/CategoryTreemap'
+import { CategoryRanking } from '@/components/charts/CategoryRanking'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 
@@ -2018,30 +2018,41 @@ export default function SpendingCategories() {
       </div>
 
       {/* ================================================================= */}
-      {/* 2.5 Category Treemap — hero visualization                         */}
+      {/* 2.5 Category Ranking — editorial replacement for 72-cell treemap  */}
       {/* ================================================================= */}
       {allCategories.length > 0 && (
-        <section aria-labelledby="treemap-heading" className="space-y-3">
+        <section aria-labelledby="ranking-heading" className="space-y-4">
           <div className="flex items-end justify-between gap-3 flex-wrap">
-            <div>
+            <div className="max-w-2xl">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-                {t('hero.treemapEyebrow')}
+                RUBLI · {i18n.language === 'en' ? 'Where the Money Goes' : 'A Dónde Va el Dinero'}
               </p>
               <h2
-                id="treemap-heading"
-                className="text-lg font-bold text-text-primary tracking-tight"
+                id="ranking-heading"
+                className="text-2xl font-bold text-text-primary leading-tight"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
-                {t('hero.treemapTitle', { count: allCategories.length })}
+                {i18n.language === 'en'
+                  ? <>The <em>top 20 categories</em> — ranked by spend, flagged by risk.</>
+                  : <>Las <em>20 categorías principales</em> — por gasto, con riesgo.</>
+                }
               </h2>
-              <p className="text-xs text-text-muted mt-0.5">
-                {t('treemap.hint')}
+              <p className="text-sm text-text-secondary mt-2 leading-relaxed">
+                {i18n.language === 'en'
+                  ? `Of ${allCategories.length} partida codes, the top 20 account for the majority of federal procurement. Rows in crimson signal critical-risk categories — those whose procurement patterns most closely resemble documented corruption cases.`
+                  : `De ${allCategories.length} códigos partida, las 20 principales concentran la mayoría del gasto federal. Las filas en carmesí indican categorías de riesgo crítico — aquellas cuyos patrones de adquisición se asemejan más a casos documentados de corrupción.`
+                }
               </p>
             </div>
             <FuentePill source="COMPRANET · 2002–2025" verified={true} />
           </div>
-          <div className="rounded-xl border border-border/30 bg-background-card overflow-hidden p-2">
-            <CategoryTreemap categories={allCategories} height={480} lang={i18n.language} />
+          <div className="rounded-xl border border-border/30 bg-background-card/50 p-5">
+            <CategoryRanking
+              categories={allCategories}
+              lang={i18n.language}
+              limit={20}
+              onSelect={(id) => setSelectedCategoryId(prev => prev === id ? null : id)}
+            />
           </div>
         </section>
       )}

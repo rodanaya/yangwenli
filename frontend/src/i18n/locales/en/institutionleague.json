@@ -2,17 +2,42 @@
   "eyebrow": "INSTITUTION TRANSPARENCY LEAGUE",
   "title": "Institution Transparency League",
   "subtitle": "Rankings based on competition rate, single-bid rate, price fairness, and risk indicators across {{total}} scored institutions",
+  "kicker": "INSTITUTIONS · FEDERAL ACCOUNTABILITY LEAGUE",
+  "meta": "FEDERAL · 2002–2025 · v0.6.5",
+  "headline": {
+    "before": "Who is accountable",
+    "accent": "for how Mexico spends?"
+  },
+  "lede": "Competitive ranking of {{total}} federal institutions scored 0–100 across five pillars — openness, price fairness, vendor diversity, process integrity and external alerts. Every agency, first to last, no excuses.",
+  "lede_none": "Competitive ranking of federal institutions scored 0–100 across five pillars — openness, price fairness, vendor diversity, process integrity and external alerts. Every agency, first to last, no excuses.",
   "podiumTitle": "Top Performers",
   "podiumSubtitle": "Institutions with the highest transparency scores",
+  "podiumHeadline": "The three most transparent institutions",
+  "podiumKicker": "Podium",
+  "podiumAriaLabel": "#{{rank}}: {{name}}, score {{score}}",
   "tableTitle": "Full Rankings",
+  "tableKicker": "Full Table",
+  "tableHeadline": "Complete ranking — {{total}} institutions",
+  "acts": {
+    "one": "LEADERS OF THE PACK",
+    "two": "THE FULL RANKING"
+  },
+  "finding": {
+    "critical": "Only {{pct}}% of institutions reach Satisfactory or better. {{failing}} are flagged at the Critical level.",
+    "normal": "Only {{pct}}% of {{total}} evaluated institutions reach the Satisfactory level or better."
+  },
   "filters": {
-    "searchPlaceholder": "Search institutions...",
+    "searchPlaceholder": "Search institutions…",
     "sectorLabel": "Sector",
     "allSectors": "All sectors",
     "allGrades": "All grades",
+    "allTiers": "All levels",
     "minContracts": "Min contracts",
     "sortBy": "Sort by",
-    "adjustFilters": "Try adjusting your filters or search query."
+    "adjustFilters": "Try adjusting your filters or search query.",
+    "search": "Search institutions",
+    "tier": "Level",
+    "results": "{{num}} institutions"
   },
   "stats": {
     "totalScored": "Scored Institutions",
@@ -22,19 +47,29 @@
     "gradeDistribution": "Grade Distribution",
     "institutionsCount": "{{num}} institutions",
     "scoreOutOf": "out of 100",
+    "outOfHundred": "/ 100",
+    "evaluated": "Evaluated institutions",
+    "critical": "At critical level",
+    "median": "Median score",
+    "tiers": "Levels",
+    "tiersRange": "Excellent → Critical",
     "findingCritical": "Only {{pct}}% of institutions score B or above. {{count}} are flagged critical.",
     "findingNormal": "Only {{pct}}% of institutions score B or above across {{total}} agencies."
   },
+  "statsAriaLabel": "General statistics",
   "pagination": {
     "previous": "Previous",
     "next": "Next",
-    "pageOf": "Page {{page}} of {{total}}"
+    "pageOf": "Page {{page}} of {{total}}",
+    "ariaLabel": "Pagination",
+    "previousAriaLabel": "Previous page",
+    "nextAriaLabel": "Next page"
   },
   "hallazgo": "FINDING",
   "columns": {
     "rank": "#",
     "institution": "Institution",
-    "grade": "Grade",
+    "grade": "Level",
     "score": "Score",
     "sector": "Sector",
     "contracts": "Contracts",
@@ -43,6 +78,7 @@
     "pillarVendors": "Vendors",
     "pillarProcess": "Process",
     "pillarExternal": "External",
+    "pillars": "Pillars",
     "trend": "Trend",
     "percentile": "National %ile"
   },
@@ -57,6 +93,17 @@
     "D-": "Very High Risk",
     "F": "Critical",
     "F-": "Red Flag"
+  },
+  "tiers": {
+    "Excelente": "Excellent",
+    "Satisfactorio": "Satisfactory",
+    "Regular": "Adequate",
+    "Deficiente": "Deficient",
+    "Critico": "Critical"
+  },
+  "distribution": {
+    "title": "Distribution by transparency level",
+    "ariaLabel": "Distribution by transparency level"
   },
   "trend": {
     "improving": "Improving",
@@ -75,11 +122,18 @@
     "process": "Process Integrity",
     "external": "External Alerts"
   },
+  "percentileLabel": "Percentile {{n}}",
+  "worstPerformerBadge": "Worst",
+  "tableAriaLabel": "Institution ranking",
+  "rowAriaLabel": "#{{rank}} {{name}}, score {{score}}, level {{tier}}",
   "empty": "No institutions match your current filters.",
-  "loading": "Loading institution rankings...",
+  "loading": "Loading institution rankings…",
+  "loadingShort": "Loading…",
   "error": "Failed to load institution rankings. Please try again.",
   "viewProfile": "View profile",
   "noSector": "Unclassified",
+  "sortAriaLabel": "Sort by {{label}}",
+  "methodologyFootnote": "RUBLI Procurement Health Index v0.6.5 · COMPRANET 2002–2025 · OECD / IMF methodology",
   "tabs": {
     "ranking": "Ranking",
     "fichas": "Scorecards",
