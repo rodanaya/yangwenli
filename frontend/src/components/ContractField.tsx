@@ -1,4 +1,5 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 /**
  * ContractField — canvas particle visualization for the RUBLI hero.
@@ -63,6 +64,39 @@ interface Attractor {
   oy: number
 }
 
+// Cluster metadata for overlay labels
+const CLUSTER_INFO = [
+  {
+    label: 'Monopoly Pattern',
+    desc: 'Single vendor dominates sector',
+    href: '/aria?pattern=P1',
+  },
+  {
+    label: 'Institutional Capture',
+    desc: 'Privileged procurement access',
+    href: '/aria?pattern=P6',
+  },
+  {
+    label: 'Ghost Companies',
+    desc: 'Shell entities, no real operations',
+    href: '/aria?pattern=P2',
+  },
+] as const
+
+// CSS overlay positions matching attractor canvas positions
+const CLUSTER_POSITIONS = [
+  { left: '74%', top: '38%', transform: 'translate(-50%, -100%) translateY(-18px)' },
+  { left: '86%', top: '65%', transform: 'translate(-50%, -100%) translateY(-18px)' },
+  { left: '63%', top: '75%', transform: 'translate(-50%, -100%) translateY(-18px)' },
+] as const
+
+// Attractor canvas percentage positions (must match seedParticles)
+const ATTRACTOR_PCT = [
+  [0.74, 0.38],
+  [0.86, 0.65],
+  [0.63, 0.75],
+] as const
+
 // Seeded RNG so the particle field is deterministic across reloads.
 // Mulberry32 — fast, good enough.
 function makeRng(seed: number) {
@@ -107,6 +141,20 @@ export default function ContractField({
   })
   const sizeRef = useRef<{ w: number; h: number; dpr: number }>({ w: 0, h: 0, dpr: 1 })
 
+  // Hover state: drives DOM label highlight
+  const [hoveredCluster, setHoveredCluster] = useState<number | null>(null)
+  // Ref synced from state so the draw loop can read it without stale closure
+  const hoveredRef = useRef<number | null>(null)
+  useEffect(() => {
+    hoveredRef.current = hoveredCluster
+  }, [hoveredCluster])
+
+  // Label visibility (fade in after ~4.8s)
+  const [showLabels, setShowLabels] = useState(false)
+
+  // Critical-particle counts per cluster (set after seedParticles)
+  const [clusterCounts, setClusterCounts] = useState<[number, number, number]>([0, 0, 0])
+
   useEffect(() => {
     const canvas = canvasRef.current
     if (!canvas) return
@@ -142,9 +190,9 @@ export default function ContractField({
       // 3 attractors — right-weighted so they don't fight headline text.
       // These are the DESTINATION of critical particles (vendor networks).
       const attractors: Attractor[] = [
-        { x: w * 0.74, y: h * 0.38, ox: 0, oy: 0 },
-        { x: w * 0.86, y: h * 0.65, ox: 0, oy: 0 },
-        { x: w * 0.63, y: h * 0.75, ox: 0, oy: 0 },
+        { x: w * ATTRACTOR_PCT[0][0], y: h * ATTRACTOR_PCT[0][1], ox: 0, oy: 0 },
+        { x: w * ATTRACTOR_PCT[1][0], y: h * ATTRACTOR_PCT[1][1], ox: 0, oy: 0 },
+        { x: w * ATTRACTOR_PCT[2][0], y: h * ATTRACTOR_PCT[2][1], ox: 0, oy: 0 },
       ]
       attractorsRef.current = attractors
 
@@ -218,6 +266,12 @@ export default function ContractField({
         })
       }
       particlesRef.current = parts
+
+      // Count critical particles per cluster for badge display
+      const c0 = parts.filter(p => p.risk === 'critical' && p.cluster === 0).length
+      const c1 = parts.filter(p => p.risk === 'critical' && p.cluster === 1).length
+      const c2 = parts.filter(p => p.risk === 'critical' && p.cluster === 2).length
+      setClusterCounts([c0, c1, c2])
     }
 
     resize()
@@ -225,17 +279,41 @@ export default function ContractField({
     const ro = new ResizeObserver(resize)
     if (canvas.parentElement) ro.observe(canvas.parentElement)
 
+    // Show labels after 4.8s
+    const labelTimer = setTimeout(() => setShowLabels(true), 4800)
+
     // -------- pointer --------
     const onMove = (e: PointerEvent) => {
       const rect = canvas.getBoundingClientRect()
-      pointerRef.current.x = e.clientX - rect.left
-      pointerRef.current.y = e.clientY - rect.top
+      const px = e.clientX - rect.left
+      const py = e.clientY - rect.top
+      pointerRef.current.x = px
+      pointerRef.current.y = py
       pointerRef.current.active = true
+
+      // Check if pointer is within 60px of any attractor center
+      const { w, h } = sizeRef.current
+      let found = false
+      for (let i = 0; i < ATTRACTOR_PCT.length; i++) {
+        const ax = w * ATTRACTOR_PCT[i][0]
+        const ay = h * ATTRACTOR_PCT[i][1]
+        const dx = px - ax
+        const dy = py - ay
+        if (dx * dx + dy * dy < 60 * 60) {
+          setHoveredCluster(i)
+          found = true
+          break
+        }
+      }
+      if (!found) {
+        setHoveredCluster(null)
+      }
     }
     const onLeave = () => {
       pointerRef.current.active = false
       pointerRef.current.x = -9999
       pointerRef.current.y = -9999
+      setHoveredCluster(null)
     }
     canvas.addEventListener('pointermove', onMove)
     canvas.addEventListener('pointerleave', onLeave)
@@ -271,6 +349,8 @@ export default function ContractField({
       ctx.globalCompositeOperation = 'source-over'
 
       const pointer = pointerRef.current
+      // Read hovered cluster from ref — safe in draw loop (avoids stale closure)
+      const hovered = hoveredRef.current
 
       for (let i = 0; i < parts.length; i++) {
         const p = parts[i]
@@ -355,7 +435,23 @@ export default function ContractField({
               ? 0.9 + Math.sin(t * 1.6 + p.phase) * 0.1
               : 1
 
-        const alpha = (p.baseAlpha * (0.35 + 0.65 * org) + 0.12 * (1 - org)) * pulse
+        // Base alpha before hover modulation
+        let alpha = (p.baseAlpha * (0.35 + 0.65 * org) + 0.12 * (1 - org)) * pulse
+
+        // Hover cluster emphasis — only kicks in after organize is nearly done
+        if (hovered !== null && t > organizeEnd - 0.5) {
+          const fadeProgress = Math.min(1, (t - (organizeEnd - 0.5)) / 0.5)
+          if (p.risk === 'critical' && p.cluster === hovered) {
+            // Highlighted cluster: boost alpha
+            alpha = Math.min(1, alpha * (1 + fadeProgress * 0.7))
+          } else if (p.risk === 'critical') {
+            // Other critical clusters: dim
+            alpha *= (1 - fadeProgress * 0.78)
+          } else {
+            // Non-critical: dim
+            alpha *= (1 - fadeProgress * 0.5)
+          }
+        }
 
         let r = 82, g = 82, b = 91 // zinc-600 default
         if (org > 0) {
@@ -447,6 +543,21 @@ export default function ContractField({
         }
       }
 
+      // Pulsing dashed ring around hovered attractor
+      if (hovered !== null && t > organizeEnd) {
+        const a = attractors[hovered]
+        const ringR = 50 + Math.sin(t * 2.2) * 5
+        const ringAlpha = 0.45 + Math.sin(t * 2.2) * 0.2
+        ctx.save()
+        ctx.strokeStyle = `rgba(239,68,68,${ringAlpha})`
+        ctx.lineWidth = 1
+        ctx.setLineDash([5, 5])
+        ctx.beginPath()
+        ctx.arc(a.x + a.ox, a.y + a.oy, ringR, 0, Math.PI * 2)
+        ctx.stroke()
+        ctx.restore()
+      }
+
       if (!prefersReduced) {
         rafRef.current = requestAnimationFrame(draw)
       }
@@ -463,17 +574,60 @@ export default function ContractField({
     return () => {
       if (rafRef.current != null) cancelAnimationFrame(rafRef.current)
       ro.disconnect()
+      clearTimeout(labelTimer)
       canvas.removeEventListener('pointermove', onMove)
       canvas.removeEventListener('pointerleave', onLeave)
     }
   }, [])
 
   return (
-    <canvas
-      ref={canvasRef}
-      className={className}
-      role="img"
-      aria-label={ariaLabel}
-    />
+    <div className={`${className} relative`}>
+      <canvas
+        ref={canvasRef}
+        style={{ position: 'absolute', inset: 0, width: '100%', height: '100%' }}
+        role="img"
+        aria-label={ariaLabel}
+      />
+
+      {/* Cluster overlay labels — fade in after particles have organized */}
+      {CLUSTER_INFO.map((info, i) => {
+        const pos = CLUSTER_POSITIONS[i]
+        return (
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: pos.left,
+              top: pos.top,
+              transform: pos.transform,
+              opacity: showLabels ? 1 : 0,
+              transition: `opacity 0.6s ease ${i * 0.2}s`,
+              pointerEvents: showLabels ? 'auto' : 'none',
+              zIndex: 20,
+            }}
+            onMouseEnter={() => setHoveredCluster(i)}
+            onMouseLeave={() => setHoveredCluster(null)}
+          >
+            <Link to={info.href}>
+              <div
+                className={`rounded border px-2.5 py-1.5 cursor-pointer transition-all duration-200 backdrop-blur-sm ${
+                  hoveredCluster === i
+                    ? 'bg-zinc-900/95 border-red-500/60 shadow-[0_0_14px_rgba(239,68,68,0.25)]'
+                    : 'bg-zinc-950/80 border-zinc-700/30 hover:border-red-500/40'
+                }`}
+              >
+                <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
+                  <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                  <span className="text-red-400 font-semibold">{info.label}</span>
+                  <span className="text-zinc-700">·</span>
+                  <span className="text-zinc-500">{clusterCounts[i]} nodes</span>
+                </div>
+                <div className="text-[9px] text-zinc-500 mt-0.5 pl-3">{info.desc}</div>
+              </div>
+            </Link>
+          </div>
+        )
+      })}
+    </div>
   )
 }
