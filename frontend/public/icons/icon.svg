@@ -1,5 +1,43 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
-  <rect width="512" height="512" rx="80" fill="#0f172a"/>
-  <text x="256" y="340" font-family="monospace" font-weight="900" font-size="220" text-anchor="middle" fill="#38bdf8">R</text>
-  <rect x="60" y="400" width="392" height="12" rx="6" fill="#38bdf8" opacity="0.4"/>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="16%" r="60%">
+      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.35"/>
+      <stop offset="60%" stop-color="#dc2626" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="spike-grad" x1="50%" y1="0%" x2="50%" y2="100%">
+      <stop offset="0%" stop-color="#ef4444"/>
+      <stop offset="100%" stop-color="#b91c1c"/>
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="96" fill="#0d0f0e"/>
+  <!-- Crimson atmospheric glow -->
+  <rect width="512" height="512" rx="96" fill="url(#glow)"/>
+
+  <!-- Baseline segments (warm dark, flanking the spike) -->
+  <line x1="48"  y1="352" x2="192" y2="352" stroke="#1e2220" stroke-width="16" stroke-linecap="round"/>
+  <line x1="320" y1="352" x2="464" y2="352" stroke="#1e2220" stroke-width="16" stroke-linecap="round"/>
+
+  <!-- Tick marks on baseline (left) — 3 equidistant marks -->
+  <line x1="88"  y1="344" x2="88"  y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+  <line x1="128" y1="344" x2="128" y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+  <line x1="164" y1="344" x2="164" y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+  <!-- Tick marks on baseline (right) -->
+  <line x1="348" y1="344" x2="348" y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+  <line x1="384" y1="344" x2="384" y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+  <line x1="424" y1="344" x2="424" y2="360" stroke="#2a3030" stroke-width="6" stroke-linecap="round"/>
+
+  <!-- THE SPIKE — bold, crimson, sharp -->
+  <polyline points="192,352 256,80 320,352"
+    stroke="url(#spike-grad)" stroke-width="28" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>
+
+  <!-- Peak: outer glow halo -->
+  <circle cx="256" cy="80" r="44" fill="#dc2626" opacity="0.14"/>
+  <circle cx="256" cy="80" r="28" fill="#dc2626" opacity="0.22"/>
+  <!-- Peak: core dot -->
+  <circle cx="256" cy="80" r="16" fill="#ef4444"/>
+  <!-- Peak: specular highlight -->
+  <circle cx="248" cy="72" r="6" fill="#fda4af" opacity="0.80"/>
 </svg>

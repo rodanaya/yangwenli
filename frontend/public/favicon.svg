@@ -1,21 +1,21 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" width="32" height="32">
+  <defs>
+    <radialGradient id="glow" cx="50%" cy="18%" r="55%">
+      <stop offset="0%" stop-color="#dc2626" stop-opacity="0.28"/>
+      <stop offset="100%" stop-color="#dc2626" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
   <!-- Background -->
-  <circle cx="16" cy="16" r="15.5" fill="#0d0f0e"/>
-
-  <!-- Three sectors: red (risk), green (monitor), amber (neutral) -->
-  <path d="M16 16 L16 1 A15 15 0 0 1 28.99 23.5 Z" fill="#c41e3a" opacity="0.9"/>
-  <path d="M16 16 L28.99 23.5 A15 15 0 0 1 3.01 23.5 Z" fill="#16a34a" opacity="0.85"/>
-  <path d="M16 16 L3.01 23.5 A15 15 0 0 1 16 1 Z" fill="#eab308" opacity="0.65"/>
-
-  <!-- Outer ring -->
-  <circle cx="16" cy="16" r="15" stroke="#ffffff" stroke-width="0.5" opacity="0.15"/>
-
-  <!-- Center hub -->
-  <circle cx="16" cy="16" r="3.5" fill="#0d0f0e"/>
-  <circle cx="16" cy="16" r="2.2" fill="#ffffff" opacity="0.95"/>
-
-  <!-- Sector marker dots -->
-  <circle cx="16" cy="7" r="1.5" fill="#c41e3a"/>
-  <circle cx="23.5" cy="20.5" r="1.5" fill="#16a34a"/>
-  <circle cx="8.5" cy="20.5" r="1.5" fill="#eab308"/>
+  <rect width="32" height="32" rx="7" fill="#0d0f0e"/>
+  <!-- Crimson glow at spike peak -->
+  <rect width="32" height="32" rx="7" fill="url(#glow)"/>
+  <!-- Baseline (warm dark — subtle, not dominant) -->
+  <line x1="3" y1="22" x2="29" y2="22" stroke="#1e2220" stroke-width="1.5"/>
+  <!-- The spike — THE mark -->
+  <polyline points="12,22 16,5 20,22"
+    stroke="#dc2626" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="miter" fill="none"/>
+  <!-- Peak: outer dot -->
+  <circle cx="16" cy="5" r="2.5" fill="#dc2626"/>
+  <!-- Peak: inner highlight -->
+  <circle cx="16" cy="5" r="1.1" fill="#fda4af"/>
 </svg>

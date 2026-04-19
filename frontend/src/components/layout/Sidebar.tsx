@@ -211,22 +211,25 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         collapsed ? 'md:w-14' : 'md:w-56',
       )}
     >
-      {/* Logo — heliocentric intelligence mark */}
+      {/* Logo — signal spike mark */}
       <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
-            <ellipse cx="16" cy="16" rx="13.5" ry="4.2" stroke="#5a6280" strokeWidth="0.4" opacity="0.35" transform="rotate(-20 16 16)" fill="none"/>
-            <ellipse cx="16" cy="16" rx="8.5" ry="2.7" stroke="#4d9ef5" strokeWidth="0.45" opacity="0.4" transform="rotate(-20 16 16)" fill="none"/>
-            <ellipse cx="16" cy="16" rx="4.8" ry="1.5" stroke="#d4922a" strokeWidth="0.4" opacity="0.55" transform="rotate(-20 16 16)" fill="none"/>
-            <circle cx="16" cy="16" r="5" fill="#d4922a" opacity="0.05"/>
-            <circle cx="16" cy="16" r="3.5" fill="#d4922a" opacity="0.10"/>
-            <circle cx="16" cy="16" r="2.4" fill="#b07c1e"/>
-            <circle cx="16" cy="16" r="1.7" fill="#d4922a"/>
-            <circle cx="16" cy="16" r="1.0" fill="#f0b840"/>
-            <circle cx="15.5" cy="15.5" r="0.45" fill="#fff8e0" opacity="0.65"/>
-            <circle cx="28.5" cy="11.5" r="1.1" fill="#6d7fa8" opacity="0.8"/>
-            <circle cx="8.0" cy="18.9" r="0.85" fill="#4d9ef5" opacity="0.75"/>
-            <circle cx="20.2" cy="15.3" r="0.6" fill="#f97316" opacity="0.85"/>
+            {/* Baseline — warm dark, flanking the spike */}
+            <line x1="2" y1="23" x2="11" y2="23" stroke="#2e2926" strokeWidth="1.4" strokeLinecap="round"/>
+            <line x1="21" y1="23" x2="30" y2="23" stroke="#2e2926" strokeWidth="1.4" strokeLinecap="round"/>
+            {/* Atmospheric glow at peak */}
+            <circle cx="16" cy="5" r="8" fill="#dc2626" opacity="0.10"/>
+            <circle cx="16" cy="5" r="5" fill="#dc2626" opacity="0.10"/>
+            {/* The spike — the detection signal */}
+            <polyline
+              points="11,23 16,5 21,23"
+              stroke="#dc2626" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="miter"
+            />
+            {/* Peak: outer dot */}
+            <circle cx="16" cy="5" r="2.4" fill="#dc2626"/>
+            {/* Peak: specular highlight */}
+            <circle cx="15.2" cy="4.3" r="0.9" fill="#fda4af" opacity="0.85"/>
           </svg>
         </div>
         {!isCollapsed && (
