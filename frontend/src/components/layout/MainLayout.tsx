@@ -29,7 +29,7 @@ export function MainLayout() {
   return (
     <div className="min-h-screen bg-background relative">
       {/* Subtle grid background — intelligence aesthetic */}
-      <div className="fixed inset-0 grid-pattern pointer-events-none opacity-[0.18]" aria-hidden="true" />
+      <div className="fixed inset-0 grid-pattern pointer-events-none opacity-[0.10]" aria-hidden="true" />
 
       {/* Skip to content link for keyboard users */}
       <a href="#main-content" className="skip-link">
@@ -88,13 +88,13 @@ export function MainLayout() {
           </AnimatePresence>
         </main>
 
-        {/* Footer */}
-        <footer className="border-t border-border/30 px-5 py-2.5 pb-20 md:pb-2.5">
-          <div className="hidden md:flex items-center justify-between text-xs text-text-muted font-mono tracking-wide mb-1.5">
-            <span>{t('footerBrand')} • {t('footerTagline')}</span>
-            <span>{t('footerStats')}</span>
+        {/* Footer — editorial colophon */}
+        <footer className="border-t border-[rgba(255,255,255,0.06)] px-5 py-3 pb-20 md:pb-3 mt-4">
+          <div className="hidden md:flex items-center justify-between text-[10px] text-zinc-500 font-mono tracking-[0.14em] uppercase mb-2">
+            <span>{t('footerBrand')} <span className="text-zinc-700 mx-1">·</span> {t('footerTagline')}</span>
+            <span className="text-zinc-600">{t('footerStats')}</span>
           </div>
-          <p className="text-[10px] text-text-muted/70 leading-relaxed max-w-3xl">
+          <p className="text-[10px] text-zinc-600 leading-relaxed max-w-3xl tracking-wide">
             {t('aboutData')}
           </p>
         </footer>

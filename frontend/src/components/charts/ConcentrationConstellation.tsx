@@ -12,6 +12,7 @@
  * it CLUSTERS. The other 94% is background sky.
  */
 import { useMemo } from 'react'
+import { halton, mulberry32 } from '@/lib/particle'
 
 export interface ConstellationRiskRow {
   level: 'critical' | 'high' | 'medium' | 'low'
@@ -43,33 +44,6 @@ const DOT_STYLE: Record<ConstellationRiskRow['level'], { r: number; fill: string
   high:     { r: 1.3, fill: '#f59e0b', alpha: 0.78 },
   medium:   { r: 0.95, fill: '#a16207', alpha: 0.55 },
   low:      { r: 0.6,  fill: '#71717a', alpha: 0.42 },
-}
-
-// ── Halton low-discrepancy sequence ───────────────────────────────────────
-// Deterministic, evenly-distributed positions that look random but never
-// clump. Far better than Math.random() for a "starfield" feel.
-function halton(index: number, base: number): number {
-  let result = 0
-  let f = 1 / base
-  let i = index
-  while (i > 0) {
-    result += f * (i % base)
-    i = Math.floor(i / base)
-    f /= base
-  }
-  return result
-}
-
-// Mulberry32 — seeded RNG for tiny jitter, deterministic across renders.
-function mulberry32(seed: number) {
-  let s = seed >>> 0
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0
-    let t = s
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
 }
 
 interface DotPos {

@@ -14,22 +14,7 @@
  * becomes a full panel visual. Fully deterministic — no animation.
  */
 
-// ── Halton + seeded RNG (same as ConcentrationConstellation) ─────────────────
-function halton(index: number, base: number): number {
-  let result = 0; let f = 1 / base; let i = index
-  while (i > 0) { result += f * (i % base); i = Math.floor(i / base); f /= base }
-  return result
-}
-function mulberry32(seed: number) {
-  let s = seed >>> 0
-  return () => {
-    s = (s + 0x6d2b79f5) >>> 0
-    let t = s
-    t = Math.imul(t ^ (t >>> 15), t | 1)
-    t ^= t + Math.imul(t ^ (t >>> 7), t | 61)
-    return ((t ^ (t >>> 14)) >>> 0) / 4294967296
-  }
-}
+import { halton, mulberry32 } from '@/lib/particle'
 
 const DOT = {
   critical: { r: 2.2, fill: '#ef4444', alpha: 0.92 },

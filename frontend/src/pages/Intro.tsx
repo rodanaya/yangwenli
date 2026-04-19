@@ -247,23 +247,23 @@ export default function Intro() {
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-14 sm:pt-28 sm:pb-20"
           >
-            {/* Kicker */}
-            <p className="stat-label text-amber-500 mb-6 inline-flex items-center gap-2">
-              <span className="h-1 w-4 bg-amber-500 inline-block" />
-              {t('hero.transparency')}
-            </p>
+            {/* Kicker — editorial kicker rule + amber */}
+            <div className="mb-6">
+              <span className="text-kicker text-kicker--investigation inline-flex items-center gap-2">
+                <span className="h-px w-6 bg-amber-500/80 inline-block" />
+                {t('hero.transparency')}
+              </span>
+            </div>
 
-            {/* Editorial headline */}
-            <h1
-              className="text-[1.875rem] sm:text-[2.5rem] lg:text-[3rem] leading-[1.08] font-semibold text-zinc-50 mb-6 tracking-[-0.02em]"
-            >
+            {/* Editorial serif headline */}
+            <h1 className="text-editorial-display text-zinc-50 mb-6">
               {t('hero.headline')}
               <br />
-              <span className="text-zinc-400">{t('hero.headline_accent')}</span>
+              <span className="text-zinc-400 italic">{t('hero.headline_accent')}</span>
             </h1>
 
-            {/* Subhead */}
-            <p className="text-lg sm:text-xl text-zinc-400 leading-relaxed max-w-3xl mb-10">
+            {/* Italic serif deck */}
+            <p className="text-deck text-zinc-400 max-w-3xl mb-10">
               {t('hero.storySubtitle')}
             </p>
 
@@ -284,37 +284,37 @@ export default function Intro() {
               </button>
             </div>
 
-            {/* Inline three-stat callout — stat-md, not stat-hero */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-8 pt-8 border-t border-zinc-900">
-              <div>
-                <div className="stat-md text-zinc-50">
+            {/* Editorial three-figure strip — hairline dividers */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-x-0 gap-y-6 pt-8 border-t border-[rgba(255,255,255,0.08)] sm:divide-x sm:divide-[rgba(255,255,255,0.08)]">
+              <div className="sm:px-6 sm:first:pl-0 space-y-1">
+                <div className="text-kicker text-zinc-500">{t('hero.statContracts')}</div>
+                <div className="text-display-num text-zinc-50">
                   {formatNumber(totalContracts)}
                 </div>
-                <p className="text-xs text-zinc-500 mt-1.5">
-                  {t('hero.statContracts')}
-                </p>
               </div>
-              <div>
-                <div className="stat-md text-zinc-50">
+              <div className="sm:px-6 space-y-1">
+                <div className="text-kicker text-zinc-500">
+                  {t('hero.statValue')} &middot; 2002&ndash;2025
+                </div>
+                <div className="text-display-num text-zinc-50">
                   {formatCompactMXN(totalValueMxn)}
                 </div>
-                <p className="text-xs text-zinc-500 mt-1.5">
-                  {t('hero.statValue')} &middot; 2002&ndash;2025
-                </p>
               </div>
-              <div>
-                <div className="stat-md" style={{ color: CRIMSON }}>
+              <div className="sm:px-6 space-y-1">
+                <div className="text-kicker text-kicker--investigation">
+                  {t('hero.statHighRisk')}
+                </div>
+                <div className="text-display-num" style={{ color: CRIMSON }}>
                   {highRiskPct.toFixed(1)}%
                 </div>
-                <p className="text-xs text-zinc-500 mt-1.5">
-                  {t('hero.statHighRisk')}
-                  <span className="text-zinc-600"> &middot; {t('hero.statHighRiskContext')}</span>
-                </p>
+                <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em]">
+                  {t('hero.statHighRiskContext')}
+                </div>
               </div>
             </div>
 
-            {/* Credibility footer — tiny mono */}
-            <p className="mt-10 text-[11px] font-mono text-zinc-600 tracking-wide">
+            {/* Credibility colophon — editorial byline */}
+            <p className="text-byline text-zinc-600 mt-10">
               {t('hero.credibility')}
             </p>
           </motion.div>

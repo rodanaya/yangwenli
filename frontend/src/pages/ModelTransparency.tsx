@@ -112,28 +112,72 @@ const VERSION_HISTORY: VersionEntry[] = [
 function StatCard({ value, label, sub }: { value: string; label: string; sub?: string }) {
   return (
     <div
-      className="border-l-2 pl-4 py-2"
-      style={{ borderColor: ACCENT }}
+      className="pl-4 py-1"
+      style={{ borderLeft: `2px solid ${ACCENT}` }}
     >
       <div
-        className="text-4xl font-bold tabular-nums tracking-tight"
-        style={{ fontFamily: 'ui-serif, Georgia, serif', color: ACCENT }}
+        className="tabular-nums leading-none"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+          color: ACCENT,
+        }}
       >
         {value}
       </div>
-      <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-400 mt-1">
+      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-400 mt-2">
         {label}
       </div>
-      {sub && <div className="text-xs text-zinc-500 mt-1 leading-relaxed">{sub}</div>}
+      {sub && <div className="text-xs text-zinc-500 mt-1.5 leading-relaxed">{sub}</div>}
     </div>
   )
 }
 
-function SectionOverline({ children }: { children: React.ReactNode }) {
+function SectionKicker({ children, accent = false }: { children: React.ReactNode; accent?: boolean }) {
   return (
-    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">
-      {children}
-    </p>
+    <div className="flex items-center gap-2.5 mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: accent ? ACCENT : '#52525b' }}
+      />
+      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-400">
+        {children}
+      </span>
+    </div>
+  )
+}
+
+function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headline: string; deck?: string }) {
+  return (
+    <div className="mb-6">
+      <SectionKicker>{eyebrow}</SectionKicker>
+      <h2
+        className="text-zinc-50 leading-[1.15] mb-2"
+        style={{
+          fontFamily: 'var(--font-family-serif)',
+          fontSize: 'clamp(1.35rem, 2.2vw, 1.75rem)',
+          fontWeight: 700,
+          letterSpacing: '-0.02em',
+        }}
+      >
+        {headline}
+      </h2>
+      {deck && (
+        <p
+          className="text-zinc-400 max-w-3xl"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontSize: '0.95rem',
+            lineHeight: 1.55,
+          }}
+        >
+          {deck}
+        </p>
+      )}
+    </div>
   )
 }
 
@@ -143,10 +187,11 @@ function SectionOverline({ children }: { children: React.ReactNode }) {
 
 function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
   return (
-    <div className="space-y-10">
+    <div className="space-y-14">
+      {/* Key Facts — editorial stat row */}
       <section>
-        <SectionOverline>Key Facts</SectionOverline>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+        <SectionKicker accent>Key facts</SectionKicker>
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-x-6 gap-y-8">
           <StatCard
             value={auc.toFixed(3)}
             label="Test AUC-ROC"
@@ -154,86 +199,167 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
           />
           <StatCard
             value="13.49%"
-            label="High-Risk Rate"
-            sub="OECD compliant (2–15% benchmark range)."
+            label="High-risk rate"
+            sub="OECD compliant (2–15% benchmark)."
           />
           <StatCard
             value={formatNumber(nContracts || 3_051_294)}
-            label="Contracts Scored"
+            label="Contracts scored"
             sub="All v0.6.5-tagged records, 2002–2025."
           />
           <StatCard
             value="748"
-            label="Ground-Truth Cases"
-            sub="603 vendors, ~288K scoped contracts, institution-windowed."
+            label="Ground-truth cases"
+            sub="603 vendors · 288K scoped contracts."
           />
         </div>
       </section>
 
+      {/* How the model works — editorial article */}
       <section>
-        <SectionOverline>How the model works</SectionOverline>
-        <div className="prose prose-invert max-w-none">
+        <SectionHeadline
+          eyebrow="How the model works"
+          headline="Similarity to documented corruption — not literal probability"
+          deck="A calibrated logistic regression trained on 748 ground-truth cases produces a 0–1 score for every federal procurement contract since 2002."
+        />
+
+        <div className="max-w-3xl space-y-5">
           <p
-            className="text-lg leading-relaxed text-zinc-300"
-            style={{ fontFamily: 'ui-serif, Georgia, serif' }}
+            className="text-zinc-200"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: '1.15rem',
+              lineHeight: 1.65,
+            }}
           >
-            RUBLI scores every Mexican federal procurement contract on a 0–1 scale
-            by comparing it against patterns from 748 documented corruption cases.
+            <span
+              className="float-left mr-2 leading-[0.85]"
+              style={{
+                fontFamily: 'var(--font-family-serif)',
+                fontSize: '3.5rem',
+                fontWeight: 700,
+                color: ACCENT,
+                marginTop: '0.15rem',
+              }}
+            >
+              R
+            </span>
+            UBLI scores every Mexican federal procurement contract on a 0–1 scale
+            by comparing it against patterns from 748 documented corruption cases — ghost
+            companies, bid rigging, captured institutions, inflated contracts.
           </p>
-          <p className="text-sm leading-relaxed text-zinc-400 mt-4">
-            The model is a calibrated <strong className="text-zinc-200">logistic regression</strong> with
+          <p className="text-[0.95rem] leading-[1.7] text-zinc-400" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            The model is a calibrated <span className="text-zinc-200 font-medium">logistic regression</span> with
             Positive-Unlabeled learning correction (Elkan &amp; Noto, 2008). It takes 16 z-score
             features — vendor behavior, price dynamics, network structure, procurement procedure —
             and produces a similarity score to known fraud patterns. Nine features survive L1
             regularization and actively drive scores; the other seven are zeroed out.
           </p>
-          <p className="text-sm leading-relaxed text-zinc-400 mt-3">
-            There is one global model plus twelve sector-specific sub-models, trained jointly
-            via curriculum learning (confirmed cases weighted 1.0, high-confidence 0.8, medium 0.5,
-            low 0.2). Sectors with too few positives (Tecnología, Trabajo, Otros) fall back to
+          <p className="text-[0.95rem] leading-[1.7] text-zinc-400" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            One global model plus twelve sector-specific sub-models train jointly
+            via curriculum learning — confirmed cases weighted 1.0, high-confidence 0.8, medium 0.5,
+            low 0.2. Sectors with too few positives (Tecnología, Trabajo, Otros) fall back to
             the global model.
           </p>
-          <div
-            className="mt-6 rounded-xl border p-4"
-            style={{ borderColor: `${ACCENT}33`, backgroundColor: `${ACCENT}0d` }}
-          >
-            <p className="text-[10px] font-mono uppercase tracking-wide mb-1" style={{ color: ACCENT }}>
-              What the score means
-            </p>
-            <p className="text-sm text-zinc-200 leading-relaxed">
-              A score of 0.60 does <em>not</em> mean a 60% chance of corruption. It means the
-              contract <em>resembles</em> documented corruption cases strongly enough to warrant
-              investigation. Scores are triage signals for journalists and auditors — never
-              verdicts.
-            </p>
-          </div>
         </div>
+
+        {/* Pull-quote aside — "What the score means" */}
+        <aside
+          className="mt-8 pl-5 py-3 max-w-2xl"
+          style={{ borderLeft: `3px solid ${ACCENT}` }}
+        >
+          <p
+            className="text-[10px] font-mono uppercase tracking-[0.2em] mb-2"
+            style={{ color: ACCENT }}
+          >
+            What the score means
+          </p>
+          <p
+            className="text-zinc-200 leading-[1.55]"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: '1.05rem',
+              fontStyle: 'italic',
+            }}
+          >
+            A score of 0.60 does <span className="not-italic font-semibold">not</span> mean a 60% chance of corruption.
+            It means the contract resembles documented corruption cases strongly enough to warrant
+            investigation. Scores are triage signals — never verdicts.
+          </p>
+        </aside>
       </section>
 
+      {/* Primary signals — newspaper-style triple */}
       <section>
-        <SectionOverline>Primary signals</SectionOverline>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">Strongest positive</div>
-            <div className="text-base font-semibold text-zinc-100 mt-1">Price Volatility</div>
-            <div className="text-xs text-zinc-400 mt-2 leading-relaxed">
-              Contract-size variance vs sector norm. β = +0.5343.
+        <SectionHeadline
+          eyebrow="Primary signals"
+          headline="Three features do most of the work"
+          deck="Nine active coefficients in the global model; these three carry the largest magnitudes."
+        />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-0 border-t border-[rgba(255,255,255,0.08)]">
+          {[
+            {
+              eyebrow: 'Strongest positive',
+              name: 'Price Volatility',
+              beta: '+0.5343',
+              note: 'Contract-size variance vs sector norm. Vendors with wildly varying ticket sizes are the strongest predictor of investigation-worthy patterns.',
+              color: POSITIVE,
+            },
+            {
+              eyebrow: 'Strongest protective',
+              name: 'Institution Diversity',
+              beta: '−0.3821',
+              note: 'Serving many distinct agencies lowers risk. Legitimate broad-reach vendors look nothing like captured suppliers.',
+              color: NEGATIVE,
+            },
+            {
+              eyebrow: 'Concentration signal',
+              name: 'Vendor Concentration',
+              beta: '+0.3749',
+              note: 'Vendor’s share of sector spending. Dominant sector players — pharmaceutical distributors, food monopolies — trigger this.',
+              color: POSITIVE,
+            },
+          ].map((sig, i) => (
+            <div
+              key={sig.name}
+              className="px-5 py-6"
+              style={{
+                borderRight: i < 2 ? '1px solid rgba(255,255,255,0.06)' : undefined,
+                borderBottom: '1px solid rgba(255,255,255,0.06)',
+                borderTop: `2px solid ${sig.color}`,
+              }}
+            >
+              <p
+                className="text-[10px] font-mono uppercase tracking-[0.2em] mb-2"
+                style={{ color: sig.color }}
+              >
+                {sig.eyebrow}
+              </p>
+              <h3
+                className="text-zinc-50 mb-2"
+                style={{
+                  fontFamily: 'var(--font-family-serif)',
+                  fontSize: '1.3rem',
+                  fontWeight: 700,
+                  letterSpacing: '-0.015em',
+                }}
+              >
+                {sig.name}
+              </h3>
+              <div
+                className="font-mono tabular-nums text-sm mb-3"
+                style={{ color: sig.color }}
+              >
+                β = {sig.beta}
+              </div>
+              <p
+                className="text-zinc-400 text-sm leading-[1.6]"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {sig.note}
+              </p>
             </div>
-          </div>
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">Strongest protective</div>
-            <div className="text-base font-semibold text-zinc-100 mt-1">Institution Diversity</div>
-            <div className="text-xs text-zinc-400 mt-2 leading-relaxed">
-              Serving many distinct agencies lowers risk. β = −0.3821.
-            </div>
-          </div>
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-            <div className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">Concentration</div>
-            <div className="text-base font-semibold text-zinc-100 mt-1">Vendor Concentration</div>
-            <div className="text-xs text-zinc-400 mt-2 leading-relaxed">
-              Vendor's value share within sector. β = +0.3749.
-            </div>
-          </div>
+          ))}
         </div>
       </section>
     </div>
@@ -242,138 +368,166 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
 
 function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
   const maxAbs = Math.max(...liveCoefficients.map((c) => Math.abs(c.beta)), 0.0001)
+  const totalContracts = RISK_DISTRIBUTION.reduce((s, r) => s + r.count, 0)
 
   return (
-    <div className="space-y-10">
+    <div className="space-y-14">
+      {/* Feature coefficients — editorial divergent bar */}
       <section>
-        <SectionOverline>Active Feature Coefficients · v0.6.5 Global Model</SectionOverline>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-3xl">
-          Nine features survive L1 regularization. Positive coefficients (amber) push contracts
-          toward higher risk scores; negative coefficients (blue) are protective. The other seven
-          features in the architecture are regularized to zero.
-        </p>
+        <SectionHeadline
+          eyebrow="Active coefficients · v0.6.5 global model"
+          headline="Nine features survive L1 regularization"
+          deck="Positive coefficients (amber) push contracts toward higher scores. Protective coefficients (blue) pull toward lower. Seven features in the architecture regularize to zero."
+        />
 
-        <div className="rounded-xl border border-zinc-800 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/40">
-                <th className="text-left py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-[28%]">Feature</th>
-                <th className="text-left py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500">Coefficient</th>
-                <th className="text-right py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-[14%]">β</th>
-              </tr>
-            </thead>
-            <tbody>
-              {liveCoefficients.map((c) => {
-                const isPositive = c.beta >= 0
-                const color = isPositive ? POSITIVE : NEGATIVE
-                const barPct = (Math.abs(c.beta) / maxAbs) * 100
-                return (
-                  <tr
-                    key={c.factor}
-                    className="border-b border-zinc-800/60 hover:bg-zinc-900/30 transition-colors"
+        {/* Divergent-bar chart, hairline rows */}
+        <div className="border-y border-[rgba(255,255,255,0.08)]">
+          {/* Header row */}
+          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 border-b border-[rgba(255,255,255,0.06)]">
+            <span>Feature</span>
+            <span className="text-center">Protective ← 0 → Risk-increasing</span>
+            <span className="text-right tabular-nums w-20">β</span>
+          </div>
+          {liveCoefficients.map((c, i) => {
+            const isPositive = c.beta >= 0
+            const color = isPositive ? POSITIVE : NEGATIVE
+            const barPct = (Math.abs(c.beta) / maxAbs) * 100
+            return (
+              <div
+                key={c.factor}
+                className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 items-center py-3.5 px-1 group hover:bg-[rgba(255,255,255,0.015)] transition-colors"
+                style={{
+                  borderBottom: i < liveCoefficients.length - 1 ? '1px solid rgba(255,255,255,0.04)' : undefined,
+                }}
+              >
+                <div>
+                  <div
+                    className="text-zinc-100"
+                    style={{ fontFamily: 'var(--font-family-serif)', fontSize: '1.02rem', fontWeight: 600, letterSpacing: '-0.01em' }}
                   >
-                    <td className="py-3 px-4">
-                      <div className="text-zinc-100 font-medium">{c.label}</div>
-                      {c.note && (
-                        <div className="text-[11px] text-zinc-500 mt-0.5 leading-snug">{c.note}</div>
-                      )}
-                    </td>
-                    <td className="py-3 px-4">
-                      <div className="flex items-center gap-3">
-                        <div className="relative flex-1 h-2 bg-zinc-900 rounded-full overflow-hidden max-w-[320px]">
-                          {/* zero marker */}
-                          <div className="absolute inset-y-0 left-1/2 w-px bg-zinc-700" />
-                          <div
-                            className="absolute inset-y-0 rounded-full"
-                            style={{
-                              backgroundColor: color,
-                              left: isPositive ? '50%' : `${50 - barPct / 2}%`,
-                              width: `${barPct / 2}%`,
-                            }}
-                          />
-                        </div>
-                      </div>
-                    </td>
-                    <td
-                      className="py-3 px-4 text-right font-mono tabular-nums text-sm"
-                      style={{ color }}
-                    >
-                      {isPositive ? '+' : ''}
-                      {c.beta.toFixed(4)}
-                    </td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
+                    {c.label}
+                  </div>
+                  {c.note && (
+                    <div className="text-[11px] text-zinc-500 mt-1 leading-snug max-w-xs">
+                      {c.note}
+                    </div>
+                  )}
+                </div>
+                <div className="relative h-2 w-full">
+                  {/* Zero line */}
+                  <div className="absolute inset-y-[-4px] left-1/2 w-px bg-[rgba(255,255,255,0.12)]" />
+                  {/* Value bar */}
+                  <div
+                    className="absolute inset-y-0"
+                    style={{
+                      backgroundColor: color,
+                      left: isPositive ? '50%' : `${50 - barPct / 2}%`,
+                      width: `${barPct / 2}%`,
+                      boxShadow: `0 0 12px ${color}44`,
+                    }}
+                  />
+                </div>
+                <div
+                  className="text-right font-mono tabular-nums text-sm w-20"
+                  style={{ color, fontFeatureSettings: '"tnum"' }}
+                >
+                  {isPositive ? '+' : ''}
+                  {c.beta.toFixed(4)}
+                </div>
+              </div>
+            )
+          })}
         </div>
 
-        <div className="mt-3 flex gap-6 text-[11px] text-zinc-500 font-mono uppercase tracking-wide">
+        <div className="mt-3 flex gap-6 text-[10px] text-zinc-500 font-mono uppercase tracking-[0.18em]">
           <div className="flex items-center gap-2">
-            <span className="h-2 w-4 rounded-full" style={{ backgroundColor: POSITIVE }} />
+            <span className="h-2 w-4" style={{ backgroundColor: POSITIVE }} />
             Risk-increasing
           </div>
           <div className="flex items-center gap-2">
-            <span className="h-2 w-4 rounded-full" style={{ backgroundColor: NEGATIVE }} />
+            <span className="h-2 w-4" style={{ backgroundColor: NEGATIVE }} />
             Protective
+          </div>
+          <div className="flex items-center gap-2 ml-auto">
+            max|β| {maxAbs.toFixed(3)}
           </div>
         </div>
       </section>
 
+      {/* Risk distribution — editorial stacked strip + hairline table */}
       <section>
-        <SectionOverline>Risk Distribution · 3,051,294 Contracts</SectionOverline>
-        <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-3xl">
-          How the model distributes Mexico's procurement history across risk tiers. The high-risk
-          rate of 13.49% sits within the OECD's 2–15% benchmark, with structural-FP exclusions
-          and ghost-companion boosts applied.
-        </p>
-        <div className="rounded-xl border border-zinc-800 overflow-hidden">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-zinc-800 bg-zinc-900/40">
-                <th className="text-left py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500">Level</th>
-                <th className="text-left py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500">Threshold</th>
-                <th className="text-right py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500">Contracts</th>
-                <th className="text-right py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500">Share</th>
-                <th className="text-left py-3 px-4 text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-[28%]">Distribution</th>
-              </tr>
-            </thead>
-            <tbody>
-              {RISK_DISTRIBUTION.map((row) => (
-                <tr
-                  key={row.level}
-                  className="border-b border-zinc-800/60 hover:bg-zinc-900/30 transition-colors"
+        <SectionHeadline
+          eyebrow={`Risk distribution · ${formatNumber(totalContracts)} contracts`}
+          headline="13.49 % of procurement volume crosses the high-risk threshold"
+          deck="Within the OECD 2–15 % benchmark range, with structural false-positive exclusions and ghost-companion boosts applied."
+        />
+
+        {/* Unified distribution strip — one continuous bar */}
+        <div
+          className="flex h-10 w-full overflow-hidden mb-2"
+          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
+        >
+          {RISK_DISTRIBUTION.map((row) => (
+            <div
+              key={row.level}
+              title={`${row.level}: ${row.pct.toFixed(2)}% (${formatNumber(row.count)})`}
+              className="flex items-center justify-center text-[10px] font-mono uppercase tracking-wider text-black/80 transition-opacity hover:opacity-90"
+              style={{
+                width: `${row.pct}%`,
+                backgroundColor: row.color,
+                minWidth: 0,
+              }}
+            >
+              {row.pct > 5 ? `${row.pct.toFixed(1)}%` : ''}
+            </div>
+          ))}
+        </div>
+        <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-6">
+          <span>Low</span>
+          <span className="text-zinc-300">High-risk threshold →</span>
+          <span>Critical</span>
+        </div>
+
+        {/* Editorial hairline table */}
+        <div className="border-y border-[rgba(255,255,255,0.08)]">
+          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 border-b border-[rgba(255,255,255,0.06)]">
+            <span>Level</span>
+            <span>Threshold</span>
+            <span className="text-right">Contracts</span>
+            <span className="text-right">Share</span>
+          </div>
+          {RISK_DISTRIBUTION.map((row, i) => (
+            <div
+              key={row.level}
+              className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 items-center py-3.5 px-1 hover:bg-[rgba(255,255,255,0.015)] transition-colors"
+              style={{
+                borderBottom: i < RISK_DISTRIBUTION.length - 1 ? '1px solid rgba(255,255,255,0.04)' : undefined,
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <span
+                  className="h-8 w-1"
+                  style={{ backgroundColor: row.color }}
+                />
+                <span
+                  className="text-zinc-50"
+                  style={{ fontFamily: 'var(--font-family-serif)', fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.015em' }}
                 >
-                  <td className="py-3 px-4">
-                    <span
-                      className="inline-flex items-center gap-2 text-zinc-100 font-medium"
-                    >
-                      <span className="h-2 w-2 rounded-full" style={{ backgroundColor: row.color }} />
-                      {row.level}
-                    </span>
-                  </td>
-                  <td className="py-3 px-4 font-mono text-zinc-400 text-xs">{row.threshold}</td>
-                  <td className="py-3 px-4 text-right font-mono tabular-nums text-zinc-200">
-                    {formatNumber(row.count)}
-                  </td>
-                  <td
-                    className="py-3 px-4 text-right font-mono tabular-nums font-semibold"
-                    style={{ color: row.color }}
-                  >
-                    {row.pct.toFixed(2)}%
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="h-2 bg-zinc-900 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full"
-                        style={{ width: `${row.pct}%`, backgroundColor: row.color }}
-                      />
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+                  {row.level}
+                </span>
+              </div>
+              <span className="font-mono text-zinc-400 text-xs tabular-nums">{row.threshold}</span>
+              <span className="text-right font-mono tabular-nums text-zinc-200">
+                {formatNumber(row.count)}
+              </span>
+              <span
+                className="text-right font-mono tabular-nums font-semibold"
+                style={{ color: row.color }}
+              >
+                {row.pct.toFixed(2)}%
+              </span>
+            </div>
+          ))}
         </div>
       </section>
     </div>
@@ -382,97 +536,167 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
 
 function AuditTrailTab() {
   return (
-    <div className="space-y-8">
-      <div className="max-w-3xl">
-        <SectionOverline>Model Version History</SectionOverline>
-        <p className="text-sm text-zinc-400 leading-relaxed">
-          Every score in the database carries a model-version tag. Preserved scores remain
-          queryable in <span className="font-mono text-zinc-300">risk_score_v3</span>,{' '}
-          <span className="font-mono text-zinc-300">risk_score_v4</span>, and{' '}
-          <span className="font-mono text-zinc-300">risk_score_v5</span> columns for reproducibility.
-        </p>
-      </div>
+    <div className="space-y-14">
+      <section>
+        <SectionHeadline
+          eyebrow="Model version history"
+          headline="Every score carries a version tag"
+          deck="Preserved scores remain queryable in risk_score_v3, risk_score_v4, and risk_score_v5 columns. Full reproducibility from hyperparameters to run ID."
+        />
 
-      <ol className="space-y-4">
-        {VERSION_HISTORY.map((entry) => {
-          const isActive = entry.status === 'active'
-          const borderColor = isActive ? ACCENT : entry.status === 'preserved' ? '#64748b' : '#3f3f46'
-          return (
-            <li
-              key={entry.version}
-              className="rounded-xl border border-zinc-800 bg-zinc-900/30 p-5 border-l-4 transition-colors hover:bg-zinc-900/50"
-              style={{ borderLeftColor: borderColor }}
-            >
-              <div className="flex flex-wrap items-baseline gap-3 mb-3">
-                <h3
-                  className="text-2xl font-bold tracking-tight"
-                  style={{ fontFamily: 'ui-serif, Georgia, serif', color: isActive ? ACCENT : '#e4e4e7' }}
+        {/* Vertical timeline */}
+        <ol className="relative pl-8 space-y-0">
+          {/* Vertical rail */}
+          <div
+            className="absolute top-2 bottom-2 left-[7px] w-px"
+            style={{ backgroundColor: 'rgba(255,255,255,0.08)' }}
+          />
+
+          {VERSION_HISTORY.map((entry, i) => {
+            const isActive = entry.status === 'active'
+            const isLast = i === VERSION_HISTORY.length - 1
+            const dotColor = isActive ? ACCENT : entry.status === 'preserved' ? '#71717a' : '#3f3f46'
+
+            return (
+              <li
+                key={entry.version}
+                className="relative pb-10"
+                style={{ paddingBottom: isLast ? 0 : '2.5rem' }}
+              >
+                {/* Timeline dot */}
+                <span
+                  className="absolute -left-[29px] top-1 h-[15px] w-[15px] rounded-full flex items-center justify-center"
+                  style={{
+                    backgroundColor: '#0a0a0a',
+                    border: `2px solid ${dotColor}`,
+                    boxShadow: isActive ? `0 0 12px ${ACCENT}99` : undefined,
+                  }}
                 >
-                  {entry.version}
-                </h3>
-                <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
-                  {entry.date}
-                </span>
-                {isActive && (
-                  <span
-                    className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wide"
-                    style={{
-                      backgroundColor: `${ACCENT}1a`,
-                      color: ACCENT,
-                      border: `1px solid ${ACCENT}33`,
-                    }}
-                  >
+                  {isActive && (
                     <span
                       className="h-1.5 w-1.5 rounded-full animate-pulse"
                       style={{ backgroundColor: ACCENT }}
                     />
-                    Active
-                  </span>
-                )}
-                {entry.status === 'preserved' && (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wide bg-zinc-800 text-zinc-400 border border-zinc-700">
-                    Preserved
-                  </span>
-                )}
-                {entry.status === 'superseded' && (
-                  <span className="inline-flex items-center rounded-full px-2.5 py-0.5 text-[10px] font-mono uppercase tracking-wide bg-zinc-900 text-zinc-500 border border-zinc-800">
-                    Superseded
-                  </span>
-                )}
-              </div>
+                  )}
+                </span>
 
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 mb-4">
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">AUC</div>
-                  <div className="text-xl font-mono tabular-nums text-zinc-100 mt-0.5">
-                    {entry.auc.toFixed(3)}
+                {/* Dateline + status chip */}
+                <div className="flex items-center gap-3 mb-3 text-[10px] font-mono uppercase tracking-[0.18em]">
+                  <span className="text-zinc-500 tabular-nums">{entry.date}</span>
+                  {isActive && (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2 py-0.5"
+                      style={{
+                        backgroundColor: `${ACCENT}1a`,
+                        color: ACCENT,
+                        border: `1px solid ${ACCENT}33`,
+                      }}
+                    >
+                      <span className="h-1 w-1 rounded-full animate-pulse" style={{ backgroundColor: ACCENT }} />
+                      Active
+                    </span>
+                  )}
+                  {entry.status === 'preserved' && (
+                    <span className="px-2 py-0.5 text-zinc-400 border border-[rgba(255,255,255,0.12)]">
+                      Preserved
+                    </span>
+                  )}
+                  {entry.status === 'superseded' && (
+                    <span className="px-2 py-0.5 text-zinc-500 border border-[rgba(255,255,255,0.06)]">
+                      Superseded
+                    </span>
+                  )}
+                </div>
+
+                {/* Version headline */}
+                <h3
+                  className="tracking-tight leading-[1.1] mb-4"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
+                    fontWeight: 700,
+                    letterSpacing: '-0.025em',
+                    color: isActive ? ACCENT : '#e4e4e7',
+                  }}
+                >
+                  {entry.version}
+                </h3>
+
+                {/* Metric pair — bylines */}
+                <div className="flex gap-10 mb-4">
+                  <div>
+                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">Test AUC</div>
+                    <div
+                      className="tabular-nums mt-1"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: '1.4rem',
+                        fontWeight: 700,
+                        color: isActive ? ACCENT : '#e4e4e7',
+                        letterSpacing: '-0.015em',
+                      }}
+                    >
+                      {entry.auc.toFixed(3)}
+                    </div>
+                  </div>
+                  <div>
+                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">High-risk rate</div>
+                    <div
+                      className="tabular-nums mt-1"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: '1.4rem',
+                        fontWeight: 700,
+                        color: '#e4e4e7',
+                        letterSpacing: '-0.015em',
+                      }}
+                    >
+                      {entry.hr.toFixed(2)}%
+                    </div>
                   </div>
                 </div>
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">High-Risk Rate</div>
-                  <div className="text-xl font-mono tabular-nums text-zinc-100 mt-0.5">
-                    {entry.hr.toFixed(2)}%
-                  </div>
-                </div>
-              </div>
 
-              <p className="text-sm text-zinc-300 leading-relaxed">{entry.change}</p>
-            </li>
-          )
-        })}
-      </ol>
+                {/* Narrative */}
+                <p
+                  className="text-zinc-300 max-w-3xl"
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    fontSize: '0.98rem',
+                    lineHeight: 1.65,
+                  }}
+                >
+                  {entry.change}
+                </p>
+              </li>
+            )
+          })}
+        </ol>
+      </section>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-900/20 p-5 mt-6">
-        <SectionOverline>Reproducibility</SectionOverline>
-        <p className="text-sm text-zinc-400 leading-relaxed">
-          Current model run ID:{' '}
-          <span className="font-mono text-zinc-200">CAL-v6.1-202603251039</span>. Training
-          hyperparameters fixed via Optuna TPE (150 trials, vendor-stratified 70/30 split):{' '}
-          <span className="font-mono text-zinc-200">C = 0.0100</span>,{' '}
-          <span className="font-mono text-zinc-200">l1_ratio = 0.9673</span>,{' '}
-          PU correction <span className="font-mono text-zinc-200">c = 0.3000</span> (floor).
+      {/* Reproducibility — footnote aside */}
+      <section
+        className="pl-5 py-5 max-w-3xl"
+        style={{ borderLeft: `2px solid ${ACCENT}` }}
+      >
+        <p
+          className="text-[10px] font-mono uppercase tracking-[0.2em] mb-3"
+          style={{ color: ACCENT }}
+        >
+          Reproducibility · run ID CAL-v6.1-202603251039
         </p>
-      </div>
+        <p
+          className="text-zinc-300 leading-[1.7]"
+          style={{ fontFamily: 'var(--font-family-serif)', fontSize: '0.98rem' }}
+        >
+          Training hyperparameters fixed via Optuna TPE (150 trials, vendor-stratified 70/30 split):
+          {' '}
+          <span className="font-mono text-zinc-100 text-sm">C = 0.0100</span>,{' '}
+          <span className="font-mono text-zinc-100 text-sm">l1_ratio = 0.9673</span>,{' '}
+          PU correction <span className="font-mono text-zinc-100 text-sm">c = 0.3000</span>{' '}
+          (floor). Full training manifest and coefficient matrix archived in{' '}
+          <span className="font-mono text-zinc-100 text-sm">model_calibration</span>.
+        </p>
+      </section>
     </div>
   )
 }
@@ -536,69 +760,96 @@ export default function ModelTransparency() {
 
   return (
     <EditorialPageShell
-      kicker={`MODEL TRANSPARENCY · ${modelMeta?.version ?? CURRENT_MODEL_VERSION}`}
-      headline={<>The <em>logistic regression</em> that teaches a machine what corruption looks like.</>}
-      paragraph={
-        <>
-          RUBLI scores {formatNumber(nContracts)} Mexican federal procurement contracts against
-          748 documented corruption cases — vendor-matched, institution-scoped, and time-windowed
-          to reduce label noise. This page opens the math, the coefficients, and the paper trail.
-        </>
-      }
-      severity="medium"
+      kicker="MODEL TRANSPARENCY · GROUND TRUTH"
+      headline="The cases that teach the model what corruption looks like."
+      paragraph="The RUBLI risk model is trained on 748 documented corruption cases matched to procurement contracts in COMPRANET. These are the ground truth labels — vendor-matched, institution-scoped, and time-windowed to reduce label noise."
       stats={[
-        { value: auc.toFixed(3), label: 'Test AUC', color: ACCENT, sub: 'Vendor-stratified hold-out' },
-        { value: '13.49%', label: 'High-Risk Rate', color: '#eab308', sub: 'OECD 2–15% range' },
-        { value: '748', label: 'GT Cases', sub: '603 vendors, 288K contracts' },
-        { value: '9', label: 'Active Features', sub: 'Of 16 after L1 regularization' },
+        { value: '748', label: 'GT cases' },
+        { value: '603', label: 'Vendors' },
+        { value: '~288K', label: 'Contracts' },
+        { value: 'v0.6.5', label: 'Active model' },
       ]}
       loading={isLoading}
     >
-      <div className="max-w-6xl mx-auto py-4 space-y-14">
-        <Act number="I" label="THE MODEL">
-          <div className="max-w-3xl">
-            <p className="text-sm text-zinc-400 leading-relaxed">
-              Three views into how RUBLI ranks {formatNumber(nContracts)} contracts by corruption
-              risk — a plain-language summary, the per-feature mathematics, and the version history
-              that lets you audit every score. Scores are triage signals for journalists and
-              auditors; they are never verdicts.
-            </p>
-            <div className="mt-4 flex flex-wrap items-center gap-3">
-              <span
-                className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono"
-                style={{
-                  backgroundColor: `${ACCENT}1a`,
-                  color: ACCENT,
-                  border: `1px solid ${ACCENT}33`,
-                }}
-              >
-                <span
-                  className="h-1.5 w-1.5 rounded-full animate-pulse"
-                  style={{ backgroundColor: ACCENT }}
-                />
-                Live · AUC {auc.toFixed(3)}
-              </span>
-              <span className="text-[11px] font-mono uppercase tracking-wide text-zinc-500">
-                Trained {modelMeta?.trained_at ?? '2026-03-25'} · Run CAL-v6.1-202603251039
-              </span>
-            </div>
-          </div>
-        </Act>
+    <Act number="I" label="GROUND TRUTH">
+    <div className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-10">
+      {/* ============================================================== */}
+      {/* Editorial hero                                                  */}
+      {/* ============================================================== */}
+      <header className="pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Metodología · Transparencia del modelo</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
+          <span className="text-zinc-700">·</span>
+          <span>Regresión logística</span>
+        </div>
+        <p className="text-kicker text-kicker--investigation mb-3">Modelo activo</p>
+        <h1
+          className="text-zinc-50 leading-[1.05]"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontSize: 'clamp(2rem, 4vw, 3rem)',
+            fontWeight: 700,
+            letterSpacing: '-0.025em',
+          }}
+        >
+          Transparencia del modelo
+        </h1>
+        <p
+          className="mt-3 max-w-3xl text-zinc-300"
+          style={{
+            fontFamily: 'var(--font-family-serif)',
+            fontStyle: 'italic',
+            fontSize: 'clamp(1rem, 1.3vw, 1.2rem)',
+            lineHeight: 1.55,
+          }}
+        >
+          Cómo calificamos {formatNumber(nContracts)} contratos del gobierno federal
+          mexicano por riesgo de corrupción — las variables, las matemáticas, y el rastro auditable.
+        </p>
+        <div className="flex flex-wrap items-center gap-4 mt-5">
+          <span
+            className="inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-mono"
+            style={{
+              backgroundColor: `${ACCENT}1a`,
+              color: ACCENT,
+              border: `1px solid ${ACCENT}33`,
+            }}
+          >
+            <span
+              className="h-1.5 w-1.5 rounded-full animate-pulse"
+              style={{ backgroundColor: ACCENT }}
+            />
+            Live · AUC {auc.toFixed(3)}
+          </span>
+          <span className="text-[11px] font-mono uppercase tracking-wide text-zinc-500">
+            Trained {modelMeta?.trained_at ?? '2026-03-25'}
+          </span>
+        </div>
+      </header>
 
-        <Act number="II" label="THE EVIDENCE">
-          <SimpleTabs tabs={tabs} defaultTab="summary">
-            <TabPanel tabKey="summary">
-              <SummaryTab auc={auc} nContracts={nContracts} />
-            </TabPanel>
-            <TabPanel tabKey="metrics">
-              <MetricsTab liveCoefficients={liveCoefficients} />
-            </TabPanel>
-            <TabPanel tabKey="audit">
-              <AuditTrailTab />
-            </TabPanel>
-          </SimpleTabs>
-        </Act>
-      </div>
+      {/* ============================================================== */}
+      {/* Tabs                                                            */}
+      {/* ============================================================== */}
+      <SimpleTabs tabs={tabs} defaultTab="summary">
+        <TabPanel tabKey="summary">
+          <SummaryTab auc={auc} nContracts={nContracts} />
+        </TabPanel>
+        <TabPanel tabKey="metrics">
+          <MetricsTab liveCoefficients={liveCoefficients} />
+        </TabPanel>
+        <TabPanel tabKey="audit">
+          <AuditTrailTab />
+        </TabPanel>
+      </SimpleTabs>
+    </div>
+    </Act>
     </EditorialPageShell>
   )
 }

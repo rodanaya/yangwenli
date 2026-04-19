@@ -17,6 +17,7 @@ import {
   toTitleCase,
   cn,
 } from '@/lib/utils'
+import { formatVendorName } from '@/lib/vendor/formatName'
 import { institutionApi, caseLibraryApi, api, scorecardApi } from '@/api/client'
 import { GradeBadge10, InstitutionScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { InstitutionScorecardData } from '@/components/ui/ScorecardWidgets'
@@ -161,7 +162,7 @@ export function InstitutionProfile() {
     const instName = toTitleCase(inst.name)
 
     if (score >= RISK_THRESHOLDS.high && daPct > 60 && topVendorName && topVendorPct && topVendorPct > 15) {
-      return `${instName} ${t('profile.editorialLedeCapture', { daPct: daPct.toFixed(0), topVendor: toTitleCase(topVendorName), topVendorPct: topVendorPct.toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), score: (score * 100).toFixed(1) })}`
+      return `${instName} ${t('profile.editorialLedeCapture', { daPct: daPct.toFixed(0), topVendor: formatVendorName(topVendorName, 40), topVendorPct: topVendorPct.toFixed(1), totalContracts: (inst.total_contracts ?? 0).toLocaleString(), score: (score * 100).toFixed(1) })}`
     }
 
     if (score >= RISK_THRESHOLDS.medium) {
@@ -483,10 +484,31 @@ export function InstitutionProfile() {
         <span className="text-text-secondary truncate max-w-[300px]">{toTitleCase(institution.name)}</span>
       </nav>
 
-      {/* ---- EDITORIAL HERO (compact — full lede in EditorialPageShell below) ---- */}
+      {/* ---- EDITORIAL HERO ---- */}
       <header>
-        {/* Institution badges row — compact, complements the shell */}
-        <div className="flex items-center gap-2 mb-3 flex-wrap">
+        {/* Dateline strip — newspaper masthead grammar */}
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+          <span className="inline-flex items-center gap-1.5">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-zinc-300">RUBLI</span>
+          </span>
+          <span className="text-zinc-700">·</span>
+          <span>Dossier · Institución</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+          {institution.siglas && (
+            <>
+              <span className="text-zinc-700">·</span>
+              <span className="tabular-nums text-zinc-300">{institution.siglas}</span>
+            </>
+          )}
+        </div>
+        {/* Kicker */}
+        <p className="text-kicker text-kicker--investigation mb-3">
+          {t('profile.breadcrumb', 'Institution Profile')}
+        </p>
+        {/* Institution type badge + sector */}
+        <div className="flex items-center gap-2 mb-3">
           {institution.institution_type && (
             <span
               className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded text-[11px] font-semibold uppercase tracking-wider border"
@@ -513,21 +535,30 @@ export function InstitutionProfile() {
               {t('profile.documentedCase', { caseName: groundTruthStatus.case_name })}
             </Badge>
           ) : null}
-          {(() => {
-            const group = getInstitutionGroup(institution.name)
-            return group ? (
-              <span className="text-xs text-text-muted">
-                {t('profile.partOf')}{' '}
-                <span className="font-medium" style={{ color: group.color }}>{group.name}</span>
-              </span>
-            ) : null
-          })()}
         </div>
 
-        <InstitutionLogoBanner name={institution.name} height={28} className="mb-4" enableWiki />
+        {/* Large serif name */}
+        <h1
+          className="text-2xl font-bold text-text-primary leading-[1.1] tracking-tight mb-1"
+          style={{ fontFamily: "var(--font-family-serif)" }}
+        >
+          {toTitleCase(institution.name)}
+        </h1>
+
+        <InstitutionLogoBanner name={institution.name} height={28} className="mt-2 mb-3" enableWiki />
+
+        {(() => {
+          const group = getInstitutionGroup(institution.name)
+          return group ? (
+            <p className="text-sm text-text-muted mb-2">
+              {t('profile.partOf')}{' '}
+              <span className="font-medium" style={{ color: group.color }}>{group.name}</span>
+            </p>
+          ) : null
+        })()}
 
         {/* Action bar */}
-        <div className="flex items-center gap-2 flex-wrap pb-4 border-b border-border">
+        <div className="flex items-center gap-2 flex-wrap mt-4 pb-4 border-b border-border">
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
           <button
             onClick={() => setNetworkOpen(true)}
@@ -579,32 +610,22 @@ export function InstitutionProfile() {
       />
 
       <EditorialPageShell
-        kicker={`EXPEDIENTE INSTITUCIONAL · ${institution?.siglas?.toUpperCase() ?? institution?.name?.toUpperCase()?.slice(0, 40) ?? ''}`}
-        headline={
-          <>
-            {toTitleCase(institution.name)}
-            {riskLevel === 'critical' && (
-              <span className="ml-3 align-middle inline-block text-xs font-mono font-bold px-2 py-0.5 rounded bg-risk-critical/15 text-risk-critical border border-risk-critical/30 tracking-wider uppercase">
-                Riesgo crítico
-              </span>
-            )}
-          </>
-        }
+        kicker={`INSTITUTION FILE · ${institution?.name?.toUpperCase() ?? 'LOADING...'}`}
+        headline={toTitleCase(institution.name)}
         paragraph={
           <>
-            {getInstitutionTypeLabel(institution.institution_type)}
-            {sectorName ? ` · Sector ${sectorName}` : ''}.
-            {' '}Registro de adquisiciones 2002–2025 con {formatNumber(totalContracts)} contratos
-            y gasto acumulado de {formatCompactMXN(totalValue)}.
-            {' '}Los patrones siguientes revelan concentración de proveedores,
-            tasa de adjudicación directa y señales de riesgo medidas contra corrupción documentada.
+            This institution's procurement record spans 2002&ndash;2025 across {formatNumber(totalContracts)} contracts.
+            {' '}{getInstitutionTypeLabel(institution.institution_type)}
+            {sectorName ? ` / ${t('profile.sectorLabel')} ${sectorName}` : ''}.
+            {' '}Patterns below reveal vendor concentration, direct-award rates, and risk signals
+            measured against documented corruption signatures.
           </>
         }
         stats={[
           {
             value: formatNumber(totalContracts),
             label: t('profile.hallazgoLabels.contractsAnalyzed'),
-            sub: '2002–2025',
+            sub: '2002-2025, COMPRANET',
           },
           {
             value: formatCompactMXN(totalValue),
@@ -619,17 +640,17 @@ export function InstitutionProfile() {
                    riskLevel === 'high' ? 'var(--color-risk-high)' :
                    riskLevel === 'medium' ? 'var(--color-risk-medium)' :
                    'var(--color-risk-low)',
-            sub: 'OCDE: 2–15%',
+            sub: 'OECD: 2-15%',
           },
           {
             value: `${daPct.toFixed(0)}%`,
             label: t('profile.hallazgoLabels.directAward'),
             color: daPct > 80 ? 'var(--color-risk-critical)' : daPct > 60 ? 'var(--color-risk-high)' : undefined,
-            sub: 'OCDE máx: 25%',
+            sub: 'OECD max: 25%',
           },
         ]}
-        meta={<>RUBLI · v0.6.5 · COMPRANET</>}
-        severity={riskLevel === 'critical' ? 'critical' : riskLevel === 'high' ? 'high' : riskLevel === 'medium' ? 'medium' : 'low'}
+        meta={<>RUBLI · v0.6.5</>}
+        severity="medium"
       >
 
       {/* ---- HIDDEN HEADLINE (kept for backward i18n / a11y links) ---- */}
@@ -641,12 +662,9 @@ export function InstitutionProfile() {
         />
       </div>
 
-      {/* ═══ ACT I: EL HALLAZGO ═══ */}
-      <Act number="I" label="EL HALLAZGO">
-
       {/* ---- INVESTIGATION LEDE ---- */}
       <div
-        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary"
+        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary mb-6"
         style={{
           fontFamily: "var(--font-family-serif)",
           borderLeft: `3px solid ${riskColor}`,
@@ -664,7 +682,9 @@ export function InstitutionProfile() {
 
       {/* ---- IMPACTO HUMANO (for high-risk institutions) ---- */}
       {riskScore >= RISK_THRESHOLDS.medium && totalValue > 100_000_000 && (
-        <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
+        <div className="mb-6">
+          <ImpactoHumano amountMxn={totalValue * (highRiskPct ?? riskScore * 100) / 100} />
+        </div>
       )}
 
       {/* ---- GROUND TRUTH WARNING BANNER ---- */}
@@ -695,10 +715,8 @@ export function InstitutionProfile() {
         </div>
       )}
 
-      </Act>
-
-      {/* ═══ ACT II: LA EVIDENCIA ═══ */}
-      <Act number="II" label="LA EVIDENCIA · EXPEDIENTE COMPLETO">
+      {/* ---- TABBED CONTENT ---- */}
+      <Act number="I" label="EVIDENCIA · EXPEDIENTE INSTITUCIONAL">
       <SimpleTabs
         defaultTab="overview"
         onTabChange={setActiveTab}
@@ -1734,7 +1752,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
             <span className="text-xs font-mono text-text-muted w-4 text-right flex-shrink-0">{i + 1}</span>
             <div className="flex-1 min-w-0">
               <div className="flex items-center justify-between gap-2 mb-0.5">
-                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{toTitleCase(v.vendor_name)}</span>
+                <span className="text-xs font-medium text-text-primary truncate group-hover:text-accent transition-colors">{formatVendorName(v.vendor_name, 40)}</span>
                 <div className="flex items-center gap-2 flex-shrink-0">
                   <span className="text-xs font-mono text-text-muted">{formatCompactMXN(v.total_value_mxn)}</span>
                   <span className="text-xs font-mono text-text-muted w-8 text-right">{pct.toFixed(0)}%</span>
@@ -2058,7 +2076,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
             {contract.vendor_name && (
               <>
                 <span>·</span>
-                <span className="truncate max-w-[120px]">{toTitleCase(contract.vendor_name)}</span>
+                <span className="truncate max-w-[120px]">{formatVendorName(contract.vendor_name, 24)}</span>
               </>
             )}
           </div>
