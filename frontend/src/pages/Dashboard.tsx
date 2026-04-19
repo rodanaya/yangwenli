@@ -23,6 +23,8 @@ import { RiskStrata, type RiskStrataRow } from '@/components/charts/RiskStrata'
 import { SectorMarimekko, type SectorMarimekkoRow } from '@/components/charts/SectorMarimekko'
 import { SexenioStratum, type SexenioYearRow } from '@/components/charts/SexenioStratum'
 import { ConcentrationConstellation, type ConstellationRiskRow } from '@/components/charts/ConcentrationConstellation'
+import { AdminFingerprints } from '@/components/charts/AdminFingerprints'
+import { PatternTypology } from '@/components/charts/PatternTypology'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 
@@ -529,6 +531,7 @@ export function Dashboard() {
               <ConcentrationConstellation
                 rows={constellationRows}
                 totalContracts={overview.total_contracts ?? 0}
+                onClusterClick={(sectorCode) => navigate(`/sectors/${sectorCode}`)}
               />
             </ErrorBoundary>
           </section>
@@ -729,6 +732,55 @@ export function Dashboard() {
             </p>
           </div>
         </div>
+
+      </Act>
+
+      {/* ================================================================ */}
+      {/* ACT V — THE PATTERNS                                              */}
+      {/* ================================================================ */}
+      <Act number="V" label="THE PATTERNS">
+
+        {/* Presidential Fingerprints */}
+        <section className="surface-card p-5">
+          <ErrorBoundary fallback={<SectionErrorFallback />}>
+            <div className="flex items-baseline justify-between gap-3 mb-1">
+              <h3 className="text-sm font-bold text-text-primary">
+                {t('editorial.adminTitle', 'Perfil de riesgo por sexenio')}
+              </h3>
+              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                2001–2025
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              {t(
+                'editorial.adminSubtitle',
+                'High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.'
+              )}
+            </p>
+            <AdminFingerprints />
+          </ErrorBoundary>
+        </section>
+
+        {/* Pattern Typology */}
+        <section className="surface-card p-5">
+          <ErrorBoundary fallback={<SectionErrorFallback />}>
+            <div className="flex items-baseline justify-between gap-3 mb-1">
+              <h3 className="text-sm font-bold text-text-primary">
+                {t('editorial.patternsTitle', 'Patrones de riesgo identificados')}
+              </h3>
+              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                v0.6.5
+              </span>
+            </div>
+            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              {t(
+                'editorial.patternsSubtitle',
+                'Five procurement red flags across 3,051,294 contracts. Co-licitación alone flags 1.5M contracts — nearly half the entire dataset.'
+              )}
+            </p>
+            <PatternTypology />
+          </ErrorBoundary>
+        </section>
 
       </Act>
 

@@ -10,8 +10,12 @@
  * Design grammar: same particle vocabulary as ContractField, but frozen.
  * Tells the story that no bar chart can: critical risk is not just rare,
  * it CLUSTERS. The other 94% is background sky.
+ *
+ * Interactivity: 3 attractors are now labeled A/B/C, pulse gently, and
+ * expose a tooltip + click handler so readers can follow the thread into
+ * the implicated sector.
  */
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { halton, mulberry32 } from '@/lib/particle'
 
 export interface ConstellationRiskRow {
@@ -23,6 +27,7 @@ export interface ConstellationRiskRow {
 interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
   totalContracts: number
+  onClusterClick?: (sectorCode: string) => void
   className?: string
 }
 
@@ -37,6 +42,51 @@ const FIELD_W = SVG_W - PAD_L - PAD_R
 const FIELD_H = SVG_H - PAD_T - PAD_B
 const N_DOTS = 1200
 const N_ATTRACTORS = 3
+
+// Cluster metadata — 3 attractors correspond to the 3 dominant risk networks
+// surfaced by the v0.6.5 model (salud, agricultura, energia sector dominance
+// in documented corruption cases: IMSS Ghost, Segalmex, Odebrecht/PEMEX).
+interface ClusterMeta {
+  letter: string
+  label: string
+  desc: string
+  count: string
+  sectorCode: string
+  // Positioning on the wrapping div, expressed in percent of parent width/height
+  // (values tuned to mirror the SVG viewBox attractor positions).
+  topPct: number
+  leftPct: number
+}
+
+const CLUSTER_META: ClusterMeta[] = [
+  {
+    letter: 'A',
+    label: 'Red Salud',
+    desc: 'Healthcare & pharma concentration',
+    count: '~61,000',
+    sectorCode: 'salud',
+    topPct: 20,
+    leftPct: 50,
+  },
+  {
+    letter: 'B',
+    label: 'Red Agricultura',
+    desc: 'Agricultural supply network',
+    count: '~61,000',
+    sectorCode: 'agricultura',
+    topPct: 55,
+    leftPct: 75,
+  },
+  {
+    letter: 'C',
+    label: 'Red Energía',
+    desc: 'Energy & infrastructure cluster',
+    count: '~62,000',
+    sectorCode: 'energia',
+    topPct: 68,
+    leftPct: 35,
+  },
+]
 
 // Risk visual styling (mirrors ContractField + RiskStrata)
 const DOT_STYLE: Record<ConstellationRiskRow['level'], { r: number; fill: string; alpha: number; halo?: number }> = {
@@ -53,8 +103,10 @@ interface DotPos {
   cluster: number // -1 for non-critical
 }
 
-export function ConcentrationConstellation({ rows, totalContracts, className }: ConcentrationConstellationProps) {
-  const { dots, criticalEdges, marginAnchors } = useMemo(() => {
+export function ConcentrationConstellation({ rows, totalContracts, onClusterClick, className }: ConcentrationConstellationProps) {
+  const [hoveredCluster, setHoveredCluster] = useState<number | null>(null)
+
+  const { dots, criticalEdges, marginAnchors, attractors } = useMemo(() => {
     // Sort to deterministic order: critical, high, medium, low
     const order = ['critical', 'high', 'medium', 'low'] as const
     const byLevel = Object.fromEntries(order.map((l) => [l, rows.find((r) => r.level === l)?.pct ?? 0])) as Record<typeof order[number], number>
@@ -161,6 +213,7 @@ export function ConcentrationConstellation({ rows, totalContracts, className }: 
     return {
       dots: built,
       criticalEdges: edges,
+      attractors,
       marginAnchors: {
         critical: findAnchor('critical', PAD_T + FIELD_H * 0.32),
         high:     findAnchor('high',     PAD_T + FIELD_H * 0.55),
@@ -182,126 +235,232 @@ export function ConcentrationConstellation({ rows, totalContracts, className }: 
   ]
 
   return (
-    <svg
-      viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      width="100%"
-      preserveAspectRatio="xMidYMid meet"
-      className={className}
-      role="img"
-      aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts: critical-risk dots cluster into 3 attractors, the rest is background.`}
-    >
-      {/* ── Field border (hairline) ──────────────────────────────────────── */}
-      <rect
-        x={PAD_L - 4}
-        y={PAD_T - 4}
-        width={FIELD_W + 8}
-        height={FIELD_H + 8}
-        fill="none"
-        stroke="rgba(255,255,255,0.04)"
-        strokeWidth={1}
-      />
-
-      {/* ── Edges (drawn first, under the dots) ──────────────────────────── */}
-      {criticalEdges.map((e, idx) => (
-        <line
-          key={`edge-${idx}`}
-          x1={e.x1}
-          y1={e.y1}
-          x2={e.x2}
-          y2={e.y2}
-          stroke="#ef4444"
-          strokeOpacity={e.primary ? 0.32 : 0.16}
-          strokeWidth={e.primary ? 0.7 : 0.5}
+    <div className="relative">
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        width="100%"
+        preserveAspectRatio="xMidYMid meet"
+        className={className}
+        role="img"
+        aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts: critical-risk dots cluster into 3 networks labeled A, B, C. Hover or click a cluster to investigate.`}
+      >
+        {/* ── Field border (hairline) ──────────────────────────────────────── */}
+        <rect
+          x={PAD_L - 4}
+          y={PAD_T - 4}
+          width={FIELD_W + 8}
+          height={FIELD_H + 8}
+          fill="none"
+          stroke="rgba(255,255,255,0.04)"
+          strokeWidth={1}
         />
-      ))}
 
-      {/* ── Halos for critical dots (under the dot core) ─────────────────── */}
-      {dots.map((d, idx) => {
-        if (d.level !== 'critical') return null
-        const s = DOT_STYLE.critical
-        return (
-          <circle
-            key={`halo-${idx}`}
-            cx={d.x}
-            cy={d.y}
-            r={(s.halo ?? 3) * 1.0}
-            fill={s.fill}
-            fillOpacity={0.10}
+        {/* ── Edges (drawn first, under the dots) ──────────────────────────── */}
+        {criticalEdges.map((e, idx) => (
+          <line
+            key={`edge-${idx}`}
+            x1={e.x1}
+            y1={e.y1}
+            x2={e.x2}
+            y2={e.y2}
+            stroke="#ef4444"
+            strokeOpacity={e.primary ? 0.32 : 0.16}
+            strokeWidth={e.primary ? 0.7 : 0.5}
           />
-        )
-      })}
+        ))}
 
-      {/* ── Dots, painted in order: low → medium → high → critical (on top) ── */}
-      {(['low', 'medium', 'high', 'critical'] as const).flatMap((paintLevel) =>
-        dots.map((d, idx) => {
-          if (d.level !== paintLevel) return null
-          const s = DOT_STYLE[d.level]
+        {/* ── Halos for critical dots (under the dot core) ─────────────────── */}
+        {dots.map((d, idx) => {
+          if (d.level !== 'critical') return null
+          const s = DOT_STYLE.critical
           return (
             <circle
-              key={`dot-${paintLevel}-${idx}`}
+              key={`halo-${idx}`}
               cx={d.x}
               cy={d.y}
-              r={s.r}
+              r={(s.halo ?? 3) * 1.0}
               fill={s.fill}
-              fillOpacity={s.alpha}
+              fillOpacity={0.10}
             />
           )
-        })
-      )}
+        })}
 
-      {/* ── Margin annotations: count + label, with leader to a real dot ─── */}
-      {annoLines.map((a) =>
-        a.anchor && a.row ? (
-          <g key={`anno-${a.label}`}>
-            {/* Leader from anchor dot to label */}
-            <line
-              x1={a.anchor.x + 4}
-              y1={a.anchor.y}
-              x2={annoX - 6}
-              y2={a.y + 4}
-              stroke="rgba(255,255,255,0.10)"
-              strokeWidth={1}
-              strokeDasharray="2 3"
-            />
-            {/* Tiny color dot in margin so the eye knows what level we're labeling */}
-            <circle cx={annoX - 12} cy={a.y + 4} r={2.4} fill={a.color} fillOpacity={0.95} />
-            {/* Count */}
-            <text
-              x={annoX}
-              y={a.y - 1}
-              fill={a.color}
-              fontSize={13}
-              fontFamily="var(--font-family-mono, monospace)"
-              fontWeight="bold"
-              dominantBaseline="middle"
-            >
-              {a.row.count.toLocaleString()}
-            </text>
-            {/* Label */}
-            <text
-              x={annoX}
-              y={a.y + 12}
-              fill="#71717a"
-              fontSize={9.5}
-              fontFamily="var(--font-family-mono, monospace)"
-              dominantBaseline="middle"
-            >
-              {a.label} · {a.row.pct.toFixed(2)}%
-            </text>
-          </g>
-        ) : null
-      )}
+        {/* ── Dots, painted in order: low → medium → high → critical (on top) ── */}
+        {(['low', 'medium', 'high', 'critical'] as const).flatMap((paintLevel) =>
+          dots.map((d, idx) => {
+            if (d.level !== paintLevel) return null
+            const s = DOT_STYLE[d.level]
+            return (
+              <circle
+                key={`dot-${paintLevel}-${idx}`}
+                cx={d.x}
+                cy={d.y}
+                r={s.r}
+                fill={s.fill}
+                fillOpacity={s.alpha}
+              />
+            )
+          })
+        )}
 
-      {/* ── Caption strip ────────────────────────────────────────────────── */}
-      <text
-        x={PAD_L}
-        y={SVG_H - 10}
-        fill="#52525b"
-        fontSize={10}
-        fontFamily="var(--font-family-mono, monospace)"
-      >
-        1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contracts · critical dots collapse into 3 networks · everything else is background
-      </text>
-    </svg>
+        {/* ── Attractor rings, labels, hit targets (above dots) ───────────── */}
+        {attractors.map((a, idx) => {
+          const isHovered = hoveredCluster === idx
+          const meta = CLUSTER_META[idx]
+          return (
+            <g key={`attractor-${idx}`}>
+              {/* Outer pulsing ring — echoes the cluster's gravitational pull */}
+              <circle
+                cx={a.x}
+                cy={a.y}
+                r={28}
+                fill="none"
+                stroke="#ef4444"
+                strokeOpacity={isHovered ? 0.55 : 0.25}
+                strokeWidth={isHovered ? 1.5 : 1}
+                style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
+              >
+                <animate
+                  attributeName="r"
+                  values="26;30;26"
+                  dur="3.2s"
+                  repeatCount="indefinite"
+                />
+                <animate
+                  attributeName="stroke-opacity"
+                  values={isHovered ? '0.35;0.7;0.35' : '0.12;0.32;0.12'}
+                  dur="3.2s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+
+              {/* Cluster letter label */}
+              <text
+                x={a.x}
+                y={a.y + 44}
+                fill="#ef4444"
+                fillOpacity={isHovered ? 1 : 0.75}
+                fontSize={9}
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight="bold"
+                textAnchor="middle"
+                dominantBaseline="middle"
+                style={{ transition: 'fill-opacity 160ms ease' }}
+              >
+                {meta.letter}
+              </text>
+
+              {/* Transparent hit target — larger than visible ring */}
+              <circle
+                cx={a.x}
+                cy={a.y}
+                r={36}
+                fill="transparent"
+                style={{ cursor: onClusterClick ? 'pointer' : 'default' }}
+                onMouseEnter={() => setHoveredCluster(idx)}
+                onMouseLeave={() => setHoveredCluster(null)}
+                onFocus={() => setHoveredCluster(idx)}
+                onBlur={() => setHoveredCluster(null)}
+                onClick={() => onClusterClick?.(meta.sectorCode)}
+                tabIndex={onClusterClick ? 0 : -1}
+                role={onClusterClick ? 'button' : undefined}
+                aria-label={onClusterClick ? `Cluster ${meta.letter}: ${meta.label}. ${meta.desc}. Open sector.` : undefined}
+              />
+            </g>
+          )
+        })}
+
+        {/* ── Margin annotations: count + label, with leader to a real dot ─── */}
+        {annoLines.map((a) =>
+          a.anchor && a.row ? (
+            <g key={`anno-${a.label}`}>
+              {/* Leader from anchor dot to label */}
+              <line
+                x1={a.anchor.x + 4}
+                y1={a.anchor.y}
+                x2={annoX - 6}
+                y2={a.y + 4}
+                stroke="rgba(255,255,255,0.10)"
+                strokeWidth={1}
+                strokeDasharray="2 3"
+              />
+              {/* Tiny color dot in margin so the eye knows what level we're labeling */}
+              <circle cx={annoX - 12} cy={a.y + 4} r={2.4} fill={a.color} fillOpacity={0.95} />
+              {/* Count */}
+              <text
+                x={annoX}
+                y={a.y - 1}
+                fill={a.color}
+                fontSize={13}
+                fontFamily="var(--font-family-mono, monospace)"
+                fontWeight="bold"
+                dominantBaseline="middle"
+              >
+                {a.row.count.toLocaleString()}
+              </text>
+              {/* Label */}
+              <text
+                x={annoX}
+                y={a.y + 12}
+                fill="#71717a"
+                fontSize={9.5}
+                fontFamily="var(--font-family-mono, monospace)"
+                dominantBaseline="middle"
+              >
+                {a.label} · {a.row.pct.toFixed(2)}%
+              </text>
+            </g>
+          ) : null
+        )}
+
+        {/* ── Caption strip ────────────────────────────────────────────────── */}
+        <text
+          x={PAD_L}
+          y={SVG_H - 10}
+          fill="#52525b"
+          fontSize={10}
+          fontFamily="var(--font-family-mono, monospace)"
+        >
+          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contracts · clusters A / B / C mark the 3 critical networks · click to investigate
+        </text>
+      </svg>
+
+      {/* ── Floating cluster tooltip (DOM, positioned over SVG) ──────────── */}
+      {hoveredCluster !== null && (() => {
+        const meta = CLUSTER_META[hoveredCluster]
+        return (
+          <div
+            className="absolute z-10 pointer-events-none rounded-md border border-stone-700 bg-stone-900/95 backdrop-blur-sm p-2.5 shadow-xl"
+            style={{
+              top: `${meta.topPct}%`,
+              left: `${meta.leftPct}%`,
+              transform: 'translate(-50%, -120%)',
+              minWidth: '180px',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-1">
+              <span className="text-[10px] font-mono font-bold text-red-400 tracking-[0.15em]">
+                CLUSTER {meta.letter}
+              </span>
+              <span className="h-1 flex-1 bg-red-500/30 rounded-full" />
+            </div>
+            <div className="text-sm font-bold text-stone-100 mb-0.5">
+              {meta.label}
+            </div>
+            <div className="text-[11px] text-stone-400 leading-snug mb-1.5">
+              {meta.desc}
+            </div>
+            <div className="text-[10px] font-mono text-stone-500 mb-1">
+              {meta.count} contratos críticos
+            </div>
+            {onClusterClick && (
+              <div className="text-[10px] font-mono text-amber-400 tracking-wider uppercase">
+                → Ver sector
+              </div>
+            )}
+          </div>
+        )
+      })()}
+    </div>
   )
 }
