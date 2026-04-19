@@ -915,9 +915,11 @@ export default function CaseDetail() {
                 </span>
               }
               foot={
-                data.compranet_visibility
+                data.compranet_visibility && data.compranet_visibility !== 'none'
                   ? `COMPRANET: ${titleCase(data.compranet_visibility)}`
-                  : undefined
+                  : data.compranet_visibility === 'none' && data.compranet_note
+                    ? data.compranet_note
+                    : undefined
               }
             />
           </div>
