@@ -148,6 +148,107 @@ interface RiskMatrixProps {
 // Each scatter point: [riskScore (x, 0-1), ipsScore (y, 0-100), totalValue, name, vendorId, pattern, tier]
 type ScatterPoint = [number, number, number, string, number, string, number]
 
+// ---------------------------------------------------------------------------
+// Priority Targets Strip — top-8 ranked list by IPS (editorial "who first" strip)
+// ---------------------------------------------------------------------------
+
+function PriorityTargetsStrip({
+  dossiers,
+  onSelect,
+}: {
+  dossiers: AriaQueueItem[]
+  onSelect: (id: number) => void
+}) {
+  const top8 = dossiers.slice(0, 8) // already sorted by IPS desc
+  if (!top8.length) return null
+
+  const maxIps = Math.max(...top8.map((d) => d.ips_final), 0.01)
+
+  return (
+    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden mb-4">
+      <div className="px-4 pt-3 pb-2 border-b border-stone-700/20 flex items-center justify-between">
+        <div>
+          <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-red-400/70 mb-0.5">
+            Objetivos prioritarios · Ordenado por IPS
+          </p>
+          <p className="text-[11px] text-stone-400/60">
+            Los {top8.length} proveedores con mayor puntuación de investigación
+          </p>
+        </div>
+        <span className="text-[9px] font-mono text-stone-500/50 uppercase tracking-wider">IPS score</span>
+      </div>
+
+      <div className="divide-y divide-stone-800/40">
+        {top8.map((d, i) => {
+          const barPct = (d.ips_final / maxIps) * 100
+          const riskLevel = d.avg_risk_score >= 0.6 ? 'critical' : d.avg_risk_score >= 0.4 ? 'high' : 'medium'
+          const riskColor = riskLevel === 'critical' ? '#dc2626' : riskLevel === 'high' ? '#ea580c' : '#f59e0b'
+          const pattern = d.primary_pattern || 'OTHER'
+          const patternColor = PATTERN_HEX[pattern] ?? '#64748b'
+
+          return (
+            <button
+              key={d.vendor_id}
+              onClick={() => onSelect(d.vendor_id)}
+              className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-stone-800/30 transition-colors group"
+            >
+              {/* Rank */}
+              <span
+                className="w-5 text-right text-[10px] font-mono font-black flex-shrink-0"
+                style={{ color: i === 0 ? '#dc2626' : i < 3 ? '#ea580c' : '#6b6258' }}
+              >
+                {i + 1}
+              </span>
+
+              {/* Pattern dot */}
+              <span
+                className="w-2 h-2 rounded-full flex-shrink-0"
+                style={{ backgroundColor: patternColor }}
+                title={PATTERN_LABELS[pattern]}
+              />
+
+              {/* Name */}
+              <span className="flex-1 text-[11px] text-stone-300 font-medium truncate group-hover:text-stone-100 transition-colors min-w-0">
+                {d.vendor_name}
+              </span>
+
+              {/* IPS bar */}
+              <div className="w-28 h-3 rounded-full bg-stone-800/60 overflow-hidden flex-shrink-0 relative">
+                <div
+                  className="absolute inset-y-0 left-0 rounded-full"
+                  style={{
+                    width: `${barPct}%`,
+                    backgroundColor: riskColor,
+                    opacity: 0.7,
+                  }}
+                />
+              </div>
+
+              {/* IPS value */}
+              <span
+                className="w-10 text-right text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
+                style={{ color: riskColor }}
+              >
+                {d.ips_final.toFixed(2)}
+              </span>
+
+              {/* Tier badge */}
+              <span
+                className={cn(
+                  'text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border flex-shrink-0',
+                  getTierBadgeColor(d.ips_tier),
+                )}
+              >
+                T{d.ips_tier}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
   const { t } = useTranslation('redes')
   const seriesData = useMemo(() => {
@@ -178,13 +279,13 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         data: points,
         symbolSize: (data: number[]) => {
           const value = data[2] ?? 0
-          return Math.max(8, Math.min(40, Math.sqrt(value / 5_000_000)))
+          return Math.max(7, Math.min(36, Math.sqrt(value / 4_000_000)))
         },
         itemStyle: {
           color: PATTERN_HEX[pattern] ?? '#64748b',
-          opacity: 0.78,
-          borderColor: '#060911',
-          borderWidth: 1,
+          opacity: 0.82,
+          borderColor: '#1a1410',
+          borderWidth: 1.5,
         },
         emphasis: {
           itemStyle: { opacity: 1, borderColor: '#ffffff', borderWidth: 2 },
@@ -194,77 +295,106 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
 
     return {
       backgroundColor: 'transparent',
-      grid: { left: 60, right: 30, top: 40, bottom: 50 },
+      grid: { left: 56, right: 24, top: 48, bottom: 52 },
+      // Danger zone shading — visual rectangle in top-right
+      graphic: [
+        // Danger zone label
+        { type: 'text', left: '72%', top: '6%', style: { text: '▲ CRÍTICO', fill: '#dc2626', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.7, fontWeight: 'bold' } },
+        { type: 'text', left: '52%', top: '6%', style: { text: 'ALTO RIESGO', fill: '#ea580c', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.55 } },
+        { type: 'text', left: '6%', top: '6%', style: { text: 'MONITOREO', fill: '#5a5248', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.6 } },
+        { type: 'text', left: '6%', top: '60%', style: { text: 'BAJO', fill: '#4a4540', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
+      ],
       xAxis: {
-        name: 'Riesgo promedio →',
+        name: 'Puntuación de riesgo →',
         nameLocation: 'end',
-        nameTextStyle: { color: '#7c8db5', fontSize: 11 },
+        nameTextStyle: { color: '#6b6258', fontSize: 10, padding: [0, 0, 0, 8] },
         type: 'value',
         min: 0,
         max: 1,
-        splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
-        axisLine: { lineStyle: { color: '#2a3350' } },
+        splitLine: { lineStyle: { color: '#2e2824', type: 'dashed', width: 0.8 } },
+        axisLine: { lineStyle: { color: '#3a3430' } },
+        axisTick: { lineStyle: { color: '#3a3430' } },
         axisLabel: {
-          color: '#7c8db5',
-          fontSize: 11,
+          color: '#6b6258',
+          fontSize: 10,
           formatter: (v: number) => v.toFixed(1),
         },
       },
       yAxis: {
         name: 'IPS ↑',
         nameLocation: 'end',
-        nameTextStyle: { color: '#7c8db5', fontSize: 11 },
+        nameTextStyle: { color: '#6b6258', fontSize: 10 },
         type: 'value',
         min: 0,
         max: 100,
-        splitLine: { lineStyle: { color: '#1c2238', type: 'dashed' } },
-        axisLine: { lineStyle: { color: '#2a3350' } },
-        axisLabel: { color: '#7c8db5', fontSize: 11 },
+        splitLine: { lineStyle: { color: '#2e2824', type: 'dashed', width: 0.8 } },
+        axisLine: { lineStyle: { color: '#3a3430' } },
+        axisTick: { lineStyle: { color: '#3a3430' } },
+        axisLabel: { color: '#6b6258', fontSize: 10 },
       },
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#0d1117',
-        borderColor: '#2a3350',
-        padding: [8, 12],
-        textStyle: { color: '#e2e8f0', fontSize: 12, lineHeight: 20 },
+        backgroundColor: '#1a1410',
+        borderColor: '#3a3430',
+        borderWidth: 1,
+        padding: [10, 14],
+        textStyle: { color: '#e8e0d8', fontSize: 12, lineHeight: 20 },
         formatter: (params: { data: ScatterPoint }) => {
           const [riskScore, ipsScore, totalVal, name, , pattern, tier] = params.data
           const patternDisplay = PATTERN_LABELS[pattern] ?? pattern
           const riskColor = riskScore >= 0.6 ? '#f87171' : riskScore >= 0.4 ? '#fb923c' : riskScore >= 0.25 ? '#fbbf24' : '#4ade80'
+          const riskLabel = riskScore >= 0.6 ? 'CRÍTICO' : riskScore >= 0.4 ? 'ALTO' : riskScore >= 0.25 ? 'MEDIO' : 'BAJO'
           return [
-            `<div style="max-width:260px;line-height:1.5">`,
-            `<div style="font-weight:700;font-size:13px;margin-bottom:4px">${name}</div>`,
-            `<div style="display:flex;gap:12px;flex-wrap:wrap;font-size:11px;color:#94a3b8">`,
-            `<span>IPS <b style="color:#e2e8f0">${ipsScore.toFixed(1)}</b></span>`,
-            `<span>Tier <b style="color:#e2e8f0">${tier}</b></span>`,
-            `<span>Riesgo <b style="color:${riskColor}">${(riskScore * 100).toFixed(0)}%</b></span>`,
+            `<div style="max-width:280px;line-height:1.6;font-family:system-ui">`,
+            `<div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#f0ece6">${name}</div>`,
+            `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#8b8178;margin-bottom:3px">`,
+            `<span>IPS <b style="color:#e8e0d8">${ipsScore.toFixed(1)}</b></span>`,
+            `<span>Tier <b style="color:#e8e0d8">${tier}</b></span>`,
+            `<span>Riesgo <b style="color:${riskColor}">${(riskScore * 100).toFixed(0)}% ${riskLabel}</b></span>`,
             `</div>`,
-            `<div style="font-size:11px;color:#64748b;margin-top:3px">`,
+            `<div style="font-size:11px;color:#6b6258;margin-top:2px">`,
             `${patternDisplay} · MX$${totalVal >= 1e9 ? (totalVal / 1e9).toFixed(2) + 'B' : (totalVal / 1e6).toFixed(0) + 'M'}`,
             `</div>`,
-            `<div style="font-size:10px;color:#475569;margin-top:2px">Clic para abrir expediente</div>`,
+            `<div style="font-size:10px;color:#4a4540;margin-top:4px">↗ Clic para abrir expediente</div>`,
             `</div>`,
           ].join('')
         },
       },
-      graphic: [
-        { type: 'text', left: '60%', top: '8%', style: { text: 'CRÍTICO', fill: '#dc2626', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
-        { type: 'text', left: '60%', top: '60%', style: { text: 'RIESGO', fill: '#ea580c', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
-        { type: 'text', left: '8%', top: '8%', style: { text: 'MONITOREO', fill: '#5a6280', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
-        { type: 'text', left: '8%', top: '60%', style: { text: 'BAJO', fill: '#5a6280', fontSize: 10, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
-      ],
       series: [
         ...series,
+        // Critical threshold line at x=0.6 (actual critical threshold, not 0.5)
         {
           type: 'scatter',
           markLine: {
             silent: true,
             symbol: 'none',
-            lineStyle: { color: '#2a3350', type: 'dashed', width: 1 },
+            lineStyle: { color: '#dc2626', type: 'solid', width: 1.5, opacity: 0.5 },
             label: { show: false },
-            data: [
-              { xAxis: 0.5 },
-            ],
+            data: [{ xAxis: 0.6 }],
+          },
+          data: [],
+        },
+        // High risk threshold at x=0.4
+        {
+          type: 'scatter',
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            lineStyle: { color: '#ea580c', type: 'dashed', width: 1, opacity: 0.35 },
+            label: { show: false },
+            data: [{ xAxis: 0.4 }],
+          },
+          data: [],
+        },
+        // IPS=60 horizontal threshold line
+        {
+          type: 'scatter',
+          markLine: {
+            silent: true,
+            symbol: 'none',
+            lineStyle: { color: '#78716c', type: 'dashed', width: 0.8, opacity: 0.4 },
+            label: { show: false },
+            data: [{ yAxis: 60 }],
           },
           data: [],
         },
@@ -288,7 +418,7 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
   }
 
   return (
-    <div className="rounded-xl border border-white/10 bg-surface-card/40 overflow-hidden mb-6">
+    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden mb-6">
       {/* Header row */}
       <div className="px-4 pt-3 pb-2 border-b border-white/8">
         <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-muted">
@@ -300,10 +430,10 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
       </div>
 
       {/* Chart */}
-      <div style={{ height: 480, width: '100%' }}>
+      <div style={{ height: 420, width: '100%' }}>
         <ReactECharts
           option={option}
-          style={{ height: 480, width: '100%' }}
+          style={{ height: 420, width: '100%' }}
           onEvents={handleEvents}
           opts={{ renderer: 'canvas' }}
           notMerge={true}
@@ -482,16 +612,39 @@ export default function RedesKnownDossier() {
   return (
     <div className="relative space-y-6 max-w-6xl mx-auto">
       {/* Editorial header */}
-      <div className="border-b border-border pb-6 mb-8">
-        <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          {t('matrixEyebrow')}
+      <div className="border-b border-border/60 pb-8 mb-8">
+        {/* Kicker strip */}
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-px flex-1 bg-gradient-to-r from-red-500/60 to-transparent" />
+          <span className="text-[10px] tracking-[0.35em] uppercase font-mono text-red-400/80">
+            {t('matrixEyebrow')}
+          </span>
+          <div className="h-px w-8 bg-red-500/40" />
         </div>
-        <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
+
+        {/* Main headline */}
+        <h1
+          style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.02em' }}
+          className="text-3xl md:text-4xl font-black text-text-primary mb-3 leading-tight"
+        >
           {t('header.title')}
         </h1>
-        <p className="text-sm text-text-secondary max-w-2xl">
+
+        {/* Lede */}
+        <p className="text-sm text-text-secondary max-w-2xl leading-relaxed mb-4">
           {t('scatter.desc')}
         </p>
+
+        {/* Key stat callout */}
+        {statsData && (
+          <div className="inline-flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2">
+            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+            <span className="text-sm font-mono">
+              <span className="text-red-400 font-bold">{statsData.latest_run?.tier1_count ?? 0}</span>
+              <span className="text-text-muted/70 ml-1.5">vendedores Tier 1 bajo investigación activa</span>
+            </span>
+          </div>
+        )}
       </div>
 
       {/* Source attribution + stats */}
@@ -528,7 +681,7 @@ export default function RedesKnownDossier() {
               key={code}
               onClick={() => setPatternFilter(patternFilter === code ? '' : code)}
               className={cn(
-                'border-l-4 pl-3 py-2 rounded-r text-left transition-all',
+                'border-l-4 pl-3 pr-3 py-3 rounded-r text-left transition-all',
                 borderColorMap[code] ?? 'border-zinc-500',
                 patternFilter === code
                   ? 'bg-white/10 ring-1 ring-white/20'
@@ -536,12 +689,22 @@ export default function RedesKnownDossier() {
               )}
               aria-pressed={patternFilter === code}
             >
-              <div className="text-xs font-mono font-bold text-text-primary">{code}</div>
-              <div className="text-xs text-text-muted">{name}</div>
-              <div className="text-sm font-semibold text-text-primary mt-1">
-                {countLabel} {t('patternGrid.vendors')}
+              {/* Pattern code + icon */}
+              <div className="flex items-center justify-between mb-1.5">
+                <span className="text-[9px] font-mono font-black uppercase tracking-widest text-text-muted/60">{code}</span>
+                {(() => {
+                  const Icon = PATTERN_ICONS[code] || AlertTriangle
+                  return <Icon className="w-3.5 h-3.5 text-text-muted/30" aria-hidden="true" />
+                })()}
               </div>
-              <div className="text-xs text-text-muted/60">{desc}</div>
+              {/* Big count */}
+              <div className="text-xl font-mono font-black text-text-primary tabular-nums leading-none mb-1">
+                {countLabel}
+              </div>
+              {/* Name */}
+              <div className="text-[10px] font-semibold text-text-primary leading-tight mb-0.5">{name}</div>
+              {/* Desc */}
+              <div className="text-[9px] text-text-muted/50 leading-tight">{desc}</div>
             </button>
           )
         })}
@@ -586,9 +749,12 @@ export default function RedesKnownDossier() {
 
       {/* Risk Intelligence Matrix — scatter plot */}
       {!isLoading && filtered.length > 0 && (
-        <ErrorBoundary fallback={<div className="h-[480px] rounded-xl border border-border/20 flex items-center justify-center text-xs text-text-muted">Visualization unavailable</div>}>
-          <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
-        </ErrorBoundary>
+        <>
+          <PriorityTargetsStrip dossiers={filtered} onSelect={setSelectedVendorId} />
+          <ErrorBoundary fallback={<div className="h-[420px] rounded-xl border border-stone-700/30 flex items-center justify-center text-xs text-stone-400">Visualization unavailable</div>}>
+            <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
+          </ErrorBoundary>
+        </>
       )}
 
       {/* Stats bar + view toggle */}
@@ -596,24 +762,27 @@ export default function RedesKnownDossier() {
         <div className="space-y-3">
           {/* Stats bar */}
           <div
-            className="grid grid-cols-4 gap-3 p-4 bg-slate-900/60 border border-slate-700/50 rounded-xl"
+            className="grid grid-cols-4 gap-3 p-4 bg-stone-900/50 border border-stone-700/30 rounded-xl"
             role="region"
             aria-label="Summary statistics"
           >
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-red-400">{statsBar.t1}</div>
-              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T1 Vendors</div>
+              <div className="flex items-center justify-center gap-1.5 mb-0.5">
+                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+                <span className="text-2xl font-mono font-bold text-red-400">{statsBar.t1}</span>
+              </div>
+              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T1 Crítico</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-orange-400">{statsData?.latest_run?.tier2_count ?? (tier2Data?.pagination?.total ?? statsBar.t2)}</div>
+              <div className="text-2xl font-mono font-bold text-orange-400">{statsData?.latest_run?.tier2_count ?? (tier2Data?.pagination?.total ?? statsBar.t2)}</div>
               <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T2 Vendors</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-text-primary">{formatCompactMXN(statsBar.totalAtRisk)}</div>
+              <div className="text-2xl font-mono font-bold text-text-primary">{formatCompactMXN(statsBar.totalAtRisk)}</div>
               <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Total at Risk</div>
             </div>
             <div className="text-center">
-              <div className="text-lg font-mono font-bold text-text-primary">{statsBar.sectors}</div>
+              <div className="text-2xl font-mono font-bold text-text-primary">{statsBar.sectors}</div>
               <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Sectors</div>
             </div>
           </div>
