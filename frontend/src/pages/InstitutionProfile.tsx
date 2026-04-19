@@ -493,15 +493,17 @@ export function InstitutionProfile() {
             <span className="text-zinc-300">RUBLI</span>
           </span>
           <span className="text-zinc-700">·</span>
-          <span>Dossier · Institución</span>
-          <span className="text-zinc-700">·</span>
-          <span className="tabular-nums">v0.6.5</span>
-          {institution.siglas && (
+          <span>Institución</span>
+          {institution.siglas ? (
             <>
               <span className="text-zinc-700">·</span>
               <span className="tabular-nums text-zinc-300">{institution.siglas}</span>
             </>
-          )}
+          ) : null}
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">v0.6.5</span>
+          <span className="text-zinc-700">·</span>
+          <span className="tabular-nums">2002–2025</span>
         </div>
         {/* Kicker */}
         <p className="text-kicker text-kicker--investigation mb-3">
@@ -537,9 +539,9 @@ export function InstitutionProfile() {
           ) : null}
         </div>
 
-        {/* Large serif name */}
+        {/* Large serif name — editorial masthead */}
         <h1
-          className="text-2xl font-bold text-text-primary leading-[1.1] tracking-tight mb-1"
+          className="text-3xl md:text-4xl lg:text-5xl font-bold text-text-primary leading-[1.05] tracking-[-0.01em] mb-1"
           style={{ fontFamily: "var(--font-family-serif)" }}
         >
           {toTitleCase(institution.name)}
@@ -557,47 +559,55 @@ export function InstitutionProfile() {
           ) : null
         })()}
 
-        {/* Action bar */}
-        <div className="flex items-center gap-2 flex-wrap mt-4 pb-4 border-b border-border">
+        {/* Action bar — primary actions (explore) + utility (save/export/feedback) */}
+        <div className="flex items-center gap-3 flex-wrap mt-5 pb-4 border-b border-border">
           <RiskBadge score={riskScore} className="text-sm px-2.5 py-1" />
-          <button
-            onClick={() => setNetworkOpen(true)}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 transition-colors font-medium"
-          >
-            <Network className="h-3.5 w-3.5" />
-            {t('profile.networkButton')}
-          </button>
-          <Link to={`/contracts?institution_id=${institutionId}`}>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-              <FileText className="h-3.5 w-3.5" />
-              {t('profile.allContractsButton')}
+          {/* Primary exploration actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button
+              onClick={() => setNetworkOpen(true)}
+              className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-accent/30 bg-accent/5 text-accent hover:bg-accent/10 transition-colors font-medium"
+            >
+              <Network className="h-3.5 w-3.5" />
+              {t('profile.networkButton')}
             </button>
-          </Link>
-          <Link to={`/institutions/compare?a=${institutionId}`}>
-            <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
-              <GitCompare className="h-3.5 w-3.5" />
-              {t('profile.compareButton')}
-            </button>
-          </Link>
-          <GenerateReportButton
-            reportType="institution"
-            entityId={institutionId}
-            entityName={toTitleCase(institution.name)}
-          />
-          <AddToWatchlistButton
-            itemType="institution"
-            itemId={institutionId}
-            itemName={toTitleCase(institution.name)}
-          />
-          <AddToDossierButton
-            entityType="institution"
-            entityId={institutionId}
-            entityName={toTitleCase(institution.name)}
-          />
-          <RiskFeedbackButton
-            entityType="institution"
-            entityId={institutionId}
-          />
+            <Link to={`/contracts?institution_id=${institutionId}`}>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
+                <FileText className="h-3.5 w-3.5" />
+                {t('profile.allContractsButton')}
+              </button>
+            </Link>
+            <Link to={`/institutions/compare?a=${institutionId}`}>
+              <button className="flex items-center gap-1.5 px-3 py-1.5 text-xs rounded-md border border-border/40 bg-background-elevated text-text-secondary hover:text-text-primary transition-colors">
+                <GitCompare className="h-3.5 w-3.5" />
+                {t('profile.compareButton')}
+              </button>
+            </Link>
+          </div>
+          {/* Divider */}
+          <span className="hidden sm:block h-5 w-px bg-border/60" aria-hidden="true" />
+          {/* Utility actions */}
+          <div className="flex items-center gap-2 flex-wrap">
+            <GenerateReportButton
+              reportType="institution"
+              entityId={institutionId}
+              entityName={toTitleCase(institution.name)}
+            />
+            <AddToWatchlistButton
+              itemType="institution"
+              itemId={institutionId}
+              itemName={toTitleCase(institution.name)}
+            />
+            <AddToDossierButton
+              entityType="institution"
+              entityId={institutionId}
+              entityName={toTitleCase(institution.name)}
+            />
+            <RiskFeedbackButton
+              entityType="institution"
+              entityId={institutionId}
+            />
+          </div>
         </div>
       </header>
 
@@ -610,7 +620,7 @@ export function InstitutionProfile() {
       />
 
       <EditorialPageShell
-        kicker={`INSTITUTION FILE · ${institution?.name?.toUpperCase() ?? 'LOADING...'}`}
+        kicker="PERFIL INSTITUCIONAL · MÉXICO"
         headline={toTitleCase(institution.name)}
         paragraph={
           <>

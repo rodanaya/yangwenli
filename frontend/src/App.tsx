@@ -24,6 +24,7 @@ const EntityProfileDrawer = lazy(() =>
 const Intro = lazy(() => import('@/pages/Intro'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
+const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
 const Explore = lazy(() => import('@/pages/explore'))
 const Methodology = lazy(() => import('@/pages/Methodology'))
 const VendorProfile = lazy(() => import('@/pages/VendorProfile'))
@@ -181,6 +182,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<TablePageSkeleton />}>
                     <Contracts />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="contracts/:id"
+                element={
+                  <SuspenseBoundary fallback={<DetailPageSkeleton />}>
+                    <ContractDetail />
                   </SuspenseBoundary>
                 }
               />
