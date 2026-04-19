@@ -55,168 +55,180 @@ interface Community {
   verdict: string
 }
 
-const COMMUNITIES: Community[] = [
-  {
-    id: 'C01',
-    name: 'Red Salud-IMSS',
-    sector: 'salud',
-    pattern: 'P2',
-    vendors: 847,
-    value: 234_000_000_000,
-    institution: 'IMSS',
-    avgRisk: 0.78,
-    confirmed: 12,
-    daRate: 0.91,
-    sbRate: 0.68,
-    paRate: 0.42,
-    verdict:
-      'Red de proveedores de medicamentos y material de curación concentrada en IMSS; 12 vendedores con sentencia o sanción firme.',
-  },
-  {
-    id: 'C02',
-    name: 'Consorcio Infraestructura Sur',
-    sector: 'infraestructura',
-    pattern: 'P7',
-    vendors: 234,
-    value: 187_000_000_000,
-    institution: 'SCT',
-    avgRisk: 0.71,
-    confirmed: 8,
-    daRate: 0.38,
-    sbRate: 0.74,
-    paRate: 0.51,
-    verdict:
-      'Constructoras que rotan entre sí en licitaciones de obra pública de la SCT; patrón de rotación (bid rotation) detectado en 74% de procesos.',
-  },
-  {
-    id: 'C03',
-    name: 'Red Energía-Pemex',
-    sector: 'energia',
-    pattern: 'P1',
-    vendors: 156,
-    value: 312_000_000_000,
-    institution: 'Pemex',
-    avgRisk: 0.69,
-    confirmed: 6,
-    daRate: 0.82,
-    sbRate: 0.55,
-    paRate: 0.34,
-    verdict:
-      'Proveedores especializados de Pemex con monopolio de facto en servicios de perforación y suministro técnico.',
-  },
-  {
-    id: 'C04',
-    name: 'Cluster Educación-SEP',
-    sector: 'educacion',
-    pattern: 'P6',
-    vendors: 412,
-    value: 89_000_000_000,
-    institution: 'SEP',
-    avgRisk: 0.64,
-    confirmed: 9,
-    daRate: 0.73,
-    sbRate: 0.48,
-    paRate: 0.29,
-    verdict:
-      'Proveedores de libros, uniformes y materiales con acceso privilegiado a SEP; patrón de captura institucional.',
-  },
-  {
-    id: 'C05',
-    name: 'Red Salud-ISSSTE',
-    sector: 'salud',
-    pattern: 'P5',
-    vendors: 189,
-    value: 145_000_000_000,
-    institution: 'ISSSTE',
-    avgRisk: 0.72,
-    confirmed: 7,
-    daRate: 0.79,
-    sbRate: 0.61,
-    paRate: 0.58,
-    verdict:
-      'Sobreprecio estructural en servicios de laboratorio y hemodiálisis contratados por ISSSTE; precios 58% sobre mediana sectorial.',
-  },
-  {
-    id: 'C06',
-    name: 'Consorcio Gobernación',
-    sector: 'gobernacion',
-    pattern: 'P6',
-    vendors: 298,
-    value: 67_000_000_000,
-    institution: 'SEGOB',
-    avgRisk: 0.61,
-    confirmed: 5,
-    daRate: 0.88,
-    sbRate: 0.42,
-    paRate: 0.24,
-    verdict:
-      'Proveedores de servicios migratorios y administrativos con adjudicación directa dominante (88%).',
-  },
-  {
-    id: 'C07',
-    name: 'Red Tecnología-SHCP',
-    sector: 'tecnologia',
-    pattern: 'P4',
-    vendors: 87,
-    value: 43_000_000_000,
-    institution: 'SAT',
-    avgRisk: 0.58,
-    confirmed: 4,
-    daRate: 0.67,
-    sbRate: 0.71,
-    paRate: 0.45,
-    verdict:
-      'Facturadores con cruce en EFOS definitivo ofreciendo servicios de TI al SAT; red de facturación cuestionada.',
-  },
-  {
-    id: 'C08',
-    name: 'Cluster Agricultura-SAGARPA',
-    sector: 'agricultura',
-    pattern: 'P3',
-    vendors: 143,
-    value: 78_000_000_000,
-    institution: 'SAGARPA',
-    avgRisk: 0.67,
-    confirmed: 11,
-    daRate: 0.69,
-    sbRate: 0.53,
-    paRate: 0.47,
-    verdict:
-      'Intermediarios en distribución de fertilizante y semillas (Segalmex-adyacente); 11 casos con imputación penal.',
-  },
-  {
-    id: 'C09',
-    name: 'Red Obras-CFE',
-    sector: 'energia',
-    pattern: 'P5',
-    vendors: 201,
-    value: 156_000_000_000,
-    institution: 'CFE',
-    avgRisk: 0.65,
-    confirmed: 6,
-    daRate: 0.58,
-    sbRate: 0.64,
-    paRate: 0.52,
-    verdict:
-      'Obras de transmisión eléctrica con sobreprecios sistemáticos; proveedores rotatorios entre CFE y subsidiarias.',
-  },
-  {
-    id: 'C10',
-    name: 'Cluster Defensa-SEDENA',
-    sector: 'defensa',
-    pattern: 'P1',
-    vendors: 34,
-    value: 92_000_000_000,
-    institution: 'SEDENA',
-    avgRisk: 0.59,
-    confirmed: 3,
-    daRate: 0.96,
-    sbRate: 0.81,
-    paRate: 0.19,
-    verdict:
-      'Proveedores militares con cláusulas de seguridad nacional; 96% adjudicación directa por ley, pero concentración anómala en 34 RFCs.',
-  },
-]
+function buildCommunities(isEs: boolean): Community[] {
+  return [
+    {
+      id: 'C01',
+      name: isEs ? 'Red Salud-IMSS' : 'Health-IMSS Network',
+      sector: 'salud',
+      pattern: 'P2',
+      vendors: 847,
+      value: 234_000_000_000,
+      institution: 'IMSS',
+      avgRisk: 0.78,
+      confirmed: 12,
+      daRate: 0.91,
+      sbRate: 0.68,
+      paRate: 0.42,
+      verdict: isEs
+        ? 'Red de proveedores de medicamentos y material de curación concentrada en IMSS; 12 vendedores con sentencia o sanción firme.'
+        : 'Network of drug and medical-supply vendors concentrated in IMSS; 12 vendors with a final sentence or sanction.',
+    },
+    {
+      id: 'C02',
+      name: isEs ? 'Consorcio Infraestructura Sur' : 'Southern Infrastructure Consortium',
+      sector: 'infraestructura',
+      pattern: 'P7',
+      vendors: 234,
+      value: 187_000_000_000,
+      institution: 'SCT',
+      avgRisk: 0.71,
+      confirmed: 8,
+      daRate: 0.38,
+      sbRate: 0.74,
+      paRate: 0.51,
+      verdict: isEs
+        ? 'Constructoras que rotan entre sí en licitaciones de obra pública de la SCT; patrón de rotación (bid rotation) detectado en 74% de procesos.'
+        : 'Construction firms rotating among themselves in SCT public-works tenders; bid-rotation pattern detected in 74% of processes.',
+    },
+    {
+      id: 'C03',
+      name: isEs ? 'Red Energía-Pemex' : 'Energy-Pemex Network',
+      sector: 'energia',
+      pattern: 'P1',
+      vendors: 156,
+      value: 312_000_000_000,
+      institution: 'Pemex',
+      avgRisk: 0.69,
+      confirmed: 6,
+      daRate: 0.82,
+      sbRate: 0.55,
+      paRate: 0.34,
+      verdict: isEs
+        ? 'Proveedores especializados de Pemex con monopolio de facto en servicios de perforación y suministro técnico.'
+        : 'Specialized Pemex vendors with de facto monopoly in drilling services and technical supply.',
+    },
+    {
+      id: 'C04',
+      name: isEs ? 'Cluster Educación-SEP' : 'Education-SEP Cluster',
+      sector: 'educacion',
+      pattern: 'P6',
+      vendors: 412,
+      value: 89_000_000_000,
+      institution: 'SEP',
+      avgRisk: 0.64,
+      confirmed: 9,
+      daRate: 0.73,
+      sbRate: 0.48,
+      paRate: 0.29,
+      verdict: isEs
+        ? 'Proveedores de libros, uniformes y materiales con acceso privilegiado a SEP; patrón de captura institucional.'
+        : 'Vendors of books, uniforms, and materials with privileged access to SEP; institutional-capture pattern.',
+    },
+    {
+      id: 'C05',
+      name: isEs ? 'Red Salud-ISSSTE' : 'Health-ISSSTE Network',
+      sector: 'salud',
+      pattern: 'P5',
+      vendors: 189,
+      value: 145_000_000_000,
+      institution: 'ISSSTE',
+      avgRisk: 0.72,
+      confirmed: 7,
+      daRate: 0.79,
+      sbRate: 0.61,
+      paRate: 0.58,
+      verdict: isEs
+        ? 'Sobreprecio estructural en servicios de laboratorio y hemodiálisis contratados por ISSSTE; precios 58% sobre mediana sectorial.'
+        : 'Structural overpricing in lab and dialysis services contracted by ISSSTE; prices 58% above sector median.',
+    },
+    {
+      id: 'C06',
+      name: isEs ? 'Consorcio Gobernación' : 'Interior Consortium',
+      sector: 'gobernacion',
+      pattern: 'P6',
+      vendors: 298,
+      value: 67_000_000_000,
+      institution: 'SEGOB',
+      avgRisk: 0.61,
+      confirmed: 5,
+      daRate: 0.88,
+      sbRate: 0.42,
+      paRate: 0.24,
+      verdict: isEs
+        ? 'Proveedores de servicios migratorios y administrativos con adjudicación directa dominante (88%).'
+        : 'Migration and administrative service vendors with dominant direct award (88%).',
+    },
+    {
+      id: 'C07',
+      name: isEs ? 'Red Tecnología-SHCP' : 'Technology-SHCP Network',
+      sector: 'tecnologia',
+      pattern: 'P4',
+      vendors: 87,
+      value: 43_000_000_000,
+      institution: 'SAT',
+      avgRisk: 0.58,
+      confirmed: 4,
+      daRate: 0.67,
+      sbRate: 0.71,
+      paRate: 0.45,
+      verdict: isEs
+        ? 'Facturadores con cruce en EFOS definitivo ofreciendo servicios de TI al SAT; red de facturación cuestionada.'
+        : 'Invoicers flagged on the EFOS definitivo list offering IT services to SAT; questioned invoicing network.',
+    },
+    {
+      id: 'C08',
+      name: isEs ? 'Cluster Agricultura-SAGARPA' : 'Agriculture-SAGARPA Cluster',
+      sector: 'agricultura',
+      pattern: 'P3',
+      vendors: 143,
+      value: 78_000_000_000,
+      institution: 'SAGARPA',
+      avgRisk: 0.67,
+      confirmed: 11,
+      daRate: 0.69,
+      sbRate: 0.53,
+      paRate: 0.47,
+      verdict: isEs
+        ? 'Intermediarios en distribución de fertilizante y semillas (Segalmex-adyacente); 11 casos con imputación penal.'
+        : 'Intermediaries in fertilizer and seed distribution (Segalmex-adjacent); 11 cases with criminal indictments.',
+    },
+    {
+      id: 'C09',
+      name: isEs ? 'Red Obras-CFE' : 'CFE Works Network',
+      sector: 'energia',
+      pattern: 'P5',
+      vendors: 201,
+      value: 156_000_000_000,
+      institution: 'CFE',
+      avgRisk: 0.65,
+      confirmed: 6,
+      daRate: 0.58,
+      sbRate: 0.64,
+      paRate: 0.52,
+      verdict: isEs
+        ? 'Obras de transmisión eléctrica con sobreprecios sistemáticos; proveedores rotatorios entre CFE y subsidiarias.'
+        : 'Electric-transmission works with systematic overpricing; vendors rotating between CFE and subsidiaries.',
+    },
+    {
+      id: 'C10',
+      name: isEs ? 'Cluster Defensa-SEDENA' : 'Defense-SEDENA Cluster',
+      sector: 'defensa',
+      pattern: 'P1',
+      vendors: 34,
+      value: 92_000_000_000,
+      institution: 'SEDENA',
+      avgRisk: 0.59,
+      confirmed: 3,
+      daRate: 0.96,
+      sbRate: 0.81,
+      paRate: 0.19,
+      verdict: isEs
+        ? 'Proveedores militares con cláusulas de seguridad nacional; 96% adjudicación directa por ley, pero concentración anómala en 34 RFCs.'
+        : 'Military vendors with national-security clauses; 96% direct award by law, but anomalous concentration in 34 RFCs.',
+    },
+  ]
+}
 
 // ---------------------------------------------------------------------------
 // Pattern palette & metadata
@@ -232,14 +244,16 @@ const PATTERN_HEX: Record<PatternCode, string> = {
   P7: '#eab308', // yellow-500  · Mixed / temporal
 }
 
-const PATTERN_LABEL: Record<PatternCode, string> = {
-  P1: 'Monopolio Estructural',
-  P2: 'Empresa Fantasma',
-  P3: 'Intermediario Sospechoso',
-  P4: 'Facturador EFOS',
-  P5: 'Sobreprecio / Rotación',
-  P6: 'Captura Institucional',
-  P7: 'Patrón Mixto',
+function buildPatternLabel(isEs: boolean): Record<PatternCode, string> {
+  return {
+    P1: isEs ? 'Monopolio Estructural' : 'Structural Monopoly',
+    P2: isEs ? 'Empresa Fantasma' : 'Ghost Company',
+    P3: isEs ? 'Intermediario Sospechoso' : 'Suspicious Intermediary',
+    P4: isEs ? 'Facturador EFOS' : 'EFOS Invoicer',
+    P5: isEs ? 'Sobreprecio / Rotación' : 'Overpricing / Rotation',
+    P6: isEs ? 'Captura Institucional' : 'Institutional Capture',
+    P7: isEs ? 'Patrón Mixto' : 'Mixed Pattern',
+  }
 }
 
 const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
@@ -307,9 +321,10 @@ interface NucleusProps {
   activeId: string | null
   onHover: (id: string | null) => void
   onSelect: (id: string) => void
+  isEs: boolean
 }
 
-function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
+function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProps) {
   const W = 900
   const H = 440
 
@@ -349,19 +364,18 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-400/80"
           style={{ fontFamily: FONT_MONO }}
         >
-          Acto I · Los Núcleos
+          {isEs ? 'Acto I · Los Núcleos' : 'Act I · The Cores'}
         </p>
         <h2
           className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
         >
-          Diez comunidades, diez instituciones capturadas
+          {isEs ? 'Diez comunidades, diez instituciones capturadas' : 'Ten communities, ten captured institutions'}
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
-          Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red
-          de co-contratación. El tamaño es el valor capturado; el color, el patrón de
-          corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la
-          red.
+          {isEs
+            ? 'Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red de co-contratación. El tamaño es el valor capturado; el color, el patrón de corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la red.'
+            : 'Each circle is a community of vendors detected by Louvain over the co-contracting network. Size maps to value captured; color maps to the dominant corruption pattern. No individual vendors here — only the shape of the network.'}
         </p>
       </div>
 
@@ -479,7 +493,7 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 text-[10px]">
-              <span className="text-zinc-500 uppercase tracking-wider">Vendedores</span>
+              <span className="text-zinc-500 uppercase tracking-wider">{isEs ? 'Vendedores' : 'Vendors'}</span>
               <DotBar
                 value={active.c.vendors / 900}
                 color={PATTERN_HEX[active.c.pattern]}
@@ -492,7 +506,7 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
               </span>
             </div>
             <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px]">
-              <span className="text-zinc-400">Valor</span>
+              <span className="text-zinc-400">{isEs ? 'Valor' : 'Value'}</span>
               <span className="text-white font-mono font-bold">
                 {formatCompactMXN(active.c.value)}
               </span>
@@ -506,11 +520,11 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
                   border: `1px solid ${PATTERN_HEX[active.c.pattern]}55`,
                 }}
               >
-                {active.c.pattern} · {PATTERN_LABEL[active.c.pattern]}
+                {active.c.pattern} · {buildPatternLabel(isEs)[active.c.pattern]}
               </span>
             </div>
             <div className="mt-1.5 text-[10px] text-zinc-500 italic">
-              Clic para ver dossier →
+              {isEs ? 'Clic para ver dossier →' : 'Click to view dossier →'}
             </div>
           </div>
         )}
@@ -519,21 +533,24 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
       {/* Legend strip */}
       <div className="px-5 py-3 border-t border-white/8 flex flex-wrap items-center gap-x-5 gap-y-2">
         <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted/50">
-          Patrones:
+          {isEs ? 'Patrones:' : 'Patterns:'}
         </span>
-        {(Object.keys(PATTERN_LABEL) as PatternCode[]).map((p) => (
-          <span
-            key={p}
-            className="inline-flex items-center gap-1.5 text-[10px] text-text-muted/70"
-          >
+        {(['P1', 'P2', 'P3', 'P4', 'P5', 'P6', 'P7'] as PatternCode[]).map((p) => {
+          const label = buildPatternLabel(isEs)[p]
+          return (
             <span
-              className="h-2 w-2 rounded-full shrink-0"
-              style={{ background: PATTERN_HEX[p] }}
-            />
-            <span className="font-mono font-bold text-[10px]">{p}</span>
-            <span className="text-[10px]">{PATTERN_LABEL[p]}</span>
-          </span>
-        ))}
+              key={p}
+              className="inline-flex items-center gap-1.5 text-[10px] text-text-muted/70"
+            >
+              <span
+                className="h-2 w-2 rounded-full shrink-0"
+                style={{ background: PATTERN_HEX[p] }}
+              />
+              <span className="font-mono font-bold text-[10px]">{p}</span>
+              <span className="text-[10px]">{label}</span>
+            </span>
+          )
+        })}
       </div>
     </div>
   )
@@ -547,23 +564,27 @@ function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
 
 function CommunityDossier({
   c,
+  communities,
   isActive,
   onHover,
   innerRef,
+  isEs,
 }: {
   c: Community
+  communities: Community[]
   isActive: boolean
   onHover: (id: string | null) => void
   innerRef: (el: HTMLDivElement | null) => void
+  isEs: boolean
 }) {
   const fill = PATTERN_HEX[c.pattern]
   const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
   const Icon = PATTERN_ICON[c.pattern]
 
   // Normalizers for member-bar and confirmed-bar (relative to our corpus)
-  const maxVendors = Math.max(...COMMUNITIES.map((x) => x.vendors))
-  const maxConfirmed = Math.max(...COMMUNITIES.map((x) => x.confirmed))
-  const maxValue = Math.max(...COMMUNITIES.map((x) => x.value))
+  const maxVendors = Math.max(...communities.map((x) => x.vendors))
+  const maxConfirmed = Math.max(...communities.map((x) => x.confirmed))
+  const maxValue = Math.max(...communities.map((x) => x.value))
 
   return (
     <div
@@ -593,7 +614,7 @@ function CommunityDossier({
               className="text-[9px] font-mono font-bold uppercase tracking-[0.15em]"
               style={{ color: fill }}
             >
-              {c.pattern} · {PATTERN_LABEL[c.pattern]}
+              {c.pattern} · {buildPatternLabel(isEs)[c.pattern]}
             </span>
           </div>
           <div
@@ -625,7 +646,7 @@ function CommunityDossier({
           <div
             className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5"
           >
-            Valor capturado
+            {isEs ? 'Valor capturado' : 'Value captured'}
           </div>
           <div
             className="text-3xl font-mono font-black tabular-nums text-white leading-none"
@@ -638,12 +659,12 @@ function CommunityDossier({
         {/* Stat bars: Members · Confirmed · Avg Risk */}
         <div className="space-y-1.5 pt-1">
           <StatRow
-            label="Proveedores"
+            label={isEs ? 'Proveedores' : 'Vendors'}
             value={formatNumber(c.vendors)}
             bar={<DotBar value={c.vendors / maxVendors} color={fill} dots={18} />}
           />
           <StatRow
-            label="Casos confirmados"
+            label={isEs ? 'Casos confirmados' : 'Confirmed cases'}
             value={`${c.confirmed}`}
             bar={
               <DotBar
@@ -654,12 +675,12 @@ function CommunityDossier({
             }
           />
           <StatRow
-            label="Riesgo promedio"
+            label={isEs ? 'Riesgo promedio' : 'Avg risk'}
             value={`${(c.avgRisk * 100).toFixed(0)}%`}
             bar={<DotBar value={c.avgRisk} color="#f59e0b" dots={18} />}
           />
           <StatRow
-            label="Cuota top-10"
+            label={isEs ? 'Cuota top-10' : 'Top-10 share'}
             value={`${((c.value / maxValue) * 100).toFixed(0)}%`}
             bar={<DotBar value={c.value / maxValue} color={fill} dots={18} />}
           />
@@ -670,23 +691,23 @@ function CommunityDossier({
           <div
             className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
           >
-            Firma de red
+            {isEs ? 'Firma de red' : 'Network signature'}
           </div>
           <div className="space-y-1.5">
             <SignatureRow
-              label="Adjudicación Directa"
+              label={isEs ? 'Adjudicación Directa' : 'Direct Award'}
               value={c.daRate}
               color="#ef4444"
               benchmark={0.25}
-              benchmarkLabel="OCDE 25%"
+              benchmarkLabel={isEs ? 'OCDE 25%' : 'OECD 25%'}
             />
             <SignatureRow
-              label="Propuesta Única"
+              label={isEs ? 'Propuesta Única' : 'Single Bid'}
               value={c.sbRate}
               color="#f59e0b"
             />
             <SignatureRow
-              label="Precio Anómalo"
+              label={isEs ? 'Precio Anómalo' : 'Price Anomaly'}
               value={c.paRate}
               color="#eab308"
             />
@@ -698,7 +719,7 @@ function CommunityDossier({
           <div
             className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5"
           >
-            Veredicto editorial
+            {isEs ? 'Veredicto editorial' : 'Editorial verdict'}
           </div>
           <p className="text-[12px] text-text-secondary leading-relaxed italic">
             “{c.verdict}”
@@ -779,7 +800,7 @@ function SignatureRow({
 // FlowParticle: top 5 communities → top 5 captured institutions.
 // ---------------------------------------------------------------------------
 
-function FlujoDeValor({ communities }: { communities: Community[] }) {
+function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: boolean }) {
   const { sources, targets, links } = useMemo(() => {
     const top5 = [...communities].sort((a, b) => b.value - a.value).slice(0, 5)
     const sources: FlowNode[] = top5.map((c) => ({
@@ -810,21 +831,34 @@ function FlujoDeValor({ communities }: { communities: Community[] }) {
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
           style={{ fontFamily: FONT_MONO }}
         >
-          Acto III · Flujo de Valor
+          {isEs ? 'Acto III · Flujo de Valor' : 'Act III · Value Flow'}
         </p>
         <h2
           className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
         >
-          Cómo fluye el dinero: comunidades → instituciones
+          {isEs ? 'Cómo fluye el dinero: comunidades → instituciones' : 'How money flows: communities → institutions'}
         </h2>
         <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
-          Cada partícula representa una fracción del valor capturado. Los flujos rojos
-          marcan comunidades con riesgo promedio ≥ 65%. Total mostrado:{' '}
-          <span className="text-white font-mono font-bold">
-            {formatCompactMXN(totalFlow)}
-          </span>{' '}
-          a través de las 5 comunidades más grandes.
+          {isEs ? (
+            <>
+              Cada partícula representa una fracción del valor capturado. Los flujos rojos
+              marcan comunidades con riesgo promedio ≥ 65%. Total mostrado:{' '}
+              <span className="text-white font-mono font-bold">
+                {formatCompactMXN(totalFlow)}
+              </span>{' '}
+              a través de las 5 comunidades más grandes.
+            </>
+          ) : (
+            <>
+              Each particle represents a fraction of value captured. Red flows
+              mark communities with average risk ≥ 65%. Total shown:{' '}
+              <span className="text-white font-mono font-bold">
+                {formatCompactMXN(totalFlow)}
+              </span>{' '}
+              across the 5 largest communities.
+            </>
+          )}
         </p>
       </div>
 
@@ -833,8 +867,8 @@ function FlujoDeValor({ communities }: { communities: Community[] }) {
           sources={sources}
           targets={targets}
           links={links}
-          sourceLabel="Comunidad"
-          targetLabel="Institución"
+          sourceLabel={isEs ? 'Comunidad' : 'Community'}
+          targetLabel={isEs ? 'Institución' : 'Institution'}
           width={860}
           height={360}
           maxDotsPerFlow={80}
@@ -848,7 +882,7 @@ function FlujoDeValor({ communities }: { communities: Community[] }) {
 // Header stats derived from live ARIA queue for context
 // ---------------------------------------------------------------------------
 
-function HeaderStats() {
+function HeaderStats({ communities, isEs }: { communities: Community[]; isEs: boolean }) {
   const { data: stats } = useQuery({
     queryKey: ['aria-stats-red'],
     queryFn: () => ariaApi.getStats(),
@@ -856,40 +890,44 @@ function HeaderStats() {
   })
 
   const totalCorpusValue = useMemo(
-    () => COMMUNITIES.reduce((s, c) => s + c.value, 0),
-    [],
+    () => communities.reduce((s, c) => s + c.value, 0),
+    [communities],
   )
   const totalCorpusVendors = useMemo(
-    () => COMMUNITIES.reduce((s, c) => s + c.vendors, 0),
-    [],
+    () => communities.reduce((s, c) => s + c.vendors, 0),
+    [communities],
   )
   const totalCorpusConfirmed = useMemo(
-    () => COMMUNITIES.reduce((s, c) => s + c.confirmed, 0),
-    [],
+    () => communities.reduce((s, c) => s + c.confirmed, 0),
+    [communities],
   )
 
   return (
     <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
       <HeaderStat
-        label="Comunidades"
+        label={isEs ? 'Comunidades' : 'Communities'}
         value="10"
-        sublabel="detectadas por Louvain"
+        sublabel={isEs ? 'detectadas por Louvain' : 'detected by Louvain'}
       />
       <HeaderStat
-        label="Proveedores en red"
+        label={isEs ? 'Proveedores en red' : 'Vendors in network'}
         value={formatNumber(totalCorpusVendors)}
-        sublabel={`de ${stats ? formatNumber(stats.queue_total) : '—'} en cola ARIA`}
+        sublabel={
+          isEs
+            ? `de ${stats ? formatNumber(stats.queue_total) : '—'} en cola ARIA`
+            : `of ${stats ? formatNumber(stats.queue_total) : '—'} in ARIA queue`
+        }
       />
       <HeaderStat
-        label="Valor capturado"
+        label={isEs ? 'Valor capturado' : 'Value captured'}
         value={formatCompactMXN(totalCorpusValue)}
-        sublabel="en las top 10"
+        sublabel={isEs ? 'en las top 10' : 'in the top 10'}
         accent="#ef4444"
       />
       <HeaderStat
-        label="Casos confirmados"
+        label={isEs ? 'Casos confirmados' : 'Confirmed cases'}
         value={String(totalCorpusConfirmed)}
-        sublabel="con sentencia o sanción"
+        sublabel={isEs ? 'con sentencia o sanción' : 'with sentence or sanction'}
         accent="#f59e0b"
       />
     </div>
@@ -930,10 +968,10 @@ function HeaderStat({
 // ---------------------------------------------------------------------------
 
 export default function RedesKnownDossier() {
-  // We keep i18n setup to satisfy potential translation needs downstream, but
-  // the page's narrative text is intentionally authored in Spanish as editorial
-  // copy rather than dynamic strings.
-  useTranslation('redes')
+  const { i18n } = useTranslation('redes')
+  const isEs = i18n.language === 'es'
+
+  const communities = useMemo(() => buildCommunities(isEs), [isEs])
 
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
@@ -959,7 +997,7 @@ export default function RedesKnownDossier() {
           <span
             className="text-[10px] tracking-[0.35em] uppercase font-mono text-red-400/80"
           >
-            Inteligencia de Red · ARIA + Louvain
+            {isEs ? 'Inteligencia de Red · ARIA + Louvain' : 'Network Intelligence · ARIA + Louvain'}
           </span>
           <div className="h-px w-8 bg-red-500/40" />
         </div>
@@ -971,15 +1009,27 @@ export default function RedesKnownDossier() {
           }}
           className="text-4xl md:text-5xl font-black text-text-primary mb-3 leading-[1.02]"
         >
-          La Red Invisible
+          {isEs ? 'La Red Invisible' : 'The Invisible Network'}
         </h1>
 
         <p className="text-base text-text-secondary max-w-3xl leading-relaxed mb-5">
-          No buscamos proveedores corruptos uno por uno. Buscamos{' '}
-          <span className="text-white font-semibold">comunidades</span> que capturan
-          instituciones. Estas son las diez redes más grandes detectadas por algoritmo
-          de comunidades Louvain sobre{' '}
-          <span className="text-white font-mono">3.05M</span> contratos federales.
+          {isEs ? (
+            <>
+              No buscamos proveedores corruptos uno por uno. Buscamos{' '}
+              <span className="text-white font-semibold">comunidades</span> que capturan
+              instituciones. Estas son las diez redes más grandes detectadas por algoritmo
+              de comunidades Louvain sobre{' '}
+              <span className="text-white font-mono">3.05M</span> contratos federales.
+            </>
+          ) : (
+            <>
+              We do not hunt corrupt vendors one by one. We hunt{' '}
+              <span className="text-white font-semibold">communities</span> that capture
+              institutions. These are the ten largest networks detected by the Louvain
+              community algorithm over{' '}
+              <span className="text-white font-mono">3.05M</span> federal contracts.
+            </>
+          )}
         </p>
 
         <div className="inline-flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2">
@@ -987,25 +1037,26 @@ export default function RedesKnownDossier() {
           <span className="text-sm font-mono">
             <span className="text-red-400 font-bold">10</span>
             <span className="text-text-muted/70 ml-1.5">
-              comunidades controlan{' '}
+              {isEs ? 'comunidades controlan ' : 'communities control '}
             </span>
             <span className="text-red-400 font-bold">MX$1.40T</span>
             <span className="text-text-muted/70 ml-1.5">
-              en contratos federales
+              {isEs ? 'en contratos federales' : 'in federal contracts'}
             </span>
           </span>
         </div>
       </div>
 
       {/* Context stats */}
-      <HeaderStats />
+      <HeaderStats communities={communities} isEs={isEs} />
 
       {/* ACT I — Nucleos */}
       <Nucleos
-        communities={COMMUNITIES}
+        communities={communities}
         activeId={effectiveActive}
         onHover={setHoverId}
         onSelect={(id) => setActiveId(id === activeId ? null : id)}
+        isEs={isEs}
       />
 
       {/* Act II intro */}
@@ -1014,43 +1065,47 @@ export default function RedesKnownDossier() {
           <span
             className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
           >
-            Acto II · El Dossier
+            {isEs ? 'Acto II · El Dossier' : 'Act II · The Dossier'}
           </span>
           <ChevronRight className="w-3 h-3 text-text-muted/40" aria-hidden="true" />
           <span className="text-[11px] text-text-muted/60">
-            Firma de red por comunidad — contrastada con el techo OCDE
+            {isEs
+              ? 'Firma de red por comunidad — contrastada con el techo OCDE'
+              : 'Network signature per community — contrasted with the OECD ceiling'}
           </span>
         </div>
         <h2
           className="text-2xl md:text-3xl font-bold text-text-primary mb-2 leading-tight"
           style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.015em' }}
         >
-          Cada comunidad, su propia patología
+          {isEs ? 'Cada comunidad, su propia patología' : 'Every community, its own pathology'}
         </h2>
         <p className="text-sm text-text-muted/70 max-w-3xl leading-relaxed">
-          Debajo, cada comunidad presenta su firma de red: tasa de adjudicación directa,
-          propuesta única y anomalía de precio. La línea cian marca el techo OCDE del
-          25% para adjudicación directa — todo lo que lo rebasa es señal de alarma.
+          {isEs
+            ? 'Debajo, cada comunidad presenta su firma de red: tasa de adjudicación directa, propuesta única y anomalía de precio. La línea cian marca el techo OCDE del 25% para adjudicación directa — todo lo que lo rebasa es señal de alarma.'
+            : 'Below, each community presents its network signature: direct-award rate, single-bid rate, and price anomaly rate. The cyan line marks the OECD ceiling of 25% for direct awards — anything above it is a red flag.'}
         </p>
       </div>
 
       {/* ACT II — Dossier grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {COMMUNITIES.map((c) => (
+        {communities.map((c) => (
           <CommunityDossier
             key={c.id}
             c={c}
+            communities={communities}
             isActive={effectiveActive === c.id}
             onHover={(id) => setHoverId(id)}
             innerRef={(el) => {
               dossierRefs.current[c.id] = el
             }}
+            isEs={isEs}
           />
         ))}
       </div>
 
       {/* ACT III — Flujo de Valor */}
-      <FlujoDeValor communities={COMMUNITIES} />
+      <FlujoDeValor communities={communities} isEs={isEs} />
 
       {/* Methodological footer */}
       <div
@@ -1062,17 +1117,31 @@ export default function RedesKnownDossier() {
             <p
               className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5"
             >
-              Metodología
+              {isEs ? 'Metodología' : 'Methodology'}
             </p>
             <p className="text-[12px] text-text-secondary leading-relaxed max-w-3xl">
-              Las comunidades se detectan con el algoritmo de Louvain sobre la red de
-              co-contratación (vendedores que aparecen juntos en procedimientos,
-              operan en la misma institución en ventanas de tiempo solapadas, o
-              comparten patrones de adjudicación). Las firmas de red provienen del
-              motor ARIA v1.1 (Run{' '}
-              <span className="font-mono text-white/80">28d5c453</span>) combinado con
-              el modelo de riesgo v0.6.5 (AUC test 0.828). Los veredictos son
-              editoriales; las métricas son del motor.
+              {isEs ? (
+                <>
+                  Las comunidades se detectan con el algoritmo de Louvain sobre la red de
+                  co-contratación (vendedores que aparecen juntos en procedimientos,
+                  operan en la misma institución en ventanas de tiempo solapadas, o
+                  comparten patrones de adjudicación). Las firmas de red provienen del
+                  motor ARIA v1.1 (Run{' '}
+                  <span className="font-mono text-white/80">28d5c453</span>) combinado con
+                  el modelo de riesgo v0.6.5 (AUC test 0.828). Los veredictos son
+                  editoriales; las métricas son del motor.
+                </>
+              ) : (
+                <>
+                  Communities are detected with the Louvain algorithm over the
+                  co-contracting network (vendors that appear together in procedures,
+                  operate at the same institution in overlapping time windows, or share
+                  award patterns). Network signatures come from the ARIA v1.1 engine
+                  (Run <span className="font-mono text-white/80">28d5c453</span>)
+                  combined with risk model v0.6.5 (test AUC 0.828). Verdicts are
+                  editorial; metrics come from the engine.
+                </>
+              )}
             </p>
           </div>
         </div>

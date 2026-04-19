@@ -199,38 +199,48 @@ function summarizeRing(id: string, pairs: CollusionPair[]): RingSummary {
 // Pattern metadata
 // ---------------------------------------------------------------------------
 
-const PATTERN_META: Record<
+function buildPatternMeta(isEs: boolean): Record<
   PatternKind,
   { label: string; desc: string; icon: React.ElementType; color: string; tone: string }
-> = {
-  rotation: {
-    label: 'Rotación de licitaciones',
-    desc: 'Volúmenes de licitación similares entre miembros — consistente con alternancia de ganadores.',
-    icon: Repeat,
-    color: 'text-red-400',
-    tone: 'bg-red-500/10 border-red-500/20',
-  },
-  cover: {
-    label: 'Cover bidding',
-    desc: 'Un miembro domina en volumen de licitaciones, los demás parecen acompañar sin ganar.',
-    icon: Shield,
-    color: 'text-orange-400',
-    tone: 'bg-orange-500/10 border-orange-500/20',
-  },
-  mixed: {
-    label: 'Patrón mixto',
-    desc: 'Signos combinados de rotación y cobertura — el anillo probablemente opera en múltiples modos.',
-    icon: AlertTriangle,
-    color: 'text-amber-400',
-    tone: 'bg-amber-500/10 border-amber-500/20',
-  },
-  unknown: {
-    label: 'Patrón sin clasificar',
-    desc: 'Intensidad suficiente para agrupación, pero sin señal dominante. Requiere inspección manual.',
-    icon: HelpCircle,
-    color: 'text-zinc-400',
-    tone: 'bg-zinc-800/40 border-zinc-700/40',
-  },
+> {
+  return {
+    rotation: {
+      label: isEs ? 'Rotación de licitaciones' : 'Bid rotation',
+      desc: isEs
+        ? 'Volúmenes de licitación similares entre miembros — consistente con alternancia de ganadores.'
+        : 'Similar bidding volumes among members — consistent with alternating winners.',
+      icon: Repeat,
+      color: 'text-red-400',
+      tone: 'bg-red-500/10 border-red-500/20',
+    },
+    cover: {
+      label: isEs ? 'Presentación de cobertura' : 'Cover bidding',
+      desc: isEs
+        ? 'Un miembro domina en volumen de licitaciones, los demás parecen acompañar sin ganar.'
+        : 'One member dominates in bidding volume; the others appear to tag along without winning.',
+      icon: Shield,
+      color: 'text-orange-400',
+      tone: 'bg-orange-500/10 border-orange-500/20',
+    },
+    mixed: {
+      label: isEs ? 'Patrón mixto' : 'Mixed pattern',
+      desc: isEs
+        ? 'Signos combinados de rotación y cobertura — el anillo probablemente opera en múltiples modos.'
+        : 'Combined signs of rotation and cover — the ring probably operates in multiple modes.',
+      icon: AlertTriangle,
+      color: 'text-amber-400',
+      tone: 'bg-amber-500/10 border-amber-500/20',
+    },
+    unknown: {
+      label: isEs ? 'Patrón sin clasificar' : 'Unclassified pattern',
+      desc: isEs
+        ? 'Intensidad suficiente para agrupación, pero sin señal dominante. Requiere inspección manual.'
+        : 'Intensity sufficient for grouping, but no dominant signal. Manual inspection required.',
+      icon: HelpCircle,
+      color: 'text-zinc-400',
+      tone: 'bg-zinc-800/40 border-zinc-700/40',
+    },
+  }
 }
 
 // ---------------------------------------------------------------------------
@@ -243,14 +253,16 @@ function RingCard({
   maxSize,
   onSelect,
   isSelected,
+  isEs,
 }: {
   ring: RingSummary
   index: number
   maxSize: number
   onSelect: (ringId: string) => void
   isSelected: boolean
+  isEs: boolean
 }) {
-  const patternMeta = PATTERN_META[ring.pattern]
+  const patternMeta = buildPatternMeta(isEs)[ring.pattern]
   const PatternIcon = patternMeta.icon
   const ringLetter = String.fromCharCode(65 + index) // A, B, C...
   const intensityPct = ring.avgCoBidRate
@@ -271,9 +283,9 @@ function RingCard({
       <div className="flex items-start justify-between gap-3 mb-4">
         <div>
           <p className="font-mono text-[10px] uppercase tracking-[0.15em] text-zinc-500 mb-1">
-            ANILLO {ringLetter}
+            {isEs ? 'ANILLO' : 'RING'} {ringLetter}
             <span className="text-zinc-600 mx-1.5">·</span>
-            <span className="text-zinc-400">{ring.members.size} miembros</span>
+            <span className="text-zinc-400">{ring.members.size} {isEs ? 'miembros' : 'members'}</span>
           </p>
           <div
             className={`inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[10px] font-mono border ${patternMeta.tone}`}
@@ -284,7 +296,7 @@ function RingCard({
         </div>
         <div className="text-right shrink-0">
           <div className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">
-            Procedimientos
+            {isEs ? 'Procedimientos' : 'Procedures'}
           </div>
           <div className="font-mono text-2xl font-bold text-zinc-100 leading-none mt-0.5">
             {formatNumber(ring.sharedProcedures)}
@@ -296,7 +308,7 @@ function RingCard({
       <div className="mb-3">
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">
-            Intensidad
+            {isEs ? 'Intensidad' : 'Intensity'}
           </span>
           <span className="font-mono text-xs text-zinc-300 tabular-nums">
             {intensityPct.toFixed(0)}%
@@ -315,7 +327,7 @@ function RingCard({
       <div className="mb-4">
         <div className="flex items-baseline justify-between mb-1.5">
           <span className="font-mono text-[10px] uppercase tracking-wide text-zinc-500">
-            Tamaño
+            {isEs ? 'Tamaño' : 'Size'}
           </span>
           <span className="font-mono text-xs text-zinc-300 tabular-nums">
             {ring.members.size} / {maxSize}
@@ -333,7 +345,7 @@ function RingCard({
       {/* Member preview */}
       <div className="border-t border-zinc-800 pt-3">
         <div className="font-mono text-[10px] uppercase tracking-wide text-zinc-600 mb-1.5">
-          Miembros
+          {isEs ? 'Miembros' : 'Members'}
         </div>
         <ul className="space-y-0.5">
           {memberNames.slice(0, 3).map((name) => (
@@ -350,7 +362,7 @@ function RingCard({
           ))}
           {memberNames.length > 3 && (
             <li className="text-[11px] text-zinc-500">
-              + {memberNames.length - 3} más
+              + {memberNames.length - 3} {isEs ? 'más' : 'more'}
             </li>
           )}
         </ul>
@@ -473,6 +485,7 @@ function ConnectionRow({
   maxShared,
   onViewContracts,
   onViewRing,
+  isEs,
 }: {
   pair: CollusionPair
   ringLabel: string | null
@@ -480,6 +493,7 @@ function ConnectionRow({
   maxShared: number
   onViewContracts: (a: number, b: number, an: string, bn: string) => void
   onViewRing: (ringId: string) => void
+  isEs: boolean
 }) {
   const rate = pair.co_bid_rate
   const isHigh = rate >= 80
@@ -531,7 +545,7 @@ function ConnectionRow({
       {/* Shared procedures DotBar */}
       <div className="hidden sm:block shrink-0 w-28">
         <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-600 mb-1">
-          Compartidos
+          {isEs ? 'Compartidos' : 'Shared'}
         </div>
         <DotBar
           value={pair.shared_procedures}
@@ -549,7 +563,7 @@ function ConnectionRow({
       {/* Co-bid rate DotBar */}
       <div className="shrink-0 w-28">
         <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-600 mb-1">
-          Tasa co-lic.
+          {isEs ? 'Tasa co-lic.' : 'Co-bid rate'}
         </div>
         <DotBar
           value={rate}
@@ -580,8 +594,8 @@ function ConnectionRow({
             )
           }
           className="p-1.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
-          title="Ver contratos compartidos"
-          aria-label="Ver contratos compartidos"
+          title={isEs ? 'Ver contratos compartidos' : 'View shared contracts'}
+          aria-label={isEs ? 'Ver contratos compartidos' : 'View shared contracts'}
         >
           <FileText className="w-3.5 h-3.5" aria-hidden="true" />
         </button>
@@ -594,10 +608,10 @@ function ConnectionRow({
               if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' })
             }}
             className="flex items-center gap-1 p-1.5 rounded text-amber-400/80 hover:text-amber-300 hover:bg-amber-500/10 transition-colors text-[10px] font-mono uppercase tracking-wide"
-            title="Ver anillo completo"
-            aria-label="Ver anillo completo"
+            title={isEs ? 'Ver anillo completo' : 'View full ring'}
+            aria-label={isEs ? 'Ver anillo completo' : 'View full ring'}
           >
-            Anillo
+            {isEs ? 'Anillo' : 'Ring'}
             <ChevronRight className="h-3 w-3" aria-hidden="true" />
           </button>
         )}
@@ -644,7 +658,8 @@ function ErrorState() {
 // ---------------------------------------------------------------------------
 
 export default function CollusionExplorer() {
-  const { t } = useTranslation('collusion')
+  const { t, i18n } = useTranslation('collusion')
+  const isEs = i18n.language === 'es'
 
   const [flaggedOnly, setFlaggedOnly] = useState(true)
   const [minShared, setMinShared] = useState(DEFAULT_MIN_SHARED)
@@ -804,22 +819,22 @@ export default function CollusionExplorer() {
               : [
                   {
                     value: formatNumber(rings.length),
-                    label: 'Anillos detectados',
+                    label: isEs ? 'Anillos detectados' : 'Rings detected',
                     color: 'var(--color-risk-critical)',
-                    sub: 'componentes ≥3 miembros',
+                    sub: isEs ? 'componentes ≥3 miembros' : 'components ≥3 members',
                   },
                   {
                     value: formatNumber(safeStats?.potential_collusion_count ?? 0),
-                    label: 'Conexiones sospechosas',
-                    sub: 'pares flagged',
+                    label: isEs ? 'Conexiones sospechosas' : 'Suspicious connections',
+                    sub: isEs ? 'pares flagged' : 'flagged pairs',
                   },
                   {
                     value: formatNumber(safeStats?.total_shared_procedures ?? 0),
-                    label: 'Procedimientos compartidos',
+                    label: isEs ? 'Procedimientos compartidos' : 'Shared procedures',
                   },
                   {
                     value: `${(safeStats?.max_co_bid_rate ?? 0).toFixed(0)}%`,
-                    label: 'Tasa máxima de co-licitación',
+                    label: isEs ? 'Tasa máxima de co-licitación' : 'Max co-bidding rate',
                   },
                 ]
           }
@@ -828,19 +843,22 @@ export default function CollusionExplorer() {
           meta={<>COMPRANET 2010&ndash;2025</>}
         >
           {/* ========================================================= */}
-          {/* ACT I — LOS ANILLOS                                         */}
+          {/* ACT I — LOS ANILLOS / THE RINGS                             */}
           {/* ========================================================= */}
           <section id="rings-section">
             <Act
               number="I"
-              label="LOS ANILLOS"
-              title="Los grupos conectados que emergen cuando se cuentan los pares."
+              label={isEs ? 'LOS ANILLOS' : 'THE RINGS'}
+              title={
+                isEs
+                  ? 'Los grupos conectados que emergen cuando se cuentan los pares.'
+                  : 'The connected groups that emerge when pairs are counted.'
+              }
             >
               <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-2xl">
-                Cada anillo es un componente conectado del grafo de co-licitación:
-                si A+B y B+C aparecen como pares sospechosos, entonces A, B y C forman
-                una estructura. Los ocho anillos más grandes, ordenados por tamaño
-                ponderado por intensidad.
+                {isEs
+                  ? 'Cada anillo es un componente conectado del grafo de co-licitación: si A+B y B+C aparecen como pares sospechosos, entonces A, B y C forman una estructura. Los ocho anillos más grandes, ordenados por tamaño ponderado por intensidad.'
+                  : 'Each ring is a connected component of the co-bidding graph: if A+B and B+C appear as suspicious pairs, then A, B, and C form a structure. The eight largest rings, sorted by size weighted by intensity.'}
               </p>
 
               {ringsLoading ? (
@@ -852,7 +870,9 @@ export default function CollusionExplorer() {
               ) : rings.length === 0 ? (
                 <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-8 text-center">
                   <p className="text-sm text-zinc-400">
-                    No se detectaron anillos con ≥3 miembros en los datos actuales.
+                    {isEs
+                      ? 'No se detectaron anillos con ≥3 miembros en los datos actuales.'
+                      : 'No rings with ≥3 members detected in the current data.'}
                   </p>
                 </div>
               ) : (
@@ -867,6 +887,7 @@ export default function CollusionExplorer() {
                         setSelectedRingId((prev) => (prev === id ? null : id))
                       }
                       isSelected={selectedRingId === ring.id}
+                      isEs={isEs}
                     />
                   ))}
                 </div>
@@ -875,11 +896,11 @@ export default function CollusionExplorer() {
               {/* Pattern glossary — inline, compact */}
               <div className="mt-6 rounded-xl border border-zinc-800 bg-zinc-900/30 p-4">
                 <p className="font-mono text-[10px] font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-                  PATRONES DETECTADOS
+                  {isEs ? 'PATRONES DETECTADOS' : 'PATTERNS DETECTED'}
                 </p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   {(['rotation', 'cover', 'mixed', 'unknown'] as const).map((kind) => {
-                    const meta = PATTERN_META[kind]
+                    const meta = buildPatternMeta(isEs)[kind]
                     const Icon = meta.icon
                     return (
                       <div key={kind} className="flex items-start gap-2">
@@ -906,18 +927,21 @@ export default function CollusionExplorer() {
           <div className="h-10" />
 
           {/* ========================================================= */}
-          {/* ACT II — LAS CONEXIONES                                    */}
+          {/* ACT II — LAS CONEXIONES / THE CONNECTIONS                   */}
           {/* ========================================================= */}
           <Act
             number="II"
-            label="LAS CONEXIONES"
-            title="Cada conexión es una arista del grafo. Así se construyen los anillos."
+            label={isEs ? 'LAS CONEXIONES' : 'THE CONNECTIONS'}
+            title={
+              isEs
+                ? 'Cada conexión es una arista del grafo. Así se construyen los anillos.'
+                : 'Each connection is an edge in the graph. This is how rings are built.'
+            }
           >
             <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-2xl">
-              Cada fila es un par de proveedores que co-licitan por encima del umbral.
-              Los pares etiquetados pertenecen a uno de los anillos identificados
-              arriba; los demás son conexiones periféricas que aún no forman una
-              estructura de tres o más.
+              {isEs
+                ? 'Cada fila es un par de proveedores que co-licitan por encima del umbral. Los pares etiquetados pertenecen a uno de los anillos identificados arriba; los demás son conexiones periféricas que aún no forman una estructura de tres o más.'
+                : 'Each row is a pair of vendors that co-bid above the threshold. Tagged pairs belong to one of the rings identified above; the others are peripheral connections that do not yet form a structure of three or more.'}
             </p>
 
             <Filters
@@ -972,6 +996,7 @@ export default function CollusionExplorer() {
                       maxShared={maxSharedInPage}
                       onViewContracts={handleViewContracts}
                       onViewRing={(id) => setSelectedRingId(id)}
+                      isEs={isEs}
                     />
                   )
                 })}
@@ -1019,31 +1044,44 @@ export default function CollusionExplorer() {
           <div className="h-10" />
 
           {/* ========================================================= */}
-          {/* ACT III — METODOLOGÍA                                      */}
+          {/* ACT III — METODOLOGÍA / METHODOLOGY                         */}
           {/* ========================================================= */}
           <Act
             number="III"
-            label="METODOLOGÍA"
-            title="Cómo construimos los anillos."
+            label={isEs ? 'METODOLOGÍA' : 'METHODOLOGY'}
+            title={isEs ? 'Cómo construimos los anillos.' : 'How we build the rings.'}
           >
             <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-4">
               <p className="text-sm text-zinc-200 leading-relaxed mb-3">
                 <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-amber-400 block mb-2">
-                  HALLAZGO
+                  {isEs ? 'HALLAZGO' : 'FINDING'}
                 </span>
-                Un par de proveedores que co-licitan al 80% es sospechoso. Pero es un
-                anillo de 5 proveedores — donde cada uno se empareja con todos los
-                demás por encima del umbral — el que constituye evidencia estructural
-                de coordinación.
+                {isEs
+                  ? 'Un par de proveedores que co-licitan al 80% es sospechoso. Pero es un anillo de 5 proveedores — donde cada uno se empareja con todos los demás por encima del umbral — el que constituye evidencia estructural de coordinación.'
+                  : 'A pair of vendors co-bidding at 80% is suspicious. But a ring of 5 vendors — where each one pairs with all the others above the threshold — is what constitutes structural evidence of coordination.'}
               </p>
               <p className="text-sm text-zinc-400 leading-relaxed">
-                Tomamos los 300 pares con mayor tasa de co-licitación (flagged,
-                ≥10 procedimientos compartidos), los tratamos como aristas de un
-                grafo, y aplicamos <em>union-find</em> para identificar los
-                componentes conectados. Cada componente con ≥3 miembros se
-                presenta como un anillo. El patrón (rotación, cobertura, mixto)
-                se infiere comparando los volúmenes de licitación relativos de los
-                miembros — sin datos de institución, solo la aritmética del grafo.
+                {isEs ? (
+                  <>
+                    Tomamos los 300 pares con mayor tasa de co-licitación (flagged,
+                    ≥10 procedimientos compartidos), los tratamos como aristas de un
+                    grafo, y aplicamos <em>union-find</em> para identificar los
+                    componentes conectados. Cada componente con ≥3 miembros se
+                    presenta como un anillo. El patrón (rotación, cobertura, mixto)
+                    se infiere comparando los volúmenes de licitación relativos de los
+                    miembros — sin datos de institución, solo la aritmética del grafo.
+                  </>
+                ) : (
+                  <>
+                    We take the top 300 pairs by co-bidding rate (flagged,
+                    ≥10 shared procedures), treat them as edges of a
+                    graph, and apply <em>union-find</em> to identify the
+                    connected components. Each component with ≥3 members is
+                    presented as a ring. The pattern (rotation, cover, mixed)
+                    is inferred by comparing members&apos; relative bidding volumes —
+                    no institution data, just the arithmetic of the graph.
+                  </>
+                )}
               </p>
             </div>
 

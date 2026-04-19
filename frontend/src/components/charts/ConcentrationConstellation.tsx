@@ -19,6 +19,7 @@
  * the full cluster summary with a DotBar visualization of highRiskPct.
  */
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { halton, mulberry32 } from '@/lib/particle'
 
 export interface ConstellationRiskRow {
@@ -65,61 +66,69 @@ interface ClusterMeta {
 // ── MODE 1: PATRONES (ARIA patterns) ──────────────────────────────────────
 // 7 corruption patterns detected by ARIA v1.1. Positions hand-tuned so the
 // clusters distribute across the panel without overlap.
-const PATTERN_META: ClusterMeta[] = [
-  // P5 — center, largest cluster (180 T1)
-  { code: 'P5', label: 'Sobreprecio Sistemático',   desc: 'Precios 2σ sobre promedio sectorial — 180 proveedores T1',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.40 },
-  // P7 — upper right (56 T1)
-  { code: 'P7', label: 'Red de Contratistas',        desc: 'Redes multi-proveedor con evidencia externa — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  highRiskPct: 0.72, fx: 0.78, fy: 0.22 },
-  // P1 — lower right (23 T1)
-  { code: 'P1', label: 'Monopolio Concentrado',      desc: 'Proveedor domina >3% del valor sectorial — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  highRiskPct: 0.85, fx: 0.72, fy: 0.68 },
-  // P3 — upper left (26 T1)
-  { code: 'P3', label: 'Intermediaria de Uso Único', desc: 'Ráfaga de contratos + desaparición — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  highRiskPct: 0.44, fx: 0.22, fy: 0.28 },
-  // P6 — lower left (31 T1)
-  { code: 'P6', label: 'Captura Institucional',      desc: '>80% contratos de una sola institución — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  highRiskPct: 0.28, fx: 0.28, fy: 0.72 },
-  // P2 — lower center (1 T1)
-  { code: 'P2', label: 'Empresa Fantasma',           desc: 'Sin RFC, ≤10 contratos, desaparece — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.78 },
-  // P4 — top center (3 T1)
-  { code: 'P4', label: 'Colusión en Licitaciones',   desc: 'Co-licitación >50% + tasa de victoria >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.42, fy: 0.14 },
-]
+function buildPatternMeta(isEs: boolean): ClusterMeta[] {
+  return [
+    // P5 — center, largest cluster (180 T1)
+    { code: 'P5', label: isEs ? 'Sobreprecio Sistemático' : 'Systematic Overpricing',   desc: isEs ? 'Precios 2σ sobre promedio sectorial — 180 proveedores T1' : 'Prices 2σ above sector average — 180 T1 vendors',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.40 },
+    // P7 — upper right (56 T1)
+    { code: 'P7', label: isEs ? 'Red de Contratistas' : 'Contractor Network',        desc: isEs ? 'Redes multi-proveedor con evidencia externa — 56 T1' : 'Multi-vendor networks with external evidence — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  highRiskPct: 0.72, fx: 0.78, fy: 0.22 },
+    // P1 — lower right (23 T1)
+    { code: 'P1', label: isEs ? 'Monopolio Concentrado' : 'Concentrated Monopoly',      desc: isEs ? 'Proveedor domina >3% del valor sectorial — 23 T1' : 'Vendor dominates >3% of sector value — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  highRiskPct: 0.85, fx: 0.72, fy: 0.68 },
+    // P3 — upper left (26 T1)
+    { code: 'P3', label: isEs ? 'Intermediaria de Uso Único' : 'Single-Use Intermediary', desc: isEs ? 'Ráfaga de contratos + desaparición — 26 T1' : 'Burst of contracts + disappearance — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  highRiskPct: 0.44, fx: 0.22, fy: 0.28 },
+    // P6 — lower left (31 T1)
+    { code: 'P6', label: isEs ? 'Captura Institucional' : 'Institutional Capture',      desc: isEs ? '>80% contratos de una sola institución — 31 T1' : '>80% of contracts from a single institution — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  highRiskPct: 0.28, fx: 0.28, fy: 0.72 },
+    // P2 — lower center (1 T1)
+    { code: 'P2', label: isEs ? 'Empresa Fantasma' : 'Ghost Company',           desc: isEs ? 'Sin RFC, ≤10 contratos, desaparece — 1 T1' : 'No RFC, ≤10 contracts, disappears — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.78 },
+    // P4 — top center (3 T1)
+    { code: 'P4', label: isEs ? 'Colusión en Licitaciones' : 'Bid Collusion',   desc: isEs ? 'Co-licitación >50% + tasa de victoria >70% — 3 T1' : 'Co-bidding >50% + win rate >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.42, fy: 0.14 },
+  ]
+}
 
 // ── MODE 2: SECTORES (12 sectors in a 4×3 grid) ──────────────────────────
 // Grid positions (row, col): 4 columns × 3 rows. Values are fraction of
 // FIELD_W × FIELD_H. Attractor radii driven by sqrt(t1) as in PATRONES.
-const SECTOR_META: ClusterMeta[] = [
-  // Row 0 (top)
-  { code: 'salud',           label: 'Salud',           desc: 'IMSS, ISSSTE, SSa — mayor concentración de casos documentados',  color: '#dc2626', vendors: 32000,  t1: 89, highRiskPct: 0.18, fx: 0.15, fy: 0.22 },
-  { code: 'educacion',       label: 'Educación',       desc: 'SEP, SEMS, becas, infraestructura educativa',                     color: '#3b82f6', vendors: 28000,  t1: 34, highRiskPct: 0.11, fx: 0.38, fy: 0.22 },
-  { code: 'infraestructura', label: 'Infraestructura', desc: 'SCT, obra pública — fraude ejecución invisible a este modelo',   color: '#ea580c', vendors: 24000,  t1: 67, highRiskPct: 0.14, fx: 0.62, fy: 0.22 },
-  { code: 'energia',         label: 'Energía',         desc: 'PEMEX, CFE — estructura monopólica, vendedores certificados',    color: '#eab308', vendors: 12000,  t1: 44, highRiskPct: 0.16, fx: 0.85, fy: 0.22 },
-  // Row 1 (middle)
-  { code: 'defensa',         label: 'Defensa',         desc: 'SEDENA, SEMAR — datos limitados por seguridad nacional',          color: '#1e3a5f', vendors: 3400,   t1:  8, highRiskPct: 0.09, fx: 0.15, fy: 0.50 },
-  { code: 'tecnologia',      label: 'Tecnología',      desc: 'Monopolios IT (Toka, Mainbit) — riesgo alto en pocos proveedores', color: '#8b5cf6', vendors: 18000,  t1: 29, highRiskPct: 0.13, fx: 0.38, fy: 0.50 },
-  { code: 'hacienda',        label: 'Hacienda',        desc: 'SAT, Tesorería — licitaciones amañadas documentadas',             color: '#16a34a', vendors: 9000,   t1: 21, highRiskPct: 0.10, fx: 0.62, fy: 0.50 },
-  { code: 'gobernacion',     label: 'Gobernación',     desc: 'Estafa Maestra originó aquí — empresas fantasma multi-instituc.', color: '#be123c', vendors: 15000,  t1: 48, highRiskPct: 0.15, fx: 0.85, fy: 0.50 },
-  // Row 2 (bottom)
-  { code: 'agricultura',     label: 'Agricultura',     desc: 'Segalmex, LICONSA — fraude ~15.8B MXN confirmado',                color: '#22c55e', vendors: 7000,   t1: 19, highRiskPct: 0.12, fx: 0.15, fy: 0.78 },
-  { code: 'ambiente',        label: 'Ambiente',        desc: 'CONAGUA — red rotativa de contratistas ghost',                    color: '#10b981', vendors: 5000,   t1: 11, highRiskPct: 0.08, fx: 0.38, fy: 0.78 },
-  { code: 'trabajo',         label: 'Trabajo',         desc: 'ISSSTE ambulancias — sobreprecio en arrendamiento',               color: '#f97316', vendors: 4000,   t1: 14, highRiskPct: 0.09, fx: 0.62, fy: 0.78 },
-  { code: 'otros',           label: 'Otros',           desc: 'Miscelánea federal — mayor volumen, menor riesgo promedio',       color: '#64748b', vendors: 160000, t1: 35, highRiskPct: 0.07, fx: 0.85, fy: 0.78 },
-]
+function buildSectorMeta(isEs: boolean): ClusterMeta[] {
+  return [
+    // Row 0 (top)
+    { code: 'salud',           label: isEs ? 'Salud' : 'Health',           desc: isEs ? 'IMSS, ISSSTE, SSa — mayor concentración de casos documentados' : 'IMSS, ISSSTE, SSa — highest concentration of documented cases',  color: '#dc2626', vendors: 32000,  t1: 89, highRiskPct: 0.18, fx: 0.15, fy: 0.22 },
+    { code: 'educacion',       label: isEs ? 'Educación' : 'Education',       desc: isEs ? 'SEP, SEMS, becas, infraestructura educativa' : 'SEP, SEMS, scholarships, educational infrastructure',                     color: '#3b82f6', vendors: 28000,  t1: 34, highRiskPct: 0.11, fx: 0.38, fy: 0.22 },
+    { code: 'infraestructura', label: isEs ? 'Infraestructura' : 'Infrastructure', desc: isEs ? 'SCT, obra pública — fraude ejecución invisible a este modelo' : 'SCT, public works — execution fraud invisible to this model',   color: '#ea580c', vendors: 24000,  t1: 67, highRiskPct: 0.14, fx: 0.62, fy: 0.22 },
+    { code: 'energia',         label: isEs ? 'Energía' : 'Energy',         desc: isEs ? 'PEMEX, CFE — estructura monopólica, vendedores certificados' : 'PEMEX, CFE — monopolistic structure, certified vendors',    color: '#eab308', vendors: 12000,  t1: 44, highRiskPct: 0.16, fx: 0.85, fy: 0.22 },
+    // Row 1 (middle)
+    { code: 'defensa',         label: isEs ? 'Defensa' : 'Defense',         desc: isEs ? 'SEDENA, SEMAR — datos limitados por seguridad nacional' : 'SEDENA, SEMAR — data limited by national security',          color: '#1e3a5f', vendors: 3400,   t1:  8, highRiskPct: 0.09, fx: 0.15, fy: 0.50 },
+    { code: 'tecnologia',      label: isEs ? 'Tecnología' : 'Technology',      desc: isEs ? 'Monopolios IT (Toka, Mainbit) — riesgo alto en pocos proveedores' : 'IT monopolies (Toka, Mainbit) — high risk in few vendors', color: '#8b5cf6', vendors: 18000,  t1: 29, highRiskPct: 0.13, fx: 0.38, fy: 0.50 },
+    { code: 'hacienda',        label: isEs ? 'Hacienda' : 'Finance',        desc: isEs ? 'SAT, Tesorería — licitaciones amañadas documentadas' : 'SAT, Treasury — documented rigged tenders',             color: '#16a34a', vendors: 9000,   t1: 21, highRiskPct: 0.10, fx: 0.62, fy: 0.50 },
+    { code: 'gobernacion',     label: isEs ? 'Gobernación' : 'Interior',     desc: isEs ? 'Estafa Maestra originó aquí — empresas fantasma multi-instituc.' : 'Estafa Maestra originated here — multi-institution ghost companies', color: '#be123c', vendors: 15000,  t1: 48, highRiskPct: 0.15, fx: 0.85, fy: 0.50 },
+    // Row 2 (bottom)
+    { code: 'agricultura',     label: isEs ? 'Agricultura' : 'Agriculture',     desc: isEs ? 'Segalmex, LICONSA — fraude ~15.8B MXN confirmado' : 'Segalmex, LICONSA — ~15.8B MXN fraud confirmed',                color: '#22c55e', vendors: 7000,   t1: 19, highRiskPct: 0.12, fx: 0.15, fy: 0.78 },
+    { code: 'ambiente',        label: isEs ? 'Ambiente' : 'Environment',        desc: isEs ? 'CONAGUA — red rotativa de contratistas ghost' : 'CONAGUA — rotating network of ghost contractors',                    color: '#10b981', vendors: 5000,   t1: 11, highRiskPct: 0.08, fx: 0.38, fy: 0.78 },
+    { code: 'trabajo',         label: isEs ? 'Trabajo' : 'Labor',         desc: isEs ? 'ISSSTE ambulancias — sobreprecio en arrendamiento' : 'ISSSTE ambulances — overpricing in leasing',               color: '#f97316', vendors: 4000,   t1: 14, highRiskPct: 0.09, fx: 0.62, fy: 0.78 },
+    { code: 'otros',           label: isEs ? 'Otros' : 'Other',           desc: isEs ? 'Miscelánea federal — mayor volumen, menor riesgo promedio' : 'Federal miscellaneous — higher volume, lower average risk',       color: '#64748b', vendors: 160000, t1: 35, highRiskPct: 0.07, fx: 0.85, fy: 0.78 },
+  ]
+}
 
 // ── MODE 3: SEXENIOS (6 presidential periods as timeline) ────────────────
 // Arranged chronologically left-to-right, Y centered at 0.50. AMLO cluster
 // is visibly larger (more vendors, higher risk) — crimson.
-const SEXENIO_META: ClusterMeta[] = [
-  { code: 'zedillo',   label: 'Zedillo',    desc: 'Datos pre-COMPRANET muy limitados (cobertura estructura A)',                 color: '#64748b', vendors: 15000,  t1:  6, highRiskPct: 0.06, fx: 0.08, fy: 0.50, kicker: '1994–2000' },
-  { code: 'fox',       label: 'Fox',        desc: 'Primera alternancia — datos estructura A, RFC <1%',                          color: '#16a34a', vendors: 25000,  t1: 12, highRiskPct: 0.07, fx: 0.22, fy: 0.50, kicker: '2000–2006' },
-  { code: 'calderon',  label: 'Calderón',   desc: 'Guerra contra narco — contratos SEDENA/SEMAR escalan',                       color: '#3b82f6', vendors: 40000,  t1: 24, highRiskPct: 0.08, fx: 0.38, fy: 0.50, kicker: '2006–2012' },
-  { code: 'pena',      label: 'Peña Nieto', desc: 'Estafa Maestra, Odebrecht, Grupo Higa — era dorada de empresas fantasma',    color: '#ea580c', vendors: 65000,  t1: 58, highRiskPct: 0.12, fx: 0.55, fy: 0.50, kicker: '2012–2018' },
-  { code: 'amlo',      label: 'AMLO',       desc: 'Segalmex, Tren Maya, COVID — mayor volumen y mayor concentración T1',        color: '#dc2626', vendors: 120000, t1: 148, highRiskPct: 0.18, fx: 0.72, fy: 0.50, kicker: '2018–2024' },
-  { code: 'sheinbaum', label: 'Sheinbaum',  desc: 'Año 1 — señales tempranas de continuidad en adjudicaciones directas',        color: '#be123c', vendors: 28000,  t1: 72, highRiskPct: 0.15, fx: 0.90, fy: 0.50, kicker: '2024–' },
-]
+function buildSexenioMeta(isEs: boolean): ClusterMeta[] {
+  return [
+    { code: 'zedillo',   label: 'Zedillo',    desc: isEs ? 'Datos pre-COMPRANET muy limitados (cobertura estructura A)' : 'Pre-COMPRANET data very limited (structure A coverage)',                 color: '#64748b', vendors: 15000,  t1:  6, highRiskPct: 0.06, fx: 0.08, fy: 0.50, kicker: '1994–2000' },
+    { code: 'fox',       label: 'Fox',        desc: isEs ? 'Primera alternancia — datos estructura A, RFC <1%' : 'First political transition — structure A data, RFC <1%',                          color: '#16a34a', vendors: 25000,  t1: 12, highRiskPct: 0.07, fx: 0.22, fy: 0.50, kicker: '2000–2006' },
+    { code: 'calderon',  label: 'Calderón',   desc: isEs ? 'Guerra contra narco — contratos SEDENA/SEMAR escalan' : 'Drug war — SEDENA/SEMAR contracts escalate',                       color: '#3b82f6', vendors: 40000,  t1: 24, highRiskPct: 0.08, fx: 0.38, fy: 0.50, kicker: '2006–2012' },
+    { code: 'pena',      label: 'Peña Nieto', desc: isEs ? 'Estafa Maestra, Odebrecht, Grupo Higa — era dorada de empresas fantasma' : 'Estafa Maestra, Odebrecht, Grupo Higa — golden age of ghost companies',    color: '#ea580c', vendors: 65000,  t1: 58, highRiskPct: 0.12, fx: 0.55, fy: 0.50, kicker: '2012–2018' },
+    { code: 'amlo',      label: 'AMLO',       desc: isEs ? 'Segalmex, Tren Maya, COVID — mayor volumen y mayor concentración T1' : 'Segalmex, Tren Maya, COVID — higher volume and higher T1 concentration',        color: '#dc2626', vendors: 120000, t1: 148, highRiskPct: 0.18, fx: 0.72, fy: 0.50, kicker: '2018–2024' },
+    { code: 'sheinbaum', label: 'Sheinbaum',  desc: isEs ? 'Año 1 — señales tempranas de continuidad en adjudicaciones directas' : 'Year 1 — early signs of continuity in direct awards',        color: '#be123c', vendors: 28000,  t1: 72, highRiskPct: 0.15, fx: 0.90, fy: 0.50, kicker: '2024–' },
+  ]
+}
 
 // Meta label shown in tooltip kicker and caption
-const MODE_KICKERS: Record<ConstellationMode, { short: string; caption: string }> = {
-  patterns: { short: 'PATRÓN',  caption: '7 patrones ARIA (P1–P7) · click para abrir tipología' },
-  sectors:  { short: 'SECTOR',  caption: '12 sectores federales · click para abrir sector' },
-  sexenios: { short: 'SEXENIO', caption: '6 periodos presidenciales · click para abrir sexenio' },
+function buildModeKickers(isEs: boolean): Record<ConstellationMode, { short: string; caption: string }> {
+  return {
+    patterns: { short: isEs ? 'PATRÓN' : 'PATTERN',  caption: isEs ? '7 patrones ARIA (P1–P7) · click para abrir tipología' : '7 ARIA patterns (P1–P7) · click to open typology' },
+    sectors:  { short: isEs ? 'SECTOR' : 'SECTOR',  caption: isEs ? '12 sectores federales · click para abrir sector' : '12 federal sectors · click to open sector' },
+    sexenios: { short: isEs ? 'SEXENIO' : 'TERM', caption: isEs ? '6 periodos presidenciales · click para abrir sexenio' : '6 presidential terms · click to open term' },
+  }
 }
 
 // Risk visual styling (mirrors ContractField + RiskStrata)
@@ -169,14 +178,18 @@ export function ConcentrationConstellation({
   onClusterClick,
   className,
 }: ConcentrationConstellationProps) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language === 'es'
   const [hoveredCluster, setHoveredCluster] = useState<number | null>(null)
 
   // Pick the active meta array for the current mode
   const activeMeta: ClusterMeta[] = useMemo(() => {
-    if (mode === 'sectors')  return SECTOR_META
-    if (mode === 'sexenios') return SEXENIO_META
-    return PATTERN_META
-  }, [mode])
+    if (mode === 'sectors')  return buildSectorMeta(isEs)
+    if (mode === 'sexenios') return buildSexenioMeta(isEs)
+    return buildPatternMeta(isEs)
+  }, [mode, isEs])
+
+  const MODE_KICKERS = useMemo(() => buildModeKickers(isEs), [isEs])
 
   const { dots, criticalEdges, marginAnchors, attractors } = useMemo(() => {
     // Reset hover when mode changes — avoid stale index referencing old meta
@@ -550,7 +563,7 @@ export function ConcentrationConstellation({
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
-          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contratos · {kickerLabel.caption}
+          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} {isEs ? 'contratos' : 'contracts'} · {kickerLabel.caption}
         </text>
       </svg>
 
@@ -601,7 +614,7 @@ export function ConcentrationConstellation({
             <div className="mb-1.5">
               <div className="flex items-center justify-between mb-0.5">
                 <span className="text-[9px] font-mono uppercase tracking-wider text-stone-500">
-                  Alto + crítico
+                  {isEs ? 'Alto + crítico' : 'High + critical'}
                 </span>
                 <span className="text-[10px] font-mono font-bold" style={{ color: meta.color }}>
                   {(meta.highRiskPct * 100).toFixed(1)}%
@@ -610,13 +623,13 @@ export function ConcentrationConstellation({
               <DotBar value={meta.highRiskPct} color={meta.color} />
             </div>
             <div className="flex items-center gap-3 text-[10px] font-mono text-stone-500 mb-1">
-              <span>{meta.vendors.toLocaleString()} proveedores</span>
+              <span>{meta.vendors.toLocaleString()} {isEs ? 'proveedores' : 'vendors'}</span>
               <span className="text-stone-600">·</span>
               <span style={{ color: meta.color }}>{meta.t1} T1</span>
             </div>
             {onClusterClick && (
               <div className="text-[10px] font-mono text-amber-400 tracking-wider uppercase">
-                → Ver detalle
+                {isEs ? '→ Ver detalle' : '→ View detail'}
               </div>
             )}
           </div>

@@ -1,28 +1,30 @@
 /**
- * InvestigationCaseDetail
- * Full-page case detail view for a single investigation case.
+ * InvestigationCaseDetail — Editorial redesign (NYT/FT investigative desk)
  * Route: /investigation/:caseId
  *
+ * An investigator workflow tool dressed as a case file. Warm dark palette
+ * (#141210 → #1a1614), serif headlines, inline DotBars for risk magnitude,
+ * evidence cards instead of data-dump tables.
+ *
  * Sections:
- *  1. Top bar: back button, title, badges, action buttons
- *  2. Summary cards: contracts / value / score
- *  3. Case narrative
- *  4. Involved vendors table
- *  5. Investigation questions
- *  6. Evidence log (external_sources)
- *  7. Action area: change status / add evidence / promote
+ *  1. Editorial header — breadcrumb, title, badges, action row
+ *  2. Summary strip — three stats with DotBars for magnitude
+ *  3. Case narrative — warm card with serif body (if narrative/summary)
+ *  4. Vendor evidence cards — each vendor is an evidence item with risk DotBar
+ *  5. Investigation questions — question cards with inline validation buttons
+ *  6. Evidence log — timeline of external sources + inline add-evidence form
+ *  7. Review action rail — status change, corroborate/refute, promote-to-GT
+ *  8. Modals — status change, promote confirm
  */
 
 import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { useTranslation } from 'react-i18next'
 import { investigationApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
-import { Card, CardContent } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
 import type {
   InvestigationValidationStatus,
@@ -45,18 +47,65 @@ import {
   Send,
   FileText,
   Users,
-  AlertCircle,
 } from 'lucide-react'
 
 // ============================================================================
-// TYPES
+// PALETTE — warm-dark editorial surface
+// ============================================================================
+
+const BG = '#141210'            // page
+const CARD = '#1a1614'          // card surface
+const CARD_HI = '#221d1a'       // card on card (elevated)
+const BORDER = 'rgba(231,229,225,0.08)'
+const BORDER_HI = 'rgba(231,229,225,0.14)'
+const INK = '#e7e5e1'           // primary text (warm bone)
+const INK_MUTED = '#a8a29e'     // secondary
+const INK_DIM = '#78716c'       // tertiary
+const INK_FAINT = '#57534e'     // overlines / captions
+const EMPTY_DOT = '#2a2420'     // dotbar empty
+
+// ============================================================================
+// INLINE DotBar — NYT-style categorical magnitude indicator
+// ============================================================================
+
+function DotBar({
+  value,
+  max = 1,
+  color = '#ef4444',
+  dots = 20,
+  size = 6,
+  gap = 2,
+}: {
+  value: number
+  max?: number
+  color?: string
+  dots?: number
+  size?: number
+  gap?: number
+}) {
+  const ratio = max > 0 ? Math.min(1, Math.max(0, value / max)) : 0
+  const filled = Math.round(ratio * dots)
+  const w = dots * (size + gap) - gap
+  return (
+    <svg width={w} height={size} style={{ display: 'block' }} aria-hidden="true">
+      {Array.from({ length: dots }, (_, i) => (
+        <circle
+          key={i}
+          cx={i * (size + gap) + size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={i < filled ? color : EMPTY_DOT}
+        />
+      ))}
+    </svg>
+  )
+}
+
+// ============================================================================
+// TYPES / HELPERS
 // ============================================================================
 
 type PriorityLevel = 'critical' | 'high' | 'medium' | 'low'
-
-// ============================================================================
-// HELPERS
-// ============================================================================
 
 function getPriority(score: number): { level: PriorityLevel; n: number } {
   const level = getRiskLevelFromScore(score)
@@ -64,55 +113,48 @@ function getPriority(score: number): { level: PriorityLevel; n: number } {
   return { level, n }
 }
 
-const PRIORITY_BADGE: Record<PriorityLevel, string> = {
-  critical: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/30',
-  high: 'bg-risk-high/15 text-risk-high border border-risk-high/30',
-  medium: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/30',
-  low: 'bg-risk-low/15 text-risk-low border border-risk-low/30',
-}
-
-const SCORE_COLOR: Record<PriorityLevel, string> = {
-  critical: 'text-risk-critical',
-  high: 'text-risk-high',
-  medium: 'text-risk-medium',
-  low: 'text-risk-low',
+const LEVEL_COLOR: Record<PriorityLevel, string> = {
+  critical: '#ef4444',
+  high: '#f59e0b',
+  medium: '#a16207',
+  low: '#71717a',
 }
 
 const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   icon: React.ElementType
   label: string
-  className: string
+  color: string
 }> = {
-  pending: {
-    icon: Clock,
-    label: 'Pending',
-    className: 'bg-risk-medium/15 text-risk-medium border border-risk-medium/30',
-  },
-  corroborated: {
-    icon: CheckCircle2,
-    label: 'Corroborated',
-    className: 'bg-risk-low/15 text-risk-low border border-risk-low/30',
-  },
-  refuted: {
-    icon: XCircle,
-    label: 'Refuted',
-    className: 'bg-risk-critical/15 text-risk-critical border border-risk-critical/30',
-  },
-  inconclusive: {
-    icon: HelpCircle,
-    label: 'Inconclusive',
-    className: 'bg-slate-500/15 text-slate-400 border border-slate-500/30',
-  },
+  pending:       { icon: Clock,        label: 'Pending',       color: '#f59e0b' },
+  corroborated:  { icon: CheckCircle2, label: 'Corroborated',  color: '#22c55e' },
+  refuted:       { icon: XCircle,      label: 'Refuted',       color: '#ef4444' },
+  inconclusive:  { icon: HelpCircle,   label: 'Inconclusive',  color: '#78716c' },
+}
+
+const EVIDENCE_STRENGTH_COLOR: Record<string, string> = {
+  confirmed: '#22c55e',
+  strong: '#22c55e',
+  likely: '#f59e0b',
+  moderate: '#f59e0b',
+  suspected: '#a16207',
+  weak: '#78716c',
+  unknown: '#78716c',
 }
 
 function StatusPill({ status }: { status: InvestigationValidationStatus }) {
-  const { t } = useTranslation('investigation')
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const Icon = config.icon
   return (
-    <span className={cn('inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium', config.className)}>
-      <Icon className="h-3.5 w-3.5" />
-      {t(`status.${status}`)}
+    <span
+      className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+      style={{
+        color: config.color,
+        border: `1px solid ${config.color}44`,
+        backgroundColor: `${config.color}14`,
+      }}
+    >
+      <Icon className="h-3 w-3" />
+      {config.label}
     </span>
   )
 }
@@ -125,7 +167,6 @@ export function InvestigationCaseDetail() {
   const { caseId } = useParams<{ caseId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
-  const { t } = useTranslation('investigation')
 
   // Modals / forms
   const [showStatusModal, setShowStatusModal] = useState(false)
@@ -201,30 +242,52 @@ export function InvestigationCaseDetail() {
   // ── Loading state ──────────────────────────────────────────────────────────
   if (isLoading) {
     return (
-      <div className="space-y-6">
-        <div className="flex items-center gap-3">
+      <div style={{ minHeight: '100vh', background: BG, padding: 32 }}>
+        <div className="mx-auto max-w-6xl space-y-6">
           <Skeleton className="h-8 w-32" />
-          <Skeleton className="h-8 flex-1" />
+          <Skeleton className="h-12 w-3/4" />
+          <div className="grid grid-cols-3 gap-4">
+            {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}
+          </div>
+          <Skeleton className="h-48 w-full" />
+          <Skeleton className="h-64 w-full" />
         </div>
-        <div className="grid grid-cols-3 gap-4">
-          {[...Array(3)].map((_, i) => <Skeleton key={i} className="h-24" />)}
-        </div>
-        <Skeleton className="h-48 w-full" />
-        <Skeleton className="h-64 w-full" />
       </div>
     )
   }
 
-  // ── Error state ────────────────────────────────────────────────────────────
+  // ── Error state — editorial "not found" ───────────────────────────────────
   if (isError || !detail) {
     return (
-      <div className="flex flex-col items-center justify-center py-20 gap-4">
-        <AlertCircle className="h-10 w-10 text-risk-critical opacity-60" />
-        <p className="text-sm text-text-muted">{t('caseDetail.loadError')}</p>
-        <Button variant="outline" size="sm" onClick={() => navigate('/investigation')}>
-          <ArrowLeft className="h-3.5 w-3.5 mr-1.5" />
-          {t('caseDetail.backToQueue')}
-        </Button>
+      <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
+        <div style={{ textAlign: 'center', maxWidth: 480 }}>
+          <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.2em', color: INK_FAINT, marginBottom: 16, textTransform: 'uppercase' }}>
+            Investigation · Not Found
+          </p>
+          <h1 style={{ fontSize: 32, fontFamily: 'serif', color: INK, marginBottom: 12, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
+            Case {caseId} not found
+          </h1>
+          <p style={{ color: INK_DIM, fontSize: 14, marginBottom: 32, lineHeight: 1.6 }}>
+            This investigation may not exist or failed to load. Check the case ID and try again.
+          </p>
+          <button
+            onClick={() => navigate('/investigation')}
+            style={{
+              fontSize: 11,
+              fontFamily: 'monospace',
+              letterSpacing: '0.12em',
+              textTransform: 'uppercase',
+              color: '#ef4444',
+              border: '1px solid rgba(239,68,68,0.3)',
+              padding: '8px 16px',
+              borderRadius: 4,
+              cursor: 'pointer',
+              background: 'transparent',
+            }}
+          >
+            ← All investigations
+          </button>
+        </div>
       </div>
     )
   }
@@ -259,194 +322,382 @@ export function InvestigationCaseDetail() {
   const newsSearchUrl = `https://www.google.com/search?q=${encodeURIComponent(`"${cleanTitle}" ASF auditoría corrupción México`)}`
   const asfSearchUrl = `https://www.asf.gob.mx/Trans/Investigaciones/dbInvestigaciones.asp`
 
+  // Confidence pill color
+  const confidencePct = (detail.confidence * 100).toFixed(0)
+  const confidenceColor = detail.confidence >= 0.75 ? '#22c55e' : detail.confidence >= 0.5 ? '#f59e0b' : '#78716c'
+
+  // Summary-strip scales
+  const VALUE_CEIL = 100_000_000_000 // 100 B MXN cap for DotBar scale
+  const valueRatio = Math.min(1, detail.total_value_mxn / VALUE_CEIL)
+
   // ── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="space-y-6 pb-10">
+    <div style={{ minHeight: '100vh', background: BG, color: INK }}>
+      <div className="mx-auto max-w-6xl px-6 md:px-8 py-8 md:py-10 space-y-8">
 
-      {/* EDITORIAL CASE FILE MASTHEAD */}
-      <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between border-b border-[rgba(255,255,255,0.08)] pb-6">
-        <div className="space-y-4 flex-1 min-w-0">
-          {/* Dateline strip */}
-          <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono tracking-[0.18em] text-zinc-500">
-            <Link
-              to="/investigation"
-              className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-amber-400 transition-colors"
-            >
-              <ArrowLeft className="h-3 w-3" />
-              {t('caseDetail.backToQueue')}
-            </Link>
-            <span className="text-zinc-700">·</span>
-            <span className="font-bold text-zinc-400">CASE FILE #{detail.id}</span>
-            <span className="text-zinc-700">·</span>
-            <span className="uppercase">RUBLI INVESTIGATION DESK</span>
-          </div>
+        {/* ═══════════════════════════════════════════════════════════════════
+            HEADER — editorial masthead
+            ═══════════════════════════════════════════════════════════════════ */}
 
-          {/* Priority accent bar + serif title block */}
-          <div
-            className="pl-5 border-l-[3px]"
-            style={{
-              borderColor: priority.level === 'critical' ? '#ef4444'
-                : priority.level === 'high' ? '#f59e0b'
-                : priority.level === 'medium' ? '#a16207'
-                : '#71717a',
-            }}
-          >
-            <span className="text-kicker text-kicker--investigation">
-              {t('caseDetail.kicker', { defaultValue: 'INVESTIGATION CASE' })}
-            </span>
-            <h1
-              className="text-zinc-50 font-bold leading-[1.05] mt-1.5 mb-3"
+        <header className="space-y-5" style={{ borderBottom: `1px solid ${BORDER}`, paddingBottom: 24 }}>
+          {/* Breadcrumb */}
+          <div className="flex items-center gap-3">
+            <button
+              onClick={() => navigate('/investigation')}
+              className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
               style={{
-                fontFamily: 'var(--font-family-serif)',
-                fontSize: 'clamp(1.625rem, 3.4vw, 2.5rem)',
-                letterSpacing: '-0.022em',
-                fontFeatureSettings: '"ss01", "kern"',
+                fontSize: 10,
+                fontFamily: 'monospace',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: INK_DIM,
+                background: 'transparent',
+                border: 'none',
+                cursor: 'pointer',
+                padding: 0,
               }}
             >
-              {cleanTitle}
-            </h1>
-            <div className="flex flex-wrap items-center gap-2">
-              <span className={cn(
-                'inline-flex items-center px-2 py-0.5 rounded text-[10px] font-bold font-mono tracking-[0.14em] uppercase border',
-                PRIORITY_BADGE[priority.level]
-              )}>
-                P{priority.n} · {priority.level.toUpperCase()}
-              </span>
-              <StatusPill status={detail.validation_status} />
-              <span
-                className="text-[11px] font-medium px-2 py-0.5 rounded font-mono uppercase tracking-wider"
-                style={{ backgroundColor: sectorColor + '18', color: sectorColor }}
-              >
-                {getSectorNameEN(detail.sector_name)}
-              </span>
-            </div>
-          </div>
-        </div>
-
-        {/* Action buttons */}
-        <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
-          <AddToDossierButton
-            entityType="note"
-            entityId={detail.id}
-            entityName={detail.title}
-            className="h-8 text-xs"
-          />
-          {/* ASF Lookup */}
-          <a
-            href={asfSearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-border/50 text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors"
-          >
-            <Shield className="h-3.5 w-3.5" />
-            {t('asfLookup.button')}
-          </a>
-          {/* News Search */}
-          <a
-            href={newsSearchUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center gap-1.5 text-xs px-3 py-1.5 rounded border border-border/50 text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors"
-          >
-            <Newspaper className="h-3.5 w-3.5" />
-            {t('asfLookup.newsSearch')}
-          </a>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs"
-            onClick={() => setShowStatusModal(true)}
-          >
-            {t('caseDetail.changeStatus')}
-          </Button>
-          <Button
-            size="sm"
-            variant="outline"
-            className="h-8 text-xs"
-            onClick={() => setShowEvidenceForm(true)}
-          >
-            <Plus className="h-3.5 w-3.5 mr-1" />
-            {t('caseDetail.addEvidence')}
-          </Button>
-          {detail.validation_status === 'corroborated' && (
-            <Button
-              size="sm"
-              className="h-8 text-xs bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30"
-              onClick={() => setShowPromoteConfirm(true)}
+              <ArrowLeft className="h-3 w-3" />
+              Investigations
+            </button>
+            <span style={{ color: INK_FAINT, fontSize: 10 }}>/</span>
+            <span
+              style={{
+                fontSize: 10,
+                fontFamily: 'monospace',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: INK_MUTED,
+                fontWeight: 700,
+              }}
             >
-              <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
-              {t('caseDetail.promoteToGroundTruth')}
-            </Button>
-          )}
-        </div>
-      </header>
+              {detail.case_id}
+            </span>
+          </div>
 
-      {/* SECTION 1 — EDITORIAL FIGURES */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 sm:divide-x sm:divide-[rgba(255,255,255,0.08)] border-y border-[rgba(255,255,255,0.08)] py-5">
-        <div className="px-4 sm:px-6 first:pl-0 space-y-1">
-          <div className="text-kicker text-zinc-500">{t('cases.columns.contractCount')}</div>
-          <div className="text-display-num text-zinc-50">
-            {formatNumber(detail.total_contracts)}
-          </div>
-        </div>
-        <div className="px-4 sm:px-6 space-y-1">
-          <div className="text-kicker text-zinc-500">{t('totalValue')}</div>
-          <div className="text-display-num text-zinc-50">
-            {formatCompactMXN(detail.total_value_mxn)}
-          </div>
-        </div>
-        <div className="px-4 sm:px-6 space-y-1">
-          <div className="text-kicker text-kicker--investigation">{t('suspicionScore')}</div>
-          <div className={cn('text-display-num', SCORE_COLOR[priority.level])}>
-            {(detail.suspicion_score * 100).toFixed(1)}<span className="text-2xl">%</span>
-          </div>
-        </div>
-      </div>
-
-      {/* SECTION 2 — NARRATIVE */}
-      {(detail.narrative || detail.summary) && (
-        <Card>
-          <CardContent className="pt-5 pb-5">
-            <div className="flex items-center gap-2 mb-3">
-              <FileText className="h-4 w-4 text-accent opacity-70" />
-              <p className="text-sm font-bold text-text-primary">{t('caseDetail.narrative')}</p>
+          {/* Title block */}
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+            <div className="flex-1 min-w-0">
+              <p
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: LEVEL_COLOR[priority.level],
+                  fontWeight: 700,
+                  marginBottom: 10,
+                }}
+              >
+                Investigation Case · P{priority.n} {priority.level.toUpperCase()}
+              </p>
+              <h1
+                style={{
+                  fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                  fontSize: 'clamp(1.75rem, 3.6vw, 2.5rem)',
+                  fontWeight: 700,
+                  lineHeight: 1.08,
+                  letterSpacing: '-0.022em',
+                  color: INK,
+                  marginBottom: 14,
+                }}
+              >
+                {cleanTitle}
+              </h1>
+              <div className="flex flex-wrap items-center gap-2">
+                <StatusPill status={detail.validation_status} />
+                {/* Confidence */}
+                <span
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+                  style={{
+                    color: confidenceColor,
+                    border: `1px solid ${confidenceColor}44`,
+                    backgroundColor: `${confidenceColor}14`,
+                  }}
+                >
+                  <Shield className="h-3 w-3" />
+                  {confidencePct}% confidence
+                </span>
+                {/* Fraud type */}
+                {detail.case_type && (
+                  <span
+                    style={{
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.14em',
+                      textTransform: 'uppercase',
+                      color: INK_MUTED,
+                      padding: '2px 10px',
+                      borderRadius: 999,
+                      border: `1px solid ${BORDER_HI}`,
+                      backgroundColor: CARD_HI,
+                    }}
+                  >
+                    {detail.case_type.replace(/_/g, ' ')}
+                  </span>
+                )}
+                {/* Sector */}
+                <span
+                  className="inline-flex items-center px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
+                  style={{
+                    backgroundColor: `${sectorColor}18`,
+                    color: sectorColor,
+                    border: `1px solid ${sectorColor}33`,
+                  }}
+                >
+                  {getSectorNameEN(detail.sector_name)}
+                </span>
+              </div>
             </div>
+
+            {/* Action row */}
+            <div className="flex flex-wrap items-center gap-2 flex-shrink-0">
+              <AddToDossierButton
+                entityType="note"
+                entityId={detail.id}
+                entityName={detail.title}
+                className="h-8 text-xs"
+              />
+              <a
+                href={asfSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: INK_MUTED,
+                  border: `1px solid ${BORDER_HI}`,
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  backgroundColor: CARD,
+                }}
+              >
+                <Shield className="h-3.5 w-3.5" />
+                ASF
+              </a>
+              <a
+                href={newsSearchUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: INK_MUTED,
+                  border: `1px solid ${BORDER_HI}`,
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  backgroundColor: CARD,
+                }}
+              >
+                <Newspaper className="h-3.5 w-3.5" />
+                News
+              </a>
+              <button
+                onClick={() => setShowStatusModal(true)}
+                className="transition-colors hover:opacity-80"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: INK,
+                  border: `1px solid ${BORDER_HI}`,
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  backgroundColor: CARD_HI,
+                  cursor: 'pointer',
+                }}
+              >
+                Change status
+              </button>
+              <button
+                onClick={() => setShowEvidenceForm(true)}
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.08em',
+                  textTransform: 'uppercase',
+                  color: '#f59e0b',
+                  border: '1px solid rgba(245,158,11,0.3)',
+                  padding: '6px 12px',
+                  borderRadius: 4,
+                  backgroundColor: 'rgba(245,158,11,0.08)',
+                  cursor: 'pointer',
+                }}
+              >
+                <Plus className="h-3.5 w-3.5" />
+                Add evidence
+              </button>
+              {detail.validation_status === 'corroborated' && (
+                <button
+                  onClick={() => setShowPromoteConfirm(true)}
+                  className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.08em',
+                    textTransform: 'uppercase',
+                    color: '#22c55e',
+                    border: '1px solid rgba(34,197,94,0.3)',
+                    padding: '6px 12px',
+                    borderRadius: 4,
+                    backgroundColor: 'rgba(34,197,94,0.08)',
+                    cursor: 'pointer',
+                  }}
+                >
+                  <ArrowUpRight className="h-3.5 w-3.5" />
+                  Promote to GT
+                </button>
+              )}
+            </div>
+          </div>
+        </header>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            SUMMARY STRIP — three stats with DotBars
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        <section className="grid grid-cols-1 sm:grid-cols-3 gap-px" style={{ backgroundColor: BORDER, border: `1px solid ${BORDER}` }}>
+          {/* Vendors */}
+          <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
+            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+              Vendors involved
+            </div>
+            <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
+              {formatNumber(detail.vendor_count || detail.vendors.length)}
+            </div>
+            <div style={{ fontSize: 11, color: INK_DIM, marginTop: 6 }}>
+              across {formatNumber(detail.total_contracts)} contracts
+            </div>
+          </div>
+
+          {/* Total value */}
+          <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
+            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+              Total value
+            </div>
+            <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
+              {formatCompactMXN(detail.total_value_mxn)}
+            </div>
+            <div className="mt-2.5">
+              <DotBar value={valueRatio} max={1} color="#f59e0b" dots={20} size={5} gap={2} />
+            </div>
+            <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
+              scale: 0–100B MXN
+            </div>
+          </div>
+
+          {/* Avg suspicion score */}
+          <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
+            <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
+              Suspicion score
+            </div>
+            <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: LEVEL_COLOR[priority.level], lineHeight: 1, letterSpacing: '-0.01em' }}>
+              {(detail.suspicion_score * 100).toFixed(0)}
+              <span style={{ fontSize: 20, opacity: 0.6 }}>%</span>
+            </div>
+            <div className="mt-2.5">
+              <DotBar value={detail.suspicion_score} max={1} color={LEVEL_COLOR[priority.level]} dots={20} size={5} gap={2} />
+            </div>
+            <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
+              critical ≥ 60 · high ≥ 40
+            </div>
+          </div>
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            CASE NARRATIVE — serif editorial block
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        {(detail.narrative || detail.summary) && (
+          <section
+            style={{
+              backgroundColor: CARD,
+              border: `1px solid ${BORDER}`,
+              borderLeft: `3px solid ${LEVEL_COLOR[priority.level]}`,
+              borderRadius: 4,
+              padding: '24px 28px',
+            }}
+          >
+            <div className="flex items-center gap-2 mb-4">
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
+                Case narrative
+              </p>
+            </div>
+
             {detail.narrative && (
-              <div className="text-sm text-text-secondary leading-relaxed space-y-1.5">
+              <div
+                style={{
+                  fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                  fontSize: 15,
+                  lineHeight: 1.7,
+                  color: INK,
+                }}
+                className="space-y-2"
+              >
                 {(() => {
                   const lines = detail.narrative.split('\n')
                   const elements: React.ReactNode[] = []
                   let i = 0
                   while (i < lines.length) {
                     const line = lines[i]
-                    // Pipe table: collect consecutive pipe lines
+                    // Pipe table
                     if (line.trim().startsWith('|')) {
                       const tableLines: string[] = []
                       while (i < lines.length && lines[i].trim().startsWith('|')) {
                         tableLines.push(lines[i])
                         i++
                       }
-                      // Filter out separator rows (---|---) and parse
                       const rows = tableLines.filter(l => !/^\s*\|[\s\-|:]+\|\s*$/.test(l))
                       if (rows.length > 0) {
                         const parseCells = (row: string) =>
                           row.replace(/^\||\|$/g, '').split('|').map(c => c.trim())
                         const [headerRow, ...bodyRows] = rows
                         elements.push(
-                          <div key={`table-${i}`} className="overflow-x-auto my-3">
+                          <div key={`table-${i}`} className="overflow-x-auto my-4" style={{ fontFamily: 'var(--font-family-sans, system-ui)' }}>
                             <table className="w-full text-xs border-collapse">
                               <thead>
                                 <tr>
                                   {parseCells(headerRow).map((cell, ci) => (
-                                    <th key={ci} className="px-3 py-1.5 text-left font-semibold text-text-primary border border-border/40 bg-background-elevated">{cell}</th>
+                                    <th
+                                      key={ci}
+                                      className="px-3 py-2 text-left"
+                                      style={{
+                                        fontSize: 11,
+                                        fontWeight: 600,
+                                        color: INK,
+                                        borderBottom: `1px solid ${BORDER_HI}`,
+                                        backgroundColor: CARD_HI,
+                                      }}
+                                    >
+                                      {cell}
+                                    </th>
                                   ))}
                                 </tr>
                               </thead>
                               <tbody>
                                 {bodyRows.map((row, ri) => (
-                                  <tr key={ri} className="even:bg-background-elevated/40">
+                                  <tr key={ri}>
                                     {parseCells(row).map((cell, ci) => (
-                                      <td key={ci} className="px-3 py-1.5 border border-border/40">{cell}</td>
+                                      <td
+                                        key={ci}
+                                        className="px-3 py-2"
+                                        style={{
+                                          fontSize: 12,
+                                          color: INK_MUTED,
+                                          borderBottom: `1px solid ${BORDER}`,
+                                        }}
+                                      >
+                                        {cell}
+                                      </td>
                                     ))}
                                   </tr>
                                 ))}
@@ -457,14 +708,14 @@ export function InvestigationCaseDetail() {
                       }
                       continue
                     }
-                    if (line.startsWith('### ')) { elements.push(<h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>); i++; continue }
-                    if (line.startsWith('## ')) { elements.push(<h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>); i++; continue }
-                    if (line.startsWith('# ')) { elements.push(<h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>); i++; continue }
-                    if (line.trim() === '') { elements.push(<div key={i} className="h-1" />); i++; continue }
+                    if (line.startsWith('### ')) { elements.push(<h4 key={i} style={{ fontFamily: 'var(--font-family-sans, system-ui)', fontSize: 13, fontWeight: 700, color: INK, marginTop: 16, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.05em' }}>{line.slice(4)}</h4>); i++; continue }
+                    if (line.startsWith('## ')) { elements.push(<h3 key={i} style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontSize: 20, fontWeight: 700, color: INK, marginTop: 20, marginBottom: 8, letterSpacing: '-0.01em' }}>{line.slice(3)}</h3>); i++; continue }
+                    if (line.startsWith('# ')) { elements.push(<h2 key={i} style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)', fontSize: 24, fontWeight: 700, color: INK, marginTop: 24, marginBottom: 10, letterSpacing: '-0.015em' }}>{line.slice(2)}</h2>); i++; continue }
+                    if (line.trim() === '') { elements.push(<div key={i} className="h-2" />); i++; continue }
                     const parts = line.split(/\*\*(.+?)\*\*/g)
                     elements.push(
                       <p key={i}>
-                        {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
+                        {parts.map((part, j) => j % 2 === 1 ? <strong key={j} style={{ fontWeight: 700, color: INK }}>{part}</strong> : part)}
                       </p>
                     )
                     i++
@@ -473,457 +724,997 @@ export function InvestigationCaseDetail() {
                 })()}
               </div>
             )}
+
             {detail.summary && detail.summary !== detail.narrative && (
-              <p className="text-xs text-text-muted leading-relaxed mt-3 pt-3 border-t border-border/20">
+              <p
+                style={{
+                  fontSize: 13,
+                  color: INK_DIM,
+                  lineHeight: 1.7,
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: `1px solid ${BORDER}`,
+                  fontStyle: 'italic',
+                }}
+              >
                 {detail.summary}
               </p>
             )}
+
             {/* Signals triggered */}
             {detail.signals_triggered.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mt-3 pt-3 border-t border-border/20">
-                {detail.signals_triggered.map((signal) => (
-                  <span
-                    key={signal}
-                    className="text-xs px-2 py-0.5 rounded bg-accent/10 text-accent font-mono"
-                  >
-                    {signal}
-                  </span>
-                ))}
+              <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
+                <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 8, fontWeight: 600 }}>
+                  Signals triggered
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {detail.signals_triggered.map((signal) => (
+                    <span
+                      key={signal}
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                        padding: '3px 8px',
+                        borderRadius: 3,
+                        backgroundColor: 'rgba(245,158,11,0.1)',
+                        color: '#f59e0b',
+                        border: '1px solid rgba(245,158,11,0.2)',
+                      }}
+                    >
+                      {signal}
+                    </span>
+                  ))}
+                </div>
               </div>
             )}
-          </CardContent>
-        </Card>
-      )}
+          </section>
+        )}
 
-      {/* SECTION 3 — INVOLVED VENDORS */}
-      {detail.vendors.length > 0 && (
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <Users className="h-4 w-4 text-accent opacity-70" />
-              <p className="text-sm font-bold text-text-primary">{t('caseDetail.vendors')}</p>
-              <span className="text-xs text-text-muted">({detail.vendors.length})</span>
+        {/* ═══════════════════════════════════════════════════════════════════
+            VENDOR EVIDENCE CARDS
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        {detail.vendors.length > 0 && (
+          <section>
+            <div className="flex items-baseline justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <Users className="h-4 w-4" style={{ color: INK_DIM }} />
+                <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+                  Vendor evidence
+                </h2>
+                <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+                  ({detail.vendors.length})
+                </span>
+              </div>
+              {firstVendor && (
+                <div className="flex gap-2">
+                  <a
+                    href={asfSearchUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                    style={{
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: INK_DIM,
+                      padding: '4px 8px',
+                      borderRadius: 3,
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <Shield className="h-3 w-3" />
+                    ASF lookup
+                  </a>
+                  <a
+                    href={`https://www.google.com/search?q=${encodeURIComponent(`"${toTitleCase(firstVendor.name)}" corrupción contrato gobierno México`)}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+                    style={{
+                      fontSize: 10,
+                      fontFamily: 'monospace',
+                      letterSpacing: '0.08em',
+                      textTransform: 'uppercase',
+                      color: INK_DIM,
+                      padding: '4px 8px',
+                      borderRadius: 3,
+                      border: `1px solid ${BORDER}`,
+                    }}
+                  >
+                    <Newspaper className="h-3 w-3" />
+                    News
+                  </a>
+                </div>
+              )}
             </div>
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="border-b border-border/30">
-                    <th className="pb-2 text-left text-xs font-medium text-text-muted">{t('vendorTableHeaders.vendor')}</th>
-                    <th className="pb-2 text-left text-xs font-medium text-text-muted">{t('vendorTableHeaders.role')}</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.contracts')}</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.value')}</th>
-                    <th className="pb-2 text-right text-xs font-medium text-text-muted">{t('vendorTableHeaders.avgRisk')}</th>
-                    <th className="pb-2 text-left text-xs font-medium text-text-muted"></th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-border/20">
-                  {detail.vendors.map((v: InvestigationVendor) => (
-                    <tr key={v.vendor_id} className="hover:bg-background-elevated/30 transition-colors">
-                      <td className="py-2.5 pr-3">
+
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+              {detail.vendors.map((v: InvestigationVendor) => {
+                const vRisk = v.avg_risk_score ?? 0
+                const vLevel = getPriority(vRisk).level
+                const vColor = LEVEL_COLOR[vLevel]
+                return (
+                  <div
+                    key={v.vendor_id}
+                    style={{
+                      backgroundColor: CARD,
+                      border: `1px solid ${BORDER}`,
+                      borderLeft: `3px solid ${vColor}`,
+                      borderRadius: 4,
+                      padding: 18,
+                    }}
+                  >
+                    {/* Top row: name + risk number */}
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div className="min-w-0 flex-1">
                         <Link
                           to={`/vendors/${v.vendor_id}`}
-                          className="text-xs font-medium text-text-primary hover:text-accent transition-colors"
-                          onClick={(e) => e.stopPropagation()}
+                          style={{
+                            fontSize: 15,
+                            fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                            fontWeight: 600,
+                            color: INK,
+                            lineHeight: 1.25,
+                            display: 'block',
+                            letterSpacing: '-0.01em',
+                          }}
+                          className="transition-colors hover:underline"
                         >
                           {toTitleCase(v.name)}
                         </Link>
-                        {v.rfc && (
-                          <p className="text-xs text-text-muted font-mono mt-0.5">{v.rfc}</p>
-                        )}
-                      </td>
-                      <td className="py-2.5 pr-3">
-                        <span className="text-xs text-text-muted">{v.role}</span>
-                      </td>
-                      <td className="py-2.5 pr-3 text-right">
-                        <span className="text-xs text-text-secondary tabular-nums">
-                          {v.contract_count != null ? formatNumber(v.contract_count) : '—'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-3 text-right">
-                        <span className="text-xs text-text-secondary tabular-nums font-mono">
-                          {v.contract_value_mxn != null ? formatCompactMXN(v.contract_value_mxn) : '—'}
-                        </span>
-                      </td>
-                      <td className="py-2.5 pr-3 text-right">
-                        {v.avg_risk_score != null ? (
-                          <span className={cn(
-                            'text-xs font-bold tabular-nums',
-                            SCORE_COLOR[getPriority(v.avg_risk_score).level]
-                          )}>
-                            {(v.avg_risk_score * 100).toFixed(0)}%
+                        <div className="flex items-center gap-2 mt-1">
+                          {v.rfc && (
+                            <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_FAINT, letterSpacing: '0.03em' }}>
+                              {v.rfc}
+                            </span>
+                          )}
+                          <span
+                            style={{
+                              fontSize: 9,
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.12em',
+                              textTransform: 'uppercase',
+                              color: INK_DIM,
+                              padding: '1px 6px',
+                              borderRadius: 2,
+                              border: `1px solid ${BORDER_HI}`,
+                            }}
+                          >
+                            {v.role}
                           </span>
-                        ) : (
-                          <span className="text-xs text-text-muted">—</span>
-                        )}
-                      </td>
-                      <td className="py-2.5">
-                        <div className="flex items-center gap-2">
-                          <Link
-                            to={`/contracts?vendor_id=${v.vendor_id}&sort_by=risk_score&sort_order=desc`}
-                            className="inline-flex items-center gap-1 text-xs text-text-muted hover:text-accent transition-colors"
-                          >
-                            <ExternalLink className="h-3 w-3" />
-                          </Link>
-                          <Link
-                            to={`/thread/${v.vendor_id}`}
-                            className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors"
-                            title="Red Thread"
-                          >
-                            Red Thread
-                          </Link>
                         </div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+                      </div>
+                      <div className="text-right flex-shrink-0">
+                        {v.avg_risk_score != null ? (
+                          <>
+                            <div style={{ fontSize: 22, fontFamily: 'monospace', fontWeight: 700, color: vColor, lineHeight: 1, letterSpacing: '-0.01em' }}>
+                              {(v.avg_risk_score * 100).toFixed(0)}
+                              <span style={{ fontSize: 11, opacity: 0.6 }}>%</span>
+                            </div>
+                            <div style={{ fontSize: 9, fontFamily: 'monospace', color: INK_FAINT, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
+                              Risk
+                            </div>
+                          </>
+                        ) : (
+                          <span style={{ fontSize: 11, color: INK_FAINT }}>—</span>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Risk DotBar */}
+                    {v.avg_risk_score != null && (
+                      <div className="mb-3">
+                        <DotBar value={v.avg_risk_score} max={1} color={vColor} dots={24} size={4} gap={2} />
+                      </div>
+                    )}
+
+                    {/* Counts row */}
+                    <div className="grid grid-cols-2 gap-3 mb-3" style={{ fontSize: 11 }}>
+                      <div>
+                        <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
+                          Contracts
+                        </div>
+                        <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
+                          {v.contract_count != null ? formatNumber(v.contract_count) : '—'}
+                        </div>
+                      </div>
+                      <div>
+                        <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
+                          Value
+                        </div>
+                        <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
+                          {v.contract_value_mxn != null ? formatCompactMXN(v.contract_value_mxn) : '—'}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Footer: deep-dive links */}
+                    <div
+                      className="flex items-center justify-between pt-3"
+                      style={{ borderTop: `1px solid ${BORDER}` }}
+                    >
+                      <Link
+                        to={`/contracts?vendor_id=${v.vendor_id}&sort_by=risk_score&sort_order=desc`}
+                        className="inline-flex items-center gap-1 transition-colors hover:opacity-80"
+                        style={{
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: INK_DIM,
+                        }}
+                      >
+                        <ExternalLink className="h-3 w-3" />
+                        Contracts
+                      </Link>
+                      <Link
+                        to={`/thread/${v.vendor_id}`}
+                        className="inline-flex items-center gap-1 transition-colors hover:opacity-80"
+                        style={{
+                          fontSize: 10,
+                          fontFamily: 'monospace',
+                          letterSpacing: '0.1em',
+                          textTransform: 'uppercase',
+                          color: '#ef4444',
+                        }}
+                      >
+                        Red Thread →
+                      </Link>
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          </section>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            INVESTIGATION QUESTIONS
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        {detail.questions.length > 0 && (
+          <section>
+            <div className="flex items-baseline gap-2 mb-4">
+              <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} />
+              <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+                Investigation questions
+              </h2>
+              <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+                ({detail.questions.length})
+              </span>
             </div>
 
-            {/* External links for first vendor */}
-            {firstVendor && (
-              <div className="mt-3 pt-3 border-t border-border/20 flex gap-2">
-                <a
-                  href={asfSearchUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-border/40 text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors"
-                >
-                  <Shield className="h-3 w-3" />
-                  {t('asfLookup.button')}
-                </a>
-                <a
-                  href={`https://www.google.com/search?q=${encodeURIComponent(`"${toTitleCase(firstVendor.name)}" corrupción contrato gobierno México`)}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-1.5 text-xs px-2.5 py-1 rounded border border-border/40 text-text-muted hover:text-text-primary hover:bg-background-elevated/50 transition-colors"
-                >
-                  <Newspaper className="h-3 w-3" />
-                  {t('asfLookup.newsSearch')}
-                </a>
-              </div>
-            )}
-          </CardContent>
-        </Card>
-      )}
-
-      {/* SECTION 4 — INVESTIGATION QUESTIONS */}
-      {detail.questions.length > 0 && (
-        <Card>
-          <CardContent className="pt-5 pb-4">
-            <div className="flex items-center gap-2 mb-3">
-              <HelpCircle className="h-4 w-4 text-accent opacity-70" />
-              <p className="text-sm font-bold text-text-primary">{t('caseDetail.questions')}</p>
-              <span className="text-xs text-text-muted">({detail.questions.length})</span>
-            </div>
-            <div className="space-y-2">
+            <div className="space-y-3">
               {detail.questions.map((q: InvestigationQuestion) => (
-                <div key={q.id} className="flex gap-2.5 p-3 rounded bg-background-elevated/30 border border-border/20">
-                  <HelpCircle className="h-3.5 w-3.5 text-accent/70 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs text-text-secondary leading-relaxed">{q.question_text}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className="text-xs text-text-muted font-mono">{q.question_type}</span>
-                      {q.priority <= 2 && (
-                        <span className="text-xs px-1.5 py-0.5 rounded bg-risk-high/10 text-risk-high font-medium">
-                          {t('highPriority')}
+                <div
+                  key={q.id}
+                  style={{
+                    backgroundColor: CARD,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 4,
+                    padding: '16px 20px',
+                  }}
+                >
+                  <div className="flex items-start gap-3">
+                    <div
+                      style={{
+                        width: 28,
+                        height: 28,
+                        borderRadius: 999,
+                        backgroundColor: q.priority <= 2 ? 'rgba(239,68,68,0.15)' : 'rgba(168,162,158,0.1)',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                      }}
+                    >
+                      <span style={{ fontSize: 11, fontFamily: 'monospace', fontWeight: 700, color: q.priority <= 2 ? '#ef4444' : INK_DIM }}>
+                        Q{q.priority}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p style={{ fontSize: 14, lineHeight: 1.6, color: INK }}>
+                        {q.question_text}
+                      </p>
+                      <div className="flex flex-wrap items-center gap-2 mt-2">
+                        <span
+                          style={{
+                            fontSize: 10,
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.1em',
+                            textTransform: 'uppercase',
+                            color: INK_FAINT,
+                          }}
+                        >
+                          {q.question_type.replace(/_/g, ' ')}
                         </span>
-                      )}
+                        {q.priority <= 2 && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.1em',
+                              textTransform: 'uppercase',
+                              padding: '2px 6px',
+                              borderRadius: 2,
+                              backgroundColor: 'rgba(239,68,68,0.1)',
+                              color: '#ef4444',
+                              border: '1px solid rgba(239,68,68,0.25)',
+                              fontWeight: 600,
+                            }}
+                          >
+                            High priority
+                          </span>
+                        )}
+                        {q.supporting_evidence && q.supporting_evidence.length > 0 && (
+                          <span
+                            style={{
+                              fontSize: 10,
+                              fontFamily: 'monospace',
+                              color: INK_DIM,
+                            }}
+                          >
+                            · {q.supporting_evidence.length} supporting evidence
+                          </span>
+                        )}
+                      </div>
                     </div>
                   </div>
                 </div>
               ))}
             </div>
-          </CardContent>
-        </Card>
-      )}
+          </section>
+        )}
 
-      {/* SECTION 5 — EVIDENCE LOG */}
-      <Card>
-        <CardContent className="pt-5 pb-4">
-          <div className="flex items-center justify-between mb-3">
+        {/* ═══════════════════════════════════════════════════════════════════
+            EVIDENCE LOG — external sources timeline
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        <section>
+          <div className="flex items-baseline justify-between mb-4">
             <div className="flex items-center gap-2">
-              <FileText className="h-4 w-4 text-accent opacity-70" />
-              <p className="text-sm font-bold text-text-primary">{t('caseDetail.evidence')}</p>
+              <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
+              <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
+                Evidence log
+              </h2>
               {parsedEvidence.length > 0 && (
-                <span className="text-xs text-text-muted">({parsedEvidence.length})</span>
+                <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
+                  ({parsedEvidence.length})
+                </span>
               )}
             </div>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-7 text-xs"
+            <button
               onClick={() => setShowEvidenceForm(!showEvidenceForm)}
+              className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80"
+              style={{
+                fontSize: 10,
+                fontFamily: 'monospace',
+                letterSpacing: '0.12em',
+                textTransform: 'uppercase',
+                color: '#f59e0b',
+                padding: '5px 10px',
+                borderRadius: 3,
+                border: '1px solid rgba(245,158,11,0.3)',
+                backgroundColor: 'rgba(245,158,11,0.08)',
+                cursor: 'pointer',
+              }}
             >
-              <Plus className="h-3 w-3 mr-1" />
-              {t('caseDetail.addEvidence')}
-            </Button>
+              <Plus className="h-3 w-3" />
+              Add evidence
+            </button>
           </div>
 
           {parsedEvidence.length === 0 && !showEvidenceForm ? (
-            <p className="text-xs text-text-muted py-4 text-center">{t('caseDetail.noEvidence')}</p>
+            <div
+              style={{
+                backgroundColor: CARD,
+                border: `1px dashed ${BORDER_HI}`,
+                borderRadius: 4,
+                padding: '32px 20px',
+                textAlign: 'center',
+              }}
+            >
+              <p style={{ fontSize: 12, color: INK_DIM, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
+                No external evidence logged yet.
+              </p>
+              <p style={{ fontSize: 11, color: INK_FAINT, marginTop: 6 }}>
+                Attach news articles, ASF audits, or legal filings to corroborate this case.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-2">
-              {parsedEvidence.map((ev, i) => (
-                <div key={i} className="flex gap-3 p-3 rounded bg-background-elevated/30 border border-border/20">
-                  <Newspaper className="h-4 w-4 text-emerald-400/60 flex-shrink-0 mt-0.5" />
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-medium text-text-primary">{ev.source_title || t('caseDetail.untitledSource')}</p>
-                    {ev.summary && (
-                      <p className="text-xs text-text-muted mt-0.5 leading-relaxed">{ev.summary}</p>
-                    )}
-                    <div className="flex items-center gap-3 mt-1.5">
-                      <span className="text-xs text-text-secondary font-mono">{ev.source_type}</span>
-                      {ev.date_published && (
-                        <span className="text-xs text-text-muted">{ev.date_published}</span>
-                      )}
-                      {ev.source_url && (
+            <div className="space-y-0" style={{ position: 'relative' }}>
+              {/* Timeline line */}
+              {parsedEvidence.length > 1 && (
+                <div
+                  style={{
+                    position: 'absolute',
+                    left: 11,
+                    top: 12,
+                    bottom: 12,
+                    width: 1,
+                    backgroundColor: BORDER_HI,
+                  }}
+                />
+              )}
+
+              {parsedEvidence.map((ev, i) => {
+                const strengthColor = EVIDENCE_STRENGTH_COLOR[ev.credibility?.toLowerCase() || 'unknown'] || INK_DIM
+                return (
+                  <div key={i} className="flex gap-4 py-3" style={{ position: 'relative' }}>
+                    {/* Timeline node */}
+                    <div
+                      style={{
+                        width: 22,
+                        height: 22,
+                        borderRadius: 999,
+                        backgroundColor: CARD_HI,
+                        border: `2px solid ${strengthColor}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        flexShrink: 0,
+                        marginTop: 2,
+                        zIndex: 1,
+                      }}
+                    >
+                      <Newspaper className="h-2.5 w-2.5" style={{ color: strengthColor }} />
+                    </div>
+
+                    <div className="flex-1 min-w-0">
+                      {/* Date + source type */}
+                      <div className="flex items-center gap-2 mb-1">
+                        {ev.date_published && (
+                          <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_DIM, letterSpacing: '0.05em' }}>
+                            {ev.date_published}
+                          </span>
+                        )}
+                        {ev.date_published && (
+                          <span style={{ fontSize: 10, color: INK_FAINT }}>·</span>
+                        )}
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.14em',
+                            textTransform: 'uppercase',
+                            color: INK_DIM,
+                          }}
+                        >
+                          {ev.source_type.replace(/_/g, ' ')}
+                        </span>
+                        <span style={{ fontSize: 10, color: INK_FAINT }}>·</span>
+                        <span
+                          style={{
+                            fontSize: 9,
+                            fontFamily: 'monospace',
+                            letterSpacing: '0.14em',
+                            textTransform: 'uppercase',
+                            color: strengthColor,
+                            fontWeight: 600,
+                          }}
+                        >
+                          {ev.credibility || 'unknown'}
+                        </span>
+                      </div>
+
+                      {/* Title */}
+                      {ev.source_url ? (
                         <a
                           href={ev.source_url}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="inline-flex items-center gap-1 text-xs text-accent hover:underline"
+                          className="inline-flex items-start gap-1 transition-colors hover:underline"
+                          style={{
+                            fontSize: 14,
+                            fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                            fontWeight: 600,
+                            color: INK,
+                            lineHeight: 1.35,
+                            letterSpacing: '-0.005em',
+                          }}
                         >
-                          {t('source')} <ExternalLink className="h-3 w-3" />
+                          {ev.source_title || 'Untitled source'}
+                          <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
                         </a>
+                      ) : (
+                        <p
+                          style={{
+                            fontSize: 14,
+                            fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                            fontWeight: 600,
+                            color: INK,
+                            lineHeight: 1.35,
+                          }}
+                        >
+                          {ev.source_title || 'Untitled source'}
+                        </p>
+                      )}
+
+                      {/* Summary */}
+                      {ev.summary && (
+                        <p style={{ fontSize: 12, color: INK_MUTED, lineHeight: 1.6, marginTop: 4 }}>
+                          {ev.summary}
+                        </p>
                       )}
                     </div>
                   </div>
-                </div>
-              ))}
+                )
+              })}
             </div>
           )}
 
-          {/* Inline add evidence form */}
+          {/* Inline add-evidence form */}
           {showEvidenceForm && (
-            <div className="mt-4 p-4 rounded-lg border border-accent/20 bg-accent/[0.02] space-y-2">
-              <p className="text-xs font-bold text-accent uppercase tracking-wider mb-2">
-                {t('evidenceForm.title')}
+            <div
+              className="mt-5"
+              style={{
+                backgroundColor: 'rgba(245,158,11,0.04)',
+                border: '1px solid rgba(245,158,11,0.2)',
+                borderRadius: 4,
+                padding: 18,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.18em',
+                  textTransform: 'uppercase',
+                  color: '#f59e0b',
+                  fontWeight: 700,
+                  marginBottom: 12,
+                }}
+              >
+                Log new evidence
               </p>
-              <input
-                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2.5 py-1.5 text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent/50"
-                placeholder={t('evidenceForm.urlPlaceholder')}
-                value={evidenceUrl}
-                onChange={(e) => setEvidenceUrl(e.target.value)}
-              />
-              <input
-                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2.5 py-1.5 text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent/50"
-                placeholder={t('evidenceForm.titlePlaceholder')}
-                value={evidenceTitle}
-                onChange={(e) => setEvidenceTitle(e.target.value)}
-              />
-              <textarea
-                className="w-full text-xs bg-background-elevated border border-border/50 rounded px-2.5 py-1.5 text-text-primary placeholder-text-muted/50 resize-none focus:outline-none focus:border-accent/50"
-                rows={3}
-                placeholder={t('evidenceForm.summaryPlaceholder')}
-                value={evidenceSummary}
-                onChange={(e) => setEvidenceSummary(e.target.value)}
-              />
-              <div className="flex items-center gap-2 pt-1 flex-wrap">
-                <select
-                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
-                  value={evidenceType}
-                  onChange={(e) => setEvidenceType(e.target.value)}
-                >
-                  <option value="news">{t('evidenceForm.types.news')}</option>
-                  <option value="asf_audit">{t('evidenceForm.types.asf_audit')}</option>
-                  <option value="legal">{t('evidenceForm.types.legal')}</option>
-                  <option value="investigative">{t('evidenceForm.types.investigative')}</option>
-                </select>
-                <select
-                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
-                  value={credibility}
-                  onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
-                >
-                  <option value="low">{t('credibility.low')}</option>
-                  <option value="medium">{t('credibility.medium')}</option>
-                  <option value="high">{t('credibility.high')}</option>
-                </select>
+              <div className="space-y-2">
                 <input
-                  type="date"
-                  className="text-xs bg-background-elevated border border-border/50 rounded px-2 py-1.5 text-text-secondary"
-                  value={datePublished}
-                  onChange={(e) => setDatePublished(e.target.value)}
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '8px 12px',
+                    color: INK,
+                    outline: 'none',
+                  }}
+                  placeholder="Source URL (https://…)"
+                  value={evidenceUrl}
+                  onChange={(e) => setEvidenceUrl(e.target.value)}
                 />
-                <Button
-                  size="sm"
-                  className="h-7 text-xs"
-                  disabled={!evidenceUrl || !evidenceTitle || addEvidenceMutation.isPending}
-                  onClick={() => addEvidenceMutation.mutate()}
-                >
-                  {addEvidenceMutation.isPending ? (
-                    <Loader2 className="h-3 w-3 animate-spin" />
-                  ) : (
-                    <Send className="h-3 w-3" />
-                  )}
-                  <span className="ml-1">{t('evidenceForm.submit')}</span>
-                </Button>
-                <Button
-                  size="sm"
-                  variant="ghost"
-                  className="h-7 text-xs"
-                  onClick={() => setShowEvidenceForm(false)}
-                >
-                  {t('evidenceForm.cancel')}
-                </Button>
+                <input
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '8px 12px',
+                    color: INK,
+                    outline: 'none',
+                  }}
+                  placeholder="Article / document title"
+                  value={evidenceTitle}
+                  onChange={(e) => setEvidenceTitle(e.target.value)}
+                />
+                <textarea
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '8px 12px',
+                    color: INK,
+                    outline: 'none',
+                    resize: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                  rows={3}
+                  placeholder="Summary / relevance to this case"
+                  value={evidenceSummary}
+                  onChange={(e) => setEvidenceSummary(e.target.value)}
+                />
+                <div className="flex items-center gap-2 flex-wrap pt-1">
+                  <select
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: CARD,
+                      border: `1px solid ${BORDER_HI}`,
+                      borderRadius: 3,
+                      padding: '6px 10px',
+                      color: INK_MUTED,
+                      outline: 'none',
+                    }}
+                    value={evidenceType}
+                    onChange={(e) => setEvidenceType(e.target.value)}
+                  >
+                    <option value="news">News article</option>
+                    <option value="asf_audit">ASF audit</option>
+                    <option value="legal">Legal filing</option>
+                    <option value="investigative">Investigative report</option>
+                  </select>
+                  <select
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: CARD,
+                      border: `1px solid ${BORDER_HI}`,
+                      borderRadius: 3,
+                      padding: '6px 10px',
+                      color: INK_MUTED,
+                      outline: 'none',
+                    }}
+                    value={credibility}
+                    onChange={(e) => setCredibility(e.target.value as 'low' | 'medium' | 'high')}
+                  >
+                    <option value="low">Low credibility</option>
+                    <option value="medium">Medium credibility</option>
+                    <option value="high">High credibility</option>
+                  </select>
+                  <input
+                    type="date"
+                    style={{
+                      fontSize: 12,
+                      backgroundColor: CARD,
+                      border: `1px solid ${BORDER_HI}`,
+                      borderRadius: 3,
+                      padding: '6px 10px',
+                      color: INK_MUTED,
+                      outline: 'none',
+                    }}
+                    value={datePublished}
+                    onChange={(e) => setDatePublished(e.target.value)}
+                  />
+                  <Button
+                    size="sm"
+                    className="h-8 text-xs"
+                    disabled={!evidenceUrl || !evidenceTitle || addEvidenceMutation.isPending}
+                    onClick={() => addEvidenceMutation.mutate()}
+                  >
+                    {addEvidenceMutation.isPending ? (
+                      <Loader2 className="h-3 w-3 animate-spin mr-1" />
+                    ) : (
+                      <Send className="h-3 w-3 mr-1" />
+                    )}
+                    Submit
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant="ghost"
+                    className="h-8 text-xs"
+                    onClick={() => setShowEvidenceForm(false)}
+                  >
+                    Cancel
+                  </Button>
+                </div>
               </div>
             </div>
           )}
-        </CardContent>
-      </Card>
+        </section>
 
-      {/* SECTION 6 — REVIEW ACTIONS */}
-      <Card>
-        <CardContent className="pt-5 pb-4">
-          <p className="text-sm font-bold text-text-primary mb-3">{t('review')}</p>
-          <div className="flex flex-wrap items-center gap-2">
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs border-risk-low/30 text-risk-low hover:bg-risk-low/10"
-              disabled={reviewMutation.isPending || detail.validation_status === 'corroborated'}
-              onClick={() => reviewMutation.mutate({ status: 'corroborated' })}
-            >
-              <CheckCircle2 className="h-3.5 w-3.5 mr-1.5" />
-              {t('actions.corroborate')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs border-risk-critical/30 text-risk-critical hover:bg-risk-critical/10"
-              disabled={reviewMutation.isPending || detail.validation_status === 'refuted'}
-              onClick={() => reviewMutation.mutate({ status: 'refuted' })}
-            >
-              <XCircle className="h-3.5 w-3.5 mr-1.5" />
-              {t('actions.refute')}
-            </Button>
-            <Button
-              size="sm"
-              variant="outline"
-              className="h-8 text-xs"
-              disabled={reviewMutation.isPending || detail.validation_status === 'inconclusive'}
-              onClick={() => reviewMutation.mutate({ status: 'inconclusive' })}
-            >
-              <HelpCircle className="h-3.5 w-3.5 mr-1.5" />
-              {t('actions.inconclusive')}
-            </Button>
+        {/* ═══════════════════════════════════════════════════════════════════
+            REVIEW ACTION RAIL
+            ═══════════════════════════════════════════════════════════════════ */}
 
-            {detail.validation_status === 'corroborated' && (
-              <Button
-                size="sm"
-                className="h-8 text-xs ml-auto bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30"
-                disabled={promoteMutation.isPending}
-                onClick={() => setShowPromoteConfirm(true)}
+        <section
+          style={{
+            backgroundColor: CARD,
+            border: `1px solid ${BORDER}`,
+            borderRadius: 4,
+            padding: '18px 24px',
+          }}
+        >
+          <div className="flex items-center justify-between flex-wrap gap-4">
+            <div>
+              <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700, marginBottom: 4 }}>
+                Review decision
+              </p>
+              <p style={{ fontSize: 13, color: INK_MUTED }}>
+                Corroborate, refute, or mark inconclusive based on the evidence above.
+              </p>
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <button
+                disabled={reviewMutation.isPending || detail.validation_status === 'corroborated'}
+                onClick={() => reviewMutation.mutate({ status: 'corroborated' })}
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#22c55e',
+                  border: '1px solid rgba(34,197,94,0.3)',
+                  backgroundColor: 'rgba(34,197,94,0.08)',
+                  padding: '7px 14px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
               >
-                {promoteMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                ) : (
-                  <ArrowUpRight className="h-3.5 w-3.5 mr-1.5" />
-                )}
-                {t('actions.promoteToGroundTruth')}
-              </Button>
-            )}
+                <CheckCircle2 className="h-3.5 w-3.5" />
+                Corroborate
+              </button>
+              <button
+                disabled={reviewMutation.isPending || detail.validation_status === 'refuted'}
+                onClick={() => reviewMutation.mutate({ status: 'refuted' })}
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: '#ef4444',
+                  border: '1px solid rgba(239,68,68,0.3)',
+                  backgroundColor: 'rgba(239,68,68,0.08)',
+                  padding: '7px 14px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                <XCircle className="h-3.5 w-3.5" />
+                Refute
+              </button>
+              <button
+                disabled={reviewMutation.isPending || detail.validation_status === 'inconclusive'}
+                onClick={() => reviewMutation.mutate({ status: 'inconclusive' })}
+                className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                style={{
+                  fontSize: 11,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.1em',
+                  textTransform: 'uppercase',
+                  color: INK_MUTED,
+                  border: `1px solid ${BORDER_HI}`,
+                  backgroundColor: CARD_HI,
+                  padding: '7px 14px',
+                  borderRadius: 4,
+                  cursor: 'pointer',
+                }}
+              >
+                <HelpCircle className="h-3.5 w-3.5" />
+                Inconclusive
+              </button>
+              {detail.validation_status === 'corroborated' && (
+                <button
+                  disabled={promoteMutation.isPending}
+                  onClick={() => setShowPromoteConfirm(true)}
+                  className="inline-flex items-center gap-1.5 transition-colors hover:opacity-80 disabled:opacity-50 disabled:cursor-not-allowed"
+                  style={{
+                    fontSize: 11,
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase',
+                    color: '#f59e0b',
+                    border: '1px solid rgba(245,158,11,0.3)',
+                    backgroundColor: 'rgba(245,158,11,0.1)',
+                    padding: '7px 14px',
+                    borderRadius: 4,
+                    cursor: 'pointer',
+                    fontWeight: 600,
+                  }}
+                >
+                  {promoteMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <ArrowUpRight className="h-3.5 w-3.5" />
+                  )}
+                  Promote to GT
+                </button>
+              )}
+            </div>
           </div>
           {reviewMutation.isPending && (
-            <p className="text-xs text-text-muted mt-2">
-              <Loader2 className="h-3 w-3 animate-spin inline mr-1" />
-              {t('saving')}
+            <p style={{ fontSize: 11, color: INK_DIM, marginTop: 10, fontFamily: 'monospace' }}>
+              <Loader2 className="h-3 w-3 animate-spin inline mr-1.5" />
+              Saving…
             </p>
           )}
           {promoteMutation.isSuccess && (
-            <p className="text-xs text-risk-low mt-2">{t('actions.promotedSuccess')}</p>
-          )}
-        </CardContent>
-      </Card>
-
-      {/* STATUS CHANGE MODAL */}
-      {showStatusModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-background-card rounded-xl border border-border/50 shadow-2xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-sm font-bold text-text-primary mb-4">{t('caseDetail.changeStatus')}</h3>
-            <div className="space-y-3">
-              <select
-                className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary"
-                value={newStatus}
-                onChange={(e) => setNewStatus(e.target.value as InvestigationValidationStatus)}
-              >
-                <option value="pending">{t('status.pending')}</option>
-                <option value="corroborated">{t('status.corroborated')}</option>
-                <option value="refuted">{t('status.refuted')}</option>
-                <option value="inconclusive">{t('status.inconclusive')}</option>
-              </select>
-              <textarea
-                className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary placeholder-text-muted/50 resize-none focus:outline-none focus:border-accent/50"
-                rows={3}
-                placeholder={t('statusModal.notesPlaceholder')}
-                value={statusNotes}
-                onChange={(e) => setStatusNotes(e.target.value)}
-              />
-              <input
-                className="w-full text-sm bg-background-elevated border border-border/50 rounded px-3 py-2 text-text-primary placeholder-text-muted/50 focus:outline-none focus:border-accent/50"
-                placeholder={t('statusModal.reviewerPlaceholder')}
-                value={reviewerName}
-                onChange={(e) => setReviewerName(e.target.value)}
-              />
-            </div>
-            <div className="flex items-center gap-2 mt-4 justify-end">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowStatusModal(false)}
-              >
-                {t('evidenceForm.cancel')}
-              </Button>
-              <Button
-                size="sm"
-                disabled={reviewMutation.isPending}
-                onClick={() => reviewMutation.mutate({ status: newStatus, notes: statusNotes })}
-              >
-                {reviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : t('statusModal.save')}
-              </Button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* PROMOTE CONFIRM MODAL */}
-      {showPromoteConfirm && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
-          <div className="bg-background-card rounded-xl border border-border/50 shadow-2xl p-6 w-full max-w-md mx-4">
-            <h3 className="text-sm font-bold text-text-primary mb-2">
-              {t('caseDetail.promoteToGroundTruth')}
-            </h3>
-            <p className="text-xs text-text-muted mb-4 leading-relaxed">
-              {t('caseDetail.promote.confirm')}
+            <p style={{ fontSize: 11, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
+              Promoted to ground truth.
             </p>
-            <div className="flex items-center gap-2 justify-end">
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setShowPromoteConfirm(false)}
-                disabled={promoteMutation.isPending}
+          )}
+        </section>
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            MODALS
+            ═══════════════════════════════════════════════════════════════════ */}
+
+        {showStatusModal && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          >
+            <div
+              style={{
+                backgroundColor: CARD,
+                border: `1px solid ${BORDER_HI}`,
+                borderRadius: 6,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                padding: 24,
+                width: '100%',
+                maxWidth: 480,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: INK_DIM,
+                  fontWeight: 700,
+                  marginBottom: 6,
+                }}
               >
-                {t('evidenceForm.cancel')}
-              </Button>
-              <Button
-                size="sm"
-                className="bg-accent/20 text-accent hover:bg-accent/30 border border-accent/30"
-                disabled={promoteMutation.isPending}
-                onClick={() => promoteMutation.mutate()}
+                Review workflow
+              </p>
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                  color: INK,
+                  marginBottom: 16,
+                  letterSpacing: '-0.01em',
+                }}
               >
-                {promoteMutation.isPending ? (
-                  <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
-                ) : (
-                  <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
-                )}
-                {t('caseDetail.promoteToGroundTruth')}
-              </Button>
+                Change case status
+              </h3>
+              <div className="space-y-2.5">
+                <select
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD_HI,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '9px 12px',
+                    color: INK,
+                    outline: 'none',
+                  }}
+                  value={newStatus}
+                  onChange={(e) => setNewStatus(e.target.value as InvestigationValidationStatus)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="corroborated">Corroborated</option>
+                  <option value="refuted">Refuted</option>
+                  <option value="inconclusive">Inconclusive</option>
+                </select>
+                <textarea
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD_HI,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '9px 12px',
+                    color: INK,
+                    outline: 'none',
+                    resize: 'none',
+                    fontFamily: 'inherit',
+                  }}
+                  rows={3}
+                  placeholder="Review notes (optional)"
+                  value={statusNotes}
+                  onChange={(e) => setStatusNotes(e.target.value)}
+                />
+                <input
+                  style={{
+                    width: '100%',
+                    fontSize: 13,
+                    backgroundColor: CARD_HI,
+                    border: `1px solid ${BORDER_HI}`,
+                    borderRadius: 3,
+                    padding: '9px 12px',
+                    color: INK,
+                    outline: 'none',
+                  }}
+                  placeholder="Reviewer name"
+                  value={reviewerName}
+                  onChange={(e) => setReviewerName(e.target.value)}
+                />
+              </div>
+              <div className="flex items-center gap-2 mt-4 justify-end">
+                <Button size="sm" variant="ghost" onClick={() => setShowStatusModal(false)}>
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={reviewMutation.isPending}
+                  onClick={() => reviewMutation.mutate({ status: newStatus, notes: statusNotes })}
+                >
+                  {reviewMutation.isPending ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : 'Save'}
+                </Button>
+              </div>
             </div>
-            {promoteMutation.isSuccess && (
-              <p className="text-xs text-risk-low mt-2">{t('caseDetail.promote.success')}</p>
-            )}
           </div>
-        </div>
-      )}
+        )}
+
+        {showPromoteConfirm && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ backgroundColor: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }}
+          >
+            <div
+              style={{
+                backgroundColor: CARD,
+                border: `1px solid ${BORDER_HI}`,
+                borderRadius: 6,
+                boxShadow: '0 20px 60px rgba(0,0,0,0.6)',
+                padding: 24,
+                width: '100%',
+                maxWidth: 480,
+              }}
+            >
+              <p
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: '#f59e0b',
+                  fontWeight: 700,
+                  marginBottom: 6,
+                }}
+              >
+                Ground truth
+              </p>
+              <h3
+                style={{
+                  fontSize: 20,
+                  fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                  color: INK,
+                  marginBottom: 10,
+                  letterSpacing: '-0.01em',
+                }}
+              >
+                Promote to ground truth?
+              </h3>
+              <p
+                style={{
+                  fontSize: 13,
+                  color: INK_MUTED,
+                  lineHeight: 1.6,
+                  marginBottom: 16,
+                }}
+              >
+                This case will be added to the ground truth corpus and used for future risk model
+                calibration. This action is recorded and auditable.
+              </p>
+              <div className="flex items-center gap-2 justify-end">
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setShowPromoteConfirm(false)}
+                  disabled={promoteMutation.isPending}
+                >
+                  Cancel
+                </Button>
+                <Button
+                  size="sm"
+                  disabled={promoteMutation.isPending}
+                  onClick={() => promoteMutation.mutate()}
+                >
+                  {promoteMutation.isPending ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1" />
+                  ) : (
+                    <ArrowUpRight className="h-3.5 w-3.5 mr-1" />
+                  )}
+                  Promote
+                </Button>
+              </div>
+              {promoteMutation.isSuccess && (
+                <p style={{ fontSize: 11, color: '#22c55e', marginTop: 10, fontFamily: 'monospace' }}>
+                  Promoted successfully.
+                </p>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

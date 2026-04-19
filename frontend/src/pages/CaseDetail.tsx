@@ -3,114 +3,241 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate, useParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { caseLibraryApi } from '@/api/client'
-import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
-import { Skeleton } from '@/components/ui/skeleton'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
-import { AlertCircle, ArrowLeft, ExternalLink, CheckCircle, Activity, TrendingUp, Users, FileText } from 'lucide-react'
-import { cn } from '@/lib/utils'
+import { ArrowLeft, ExternalLink, Activity } from 'lucide-react'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
 import type { FraudType, LinkedVendor } from '@/api/types'
-import { slideUp, staggerContainer, staggerItem } from '@/lib/animations'
+import { slideUp } from '@/lib/animations'
 
-// ── Severity colours ──────────────────────────────────────────────────────────
-const SEVERITY_COLORS: Record<number, string> = {
-  1: 'bg-muted text-muted-foreground',
-  2: 'bg-amber-100 text-amber-800 dark:bg-yellow-500/20 dark:text-yellow-400',
-  3: 'bg-orange-500/20 text-orange-400',
-  4: 'bg-red-500/20 text-red-400',
+// ─────────────────────────────────────────────────────────────────────────────
+// Editorial palette (warm dark)
+// ─────────────────────────────────────────────────────────────────────────────
+const BG = '#141210'
+const PANEL = '#1a1614'
+const PANEL_2 = '#201b18'
+const BORDER = 'rgba(255,255,255,0.06)'
+const BORDER_STRONG = 'rgba(255,255,255,0.12)'
+const TEXT_PRIMARY = '#e7e5e1'
+const TEXT_SECONDARY = '#a8a29e'
+const TEXT_MUTED = '#78716c'
+const TEXT_FAINT = '#57534e'
+const CRIMSON_HI = '#ef4444'
+const AMBER = '#f59e0b'
+const EMERALD = '#10b981'
+const CYAN = '#22d3ee'
+
+// ─────────────────────────────────────────────────────────────────────────────
+// DotBar — particle density encoding for intensities
+// ─────────────────────────────────────────────────────────────────────────────
+function DotBar({
+  value,
+  max = 1,
+  color = CRIMSON_HI,
+  dots = 20,
+  size = 7,
+  gap = 3,
+}: {
+  value: number
+  max?: number
+  color?: string
+  dots?: number
+  size?: number
+  gap?: number
+}) {
+  const filled = Math.max(0, Math.min(dots, Math.round((value / max) * dots)))
+  return (
+    <svg
+      width={dots * (size + gap) - gap}
+      height={size}
+      style={{ display: 'block' }}
+      aria-hidden
+    >
+      {Array.from({ length: dots }, (_, i) => (
+        <circle
+          key={i}
+          cx={i * (size + gap) + size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={i < filled ? color : '#2a2420'}
+        />
+      ))}
+    </svg>
+  )
 }
 
-const LEGAL_STATUS_COLORS: Record<string, string> = {
-  impunity: 'border-red-500/50 text-red-400',
-  investigation: 'border-amber-400 text-amber-800 dark:border-yellow-500/50 dark:text-yellow-400',
-  prosecuted: 'border-orange-500/50 text-orange-400',
-  convicted: 'border-green-500/50 text-green-400',
-  acquitted: 'border-blue-500/50 text-blue-400',
-  dismissed: 'border-muted text-muted-foreground',
-  unresolved: 'border-muted text-muted-foreground',
+// ─────────────────────────────────────────────────────────────────────────────
+// Fraud-type accent
+// ─────────────────────────────────────────────────────────────────────────────
+const FRAUD_ACCENT: Record<string, string> = {
+  ghost_company: CRIMSON_HI,
+  bid_rigging: '#a78bfa',
+  overpricing: '#fb923c',
+  conflict_of_interest: '#c084fc',
+  embezzlement: AMBER,
+  bribery: '#fb7185',
+  procurement_fraud: '#facc15',
+  monopoly: '#60a5fa',
+  emergency_fraud: CYAN,
+  tender_rigging: '#818cf8',
+  other: '#94a3b8',
 }
 
-// ── Fraud type badge colours ──────────────────────────────────────────────────
-const FRAUD_TYPE_COLORS: Record<string, { border: string; text: string; bg: string }> = {
-  ghost_company:        { border: 'border-red-500/60',    text: 'text-red-400',    bg: 'bg-red-500/10' },
-  bid_rigging:          { border: 'border-purple-500/60', text: 'text-purple-400', bg: 'bg-purple-500/10' },
-  overpricing:          { border: 'border-orange-500/60', text: 'text-orange-400', bg: 'bg-orange-500/10' },
-  conflict_of_interest: { border: 'border-violet-500/60', text: 'text-violet-400', bg: 'bg-violet-500/10' },
-  embezzlement:         { border: 'border-amber-500/60',  text: 'text-amber-400',  bg: 'bg-amber-500/10' },
-  bribery:              { border: 'border-rose-500/60',   text: 'text-rose-400',   bg: 'bg-rose-500/10' },
-  procurement_fraud:    { border: 'border-amber-400 dark:border-yellow-500/60', text: 'text-amber-800 dark:text-yellow-400', bg: 'bg-amber-100/50 dark:bg-yellow-500/10' },
-  monopoly:             { border: 'border-blue-500/60',   text: 'text-blue-400',   bg: 'bg-blue-500/10' },
-  emergency_fraud:      { border: 'border-cyan-500/60',   text: 'text-cyan-400',   bg: 'bg-cyan-500/10' },
-  tender_rigging:       { border: 'border-indigo-500/60', text: 'text-indigo-400', bg: 'bg-indigo-500/10' },
-  other:                { border: 'border-slate-500/60',  text: 'text-slate-400',  bg: 'bg-slate-500/10' },
+// ─────────────────────────────────────────────────────────────────────────────
+// Legal status styling (editorial, English)
+// ─────────────────────────────────────────────────────────────────────────────
+function legalStatusMeta(status: string): {
+  accent: string
+  bg: string
+  border: string
+  headline: string
+  subline: string
+  label: string
+} {
+  switch (status) {
+    case 'convicted':
+      return {
+        accent: EMERALD,
+        bg: 'rgba(16,185,129,0.08)',
+        border: 'rgba(16,185,129,0.25)',
+        headline: 'Criminal conviction obtained',
+        subline: 'A court of law returned a guilty verdict against at least one actor tied to this case.',
+        label: 'Convicted',
+      }
+    case 'prosecuted':
+      return {
+        accent: '#fb923c',
+        bg: 'rgba(251,146,60,0.08)',
+        border: 'rgba(251,146,60,0.25)',
+        headline: 'Prosecution in progress',
+        subline: 'Formal charges have been filed; trial proceedings are under way.',
+        label: 'Prosecuted',
+      }
+    case 'investigation':
+      return {
+        accent: AMBER,
+        bg: 'rgba(245,158,11,0.08)',
+        border: 'rgba(245,158,11,0.25)',
+        headline: 'Under active investigation',
+        subline: 'An administrative or criminal inquiry is open; no charges have been filed.',
+        label: 'Investigation',
+      }
+    case 'acquitted':
+      return {
+        accent: '#60a5fa',
+        bg: 'rgba(96,165,250,0.08)',
+        border: 'rgba(96,165,250,0.25)',
+        headline: 'Defendants acquitted',
+        subline: 'The court returned a not-guilty verdict. The factual record remains in the public domain.',
+        label: 'Acquitted',
+      }
+    case 'dismissed':
+      return {
+        accent: TEXT_MUTED,
+        bg: 'rgba(120,113,108,0.08)',
+        border: 'rgba(120,113,108,0.25)',
+        headline: 'Case dismissed',
+        subline: 'Proceedings were dismissed without a conviction. See notes for jurisdictional context.',
+        label: 'Dismissed',
+      }
+    case 'impunity':
+      return {
+        accent: CRIMSON_HI,
+        bg: 'rgba(239,68,68,0.08)',
+        border: 'rgba(239,68,68,0.28)',
+        headline: 'No convictions recorded in public court records',
+        subline:
+          'Despite documented evidence, no criminal sanctions have been obtained — a signature feature of Mexican procurement scandals.',
+        label: 'Impunity',
+      }
+    default:
+      return {
+        accent: TEXT_MUTED,
+        bg: 'rgba(120,113,108,0.06)',
+        border: 'rgba(120,113,108,0.25)',
+        headline: 'Legal outcome unresolved',
+        subline: 'Public records do not yet document a final judicial disposition.',
+        label: 'Unresolved',
+      }
+  }
 }
 
-// Fraud type → model detection signals shown in the "How We Detected" section
-const FRAUD_TYPE_SIGNALS: Record<string, string[]> = {
+// ─────────────────────────────────────────────────────────────────────────────
+// Signals (English editorial wording) + severity intensities per fraud type
+// ─────────────────────────────────────────────────────────────────────────────
+interface SignalRow {
+  label: string
+  intensity: number
+  severity: 'Critical' | 'High' | 'Moderate'
+}
+
+const FRAUD_SIGNALS: Record<string, SignalRow[]> = {
   ghost_company: [
-    'High vendor concentration: a single vendor controlled a disproportionate share of sector contracts',
-    'Abnormal price volatility: contract amounts varied far outside the sector norm',
-    'Win rate anomaly: vendor won near 100% of competitive procedures it entered',
+    { label: 'Vendor concentration (sector share controlled)', intensity: 0.92, severity: 'Critical' },
+    { label: 'Price volatility vs sector norm', intensity: 0.85, severity: 'Critical' },
+    { label: 'Win rate anomaly in competitive procedures', intensity: 0.78, severity: 'High' },
   ],
   bid_rigging: [
-    'Repeated co-bidding patterns: the same group of vendors appeared together in sequential procedures',
-    'Alternating win rates: vendors took turns winning, consistent with bid rotation',
-    'Suspiciously low price gaps: losing bids were just slightly above the winner, signalling cover bidding',
+    { label: 'Repeated co-bidding — same vendor cluster', intensity: 0.88, severity: 'Critical' },
+    { label: 'Alternating wins — rotation pattern', intensity: 0.75, severity: 'High' },
+    { label: 'Low price gap between winner and cover bids', intensity: 0.65, severity: 'High' },
   ],
   overpricing: [
-    'Price ratio outlier: contract amounts were 3x or more above the sector median',
-    'High price hypothesis confidence: IQR-based statistical test flagged extreme overpricing',
-    'Repeated same-institution awards: same vendor repeatedly won from the same contracting authority',
+    { label: 'Price ratio — 3x+ above sector median', intensity: 0.9, severity: 'Critical' },
+    { label: 'IQR statistical outlier test', intensity: 0.82, severity: 'Critical' },
+    { label: 'Same-institution repeat awards', intensity: 0.7, severity: 'High' },
   ],
   conflict_of_interest: [
-    'Abnormally high win rate with a single institution',
-    'Industry mismatch: vendor\'s stated sector did not match the contract category',
-    'Short advertisement periods: limited time for competing vendors to prepare bids',
+    { label: 'Abnormal single-institution win rate', intensity: 0.85, severity: 'Critical' },
+    { label: 'Industry mismatch vs contract category', intensity: 0.72, severity: 'High' },
+    { label: 'Short advertisement periods', intensity: 0.55, severity: 'Moderate' },
   ],
   embezzlement: [
-    'Year-end contract clustering: contracts concentrated in December budget spending',
-    'Same-day contract patterns: multiple contracts signed simultaneously to the same vendor',
-    'Threshold splitting: contract values just below legal thresholds for competitive bidding',
+    { label: 'Year-end contract clustering (December)', intensity: 0.8, severity: 'Critical' },
+    { label: 'Same-day simultaneous contracts', intensity: 0.72, severity: 'High' },
+    { label: 'Threshold splitting below bidding caps', intensity: 0.68, severity: 'High' },
   ],
   bribery: [
-    'Industry mismatch: out-of-sector vendor winning specialised contracts',
-    'Network centrality: vendor appeared at the hub of a co-bidding relationship cluster',
-    'Win rate anomaly: success rate far above the sector baseline',
+    { label: 'Industry mismatch — out-of-sector award', intensity: 0.78, severity: 'High' },
+    { label: 'Network centrality in co-bidding graph', intensity: 0.7, severity: 'High' },
+    { label: 'Win rate far above sector baseline', intensity: 0.82, severity: 'Critical' },
   ],
   procurement_fraud: [
-    'Direct award prevalence: contracts awarded without competitive procedures',
-    'High vendor concentration in a single institution',
-    'Abnormal price volatility across contracts of the same type',
+    { label: 'Direct award prevalence', intensity: 0.85, severity: 'Critical' },
+    { label: 'Vendor concentration within institution', intensity: 0.78, severity: 'High' },
+    { label: 'Price volatility across same contract type', intensity: 0.6, severity: 'Moderate' },
   ],
   monopoly: [
-    'Extreme vendor concentration: one vendor held >50% of all sector contracts by value',
-    'Near-zero single-bid rate in competitive procedures: no real competition detected',
-    'Institution diversity signal: vendor served only one or two contracting authorities',
+    { label: 'Extreme vendor concentration (>50% of sector)', intensity: 0.95, severity: 'Critical' },
+    { label: 'Near-zero real competition in procedures', intensity: 0.88, severity: 'Critical' },
+    { label: 'Low institution diversity (1–2 authorities)', intensity: 0.75, severity: 'High' },
   ],
   emergency_fraud: [
-    'Short advertisement periods: procedures fast-tracked under emergency justification',
-    'Price ratio outliers: amounts significantly above normal benchmarks',
-    'Direct award clustering: multiple emergency contracts to the same vendor simultaneously',
+    { label: 'Fast-tracked advertisement periods', intensity: 0.88, severity: 'Critical' },
+    { label: 'Price ratio outliers above normal benchmarks', intensity: 0.78, severity: 'High' },
+    { label: 'Simultaneous direct awards to same vendor', intensity: 0.7, severity: 'High' },
   ],
   tender_rigging: [
-    'Co-bidding concentration: a closed group of vendors dominated the procedure pool',
-    'High win rate with a single institution over a sustained period',
-    'Price anomaly: winning bids consistently at the ceiling of acceptable ranges',
+    { label: 'Closed vendor pool dominating procedure', intensity: 0.85, severity: 'Critical' },
+    { label: 'Sustained high win rate, single institution', intensity: 0.78, severity: 'High' },
+    { label: 'Winning bids consistently at ceiling', intensity: 0.7, severity: 'High' },
   ],
   other: [
-    'Statistical anomalies in vendor concentration detected by the risk model',
-    'Behavioural patterns consistent with known corruption cases in the training set',
-    'Multiple z-score features above sector baselines simultaneously',
+    { label: 'Statistical anomalies in vendor concentration', intensity: 0.65, severity: 'Moderate' },
+    { label: 'Behavioural patterns match known cases', intensity: 0.6, severity: 'Moderate' },
+    { label: 'Multiple z-score features above baseline', intensity: 0.7, severity: 'High' },
   ],
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Helpers
+// ─────────────────────────────────────────────────────────────────────────────
 function formatMXN(n?: number | null): string {
-  if (!n) return '?'
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B MXN`
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M MXN`
-  return `$${n.toLocaleString()} MXN`
+  if (!n) return '—'
+  if (n >= 1e12) return `$${(n / 1e12).toFixed(2)}T`
+  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
+  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`
+  return `$${n.toLocaleString()}`
 }
 
 function formatCompact(n: number): string {
@@ -119,157 +246,306 @@ function formatCompact(n: number): string {
   return String(n)
 }
 
-// ── Timeline helpers ──────────────────────────────────────────────────────────
-interface TimelineEvent {
-  date: string
-  labelKey: string
-  labelParams?: Record<string, string | number>
-  sublabelKey?: string
-  sublabelParams?: Record<string, string | number>
-  type: 'start' | 'exposure' | 'resolution' | 'milestone'
+function titleCase(s: string): string {
+  return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
-function buildTimeline(
-  yearStart?: number,
-  yearEnd?: number,
-  discoveryYear?: number,
-  legalStatus?: string,
-  administration?: string,
-): TimelineEvent[] {
-  const events: TimelineEvent[] = []
-
-  if (yearStart) {
-    events.push({
-      date: yearEnd && yearEnd !== yearStart ? `${yearStart}–${yearEnd}` : String(yearStart),
-      labelKey: 'detail.timelineContractsAwarded',
-      sublabelKey: yearEnd && yearEnd !== yearStart
-        ? 'detail.timelineMultiYear'
-        : 'detail.timelineSingleYear',
-      sublabelParams: yearEnd && yearEnd !== yearStart
-        ? { n: yearEnd - yearStart + 1 }
-        : undefined,
-      type: 'start',
-    })
-  }
-
-  // Administration milestone — labels come from existing administrations i18n keys
-  if (administration && administration !== 'unknown') {
-    const adminDateRange: Record<string, string> = {
-      fox: '2000–2006',
-      calderon: '2006–2012',
-      epn: '2012–2018',
-      amlo: '2018–2024',
-      sheinbaum: '2024–',
-    }
-    if (adminDateRange[administration]) {
-      events.push({
-        date: adminDateRange[administration],
-        labelKey: `administrations.${administration}`,
-        type: 'milestone',
-      })
-    }
-  }
-
-  if (discoveryYear) {
-    const yearsAfter = yearStart ? discoveryYear - yearStart : null
-    events.push({
-      date: String(discoveryYear),
-      labelKey: 'detail.timelineExposure',
-      sublabelKey: yearsAfter != null && yearsAfter > 0
-        ? (yearsAfter === 1 ? 'detail.timelineExposureSub_one' : 'detail.timelineExposureSub_other')
-        : undefined,
-      sublabelParams: yearsAfter != null && yearsAfter > 0 ? { count: yearsAfter } : undefined,
-      type: 'exposure',
-    })
-  }
-
-  if (legalStatus && (legalStatus === 'convicted' || legalStatus === 'acquitted' || legalStatus === 'dismissed')) {
-    const labelKeyMap: Record<string, string> = {
-      convicted: 'detail.timelineConviction',
-      acquitted: 'detail.timelineAcquitted',
-      dismissed: 'detail.timelineDismissed',
-    }
-    events.push({
-      date: 'Resolved',
-      labelKey: labelKeyMap[legalStatus] ?? 'detail.timelineLegalResolution',
-      type: 'resolution',
-    })
-  }
-
-  return events
+const FRAUD_LABEL_EN: Record<string, string> = {
+  ghost_company: 'Ghost Company',
+  bid_rigging: 'Bid Rigging',
+  overpricing: 'Overpricing',
+  conflict_of_interest: 'Conflict of Interest',
+  embezzlement: 'Embezzlement',
+  bribery: 'Bribery',
+  procurement_fraud: 'Procurement Fraud',
+  monopoly: 'Monopoly',
+  emergency_fraud: 'Emergency Fraud',
+  tender_rigging: 'Tender Rigging',
+  other: 'Other',
 }
 
-// ── Risk score mini gauge ─────────────────────────────────────────────────────
-function RiskGauge({ score }: { score: number }) {
-  const level = getRiskLevelFromScore(score)
-  const color = RISK_COLORS[level]
-  const pct = Math.round(score * 100)
+const ADMIN_LABEL_EN: Record<string, string> = {
+  fox: 'Fox (2000–2006)',
+  calderon: 'Calderón (2006–2012)',
+  epn: 'Peña Nieto (2012–2018)',
+  amlo: 'López Obrador (2018–2024)',
+  sheinbaum: 'Sheinbaum (2024–)',
+}
 
+const SEVERITY_LABEL: Record<number, string> = {
+  1: 'Low',
+  2: 'Moderate',
+  3: 'High',
+  4: 'Critical',
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Shared style tokens
+// ─────────────────────────────────────────────────────────────────────────────
+const OVERLINE: React.CSSProperties = {
+  fontSize: 10,
+  fontFamily: 'monospace',
+  letterSpacing: '0.2em',
+  textTransform: 'uppercase',
+  color: TEXT_FAINT,
+  fontWeight: 700,
+}
+
+const ACT_HEADLINE: React.CSSProperties = {
+  fontFamily: 'var(--font-family-serif, Georgia, serif)',
+  fontWeight: 700,
+  letterSpacing: '-0.01em',
+  color: TEXT_PRIMARY,
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Small pieces
+// ─────────────────────────────────────────────────────────────────────────────
+function Pill({
+  children,
+  color = TEXT_MUTED,
+  border,
+  bg,
+}: {
+  children: React.ReactNode
+  color?: string
+  border?: string
+  bg?: string
+}) {
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 h-1.5 bg-border/40 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all duration-500"
-          style={{ width: `${pct}%`, backgroundColor: color }}
-        />
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 10,
+        fontFamily: 'monospace',
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        padding: '5px 10px',
+        borderRadius: 3,
+        color,
+        border: `1px solid ${border ?? 'rgba(255,255,255,0.1)'}`,
+        background: bg ?? 'transparent',
+      }}
+    >
+      {children}
+    </span>
+  )
+}
+
+function StatCell({
+  overline,
+  value,
+  foot,
+}: {
+  overline: string
+  value: React.ReactNode
+  foot?: React.ReactNode
+}) {
+  return (
+    <div
+      style={{
+        padding: '14px 18px',
+        borderLeft: `1px solid ${BORDER}`,
+        minWidth: 0,
+      }}
+    >
+      <div style={{ ...OVERLINE, marginBottom: 6 }}>{overline}</div>
+      <div
+        style={{
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+          fontSize: 20,
+          fontWeight: 700,
+          color: TEXT_PRIMARY,
+          letterSpacing: '-0.01em',
+          lineHeight: 1.15,
+        }}
+      >
+        {value}
       </div>
-      <span className="text-xs font-mono font-semibold" style={{ color }}>
-        {pct}%
-      </span>
+      {foot && (
+        <div
+          style={{
+            fontSize: 11,
+            color: TEXT_MUTED,
+            marginTop: 4,
+          }}
+        >
+          {foot}
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Detection score label ─────────────────────────────────────────────────────
-function DetectionScoreLabel({ score }: { score: number }) {
-  const { t } = useTranslation('cases')
-  const level = getRiskLevelFromScore(score)
-  const pct = Math.round(score * 100)
+function SeverityIndicator({ severity }: { severity: number }) {
+  const color = severity >= 4 ? CRIMSON_HI : severity >= 3 ? '#fb923c' : severity >= 2 ? AMBER : TEXT_MUTED
   return (
-    <span className="text-[10px] text-text-muted">{pct}% — {t(`severity.${level === 'critical' ? 4 : level === 'high' ? 3 : level === 'medium' ? 2 : 1}`)}</span>
-  )
-}
-
-// ── Similar case card ─────────────────────────────────────────────────────────
-function SimilarCaseCard({ cas, onClick }: { cas: { name_en: string; slug: string; fraud_type: FraudType; severity: number; amount_mxn_low?: number | null }; onClick: () => void }) {
-  const { t } = useTranslation('cases')
-  const colors = FRAUD_TYPE_COLORS[cas.fraud_type] ?? FRAUD_TYPE_COLORS.other
-  return (
-    <button
-      onClick={onClick}
-      className={cn(
-        'w-full text-left p-3 rounded-lg border transition-all hover:bg-card/80 group',
-        colors.border,
-        colors.bg,
-      )}
+    <span
+      style={{
+        display: 'inline-flex',
+        alignItems: 'center',
+        gap: 6,
+        fontSize: 10,
+        fontFamily: 'monospace',
+        fontWeight: 700,
+        letterSpacing: '0.12em',
+        textTransform: 'uppercase',
+        padding: '5px 10px',
+        borderRadius: 3,
+        color,
+        border: `1px solid ${color}40`,
+        background: `${color}10`,
+      }}
     >
-      <div className="text-xs font-semibold text-text-primary group-hover:text-accent transition-colors leading-snug mb-1">
-        {cas.name_en}
-      </div>
-      <div className="flex items-center gap-2 text-[10px] text-text-muted">
-        <span className={cn('px-1.5 py-0.5 rounded font-bold',
-          cas.severity >= 4 ? 'bg-red-500/20 text-red-400'
-          : cas.severity >= 3 ? 'bg-orange-500/20 text-orange-400'
-          : 'bg-amber-100 text-amber-800 dark:bg-yellow-500/20 dark:text-yellow-400'
-        )}>
-          {t(`severity.${cas.severity}`)}
-        </span>
-        <span className={cn('px-1.5 py-0.5 rounded border', colors.border, colors.text)}>
-          {t(`fraudTypes.${cas.fraud_type}`)}
-        </span>
-        {cas.amount_mxn_low && (
-          <span className="ml-auto font-mono">{formatMXN(cas.amount_mxn_low)}</span>
-        )}
-      </div>
-    </button>
+      <span style={{ display: 'flex', gap: 2 }}>
+        {[1, 2, 3, 4].map((n) => (
+          <span
+            key={n}
+            style={{
+              width: 4,
+              height: 8,
+              background: n <= severity ? color : 'rgba(255,255,255,0.08)',
+              borderRadius: 1,
+            }}
+          />
+        ))}
+      </span>
+      <span>
+        Severity {severity}/4 · {SEVERITY_LABEL[severity] ?? '—'}
+      </span>
+    </span>
   )
 }
 
-// ── Main component ────────────────────────────────────────────────────────────
+// ─────────────────────────────────────────────────────────────────────────────
+// Act wrapper
+// ─────────────────────────────────────────────────────────────────────────────
+function Act({
+  number,
+  title,
+  subtitle,
+  children,
+}: {
+  number: string
+  title: string
+  subtitle?: string
+  children: React.ReactNode
+}) {
+  return (
+    <section style={{ borderTop: `1px solid ${BORDER}`, padding: '56px 0 8px' }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 14, marginBottom: 14, flexWrap: 'wrap' }}>
+        <span style={{ ...OVERLINE, color: CRIMSON_HI }}>{number}</span>
+        <h2 style={{ ...ACT_HEADLINE, fontSize: 'clamp(1.35rem, 2.2vw, 1.75rem)', margin: 0 }}>{title}</h2>
+      </div>
+      {subtitle && (
+        <p
+          style={{
+            color: TEXT_SECONDARY,
+            fontSize: 13,
+            maxWidth: 620,
+            marginBottom: 22,
+            lineHeight: 1.55,
+          }}
+        >
+          {subtitle}
+        </p>
+      )}
+      {children}
+    </section>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Dot timeline (horizontal)
+// ─────────────────────────────────────────────────────────────────────────────
+interface TimelinePoint {
+  label: string
+  year: string
+  color: string
+}
+
+function DotTimeline({ points }: { points: TimelinePoint[] }) {
+  if (points.length === 0) return null
+  return (
+    <div
+      style={{
+        background: PANEL,
+        border: `1px solid ${BORDER}`,
+        borderRadius: 4,
+        padding: '28px 32px 24px',
+        overflowX: 'auto',
+      }}
+    >
+      <div
+        style={{
+          display: 'grid',
+          gridTemplateColumns: `repeat(${points.length}, minmax(110px, 1fr))`,
+          alignItems: 'end',
+          gap: 0,
+          position: 'relative',
+        }}
+      >
+        <div
+          style={{
+            position: 'absolute',
+            left: `calc(${100 / (points.length * 2)}%)`,
+            right: `calc(${100 / (points.length * 2)}%)`,
+            top: 30,
+            height: 1,
+            background: BORDER_STRONG,
+            zIndex: 0,
+          }}
+        />
+        {points.map((p, i) => (
+          <div
+            key={i}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              zIndex: 1,
+              position: 'relative',
+            }}
+          >
+            <div style={{ ...OVERLINE, fontSize: 10, marginBottom: 10, color: TEXT_MUTED }}>{p.year}</div>
+            <div
+              style={{
+                width: 14,
+                height: 14,
+                borderRadius: '50%',
+                background: p.color,
+                boxShadow: `0 0 0 4px ${p.color}22, 0 0 0 5px ${BG}`,
+                marginBottom: 14,
+              }}
+            />
+            <div
+              style={{
+                fontSize: 11,
+                color: TEXT_PRIMARY,
+                textAlign: 'center',
+                fontWeight: 600,
+                lineHeight: 1.3,
+                maxWidth: 140,
+              }}
+            >
+              {p.label}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Main
+// ─────────────────────────────────────────────────────────────────────────────
 export default function CaseDetail() {
   const { slug } = useParams<{ slug: string }>()
-  const { t, i18n } = useTranslation('cases')
-  const { t: ts } = useTranslation('sectors')
+  const { i18n } = useTranslation('cases')
   const navigate = useNavigate()
 
   const { data, isLoading, error } = useQuery({
@@ -279,7 +555,6 @@ export default function CaseDetail() {
     staleTime: 10 * 60 * 1000,
   })
 
-  // Load all cases so we can show "Similar Cases"
   const { data: allCases } = useQuery({
     queryKey: ['cases', 'list', {}],
     queryFn: () => caseLibraryApi.getAll({}),
@@ -289,791 +564,1085 @@ export default function CaseDetail() {
 
   if (isLoading) {
     return (
-      <div className="p-6 max-w-4xl mx-auto space-y-4">
-        <Skeleton className="h-8 w-32" />
-        <Skeleton className="h-12 w-3/4" />
-        <Skeleton className="h-32 w-full" />
-        <Skeleton className="h-40 w-full" />
+      <div style={{ minHeight: '100vh', background: BG, padding: '48px 32px' }}>
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div style={{ ...OVERLINE, marginBottom: 20 }}>Cases · Loading</div>
+          <div
+            style={{
+              height: 80,
+              background: PANEL,
+              borderRadius: 4,
+              marginBottom: 16,
+              border: `1px solid ${BORDER}`,
+            }}
+          />
+          <div
+            style={{
+              height: 240,
+              background: PANEL,
+              borderRadius: 4,
+              border: `1px solid ${BORDER}`,
+            }}
+          />
+        </div>
       </div>
     )
   }
 
   if (error || !data) {
     return (
-      <div className="p-6 max-w-4xl mx-auto">
-        <Button variant="ghost" size="sm" onClick={() => navigate('/cases')} className="mb-4">
-          <ArrowLeft className="h-4 w-4 mr-2" /> {t('detail.backToLibrary')}
-        </Button>
-        <div className="flex items-center gap-2 text-sm text-destructive p-4 bg-destructive/10 rounded-lg">
-          <AlertCircle className="h-4 w-4" />
-          <span>{t('detail.caseNotFound')}</span>
+      <div
+        style={{
+          minHeight: '100vh',
+          background: BG,
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          padding: 32,
+        }}
+      >
+        <div style={{ textAlign: 'center', maxWidth: 480 }}>
+          <p
+            style={{
+              fontSize: 10,
+              fontFamily: 'monospace',
+              letterSpacing: '0.2em',
+              color: TEXT_FAINT,
+              marginBottom: 16,
+              textTransform: 'uppercase',
+            }}
+          >
+            Cases · Not Found
+          </p>
+          <h1
+            style={{
+              fontSize: 32,
+              fontFamily: 'var(--font-family-serif, Georgia, serif)',
+              color: TEXT_PRIMARY,
+              marginBottom: 12,
+              fontWeight: 700,
+            }}
+          >
+            Case not found
+          </h1>
+          <p style={{ color: TEXT_MUTED, fontSize: 14, marginBottom: 32 }}>
+            "{slug}" does not exist in the case library, or could not be loaded.
+          </p>
+          <button
+            onClick={() => navigate('/cases')}
+            style={{
+              fontSize: 11,
+              fontFamily: 'monospace',
+              color: CRIMSON_HI,
+              border: `1px solid ${CRIMSON_HI}4d`,
+              padding: '8px 16px',
+              borderRadius: 4,
+              cursor: 'pointer',
+              background: 'transparent',
+              letterSpacing: '0.1em',
+              textTransform: 'uppercase',
+            }}
+          >
+            ← Browse all cases
+          </button>
         </div>
       </div>
     )
   }
 
-  const name = i18n.language === 'es' ? data.name_es : data.name_en
+  const name = i18n.language === 'es' && data.name_es ? data.name_es : data.name_en
   const summary = i18n.language === 'es' && data.summary_es ? data.summary_es : data.summary_en
 
-  const fraudColors = FRAUD_TYPE_COLORS[data.fraud_type] ?? FRAUD_TYPE_COLORS.other
-  const signalKeys = FRAUD_TYPE_SIGNALS[data.fraud_type] ?? FRAUD_TYPE_SIGNALS.other
-  const fraudTypeKey = data.fraud_type in FRAUD_TYPE_SIGNALS ? data.fraud_type : 'other'
-  const signals = signalKeys.map((_, idx) => t(`signals.${fraudTypeKey}.${idx}`, { defaultValue: signalKeys[idx] }))
-  const timelineEvents = buildTimeline(
-    data.contract_year_start,
-    data.contract_year_end,
-    data.discovery_year,
-    data.legal_status,
-    data.administration,
-  )
+  const accent = FRAUD_ACCENT[data.fraud_type] ?? FRAUD_ACCENT.other
+  const signals = FRAUD_SIGNALS[data.fraud_type] ?? FRAUD_SIGNALS.other
+  const legal = legalStatusMeta(data.legal_status)
 
-  // Use actual linked_vendors from ground truth (when this case trained the model)
   const linkedVendors: LinkedVendor[] = data.linked_vendors ?? []
-  const hasRealVendorScores = linkedVendors.length > 0
-
-  // Compute aggregate detection score from linked vendors (avg of avg_risk_score)
-  const vendorScores = linkedVendors.filter(v => v.avg_risk_score != null).map(v => v.avg_risk_score!)
-  const avgDetectionScore = vendorScores.length > 0
-    ? vendorScores.reduce((a, b) => a + b, 0) / vendorScores.length
-    : null
+  const vendorScores = linkedVendors.filter((v) => v.avg_risk_score != null).map((v) => v.avg_risk_score!)
+  const avgDetectionScore =
+    vendorScores.length > 0 ? vendorScores.reduce((a, b) => a + b, 0) / vendorScores.length : null
   const totalContractsLinked = linkedVendors.reduce((s, v) => s + (v.contract_count ?? 0), 0)
 
-  // Derive sector names for sector_ids
   const sectorLabels = (data.sector_ids ?? [])
-    .map(sid => { const sec = SECTORS.find(s => s.id === sid); return sec ? ts(sec.code) : undefined })
-    .filter(Boolean) as string[]
+    .map((sid) => SECTORS.find((s) => s.id === sid))
+    .filter(Boolean)
+    .map((s) => titleCase(s!.code))
 
-  // Similar cases: same fraud_type, different slug, top 3 by severity
   const similarCases = allCases
     ? allCases
-        .filter(c => c.fraud_type === data.fraud_type && c.slug !== data.slug)
+        .filter((c) => c.fraud_type === data.fraud_type && c.slug !== data.slug)
         .sort((a, b) => b.severity - a.severity)
         .slice(0, 3)
     : []
 
+  const yearDisplay =
+    data.contract_year_start && data.contract_year_end && data.contract_year_end !== data.contract_year_start
+      ? `${data.contract_year_start}–${data.contract_year_end}`
+      : data.contract_year_start
+      ? String(data.contract_year_start)
+      : '—'
+
+  const timelinePoints: TimelinePoint[] = []
+  if (data.contract_year_start) {
+    timelinePoints.push({
+      year:
+        data.contract_year_end && data.contract_year_end !== data.contract_year_start
+          ? `${data.contract_year_start}–${data.contract_year_end}`
+          : String(data.contract_year_start),
+      label: 'Contracts awarded',
+      color: CRIMSON_HI,
+    })
+  }
+  if (data.discovery_year) {
+    timelinePoints.push({
+      year: String(data.discovery_year),
+      label: 'Publicly disclosed',
+      color: AMBER,
+    })
+  }
+  if (data.legal_status === 'convicted') {
+    timelinePoints.push({ year: 'Resolved', label: 'Conviction obtained', color: EMERALD })
+  } else if (data.legal_status === 'prosecuted') {
+    timelinePoints.push({ year: 'Pending', label: 'Prosecution under way', color: '#fb923c' })
+  } else if (data.legal_status === 'investigation') {
+    timelinePoints.push({ year: 'Open', label: 'Under investigation', color: AMBER })
+  } else if (data.legal_status === 'impunity') {
+    timelinePoints.push({ year: 'No action', label: 'Impunity — no charges filed', color: CRIMSON_HI })
+  } else if (data.legal_status === 'dismissed') {
+    timelinePoints.push({ year: 'Closed', label: 'Case dismissed', color: TEXT_MUTED })
+  } else if (data.legal_status === 'acquitted') {
+    timelinePoints.push({ year: 'Resolved', label: 'Defendants acquitted', color: '#60a5fa' })
+  }
+
+  const institutions = (data.key_actors ?? []).filter((a) => a.role === 'institution')
+  const officials = (data.key_actors ?? []).filter(
+    (a) => a.role !== 'vendor' && a.role !== 'institution',
+  )
+  const fallbackVendorActors = (data.key_actors ?? []).filter((a) => a.role === 'vendor')
+
   return (
-    <div className="p-6 max-w-4xl mx-auto">
-
-      {/* Back navigation */}
-      <button
-        onClick={() => navigate('/cases')}
-        className="text-xs text-text-muted hover:text-accent mb-5 flex items-center gap-1 transition-colors"
-      >
-        <ArrowLeft className="h-3.5 w-3.5" /> {t('detail.backToLibrary')}
-      </button>
-
-      {/* ── Title block ─────────────────────────────────────────────────────── */}
-      <motion.div className="mb-6" variants={slideUp} initial="initial" animate="animate">
-        <div className="flex items-center gap-2 flex-wrap mb-2">
-          {/* Severity */}
-          <span className={cn('text-xs font-bold px-2.5 py-1 rounded', SEVERITY_COLORS[data.severity] ?? SEVERITY_COLORS[2])}>
-            {t(`severity.${data.severity}`)}
-          </span>
-
-          {/* Fraud type — prominently coloured */}
-          <span className={cn(
-            'text-xs font-semibold px-2.5 py-1 rounded border',
-            fraudColors.border,
-            fraudColors.text,
-            fraudColors.bg,
-          )}>
-            {t(`fraudTypes.${data.fraud_type}`)}
-          </span>
-
-          {/* Legal status */}
-          <Badge variant="outline" className={cn('text-xs', LEGAL_STATUS_COLORS[data.legal_status] ?? '')}>
-            {t(`legalStatuses.${data.legal_status}`)}
-          </Badge>
-
-          {/* ML-linked badge */}
-          {data.ground_truth_case_id != null && (
-            <Link to="/methodology" className="no-underline">
-              <Badge variant="outline" className="text-xs border-accent/50 text-accent hover:bg-accent/10 transition-colors cursor-pointer">
-                {t('card.mlLinked')} — {t('detail.viewModelValidation')}
-              </Badge>
-            </Link>
-          )}
-        </div>
-
-        {/* Dateline strip above headline */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mt-3 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
-          <span className="inline-flex items-center gap-1.5">
-            <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-zinc-300">RUBLI</span>
-          </span>
-          <span className="text-zinc-700">·</span>
-          <span>Caso · Archivo</span>
-          {data.ground_truth_case_id != null && (
-            <>
-              <span className="text-zinc-700">·</span>
-              <span className="text-amber-500">ML-linked</span>
-            </>
-          )}
-        </div>
-
-        <div className="flex items-start justify-between gap-3">
-          <h1
-            className="text-text-primary leading-[1.05]"
-            style={{
-              fontFamily: 'var(--font-family-serif)',
-              fontSize: 'clamp(1.75rem, 3.5vw, 2.75rem)',
-              fontWeight: 700,
-              letterSpacing: '-0.025em',
-            }}
-          >
-            {name}
-          </h1>
-          <AddToDossierButton
-            entityType="note"
-            entityId={data.id}
-            entityName={data.name_en}
-            className="flex-shrink-0"
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-4 mt-2 text-xs text-text-muted">
-          {(data.contract_year_start || data.contract_year_end) && (
-            <span>
-              {data.contract_year_start}
-              {data.contract_year_end && data.contract_year_end !== data.contract_year_start
-                ? `–${data.contract_year_end}`
-                : ''}
-            </span>
-          )}
-          {data.discovery_year && <span>{t('card.discovered', { year: data.discovery_year })}</span>}
-          <span>{t(`administrations.${data.administration}`)}</span>
-          {sectorLabels.length > 0 && (
-            <span>{sectorLabels.join(', ')}</span>
-          )}
-        </div>
-      </motion.div>
-
-      {/* ── Summary ─────────────────────────────────────────────────────────── */}
-      <div className="bg-card border border-border/60 rounded-lg p-4 mb-5">
-        <p className="text-sm text-text-secondary leading-relaxed">{summary}</p>
+    <div style={{ background: BG, minHeight: '100vh', color: TEXT_PRIMARY }}>
+      {/* Back nav */}
+      <div style={{ maxWidth: 1100, margin: '0 auto', padding: '28px 32px 0' }}>
+        <button
+          onClick={() => navigate('/cases')}
+          style={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 6,
+            fontSize: 10,
+            fontFamily: 'monospace',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase',
+            color: TEXT_MUTED,
+            background: 'transparent',
+            border: 'none',
+            cursor: 'pointer',
+            padding: 0,
+          }}
+          onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = CRIMSON_HI)}
+          onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = TEXT_MUTED)}
+        >
+          <ArrowLeft size={12} /> Back to case library
+        </button>
       </div>
 
-      {/* ── Impact Metrics Grid ─────────────────────────────────────────────── */}
-      {(data.amount_mxn_low || data.amount_mxn_high || hasRealVendorScores) && (
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.impactMetrics')}</p>
-          <motion.div
-            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
-            variants={staggerContainer}
-            initial="initial"
-            animate="animate"
+      {/* HERO */}
+      <motion.header
+        variants={slideUp}
+        initial="initial"
+        animate="animate"
+        style={{
+          background: PANEL,
+          borderTop: `1px solid ${BORDER}`,
+          borderBottom: `1px solid ${BORDER}`,
+          padding: '40px 32px 0',
+          marginTop: 28,
+        }}
+      >
+        <div style={{ maxWidth: 1100, margin: '0 auto' }}>
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: 10,
+              marginBottom: 22,
+              flexWrap: 'wrap',
+            }}
           >
-            {/* Total value */}
-            {(data.amount_mxn_low || data.amount_mxn_high) && (
-              <motion.div
-                variants={staggerItem}
-                className={cn(
-                  'rounded-lg border p-3 flex flex-col gap-1',
-                  fraudColors.border,
-                  fraudColors.bg,
-                )}
-              >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                  {t('detail.estimatedValue')}
-                </div>
-                <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                  {data.amount_mxn_low ? formatMXN(data.amount_mxn_low) : '—'}
-                </div>
-                {data.amount_mxn_high && data.amount_mxn_high !== data.amount_mxn_low && (
-                  <div className="text-[11px] text-text-muted">
-                    {t('detail.upTo', { amount: formatMXN(data.amount_mxn_high) })}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* RUBLI Detection Score — real data when GT-linked, severity-based otherwise */}
-            <motion.div
-              variants={staggerItem}
-              className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1.5',
-                fraudColors.border,
-                fraudColors.bg,
-              )}
+            <span
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 6,
+                fontSize: 10,
+                fontFamily: 'monospace',
+                letterSpacing: '0.2em',
+                textTransform: 'uppercase',
+                color: TEXT_SECONDARY,
+                fontWeight: 700,
+              }}
             >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
-                <TrendingUp className="h-3 w-3" />
-                {t('detail.detectionScore')}
-              </div>
-              {avgDetectionScore != null ? (
-                <>
-                  <RiskGauge score={avgDetectionScore} />
-                  <DetectionScoreLabel score={avgDetectionScore} />
-                  <div className="text-[10px] text-text-muted">
-                    {t('detail.avgAcrossVendors', { count: linkedVendors.length })}
-                  </div>
-                </>
-              ) : (
-                <>
-                  <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                    {t(`severity.${data.severity}`)}
-                  </div>
-                  <div className="text-[11px] text-text-muted">{t('detail.basedOnSeverity')}</div>
-                </>
-              )}
-            </motion.div>
+              <span
+                style={{
+                  width: 6,
+                  height: 6,
+                  borderRadius: '50%',
+                  background: CRIMSON_HI,
+                  display: 'inline-block',
+                }}
+              />
+              RUBLI
+            </span>
+            <span style={{ color: TEXT_FAINT }}>·</span>
+            <span style={{ ...OVERLINE, color: TEXT_MUTED }}>Case file</span>
+            {data.ground_truth_case_id != null && (
+              <>
+                <span style={{ color: TEXT_FAINT }}>·</span>
+                <Link to="/methodology" style={{ ...OVERLINE, color: CYAN, textDecoration: 'none' }}>
+                  ML-linked · Ground truth
+                </Link>
+              </>
+            )}
+          </div>
 
-            {/* Contracts affected */}
-            {(totalContractsLinked > 0 || data.amount_mxn_low) && (
-              <motion.div
-                variants={staggerItem}
-                className={cn(
-                  'rounded-lg border p-3 flex flex-col gap-1',
-                  fraudColors.border,
-                  fraudColors.bg,
-                )}
-              >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted flex items-center gap-1">
-                  <Users className="h-3 w-3" />
-                  {t('detail.contractsAffected')}
-                </div>
-                <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                  {totalContractsLinked > 0 ? formatCompact(totalContractsLinked) : '—'}
-                </div>
-                {linkedVendors.length > 0 ? (
-                  <div className="text-[11px] text-text-muted">
-                    {t('detail.vendorsMatched', { count: linkedVendors.length })}
-                  </div>
+          <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 24 }}>
+            <Pill color={accent} border={`${accent}55`} bg={`${accent}12`}>
+              {FRAUD_LABEL_EN[data.fraud_type] ?? titleCase(data.fraud_type)}
+            </Pill>
+            <SeverityIndicator severity={data.severity} />
+            <Pill color={legal.accent} border={legal.border} bg={legal.bg}>
+              {legal.label}
+            </Pill>
+          </div>
+
+          <div
+            style={{
+              display: 'flex',
+              alignItems: 'flex-start',
+              justifyContent: 'space-between',
+              gap: 24,
+              marginBottom: 18,
+            }}
+          >
+            <h1
+              style={{
+                ...ACT_HEADLINE,
+                fontSize: 'clamp(1.875rem, 4vw, 2.75rem)',
+                lineHeight: 1.08,
+                margin: 0,
+                maxWidth: 820,
+              }}
+            >
+              {name}
+            </h1>
+            <div style={{ flexShrink: 0 }}>
+              <AddToDossierButton entityType="note" entityId={data.id} entityName={data.name_en} />
+            </div>
+          </div>
+
+          <p
+            style={{
+              fontSize: 16,
+              lineHeight: 1.6,
+              color: TEXT_SECONDARY,
+              maxWidth: 820,
+              marginBottom: 36,
+              fontFamily: 'var(--font-family-serif, Georgia, serif)',
+            }}
+          >
+            {summary}
+          </p>
+        </div>
+
+        <div style={{ maxWidth: 1100, margin: '0 auto', borderTop: `1px solid ${BORDER}` }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            }}
+          >
+            <StatCell
+              overline="Estimated value"
+              value={
+                data.amount_mxn_low ? (
+                  <>
+                    {formatMXN(data.amount_mxn_low)}
+                    <span style={{ fontSize: 12, color: TEXT_MUTED, fontWeight: 400, marginLeft: 6 }}>
+                      MXN
+                    </span>
+                  </>
                 ) : (
-                  <div className="text-[11px] text-text-muted">
-                    {data.compranet_visibility === 'invisible'
-                      ? t('detail.visibilityInvisible')
-                      : data.compranet_visibility === 'partial'
-                      ? t('detail.visibilityPartial')
-                      : t('detail.visibilityNone')}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* Severity level as visual KPI */}
-            <motion.div
-              variants={staggerItem}
-              className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                {t('detail.severityLevel')}
-              </div>
-              <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                {data.severity} / 4
-              </div>
-              <div className="flex gap-1 mt-0.5">
-                {[1, 2, 3, 4].map((n) => (
-                  <div
-                    key={n}
-                    className={cn(
-                      'h-1.5 flex-1 rounded-full',
-                      n <= data.severity
-                        ? data.severity >= 4 ? 'bg-red-500' : data.severity >= 3 ? 'bg-orange-500' : 'bg-yellow-500'
-                        : 'bg-border/30',
-                    )}
-                  />
-                ))}
-              </div>
-            </motion.div>
-
-            {/* Legal status KPI */}
-            <motion.div
-              variants={staggerItem}
-              className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                {t('detail.legalOutcome')}
-              </div>
-              <div className="text-sm font-semibold text-text-primary capitalize leading-snug">
-                {t(`legalStatuses.${data.legal_status}`)}
-              </div>
-              <div className="text-[11px] text-text-muted">
-                {data.legal_status === 'convicted' ? t('detail.legalConvicted') :
-                 data.legal_status === 'prosecuted' ? t('detail.legalProsecuted') :
-                 data.legal_status === 'impunity' ? t('detail.legalImpunity') :
-                 data.legal_status === 'investigation' ? t('detail.legalInvestigation') :
-                 t('detail.legalUnresolved')}
-              </div>
-            </motion.div>
-
-            {/* Discovery year KPI */}
-            {data.discovery_year && (
-              <motion.div
-                variants={staggerItem}
-                className={cn(
-                  'rounded-lg border p-3 flex flex-col gap-1',
-                  fraudColors.border,
-                  fraudColors.bg,
-                )}
-              >
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                  {t('detail.discovered')}
-                </div>
-                <div className="text-lg font-mono font-bold text-text-primary leading-tight">
-                  {data.discovery_year}
-                </div>
-                {data.contract_year_start && (
-                  <div className="text-[11px] text-text-muted">
-                    {t('detail.yearsAfterContracts', { n: data.discovery_year - data.contract_year_start })}
-                  </div>
-                )}
-              </motion.div>
-            )}
-
-            {/* COMPRANET visibility */}
-            <motion.div
-              variants={staggerItem}
-              className={cn(
-                'rounded-lg border p-3 flex flex-col gap-1',
-                fraudColors.border,
-                fraudColors.bg,
-              )}
-            >
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                {t('detail.compranetVisibilityLabel')}
-              </div>
-              <div className={cn(
-                'text-sm font-semibold capitalize leading-snug',
-                data.compranet_visibility === 'high' ? 'text-green-400' :
-                data.compranet_visibility === 'partial' ? 'text-yellow-400' :
-                'text-text-muted',
-              )}>
-                {t(`compranetVisibility.${data.compranet_visibility}`)}
-              </div>
-              <div className="text-[11px] text-text-muted">
-                {data.compranet_visibility === 'high' ? t('detail.compranetContractsVisible') :
-                 data.compranet_visibility === 'partial' ? t('detail.compranetPartiallyVisible') :
-                 t('detail.compranetNotVisible')}
-              </div>
-            </motion.div>
-          </motion.div>
-        </section>
-      )}
-
-      {/* ── Info grid (amount note / COMPRANET note / legal note) ────────────── */}
-      {(data.amount_note || data.compranet_note || data.legal_status_note) && (
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-6">
-          {data.amount_note && (
-            <div className="bg-card border border-border/50 rounded-lg p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">
-                {t('detail.amountNote')}
-              </div>
-              {data.amount_mxn_low && (
-                <div className="text-sm font-mono text-text-primary">
-                  {formatMXN(data.amount_mxn_low)}
-                  {data.amount_mxn_high ? ` – ${formatMXN(data.amount_mxn_high)}` : '+'}
-                </div>
-              )}
-              <p className="text-[11px] text-text-muted mt-1">{data.amount_note}</p>
-            </div>
-          )}
-          {data.compranet_note && (
-            <div className="bg-card border border-border/50 rounded-lg p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">
-                {t('detail.compranetNote')}
-              </div>
-              <div className="text-[11px] text-text-secondary">{data.compranet_note}</div>
-            </div>
-          )}
-          {data.legal_status_note && (
-            <div className="bg-card border border-border/50 rounded-lg p-3">
-              <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-1">
-                {t('detail.legalNote')}
-              </div>
-              <div className="text-[11px] text-text-secondary">{data.legal_status_note}</div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {/* ── Case Timeline ───────────────────────────────────────────────────── */}
-      {timelineEvents.length > 0 && (
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.caseTimeline')}</p>
-          <div className="bg-card border border-border/50 rounded-lg p-4">
-            <div className="relative space-y-0">
-              {/* Vertical connector line */}
-              {timelineEvents.length > 1 && (
-                <div className="absolute left-3 top-4 bottom-4 w-px bg-border/30" />
-              )}
-              {timelineEvents.map((event, i) => (
-                <div key={i} className="relative pl-9 pb-5 last:pb-0">
-                  {/* Dot */}
-                  <div className={cn(
-                    'absolute left-1.5 top-1.5 h-3 w-3 rounded-full border-2',
-                    event.type === 'start'
-                      ? 'border-red-400 bg-red-400/20'
-                      : event.type === 'exposure'
-                        ? 'border-amber-400 bg-amber-400/20'
-                        : event.type === 'milestone'
-                          ? 'border-border bg-border/30'
-                          : 'border-emerald-400 bg-emerald-400/20',
-                  )} />
-                  <div className="text-xs text-text-muted font-mono">{event.date}</div>
-                  <div className="text-sm font-medium text-text-primary">{t(event.labelKey, event.labelParams)}</div>
-                  {event.sublabelKey && (
-                    <div className="text-[11px] text-text-muted mt-0.5">{t(event.sublabelKey, event.sublabelParams)}</div>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-      )}
-
-      {/* ── How We Detected This ────────────────────────────────────────────── */}
-      <section className="mb-6">
-        <div className="rounded-lg border border-cyan-500/20 bg-cyan-500/5 p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <TrendingUp className="h-4 w-4 text-cyan-400" />
-            <h3 className="text-sm font-semibold text-cyan-400">{t('detail.riskSignals')}</h3>
-            {avgDetectionScore != null && (
-              <span className="ml-auto text-xs font-mono font-bold" style={{ color: RISK_COLORS[getRiskLevelFromScore(avgDetectionScore)] }}>
-                {t('detail.avgDetectionScore', { pct: Math.round(avgDetectionScore * 100) })}
-              </span>
-            )}
-          </div>
-          {avgDetectionScore != null && avgDetectionScore < 0.30 && (
-            <div className="mb-3 p-2 rounded border border-amber-500/30 bg-amber-500/5 text-[11px] text-amber-300/80">
-              {t('detail.lowScoreWarning', { pct: Math.round(avgDetectionScore * 100) })}
-            </div>
-          )}
-          <div className="space-y-2 text-sm text-text-muted">
-            {signals.map((signal, i) => (
-              <div key={i} className="flex items-start gap-2">
-                <CheckCircle className="h-3.5 w-3.5 text-cyan-400 mt-0.5 flex-shrink-0" />
-                <span>{signal}</span>
-              </div>
-            ))}
-          </div>
-          {data.ground_truth_case_id != null && (
-            <div className="mt-3 pt-3 border-t border-cyan-500/15">
-              <div className="flex items-start gap-2 text-[11px] text-text-muted">
-                <Activity className="h-3.5 w-3.5 text-cyan-400 flex-shrink-0 mt-0.5" />
-                <span>
-                  {t('detail.mlTrainingNote', {
-                    vendors: linkedVendors.length > 0
-                      ? t('detail.mlVendors', { count: linkedVendors.length })
-                      : t('detail.mlContracts'),
-                  })}{' '}
-                  <Link to="/methodology" className="text-cyan-400 hover:underline">
-                    {t('detail.viewModelValidation')}
-                  </Link>
+                  '—'
+                )
+              }
+              foot={
+                data.amount_mxn_high && data.amount_mxn_high !== data.amount_mxn_low
+                  ? `up to ${formatMXN(data.amount_mxn_high)} MXN`
+                  : undefined
+              }
+            />
+            <StatCell
+              overline="Years active"
+              value={yearDisplay}
+              foot={
+                data.discovery_year && data.contract_year_start
+                  ? `exposed ${data.discovery_year - data.contract_year_start} yr${
+                      data.discovery_year - data.contract_year_start === 1 ? '' : 's'
+                    } later`
+                  : data.discovery_year
+                  ? `exposed ${data.discovery_year}`
+                  : undefined
+              }
+            />
+            <StatCell
+              overline="Administration"
+              value={
+                <span style={{ fontSize: 14 }}>
+                  {ADMIN_LABEL_EN[data.administration] ?? titleCase(data.administration)}
                 </span>
-              </div>
+              }
+            />
+            <StatCell
+              overline="Sector"
+              value={
+                <span style={{ fontSize: 14 }}>
+                  {sectorLabels.length > 0 ? sectorLabels.join(' · ') : '—'}
+                </span>
+              }
+              foot={
+                data.compranet_visibility
+                  ? `COMPRANET: ${titleCase(data.compranet_visibility)}`
+                  : undefined
+              }
+            />
+          </div>
+        </div>
+      </motion.header>
+
+      {/* BODY */}
+      <main style={{ maxWidth: 1100, margin: '0 auto', padding: '0 32px 80px' }}>
+        {/* ACT I */}
+        <Act
+          number="Act I"
+          title="How it happened"
+          subtitle="The procurement mechanics and the window of time during which this scheme operated."
+        >
+          <div style={{ marginBottom: 28 }}>
+            <div
+              style={{
+                fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                fontSize: 17,
+                lineHeight: 1.75,
+                color: TEXT_PRIMARY,
+                maxWidth: 720,
+              }}
+            >
+              {summary}
+            </div>
+          </div>
+
+          <DotTimeline points={timelinePoints} />
+
+          {(data.amount_note || data.compranet_note || data.legal_status_note) && (
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))',
+                gap: 0,
+                marginTop: 28,
+                border: `1px solid ${BORDER}`,
+                borderRadius: 4,
+                background: PANEL,
+              }}
+            >
+              {data.amount_note && (
+                <div style={{ padding: '18px 22px', borderRight: `1px solid ${BORDER}` }}>
+                  <div style={{ ...OVERLINE, marginBottom: 8 }}>Amount notes</div>
+                  <div style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
+                    {data.amount_note}
+                  </div>
+                </div>
+              )}
+              {data.compranet_note && (
+                <div style={{ padding: '18px 22px', borderRight: `1px solid ${BORDER}` }}>
+                  <div style={{ ...OVERLINE, marginBottom: 8 }}>COMPRANET visibility</div>
+                  <div style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
+                    {data.compranet_note}
+                  </div>
+                </div>
+              )}
+              {data.legal_status_note && (
+                <div style={{ padding: '18px 22px' }}>
+                  <div style={{ ...OVERLINE, marginBottom: 8 }}>Legal notes</div>
+                  <div style={{ fontSize: 12, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
+                    {data.legal_status_note}
+                  </div>
+                </div>
+              )}
             </div>
           )}
-        </div>
-      </section>
+        </Act>
 
-      {/* ── Connected Vendors (real data from ground truth) ─────────────────── */}
-      {hasRealVendorScores ? (
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-3">
-            {t('detail.linkedVendors')}
-            <span className="text-text-muted font-normal ml-2">{t('detail.linkedVendorsCount', { count: linkedVendors.length })}</span>
-          </p>
-          <div className="space-y-2">
-            {linkedVendors.map((vendor, i) => (
-              <div key={i} className="bg-card border border-border/40 rounded-lg p-3 flex flex-col gap-1.5">
-                <div className="flex items-center justify-between gap-3">
-                  <div>
-                    <div className="flex items-center gap-2">
-                      {vendor.vendor_id ? (
-                        <Link
-                          to={`/vendors/${vendor.vendor_id}`}
-                          className="text-xs font-semibold text-text-primary hover:text-accent transition-colors"
-                        >
-                          {vendor.vendor_name}
-                        </Link>
-                      ) : (
-                        <div className="text-xs font-semibold text-text-primary">{vendor.vendor_name}</div>
-                      )}
-                      {vendor.vendor_id && (
-                        <Link
-                          to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
-                          className="text-text-muted hover:text-accent transition-colors"
-                          title="View contracts"
-                        >
-                          <ExternalLink className="h-3 w-3" />
-                        </Link>
-                      )}
-                      {vendor.vendor_id && (
-                        <Link
-                          to={`/thread/${vendor.vendor_id}`}
-                          className="text-[10px] text-red-400/70 hover:text-red-400 transition-colors"
-                          title="Red Thread"
-                        >
-                          Red Thread
-                        </Link>
-                      )}
-                    </div>
-                    <div className="flex items-center gap-2 mt-0.5">
-                      <Badge variant="outline" className={cn(
-                        'text-[10px] px-1.5 py-0',
-                        fraudColors.border,
-                        fraudColors.text,
-                      )}>
-                        {t(`detail.roles.${vendor.role}`, { defaultValue: vendor.role })}
-                      </Badge>
-                      <span className="text-[10px] text-text-muted">
-                        {t('card.contracts', { n: vendor.contract_count })}
-                      </span>
-                      {vendor.match_method && (
-                        <span className="text-[10px] text-text-muted">{t('detail.matchedBy', { method: vendor.match_method })}</span>
-                      )}
-                    </div>
-                  </div>
-                  {vendor.avg_risk_score != null && (
-                    <div className="text-right flex-shrink-0">
-                      <div className="text-[10px] text-text-muted uppercase tracking-wider mb-1">{t('detail.rubliScore')}</div>
-                      <div
-                        className="text-base font-mono font-bold"
-                        style={{ color: RISK_COLORS[getRiskLevelFromScore(vendor.avg_risk_score)] }}
-                      >
-                        {Math.round(vendor.avg_risk_score * 100)}%
-                      </div>
-                    </div>
-                  )}
+        {/* ACT II */}
+        <Act
+          number="Act II"
+          title="What the data revealed"
+          subtitle={
+            avgDetectionScore != null
+              ? 'Signals the RUBLI risk model uses to flag this pattern. Intensity reflects how strongly each signal typically presents.'
+              : 'The characteristic fingerprints the RUBLI risk model uses to detect this fraud type in procurement records.'
+          }
+        >
+          {avgDetectionScore != null && (
+            <div
+              style={{
+                display: 'flex',
+                alignItems: 'baseline',
+                gap: 16,
+                padding: '20px 24px',
+                background: PANEL,
+                border: `1px solid ${BORDER}`,
+                borderLeft: `3px solid ${CRIMSON_HI}`,
+                borderRadius: 4,
+                marginBottom: 24,
+                flexWrap: 'wrap',
+              }}
+            >
+              <div>
+                <div style={{ ...OVERLINE, color: CRIMSON_HI, marginBottom: 4 }}>Detection score</div>
+                <div
+                  style={{
+                    fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                    fontSize: 48,
+                    fontWeight: 700,
+                    color: RISK_COLORS[getRiskLevelFromScore(avgDetectionScore)] ?? CRIMSON_HI,
+                    lineHeight: 1,
+                    letterSpacing: '-0.02em',
+                  }}
+                >
+                  {Math.round(avgDetectionScore * 100)}
+                  <span style={{ fontSize: 20, color: TEXT_MUTED, fontWeight: 400 }}>%</span>
                 </div>
-                {/* Risk score bar */}
-                {vendor.avg_risk_score != null && (
-                  <RiskGauge score={vendor.avg_risk_score} />
-                )}
               </div>
-            ))}
-          </div>
-        </section>
-      ) : (data.key_actors ?? []).filter(a => a.role === 'vendor').length > 0 ? (
-        /* Fallback: key actors vendors when no ground truth linked vendors */
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.connectedVendors')}</p>
-          <div className="space-y-2">
-            {(data.key_actors ?? [])
-              .filter(a => a.role === 'vendor')
-              .map((actor, i) => (
-                <div key={i} className="bg-card border border-border/40 rounded-lg p-3 flex flex-col gap-1.5">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
-                      {actor.title && (
-                        <div className="text-[11px] text-text-muted">{actor.title}</div>
-                      )}
-                    </div>
-                    <Badge variant="outline" className={cn(
-                      'text-[10px] px-1.5 py-0 flex-shrink-0',
-                      fraudColors.border,
-                      fraudColors.text,
-                    )}>
-                      {t('detail.roles.vendor')}
-                    </Badge>
-                  </div>
-                  {actor.note && (
-                    <div className="text-[11px] text-text-secondary">{actor.note}</div>
+              <div style={{ flex: 1, minWidth: 220 }}>
+                <div style={{ fontSize: 13, color: TEXT_SECONDARY, lineHeight: 1.55 }}>
+                  Average RUBLI score across {linkedVendors.length}{' '}
+                  {linkedVendors.length === 1 ? 'vendor' : 'vendors'} matched to this case in COMPRANET.
+                  {avgDetectionScore < 0.3 && (
+                    <span style={{ color: AMBER, display: 'block', marginTop: 4, fontSize: 12 }}>
+                      Low score: model underdetects this structural pattern — see methodology.
+                    </span>
                   )}
                 </div>
-              ))}
-          </div>
-        </section>
-      ) : null}
-
-      {/* ── Institutions Affected ────────────────────────────────────────────── */}
-      {(() => {
-        const institutions = (data.key_actors ?? []).filter(a => a.role === 'institution')
-        if (institutions.length === 0) return null
-        return (
-          <section className="mb-6">
-            <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.institutionsAffected')}</p>
-            <div className="flex flex-wrap gap-2">
-              {institutions.map((actor, i) => (
-                <div key={i} className="flex items-center gap-2 bg-card border border-border/40 rounded-lg px-3 py-2">
-                  <InstitutionBadge name={actor.name} size={24} showTooltip={false} />
-                  <div>
-                    <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
-                    {actor.title && <div className="text-[10px] text-text-muted">{actor.title}</div>}
-                    {actor.note && <div className="text-[10px] text-text-secondary">{actor.note}</div>}
-                  </div>
-                </div>
-              ))}
+              </div>
+              {data.ground_truth_case_id != null && (
+                <Link
+                  to="/methodology"
+                  style={{
+                    fontSize: 10,
+                    fontFamily: 'monospace',
+                    letterSpacing: '0.15em',
+                    textTransform: 'uppercase',
+                    color: CYAN,
+                    textDecoration: 'none',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: 4,
+                  }}
+                >
+                  <Activity size={11} /> Model validation →
+                </Link>
+              )}
             </div>
-          </section>
-        )
-      })()}
+          )}
 
-      {/* ── Key Actors (officials + journalists, not institutions or vendors) ── */}
-      {(data.key_actors ?? []).filter(a => a.role !== 'vendor' && a.role !== 'institution').length > 0 && (
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.keyActors')}</p>
-          <div className="space-y-2">
-            {(data.key_actors ?? [])
-              .filter(a => a.role !== 'vendor' && a.role !== 'institution')
-              .map((actor, i) => (
-                <div key={i} className="flex gap-3 bg-card border border-border/40 rounded-lg p-3">
-                  <div className="flex-shrink-0">
-                    <Badge variant="outline" className="text-[10px] px-1.5 py-0">
-                      {t(`detail.roles.${actor.role}`)}
-                    </Badge>
+          <div
+            style={{
+              border: `1px solid ${BORDER}`,
+              borderRadius: 4,
+              background: PANEL,
+              overflow: 'hidden',
+            }}
+          >
+            {signals.map((s, i) => {
+              const sevColor =
+                s.severity === 'Critical' ? CRIMSON_HI : s.severity === 'High' ? '#fb923c' : AMBER
+              return (
+                <div
+                  key={i}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'minmax(0,1fr) auto',
+                    alignItems: 'center',
+                    gap: 20,
+                    padding: '16px 22px',
+                    borderTop: i === 0 ? 'none' : `1px solid ${BORDER}`,
+                  }}
+                >
+                  <div>
+                    <div style={{ ...OVERLINE, fontSize: 9, color: TEXT_FAINT, marginBottom: 4 }}>
+                      Signal {String(i + 1).padStart(2, '0')}
+                    </div>
+                    <div style={{ fontSize: 13, color: TEXT_PRIMARY, lineHeight: 1.45 }}>{s.label}</div>
                   </div>
-                  <div className="min-w-0">
-                    <div className="text-xs font-semibold text-text-primary">{actor.name}</div>
-                    {actor.title && <div className="text-[11px] text-text-muted">{actor.title}</div>}
-                    {actor.note && <div className="text-[11px] text-text-secondary mt-0.5">{actor.note}</div>}
+                  <div
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'flex-end',
+                      gap: 6,
+                    }}
+                  >
+                    <DotBar value={s.intensity} color={sevColor} dots={18} size={6} gap={3} />
+                    <span
+                      style={{
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                        fontWeight: 700,
+                        letterSpacing: '0.1em',
+                        textTransform: 'uppercase',
+                        color: sevColor,
+                      }}
+                    >
+                      {s.severity}
+                    </span>
                   </div>
                 </div>
-              ))}
+              )
+            })}
           </div>
-        </section>
-      )}
+        </Act>
 
-      {/* ── Evidence Trail (linked vendors → contract deep-links) ────────────── */}
-      {linkedVendors.length > 0 && (
-        <section className="mb-6">
-          <p className="text-sm font-bold font-mono text-text-primary mb-1">
-            {t('detail.evidenceTrail')}
-          </p>
-          <p className="text-[11px] text-text-muted mb-3">{t('detail.evidenceTrailSubtitle')}</p>
-          <div className="rounded-lg border border-border/40 overflow-x-auto">
-            <table className="w-full text-xs" aria-label="Case evidence contracts">
-              <thead>
-                <tr className="border-b border-border/40 bg-card/60">
-                  <th className="text-left px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                    {t('detail.roles.vendor')}
-                  </th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                    {t('detail.contractsAffected')}
-                  </th>
-                  <th className="text-right px-3 py-2 text-[10px] font-bold uppercase tracking-wider text-text-muted">
-                    {t('detail.vendorRiskScore')}
-                  </th>
-                  <th className="px-3 py-2" />
-                </tr>
-              </thead>
-              <tbody>
-                {linkedVendors.map((vendor, i) => {
-                  const level = vendor.avg_risk_score != null ? getRiskLevelFromScore(vendor.avg_risk_score) : null
-                  const color = level ? RISK_COLORS[level] : undefined
-                  return (
-                    <tr key={i} className="border-b border-border/30 last:border-0 hover:bg-card/40 transition-colors">
-                      <td className="px-3 py-2 font-medium text-text-primary">
+        {/* ACT III */}
+        <Act
+          number="Act III"
+          title="Who was involved"
+          subtitle={
+            linkedVendors.length > 0
+              ? `${linkedVendors.length} ${
+                  linkedVendors.length === 1 ? 'vendor' : 'vendors'
+                } matched from ground-truth evidence, with ${formatCompact(totalContractsLinked)} linked contracts on record.`
+              : 'Vendor records identified from public reporting. Continuous matching is in progress via ARIA.'
+          }
+        >
+          {linkedVendors.length > 0 ? (
+            <div style={{ display: 'grid', gap: 12 }}>
+              {linkedVendors.map((vendor, i) => {
+                const score = vendor.avg_risk_score
+                const scoreLevel = score != null ? getRiskLevelFromScore(score) : null
+                const scoreColor = scoreLevel ? RISK_COLORS[scoreLevel] : TEXT_MUTED
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      background: PANEL,
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 4,
+                      padding: '18px 22px',
+                      display: 'grid',
+                      gridTemplateColumns: 'minmax(0, 1fr) auto',
+                      gap: 24,
+                      alignItems: 'start',
+                    }}
+                  >
+                    <div style={{ minWidth: 0 }}>
+                      <div
+                        style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: 10,
+                          flexWrap: 'wrap',
+                          marginBottom: 8,
+                        }}
+                      >
                         {vendor.vendor_id ? (
-                          <Link to={`/vendors/${vendor.vendor_id}`} className="hover:text-accent transition-colors">
+                          <Link
+                            to={`/vendors/${vendor.vendor_id}`}
+                            style={{
+                              fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                              fontSize: 17,
+                              fontWeight: 700,
+                              color: TEXT_PRIMARY,
+                              textDecoration: 'none',
+                              letterSpacing: '-0.005em',
+                            }}
+                          >
                             {vendor.vendor_name}
                           </Link>
                         ) : (
-                          vendor.vendor_name
+                          <span
+                            style={{
+                              fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                              fontSize: 17,
+                              fontWeight: 700,
+                              color: TEXT_PRIMARY,
+                            }}
+                          >
+                            {vendor.vendor_name}
+                          </span>
                         )}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono text-text-secondary">
-                        {vendor.contract_count > 0 ? (
-                          vendor.vendor_id ? (
-                            <Link
-                              to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
-                              className="hover:text-accent transition-colors"
-                            >
-                              {vendor.contract_count.toLocaleString()}
-                            </Link>
-                          ) : (
-                            vendor.contract_count.toLocaleString()
-                          )
-                        ) : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right font-mono font-bold" style={color ? { color } : undefined}>
-                        {vendor.avg_risk_score != null ? `${Math.round(vendor.avg_risk_score * 100)}%` : '—'}
-                      </td>
-                      <td className="px-3 py-2 text-right">
+                        <Pill color={accent} border={`${accent}44`} bg={`${accent}0e`}>
+                          {titleCase(vendor.role)}
+                        </Pill>
+                        {vendor.evidence_strength && (
+                          <Pill
+                            color={
+                              vendor.evidence_strength === 'strong'
+                                ? EMERALD
+                                : vendor.evidence_strength === 'medium'
+                                ? AMBER
+                                : TEXT_MUTED
+                            }
+                          >
+                            {titleCase(vendor.evidence_strength)} evidence
+                          </Pill>
+                        )}
+                      </div>
+                      <div
+                        style={{
+                          display: 'flex',
+                          gap: 18,
+                          flexWrap: 'wrap',
+                          fontSize: 11,
+                          fontFamily: 'monospace',
+                          color: TEXT_MUTED,
+                          marginBottom: 12,
+                        }}
+                      >
+                        <span>
+                          <span style={{ color: TEXT_FAINT }}>CONTRACTS · </span>
+                          <span style={{ color: TEXT_SECONDARY }}>
+                            {vendor.contract_count.toLocaleString()}
+                          </span>
+                        </span>
+                        {vendor.match_method && (
+                          <span>
+                            <span style={{ color: TEXT_FAINT }}>MATCH · </span>
+                            <span style={{ color: TEXT_SECONDARY }}>{vendor.match_method}</span>
+                          </span>
+                        )}
+                      </div>
+                      {score != null && (
+                        <div style={{ maxWidth: 300 }}>
+                          <DotBar value={score} max={1} color={scoreColor} dots={20} size={6} gap={3} />
+                        </div>
+                      )}
+                      <div style={{ display: 'flex', gap: 14, marginTop: 12, flexWrap: 'wrap' }}>
                         {vendor.vendor_id && (
                           <Link
                             to={`/contracts?vendor_id=${vendor.vendor_id}&sort_by=risk_score&sort_order=desc`}
-                            className="text-[10px] text-text-muted hover:text-accent transition-colors"
+                            style={{
+                              fontSize: 10,
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.15em',
+                              textTransform: 'uppercase',
+                              color: TEXT_MUTED,
+                              textDecoration: 'none',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: 4,
+                            }}
                           >
-                            {t('detail.viewAllContracts')}
+                            <ExternalLink size={10} /> View contracts
                           </Link>
                         )}
-                      </td>
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-        </section>
-      )}
-
-      {/* ── Sources ─────────────────────────────────────────────────────────── */}
-      <section className="mb-6">
-        <p className="text-sm font-bold font-mono text-text-primary mb-3">{t('detail.sources')}</p>
-        {(data.sources ?? []).length === 0 ? (
-          <p className="text-xs text-text-muted">{t('detail.noSources')}</p>
-        ) : (
-          <div className="space-y-2">
-            {(data.sources ?? []).map((src, i) => (
-              <div key={i} className="flex gap-3 bg-card border border-border/40 rounded-lg p-3">
-                <Badge variant="outline" className="text-[10px] px-1.5 py-0 flex-shrink-0 h-fit">
-                  {t(`detail.sourceTypes.${src.type}`)}
-                </Badge>
-                <div>
-                  <div className="text-xs font-medium text-text-primary">
-                    {src.url ? (
-                      <a
-                        href={src.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="hover:text-accent flex items-center gap-1"
-                      >
-                        {src.title} <ExternalLink className="h-3 w-3" />
-                      </a>
-                    ) : (
-                      src.title
+                        {vendor.vendor_id && (
+                          <Link
+                            to={`/thread/${vendor.vendor_id}`}
+                            style={{
+                              fontSize: 10,
+                              fontFamily: 'monospace',
+                              letterSpacing: '0.15em',
+                              textTransform: 'uppercase',
+                              color: CRIMSON_HI,
+                              textDecoration: 'none',
+                            }}
+                          >
+                            Investigation thread →
+                          </Link>
+                        )}
+                      </div>
+                    </div>
+                    {score != null && (
+                      <div style={{ textAlign: 'right', flexShrink: 0 }}>
+                        <div style={{ ...OVERLINE, fontSize: 9, marginBottom: 4 }}>RUBLI</div>
+                        <div
+                          style={{
+                            fontFamily: 'ui-monospace, SFMono-Regular, Menlo, monospace',
+                            fontSize: 28,
+                            fontWeight: 700,
+                            color: scoreColor,
+                            lineHeight: 1,
+                            letterSpacing: '-0.01em',
+                          }}
+                        >
+                          {Math.round(score * 100)}
+                          <span style={{ fontSize: 12, color: TEXT_MUTED, fontWeight: 400 }}>%</span>
+                        </div>
+                      </div>
                     )}
                   </div>
-                  <div className="text-[11px] text-text-muted">
-                    {src.outlet}{src.date ? ` · ${src.date.slice(0, 7)}` : ''}
+                )
+              })}
+            </div>
+          ) : fallbackVendorActors.length > 0 ? (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {fallbackVendorActors.map((actor, i) => (
+                <div
+                  key={i}
+                  style={{
+                    background: PANEL,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 4,
+                    padding: '16px 20px',
+                  }}
+                >
+                  <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, flexWrap: 'wrap' }}>
+                    <span
+                      style={{
+                        fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                        fontSize: 16,
+                        fontWeight: 700,
+                        color: TEXT_PRIMARY,
+                      }}
+                    >
+                      {actor.name}
+                    </span>
+                    <Pill color={accent} border={`${accent}44`} bg={`${accent}0e`}>
+                      Vendor
+                    </Pill>
+                  </div>
+                  {actor.title && (
+                    <div style={{ fontSize: 12, color: TEXT_MUTED, marginTop: 4 }}>{actor.title}</div>
+                  )}
+                  {actor.note && (
+                    <div style={{ fontSize: 12, color: TEXT_SECONDARY, marginTop: 6, lineHeight: 1.55 }}>
+                      {actor.note}
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div
+              style={{
+                background: PANEL,
+                border: `1px dashed ${BORDER_STRONG}`,
+                borderRadius: 4,
+                padding: '28px 24px',
+                textAlign: 'center',
+              }}
+            >
+              <div style={{ ...OVERLINE, color: AMBER, marginBottom: 8 }}>In progress</div>
+              <div
+                style={{
+                  fontSize: 13,
+                  color: TEXT_SECONDARY,
+                  lineHeight: 1.6,
+                  maxWidth: 480,
+                  margin: '0 auto',
+                }}
+              >
+                Vendor identification in progress via ARIA. This case exists in the narrative record but has
+                not yet been matched to specific procurement vendors.
+              </div>
+            </div>
+          )}
+
+          {institutions.length > 0 && (
+            <div style={{ marginTop: 32 }}>
+              <div style={{ ...OVERLINE, marginBottom: 12 }}>Institutions affected</div>
+              <div style={{ display: 'flex', flexWrap: 'wrap', gap: 10 }}>
+                {institutions.map((actor, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      background: PANEL,
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 4,
+                      padding: '10px 14px',
+                    }}
+                  >
+                    <InstitutionBadge name={actor.name} size={24} showTooltip={false} />
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 12, color: TEXT_PRIMARY, fontWeight: 600 }}>
+                        {actor.name}
+                      </div>
+                      {actor.title && <div style={{ fontSize: 10, color: TEXT_MUTED }}>{actor.title}</div>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {officials.length > 0 && (
+            <div style={{ marginTop: 28 }}>
+              <div style={{ ...OVERLINE, marginBottom: 12 }}>Key figures</div>
+              <div style={{ display: 'grid', gap: 10 }}>
+                {officials.map((actor, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      display: 'flex',
+                      gap: 14,
+                      background: PANEL,
+                      border: `1px solid ${BORDER}`,
+                      borderRadius: 4,
+                      padding: '14px 18px',
+                    }}
+                  >
+                    <Pill color={TEXT_SECONDARY} border={BORDER_STRONG}>
+                      {titleCase(actor.role)}
+                    </Pill>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontSize: 13, color: TEXT_PRIMARY, fontWeight: 600 }}>{actor.name}</div>
+                      {actor.title && (
+                        <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 2 }}>{actor.title}</div>
+                      )}
+                      {actor.note && (
+                        <div
+                          style={{
+                            fontSize: 12,
+                            color: TEXT_SECONDARY,
+                            marginTop: 4,
+                            lineHeight: 1.55,
+                          }}
+                        >
+                          {actor.note}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </Act>
+
+        {/* ACT IV */}
+        <Act
+          number="Act IV"
+          title="Legal outcome"
+          subtitle="The judicial disposition of this case based on public records."
+        >
+          <div
+            style={{
+              background: legal.bg,
+              border: `1px solid ${legal.border}`,
+              borderLeft: `3px solid ${legal.accent}`,
+              borderRadius: 4,
+              padding: '24px 28px',
+            }}
+          >
+            <div style={{ ...OVERLINE, color: legal.accent, marginBottom: 10 }}>
+              Status · {legal.label}
+            </div>
+            <h3
+              style={{
+                ...ACT_HEADLINE,
+                fontSize: 'clamp(1.125rem, 1.8vw, 1.375rem)',
+                marginBottom: 10,
+                lineHeight: 1.25,
+              }}
+            >
+              {legal.headline}
+            </h3>
+            <p style={{ fontSize: 14, color: TEXT_SECONDARY, lineHeight: 1.65, maxWidth: 700, margin: 0 }}>
+              {legal.subline}
+            </p>
+            {data.legal_status_note && (
+              <p
+                style={{
+                  fontSize: 12,
+                  color: TEXT_MUTED,
+                  lineHeight: 1.6,
+                  marginTop: 16,
+                  paddingTop: 16,
+                  borderTop: `1px solid ${BORDER}`,
+                  maxWidth: 700,
+                }}
+              >
+                <span style={{ ...OVERLINE, fontSize: 9, marginRight: 6 }}>Note</span>
+                {data.legal_status_note}
+              </p>
+            )}
+          </div>
+        </Act>
+
+        {/* Sources */}
+        <Act
+          number="Sources"
+          title="Public record"
+          subtitle="Reporting and audit evidence cited for this case."
+        >
+          {(data.sources ?? []).length === 0 ? (
+            <div
+              style={{
+                padding: '24px',
+                border: `1px dashed ${BORDER_STRONG}`,
+                borderRadius: 4,
+                fontSize: 12,
+                color: TEXT_MUTED,
+                textAlign: 'center',
+              }}
+            >
+              No sources recorded for this case yet.
+            </div>
+          ) : (
+            <div style={{ display: 'grid', gap: 10 }}>
+              {(data.sources ?? []).map((src, i) => (
+                <div
+                  key={i}
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'auto minmax(0,1fr)',
+                    gap: 16,
+                    background: PANEL,
+                    border: `1px solid ${BORDER}`,
+                    borderRadius: 4,
+                    padding: '14px 18px',
+                    alignItems: 'start',
+                  }}
+                >
+                  <Pill color={TEXT_SECONDARY} border={BORDER_STRONG}>
+                    {titleCase(src.type)}
+                  </Pill>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 600, color: TEXT_PRIMARY }}>
+                      {src.url ? (
+                        <a
+                          href={src.url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          style={{
+                            color: TEXT_PRIMARY,
+                            textDecoration: 'none',
+                            display: 'inline-flex',
+                            alignItems: 'center',
+                            gap: 6,
+                          }}
+                        >
+                          {src.title}
+                          <ExternalLink size={11} style={{ color: TEXT_MUTED }} />
+                        </a>
+                      ) : (
+                        src.title
+                      )}
+                    </div>
+                    <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 4 }}>
+                      {src.outlet}
+                      {src.date ? ` · ${src.date.slice(0, 7)}` : ''}
+                    </div>
                   </div>
                 </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+              ))}
+            </div>
+          )}
+        </Act>
 
-      {/* ── Similar Cases ────────────────────────────────────────────────────── */}
-      {similarCases.length > 0 && (
-        <section>
-          <p className="text-sm font-bold font-mono text-text-primary mb-3 flex items-center gap-2">
-            <FileText className="h-4 w-4 text-text-muted" />
-            {t('detail.similarCases')}
-            <span className="text-text-muted font-normal text-xs">
-              {t('detail.similarCasesSubtitle', { type: t(`fraudTypes.${data.fraud_type}`) })}
-            </span>
-          </p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-            {similarCases.map((cas) => (
-              <SimilarCaseCard
-                key={cas.slug}
-                cas={cas}
-                onClick={() => navigate(`/cases/${cas.slug}`)}
-              />
-            ))}
-          </div>
-          <div className="mt-3 text-center">
-            <button
-              onClick={() => navigate(`/cases?fraud_type=${data.fraud_type}`)}
-              className="text-xs text-text-muted hover:text-accent transition-colors"
+        {/* Similar cases */}
+        {similarCases.length > 0 && (
+          <Act
+            number="See also"
+            title={`Similar ${(
+              FRAUD_LABEL_EN[data.fraud_type] ?? titleCase(data.fraud_type)
+            ).toLowerCase()} cases`}
+            subtitle="Other documented cases of the same fraud pattern."
+          >
+            <div
+              style={{
+                display: 'grid',
+                gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))',
+                gap: 10,
+              }}
             >
-              {t('detail.viewAllCases', { type: t(`fraudTypes.${data.fraud_type}`) })}
-            </button>
-          </div>
-        </section>
-      )}
+              {similarCases.map((cas) => {
+                const sAccent = FRAUD_ACCENT[cas.fraud_type as FraudType] ?? FRAUD_ACCENT.other
+                const sName =
+                  i18n.language === 'es' && (cas as unknown as { name_es?: string }).name_es
+                    ? (cas as unknown as { name_es: string }).name_es
+                    : cas.name_en
+                return (
+                  <button
+                    key={cas.slug}
+                    onClick={() => navigate(`/cases/${cas.slug}`)}
+                    style={{
+                      textAlign: 'left',
+                      background: PANEL,
+                      border: `1px solid ${BORDER}`,
+                      borderLeft: `2px solid ${sAccent}`,
+                      borderRadius: 4,
+                      padding: '16px 18px',
+                      cursor: 'pointer',
+                      color: 'inherit',
+                      transition: 'background 160ms',
+                    }}
+                    onMouseEnter={(e) => {
+                      ;(e.currentTarget as HTMLButtonElement).style.background = PANEL_2
+                    }}
+                    onMouseLeave={(e) => {
+                      ;(e.currentTarget as HTMLButtonElement).style.background = PANEL
+                    }}
+                  >
+                    <div style={{ ...OVERLINE, fontSize: 9, color: sAccent, marginBottom: 8 }}>
+                      Severity {cas.severity}/4
+                    </div>
+                    <div
+                      style={{
+                        fontFamily: 'var(--font-family-serif, Georgia, serif)',
+                        fontSize: 15,
+                        fontWeight: 700,
+                        color: TEXT_PRIMARY,
+                        lineHeight: 1.3,
+                        marginBottom: 8,
+                      }}
+                    >
+                      {sName}
+                    </div>
+                    <div
+                      style={{
+                        display: 'flex',
+                        justifyContent: 'space-between',
+                        fontSize: 10,
+                        fontFamily: 'monospace',
+                        color: TEXT_MUTED,
+                      }}
+                    >
+                      <span>{FRAUD_LABEL_EN[cas.fraud_type] ?? titleCase(cas.fraud_type)}</span>
+                      {cas.amount_mxn_low && <span>{formatMXN(cas.amount_mxn_low)} MXN</span>}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+            <div style={{ marginTop: 18, textAlign: 'center' }}>
+              <button
+                onClick={() => navigate(`/cases?fraud_type=${data.fraud_type}`)}
+                style={{
+                  fontSize: 10,
+                  fontFamily: 'monospace',
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  color: TEXT_MUTED,
+                  background: 'transparent',
+                  border: 'none',
+                  cursor: 'pointer',
+                  padding: 0,
+                }}
+                onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = CRIMSON_HI)}
+                onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = TEXT_MUTED)}
+              >
+                View all {FRAUD_LABEL_EN[data.fraud_type] ?? titleCase(data.fraud_type)} cases →
+              </button>
+            </div>
+          </Act>
+        )}
+      </main>
     </div>
   )
 }
