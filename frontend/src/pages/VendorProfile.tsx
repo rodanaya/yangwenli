@@ -843,6 +843,10 @@ export function VendorProfile() {
     queryFn: () => vendorApi.getById(vendorId),
     enabled: !!vendorId,
     staleTime: 5 * 60 * 1000,
+    retry: (count, err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      return status !== 404 && count < 2
+    },
   })
 
   // Fetch vendor risk profile

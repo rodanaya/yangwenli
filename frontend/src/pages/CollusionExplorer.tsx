@@ -803,16 +803,27 @@ export default function CollusionExplorer() {
     <div className="min-h-screen bg-zinc-950 text-zinc-100">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <EditorialPageShell
-          kicker="NETWORK ANALYSIS · BID-RING DETECTION"
+          kicker={isEs ? 'ANÁLISIS DE REDES · DETECCIÓN DE ANILLOS DE COLUSIÓN' : 'NETWORK ANALYSIS · BID-RING DETECTION'}
           headline={
-            <>
-              Pairs are evidence.{' '}
-              <span style={{ color: 'var(--color-risk-critical)' }}>
-                Rings are the investigation.
-              </span>
-            </>
+            isEs ? (
+              <>
+                Los pares son evidencia.{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>
+                  Los anillos son la investigación.
+                </span>
+              </>
+            ) : (
+              <>
+                Pairs are evidence.{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>
+                  Rings are the investigation.
+                </span>
+              </>
+            )
           }
-          paragraph="A vendor bidding repeatedly against the same partner is a coincidence. Three or more vendors bidding in overlapping pairs — A with B, B with C, C with A — is a structure. We group every flagged pair into connected components: each component is a bid-ring. The ring is the unit of accountability."
+          paragraph={isEs
+            ? 'Un proveedor que licita repetidamente contra el mismo socio es una coincidencia. Tres o más proveedores que licitan en pares solapados — A con B, B con C, C con A — es una estructura. Agrupamos cada par marcado en componentes conectados: cada componente es un anillo de colusión. El anillo es la unidad de rendición de cuentas.'
+            : 'A vendor bidding repeatedly against the same partner is a coincidence. Three or more vendors bidding in overlapping pairs — A with B, B with C, C with A — is a structure. We group every flagged pair into connected components: each component is a bid-ring. The ring is the unit of accountability.'}
           stats={
             statsLoading
               ? undefined
@@ -826,7 +837,7 @@ export default function CollusionExplorer() {
                   {
                     value: formatNumber(safeStats?.potential_collusion_count ?? 0),
                     label: isEs ? 'Conexiones sospechosas' : 'Suspicious connections',
-                    sub: isEs ? 'pares flagged' : 'flagged pairs',
+                    sub: isEs ? 'pares marcados' : 'flagged pairs',
                   },
                   {
                     value: formatNumber(safeStats?.total_shared_procedures ?? 0),

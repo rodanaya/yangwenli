@@ -553,6 +553,10 @@ export default function CaseDetail() {
     queryFn: slug ? () => caseLibraryApi.getBySlug(slug) : () => Promise.reject(new Error('No slug')),
     enabled: !!slug,
     staleTime: 10 * 60 * 1000,
+    retry: (count, err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      return status !== 404 && count < 2
+    },
   })
 
   const { data: allCases } = useQuery({

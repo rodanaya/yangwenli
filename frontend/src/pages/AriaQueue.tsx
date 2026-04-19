@@ -560,7 +560,8 @@ export default function AriaPage() {
     ? tier1Items.reduce((s, x) => s + (x.avg_risk_score ?? 0), 0) / tier1Items.length
     : null
 
-  const locale = i18n.language === 'es' ? 'es-MX' : 'en-US'
+  const isEs = i18n.language === 'es'
+  const locale = isEs ? 'es-MX' : 'en-US'
   const lastRunAt = stats?.latest_run?.completed_at
     ? new Intl.DateTimeFormat(locale, {
         month: 'short', day: 'numeric', year: 'numeric',
@@ -608,24 +609,34 @@ export default function AriaPage() {
     <div className="min-h-screen bg-background">
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
         <EditorialPageShell
-          kicker={`ARIA QUEUE · ACTIVE INVESTIGATION BUREAU${lastRunAt ? ` · SYNCED ${lastRunAt.toUpperCase()}` : ''}`}
+          kicker={isEs
+            ? `COLA ARIA · BURÓ DE INVESTIGACIÓN ACTIVA${lastRunAt ? ` · SINCRONIZADO ${lastRunAt.toUpperCase()}` : ''}`
+            : `ARIA QUEUE · ACTIVE INVESTIGATION BUREAU${lastRunAt ? ` · SYNCED ${lastRunAt.toUpperCase()}` : ''}`
+          }
           headline={
-            statsLoading ? 'Loading queue...' : (
+            statsLoading ? (isEs ? 'Cargando cola...' : 'Loading queue...') : (
               <>
-                {formatNumber(tierCounts[1])} vendors trip every{' '}
-                <span style={{ color: 'var(--color-risk-critical)' }}>corruption pattern</span>{' '}
-                in our model.
+                {formatNumber(tierCounts[1])}{' '}
+                {isEs ? 'proveedores activan cada' : 'vendors trip every'}{' '}
+                <span style={{ color: 'var(--color-risk-critical)' }}>
+                  {isEs ? 'patrón de corrupción' : 'corruption pattern'}
+                </span>{' '}
+                {isEs ? 'en nuestro modelo.' : 'in our model.'}
               </>
             )
           }
           paragraph={
-            statsLoading ? 'Loading...' : `These are the ${formatNumber(tierCounts[1])} highest-risk vendors in Mexican federal procurement. Each one matches the structural fingerprint of at least three documented corruption cases. ${elevatedValue > 0 ? formatCompactMXN(elevatedValue) + ' flows through their contracts.' : ''}`
+            statsLoading
+              ? (isEs ? 'Cargando...' : 'Loading...')
+              : isEs
+                ? `Estos son los ${formatNumber(tierCounts[1])} proveedores de mayor riesgo en la contratación pública federal mexicana. Cada uno coincide con la huella estructural de al menos tres casos documentados de corrupción.${elevatedValue > 0 ? ' ' + formatCompactMXN(elevatedValue) + ' fluyen a través de sus contratos.' : ''}`
+                : `These are the ${formatNumber(tierCounts[1])} highest-risk vendors in Mexican federal procurement. Each one matches the structural fingerprint of at least three documented corruption cases.${elevatedValue > 0 ? ' ' + formatCompactMXN(elevatedValue) + ' flows through their contracts.' : ''}`
           }
           stats={statsLoading ? undefined : [
-            { value: formatNumber(tierCounts[1]), label: 'T1 Critical', color: 'var(--color-risk-critical)' },
-            { value: formatNumber(tierCounts[2]), label: 'T2 High', color: 'var(--color-risk-high)' },
-            { value: formatNumber(tierCounts[3]), label: 'T3 Medium' },
-            { value: elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—', label: 'Value at risk', color: 'var(--color-accent)' },
+            { value: formatNumber(tierCounts[1]), label: isEs ? 'T1 Crítico' : 'T1 Critical', color: 'var(--color-risk-critical)' },
+            { value: formatNumber(tierCounts[2]), label: isEs ? 'T2 Alto' : 'T2 High', color: 'var(--color-risk-high)' },
+            { value: formatNumber(tierCounts[3]), label: isEs ? 'T3 Medio' : 'T3 Medium' },
+            { value: elevatedValue > 0 ? formatCompactMXN(elevatedValue) : '—', label: isEs ? 'Valor en riesgo' : 'Value at risk', color: 'var(--color-accent)' },
           ]}
           loading={statsLoading}
           severity="critical"

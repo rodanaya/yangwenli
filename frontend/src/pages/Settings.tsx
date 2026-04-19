@@ -476,6 +476,21 @@ function DataQualityTab() {
 
   if (!data) return null
 
+  // Metrics haven't been computed yet — last_calculated is null and arrays are empty
+  if (!data.last_calculated && data.grade_distribution.length === 0) {
+    return (
+      <Card>
+        <CardContent className="p-10 text-center space-y-3">
+          <Database className="h-8 w-8 mx-auto text-text-muted opacity-40" />
+          <p className="text-sm font-medium text-text-primary">Data Quality Metrics Not Yet Computed</p>
+          <p className="text-xs text-text-muted max-w-sm mx-auto">
+            Run <code className="bg-background-card px-1.5 py-0.5 rounded text-accent font-mono">python -m scripts.precompute_stats</code> from the backend directory to generate quality metrics for {formatNumber(data.total_contracts)} contracts.
+          </p>
+        </CardContent>
+      </Card>
+    )
+  }
+
   const overallGrade = getGradeFromScore(data.overall_score)
 
   return (

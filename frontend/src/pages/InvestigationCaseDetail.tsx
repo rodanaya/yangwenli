@@ -192,6 +192,10 @@ export function InvestigationCaseDetail() {
     queryFn: () => investigationApi.getCaseById(caseId!),
     staleTime: 5 * 60 * 1000,
     enabled: !!caseId,
+    retry: (count, err) => {
+      const status = (err as { response?: { status?: number } })?.response?.status
+      return status !== 404 && count < 2
+    },
   })
 
   // Review mutation

@@ -183,18 +183,19 @@ interface ColumnDef {
   align: 'left' | 'center' | 'right'
   sortField?: ContractSortField
   hideBelow?: string
+  thClass?: string
 }
 
 // Column definitions — labels resolved via t() inside the component (Fix 4)
 const CONTRACT_COLUMN_DEFS: ColumnDef[] = [
-  { key: 'risk', labelKey: 'columns.risk', align: 'center', sortField: 'risk_score' },
-  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn' },
-  { key: 'vendor', labelKey: 'columns.vendor', align: 'left', sortField: 'vendor_name' },
-  { key: 'institution', labelKey: 'columns.institution', align: 'left', sortField: 'institution_name' },
-  { key: 'sector', labelKey: 'columns.sector', align: 'left', sortField: 'sector_id' },
-  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date' },
-  { key: 'procedure', labelKey: 'columns.procedure', align: 'left' },
-  { key: 'anomaly', labelKey: 'columns.anomalyScore', align: 'right', sortField: 'mahalanobis_distance' },
+  { key: 'risk', labelKey: 'columns.risk', align: 'center', sortField: 'risk_score', thClass: 'w-16' },
+  { key: 'amount', labelKey: 'columns.amount', align: 'right', sortField: 'amount_mxn', thClass: 'w-28' },
+  { key: 'vendor', labelKey: 'columns.vendor', align: 'left', sortField: 'vendor_name', thClass: 'w-44' },
+  { key: 'institution', labelKey: 'columns.institution', align: 'left', sortField: 'institution_name', thClass: 'w-44' },
+  { key: 'sector', labelKey: 'columns.sector', align: 'left', sortField: 'sector_id', thClass: 'w-24' },
+  { key: 'date', labelKey: 'columns.date', align: 'right', sortField: 'contract_date', thClass: 'w-24' },
+  { key: 'procedure', labelKey: 'columns.procedure', align: 'left', thClass: 'w-24' },
+  { key: 'anomaly', labelKey: 'columns.anomalyScore', align: 'right', sortField: 'mahalanobis_distance', thClass: 'w-20' },
 ]
 
 // =============================================================================
@@ -1081,7 +1082,7 @@ export function Contracts() {
                 overflow-hidden root which clips the min-w content on mobile */}
             <div className="overflow-x-auto overflow-y-auto h-[600px]">
               <div className="min-w-[700px]">
-              <table className="w-full" role="table" aria-label="Contracts list">
+              <table className="w-full table-fixed" role="table" aria-label="Contracts list">
                 <thead className="sticky top-0 z-10 bg-background-card/95 backdrop-blur-sm border-b border-border">
                   <tr>
                     <th className="px-2 py-2 w-8" title={t('table.selectForCompare')}>
@@ -1106,7 +1107,8 @@ export function Contracts() {
                           col.sortField && 'cursor-pointer hover:text-accent transition-colors',
                           col.align === 'right' ? 'text-right' : col.align === 'center' ? 'text-center' : 'text-left',
                           col.hideBelow === 'lg' && 'hidden lg:table-cell',
-                          col.sortField && sortBy === col.sortField ? 'text-accent' : 'text-text-muted'
+                          col.sortField && sortBy === col.sortField ? 'text-accent' : 'text-text-muted',
+                          col.thClass
                         )}
                         onClick={col.sortField ? () => handleSort(col.sortField!) : undefined}
                         title={col.key === 'anomaly' ? t('table.anomalyTooltip') : undefined}
