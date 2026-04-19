@@ -776,6 +776,99 @@
     border-bottom-color: color-mix(in oklab, var(--color-accent) 15%, var(--color-border));
   }
 
+  /* ─── EDITORIAL PAGE SHELL — lede block ───────────────────────────── */
+  .lede-dateline {
+    font-family: var(--font-family-mono);
+    font-size: 0.6875rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+  .lede-headline {
+    font-family: var(--font-family-serif);
+    font-size: clamp(1.75rem, 4vw, 2.75rem);
+    font-weight: 800;
+    line-height: 1.06;
+    letter-spacing: -0.03em;
+    color: var(--color-text-primary);
+  }
+  .measure-headline { max-width: 36rem; }
+  .lede-paragraph {
+    font-size: 1rem;
+    line-height: 1.65;
+    color: var(--color-text-secondary);
+    max-width: 60ch;
+  }
+
+  /* ─── STAT STRIP ───────────────────────────────────────────────────── */
+  .stat-strip {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 2.5rem;
+  }
+  .stat-strip-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.125rem;
+  }
+  .stat-strip-value {
+    font-family: var(--font-family-sans);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1;
+    letter-spacing: -0.02em;
+    font-variant-numeric: tabular-nums;
+    color: var(--color-accent);
+  }
+  .stat-strip-label {
+    font-family: var(--font-family-mono);
+    font-size: 0.6875rem;
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+  }
+
+  /* ─── ACT DIVIDER ──────────────────────────────────────────────────── */
+  .act-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 1.5rem;
+  }
+  .act-num {
+    font-family: var(--font-family-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+  .act-rule {
+    flex: 1;
+    height: 1px;
+    background: var(--color-border);
+  }
+  .act-label {
+    font-family: var(--font-family-mono);
+    font-size: 0.625rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--color-text-muted);
+    flex-shrink: 0;
+  }
+  .act-title {
+    font-family: var(--font-family-serif);
+    font-size: 1.5rem;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--color-text-primary);
+  }
+
 }
 
 
