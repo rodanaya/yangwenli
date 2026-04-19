@@ -358,5 +358,13 @@
     "metricHR": "Alto Riesgo %",
     "metricSB": "Lic. Única %"
   },
-  "share": "Compartir"
+  "share": "Compartir",
+  "lede": {
+    "rose": "subió",
+    "fell": "cayó",
+    "contracts": "contratos",
+    "kicker": "Hallazgo sexenal · Adjudicación directa {{direction}} {{absDelta}} pp",
+    "deck": "El traspaso de {{prevName}} a {{currName}} trajo el mayor giro en contratación sin concurso del periodo analizado: la adjudicación directa {{direction}} de {{prevPct}}% a {{currPct}}% — una señal de cómo cambia la competencia cuando cambia el régimen.",
+    "viewDossier": "Ver expediente de {{name}}"
+  }
 }

@@ -258,5 +258,21 @@
     "tooltipDirectAward": "Adj. directa:",
     "tooltipAboveOECD": "{{x}}x sobre límite OCDE",
     "tooltipWithinOECD": "Dentro del límite OCDE"
+  },
+  "trendChart": {
+    "eyebrow": "Tendencia temporal",
+    "title": "Riesgo promedio por sector 2015-2025"
+  },
+  "featured": {
+    "kicker": "Lede sectorial · {{sector}}",
+    "leadsRisk": "encabeza el riesgo con",
+    "avgRiskSuffix": "de riesgo promedio",
+    "deck": "{{exceedingOECD}} de 12 sectores rebasan el umbral OCDE del 25% en adjudicación directa. El líder combina {{topRiskPct}}% de riesgo con {{topDaPct}}% de contratos adjudicados sin concurso.",
+    "meta": {
+      "leaderRisk": "Riesgo promedio líder",
+      "totalValue": "Valor total 2002–2025",
+      "contracts": "Contratos",
+      "sectorsBeyond": "Sectores > OCDE 25%"
+    }
   }
 }

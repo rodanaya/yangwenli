@@ -475,5 +475,12 @@
     }
   },
   "copyCitation": "Copy citation",
-  "citationCopied": "Citation copied!"
+  "citationCopied": "Citation copied!",
+  "hero": {
+    "breadcrumb": "Methodology · Model Transparency",
+    "modelType": "Logistic regression",
+    "kicker": "Active model",
+    "headline": "Model Transparency",
+    "subtitle": "How we score {{n}} Mexican federal procurement contracts for corruption risk — the variables, the math, and the auditable trail."
+  }
 }

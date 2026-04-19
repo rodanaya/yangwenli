@@ -104,5 +104,12 @@
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo"
-  }
+  },
+  "scatter": {
+    "axesLabel": "Ejes",
+    "xAxis": "X: Puntuación de riesgo promedio (0 → 1)",
+    "yAxis": "Y: IPS — Índice de Prioridad de Investigación (0 → 100)",
+    "desc": "Matriz de priorización: IPS vs puntuación de riesgo. Cada burbuja es un proveedor en vigilancia activa — clic para abrir su expediente."
+  },
+  "matrixEyebrow": "Inteligencia Artificial · Cola de Investigación"
 }

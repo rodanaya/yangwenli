@@ -104,5 +104,12 @@
     "high": "High",
     "medium": "Medium",
     "low": "Low"
-  }
+  },
+  "scatter": {
+    "axesLabel": "Axes",
+    "xAxis": "X: Avg risk score (0 → 1)",
+    "yAxis": "Y: IPS — Investigation Priority Score (0 → 100)",
+    "desc": "Prioritization matrix: IPS vs risk score. Each bubble is a vendor under active surveillance — click to open dossier."
+  },
+  "matrixEyebrow": "Artificial Intelligence · Investigation Queue"
 }

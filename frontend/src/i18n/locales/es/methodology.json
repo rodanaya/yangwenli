@@ -475,5 +475,12 @@
     }
   },
   "copyCitation": "Copiar cita",
-  "citationCopied": "Cita copiada!"
+  "citationCopied": "Cita copiada!",
+  "hero": {
+    "breadcrumb": "Metodología · Transparencia del modelo",
+    "modelType": "Regresión logística",
+    "kicker": "Modelo activo",
+    "headline": "Transparencia del modelo",
+    "subtitle": "Cómo calificamos {{n}} contratos del gobierno federal mexicano por riesgo de corrupción — las variables, las matemáticas, y el rastro auditable."
+  }
 }

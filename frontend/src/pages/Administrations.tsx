@@ -1248,27 +1248,27 @@ export default function Administrations() {
       {headlineTransition && (() => {
         const { top, prev, curr } = headlineTransition
         const deltaValue = top.dDA.value
-        const direction = deltaValue > 0 ? 'subió' : 'cayó'
+        const direction = deltaValue > 0 ? t('lede.rose') : t('lede.fell')
         const absDelta = Math.abs(deltaValue).toFixed(1)
         const accent = deltaValue > 0 ? '#f87171' : '#4ade80'
         return (
           <FeaturedComparison
-            kicker={`Hallazgo sexenal · Adjudicación directa ${direction} ${absDelta} pp`}
+            kicker={t('lede.kicker', { direction, absDelta })}
             accent={accent}
             entityA={{
               name: prev.name,
-              subtitle: `${prev.directAwardPct.toFixed(1)}% DA · ${formatNumber(prev.contracts)} contratos`,
+              subtitle: `${prev.directAwardPct.toFixed(1)}% DA · ${formatNumber(prev.contracts)} ${t('lede.contracts')}`,
               share: prev.directAwardPct,
             }}
             entityB={{
               name: curr.name,
-              subtitle: `${curr.directAwardPct.toFixed(1)}% DA · ${formatNumber(curr.contracts)} contratos`,
+              subtitle: `${curr.directAwardPct.toFixed(1)}% DA · ${formatNumber(curr.contracts)} ${t('lede.contracts')}`,
               share: curr.directAwardPct,
             }}
             centerLabel={`${deltaValue > 0 ? '+' : ''}${deltaValue.toFixed(1)} pp`}
-            deck={`El traspaso de ${prev.name} a ${curr.name} trajo el mayor giro en contratación sin concurso del periodo analizado: la adjudicación directa ${direction} de ${prev.directAwardPct.toFixed(1)}% a ${curr.directAwardPct.toFixed(1)}% — una señal de cómo cambia la competencia cuando cambia el régimen.`}
+            deck={t('lede.deck', { prevName: prev.name, currName: curr.name, direction, prevPct: prev.directAwardPct.toFixed(1), currPct: curr.directAwardPct.toFixed(1) })}
             action={{
-              label: `Ver expediente de ${curr.name}`,
+              label: t('lede.viewDossier', { name: curr.name }),
               onClick: () => setSelectedAdmin(curr.name),
             }}
             tintColor={top.toColor}

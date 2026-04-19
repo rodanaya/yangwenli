@@ -6,6 +6,7 @@
  */
 
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { useQuery } from '@tanstack/react-query'
@@ -706,6 +707,7 @@ function AuditTrailTab() {
 // ============================================================================
 
 export default function ModelTransparency() {
+  const { t } = useTranslation('methodology')
   // Live metadata (AUC + freshness)
   const { data: modelMeta } = useQuery({
     queryKey: ['model', 'metadata'],
@@ -783,13 +785,13 @@ export default function ModelTransparency() {
             <span className="text-zinc-300">RUBLI</span>
           </span>
           <span className="text-zinc-700">·</span>
-          <span>Metodología · Transparencia del modelo</span>
+          <span>{t('hero.breadcrumb')}</span>
           <span className="text-zinc-700">·</span>
           <span className="tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
           <span className="text-zinc-700">·</span>
-          <span>Regresión logística</span>
+          <span>{t('hero.modelType')}</span>
         </div>
-        <p className="text-kicker text-kicker--investigation mb-3">Modelo activo</p>
+        <p className="text-kicker text-kicker--investigation mb-3">{t('hero.kicker')}</p>
         <h1
           className="text-zinc-50 leading-[1.05]"
           style={{
@@ -799,7 +801,7 @@ export default function ModelTransparency() {
             letterSpacing: '-0.025em',
           }}
         >
-          Transparencia del modelo
+          {t('hero.headline')}
         </h1>
         <p
           className="mt-3 max-w-3xl text-zinc-300"
@@ -810,8 +812,7 @@ export default function ModelTransparency() {
             lineHeight: 1.55,
           }}
         >
-          Cómo calificamos {formatNumber(nContracts)} contratos del gobierno federal
-          mexicano por riesgo de corrupción — las variables, las matemáticas, y el rastro auditable.
+          {t('hero.subtitle', { n: formatNumber(nContracts) })}
         </p>
         <div className="flex flex-wrap items-center gap-4 mt-5">
           <span

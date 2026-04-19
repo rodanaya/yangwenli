@@ -351,10 +351,10 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
   return (
     <div className="surface-card p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-        Tendencia temporal
+        {t('trendChart.eyebrow')}
       </p>
       <h3 className="text-sm font-bold text-white mb-3">
-        Riesgo promedio por sector 2015-2025
+        {t('trendChart.title')}
       </h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
@@ -536,22 +536,22 @@ export function Sectors() {
           const topDaPct = (topRiskSector.direct_award_pct ?? 0).toFixed(0)
           return (
             <FeaturedFinding
-              kicker={`Lede sectorial · ${topSectorName.toUpperCase()}`}
+              kicker={t('featured.kicker', { sector: topSectorName.toUpperCase() })}
               accent={topSectorColor}
               headline={
                 <>
                   <span style={{ color: topSectorColor }}>{topSectorName}</span>
-                  {' '}encabeza el riesgo con{' '}
+                  {' '}{t('featured.leadsRisk')}{' '}
                   <span className="tabular-nums">{topRiskPct}%</span>
-                  {' '}de riesgo promedio
+                  {' '}{t('featured.avgRiskSuffix')}
                 </>
               }
-              deck={`${exceedingOECD} de 12 sectores rebasan el umbral OCDE del 25% en adjudicación directa. El líder combina ${topRiskPct}% de riesgo con ${topDaPct}% de contratos adjudicados sin concurso.`}
+              deck={t('featured.deck', { exceedingOECD, topRiskPct, topDaPct })}
               meta={[
-                { label: 'Riesgo promedio líder', value: `${topRiskPct}%`, accent: true },
-                { label: 'Valor total 2002–2025', value: formatSpend(totalValue) },
-                { label: 'Contratos', value: formatNumber(totalContracts) },
-                { label: 'Sectores > OCDE 25%', value: `${exceedingOECD} / 12` },
+                { label: t('featured.meta.leaderRisk'), value: `${topRiskPct}%`, accent: true },
+                { label: t('featured.meta.totalValue'), value: formatSpend(totalValue) },
+                { label: t('featured.meta.contracts'), value: formatNumber(totalContracts) },
+                { label: t('featured.meta.sectorsBeyond'), value: `${exceedingOECD} / 12` },
               ]}
             />
           )

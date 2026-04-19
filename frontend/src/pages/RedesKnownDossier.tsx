@@ -149,6 +149,7 @@ interface RiskMatrixProps {
 type ScatterPoint = [number, number, number, string, number, string, number]
 
 function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
+  const { t } = useTranslation('redes')
   const seriesData = useMemo(() => {
     // Group dossiers by primary_pattern so each pattern is its own series
     const grouped: Record<string, ScatterPoint[]> = {}
@@ -364,13 +365,13 @@ function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
         {/* Axes guide */}
         <div className="ml-auto text-right">
           <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
-            Ejes
+            {t('scatter.axesLabel')}
           </p>
           <p className="text-[10px] text-text-muted/60">
-            X: Puntuación de riesgo promedio (0 → 1)
+            {t('scatter.xAxis')}
           </p>
           <p className="text-[10px] text-text-muted/60">
-            Y: IPS — Índice de Prioridad de Investigación (0 → 100)
+            {t('scatter.yAxis')}
           </p>
         </div>
       </div>
@@ -483,13 +484,13 @@ export default function RedesKnownDossier() {
       {/* Editorial header */}
       <div className="border-b border-border pb-6 mb-8">
         <div className="text-[10px] tracking-[0.3em] uppercase text-text-muted mb-2">
-          Inteligencia Artificial · Cola de Investigación
+          {t('matrixEyebrow')}
         </div>
         <h1 style={{ fontFamily: 'var(--font-family-serif)' }} className="text-2xl font-bold text-text-primary mb-2">
           {t('header.title')}
         </h1>
         <p className="text-sm text-text-secondary max-w-2xl">
-          Matriz de priorización: IPS vs puntuación de riesgo. Cada burbuja es un proveedor en vigilancia activa — clic para abrir su expediente.
+          {t('scatter.desc')}
         </p>
       </div>
 

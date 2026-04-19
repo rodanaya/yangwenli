@@ -258,5 +258,21 @@
     "tooltipDirectAward": "Direct award:",
     "tooltipAboveOECD": "{{x}}x above OECD limit",
     "tooltipWithinOECD": "Within OECD limit"
+  },
+  "trendChart": {
+    "eyebrow": "Temporal trend",
+    "title": "Avg risk by sector 2015–2025"
+  },
+  "featured": {
+    "kicker": "Sector lede · {{sector}}",
+    "leadsRisk": "leads in risk with",
+    "avgRiskSuffix": "average risk",
+    "deck": "{{exceedingOECD}} of 12 sectors exceed the OECD 25% direct-award threshold. The leader combines {{topRiskPct}}% risk with {{topDaPct}}% of contracts awarded without competitive bidding.",
+    "meta": {
+      "leaderRisk": "Leading sector risk",
+      "totalValue": "Total value 2002–2025",
+      "contracts": "Contracts",
+      "sectorsBeyond": "Sectors > OECD 25%"
+    }
   }
 }

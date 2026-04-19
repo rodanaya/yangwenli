@@ -358,5 +358,13 @@
     "metricHR": "High Risk %",
     "metricSB": "Single Bid %"
   },
-  "share": "Share"
+  "share": "Share",
+  "lede": {
+    "rose": "rose",
+    "fell": "fell",
+    "contracts": "contracts",
+    "kicker": "Sexenio finding · Direct award {{direction}} {{absDelta}} pp",
+    "deck": "The handover from {{prevName}} to {{currName}} brought the sharpest swing in non-competitive contracting of the analyzed period: direct awards {{direction}} from {{prevPct}}% to {{currPct}}% — a signal of how competition changes when administrations change.",
+    "viewDossier": "View dossier for {{name}}"
+  }
 }
