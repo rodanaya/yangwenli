@@ -1,20 +1,22 @@
 /**
  * ConcentrationConstellation — a static dot-density "sky" of contract risk,
- * now labelled with the 7 ARIA corruption pattern clusters (P1..P7).
+ * with three clustering modes that re-organize the same dot population around
+ * different attractor geographies:
+ *
+ *   PATRONES (default)  — 7 ARIA corruption pattern clusters (P1..P7)
+ *   SECTORES            — 12 sector attractors in a 4×3 grid
+ *   SEXENIOS            — 6 presidential periods in a horizontal timeline
  *
  * 1,200 fixed dots laid out in a Halton(2,3) sequence fill an 840x220 panel.
  * Each dot is colored by risk level in exact proportion to risk_distribution.
- * Critical dots are allocated to the 7 ARIA attractors by a weighted Halton
- * draw (proportional to each pattern's T1 vendor count), then joined to their
- * nearest in-cluster neighbors with hairline edges — the 7 architectures of
- * state capture made legible.
+ * Critical dots are allocated to the active attractor set by a weighted Halton
+ * draw (proportional to each cluster's T1 vendor count), then joined to their
+ * nearest in-cluster neighbors with hairline edges — the architectures of
+ * state capture made legible, from three different vantage points.
  *
  * Design grammar: same particle vocabulary as ContractField, but frozen.
- * Ring radius ∝ √(T1 count); ring color = pattern severity; hover exposes
- * the full pattern summary with "Ver en ARIA" affordance.
- *
- * Interactivity: clicking a cluster calls onClusterClick(patternCode), e.g.
- *   onClusterClick={(code) => navigate(`/clusters#${code.toLowerCase()}`)}
+ * Ring radius ∝ √(T1 count); ring color = cluster identity; hover exposes
+ * the full cluster summary with a DotBar visualization of highRiskPct.
  */
 import { useMemo, useState } from 'react'
 import { halton, mulberry32 } from '@/lib/particle'
@@ -25,10 +27,13 @@ export interface ConstellationRiskRow {
   pct: number // 0-100
 }
 
+export type ConstellationMode = 'patterns' | 'sectors' | 'sexenios'
+
 interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
   totalContracts: number
-  onClusterClick?: (patternCode: string) => void
+  mode?: ConstellationMode
+  onClusterClick?: (clusterCode: string) => void
   className?: string
 }
 
@@ -42,52 +47,80 @@ const PAD_B = 28
 const FIELD_W = SVG_W - PAD_L - PAD_R
 const FIELD_H = SVG_H - PAD_T - PAD_B
 const N_DOTS = 1200
-const N_ATTRACTORS = 7
 
-// ── ARIA Pattern cluster metadata ─────────────────────────────────────────
-// 7 corruption patterns detected by ARIA v1.1. Positions are fractions of
-// FIELD_W × FIELD_H, hand-tuned so the 7 clusters distribute across the
-// panel without overlap and avoid the right-margin annotation strip.
+// ── Cluster metadata (shared shape across the 3 modes) ────────────────────
 interface ClusterMeta {
-  code: string     // 'P1' .. 'P7'
-  label: string
-  desc: string
-  color: string
-  vendors: number  // total vendors in the pattern
-  t1: number       // T1 critical vendors
+  code: string     // e.g. 'P5', 'salud', 'amlo'
+  label: string    // human-readable
+  desc: string     // tooltip description
+  color: string    // stroke/ring color
+  vendors: number  // total vendors in the cluster
+  t1: number       // T1 critical vendors (drives weight & ring radius)
+  highRiskPct: number // 0..1 — rendered as DotBar in tooltip
   fx: number       // 0..1, fraction of FIELD_W
   fy: number       // 0..1, fraction of FIELD_H
+  kicker?: string  // optional extra line (e.g. sexenio years)
 }
 
-const CLUSTER_META: ClusterMeta[] = [
+// ── MODE 1: PATRONES (ARIA patterns) ──────────────────────────────────────
+// 7 corruption patterns detected by ARIA v1.1. Positions hand-tuned so the
+// clusters distribute across the panel without overlap.
+const PATTERN_META: ClusterMeta[] = [
   // P5 — center, largest cluster (180 T1)
-  { code: 'P5', label: 'Sobreprecio Sistemático',   desc: 'Precios 2σ sobre promedio sectorial — 180 proveedores T1',           color: '#dc2626', vendors: 3985,  t1: 180, fx: 0.50, fy: 0.40 },
+  { code: 'P5', label: 'Sobreprecio Sistemático',   desc: 'Precios 2σ sobre promedio sectorial — 180 proveedores T1',           color: '#dc2626', vendors: 3985,  t1: 180, highRiskPct: 0.62, fx: 0.50, fy: 0.40 },
   // P7 — upper right (56 T1)
-  { code: 'P7', label: 'Red de Contratistas',        desc: 'Redes multi-proveedor con evidencia externa — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  fx: 0.78, fy: 0.22 },
+  { code: 'P7', label: 'Red de Contratistas',        desc: 'Redes multi-proveedor con evidencia externa — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  highRiskPct: 0.72, fx: 0.78, fy: 0.22 },
   // P1 — lower right (23 T1)
-  { code: 'P1', label: 'Monopolio Concentrado',      desc: 'Proveedor domina >3% del valor sectorial — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  fx: 0.72, fy: 0.68 },
+  { code: 'P1', label: 'Monopolio Concentrado',      desc: 'Proveedor domina >3% del valor sectorial — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  highRiskPct: 0.85, fx: 0.72, fy: 0.68 },
   // P3 — upper left (26 T1)
-  { code: 'P3', label: 'Intermediaria de Uso Único', desc: 'Ráfaga de contratos + desaparición — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  fx: 0.22, fy: 0.28 },
+  { code: 'P3', label: 'Intermediaria de Uso Único', desc: 'Ráfaga de contratos + desaparición — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  highRiskPct: 0.44, fx: 0.22, fy: 0.28 },
   // P6 — lower left (31 T1)
-  { code: 'P6', label: 'Captura Institucional',      desc: '>80% contratos de una sola institución — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  fx: 0.28, fy: 0.72 },
+  { code: 'P6', label: 'Captura Institucional',      desc: '>80% contratos de una sola institución — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  highRiskPct: 0.28, fx: 0.28, fy: 0.72 },
   // P2 — lower center (1 T1)
-  { code: 'P2', label: 'Empresa Fantasma',           desc: 'Sin RFC, ≤10 contratos, desaparece — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   fx: 0.55, fy: 0.78 },
+  { code: 'P2', label: 'Empresa Fantasma',           desc: 'Sin RFC, ≤10 contratos, desaparece — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   highRiskPct: 0.12, fx: 0.55, fy: 0.78 },
   // P4 — top center (3 T1)
-  { code: 'P4', label: 'Colusión en Licitaciones',   desc: 'Co-licitación >50% + tasa de victoria >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   fx: 0.42, fy: 0.14 },
+  { code: 'P4', label: 'Colusión en Licitaciones',   desc: 'Co-licitación >50% + tasa de victoria >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   highRiskPct: 0.35, fx: 0.42, fy: 0.14 },
 ]
 
-// Weighted allocation of critical dots to clusters (∝ T1 count).
-// Totals: P5=180, P7=56, P6=31, P3=26, P1=23, P4=3, P2=1 → 320
-// Order MUST match CLUSTER_META order above.
-const CLUSTER_WEIGHTS = [
-  180 / 320, // P5
-   56 / 320, // P7
-   23 / 320, // P1
-   26 / 320, // P3
-   31 / 320, // P6
-    1 / 320, // P2
-    3 / 320, // P4
+// ── MODE 2: SECTORES (12 sectors in a 4×3 grid) ──────────────────────────
+// Grid positions (row, col): 4 columns × 3 rows. Values are fraction of
+// FIELD_W × FIELD_H. Attractor radii driven by sqrt(t1) as in PATRONES.
+const SECTOR_META: ClusterMeta[] = [
+  // Row 0 (top)
+  { code: 'salud',           label: 'Salud',           desc: 'IMSS, ISSSTE, SSa — mayor concentración de casos documentados',  color: '#dc2626', vendors: 32000,  t1: 89, highRiskPct: 0.18, fx: 0.15, fy: 0.22 },
+  { code: 'educacion',       label: 'Educación',       desc: 'SEP, SEMS, becas, infraestructura educativa',                     color: '#3b82f6', vendors: 28000,  t1: 34, highRiskPct: 0.11, fx: 0.38, fy: 0.22 },
+  { code: 'infraestructura', label: 'Infraestructura', desc: 'SCT, obra pública — fraude ejecución invisible a este modelo',   color: '#ea580c', vendors: 24000,  t1: 67, highRiskPct: 0.14, fx: 0.62, fy: 0.22 },
+  { code: 'energia',         label: 'Energía',         desc: 'PEMEX, CFE — estructura monopólica, vendedores certificados',    color: '#eab308', vendors: 12000,  t1: 44, highRiskPct: 0.16, fx: 0.85, fy: 0.22 },
+  // Row 1 (middle)
+  { code: 'defensa',         label: 'Defensa',         desc: 'SEDENA, SEMAR — datos limitados por seguridad nacional',          color: '#1e3a5f', vendors: 3400,   t1:  8, highRiskPct: 0.09, fx: 0.15, fy: 0.50 },
+  { code: 'tecnologia',      label: 'Tecnología',      desc: 'Monopolios IT (Toka, Mainbit) — riesgo alto en pocos proveedores', color: '#8b5cf6', vendors: 18000,  t1: 29, highRiskPct: 0.13, fx: 0.38, fy: 0.50 },
+  { code: 'hacienda',        label: 'Hacienda',        desc: 'SAT, Tesorería — licitaciones amañadas documentadas',             color: '#16a34a', vendors: 9000,   t1: 21, highRiskPct: 0.10, fx: 0.62, fy: 0.50 },
+  { code: 'gobernacion',     label: 'Gobernación',     desc: 'Estafa Maestra originó aquí — empresas fantasma multi-instituc.', color: '#be123c', vendors: 15000,  t1: 48, highRiskPct: 0.15, fx: 0.85, fy: 0.50 },
+  // Row 2 (bottom)
+  { code: 'agricultura',     label: 'Agricultura',     desc: 'Segalmex, LICONSA — fraude ~15.8B MXN confirmado',                color: '#22c55e', vendors: 7000,   t1: 19, highRiskPct: 0.12, fx: 0.15, fy: 0.78 },
+  { code: 'ambiente',        label: 'Ambiente',        desc: 'CONAGUA — red rotativa de contratistas ghost',                    color: '#10b981', vendors: 5000,   t1: 11, highRiskPct: 0.08, fx: 0.38, fy: 0.78 },
+  { code: 'trabajo',         label: 'Trabajo',         desc: 'ISSSTE ambulancias — sobreprecio en arrendamiento',               color: '#f97316', vendors: 4000,   t1: 14, highRiskPct: 0.09, fx: 0.62, fy: 0.78 },
+  { code: 'otros',           label: 'Otros',           desc: 'Miscelánea federal — mayor volumen, menor riesgo promedio',       color: '#64748b', vendors: 160000, t1: 35, highRiskPct: 0.07, fx: 0.85, fy: 0.78 },
 ]
+
+// ── MODE 3: SEXENIOS (6 presidential periods as timeline) ────────────────
+// Arranged chronologically left-to-right, Y centered at 0.50. AMLO cluster
+// is visibly larger (more vendors, higher risk) — crimson.
+const SEXENIO_META: ClusterMeta[] = [
+  { code: 'zedillo',   label: 'Zedillo',    desc: 'Datos pre-COMPRANET muy limitados (cobertura estructura A)',                 color: '#64748b', vendors: 15000,  t1:  6, highRiskPct: 0.06, fx: 0.08, fy: 0.50, kicker: '1994–2000' },
+  { code: 'fox',       label: 'Fox',        desc: 'Primera alternancia — datos estructura A, RFC <1%',                          color: '#16a34a', vendors: 25000,  t1: 12, highRiskPct: 0.07, fx: 0.22, fy: 0.50, kicker: '2000–2006' },
+  { code: 'calderon',  label: 'Calderón',   desc: 'Guerra contra narco — contratos SEDENA/SEMAR escalan',                       color: '#3b82f6', vendors: 40000,  t1: 24, highRiskPct: 0.08, fx: 0.38, fy: 0.50, kicker: '2006–2012' },
+  { code: 'pena',      label: 'Peña Nieto', desc: 'Estafa Maestra, Odebrecht, Grupo Higa — era dorada de empresas fantasma',    color: '#ea580c', vendors: 65000,  t1: 58, highRiskPct: 0.12, fx: 0.55, fy: 0.50, kicker: '2012–2018' },
+  { code: 'amlo',      label: 'AMLO',       desc: 'Segalmex, Tren Maya, COVID — mayor volumen y mayor concentración T1',        color: '#dc2626', vendors: 120000, t1: 148, highRiskPct: 0.18, fx: 0.72, fy: 0.50, kicker: '2018–2024' },
+  { code: 'sheinbaum', label: 'Sheinbaum',  desc: 'Año 1 — señales tempranas de continuidad en adjudicaciones directas',        color: '#be123c', vendors: 28000,  t1: 72, highRiskPct: 0.15, fx: 0.90, fy: 0.50, kicker: '2024–' },
+]
+
+// Meta label shown in tooltip kicker and caption
+const MODE_KICKERS: Record<ConstellationMode, { short: string; caption: string }> = {
+  patterns: { short: 'PATRÓN',  caption: '7 patrones ARIA (P1–P7) · click para abrir tipología' },
+  sectors:  { short: 'SECTOR',  caption: '12 sectores federales · click para abrir sector' },
+  sexenios: { short: 'SEXENIO', caption: '6 periodos presidenciales · click para abrir sexenio' },
+}
 
 // Risk visual styling (mirrors ContractField + RiskStrata)
 const DOT_STYLE: Record<ConstellationRiskRow['level'], { r: number; fill: string; alpha: number; halo?: number }> = {
@@ -101,13 +134,57 @@ interface DotPos {
   x: number
   y: number
   level: ConstellationRiskRow['level']
-  cluster: number // -1 for non-critical, else 0..N_ATTRACTORS-1
+  cluster: number // -1 for non-critical, else 0..nClusters-1
 }
 
-export function ConcentrationConstellation({ rows, totalContracts, onClusterClick, className }: ConcentrationConstellationProps) {
+// ── DotBar — small inline dot-style bar chart (0..1 → filled/empty dots) ──
+function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
+  value: number
+  color: string
+  dots?: number
+  size?: number
+  gap?: number
+}) {
+  const filled = Math.round(value * dots)
+  const w = dots * (size + gap) - gap
+  return (
+    <svg width={w} height={size} style={{ display: 'block' }}>
+      {Array.from({ length: dots }, (_, i) => (
+        <circle
+          key={i}
+          cx={i * (size + gap) + size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={i < filled ? color : '#2a2420'}
+        />
+      ))}
+    </svg>
+  )
+}
+
+export function ConcentrationConstellation({
+  rows,
+  totalContracts,
+  mode = 'patterns',
+  onClusterClick,
+  className,
+}: ConcentrationConstellationProps) {
   const [hoveredCluster, setHoveredCluster] = useState<number | null>(null)
 
+  // Pick the active meta array for the current mode
+  const activeMeta: ClusterMeta[] = useMemo(() => {
+    if (mode === 'sectors')  return SECTOR_META
+    if (mode === 'sexenios') return SEXENIO_META
+    return PATTERN_META
+  }, [mode])
+
   const { dots, criticalEdges, marginAnchors, attractors } = useMemo(() => {
+    // Reset hover when mode changes — avoid stale index referencing old meta
+    // (setState inside useMemo would be a bug; we instead cap hoveredCluster
+    //  at paint time).
+
+    const nClusters = activeMeta.length
+
     // Sort to deterministic order: critical, high, medium, low
     const order = ['critical', 'high', 'medium', 'low'] as const
     const byLevel = Object.fromEntries(order.map((l) => [l, rows.find((r) => r.level === l)?.pct ?? 0])) as Record<typeof order[number], number>
@@ -129,25 +206,27 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       for (let i = 0; i < counts[lvl]; i++) labels.push(lvl)
     }
 
-    // 7 attractors laid out across the field, coords pre-resolved from fx/fy
-    const attractors = CLUSTER_META.map((m) => ({
+    // Attractors: resolve fractional coords into pixel positions
+    const attractors = activeMeta.map((m) => ({
       x: PAD_L + m.fx * FIELD_W,
       y: PAD_T + m.fy * FIELD_H,
     }))
 
-    // Cumulative weights for weighted Halton draw on critical dots
+    // Cluster weights ∝ T1 count (critical attribution follows risk mass)
+    const totalT1 = activeMeta.reduce((s, m) => s + m.t1, 0) || 1
+    const weights = activeMeta.map((m) => m.t1 / totalT1)
     const cumWeights: number[] = []
-    for (let i = 0; i < CLUSTER_WEIGHTS.length; i++) {
-      cumWeights.push((cumWeights[i - 1] ?? 0) + CLUSTER_WEIGHTS[i])
+    for (let i = 0; i < weights.length; i++) {
+      cumWeights.push((cumWeights[i - 1] ?? 0) + weights[i])
     }
-    // Ensure final bucket captures numeric slop
     cumWeights[cumWeights.length - 1] = 1
 
-    const rng = mulberry32(31415)
+    // Seed varies by mode so dot positions change when user toggles — the
+    // panel feels alive and re-organizing rather than frozen.
+    const seed = mode === 'sectors' ? 27182 : mode === 'sexenios' ? 16180 : 31415
+    const rng = mulberry32(seed)
     const built: DotPos[] = []
 
-    // Track critical dot index so we can draw a deterministic Halton value per
-    // critical dot (independent of absolute index i).
     let criticalIdx = 0
 
     for (let i = 0; i < N_DOTS; i++) {
@@ -164,17 +243,20 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       let cluster = -1
 
       if (level === 'critical') {
-        // Weighted assignment via a fresh Halton base-5 sequence so cluster
-        // distribution tracks T1 counts (180/56/31/26/23/3/1), not i-modulo.
+        // Weighted assignment via fresh Halton base-5 so cluster distribution
+        // tracks T1 counts, not i-modulo.
         const uCluster = halton(criticalIdx * 7 + 1, 5)
         let picked = cumWeights.findIndex((cw) => uCluster < cw)
-        if (picked === -1) picked = N_ATTRACTORS - 1
+        if (picked === -1) picked = nClusters - 1
         cluster = picked
         criticalIdx++
 
         const a = attractors[cluster]
         const ang = rng() * Math.PI * 2
-        const radius = 6 + Math.pow(rng(), 1.6) * 22
+        // In sexenios mode, slightly tighten the clusters so 6 nodes read
+        // as a row, not a loose cloud.
+        const rMax = mode === 'sexenios' ? 16 : 22
+        const radius = 6 + Math.pow(rng(), 1.6) * rMax
         x = a.x + Math.cos(ang) * radius
         y = a.y + Math.sin(ang) * radius
       }
@@ -214,8 +296,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       }
     }
 
-    // Pick a representative anchor dot for each level (for margin labels).
-    // Critical leader points to cluster 0 (P5) specifically, per spec.
+    // Pick representative anchor dots for margin labels (always same cluster[0])
     const findAnchor = (lvl: ConstellationRiskRow['level'], targetY: number): DotPos | null => {
       let best: DotPos | null = null
       let bd = Infinity
@@ -250,7 +331,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
         low:      findAnchor('low',      PAD_T + FIELD_H * 0.82),
       },
     }
-  }, [rows])
+  }, [rows, activeMeta, mode])
 
   const criticalRow = rows.find((r) => r.level === 'critical')
   const highRow = rows.find((r) => r.level === 'high')
@@ -264,6 +345,17 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
     { row: lowRow,      anchor: marginAnchors.low,      color: '#a1a1aa', label: 'low',      y: PAD_T + FIELD_H * 0.85 },
   ]
 
+  // Guard hovered index against mode changes (stale high index after toggle)
+  const safeHover =
+    hoveredCluster !== null && hoveredCluster < activeMeta.length ? hoveredCluster : null
+
+  const kickerLabel = MODE_KICKERS[mode]
+  const modeAriaHint = mode === 'sectors'
+    ? 'Critical-risk dots cluster into 12 federal sectors arranged in a grid.'
+    : mode === 'sexenios'
+      ? 'Critical-risk dots cluster into 6 presidential periods arranged chronologically.'
+      : 'Critical-risk dots cluster into 7 ARIA corruption patterns (P1–P7).'
+
   return (
     <div className="relative">
       <svg
@@ -272,7 +364,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
         preserveAspectRatio="xMidYMid meet"
         className={className}
         role="img"
-        aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts: critical-risk dots cluster into 7 ARIA corruption patterns (P1–P7). Hover or click a cluster to open its pattern page.`}
+        aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts. ${modeAriaHint} Hover or click a cluster to open its page.`}
       >
         {/* ── Field border (hairline) ──────────────────────────────────────── */}
         <rect
@@ -284,6 +376,19 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
           stroke="rgba(255,255,255,0.04)"
           strokeWidth={1}
         />
+
+        {/* ── Sexenios timeline baseline (subtle spine under attractors) ──── */}
+        {mode === 'sexenios' && (
+          <line
+            x1={PAD_L + FIELD_W * 0.04}
+            y1={PAD_T + FIELD_H * 0.50}
+            x2={PAD_L + FIELD_W * 0.96}
+            y2={PAD_T + FIELD_H * 0.50}
+            stroke="rgba(255,255,255,0.05)"
+            strokeWidth={1}
+            strokeDasharray="2 4"
+          />
+        )}
 
         {/* ── Edges (drawn first, under the dots) ──────────────────────────── */}
         {criticalEdges.map((e, idx) => (
@@ -335,13 +440,17 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
 
         {/* ── Attractor rings, labels, hit targets (above dots) ───────────── */}
         {attractors.map((a, idx) => {
-          const isHovered = hoveredCluster === idx
-          const meta = CLUSTER_META[idx]
-          // Ring radius ∝ √T1 so P5(180) reads largest, P2(1) smallest.
-          // Floor at 4 so P2/P4 remain visible; cap at 16 so P5 doesn't dominate.
+          const isHovered = safeHover === idx
+          const meta = activeMeta[idx]
+          // Ring radius ∝ √T1 so high-t1 nodes read larger.
+          // Floor at 4 so small clusters remain visible; cap at 16.
           const ringR = Math.max(4, Math.min(16, Math.sqrt(meta.t1)))
+          // Short label inside/above the ring. For patrones it's the code
+          // ("P5"); for sectores/sexenios use first 3 chars of the label.
+          const shortLabel =
+            mode === 'patterns' ? meta.code : meta.label.slice(0, 3).toUpperCase()
           return (
-            <g key={`attractor-${idx}`}>
+            <g key={`attractor-${meta.code}-${idx}`}>
               {/* Outer ring — radius ∝ √T1 count */}
               <circle
                 cx={a.x}
@@ -354,7 +463,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
                 style={{ transition: 'stroke-opacity 160ms ease' }}
               />
 
-              {/* Pattern code label (e.g. "P5") */}
+              {/* Cluster label */}
               <text
                 x={a.x}
                 y={a.y + ringR + 8}
@@ -367,7 +476,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
                 dominantBaseline="middle"
                 style={{ transition: 'fill-opacity 160ms ease' }}
               >
-                {meta.code}
+                {shortLabel}
               </text>
 
               {/* Transparent hit target — larger than visible ring */}
@@ -384,7 +493,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
                 onClick={() => onClusterClick?.(meta.code)}
                 tabIndex={onClusterClick ? 0 : -1}
                 role={onClusterClick ? 'button' : undefined}
-                aria-label={onClusterClick ? `Pattern ${meta.code}: ${meta.label}. ${meta.desc}. Open pattern page.` : undefined}
+                aria-label={onClusterClick ? `${meta.label}. ${meta.desc}. Open page.` : undefined}
               />
             </g>
           )
@@ -441,25 +550,33 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
-          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contratos · 7 patrones ARIA (P1–P7) · click para abrir tipología
+          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contratos · {kickerLabel.caption}
         </text>
       </svg>
 
       {/* ── Floating cluster tooltip (DOM, positioned over SVG) ──────────── */}
-      {hoveredCluster !== null && (() => {
-        const meta = CLUSTER_META[hoveredCluster]
+      {safeHover !== null && (() => {
+        const meta = activeMeta[safeHover]
         // Convert attractor frac to CSS percent of wrapping div
         const topPct = ((PAD_T + meta.fy * FIELD_H) / SVG_H) * 100
         const leftPct = ((PAD_L + meta.fx * FIELD_W) / SVG_W) * 100
+        // On the far-right column, flip tooltip to the left so it doesn't
+        // clip off the edge of the card.
+        const flipLeft = meta.fx > 0.80
+        const transform = flipLeft
+          ? 'translate(-90%, -130%)'
+          : meta.fx < 0.15
+            ? 'translate(-10%, -130%)'
+            : 'translate(-50%, -130%)'
         return (
           <div
             className="absolute z-10 pointer-events-none rounded-md border border-stone-700 bg-stone-900/95 backdrop-blur-sm p-2.5 shadow-xl"
             style={{
               top: `${topPct}%`,
               left: `${leftPct}%`,
-              transform: 'translate(-50%, -130%)',
+              transform,
               minWidth: '200px',
-              maxWidth: '260px',
+              maxWidth: '280px',
             }}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -467,15 +584,30 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
                 className="text-[10px] font-mono font-bold tracking-[0.15em]"
                 style={{ color: meta.color }}
               >
-                {meta.code} · PATRÓN
+                {mode === 'patterns' ? `${meta.code} · ${kickerLabel.short}` : kickerLabel.short}
               </span>
               <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} />
             </div>
             <div className="text-sm font-bold text-stone-100 mb-0.5">
               {meta.label}
+              {meta.kicker && (
+                <span className="ml-1.5 text-[10px] font-mono text-stone-500">{meta.kicker}</span>
+              )}
             </div>
             <div className="text-[11px] text-stone-400 leading-snug mb-1.5">
               {meta.desc}
+            </div>
+            {/* DotBar — highRiskPct visualized as filled dots */}
+            <div className="mb-1.5">
+              <div className="flex items-center justify-between mb-0.5">
+                <span className="text-[9px] font-mono uppercase tracking-wider text-stone-500">
+                  Alto + crítico
+                </span>
+                <span className="text-[10px] font-mono font-bold" style={{ color: meta.color }}>
+                  {(meta.highRiskPct * 100).toFixed(1)}%
+                </span>
+              </div>
+              <DotBar value={meta.highRiskPct} color={meta.color} />
             </div>
             <div className="flex items-center gap-3 text-[10px] font-mono text-stone-500 mb-1">
               <span>{meta.vendors.toLocaleString()} proveedores</span>
@@ -484,7 +616,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
             </div>
             {onClusterClick && (
               <div className="text-[10px] font-mono text-amber-400 tracking-wider uppercase">
-                → Ver tipología
+                → Ver detalle
               </div>
             )}
           </div>

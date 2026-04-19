@@ -1,4 +1,4 @@
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Link, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
@@ -22,7 +22,7 @@ import { RISK_COLORS, SECTOR_COLORS, getSectorNameEN, CURRENT_MODEL_VERSION } fr
 import { RiskStrata, type RiskStrataRow } from '@/components/charts/RiskStrata'
 import { SectorMarimekko, type SectorMarimekkoRow } from '@/components/charts/SectorMarimekko'
 import { SexenioStratum, type SexenioYearRow } from '@/components/charts/SexenioStratum'
-import { ConcentrationConstellation, type ConstellationRiskRow } from '@/components/charts/ConcentrationConstellation'
+import { ConcentrationConstellation, type ConstellationRiskRow, type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
 import { AdminFingerprints } from '@/components/charts/AdminFingerprints'
 import { PatternTypology } from '@/components/charts/PatternTypology'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -271,6 +271,9 @@ export function Dashboard() {
   const { t } = useTranslation('dashboard')
   const { t: tc } = useTranslation('common')
   const { t: ts } = useTranslation('sectors')
+
+  // ── UI state ──────────────────────────────────────────────────────────────
+  const [constellationMode, setConstellationMode] = useState<ConstellationMode>('patterns')
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -526,12 +529,58 @@ export function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                {t('editorial.constellationSubtitle', 'Cada punto representa un conjunto de contratos. Los contratos críticos se auto-organizan en 7 patrones ARIA — las 7 arquitecturas de captura del Estado.')}
+                {constellationMode === 'sectors'
+                  ? t('editorial.constellationSubtitleSectors', 'Cada punto representa un conjunto de contratos. Los críticos se agrupan en los 12 sectores federales — donde el dinero público se concentra.')
+                  : constellationMode === 'sexenios'
+                  ? t('editorial.constellationSubtitleSexenios', 'Cada punto representa un conjunto de contratos. Los críticos se distribuyen entre los 6 sexenios presidenciales — 23 años de contratación.')
+                  : t('editorial.constellationSubtitle', 'Cada punto representa un conjunto de contratos. Los contratos críticos se auto-organizan en 7 patrones ARIA — las 7 arquitecturas de captura del Estado.')}
               </p>
+
+              {/* Mode pillbox — PATRONES / SECTORES / SEXENIOS ──────────── */}
+              <div
+                role="tablist"
+                aria-label="Constellation clustering mode"
+                className="inline-flex items-center gap-1 mb-4 rounded-full border border-border/40 bg-background-elevated/40 p-0.5"
+              >
+                {([
+                  { key: 'patterns', label: 'PATRONES' },
+                  { key: 'sectors',  label: 'SECTORES' },
+                  { key: 'sexenios', label: 'SEXENIOS' },
+                ] as const).map((opt) => {
+                  const active = constellationMode === opt.key
+                  return (
+                    <button
+                      key={opt.key}
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      onClick={() => setConstellationMode(opt.key)}
+                      className={cn(
+                        'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-full transition-colors',
+                        active
+                          ? 'bg-risk-critical/15 text-risk-critical border border-risk-critical/40 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]'
+                          : 'text-text-muted/70 border border-transparent hover:text-text-primary hover:bg-background-elevated/60'
+                      )}
+                    >
+                      {opt.label}
+                    </button>
+                  )
+                })}
+              </div>
+
               <ConcentrationConstellation
                 rows={constellationRows}
                 totalContracts={overview.total_contracts ?? 0}
-                onClusterClick={(patternCode) => navigate(`/clusters#${patternCode.toLowerCase()}`)}
+                mode={constellationMode}
+                onClusterClick={(code) => {
+                  if (constellationMode === 'sectors') {
+                    navigate(`/sectors/${code}`)
+                  } else if (constellationMode === 'sexenios') {
+                    navigate(`/stories/${code}`)
+                  } else {
+                    navigate(`/clusters#${code.toLowerCase()}`)
+                  }
+                }}
               />
             </ErrorBoundary>
           </section>

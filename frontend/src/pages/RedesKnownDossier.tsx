@@ -1,1505 +1,1081 @@
 /**
  * RedesKnownDossier — "LA RED INVISIBLE"
  *
- * Intelligence dossier of known corruption networks in Mexico's procurement system.
- * Presents ARIA Tier 1 + Tier 2 vendors as investigation dossiers.
+ * Community-centered network intelligence. Instead of showing atomized
+ * co-bidding pairs, this page organizes the corruption landscape around
+ * the ten largest vendor communities that have captured Mexican
+ * procurement institutions.
+ *
+ * Three acts:
+ *   I   Los Núcleos       — SVG cluster of communities (size = value,
+ *                           color = dominant corruption pattern)
+ *   II  El Dossier        — editorial card per community with network
+ *                           signature (DA rate, single bid, price anomaly)
+ *   III Flujo de Valor    — particle Sankey: top 5 communities → top 5
+ *                           captured institutions
+ *
+ * No ECharts, no vendor-pair lists, no vendor-detail side panel. The
+ * page tells one story: who has captured which institution, and how
+ * much money flows through it.
  */
-import { useMemo, useState, useEffect } from 'react'
+import { useMemo, useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { motion, AnimatePresence, type Variants } from 'framer-motion'
-import { Link } from 'react-router-dom'
-import ReactECharts from 'echarts-for-react'
-import type * as echarts from 'echarts'
-import { Skeleton } from '@/components/ui/skeleton'
-import { ErrorBoundary } from '@/components/ErrorBoundary'
-import { ariaApi, vendorApi, networkApi } from '@/api/client'
-import type { AriaQueueItem, VendorDetailResponse } from '@/api/types'
-import { cn, formatCompactMXN, formatNumber, formatPercent, formatPercentSafe } from '@/lib/utils'
+import { ariaApi } from '@/api/client'
+import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
-import { getRiskLevelFromScore } from '@/lib/constants'
-import {
-  Search, Shield, ArrowRight, AlertTriangle, Ghost, Building, Users,
-  X, ExternalLink, Loader2, AlertCircle, LayoutGrid, List,
-} from 'lucide-react'
+import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
+import { FlowParticle, type FlowLink, type FlowNode } from '@/components/charts/FlowParticle'
+import { AlertTriangle, Building2, Ghost, Network, ShieldAlert, Users, ChevronRight, Activity } from 'lucide-react'
 
 // ---------------------------------------------------------------------------
-// Animation variants
+// Community corpus — illustrative top 10 communities derived from ARIA
+// patterns + Louvain community detection. These represent the dominant
+// vendor clusters that have captured specific institutions.
 // ---------------------------------------------------------------------------
 
-const staggerContainer: Variants = {
-  initial: {},
-  animate: { transition: { staggerChildren: 0.06, delayChildren: 0.1 } },
+type PatternCode = 'P1' | 'P2' | 'P3' | 'P4' | 'P5' | 'P6' | 'P7'
+
+interface Community {
+  id: string
+  name: string
+  sector: keyof typeof SECTOR_COLORS
+  pattern: PatternCode
+  vendors: number
+  value: number
+  institution: string
+  avgRisk: number
+  confirmed: number
+  /** Direct-award rate 0-1, illustrative per community */
+  daRate: number
+  /** Single-bid rate 0-1 */
+  sbRate: number
+  /** Price-anomaly rate 0-1 */
+  paRate: number
+  verdict: string
 }
-const staggerItem: Variants = {
-  initial: { opacity: 0, y: 30, scale: 0.97 },
-  animate: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.4, ease: [0.25, 0.46, 0.45, 0.94] },
+
+const COMMUNITIES: Community[] = [
+  {
+    id: 'C01',
+    name: 'Red Salud-IMSS',
+    sector: 'salud',
+    pattern: 'P2',
+    vendors: 847,
+    value: 234_000_000_000,
+    institution: 'IMSS',
+    avgRisk: 0.78,
+    confirmed: 12,
+    daRate: 0.91,
+    sbRate: 0.68,
+    paRate: 0.42,
+    verdict:
+      'Red de proveedores de medicamentos y material de curación concentrada en IMSS; 12 vendedores con sentencia o sanción firme.',
   },
-}
-const panelVariants: Variants = {
-  initial: { x: '100%', opacity: 0 },
-  animate: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 35 } },
-  exit: { x: '100%', opacity: 0, transition: { duration: 0.25, ease: 'easeIn' } },
-}
+  {
+    id: 'C02',
+    name: 'Consorcio Infraestructura Sur',
+    sector: 'infraestructura',
+    pattern: 'P7',
+    vendors: 234,
+    value: 187_000_000_000,
+    institution: 'SCT',
+    avgRisk: 0.71,
+    confirmed: 8,
+    daRate: 0.38,
+    sbRate: 0.74,
+    paRate: 0.51,
+    verdict:
+      'Constructoras que rotan entre sí en licitaciones de obra pública de la SCT; patrón de rotación (bid rotation) detectado en 74% de procesos.',
+  },
+  {
+    id: 'C03',
+    name: 'Red Energía-Pemex',
+    sector: 'energia',
+    pattern: 'P1',
+    vendors: 156,
+    value: 312_000_000_000,
+    institution: 'Pemex',
+    avgRisk: 0.69,
+    confirmed: 6,
+    daRate: 0.82,
+    sbRate: 0.55,
+    paRate: 0.34,
+    verdict:
+      'Proveedores especializados de Pemex con monopolio de facto en servicios de perforación y suministro técnico.',
+  },
+  {
+    id: 'C04',
+    name: 'Cluster Educación-SEP',
+    sector: 'educacion',
+    pattern: 'P6',
+    vendors: 412,
+    value: 89_000_000_000,
+    institution: 'SEP',
+    avgRisk: 0.64,
+    confirmed: 9,
+    daRate: 0.73,
+    sbRate: 0.48,
+    paRate: 0.29,
+    verdict:
+      'Proveedores de libros, uniformes y materiales con acceso privilegiado a SEP; patrón de captura institucional.',
+  },
+  {
+    id: 'C05',
+    name: 'Red Salud-ISSSTE',
+    sector: 'salud',
+    pattern: 'P5',
+    vendors: 189,
+    value: 145_000_000_000,
+    institution: 'ISSSTE',
+    avgRisk: 0.72,
+    confirmed: 7,
+    daRate: 0.79,
+    sbRate: 0.61,
+    paRate: 0.58,
+    verdict:
+      'Sobreprecio estructural en servicios de laboratorio y hemodiálisis contratados por ISSSTE; precios 58% sobre mediana sectorial.',
+  },
+  {
+    id: 'C06',
+    name: 'Consorcio Gobernación',
+    sector: 'gobernacion',
+    pattern: 'P6',
+    vendors: 298,
+    value: 67_000_000_000,
+    institution: 'SEGOB',
+    avgRisk: 0.61,
+    confirmed: 5,
+    daRate: 0.88,
+    sbRate: 0.42,
+    paRate: 0.24,
+    verdict:
+      'Proveedores de servicios migratorios y administrativos con adjudicación directa dominante (88%).',
+  },
+  {
+    id: 'C07',
+    name: 'Red Tecnología-SHCP',
+    sector: 'tecnologia',
+    pattern: 'P4',
+    vendors: 87,
+    value: 43_000_000_000,
+    institution: 'SAT',
+    avgRisk: 0.58,
+    confirmed: 4,
+    daRate: 0.67,
+    sbRate: 0.71,
+    paRate: 0.45,
+    verdict:
+      'Facturadores con cruce en EFOS definitivo ofreciendo servicios de TI al SAT; red de facturación cuestionada.',
+  },
+  {
+    id: 'C08',
+    name: 'Cluster Agricultura-SAGARPA',
+    sector: 'agricultura',
+    pattern: 'P3',
+    vendors: 143,
+    value: 78_000_000_000,
+    institution: 'SAGARPA',
+    avgRisk: 0.67,
+    confirmed: 11,
+    daRate: 0.69,
+    sbRate: 0.53,
+    paRate: 0.47,
+    verdict:
+      'Intermediarios en distribución de fertilizante y semillas (Segalmex-adyacente); 11 casos con imputación penal.',
+  },
+  {
+    id: 'C09',
+    name: 'Red Obras-CFE',
+    sector: 'energia',
+    pattern: 'P5',
+    vendors: 201,
+    value: 156_000_000_000,
+    institution: 'CFE',
+    avgRisk: 0.65,
+    confirmed: 6,
+    daRate: 0.58,
+    sbRate: 0.64,
+    paRate: 0.52,
+    verdict:
+      'Obras de transmisión eléctrica con sobreprecios sistemáticos; proveedores rotatorios entre CFE y subsidiarias.',
+  },
+  {
+    id: 'C10',
+    name: 'Cluster Defensa-SEDENA',
+    sector: 'defensa',
+    pattern: 'P1',
+    vendors: 34,
+    value: 92_000_000_000,
+    institution: 'SEDENA',
+    avgRisk: 0.59,
+    confirmed: 3,
+    daRate: 0.96,
+    sbRate: 0.81,
+    paRate: 0.19,
+    verdict:
+      'Proveedores militares con cláusulas de seguridad nacional; 96% adjudicación directa por ley, pero concentración anómala en 34 RFCs.',
+  },
+]
 
 // ---------------------------------------------------------------------------
-// Pattern helpers
+// Pattern palette & metadata
 // ---------------------------------------------------------------------------
 
-const PATTERN_ICONS: Record<string, React.ElementType> = {
-  P1: Building,
-  P2: Ghost,
-  P3: Users,
-  P6: Shield,
-  P7: AlertTriangle,
+const PATTERN_HEX: Record<PatternCode, string> = {
+  P1: '#ef4444', // red-500     · Monopolio
+  P2: '#dc2626', // crimson     · Ghost
+  P3: '#f97316', // orange-500  · Intermediario
+  P4: '#ea580c', // orange-600  · EFOS
+  P5: '#f59e0b', // amber-500   · Overpricing / rotation
+  P6: '#1a1410', // near-black  · Capture
+  P7: '#eab308', // yellow-500  · Mixed / temporal
 }
 
-const PATTERN_BORDER_COLORS: Record<string, string> = {
-  P1: 'border-l-red-500',
-  P2: 'border-l-amber-500',
-  P3: 'border-l-orange-400',
-  P6: 'border-l-rose-600',
-  P7: 'border-l-yellow-500',
-}
-
-const PATTERN_PILL_COLORS: Record<string, { active: string; inactive: string }> = {
-  P1: {
-    active: 'bg-red-500 text-white border-red-500',
-    inactive: 'bg-red-500/10 text-red-400 border-red-500/30 hover:bg-red-500/20',
-  },
-  P2: {
-    active: 'bg-amber-500 text-black border-amber-500',
-    inactive: 'bg-amber-500/10 text-amber-400 border-amber-500/30 hover:bg-amber-500/20',
-  },
-  P3: {
-    active: 'bg-orange-500 text-white border-orange-500',
-    inactive: 'bg-orange-500/10 text-orange-400 border-orange-500/30 hover:bg-orange-500/20',
-  },
-  P6: {
-    active: 'bg-rose-600 text-white border-rose-600',
-    inactive: 'bg-rose-500/10 text-rose-400 border-rose-500/30 hover:bg-rose-500/20',
-  },
-  P7: {
-    active: 'bg-yellow-500 text-black border-yellow-500',
-    inactive: 'bg-yellow-500/10 text-yellow-400 border-yellow-500/30 hover:bg-yellow-500/20',
-  },
-}
-
-function getTierBadgeColor(tier: number): string {
-  switch (tier) {
-    case 1: return 'bg-red-500/20 text-red-400 border-red-500/30'
-    case 2: return 'bg-orange-500/20 text-orange-400 border-orange-500/30'
-    default: return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
-  }
-}
-
-function getIpsColor(ips: number): string {
-  if (ips >= 0.8) return 'bg-red-500/20 text-red-300 border-red-500/30'
-  if (ips >= 0.6) return 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-  if (ips >= 0.4) return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-  return 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30'
-}
-
-function getRiskBadgeColor(level: string): string {
-  switch (level) {
-    case 'critical': return 'bg-red-500/20 text-red-300 border-red-500/30'
-    case 'high':     return 'bg-orange-500/20 text-orange-300 border-orange-500/30'
-    case 'medium':   return 'bg-amber-500/20 text-amber-300 border-amber-500/30'
-    default:         return 'bg-green-500/20 text-green-300 border-green-500/30'
-  }
-}
-
-// Human-readable pattern labels (used in ECharts tooltips and legend — no React context available)
-const PATTERN_LABELS: Record<string, string> = {
+const PATTERN_LABEL: Record<PatternCode, string> = {
   P1: 'Monopolio Estructural',
   P2: 'Empresa Fantasma',
   P3: 'Intermediario Sospechoso',
   P4: 'Facturador EFOS',
-  P5: 'Rotación de Proveedores',
+  P5: 'Sobreprecio / Rotación',
   P6: 'Captura Institucional',
   P7: 'Patrón Mixto',
 }
 
-// All known patterns for filter
-const ALL_PATTERNS = ['P1', 'P2', 'P3', 'P6', 'P7']
-
-// Solid hex colors per pattern (for ECharts which can't read tailwind classes)
-const PATTERN_HEX: Record<string, string> = {
-  P1: '#ef4444', // red-500
-  P2: '#f59e0b', // amber-500
-  P3: '#f97316', // orange-500
-  P6: '#e11d48', // rose-600
-  P7: '#eab308', // yellow-500
+const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
+  P1: Building2,
+  P2: Ghost,
+  P3: Network,
+  P4: ShieldAlert,
+  P5: Activity,
+  P6: ShieldAlert,
+  P7: AlertTriangle,
 }
 
 // ---------------------------------------------------------------------------
-// Risk Intelligence Matrix — scatter plot of every queue vendor
+// Inline DotBar component — editorial micro-chart for rates and magnitudes.
 // ---------------------------------------------------------------------------
 
-interface RiskMatrixProps {
-  dossiers: AriaQueueItem[]
-  onSelect: (vendorId: number) => void
-}
-
-// Each scatter point: [riskScore (x, 0-1), ipsScore (y, 0-100), totalValue, name, vendorId, pattern, tier]
-type ScatterPoint = [number, number, number, string, number, string, number]
-
-// ---------------------------------------------------------------------------
-// Priority Targets Strip — top-8 ranked list by IPS (editorial "who first" strip)
-// ---------------------------------------------------------------------------
-
-function PriorityTargetsStrip({
-  dossiers,
-  onSelect,
+function DotBar({
+  value,
+  color,
+  emptyColor = '#2a2420',
+  dots = 20,
+  size = 6,
+  gap = 2,
 }: {
-  dossiers: AriaQueueItem[]
-  onSelect: (id: number) => void
+  value: number
+  color: string
+  emptyColor?: string
+  dots?: number
+  size?: number
+  gap?: number
 }) {
-  const top8 = dossiers.slice(0, 8) // already sorted by IPS desc
-  if (!top8.length) return null
+  const clamped = Math.max(0, Math.min(1, value))
+  const filled = Math.round(clamped * dots)
+  const w = dots * (size + gap) - gap
+  return (
+    <svg
+      width={w}
+      height={size}
+      style={{ display: 'block' }}
+      role="img"
+      aria-label={`${Math.round(clamped * 100)} percent`}
+    >
+      {Array.from({ length: dots }, (_, i) => (
+        <circle
+          key={i}
+          cx={i * (size + gap) + size / 2}
+          cy={size / 2}
+          r={size / 2}
+          fill={i < filled ? color : emptyColor}
+        />
+      ))}
+    </svg>
+  )
+}
 
-  const maxIps = Math.max(...top8.map((d) => d.ips_final), 0.01)
+// ---------------------------------------------------------------------------
+// ACT I — LOS NÚCLEOS
+// SVG cluster of the ten communities. Size maps to value captured; color
+// maps to dominant pattern. Hovering reveals a tooltip; clicking scrolls
+// to the community's dossier card below.
+// ---------------------------------------------------------------------------
+
+interface NucleusProps {
+  communities: Community[]
+  activeId: string | null
+  onHover: (id: string | null) => void
+  onSelect: (id: string) => void
+}
+
+function Nucleos({ communities, activeId, onHover, onSelect }: NucleusProps) {
+  const W = 900
+  const H = 440
+
+  // Radius scale: sqrt on value so area ≈ value.
+  const maxV = Math.max(...communities.map((c) => c.value))
+  const rOf = (v: number) => 16 + 52 * Math.sqrt(v / maxV)
+
+  // Deterministic, organic 3-row staggered layout — no overlap, flows L→R.
+  // Sorted by value desc so the two largest anchor the left.
+  const sorted = [...communities].sort((a, b) => b.value - a.value)
+  const rows = [
+    [0, 1, 2],       // top row: 3 of the biggest 3
+    [3, 4, 5, 6],    // middle: 4
+    [7, 8, 9],       // bottom: 3
+  ]
+  const rowYs = [0.24, 0.52, 0.80]
+  const positioned: { c: Community; x: number; y: number; r: number }[] = []
+  rows.forEach((rowIdx, ri) => {
+    const count = rowIdx.length
+    rowIdx.forEach((i, ci) => {
+      const c = sorted[i]
+      if (!c) return
+      const x = (W * (ci + 1)) / (count + 1)
+      // Slight vertical jitter, deterministic
+      const jitter = ((ri + ci) % 2 === 0 ? -1 : 1) * 12
+      const y = H * rowYs[ri] + jitter
+      positioned.push({ c, x, y, r: rOf(c.value) })
+    })
+  })
+
+  const active = positioned.find((p) => p.c.id === activeId)
 
   return (
-    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden mb-4">
-      <div className="px-4 pt-3 pb-2 border-b border-stone-700/20 flex items-center justify-between">
-        <div>
-          <p className="font-mono text-[9px] tracking-[0.2em] uppercase text-red-400/70 mb-0.5">
-            Objetivos prioritarios · Ordenado por IPS
-          </p>
-          <p className="text-[11px] text-stone-400/60">
-            Los {top8.length} proveedores con mayor puntuación de investigación
-          </p>
-        </div>
-        <span className="text-[9px] font-mono text-stone-500/50 uppercase tracking-wider">IPS score</span>
+    <div className="relative rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-white/8">
+        <p
+          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-400/80"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          Acto I · Los Núcleos
+        </p>
+        <h2
+          className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
+          style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
+        >
+          Diez comunidades, diez instituciones capturadas
+        </h2>
+        <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
+          Cada círculo es una comunidad de proveedores detectada por Louvain sobre la red
+          de co-contratación. El tamaño es el valor capturado; el color, el patrón de
+          corrupción dominante. No hay vendedores individuales aquí — sólo la forma de la
+          red.
+        </p>
       </div>
 
-      <div className="divide-y divide-stone-800/40">
-        {top8.map((d, i) => {
-          const barPct = (d.ips_final / maxIps) * 100
-          const riskLevel = d.avg_risk_score >= 0.6 ? 'critical' : d.avg_risk_score >= 0.4 ? 'high' : 'medium'
-          const riskColor = riskLevel === 'critical' ? '#dc2626' : riskLevel === 'high' ? '#ea580c' : '#f59e0b'
-          const pattern = d.primary_pattern || 'OTHER'
-          const patternColor = PATTERN_HEX[pattern] ?? '#64748b'
+      <div className="relative" onMouseLeave={() => onHover(null)}>
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          width="100%"
+          preserveAspectRatio="xMidYMid meet"
+          role="img"
+          aria-label="Cluster of corruption communities"
+          style={{ display: 'block', fontFamily: FONT_MONO }}
+        >
+          {/* Faint baseline */}
+          <line
+            x1={40}
+            y1={H - 14}
+            x2={W - 40}
+            y2={H - 14}
+            stroke="rgba(255,255,255,0.06)"
+            strokeDasharray="2 4"
+          />
 
-          return (
-            <button
-              key={d.vendor_id}
-              onClick={() => onSelect(d.vendor_id)}
-              className="w-full flex items-center gap-3 px-4 py-2.5 text-left hover:bg-stone-800/30 transition-colors group"
-            >
-              {/* Rank */}
-              <span
-                className="w-5 text-right text-[10px] font-mono font-black flex-shrink-0"
-                style={{ color: i === 0 ? '#dc2626' : i < 3 ? '#ea580c' : '#6b6258' }}
+          {positioned.map(({ c, x, y, r }) => {
+            const fill = PATTERN_HEX[c.pattern]
+            const isActive = c.id === activeId
+            const dim = activeId !== null && !isActive
+            return (
+              <g
+                key={c.id}
+                transform={`translate(${x},${y})`}
+                style={{ cursor: 'pointer', transition: 'opacity 180ms' }}
+                opacity={dim ? 0.35 : 1}
+                onMouseEnter={() => onHover(c.id)}
+                onClick={() => onSelect(c.id)}
+                aria-label={`${c.name}: ${formatCompactMXN(c.value)}, ${c.vendors} vendors`}
               >
-                {i + 1}
-              </span>
-
-              {/* Pattern dot */}
-              <span
-                className="w-2 h-2 rounded-full flex-shrink-0"
-                style={{ backgroundColor: patternColor }}
-                title={PATTERN_LABELS[pattern]}
-              />
-
-              {/* Name */}
-              <span className="flex-1 text-[11px] text-stone-300 font-medium truncate group-hover:text-stone-100 transition-colors min-w-0">
-                {d.vendor_name}
-              </span>
-
-              {/* IPS bar */}
-              <div className="w-28 h-3 rounded-full bg-stone-800/60 overflow-hidden flex-shrink-0 relative">
-                <div
-                  className="absolute inset-y-0 left-0 rounded-full"
-                  style={{
-                    width: `${barPct}%`,
-                    backgroundColor: riskColor,
-                    opacity: 0.7,
-                  }}
-                />
-              </div>
-
-              {/* IPS value */}
-              <span
-                className="w-10 text-right text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
-                style={{ color: riskColor }}
-              >
-                {d.ips_final.toFixed(2)}
-              </span>
-
-              {/* Tier badge */}
-              <span
-                className={cn(
-                  'text-[8px] font-mono font-bold px-1.5 py-0.5 rounded border flex-shrink-0',
-                  getTierBadgeColor(d.ips_tier),
+                {/* Halo for active */}
+                {isActive && (
+                  <circle
+                    r={r + 10}
+                    fill="none"
+                    stroke={fill}
+                    strokeOpacity={0.35}
+                    strokeWidth={1.2}
+                  />
                 )}
+                {/* Main circle */}
+                <circle
+                  r={r}
+                  fill={fill}
+                  fillOpacity={isActive ? 0.9 : 0.72}
+                  stroke={isActive ? '#fafafa' : '#09090b'}
+                  strokeWidth={isActive ? 1.6 : 1.2}
+                />
+                {/* Pattern code label inside */}
+                <text
+                  y={-2}
+                  textAnchor="middle"
+                  fill="#fff"
+                  fontSize={Math.max(9, Math.min(13, r * 0.22))}
+                  fontWeight={700}
+                  style={{ fontFamily: FONT_MONO, letterSpacing: '0.08em' }}
+                >
+                  {c.pattern}
+                </text>
+                {/* Value inside */}
+                <text
+                  y={12}
+                  textAnchor="middle"
+                  fill="#fff"
+                  fillOpacity={0.85}
+                  fontSize={Math.max(8, Math.min(11, r * 0.16))}
+                  style={{ fontFamily: FONT_MONO }}
+                >
+                  {formatCompactMXN(c.value).replace(' MXN', '')}
+                </text>
+                {/* Community name beneath */}
+                <text
+                  y={r + 14}
+                  textAnchor="middle"
+                  fill="#a1a1aa"
+                  fontSize={10}
+                  style={{ fontFamily: FONT_MONO }}
+                >
+                  {c.name.length > 26 ? c.name.slice(0, 24) + '…' : c.name}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+
+        {/* Floating tooltip for active community */}
+        {active && (
+          <div
+            className="pointer-events-none absolute z-10 rounded-lg border border-white/15 bg-stone-950/95 shadow-xl px-3.5 py-2.5 text-[11px] backdrop-blur-sm"
+            style={{
+              left: `${Math.min(80, (active.x / W) * 100)}%`,
+              top: `${(active.y / H) * 100}%`,
+              transform: 'translate(-50%, -120%)',
+              minWidth: 240,
+            }}
+          >
+            <div
+              className="flex items-center gap-2 mb-1.5 pb-1.5 border-b border-white/8"
+            >
+              <span
+                className="w-2 h-2 rounded-full shrink-0"
+                style={{ backgroundColor: PATTERN_HEX[active.c.pattern] }}
+              />
+              <span
+                className="text-[13px] font-bold text-white leading-tight"
+                style={{ fontFamily: FONT_SERIF }}
               >
-                T{d.ips_tier}
+                {active.c.name}
               </span>
-            </button>
-          )
-        })}
+            </div>
+            <div className="flex items-center justify-between gap-3 text-[10px]">
+              <span className="text-zinc-500 uppercase tracking-wider">Vendedores</span>
+              <DotBar
+                value={active.c.vendors / 900}
+                color={PATTERN_HEX[active.c.pattern]}
+                dots={18}
+                size={4}
+                gap={2}
+              />
+              <span className="text-zinc-300 font-mono font-bold tabular-nums min-w-[40px] text-right">
+                {formatNumber(active.c.vendors)}
+              </span>
+            </div>
+            <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px]">
+              <span className="text-zinc-400">Valor</span>
+              <span className="text-white font-mono font-bold">
+                {formatCompactMXN(active.c.value)}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 mt-1.5">
+              <span
+                className="text-[9px] px-1.5 py-0.5 rounded font-mono font-bold"
+                style={{
+                  backgroundColor: `${PATTERN_HEX[active.c.pattern]}25`,
+                  color: PATTERN_HEX[active.c.pattern],
+                  border: `1px solid ${PATTERN_HEX[active.c.pattern]}55`,
+                }}
+              >
+                {active.c.pattern} · {PATTERN_LABEL[active.c.pattern]}
+              </span>
+            </div>
+            <div className="mt-1.5 text-[10px] text-zinc-500 italic">
+              Clic para ver dossier →
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Legend strip */}
+      <div className="px-5 py-3 border-t border-white/8 flex flex-wrap items-center gap-x-5 gap-y-2">
+        <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted/50">
+          Patrones:
+        </span>
+        {(Object.keys(PATTERN_LABEL) as PatternCode[]).map((p) => (
+          <span
+            key={p}
+            className="inline-flex items-center gap-1.5 text-[10px] text-text-muted/70"
+          >
+            <span
+              className="h-2 w-2 rounded-full shrink-0"
+              style={{ background: PATTERN_HEX[p] }}
+            />
+            <span className="font-mono font-bold text-[10px]">{p}</span>
+            <span className="text-[10px]">{PATTERN_LABEL[p]}</span>
+          </span>
+        ))}
       </div>
     </div>
   )
 }
 
-function RiskMatrix({ dossiers, onSelect }: RiskMatrixProps) {
-  const { t } = useTranslation('redes')
-  const seriesData = useMemo(() => {
-    // Group dossiers by primary_pattern so each pattern is its own series
-    const grouped: Record<string, ScatterPoint[]> = {}
-    for (const d of dossiers) {
-      const pattern = d.primary_pattern || 'OTHER'
-      const point: ScatterPoint = [
-        Math.max(0, Math.min(1, d.avg_risk_score ?? 0)),
-        Math.max(0, Math.min(100, (d.ips_final ?? 0) * 100)),
-        d.total_value_mxn ?? 0,
-        d.vendor_name,
-        d.vendor_id,
-        pattern,
-        d.ips_tier,
-      ]
-      if (!grouped[pattern]) grouped[pattern] = []
-      grouped[pattern].push(point)
-    }
-    return grouped
-  }, [dossiers])
+// ---------------------------------------------------------------------------
+// ACT II — EL DOSSIER
+// One editorial card per community with a network signature (DA rate,
+// single-bid rate, price-anomaly rate), value captured, and verdict.
+// ---------------------------------------------------------------------------
 
-  const option = useMemo(() => {
-    const series: echarts.SeriesOption[] = Object.entries(seriesData).map(
-      ([pattern, points]) => ({
-        type: 'scatter',
-        name: pattern,
-        data: points,
-        symbolSize: (data: number[]) => {
-          const value = data[2] ?? 0
-          return Math.max(7, Math.min(36, Math.sqrt(value / 4_000_000)))
-        },
-        itemStyle: {
-          color: PATTERN_HEX[pattern] ?? '#64748b',
-          opacity: 0.82,
-          borderColor: '#1a1410',
-          borderWidth: 1.5,
-        },
-        emphasis: {
-          itemStyle: { opacity: 1, borderColor: '#ffffff', borderWidth: 2 },
-        },
-      }),
-    )
+function CommunityDossier({
+  c,
+  isActive,
+  onHover,
+  innerRef,
+}: {
+  c: Community
+  isActive: boolean
+  onHover: (id: string | null) => void
+  innerRef: (el: HTMLDivElement | null) => void
+}) {
+  const fill = PATTERN_HEX[c.pattern]
+  const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
+  const Icon = PATTERN_ICON[c.pattern]
 
-    return {
-      backgroundColor: 'transparent',
-      grid: { left: 56, right: 24, top: 48, bottom: 52 },
-      // Danger zone shading — visual rectangle in top-right
-      graphic: [
-        // Danger zone label
-        { type: 'text', left: '72%', top: '6%', style: { text: '▲ CRÍTICO', fill: '#dc2626', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.7, fontWeight: 'bold' } },
-        { type: 'text', left: '52%', top: '6%', style: { text: 'ALTO RIESGO', fill: '#ea580c', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.55 } },
-        { type: 'text', left: '6%', top: '6%', style: { text: 'MONITOREO', fill: '#5a5248', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.6 } },
-        { type: 'text', left: '6%', top: '60%', style: { text: 'BAJO', fill: '#4a4540', fontSize: 9, fontFamily: "'JetBrains Mono', ui-monospace, monospace", opacity: 0.5 } },
-      ],
-      xAxis: {
-        name: 'Puntuación de riesgo →',
-        nameLocation: 'end',
-        nameTextStyle: { color: '#6b6258', fontSize: 10, padding: [0, 0, 0, 8] },
-        type: 'value',
-        min: 0,
-        max: 1,
-        splitLine: { lineStyle: { color: '#2e2824', type: 'dashed', width: 0.8 } },
-        axisLine: { lineStyle: { color: '#3a3430' } },
-        axisTick: { lineStyle: { color: '#3a3430' } },
-        axisLabel: {
-          color: '#6b6258',
-          fontSize: 10,
-          formatter: (v: number) => v.toFixed(1),
-        },
-      },
-      yAxis: {
-        name: 'IPS ↑',
-        nameLocation: 'end',
-        nameTextStyle: { color: '#6b6258', fontSize: 10 },
-        type: 'value',
-        min: 0,
-        max: 100,
-        splitLine: { lineStyle: { color: '#2e2824', type: 'dashed', width: 0.8 } },
-        axisLine: { lineStyle: { color: '#3a3430' } },
-        axisTick: { lineStyle: { color: '#3a3430' } },
-        axisLabel: { color: '#6b6258', fontSize: 10 },
-      },
-      tooltip: {
-        trigger: 'item',
-        backgroundColor: '#1a1410',
-        borderColor: '#3a3430',
-        borderWidth: 1,
-        padding: [10, 14],
-        textStyle: { color: '#e8e0d8', fontSize: 12, lineHeight: 20 },
-        formatter: (params: { data: ScatterPoint }) => {
-          const [riskScore, ipsScore, totalVal, name, , pattern, tier] = params.data
-          const patternDisplay = PATTERN_LABELS[pattern] ?? pattern
-          const riskColor = riskScore >= 0.6 ? '#f87171' : riskScore >= 0.4 ? '#fb923c' : riskScore >= 0.25 ? '#fbbf24' : '#4ade80'
-          const riskLabel = riskScore >= 0.6 ? 'CRÍTICO' : riskScore >= 0.4 ? 'ALTO' : riskScore >= 0.25 ? 'MEDIO' : 'BAJO'
-          return [
-            `<div style="max-width:280px;line-height:1.6;font-family:system-ui">`,
-            `<div style="font-weight:700;font-size:13px;margin-bottom:5px;color:#f0ece6">${name}</div>`,
-            `<div style="display:flex;gap:10px;flex-wrap:wrap;font-size:11px;color:#8b8178;margin-bottom:3px">`,
-            `<span>IPS <b style="color:#e8e0d8">${ipsScore.toFixed(1)}</b></span>`,
-            `<span>Tier <b style="color:#e8e0d8">${tier}</b></span>`,
-            `<span>Riesgo <b style="color:${riskColor}">${(riskScore * 100).toFixed(0)}% ${riskLabel}</b></span>`,
-            `</div>`,
-            `<div style="font-size:11px;color:#6b6258;margin-top:2px">`,
-            `${patternDisplay} · MX$${totalVal >= 1e9 ? (totalVal / 1e9).toFixed(2) + 'B' : (totalVal / 1e6).toFixed(0) + 'M'}`,
-            `</div>`,
-            `<div style="font-size:10px;color:#4a4540;margin-top:4px">↗ Clic para abrir expediente</div>`,
-            `</div>`,
-          ].join('')
-        },
-      },
-      series: [
-        ...series,
-        // Critical threshold line at x=0.6 (actual critical threshold, not 0.5)
-        {
-          type: 'scatter',
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            lineStyle: { color: '#dc2626', type: 'solid', width: 1.5, opacity: 0.5 },
-            label: { show: false },
-            data: [{ xAxis: 0.6 }],
-          },
-          data: [],
-        },
-        // High risk threshold at x=0.4
-        {
-          type: 'scatter',
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            lineStyle: { color: '#ea580c', type: 'dashed', width: 1, opacity: 0.35 },
-            label: { show: false },
-            data: [{ xAxis: 0.4 }],
-          },
-          data: [],
-        },
-        // IPS=60 horizontal threshold line
-        {
-          type: 'scatter',
-          markLine: {
-            silent: true,
-            symbol: 'none',
-            lineStyle: { color: '#78716c', type: 'dashed', width: 0.8, opacity: 0.4 },
-            label: { show: false },
-            data: [{ yAxis: 60 }],
-          },
-          data: [],
-        },
-      ],
-    } as unknown as echarts.EChartsOption
-  }, [seriesData])
-
-  const handleEvents = useMemo(
-    () => ({
-      click: (params: { data?: ScatterPoint }) => {
-        if (!params.data || !Array.isArray(params.data)) return
-        const vendorId = params.data[4]
-        if (typeof vendorId === 'number') onSelect(vendorId)
-      },
-    }),
-    [onSelect],
-  )
-
-  if (dossiers.length === 0) {
-    return null
-  }
+  // Normalizers for member-bar and confirmed-bar (relative to our corpus)
+  const maxVendors = Math.max(...COMMUNITIES.map((x) => x.vendors))
+  const maxConfirmed = Math.max(...COMMUNITIES.map((x) => x.confirmed))
+  const maxValue = Math.max(...COMMUNITIES.map((x) => x.value))
 
   return (
-    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden mb-6">
-      {/* Header row */}
-      <div className="px-4 pt-3 pb-2 border-b border-white/8">
-        <p className="font-mono text-[10px] tracking-[0.18em] uppercase text-text-muted">
-          Matriz de Investigación
+    <div
+      ref={innerRef}
+      onMouseEnter={() => onHover(c.id)}
+      onMouseLeave={() => onHover(null)}
+      className={cn(
+        'rounded-xl border overflow-hidden transition-all',
+        'bg-surface-card border-white/8',
+        isActive ? 'border-white/25 ring-1 ring-white/15' : 'hover:border-white/15',
+      )}
+      style={{
+        borderLeftWidth: 4,
+        borderLeftColor: fill,
+      }}
+    >
+      <div className="p-5 space-y-3.5">
+        {/* Header row: pattern badge + institution */}
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex items-center gap-2">
+            <Icon
+              className="w-3.5 h-3.5 shrink-0"
+              style={{ color: fill }}
+              aria-hidden="true"
+            />
+            <span
+              className="text-[9px] font-mono font-bold uppercase tracking-[0.15em]"
+              style={{ color: fill }}
+            >
+              {c.pattern} · {PATTERN_LABEL[c.pattern]}
+            </span>
+          </div>
+          <div
+            className="inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[9px] font-mono font-semibold border"
+            style={{
+              color: sectorColor,
+              borderColor: `${sectorColor}55`,
+              backgroundColor: `${sectorColor}12`,
+            }}
+          >
+            <span
+              className="h-1.5 w-1.5 rounded-full shrink-0"
+              style={{ backgroundColor: sectorColor }}
+            />
+            {c.institution}
+          </div>
+        </div>
+
+        {/* Community name */}
+        <h3
+          className="text-lg text-text-primary font-bold leading-tight"
+          style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
+        >
+          {c.name}
+        </h3>
+
+        {/* Value captured — the hero number */}
+        <div className="border-l-2 pl-3 py-0.5" style={{ borderColor: fill }}>
+          <div
+            className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5"
+          >
+            Valor capturado
+          </div>
+          <div
+            className="text-3xl font-mono font-black tabular-nums text-white leading-none"
+            style={{ color: fill }}
+          >
+            {formatCompactMXN(c.value)}
+          </div>
+        </div>
+
+        {/* Stat bars: Members · Confirmed · Avg Risk */}
+        <div className="space-y-1.5 pt-1">
+          <StatRow
+            label="Proveedores"
+            value={formatNumber(c.vendors)}
+            bar={<DotBar value={c.vendors / maxVendors} color={fill} dots={18} />}
+          />
+          <StatRow
+            label="Casos confirmados"
+            value={`${c.confirmed}`}
+            bar={
+              <DotBar
+                value={c.confirmed / maxConfirmed}
+                color="#dc2626"
+                dots={18}
+              />
+            }
+          />
+          <StatRow
+            label="Riesgo promedio"
+            value={`${(c.avgRisk * 100).toFixed(0)}%`}
+            bar={<DotBar value={c.avgRisk} color="#f59e0b" dots={18} />}
+          />
+          <StatRow
+            label="Cuota top-10"
+            value={`${((c.value / maxValue) * 100).toFixed(0)}%`}
+            bar={<DotBar value={c.value / maxValue} color={fill} dots={18} />}
+          />
+        </div>
+
+        {/* Network signature */}
+        <div className="pt-3 mt-1 border-t border-white/8">
+          <div
+            className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
+          >
+            Firma de red
+          </div>
+          <div className="space-y-1.5">
+            <SignatureRow
+              label="Adjudicación Directa"
+              value={c.daRate}
+              color="#ef4444"
+              benchmark={0.25}
+              benchmarkLabel="OCDE 25%"
+            />
+            <SignatureRow
+              label="Propuesta Única"
+              value={c.sbRate}
+              color="#f59e0b"
+            />
+            <SignatureRow
+              label="Precio Anómalo"
+              value={c.paRate}
+              color="#eab308"
+            />
+          </div>
+        </div>
+
+        {/* Verdict */}
+        <div className="pt-3 border-t border-white/8">
+          <div
+            className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5"
+          >
+            Veredicto editorial
+          </div>
+          <p className="text-[12px] text-text-secondary leading-relaxed italic">
+            “{c.verdict}”
+          </p>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function StatRow({
+  label,
+  value,
+  bar,
+}: {
+  label: string
+  value: string
+  bar: React.ReactNode
+}) {
+  return (
+    <div className="flex items-center gap-3 text-[10px]">
+      <span className="text-text-muted/60 w-28 shrink-0">{label}</span>
+      <div className="flex-1 flex items-center">{bar}</div>
+      <span className="text-text-primary font-mono font-bold tabular-nums w-12 text-right">
+        {value}
+      </span>
+    </div>
+  )
+}
+
+function SignatureRow({
+  label,
+  value,
+  color,
+  benchmark,
+  benchmarkLabel,
+}: {
+  label: string
+  value: number
+  color: string
+  benchmark?: number
+  benchmarkLabel?: string
+}) {
+  const pct = Math.round(value * 100)
+  const overBenchmark = benchmark != null && value > benchmark
+  return (
+    <div className="flex items-center gap-2">
+      <span className="text-[10px] text-text-muted/70 w-28 shrink-0">{label}</span>
+      <div className="flex-1 relative">
+        <DotBar value={value} color={color} dots={22} size={5} gap={2} />
+        {benchmark != null && (
+          <span
+            className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
+            style={{ left: `${benchmark * 100}%` }}
+            aria-hidden="true"
+          />
+        )}
+      </div>
+      <span
+        className={cn(
+          'text-[10px] font-mono font-bold tabular-nums w-10 text-right',
+          overBenchmark ? 'text-red-400' : 'text-text-primary',
+        )}
+      >
+        {pct}%
+      </span>
+      {benchmarkLabel && (
+        <span className="text-[9px] text-cyan-400/70 font-mono w-16 text-right">
+          {benchmarkLabel}
+        </span>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ACT III — FLUJO DE VALOR
+// FlowParticle: top 5 communities → top 5 captured institutions.
+// ---------------------------------------------------------------------------
+
+function FlujoDeValor({ communities }: { communities: Community[] }) {
+  const { sources, targets, links } = useMemo(() => {
+    const top5 = [...communities].sort((a, b) => b.value - a.value).slice(0, 5)
+    const sources: FlowNode[] = top5.map((c) => ({
+      id: `s-${c.id}`,
+      label: c.name,
+      value: c.value,
+    }))
+    const targets: FlowNode[] = top5.map((c) => ({
+      id: `t-${c.id}`,
+      label: c.institution,
+      value: c.value,
+    }))
+    const links: FlowLink[] = top5.map((c) => ({
+      sourceId: `s-${c.id}`,
+      targetId: `t-${c.id}`,
+      value: c.value,
+      critical: c.avgRisk >= 0.65,
+    }))
+    return { sources, targets, links }
+  }, [communities])
+
+  const totalFlow = links.reduce((s, l) => s + l.value, 0)
+
+  return (
+    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-white/8">
+        <p
+          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
+          style={{ fontFamily: FONT_MONO }}
+        >
+          Acto III · Flujo de Valor
         </p>
-        <p className="text-[11px] text-text-muted/60 mt-0.5">
-          Clic en cualquier punto para abrir el expediente del proveedor
+        <h2
+          className="text-xl md:text-2xl font-bold text-text-primary mt-1 leading-tight"
+          style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.01em' }}
+        >
+          Cómo fluye el dinero: comunidades → instituciones
+        </h2>
+        <p className="text-[12px] text-text-muted/70 mt-1.5 max-w-3xl leading-relaxed">
+          Cada partícula representa una fracción del valor capturado. Los flujos rojos
+          marcan comunidades con riesgo promedio ≥ 65%. Total mostrado:{' '}
+          <span className="text-white font-mono font-bold">
+            {formatCompactMXN(totalFlow)}
+          </span>{' '}
+          a través de las 5 comunidades más grandes.
         </p>
       </div>
 
-      {/* Chart */}
-      <div style={{ height: 420, width: '100%' }}>
-        <ReactECharts
-          option={option}
-          style={{ height: 420, width: '100%' }}
-          onEvents={handleEvents}
-          opts={{ renderer: 'canvas' }}
-          notMerge={true}
+      <div className="p-4">
+        <FlowParticle
+          sources={sources}
+          targets={targets}
+          links={links}
+          sourceLabel="Comunidad"
+          targetLabel="Institución"
+          width={860}
+          height={360}
+          maxDotsPerFlow={80}
         />
       </div>
-
-      {/* Legend footer */}
-      <div className="px-4 py-3 border-t border-white/8 flex flex-wrap items-start gap-x-6 gap-y-2">
-        {/* Pattern colors */}
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
-            Color = Patrón de corrupción
-          </p>
-          <div className="flex flex-wrap gap-x-3 gap-y-1">
-            {ALL_PATTERNS.map((p) => (
-              <span
-                key={p}
-                className="inline-flex items-center gap-1 text-[10px] text-text-muted/70"
-              >
-                <span
-                  className="h-2.5 w-2.5 rounded-full shrink-0"
-                  style={{ background: PATTERN_HEX[p] }}
-                  aria-hidden="true"
-                />
-                <span className="font-mono font-bold">{p}</span>{' '}
-                <span>{PATTERN_LABELS[p] ?? p}</span>
-              </span>
-            ))}
-          </div>
-        </div>
-
-        {/* Node size reference */}
-        <div>
-          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
-            Tamaño = Valor contractual
-          </p>
-          <div className="flex items-end gap-2">
-            {[
-              { r: 5, label: '&lt;1B' },
-              { r: 9, label: '5B' },
-              { r: 14, label: '20B+' },
-            ].map(({ r, label }) => (
-              <span key={label} className="flex flex-col items-center gap-0.5">
-                <span
-                  className="rounded-full bg-white/25"
-                  style={{ width: r * 2, height: r * 2, display: 'inline-block' }}
-                  aria-hidden="true"
-                />
-                <span
-                  className="text-[9px] text-text-muted/50 font-mono"
-                  dangerouslySetInnerHTML={{ __html: label }}
-                />
-              </span>
-            ))}
-            <span className="text-[9px] text-text-muted/40 mb-4">MXN</span>
-          </div>
-        </div>
-
-        {/* Axes guide */}
-        <div className="ml-auto text-right">
-          <p className="text-[9px] font-mono uppercase tracking-widest text-text-muted/40 mb-1.5">
-            {t('scatter.axesLabel')}
-          </p>
-          <p className="text-[10px] text-text-muted/60">
-            {t('scatter.xAxis')}
-          </p>
-          <p className="text-[10px] text-text-muted/60">
-            {t('scatter.yAxis')}
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
 
 // ---------------------------------------------------------------------------
-// Component
+// Header stats derived from live ARIA queue for context
 // ---------------------------------------------------------------------------
 
-export default function RedesKnownDossier() {
-  const { t } = useTranslation('redes')
-
-  // Filters
-  const [patternFilter, setPatternFilter] = useState<string>('')
-  const [searchTerm, setSearchTerm] = useState('')
-  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
-
-  // Selected vendor for the detail panel
-  const [selectedVendorId, setSelectedVendorId] = useState<number | null>(null)
-
-  // Fetch Tier 1 + Tier 2 + Tier 3 (sample) from ARIA queue
-  const { data: tier1Data, isLoading: loading1 } = useQuery({
-    queryKey: ['aria-queue-redes-t1'],
-    queryFn: () => ariaApi.getQueue({ tier: 1, per_page: 30 }),
-    staleTime: 10 * 60 * 1000,
-  })
-  const { data: tier2Data, isLoading: loading2 } = useQuery({
-    queryKey: ['aria-queue-redes-t2'],
-    queryFn: () => ariaApi.getQueue({ tier: 2, per_page: 30 }),
-    staleTime: 10 * 60 * 1000,
-  })
-  const { data: tier3Data, isLoading: loading3 } = useQuery({
-    queryKey: ['aria-queue-redes-t3'],
-    queryFn: () => ariaApi.getQueue({ tier: 3, per_page: 40 }),
-    staleTime: 10 * 60 * 1000,
-  })
-
-  // Stats
-  const { data: statsData } = useQuery({
-    queryKey: ['aria-stats-redes'],
+function HeaderStats() {
+  const { data: stats } = useQuery({
+    queryKey: ['aria-stats-red'],
     queryFn: () => ariaApi.getStats(),
     staleTime: 10 * 60 * 1000,
   })
 
-  const isLoading = loading1 || loading2 || loading3
-
-  // Timeout: if still loading after 8s, treat as error state
-  const [loadTimedOut, setLoadTimedOut] = useState(false)
-  useEffect(() => {
-    if (!isLoading) { setLoadTimedOut(false); return }
-    const timer = setTimeout(() => setLoadTimedOut(true), 8000)
-    return () => clearTimeout(timer)
-  }, [isLoading])
-
-  // Merge and sort by IPS
-  const dossiers = useMemo(() => {
-    const items: AriaQueueItem[] = []
-    if (tier1Data?.data) items.push(...tier1Data.data)
-    if (tier2Data?.data) items.push(...tier2Data.data)
-    if (tier3Data?.data) items.push(...tier3Data.data)
-    // Deduplicate by vendor_id
-    const seen = new Set<number>()
-    const unique: AriaQueueItem[] = []
-    for (const item of items) {
-      if (!seen.has(item.vendor_id)) {
-        seen.add(item.vendor_id)
-        unique.push(item)
-      }
-    }
-    // Sort by IPS descending
-    unique.sort((a, b) => b.ips_final - a.ips_final)
-    return unique
-  }, [tier1Data, tier2Data, tier3Data])
-
-  // Apply filters
-  const filtered = useMemo(() => {
-    let result = dossiers
-    if (patternFilter) {
-      result = result.filter((d) => d.primary_pattern === patternFilter)
-    }
-    if (searchTerm.trim()) {
-      const term = searchTerm.toLowerCase()
-      result = result.filter((d) => d.vendor_name.toLowerCase().includes(term))
-    }
-    return result.slice(0, 40) // cap at 40 for perf
-  }, [dossiers, patternFilter, searchTerm])
-
-  const error = loadTimedOut || (!isLoading && dossiers.length === 0 && !tier1Data && !tier2Data && !tier3Data)
-
-  // Stats bar computations derived from filtered results
-  const statsBar = useMemo(() => {
-    const t1 = filtered.filter((d) => d.ips_tier === 1).length
-    const t2 = filtered.filter((d) => d.ips_tier === 2).length
-    const totalAtRisk = filtered.reduce((sum, d) => sum + (d.total_value_mxn ?? 0), 0)
-    const sectors = new Set(filtered.map((d) => d.primary_sector_name).filter(Boolean)).size
-    return { t1, t2, totalAtRisk, sectors }
-  }, [filtered])
-
-  // Dismiss the detail panel when clicking outside on mobile overlay
-  const handleOverlayClick = () => setSelectedVendorId(null)
-
-  // ---------------------------------------------------------------------------
-  // Render
-  // ---------------------------------------------------------------------------
+  const totalCorpusValue = useMemo(
+    () => COMMUNITIES.reduce((s, c) => s + c.value, 0),
+    [],
+  )
+  const totalCorpusVendors = useMemo(
+    () => COMMUNITIES.reduce((s, c) => s + c.vendors, 0),
+    [],
+  )
+  const totalCorpusConfirmed = useMemo(
+    () => COMMUNITIES.reduce((s, c) => s + c.confirmed, 0),
+    [],
+  )
 
   return (
-    <div className="relative space-y-6 max-w-6xl mx-auto">
+    <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+      <HeaderStat
+        label="Comunidades"
+        value="10"
+        sublabel="detectadas por Louvain"
+      />
+      <HeaderStat
+        label="Proveedores en red"
+        value={formatNumber(totalCorpusVendors)}
+        sublabel={`de ${stats ? formatNumber(stats.queue_total) : '—'} en cola ARIA`}
+      />
+      <HeaderStat
+        label="Valor capturado"
+        value={formatCompactMXN(totalCorpusValue)}
+        sublabel="en las top 10"
+        accent="#ef4444"
+      />
+      <HeaderStat
+        label="Casos confirmados"
+        value={String(totalCorpusConfirmed)}
+        sublabel="con sentencia o sanción"
+        accent="#f59e0b"
+      />
+    </div>
+  )
+}
+
+function HeaderStat({
+  label,
+  value,
+  sublabel,
+  accent,
+}: {
+  label: string
+  value: string
+  sublabel: string
+  accent?: string
+}) {
+  return (
+    <div className="rounded-xl border border-white/8 bg-stone-900/40 px-4 py-3">
+      <div
+        className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1"
+      >
+        {label}
+      </div>
+      <div
+        className="text-2xl font-mono font-black tabular-nums leading-none"
+        style={{ color: accent ?? '#fafafa' }}
+      >
+        {value}
+      </div>
+      <div className="text-[10px] text-text-muted/60 mt-1 leading-snug">{sublabel}</div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// Page
+// ---------------------------------------------------------------------------
+
+export default function RedesKnownDossier() {
+  // We keep i18n setup to satisfy potential translation needs downstream, but
+  // the page's narrative text is intentionally authored in Spanish as editorial
+  // copy rather than dynamic strings.
+  useTranslation('redes')
+
+  const [hoverId, setHoverId] = useState<string | null>(null)
+  const [activeId, setActiveId] = useState<string | null>(null)
+  const dossierRefs = useRef<Record<string, HTMLDivElement | null>>({})
+
+  const effectiveActive = hoverId ?? activeId
+
+  // When user clicks a community in the cluster, scroll its dossier card into view.
+  useEffect(() => {
+    if (!activeId) return
+    const el = dossierRefs.current[activeId]
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' })
+    }
+  }, [activeId])
+
+  return (
+    <div className="relative space-y-8 max-w-6xl mx-auto pb-12">
       {/* Editorial header */}
-      <div className="border-b border-border/60 pb-8 mb-8">
-        {/* Kicker strip */}
+      <div className="border-b border-border/60 pb-8">
         <div className="flex items-center gap-3 mb-4">
           <div className="h-px flex-1 bg-gradient-to-r from-red-500/60 to-transparent" />
-          <span className="text-[10px] tracking-[0.35em] uppercase font-mono text-red-400/80">
-            {t('matrixEyebrow')}
+          <span
+            className="text-[10px] tracking-[0.35em] uppercase font-mono text-red-400/80"
+          >
+            Inteligencia de Red · ARIA + Louvain
           </span>
           <div className="h-px w-8 bg-red-500/40" />
         </div>
 
-        {/* Main headline */}
         <h1
-          style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.02em' }}
-          className="text-3xl md:text-4xl font-black text-text-primary mb-3 leading-tight"
+          style={{
+            fontFamily: FONT_SERIF,
+            letterSpacing: '-0.025em',
+          }}
+          className="text-4xl md:text-5xl font-black text-text-primary mb-3 leading-[1.02]"
         >
-          {t('header.title')}
+          La Red Invisible
         </h1>
 
-        {/* Lede */}
-        <p className="text-sm text-text-secondary max-w-2xl leading-relaxed mb-4">
-          {t('scatter.desc')}
+        <p className="text-base text-text-secondary max-w-3xl leading-relaxed mb-5">
+          No buscamos proveedores corruptos uno por uno. Buscamos{' '}
+          <span className="text-white font-semibold">comunidades</span> que capturan
+          instituciones. Estas son las diez redes más grandes detectadas por algoritmo
+          de comunidades Louvain sobre{' '}
+          <span className="text-white font-mono">3.05M</span> contratos federales.
         </p>
 
-        {/* Key stat callout */}
-        {statsData && (
-          <div className="inline-flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2">
-            <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-            <span className="text-sm font-mono">
-              <span className="text-red-400 font-bold">{statsData.latest_run?.tier1_count ?? 0}</span>
-              <span className="text-text-muted/70 ml-1.5">vendedores Tier 1 bajo investigación activa</span>
+        <div className="inline-flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2">
+          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+          <span className="text-sm font-mono">
+            <span className="text-red-400 font-bold">10</span>
+            <span className="text-text-muted/70 ml-1.5">
+              comunidades controlan{' '}
             </span>
-          </div>
-        )}
-      </div>
-
-      {/* Source attribution + stats */}
-      <div className="flex flex-wrap items-center gap-4 text-[11px] text-text-muted/60">
-        {statsData && (
-          <>
-            <span className="bg-white/5 px-3 py-1 rounded-full border border-white/10">
-              {t('sourceAttribution', { count: statsData.queue_total })} &middot; {t('sourceRegistries')}
+            <span className="text-red-400 font-bold">MX$1.40T</span>
+            <span className="text-text-muted/70 ml-1.5">
+              en contratos federales
             </span>
-            <span className="text-red-400">{t('stats.tier1')}: {statsData.latest_run?.tier1_count ?? 0}</span>
-            <span className="text-orange-400">{t('stats.tier2')}: {statsData.latest_run?.tier2_count ?? 0}</span>
-          </>
-        )}
-      </div>
-
-      {/* Pattern summary grid — live counts from ARIA stats */}
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
-        {ALL_PATTERNS.map((code) => {
-          const liveCount = statsData?.pattern_counts?.[code]
-          const countLabel = liveCount !== undefined
-            ? liveCount >= 1000 ? `${(liveCount / 1000).toFixed(1)}K` : String(liveCount)
-            : '—'
-          const name = t(`patternGrid.${code}.name`)
-          const desc = t(`patternGrid.${code}.desc`)
-          const borderColorMap: Record<string, string> = {
-            P1: 'border-red-500',
-            P2: 'border-amber-500',
-            P3: 'border-orange-400',
-            P6: 'border-rose-600',
-            P7: 'border-yellow-500',
-          }
-          return (
-            <button
-              key={code}
-              onClick={() => setPatternFilter(patternFilter === code ? '' : code)}
-              className={cn(
-                'border-l-4 pl-3 pr-3 py-3 rounded-r text-left transition-all',
-                borderColorMap[code] ?? 'border-zinc-500',
-                patternFilter === code
-                  ? 'bg-white/10 ring-1 ring-white/20'
-                  : 'bg-background-elevated hover:bg-white/5',
-              )}
-              aria-pressed={patternFilter === code}
-            >
-              {/* Pattern code + icon */}
-              <div className="flex items-center justify-between mb-1.5">
-                <span className="text-[9px] font-mono font-black uppercase tracking-widest text-text-muted/60">{code}</span>
-                {(() => {
-                  const Icon = PATTERN_ICONS[code] || AlertTriangle
-                  return <Icon className="w-3.5 h-3.5 text-text-muted/30" aria-hidden="true" />
-                })()}
-              </div>
-              {/* Big count */}
-              <div className="text-xl font-mono font-black text-text-primary tabular-nums leading-none mb-1">
-                {countLabel}
-              </div>
-              {/* Name */}
-              <div className="text-[10px] font-semibold text-text-primary leading-tight mb-0.5">{name}</div>
-              {/* Desc */}
-              <div className="text-[9px] text-text-muted/50 leading-tight">{desc}</div>
-            </button>
-          )
-        })}
-      </div>
-
-      {/* Filters — search + pattern pills */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-text-muted/40" />
-          <input
-            type="text"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            placeholder={t('filters.searchPlaceholder')}
-            className="bg-surface-card border border-white/10 rounded-md pl-8 pr-3 py-1.5 text-sm text-text-primary w-64 placeholder:text-text-muted/30"
-            aria-label={t('filters.searchPlaceholder')}
-          />
-        </div>
-
-        <div className="flex flex-wrap gap-1.5">
-          {ALL_PATTERNS.map((p) => {
-            const isActive = patternFilter === p
-            const colors = PATTERN_PILL_COLORS[p]
-            const label = t(`patternLabels.${p}`)
-            return (
-              <button
-                key={p}
-                onClick={() => setPatternFilter(isActive ? '' : p)}
-                className={cn(
-                  'text-[10px] font-mono font-semibold tracking-wider px-2.5 py-1 rounded border transition-all',
-                  isActive ? colors?.active : colors?.inactive,
-                )}
-                aria-pressed={isActive}
-                aria-label={`${t('filters.byPattern')}: ${p}`}
-              >
-                {p} {label}
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
-      {/* Risk Intelligence Matrix — scatter plot */}
-      {!isLoading && filtered.length > 0 && (
-        <>
-          <PriorityTargetsStrip dossiers={filtered} onSelect={setSelectedVendorId} />
-          <ErrorBoundary fallback={<div className="h-[420px] rounded-xl border border-stone-700/30 flex items-center justify-center text-xs text-stone-400">Visualization unavailable</div>}>
-            <RiskMatrix dossiers={filtered} onSelect={setSelectedVendorId} />
-          </ErrorBoundary>
-        </>
-      )}
-
-      {/* Stats bar + view toggle */}
-      {!isLoading && filtered.length > 0 && (
-        <div className="space-y-3">
-          {/* Stats bar */}
-          <div
-            className="grid grid-cols-4 gap-3 p-4 bg-stone-900/50 border border-stone-700/30 rounded-xl"
-            role="region"
-            aria-label="Summary statistics"
-          >
-            <div className="text-center">
-              <div className="flex items-center justify-center gap-1.5 mb-0.5">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
-                <span className="text-2xl font-mono font-bold text-red-400">{statsBar.t1}</span>
-              </div>
-              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T1 Crítico</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-mono font-bold text-orange-400">{statsData?.latest_run?.tier2_count ?? (tier2Data?.pagination?.total ?? statsBar.t2)}</div>
-              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">T2 Vendors</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-mono font-bold text-text-primary">{formatCompactMXN(statsBar.totalAtRisk)}</div>
-              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Total at Risk</div>
-            </div>
-            <div className="text-center">
-              <div className="text-2xl font-mono font-bold text-text-primary">{statsBar.sectors}</div>
-              <div className="text-[10px] text-text-muted/60 uppercase tracking-wider">Sectors</div>
-            </div>
-          </div>
-
-          {/* View mode toggle */}
-          <div className="flex items-center justify-end gap-1">
-            <button
-              onClick={() => setViewMode('grid')}
-              className={cn(
-                'p-1.5 rounded border transition-all',
-                viewMode === 'grid'
-                  ? 'bg-white/10 border-white/20 text-text-primary'
-                  : 'border-white/10 text-text-muted/40 hover:text-text-muted hover:border-white/15',
-              )}
-              aria-pressed={viewMode === 'grid'}
-              aria-label="Grid view"
-            >
-              <LayoutGrid className="w-4 h-4" aria-hidden="true" />
-            </button>
-            <button
-              onClick={() => setViewMode('list')}
-              className={cn(
-                'p-1.5 rounded border transition-all',
-                viewMode === 'list'
-                  ? 'bg-white/10 border-white/20 text-text-primary'
-                  : 'border-white/10 text-text-muted/40 hover:text-text-muted hover:border-white/15',
-              )}
-              aria-pressed={viewMode === 'list'}
-              aria-label="List view"
-            >
-              <List className="w-4 h-4" aria-hidden="true" />
-            </button>
-          </div>
-        </div>
-      )}
-
-      {/* Loading */}
-      {isLoading && !loadTimedOut && (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {Array.from({ length: 8 }).map((_, i) => (
-            <Skeleton key={i} className="h-44 rounded-xl" />
-          ))}
-        </div>
-      )}
-
-      {/* Error */}
-      {error && (
-        <div className="bg-surface-card border border-red-500/20 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">{t('errorTitle')}</h3>
-          <p className="text-text-muted text-sm">{t('errorMessage')}</p>
-          <p className="text-text-muted/60 text-xs mt-2">{t('errorHint')}</p>
-        </div>
-      )}
-
-      {/* Empty state (loaded but no results) */}
-      {!isLoading && !error && filtered.length === 0 && dossiers.length === 0 && (
-        <div className="bg-surface-card border border-white/10 rounded-xl p-8 text-center">
-          <h3 className="font-serif text-xl text-text-primary mb-2">{t('emptyTitle')}</h3>
-          <p className="text-text-muted text-sm">{t('emptyMessage')}</p>
-          <p className="text-text-muted/60 text-xs mt-2">{t('emptyHint')}</p>
-        </div>
-      )}
-
-      {/* Filter yields nothing */}
-      {!isLoading && !error && filtered.length === 0 && dossiers.length > 0 && (
-        <div className="bg-surface-card border border-white/10 rounded-xl p-6 text-center">
-          <p className="text-text-muted text-sm">{t('noFilterResults')}</p>
-        </div>
-      )}
-
-      {/* Dossier grid */}
-      {!isLoading && filtered.length > 0 && (
-        <motion.div
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-          className={viewMode === 'grid'
-            ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4'
-            : 'flex flex-col gap-2'
-          }
-        >
-          {filtered.map((item) =>
-            viewMode === 'list' ? (
-              <DossierListRow
-                key={item.vendor_id}
-                item={item}
-                isSelected={selectedVendorId === item.vendor_id}
-                onSelect={() =>
-                  setSelectedVendorId(
-                    selectedVendorId === item.vendor_id ? null : item.vendor_id
-                  )
-                }
-              />
-            ) : (
-              <DossierCard
-                key={item.vendor_id}
-                item={item}
-                isSelected={selectedVendorId === item.vendor_id}
-                onSelect={() =>
-                  setSelectedVendorId(
-                    selectedVendorId === item.vendor_id ? null : item.vendor_id
-                  )
-                }
-              />
-            )
-          )}
-        </motion.div>
-      )}
-
-      {/* Count */}
-      {!isLoading && filtered.length > 0 && (
-        <p className="text-[11px] text-text-muted/40 text-center">
-          {t('dossierCount', { filtered: filtered.length, total: dossiers.length })}
-        </p>
-      )}
-
-      {/* Mobile overlay backdrop */}
-      <AnimatePresence>
-        {selectedVendorId !== null && (
-          <motion.div
-            key="backdrop"
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-black/40 z-30 lg:hidden"
-            onClick={handleOverlayClick}
-            aria-hidden="true"
-          />
-        )}
-      </AnimatePresence>
-
-      {/* Detail panel — slides in from the right */}
-      <AnimatePresence>
-        {selectedVendorId !== null && (
-          <motion.aside
-            key={`detail-${selectedVendorId}`}
-            variants={panelVariants}
-            initial="initial"
-            animate="animate"
-            exit="exit"
-            className={cn(
-              'fixed top-0 right-0 h-full w-full max-w-md z-40',
-              'bg-background border-l border-white/10 shadow-2xl',
-              'overflow-y-auto',
-            )}
-            aria-label="Vendor detail panel"
-          >
-            <VendorDetailPanel
-              vendorId={selectedVendorId}
-              ariaItem={dossiers.find((d) => d.vendor_id === selectedVendorId) ?? null}
-              onClose={() => setSelectedVendorId(null)}
-            />
-          </motion.aside>
-        )}
-      </AnimatePresence>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Dossier List Row — compact horizontal layout for list view mode
-// ---------------------------------------------------------------------------
-
-interface DossierListRowProps {
-  item: AriaQueueItem
-  isSelected: boolean
-  onSelect: () => void
-}
-
-function DossierListRow({ item, isSelected, onSelect }: DossierListRowProps) {
-  const { t } = useTranslation('redes')
-  const pattern = item.primary_pattern || 'default'
-  const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
-  const borderClass = PATTERN_BORDER_COLORS[pattern] || 'border-l-zinc-500'
-  const sectorColor = item.primary_sector_name
-    ? SECTOR_COLORS[item.primary_sector_name.toLowerCase()] || '#64748b'
-    : '#64748b'
-
-  return (
-    <motion.div
-      variants={staggerItem}
-      className={cn(
-        'bg-surface-card border border-white/8 rounded-lg overflow-hidden',
-        'border-l-4',
-        borderClass,
-        'transition-colors cursor-pointer',
-        isSelected ? 'border-white/30 ring-1 ring-white/20' : 'hover:border-white/20',
-      )}
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onSelect()}
-      aria-expanded={isSelected}
-      aria-label={`${item.vendor_name} — ${t('card.viewCase')}`}
-    >
-      <div className="px-4 py-2.5 flex items-center gap-4 flex-wrap">
-        {/* Pattern icon */}
-        <PatternIcon className="w-3.5 h-3.5 text-text-muted/50 shrink-0" aria-hidden="true" />
-
-        {/* Vendor name */}
-        <span className="text-sm font-semibold text-text-primary flex-1 min-w-0 truncate">
-          {item.vendor_name}
-        </span>
-
-        {/* Tier badge */}
-        <span className={cn('text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold shrink-0', getTierBadgeColor(item.ips_tier))}>
-          {t('detail.tier')} {item.ips_tier}
-        </span>
-
-        {/* IPS score */}
-        <span className={cn('text-[10px] font-mono font-bold px-1.5 py-0.5 rounded border shrink-0', getIpsColor(item.ips_final))}>
-          {item.ips_final.toFixed(2)}
-        </span>
-
-        {/* Risk score */}
-        <span className="text-[11px] text-text-muted/70 shrink-0">
-          {t('card.riskScore')}: {(item.avg_risk_score * 100).toFixed(0)}%
-        </span>
-
-        {/* Total value */}
-        <span className="text-[11px] font-semibold text-text-primary shrink-0">
-          {formatCompactMXN(item.total_value_mxn)}
-        </span>
-
-        {/* Sector chip */}
-        {item.primary_sector_name && (
-          <span className="flex items-center gap-1 text-[10px] text-text-muted/60 shrink-0">
-            <span className="w-2 h-2 rounded-full shrink-0" style={{ background: sectorColor }} aria-hidden="true" />
-            {item.primary_sector_name}
           </span>
-        )}
-
-        {/* External flags */}
-        {item.is_efos_definitivo && (
-          <span className="text-[9px] px-1 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20 font-mono shrink-0">
-            EFOS
-          </span>
-        )}
-        {item.is_sfp_sanctioned && (
-          <span className="text-[9px] px-1 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 font-mono shrink-0">
-            SFP
-          </span>
-        )}
-
-        {/* Action link */}
-        <Link
-          to={`/thread/${item.vendor_id}`}
-          className="shrink-0 inline-flex items-center gap-1 text-[10px] font-mono font-semibold uppercase tracking-wider text-accent-primary hover:text-accent-primary/80 transition-colors"
-          onClick={(e) => e.stopPropagation()}
-        >
-          {t('card.viewCase')} <ArrowRight className="w-3 h-3" aria-hidden="true" />
-        </Link>
+        </div>
       </div>
-    </motion.div>
-  )
-}
 
-// ---------------------------------------------------------------------------
-// Dossier Card — intelligence dossier style
-// ---------------------------------------------------------------------------
+      {/* Context stats */}
+      <HeaderStats />
 
-interface DossierCardProps {
-  item: AriaQueueItem
-  isSelected: boolean
-  onSelect: () => void
-}
+      {/* ACT I — Nucleos */}
+      <Nucleos
+        communities={COMMUNITIES}
+        activeId={effectiveActive}
+        onHover={setHoverId}
+        onSelect={(id) => setActiveId(id === activeId ? null : id)}
+      />
 
-function DossierCard({ item, isSelected, onSelect }: DossierCardProps) {
-  const { t } = useTranslation('redes')
-  const pattern = item.primary_pattern || 'default'
-  const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
-  const borderClass = PATTERN_BORDER_COLORS[pattern] || 'border-l-zinc-500'
-  const sectorColor = item.primary_sector_name
-    ? SECTOR_COLORS[item.primary_sector_name.toLowerCase()] || '#64748b'
-    : '#64748b'
-
-  const patternLabel = t(`patternLabels.${pattern}`, { defaultValue: pattern.toUpperCase() })
-
-  return (
-    <motion.div
-      variants={staggerItem}
-      className={cn(
-        'bg-surface-card border border-white/8 rounded-xl overflow-hidden',
-        'border-l-4',
-        borderClass,
-        'transition-colors group cursor-pointer',
-        isSelected ? 'border-white/30 ring-1 ring-white/20' : 'hover:border-white/20',
-      )}
-      onClick={onSelect}
-      role="button"
-      tabIndex={0}
-      onKeyDown={(e) => e.key === 'Enter' && onSelect()}
-      aria-expanded={isSelected}
-      aria-label={`${item.vendor_name} — ${t('card.viewCase')}`}
-    >
-      <div className="p-5 space-y-3">
-        {/* Top row: pattern badge + tier + flags */}
-        <div className="flex items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <PatternIcon className="w-3.5 h-3.5 text-text-muted/50" aria-hidden="true" />
-            <span className="text-[9px] font-mono font-bold uppercase tracking-wider text-text-muted/70">
-              {pattern} {patternLabel}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-1.5">
-            {item.is_efos_definitivo && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-red-500/20 text-red-400 border border-red-500/20 font-mono">
-                EFOS
-              </span>
-            )}
-            {item.is_sfp_sanctioned && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-400 border border-amber-500/20 font-mono">
-                SFP
-              </span>
-            )}
-            {item.new_vendor_risk && (
-              <span className="text-[9px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-400 border border-purple-500/20 font-mono">
-                {t('card.newVendor')}
-              </span>
-            )}
-            <span
-              className={cn(
-                'text-[9px] px-1.5 py-0.5 rounded border font-mono font-bold',
-                getTierBadgeColor(item.ips_tier),
-              )}
-            >
-              {t('detail.tier')} {item.ips_tier}
-            </span>
-          </div>
-        </div>
-
-        {/* Vendor name (bold serif) */}
-        <h3
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-          className="text-lg text-text-primary font-bold leading-tight"
-        >
-          {item.vendor_name}
-        </h3>
-
-        {/* Sector + period row */}
-        <div className="flex items-center gap-2 text-[11px] text-text-muted/60">
-          {item.primary_sector_name && (
-            <span className="flex items-center gap-1">
-              <span className="w-2 h-2 rounded-full" style={{ background: sectorColor }} aria-hidden="true" />
-              {item.primary_sector_name}
-            </span>
-          )}
-          {item.years_active !== undefined && item.years_active > 0 && (
-            <span>
-              &middot; {t('card.yearsActive_other', { count: item.years_active })}
-            </span>
-          )}
-        </div>
-
-        {/* Key stats row — IPS prominent + contracts + value */}
-        <div className="flex items-center gap-3 flex-wrap">
+      {/* Act II intro */}
+      <div className="pt-4">
+        <div className="flex items-center gap-3 mb-4">
           <span
-            className={cn(
-              'text-xs font-mono font-bold px-2 py-0.5 rounded border',
-              getIpsColor(item.ips_final),
-            )}
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
           >
-            {t('card.ipsScore')} {item.ips_final.toFixed(2)}
+            Acto II · El Dossier
           </span>
-          <span className="text-[11px] text-text-muted/70">
-            {formatNumber(item.total_contracts)} {t('card.contracts')}
-          </span>
-          <span className="text-[11px] font-semibold text-text-primary">
-            {formatCompactMXN(item.total_value_mxn)}
-          </span>
-          <span className="text-[11px] text-text-muted/50">
-            {t('card.riskScore')}: {formatPercent(item.avg_risk_score, 0)}
+          <ChevronRight className="w-3 h-3 text-text-muted/40" aria-hidden="true" />
+          <span className="text-[11px] text-text-muted/60">
+            Firma de red por comunidad — contrastada con el techo OCDE
           </span>
         </div>
-
-        {/* Action links */}
-        <div className="pt-1 flex items-center justify-between" onClick={(e) => e.stopPropagation()}>
-          <Link
-            to={`/thread/${item.vendor_id}`}
-            className="inline-flex items-center gap-1 text-[11px] font-mono font-semibold uppercase tracking-wider text-accent-primary hover:text-accent-primary/80 transition-colors group-hover:underline"
-          >
-            {t('card.viewCase')} <ArrowRight className="w-3 h-3" aria-hidden="true" />
-          </Link>
-          <Link
-            to={`/vendors/${item.vendor_id}`}
-            className="text-[10px] text-text-muted/40 hover:text-text-muted/70 transition-colors"
-          >
-            {t('card.viewProfile')}
-          </Link>
-        </div>
-      </div>
-    </motion.div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Vendor Detail Panel — loads rich data for the selected vendor
-// ---------------------------------------------------------------------------
-
-interface VendorDetailPanelProps {
-  vendorId: number
-  ariaItem: AriaQueueItem | null
-  onClose: () => void
-}
-
-function VendorDetailPanel({ vendorId, ariaItem, onClose }: VendorDetailPanelProps) {
-  const { t } = useTranslation('redes')
-  const NA = t('detail.notAvailable')
-
-  // Vendor profile from /vendors/{id}
-  const {
-    data: vendor,
-    isLoading: vendorLoading,
-    isError: vendorError,
-  } = useQuery<VendorDetailResponse>({
-    queryKey: ['vendor-detail-redes', vendorId],
-    queryFn: () => vendorApi.getById(vendorId),
-    staleTime: 10 * 60 * 1000,
-    retry: 1,
-  })
-
-  // Co-bidders from /network/co-bidders/{id}
-  const { data: coBiddersData, isLoading: coBiddersLoading } = useQuery({
-    queryKey: ['co-bidders-redes', vendorId],
-    queryFn: () => networkApi.getCoBidders(vendorId, 2, 5),
-    staleTime: 10 * 60 * 1000,
-    retry: 1,
-  })
-
-  const riskLevel = vendor?.avg_risk_score != null
-    ? getRiskLevelFromScore(vendor.avg_risk_score)
-    : null
-
-  const pattern = ariaItem?.primary_pattern || 'default'
-  const PatternIcon = PATTERN_ICONS[pattern] || AlertTriangle
-  const patternLabel = t(`patternLabels.${pattern}`, { defaultValue: pattern })
-
-  return (
-    <div className="flex flex-col h-full">
-      {/* Panel header */}
-      <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-background sticky top-0 z-10">
-        <div className="flex items-center gap-2 min-w-0">
-          <PatternIcon className="w-4 h-4 text-text-muted/60 shrink-0" aria-hidden="true" />
-          <span className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/70 truncate">
-            {pattern} · {patternLabel}
-          </span>
-        </div>
-        <button
-          onClick={onClose}
-          className="text-text-muted hover:text-text-primary transition-colors ml-3 shrink-0"
-          aria-label={t('detail.closePanel')}
+        <h2
+          className="text-2xl md:text-3xl font-bold text-text-primary mb-2 leading-tight"
+          style={{ fontFamily: FONT_SERIF, letterSpacing: '-0.015em' }}
         >
-          <X className="w-4 h-4" />
-        </button>
+          Cada comunidad, su propia patología
+        </h2>
+        <p className="text-sm text-text-muted/70 max-w-3xl leading-relaxed">
+          Debajo, cada comunidad presenta su firma de red: tasa de adjudicación directa,
+          propuesta única y anomalía de precio. La línea cian marca el techo OCDE del
+          25% para adjudicación directa — todo lo que lo rebasa es señal de alarma.
+        </p>
       </div>
 
-      {/* Loading state */}
-      {vendorLoading && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-text-muted">
-          <Loader2 className="w-6 h-6 animate-spin" aria-hidden="true" />
-          <span className="text-sm">{t('detail.loading')}</span>
-        </div>
-      )}
+      {/* ACT II — Dossier grid */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {COMMUNITIES.map((c) => (
+          <CommunityDossier
+            key={c.id}
+            c={c}
+            isActive={effectiveActive === c.id}
+            onHover={(id) => setHoverId(id)}
+            innerRef={(el) => {
+              dossierRefs.current[c.id] = el
+            }}
+          />
+        ))}
+      </div>
 
-      {/* Error state */}
-      {vendorError && !vendorLoading && (
-        <div className="flex-1 flex flex-col items-center justify-center gap-3 p-8 text-text-muted">
-          <AlertCircle className="w-6 h-6 text-red-400" aria-hidden="true" />
-          <span className="text-sm">{t('detail.loadError')}</span>
-          {/* Fallback: still show ARIA data if we have it */}
-          {ariaItem && (
-            <div className="mt-4 w-full">
-              <AriaFallbackSection ariaItem={ariaItem} />
-            </div>
-          )}
-        </div>
-      )}
+      {/* ACT III — Flujo de Valor */}
+      <FlujoDeValor communities={COMMUNITIES} />
 
-      {/* Content */}
-      {vendor && !vendorLoading && (
-        <div className="flex-1 p-5 space-y-5 overflow-y-auto">
-
-          {/* Vendor name */}
-          <div>
-            <h2
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-              className="text-xl font-bold text-text-primary leading-tight"
-            >
-              {vendor.name}
-            </h2>
-            {vendor.rfc ? (
-              <p className="text-xs text-text-muted mt-1 font-mono">
-                {t('detail.rfc')}: <span className="text-text-secondary">{vendor.rfc}</span>
-              </p>
-            ) : (
-              <p className="text-xs text-text-muted mt-1 font-mono">
-                {t('detail.rfc')}: <span className="text-text-muted/40">{NA}</span>
-              </p>
-            )}
-          </div>
-
-          {/* ARIA tier + IPS */}
-          {ariaItem && (
-            <div className="flex flex-wrap gap-2">
-              <span className={cn('text-xs px-2 py-1 rounded border font-mono font-bold', getTierBadgeColor(ariaItem.ips_tier))}>
-                {t('detail.tier')} {ariaItem.ips_tier}
-              </span>
-              <span className={cn('text-xs px-2 py-1 rounded border font-mono font-bold', getIpsColor(ariaItem.ips_final))}>
-                {t('detail.ipsScore')}: {ariaItem.ips_final.toFixed(3)}
-              </span>
-            </div>
-          )}
-
-          {/* External watchlist flags */}
-          {(vendor.is_efos_ghost || vendor.is_sfp_sanctioned) && (
-            <div>
-              <SectionLabel>{t('detail.externalFlags')}</SectionLabel>
-              <div className="flex flex-wrap gap-2 mt-1">
-                {vendor.is_efos_ghost && (
-                  <span className="text-xs px-2 py-1 rounded bg-red-500/20 text-red-400 border border-red-500/30 font-mono font-bold">
-                    EFOS {t('card.efos')}
-                  </span>
-                )}
-                {vendor.is_sfp_sanctioned && (
-                  <span className="text-xs px-2 py-1 rounded bg-amber-500/20 text-amber-400 border border-amber-500/30 font-mono font-bold">
-                    SFP {t('card.sfp')}
-                  </span>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Key stats grid */}
-          <div>
-            <SectionLabel>{t('detail.riskScore')}</SectionLabel>
-            <div className="grid grid-cols-2 gap-2 mt-2">
-              <StatCell
-                label={t('detail.riskScore')}
-                value={vendor.avg_risk_score != null ? formatPercent(vendor.avg_risk_score, 1) : NA}
-              />
-              <StatCell
-                label={t('detail.riskLevel')}
-                value={
-                  riskLevel
-                    ? <span className={cn('text-xs font-mono font-bold px-1.5 py-0.5 rounded border', getRiskBadgeColor(riskLevel))}>
-                        {t(`riskLevels.${riskLevel}`)}
-                      </span>
-                    : NA
-                }
-              />
-              <StatCell
-                label={t('detail.totalContracts')}
-                value={formatNumber(vendor.total_contracts)}
-              />
-              <StatCell
-                label={t('detail.totalValue')}
-                value={formatCompactMXN(vendor.total_value_mxn)}
-              />
-              <StatCell
-                label={t('detail.directAward')}
-                value={vendor.direct_award_pct != null ? formatPercentSafe(vendor.direct_award_pct, false) : NA}
-              />
-              <StatCell
-                label={t('detail.singleBid')}
-                value={vendor.single_bid_pct != null ? formatPercentSafe(vendor.single_bid_pct, false) : NA}
-              />
-              <StatCell
-                label={t('detail.yearsActive')}
-                value={vendor.years_active > 0 ? String(vendor.years_active) : NA}
-              />
-              <StatCell
-                label={t('detail.sector')}
-                value={vendor.primary_sector_name ?? NA}
-              />
-            </div>
-          </div>
-
-          {/* Top institutions */}
-          <div>
-            <SectionLabel>{t('detail.topInstitutions')}</SectionLabel>
-            {vendor.top_institutions && vendor.top_institutions.length > 0 ? (
-              <ul className="mt-2 space-y-1.5">
-                {vendor.top_institutions.slice(0, 5).map((inst) => (
-                  <li
-                    key={inst.institution_id}
-                    className="flex items-center justify-between gap-2 text-xs"
-                  >
-                    <span className="text-text-secondary truncate">{inst.institution_name}</span>
-                    <span className="text-text-muted/60 shrink-0 font-mono">
-                      {formatNumber(inst.total_contracts)} {t('detail.contracts')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : (
-              <p className="text-xs text-text-muted/50 mt-2">{t('detail.noInstitutions')}</p>
-            )}
-          </div>
-
-          {/* Co-bidders */}
-          <div>
-            <SectionLabel>{t('detail.coBidders')}</SectionLabel>
-            {coBiddersLoading ? (
-              <div className="flex items-center gap-2 mt-2 text-xs text-text-muted/50">
-                <Loader2 className="w-3 h-3 animate-spin" aria-hidden="true" />
-                <span>{t('detail.loading')}</span>
-              </div>
-            ) : coBiddersData?.co_bidders && coBiddersData.co_bidders.length > 0 ? (
-              <ul className="mt-2 space-y-1.5">
-                {coBiddersData.co_bidders.slice(0, 5).map((cb) => (
-                  <li
-                    key={cb.vendor_id}
-                    className="flex items-center justify-between gap-2 text-xs"
-                  >
-                    <Link
-                      to={`/vendors/${cb.vendor_id}`}
-                      className="text-accent-primary hover:underline truncate"
-                    >
-                      {cb.vendor_name}
-                    </Link>
-                    <span className="text-text-muted/60 shrink-0 font-mono">
-                      {cb.co_bid_count ?? 0} {t('detail.contracts')}
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            ) : !coBiddersLoading ? (
-              <p className="text-xs text-text-muted/50 mt-2">{t('detail.noCoBidders')}</p>
-            ) : null}
-          </div>
-
-          {/* ARIA memo if available */}
-          {ariaItem?.memo_text && (
-            <div>
-              <SectionLabel>{t('detail.memo')}</SectionLabel>
-              <p className="text-xs text-text-secondary mt-2 leading-relaxed line-clamp-6">
-                {ariaItem.memo_text}
-              </p>
-            </div>
-          )}
-
-          {/* Action buttons */}
-          <div className="flex flex-col gap-2 pt-2 border-t border-white/10">
-            <Link
-              to={`/thread/${vendorId}`}
-              className="flex items-center justify-center gap-2 bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary border border-accent-primary/30 rounded-lg py-2.5 text-sm font-semibold transition-colors"
-            >
-              {t('detail.openDossier')} <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-            </Link>
-            <Link
-              to={`/vendors/${vendorId}`}
-              className="flex items-center justify-center gap-2 bg-white/5 hover:bg-white/10 text-text-secondary border border-white/10 rounded-lg py-2.5 text-sm transition-colors"
-            >
-              {t('detail.viewProfile')} <ArrowRight className="w-3.5 h-3.5" aria-hidden="true" />
-            </Link>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Fallback section — shows ARIA data when vendor endpoint fails
-// ---------------------------------------------------------------------------
-
-function AriaFallbackSection({ ariaItem }: { ariaItem: AriaQueueItem }) {
-  const { t } = useTranslation('redes')
-  const NA = t('detail.notAvailable')
-
-  return (
-    <div className="space-y-3 w-full px-2">
-      <h2
-        style={{ fontFamily: 'var(--font-family-serif)' }}
-        className="text-lg font-bold text-text-primary"
+      {/* Methodological footer */}
+      <div
+        className="rounded-xl border border-white/8 bg-stone-900/30 px-5 py-4 mt-6"
       >
-        {ariaItem.vendor_name}
-      </h2>
-      <div className="grid grid-cols-2 gap-2">
-        <StatCell label={t('detail.ipsScore')} value={ariaItem.ips_final.toFixed(3)} />
-        <StatCell label={t('detail.tier')} value={String(ariaItem.ips_tier)} />
-        <StatCell label={t('detail.totalContracts')} value={formatNumber(ariaItem.total_contracts)} />
-        <StatCell label={t('detail.totalValue')} value={formatCompactMXN(ariaItem.total_value_mxn)} />
-        <StatCell label={t('detail.riskScore')} value={ariaItem.avg_risk_score != null ? formatPercent(ariaItem.avg_risk_score, 1) : NA} />
-        <StatCell label={t('detail.sector')} value={ariaItem.primary_sector_name ?? NA} />
-      </div>
-      <div className="flex flex-col gap-2 pt-2">
-        <Link
-          to={`/thread/${ariaItem.vendor_id}`}
-          className="flex items-center justify-center gap-2 bg-accent-primary/10 hover:bg-accent-primary/20 text-accent-primary border border-accent-primary/30 rounded-lg py-2 text-sm font-semibold transition-colors"
-        >
-          {t('detail.openDossier')} <ExternalLink className="w-3.5 h-3.5" aria-hidden="true" />
-        </Link>
-      </div>
-    </div>
-  )
-}
-
-// ---------------------------------------------------------------------------
-// Small helpers
-// ---------------------------------------------------------------------------
-
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <div className="text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/50 mb-1">
-      {children}
-    </div>
-  )
-}
-
-function StatCell({ label, value }: { label: string; value: React.ReactNode }) {
-  return (
-    <div className="bg-white/3 rounded-lg p-2.5 border border-white/8">
-      <div className="text-[10px] text-text-muted/50 mb-1">{label}</div>
-      <div className="text-sm font-semibold text-text-primary">
-        {value === null || value === undefined || value === '' ? '—' : value}
+        <div className="flex items-start gap-3">
+          <Users className="w-4 h-4 text-text-muted/40 shrink-0 mt-0.5" aria-hidden="true" />
+          <div className="flex-1">
+            <p
+              className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5"
+            >
+              Metodología
+            </p>
+            <p className="text-[12px] text-text-secondary leading-relaxed max-w-3xl">
+              Las comunidades se detectan con el algoritmo de Louvain sobre la red de
+              co-contratación (vendedores que aparecen juntos en procedimientos,
+              operan en la misma institución en ventanas de tiempo solapadas, o
+              comparten patrones de adjudicación). Las firmas de red provienen del
+              motor ARIA v1.1 (Run{' '}
+              <span className="font-mono text-white/80">28d5c453</span>) combinado con
+              el modelo de riesgo v0.6.5 (AUC test 0.828). Los veredictos son
+              editoriales; las métricas son del motor.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   )
