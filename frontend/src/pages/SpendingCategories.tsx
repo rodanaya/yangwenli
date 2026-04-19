@@ -27,12 +27,6 @@ import {
   LineChart,
   Line,
   Legend,
-  Cell,
-  LabelList,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-  ReferenceLine,
 } from '@/components/charts'
 import {
   TrendingUp,
@@ -1335,6 +1329,283 @@ function SectorGroupedCategories({
 }
 
 // =============================================================================
+// Pure-SVG Risk × Value Quadrant Scatter
+// =============================================================================
+
+type ScatterPoint = {
+  category_id: number
+  name: string
+  total_value: number
+  avg_risk: number
+  total_contracts: number
+  direct_award_pct: number
+  sector_code: string | null
+  fill: string
+}
+
+function QuadrantScatterSVG({
+  data,
+  medianValue,
+  onNavigate,
+}: {
+  data: ScatterPoint[]
+  medianValue: number
+  onNavigate: (path: string) => void
+}) {
+  const [hovered, setHovered] = useState<number | null>(null)
+
+  const W = 600
+  const H = 380
+  const ML = 56, MR = 20, MT = 24, MB = 50
+  const plotW = W - ML - MR
+  const plotH = H - MT - MB
+
+  const maxValue = useMemo(() => Math.max(...data.map(d => d.total_value), 1), [data])
+  const maxRisk = useMemo(() => {
+    const m = Math.max(...data.map(d => d.avg_risk), 0.2)
+    return Math.min(m * 1.15, 1.0)
+  }, [data])
+
+  const xScale = (v: number) => (v / maxValue) * plotW
+  const yScale = (r: number) => plotH * (1 - Math.min(r, maxRisk) / maxRisk)
+
+  const xMedian = xScale(medianValue)
+  const RISK_LINE = 0.15
+  const yRiskLine = yScale(RISK_LINE)
+
+  const labeled = useMemo(() => {
+    const byRisk = [...data].sort((a, b) => b.avg_risk - a.avg_risk).slice(0, 5).map(d => d.category_id)
+    const byVal = [...data].filter(d => d.avg_risk > RISK_LINE).sort((a, b) => b.total_value - a.total_value).slice(0, 3).map(d => d.category_id)
+    return new Set([...byRisk, ...byVal])
+  }, [data])
+
+  const hoveredItem = data.find(d => d.category_id === hovered) ?? null
+
+  return (
+    <div className="relative select-none" style={{ height: H }}>
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        style={{ width: '100%', height: '100%' }}
+        aria-label="Cuadrante riesgo vs gasto"
+        onMouseLeave={() => setHovered(null)}
+      >
+        <g transform={`translate(${ML},${MT})`}>
+          {/* Quadrant shading */}
+          <rect x={xMedian} y={0} width={plotW - xMedian} height={yRiskLine} fill="#dc262609" />
+          <rect x={0} y={0} width={xMedian} height={yRiskLine} fill="#eab30807" />
+          <rect x={xMedian} y={yRiskLine} width={plotW - xMedian} height={plotH - yRiskLine} fill="#3b82f606" />
+
+          {/* Reference lines */}
+          <line x1={xMedian} y1={0} x2={xMedian} y2={plotH} stroke="var(--color-border)" strokeDasharray="4 3" opacity={0.55} />
+          <line x1={0} y1={yRiskLine} x2={plotW} y2={yRiskLine} stroke="var(--color-border)" strokeDasharray="4 3" opacity={0.55} />
+
+          {/* Quadrant corner labels */}
+          <text x={xMedian + 6} y={11} fontSize={7.5} fontFamily="monospace" fill="#dc262665">ALTO RIESGO · ALTO VALOR</text>
+          <text x={6} y={11} fontSize={7.5} fontFamily="monospace" fill="#eab30855">ALTO RIESGO</text>
+          <text x={xMedian + 6} y={plotH - 5} fontSize={7.5} fontFamily="monospace" fill="#3b82f655">ALTO VALOR</text>
+          <text x={6} y={plotH - 5} fontSize={7.5} fontFamily="monospace" fill="#52525b55">RIESGO BAJO</text>
+
+          {/* 15% risk annotation */}
+          <text x={plotW - 4} y={yRiskLine - 4} textAnchor="end" fontSize={7.5} fontFamily="monospace" fill="#71717a80">15% riesgo</text>
+
+          {/* Axes */}
+          <line x1={0} y1={plotH} x2={plotW} y2={plotH} stroke="var(--color-border)" />
+          <line x1={0} y1={0} x2={0} y2={plotH} stroke="var(--color-border)" />
+
+          {/* X ticks */}
+          {[0, 0.25, 0.5, 0.75, 1].map(p => (
+            <g key={p}>
+              <line x1={p * plotW} y1={plotH} x2={p * plotW} y2={plotH + 4} stroke="var(--color-border)" />
+              <text x={p * plotW} y={plotH + 14} textAnchor="middle" fontSize={8.5} fontFamily="monospace" fill="var(--color-text-muted)">
+                {formatCompactMXN(p * maxValue)}
+              </text>
+            </g>
+          ))}
+
+          {/* Y ticks */}
+          {[0, 0.1, 0.2, 0.3, 0.4, 0.5].filter(r => r <= maxRisk + 0.05).map(r => (
+            <g key={r}>
+              <line x1={-4} y1={yScale(r)} x2={0} y2={yScale(r)} stroke="var(--color-border)" />
+              <text x={-8} y={yScale(r) + 3} textAnchor="end" fontSize={8.5} fontFamily="monospace" fill="var(--color-text-muted)">
+                {(r * 100).toFixed(0)}%
+              </text>
+            </g>
+          ))}
+
+          {/* Axis labels */}
+          <text x={plotW / 2} y={plotH + 38} textAnchor="middle" fontSize={8} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
+            GASTO TOTAL (MXN)
+          </text>
+          <g transform={`rotate(-90) translate(${-(plotH / 2)}, ${-46})`}>
+            <text textAnchor="middle" fontSize={8} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
+              RIESGO PROMEDIO
+            </text>
+          </g>
+
+          {/* Data points */}
+          <g>
+            {data.map((d) => {
+              const cx = Math.max(4, Math.min(plotW - 4, xScale(d.total_value)))
+              const cy = Math.max(4, Math.min(plotH - 4, yScale(d.avg_risk)))
+              const r = Math.max(3, Math.min(9, Math.sqrt(d.total_contracts / 800)))
+              const isHov = hovered === d.category_id
+              const dimmed = hovered !== null && !isHov
+              return (
+                <circle
+                  key={d.category_id}
+                  cx={cx}
+                  cy={cy}
+                  r={isHov ? r + 2.5 : r}
+                  fill={d.fill}
+                  fillOpacity={dimmed ? 0.18 : isHov ? 1 : 0.72}
+                  stroke={isHov ? '#ffffff' : 'transparent'}
+                  strokeWidth={isHov ? 1.5 : 0}
+                  style={{ cursor: 'pointer', transition: 'r 0.12s, fill-opacity 0.12s' }}
+                  onMouseEnter={() => setHovered(d.category_id)}
+                  onMouseLeave={() => setHovered(null)}
+                  onClick={() => onNavigate(`/categories/${d.category_id}`)}
+                />
+              )
+            })}
+          </g>
+
+          {/* Notable labels */}
+          {data.filter(d => labeled.has(d.category_id)).map((d) => {
+            const cx = Math.max(4, Math.min(plotW - 4, xScale(d.total_value)))
+            const cy = Math.max(4, Math.min(plotH - 4, yScale(d.avg_risk)))
+            const label = d.name.length > 22 ? d.name.slice(0, 21) + '…' : d.name
+            const isHov = hovered === d.category_id
+            const dimmed = hovered !== null && !isHov
+            return (
+              <text
+                key={`lbl-${d.category_id}`}
+                x={cx}
+                y={cy - 8}
+                textAnchor="middle"
+                fontSize={7.5}
+                fontFamily="monospace"
+                fill={d.fill}
+                fillOpacity={dimmed ? 0.12 : isHov ? 1 : 0.82}
+                style={{ pointerEvents: 'none' }}
+              >
+                {label}
+              </text>
+            )
+          })}
+        </g>
+      </svg>
+
+      {/* Floating tooltip — fixed bottom-left so it never clips */}
+      {hoveredItem && (
+        <div
+          className="absolute bottom-12 left-14 z-20 rounded-lg border p-3 text-xs font-mono shadow-xl pointer-events-none animate-in fade-in duration-100"
+          style={{ backgroundColor: 'var(--color-background-card)', borderColor: hoveredItem.fill, maxWidth: 230 }}
+        >
+          <p className="font-bold text-text-primary text-[11px] mb-1 leading-tight whitespace-normal">{hoveredItem.name}</p>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: hoveredItem.fill }} />
+            <span className="text-text-muted/80 capitalize text-[10px]">{hoveredItem.sector_code ?? 'otros'}</span>
+          </div>
+          <div className="space-y-0.5 text-[10px]">
+            <p className="text-text-muted">Gasto: <span className="font-semibold text-text-primary">{formatCompactMXN(hoveredItem.total_value)}</span></p>
+            <p className="text-text-muted">Riesgo: <span className="font-semibold" style={{ color: getRiskColor(hoveredItem.avg_risk) }}>{(hoveredItem.avg_risk * 100).toFixed(1)}%</span></p>
+            <p className="text-text-muted">Adj. directa: <span className="text-text-primary">{hoveredItem.direct_award_pct.toFixed(0)}%</span></p>
+            <p className="text-text-muted">{hoveredItem.total_contracts.toLocaleString('es-MX')} contratos</p>
+          </div>
+          <p className="text-accent/60 mt-1.5 text-[10px]">Clic para ver perfil →</p>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// =============================================================================
+// Direct Award Concentration Chart — horizontal bars, OECD 25% line
+// =============================================================================
+
+function DAConcentrationChart({
+  categories,
+  lang,
+  onSelect,
+}: {
+  categories: CategoryStat[]
+  lang: string
+  onSelect: (id: number) => void
+}) {
+  const top = useMemo(() => {
+    return [...categories]
+      .filter(c => c.direct_award_pct > 0 && c.total_contracts >= 10)
+      .sort((a, b) => b.direct_award_pct - a.direct_award_pct)
+      .slice(0, 22)
+  }, [categories])
+
+  if (!top.length) return <p className="text-text-muted text-sm text-center py-8">Sin datos</p>
+
+  const maxDA = Math.max(...top.map(d => d.direct_award_pct), 100)
+  const OECD = 25
+  const oecdPct = (OECD / maxDA) * 100
+
+  return (
+    <div className="space-y-[3px]">
+      {top.map((cat, idx) => {
+        const isOver = cat.direct_award_pct > OECD
+        const barW = (cat.direct_award_pct / maxDA) * 100
+        const rColor = getRiskColor(cat.avg_risk)
+        return (
+          <button
+            key={cat.category_id}
+            onClick={() => onSelect(cat.category_id)}
+            className="w-full group flex items-center gap-2 px-1 py-[3px] rounded hover:bg-background-elevated/30 transition-colors text-left"
+            title={`${localeName(cat, lang)} — ${cat.direct_award_pct.toFixed(0)}% adjudicación directa`}
+          >
+            <span className="text-[9px] font-mono text-text-muted/30 w-4 flex-shrink-0 tabular-nums text-right">{idx + 1}</span>
+            <span className="w-36 flex-shrink-0 text-[10px] font-mono text-text-muted/80 truncate group-hover:text-text-primary transition-colors">
+              {localeName(cat, lang)}
+            </span>
+            <div className="flex-1 relative h-3.5">
+              <div className="absolute inset-0 rounded bg-background-elevated/30" />
+              <div
+                className="absolute inset-y-0 left-0 rounded transition-all duration-300"
+                style={{ width: `${barW}%`, backgroundColor: isOver ? '#fb923c' : '#3b82f6', opacity: 0.72 }}
+              />
+              <div
+                className="absolute inset-y-[-2px] w-px bg-red-500"
+                style={{ left: `${oecdPct}%`, opacity: 0.65 }}
+              />
+            </div>
+            <span
+              className="text-[10px] font-mono font-bold tabular-nums w-9 text-right flex-shrink-0"
+              style={{ color: isOver ? '#fb923c' : 'var(--color-text-secondary)' }}
+            >
+              {cat.direct_award_pct.toFixed(0)}%
+            </span>
+            <span className="text-[9px] font-mono tabular-nums w-9 text-right flex-shrink-0" style={{ color: rColor }}>
+              R:{(cat.avg_risk * 100).toFixed(0)}%
+            </span>
+          </button>
+        )
+      })}
+
+      <div className="flex items-center gap-4 pt-3 border-t border-border/20 text-[9px] font-mono text-text-muted/50">
+        <div className="flex items-center gap-1.5">
+          <div className="w-px h-3.5 bg-red-500 opacity-70" />
+          <span>Límite OCDE 25%</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-3 rounded" style={{ backgroundColor: '#fb923c', opacity: 0.72 }} />
+          <span>Sobre límite</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <div className="h-2.5 w-3 rounded" style={{ backgroundColor: '#3b82f6', opacity: 0.72 }} />
+          <span>Dentro de límite</span>
+        </div>
+        <span className="ml-auto opacity-60">R: riesgo promedio</span>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -1496,21 +1767,6 @@ export default function SpendingCategories() {
     if (!selectedCategoryId) return null
     return allCategories.find(c => c.category_id === selectedCategoryId) ?? null
   }, [selectedCategoryId, allCategories])
-
-  // Treemap data
-  const treemapData = useMemo(() => {
-    return filteredCategories
-      .filter(c => c.total_value > 0)
-      .slice(0, 30)
-      .map(c => ({
-        name: localeName(c, i18n.language),
-        value: c.total_value,
-        category_id: c.category_id,
-        fill: selectedCategoryId === c.category_id
-          ? '#f59e0b'
-          : c.sector_code ? (SECTOR_COLORS[c.sector_code] || '#64748b') : getRiskColor(c.avg_risk),
-      }))
-  }, [filteredCategories, selectedCategoryId, i18n.language])
 
   // Trend chart data
   const trendChartData = useMemo(() => {
@@ -2095,123 +2351,13 @@ export default function SpendingCategories() {
         <Card>
           <CardContent className="pt-6 pb-4">
             {summaryLoading ? (
-              <ChartSkeleton height={420} />
+              <ChartSkeleton height={380} />
             ) : scatterData.length > 0 ? (
-              <div style={{ height: 420 }} className="relative">
-                {/* Quadrant labels */}
-                <div className="absolute top-2 left-16 text-[10px] font-mono uppercase tracking-wider text-text-muted/40 z-10 pointer-events-none">
-                  {t('riskMap.quadrantLowHigh')}
-                </div>
-                <div className="absolute top-2 right-8 text-[10px] font-mono uppercase tracking-wider text-red-400/60 z-10 pointer-events-none">
-                  {t('riskMap.quadrantHighHigh')}
-                </div>
-                <div className="absolute bottom-10 left-16 text-[10px] font-mono uppercase tracking-wider text-text-muted/30 z-10 pointer-events-none">
-                  {t('riskMap.quadrantLowLow')}
-                </div>
-                <div className="absolute bottom-10 right-8 text-[10px] font-mono uppercase tracking-wider text-green-500/40 z-10 pointer-events-none">
-                  {t('riskMap.quadrantHighLow')}
-                </div>
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 20, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" strokeOpacity={0.4} />
-                    <XAxis
-                      type="number"
-                      dataKey="total_value"
-                      name={t('riskMap.axisSpend')}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      label={{
-                        value: t('riskMap.axisSpendLabel'),
-                        position: 'insideBottom',
-                        offset: -10,
-                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' },
-                      }}
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="avg_risk"
-                      name={t('riskMap.axisRisk')}
-                      domain={[0, 'auto']}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      width={45}
-                      label={{
-                        value: t('riskMap.axisRiskLabel'),
-                        angle: -90,
-                        position: 'insideLeft',
-                        offset: 5,
-                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' },
-                      }}
-                    />
-                    <ZAxis type="number" dataKey="radius" range={[30, 450]} />
-                    <ReferenceLine
-                      x={scatterMedianValue}
-                      stroke="var(--color-border)"
-                      strokeDasharray="6 4"
-                      strokeOpacity={0.5}
-                    />
-                    <ReferenceLine
-                      y={0.15}
-                      stroke="var(--color-border)"
-                      strokeDasharray="6 4"
-                      strokeOpacity={0.5}
-                      label={{
-                        value: '15% riesgo',
-                        position: 'right',
-                        style: { fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' },
-                      }}
-                    />
-                    <RechartsTooltip
-                      cursor={{ strokeDasharray: '3 3', stroke: '#52525b' }}
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null
-                        const d = payload[0].payload as (typeof scatterData)[0]
-                        return (
-                          <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
-                          >
-                            <p className="font-bold text-text-primary text-[11px] max-w-[220px] whitespace-normal">{d.name}</p>
-                            <div className="flex items-center gap-2">
-                              <span className="w-2 h-2 rounded-full" style={{ backgroundColor: d.fill }} />
-                              <span className="text-text-muted capitalize">{d.sector_code ? t(`sectors.${d.sector_code}`) : t('scatter.sectorFallback')}</span>
-                            </div>
-                            <p className="text-text-secondary">{t('riskMap.tooltipSpend')} <span className="font-bold text-text-primary">{formatCompactMXN(d.total_value)}</span></p>
-                            <p className="text-text-secondary">{t('riskMap.tooltipRisk')} <span className="font-bold" style={{ color: getRiskColor(d.avg_risk) }}>{(d.avg_risk * 100).toFixed(1)}%</span></p>
-                            <p className="text-text-secondary">{t('table.colDA')} <span className="text-text-primary">{d.direct_award_pct?.toFixed(0) ?? '—'}%</span></p>
-                            <p className="text-text-secondary">{t('scatter.contracts', { count: d.total_contracts })}</p>
-                            <p className="text-accent/60 mt-1">{t('scatter.clickToView')}</p>
-                          </div>
-                        )
-                      }}
-                    />
-                    <Scatter
-                      data={scatterData}
-                      onClick={(entry) => {
-                        if (entry?.category_id) {
-                          navigate(`/categories/${entry.category_id}`)
-                        }
-                      }}
-                      cursor="pointer"
-                    >
-                      {scatterData.map((entry, index) => (
-                        <Cell
-                          key={`scatter-${index}`}
-                          fill={entry.fill}
-                          fillOpacity={0.75}
-                          stroke={entry.fill}
-                          strokeWidth={1}
-                          strokeOpacity={0.3}
-                        />
-                      ))}
-                    </Scatter>
-                  </ScatterChart>
-                </ResponsiveContainer>
-              </div>
+              <QuadrantScatterSVG
+                data={scatterData}
+                medianValue={scatterMedianValue}
+                onNavigate={navigate}
+              />
             ) : (
               <div className="flex items-center justify-center h-64 text-text-muted text-sm">
                 {t('scatter.noData')}
@@ -2330,115 +2476,31 @@ export default function SpendingCategories() {
       <div className="space-y-5">
         <div className="h-px bg-border" />
 
-        {/* Top Categories Bar Chart */}
+        {/* Direct Award Concentration */}
         <Card>
           <CardHeader className="pb-2">
-            <CardTitle className="flex items-center gap-2 text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
-              <BarChart3 className="h-4 w-4 text-text-muted" />
-              {t('treemap.title')}
-            </CardTitle>
-            <CardDescription>
-              {t('sexenio.barChartHint')}
-            </CardDescription>
+            <div className="flex items-start justify-between gap-2">
+              <div>
+                <CardTitle className="flex items-center gap-2 text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                  <AlertTriangle className="h-4 w-4 text-amber-400" />
+                  {t('da.chartTitle', 'Concentración por Adjudicación Directa')}
+                </CardTitle>
+                <CardDescription className="mt-1">
+                  {t('da.chartDesc', 'Categorías con mayor proporción de contratos sin licitación, ordenadas por porcentaje. La línea roja marca el límite recomendado por la OCDE (25%).')}
+                </CardDescription>
+              </div>
+              <FuentePill source="COMPRANET 2002–2025" />
+            </div>
           </CardHeader>
           <CardContent>
-            {selectedCategoryName && (
-              <div className="flex items-center gap-2 mb-2">
-                <span className="text-xs text-text-muted">{t('sexenio.filteredBy')}</span>
-                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-medium bg-amber-500/10 text-amber-400 border border-amber-500/20">
-                  {selectedCategoryName}
-                  <button
-                    onClick={() => setSelectedCategoryId(null)}
-                    className="ml-0.5 hover:text-amber-200"
-                    aria-label={t('filters.clearFilter')}
-                  >
-                    &times;
-                  </button>
-                </span>
-              </div>
-            )}
             {summaryLoading ? (
-              <ChartSkeleton height={500} />
-            ) : treemapData.length > 0 ? (
-              <div style={{ height: Math.max(380, treemapData.length * 22 + 60) }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart
-                    layout="vertical"
-                    data={treemapData}
-                    margin={{ top: 4, right: 120, bottom: 4, left: 8 }}
-                    style={{ cursor: 'pointer' }}
-                  >
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
-                    <XAxis
-                      type="number"
-                      dataKey="value"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      type="category"
-                      dataKey="name"
-                      width={200}
-                      tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
-                      tickFormatter={(v: string) => v.length > 28 ? v.slice(0, 27) + '…' : v}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (!active || !payload?.length) return null
-                        const d = payload[0].payload as { name: string; value: number; category_id: number }
-                        return (
-                          <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
-                          >
-                            <p className="font-bold text-text-primary mb-1 max-w-[220px] whitespace-normal">{d.name}</p>
-                            <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
-                            {selectedCategoryId === d.category_id && (
-                              <p className="text-amber-400 mt-1">{t('table.selectedClickDeselect')}</p>
-                            )}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Bar
-                      dataKey="value"
-                      radius={[0, 3, 3, 0]}
-                      maxBarSize={18}
-                      onClick={(barData) => {
-                        const d = barData as { category_id?: number } | null
-                        const cid = d?.category_id
-                        if (cid != null) {
-                          setSelectedCategoryId((prev: number | null) => prev === cid ? null : cid)
-                        }
-                      }}
-                    >
-                      {treemapData.map((entry, index) => (
-                        <Cell
-                          key={`bar-cell-${index}`}
-                          fill={entry.fill}
-                          fillOpacity={selectedCategoryId === null || selectedCategoryId === entry.category_id ? 0.85 : 0.35}
-                          stroke={selectedCategoryId === entry.category_id ? '#f59e0b' : 'transparent'}
-                          strokeWidth={selectedCategoryId === entry.category_id ? 1.5 : 0}
-                        />
-                      ))}
-                      <LabelList
-                        dataKey="value"
-                        position="right"
-                        formatter={(v: unknown) => formatCompactMXN(Number(v))}
-                        style={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      />
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <ChartSkeleton height={440} />
             ) : (
-              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-                {t('treemap.empty')}
-              </div>
+              <DAConcentrationChart
+                categories={filteredCategories}
+                lang={i18n.language}
+                onSelect={(id) => setSelectedCategoryId(prev => prev === id ? null : id)}
+              />
             )}
           </CardContent>
         </Card>
@@ -2568,8 +2630,12 @@ export default function SpendingCategories() {
                 </ResponsiveContainer>
               </div>
             ) : (
-              <div className="flex items-center justify-center h-64 text-text-muted text-sm">
-                {t('trends.empty')}
+              <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
+                <TrendingUp className="h-8 w-8 text-text-muted/30" />
+                <div>
+                  <p className="text-sm text-text-muted">{t('trends.empty', 'Selecciona una categoría arriba')}</p>
+                  <p className="text-[11px] text-text-muted/50 mt-1 font-mono">{t('trends.emptyHint', 'o ajusta el rango de años para ver la evolución del gasto')}</p>
+                </div>
               </div>
             )}
           </CardContent>
