@@ -27,6 +27,7 @@ import {
   Activity,
   Search,
   Newspaper,
+  Grid3x3,
 
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
@@ -74,6 +75,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'typologies', href: '/clusters', icon: Grid3x3 },
       { i18nKey: 'theArchive', href: '/investigation', icon: FolderSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },

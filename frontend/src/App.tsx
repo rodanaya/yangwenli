@@ -56,6 +56,7 @@ const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 // MexicoMap removed — /map redirects to /administrations
 // Annotations removed — /annotations redirects to /workspace
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
+const CorruptionClusters = lazy(() => import('@/pages/CorruptionClusters'))
 // ReportCard and InstitutionScorecards are now lazy-loaded inside InstitutionLeague tabs
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
@@ -231,6 +232,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <AriaQueue />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="clusters"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CorruptionClusters />
                   </SuspenseBoundary>
                 }
               />

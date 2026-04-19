@@ -526,12 +526,12 @@ export function Dashboard() {
                 </span>
               </div>
               <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                {t('editorial.constellationSubtitle', 'Each dot represents a cluster of contracts. Critical-risk contracts self-organize into 3 networks — the same geometry as documented corruption patterns.')}
+                {t('editorial.constellationSubtitle', 'Cada punto representa un conjunto de contratos. Los contratos críticos se auto-organizan en 7 patrones ARIA — las 7 arquitecturas de captura del Estado.')}
               </p>
               <ConcentrationConstellation
                 rows={constellationRows}
                 totalContracts={overview.total_contracts ?? 0}
-                onClusterClick={(sectorCode) => navigate(`/sectors/${sectorCode}`)}
+                onClusterClick={(patternCode) => navigate(`/clusters#${patternCode.toLowerCase()}`)}
               />
             </ErrorBoundary>
           </section>

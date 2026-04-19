@@ -1,19 +1,20 @@
 /**
- * ConcentrationConstellation — a static dot-density "sky" of contract risk.
+ * ConcentrationConstellation — a static dot-density "sky" of contract risk,
+ * now labelled with the 7 ARIA corruption pattern clusters (P1..P7).
  *
  * 1,200 fixed dots laid out in a Halton(2,3) sequence fill an 840x220 panel.
  * Each dot is colored by risk level in exact proportion to risk_distribution.
- * Critical dots are nudged toward 3 invisible attractors (echoing the
- * ContractField hero on Intro) and joined to nearest neighbors with hairline
- * red edges — the corruption network made legible.
+ * Critical dots are allocated to the 7 ARIA attractors by a weighted Halton
+ * draw (proportional to each pattern's T1 vendor count), then joined to their
+ * nearest in-cluster neighbors with hairline edges — the 7 architectures of
+ * state capture made legible.
  *
  * Design grammar: same particle vocabulary as ContractField, but frozen.
- * Tells the story that no bar chart can: critical risk is not just rare,
- * it CLUSTERS. The other 94% is background sky.
+ * Ring radius ∝ √(T1 count); ring color = pattern severity; hover exposes
+ * the full pattern summary with "Ver en ARIA" affordance.
  *
- * Interactivity: 3 attractors are now labeled A/B/C, pulse gently, and
- * expose a tooltip + click handler so readers can follow the thread into
- * the implicated sector.
+ * Interactivity: clicking a cluster calls onClusterClick(patternCode), e.g.
+ *   onClusterClick={(code) => navigate(`/clusters#${code.toLowerCase()}`)}
  */
 import { useMemo, useState } from 'react'
 import { halton, mulberry32 } from '@/lib/particle'
@@ -27,7 +28,7 @@ export interface ConstellationRiskRow {
 interface ConcentrationConstellationProps {
   rows: ConstellationRiskRow[]
   totalContracts: number
-  onClusterClick?: (sectorCode: string) => void
+  onClusterClick?: (patternCode: string) => void
   className?: string
 }
 
@@ -41,51 +42,51 @@ const PAD_B = 28
 const FIELD_W = SVG_W - PAD_L - PAD_R
 const FIELD_H = SVG_H - PAD_T - PAD_B
 const N_DOTS = 1200
-const N_ATTRACTORS = 3
+const N_ATTRACTORS = 7
 
-// Cluster metadata — 3 attractors correspond to the 3 dominant risk networks
-// surfaced by the v0.6.5 model (salud, agricultura, energia sector dominance
-// in documented corruption cases: IMSS Ghost, Segalmex, Odebrecht/PEMEX).
+// ── ARIA Pattern cluster metadata ─────────────────────────────────────────
+// 7 corruption patterns detected by ARIA v1.1. Positions are fractions of
+// FIELD_W × FIELD_H, hand-tuned so the 7 clusters distribute across the
+// panel without overlap and avoid the right-margin annotation strip.
 interface ClusterMeta {
-  letter: string
+  code: string     // 'P1' .. 'P7'
   label: string
   desc: string
-  count: string
-  sectorCode: string
-  // Positioning on the wrapping div, expressed in percent of parent width/height
-  // (values tuned to mirror the SVG viewBox attractor positions).
-  topPct: number
-  leftPct: number
+  color: string
+  vendors: number  // total vendors in the pattern
+  t1: number       // T1 critical vendors
+  fx: number       // 0..1, fraction of FIELD_W
+  fy: number       // 0..1, fraction of FIELD_H
 }
 
 const CLUSTER_META: ClusterMeta[] = [
-  {
-    letter: 'A',
-    label: 'Red Salud',
-    desc: 'Healthcare & pharma concentration',
-    count: '~61,000',
-    sectorCode: 'salud',
-    topPct: 20,
-    leftPct: 50,
-  },
-  {
-    letter: 'B',
-    label: 'Red Agricultura',
-    desc: 'Agricultural supply network',
-    count: '~61,000',
-    sectorCode: 'agricultura',
-    topPct: 55,
-    leftPct: 75,
-  },
-  {
-    letter: 'C',
-    label: 'Red Energía',
-    desc: 'Energy & infrastructure cluster',
-    count: '~62,000',
-    sectorCode: 'energia',
-    topPct: 68,
-    leftPct: 35,
-  },
+  // P5 — center, largest cluster (180 T1)
+  { code: 'P5', label: 'Sobreprecio Sistemático',   desc: 'Precios 2σ sobre promedio sectorial — 180 proveedores T1',           color: '#dc2626', vendors: 3985,  t1: 180, fx: 0.50, fy: 0.40 },
+  // P7 — upper right (56 T1)
+  { code: 'P7', label: 'Red de Contratistas',        desc: 'Redes multi-proveedor con evidencia externa — 56 T1',              color: '#dc2626', vendors: 257,   t1: 56,  fx: 0.78, fy: 0.22 },
+  // P1 — lower right (23 T1)
+  { code: 'P1', label: 'Monopolio Concentrado',      desc: 'Proveedor domina >3% del valor sectorial — 23 T1',                 color: '#dc2626', vendors: 44,    t1: 23,  fx: 0.72, fy: 0.68 },
+  // P3 — upper left (26 T1)
+  { code: 'P3', label: 'Intermediaria de Uso Único', desc: 'Ráfaga de contratos + desaparición — 26 T1',                       color: '#f59e0b', vendors: 2974,  t1: 26,  fx: 0.22, fy: 0.28 },
+  // P6 — lower left (31 T1)
+  { code: 'P6', label: 'Captura Institucional',      desc: '>80% contratos de una sola institución — 31 T1',                   color: '#78716c', vendors: 15923, t1: 31,  fx: 0.28, fy: 0.72 },
+  // P2 — lower center (1 T1)
+  { code: 'P2', label: 'Empresa Fantasma',           desc: 'Sin RFC, ≤10 contratos, desaparece — 1 T1',                        color: '#57534e', vendors: 6034,  t1: 1,   fx: 0.55, fy: 0.78 },
+  // P4 — top center (3 T1)
+  { code: 'P4', label: 'Colusión en Licitaciones',   desc: 'Co-licitación >50% + tasa de victoria >70% — 3 T1',               color: '#f59e0b', vendors: 220,   t1: 3,   fx: 0.42, fy: 0.14 },
+]
+
+// Weighted allocation of critical dots to clusters (∝ T1 count).
+// Totals: P5=180, P7=56, P6=31, P3=26, P1=23, P4=3, P2=1 → 320
+// Order MUST match CLUSTER_META order above.
+const CLUSTER_WEIGHTS = [
+  180 / 320, // P5
+   56 / 320, // P7
+   23 / 320, // P1
+   26 / 320, // P3
+   31 / 320, // P6
+    1 / 320, // P2
+    3 / 320, // P4
 ]
 
 // Risk visual styling (mirrors ContractField + RiskStrata)
@@ -100,7 +101,7 @@ interface DotPos {
   x: number
   y: number
   level: ConstellationRiskRow['level']
-  cluster: number // -1 for non-critical
+  cluster: number // -1 for non-critical, else 0..N_ATTRACTORS-1
 }
 
 export function ConcentrationConstellation({ rows, totalContracts, onClusterClick, className }: ConcentrationConstellationProps) {
@@ -128,15 +129,26 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       for (let i = 0; i < counts[lvl]; i++) labels.push(lvl)
     }
 
-    // Three invisible attractors — same right-weighted geometry as ContractField
-    const attractors = [
-      { x: PAD_L + FIELD_W * 0.55, y: PAD_T + FIELD_H * 0.32 },
-      { x: PAD_L + FIELD_W * 0.82, y: PAD_T + FIELD_H * 0.62 },
-      { x: PAD_L + FIELD_W * 0.38, y: PAD_T + FIELD_H * 0.78 },
-    ]
+    // 7 attractors laid out across the field, coords pre-resolved from fx/fy
+    const attractors = CLUSTER_META.map((m) => ({
+      x: PAD_L + m.fx * FIELD_W,
+      y: PAD_T + m.fy * FIELD_H,
+    }))
+
+    // Cumulative weights for weighted Halton draw on critical dots
+    const cumWeights: number[] = []
+    for (let i = 0; i < CLUSTER_WEIGHTS.length; i++) {
+      cumWeights.push((cumWeights[i - 1] ?? 0) + CLUSTER_WEIGHTS[i])
+    }
+    // Ensure final bucket captures numeric slop
+    cumWeights[cumWeights.length - 1] = 1
 
     const rng = mulberry32(31415)
     const built: DotPos[] = []
+
+    // Track critical dot index so we can draw a deterministic Halton value per
+    // critical dot (independent of absolute index i).
+    let criticalIdx = 0
 
     for (let i = 0; i < N_DOTS; i++) {
       // Halton(2,3) for even-but-organic positions
@@ -152,12 +164,17 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       let cluster = -1
 
       if (level === 'critical') {
-        // Pull critical dots toward an attractor — same as ContractField's
-        // self-organize phase. Selection is deterministic via index mod.
-        cluster = i % N_ATTRACTORS
+        // Weighted assignment via a fresh Halton base-5 sequence so cluster
+        // distribution tracks T1 counts (180/56/31/26/23/3/1), not i-modulo.
+        const uCluster = halton(criticalIdx * 7 + 1, 5)
+        let picked = cumWeights.findIndex((cw) => uCluster < cw)
+        if (picked === -1) picked = N_ATTRACTORS - 1
+        cluster = picked
+        criticalIdx++
+
         const a = attractors[cluster]
         const ang = rng() * Math.PI * 2
-        const radius = 8 + Math.pow(rng(), 1.6) * 26
+        const radius = 6 + Math.pow(rng(), 1.6) * 22
         x = a.x + Math.cos(ang) * radius
         y = a.y + Math.sin(ang) * radius
       }
@@ -197,8 +214,8 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       }
     }
 
-    // Pick a representative anchor dot for each level (for margin labels)
-    // Use the one closest to a target y-position so leaders fan out.
+    // Pick a representative anchor dot for each level (for margin labels).
+    // Critical leader points to cluster 0 (P5) specifically, per spec.
     const findAnchor = (lvl: ConstellationRiskRow['level'], targetY: number): DotPos | null => {
       let best: DotPos | null = null
       let bd = Infinity
@@ -209,13 +226,26 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
       }
       return best
     }
+    const findCriticalAnchorInCluster = (clusterIdx: number): DotPos | null => {
+      const a = attractors[clusterIdx]
+      let best: DotPos | null = null
+      let bd = Infinity
+      for (const d of built) {
+        if (d.level !== 'critical' || d.cluster !== clusterIdx) continue
+        const dx = d.x - a.x
+        const dy = d.y - a.y
+        const d2 = dx * dx + dy * dy
+        if (d2 < bd) { bd = d2; best = d }
+      }
+      return best
+    }
 
     return {
       dots: built,
       criticalEdges: edges,
       attractors,
       marginAnchors: {
-        critical: findAnchor('critical', PAD_T + FIELD_H * 0.32),
+        critical: findCriticalAnchorInCluster(0) ?? findAnchor('critical', PAD_T + FIELD_H * 0.40),
         high:     findAnchor('high',     PAD_T + FIELD_H * 0.55),
         low:      findAnchor('low',      PAD_T + FIELD_H * 0.82),
       },
@@ -242,7 +272,7 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
         preserveAspectRatio="xMidYMid meet"
         className={className}
         role="img"
-        aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts: critical-risk dots cluster into 3 networks labeled A, B, C. Hover or click a cluster to investigate.`}
+        aria-label={`Constellation of ${totalContracts.toLocaleString()} contracts: critical-risk dots cluster into 7 ARIA corruption patterns (P1–P7). Hover or click a cluster to open its pattern page.`}
       >
         {/* ── Field border (hairline) ──────────────────────────────────────── */}
         <rect
@@ -307,64 +337,54 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
         {attractors.map((a, idx) => {
           const isHovered = hoveredCluster === idx
           const meta = CLUSTER_META[idx]
+          // Ring radius ∝ √T1 so P5(180) reads largest, P2(1) smallest.
+          // Floor at 4 so P2/P4 remain visible; cap at 16 so P5 doesn't dominate.
+          const ringR = Math.max(4, Math.min(16, Math.sqrt(meta.t1)))
           return (
             <g key={`attractor-${idx}`}>
-              {/* Outer pulsing ring — echoes the cluster's gravitational pull */}
+              {/* Outer ring — radius ∝ √T1 count */}
               <circle
                 cx={a.x}
                 cy={a.y}
-                r={28}
+                r={ringR}
                 fill="none"
-                stroke="#ef4444"
-                strokeOpacity={isHovered ? 0.55 : 0.25}
-                strokeWidth={isHovered ? 1.5 : 1}
-                style={{ transition: 'stroke-opacity 160ms ease, stroke-width 160ms ease' }}
-              >
-                <animate
-                  attributeName="r"
-                  values="26;30;26"
-                  dur="3.2s"
-                  repeatCount="indefinite"
-                />
-                <animate
-                  attributeName="stroke-opacity"
-                  values={isHovered ? '0.35;0.7;0.35' : '0.12;0.32;0.12'}
-                  dur="3.2s"
-                  repeatCount="indefinite"
-                />
-              </circle>
+                stroke={meta.color}
+                strokeOpacity={isHovered ? 0.75 : 0.30}
+                strokeWidth={1}
+                style={{ transition: 'stroke-opacity 160ms ease' }}
+              />
 
-              {/* Cluster letter label */}
+              {/* Pattern code label (e.g. "P5") */}
               <text
                 x={a.x}
-                y={a.y + 44}
-                fill="#ef4444"
-                fillOpacity={isHovered ? 1 : 0.75}
-                fontSize={9}
+                y={a.y + ringR + 8}
+                fill={meta.color}
+                fillOpacity={isHovered ? 1 : 0.80}
+                fontSize={7}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="bold"
                 textAnchor="middle"
                 dominantBaseline="middle"
                 style={{ transition: 'fill-opacity 160ms ease' }}
               >
-                {meta.letter}
+                {meta.code}
               </text>
 
               {/* Transparent hit target — larger than visible ring */}
               <circle
                 cx={a.x}
                 cy={a.y}
-                r={36}
+                r={Math.max(18, ringR + 10)}
                 fill="transparent"
                 style={{ cursor: onClusterClick ? 'pointer' : 'default' }}
                 onMouseEnter={() => setHoveredCluster(idx)}
                 onMouseLeave={() => setHoveredCluster(null)}
                 onFocus={() => setHoveredCluster(idx)}
                 onBlur={() => setHoveredCluster(null)}
-                onClick={() => onClusterClick?.(meta.sectorCode)}
+                onClick={() => onClusterClick?.(meta.code)}
                 tabIndex={onClusterClick ? 0 : -1}
                 role={onClusterClick ? 'button' : undefined}
-                aria-label={onClusterClick ? `Cluster ${meta.letter}: ${meta.label}. ${meta.desc}. Open sector.` : undefined}
+                aria-label={onClusterClick ? `Pattern ${meta.code}: ${meta.label}. ${meta.desc}. Open pattern page.` : undefined}
               />
             </g>
           )
@@ -421,28 +441,35 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
-          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contracts · clusters A / B / C mark the 3 critical networks · click to investigate
+          1 dot ≈ {Math.round(totalContracts / N_DOTS).toLocaleString()} contratos · 7 patrones ARIA (P1–P7) · click para abrir tipología
         </text>
       </svg>
 
       {/* ── Floating cluster tooltip (DOM, positioned over SVG) ──────────── */}
       {hoveredCluster !== null && (() => {
         const meta = CLUSTER_META[hoveredCluster]
+        // Convert attractor frac to CSS percent of wrapping div
+        const topPct = ((PAD_T + meta.fy * FIELD_H) / SVG_H) * 100
+        const leftPct = ((PAD_L + meta.fx * FIELD_W) / SVG_W) * 100
         return (
           <div
             className="absolute z-10 pointer-events-none rounded-md border border-stone-700 bg-stone-900/95 backdrop-blur-sm p-2.5 shadow-xl"
             style={{
-              top: `${meta.topPct}%`,
-              left: `${meta.leftPct}%`,
-              transform: 'translate(-50%, -120%)',
-              minWidth: '180px',
+              top: `${topPct}%`,
+              left: `${leftPct}%`,
+              transform: 'translate(-50%, -130%)',
+              minWidth: '200px',
+              maxWidth: '260px',
             }}
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="text-[10px] font-mono font-bold text-red-400 tracking-[0.15em]">
-                CLUSTER {meta.letter}
+              <span
+                className="text-[10px] font-mono font-bold tracking-[0.15em]"
+                style={{ color: meta.color }}
+              >
+                {meta.code} · PATRÓN
               </span>
-              <span className="h-1 flex-1 bg-red-500/30 rounded-full" />
+              <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} />
             </div>
             <div className="text-sm font-bold text-stone-100 mb-0.5">
               {meta.label}
@@ -450,12 +477,14 @@ export function ConcentrationConstellation({ rows, totalContracts, onClusterClic
             <div className="text-[11px] text-stone-400 leading-snug mb-1.5">
               {meta.desc}
             </div>
-            <div className="text-[10px] font-mono text-stone-500 mb-1">
-              {meta.count} contratos críticos
+            <div className="flex items-center gap-3 text-[10px] font-mono text-stone-500 mb-1">
+              <span>{meta.vendors.toLocaleString()} proveedores</span>
+              <span className="text-stone-600">·</span>
+              <span style={{ color: meta.color }}>{meta.t1} T1</span>
             </div>
             {onClusterClick && (
               <div className="text-[10px] font-mono text-amber-400 tracking-wider uppercase">
-                → Ver sector
+                → Ver tipología
               </div>
             )}
           </div>
