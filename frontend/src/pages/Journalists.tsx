@@ -228,6 +228,7 @@ function FeaturedStory({ story }: { story: StoryDef }) {
 function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () => void }) {
   const { t } = useTranslation('journalists')
   const status = story.status ? STATUS_CONFIG[story.status] : null
+  const isRead = (() => { try { return !!localStorage.getItem(`rubli_read:${story.slug}`) } catch { return false } })()
 
   // Use i18n headline/subheadline if available, fall back to story-content
   const headline = t(`stories.${story.slug}.headline`, { defaultValue: story.headline })
@@ -247,7 +248,7 @@ function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () =>
     >
       {/* Card body */}
       <div className="p-5 pb-4 flex flex-col gap-2.5 flex-1">
-        {/* Top row: type + status */}
+        {/* Top row: type + status + read indicator */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-600">
             {story.type === 'case' ? 'CASE STUDY' : story.type === 'era' ? 'ERA ANALYSIS' : story.type === 'year' ? 'ANNUAL REVIEW' : 'INVESTIGATION'}
@@ -260,6 +261,11 @@ function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () =>
           {story.era && (
             <span className="px-1.5 py-0.5 rounded text-[10px] bg-zinc-800 text-zinc-500 font-mono">
               {story.era === 'amlo' ? '4T' : story.era === 'pena' ? 'EPN' : story.era === 'calderon' ? 'FCH' : story.era === 'fox' ? 'FOX' : story.era.toUpperCase()}
+            </span>
+          )}
+          {isRead && (
+            <span className="ml-auto text-[10px] text-zinc-600 font-mono tracking-wide">
+              ✓ read
             </span>
           )}
         </div>

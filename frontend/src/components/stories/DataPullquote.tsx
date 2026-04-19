@@ -102,30 +102,20 @@ export default function DataPullquote({
           </div>
           <p className="text-sm text-zinc-400 mb-3">{statLabel}</p>
 
-          {/* Comparison bars */}
+          {/* Stat bar */}
           {barValue !== undefined && (
-            <div className="space-y-1.5" role="img" aria-label={`Comparacion: ${stat} vs ${barLabel || 'referencia'}`}>
+            <div role="img" aria-label={`${stat}${barLabel ? ` — ${barLabel}` : ''}`}>
               <div className="flex items-center gap-3">
-                <span className="text-[10px] text-zinc-500 w-20 shrink-0 uppercase tracking-wider">Dato</span>
                 <AnimatedFill
                   pct={barValue}
                   color={barColorHex}
-                  height="h-3"
+                  height="h-2.5"
                   delay={200}
                 />
-                <span className={cn('text-xs font-bold tabular-nums', statColor)}>{stat}</span>
+                <span className={cn('text-xs font-bold tabular-nums shrink-0', statColor)}>{stat}</span>
               </div>
               {barLabel && (
-                <div className="flex items-center gap-3">
-                  <span className="text-[10px] text-zinc-500 w-20 shrink-0 uppercase tracking-wider">Ref.</span>
-                  <div className="flex-1 h-3 bg-surface-raised rounded overflow-hidden">
-                    <div
-                      className="h-full rounded bg-zinc-600"
-                      style={{ width: `${Math.min(100 - barValue, 100)}%` }}
-                    />
-                  </div>
-                  <span className="text-xs text-zinc-500 tabular-nums">{barLabel}</span>
-                </div>
+                <p className="text-[10px] text-zinc-600 uppercase tracking-wider mt-1.5">{barLabel}</p>
               )}
             </div>
           )}

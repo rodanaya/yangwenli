@@ -7,10 +7,10 @@
  */
 
 import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useEffect } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
-import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight } from 'lucide-react'
+import { Clock, ArrowLeft, ExternalLink, Share2, ArrowRight, ChevronRight, FileText } from 'lucide-react'
 import { getStoryBySlug, getRelatedStories } from '@/lib/story-content'
 import type { StoryChapterDef, StoryDef, StoryStatus } from '@/lib/story-content'
 import { OutletBadge } from '@/components/stories/OutletBadge'
@@ -131,6 +131,38 @@ function parseLeadStat(value: string): { numeric: number; prefix: string; suffix
 }
 
 // ---------------------------------------------------------------------------
+// Chapter sources — collapsible citation footnote
+// ---------------------------------------------------------------------------
+
+function ChapterSources({ sources }: { sources: string[] }) {
+  const [open, setOpen] = useState(false)
+  return (
+    <div className="mt-8 mb-2">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="inline-flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors group"
+        aria-expanded={open}
+      >
+        <FileText className="h-3 w-3 group-hover:text-zinc-400" />
+        <span className="font-mono">{open ? '−' : '+'}</span>
+        <span>{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
+        <span className="text-zinc-700">&mdash; {open ? 'collapse' : 'view citations'}</span>
+      </button>
+      {open && (
+        <ol className="mt-3 space-y-1.5 border-l-2 border-zinc-800 pl-4">
+          {sources.map((s, i) => (
+            <li key={i} className="text-[11px] text-zinc-500 font-mono leading-relaxed">
+              <span className="text-zinc-700 mr-2 select-none">[{i + 1}]</span>
+              {s}
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // Chapter section
 // ---------------------------------------------------------------------------
 
@@ -167,6 +199,10 @@ function ChapterSection({
           </ScrollReveal>
         ))}
 
+        {chapter.sources && chapter.sources.length > 0 && (
+          <ChapterSources sources={chapter.sources} />
+        )}
+
         {chapter.chartConfig && (() => {
           const chartId = chapter.chartConfig.chartId || TYPE_TO_CHART_ID[chapter.chartConfig.type]
           const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
@@ -201,6 +237,17 @@ function ChapterSection({
       </div>
     </section>
   )
+}
+
+// ---------------------------------------------------------------------------
+// Shared status config (used in Hero + Methodology)
+// ---------------------------------------------------------------------------
+
+const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
+  solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
+  reporteado:  { labelKey: 'story.statusReporteado',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
+  auditado:    { labelKey: 'story.statusAuditado',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
+  procesado:   { labelKey: 'story.statusProcesado',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
 }
 
 // ---------------------------------------------------------------------------
@@ -271,18 +318,32 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           {story.subheadline}
         </motion.p>
 
-        {/* Byline + read time */}
+        {/* Byline + read time + investigation status */}
         <motion.div
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="flex items-center gap-4 text-sm text-zinc-500 mb-10"
+          className="flex flex-wrap items-center gap-3 text-sm text-zinc-500 mb-10"
         >
           <span>{story.byline}</span>
           <span className="w-px h-4 bg-zinc-700" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
             {story.estimatedMinutes} min {t('storyType.readTime', 'read')}
+          </span>
+          {story.status && (() => {
+            const sc = STATUS_CONFIG[story.status]
+            return (
+              <span
+                className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-semibold ${sc.bg} ${sc.border} ${sc.color}`}
+              >
+                <span className="w-1.5 h-1.5 rounded-full bg-current opacity-80" />
+                {t(sc.labelKey, story.status)}
+              </span>
+            )
+          })()}
+          <span className="text-[11px] text-zinc-700 font-mono">
+            {story.chapters.length} {story.chapters.length === 1 ? 'chapter' : 'chapters'}
           </span>
         </motion.div>
 
@@ -337,29 +398,52 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
 // Chapter navigation dots (sticky sidebar)
 // ---------------------------------------------------------------------------
 
-function ChapterNav({ chapters, accentColor }: { chapters: StoryChapterDef[]; accentColor: string }) {
+function ChapterNav({
+  chapters,
+  accentColor,
+  activeChapterId,
+}: {
+  chapters: StoryChapterDef[]
+  accentColor: string
+  activeChapterId: string | null
+}) {
   const { t } = useTranslation('common')
   return (
     <nav
       className="hidden lg:flex fixed right-6 top-1/2 -translate-y-1/2 z-40 flex-col gap-3"
       aria-label={t('storyType.chapterNav', 'Chapter navigation')}
     >
-      {chapters.map((ch) => (
-        <a
-          key={ch.id}
-          href={`#chapter-${ch.id}`}
-          className="group relative flex items-center justify-end gap-2"
-          aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${ch.title}`}
-        >
-          <span className="opacity-0 group-hover:opacity-100 transition-opacity text-xs text-zinc-400 whitespace-nowrap pr-2">
-            {ch.title}
-          </span>
-          <span
-            className="w-2.5 h-2.5 rounded-full border-2 transition-colors group-hover:scale-125"
-            style={{ borderColor: accentColor }}
-          />
-        </a>
-      ))}
+      {chapters.map((ch) => {
+        const isActive = ch.id === activeChapterId
+        return (
+          <a
+            key={ch.id}
+            href={`#chapter-${ch.id}`}
+            className="group relative flex items-center justify-end gap-2"
+            aria-label={`${t('storyType.chapter', 'Chapter')} ${ch.number}: ${ch.title}`}
+            aria-current={isActive ? 'step' : undefined}
+          >
+            <span
+              className={cn(
+                'transition-opacity text-xs whitespace-nowrap pr-2',
+                isActive ? 'opacity-100 text-zinc-200' : 'opacity-0 group-hover:opacity-100 text-zinc-400'
+              )}
+            >
+              {ch.title}
+            </span>
+            <span
+              className={cn(
+                'w-2.5 h-2.5 rounded-full border-2 transition-all',
+                isActive ? 'scale-125' : 'group-hover:scale-110'
+              )}
+              style={{
+                borderColor: accentColor,
+                backgroundColor: isActive ? accentColor : 'transparent',
+              }}
+            />
+          </a>
+        )
+      })}
     </nav>
   )
 }
@@ -367,13 +451,6 @@ function ChapterNav({ chapters, accentColor }: { chapters: StoryChapterDef[]; ac
 // ---------------------------------------------------------------------------
 // Methodology footer
 // ---------------------------------------------------------------------------
-
-const STATUS_CONFIG: Record<StoryStatus, { labelKey: string; color: string; bg: string; border: string }> = {
-  solo_datos:  { labelKey: 'story.statusSoloDatos', color: 'text-amber-400',  bg: 'bg-amber-950/40',  border: 'border-amber-800/60' },
-  reporteado:  { labelKey: 'story.statusReporteado',           color: 'text-sky-400',     bg: 'bg-sky-950/40',    border: 'border-sky-800/60'   },
-  auditado:    { labelKey: 'story.statusAuditado',          color: 'text-violet-400',  bg: 'bg-violet-950/40', border: 'border-violet-800/60' },
-  procesado:   { labelKey: 'story.statusProcesado',           color: 'text-red-400',     bg: 'bg-red-950/40',    border: 'border-red-800/60'   },
-}
 
 function MethodologySection({ story }: { story: StoryDef }) {
   const { t } = useTranslation('common')
@@ -594,13 +671,58 @@ export default function StoryNarrative() {
   const { t } = useTranslation('common')
   const { slug } = useParams<{ slug: string }>()
   const navigate = useNavigate()
+  const [scrollPct, setScrollPct] = useState(0)
+  const [activeChapterId, setActiveChapterId] = useState<string | null>(null)
 
   const story = slug ? getStoryBySlug(slug) : undefined
 
   // Scroll to top on slug change
   useEffect(() => {
     window.scrollTo({ top: 0 })
+    setScrollPct(0)
+    setActiveChapterId(null)
   }, [slug])
+
+  // Reading progress bar
+  useEffect(() => {
+    if (!story) return
+    const onScroll = () => {
+      const el = document.documentElement
+      const total = el.scrollHeight - el.clientHeight
+      setScrollPct(total > 0 ? Math.min(100, (el.scrollTop / total) * 100) : 0)
+    }
+    window.addEventListener('scroll', onScroll, { passive: true })
+    return () => window.removeEventListener('scroll', onScroll)
+  }, [story])
+
+  // Active chapter tracking via IntersectionObserver
+  useEffect(() => {
+    if (!story) return
+    const sections = story.chapters
+      .map((ch) => document.getElementById(`chapter-${ch.id}`))
+      .filter(Boolean) as HTMLElement[]
+    const observer = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (entry.isIntersecting) {
+            setActiveChapterId(entry.target.id.replace('chapter-', ''))
+          }
+        }
+      },
+      { rootMargin: '-15% 0px -65% 0px' }
+    )
+    sections.forEach((s) => observer.observe(s))
+    return () => observer.disconnect()
+  }, [story])
+
+  // Mark story as read in localStorage
+  const markRead = useCallback((s: string) => {
+    try { localStorage.setItem(`rubli_read:${s}`, '1') } catch { /* ignore */ }
+  }, [])
+
+  useEffect(() => {
+    if (slug) markRead(slug)
+  }, [slug, markRead])
 
   if (!story) {
     return (
@@ -638,8 +760,14 @@ export default function StoryNarrative() {
 
   return (
     <div className="min-h-screen bg-black">
-      {/* Back to Journalists link */}
+      {/* Sticky header: back link + reading progress */}
       <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-zinc-800/50">
+        {/* Progress bar */}
+        <div
+          className="absolute bottom-0 left-0 h-[2px] transition-all duration-100"
+          style={{ width: `${scrollPct}%`, backgroundColor: accentColor }}
+          aria-hidden="true"
+        />
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
           <Link
             to="/journalists"
@@ -648,8 +776,8 @@ export default function StoryNarrative() {
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('story.allStories')}
           </Link>
-          <span className="text-[10px] text-zinc-600 uppercase tracking-wider">
-            {t('story.investigations')}
+          <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
+            {Math.round(scrollPct)}%
           </span>
         </div>
       </div>
@@ -658,7 +786,7 @@ export default function StoryNarrative() {
       <StoryHero story={story} accentColor={accentColor} />
 
       {/* Chapter navigation dots */}
-      <ChapterNav chapters={story.chapters} accentColor={accentColor} />
+      <ChapterNav chapters={story.chapters} accentColor={accentColor} activeChapterId={activeChapterId} />
 
       {/* ── ACT I: THE INVESTIGATION ── */}
       <main className="relative max-w-4xl mx-auto px-4 sm:px-6 pt-16">

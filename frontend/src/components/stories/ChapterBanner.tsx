@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import { ScrollReveal } from '@/hooks/useAnimations'
 import { cn } from '@/lib/utils'
 
@@ -18,6 +19,7 @@ export default function ChapterBanner({
   color = '#dc2626',
   className,
 }: ChapterBannerProps) {
+  const { t } = useTranslation('common')
   const paddedNumber = String(number).padStart(2, '0')
 
   return (
@@ -27,7 +29,7 @@ export default function ChapterBanner({
         style={{ borderTop: `2px solid ${color}` }}
         role="heading"
         aria-level={2}
-        aria-label={`Capitulo ${paddedNumber}: ${title}`}
+        aria-label={`${t('storyType.chapter', 'Chapter')} ${paddedNumber}: ${title}`}
       >
         {/* Large background number */}
         <span
@@ -45,7 +47,7 @@ export default function ChapterBanner({
               className="text-[11px] uppercase tracking-[0.2em] font-semibold"
               style={{ color }}
             >
-              Capitulo {paddedNumber}
+              {t('storyType.chapter', 'Chapter')} {paddedNumber}
             </p>
             <h2 className="text-2xl md:text-4xl font-bold text-zinc-100 leading-tight max-w-2xl">
               {title}
