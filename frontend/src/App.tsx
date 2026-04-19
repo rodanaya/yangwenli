@@ -287,6 +287,8 @@ function App() {
               />
               <Route path="temporal" element={<Navigate to="/administrations" replace />} />
               <Route path="institutions/health" element={<Navigate to="/institutions" replace />} />
+              <Route path="institutions/scorecards" element={<Navigate to="/institutions?tab=fichas" replace />} />
+              <Route path="institutions/fichas" element={<Navigate to="/institutions?tab=fichas" replace />} />
               <Route path="price-intelligence" element={<Navigate to="/price-analysis" replace />} />
               <Route path="model-transparency" element={<Navigate to="/model" replace />} />
               <Route

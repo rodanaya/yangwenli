@@ -94,13 +94,13 @@ def get_database_stats(response: Response):
         """)
         total_value = cursor.fetchone()["total"]
 
-        # Year range
+        # Year range — clamp to valid COMPRANET range (2002+); pre-2002 rows are data errors
         cursor.execute("""
             SELECT
                 MIN(contract_year) as min_year,
                 MAX(contract_year) as max_year
             FROM contracts
-            WHERE contract_year IS NOT NULL
+            WHERE contract_year IS NOT NULL AND contract_year >= 2002
         """)
         row = cursor.fetchone()
         min_year = row["min_year"] or 2002

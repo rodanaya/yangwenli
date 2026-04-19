@@ -116,11 +116,11 @@ def _search_institutions(q: str, limit: int) -> list[InstitutionResult]:
                        COALESCE(ist.total_contracts, 0) AS total_contracts
                 FROM institutions i
                 LEFT JOIN institution_stats ist ON i.id = ist.institution_id
-                WHERE i.name LIKE ?
+                WHERE i.name LIKE ? OR COALESCE(i.siglas, '') LIKE ?
                 ORDER BY total_contracts DESC
                 LIMIT ?
                 """,
-                (f"%{q}%", limit),
+                (f"%{q}%", f"%{q}%", limit),
             )
             rows = cur.fetchall()
         return [
@@ -158,7 +158,12 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
     """
     try:
         with get_db() as conn:
-            # Try FTS5 path first
+            # Check FTS table exists before trying — LIKE scan on 3.1M rows causes 30s timeout
+            fts_exists = conn.execute(
+                "SELECT 1 FROM sqlite_master WHERE type='table' AND name='contracts_fts'"
+            ).fetchone()
+            if not fts_exists:
+                return []
             try:
                 cur = conn.execute(
                     """
@@ -174,21 +179,7 @@ def _search_contracts(q: str, limit: int) -> list[ContractResult]:
                 )
                 rows = cur.fetchall()
             except Exception:
-                # FTS table missing — fall back to LIKE (dev environments)
-                cur = conn.execute(
-                    """
-                    SELECT id, title, amount_mxn, risk_level, contract_year
-                    FROM contracts
-                    WHERE title LIKE ?
-                      AND amount_mxn IS NOT NULL
-                      AND amount_mxn > 0
-                      AND amount_mxn <= 100000000000
-                    ORDER BY risk_score DESC
-                    LIMIT ?
-                    """,
-                    (f"%{q}%", limit),
-                )
-                rows = cur.fetchall()
+                rows = []
         return [
             ContractResult(
                 id=r["id"],

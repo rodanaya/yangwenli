@@ -75,6 +75,6 @@
   },
   "methodology": {
     "label": "Metodología: ",
-    "body": "Este análisis agrupa 3,059,592 contratos (2002–2025) por el año dentro de cada sexenio presidencial. Año 1 = primer año calendario de un nuevo presidente. Puntajes de riesgo del modelo RUBLI v0.6.5 (AUC 0.828, split vendedor-estratificado). Umbral de alto riesgo: puntaje ≥ 0.40. Adjudicación directa = procedimiento de contratación no competitivo. Propuesta única = procedimiento competitivo con un solo oferente. Año electoral = año de elección presidencial federal (2000, 2006, 2012, 2018, 2024). Casos GT = contratos vinculados a casos de corrupción documentados en la base de verdad de campo de RUBLI (748 casos al 2026-03-25). La concentración HHI de vendedores se calcula por sexenio en todos los sectores."
+    "body": "Este análisis agrupa 3,051,294 contratos (2002–2025) por el año dentro de cada sexenio presidencial. Año 1 = primer año calendario de un nuevo presidente. Puntajes de riesgo del modelo RUBLI v0.6.5 (AUC 0.828, split vendedor-estratificado). Umbral de alto riesgo: puntaje ≥ 0.40. Adjudicación directa = procedimiento de contratación no competitivo. Propuesta única = procedimiento competitivo con un solo oferente. Año electoral = año de elección presidencial federal (2000, 2006, 2012, 2018, 2024). Casos GT = contratos vinculados a casos de corrupción documentados en la base de verdad de campo de RUBLI (748 casos al 2026-03-25). La concentración HHI de vendedores se calcula por sexenio en todos los sectores."
   }
 }
