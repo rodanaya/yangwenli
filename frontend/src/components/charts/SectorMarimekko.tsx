@@ -1,7 +1,7 @@
 /**
- * SectorMarimekko — variable-width bar chart
- * Width encodes total spend, fill encodes risk composition
- * Each sector row width is proportional to its share of grand total spend
+ * SectorMarimekko — horizontal bar chart
+ * Bar width = sector spend relative to largest sector (not grand total)
+ * Fill = risk composition (low → medium → high → critical, L→R)
  */
 
 import { useState } from 'react'
@@ -25,18 +25,19 @@ interface SectorMarimekkoProps {
   className?: string
 }
 
-const LABEL_W  = 110
-const CHART_W  = 340
-const VALUE_W  = 80
-const ROW_H    = 24
-const ROW_GAP  = 3
-const SVG_W    = LABEL_W + CHART_W + VALUE_W
+const LABEL_W  = 112
+const TAB_W    = 3
+const CHART_W  = 300
+const GAP      = 10
+const VALUE_W  = 90
+const ROW_H    = 22
+const ROW_GAP  = 4
+const SVG_W    = LABEL_W + TAB_W + CHART_W + GAP + VALUE_W
 
-// Risk segment colors (low → critical, left to right inside each row)
 const SEG_COLORS = {
-  low:      { fill: '#3f3f46', opacity: 0.5 },
-  medium:   { fill: '#a16207', opacity: 0.7 },
-  high:     { fill: '#f59e0b', opacity: 0.9 },
+  low:      { fill: '#3f3f46', opacity: 0.45 },
+  medium:   { fill: '#a16207', opacity: 0.65 },
+  high:     { fill: '#f59e0b', opacity: 0.88 },
   critical: { fill: '#ef4444', opacity: 1.0, stroke: '#fca5a5', strokeWidth: 0.5 },
 } as const
 
@@ -45,22 +46,22 @@ interface TooltipData {
   name: string
   totalValue: number
   highRiskPct: number
+  criticalPct: number
   avgRisk: number
-  x: number
-  y: number
 }
 
 export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMarimekkoProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
-  // Sort by totalValue descending
   const sorted = [...sectors].sort((a, b) => b.totalValue - a.totalValue)
-
-  const grandTotal = sorted.reduce((s, r) => s + r.totalValue, 0)
-  if (grandTotal === 0) return null
+  const maxValue = sorted[0]?.totalValue ?? 1
+  if (maxValue === 0) return null
 
   const nSectors = sorted.length
-  const svgH = nSectors * (ROW_H + ROW_GAP) + 30
+  const legendH = 22
+  const svgH = nSectors * (ROW_H + ROW_GAP) + legendH + 16
+
+  const barStartX = LABEL_W + TAB_W
 
   return (
     <div className={className} style={{ position: 'relative' }}>
@@ -68,32 +69,23 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         viewBox={`0 0 ${SVG_W} ${svgH}`}
         width="100%"
         preserveAspectRatio="xMinYMid meet"
-        aria-label="Marimekko chart of contract spend and risk by sector"
+        aria-label="Sector spend and risk composition chart"
         role="img"
       >
         {sorted.map((sector, idx) => {
           const rowY = idx * (ROW_H + ROW_GAP)
-          const rowWidth = (sector.totalValue / grandTotal) * CHART_W
-          const barX = LABEL_W + 3 // after the 3px tab
+          const barWidth = (sector.totalValue / maxValue) * CHART_W
 
-          // Risk segments: low, medium, high, critical (left to right)
-          const segments: Array<{
-            key: string
-            pct: number
-            fill: string
-            opacity: number
-            stroke?: string
-            strokeWidth?: number
-          }> = [
+          const segments: Array<{ key: string; pct: number; fill: string; opacity: number; stroke?: string; strokeWidth?: number }> = [
             { key: 'low',      pct: sector.lowPct,      ...SEG_COLORS.low },
             { key: 'medium',   pct: sector.mediumPct,   ...SEG_COLORS.medium },
             { key: 'high',     pct: sector.highPct,     ...SEG_COLORS.high },
             { key: 'critical', pct: sector.criticalPct, ...SEG_COLORS.critical },
           ]
 
-          let segX = barX
+          let segX = barStartX
           const renderedSegs = segments.map((seg) => {
-            const segW = (seg.pct / 100) * rowWidth
+            const segW = (seg.pct / 100) * barWidth
             const x = segX
             segX += segW
             if (segW < 0.5) return null
@@ -112,59 +104,55 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
             )
           })
 
-          const handleMouseEnter = () => {
-            setTooltip({
-              code: sector.code,
-              name: sector.name,
-              totalValue: sector.totalValue,
-              highRiskPct: sector.highPct + sector.criticalPct,
-              avgRisk: sector.avgRisk,
-              x: LABEL_W + rowWidth,
-              y: rowY,
-            })
-          }
+          const hrPct = sector.highPct + sector.criticalPct
 
           return (
             <g
               key={sector.code}
               className={onSectorClick ? 'cursor-pointer' : undefined}
               onClick={() => onSectorClick?.(sector.code)}
-              onMouseEnter={handleMouseEnter}
+              onMouseEnter={() => setTooltip({ code: sector.code, name: sector.name, totalValue: sector.totalValue, highRiskPct: hrPct, criticalPct: sector.criticalPct, avgRisk: sector.avgRisk })}
               onMouseLeave={() => setTooltip(null)}
               role={onSectorClick ? 'button' : undefined}
               aria-label={`${sector.name}: ${formatCompactMXN(sector.totalValue)}`}
             >
-              {/* Sector name label */}
-              <text
-                x={LABEL_W - 8}
-                y={rowY + ROW_H / 2}
-                textAnchor="end"
-                dominantBaseline="middle"
-                fill="#d4d4d8"
-                fontSize={12}
-                fontFamily="var(--font-family-sans, sans-serif)"
-              >
+              {/* Sector name */}
+              <text x={LABEL_W - 6} y={rowY + ROW_H / 2} textAnchor="end" dominantBaseline="middle"
+                fill="#c4bdb8" fontSize={11} fontFamily="var(--font-family-sans, sans-serif)">
                 {sector.name}
               </text>
 
-              {/* 3px colored sector identity tab */}
-              <rect
-                x={LABEL_W}
-                y={rowY}
-                width={3}
-                height={ROW_H}
-                fill={sector.color}
-              />
+              {/* Sector color tab */}
+              <rect x={LABEL_W} y={rowY} width={TAB_W} height={ROW_H} fill={sector.color} />
 
-              {/* Risk composition segments */}
+              {/* Background track */}
+              <rect x={barStartX} y={rowY} width={CHART_W} height={ROW_H}
+                fill="#1c1917" fillOpacity={0.5} />
+
+              {/* Risk composition fill */}
               {renderedSegs}
 
-              {/* Spend value to the right of segments */}
+              {/* H+C % label inside bar right edge — only if wide enough */}
+              {barWidth > 50 && hrPct > 0 && (
+                <text
+                  x={barStartX + barWidth - 4}
+                  y={rowY + ROW_H / 2}
+                  textAnchor="end"
+                  dominantBaseline="middle"
+                  fill="rgba(255,255,255,0.55)"
+                  fontSize={9}
+                  fontFamily="var(--font-family-mono, monospace)"
+                >
+                  {hrPct.toFixed(0)}%
+                </text>
+              )}
+
+              {/* Value label — always at fixed right position */}
               <text
-                x={LABEL_W + rowWidth + 6}
+                x={barStartX + CHART_W + GAP}
                 y={rowY + ROW_H / 2}
                 dominantBaseline="middle"
-                fill="#71717a"
+                fill="#78716c"
                 fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
               >
@@ -174,41 +162,62 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
           )
         })}
 
-        {/* Bottom legend strip */}
-        <text
-          x={LABEL_W}
-          y={nSectors * (ROW_H + ROW_GAP) + 8}
-          fill="#52525b"
-          fontSize={9}
-          fontFamily="var(--font-family-mono, monospace)"
-          dominantBaseline="hanging"
-        >
-          {'← width = total contract value · fill = risk composition →'}
-        </text>
+        {/* Legend */}
+        {(() => {
+          const legendY = nSectors * (ROW_H + ROW_GAP) + 8
+          const items = [
+            { label: 'low',      fill: '#3f3f46', opacity: 0.7 },
+            { label: 'medium',   fill: '#a16207', opacity: 0.8 },
+            { label: 'high',     fill: '#f59e0b', opacity: 0.9 },
+            { label: 'critical', fill: '#ef4444', opacity: 1.0 },
+          ]
+          let lx = barStartX
+          return (
+            <g>
+              {items.map(({ label, fill, opacity }) => {
+                const el = (
+                  <g key={label}>
+                    <rect x={lx} y={legendY + 3} width={8} height={8} fill={fill} fillOpacity={opacity} rx={1} />
+                    <text x={lx + 11} y={legendY + 7} fill="#52525b" fontSize={9}
+                      fontFamily="var(--font-family-mono, monospace)" dominantBaseline="middle">
+                      {label}
+                    </text>
+                  </g>
+                )
+                lx += label.length * 6 + 22
+                return el
+              })}
+            </g>
+          )
+        })()}
       </svg>
 
-      {/* Hover tooltip via absolutely-positioned div */}
+      {/* Tooltip */}
       {tooltip && (
         <div
-          className="chart-tooltip pointer-events-none"
           style={{
             position: 'absolute',
             top: 0,
             left: '50%',
             transform: 'translateX(-50%)',
             zIndex: 10,
-            minWidth: 180,
+            minWidth: 190,
+            background: '#1a1410',
+            border: '1px solid #3a3430',
+            borderRadius: 6,
+            padding: '10px 14px',
+            pointerEvents: 'none',
           }}
         >
-          <p className="font-medium text-zinc-200 mb-1">{tooltip.name}</p>
-          <p className="text-zinc-400 text-xs">
-            Spend: <span className="font-mono text-zinc-200">{formatCompactMXN(tooltip.totalValue)}</span>
+          <p style={{ fontWeight: 600, color: '#e8e0d8', marginBottom: 6, fontSize: 13 }}>{tooltip.name}</p>
+          <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
+            Spend: <span style={{ fontFamily: 'monospace', color: '#c4bdb8' }}>{formatCompactMXN(tooltip.totalValue)}</span>
           </p>
-          <p className="text-zinc-400 text-xs">
-            High-risk: <span className="font-mono text-zinc-200">{tooltip.highRiskPct.toFixed(1)}%</span>
+          <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
+            High + Critical: <span style={{ fontFamily: 'monospace', color: '#f87171' }}>{tooltip.highRiskPct.toFixed(1)}%</span>
           </p>
-          <p className="text-zinc-400 text-xs">
-            Avg risk: <span className="font-mono text-zinc-200">{(tooltip.avgRisk * 100).toFixed(1)}%</span>
+          <p style={{ color: '#78716c', fontSize: 11 }}>
+            Critical only: <span style={{ fontFamily: 'monospace', color: '#ef4444' }}>{tooltip.criticalPct.toFixed(1)}%</span>
           </p>
         </div>
       )}

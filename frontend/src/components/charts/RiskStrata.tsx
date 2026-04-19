@@ -1,9 +1,10 @@
 /**
- * RiskStrata — a vertical geological column
- * One tall bar = the universe of contracts
- * Strata from top (critical, hot) to bottom (low, cool)
- * OECD 15% reference line cuts horizontally through it
+ * RiskStrata — horizontal bar breakdown of contracts by risk level
+ * critical → high → medium → low
+ * Hero stat: high-risk rate (critical + high combined)
  */
+
+import { formatNumber } from '@/lib/utils'
 
 export interface RiskStrataRow {
   level: 'critical' | 'high' | 'medium' | 'low'
@@ -19,179 +20,124 @@ interface RiskStrataProps {
   className?: string
 }
 
-const STRATA_COLORS: Record<string, { fill: string; stroke?: string; opacity: number }> = {
-  critical: { fill: '#ef4444', stroke: '#dc2626', opacity: 1.0 },
-  high:     { fill: '#f59e0b', opacity: 0.9 },
-  medium:   { fill: '#a16207', opacity: 0.6 },
-  low:      { fill: '#3f3f46', opacity: 0.5 },
+const STRATA_COLORS: Record<string, string> = {
+  critical: '#ef4444',
+  high:     '#f59e0b',
+  medium:   '#a16207',
+  low:      '#3f3f46',
 }
 
-const TOTAL_H = 280
-const COL_W   = 52
-const COL_X   = 180
-const LEADER_END_X = 248
-const LABEL_X = 254
-const SVG_W   = 520
-const SVG_H   = 340
+const STRATA_OPACITY: Record<string, number> = {
+  critical: 1.0,
+  high:     0.88,
+  medium:   0.65,
+  low:      0.45,
+}
+
+const LABEL_W  = 58
+const BAR_W    = 160
+const GAP      = 6
+const PCT_W    = 36
+const COUNT_W  = 76
+const ROW_H    = 20
+const ROW_GAP  = 6
+const SVG_W    = LABEL_W + BAR_W + GAP + PCT_W + COUNT_W
 
 export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStrataProps) {
-  // Compute cumulative y positions
-  let cumPct = 0
-  const segments = rows.map((row) => {
-    const y = (cumPct / 100) * TOTAL_H
-    const h = (row.pct / 100) * TOTAL_H
-    cumPct += row.pct
-    return { ...row, y, h }
-  })
+  const order: RiskStrataRow['level'][] = ['critical', 'high', 'medium', 'low']
+  const sorted = order.map((lvl) => rows.find((r) => r.level === lvl)).filter(Boolean) as RiskStrataRow[]
 
-  // OECD 15% line at y = 15% of TOTAL_H
-  const oecdY = TOTAL_H * 0.15
-
-  // Hero stat: midpoint of critical+high band
-  const critHighPct = rows
-    .filter((r) => r.level === 'critical' || r.level === 'high')
-    .reduce((s, r) => s + r.pct, 0)
-  const heroY = (critHighPct / 100) * TOTAL_H / 2
+  // Hero block height
+  const HERO_H = 56
+  const svgH = HERO_H + sorted.length * (ROW_H + ROW_GAP) + 36
 
   return (
     <svg
-      viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+      viewBox={`0 0 ${SVG_W} ${svgH}`}
       width="100%"
       preserveAspectRatio="xMinYMid meet"
       className={className}
-      aria-label="Geological column chart of contracts by risk level"
+      aria-label={`Risk distribution: ${hrRate.toFixed(1)}% high-risk rate across ${totalContracts.toLocaleString()} contracts`}
       role="img"
     >
-      {/* ── Geological strata column ─────────────────────────────────────── */}
-      {segments.map((seg) => {
-        if (seg.h < 0.5) return null
-        const style = STRATA_COLORS[seg.level] ?? { fill: '#3f3f46', opacity: 0.5 }
-        return (
-          <rect
-            key={seg.level}
-            x={COL_X}
-            y={seg.y}
-            width={COL_W}
-            height={seg.h}
-            fill={style.fill}
-            fillOpacity={style.opacity}
-            stroke={style.stroke}
-            strokeWidth={style.stroke ? 1 : 0}
-          />
-        )
-      })}
+      {/* ── Hero stat ───────────────────────────────────────────────── */}
+      <text x={0} y={34} fill="#ef4444" fontSize={32} fontFamily="var(--font-family-mono, monospace)"
+        fontWeight="bold" dominantBaseline="middle">
+        {hrRate.toFixed(1)}%
+      </text>
+      <text x={0} y={50} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono, monospace)"
+        dominantBaseline="middle" letterSpacing="0.08em">
+        HIGH-RISK RATE · OECD 2–15%
+      </text>
 
-      {/* ── Dashed leader lines + labels ─────────────────────────────────── */}
-      {segments.map((seg) => {
-        if (seg.h < 0.5) return null
-        const midY = seg.y + seg.h / 2
+      {/* ── Horizontal bars ─────────────────────────────────────────── */}
+      {sorted.map((row, idx) => {
+        const rowY = HERO_H + idx * (ROW_H + ROW_GAP)
+        const fill = STRATA_COLORS[row.level] ?? '#3f3f46'
+        const opacity = STRATA_OPACITY[row.level] ?? 0.5
+        const barFill = (row.pct / 100) * BAR_W
+
         return (
-          <g key={`label-${seg.level}`}>
-            {/* Leader line */}
-            <line
-              x1={COL_X + COL_W}
-              y1={midY}
-              x2={LEADER_END_X}
-              y2={midY}
-              stroke="rgba(255,255,255,0.15)"
-              strokeWidth={1}
-              strokeDasharray="2 3"
-            />
-            {/* Tier label */}
+          <g key={row.level}>
+            {/* Level label */}
             <text
-              x={LABEL_X}
-              y={midY - 6}
-              fill="#d4d4d8"
-              fontSize={11}
-              fontFamily="var(--font-family-mono, monospace)"
+              x={LABEL_W - 4}
+              y={rowY + ROW_H / 2}
+              textAnchor="end"
               dominantBaseline="middle"
-            >
-              {seg.label}
-            </text>
-            {/* Pct + count */}
-            <text
-              x={LABEL_X}
-              y={midY + 8}
-              fill="#71717a"
+              fill={row.level === 'critical' || row.level === 'high' ? '#a8a29e' : '#52525b'}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              dominantBaseline="middle"
             >
-              {seg.pct.toFixed(1)}% · {seg.count.toLocaleString()}
+              {row.label}
+            </text>
+
+            {/* Background track */}
+            <rect x={LABEL_W} y={rowY} width={BAR_W} height={ROW_H}
+              fill="#1c1917" fillOpacity={0.5} rx={2} />
+
+            {/* Filled bar */}
+            <rect x={LABEL_W} y={rowY} width={Math.max(barFill, 1)} height={ROW_H}
+              fill={fill} fillOpacity={opacity} rx={2} />
+
+            {/* Percentage */}
+            <text
+              x={LABEL_W + BAR_W + GAP}
+              y={rowY + ROW_H / 2}
+              dominantBaseline="middle"
+              fill={row.level === 'critical' ? '#f87171' : row.level === 'high' ? '#fbbf24' : '#52525b'}
+              fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)"
+              fontWeight={row.level === 'critical' || row.level === 'high' ? 'bold' : 'normal'}
+            >
+              {row.pct.toFixed(1)}%
+            </text>
+
+            {/* Count */}
+            <text
+              x={LABEL_W + BAR_W + GAP + PCT_W}
+              y={rowY + ROW_H / 2}
+              dominantBaseline="middle"
+              fill="#3f3f46"
+              fontSize={9}
+              fontFamily="var(--font-family-mono, monospace)"
+            >
+              {formatNumber(row.count)}
             </text>
           </g>
         )
       })}
 
-      {/* ── OECD 15% reference line ───────────────────────────────────────── */}
-      <line
-        x1={COL_X - 12}
-        y1={oecdY}
-        x2={COL_X + COL_W + 12}
-        y2={oecdY}
-        stroke="#22d3ee"
-        strokeWidth={1}
-        strokeDasharray="3 3"
-      />
-      <text
-        x={COL_X - 14}
-        y={oecdY}
-        fill="#22d3ee"
-        fontSize={9}
-        fontFamily="var(--font-family-mono, monospace)"
-        textAnchor="end"
-        dominantBaseline="middle"
-      >
-        OECD 15%
-      </text>
-
-      {/* ── Hero stat — hrRate, floats left of column ────────────────────── */}
-      <text
-        x={COL_X - 16}
-        y={heroY - 8}
-        textAnchor="end"
-        fill="#ef4444"
-        fontSize={28}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight="bold"
-        dominantBaseline="middle"
-      >
-        {hrRate.toFixed(1)}%
-      </text>
-      <text
-        x={COL_X - 16}
-        y={heroY + 18}
-        textAnchor="end"
-        fill="#71717a"
-        fontSize={10}
-        fontFamily="var(--font-family-mono, monospace)"
-        dominantBaseline="middle"
-      >
-        high-risk
-      </text>
-
-      {/* ── Column border (hairline) ──────────────────────────────────────── */}
-      <rect
-        x={COL_X}
-        y={0}
-        width={COL_W}
-        height={TOTAL_H}
-        fill="none"
-        stroke="rgba(255,255,255,0.06)"
-        strokeWidth={1}
-      />
-
-      {/* ── Caption below column ─────────────────────────────────────────── */}
-      <text
-        x={COL_X + COL_W / 2}
-        y={TOTAL_H + 18}
-        textAnchor="middle"
-        fill="#52525b"
-        fontSize={10}
-        fontFamily="var(--font-family-mono, monospace)"
-      >
-        {totalContracts.toLocaleString()} contracts analyzed
-      </text>
+      {/* ── Caption ─────────────────────────────────────────────────── */}
+      {(() => {
+        const capY = HERO_H + sorted.length * (ROW_H + ROW_GAP) + 12
+        return (
+          <text x={LABEL_W} y={capY} fill="#3f3f46" fontSize={9}
+            fontFamily="var(--font-family-mono, monospace)" dominantBaseline="hanging">
+            {formatNumber(totalContracts)} contracts analyzed
+          </text>
+        )
+      })()}
     </svg>
   )
 }
