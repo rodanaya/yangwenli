@@ -135,16 +135,27 @@ function HeroBannerStats({
   return (
     <div
       className="relative overflow-hidden rounded-xl"
-      style={{ background: 'linear-gradient(to bottom, #0f172a 0%, #0f172a 60%, transparent 100%)' }}
+      style={{ background: 'linear-gradient(160deg, #1a1310 0%, #110e0c 60%, #0d0b09 100%)' }}
     >
+      {/* Crimson atmospheric glow at top */}
       <div
         className="absolute inset-0 pointer-events-none"
         aria-hidden="true"
-        style={{ background: 'radial-gradient(ellipse 70% 60% at 50% 0%, rgba(99,102,241,0.12) 0%, transparent 70%)' }}
+        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(220,38,38,0.10) 0%, transparent 65%)' }}
       />
+      {/* Subtle spike watermark */}
+      <svg
+        className="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none"
+        width="120" height="160" viewBox="0 0 32 44" aria-hidden="true"
+      >
+        <line x1="2" y1="38" x2="12" y2="38" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
+        <line x1="20" y1="38" x2="30" y2="38" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
+        <polyline points="12,38 16,4 20,38" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="miter" fill="none"/>
+        <circle cx="16" cy="4" r="3" fill="#dc2626"/>
+      </svg>
       <div className="relative z-10 px-6 pt-10 pb-8 text-center">
         <motion.p
-          className="text-[10px] uppercase tracking-[0.4em] text-slate-400 mb-3"
+          className="text-[10px] uppercase tracking-[0.4em] text-red-400/60 mb-3"
           initial={{ opacity: 0, y: -8 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5, delay: 0.05 }}
@@ -157,14 +168,14 @@ function HeroBannerStats({
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <span
-            className="block text-[96px] sm:text-[128px] font-black leading-none tabular-nums text-white"
+            className="block text-[60px] sm:text-[80px] font-black leading-none tabular-nums text-white"
             style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.04em' }}
           >
             {year}
           </span>
         </motion.div>
         <motion.p
-          className="text-base sm:text-lg text-slate-300 mt-2 mb-8"
+          className="text-base sm:text-lg text-stone-300/70 mt-2 mb-8"
           style={{ fontFamily: 'var(--font-family-serif)' }}
           initial={{ opacity: 0, y: 8 }}
           animate={{ opacity: 1, y: 0 }}
@@ -181,12 +192,12 @@ function HeroBannerStats({
           {stats.map((s) => (
             <motion.div key={s.label} variants={staggerItem} className="flex flex-col items-center gap-1">
               <span
-                className="text-2xl sm:text-3xl font-black tabular-nums leading-none"
+                className="text-xl sm:text-2xl font-black tabular-nums leading-none"
                 style={{ color: s.color, fontFamily: 'var(--font-family-serif)' }}
               >
                 {s.value}
               </span>
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-slate-400 text-center leading-tight">
+              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-stone-400/70 text-center leading-tight">
                 {s.label}
               </span>
             </motion.div>
@@ -324,40 +335,20 @@ interface SectorGrowthRow {
   growthPct: number | null
 }
 
-function SectorGrowthDiverging({
-  rows,
-}: {
-  rows: SectorGrowthRow[]
-}) {
-  // Only include sectors with prior-year data
+function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
   const withData = rows.filter((r) => r.growthPct != null) as (SectorGrowthRow & { growthPct: number })[]
   if (!withData.length) return null
 
-  // Sort descending so highest growth is on top
   const sorted = [...withData].sort((a, b) => b.growthPct - a.growthPct)
-  const maxAbs = Math.max(...sorted.map((r) => Math.abs(r.growthPct)), 10)
+  const maxAbs = Math.max(...sorted.map((r) => Math.abs(r.growthPct)), 50)
 
-  // Clamp extreme values for visual comfort, but show true number in label
-  const clamped = sorted.map((r) => ({
-    ...r,
-    growthPctClamped: Math.max(-300, Math.min(300, r.growthPct)),
-  }))
-
-  // ── Pure SVG diverging dot chart ────────────────────────────────────────────
-  const ROW_H = 29
-  const DOT_AREA = 170
-  const LABEL_W = 94
-  const PCT_W = 48
-  const svgW = LABEL_W + DOT_AREA * 2 + PCT_W
-  const svgH = clamped.length * ROW_H + 22
-  const centerX = LABEL_W + DOT_AREA
-  const maxDots = 20
-
-  function h2(idx: number) {
-    let r = 0; let f = 0.5; let n = idx + 1
-    while (n > 0) { r += (n % 2) * f; n = Math.floor(n / 2); f *= 0.5 }
-    return r
-  }
+  const ROW_H = 22
+  const LABEL_W = 88
+  const BAR_AREA = 160
+  const PCT_W = 44
+  const svgW = LABEL_W + BAR_AREA * 2 + PCT_W
+  const svgH = sorted.length * ROW_H + 20
+  const centerX = LABEL_W + BAR_AREA
 
   return (
     <div className="pt-1">
@@ -365,57 +356,77 @@ function SectorGrowthDiverging({
         viewBox={`0 0 ${svgW} ${svgH}`}
         width="100%"
         role="img"
-        aria-label="Sector year-over-year growth diverging dot chart"
+        aria-label="Sector year-over-year growth diverging bar chart"
       >
-        {/* Header labels */}
-        <text x={LABEL_W + DOT_AREA * 0.5} y={9} fill="#3f3f46" fontSize={8} textAnchor="middle" fontFamily="monospace">← decline</text>
-        <text x={LABEL_W + DOT_AREA * 1.5} y={9} fill="#3f3f46" fontSize={8} textAnchor="middle" fontFamily="monospace">growth →</text>
+        {/* Header */}
+        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#52525b" fontSize={7.5} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#52525b" fontSize={7.5} textAnchor="middle" fontFamily="monospace">growth →</text>
 
-        {/* Center zero axis */}
-        <line x1={centerX} y1={12} x2={centerX} y2={svgH - 8} stroke="#3f3f46" strokeWidth={1} />
-        <text x={centerX} y={svgH - 1} fill="#52525b" fontSize={8} textAnchor="middle" fontFamily="monospace">0%</text>
+        {/* Zero axis */}
+        <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="#3f3f46" strokeWidth={0.75} />
 
-        {clamped.map((row, ri) => {
-          const cy = 14 + ri * ROW_H + ROW_H / 2
-          const absG = Math.abs(row.growthPctClamped)
-          const nDots = Math.max(1, Math.round((absG / Math.max(maxAbs, 1)) * maxDots))
+        {sorted.map((row, ri) => {
+          const cy = 14 + ri * ROW_H
+          const barH = ROW_H * 0.52
+          const barY = cy + (ROW_H - barH) / 2
+          const clamped = Math.max(-300, Math.min(300, row.growthPct))
+          const barLen = (Math.abs(clamped) / Math.max(maxAbs, 1)) * (BAR_AREA - 6)
           const isPos = row.growthPct >= 0
           const color = isPos ? '#4ade80' : '#f87171'
-          const alpha = Math.min(0.90, 0.38 + absG / (maxAbs * 1.7))
-
-          const dots = Array.from({ length: nDots }, (_, di) => {
-            const xFrac = (di + 0.5) / maxDots
-            const yJitter = (h2(ri * 50 + di) - 0.5) * (ROW_H * 0.48)
-            const cx = isPos
-              ? centerX + 3 + xFrac * (DOT_AREA - 8)
-              : centerX - 3 - xFrac * (DOT_AREA - 8)
-            return { cx, cy: cy + yJitter }
-          })
+          const barX = isPos ? centerX + 2 : centerX - 2 - barLen
 
           return (
             <g key={row.id}>
               {/* Sector label */}
               <text
                 x={LABEL_W - 6}
-                y={cy + 1}
+                y={cy + ROW_H / 2 + 1}
                 fill="#a1a1aa"
-                fontSize={10}
+                fontSize={9.5}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"
               >
                 {row.name.slice(0, 11)}
               </text>
-              {/* Dots */}
-              {dots.map((d, di) => (
-                <circle key={di} cx={d.cx} cy={d.cy} r={2.0} fill={color} fillOpacity={alpha} />
-              ))}
+
+              {/* Bar background track */}
+              <rect
+                x={isPos ? centerX + 2 : centerX - BAR_AREA + 4}
+                y={barY}
+                width={BAR_AREA - 6}
+                height={barH}
+                rx={1.5}
+                fill="#27272a"
+                fillOpacity={0.5}
+              />
+
+              {/* Growth bar */}
+              <rect
+                x={barX}
+                y={barY}
+                width={Math.max(barLen, 1)}
+                height={barH}
+                rx={1.5}
+                fill={color}
+                fillOpacity={0.75}
+              />
+
+              {/* Sector color dot */}
+              <circle
+                cx={isPos ? centerX + 2 + barLen + 4 : centerX - 2 - barLen - 4}
+                cy={cy + ROW_H / 2}
+                r={2}
+                fill={row.color}
+                fillOpacity={0.6}
+              />
+
               {/* Pct label */}
               <text
-                x={svgW - 3}
-                y={cy + 1}
+                x={svgW - 2}
+                y={cy + ROW_H / 2 + 1}
                 fill={color}
-                fontSize={9}
+                fontSize={8.5}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"
@@ -494,17 +505,21 @@ function RiskEvolution({
           <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
             {t('riskEvolution.thisYear')}
           </span>
-          <div className="flex-1 relative h-3 rounded bg-background-elevated/50 overflow-hidden">
+          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
             <motion.div
-              className="absolute inset-y-0 left-0 rounded"
-              style={{ backgroundColor: isAboveOECD ? '#f87171' : '#fbbf24' }}
+              className="absolute inset-y-0 left-0 rounded flex items-center px-2"
+              style={{ backgroundColor: isAboveOECD ? '#dc2626' : '#f59e0b' }}
               initial={{ width: '0%' }}
               animate={{ width: `${yearPct}%` }}
               transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            />
+            >
+              <span className="text-[9px] font-mono font-bold text-white whitespace-nowrap">
+                {yearRow.high_risk_pct.toFixed(1)}%
+              </span>
+            </motion.div>
             {/* OECD marker line */}
             <div
-              className="absolute inset-y-0 w-px bg-cyan-400"
+              className="absolute inset-y-0 w-px bg-cyan-400/80"
               style={{ left: `${oecdPct}%` }}
               aria-hidden="true"
             />
@@ -519,13 +534,17 @@ function RiskEvolution({
           <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
             {t('riskEvolution.historicalAvg')}
           </span>
-          <div className="flex-1 relative h-3 rounded bg-background-elevated/50 overflow-hidden">
+          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 rounded bg-zinc-400/50"
+              className="absolute inset-y-0 left-0 rounded bg-zinc-500/50 flex items-center px-2"
               style={{ width: `${avgPct}%` }}
-            />
+            >
+              <span className="text-[9px] font-mono text-zinc-300 whitespace-nowrap">
+                {historicalAvg.toFixed(1)}%
+              </span>
+            </div>
             <div
-              className="absolute inset-y-0 w-px bg-cyan-400"
+              className="absolute inset-y-0 w-px bg-cyan-400/80"
               style={{ left: `${oecdPct}%` }}
               aria-hidden="true"
             />
@@ -540,11 +559,15 @@ function RiskEvolution({
           <span className="text-[10px] uppercase tracking-wider text-cyan-400 w-28 flex-shrink-0">
             {t('riskEvolution.oecdTarget')}
           </span>
-          <div className="flex-1 relative h-3 rounded bg-background-elevated/50 overflow-hidden">
+          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
             <div
-              className="absolute inset-y-0 left-0 rounded bg-cyan-400/40"
+              className="absolute inset-y-0 left-0 rounded bg-cyan-400/30 flex items-center px-2"
               style={{ width: `${oecdPct}%` }}
-            />
+            >
+              <span className="text-[9px] font-mono text-cyan-300 whitespace-nowrap">
+                {OECD_HIGH_RISK_THRESHOLD}%
+              </span>
+            </div>
             <div
               className="absolute inset-y-0 w-px bg-cyan-400"
               style={{ left: `${oecdPct}%` }}
@@ -836,22 +859,31 @@ function NotableRiskContracts({
           <motion.button
             key={c.id ?? i}
             onClick={() => c.id && onContractClick(c.id)}
-            className="w-full text-left rounded-lg border border-border/30 bg-card/40 hover:bg-card-hover/40 hover:border-accent/30 transition-all p-4"
+            className="w-full text-left rounded-r-lg bg-card/40 hover:bg-card-hover/40 transition-all p-4"
+            style={{ borderLeft: `3px solid ${color}` }}
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: i * 0.04 }}
           >
             <div className="flex items-start gap-3">
-              <span
-                className="flex items-center justify-center w-9 h-9 rounded flex-shrink-0 font-mono font-bold text-sm tabular-nums"
-                style={{
-                  backgroundColor: `${color}20`,
-                  color: color,
-                  border: `1px solid ${color}40`,
-                }}
-              >
-                {score.toFixed(2)}
-              </span>
+              <div className="flex flex-col items-center justify-center w-10 flex-shrink-0 gap-0.5">
+                <span
+                  className="text-[10px] font-mono font-black tabular-nums"
+                  style={{ color: color }}
+                >
+                  #{i + 1}
+                </span>
+                <span
+                  className="text-[9px] font-mono tabular-nums px-1 py-px rounded"
+                  style={{
+                    backgroundColor: `${color}18`,
+                    color: color,
+                    border: `1px solid ${color}30`,
+                  }}
+                >
+                  {score.toFixed(2)}
+                </span>
+              </div>
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-text-primary font-medium line-clamp-2 leading-snug mb-1">
                   {c.title ?? `Contrato ${c.id}`}
@@ -924,13 +956,13 @@ function MonthlySpending({
 
   return (
     <div>
-      <div className="h-[280px] rounded-lg border border-border/30 bg-background-elevated/20 p-4">
+      <div className="h-[240px] rounded-lg border border-border/30 bg-background-elevated/20 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <defs>
               <linearGradient id="monthlyGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.05} />
+                <stop offset="0%" stopColor="#dc2626" stopOpacity={0.6} />
+                <stop offset="100%" stopColor="#dc2626" stopOpacity={0.05} />
               </linearGradient>
             </defs>
             <XAxis
@@ -947,7 +979,7 @@ function MonthlySpending({
               width={60}
             />
             <RechartsTooltip
-              cursor={{ stroke: '#6366f1', strokeWidth: 1 }}
+              cursor={{ stroke: '#dc2626', strokeWidth: 1 }}
               contentStyle={{
                 background: '#18181b',
                 border: '1px solid #3f3f46',
@@ -970,18 +1002,20 @@ function MonthlySpending({
             <Area
               type="monotone"
               dataKey="value"
-              stroke="#818cf8"
+              stroke="#ef4444"
               strokeWidth={2}
               fill="url(#monthlyGradient)"
             />
             {/* December callout */}
-            <ReferenceLine
-              x="Dec"
-              stroke="#fbbf24"
-              strokeWidth={2}
-              strokeDasharray="4 3"
-              label={{ value: 'Dec', fill: '#fbbf24', fontSize: 10, position: 'top' }}
-            />
+            {chartData.find(m => m.isDecember) && (
+              <ReferenceLine
+                x={chartData.find(m => m.isDecember)!.monthName}
+                stroke="#fbbf24"
+                strokeWidth={1.5}
+                strokeDasharray="3 3"
+                label={{ value: '↑ Dec', fill: '#fbbf24', fontSize: 9, position: 'insideTopRight' }}
+              />
+            )}
           </AreaChart>
         </ResponsiveContainer>
       </div>
@@ -1007,7 +1041,7 @@ function MonthlySpending({
               })}
             </p>
           </div>
-          <span className="font-mono text-xl font-bold tabular-nums flex-shrink-0" style={{ color: decColor }}>
+          <span className="font-mono text-base font-bold tabular-nums flex-shrink-0" style={{ color: decColor }}>
             {decPct.toFixed(1)}%
           </span>
         </div>
@@ -1584,7 +1618,7 @@ export default function YearInReview() {
             </p>
 
             {monthlyLoading ? (
-              <Skeleton className="h-[280px]" />
+              <Skeleton className="h-[240px]" />
             ) : (
               <MonthlySpending data={monthlyResp} year={validYear} />
             )}
