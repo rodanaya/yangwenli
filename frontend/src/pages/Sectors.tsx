@@ -9,6 +9,7 @@
  */
 
 import { useMemo, useState } from 'react'
+import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import { useQuery, useQueries } from '@tanstack/react-query'
@@ -28,15 +29,11 @@ import SectorConcentrationChart from '@/components/charts/SectorConcentrationCha
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import {
-  BarChart,
-  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  Cell,
-  ReferenceLine,
   LineChart,
   Line,
   Legend,
@@ -296,6 +293,114 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
         />
       </div>
     </div>
+  )
+}
+
+// ── OECD Competition Dot Matrix ──────────────────────────────────────────────
+// Horizontal dot strips: 50 dots = 0-100%, 1 dot = 2pp. OECD 25% marker at dot 12.
+
+const OE_DOTS = 50            // 1 dot = 2pp
+const OE_DOT_R = 3
+const OE_DOT_GAP = 8
+const OE_LABEL_W = 100
+const OE_ROW_H = 16
+const OE_VAL_W = 42
+const OE_TOP_PAD = 16
+const OE_BOTTOM_PAD = 6
+const OECD_DOT_IDX = 12       // 12 * 2pp = 24-26pp, marks 25% line
+
+function OECDCompetitionDotMatrix({
+  data,
+}: {
+  data: Array<{ name: string; code: string; da_pct: number }>
+}) {
+  if (!data.length) return null
+
+  const chartW = OE_LABEL_W + OE_DOTS * OE_DOT_GAP + OE_VAL_W
+  const chartH = OE_TOP_PAD + data.length * OE_ROW_H + OE_BOTTOM_PAD
+
+  // OECD line sits between dot index 11 and 12 (25% = 12.5 dots)
+  const oecdX = OE_LABEL_W + OECD_DOT_IDX * OE_DOT_GAP - OE_DOT_GAP / 2 + OE_DOT_R
+
+  return (
+    <svg
+      viewBox={`0 0 ${chartW} ${chartH}`}
+      className="w-full h-auto"
+    >
+      {/* OECD 25% reference line */}
+      <line
+        x1={oecdX}
+        x2={oecdX}
+        y1={OE_TOP_PAD - 10}
+        y2={OE_TOP_PAD + data.length * OE_ROW_H}
+        stroke="#22d3ee"
+        strokeDasharray="4 4"
+        strokeWidth={1}
+      />
+      <text
+        x={oecdX}
+        y={OE_TOP_PAD - 4}
+        textAnchor="middle"
+        fill="#22d3ee"
+        fontSize={9}
+        fontFamily="var(--font-family-mono)"
+        fontWeight={600}
+      >
+        OCDE 25%
+      </text>
+
+      {data.map((item, rowIdx) => {
+        const filled = Math.min(OE_DOTS, Math.round((item.da_pct / 100) * OE_DOTS))
+        const yCenter = OE_TOP_PAD + rowIdx * OE_ROW_H + OE_ROW_H / 2
+        const color = SECTOR_COLORS[item.code] ?? '#64748b'
+        const aboveOECD = item.da_pct > 25
+
+        return (
+          <g key={item.code}>
+            <text
+              x={OE_LABEL_W - 6}
+              y={yCenter + 3}
+              textAnchor="end"
+              fill="#a1a1aa"
+              fontSize={9}
+              fontFamily="var(--font-family-mono)"
+            >
+              {item.name.length > 12 ? item.name.slice(0, 12) + '…' : item.name}
+            </text>
+            {Array.from({ length: OE_DOTS }).map((_, i) => {
+              const isFilled = i < filled
+              return (
+                <motion.circle
+                  key={i}
+                  cx={OE_LABEL_W + i * OE_DOT_GAP + OE_DOT_R}
+                  cy={yCenter}
+                  r={OE_DOT_R}
+                  fill={isFilled ? color : '#18181b'}
+                  stroke={isFilled ? 'none' : '#27272a'}
+                  strokeWidth={0.5}
+                  fillOpacity={isFilled ? (aboveOECD ? 0.9 : 0.4) : 1}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                />
+              )
+            })}
+            <text
+              x={OE_LABEL_W + OE_DOTS * OE_DOT_GAP + 6}
+              y={yCenter + 3}
+              fill={aboveOECD ? color : '#71717a'}
+              fontSize={9}
+              fontFamily="var(--font-family-mono)"
+              fontWeight={aboveOECD ? 700 : 400}
+            >
+              {item.da_pct.toFixed(1)}%
+            </text>
+            <title>{item.name}: {item.da_pct.toFixed(1)}% direct awards</title>
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 
@@ -560,71 +665,23 @@ export function Sectors() {
         {/* ── OECD COMPETITION GAP + RISK TREND ─────────────────────── */}
         {!isLoading && sectors.length > 0 && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
-            {/* OECD Competition Gap Bar Chart */}
-            <div className="surface-card p-4" role="img" aria-label="Bar chart comparing direct award rates by sector against the OECD 25% benchmark">
+            {/* OECD Competition Gap Dot Matrix */}
+            <div className="surface-card p-4" role="img" aria-label="Dot matrix comparing direct award rates by sector against the OECD 25% benchmark">
               <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
                 {t('finding.competitionGapLabel')}
               </p>
               <h3 className="text-sm font-bold text-white mb-3">
                 {t('finding.directAwardVsOECD')}
               </h3>
-              <ResponsiveContainer width="100%" height={220}>
-                <BarChart
-                  data={[...sectors]
-                    .map((s) => ({
-                      name: t(s.sector_code),
-                      code: s.sector_code,
-                      da_pct: s.direct_award_pct ?? 0,
-                    }))
-                    .sort((a, b) => b.da_pct - a.da_pct)}
-                  layout="vertical"
-                  margin={{ top: 0, right: 16, left: 4, bottom: 0 }}
-                >
-                  <CartesianGrid strokeDasharray="3 3" horizontal={false} stroke="#27272a" />
-                  <XAxis
-                    type="number"
-                    domain={[0, 100]}
-                    tick={{ fontSize: 9, fill: '#71717a' }}
-                    tickFormatter={(v: number) => `${v}%`}
-                  />
-                  <YAxis
-                    type="category"
-                    dataKey="name"
-                    width={90}
-                    tick={{ fontSize: 9, fill: '#a1a1aa' }}
-                  />
-                  <ReferenceLine x={25} stroke="#22d3ee" strokeDasharray="4 4" strokeWidth={1.5} label={{ value: 'OCDE 25%', position: 'top', fill: '#22d3ee', fontSize: 9 }} />
-                  <RechartsTooltip
-                    content={({ active, payload }) => {
-                      if (!active || !payload?.length) return null
-                      const d = payload[0]?.payload as { name: string; da_pct: number } | undefined
-                      if (!d) return null
-                      return (
-                        <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
-                          <p className="text-white font-semibold">{d.name}</p>
-                          <p className="text-zinc-400">{t('finding.tooltipDirectAward')} <span className="text-orange-400 font-bold">{d.da_pct.toFixed(1)}%</span></p>
-                          <p className="text-zinc-500">{d.da_pct > 25 ? t('finding.tooltipAboveOECD', { x: (d.da_pct / 25).toFixed(1) }) : t('finding.tooltipWithinOECD')}</p>
-                        </div>
-                      )
-                    }}
-                  />
-                  <Bar dataKey="da_pct" radius={[0, 3, 3, 0]}>
-                    {[...sectors]
-                      .map((s) => ({
-                        code: s.sector_code,
-                        da_pct: s.direct_award_pct ?? 0,
-                      }))
-                      .sort((a, b) => b.da_pct - a.da_pct)
-                      .map((entry) => (
-                        <Cell
-                          key={entry.code}
-                          fill={SECTOR_COLORS[entry.code] ?? '#64748b'}
-                          fillOpacity={entry.da_pct > 25 ? 0.85 : 0.35}
-                        />
-                      ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
+              <OECDCompetitionDotMatrix
+                data={[...sectors]
+                  .map((s) => ({
+                    name: t(s.sector_code),
+                    code: s.sector_code,
+                    da_pct: s.direct_award_pct ?? 0,
+                  }))
+                  .sort((a, b) => b.da_pct - a.da_pct)}
+              />
             </div>
 
             {/* Risk Trend per Sector (top 6 by value) */}

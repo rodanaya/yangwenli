@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import {
   ResponsiveContainer,
   ScatterChart,
@@ -8,9 +9,6 @@ import {
   ZAxis,
   Tooltip,
   ReferenceLine,
-  BarChart,
-  Bar,
-  Cell,
 } from 'recharts'
 import { cn, formatCompactMXN } from '@/lib/utils'
 import { RISK_COLORS } from '@/lib/constants'
@@ -147,26 +145,6 @@ function RiskLegend() {
         />
         Unknown
       </span>
-    </div>
-  )
-}
-
-// ─── Bar tooltip for year counts ──────────────────────────────────────────────
-
-function CountTooltip({
-  active,
-  payload,
-  label,
-}: {
-  active?: boolean
-  payload?: Array<{ value: number }>
-  label?: number
-}) {
-  if (!active || !payload?.length) return null
-  return (
-    <div className="rounded-md border border-white/10 bg-background-card px-2 py-1 text-xs shadow-md">
-      <span className="text-text-secondary">{label}: </span>
-      <span className="font-medium text-text-primary">{payload[0].value} contracts</span>
     </div>
   )
 }
@@ -332,34 +310,86 @@ export default function VendorContractTimeline({
         Contracts per year
       </p>
 
-      {/* Bar chart — contract count per year */}
-      <div aria-hidden="true">
-        <ResponsiveContainer width="100%" height={60}>
-          <BarChart
-            data={barData}
-            margin={{ top: 0, right: 12, bottom: 0, left: 0 }}
-            barCategoryGap="20%"
-          >
-            <XAxis
-              dataKey="year"
-              tickLine={false}
-              axisLine={false}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
-            />
-            <YAxis hide />
-            <Tooltip content={<CountTooltip />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-            <Bar dataKey="count" radius={[2, 2, 0, 0]} maxBarSize={24}>
-              {barData.map(entry => (
-                <Cell
-                  key={entry.year}
-                  fill="#3b82f6"
-                  fillOpacity={0.5}
-                />
-              ))}
-            </Bar>
-          </BarChart>
-        </ResponsiveContainer>
-      </div>
+      {/* Dot-matrix — contract count per year */}
+      <YearCountDotMatrix barData={barData} />
+    </div>
+  )
+}
+
+// ─── Year count dot-matrix ────────────────────────────────────────────────────
+
+const YC_ROWS = 20
+const YC_DOT_R = 2.2
+const YC_DOT_GAP = 5.2
+const YC_COL_W = 18
+const YC_TOP_PAD = 4
+const YC_BOTTOM_PAD = 16
+const YC_LEFT_PAD = 4
+
+function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count: number }> }) {
+  if (!barData.length) return null
+
+  const maxCount = Math.max(...barData.map(d => d.count), 1)
+  const chartW = YC_LEFT_PAD + barData.length * YC_COL_W + YC_LEFT_PAD
+  const chartH = YC_TOP_PAD + YC_ROWS * YC_DOT_GAP + YC_BOTTOM_PAD
+
+  return (
+    <div aria-hidden="true">
+      <svg
+        viewBox={`0 0 ${chartW} ${chartH}`}
+        className="w-full h-auto"
+        preserveAspectRatio="xMidYMid meet"
+      >
+        {barData.map((item, colIdx) => {
+          const filled = Math.max(1, Math.round((item.count / maxCount) * YC_ROWS))
+          const xCenter = YC_LEFT_PAD + colIdx * YC_COL_W + YC_COL_W / 2
+
+          // Show year label every ~3 columns to reduce clutter when many years
+          const showLabel =
+            barData.length <= 8 ||
+            colIdx === 0 ||
+            colIdx === barData.length - 1 ||
+            colIdx % Math.ceil(barData.length / 6) === 0
+
+          return (
+            <g key={item.year}>
+              {Array.from({ length: YC_ROWS }).map((_, i) => {
+                const dotY = YC_TOP_PAD + (YC_ROWS - 1 - i) * YC_DOT_GAP
+                const isFilled = i < filled
+                return (
+                  <motion.circle
+                    key={i}
+                    cx={xCenter}
+                    cy={dotY}
+                    r={YC_DOT_R}
+                    fill={isFilled ? '#3b82f6' : '#18181b'}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={0.4}
+                    fillOpacity={isFilled ? 0.7 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: colIdx * 0.02 + (filled - i) * 0.004 }}
+                  />
+                )
+              })}
+              {showLabel && (
+                <text
+                  x={xCenter}
+                  y={YC_TOP_PAD + YC_ROWS * YC_DOT_GAP + 10}
+                  textAnchor="middle"
+                  fill="#94a3b8"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {String(item.year).slice(2)}
+                </text>
+              )}
+              <title>{item.year}: {item.count} contracts</title>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }

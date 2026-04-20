@@ -37,14 +37,12 @@ import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution
 import {
   AreaChart,
   Area,
-  BarChart,
   Bar,
   ComposedChart,
   Line,
   XAxis,
   YAxis,
   CartesianGrid,
-  Cell,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
   ReferenceLine,
@@ -2489,58 +2487,78 @@ export function VendorProfile() {
                             : []),
                         ]
                         const totalPieValue = pieData.reduce((s, d) => s + d.value, 0)
-                        const barHeight = Math.max(180, pieData.length * 28)
+                        // Dot-strip constants
+                        const DOTS = 40
+                        const DOT_R = 2.5
+                        const DOT_GAP = 7
+                        const LABEL_W = 140
+                        const ROW_H = 22
+                        const VALUE_W = 60
+                        const maxPieVal = Math.max(...pieData.map((d) => d.value), 1)
+                        const stripW = LABEL_W + DOTS * DOT_GAP + VALUE_W
+                        const stripH = pieData.length * ROW_H + 12
                         return (
                           <div className="mt-4">
                             <p className="text-xs text-text-muted mb-2">Value share by institution</p>
                             <div
-                              style={{ height: `${barHeight}px` }}
                               role="img"
-                              aria-label="Horizontal bar chart showing contract value share by institution"
+                              aria-label="Horizontal dot strip chart showing contract value share by institution"
                             >
-                              <span className="sr-only">Horizontal bar chart showing contract value distribution across institutions for this vendor.</span>
-                              <ResponsiveContainer width="100%" height="100%">
-                                <BarChart
-                                  data={pieData}
-                                  layout="vertical"
-                                  margin={{ top: 4, right: 8, bottom: 4, left: 8 }}
-                                >
-                                  <XAxis
-                                    type="number"
-                                    hide
-                                    domain={[0, 'dataMax']}
-                                  />
-                                  <YAxis
-                                    type="category"
-                                    dataKey="name"
-                                    tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                                    width={140}
-                                    interval={0}
-                                  />
-                                  <RechartsTooltip
-                                    cursor={{ fill: 'rgba(255,255,255,0.04)' }}
-                                    content={({ active, payload }) => {
-                                      if (active && payload?.[0]) {
-                                        const d = payload[0].payload as { name: string; value: number }
-                                        const pct = totalPieValue > 0 ? ((d.value / totalPieValue) * 100).toFixed(1) : '0'
+                              <span className="sr-only">Dot strip chart showing contract value distribution across institutions for this vendor.</span>
+                              <svg
+                                viewBox={`0 0 ${stripW} ${stripH}`}
+                                width="100%"
+                                height={stripH}
+                                style={{ display: 'block' }}
+                              >
+                                {pieData.map((entry, rowIdx) => {
+                                  const pct = totalPieValue > 0 ? (entry.value / totalPieValue) * 100 : 0
+                                  const filledDots = Math.max(1, Math.round((entry.value / maxPieVal) * DOTS))
+                                  const y = rowIdx * ROW_H + ROW_H / 2 + 4
+                                  const label = entry.name.length > 22 ? entry.name.slice(0, 21) + '…' : entry.name
+                                  return (
+                                    <g key={rowIdx}>
+                                      <title>{`${entry.name} — ${formatCompactMXN(entry.value)} (${pct.toFixed(1)}%)`}</title>
+                                      <text
+                                        x={LABEL_W - 6}
+                                        y={y + 3}
+                                        textAnchor="end"
+                                        fontSize={10}
+                                        fill="var(--color-text-muted)"
+                                      >
+                                        {label}
+                                      </text>
+                                      {Array.from({ length: DOTS }).map((_, dotIdx) => {
+                                        const active = dotIdx < filledDots
                                         return (
-                                          <div className="chart-tooltip max-w-[220px]">
-                                            <p className="font-medium text-zinc-200 mb-0.5 break-words">{d.name}</p>
-                                            <p className="text-zinc-400">{formatCompactMXN(d.value)}</p>
-                                            <p className="text-zinc-400">{pct}% of total</p>
-                                          </div>
+                                          <motion.circle
+                                            key={dotIdx}
+                                            cx={LABEL_W + dotIdx * DOT_GAP + DOT_GAP / 2}
+                                            cy={y}
+                                            r={DOT_R}
+                                            fill={active ? entry.color : 'rgba(255,255,255,0.06)'}
+                                            initial={{ opacity: 0, scale: 0.6 }}
+                                            animate={{ opacity: 1, scale: 1 }}
+                                            transition={{
+                                              duration: 0.18,
+                                              delay: active ? rowIdx * 0.03 + dotIdx * 0.008 : 0,
+                                            }}
+                                          />
                                         )
-                                      }
-                                      return null
-                                    }}
-                                  />
-                                  <Bar dataKey="value" radius={[0, 4, 4, 0]} barSize={14}>
-                                    {pieData.map((entry, idx) => (
-                                      <Cell key={idx} fill={entry.color} />
-                                    ))}
-                                  </Bar>
-                                </BarChart>
-                              </ResponsiveContainer>
+                                      })}
+                                      <text
+                                        x={LABEL_W + DOTS * DOT_GAP + 6}
+                                        y={y + 3}
+                                        fontSize={10}
+                                        fill="var(--color-text-secondary)"
+                                        fontFamily="var(--font-family-mono)"
+                                      >
+                                        {pct.toFixed(0)}%
+                                      </text>
+                                    </g>
+                                  )
+                                })}
+                              </svg>
                             </div>
                             {/* Inline legend with percentage share */}
                             <div className="flex flex-col gap-0.5 mt-2">
@@ -3332,62 +3350,96 @@ export function VendorProfile() {
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <div
-                      className="h-[160px]"
-                      role="img"
-                      aria-label="Bar chart showing the distribution of contract sizes for this vendor"
-                    >
-                      <span className="sr-only">
-                        Bar chart showing how many contracts fall into each contract size bucket. A reference line marks the 3M MXN single-tender threshold.
-                      </span>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <BarChart data={histogramData.buckets} margin={{ top: 4, right: 4, bottom: 4, left: 0 }}>
-                          <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" vertical={false} />
-                          <XAxis
-                            dataKey="bucket"
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
-                          />
-                          <YAxis
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
-                            width={28}
-                            allowDecimals={false}
-                          />
-                          <RechartsTooltip
-                            content={({ active, payload }) => {
-                              if (active && payload?.[0]) {
-                                const d = payload[0].payload as { bucket: string; count: number }
-                                return (
-                                  <div className="chart-tooltip">
-                                    <p className="font-medium text-zinc-200">{d.bucket}</p>
-                                    <p className="text-zinc-400 tabular-nums">{d.count.toLocaleString()} contracts</p>
-                                  </div>
-                                )
-                              }
-                              return null
-                            }}
-                          />
-                          <Bar dataKey="count" fill={riskColor} opacity={0.75} radius={[2, 2, 0, 0]}>
-                            {histogramData.buckets.map((entry, index) => (
-                              <Cell
-                                key={`cell-${index}`}
-                                fill={entry.min_amount < histogramData.threshold_mxn && entry.max_amount > histogramData.threshold_mxn
-                                  ? '#f59e0b'
-                                  : entry.min_amount >= histogramData.threshold_mxn
-                                    ? riskColor
-                                    : 'var(--color-text-secondary)'}
-                                opacity={0.75}
-                              />
-                            ))}
-                          </Bar>
-                          <ReferenceLine
-                            x="1M–3M"
-                            stroke="#f59e0b"
-                            strokeDasharray="4 2"
-                            label={{ value: t('histogram.thresholdLabel'), position: 'top', fill: '#f59e0bcc', fontSize: 9 }}
-                          />
-                        </BarChart>
-                      </ResponsiveContainer>
-                    </div>
+                    {(() => {
+                      const buckets = histogramData.buckets
+                      const ROWS = 22
+                      const COL_W = 32
+                      const DOT_GAP = 6
+                      const DOT_R = 2.5
+                      const LEFT_PAD = 8
+                      const TOP_PAD = 18
+                      const BOTTOM_LABEL = 18
+                      const viewH = TOP_PAD + ROWS * DOT_GAP + BOTTOM_LABEL
+                      const viewW = LEFT_PAD * 2 + buckets.length * COL_W
+                      const maxCount = Math.max(...buckets.map((b) => b.count), 1)
+                      return (
+                        <div
+                          role="img"
+                          aria-label="Dot column chart showing the distribution of contract sizes for this vendor"
+                        >
+                          <span className="sr-only">
+                            Dot column chart showing how many contracts fall into each contract size bucket. A marker highlights the 3M MXN single-tender threshold.
+                          </span>
+                          <svg
+                            viewBox={`0 0 ${viewW} ${viewH}`}
+                            width="100%"
+                            height={160}
+                            style={{ display: 'block' }}
+                          >
+                            {buckets.map((entry, colIdx) => {
+                              const spansThreshold =
+                                entry.min_amount < histogramData.threshold_mxn &&
+                                entry.max_amount > histogramData.threshold_mxn
+                              const aboveThreshold = entry.min_amount >= histogramData.threshold_mxn
+                              const color = spansThreshold
+                                ? '#f59e0b'
+                                : aboveThreshold
+                                  ? riskColor
+                                  : 'var(--color-text-secondary)'
+                              const filledDots = Math.round((entry.count / maxCount) * ROWS)
+                              const cx = LEFT_PAD + colIdx * COL_W + COL_W / 2
+                              return (
+                                <g key={colIdx}>
+                                  <title>{`${entry.bucket} — ${entry.count.toLocaleString()} contracts`}</title>
+                                  {spansThreshold && (
+                                    <text
+                                      x={cx}
+                                      y={TOP_PAD - 6}
+                                      textAnchor="middle"
+                                      fontSize={8}
+                                      fill="#f59e0bcc"
+                                    >
+                                      {t('histogram.thresholdLabel')}
+                                    </text>
+                                  )}
+                                  {Array.from({ length: ROWS }).map((_, rowIdx) => {
+                                    const fromBottom = ROWS - 1 - rowIdx
+                                    const active = fromBottom < filledDots
+                                    const cy = TOP_PAD + rowIdx * DOT_GAP + DOT_GAP / 2
+                                    return (
+                                      <motion.circle
+                                        key={rowIdx}
+                                        cx={cx}
+                                        cy={cy}
+                                        r={DOT_R}
+                                        fill={active ? color : 'rgba(255,255,255,0.05)'}
+                                        fillOpacity={active ? 0.75 : 1}
+                                        initial={{ opacity: 0, scale: 0.6 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        transition={{
+                                          duration: 0.18,
+                                          delay: active ? colIdx * 0.02 + fromBottom * 0.01 : 0,
+                                        }}
+                                      />
+                                    )
+                                  })}
+                                  <text
+                                    x={cx}
+                                    y={viewH - 6}
+                                    textAnchor="middle"
+                                    fontSize={8}
+                                    fill="var(--color-text-muted)"
+                                    fontFamily="var(--font-family-mono)"
+                                  >
+                                    {entry.bucket}
+                                  </text>
+                                </g>
+                              )
+                            })}
+                          </svg>
+                        </div>
+                      )
+                    })()}
                     <p className="text-[10px] text-text-muted/70 italic mt-2">{t('histogram.description')}</p>
                   </CardContent>
                 </Card>
@@ -4795,7 +4847,7 @@ function PeriodistaPanel({
   activeTab: string
   onExportCSV?: () => void
 }) {
-  const { t } = useTranslation('vendors')
+  useTranslation('vendors')
   const [copiedLede, setCopiedLede] = useState(false)
 
   const { data: narrative, isLoading: narrativeLoading } = useQuery<VendorNarrativeResponse>({
@@ -4875,55 +4927,89 @@ function PeriodistaPanel({
               </span>
             </div>
 
-            {/* Year-by-year bar chart */}
-            {narrative.years.length > 0 && (
-              <div
-                className="h-[220px]"
-                role="img"
-                aria-label="Bar chart showing annual contract value by year for this vendor's investigation narrative"
-              >
-                <span className="sr-only">Bar chart showing the annual contract value in MXN for each year of this vendor's procurement activity.</span>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={narrative.years} margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      interval="preserveStartEnd"
-                    />
-                    <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      width={70}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload?.[0]) {
-                          const d = payload[0].payload as { year: number; total_value_mxn: number; contract_count: number; avg_risk_score: number | null }
-                          return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium text-zinc-200">{d.year}</p>
-                              <p className="text-zinc-400">{formatCompactMXN(d.total_value_mxn)}</p>
-                              <p className="text-zinc-400">{t('history.contractsCount', {count: d.contract_count})}</p>
-                              {d.avg_risk_score != null && (
-                                <p className="text-zinc-400">{t('history.avgRisk', {score: d.avg_risk_score.toFixed(2)})}</p>
-                              )}
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Bar dataKey="total_value_mxn" radius={[2, 2, 0, 0]} barSize={14}>
-                      {narrative.years.map((entry, i) => {
-                        const riskLevel = entry.avg_risk_score != null ? getRiskLevel(entry.avg_risk_score) : 'low'
-                        return <Cell key={i} fill={RISK_COLORS[riskLevel]} fillOpacity={0.85} />
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
-            )}
+            {/* Year-by-year dot columns */}
+            {narrative.years.length > 0 && (() => {
+              const years = narrative.years
+              const ROWS = 28
+              const COL_W = Math.max(18, Math.min(32, Math.floor(700 / years.length)))
+              const DOT_GAP = 7
+              const DOT_R = 2.75
+              const LEFT_PAD = 12
+              const TOP_PAD = 10
+              const BOTTOM_LABEL = 22
+              const viewH = TOP_PAD + ROWS * DOT_GAP + BOTTOM_LABEL
+              const viewW = LEFT_PAD * 2 + years.length * COL_W
+              const maxVal = Math.max(...years.map((y) => y.total_value_mxn), 1)
+              // Label every Nth year to avoid overlap
+              const labelStep = Math.max(1, Math.ceil(years.length / 10))
+              return (
+                <div
+                  role="img"
+                  aria-label="Dot column chart showing annual contract value by year for this vendor's investigation narrative"
+                >
+                  <span className="sr-only">Dot column chart showing the annual contract value in MXN for each year of this vendor's procurement activity.</span>
+                  <svg
+                    viewBox={`0 0 ${viewW} ${viewH}`}
+                    width="100%"
+                    height={220}
+                    style={{ display: 'block' }}
+                  >
+                    {years.map((entry, colIdx) => {
+                      const riskLevel = entry.avg_risk_score != null ? getRiskLevel(entry.avg_risk_score) : 'low'
+                      const color = RISK_COLORS[riskLevel]
+                      const filledDots = Math.max(
+                        entry.total_value_mxn > 0 ? 1 : 0,
+                        Math.round((entry.total_value_mxn / maxVal) * ROWS)
+                      )
+                      const cx = LEFT_PAD + colIdx * COL_W + COL_W / 2
+                      const showLabel = colIdx === 0 || colIdx === years.length - 1 || colIdx % labelStep === 0
+                      return (
+                        <g key={colIdx}>
+                          <title>
+                            {`${entry.year} — ${formatCompactMXN(entry.total_value_mxn)} · ${entry.contract_count} contracts${
+                              entry.avg_risk_score != null ? ` · risk ${entry.avg_risk_score.toFixed(2)}` : ''
+                            }`}
+                          </title>
+                          {Array.from({ length: ROWS }).map((_, rowIdx) => {
+                            const fromBottom = ROWS - 1 - rowIdx
+                            const active = fromBottom < filledDots
+                            const cy = TOP_PAD + rowIdx * DOT_GAP + DOT_GAP / 2
+                            return (
+                              <motion.circle
+                                key={rowIdx}
+                                cx={cx}
+                                cy={cy}
+                                r={DOT_R}
+                                fill={active ? color : 'rgba(255,255,255,0.05)'}
+                                fillOpacity={active ? 0.85 : 1}
+                                initial={{ opacity: 0, scale: 0.6 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                transition={{
+                                  duration: 0.2,
+                                  delay: active ? colIdx * 0.015 + fromBottom * 0.008 : 0,
+                                }}
+                              />
+                            )
+                          })}
+                          {showLabel && (
+                            <text
+                              x={cx}
+                              y={viewH - 8}
+                              textAnchor="middle"
+                              fontSize={9}
+                              fill="var(--color-text-muted)"
+                              fontFamily="var(--font-family-mono)"
+                            >
+                              {entry.year}
+                            </text>
+                          )}
+                        </g>
+                      )
+                    })}
+                  </svg>
+                </div>
+              )
+            })()}
           </div>
         ) : (
           <p className="text-sm text-text-muted">No se pudo obtener la narrativa.</p>

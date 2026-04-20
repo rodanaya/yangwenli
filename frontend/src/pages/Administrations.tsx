@@ -30,7 +30,6 @@ import { TableExportButton } from '@/components/TableExportButton'
 import {
   ResponsiveContainer,
   ComposedChart,
-  Bar,
   Line,
   XAxis,
   YAxis,
@@ -40,6 +39,7 @@ import {
   ReferenceLine,
   ReferenceArea,
 } from '@/components/charts'
+import { DotStrip } from '@/components/charts/DotStrip'
 import {
   TrendingUp,
   TrendingDown,
@@ -3171,10 +3171,20 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <Bar yAxisId="risk" dataKey="high_risk_pct" name="High Risk %" fill={RISK_COLORS.high} opacity={0.85} radius={[2, 2, 0, 0]} />
                 <Line yAxisId="da" type="monotone" dataKey="direct_award_pct" name="Direct Award %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
               </ComposedChart>
             </ResponsiveContainer>
+            <div className="mt-3">
+              <DotStrip
+                data={(politicalData.sexenio_year_breakdown ?? []).map((r) => ({
+                  label: r.label,
+                  value: +r.high_risk_pct.toFixed(2),
+                  color: RISK_COLORS.high,
+                }))}
+                formatVal={(v) => `${v.toFixed(1)}%`}
+              />
+              <p className="text-[10px] text-text-muted font-mono mt-1">High Risk % por año del sexenio</p>
+            </div>
             {politicalData.election_year_effect?.risk_delta !== undefined && (
               <p className="mt-2 text-[11px] text-text-muted font-mono">
                 {t('patternsView.electionYearAvgNote', {
@@ -3377,22 +3387,6 @@ function PoliticalCycleView() {
                     ] as [string, string]}
                   />
                   <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                  <Bar
-                    yAxisId="risk"
-                    dataKey="avg_risk_pct"
-                    name="Avg Risk %"
-                    fill={RISK_COLORS.high}
-                    opacity={0.85}
-                    radius={[2, 2, 0, 0]}
-                  />
-                  <Bar
-                    yAxisId="risk"
-                    dataKey="high_risk_pct"
-                    name="High Risk %"
-                    fill={RISK_COLORS.critical}
-                    opacity={0.6}
-                    radius={[2, 2, 0, 0]}
-                  />
                   <Line
                     yAxisId="da"
                     type="monotone"
@@ -3404,6 +3398,32 @@ function PoliticalCycleView() {
                   />
                 </ComposedChart>
               </ResponsiveContainer>
+              <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                <div>
+                  <p className="text-[10px] text-text-muted font-mono mb-1">Avg Risk %</p>
+                  <DotStrip
+                    data={breakdownData.map((d) => ({
+                      label: d.label,
+                      value: d.avg_risk_pct,
+                      color: RISK_COLORS.high,
+                    }))}
+                    formatVal={(v) => `${v.toFixed(2)}%`}
+                    dots={36}
+                  />
+                </div>
+                <div>
+                  <p className="text-[10px] text-text-muted font-mono mb-1">High Risk %</p>
+                  <DotStrip
+                    data={breakdownData.map((d) => ({
+                      label: d.label,
+                      value: d.high_risk_pct,
+                      color: RISK_COLORS.critical,
+                    }))}
+                    formatVal={(v) => `${v.toFixed(1)}%`}
+                    dots={36}
+                  />
+                </div>
+              </div>
               <p className="text-[11px] text-text-muted mt-2 font-mono">
                 Year 1 = first year of administration, Year 6 = final year before election.
                 Higher risk in late sexenio years may indicate &quot;budget dump&quot; spending.

@@ -28,16 +28,6 @@ import {
 import { RiskFactorTable } from '@/components/RiskExplainer'
 import { CitationBlock } from '@/components/CitationBlock'
 import { RiskScoreDisclaimer } from '@/components/RiskScoreDisclaimer'
-import {
-  BarChart,
-  Bar,
-  Cell,
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  CartesianGrid,
-} from '@/components/charts'
 
 // ============================================================================
 // Static Data
@@ -329,6 +319,16 @@ function Formula({ children }: { children: React.ReactNode }) {
 // Chart Components
 // ============================================================================
 
+// ── Horizontal dot-matrix geometry (shared) ──────────────────────────────────
+const MD_DOTS = 50
+const MD_DOT_R = 2.8
+const MD_DOT_GAP = 7
+const MD_ROW_H = 20
+const MD_LABEL_W = 150
+const MD_VAL_W = 48
+const MD_TOP_PAD = 8
+const MD_BOTTOM_PAD = 6
+
 const CoefficientChart = memo(function CoefficientChart() {
   const { t } = useTranslation('methodology')
   const chartData = useMemo(() => V6_COEFFICIENTS.map((c) => ({
@@ -337,46 +337,84 @@ const CoefficientChart = memo(function CoefficientChart() {
     fill: c.coeff > 0 ? '#4ade80' : c.coeff < 0 ? '#f87171' : '#64748b',
   })), [t])
 
+  // Scale: coefficients range from -0.6 to +1.3; we use a symmetric 0-based axis.
+  // Dots are a signed magnitude strip — zero at dot index 23 (approximately).
+  const RANGE_MIN = -0.6
+  const RANGE_MAX = 1.3
+  const SPAN = RANGE_MAX - RANGE_MIN           // 1.9
+  const ZERO_DOT = Math.round(((0 - RANGE_MIN) / SPAN) * MD_DOTS) // ≈15
+
+  const chartW = MD_LABEL_W + MD_DOTS * MD_DOT_GAP + MD_VAL_W
+  const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
+
   return (
-    <div className="h-[520px]" role="img" aria-label="Bar chart showing model coefficient values by feature">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 60 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} opacity={0.3} />
-          <XAxis
-            type="number"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            domain={[-0.6, 1.3]}
-            tickFormatter={(v: number) => v.toFixed(1)}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            width={140}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload
+    <div role="img" aria-label="Dot matrix showing model coefficient values by feature">
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
+        {/* Zero reference line */}
+        <line
+          x1={MD_LABEL_W + ZERO_DOT * MD_DOT_GAP + MD_DOT_R}
+          x2={MD_LABEL_W + ZERO_DOT * MD_DOT_GAP + MD_DOT_R}
+          y1={MD_TOP_PAD - 2}
+          y2={MD_TOP_PAD + chartData.length * MD_ROW_H}
+          stroke="#52525b"
+          strokeDasharray="3 3"
+          strokeWidth={0.6}
+        />
+
+        {chartData.map((item, rowIdx) => {
+          const valueDot = Math.round(((item.coeff - RANGE_MIN) / SPAN) * MD_DOTS)
+          const yCenter = MD_TOP_PAD + rowIdx * MD_ROW_H + MD_ROW_H / 2
+          const color = item.fill
+
+          return (
+            <g key={item.name}>
+              <text
+                x={MD_LABEL_W - 6}
+                y={yCenter + 3}
+                textAnchor="end"
+                fill="var(--color-text-muted)"
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+              >
+                {item.name.length > 20 ? item.name.slice(0, 20) + '…' : item.name}
+              </text>
+              {Array.from({ length: MD_DOTS }).map((_, i) => {
+                // Dot is "filled" if it's on the signed path from zero to value.
+                const isFilled =
+                  (item.coeff >= 0 && i >= ZERO_DOT && i < valueDot) ||
+                  (item.coeff < 0 && i < ZERO_DOT && i >= valueDot)
                 return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium text-xs">{d.name}</p>
-                    <p className="text-xs text-text-muted tabular-nums font-mono">
-                      {d.coeff > 0 ? '+' : ''}{d.coeff.toFixed(3)}
-                    </p>
-                  </div>
+                  <motion.circle
+                    key={i}
+                    cx={MD_LABEL_W + i * MD_DOT_GAP + MD_DOT_R}
+                    cy={yCenter}
+                    r={MD_DOT_R}
+                    fill={isFilled ? color : '#18181b'}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={0.4}
+                    fillOpacity={isFilled ? 0.85 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                  />
                 )
-              }
-              return null
-            }}
-          />
-          <Bar dataKey="coeff" radius={[0, 3, 3, 0]}>
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.fill} fillOpacity={0.8} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+              })}
+              <text
+                x={MD_LABEL_W + MD_DOTS * MD_DOT_GAP + 6}
+                y={yCenter + 3}
+                fill={color}
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={600}
+              >
+                {item.coeff > 0 ? '+' : ''}{item.coeff.toFixed(3)}
+              </text>
+              <title>{item.name}: {item.coeff > 0 ? '+' : ''}{item.coeff.toFixed(3)}</title>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 })
@@ -389,40 +427,64 @@ const V33WeightsChart = memo(function V33WeightsChart() {
       weight: c.weight,
     })), [t])
 
+  // Scale: weights range 0-20%. 1 dot = 0.4pp.
+  const MAX_PCT = 20
+  const chartW = MD_LABEL_W + MD_DOTS * MD_DOT_GAP + MD_VAL_W
+  const chartH = MD_TOP_PAD + chartData.length * MD_ROW_H + MD_BOTTOM_PAD
+
   return (
-    <div className="h-[280px]" role="img" aria-label="Bar chart showing risk factor weights in the v3.3 model">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical" margin={{ left: 10, right: 40 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" horizontal={false} opacity={0.3} />
-          <XAxis
-            type="number"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            domain={[0, 20]}
-            tickFormatter={(v: number) => `${v}%`}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-            width={130}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload
+    <div role="img" aria-label="Dot matrix showing risk factor weights in the v3.3 model">
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-auto">
+        {chartData.map((item, rowIdx) => {
+          const filled = Math.round((item.weight / MAX_PCT) * MD_DOTS)
+          const yCenter = MD_TOP_PAD + rowIdx * MD_ROW_H + MD_ROW_H / 2
+
+          return (
+            <g key={item.name}>
+              <text
+                x={MD_LABEL_W - 6}
+                y={yCenter + 3}
+                textAnchor="end"
+                fill="var(--color-text-muted)"
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+              >
+                {item.name.length > 20 ? item.name.slice(0, 20) + '…' : item.name}
+              </text>
+              {Array.from({ length: MD_DOTS }).map((_, i) => {
+                const isFilled = i < filled
                 return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium text-xs">{d.name}</p>
-                    <p className="text-xs text-text-muted tabular-nums">{d.weight}% weight</p>
-                  </div>
+                  <motion.circle
+                    key={i}
+                    cx={MD_LABEL_W + i * MD_DOT_GAP + MD_DOT_R}
+                    cy={yCenter}
+                    r={MD_DOT_R}
+                    fill={isFilled ? 'var(--color-accent)' : '#18181b'}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={0.4}
+                    fillOpacity={isFilled ? 0.75 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                  />
                 )
-              }
-              return null
-            }}
-          />
-          <Bar dataKey="weight" fill="var(--color-accent)" radius={[0, 3, 3, 0]} fillOpacity={0.6} />
-        </BarChart>
-      </ResponsiveContainer>
+              })}
+              <text
+                x={MD_LABEL_W + MD_DOTS * MD_DOT_GAP + 6}
+                y={yCenter + 3}
+                fill="var(--color-accent)"
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={600}
+              >
+                {item.weight}%
+              </text>
+              <title>{item.name}: {item.weight}% weight</title>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 })

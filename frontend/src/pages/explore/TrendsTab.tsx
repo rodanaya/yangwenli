@@ -46,7 +46,6 @@ import {
   ReferenceLine,
   ReferenceArea,
   ComposedChart,
-  Bar,
   Line,
   Cell,
   RadarChart,
@@ -60,6 +59,7 @@ import {
   ZAxis,
   Legend,
 } from '@/components/charts'
+import { DotStrip } from '@/components/charts/DotStrip'
 
 // =============================================================================
 // Constants
@@ -521,13 +521,6 @@ export default function TrendsTab() {
                         style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
                       }}
                     />
-                    <Bar
-                      yAxisId="left"
-                      dataKey="contracts"
-                      fill="var(--color-accent)"
-                      opacity={0.7}
-                      radius={[2, 2, 0, 0]}
-                    />
                     <Line
                       yAxisId="right"
                       type="monotone"
@@ -538,6 +531,16 @@ export default function TrendsTab() {
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
+                <div className="mt-3">
+                  <DotStrip
+                    data={timelineData.map((d) => ({
+                      label: String(d.year),
+                      value: d.contracts,
+                      color: 'var(--color-accent)',
+                    }))}
+                    formatVal={(v) => `${(v / 1000).toFixed(0)}K`}
+                  />
+                </div>
               </div>
             )}
           </CardContent>
@@ -1007,15 +1010,6 @@ export default function TrendsTab() {
                         return null
                       }}
                     />
-                    <Bar yAxisId="left" dataKey="contracts" radius={[2, 2, 0, 0]}>
-                      {monthlyChartData.map((entry, index) => (
-                        <Cell
-                          key={entry.month ?? index}
-                          fill={entry.isYearEnd ? RISK_COLORS.high : 'var(--color-accent)'}
-                          opacity={0.7}
-                        />
-                      ))}
-                    </Bar>
                     <Line
                       yAxisId="right"
                       type="monotone"
@@ -1037,6 +1031,16 @@ export default function TrendsTab() {
                     />
                   </ComposedChart>
                 </ResponsiveContainer>
+                <div className="mt-3">
+                  <DotStrip
+                    data={monthlyChartData.map((entry) => ({
+                      label: ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'][(entry.month ?? 1) - 1] ?? String(entry.month ?? ''),
+                      value: entry.contracts ?? 0,
+                      color: entry.isYearEnd ? RISK_COLORS.high : 'var(--color-accent)',
+                    }))}
+                    formatVal={(v) => Number(v).toLocaleString()}
+                  />
+                </div>
               </div>
             ) : (
               <p className="text-sm text-text-muted text-center py-12">

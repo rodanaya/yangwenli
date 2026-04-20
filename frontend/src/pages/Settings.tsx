@@ -31,11 +31,6 @@ import {
 } from 'lucide-react'
 import {
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
   Tooltip as RechartsTooltip,
   Cell,
   PieChart,
@@ -1049,56 +1044,98 @@ function DQGradeDistributionChart({ data }: { data: GradeDistribution[] }) {
 }
 
 function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
-  const chartData = data.map((d) => ({
-    ...d,
-    label: `${d.structure}\n(${d.years})`,
-    color:
-      d.quality_description === 'best'
-        ? '#4ade80'
-        : d.quality_description === 'good'
-          ? '#60a5fa'
-          : d.quality_description === 'better'
-            ? '#fbbf24'
-            : '#fb923c',
-  }))
+  const chartData = data.map((d) => {
+    // Color by structure letter (A=red lowest quality … D=green best)
+    const colorByStructure: Record<string, string> = {
+      A: '#f87171',
+      B: '#fb923c',
+      C: '#fbbf24',
+      D: '#4ade80',
+    }
+    return {
+      ...d,
+      color: colorByStructure[d.structure] ?? '#64748b',
+    }
+  })
+
+  // Dot-matrix geometry
+  const DOTS = 50              // 1 dot = 2 points of quality score (0-100)
+  const DOT_R = 3
+  const DOT_GAP = 8
+  const ROW_H = 40
+  const LABEL_W = 150
+  const VAL_W = 48
+  const TOP_PAD = 6
+  const BOTTOM_PAD = 6
+  const chartW = LABEL_W + DOTS * DOT_GAP + VAL_W
+  const chartH = TOP_PAD + chartData.length * ROW_H + BOTTOM_PAD
 
   return (
-    <div className="h-[250px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical">
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} horizontal={false} />
-          <XAxis type="number" domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }} />
-          <YAxis
-            type="category"
-            dataKey="structure"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-            width={40}
-            tickFormatter={(v) => `Period ${v}`}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload as StructureQuality
+    <div className="h-[250px]" role="img" aria-label="Dot matrix showing data quality scores by structure">
+      <svg viewBox={`0 0 ${chartW} ${chartH}`} className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+        {chartData.map((item, rowIdx) => {
+          const filled = Math.min(DOTS, Math.round((item.avg_quality_score / 100) * DOTS))
+          const yCenter = TOP_PAD + rowIdx * ROW_H + ROW_H / 2
+
+          return (
+            <g key={item.structure}>
+              <text
+                x={LABEL_W - 6}
+                y={yCenter - 2}
+                textAnchor="end"
+                fill="var(--color-text-muted)"
+                fontSize={11}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={600}
+              >
+                Period {item.structure}
+              </text>
+              <text
+                x={LABEL_W - 6}
+                y={yCenter + 10}
+                textAnchor="end"
+                fill="#71717a"
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+              >
+                {item.years}
+              </text>
+              {Array.from({ length: DOTS }).map((_, i) => {
+                const isFilled = i < filled
                 return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium">Period {d.structure} ({d.years})</p>
-                    <p className="text-sm text-text-muted">Quality: {d.quality_description}</p>
-                    <p className="text-sm text-text-muted">Score: {d.avg_quality_score.toFixed(1)}</p>
-                    <p className="text-sm text-text-muted">RFC Coverage: {d.rfc_coverage}%</p>
-                    <p className="text-sm text-text-muted">Contracts: {formatNumber(d.contract_count)}</p>
-                  </div>
+                  <motion.circle
+                    key={i}
+                    cx={LABEL_W + i * DOT_GAP + DOT_R}
+                    cy={yCenter}
+                    r={DOT_R}
+                    fill={isFilled ? item.color : '#18181b'}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={0.5}
+                    fillOpacity={isFilled ? 0.85 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                  />
                 )
-              }
-              return null
-            }}
-          />
-          <Bar dataKey="avg_quality_score" radius={[0, 4, 4, 0]}>
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+              })}
+              <text
+                x={LABEL_W + DOTS * DOT_GAP + 6}
+                y={yCenter + 3}
+                fill={item.color}
+                fontSize={10}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={700}
+              >
+                {item.avg_quality_score.toFixed(1)}
+              </text>
+              <title>
+                Period {item.structure} ({item.years}) — Quality: {item.quality_description}, Score: {item.avg_quality_score.toFixed(1)}, RFC: {item.rfc_coverage}%, Contracts: {formatNumber(item.contract_count)}
+              </title>
+            </g>
+          )
+        })}
+      </svg>
     </div>
   )
 }

@@ -9,6 +9,7 @@ import { useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import {
   RadarChart,
   PolarGrid,
@@ -16,11 +17,6 @@ import {
   Radar,
   ResponsiveContainer,
   Tooltip as RechartsTooltip,
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
 } from '@/components/charts'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
@@ -590,7 +586,113 @@ function TopVendorsComparison({
   )
 }
 
-/** Risk distribution comparison — grouped bar chart */
+interface PairedDotDatum {
+  level: string
+  a: number
+  b: number
+  color: string
+}
+
+/**
+ * PairedDotStrips — paired horizontal dot-matrix strips.
+ * For each metric row, shows TWO strips side by side: institution A on top,
+ * institution B below. Values are percentages (0-100).
+ */
+function PairedDotStrips({
+  data,
+  colorA,
+  colorB,
+  nameA,
+  nameB,
+}: {
+  data: PairedDotDatum[]
+  colorA: string
+  colorB: string
+  nameA: string
+  nameB: string
+}) {
+  const DOTS = 50
+  const DOT_R = 3
+  const DOT_GAP = 8
+  const LABEL_W = 90
+  const STRIP_H = 14
+  const PAIR_H = STRIP_H * 2 + 18
+  const VALUE_W = 56
+
+  // Scale relative to max value across both a and b
+  const maxValue = Math.max(...data.flatMap(d => [d.a, d.b]), 1)
+  const width = LABEL_W + DOTS * DOT_GAP + VALUE_W + 16
+  const height = data.length * PAIR_H + 24
+
+  const renderStrip = (value: number, color: string, cy: number, rowIdx: number, seriesIdx: 0 | 1) => {
+    const filled = value > 0 ? Math.max(1, Math.round((value / maxValue) * DOTS)) : 0
+    return (
+      <>
+        {Array.from({ length: DOTS }).map((_, i) => {
+          const isFilled = i < filled
+          return (
+            <motion.circle
+              key={`s-${rowIdx}-${seriesIdx}-${i}`}
+              cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
+              cy={cy}
+              r={DOT_R}
+              fill={isFilled ? color : '#18181b'}
+              fillOpacity={isFilled ? 0.85 : 1}
+              stroke={isFilled ? 'none' : '#27272a'}
+              strokeWidth={isFilled ? 0 : 1}
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.2, delay: rowIdx * 0.04 + seriesIdx * 0.02 + i * 0.002 }}
+            />
+          )
+        })}
+        <text
+          x={LABEL_W + DOTS * DOT_GAP + 8}
+          y={cy + 3}
+          fontSize="10"
+          fill={color}
+          fontFamily="var(--font-family-mono)"
+        >
+          {value.toFixed(1)}%
+        </text>
+      </>
+    )
+  }
+
+  return (
+    <div style={{ minHeight: 260 }}>
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+        <title>
+          Paired dot strips comparing {nameA} and {nameB} across risk levels
+        </title>
+        {data.map((d, rowIdx) => {
+          const topCy = 12 + rowIdx * PAIR_H + STRIP_H / 2 + 2
+          const botCy = topCy + STRIP_H + 2
+          return (
+            <g key={`pair-${rowIdx}`}>
+              <text
+                x={LABEL_W - 8}
+                y={topCy + STRIP_H / 2 + 2}
+                textAnchor="end"
+                fontSize="11"
+                fill="var(--color-text-secondary)"
+                fontFamily="var(--font-family-sans)"
+                fontWeight={600}
+              >
+                {d.level}
+              </text>
+              {renderStrip(d.a, colorA, topCy, rowIdx, 0)}
+              {renderStrip(d.b, colorB, botCy, rowIdx, 1)}
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+/** Risk distribution comparison — paired dot strips */
 function RiskDistribution({
   instA,
   instB,
@@ -644,41 +746,8 @@ function RiskDistribution({
           <span> Base: {formatNumber(totalA)} vs {formatNumber(totalB)} contratos.</span>
         )}
       </p>
-      <div className="h-[260px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Bar chart comparing risk level distribution between two institutions">
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart data={chartData} barGap={2} barCategoryGap="20%">
-            <CartesianGrid stroke="#27272a" strokeDasharray="3 3" />
-            <XAxis
-              dataKey="level"
-              tick={{ fontSize: 11, fill: '#94a3b8' }}
-              axisLine={{ stroke: '#3f3f46' }}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-            />
-            <RechartsTooltip
-              content={({ active, payload, label }) => {
-                if (!active || !payload?.length) return null
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                    <p className="font-semibold text-text-primary mb-1">{label}</p>
-                    {payload.map((p) => (
-                      <p key={p.dataKey as string} style={{ color: p.color as string }}>
-                        {p.name}: {(p.value as number).toFixed(1)}%
-                      </p>
-                    ))}
-                  </div>
-                )
-              }}
-            />
-            <Bar dataKey="a" name={nameA} fill={COLOR_A} radius={[2, 2, 0, 0]} />
-            <Bar dataKey="b" name={nameB} fill={COLOR_B} radius={[2, 2, 0, 0]} />
-          </BarChart>
-        </ResponsiveContainer>
+      <div className="rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Dot matrix chart comparing risk level distribution between two institutions">
+        <PairedDotStrips data={chartData} colorA={COLOR_A} colorB={COLOR_B} nameA={nameA} nameB={nameB} />
       </div>
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-3">

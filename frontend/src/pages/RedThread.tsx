@@ -26,9 +26,6 @@ import {
   YAxis,
   Tooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
-  Cell,
 } from 'recharts'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
@@ -688,37 +685,124 @@ function ChapterMoney({ timeline, t }: {
         </AnimatePresence>
       </div>
 
-      {/* Bar chart: avg risk score by year */}
+      {/* Dot-matrix: avg risk score by year */}
       {chartData.some((d) => d.risk > 0) && (
         <div className="bg-background border border-border rounded-xl p-6">
           <p className="editorial-label text-text-muted mb-4">{t('money.chartRiskLabel')}</p>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-                <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} width={35} domain={[0, 100]} />
-                <Tooltip
-                  contentStyle={{ background: '#1c1c1e', border: '1px solid #3f3f46', borderRadius: 8, fontSize: 12 }}
-                  labelStyle={{ color: '#e5e7eb' }}
-                  formatter={(v: unknown) => [`${(v as number).toFixed(1)}%`, t('money.tooltipRisk')]}
-                />
-                <Bar dataKey="risk" radius={[3, 3, 0, 0]}>
-                  {chartData.map((entry, index) => (
-                    <Cell
-                      key={`cell-${index}`}
-                      fill={entry.risk > 50 ? '#dc2626' : entry.risk > 30 ? '#ea580c' : entry.risk > 15 ? '#eab308' : '#4ade80'}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <RiskHistoryDotMatrix chartData={chartData} />
           <AnnotationNote>
             {t('money.riskNote')}
           </AnnotationNote>
         </div>
       )}
     </section>
+  )
+}
+
+// ─── Risk History Dot-Matrix ────────────────────────────────────────────────
+
+const RH_ROWS = 40           // 1 dot = 2.5pp risk (0-100)
+const RH_DOT_R = 2.6
+const RH_DOT_GAP = 5.5
+const RH_COL_W = 38
+const RH_TOP_PAD = 8
+const RH_BOTTOM_PAD = 20
+const RH_LEFT_PAD = 32
+
+function riskColor(pct: number): string {
+  if (pct > 50) return '#dc2626'
+  if (pct > 30) return '#ea580c'
+  if (pct > 15) return '#eab308'
+  return '#4ade80'
+}
+
+function RiskHistoryDotMatrix({
+  chartData,
+}: {
+  chartData: Array<{ year: number; risk: number }>
+}) {
+  if (!chartData.length) return null
+
+  const chartW = RH_LEFT_PAD + chartData.length * RH_COL_W + 8
+  const chartH = RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + RH_BOTTOM_PAD
+
+  return (
+    <svg
+      viewBox={`0 0 ${chartW} ${chartH}`}
+      className="w-full h-auto"
+      role="img"
+      aria-label="Annual average risk score history"
+    >
+      {/* Y-axis guide lines at 0/25/50/75/100 */}
+      {[0, 0.25, 0.5, 0.75, 1].map((frac) => {
+        const value = 100 * (1 - frac)
+        const y = RH_TOP_PAD + frac * RH_ROWS * RH_DOT_GAP
+        return (
+          <g key={frac}>
+            <line
+              x1={RH_LEFT_PAD - 4}
+              x2={chartW - 4}
+              y1={y}
+              y2={y}
+              stroke="#27272a"
+              strokeDasharray="3 3"
+              strokeWidth={0.5}
+            />
+            <text
+              x={RH_LEFT_PAD - 6}
+              y={y + 3}
+              textAnchor="end"
+              fill="#6b7280"
+              fontSize={8}
+              fontFamily="var(--font-family-mono)"
+            >
+              {value}%
+            </text>
+          </g>
+        )
+      })}
+
+      {chartData.map((item, colIdx) => {
+        const filled = Math.round((Math.min(100, Math.max(0, item.risk)) / 100) * RH_ROWS)
+        const xCenter = RH_LEFT_PAD + colIdx * RH_COL_W + RH_COL_W / 2
+        const color = riskColor(item.risk)
+
+        return (
+          <g key={item.year}>
+            {Array.from({ length: RH_ROWS }).map((_, i) => {
+              const dotY = RH_TOP_PAD + (RH_ROWS - 1 - i) * RH_DOT_GAP
+              const isFilled = i < filled
+              return (
+                <motion.circle
+                  key={i}
+                  cx={xCenter}
+                  cy={dotY}
+                  r={RH_DOT_R}
+                  fill={isFilled ? color : '#18181b'}
+                  stroke={isFilled ? 'none' : '#27272a'}
+                  strokeWidth={0.5}
+                  initial={{ opacity: 0 }}
+                  whileInView={{ opacity: 1 }}
+                  viewport={{ once: true }}
+                  transition={{ duration: 0.2, delay: colIdx * 0.03 + (filled - i) * 0.004 }}
+                />
+              )
+            })}
+            <text
+              x={xCenter}
+              y={RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + 12}
+              textAnchor="middle"
+              fill="#6b7280"
+              fontSize={9}
+              fontFamily="var(--font-family-mono)"
+            >
+              {item.year}
+            </text>
+            <title>{item.year}: {item.risk.toFixed(1)}% avg risk</title>
+          </g>
+        )
+      })}
+    </svg>
   )
 }
 

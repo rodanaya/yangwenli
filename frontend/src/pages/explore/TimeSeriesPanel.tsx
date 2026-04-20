@@ -6,7 +6,6 @@ import { Skeleton } from '@/components/ui/skeleton'
 import {
   ResponsiveContainer,
   ComposedChart,
-  Bar,
   Line,
   XAxis,
   YAxis,
@@ -14,6 +13,7 @@ import {
   Tooltip as RechartsTooltip,
   ReferenceArea,
 } from 'recharts'
+import { DotStrip } from '@/components/charts/DotStrip'
 
 interface TimeSeriesPanelProps {
   yearStart: number | undefined
@@ -182,13 +182,6 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
                 strokeWidth={1}
               />
             )}
-            <Bar
-              dataKey="contracts"
-              fill="url(#barGrad)"
-              yAxisId="left"
-              isAnimationActive={false}
-              radius={[1, 1, 0, 0]}
-            />
             <Line
               type="monotone"
               dataKey="avgRisk"
@@ -200,6 +193,16 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
             />
           </ComposedChart>
         </ResponsiveContainer>
+      </div>
+      <div className="mt-3">
+        <DotStrip
+          data={chartData.map((d) => ({
+            label: String(d.year),
+            value: d.contracts,
+            color: '#6366f1',
+          }))}
+          formatVal={(v) => Number(v).toLocaleString()}
+        />
       </div>
       <div className="flex items-center gap-4 mt-1.5 text-[10px] text-text-muted/60">
         <div className="flex items-center gap-1">

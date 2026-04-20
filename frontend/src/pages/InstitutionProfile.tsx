@@ -72,10 +72,10 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ComposedChart,
-  Bar,
   Line,
   ReferenceLine,
 } from '@/components/charts'
+import { DotStrip } from '@/components/charts/DotStrip'
 
 // SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
@@ -1480,10 +1480,21 @@ export function InstitutionProfile() {
                             return [num, name === 'observations_total' ? 'Observaciones' : 'Solventadas']
                           }}
                         />
-                        <Bar yAxisId="left" dataKey="amount_mxn" fill="hsl(var(--muted))" opacity={0.8} name="amount_mxn" />
                         <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
                       </ComposedChart>
                     </ResponsiveContainer>
+                    </div>
+                    <div className="mt-3">
+                      <DotStrip
+                        data={(asfData.findings ?? []).map((f) => ({
+                          label: String(f.year),
+                          value: (f.amount_mxn as number) ?? 0,
+                          color: '#a78bfa',
+                        }))}
+                        formatVal={(v) => formatCompactMXN(v)}
+                        dots={40}
+                      />
+                      <p className="text-[10px] text-text-muted font-mono mt-1">Monto observado por año</p>
                     </div>
                   </div>
                 )}
@@ -1733,14 +1744,21 @@ function SpendingOverTimeChart({ data }: {
           />
           <ReferenceLine yAxisId="left" x={2018} stroke="#8b5cf6" strokeDasharray="4 4" opacity={0.5} label={{ value: 'AMLO', position: 'top', fontSize: 9, fill: '#8b5cf6' }} />
           <ReferenceLine yAxisId="left" x={2020} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: 'COVID', position: 'top', fontSize: 9, fill: '#dc2626' }} />
-          <Bar yAxisId="left" dataKey="valueBillions" name="Gasto (B MXN)" radius={[2, 2, 0, 0]}>
-            {chartData.map((entry, idx) => (
-              <rect key={idx} fill={barColor(entry.riskPct)} />
-            ))}
-          </Bar>
           <Line yAxisId="right" type="monotone" dataKey="contracts" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} name={t('columns.contracts')} />
         </ComposedChart>
       </ResponsiveContainer>
+      <div className="mt-3">
+        <DotStrip
+          data={chartData.map((entry) => ({
+            label: String(entry.year),
+            value: entry.valueBillions,
+            color: barColor(entry.riskPct),
+          }))}
+          formatVal={(v) => `${v.toFixed(1)}B`}
+          dots={40}
+        />
+        <p className="text-[10px] text-text-muted font-mono mt-1">Gasto (B MXN) por año</p>
+      </div>
     </div>
   )
 }
@@ -2031,10 +2049,21 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
               return null
             }}
           />
-          <Bar yAxisId="left" dataKey="contracts" fill="var(--color-accent-data)" opacity={0.4} name={t('columns.contracts')} radius={[2, 2, 0, 0]} />
           <Line yAxisId="right" type="monotone" dataKey="asfObs" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} name="ASF Observations" />
         </ComposedChart>
       </ResponsiveContainer>
+      <div className="mt-3">
+        <DotStrip
+          data={chartData.map((entry: { year: number | string; contracts: number }) => ({
+            label: String(entry.year),
+            value: entry.contracts ?? 0,
+            color: 'var(--color-accent-data)',
+          }))}
+          formatVal={(v) => Number(v).toLocaleString()}
+          dots={40}
+        />
+        <p className="text-[10px] text-text-muted font-mono mt-1">Contratos por año</p>
+      </div>
     </div>
   )
 }

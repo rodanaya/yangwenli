@@ -1,15 +1,4 @@
 import { motion } from 'framer-motion'
-import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
 
 const data = [
   { year: '2019', contracts: 18025 },
@@ -23,28 +12,20 @@ const data = [
 const PEAK_YEAR = '2023'
 const TOTAL = data.reduce((sum, d) => sum + d.contracts, 0)
 
-interface PayloadEntry {
-  payload: { year: string; contracts: number }
-}
+// ─── Dot-matrix geometry ──────────────────────────────────────────────────────
+const ROWS = 40              // vertical dots per column
+const DOT_R = 3
+const DOT_GAP = 6
+const COL_W = 52
+const TOP_PAD = 18
+const LABEL_W = 36           // left pad for y-axis labels
+const BOTTOM_PAD = 24
+const CHART_H = TOP_PAD + ROWS * DOT_GAP + BOTTOM_PAD
+const CHART_W = LABEL_W + data.length * COL_W + 20
+const MAX_VALUE = 25000      // matches previous YAxis domain
 
-function DarkTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const pctOfTotal = ((d.contracts / TOTAL) * 100).toFixed(1)
-  return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm shadow-xl">
-      <p className="font-mono text-xs font-semibold text-zinc-100">{d.year}</p>
-      <div className="mt-1 space-y-0.5">
-        <p className="text-zinc-400 text-xs">
-          <span className="text-zinc-100 font-bold">{d.contracts.toLocaleString('es-MX')}</span> contratos fraccionados
-        </p>
-        <p className="text-zinc-500 text-[10px]">{pctOfTotal}% del total AMLO</p>
-        {d.year === '2024' && (
-          <p className="text-amber-400 text-[10px] font-mono">* ano parcial</p>
-        )}
-      </div>
-    </div>
-  )
+function formatK(v: number): string {
+  return `${(v / 1000).toFixed(1)}K`
 }
 
 export function StoryHemoserSplitting() {
@@ -81,59 +62,108 @@ export function StoryHemoserSplitting() {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={240}>
-        <ComposedChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={{ stroke: '#3f3f46' }}
-          />
-          <YAxis
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${(v / 1000).toFixed(0)}K`}
-            domain={[0, 25000]}
-          />
-          <Tooltip
-            content={<DarkTooltip />}
-            cursor={{ fill: '#27272a', opacity: 0.6 }}
-          />
-          <Bar
-            dataKey="contracts"
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationEasing="ease-out"
-            label={{
-              position: 'top' as const,
-              formatter: (v: unknown) => `${(Number(v) / 1000).toFixed(1)}K`,
-              fill: '#71717a',
-              fontSize: 9,
-              fontFamily: 'var(--font-family-mono)',
-            }}
-          >
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={entry.year === PEAK_YEAR ? '#dc2626' : '#52525b'}
-                fillOpacity={entry.year === PEAK_YEAR ? 1 : 0.8}
+      {/* Dot-matrix vertical columns */}
+      <svg
+        viewBox={`0 0 ${CHART_W} ${CHART_H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Contratos fraccionados por año, 2019-2024"
+      >
+        {/* Y-axis guide labels (25K / 12.5K / 0) */}
+        {[0, 0.5, 1].map((frac) => {
+          const value = MAX_VALUE * (1 - frac)
+          const y = TOP_PAD + frac * ROWS * DOT_GAP
+          return (
+            <g key={frac}>
+              <line
+                x1={LABEL_W - 2}
+                x2={CHART_W - 8}
+                y1={y}
+                y2={y}
+                stroke="#27272a"
+                strokeDasharray="3 3"
+                strokeWidth={0.5}
               />
-            ))}
-          </Bar>
-          <Line
-            type="monotone"
-            dataKey="contracts"
-            stroke="#a1a1aa"
-            strokeWidth={1}
-            dot={false}
-            strokeDasharray="4 3"
-            isAnimationActive={false}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+              <text
+                x={LABEL_W - 6}
+                y={y + 3}
+                textAnchor="end"
+                fill="#52525b"
+                fontSize={8}
+                fontFamily="var(--font-family-mono)"
+              >
+                {formatK(value)}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Columns of dots */}
+        {data.map((item, colIdx) => {
+          const filled = Math.round((item.contracts / MAX_VALUE) * ROWS)
+          const xCenter = LABEL_W + colIdx * COL_W + COL_W / 2
+          const isPeak = item.year === PEAK_YEAR
+          const color = isPeak ? '#dc2626' : '#52525b'
+          const pctOfTotal = ((item.contracts / TOTAL) * 100).toFixed(1)
+
+          return (
+            <g key={item.year}>
+              {Array.from({ length: ROWS }).map((_, i) => {
+                const dotY = TOP_PAD + (ROWS - 1 - i) * DOT_GAP
+                const isFilled = i < filled
+                return (
+                  <motion.circle
+                    key={i}
+                    cx={xCenter}
+                    cy={dotY}
+                    r={DOT_R}
+                    fill={isFilled ? color : '#18181b'}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={0.5}
+                    fillOpacity={isPeak && isFilled ? 1 : 0.85}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: colIdx * 0.04 + (filled - i) * 0.005 }}
+                  />
+                )
+              })}
+
+              {/* Value label above column */}
+              <text
+                x={xCenter}
+                y={TOP_PAD + (ROWS - filled) * DOT_GAP - 5}
+                textAnchor="middle"
+                fill={isPeak ? '#fca5a5' : '#a1a1aa'}
+                fontSize={9}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={isPeak ? 700 : 500}
+              >
+                {formatK(item.contracts)}
+              </text>
+
+              {/* X-axis year label */}
+              <text
+                x={xCenter}
+                y={TOP_PAD + ROWS * DOT_GAP + 14}
+                textAnchor="middle"
+                fill={isPeak ? '#dc2626' : '#71717a'}
+                fontSize={10}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={isPeak ? 700 : 400}
+              >
+                {item.year}
+                {item.year === '2024' ? '*' : ''}
+              </text>
+
+              {/* Hidden title for hover on the whole column */}
+              <title>
+                {item.year}: {item.contracts.toLocaleString('es-MX')} contratos fraccionados ({pctOfTotal}% del total AMLO)
+              </title>
+            </g>
+          )
+        })}
+      </svg>
 
       {/* Annotation pills */}
       <div className="mt-4 flex flex-wrap gap-2">
@@ -148,7 +178,7 @@ export function StoryHemoserSplitting() {
 
       {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-3">
-        * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v6.5
+        * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.6.5
       </p>
     </motion.div>
   )

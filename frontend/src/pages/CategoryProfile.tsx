@@ -10,6 +10,7 @@ import { useMemo } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { Card, CardContent, CardHeader } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { ChartSkeleton } from '@/components/LoadingSkeleton'
@@ -22,12 +23,9 @@ import {
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   Area,
   Line,
   ComposedChart,
-  Cell,
 } from '@/components/charts'
 import {
   ArrowLeft,
@@ -102,6 +100,217 @@ function getConcentrationBadge(label: string, t: (key: string) => string) {
     default:
       return { text: t('profile.concentration.competitive'), color: '#4ade80', bg: 'rgba(74,222,128,0.1)' }
   }
+}
+
+// =============================================================================
+// Dot-matrix chart primitives
+// =============================================================================
+
+interface SexenioBarDatum {
+  admin: string
+  value: number
+  contracts: number
+  avg_risk: number
+}
+
+/**
+ * SexenioDotColumns — vertical dot-matrix columns, one per administration.
+ * Replaces a stacked vertical bar chart. Dots stack bottom-up; filled count
+ * is proportional to admin value / max value.
+ */
+function SexenioDotColumns({
+  data,
+  color,
+  t,
+}: {
+  data: SexenioBarDatum[]
+  color: string
+  t: (key: string) => string
+}) {
+  const ROWS = 40
+  const COL_W = 28
+  const DOT_GAP = 7
+  const DOT_R = 2.5
+  const LABEL_H = 28
+  const TOOLTIP_H = 18
+
+  const maxValue = Math.max(...data.map(d => d.value), 1)
+  const width = Math.max(380, data.length * (COL_W + 24) + 40)
+  const height = ROWS * DOT_GAP + LABEL_H + TOOLTIP_H + 16
+  const colsTotalWidth = data.length * COL_W + (data.length - 1) * 24
+  const offsetX = (width - colsTotalWidth) / 2
+
+  return (
+    <div
+      style={{ height: 280 }}
+      role="img"
+      aria-label="Dot matrix chart showing contract value by presidential administration"
+      className="flex items-center justify-center"
+    >
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto max-h-[260px]">
+        {data.map((d, colIdx) => {
+          const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * ROWS)) : 0
+          const cx = offsetX + colIdx * (COL_W + 24) + COL_W / 2
+          const opacity = 0.3 + (colIdx / Math.max(1, data.length - 1)) * 0.6
+
+          return (
+            <g key={`admin-${colIdx}`}>
+              {/* Stats above column */}
+              <text
+                x={cx}
+                y={10}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#a1a1aa"
+                fontFamily="var(--font-family-mono)"
+              >
+                {formatCompactMXN(d.value)}
+              </text>
+              {/* Dot column (bottom-up) */}
+              {Array.from({ length: ROWS }).map((_, i) => {
+                // i=0 at bottom → top when index is highest
+                const dotIdx = ROWS - 1 - i
+                const isFilled = dotIdx < filled
+                const cy = TOOLTIP_H + (ROWS - 1 - dotIdx) * DOT_GAP + DOT_GAP / 2
+                return (
+                  <motion.circle
+                    key={`d-${colIdx}-${i}`}
+                    cx={cx}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={isFilled ? color : '#18181b'}
+                    fillOpacity={isFilled ? opacity : 1}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={isFilled ? 0 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}
+                  />
+                )
+              })}
+              {/* Admin label */}
+              <text
+                x={cx}
+                y={TOOLTIP_H + ROWS * DOT_GAP + 14}
+                textAnchor="middle"
+                fontSize="11"
+                fill="var(--color-text-secondary)"
+                fontFamily="var(--font-family-mono)"
+              >
+                {d.admin}
+              </text>
+              {/* Risk / contracts secondary label */}
+              <text
+                x={cx}
+                y={TOOLTIP_H + ROWS * DOT_GAP + 26}
+                textAnchor="middle"
+                fontSize="9"
+                fill={getRiskColor(d.avg_risk)}
+                fontFamily="var(--font-family-mono)"
+              >
+                {(d.avg_risk * 100).toFixed(0)}% · {formatNumber(d.contracts)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+      <span className="sr-only">
+        {data.map(d => `${d.admin}: ${formatCompactMXN(d.value)}, ${t('profile.adminTooltip.risk')} ${(d.avg_risk * 100).toFixed(1)}%`).join('. ')}
+      </span>
+    </div>
+  )
+}
+
+interface SubcatDotDatum {
+  name: string
+  value: number
+  avg_risk: number
+}
+
+/**
+ * SubcatDotStrips — horizontal dot-matrix strips, one per subcategory.
+ * Replaces a horizontal bar chart. Label on left, dots fill right proportional
+ * to subcategory value / max value.
+ */
+function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: string }) {
+  const DOTS = 50
+  const DOT_R = 3
+  const DOT_GAP = 8
+  const LABEL_W = 180
+  const ROW_H = 22
+  const VALUE_W = 90
+
+  const maxValue = Math.max(...data.map(d => d.value), 1)
+  const width = LABEL_W + DOTS * DOT_GAP + VALUE_W + 16
+  const height = data.length * ROW_H + 24
+
+  return (
+    <div
+      style={{ minHeight: Math.max(200, data.length * ROW_H + 60) }}
+      role="img"
+      aria-label="Dot matrix chart showing contract value by subcategory"
+    >
+      <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto">
+        {data.map((d, rowIdx) => {
+          const filled = d.value > 0 ? Math.max(1, Math.round((d.value / maxValue) * DOTS)) : 0
+          const cy = 12 + rowIdx * ROW_H + ROW_H / 2
+          return (
+            <g key={`subcat-${rowIdx}`}>
+              <text
+                x={LABEL_W - 8}
+                y={cy + 3}
+                textAnchor="end"
+                fontSize="10"
+                fill="var(--color-text-secondary)"
+                fontFamily="var(--font-family-sans)"
+              >
+                {d.name}
+              </text>
+              {Array.from({ length: DOTS }).map((_, i) => {
+                const isFilled = i < filled
+                return (
+                  <motion.circle
+                    key={`dot-${rowIdx}-${i}`}
+                    cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={isFilled ? color : '#18181b'}
+                    fillOpacity={isFilled ? 0.7 : 1}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={isFilled ? 0 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                  />
+                )
+              })}
+              <text
+                x={LABEL_W + DOTS * DOT_GAP + 8}
+                y={cy + 3}
+                fontSize="10"
+                fill="var(--color-text-primary)"
+                fontFamily="var(--font-family-mono)"
+              >
+                {formatCompactMXN(d.value)}
+              </text>
+              <text
+                x={width - 4}
+                y={cy + 3}
+                textAnchor="end"
+                fontSize="9"
+                fill={getRiskColor(d.avg_risk)}
+                fontFamily="var(--font-family-mono)"
+              >
+                {(d.avg_risk * 100).toFixed(0)}%
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
 }
 
 // =============================================================================
@@ -464,52 +673,11 @@ export default function CategoryProfile() {
             {sexenioLoading ? (
               <ChartSkeleton height={280} />
             ) : sexenioBarData.length > 0 && sexenioBarData.some(d => d.value > 0) ? (
-              <div style={{ height: 280 }} role="img" aria-label="Bar chart showing contract value by presidential administration">
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={sexenioBarData} margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
-                    <XAxis
-                      dataKey="admin"
-                      tick={{ fill: 'var(--color-text-secondary)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      width={72}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        const d = payload[0]?.payload as (typeof sexenioBarData)[0] | undefined
-                        return (
-                          <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
-                          >
-                            <p className="font-bold text-text-primary">{label}</p>
-                            <p className="text-text-secondary">{t('profile.adminTooltip.spend')} <span className="font-bold text-text-primary">{formatCompactMXN(d?.value ?? 0)}</span></p>
-                            <p className="text-text-secondary">{t('profile.adminTooltip.contracts')} <span className="text-text-primary">{formatNumber(d?.contracts ?? 0)}</span></p>
-                            <p className="text-text-secondary">{t('profile.adminTooltip.risk')} <span className="font-bold" style={{ color: getRiskColor(d?.avg_risk ?? 0) }}>{((d?.avg_risk ?? 0) * 100).toFixed(1)}%</span></p>
-                          </div>
-                        )
-                      }}
-                    />
-                    <Bar dataKey="value" radius={[4, 4, 0, 0]} maxBarSize={50}>
-                      {sexenioBarData.map((_entry, index) => (
-                        <Cell
-                          key={`admin-${index}`}
-                          fill={sectorColor}
-                          fillOpacity={0.3 + (index / (sexenioBarData.length - 1)) * 0.6}
-                        />
-                      ))}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <SexenioDotColumns
+                data={sexenioBarData}
+                color={sectorColor}
+                t={t}
+              />
             ) : (
               <div className="flex items-center justify-center h-48 text-text-muted text-sm">
                 {t('profile.empty.noAdmin')}
@@ -855,62 +1023,14 @@ export default function CategoryProfile() {
               {subcategoryLoading ? (
                 <ChartSkeleton height={320} />
               ) : subcatBarData.length > 0 ? (
-                <div style={{ height: Math.max(200, subcatBarData.length * 28 + 60) }} role="img" aria-label="Bar chart showing contract value by subcategory">
-                  <ResponsiveContainer width="100%" height="100%">
-                    <BarChart
-                      layout="vertical"
-                      data={subcatBarData.map(s => ({
-                        name: truncate(s.name_es || s.name_en, 30),
-                        value: s.total_value,
-                        avg_risk: s.avg_risk,
-                      }))}
-                      margin={{ top: 4, right: 100, bottom: 4, left: 8 }}
-                    >
-                      <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
-                      <XAxis
-                        type="number"
-                        dataKey="value"
-                        tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                        tickFormatter={(v: number) => formatCompactMXN(v)}
-                        axisLine={{ stroke: 'var(--color-border)' }}
-                        tickLine={false}
-                      />
-                      <YAxis
-                        type="category"
-                        dataKey="name"
-                        width={180}
-                        tick={{ fill: 'var(--color-text-secondary)', fontSize: 10 }}
-                        axisLine={false}
-                        tickLine={false}
-                      />
-                      <RechartsTooltip
-                        content={({ active, payload }) => {
-                          if (!active || !payload?.length) return null
-                          const d = payload[0].payload as { name: string; value: number; avg_risk: number }
-                          return (
-                            <div
-                              className="rounded-lg border p-3 text-xs font-mono shadow-lg"
-                              style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
-                            >
-                              <p className="font-bold text-text-primary mb-1">{d.name}</p>
-                              <p className="text-text-secondary">{formatCompactMXN(d.value)}</p>
-                              <p style={{ color: getRiskColor(d.avg_risk) }}>Riesgo: {(d.avg_risk * 100).toFixed(1)}%</p>
-                            </div>
-                          )
-                        }}
-                      />
-                      <Bar dataKey="value" radius={[0, 3, 3, 0]} maxBarSize={18}>
-                        {subcatBarData.map((_entry, index) => (
-                          <Cell
-                            key={`subcat-${index}`}
-                            fill={sectorColor}
-                            fillOpacity={0.7}
-                          />
-                        ))}
-                      </Bar>
-                    </BarChart>
-                  </ResponsiveContainer>
-                </div>
+                <SubcatDotStrips
+                  data={subcatBarData.map(s => ({
+                    name: truncate(s.name_es || s.name_en, 30),
+                    value: s.total_value,
+                    avg_risk: s.avg_risk,
+                  }))}
+                  color={sectorColor}
+                />
               ) : (
                 <div className="flex items-center justify-center h-32 text-text-muted text-sm">
                   Sin subcategorias disponibles.

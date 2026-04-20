@@ -16,14 +16,13 @@ import { ChartSkeleton } from '@/components/LoadingSkeleton'
 import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
+import { motion } from 'framer-motion'
 import {
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip as RechartsTooltip,
   ResponsiveContainer,
-  BarChart,
-  Bar,
   LineChart,
   Line,
   Legend,
@@ -2346,6 +2345,174 @@ function VendorConcentrationCallout({
 }
 
 // =============================================================================
+// Dot-matrix chart primitives
+// =============================================================================
+
+interface SexenioStackedDatum {
+  admin: string
+  [categoryKey: string]: string | number
+}
+
+interface SexenioCategory {
+  key: string
+  color: string
+}
+
+/**
+ * SexenioStackedDotColumns — vertical stacked dot-matrix columns.
+ * Replaces a stacked BarChart. Each administration is a column; dots stack
+ * bottom-up, colored by category proportion of that admin's total.
+ */
+function SexenioStackedDotColumns({
+  data,
+  categories,
+}: {
+  data: SexenioStackedDatum[]
+  categories: SexenioCategory[]
+}) {
+  const ROWS = 40
+  const COL_W = 32
+  const DOT_GAP = 8
+  const DOT_R = 3
+  const LABEL_H = 28
+  const VALUE_H = 18
+  const LEGEND_COLS = 2
+
+  // Compute per-admin totals and max-total for scaling columns
+  const adminTotals = data.map(d =>
+    categories.reduce((s, c) => s + (Number(d[c.key]) || 0), 0)
+  )
+  const maxTotal = Math.max(...adminTotals, 1)
+  const width = Math.max(520, data.length * (COL_W + 40) + 40)
+  const colsTotalWidth = data.length * COL_W + (data.length - 1) * 40
+  const offsetX = (width - colsTotalWidth) / 2
+  const chartHeight = ROWS * DOT_GAP + LABEL_H + VALUE_H + 16
+
+  // Build legend: categories split into rows
+  const legendRowH = 18
+  const legendRows = Math.ceil(categories.length / LEGEND_COLS)
+  const legendHeight = legendRows * legendRowH + 16
+  const totalHeight = chartHeight + legendHeight
+  const legendY = chartHeight + 4
+
+  return (
+    <div
+      style={{ height: 380 }}
+      role="img"
+      aria-label="Dot matrix chart showing contract value by administration and top categories"
+    >
+      <svg viewBox={`0 0 ${width} ${totalHeight}`} className="w-full h-auto max-h-[370px]">
+        {data.map((d, colIdx) => {
+          const total = adminTotals[colIdx]
+          const filledTotal = total > 0 ? Math.max(1, Math.round((total / maxTotal) * ROWS)) : 0
+          const cx = offsetX + colIdx * (COL_W + 40) + COL_W / 2
+
+          // Build per-category filled counts proportional to category share of total,
+          // within the admin's filledTotal rows.
+          const catFilled: number[] = []
+          let remaining = filledTotal
+          categories.forEach((c, i) => {
+            const v = Number(d[c.key]) || 0
+            if (total <= 0) {
+              catFilled.push(0)
+              return
+            }
+            const fill =
+              i === categories.length - 1
+                ? remaining
+                : Math.round((v / total) * filledTotal)
+            const capped = Math.max(0, Math.min(fill, remaining))
+            catFilled.push(capped)
+            remaining -= capped
+          })
+
+          // Map dot index (bottom-up) → category color
+          const dotColors: (string | null)[] = Array(ROWS).fill(null)
+          let cursor = 0
+          catFilled.forEach((count, ci) => {
+            for (let k = 0; k < count; k++) {
+              if (cursor < ROWS) {
+                dotColors[cursor] = categories[ci].color
+                cursor++
+              }
+            }
+          })
+
+          return (
+            <g key={`admin-${colIdx}`}>
+              <text
+                x={cx}
+                y={12}
+                textAnchor="middle"
+                fontSize="9"
+                fill="#a1a1aa"
+                fontFamily="var(--font-family-mono)"
+              >
+                {formatCompactMXN(total)}
+              </text>
+              {Array.from({ length: ROWS }).map((_, i) => {
+                // i=0 → bottom
+                const cy = VALUE_H + (ROWS - 1 - i) * DOT_GAP + DOT_GAP / 2
+                const fill = dotColors[i]
+                return (
+                  <motion.circle
+                    key={`dot-${colIdx}-${i}`}
+                    cx={cx}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={fill ?? '#18181b'}
+                    fillOpacity={fill ? 0.85 : 1}
+                    stroke={fill ? 'none' : '#27272a'}
+                    strokeWidth={fill ? 0 : 1}
+                    initial={{ opacity: 0 }}
+                    whileInView={{ opacity: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}
+                  />
+                )
+              })}
+              <text
+                x={cx}
+                y={VALUE_H + ROWS * DOT_GAP + 18}
+                textAnchor="middle"
+                fontSize="11"
+                fill="var(--color-text-secondary)"
+                fontFamily="var(--font-family-mono)"
+              >
+                {d.admin}
+              </text>
+            </g>
+          )
+        })}
+
+        {/* Legend */}
+        {categories.map((c, i) => {
+          const col = i % LEGEND_COLS
+          const row = Math.floor(i / LEGEND_COLS)
+          const colWidth = width / LEGEND_COLS
+          const lx = col * colWidth + 20
+          const ly = legendY + row * legendRowH + 12
+          return (
+            <g key={`legend-${i}`}>
+              <circle cx={lx} cy={ly - 3} r={4} fill={c.color} />
+              <text
+                x={lx + 10}
+                y={ly}
+                fontSize="10"
+                fill="var(--color-text-secondary)"
+                fontFamily="var(--font-family-sans)"
+              >
+                {truncate(c.key, 32)}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+    </div>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -3229,70 +3396,10 @@ export default function SpendingCategories() {
             {sexenioLoading ? (
               <ChartSkeleton height={380} />
             ) : sexenioChartData.length > 0 ? (
-              <div style={{ height: 380 }}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <BarChart data={sexenioChartData} margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
-                    <XAxis
-                      dataKey="admin"
-                      tick={{ fill: 'var(--color-text-secondary)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      width={72}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        const total = payload.reduce((s, p) => s + (Number(p.value) || 0), 0)
-                        return (
-                          <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
-                          >
-                            <p className="font-bold text-text-primary text-[11px] mb-1">{label}</p>
-                            <p className="text-text-secondary mb-1.5">{t('sexenio.total')} <span className="font-bold text-text-primary">{formatCompactMXN(total)}</span></p>
-                            {payload.filter(p => (Number(p.value) || 0) > 0).map((p, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <span className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: String(p.color) }} />
-                                <span className="text-text-muted/80 truncate max-w-[160px]">{String(p.name)}</span>
-                                <span className="ml-auto font-semibold tabular-nums" style={{ color: String(p.color) }}>
-                                  {formatCompactMXN(Number(p.value))}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={48}
-                      wrapperStyle={{ paddingTop: 8 }}
-                      formatter={(value: string) => (
-                        <span className="text-[10px]" style={{ color: 'var(--color-text-secondary)' }}>
-                          {value}
-                        </span>
-                      )}
-                    />
-                    {sexenioCategories.map((cat) => (
-                      <Bar
-                        key={cat.key}
-                        dataKey={cat.key}
-                        stackId="sexenio"
-                        fill={cat.color}
-                        fillOpacity={0.8}
-                        maxBarSize={60}
-                      />
-                    ))}
-                  </BarChart>
-                </ResponsiveContainer>
-              </div>
+              <SexenioStackedDotColumns
+                data={sexenioChartData}
+                categories={sexenioCategories}
+              />
             ) : (
               <div className="flex items-center justify-center h-64 text-text-muted text-sm">
                 {t('sexenio.noData')}
