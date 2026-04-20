@@ -142,13 +142,13 @@ export function DataInfographics() {
             </p>
           </div>
         </div>
-        <span className="text-xs text-zinc-600 tabular-nums">
+        <span className="text-xs text-zinc-600 font-mono tabular-nums">
           {active + 1} / {INFOGRAPHICS.length}
         </span>
       </div>
 
       {/* Main viewer */}
-      <div className="rounded-2xl border border-zinc-800 bg-zinc-900/60 overflow-hidden">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-900/60 overflow-hidden">
         {/* Chart area */}
         <div className="relative bg-[#040810] min-h-[340px] flex items-center justify-center p-4">
           <AnimatePresence mode="wait">

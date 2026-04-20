@@ -256,7 +256,7 @@ function ExtremeCaseCard({
       {/* Overpricing factor -- hero number */}
       <div className="flex items-baseline gap-2 mb-2">
         <span
-          className="text-3xl font-bold text-orange-400 tabular-nums"
+          className="text-3xl font-bold text-orange-400 font-mono tabular-nums"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {overpricingFactor}x
@@ -267,7 +267,7 @@ function ExtremeCaseCard({
       </div>
 
       {/* Amount */}
-      <p className="text-lg font-semibold text-zinc-100 tabular-nums mb-1">
+      <p className="text-lg font-semibold text-zinc-100 font-mono tabular-nums mb-1">
         {formatCompactMXN(contract.amount_mxn)}
       </p>
 
@@ -452,10 +452,10 @@ function ReincidentesSection({
                       })}
                     </div>
                   </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-zinc-400 text-xs">
+                  <td className="py-2 px-3 text-right font-mono tabular-nums text-zinc-400 text-xs">
                     {v.contracts}
                   </td>
-                  <td className="py-2 px-3 text-right tabular-nums text-zinc-400 text-xs hidden sm:table-cell">
+                  <td className="py-2 px-3 text-right font-mono tabular-nums text-zinc-400 text-xs hidden sm:table-cell">
                     {formatCompactMXN(v.total_value)}
                   </td>
                   <td className="py-2 px-3 text-center hidden sm:table-cell">
@@ -588,7 +588,7 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
       >
         <div className="flex items-center gap-2">
           <Info className="w-4 h-4 text-zinc-500" aria-hidden="true" />
-          <span className="text-xs uppercase tracking-[0.15em] font-semibold text-zinc-500 group-hover:text-zinc-300 transition-colors">
+          <span className="text-[10px] font-semibold uppercase tracking-widest text-zinc-500 group-hover:text-zinc-300 transition-colors">
             {t('methodologyLabel')}
           </span>
         </div>
@@ -632,7 +632,7 @@ function MostExtremeCallout({
   const factor = (contract.z_price_ratio ?? 0).toFixed(1)
   return (
     <aside
-      className="relative overflow-hidden rounded-xl border border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/30 p-5 md:p-6"
+      className="relative overflow-hidden rounded-sm border border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/30 p-5 md:p-6"
       role="complementary"
       aria-label="El contrato más extremo"
     >
@@ -672,7 +672,7 @@ function MostExtremeCallout({
               formatVendorName(contract.vendor_name, 60)
             )}
             <span className="text-zinc-500"> cobró </span>
-            <span className="text-red-300 tabular-nums">{formatCompactMXN(contract.amount_mxn)}</span>
+            <span className="text-red-300 font-mono tabular-nums">{formatCompactMXN(contract.amount_mxn)}</span>
             <span className="text-zinc-500"> a </span>
             <span className="text-zinc-200">{contract.institution_name}</span>
             <span className="text-zinc-500"> ({contract.contract_year}).</span>
@@ -702,7 +702,7 @@ function MostExtremeCallout({
         {/* Hero factor */}
         <div className="border-l-2 border-red-500 pl-4 md:pl-5 md:text-right">
           <div
-            className="font-bold text-red-400 tabular-nums leading-none"
+            className="font-bold text-red-400 font-mono tabular-nums leading-none"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: 'clamp(2.5rem, 6vw, 4rem)',
@@ -1383,13 +1383,13 @@ function RiskLevelPriceGap({
         </p>
       </div>
 
-      <div className="rounded-xl border border-zinc-700/60 bg-zinc-900/40 p-4 md:p-5 space-y-5">
+      <div className="rounded-sm border border-zinc-700/60 bg-zinc-900/40 p-4 md:p-5 space-y-5">
         {/* Headline: the premium */}
         {stats.premium > 0 && stats.standard.count > 0 && stats.flagged.count > 0 && (
           <div className="flex items-baseline gap-3 flex-wrap">
             <TrendingUp className="w-5 h-5 text-red-400 flex-shrink-0" aria-hidden="true" />
             <div
-              className="text-3xl md:text-4xl font-bold text-red-400 tabular-nums leading-none"
+              className="text-3xl md:text-4xl font-bold text-red-400 font-mono tabular-nums leading-none"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               +{stats.premium.toFixed(0)}%
@@ -1632,7 +1632,7 @@ export default function PriceIntelligence() {
           <span className="text-zinc-700">·</span>
           <span>Investigación · Precios anómalos</span>
           <span className="text-zinc-700">·</span>
-          <span className="tabular-nums">v0.6.5</span>
+          <span className="font-mono tabular-nums">v0.6.5</span>
         </div>
 
         {/* Overline */}
@@ -1697,7 +1697,7 @@ export default function PriceIntelligence() {
           </div>
         ) : summary && summary.total_outliers === 0 ? (
           // --- HEALTHY SYSTEM: no anomalies detected at current threshold -----
-          <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 max-w-3xl">
+          <div className="rounded-sm border border-emerald-500/30 bg-emerald-500/5 p-6 space-y-4 max-w-3xl">
             <div className="flex items-start gap-3">
               <CheckCircle2 className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
@@ -1804,7 +1804,7 @@ export default function PriceIntelligence() {
             )
           })()
         ) : (
-          <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/40 p-6 text-center">
+          <div className="rounded-sm border border-zinc-700/40 bg-zinc-900/40 p-6 text-center">
             <AlertTriangle className="w-5 h-5 text-zinc-600 mx-auto mb-2" />
             <p className="text-sm text-zinc-500">
               {t('noAnomaliesAtThreshold')}
@@ -1826,7 +1826,7 @@ export default function PriceIntelligence() {
       {/* ================================================================== */}
       {/* FILTER CONTROLS                                                     */}
       {/* ================================================================== */}
-      <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-4 space-y-4">
+      <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-sm p-4 space-y-4">
         {/* Z-score slider */}
         <div>
           <div className="flex items-center justify-between mb-1">
@@ -1998,13 +1998,13 @@ export default function PriceIntelligence() {
                         />
                         {s.name}
                       </td>
-                      <td className="py-2 px-3 text-right tabular-nums text-zinc-400">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums text-zinc-400">
                         {formatNumber(s.count)}
                       </td>
-                      <td className="py-2 px-3 text-right tabular-nums text-zinc-400 hidden sm:table-cell">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums text-zinc-400 hidden sm:table-cell">
                         {formatCompactMXN(s.totalValue)}
                       </td>
-                      <td className="py-2 px-3 text-right tabular-nums text-orange-400">
+                      <td className="py-2 px-3 text-right font-mono tabular-nums text-orange-400">
                         +{(s.avgZ ?? 0).toFixed(1)}&sigma;
                       </td>
                     </tr>
@@ -2103,7 +2103,7 @@ export default function PriceIntelligence() {
         const avgZ = summary.avg_z_score || 3
         const savings = avgZ > 1 ? summary.total_value_mxn * (1 - 1 / avgZ) : 0
         return (
-          <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 max-w-3xl">
+          <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4 max-w-3xl">
             <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
               HALLAZGO
             </p>

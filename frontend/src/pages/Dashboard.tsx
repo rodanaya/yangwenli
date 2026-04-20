@@ -250,7 +250,9 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
                           cx={i * DG + DR}
                           cy={3}
                           r={DR}
-                          fill={i < filled ? riskColor : '#2d2926'}
+                          fill={i < filled ? riskColor : '#f3f1ec'}
+                          stroke={i < filled ? undefined : '#e2ddd6'}
+                          strokeWidth={i < filled ? 0 : 0.5}
                           fillOpacity={i < filled ? 0.85 : 1}
                         />
                       ))}
@@ -734,7 +736,7 @@ export function Dashboard() {
                     {toTitleCase(topVendor.vendor_name)}
                   </p>
                   <p className="text-xs text-text-muted flex items-center gap-2 flex-wrap">
-                    <span>{formatNumber(topVendor.total_contracts)} {tc('contracts').toLowerCase()}</span>
+                    <span><span className="font-mono tabular-nums">{formatNumber(topVendor.total_contracts)}</span> {tc('contracts').toLowerCase()}</span>
                     <span className="text-text-muted/40">·</span>
                     <span className="font-mono">{formatCompactMXN(topVendor.total_value_mxn)}</span>
                     {topVendor.primary_sector_name && (

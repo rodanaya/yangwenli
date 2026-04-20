@@ -62,9 +62,16 @@ export function CategoryRanking({ categories, lang, limit = 20, onSelect }: Prop
 
   if (!ranked.length) {
     return (
-      <div className="flex items-center justify-center h-48 rounded-xl border border-border/30 bg-background-card">
-        <p className="text-xs text-text-muted font-mono">
-          {lang === 'en' ? 'No category data' : 'Sin datos de categorías'}
+      <div className="flex flex-col items-center justify-center h-48 rounded-sm border border-border bg-background-card px-6 text-center">
+        <p className="text-sm text-text-muted">
+          {lang === 'en'
+            ? 'No category data for the selected filters.'
+            : 'Sin datos de categorías para los filtros seleccionados.'}
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          {lang === 'en'
+            ? 'Try broadening the year range or clearing active filters.'
+            : 'Prueba ampliar el rango de años o limpiar los filtros activos.'}
         </p>
       </div>
     )
@@ -163,8 +170,8 @@ export function CategoryRanking({ categories, lang, limit = 20, onSelect }: Prop
         </div>
         <span className="ml-auto opacity-60">
           {lang === 'en'
-            ? 'Thin vertical bar = sector · click row for profile'
-            : 'Barra vertical = sector · clic para perfil'}
+            ? '1 ● ≈ share of top-1 category · click row for profile'
+            : '1 ● ≈ proporción del top-1 · clic para perfil'}
         </span>
       </div>
     </div>
@@ -220,7 +227,7 @@ function RankingRow({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, i) => (
                   <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                    fill={i < filled ? color : '#27272a'}
+                    fill={i < filled ? color : '#2d2926'}
                     fillOpacity={i < filled ? 0.45 : 0.3}
                   />
                 ))}
@@ -321,7 +328,7 @@ function RankingRow({
             <svg viewBox={`0 0 ${N * DG} 8`} className="hidden md:block w-36 flex-shrink-0" style={{ height: 8 }} aria-hidden="true">
               {Array.from({ length: N }).map((_, i) => (
                 <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                  fill={i < filled ? dotColor : '#27272a'}
+                  fill={i < filled ? dotColor : '#2d2926'}
                   fillOpacity={i < filled ? (isCritical || isHigh ? 0.85 : 0.55) : 1}
                 />
               ))}

@@ -48,7 +48,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
       riskScore: v.avg_risk_score ?? 0,
       itemStyle: {
         color: riskToColor(v.avg_risk_score ?? 0),
-        borderColor: '#27272a',
+        borderColor: '#2d2926',
         borderWidth: 2,
       },
     }))
@@ -64,7 +64,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
         riskScore: 0,
         itemStyle: {
           color: '#52525b',
-          borderColor: '#27272a',
+          borderColor: '#2d2926',
           borderWidth: 2,
         },
       }
@@ -132,7 +132,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
         padding: [4, 6],
       },
       itemStyle: {
-        borderColor: '#27272a',
+        borderColor: '#2d2926',
         borderWidth: 2,
         gapWidth: 2,
       },

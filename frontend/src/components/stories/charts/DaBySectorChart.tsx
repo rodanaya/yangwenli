@@ -45,9 +45,9 @@ export function DaBySectorChart() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         RUBLI · Por sector
@@ -121,7 +121,7 @@ export function DaBySectorChart() {
                     stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2, delay: rowIdx * 0.04 + i * 0.005 }}
                   />
                 )

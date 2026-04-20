@@ -232,7 +232,7 @@ function HeroSection() {
 
       {/* Impunity callout: the editorial finding */}
       {totalCases > 0 && (
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
+        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4 flex items-start gap-3">
           <Scale className="h-4 w-4 text-amber-400 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
@@ -558,12 +558,12 @@ export default function CaseLibrary() {
       <HeroSection />
 
       {/* ── Editorial Pull-Quote — conviction stat ── */}
-      <div className="relative my-10 rounded-2xl overflow-hidden border border-zinc-800/60" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #0f0b05 100%)' }}>
+      <div className="relative my-10 rounded-sm overflow-hidden border border-zinc-800/60" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #0f0b05 100%)' }}>
         <div className="absolute inset-0 opacity-10" style={{ background: 'radial-gradient(ellipse at 20% 50%, #d4922a 0%, transparent 60%)' }} />
         <div className="relative px-8 py-10 flex flex-col sm:flex-row items-center sm:items-start gap-8">
           <div className="flex-shrink-0 text-center sm:text-left">
             <span
-              className="block tabular-nums font-black leading-none"
+              className="block font-mono tabular-nums font-black leading-none"
               style={{ fontFamily: 'var(--font-family-serif)', fontSize: 'clamp(4rem, 10vw, 7rem)', color: '#d4922a', letterSpacing: '-0.04em' }}
             >
               7%
@@ -698,7 +698,7 @@ export default function CaseLibrary() {
       )}
 
       {error && (
-        <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-5 flex items-start gap-3">
+        <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-5 flex items-start gap-3">
           <AlertCircle className="h-5 w-5 text-red-400 mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-medium text-red-400 mb-1">{t('loadError')}</p>

@@ -109,7 +109,7 @@ export default function SectorConcentrationChart({
 
   return (
     <section
-      className={cn('rounded-xl border border-white/8 bg-zinc-900/60 p-5', className)}
+      className={cn('rounded-sm border border-white/8 bg-zinc-900/60 p-5', className)}
       aria-labelledby="sector-concentration-title"
     >
       {showTitle && (

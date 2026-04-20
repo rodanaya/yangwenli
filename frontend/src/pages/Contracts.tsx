@@ -986,8 +986,7 @@ export function Contracts() {
         className="flex items-center justify-between flex-wrap gap-2"
         variants={slideUp}
         initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
+        animate="animate"
       >
         {pageStats && (
           <div className="flex items-center gap-3 flex-wrap">
@@ -1164,7 +1163,7 @@ export function Contracts() {
       {/* Pagination — Fix 6: use filters.per_page throughout */}
       {data && (data?.pagination?.total ?? 0) > 0 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted font-mono tabular-nums">
             {(() => {
               const { start, end } = getPaginationRange(filters.page || 1, filters.per_page || 50, data.pagination?.total ?? 0)
               return `${formatNumber(start)}-${formatNumber(end)} of ${formatNumber(data.pagination?.total ?? 0)}`
@@ -1181,7 +1180,7 @@ export function Contracts() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-xs text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {clampPage(filters.page || 1, data.pagination?.total_pages ?? 1)}/{Math.max(1, data.pagination?.total_pages ?? 1)}
             </span>
             <Button
@@ -1217,7 +1216,7 @@ export function Contracts() {
           className="flex items-center gap-3 px-4 py-2.5 rounded-full shadow-xl border border-accent/30 bg-background-card backdrop-blur-sm"
         >
           <span className="text-xs text-text-muted">
-            <span className="font-semibold text-accent tabular-nums">{compareIds.size}</span> selected
+            <span className="font-semibold text-accent font-mono tabular-nums">{compareIds.size}</span> selected
           </span>
           <Button
             size="sm"
@@ -1258,7 +1257,7 @@ function StatPill({ label, value, color }: { label: string; value: string; color
   return (
     <div className="flex items-center gap-1.5">
       <span className="text-xs text-text-muted">{label}</span>
-      <span className="text-xs font-semibold tabular-nums" style={color ? { color } : undefined}>
+      <span className="text-xs font-semibold font-mono tabular-nums" style={color ? { color } : undefined}>
         {value}
       </span>
     </div>
@@ -1352,7 +1351,9 @@ function ContractRow({
                   <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#27272a'}
+                        fill={k < filled ? color : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}
@@ -1378,7 +1379,7 @@ function ContractRow({
 
       {/* Amount */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs tabular-nums font-medium text-text-primary">
+        <span className="text-xs font-mono tabular-nums font-medium text-text-primary">
           {formatCompactMXN(contract.amount_mxn)}
         </span>
       </td>
@@ -1450,7 +1451,7 @@ function ContractRow({
 
       {/* Date: year-month only for density */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs text-text-muted tabular-nums whitespace-nowrap">
+        <span className="text-xs text-text-muted font-mono tabular-nums whitespace-nowrap">
           {contract.contract_date
             ? contract.contract_date.slice(0, 7)
             : contract.contract_year || '—'}
@@ -1507,7 +1508,9 @@ function ContractRow({
                   <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#27272a'}
+                        fill={k < filled ? color : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}

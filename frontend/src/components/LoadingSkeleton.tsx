@@ -114,7 +114,7 @@ export function KPICardSkeleton() {
             <Skeleton className="h-8 w-28" />
             <Skeleton className="h-3 w-24" />
           </div>
-          <Skeleton className="h-12 w-12 rounded-xl" />
+          <Skeleton className="h-12 w-12 rounded-sm" />
         </div>
       </CardContent>
     </Card>

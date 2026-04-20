@@ -72,11 +72,11 @@ function BellCurveSVG({ zScore }: { zScore: number }) {
       <line x1={markerX} y1="0" x2={markerX} y2="60" strokeWidth="2" className={`stroke-current ${color.replace('bg-', 'text-')}`} />
       <circle cx={markerX} cy="8" r="3" className={`fill-current ${color.replace('bg-', 'text-')}`} />
       {/* Labels */}
-      <text x="100" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="7">0</text>
-      <text x="78" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6">-1</text>
-      <text x="122" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6">+1</text>
-      <text x="55" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6">-2</text>
-      <text x="145" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6">+2</text>
+      <text x="100" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="7" fontFamily="var(--font-family-mono, monospace)">0</text>
+      <text x="78" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6" fontFamily="var(--font-family-mono, monospace)">-1</text>
+      <text x="122" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6" fontFamily="var(--font-family-mono, monospace)">+1</text>
+      <text x="55" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6" fontFamily="var(--font-family-mono, monospace)">-2</text>
+      <text x="145" y="58" textAnchor="middle" className="text-text-muted fill-current" fontSize="6" fontFamily="var(--font-family-mono, monospace)">+2</text>
     </svg>
   )
 }

@@ -106,7 +106,7 @@ function InvestigationTeaser({
   return (
     <button
       onClick={onClick}
-      className="group text-left w-full h-full rounded-xl border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 hover:border-zinc-700 transition-colors p-7 flex flex-col gap-5 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
+      className="group text-left w-full h-full rounded-sm border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 hover:border-zinc-700 transition-colors p-7 flex flex-col gap-5 focus:outline-none focus:ring-2 focus:ring-amber-400/40"
     >
       {/* Ordinal + kicker */}
       <div className="flex items-center gap-3">
@@ -612,7 +612,7 @@ export default function Intro() {
                 <button
                   key={card.kicker}
                   onClick={() => goToApp(card.href)}
-                  className={`text-left rounded-xl border p-6 transition-all hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-amber-500/40 ${card.accent}`}
+                  className={`text-left rounded-sm border p-6 transition-all hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-amber-500/40 ${card.accent}`}
                 >
                   <div className={`text-xl mb-3 ${card.iconColor}`}>{card.icon}</div>
                   <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-zinc-500 mb-1">
@@ -640,7 +640,7 @@ export default function Intro() {
             ===================================================================== */}
         <section className="border-b border-zinc-900">
           <div className="max-w-6xl mx-auto px-6 py-16">
-            <div className="rounded-xl border border-zinc-800 bg-gradient-to-br from-zinc-900/70 to-zinc-950 p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
+            <div className="rounded-sm border border-zinc-800 bg-gradient-to-br from-zinc-900/70 to-zinc-950 p-8 flex flex-col md:flex-row items-start md:items-center gap-6">
               <div className="flex-1 min-w-0">
                 <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-amber-500 mb-2">
                   {t('scorecards.kicker')}
@@ -689,7 +689,7 @@ export default function Intro() {
                 </button>
               </div>
 
-              <div className="rounded-xl border border-zinc-800 overflow-hidden divide-y divide-zinc-800">
+              <div className="rounded-sm border border-zinc-800 overflow-hidden divide-y divide-zinc-800">
                 {recentCritical.slice(0, 5).map((c) => {
                   const sectorColor = c.sector_name
                     ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'

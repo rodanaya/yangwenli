@@ -164,7 +164,7 @@ function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
           cx={i * (size + gap) + size / 2}
           cy={size / 2}
           r={size / 2}
-          fill={i < filled ? color : '#2a2420'}
+          fill={i < filled ? color : '#2d2926'}
         />
       ))}
     </svg>

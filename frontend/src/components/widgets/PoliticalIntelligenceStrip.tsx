@@ -61,7 +61,7 @@ function VendorBar({ vendor, maxValue }: { vendor: TopPeriodEntityItem; maxValue
             <svg viewBox={`0 0 ${N * DG} 8`} className="flex-1" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
               {Array.from({ length: N }).map((_, i) => (
                 <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                  fill={i < filled ? barColor : '#27272a'}
+                  fill={i < filled ? barColor : '#2d2926'}
                   fillOpacity={i < filled ? 0.85 : 1}
                 />
               ))}
@@ -121,7 +121,7 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
   )
 
   return (
-    <div className={cn('bg-background-card border border-border rounded-xl p-5', className)}>
+    <div className={cn('bg-background-card border border-border rounded-sm p-5', className)}>
       {/* Header */}
       <div className="flex items-center gap-2 mb-3">
         <Landmark className="h-5 w-5 text-text-muted" />

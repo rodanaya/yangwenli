@@ -51,8 +51,13 @@ export function CaseDossierStrip({
 }: CaseDossierStripProps) {
   if (cases.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-xs text-zinc-500">
-        No cases
+      <div className="flex flex-col items-center justify-center h-32 text-center px-6 border border-border rounded-sm bg-background-card">
+        <p className="text-sm text-text-muted">
+          Ningún caso documentado coincide con los filtros actuales.
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          Ajusta el sector, el año o el tipo de caso para ampliar la búsqueda.
+        </p>
       </div>
     )
   }

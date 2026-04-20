@@ -56,7 +56,7 @@ export function StoryTrenMaya() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -100,7 +100,7 @@ export function StoryTrenMaya() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[720px]"
@@ -302,7 +302,7 @@ export function StoryTrenMaya() {
         </svg>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

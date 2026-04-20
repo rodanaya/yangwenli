@@ -13,8 +13,7 @@ export function StorySeasonalityCalendar() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -51,12 +50,12 @@ export function StorySeasonalityCalendar() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
         <SeasonalityCalendar />
       </div>
 
       {/* OECD context */}
-      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-3">
+      <div className="rounded-sm border border-cyan-500/20 bg-cyan-500/5 p-3">
         <p className="text-xs font-mono uppercase tracking-wide text-cyan-400 mb-1">
           OECD BENCHMARK
         </p>

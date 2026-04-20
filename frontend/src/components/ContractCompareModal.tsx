@@ -56,14 +56,14 @@ function RiskBar({ score }: { score?: number }) {
           <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                fill={k < filled ? color : '#27272a'}
+                fill={k < filled ? color : '#2d2926'}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
             ))}
           </svg>
         )
       })()}
-      <span className="tabular-nums font-semibold" style={{ color }}>
+      <span className="font-mono tabular-nums font-semibold" style={{ color }}>
         {(score * 100).toFixed(0)}%
       </span>
     </div>

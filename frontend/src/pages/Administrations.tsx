@@ -426,7 +426,7 @@ function AdminDossierPanel({
       initial={{ opacity: 0, y: 12 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.3, ease: 'easeOut' }}
-      className="rounded-xl border border-border/50 bg-background-card overflow-hidden"
+      className="rounded-sm border border-border/50 bg-background-card overflow-hidden"
       style={{ borderLeftWidth: 4, borderLeftColor: partyColor }}
     >
       {/* Dossier Header */}
@@ -736,7 +736,9 @@ function AdminDossierPanel({
                             <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                               {Array.from({ length: N }).map((_, k) => (
                                 <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : '#27272a'}
+                                  fill={k < filled ? sector.color : '#f3f1ec'}
+                                  stroke={k < filled ? undefined : '#e2ddd6'}
+                                  strokeWidth={k < filled ? 0 : 0.5}
                                   fillOpacity={k < filled ? 0.7 : 1}
                                 />
                               ))}
@@ -748,6 +750,9 @@ function AdminDossierPanel({
                   )
                 })}
               </div>
+              <p className="text-[10px] font-mono text-text-muted/60 mt-1.5">
+                1 ● ≈ 5% del sector líder
+              </p>
             </div>
           )}
         </div>
@@ -1102,7 +1107,7 @@ export default function Administrations() {
           <span aria-hidden>·</span>
           <span>{t('classifiedHeader.eyebrow', 'Political cycle analysis')}</span>
           <span aria-hidden>·</span>
-          <span className="tabular-nums">v0.6.5</span>
+          <span className="font-mono tabular-nums">v0.6.5</span>
         </div>
         <div className="flex items-start justify-between gap-6">
           <div className="flex-1 min-w-0">
@@ -1459,8 +1464,7 @@ export default function Administrations() {
         className="relative border-l-4 border-accent bg-background-card rounded-r-lg px-5 py-4 space-y-2"
         variants={fadeIn}
         initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
+        animate="animate"
       >
         <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent">
           {t('editorial.sectionTitle')}
@@ -1506,8 +1510,7 @@ export default function Administrations() {
           className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-4"
           variants={slideUp}
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, margin: '-50px' }}
+          animate="animate"
         >
           {[
             { label: t('statCards.contracts'), value: formatNumber(selectedAgg.contracts), delta: null, icon: FileText },
@@ -1571,7 +1574,9 @@ export default function Administrations() {
                         <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : '#27272a'}
+                              fill={k < filled ? color : '#f3f1ec'}
+                              stroke={k < filled ? undefined : '#e2ddd6'}
+                              strokeWidth={k < filled ? 0 : 0.5}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
                           ))}
@@ -2446,7 +2451,9 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? '#a1a1aa' : '#27272a'}
+                    fill={k < filled ? '#a1a1aa' : '#f3f1ec'}
+                    stroke={k < filled ? undefined : '#e2ddd6'}
+                    strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.5 : 1}
                   />
                 ))}
@@ -2465,7 +2472,9 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? toBarColor : '#27272a'}
+                    fill={k < filled ? toBarColor : '#f3f1ec'}
+                    stroke={k < filled ? undefined : '#e2ddd6'}
+                    strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
                 ))}
@@ -2766,7 +2775,9 @@ function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin
             const filled = Math.max(1, Math.round(intensity * N))
             return Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={1.5} r={DR}
-                fill={k < filled ? bgColor : '#27272a'}
+                fill={k < filled ? bgColor : '#f3f1ec'}
+                stroke={k < filled ? undefined : '#e2ddd6'}
+                strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.6 : 1}
               />
             ))

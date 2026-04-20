@@ -48,7 +48,7 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
   return (
     <ScrollReveal>
       <div
-        className="rounded-xl border border-border/30 bg-background-card/60 p-4"
+        className="rounded-sm border border-border/30 bg-background-card/60 p-4"
         style={{ borderLeftWidth: '3px', borderLeftColor: '#f97316' }}
       >
         <div className="flex items-center justify-between mb-2">

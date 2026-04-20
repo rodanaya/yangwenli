@@ -834,7 +834,12 @@ export default function TrendsTab() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-text-muted text-center py-12">No sector data</p>
+              <div className="py-12 text-center">
+                <p className="text-sm text-text-muted">Sin datos de sector para este corte.</p>
+                <p className="text-[11px] text-text-muted mt-1">
+                  Ajusta el rango de años o el tipo de métrica.
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>
@@ -924,7 +929,12 @@ export default function TrendsTab() {
                 </div>
               </div>
             ) : (
-              <p className="text-sm text-text-muted text-center py-12">No sector data</p>
+              <div className="py-12 text-center">
+                <p className="text-sm text-text-muted">Sin datos de sector para este corte.</p>
+                <p className="text-[11px] text-text-muted mt-1">
+                  Ajusta el rango de años o el tipo de métrica.
+                </p>
+              </div>
             )}
           </CardContent>
         </Card>

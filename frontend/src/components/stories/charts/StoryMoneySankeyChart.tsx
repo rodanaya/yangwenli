@@ -50,8 +50,7 @@ export function StoryMoneySankeyChart() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -97,12 +96,12 @@ export function StoryMoneySankeyChart() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
         <MoneySankeyChart flows={PHARMA_FLOWS} height={300} />
       </div>
 
       {/* Finding callout */}
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

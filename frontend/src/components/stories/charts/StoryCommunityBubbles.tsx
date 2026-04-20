@@ -81,8 +81,7 @@ export function StoryCommunityBubbles() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -120,7 +119,7 @@ export function StoryCommunityBubbles() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -153,8 +152,7 @@ export function StoryCommunityBubbles() {
               strokeOpacity={0.35}
               strokeWidth={0.8}
               initial={{ pathLength: 0 }}
-              whileInView={{ pathLength: 1 }}
-              viewport={{ once: true }}
+              animate={{ pathLength: 1 }}
               transition={{ duration: 0.8, delay: 0.2 }}
             />
           ))}
@@ -162,8 +160,7 @@ export function StoryCommunityBubbles() {
           {/* Hub node */}
           <motion.g
             initial={{ scale: 0, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4 }}
           >
             <circle cx={CX} cy={CY} r={38} fill="#27272a" stroke="#71717a" strokeWidth={2} />
@@ -182,8 +179,7 @@ export function StoryCommunityBubbles() {
               <motion.g
                 key={n.id}
                 initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.3, delay: 0.3 + i * 0.035 }}
               >
                 <circle
@@ -228,7 +224,7 @@ export function StoryCommunityBubbles() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

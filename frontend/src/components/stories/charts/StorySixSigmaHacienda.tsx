@@ -37,9 +37,9 @@ export function StorySixSigmaHacienda() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         RUBLI · SixSigma en Hacienda
@@ -103,7 +103,7 @@ export function StorySixSigmaHacienda() {
                   stroke={won ? 'none' : '#3f3f46'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2, delay: i * 0.012 }}
                 />
               )
@@ -126,7 +126,7 @@ export function StorySixSigmaHacienda() {
                   stroke={won ? 'none' : '#3f3f46'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2, delay: 0.6 + i * 0.012 }}
                 />
               )
@@ -188,7 +188,7 @@ export function StorySixSigmaHacienda() {
                   stroke="#09090b"
                   strokeWidth={1}
                   initial={{ opacity: 0, scale: 0 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
+                  animate={{ opacity: 1, scale: 1 }}
                   transition={{ duration: 0.2, delay: i * 0.005 }}
                 />
               )
@@ -216,7 +216,7 @@ export function StorySixSigmaHacienda() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

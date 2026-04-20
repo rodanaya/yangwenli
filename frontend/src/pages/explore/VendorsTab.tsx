@@ -299,7 +299,7 @@ export default function VendorsTab() {
       {/* Filters bar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
+          <p className="text-xs text-text-muted font-mono tabular-nums" aria-live="polite">
             {data
               ? `${formatNumber(data.pagination.total)} vendors`
               : 'Loading...'}
@@ -477,7 +477,12 @@ export default function VendorsTab() {
       ) : !data?.data?.length ? (
         <div className="py-12 text-center">
           <UserX className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" />
-          <p className="text-sm text-text-muted">No vendors match your filters</p>
+          <p className="text-sm text-text-muted">
+            No vendors match your filters.
+          </p>
+          <p className="text-[11px] text-text-muted mt-1">
+            Try broadening the risk level or clearing the search query.
+          </p>
         </div>
       ) : (
         <div className="rounded-lg border border-border overflow-hidden">
@@ -528,7 +533,7 @@ export default function VendorsTab() {
       {/* Pagination */}
       {data && data.pagination.total_pages > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted font-mono tabular-nums">
             {(filters.page! - 1) * filters.per_page! + 1}-
             {Math.min(filters.page! * filters.per_page!, data.pagination.total)} of{' '}
             {formatNumber(data.pagination.total)}
@@ -544,7 +549,7 @@ export default function VendorsTab() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-xs text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {filters.page}/{data.pagination.total_pages}
             </span>
             <Button
@@ -685,9 +690,14 @@ function FlashVendorRadar() {
               <p className="text-xs text-text-muted">Failed to load flash vendor data</p>
             </div>
           ) : !allDots.length ? (
-            <div className="py-8 text-center">
+            <div className="py-8 text-center px-6">
               <Radar className="h-8 w-8 text-text-muted mx-auto mb-2 opacity-40" aria-hidden="true" />
-              <p className="text-xs text-text-muted">No flash vendors found with current thresholds</p>
+              <p className="text-xs text-text-muted">
+                No flash vendors above the current thresholds.
+              </p>
+              <p className="text-[11px] text-text-muted mt-1">
+                Try lowering the risk floor or widening the contract-count filter.
+              </p>
             </div>
           ) : (
             <>
@@ -767,7 +777,7 @@ function FlashVendorRadar() {
                               {toTitleCase(d.vendor_name)}
                             </Link>
                             <div className="flex items-center gap-2 shrink-0">
-                              <span className="text-xs tabular-nums text-text-muted">{formatCompactMXN(d.total_value)}</span>
+                              <span className="text-xs font-mono tabular-nums text-text-muted">{formatCompactMXN(d.total_value)}</span>
                               <span
                                 className="text-xs font-semibold"
                                 style={{ color: RISK_COLORS[level] }}
@@ -854,7 +864,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
     >
       {/* Rank */}
       <td className="px-2 py-2 text-center">
-        <span className="text-xs tabular-nums text-text-muted">{rank}</span>
+        <span className="text-xs font-mono tabular-nums text-text-muted">{rank}</span>
       </td>
 
       {/* Vendor name + sector + activity */}
@@ -910,14 +920,14 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
 
       {/* Contracts */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs tabular-nums text-text-primary font-medium">
+        <span className="text-xs font-mono tabular-nums text-text-primary font-medium">
           {formatNumber(vendor.total_contracts)}
         </span>
       </td>
 
       {/* Value */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs tabular-nums text-text-primary font-medium">
+        <span className="text-xs font-mono tabular-nums text-text-primary font-medium">
           {formatCompactMXN(vendor.total_value_mxn)}
         </span>
       </td>
@@ -934,14 +944,14 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
                 <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : '#27272a'}
+                      fill={k < filled ? riskColor : '#2d2926'}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
                 </svg>
               )
             })()}
-            <span className="text-xs tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
+            <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(vendor.avg_risk_score * 100).toFixed(0)}%
             </span>
           </div>
@@ -957,7 +967,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
 
       {/* Single Bid % */}
       <td className="px-3 py-2 text-right hidden xl:table-cell">
-        <span className="text-xs tabular-nums" style={{ color: sbColor }}>
+        <span className="text-xs font-mono tabular-nums" style={{ color: sbColor }}>
           {vendor.single_bid_pct < 1 && vendor.single_bid_pct > 0
             ? `${vendor.single_bid_pct.toFixed(1)}%`
             : `${vendor.single_bid_pct.toFixed(0)}%`}
@@ -966,7 +976,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
 
       {/* High Risk % */}
       <td className="px-3 py-2 text-right hidden lg:table-cell">
-        <span className="text-xs tabular-nums font-medium" style={{ color: hrColor }}>
+        <span className="text-xs font-mono tabular-nums font-medium" style={{ color: hrColor }}>
           {vendor.high_risk_pct < 1 && vendor.high_risk_pct > 0
             ? `${vendor.high_risk_pct.toFixed(1)}%`
             : `${vendor.high_risk_pct.toFixed(0)}%`}
@@ -976,7 +986,7 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
       {/* Anomaly % */}
       <td className="px-3 py-2 text-right hidden xl:table-cell">
         {vendor.pct_anomalous != null ? (
-          <span className="text-xs tabular-nums" style={{ color: anomColor }}>
+          <span className="text-xs font-mono tabular-nums" style={{ color: anomColor }}>
             {vendor.pct_anomalous.toFixed(0)}%
           </span>
         ) : (

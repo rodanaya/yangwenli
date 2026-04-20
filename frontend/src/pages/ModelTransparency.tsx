@@ -117,7 +117,7 @@ function StatCard({ value, label, sub }: { value: string; label: string; sub?: s
       style={{ borderLeft: `2px solid ${ACCENT}` }}
     >
       <div
-        className="tabular-nums leading-none"
+        className="font-mono tabular-nums leading-none"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
@@ -387,7 +387,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 border-b border-[rgba(255,255,255,0.06)]">
             <span>Feature</span>
             <span className="text-center">Protective ← 0 → Risk-increasing</span>
-            <span className="text-right tabular-nums w-20">β</span>
+            <span className="text-right font-mono tabular-nums w-20">β</span>
           </div>
           {liveCoefficients.map((c, i) => {
             const isPositive = c.beta >= 0
@@ -429,7 +429,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = !isPositive && i < filled
                           return (
                             <circle key={`l-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#27272a'}
+                              fill={isFilled ? color : '#2d2926'}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
                           )
@@ -440,7 +440,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = isPositive && i < filled
                           return (
                             <circle key={`r-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#27272a'}
+                              fill={isFilled ? color : '#2d2926'}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
                           )
@@ -608,7 +608,7 @@ function AuditTrailTab() {
 
                 {/* Dateline + status chip */}
                 <div className="flex items-center gap-3 mb-3 text-[10px] font-mono uppercase tracking-[0.18em]">
-                  <span className="text-zinc-500 tabular-nums">{entry.date}</span>
+                  <span className="text-zinc-500 font-mono tabular-nums">{entry.date}</span>
                   {isActive && (
                     <span
                       className="inline-flex items-center gap-1.5 px-2 py-0.5"
@@ -653,7 +653,7 @@ function AuditTrailTab() {
                   <div>
                     <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">Test AUC</div>
                     <div
-                      className="tabular-nums mt-1"
+                      className="font-mono tabular-nums mt-1"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: '1.4rem',
@@ -668,7 +668,7 @@ function AuditTrailTab() {
                   <div>
                     <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">High-risk rate</div>
                     <div
-                      className="tabular-nums mt-1"
+                      className="font-mono tabular-nums mt-1"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: '1.4rem',
@@ -812,7 +812,7 @@ export default function ModelTransparency() {
           <span className="text-zinc-700">·</span>
           <span>{t('hero.breadcrumb')}</span>
           <span className="text-zinc-700">·</span>
-          <span className="tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
+          <span className="font-mono tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
           <span className="text-zinc-700">·</span>
           <span>{t('hero.modelType')}</span>
         </div>

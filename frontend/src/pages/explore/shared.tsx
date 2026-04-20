@@ -29,7 +29,7 @@ export function StatPill({ label, value, color }: { label: string; value: string
     <div className="flex items-center gap-1.5">
       <span className="text-xs text-text-muted">{label}</span>
       <span
-        className="text-xs font-semibold tabular-nums"
+        className="text-xs font-semibold font-mono tabular-nums"
         style={color ? { color } : undefined}
       >
         {value}
@@ -49,14 +49,14 @@ export function MiniBar({ pct, color }: { pct: number; color: string }) {
           <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                fill={k < filled ? color : '#27272a'}
+                fill={k < filled ? color : '#2d2926'}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
             ))}
           </svg>
         )
       })()}
-      <span className="text-xs tabular-nums" style={{ color }}>
+      <span className="text-xs font-mono tabular-nums" style={{ color }}>
         {(clampedPct * 100).toFixed(0)}%
       </span>
     </div>

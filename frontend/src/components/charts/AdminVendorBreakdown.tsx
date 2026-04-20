@@ -52,7 +52,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
               >
                 {v.name}
               </span>
-              <span className="text-text-muted ml-2 shrink-0">
+              <span className="font-mono tabular-nums text-text-muted ml-2 shrink-0">
                 {formatCompactMXN(v.total_mxn)}
               </span>
             </div>
@@ -75,7 +75,7 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
               )
             })()}
             <div className="text-xs text-text-muted mt-0.5">
-              {v.contracts.toLocaleString()} {t('vendorSection.contracts')} &middot; {v.risk_pct.toFixed(0)}% {t('vendorSection.riskScore')}
+              <span className="font-mono tabular-nums">{v.contracts.toLocaleString()}</span> {t('vendorSection.contracts')} &middot; <span className="font-mono tabular-nums">{v.risk_pct.toFixed(0)}%</span> {t('vendorSection.riskScore')}
             </div>
           </div>
         )

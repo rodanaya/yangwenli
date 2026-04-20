@@ -12,10 +12,9 @@ export function StoryTemporalRiskChart() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="w-full bg-zinc-900 rounded-xl p-4 border border-zinc-800"
+      className="w-full bg-zinc-900 rounded-sm p-4 border border-zinc-800"
     >
       {/* Editorial overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">

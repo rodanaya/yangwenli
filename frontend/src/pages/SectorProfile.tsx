@@ -267,7 +267,7 @@ function InstitutionList({
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#27272a'}
+                        fill={k < filled ? color : '#2d2926'}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}
@@ -361,7 +361,7 @@ function VendorTable({
                           <svg viewBox={`0 0 ${N * DG} 5`} className="w-32 mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                             {Array.from({ length: N }).map((_, k) => (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={k < filled ? color : '#27272a'}
+                                fill={k < filled ? color : '#2d2926'}
                                 fillOpacity={k < filled ? 0.85 : 1}
                               />
                             ))}
@@ -458,7 +458,7 @@ function RiskDonut({
                 <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? color : '#27272a'}
+                      fill={k < filled ? color : '#2d2926'}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
@@ -526,7 +526,7 @@ function FactorRankList({
                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? color : '#27272a'}
+                        fill={k < filled ? color : '#2d2926'}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}
@@ -626,7 +626,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
 
   return (
     <div
-      className="rounded-xl border border-white/8 bg-zinc-900/40 p-4"
+      className="rounded-sm border border-white/8 bg-zinc-900/40 p-4"
       aria-label="Procurement Health Index governance grade"
     >
       <div className="flex items-start gap-5">
@@ -697,7 +697,12 @@ function RiskTrendChart({ years }: { years: TimelineYear[] }) {
 
   if (!data.length) {
     return (
-      <p className="text-sm text-zinc-500 py-8 text-center">No risk timeline data available.</p>
+      <div className="py-8 text-center">
+        <p className="text-sm text-text-muted">Sin datos de evolución de riesgo para este sector.</p>
+        <p className="text-[11px] text-text-muted mt-1">
+          Requiere al menos dos años con contratos calificados.
+        </p>
+      </div>
     )
   }
 
@@ -888,7 +893,7 @@ function InvestigationCallout({
 
   return (
     <div
-      className="rounded-xl border border-red-500/25 bg-red-500/5 p-4"
+      className="rounded-sm border border-red-500/25 bg-red-500/5 p-4"
       role="region"
       aria-label={`${cases.length} investigation cases in this sector`}
     >
@@ -950,7 +955,7 @@ function SectorProfileSkeleton() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 px-4 sm:px-6">
       <Skeleton className="h-4 w-32 mt-4" />
-      <div className="rounded-2xl border border-white/8 bg-zinc-900/60 p-6 sm:p-8 space-y-4">
+      <div className="rounded-sm border border-white/8 bg-zinc-900/60 p-6 sm:p-8 space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="flex gap-6">
           <Skeleton className="h-16 w-32" />
@@ -961,7 +966,7 @@ function SectorProfileSkeleton() {
       <div className="flex gap-2">
         {[0,1,2].map((i) => <Skeleton key={i} className="h-9 w-32 rounded-lg" />)}
       </div>
-      <Skeleton className="h-64 w-full rounded-xl" />
+      <Skeleton className="h-64 w-full rounded-sm" />
     </div>
   )
 }
@@ -1180,7 +1185,7 @@ export function SectorProfile() {
       >
         <Link
           to="/sectors"
-          className="inline-flex items-center gap-1.5 text-xs uppercase tracking-[0.15em] text-zinc-500 hover:text-white transition-colors font-semibold"
+          className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           {t('profile.backToSectors')}
@@ -1258,7 +1263,7 @@ export function SectorProfile() {
       <Act number="I" label="EVIDENCIA · ANÁLISIS DEL SECTOR">
       <div>
         <div
-          className="flex gap-1 rounded-xl bg-zinc-900/60 border border-white/8 p-1 mb-6"
+          className="flex gap-1 rounded-sm bg-zinc-900/60 border border-white/8 p-1 mb-6"
           role="tablist"
           aria-label="Sector detail tabs"
         >
@@ -1336,7 +1341,7 @@ export function SectorProfile() {
                 </p>
               </div>
             </div>
-            <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-4">
+            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-4">
               {sector.trends?.length ? (
                 <TrendArea data={sector.trends} color={sectorColor} />
               ) : (
@@ -1363,7 +1368,7 @@ export function SectorProfile() {
                   </p>
                 </div>
               </div>
-              <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-4">
+              <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-4">
                 <RiskTrendChart years={timelineData.years} />
                 <div className="flex items-center gap-4 mt-2 ml-1">
                   <div className="flex items-center gap-1.5">
@@ -1409,7 +1414,7 @@ export function SectorProfile() {
                 </Button>
               </Link>
             </div>
-            <div className="rounded-xl border border-white/8 bg-zinc-900/40">
+            <div className="rounded-sm border border-white/8 bg-zinc-900/40">
               {moneyFlowLoading || institutionsLoading ? (
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1464,7 +1469,7 @@ export function SectorProfile() {
             </div>
           </div>
 
-          <div className="rounded-xl border border-white/8 bg-zinc-900/40 overflow-hidden">
+          <div className="rounded-sm border border-white/8 bg-zinc-900/40 overflow-hidden">
             {vendorsLoading ? (
               <div className="p-4 space-y-3">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -1504,7 +1509,7 @@ export function SectorProfile() {
               {t('profile.riskDistribution')}
             </h2>
             <p className="text-xs text-zinc-400 mb-4">{t('profile.riskDistributionSubtitle')}</p>
-            <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-5">
+            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
               {riskLoading ? (
                 <div className="flex items-center gap-6">
                   <Skeleton className="h-44 w-44 rounded-full flex-shrink-0" />
@@ -1531,7 +1536,7 @@ export function SectorProfile() {
               {t('profile.topRiskFactors')}
             </h2>
             <p className="text-xs text-zinc-400 mb-4">{t('profile.topRiskFactorsSubtitle')}</p>
-            <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-5">
+            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
               {riskFactorsLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1563,7 +1568,7 @@ export function SectorProfile() {
               <p className="text-xs text-zinc-400 mb-4">
                 Gini coefficient — 1.0 = full monopoly, 0 = perfect competition
               </p>
-              <div className="rounded-xl border border-white/8 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
                 <ConcentrationGiniChart history={concentrationHistory.history} />
               </div>
             </section>
@@ -1604,7 +1609,7 @@ export function SectorProfile() {
                   <div
                     key={item.label}
                     className={cn(
-                      'rounded-xl border p-4',
+                      'rounded-sm border p-4',
                       item.warn
                         ? 'border-amber-500/30 bg-amber-500/5'
                         : 'border-white/8 bg-zinc-900/40'

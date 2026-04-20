@@ -64,10 +64,9 @@ export function StoryInfraestructura() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         RUBLI · Infraestructura sin competencia
@@ -156,8 +155,7 @@ export function StoryInfraestructura() {
                 height={BAR_H}
                 fill={COLORS.direct}
                 initial={{ width: 0 }}
-                whileInView={{ width: directW }}
-                viewport={{ once: true }}
+                animate={{ width: directW }}
                 transition={{ duration: 0.6, delay: idx * 0.04 }}
               />
               {/* Single bidder segment */}
@@ -168,8 +166,7 @@ export function StoryInfraestructura() {
                 height={BAR_H}
                 fill={COLORS.single}
                 initial={{ width: 0 }}
-                whileInView={{ width: singleW }}
-                viewport={{ once: true }}
+                animate={{ width: singleW }}
                 transition={{ duration: 0.6, delay: idx * 0.04 + 0.1 }}
               />
               {/* Open tender segment */}
@@ -180,8 +177,7 @@ export function StoryInfraestructura() {
                 height={BAR_H}
                 fill={COLORS.open}
                 initial={{ width: 0 }}
-                whileInView={{ width: openW }}
-                viewport={{ once: true }}
+                animate={{ width: openW }}
                 transition={{ duration: 0.6, delay: idx * 0.04 + 0.2 }}
               />
 
@@ -228,8 +224,7 @@ export function StoryInfraestructura() {
               {annotation && (
                 <motion.g
                   initial={{ opacity: 0, x: 10 }}
-                  whileInView={{ opacity: 1, x: 0 }}
-                  viewport={{ once: true }}
+                  animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 1 + idx * 0.04 }}
                 >
                   <circle
@@ -278,7 +273,7 @@ export function StoryInfraestructura() {
         </text>
       </svg>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

@@ -431,7 +431,7 @@ function CategorySummaryCard({
   const isOECDViolation = category.direct_award_pct > 25
 
   return (
-    <div className="rounded-xl border border-accent/30 bg-accent/[0.03] overflow-hidden">
+    <div className="rounded-sm border border-accent/30 bg-accent/[0.03] overflow-hidden">
       {/* Header bar */}
       <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-accent/20 bg-accent/[0.05]">
         <div className="flex items-center gap-3 min-w-0">
@@ -811,7 +811,7 @@ function SubcategoryPanel({
             return (
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => {
-                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#27272a'
+                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#2d2926'
                   return (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                       fill={fill}
@@ -886,7 +886,7 @@ function SubcategoryPanel({
                             const isTotal = k < totalFilled
                             return (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={isDa ? baseColor : isTotal ? baseColor : '#27272a'}
+                                fill={isDa ? baseColor : isTotal ? baseColor : '#2d2926'}
                                 fillOpacity={isDa ? 0.9 : isTotal ? 0.45 : 1}
                               />
                             )
@@ -1570,7 +1570,13 @@ function DAConcentrationChart({
       .slice(0, 22)
   }, [categories])
 
-  if (!top.length) return <p className="text-text-muted text-sm text-center py-8">Sin datos</p>
+  if (!top.length) return (
+    <div className="py-8 text-center border-t border-amber-900/20">
+      <p className="text-sm font-normal text-text-muted">
+        Sin datos de adjudicación directa para las categorías con suficiente volumen (≥10 contratos).
+      </p>
+    </div>
+  )
 
   const maxDA = Math.max(...top.map(d => d.direct_award_pct), 100)
   const OECD = 25
@@ -1603,7 +1609,7 @@ function DAConcentrationChart({
                 <svg viewBox={`0 0 ${svgW} 14`} className="flex-1 h-3.5" preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={7} r={DR}
-                      fill={i < filled ? dotColor : '#27272a'}
+                      fill={i < filled ? dotColor : '#2d2926'}
                       fillOpacity={i < filled ? 0.72 : 1}
                     />
                   ))}
@@ -1805,7 +1811,9 @@ function TreemapSquarified({
         className="flex items-center justify-center rounded-lg border border-border/30 bg-background-card"
         style={{ height }}
       >
-        <p className="text-xs text-text-muted font-mono">{t('treemap.noData', 'Sin datos')}</p>
+        <p className="text-sm font-normal text-text-muted text-center max-w-xs">
+          {t('treemap.noData', 'Sin datos de categorías disponibles para el filtro seleccionado.')}
+        </p>
       </div>
     )
   }
@@ -2098,7 +2106,7 @@ function SignalNoiseOutliers({
             <button
               key={cat.category_id}
               onClick={() => onSelect(cat.category_id)}
-              className="group text-left rounded-xl border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.07] hover:border-amber-500/40 transition-colors overflow-hidden"
+              className="group text-left rounded-sm border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.07] hover:border-amber-500/40 transition-colors overflow-hidden"
               style={{ borderLeftColor: riskColor, borderLeftWidth: 3 }}
             >
               <div className="p-5">
@@ -2215,7 +2223,7 @@ function VendorConcentrationCallout({
 }) {
   if (loading) {
     return (
-      <div className="rounded-xl border border-border/30 bg-background-card/50 p-5">
+      <div className="rounded-sm border border-border/30 bg-background-card/50 p-5">
         <Skeleton className="h-4 w-1/3 mb-3" />
         <Skeleton className="h-12 w-1/2 mb-4" />
         <div className="space-y-2">
@@ -2242,7 +2250,7 @@ function VendorConcentrationCallout({
 
   return (
     <div
-      className="rounded-xl border overflow-hidden"
+      className="rounded-sm border overflow-hidden"
       style={{
         borderColor: `${pillColor}30`,
         backgroundColor: `${pillColor}08`,
@@ -2880,7 +2888,7 @@ export default function SpendingCategories() {
   if (summaryLoading && !summaryData) {
     return (
       <div className="space-y-8">
-        <Skeleton className="h-32 w-full rounded-xl" />
+        <Skeleton className="h-32 w-full rounded-sm" />
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
             <Skeleton key={i} className="h-28 rounded-lg" />
@@ -3018,7 +3026,7 @@ export default function SpendingCategories() {
             </div>
             <FuentePill source="COMPRANET · 2002–2025" verified={true} />
           </div>
-          <div className="rounded-xl border border-border/30 bg-background-card/50 p-2">
+          <div className="rounded-sm border border-border/30 bg-background-card/50 p-2">
             {summaryLoading ? (
               <ChartSkeleton height={480} />
             ) : (
@@ -3062,7 +3070,7 @@ export default function SpendingCategories() {
             </div>
             <FuentePill source="COMPRANET · 2002–2025" verified={true} />
           </div>
-          <div className="rounded-xl border border-border/30 bg-background-card/50 p-5">
+          <div className="rounded-sm border border-border/30 bg-background-card/50 p-5">
             <CategoryRanking
               categories={allCategories}
               lang={i18n.language}
@@ -3581,7 +3589,7 @@ export default function SpendingCategories() {
                               <div key={i} className="flex items-center gap-2">
                                 <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color ?? '#888' }} />
                                 <span className="text-text-muted/80 truncate max-w-[180px]">{truncate(String(p.name), 30)}</span>
-                                <span className="ml-auto font-semibold tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
+                                <span className="ml-auto font-semibold font-mono tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
                                   {formatCompactMXN(p.value as number)}
                                 </span>
                               </div>

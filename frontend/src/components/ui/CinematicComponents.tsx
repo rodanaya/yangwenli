@@ -66,7 +66,7 @@ export const GlowCard = forwardRef<HTMLDivElement, GlowCardProps>(
     return (
       <motion.div
         ref={ref}
-        className={cn('group relative rounded-xl p-[1px]', className)}
+        className={cn('group relative rounded-sm p-[1px]', className)}
         style={
           {
             ...style,
@@ -82,7 +82,7 @@ export const GlowCard = forwardRef<HTMLDivElement, GlowCardProps>(
       >
         {/* Outer glow pulse on hover */}
         <div
-          className="pointer-events-none absolute inset-0 rounded-xl opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+          className="pointer-events-none absolute inset-0 rounded-sm opacity-0 transition-opacity duration-500 group-hover:opacity-100"
           style={{
             boxShadow: `0 0 40px 4px ${glowColor}40, 0 0 80px 8px ${glowColor}20`,
           }}
@@ -368,8 +368,7 @@ export function ScrollReveal({
       className={className}
       variants={revealVariants[direction]}
       initial="hidden"
-      whileInView="visible"
-      viewport={{ once: true, margin: '-60px' }}
+      animate="visible"
       transition={{ delay }}
     >
       {children}
@@ -538,7 +537,7 @@ export function ProgressReveal({
         <div className="mb-1.5 flex items-center justify-between text-xs text-text-secondary">
           {label && <span>{label}</span>}
           {showValue && (
-            <span className="tabular-nums font-medium" style={{ color }}>
+            <span className="font-mono tabular-nums font-medium" style={{ color }}>
               {clamped.toFixed(1)}%
             </span>
           )}
@@ -560,7 +559,7 @@ export function ProgressReveal({
             <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: Math.max(Number(height) || 10, 10) }} preserveAspectRatio="none" aria-hidden="true">
               {Array.from({ length: N }).map((_, k) => (
                 <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                  fill={k < filled ? color : '#27272a'}
+                  fill={k < filled ? color : '#2d2926'}
                   fillOpacity={k < filled ? 0.85 : 1}
                 />
               ))}

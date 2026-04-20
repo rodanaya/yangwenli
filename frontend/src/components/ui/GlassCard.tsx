@@ -12,7 +12,7 @@ export function GlassCard({ children, className, glow = false, title, headerActi
   return (
     <div
       className={cn(
-        'rounded-xl border border-border/40 bg-surface/60 backdrop-blur-sm',
+        'rounded-sm border border-border/40 bg-surface/60 backdrop-blur-sm',
         glow && 'transition-shadow hover:border-accent/30 hover:shadow-[0_0_20px_rgba(0,0,0,0.15)]',
         className
       )}

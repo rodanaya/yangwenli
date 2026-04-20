@@ -379,7 +379,7 @@ function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
 function DotBar({
   value,
   color,
-  emptyColor = '#2a2420',
+  emptyColor = '#f3f1ec',
   dots = 20,
   size = 7,
   gap = 3,
@@ -406,6 +406,8 @@ function DotBar({
             cy={size / 2}
             r={size / 2}
             fill={i < filled ? color : emptyColor}
+            stroke={i < filled ? undefined : '#e2ddd6'}
+            strokeWidth={i < filled ? 0 : 0.5}
           />
         ))}
       </svg>
@@ -500,7 +502,9 @@ function ComplementaryTypologyCard({
                     cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
                     cy={DOT_SIZE / 2}
                     r={DOT_SIZE / 2}
-                    fill={i < filled ? accent : '#2a2420'}
+                    fill={i < filled ? accent : '#f3f1ec'}
+                    stroke={i < filled ? undefined : '#e2ddd6'}
+                    strokeWidth={i < filled ? 0 : 0.5}
                   />
                 ))}
               </svg>

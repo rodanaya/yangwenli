@@ -508,7 +508,7 @@ export default function CategoryProfile() {
           {[1, 2, 3, 4].map(i => <Skeleton key={i} className="h-24 w-full" />)}
         </div>
       ) : category ? (
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/20 rounded-xl overflow-hidden">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-px bg-border/20 rounded-sm overflow-hidden">
           <div className="bg-background-card px-5 py-4">
             <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-1">{t('profile.kpi.totalAmount')}</p>
             <p className="text-2xl font-mono font-bold text-text-primary leading-tight">
@@ -775,7 +775,9 @@ export default function CategoryProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? vendorRiskColor : '#27272a'}
+                                      fill={k < filled ? vendorRiskColor : '#f3f1ec'}
+                                      stroke={k < filled ? undefined : '#e2ddd6'}
+                                      strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
                                   ))}
@@ -885,7 +887,9 @@ export default function CategoryProfile() {
                               <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                                    fill={k < filled ? color : '#27272a'}
+                                    fill={k < filled ? color : '#f3f1ec'}
+                                    stroke={k < filled ? undefined : '#e2ddd6'}
+                                    strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.7 : 1}
                                   />
                                 ))}

@@ -47,8 +47,13 @@ export function RiskHorizon({
 }: RiskHorizonProps) {
   if (rows.length === 0) {
     return (
-      <div className="flex items-center justify-center h-32 text-xs text-zinc-500">
-        No data
+      <div className="flex flex-col items-center justify-center h-32 px-6 text-center border border-border rounded-sm bg-background-card">
+        <p className="text-sm text-text-muted">
+          Sin datos de riesgo para esta cohorte.
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          El horizonte requiere al menos una fila de valores anuales.
+        </p>
       </div>
     )
   }

@@ -235,7 +235,7 @@ function CustomTooltip({ active, payload, label, visibleSectors }: CustomTooltip
             />
             <span className="text-text-muted truncate">{entry.name}</span>
           </div>
-          <span className="text-text-primary font-semibold tabular-nums flex-shrink-0">
+          <span className="text-text-primary font-semibold font-mono tabular-nums flex-shrink-0">
             {entry.value != null ? `${entry.value.toFixed(1)}%` : '—'}
           </span>
         </div>

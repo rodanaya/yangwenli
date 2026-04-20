@@ -59,7 +59,9 @@ function DotBar({
           cx={i * (size + gap) + size / 2}
           cy={size / 2}
           r={size / 2}
-          fill={i < filled ? color : '#2a2420'}
+          fill={i < filled ? color : '#f3f1ec'}
+          stroke={i < filled ? undefined : '#e2ddd6'}
+          strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
     </svg>

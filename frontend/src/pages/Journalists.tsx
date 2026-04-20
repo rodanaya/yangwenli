@@ -127,7 +127,7 @@ function BreakingStrip() {
                     <svg viewBox={`0 0 ${N * DG} 5`} className="flex-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                          fill={k < filled ? color : '#27272a'}
+                          fill={k < filled ? color : '#2d2926'}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
@@ -158,7 +158,7 @@ function FeaturedStory({ story }: { story: StoryDef }) {
       whileTap={{ scale: 0.99 }}
       onClick={() => navigate(`/stories/${story.slug}`)}
       className={cn(
-        'relative w-full rounded-2xl border border-zinc-800 bg-zinc-900',
+        'relative w-full rounded-sm border border-zinc-800 bg-zinc-900',
         'p-8 sm:p-10 lg:p-12 text-left overflow-hidden group cursor-pointer',
         'transition-colors hover:border-zinc-700'
       )}
@@ -252,7 +252,7 @@ function InvestigationCard({ story, onClick }: { story: StoryDef; onClick: () =>
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'relative bg-zinc-900 border border-zinc-800 rounded-xl text-left w-full',
+        'relative bg-zinc-900 border border-zinc-800 rounded-sm text-left w-full',
         'flex flex-col transition-colors cursor-pointer group overflow-hidden'
       )}
       aria-label={headline}
@@ -363,7 +363,7 @@ export default function Journalists() {
             <span className="text-zinc-700">·</span>
             <span>Investigations · Desk</span>
             <span className="text-zinc-700">·</span>
-            <span className="tabular-nums">v0.6.5</span>
+            <span className="font-mono tabular-nums">v0.6.5</span>
           </div>
 
           {/* Kicker */}
@@ -512,7 +512,7 @@ export default function Journalists() {
         {/* METHODOLOGY FOOTER                                               */}
         {/* ================================================================ */}
         <ScrollReveal className="pb-16">
-          <div className="rounded-2xl border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
+          <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-8 sm:p-10">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-6">
               <div className="max-w-lg">
                 <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-2">

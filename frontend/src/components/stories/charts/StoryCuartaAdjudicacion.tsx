@@ -39,10 +39,9 @@ export function StoryCuartaAdjudicacion() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
         RUBLI · Hallazgo
@@ -102,8 +101,7 @@ export function StoryCuartaAdjudicacion() {
                     strokeWidth={STROKE}
                     strokeLinecap="round"
                     initial={{ pathLength: 0 }}
-                    whileInView={{ pathLength: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ pathLength: 1 }}
                     transition={{ duration: 1.2, delay: i * 0.25, ease: 'easeOut' }}
                   />
                   {/* OECD tick on this ring */}
@@ -151,8 +149,7 @@ export function StoryCuartaAdjudicacion() {
             <motion.div
               key={ring.era}
               initial={{ opacity: 0, x: 10 }}
-              whileInView={{ opacity: 1, x: 0 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, x: 0 }}
               transition={{ duration: 0.4, delay: 0.3 + i * 0.1 }}
               className="border-l-2 pl-3"
               style={{ borderColor: ring.color }}

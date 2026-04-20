@@ -84,7 +84,7 @@ export function AriaMemoPanel({ vendorId, vendorName, tier, className }: AriaMem
   return (
     <div
       className={cn(
-        'bg-background-card border border-border rounded-xl overflow-hidden',
+        'bg-background-card border border-border rounded-sm overflow-hidden',
         className,
       )}
     >

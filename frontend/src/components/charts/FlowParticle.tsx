@@ -113,10 +113,10 @@ export function FlowParticle({
       <line x1={tgtX} y1={pad} x2={tgtX} y2={height - pad} stroke={HAIRLINE_STROKE} />
 
       {/* Column headers */}
-      <text x={srcX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em">
+      <text x={srcX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
         {sourceLabel.toUpperCase()}
       </text>
-      <text x={tgtX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em">
+      <text x={tgtX} y={pad - 4} fill="#71717a" fontSize={8} textAnchor="middle" letterSpacing="0.1em" fontFamily={FONT_MONO}>
         {targetLabel.toUpperCase()}
       </text>
 
@@ -142,6 +142,7 @@ export function FlowParticle({
           fontSize={10}
           textAnchor="end"
           dominantBaseline="middle"
+          fontFamily={FONT_MONO}
         >
           {n.label.slice(0, 20)}
         </text>
@@ -156,6 +157,7 @@ export function FlowParticle({
           fontSize={10}
           textAnchor="start"
           dominantBaseline="middle"
+          fontFamily={FONT_MONO}
         >
           {n.label.slice(0, 20)}
         </text>

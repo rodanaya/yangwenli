@@ -137,7 +137,7 @@ function TierFilterPill({
       </span>
       {loading
         ? <span className="w-6 h-2.5 rounded bg-zinc-700 animate-pulse" />
-        : <span className="tabular-nums">{formatNumber(count)}</span>
+        : <span className="font-mono tabular-nums">{formatNumber(count)}</span>
       }
     </button>
   )
@@ -194,7 +194,7 @@ function TierNavigationRow({
           </div>
         </div>
         <div>
-          <div className="stat-sm tabular-nums text-zinc-200">
+          <div className="stat-sm font-mono tabular-nums text-zinc-200">
             {avgRisk != null ? `${(avgRisk * 100).toFixed(0)}%` : '—'}
           </div>
           <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
@@ -202,7 +202,7 @@ function TierNavigationRow({
           </div>
         </div>
         <div className="hidden sm:block">
-          <div className="stat-sm tabular-nums text-zinc-200">
+          <div className="stat-sm font-mono tabular-nums text-zinc-200">
             {valueAtRisk != null && valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
           </div>
           <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
@@ -247,7 +247,7 @@ function PatternChip({
     >
       <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
       <span className={cn(isActive ? meta.text : 'text-zinc-300')}>{t(`patterns.${pattern}`)}</span>
-      <span className="tabular-nums text-zinc-500">{formatNumber(count)}</span>
+      <span className="font-mono tabular-nums text-zinc-500">{formatNumber(count)}</span>
     </button>
   )
 }
@@ -781,7 +781,7 @@ export default function AriaPage() {
               >
                 {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count != null && (
-                  <span className="tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
+                  <span className="font-mono tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
                 )}
               </button>
               <button

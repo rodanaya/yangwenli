@@ -298,7 +298,7 @@ function StatNumber({ slide, active }: { slide: Slide; active: boolean }) {
     : Math.round(display).toLocaleString()
 
   return (
-    <span className="tabular-nums">
+    <span className="font-mono tabular-nums">
       {slide.statPrefix ?? ''}{formatted}{slide.statSuffix ?? ''}
     </span>
   )
@@ -345,7 +345,7 @@ export default function StoryInfographic() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl border border-zinc-800 bg-zinc-950"
+      className="relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-950"
       style={{ fontFamily: 'var(--font-family-sans)' }}
     >
       {/* Colored top accent line */}

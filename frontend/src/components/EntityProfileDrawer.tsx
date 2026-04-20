@@ -227,13 +227,13 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded bg-background-elevated p-2.5">
             <p className="text-xs text-text-muted mb-0.5">{tCommon('contracts')}</p>
-            <p className="text-sm font-semibold tabular-nums">
+            <p className="text-sm font-semibold font-mono tabular-nums">
               {formatNumber(vendor.total_contracts)}
             </p>
           </div>
           <div className="rounded bg-background-elevated p-2.5">
             <p className="text-xs text-text-muted mb-0.5">{tCommon('totalValue')}</p>
-            <p className="text-sm font-semibold tabular-nums">
+            <p className="text-sm font-semibold font-mono tabular-nums">
               {formatCompactMXN(vendor.total_value_mxn)}
             </p>
           </div>
@@ -423,13 +423,13 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
         <div className="grid grid-cols-2 gap-2">
           <div className="rounded bg-background-elevated p-2.5">
             <p className="text-xs text-text-muted mb-0.5">Contracts</p>
-            <p className="text-sm font-semibold tabular-nums">
+            <p className="text-sm font-semibold font-mono tabular-nums">
               {formatNumber(institution.total_contracts ?? 0)}
             </p>
           </div>
           <div className="rounded bg-background-elevated p-2.5">
             <p className="text-xs text-text-muted mb-0.5">Total Spend</p>
-            <p className="text-sm font-semibold tabular-nums">
+            <p className="text-sm font-semibold font-mono tabular-nums">
               {formatCompactMXN(institution.total_amount_mxn ?? 0)}
             </p>
           </div>

@@ -200,9 +200,9 @@ function ChapterSubject({ vendor, aria, t }: {
             note: t('notes.oecdBenchmark'),
           },
         ].map((s) => (
-          <div key={s.label} className="bg-background border border-border rounded-xl p-5">
+          <div key={s.label} className="bg-background border border-border rounded-sm p-5">
             <p className="editorial-label text-text-muted mb-1">{s.label}</p>
-            <p className="text-2xl font-black text-white tabular-nums">{s.value}</p>
+            <p className="text-2xl font-black text-white font-mono tabular-nums">{s.value}</p>
             <AnnotationNote>{s.note}</AnnotationNote>
           </div>
         ))}
@@ -279,7 +279,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
         </div>
 
         {/* Dot field — one dot per year, spread across timeline */}
-        <div className="relative h-48 bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden px-4 py-2">
+        <div className="relative h-48 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden px-4 py-2">
           {sortedTimeline.map((item, idx) => {
             const xPct = maxYear > minYear ? ((item.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
             const risk = item.avg_risk_score ?? 0
@@ -335,8 +335,8 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
           return (
             <div key={item.year} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
               <p className="text-xs text-zinc-500 mb-1">{item.year}</p>
-              <p className="text-sm font-bold text-white tabular-nums">{formatCompactMXN(item.total_value)}</p>
-              <p className="text-xs mt-0.5 tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
+              <p className="text-sm font-bold text-white font-mono tabular-nums">{formatCompactMXN(item.total_value)}</p>
+              <p className="text-xs mt-0.5 font-mono tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
                 {item.contract_count} · {Math.round(pctHigh)}% risk
               </p>
             </div>
@@ -385,7 +385,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.5 }}
-          className="rounded-xl border p-6 mb-10"
+          className="rounded-sm border p-6 mb-10"
           style={{ backgroundColor: meta.bg, borderColor: meta.color + '44' }}
         >
           <div className="flex items-center gap-3 mb-3">
@@ -422,7 +422,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                     <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                          fill={k < filled ? color : '#27272a'}
+                          fill={k < filled ? color : '#2d2926'}
                           fillOpacity={k < filled ? 0.45 : 0.3}
                         />
                       ))}
@@ -439,7 +439,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                   <div className="min-w-0">
                     <span className="text-sm text-zinc-200">{f.label_en}</span>
                     {f.z_score !== 0 && (
-                      <span className="text-xs text-zinc-500 tabular-nums ml-2">
+                      <span className="text-xs text-zinc-500 font-mono tabular-nums ml-2">
                         z={f.z_score.toFixed(2)}
                       </span>
                     )}
@@ -504,9 +504,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
       </p>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
-        <div className="bg-background border border-border rounded-xl p-6">
+        <div className="bg-background border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.institutionsServed')}</p>
-          <p className="text-2xl font-bold text-white tabular-nums">{formatNumber(vendor.total_institutions)}</p>
+          <p className="text-2xl font-bold text-white font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</p>
           <AnnotationNote>
             {vendor.total_institutions <= 3
               ? t('network.institutionsNote.few')
@@ -516,9 +516,9 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
           </AnnotationNote>
         </div>
 
-        <div className="bg-background border border-border rounded-xl p-6">
+        <div className="bg-background border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.sectorsActive')}</p>
-          <p className="text-2xl font-bold text-white tabular-nums">{vendor.sectors_count}</p>
+          <p className="text-2xl font-bold text-white font-mono tabular-nums">{vendor.sectors_count}</p>
           <AnnotationNote>
             {vendor.sectors_count <= 1
               ? t('network.sectorsNote.single')
@@ -535,7 +535,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
         {coBidders === null ? (
           <div className="space-y-2">
             {[...Array(3)].map((_, i) => (
-              <div key={i} className="h-14 rounded-xl bg-background-elevated animate-pulse" />
+              <div key={i} className="h-14 rounded-sm bg-background-elevated animate-pulse" />
             ))}
           </div>
         ) : coBidders.length === 0 ? (
@@ -548,7 +548,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
                 <li key={cb.vendor_id}>
                   <Link
                     to={`/thread/${cb.vendor_id}`}
-                    className="flex items-center gap-3 bg-background hover:bg-background-elevated border border-border rounded-xl px-4 py-3 transition-colors group"
+                    className="flex items-center gap-3 bg-background hover:bg-background-elevated border border-border rounded-sm px-4 py-3 transition-colors group"
                   >
                     <div className="flex-1 min-w-0">
                       <p
@@ -579,7 +579,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
       {/* CTA to full network graph */}
       <Link
         to={`/network?vendor=${vendorId}`}
-        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-xl p-6 transition-all mb-6"
+        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all mb-6"
       >
         <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-red-950 flex items-center justify-center transition-colors flex-shrink-0">
           <GitBranch className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
@@ -596,7 +596,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
       {/* CTA to vendor profile network tab */}
       <Link
         to={`/vendors/${vendorId}?tab=network`}
-        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-xl p-6 transition-all"
+        className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all"
       >
         <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-red-950 flex items-center justify-center transition-colors flex-shrink-0">
           <Building2 className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
@@ -660,7 +660,7 @@ function ChapterMoney({ timeline, t }: {
       )}
 
       {/* Area chart: contract value over time */}
-      <div ref={ref} className="bg-background border border-border rounded-xl p-6 mb-6">
+      <div ref={ref} className="bg-background border border-border rounded-sm p-6 mb-6">
         <p className="editorial-label text-text-muted mb-4">{t('money.chartValueLabel')}</p>
         <AnimatePresence>
           {inView && (
@@ -696,7 +696,7 @@ function ChapterMoney({ timeline, t }: {
 
       {/* Dot-matrix: avg risk score by year */}
       {chartData.some((d) => d.risk > 0) && (
-        <div className="bg-background border border-border rounded-xl p-6">
+        <div className="bg-background border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-4">{t('money.chartRiskLabel')}</p>
           <RiskHistoryDotMatrix chartData={chartData} />
           <AnnotationNote>
@@ -853,11 +853,11 @@ function ChapterVerdict({
       </p>
 
       {/* Score card */}
-      <div className="bg-background border border-border rounded-2xl p-8 mb-8">
+      <div className="bg-background border border-border rounded-sm p-8 mb-8">
         <div className="flex items-start justify-between mb-6">
           <div>
             <p className="editorial-label text-text-muted mb-2">{t('verdict.riskIndicatorScore')}</p>
-            <p className="font-serif text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor, fontFamily: 'var(--font-family-serif)' }}>
+            <p className="font-mono text-2xl sm:text-3xl font-bold tabular-nums" style={{ color: riskColor }}>
               {((vendor.avg_risk_score ?? 0) * 100).toFixed(1)}
             </p>
             <p className="text-text-muted text-sm mt-1">{t('verdict.outOf100')}</p>
@@ -946,7 +946,7 @@ function ChapterVerdict({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={() => navigate(`/vendors/${vendorId}`)}
-          className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-white font-semibold rounded-xl px-5 py-3.5 transition-colors"
+          className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-white font-semibold rounded-sm px-5 py-3.5 transition-colors"
         >
           <Building2 className="w-4 h-4" />
           {t('verdict.fullVendorProfile')}
@@ -959,7 +959,7 @@ function ChapterVerdict({
             window.print()
             window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
           }}
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-xl px-5 py-3.5 transition-colors border border-border"
+          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
         >
           <Download className="w-4 h-4" />
           {t('verdict.exportPdf')}
@@ -967,7 +967,7 @@ function ChapterVerdict({
 
         <Link
           to="/workspace"
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-xl px-5 py-3.5 transition-colors border border-border"
+          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
         >
           <BookmarkPlus className="w-4 h-4" />
           {t('verdict.addToWorkspace')}
@@ -975,7 +975,7 @@ function ChapterVerdict({
       </div>
 
       {/* Disclaimer */}
-      <div className="mt-10 p-4 bg-background border border-border rounded-xl">
+      <div className="mt-10 p-4 bg-background border border-border rounded-sm">
         <div className="flex items-start gap-3">
           <FileText className="w-4 h-4 text-text-secondary flex-shrink-0 mt-0.5" />
           <p className="text-xs text-text-secondary leading-relaxed">

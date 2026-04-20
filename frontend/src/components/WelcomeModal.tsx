@@ -85,7 +85,7 @@ function RiskBarDemo({ t }: { t: (key: string) => string }) {
               <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? color : '#27272a'}
+                    fill={k < filled ? color : '#2d2926'}
                     fillOpacity={k < filled ? (active ? 1 : 0.35) : 1}
                   />
                 ))}
@@ -153,7 +153,7 @@ function WorkflowDemo({ t }: { t: (key: string) => string }) {
       {steps.map(({ icon: Icon, label }, i) => (
         <div key={label} className="flex items-center gap-1">
           <div className="flex flex-col items-center gap-1.5">
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-accent/10 border border-accent/20">
+            <div className="flex h-10 w-10 items-center justify-center rounded-sm bg-accent/10 border border-accent/20">
               <Icon className="h-4.5 w-4.5 text-accent" />
             </div>
             <span className="text-[10px] text-text-muted text-center leading-tight max-w-[60px]">
@@ -237,7 +237,7 @@ export function WelcomeModal() {
         <div className="py-4">
           {/* Step content */}
           <div className="flex flex-col items-center text-center py-4">
-            <div className={`flex h-16 w-16 items-center justify-center rounded-2xl ${currentStep.bgColor} mb-4 border border-white/5`}>
+            <div className={`flex h-16 w-16 items-center justify-center rounded-sm ${currentStep.bgColor} mb-4 border border-white/5`}>
               <Icon className={`h-8 w-8 ${currentStep.color}`} />
             </div>
             <h3 className="text-lg font-semibold text-[#e6e9f4] mb-2">

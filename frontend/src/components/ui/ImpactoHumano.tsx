@@ -57,7 +57,7 @@ export function ImpactoHumano({ amountMxn, className }: ImpactoHumanoProps) {
         <div key={i} className="flex items-baseline gap-1.5 text-text-secondary">
           <span className="text-amber-500">&rarr;</span>
           <span>
-            <span className="font-semibold text-text-primary tabular-nums">
+            <span className="font-semibold text-text-primary font-mono tabular-nums">
               {c.count.toLocaleString()}
             </span>{' '}
             {t(c.labelKey)}

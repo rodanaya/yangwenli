@@ -356,7 +356,7 @@ function HeroImpactSection({
                     aria-hidden="true"
                   />
                   <span className="font-mono font-bold" style={{ color }}>{label}</span>
-                  <span className="tabular-nums">{entry.count_pct.toFixed(1)}%</span>
+                  <span className="font-mono tabular-nums">{entry.count_pct.toFixed(1)}%</span>
                 </span>
               )
             })}
@@ -391,7 +391,7 @@ function HeroSection({
   return (
     <section className="mb-10">
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-sm overflow-hidden"
         style={{
           border: `1px solid ${mx.border}`,
           borderLeftWidth: 6,
@@ -521,7 +521,7 @@ function OECDContextPanel({ national }: { national: PHINational }) {
 
   return (
     <section className="mb-10">
-      <div className="rounded-xl border border-cyan-500/20 bg-cyan-500/5 p-5">
+      <div className="rounded-sm border border-cyan-500/20 bg-cyan-500/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-cyan-400 mb-3">
           {t('oecdContextTitle')}
         </p>
@@ -639,7 +639,7 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
                 aria-hidden="true"
               />
               <span className="font-mono font-bold" style={{ color: RISK_LEVEL_COLORS[key] }}>{label}</span>
-              <span className="tabular-nums">{entry.value_pct.toFixed(0)}%</span>
+              <span className="font-mono tabular-nums">{entry.value_pct.toFixed(0)}%</span>
             </span>
           )
         })}
@@ -752,7 +752,7 @@ function WhatThisMeans({
       <h2 className="text-lg font-serif font-bold mb-4 text-zinc-100">
         {t('whatThisMeansTitle')}
       </h2>
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-3">
           HALLAZGO
         </p>
@@ -882,7 +882,7 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                         <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : '#27272a'}
+                              fill={k < filled ? color : '#2d2926'}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
                           ))}

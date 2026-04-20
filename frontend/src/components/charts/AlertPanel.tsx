@@ -46,9 +46,12 @@ export const AlertPanel = memo(function AlertPanel({
 
   if (displayedAnomalies.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-8 text-text-muted">
+      <div className="flex flex-col items-center justify-center py-8 px-6 text-center text-text-muted">
         <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-        <p className="text-sm">No anomalies detected</p>
+        <p className="text-sm">No se detectaron anomalías activas.</p>
+        <p className="text-[11px] text-text-muted mt-1">
+          El modelo v0.6.5 no encontró señales por encima del umbral crítico para este filtro.
+        </p>
       </div>
     )
   }

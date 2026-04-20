@@ -332,7 +332,7 @@ export default function InstitutionsTab() {
       {/* Filters bar */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-2">
-          <p className="text-xs text-text-muted tabular-nums" aria-live="polite">
+          <p className="text-xs text-text-muted font-mono tabular-nums" aria-live="polite">
             {data
               ? t('institutions.count', { n: formatNumber(data?.pagination?.total ?? 0) })
               : tc('loading')}
@@ -540,7 +540,7 @@ export default function InstitutionsTab() {
       {/* Pagination */}
       {data && (data?.pagination?.total_pages ?? 0) > 1 && (
         <div className="flex items-center justify-between">
-          <p className="text-xs text-text-muted tabular-nums">
+          <p className="text-xs text-text-muted font-mono tabular-nums">
             {(filters.page! - 1) * filters.per_page! + 1}-
             {Math.min(filters.page! * filters.per_page!, data.pagination?.total ?? 0)} of{' '}
             {formatNumber(data.pagination?.total ?? 0)}
@@ -556,7 +556,7 @@ export default function InstitutionsTab() {
             >
               <ChevronLeft className="h-3.5 w-3.5" />
             </Button>
-            <span className="text-xs text-text-muted tabular-nums px-1">
+            <span className="text-xs text-text-muted font-mono tabular-nums px-1">
               {filters.page}/{data.pagination?.total_pages ?? 1}
             </span>
             <Button
@@ -713,14 +713,14 @@ function ValueConcentrationAlerts() {
 
                         {/* Total value */}
                         <td className="px-3 py-2 text-right hidden sm:table-cell">
-                          <span className="tabular-nums text-text-primary">
+                          <span className="font-mono tabular-nums text-text-primary">
                             {formatCompactMXN(row.vendor_value)}
                           </span>
                         </td>
 
                         {/* Risk score */}
                         <td className="px-3 py-2 text-right hidden md:table-cell">
-                          <span className="tabular-nums font-semibold" style={{ color: riskColor }}>
+                          <span className="font-mono tabular-nums font-semibold" style={{ color: riskColor }}>
                             {(row.avg_risk_score * 100).toFixed(0)}%
                           </span>
                         </td>
@@ -778,7 +778,7 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
     <tr className="hover:bg-accent/[0.04] transition-colors group" {...prefetch}>
       {/* Rank */}
       <td className="px-2 py-2 text-center">
-        <span className="text-xs tabular-nums text-text-muted">{rank}</span>
+        <span className="text-xs font-mono tabular-nums text-text-muted">{rank}</span>
       </td>
 
       {/* Institution name + type icon + sector */}
@@ -828,14 +828,14 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
 
       {/* Contracts */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs tabular-nums text-text-primary font-medium">
+        <span className="text-xs font-mono tabular-nums text-text-primary font-medium">
           {formatNumber(institution.total_contracts || 0)}
         </span>
       </td>
 
       {/* Spending */}
       <td className="px-3 py-2 text-right">
-        <span className="text-xs tabular-nums text-text-primary font-medium">
+        <span className="text-xs font-mono tabular-nums text-text-primary font-medium">
           {formatCompactMXN(institution.total_amount_mxn || 0)}
         </span>
       </td>
@@ -852,14 +852,14 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
                 <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : '#27272a'}
+                      fill={k < filled ? riskColor : '#2d2926'}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
                 </svg>
               )
             })()}
-            <span className="text-xs tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
+            <span className="text-xs font-mono tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(institution.avg_risk_score * 100).toFixed(0)}%
             </span>
           </div>
@@ -875,21 +875,21 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
 
       {/* Single Bid % */}
       <td className="px-3 py-2 text-right hidden xl:table-cell">
-        <span className="text-xs tabular-nums" style={{ color: sbColor }}>
+        <span className="text-xs font-mono tabular-nums" style={{ color: sbColor }}>
           {sbPct < 1 && sbPct > 0 ? `${sbPct.toFixed(1)}%` : `${sbPct.toFixed(0)}%`}
         </span>
       </td>
 
       {/* Flagged % */}
       <td className="px-3 py-2 text-right hidden lg:table-cell">
-        <span className="text-xs tabular-nums font-medium" style={{ color: hrColor }}>
+        <span className="text-xs font-mono tabular-nums font-medium" style={{ color: hrColor }}>
           {hrPct < 1 && hrPct > 0 ? `${hrPct.toFixed(1)}%` : `${hrPct.toFixed(0)}%`}
         </span>
       </td>
 
       {/* Vendor count */}
       <td className="px-3 py-2 text-right hidden xl:table-cell">
-        <span className="text-xs tabular-nums text-text-primary">
+        <span className="text-xs font-mono tabular-nums text-text-primary">
           {institution.vendor_count != null ? formatNumber(institution.vendor_count) : '-'}
         </span>
       </td>

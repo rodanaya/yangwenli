@@ -148,19 +148,19 @@ export default function ContractDetail() {
           {contract.contract_number && (
             <>
               <span className="text-zinc-700">·</span>
-              <span className="text-zinc-300 tabular-nums">{contract.contract_number}</span>
+              <span className="text-zinc-300 font-mono tabular-nums">{contract.contract_number}</span>
             </>
           )}
           {contract.risk_model_version && (
             <>
               <span className="text-zinc-700">·</span>
-              <span className="tabular-nums">{contract.risk_model_version}</span>
+              <span className="font-mono tabular-nums">{contract.risk_model_version}</span>
             </>
           )}
           {contract.contract_year && (
             <>
               <span className="text-zinc-700">·</span>
-              <span className="tabular-nums">{contract.contract_year}</span>
+              <span className="font-mono tabular-nums">{contract.contract_year}</span>
             </>
           )}
         </div>
@@ -308,7 +308,7 @@ export default function ContractDetail() {
           <Section overline="Finding · Risk Assessment" title="What the model sees">
             <div className="space-y-6">
               {/* Risk score bar */}
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
                 <div className="flex items-baseline justify-between mb-3">
                   <div className="flex items-baseline gap-3">
                     <span
@@ -336,7 +336,9 @@ export default function ContractDetail() {
                     <svg viewBox={`0 0 ${totalW} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                          fill={k < filled ? riskPalette.color : '#27272a'}
+                          fill={k < filled ? riskPalette.color : '#f3f1ec'}
+                          stroke={k < filled ? undefined : '#e2ddd6'}
+                          strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
@@ -520,7 +522,7 @@ export default function ContractDetail() {
           {/* ----- Description ----- */}
           {contract.description && (
             <Section overline="Record · Description" title="Object of the contract">
-              <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
                 <p
                   className="text-[15px] text-zinc-300 leading-relaxed"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
@@ -761,7 +763,7 @@ function AnomalyScoreCard({
 }) {
   const isAiConfirmed = isHighRisk && score >= 0.5
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-4">
       <div className="flex items-baseline justify-between mb-3">
         <div>
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-0.5">
@@ -804,7 +806,9 @@ function AnomalyScoreCard({
           <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                fill={k < filled ? color : '#27272a'}
+                fill={k < filled ? color : '#f3f1ec'}
+                stroke={k < filled ? undefined : '#e2ddd6'}
+                strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
             ))}
@@ -861,7 +865,7 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
       : 'Within standard publication window'
 
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-5">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {delay != null && (
           <div>
@@ -915,7 +919,7 @@ function SidebarCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-4">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-zinc-500 mb-3">
         {overline}
       </p>
@@ -940,7 +944,7 @@ function IdRow({ label, value }: { label: string; value: string }) {
         className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-zinc-100 group"
         title="Copy to clipboard"
       >
-        <span className="tabular-nums">{value}</span>
+        <span className="font-mono tabular-nums">{value}</span>
         <Copy className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400" />
       </button>
     </div>

@@ -195,7 +195,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         {/* Spend + sparkline row */}
         <div className="flex items-end justify-between gap-2">
           <div>
-            <p className="text-2xl font-black tabular-nums text-white leading-none">
+            <p className="text-2xl font-black font-mono tabular-nums text-white leading-none">
               {formatSpend(sector.total_value_mxn)}
             </p>
             <p className="text-[11px] text-zinc-400 mt-0.5">
@@ -600,9 +600,9 @@ export function Sectors() {
             <span className="text-zinc-700">·</span>
             <span>Sectores</span>
             <span className="text-zinc-700">·</span>
-            <span className="tabular-nums">COMPRANET 2002–2025</span>
+            <span className="font-mono tabular-nums">COMPRANET 2002–2025</span>
             <span className="text-zinc-700">·</span>
-            <span className="tabular-nums">v0.6.5</span>
+            <span className="font-mono tabular-nums">v0.6.5</span>
           </div>
           <p className="text-kicker text-kicker--investigation mb-3">
             {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
@@ -639,9 +639,9 @@ export function Sectors() {
                 <span className="text-white font-black">12</span>{' '}
                 <span className="text-zinc-500">{t('statCards.sectorsTracked').toLowerCase()}</span>
                 <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
-                <span className="text-white font-black tabular-nums">{formatSpend(totalValue)}</span>
+                <span className="text-white font-black font-mono tabular-nums">{formatSpend(totalValue)}</span>
                 <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
-                <span className="text-white font-black tabular-nums">{formatNumber(totalContracts)}</span>{' '}
+                <span className="text-white font-black font-mono tabular-nums">{formatNumber(totalContracts)}</span>{' '}
                 <span className="text-zinc-500">{t('statCards.totalContracts').toLowerCase()}</span>
               </p>
             )}
@@ -668,7 +668,7 @@ export function Sectors() {
                 <>
                   <span style={{ color: topSectorColor }}>{topSectorName}</span>
                   {' '}{t('featured.leadsRisk')}{' '}
-                  <span className="tabular-nums">{topRiskPct}%</span>
+                  <span className="font-mono tabular-nums">{topRiskPct}%</span>
                   {' '}{t('featured.avgRiskSuffix')}
                 </>
               }
@@ -728,7 +728,7 @@ export function Sectors() {
         {error && (
           <div
             role="alert"
-            className="rounded-xl border border-red-500/30 bg-red-500/10 p-6 text-center text-sm text-red-400"
+            className="rounded-sm border border-red-500/30 bg-red-500/10 p-6 text-center text-sm text-red-400"
           >
             {t('page.failedToLoad')}
           </div>
@@ -738,7 +738,7 @@ export function Sectors() {
         {!error && (
           <>
             {!isLoading && sorted.length === 0 && (
-              <div className="rounded-xl border border-border/30 bg-background-elevated/20 p-10 text-center text-sm text-text-muted">
+              <div className="rounded-sm border border-border/30 bg-background-elevated/20 p-10 text-center text-sm text-text-muted">
                 {t('emptyState.noFoundDesc', { name: t('page.title', 'sectors') })}
               </div>
             )}

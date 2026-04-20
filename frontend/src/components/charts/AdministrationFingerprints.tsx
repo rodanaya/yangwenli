@@ -171,7 +171,7 @@ function AdminRadarPanel({ admin }: { admin: (typeof ADMIN_DATA)[0] }) {
   const data = buildRadarData(admin)
 
   return (
-    <div className="flex flex-col items-center rounded-xl border border-zinc-800 bg-zinc-900/60 p-4 gap-2">
+    <div className="flex flex-col items-center rounded-sm border border-zinc-800 bg-zinc-900/60 p-4 gap-2">
       {/* Title */}
       <div className="text-center">
         <p className="text-sm font-bold text-zinc-100 leading-tight">{admin.shortName}</p>
@@ -235,7 +235,7 @@ function InsightCard({
   color: string
 }) {
   return (
-    <div className="flex flex-col gap-1 rounded-xl border border-zinc-800 bg-zinc-900/60 p-4">
+    <div className="flex flex-col gap-1 rounded-sm border border-zinc-800 bg-zinc-900/60 p-4">
       <p className="text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-[0.15em]">{label}</p>
       <p className="text-base font-bold font-mono" style={{ color }}>
         {value}

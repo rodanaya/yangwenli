@@ -26,7 +26,7 @@ export function StatCard({
   return (
     <motion.div
       className={cn(
-        'rounded-xl border border-border/30 bg-card p-4 transition-all duration-200',
+        'rounded-sm border border-border/30 bg-card p-4 transition-all duration-200',
         onClick && 'cursor-pointer hover:border-border/60 hover:bg-background-elevated/10',
         className
       )}
@@ -35,29 +35,29 @@ export function StatCard({
       whileTap={{ scale: 0.98 }}
     >
       <div className="flex items-start justify-between mb-3">
-        <span className="text-xs text-text-muted uppercase tracking-wider">
+        <span className="text-[10px] font-semibold text-text-muted uppercase tracking-widest leading-[1.3]">
           {title}
         </span>
         {Icon && <Icon className="h-4 w-4 text-text-muted/50" />}
       </div>
       <div
-        className="text-2xl font-bold font-mono text-text-primary"
+        className="text-2xl font-bold font-mono tabular-nums text-text-primary"
         style={accentColor !== '#06b6d4' ? { color: accentColor } : undefined}
       >
         {typeof value === 'number' ? value.toLocaleString(getLocale()) : value}
       </div>
       {subtitle && (
-        <div className="text-xs text-text-muted mt-1">{subtitle}</div>
+        <div className="text-xs text-text-muted mt-1 leading-[1.4]">{subtitle}</div>
       )}
       {trend && (
         <div
           className={cn(
-            'text-xs mt-2',
+            'text-xs font-mono tabular-nums mt-2',
             trend.value >= 0 ? 'text-emerald-400' : 'text-red-400'
           )}
         >
           {trend.value >= 0 ? '↑' : '↓'} {Math.abs(trend.value).toFixed(1)}%{' '}
-          {trend.label}
+          <span className="font-sans text-text-muted">{trend.label}</span>
         </div>
       )}
     </motion.div>

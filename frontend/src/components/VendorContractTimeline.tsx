@@ -207,7 +207,9 @@ export default function VendorContractTimeline({
         role="status"
         aria-label="No contract data available"
       >
-        <p className="text-sm text-text-muted">No contract data available</p>
+        <p className="text-sm font-normal text-text-muted max-w-sm text-center px-4">
+          Este proveedor no tiene contratos en el período seleccionado.
+        </p>
       </div>
     )
   }

@@ -21,7 +21,7 @@ const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() /
 // Risk color ramp — dark-mode optimized (transparent for no data, zinc-800 base)
 // Breakpoints aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
 function riskToColor(risk: number): string {
-  if (risk === 0) return '#27272a'    // zinc-800 — no data
+  if (risk === 0) return '#2d2926'    // zinc-800 — no data
   if (risk < 0.15) return '#166534'   // green-800 — low
   if (risk < 0.25) return '#365314'   // lime-800 — low/medium boundary
   if (risk < 0.40) return '#713f12'   // amber-900 — medium
@@ -111,7 +111,7 @@ export function RiskCalendarHeatmap() {
                       style={{
                         width: CELL_W,
                         height: CELL_H,
-                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#27272a',
+                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#2d2926',
                         outline: isDecember ? '1px solid #71717a' : 'none',
                         outlineOffset: -1,
                       }}
@@ -161,7 +161,7 @@ export function RiskCalendarHeatmap() {
       <div className="mt-3 flex items-center gap-2">
         <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">Risk:</span>
         {[
-          { label: 'None', color: '#27272a' },
+          { label: 'None', color: '#2d2926' },
           { label: 'Low', color: RISK_COLORS.low },
           { label: 'Medium', color: RISK_COLORS.medium },
           { label: 'High', color: RISK_COLORS.high },

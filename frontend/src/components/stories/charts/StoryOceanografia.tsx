@@ -54,8 +54,7 @@ export function StoryOceanografia() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -99,7 +98,7 @@ export function StoryOceanografia() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -156,8 +155,7 @@ export function StoryOceanografia() {
                   fill={isArrest ? '#dc2626' : '#a16207'}
                   fillOpacity={isArrest ? 0.9 : 0.75}
                   initial={{ height: 0, y: PAD_T + CHART_H }}
-                  whileInView={{ height: barH, y }}
-                  viewport={{ once: true }}
+                  animate={{ height: barH, y }}
                   transition={{ duration: 0.6, delay: i * 0.05, ease: [0.22, 1, 0.36, 1] }}
                 />
                 {/* Contract count above bar */}
@@ -223,7 +221,7 @@ export function StoryOceanografia() {
         </svg>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

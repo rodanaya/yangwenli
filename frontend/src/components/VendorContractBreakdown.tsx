@@ -235,8 +235,13 @@ export function VendorContractBreakdown({
               Procedure Type
             </span>
             {procedureData.length === 0 ? (
-              <div className="h-44 flex items-center justify-center text-xs text-text-muted">
-                No data
+              <div className="h-44 flex flex-col items-center justify-center px-4 text-center">
+                <p className="text-xs text-text-muted">
+                  Sin registros de tipo de procedimiento.
+                </p>
+                <p className="text-[10px] text-text-muted mt-1">
+                  Dato faltante en COMPRANET para este proveedor.
+                </p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={176}>
@@ -287,8 +292,13 @@ export function VendorContractBreakdown({
               Risk Distribution
             </span>
             {riskData.length === 0 ? (
-              <div className="h-44 flex items-center justify-center text-xs text-text-muted">
-                No data
+              <div className="h-44 flex flex-col items-center justify-center px-4 text-center">
+                <p className="text-xs text-text-muted">
+                  Sin puntuaciones de riesgo v0.6.5.
+                </p>
+                <p className="text-[10px] text-text-muted mt-1">
+                  Contratos sin features z-score en el modelo actual.
+                </p>
               </div>
             ) : (
               <ResponsiveContainer width="100%" height={176}>

@@ -63,7 +63,7 @@ export const StatCard = memo(function StatCard({
       }
     >
       <CardContent className="p-4">
-        <p className="text-xs font-bold tracking-wider uppercase text-text-muted font-mono mb-1.5">
+        <p className="text-[10px] font-semibold tracking-widest uppercase text-text-muted leading-[1.3] mb-1.5">
           {label}
         </p>
         {loading ? (
@@ -71,7 +71,7 @@ export const StatCard = memo(function StatCard({
         ) : (
           <p
             className={cn(
-              'text-2xl md:text-3xl font-black tabular-nums tracking-tight leading-none',
+              'text-2xl md:text-3xl font-bold font-mono tabular-nums tracking-tight leading-none',
               color,
             )}
           >
@@ -158,7 +158,7 @@ export const PageHero = memo(function PageHero({
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           {icon}
-          <span className="text-xs font-bold tracking-wider uppercase text-accent font-mono">
+          <span className="text-[10px] font-semibold tracking-widest uppercase text-accent leading-[1.3]">
             {trackingLabel}
           </span>
         </div>
@@ -168,10 +168,10 @@ export const PageHero = memo(function PageHero({
         <Skeleton className="h-14 w-96" />
       ) : (
         <div>
-          <p className="text-4xl md:text-5xl font-black text-text-primary tracking-tight leading-none">
+          <p className="text-4xl md:text-5xl font-bold font-mono tabular-nums text-text-primary tracking-[-0.02em] leading-[1.05]">
             {headline}
           </p>
-          <p className="text-lg text-text-muted mt-1 font-medium">{subtitle}</p>
+          <p className="text-lg text-text-secondary mt-2 font-normal leading-[1.4]">{subtitle}</p>
         </div>
       )}
       {detail && (

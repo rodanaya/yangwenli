@@ -13,8 +13,7 @@ export function StoryRiskCalendar() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -52,7 +51,7 @@ export function StoryRiskCalendar() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
         <RiskCalendarHeatmap />
       </div>
 

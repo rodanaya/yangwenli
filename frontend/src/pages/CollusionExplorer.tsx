@@ -380,7 +380,7 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
           const pos = positions.get(n.id)
           if (!pos) return null
           const isInst = n.kind === 'institution'
-          const fill = isInst ? '#27272a' : (n.risk ? RISK_FILL[n.risk] : '#fbbf24')
+          const fill = isInst ? '#2d2926' : (n.risk ? RISK_FILL[n.risk] : '#fbbf24')
           const stroke = isInst ? '#71717a' : caseData.color
           const r = isInst ? 11 : 7
           return (
@@ -450,7 +450,7 @@ function DotBar({
   value,
   max = 1,
   color = '#dc2626',
-  emptyColor = '#2a2420',
+  emptyColor = '#f3f1ec',
   dots = 20,
   size = 6,
   gap = 2,
@@ -475,6 +475,8 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : emptyColor}
+          stroke={i < filled ? undefined : '#e2ddd6'}
+          strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
     </svg>
@@ -670,7 +672,7 @@ function RingCanvas({
   return (
     <svg
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      className="w-full rounded-xl bg-zinc-950/70 border border-zinc-800/80"
+      className="w-full rounded-sm bg-zinc-950/70 border border-zinc-800/80"
       style={{ maxHeight: 520 }}
       role="group"
       aria-label={isEs ? 'Mapa visual de anillos de colusión' : 'Visual map of collusion rings'}
@@ -827,7 +829,7 @@ function RingCanvasSkeleton() {
   return (
     <svg
       viewBox="0 0 640 324"
-      className="w-full rounded-xl bg-zinc-950/70 border border-zinc-800/80"
+      className="w-full rounded-sm bg-zinc-950/70 border border-zinc-800/80"
       style={{ maxHeight: 340 }}
       aria-hidden="true"
     >
@@ -865,7 +867,7 @@ function RingDetailPanel({
   const sortedPairs = [...ring.pairs].sort((a, b) => b.co_bid_rate - a.co_bid_rate)
 
   return (
-    <div className="mt-4 rounded-xl border border-zinc-700/60 bg-zinc-900/80 p-5 animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="mt-4 rounded-sm border border-zinc-700/60 bg-zinc-900/80 p-5 animate-in fade-in slide-in-from-top-2 duration-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
@@ -1030,7 +1032,7 @@ function Filters({
   const { t } = useTranslation('collusion')
 
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-xl border border-zinc-800 bg-zinc-900/40">
+    <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-sm border border-zinc-800 bg-zinc-900/40">
       <label className="flex items-center gap-2 cursor-pointer select-none">
         <div className="relative inline-flex items-center">
           <input
@@ -1241,7 +1243,7 @@ function ConnectionRow({
 function EmptyState() {
   const { t } = useTranslation('collusion')
   return (
-    <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-8 text-center">
+    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-8 text-center">
       <Users className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
       <p className="text-sm font-semibold text-zinc-300 mb-1">{t('empty.title')}</p>
       <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">{t('empty.body')}</p>
@@ -1252,7 +1254,7 @@ function EmptyState() {
 function ErrorState() {
   const { t } = useTranslation('collusion')
   return (
-    <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-8 text-center">
+    <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-8 text-center">
       <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-3" aria-hidden="true" />
       <p className="text-sm font-semibold text-red-300 mb-1">{t('error.title')}</p>
       <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">{t('error.body')}</p>
@@ -1488,7 +1490,7 @@ export default function CollusionExplorer() {
               <div className="flex items-center gap-1.5">
                 <span
                   className="inline-block"
-                  style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#27272a', border: '1px solid #71717a' }}
+                  style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#2d2926', border: '1px solid #71717a' }}
                 />
                 {isEs ? 'Institución' : 'Institution'}
               </div>
@@ -1536,7 +1538,7 @@ export default function CollusionExplorer() {
               {ringsLoading ? (
                 <RingCanvasSkeleton />
               ) : rings.length === 0 ? (
-                <div className="rounded-xl border border-zinc-800 bg-zinc-900/40 p-8 text-center">
+                <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-8 text-center">
                   <p className="text-sm text-zinc-400">
                     {isEs
                       ? 'No se detectaron anillos con ≥3 miembros en los datos actuales.'
@@ -1567,7 +1569,7 @@ export default function CollusionExplorer() {
               )}
 
               {/* Pattern legend — compact, inline */}
-              <div className="mt-5 rounded-xl border border-zinc-800/70 bg-zinc-900/30 p-4">
+              <div className="mt-5 rounded-sm border border-zinc-800/70 bg-zinc-900/30 p-4">
                 <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600 mb-3">
                   {isEs ? 'LEYENDA DE PATRONES' : 'PATTERN LEGEND'}
                 </p>
@@ -1719,7 +1721,7 @@ export default function CollusionExplorer() {
             label={isEs ? 'METODOLOGÍA' : 'METHODOLOGY'}
             title={isEs ? 'Cómo construimos los anillos.' : 'How we build the rings.'}
           >
-            <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-4">
+            <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mb-4">
               <p className="text-sm text-zinc-200 leading-relaxed mb-3">
                 <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-amber-400 block mb-2">
                   {isEs ? 'HALLAZGO' : 'FINDING'}
@@ -1754,7 +1756,7 @@ export default function CollusionExplorer() {
                 <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                 {t('methodology.title')}
               </summary>
-              <div className="mt-3 rounded-xl border border-zinc-800 bg-zinc-900/30 p-5">
+              <div className="mt-3 rounded-sm border border-zinc-800 bg-zinc-900/30 p-5">
                 <p className="text-sm text-zinc-400 leading-relaxed">{t('methodology.body')}</p>
               </div>
             </details>

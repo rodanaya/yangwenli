@@ -284,7 +284,7 @@ function PullQuote({
   return (
     <blockquote className="my-3 pl-5 py-1" style={{ borderLeft: '2px solid var(--color-accent)' }}>
       <div
-        className="tabular-nums leading-none"
+        className="font-mono tabular-nums leading-none"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
@@ -682,7 +682,7 @@ export function Methodology() {
               <span className="text-zinc-700">·</span>
               <span>{t('kicker')}</span>
               <span className="text-zinc-700">·</span>
-              <span className="tabular-nums">v0.6.5</span>
+              <span className="font-mono tabular-nums">v0.6.5</span>
             </div>
             <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>
             <h1
@@ -1362,21 +1362,21 @@ export function Methodology() {
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
                   <div>
-                    <span className="text-lg font-bold tabular-nums text-risk-critical">5</span>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-critical">5</span>
                     <span className="text-xs text-text-muted ml-1.5">High Impact</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-high/5 border border-risk-high/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-high" />
                   <div>
-                    <span className="text-lg font-bold tabular-nums text-risk-high">5</span>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-high">5</span>
                     <span className="text-xs text-text-muted ml-1.5">Medium Impact</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-medium/5 border border-risk-medium/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-medium" />
                   <div>
-                    <span className="text-lg font-bold tabular-nums text-risk-medium">4</span>
+                    <span className="text-lg font-bold font-mono tabular-nums text-risk-medium">4</span>
                     <span className="text-xs text-text-muted ml-1.5">Low Impact</span>
                   </div>
                 </div>

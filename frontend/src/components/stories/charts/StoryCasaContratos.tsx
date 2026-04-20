@@ -56,7 +56,7 @@ export function StoryCasaContratos() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -100,7 +100,7 @@ export function StoryCasaContratos() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -129,7 +129,7 @@ export function StoryCasaContratos() {
                 strokeOpacity={0.35}
                 strokeWidth={1 + (v.contracts / maxContracts) * 3}
                 initial={{ pathLength: 0, opacity: 0 }}
-                whileInView={{ pathLength: 1, opacity: 0.6 }}
+                animate={{ pathLength: 1, opacity: 0.6 }}
                 transition={{ duration: 0.6, delay: 0.3 + i * 0.1 }}
               />
             )
@@ -155,7 +155,7 @@ export function StoryCasaContratos() {
               <motion.g
                 key={v.name}
                 initial={{ opacity: 0, scale: 0.3 }}
-                whileInView={{ opacity: 1, scale: 1 }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.6 + i * 0.1, type: 'spring', stiffness: 120 }}
               >
                 {/* Pulsing ring on high-risk */}
@@ -221,7 +221,7 @@ export function StoryCasaContratos() {
           {/* Center institution */}
           <motion.g
             initial={{ opacity: 0, scale: 0.5 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.6 }}
           >
             <circle cx={CX} cy={CY} r={54} fill="#1e3a5f" fillOpacity={0.5} stroke="#3b82f6" strokeWidth={1.5} />
@@ -269,7 +269,7 @@ export function StoryCasaContratos() {
         </svg>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

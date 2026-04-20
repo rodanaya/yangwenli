@@ -114,7 +114,7 @@ export function RacingBarChart() {
       {/* Header with year + admin badge */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <span className="text-4xl font-black tabular-nums text-text-primary">{currentYear}</span>
+          <span className="text-4xl font-black font-mono tabular-nums text-text-primary">{currentYear}</span>
           <span
             className="text-xs font-semibold px-2 py-1 rounded-full text-white"
             style={{ backgroundColor: adminColor }}
@@ -176,7 +176,7 @@ export function RacingBarChart() {
                       />
                     ))}
                   </svg>
-                  <span className="text-[10px] tabular-nums text-text-muted whitespace-nowrap">
+                  <span className="text-[10px] font-mono tabular-nums text-text-muted whitespace-nowrap">
                     {formatCompactMXN(entry.value)}
                   </span>
                 </div>

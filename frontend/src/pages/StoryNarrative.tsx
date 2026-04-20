@@ -224,7 +224,7 @@ function ChapterSection({
                 <ChartComponent />
               ) : (
                 <div
-                  className="bg-zinc-900 rounded-xl p-6 text-zinc-500 text-sm text-center"
+                  className="bg-zinc-900 rounded-sm p-6 text-zinc-500 text-sm text-center"
                   role="img"
                   aria-label={chapter.chartConfig.title}
                 >
@@ -566,8 +566,7 @@ function RelatedSection({ story }: { story: StoryDef }) {
         <motion.div
           variants={staggerContainer}
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, margin: '-50px' }}
+          animate="animate"
           className="grid grid-cols-1 md:grid-cols-3 gap-4"
         >
           {related.slice(0, 3).map((r) => (

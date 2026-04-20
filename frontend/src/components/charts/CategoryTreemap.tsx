@@ -140,7 +140,7 @@ export function CategoryTreemap({ categories = [], height = 480, lang }: Props) 
           levels: [
             {
               itemStyle: {
-                borderColor: '#27272a',
+                borderColor: '#2d2926',
                 borderWidth: 0,
                 gapWidth: 2,
               },
@@ -165,10 +165,19 @@ export function CategoryTreemap({ categories = [], height = 480, lang }: Props) 
   if (!data.length) {
     return (
       <div
-        className="flex items-center justify-center border border-border/30 rounded-lg bg-background-card"
+        className="flex flex-col items-center justify-center border border-border rounded-sm bg-background-card px-6 text-center"
         style={{ height: `${height}px` }}
       >
-        <p className="text-xs text-text-muted font-mono">{lang === 'en' ? 'No category data' : 'Sin datos de categorías'}</p>
+        <p className="text-sm text-text-muted">
+          {lang === 'en'
+            ? 'No category spending data for this view.'
+            : 'Sin datos de gasto por categoría para esta vista.'}
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          {lang === 'en'
+            ? 'Select a sector or administration with active contracts.'
+            : 'Selecciona un sector o administración con contratos activos.'}
+        </p>
       </div>
     )
   }

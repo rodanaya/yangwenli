@@ -599,7 +599,7 @@ export function Investigation() {
                 priorityFilter === chip.key ? 'ring-1 ring-current' : ''
               )}
             >
-              <span className="font-bold tabular-nums">{chip.count}</span>
+              <span className="font-bold font-mono tabular-nums">{chip.count}</span>
               <span>{chip.label}</span>
             </button>
           ))}
@@ -632,7 +632,7 @@ export function Investigation() {
               >
                 {Icon && <Icon className="h-3 w-3" />}
                 {pill.label}
-                <span className="text-text-muted/50 tabular-nums ml-0.5">{count}</span>
+                <span className="text-text-muted/50 font-mono tabular-nums ml-0.5">{count}</span>
               </button>
             )
           })}
@@ -939,7 +939,7 @@ function CaseTableRow({
       {/* Evidence count (vendor count as proxy) */}
       <td className="px-3 py-3 whitespace-nowrap">
         <div className="flex items-center gap-1.5">
-          <span className="text-xs text-text-muted tabular-nums">
+          <span className="text-xs text-text-muted font-mono tabular-nums">
             {evidenceCount > 0 ? (
               <span className="text-text-secondary font-medium">{evidenceCount}</span>
             ) : (

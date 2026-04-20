@@ -229,8 +229,8 @@ export function VendorContractRiskMatrix({
         )}
       >
         <AlertTriangle className="text-text-muted mb-2" size={24} />
-        <p className="text-sm text-text-muted text-center">
-          Risk scores not available for this vendor's contracts
+        <p className="text-sm font-normal text-text-muted text-center max-w-sm">
+          No hay puntuaciones de riesgo disponibles para los contratos de este proveedor en el período analizado.
         </p>
       </div>
     )

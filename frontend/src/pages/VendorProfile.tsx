@@ -38,7 +38,6 @@ import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution
 import {
   AreaChart,
   Area,
-  Bar,
   ComposedChart,
   Line,
   XAxis,
@@ -200,7 +199,7 @@ function PlainLanguageRiskCard({
   ]
 
   return (
-    <div className="bg-amber-950/20 border border-amber-500/20 rounded-xl p-4">
+    <div className="bg-amber-950/20 border border-amber-500/20 rounded-sm p-4">
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
@@ -563,7 +562,16 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
   }, [waterfallData])
 
   if (topFactors.length === 0) {
-    return <p className="text-xs text-text-muted">No contributing risk factors found.</p>
+    return (
+      <div>
+        <p className="text-xs text-text-muted">
+          Sin factores de riesgo que expliquen la puntuación.
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          Todos los z-scores están dentro de rangos normales para su sector.
+        </p>
+      </div>
+    )
   }
 
   const maxScore = Math.max(...topFactors.map((f) => f.score), 0.01)
@@ -588,7 +596,7 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
               <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                    fill={k < filled ? color : '#27272a'}
+                    fill={k < filled ? color : '#2d2926'}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
                 ))}
@@ -639,7 +647,7 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? '#dc2626' : '#27272a'}
+                      fill={k < filled ? '#dc2626' : '#2d2926'}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
@@ -667,7 +675,7 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                     <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                          fill={k < filled ? '#10b981' : '#27272a'}
+                          fill={k < filled ? '#10b981' : '#2d2926'}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
@@ -1279,7 +1287,7 @@ export function VendorProfile() {
 
         return (
           <div
-            className="rounded-xl border px-5 py-4 mb-1"
+            className="rounded-sm border px-5 py-4 mb-1"
             style={{ borderColor: `${borderColor}50`, background: bgColor }}
           >
             {/* Header row */}
@@ -2016,7 +2024,7 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                    fill={k < filled ? '#ea580c' : '#27272a'}
+                                    fill={k < filled ? '#ea580c' : '#2d2926'}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
                                 ))}
@@ -2083,11 +2091,11 @@ export function VendorProfile() {
                   />
                   <div className="flex justify-between text-sm">
                     <span className="text-text-muted">{t('cards.avgContract')}</span>
-                    <span className="font-medium tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
+                    <span className="font-medium font-mono tabular-nums">{formatCompactMXN(vendor.avg_contract_value || 0)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-text-muted">{t('cards.sectors')}</span>
-                    <span className="font-medium tabular-nums">{String(vendor.sectors_count || 0)}</span>
+                    <span className="font-medium font-mono tabular-nums">{String(vendor.sectors_count || 0)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -2182,7 +2190,7 @@ export function VendorProfile() {
                         <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                              fill={k < filled ? '#f59e0b' : '#27272a'}
+                              fill={k < filled ? '#f59e0b' : '#2d2926'}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
                           ))}
@@ -2230,7 +2238,7 @@ export function VendorProfile() {
                                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                     {Array.from({ length: N }).map((_, k) => (
                                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                        fill={k < filled ? '#10b981' : '#27272a'}
+                                        fill={k < filled ? '#10b981' : '#2d2926'}
                                         fillOpacity={k < filled ? 0.85 : 1}
                                       />
                                     ))}
@@ -2301,7 +2309,14 @@ export function VendorProfile() {
                         )}
                       </div>
                     ) : (
-                      <p className="text-xs text-text-muted">No pattern insights available for this vendor.</p>
+                      <div>
+                        <p className="text-xs text-text-muted">
+                          Sin análisis de patrones para este proveedor.
+                        </p>
+                        <p className="text-[11px] text-text-muted mt-1">
+                          El resumen LLM se genera solo para proveedores ARIA T1–T2.
+                        </p>
+                      </div>
                     )}
                 </CardContent>
               </Card>
@@ -2333,7 +2348,7 @@ export function VendorProfile() {
                             </span>
                           </div>
                           {s.contract_count != null && (
-                            <span className="text-xs text-text-muted tabular-nums shrink-0 ml-2">
+                            <span className="text-xs text-text-muted font-mono tabular-nums shrink-0 ml-2">
                               {s.contract_count} contracts
                             </span>
                           )}
@@ -2757,7 +2772,7 @@ export function VendorProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? sectorColor : '#27272a'}
+                                      fill={k < filled ? sectorColor : '#2d2926'}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
                                   ))}
@@ -2823,7 +2838,7 @@ export function VendorProfile() {
                                 return (
                                   <div className="chart-tooltip">
                                     <p className="font-medium text-zinc-200">{d.year}</p>
-                                    <p className="text-zinc-400 tabular-nums">{(d.avg * 100).toFixed(1)}%</p>
+                                    <p className="text-zinc-400 font-mono tabular-nums">{(d.avg * 100).toFixed(1)}%</p>
                                   </div>
                                 )
                               }
@@ -2944,14 +2959,15 @@ export function VendorProfile() {
                             }}
                           />
                           <RechartsLegend wrapperStyle={{ fontSize: 9 }} />
-                          <Bar
+                          <Area
                             yAxisId="left"
+                            type="monotone"
                             dataKey="contract_count"
                             name={tc('contracts')}
+                            stroke={riskColor}
+                            strokeWidth={1}
                             fill={riskColor}
-                            fillOpacity={0.45}
-                            radius={[2, 2, 0, 0]}
-                            maxBarSize={20}
+                            fillOpacity={0.18}
                           />
                           <Line
                             yAxisId="right"
@@ -3035,11 +3051,11 @@ export function VendorProfile() {
                                     <div className="chart-tooltip space-y-0.5">
                                       <p className="font-medium text-zinc-200">{d.year}</p>
                                       <p className="text-zinc-400">
-                                        Value: <span className="text-zinc-200 tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
+                                        Value: <span className="text-zinc-200 font-mono tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
                                       </p>
                                       {d.win_rate != null && (
                                         <p className="text-zinc-400">
-                                          Win rate: <span className="text-zinc-200 tabular-nums">{d.win_rate}%</span>
+                                          Win rate: <span className="text-zinc-200 font-mono tabular-nums">{d.win_rate}%</span>
                                         </p>
                                       )}
                                     </div>
@@ -3048,13 +3064,15 @@ export function VendorProfile() {
                                 return null
                               }}
                             />
-                            <Bar
+                            <Area
                               yAxisId="left"
+                              type="monotone"
                               dataKey="total_value_m"
                               name="Value (M MXN)"
+                              stroke="var(--color-accent-data)"
+                              strokeWidth={1}
                               fill="var(--color-accent-data)"
-                              fillOpacity={0.5}
-                              radius={[2, 2, 0, 0]}
+                              fillOpacity={0.2}
                             />
                             <Line
                               yAxisId="right"
@@ -3704,7 +3722,7 @@ export function VendorProfile() {
                       {' '}mostrados de{' '}
                       <span className="font-medium text-text-secondary">{contractTotal.toLocaleString()}</span>
                       {' '}contratos — Total pagina:{' '}
-                      <span className="font-medium text-text-secondary tabular-nums">{formatCompactMXN(filteredTotalValue)}</span>
+                      <span className="font-medium text-text-secondary font-mono tabular-nums">{formatCompactMXN(filteredTotalValue)}</span>
                     </span>
                     <button
                       onClick={exportContractsCSV}
@@ -3738,11 +3756,21 @@ export function VendorProfile() {
                     </div>
                   </ScrollArea>
                 ) : (contracts?.data?.length ?? 0) > 0 ? (
-                  <div className="p-8 text-center text-text-muted text-sm">
-                    No contracts match the current filters.
+                  <div className="py-8 text-center border-t border-amber-900/20">
+                    <p className="text-sm font-normal text-text-muted">
+                      {i18n.language.startsWith('en')
+                        ? 'No contracts match the current filters for this vendor.'
+                        : 'Ningún contrato coincide con los filtros actuales para este proveedor.'}
+                    </p>
                   </div>
                 ) : (
-                  <div className="p-8 text-center text-text-muted">{t('cards.noContractsFound')}</div>
+                  <div className="py-8 text-center border-t border-amber-900/20">
+                    <p className="text-sm font-normal text-text-muted">
+                      {i18n.language.startsWith('en')
+                        ? 'This vendor has no contracts in the selected period.'
+                        : 'Este proveedor no tiene contratos en el período seleccionado.'}
+                    </p>
+                  </div>
                 )}
               </CardContent>
 
@@ -3926,7 +3954,7 @@ export function VendorProfile() {
                                       {Array.from({ length: N }).map((_, k) => {
                                         const fill = k < thisFilled ? '#22c55e'
                                           : k < partnerEnd ? partnerColor
-                                          : '#27272a'
+                                          : '#2d2926'
                                         return (
                                           <circle key={k} cx={k * DG + DR} cy={4} r={DR}
                                             fill={fill}
@@ -4007,7 +4035,7 @@ export function VendorProfile() {
                             <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1">
                               {t('network.closedTriangles')}
                             </p>
-                            <p className="text-xl font-bold tabular-nums text-text-primary">
+                            <p className="text-xl font-bold font-mono tabular-nums text-text-primary">
                               {vendor.cobid_triangle_count.toLocaleString()}
                             </p>
                             <p className="text-[10px] text-text-muted mt-0.5">
@@ -4148,7 +4176,7 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                    fill={k < filled ? dim.color : '#27272a'}
+                                    fill={k < filled ? dim.color : '#2d2926'}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
                                 ))}
@@ -4183,7 +4211,7 @@ export function VendorProfile() {
                                     <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                                       {Array.from({ length: N }).map((_, k) => (
                                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                          fill={k < filled ? '#f59e0b' : '#27272a'}
+                                          fill={k < filled ? '#f59e0b' : '#2d2926'}
                                           fillOpacity={k < filled ? 0.85 : 1}
                                         />
                                       ))}
@@ -4409,7 +4437,7 @@ function RiskGauge({
           />
         </svg>
         <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <span className="stat-hero tabular-nums" style={score >= 0.40 ? { color: color, textShadow: `0 0 20px ${color}60` } : undefined}>{percentage}</span>
+          <span className="stat-hero font-mono tabular-nums" style={score >= 0.40 ? { color: color, textShadow: `0 0 20px ${color}60` } : undefined}>{percentage}</span>
           <span className="text-xs text-text-muted">/ 100</span>
         </div>
       </div>
@@ -4428,12 +4456,12 @@ function RiskGauge({
       <div className="mt-3 space-y-1 text-center">
         {riskPercentile != null && (
           <p className="text-xs text-text-muted">
-            Higher than <span className="font-medium text-text-secondary tabular-nums">{riskPercentile.toFixed(0)}%</span> of vendors
+            Higher than <span className="font-medium text-text-secondary font-mono tabular-nums">{riskPercentile.toFixed(0)}%</span> of vendors
           </p>
         )}
         {riskVsSectorAvg != null && (
           <p className="text-xs text-text-muted">
-            <span className={`font-medium tabular-nums ${riskVsSectorAvg > 0 ? 'text-risk-high' : 'text-risk-low'}`}>
+            <span className={`font-medium font-mono tabular-nums ${riskVsSectorAvg > 0 ? 'text-risk-high' : 'text-risk-low'}`}>
               {riskVsSectorAvg > 0 ? '+' : ''}{(riskVsSectorAvg * 100).toFixed(1)}
             </span>
             {' '}vs sector avg
@@ -4452,7 +4480,14 @@ function RiskGauge({
 
 function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: number; percentage: number }> }) {
   if (factors.length === 0) {
-    return <p className="text-sm text-text-muted">No risk factors triggered</p>
+    return (
+      <div>
+        <p className="text-sm text-text-muted">Sin banderas de riesgo disparadas.</p>
+        <p className="text-[11px] text-text-muted mt-1">
+          Los contratos de este proveedor no activaron los 8 indicadores v0.6.5.
+        </p>
+      </div>
+    )
   }
 
   return (
@@ -4464,7 +4499,7 @@ function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: n
           <div key={f.factor} title={f.factor}>
             <div className="flex justify-between text-xs mb-1.5">
               <span className="text-text-secondary">{parsed.label}</span>
-              <span className="text-text-muted tabular-nums">{f.count} ({f.percentage.toFixed(1)}%)</span>
+              <span className="text-text-muted font-mono tabular-nums">{f.count} ({f.percentage.toFixed(1)}%)</span>
             </div>
             <AnimatedFill
               pct={Math.min(f.percentage, 100)}
@@ -4489,7 +4524,7 @@ function PatternBar({ label, value, isPercent100 = false }: { label: string; val
     <div>
       <div className="flex justify-between text-sm mb-1">
         <span className="text-text-muted">{label}</span>
-        <span className={`font-medium tabular-nums ${isHigh ? 'text-risk-high' : 'text-text-secondary'}`}>
+        <span className={`font-medium font-mono tabular-nums ${isHigh ? 'text-risk-high' : 'text-text-secondary'}`}>
           {displayPct.toFixed(1)}%
         </span>
       </div>
@@ -4506,7 +4541,7 @@ function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
     <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
       <span className="text-sm text-text-muted">{label}</span>
-      <span className="font-medium tabular-nums">{value}</span>
+      <span className="font-medium font-mono tabular-nums">{value}</span>
     </div>
   )
 }
@@ -4534,7 +4569,7 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
                   <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                        fill={k < filled ? '#22d3ee' : '#27272a'}
+                        fill={k < filled ? '#22d3ee' : '#2d2926'}
                         fillOpacity={k < filled ? 0.4 : 0.3}
                       />
                     ))}
@@ -4552,8 +4587,8 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
               </Link>
             </div>
             <div className="text-right relative z-10 flex-shrink-0">
-              <p className="text-sm font-medium tabular-nums">{formatCompactMXN(inst.total_value_mxn)}</p>
-              <p className="text-xs text-text-muted tabular-nums">{inst.contract_count} contracts</p>
+              <p className="text-sm font-medium font-mono tabular-nums">{formatCompactMXN(inst.total_value_mxn)}</p>
+              <p className="text-xs text-text-muted font-mono tabular-nums">{inst.contract_count} contracts</p>
             </div>
           </div>
         )
@@ -4588,7 +4623,7 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
         </div>
       </div>
       <div className="flex items-center gap-3 flex-shrink-0">
-        <p className="text-sm font-medium tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
+        <p className="text-sm font-medium font-mono tabular-nums">{formatCompactMXN(contract.amount_mxn)}</p>
         {contract.risk_score !== undefined && contract.risk_score !== null && (
           <RiskBadge score={contract.risk_score} />
         )}
@@ -5122,7 +5157,12 @@ function PeriodistaPanel({
             })()}
           </div>
         ) : (
-          <p className="text-sm text-text-muted">No se pudo obtener la narrativa.</p>
+          <div>
+            <p className="text-sm text-text-muted">No se pudo generar la narrativa.</p>
+            <p className="text-[11px] text-text-muted mt-1">
+              El servicio LLM está temporalmente fuera de línea — los datos estructurados siguen disponibles.
+            </p>
+          </div>
         )}
       </div>
 
@@ -5135,7 +5175,7 @@ function PeriodistaPanel({
         {casesLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-xl" />
+              <Skeleton key={i} className="h-32 w-full rounded-sm" />
             ))}
           </div>
         ) : similarCases && similarCases.length > 0 ? (
@@ -5143,7 +5183,7 @@ function PeriodistaPanel({
             {similarCases.slice(0, 3).map((sc) => (
               <div
                 key={sc.case_id}
-                className="bg-background-elevated border border-border rounded-xl p-4 space-y-2"
+                className="bg-background-elevated border border-border rounded-sm p-4 space-y-2"
               >
                 <p className="font-semibold text-text-primary text-sm">{sc.case_name}</p>
                 <div className="flex items-center gap-2 flex-wrap">
@@ -5188,7 +5228,7 @@ function PeriodistaPanel({
           <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
             Parrafo para periodista
           </h3>
-          <div className="bg-background-elevated border border-border rounded-xl p-5">
+          <div className="bg-background-elevated border border-border rounded-sm p-5">
             <p className="text-sm text-text-secondary leading-relaxed mb-4">
               {ledeParagraph}
             </p>

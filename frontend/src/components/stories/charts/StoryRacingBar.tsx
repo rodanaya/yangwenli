@@ -58,8 +58,7 @@ export function StoryRacingBar() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -96,7 +95,7 @@ export function StoryRacingBar() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -129,8 +128,7 @@ export function StoryRacingBar() {
               strokeOpacity={0.4}
               strokeWidth={1}
               initial={{ pathLength: 0 }}
-              whileInView={{ pathLength: 1 }}
-              viewport={{ once: true }}
+              animate={{ pathLength: 1 }}
               transition={{ duration: 0.8, delay: 0.3 + i * 0.1 }}
             />
           ))}
@@ -145,8 +143,7 @@ export function StoryRacingBar() {
               <motion.g
                 key={v.name}
                 initial={{ opacity: 0, scale: 0 }}
-                whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
+                animate={{ opacity: 1, scale: 1 }}
                 transition={{ duration: 0.5, delay: 0.15 + i * 0.12 }}
               >
                 <circle

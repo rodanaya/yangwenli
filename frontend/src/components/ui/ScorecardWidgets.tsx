@@ -104,7 +104,7 @@ export function PillarBar({
     <div className="space-y-1">
       <div className="flex items-center justify-between text-[11px]" style={{ color: 'var(--color-text-secondary)' }}>
         <span>{label}</span>
-        <span className="font-medium tabular-nums">{score.toFixed(0)}/{maxScore}</span>
+        <span className="font-medium font-mono tabular-nums">{score.toFixed(0)}/{maxScore}</span>
       </div>
       {(() => {
         const N = 22, DR = 2, DG = 5
@@ -113,7 +113,7 @@ export function PillarBar({
           <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                fill={k < filled ? color : '#27272a'}
+                fill={k < filled ? color : '#2d2926'}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
             ))}
@@ -153,14 +153,14 @@ export function VendorScorecardCard({ sc }: { sc: VendorScorecardData }) {
     { label: 'Alertas Ext.',score: sc.pillar_flags,       max: 15 },
   ]
   return (
-    <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: c.border, backgroundColor: c.bg + '40' }}>
+    <div className="rounded-sm border p-4 space-y-3" style={{ borderColor: c.border, backgroundColor: c.bg + '40' }}>
       <div className="flex items-center gap-3">
         <GradeBadge10 grade={sc.grade} size="lg" />
         <div>
           <div className="text-xs font-semibold" style={{ color: c.text }}>
             {sc.grade_label}
           </div>
-          <div className="text-lg font-bold tabular-nums" style={{ color: c.text }}>
+          <div className="text-lg font-bold font-mono tabular-nums" style={{ color: c.text }}>
             {sc.total_score.toFixed(0)}<span className="text-xs font-normal opacity-70">/100</span>
           </div>
           <div className="text-[11px] opacity-60">
@@ -210,14 +210,14 @@ export function InstitutionScorecardCard({ sc }: { sc: InstitutionScorecardData 
     { label: 'Alertas Ext.',  score: sc.pillar_external, max: 20 },
   ]
   return (
-    <div className="rounded-xl border p-4 space-y-3" style={{ borderColor: c.border, backgroundColor: c.bg + '40' }}>
+    <div className="rounded-sm border p-4 space-y-3" style={{ borderColor: c.border, backgroundColor: c.bg + '40' }}>
       <div className="flex items-center gap-3">
         <GradeBadge10 grade={sc.grade} size="lg" />
         <div>
           <div className="text-xs font-semibold" style={{ color: c.text }}>
             {sc.grade_label}
           </div>
-          <div className="text-lg font-bold tabular-nums" style={{ color: c.text }}>
+          <div className="text-lg font-bold font-mono tabular-nums" style={{ color: c.text }}>
             {sc.total_score.toFixed(0)}<span className="text-xs font-normal opacity-70">/100</span>
           </div>
           <div className="text-[11px] opacity-60">

@@ -125,7 +125,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                   </InfoRow>
 
                   <InfoRow icon={DollarSign} label={t('detail.amount')}>
-                    <span className="font-medium tabular-nums">
+                    <span className="font-medium font-mono tabular-nums">
                       {formatCompactMXN(contract.amount_mxn)}
                     </span>
                     <span className="text-text-muted ml-1.5 text-xs">
@@ -257,7 +257,7 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                               {Array.from({ length: N }).map((_, k) => (
                                 <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? color : '#27272a'}
+                                  fill={k < filled ? color : '#2d2926'}
                                   fillOpacity={k < filled ? 0.85 : 1}
                                 />
                               ))}

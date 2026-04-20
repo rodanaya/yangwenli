@@ -80,7 +80,7 @@ export function StoryCard(props: StoryCardProps) {
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'relative bg-zinc-900 border border-zinc-800 rounded-xl p-5 text-left w-full',
+        'relative bg-zinc-900 border border-zinc-800 rounded-sm p-5 text-left w-full',
         'flex flex-col gap-3 transition-colors cursor-pointer group overflow-hidden'
       )}
       aria-label={headline}

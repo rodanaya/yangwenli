@@ -32,9 +32,9 @@ export function StoryHemoserSplitting() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-900 border border-zinc-800 p-5"
+      className="rounded-sm bg-zinc-900 border border-zinc-800 p-5"
     >
       {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">

@@ -164,7 +164,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
     return (
       <div>
         <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
-          <span className="text-xs text-text-muted tabular-nums">
+          <span className="text-xs text-text-muted font-mono tabular-nums">
             Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} vendors · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
           </span>
           <div className="flex items-center gap-3 text-[11px] text-text-muted">
@@ -231,7 +231,7 @@ export function ResultsTable({ filters, page, onPageChange }: ResultsTableProps)
   return (
     <div>
       <div className="flex items-center justify-between mb-1.5 flex-wrap gap-2">
-        <span className="text-xs text-text-muted tabular-nums">
+        <span className="text-xs text-text-muted font-mono tabular-nums">
           Showing {rangeStart}–{rangeEnd} of {formatNumber(pagination.total)} institutions · sorted by {sortLabels[sortField]} {sortOrder === 'desc' ? '↓' : '↑'}
         </span>
         <div className="flex items-center gap-3 text-[11px] text-text-muted">
@@ -328,7 +328,7 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
                     <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                          fill={k < filled ? color : '#27272a'}
+                          fill={k < filled ? color : '#2d2926'}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
@@ -534,7 +534,12 @@ function InlineDossierTrigger({
                 <Loader2 className="h-3.5 w-3.5 animate-spin text-text-muted" />
               </div>
             ) : activeDossiers.length === 0 ? (
-              <p className="text-xs text-text-muted px-3 py-2 text-center">No dossiers yet</p>
+              <div className="px-3 py-3 text-center">
+                <p className="text-xs text-text-muted">Aún no hay dossiers abiertos.</p>
+                <p className="text-[10px] text-text-muted mt-0.5">
+                  Crea el primero para agrupar esta investigación.
+                </p>
+              </div>
             ) : (
               activeDossiers.map((d: DossierSummary) => {
                 const isOk = success === d.id

@@ -298,8 +298,8 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
             <span key={tier.key} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
               <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
-              <span className="tabular-nums text-zinc-500">{count}</span>
-              <span className="tabular-nums text-zinc-600">({pct}%)</span>
+              <span className="font-mono tabular-nums text-zinc-500">{count}</span>
+              <span className="font-mono tabular-nums text-zinc-600">({pct}%)</span>
             </span>
           )
         })}
@@ -718,7 +718,9 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
                   <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : '#27272a'}
+                        fill={k < filled ? barColor : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}
@@ -1012,7 +1014,7 @@ export default function InstitutionLeague() {
             </div>
             {/* Tier distribution bar */}
             {statsData.grade_distribution && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-xl px-5 py-4">
+              <div className="bg-zinc-900 border border-zinc-800 rounded-sm px-5 py-4">
                 <TierDistributionBar distribution={statsData.grade_distribution} />
               </div>
             )}
@@ -1191,7 +1193,7 @@ export default function InstitutionLeague() {
           )}
 
           {!isLoading && !isError && items.length === 0 && (
-            <div className="rounded-xl border border-zinc-800 bg-zinc-900/50 p-8 text-center">
+            <div className="rounded-sm border border-zinc-800 bg-zinc-900/50 p-8 text-center">
               <p className="text-zinc-400 text-sm">{t('empty')}</p>
               <p className="text-zinc-600 text-xs mt-1">
                 {t('filters.adjustFilters')}
@@ -1200,7 +1202,7 @@ export default function InstitutionLeague() {
           )}
 
           {items.length > 0 && (
-            <div className="overflow-x-auto rounded-xl border border-zinc-800">
+            <div className="overflow-x-auto rounded-sm border border-zinc-800">
               <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
                   <tr className="border-b border-zinc-800 bg-zinc-900/80">
@@ -1283,7 +1285,7 @@ export default function InstitutionLeague() {
                         style={{ borderLeft: `4px solid ${tier.color}` }}
                       >
                         {/* Rank — large bold mono */}
-                        <td className="px-3 py-3 tabular-nums text-right w-16">
+                        <td className="px-3 py-3 font-mono tabular-nums text-right w-16">
                           <div className="flex items-center justify-end gap-1.5">
                             {isTopMedalist && (
                               <Crown
@@ -1488,7 +1490,7 @@ function StatCard({
     <Wrapper
       onClick={onClick}
       className={`
-        bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3 text-left
+        bg-zinc-900 border border-zinc-800 rounded-sm px-4 py-3 text-left
         ${onClick ? 'hover:border-zinc-600 cursor-pointer transition-colors' : ''}
       `}
     >

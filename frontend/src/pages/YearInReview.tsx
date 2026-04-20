@@ -134,7 +134,7 @@ function HeroBannerStats({
 
   return (
     <div
-      className="relative overflow-hidden rounded-xl"
+      className="relative overflow-hidden rounded-sm"
       style={{ background: 'linear-gradient(160deg, #1a1310 0%, #110e0c 60%, #0d0b09 100%)' }}
     >
       {/* Crimson atmospheric glow at top */}
@@ -168,7 +168,7 @@ function HeroBannerStats({
           transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
         >
           <span
-            className="block text-[60px] sm:text-[80px] font-black leading-none tabular-nums text-white"
+            className="block text-[60px] sm:text-[80px] font-black leading-none font-mono tabular-nums text-white"
             style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.04em' }}
           >
             {year}
@@ -192,7 +192,7 @@ function HeroBannerStats({
           {stats.map((s) => (
             <motion.div key={s.label} variants={staggerItem} className="flex flex-col items-center gap-1">
               <span
-                className="text-xl sm:text-2xl font-black tabular-nums leading-none"
+                className="text-xl sm:text-2xl font-black font-mono tabular-nums leading-none"
                 style={{ color: s.color, fontFamily: 'var(--font-family-serif)' }}
               >
                 {s.value}
@@ -1333,7 +1333,7 @@ export default function YearInReview() {
           />
 
           {/* Year selector */}
-          <div className="relative overflow-hidden rounded-xl border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
+          <div className="relative overflow-hidden rounded-sm border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
             <div className="flex items-center gap-2 flex-wrap">
               <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
               <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
@@ -1585,7 +1585,7 @@ export default function YearInReview() {
 
           {/* Full sector distribution (ALL 12) */}
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
               {t('sectorAll.sectionLabel')}
             </p>
             <p
@@ -1615,7 +1615,7 @@ export default function YearInReview() {
 
           {/* Sector growth — diverging chart */}
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
               {t('sectorGrowthFull.sectionLabel')}
             </p>
             <p
@@ -1647,7 +1647,7 @@ export default function YearInReview() {
           {/* Risk Evolution */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
                 {t('riskEvolution.sectionLabel')}
               </p>
               <p
@@ -1667,7 +1667,7 @@ export default function YearInReview() {
           {/* Procedure Type */}
           {yearRow && yoyData.length > 0 && (
             <div>
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
                 {t('procedureType.sectionLabel')}
               </p>
               <p
@@ -1688,7 +1688,7 @@ export default function YearInReview() {
 
           {/* Monthly spending */}
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
               {t('monthly.sectionLabel')}
             </p>
             <p
@@ -1716,7 +1716,7 @@ export default function YearInReview() {
           {/* Spotlight — top vendor */}
           {topVendor && !vendorsLoading && (
             <motion.div variants={fadeIn} initial="initial" animate="animate">
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-3">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-3">
                 {t('spotlight.label')}
               </p>
               <div
@@ -1768,7 +1768,7 @@ export default function YearInReview() {
 
           {/* Top 20 Vendors */}
           <div>
-            <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold mb-1">
+            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
               {t('topVendorsFull.sectionLabel')}
             </p>
             <p
@@ -1799,7 +1799,7 @@ export default function YearInReview() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <AlertTriangle className="h-3.5 w-3.5 text-red-400" aria-hidden="true" />
-              <p className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
                 {t('notableRisks.sectionLabel')}
               </p>
             </div>

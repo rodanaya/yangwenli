@@ -381,7 +381,7 @@ function VerdictHeader({
     <div className="mb-10">
       {/* Section label */}
       <div className="h-px bg-border mb-4" />
-      <span className="text-xs uppercase tracking-[0.2em] text-text-muted font-semibold">
+      <span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
         {t('verdict.section')}
       </span>
 
@@ -630,7 +630,7 @@ function VerdictCallout({
       className="mt-10 border rounded-lg p-6 bg-zinc-900/60"
       style={{ borderColor: `${borderColor}40`, borderTopWidth: '3px', borderTopColor: borderColor }}
     >
-      <p className="text-xs tracking-[0.2em] uppercase text-text-muted font-semibold mb-2">
+      <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
         {t('verdict.title')}
       </p>
       <h3

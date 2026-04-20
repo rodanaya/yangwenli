@@ -94,9 +94,9 @@ export function StoryNuevosRicos() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
         RUBLI · Cohortes de proveedores
@@ -193,7 +193,7 @@ export function StoryNuevosRicos() {
             stroke={ERA_COLORS[p.era]}
             strokeWidth={1}
             initial={{ opacity: 0, scale: 0 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.3, delay: 0.1 + i * 0.03 }}
           />
         ))}
@@ -203,7 +203,7 @@ export function StoryNuevosRicos() {
           <motion.g
             key={c.era}
             initial={{ opacity: 0, scale: 0 }}
-            whileInView={{ opacity: 1, scale: 1 }}
+            animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.5, delay: 0.8 + i * 0.15 }}
           >
             <circle

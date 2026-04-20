@@ -72,7 +72,8 @@ const PATTERNS: Pattern[] = [
 
 export function PatternTypology() {
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+    <div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
       {PATTERNS.map((p) => {
         const isFlagship = p.key === 'co_bidding'
         const barPct = Math.min(100, p.pct * 2) // 50% → full bar
@@ -120,7 +121,7 @@ export function PatternTypology() {
                 <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                      fill={i < filled ? p.color : '#2a2522'}
+                      fill={i < filled ? p.color : '#2d2926'}
                       fillOpacity={i < filled ? 0.85 : 1}
                     />
                   ))}
@@ -134,6 +135,10 @@ export function PatternTypology() {
           </div>
         )
       })}
+      </div>
+      <p className="text-[10px] font-mono text-text-muted mt-2">
+        1 ● ≈ 2% de contratos clasificados · severity = nivel de riesgo estructural
+      </p>
     </div>
   )
 }

@@ -202,7 +202,7 @@ function TopCapturedList({
           >
             {/* Rank number */}
             <span
-              className="text-2xl font-bold text-text-muted/20 w-8 text-right tabular-nums shrink-0 mt-0.5"
+              className="text-2xl font-bold text-text-muted/20 w-8 text-right font-mono tabular-nums shrink-0 mt-0.5"
               style={{ fontFamily: 'var(--font-family-serif)' }}
               aria-label={`Rank ${idx + 1}`}
             >
@@ -244,7 +244,7 @@ function TopCapturedList({
             {/* Capture percentage + label */}
             <div className="text-right shrink-0">
               <div
-                className="text-lg font-bold tabular-nums leading-tight"
+                className="text-lg font-bold font-mono tabular-nums leading-tight"
                 style={{ color: row.pct >= 0.5 ? '#f87171' : row.pct >= 0.3 ? '#fb923c' : row.pct >= 0.15 ? '#fbbf24' : '#94a3b8' }}
               >
                 {formatPercent(row.pct, 1)}
@@ -292,7 +292,7 @@ function HeroCaptureCallout({
 }) {
   return (
     <div
-      className="border border-red-500/30 bg-red-500/5 rounded-xl p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
+      className="border border-red-500/30 bg-red-500/5 rounded-sm p-4 flex flex-col sm:flex-row items-start sm:items-center gap-4"
       role="region"
       aria-label={t('hero.worstCapture')}
     >
@@ -317,7 +317,7 @@ function HeroCaptureCallout({
       </div>
       <div className="text-right shrink-0">
         <div
-          className="text-4xl font-bold tabular-nums leading-none"
+          className="text-4xl font-bold font-mono tabular-nums leading-none"
           style={{ color: '#f87171', fontFamily: 'var(--font-family-serif)' }}
           aria-label={`${(row.pct * 100).toFixed(1)}%`}
         >
@@ -371,7 +371,7 @@ function CaptureBarChart({
             <div className="flex items-start gap-3">
               {/* Rank */}
               <span
-                className="text-lg font-bold text-text-muted/20 w-6 shrink-0 tabular-nums leading-tight pt-0.5"
+                className="text-lg font-bold text-text-muted/20 w-6 shrink-0 font-mono tabular-nums leading-tight pt-0.5"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {idx + 1}
@@ -406,7 +406,9 @@ function CaptureBarChart({
                       <svg viewBox={`0 0 ${N * DG} 7`} className="flex-1" style={{ height: 7 }} preserveAspectRatio="none" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={3.5} r={DR}
-                            fill={k < filled ? barColor : '#27272a'}
+                            fill={k < filled ? barColor : '#f3f1ec'}
+                            stroke={k < filled ? undefined : '#e2ddd6'}
+                            strokeWidth={k < filled ? 0 : 0.5}
                             fillOpacity={k < filled ? 0.85 : 1}
                           />
                         ))}
@@ -414,7 +416,7 @@ function CaptureBarChart({
                     )
                   })()}
                   <span
-                    className="text-sm font-bold tabular-nums shrink-0 w-14 text-right"
+                    className="text-sm font-bold font-mono tabular-nums shrink-0 w-14 text-right"
                     style={{ color: textColor }}
                   >
                     {pct.toFixed(1)}%
@@ -693,7 +695,7 @@ export default function CapturaHeatmap() {
       </div>
 
       {/* ===== Editorial lede: WHY this matters ===== */}
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mb-6">
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400 mb-2">
           {t('editorialLede.overline')}
         </p>
@@ -775,7 +777,7 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Filters ===== */}
-      <div className="space-y-3 rounded-xl border border-white/10 bg-surface-card/40 p-4">
+      <div className="space-y-3 rounded-sm border border-white/10 bg-surface-card/40 p-4">
         {/* Current filter state indicator */}
         <div className="flex flex-wrap items-center gap-2 text-[11px]">
           <span className="text-text-muted/60 uppercase tracking-wide">{t('filters.currentView')}:</span>
@@ -893,7 +895,7 @@ export default function CapturaHeatmap() {
 
       {/* ===== Error ===== */}
       {error && !isLoading && (
-        <div className="bg-surface-card border border-red-500/20 rounded-xl p-6">
+        <div className="bg-surface-card border border-red-500/20 rounded-sm p-6">
           <div className="flex items-start gap-4">
             <div className="h-10 w-10 rounded-full bg-red-500/10 flex items-center justify-center flex-shrink-0">
               <Info className="h-5 w-5 text-red-400" />
@@ -912,7 +914,7 @@ export default function CapturaHeatmap() {
       {/* ===== Empty state — clean, user-facing ===== */}
       {!isLoading && !error && institutions.length === 0 && (
         <div className="space-y-5">
-          <div className="bg-surface-card border border-amber-500/20 rounded-xl p-6">
+          <div className="bg-surface-card border border-amber-500/20 rounded-sm p-6">
             <div className="flex items-start gap-4">
               <div className="h-10 w-10 rounded-full bg-amber-500/10 flex items-center justify-center flex-shrink-0">
                 <Info className="h-5 w-5 text-amber-400" />
@@ -1044,7 +1046,7 @@ export default function CapturaHeatmap() {
                   </div>
                   <div className="text-right shrink-0">
                     <div
-                      className="text-sm font-semibold tabular-nums"
+                      className="text-sm font-semibold font-mono tabular-nums"
                       style={{
                         color:
                           cell.pctOfInstitution >= 0.5 ? '#f87171'
@@ -1123,7 +1125,7 @@ export default function CapturaHeatmap() {
       )}
 
       {/* ===== Methodology footer ===== */}
-      <div className="bg-surface-card/50 border border-white/5 rounded-xl p-5 text-xs text-text-muted/50 space-y-1">
+      <div className="bg-surface-card/50 border border-white/5 rounded-sm p-5 text-xs text-text-muted/50 space-y-1">
         <h4 className="font-serif text-text-muted/70 text-sm">{t('methodology.title')}</h4>
         <p>{t('methodology.content')}</p>
       </div>

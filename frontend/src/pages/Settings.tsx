@@ -202,7 +202,7 @@ function GeneralTab() {
 
       {/* Data info */}
       <motion.div variants={staggerItem}>
-      <div className="card-elevated rounded-xl overflow-hidden">
+      <div className="card-elevated rounded-sm overflow-hidden">
         <div className="px-6 py-4 flex items-center justify-between" style={{ borderLeft: '3px solid var(--color-accent-data)' }}>
           <div>
             <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
@@ -239,7 +239,7 @@ function GeneralTab() {
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
-                  <p className="font-medium tabular-nums">
+                  <p className="font-medium font-mono tabular-nums">
                     {stats ? formatNumber(stats.total_contracts) : '-'}
                   </p>
                 )}
@@ -249,7 +249,7 @@ function GeneralTab() {
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
-                  <p className="font-medium tabular-nums">
+                  <p className="font-medium font-mono tabular-nums">
                     {stats ? formatNumber(stats.total_vendors) : '-'}
                   </p>
                 )}
@@ -259,7 +259,7 @@ function GeneralTab() {
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
-                  <p className="font-medium tabular-nums">
+                  <p className="font-medium font-mono tabular-nums">
                     {stats ? formatNumber(stats.total_institutions) : '-'}
                   </p>
                 )}
@@ -269,7 +269,7 @@ function GeneralTab() {
                 {isLoading ? (
                   <Skeleton className="h-5 w-24" />
                 ) : (
-                  <p className="font-medium tabular-nums">
+                  <p className="font-medium font-mono tabular-nums">
                     {stats ? formatCompactMXN(stats.total_value_mxn) : '-'}
                   </p>
                 )}
@@ -298,7 +298,7 @@ function GeneralTab() {
 
       {/* About */}
       <motion.div variants={staggerItem}>
-      <div className="card-elevated rounded-xl overflow-hidden">
+      <div className="card-elevated rounded-sm overflow-hidden">
         <div className="px-6 py-4" style={{ borderLeft: '3px solid var(--color-accent)' }}>
           <h3 className="flex items-center gap-2 text-base font-semibold text-text-primary font-mono">
             <Info className="h-4 w-4 text-accent" />
@@ -1158,7 +1158,7 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? color : '#27272a'}
+                      fill={k < filled ? color : '#2d2926'}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
@@ -1166,7 +1166,7 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
               )
             })()}
           </div>
-          <div className="w-16 text-right text-sm tabular-nums">{field.fill_rate.toFixed(1)}%</div>
+          <div className="w-16 text-right text-sm font-mono tabular-nums">{field.fill_rate.toFixed(1)}%</div>
         </div>
       ))}
     </div>

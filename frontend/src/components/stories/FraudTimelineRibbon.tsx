@@ -137,7 +137,7 @@ export default function FraudTimelineRibbon({
               style={{ left: `${getPositionPct(year)}%` }}
             >
               <div className="w-[1px] h-4 bg-zinc-700 mx-auto" aria-hidden="true" />
-              <span className="text-[10px] text-zinc-600 tabular-nums block text-center mt-0.5">
+              <span className="text-[10px] text-zinc-600 font-mono tabular-nums block text-center mt-0.5">
                 {year}
               </span>
             </div>
@@ -202,7 +202,7 @@ export default function FraudTimelineRibbon({
                     aria-label={`${c.caseName}, ${c.year}${c.valueBn ? `, ${c.valueBn}B MXN` : ''}`}
                   >
                     <p
-                      className="text-[10px] font-bold tabular-nums mb-0.5"
+                      className="text-[10px] font-bold font-mono tabular-nums mb-0.5"
                       style={{ color: eraColor }}
                     >
                       {c.year}
@@ -211,7 +211,7 @@ export default function FraudTimelineRibbon({
                       {c.caseName}
                     </p>
                     {c.valueBn !== undefined && (
-                      <p className="text-[11px] font-bold text-red-400 tabular-nums">
+                      <p className="text-[11px] font-bold text-red-400 font-mono tabular-nums">
                         {c.valueBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B MXN
                       </p>
                     )}

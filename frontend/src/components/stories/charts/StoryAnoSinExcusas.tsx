@@ -45,7 +45,7 @@ export function StoryAnoSinExcusas() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -83,7 +83,7 @@ export function StoryAnoSinExcusas() {
         </div>
       </div>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[680px]"
@@ -224,7 +224,7 @@ export function StoryAnoSinExcusas() {
                     rx={3}
                     fill={row.covid ? '#52525b' : '#18181b'}
                     fillOpacity={row.covid ? 0.6 : 0.8}
-                    stroke={row.covid ? '#71717a' : '#27272a'}
+                    stroke={row.covid ? '#71717a' : '#2d2926'}
                     strokeWidth={0.75}
                   />
                   <text
@@ -258,7 +258,7 @@ export function StoryAnoSinExcusas() {
         </svg>
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

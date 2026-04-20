@@ -14,8 +14,7 @@ export function StoryAdminFingerprints() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -57,13 +56,13 @@ export function StoryAdminFingerprints() {
       </div>
 
       {/* Chart */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
         <AdministrationFingerprints />
       </div>
 
       {/* Caveat + finding */}
       <div className="grid grid-cols-2 gap-3">
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-3">
+        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-3">
           <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
             HALLAZGO
           </p>
@@ -73,7 +72,7 @@ export function StoryAdminFingerprints() {
             rhetoric, the data shows less competition, not more.
           </p>
         </div>
-        <div className="rounded-xl border border-zinc-700/40 bg-zinc-900/60 p-3">
+        <div className="rounded-sm border border-zinc-700/40 bg-zinc-900/60 p-3">
           <p className="text-xs font-mono uppercase tracking-wide text-zinc-500 mb-1">
             CAVEAT
           </p>

@@ -71,9 +71,9 @@ export function StoryTrianguloFarmaceutico() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         RUBLI · Triángulo Farmacéutico
@@ -123,7 +123,7 @@ export function StoryTrianguloFarmaceutico() {
           strokeWidth={1}
           strokeDasharray="4 6"
           initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
+          animate={{ pathLength: 1 }}
           transition={{ duration: 1.5 }}
         />
 
@@ -144,7 +144,7 @@ export function StoryTrianguloFarmaceutico() {
               strokeWidth={strokeWidth}
               strokeLinecap="round"
               initial={{ pathLength: 0, opacity: 0 }}
-              whileInView={{ pathLength: 1, opacity: 1 }}
+              animate={{ pathLength: 1, opacity: 1 }}
               transition={{ duration: 0.8, delay: 0.2 + i * 0.06 }}
             />
           )
@@ -179,7 +179,7 @@ export function StoryTrianguloFarmaceutico() {
           <motion.g
             key={inst.id}
             initial={{ scale: 0, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
           >
             <circle cx={inst.x} cy={inst.y} r={28} fill="#18181b" stroke="#3b82f6" strokeWidth={2} />
@@ -212,7 +212,7 @@ export function StoryTrianguloFarmaceutico() {
           <motion.g
             key={v.id}
             initial={{ scale: 0, opacity: 0 }}
-            whileInView={{ scale: 1, opacity: 1 }}
+            animate={{ scale: 1, opacity: 1 }}
             transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
           >
             <circle
@@ -301,7 +301,7 @@ export function StoryTrianguloFarmaceutico() {
         })}
       </div>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

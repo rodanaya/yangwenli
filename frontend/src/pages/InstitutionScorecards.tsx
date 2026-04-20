@@ -208,8 +208,8 @@ function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
             <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
               <span className="font-mono font-bold" style={{ color: tier.color }}>{displayLabel}</span>
-              <span className="tabular-nums text-zinc-500">{formatNumber(count)}</span>
-              <span className="tabular-nums text-zinc-600">({pct}%)</span>
+              <span className="font-mono tabular-nums text-zinc-500">{formatNumber(count)}</span>
+              <span className="font-mono tabular-nums text-zinc-600">({pct}%)</span>
             </span>
           )
         })}
@@ -255,7 +255,9 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
                 <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                      fill={k < filled ? color : '#27272a'}
+                      fill={k < filled ? color : '#f3f1ec'}
+                      stroke={k < filled ? undefined : '#e2ddd6'}
+                      strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
@@ -299,7 +301,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
   return (
     <article
-      className="group flex flex-col rounded-xl border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-white/20"
+      className="group flex flex-col rounded-sm border overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-0.5 focus-within:ring-2 focus-within:ring-white/20"
       style={{
         borderColor: tier.border,
         backgroundColor: 'rgba(24,24,27,0.70)',
@@ -413,7 +415,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
 function InstitutionCardSkeleton() {
   return (
-    <div className="rounded-xl border border-white/8 bg-zinc-900/60 overflow-hidden">
+    <div className="rounded-sm border border-white/8 bg-zinc-900/60 overflow-hidden">
       <div className="h-1 w-full bg-zinc-800" />
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
@@ -472,7 +474,7 @@ function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
       <span className="h-2 w-2 rounded-full" style={{ backgroundColor: active ? '#000' : tier.color }} aria-hidden="true" />
       {t(`tiers.${tierName}`)}
       <span
-        className="text-[10px] font-bold tabular-nums px-1.5 py-0.5 rounded"
+        className="text-[10px] font-bold font-mono tabular-nums px-1.5 py-0.5 rounded"
         style={{
           backgroundColor: active ? 'rgba(0,0,0,0.15)' : 'rgba(255,255,255,0.05)',
           color: active ? '#000' : tier.color,
@@ -628,7 +630,7 @@ export default function InstitutionScorecards() {
 
           {/* Tier distribution bar */}
           <section
-            className="rounded-xl border border-white/8 bg-zinc-900/60 p-5"
+            className="rounded-sm border border-white/8 bg-zinc-900/60 p-5"
             aria-label={t('aria.distributionSection')}
           >
             {statsLoading ? (
@@ -799,7 +801,7 @@ export default function InstitutionScorecards() {
           {!listLoading && institutions.length === 0 && (
             <div
               role="alert"
-              className="rounded-xl border border-white/8 bg-zinc-900/60 p-12 text-center"
+              className="rounded-sm border border-white/8 bg-zinc-900/60 p-12 text-center"
             >
               <Building2 className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
               <p className="text-sm text-zinc-500">{t('noResults')}</p>
@@ -882,7 +884,7 @@ export default function InstitutionScorecards() {
         )}
 
         {/* Footer note — context footnote */}
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400/70 mb-1">
             {t('footnotes.title')}
           </p>

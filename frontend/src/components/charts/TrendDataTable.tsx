@@ -278,12 +278,12 @@ export default function TrendDataTable({
                     )}
 
                     {/* Total contracts */}
-                    <TableCell className="text-right tabular-nums text-text-secondary">
+                    <TableCell className="text-right font-mono tabular-nums text-text-secondary">
                       {row.total_contracts.toLocaleString(getLocale())}
                     </TableCell>
 
                     {/* High-risk count */}
-                    <TableCell className="text-right tabular-nums text-text-secondary">
+                    <TableCell className="text-right font-mono tabular-nums text-text-secondary">
                       {row.high_risk_count.toLocaleString(getLocale())}
                     </TableCell>
 
@@ -325,13 +325,13 @@ export default function TrendDataTable({
                     </TableCell>
 
                     {/* Avg score */}
-                    <TableCell className="text-right tabular-nums text-text-secondary">
+                    <TableCell className="text-right font-mono tabular-nums text-text-secondary">
                       {avgScoreDisplay}
                     </TableCell>
 
                     {/* Total value */}
                     {showValue && (
-                      <TableCell className="text-right tabular-nums text-text-secondary text-xs">
+                      <TableCell className="text-right font-mono tabular-nums text-text-secondary text-xs">
                         {row.total_value_mxn !== undefined
                           ? formatCompactMXN(row.total_value_mxn)
                           : '—'}

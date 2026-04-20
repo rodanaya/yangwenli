@@ -119,8 +119,13 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
 
   if (!slopes.length || slopes.every((s) => s.valueA === 0 && s.valueB === 0)) {
     return (
-      <div className="flex items-center justify-center h-[200px] text-text-muted text-sm font-mono">
-        No data available for slope chart
+      <div className="flex flex-col items-center justify-center h-[200px] px-6 text-center border border-border rounded-sm bg-background-card">
+        <p className="text-sm text-text-muted">
+          Sin datos suficientes para comparar los dos períodos seleccionados.
+        </p>
+        <p className="text-[11px] text-text-muted mt-1">
+          Ambos rangos deben incluir al menos un sector con contratos.
+        </p>
       </div>
     )
   }
@@ -142,10 +147,10 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
         <rect x="0" y="0" width={svgWidth} height={height} fill="transparent" />
 
         {/* Column headers */}
-        <text x={leftCol} y={topPad - 20} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={11} fontWeight={700}>
+        <text x={leftCol} y={topPad - 20} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono, monospace)">
           {periodALabel}
         </text>
-        <text x={rightCol} y={topPad - 20} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={11} fontWeight={700}>
+        <text x={rightCol} y={topPad - 20} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize={11} fontWeight={700} fontFamily="var(--font-family-mono, monospace)">
           {periodBLabel}
         </text>
 
@@ -194,6 +199,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                 fontSize={isMax || isMin || isHovered ? 11 : 10}
                 fontWeight={isMax || isMin || isHovered ? 700 : 400}
                 fill={dimmed ? 'rgba(255,255,255,0.15)' : s.color}
+                fontFamily="var(--font-family-mono, monospace)"
               >
                 {s.nameEN} {s.valueA.toFixed(1)}%
               </text>
@@ -206,6 +212,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                 fontSize={isMax || isMin || isHovered ? 11 : 10}
                 fontWeight={isMax || isMin || isHovered ? 700 : 400}
                 fill={dimmed ? 'rgba(255,255,255,0.15)' : s.color}
+                fontFamily="var(--font-family-mono, monospace)"
               >
                 {s.valueB.toFixed(1)}% {s.nameEN}
               </text>
@@ -219,6 +226,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                   fontSize={10}
                   fontWeight={700}
                   fill="#f87171"
+                  fontFamily="var(--font-family-mono, monospace)"
                 >
                   {'↑'} +{s.delta.toFixed(1)}pp
                 </text>
@@ -233,6 +241,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                   fontSize={10}
                   fontWeight={700}
                   fill="#4ade80"
+                  fontFamily="var(--font-family-mono, monospace)"
                 >
                   {'↓'} {s.delta.toFixed(1)}pp
                 </text>

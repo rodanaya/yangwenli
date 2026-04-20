@@ -36,7 +36,7 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
   return (
     <ScrollReveal>
       <div
-        className="rounded-xl overflow-hidden"
+        className="rounded-sm overflow-hidden"
         style={{
           background:
             'linear-gradient(135deg, rgba(10,4,4,0.98) 0%, rgba(20,8,8,0.98) 50%, rgba(10,4,4,0.98) 100%)',
@@ -100,7 +100,7 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
                 <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={5} r={DR}
-                      fill={i < filled ? '#ef4444' : '#27272a'}
+                      fill={i < filled ? '#ef4444' : '#2d2926'}
                       fillOpacity={i < filled ? 0.85 : 1}
                     />
                   ))}

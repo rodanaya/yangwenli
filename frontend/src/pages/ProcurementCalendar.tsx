@@ -435,7 +435,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
 
   if (!stats.hasDecemberData) {
     return (
-      <div className="rounded-xl border border-stone-800 bg-stone-900/40 p-5">
+      <div className="rounded-sm border border-stone-800 bg-stone-900/40 p-5">
         <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-stone-600 mb-1">
           {t('decemberSection.title')}
         </p>
@@ -456,7 +456,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
   const avgRiskBarWidth = Math.min(100, stats.highRiskRate * 200)
 
   return (
-    <div className="rounded-xl border border-orange-800/30 bg-orange-950/10 p-5 space-y-4">
+    <div className="rounded-sm border border-orange-800/30 bg-orange-950/10 p-5 space-y-4">
       <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-500 mb-1">
         {t('decemberSection.title')}
       </p>
@@ -926,7 +926,7 @@ export default function ProcurementCalendar() {
         )}
 
         {/* Editorial findings callout */}
-        <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
+        <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mt-6">
           <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 mb-2">
             {t('finding.label')}
           </p>

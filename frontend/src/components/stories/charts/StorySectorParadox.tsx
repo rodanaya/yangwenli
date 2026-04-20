@@ -59,10 +59,9 @@ export function StorySectorParadox() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
         RUBLI · La paradoja de la adjudicación directa
@@ -137,8 +136,7 @@ export function StorySectorParadox() {
             <motion.g
               key={p.code}
               initial={{ opacity: 0, scale: 0 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1, scale: 1 }}
               transition={{ duration: 0.4, delay: 0.15 + i * 0.05 }}
             >
               <circle

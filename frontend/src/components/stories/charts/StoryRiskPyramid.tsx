@@ -33,7 +33,7 @@ export function StoryRiskPyramid() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -72,7 +72,7 @@ export function StoryRiskPyramid() {
       </div>
 
       {/* The pyramid */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -117,7 +117,7 @@ export function StoryRiskPyramid() {
                     r={DOT_R}
                     fill={tier.color}
                     initial={{ opacity: 0, scale: 0 }}
-                    whileInView={{ opacity: 1, scale: 1 }}
+                    animate={{ opacity: 1, scale: 1 }}
                     transition={{ duration: 0.2, delay: rowIdx * 0.15 + i * 0.012 }}
                   />
                 ))}
@@ -134,7 +134,7 @@ export function StoryRiskPyramid() {
                   const baseX = LEFT_LABEL_W + totalWidth + 8
                   return Array.from({ length: N }).map((_, k) => (
                     <circle key={`v-${k}`} cx={baseX + k * DG + DR} cy={y + 10.5} r={DR}
-                      fill={k < filled ? tier.color : '#27272a'}
+                      fill={k < filled ? tier.color : '#2d2926'}
                       fillOpacity={k < filled ? 0.55 : 1}
                     />
                   ))
@@ -161,7 +161,7 @@ export function StoryRiskPyramid() {
       </div>
 
       {/* Finding */}
-      <div className="rounded-xl border border-red-500/20 bg-red-500/5 p-4">
+      <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-red-400 mb-1">
           HALLAZGO
         </p>

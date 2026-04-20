@@ -176,7 +176,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
             <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.color }} />
             <span className="text-text-muted">{entry.name}</span>
           </div>
-          <span className="text-text-primary font-semibold tabular-nums">
+          <span className="text-text-primary font-semibold font-mono tabular-nums">
             {entry.name === 'Avg Risk Score'
               ? entry.value.toFixed(3)
               : `${entry.value.toFixed(1)}%`}

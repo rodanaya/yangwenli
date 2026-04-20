@@ -231,19 +231,19 @@ function InstitutionPreviewCard({
       <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/30">
         <div>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Contracts</p>
-          <p className="text-sm font-bold text-text-primary tabular-nums">
+          <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatNumber(institution.total_contracts ?? 0)}
           </p>
         </div>
         <div>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Valor</p>
-          <p className="text-sm font-bold text-text-primary tabular-nums">
+          <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatCompactMXN(institution.total_amount_mxn ?? 0)}
           </p>
         </div>
         <div>
           <p className="text-[10px] text-text-muted uppercase tracking-wide">Adj. Directa</p>
-          <p className="text-sm font-bold text-text-primary tabular-nums">
+          <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct, false) : '--'}
           </p>
         </div>
@@ -528,16 +528,16 @@ function TopVendorsComparison({
                         </Link>
                       </div>
                       <div className="flex items-center gap-3 mt-1">
-                        <span className="text-xs text-text-muted tabular-nums">
+                        <span className="text-xs text-text-muted font-mono tabular-nums">
                           {formatCompactMXN(v.total_value_mxn)}
                         </span>
-                        <span className="text-xs text-text-muted tabular-nums">
+                        <span className="text-xs text-text-muted font-mono tabular-nums">
                           {v.contract_count.toLocaleString()} contr.
                         </span>
                       </div>
                     </div>
                     <div className="text-right flex-shrink-0">
-                      <span className="text-sm font-bold tabular-nums" style={{ color: accentColor }}>
+                      <span className="text-sm font-bold font-mono tabular-nums" style={{ color: accentColor }}>
                         {share.toFixed(1)}%
                       </span>
                       {riskColor && (
@@ -559,7 +559,9 @@ function TopVendorsComparison({
                       <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                            fill={k < filled ? accentColor : '#27272a'}
+                            fill={k < filled ? accentColor : '#f3f1ec'}
+                            stroke={k < filled ? undefined : '#e2ddd6'}
+                            strokeWidth={k < filled ? 0 : 0.5}
                             fillOpacity={k < filled ? 0.85 : 1}
                           />
                         ))}

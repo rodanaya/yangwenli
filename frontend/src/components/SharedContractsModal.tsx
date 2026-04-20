@@ -110,7 +110,7 @@ export function SharedContractsModal({
       aria-labelledby="shared-contracts-title"
       onClick={handleOverlayClick}
     >
-      <div ref={modalRef} onKeyDown={handleKeyDown} className="bg-[#0f1117] border border-white/10 rounded-xl max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div ref={modalRef} onKeyDown={handleKeyDown} className="bg-[#0f1117] border border-white/10 rounded-sm max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-start justify-between px-5 py-4 border-b border-white/8 shrink-0">
           <div className="min-w-0 flex-1 pr-4">
@@ -173,9 +173,11 @@ export function SharedContractsModal({
               <p className="text-xs text-zinc-500">{t('errors.couldNotLoad')}</p>
             </div>
           ) : contracts.length === 0 ? (
-            <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <FileText className="h-7 w-7 text-zinc-700" aria-hidden="true" />
-              <p className="text-sm text-zinc-400 font-medium">No se encontraron contratos compartidos</p>
+            <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-amber-900/20">
+              <FileText className="h-6 w-6 text-zinc-700" aria-hidden="true" />
+              <p className="text-sm font-normal text-zinc-400 max-w-sm text-center">
+                Estos dos proveedores no comparten contratos en el período analizado.
+              </p>
             </div>
           ) : (
             <div className="overflow-x-auto">

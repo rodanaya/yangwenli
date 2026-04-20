@@ -134,7 +134,7 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
   return (
     <ScrollReveal>
       <div
-        className="rounded-xl border border-border/30 bg-background-card/60 p-5"
+        className="rounded-sm border border-border/30 bg-background-card/60 p-5"
         style={{ borderTopWidth: '3px', borderTopColor: gaugeColor }}
       >
         <div className="mb-4">

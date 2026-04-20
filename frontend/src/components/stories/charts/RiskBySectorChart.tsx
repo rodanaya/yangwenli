@@ -52,9 +52,9 @@ export function RiskBySectorChart() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-zinc-900 rounded-xl p-4 border border-zinc-800"
+      className="bg-zinc-900 rounded-sm p-4 border border-zinc-800"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         RUBLI · Sector Risk Distribution
@@ -66,7 +66,7 @@ export function RiskBySectorChart() {
         % of contracts rated critical + high · National avg: {OECD_AVG}%
       </p>
 
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"

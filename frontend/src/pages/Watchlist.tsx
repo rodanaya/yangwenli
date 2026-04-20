@@ -643,7 +643,7 @@ export function Watchlist() {
             <span aria-hidden>·</span>
             <span>{t('subtitleFull')}</span>
             <span aria-hidden>·</span>
-            <span className="tabular-nums">v0.6.5</span>
+            <span className="font-mono tabular-nums">v0.6.5</span>
           </div>
           <div className="flex items-start justify-between gap-6">
             <div className="flex-1 min-w-0">
@@ -874,7 +874,7 @@ export function Watchlist() {
                         </div>
                         {/* 3-column get-started guide */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 max-w-2xl mx-auto">
-                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
                             <div className="text-2xl mb-2">🔍</div>
                             <p className="text-xs font-semibold text-text-primary mb-1">Watch a vendor</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Track risk changes for high-priority vendors in the ARIA queue</p>
@@ -887,7 +887,7 @@ export function Watchlist() {
                               <Crosshair className="h-3 w-3 mr-1" /> Browse T1 Queue
                             </Button>
                           </div>
-                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
                             <div className="text-2xl mb-2">📋</div>
                             <p className="text-xs font-semibold text-text-primary mb-1">Explore contracts</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Find vendors or institutions and click the eye icon to start tracking</p>
@@ -900,7 +900,7 @@ export function Watchlist() {
                               <Search className="h-3 w-3 mr-1" /> Search vendors
                             </Button>
                           </div>
-                          <div className="rounded-xl border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
+                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
                             <div className="text-2xl mb-2">📁</div>
                             <p className="text-xs font-semibold text-text-primary mb-1">Open a case</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Browse the 43 documented cases and track involved parties</p>
@@ -1175,14 +1175,14 @@ function WatchlistRow({
 
       {/* Risk at add */}
       <td className="px-3 py-3 text-right whitespace-nowrap">
-        <span className={`text-sm tabular-nums ${getRiskColor(item.risk_score_at_creation)}`}>
+        <span className={`text-sm font-mono tabular-nums ${getRiskColor(item.risk_score_at_creation)}`}>
           {formatRiskPct(item.risk_score_at_creation)}
         </span>
       </td>
 
       {/* Current risk */}
       <td className="px-3 py-3 text-right whitespace-nowrap">
-        <span className={`text-sm tabular-nums font-medium ${getRiskColor(item.risk_score)}`}>
+        <span className={`text-sm font-mono tabular-nums font-medium ${getRiskColor(item.risk_score)}`}>
           {formatRiskPct(item.risk_score)}
         </span>
       </td>
@@ -1254,7 +1254,7 @@ function WatchlistRow({
                       <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1 max-w-[200px]" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                            fill={k < filled ? '#fb923c' : '#27272a'}
+                            fill={k < filled ? '#fb923c' : '#2d2926'}
                             fillOpacity={k < filled ? 0.7 : 1}
                           />
                         ))}

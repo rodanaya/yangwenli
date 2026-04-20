@@ -109,7 +109,7 @@ export default function CrimeCard({
           >
             {config.label}
           </span>
-          <span className="tabular-nums">{yearRange}</span>
+          <span className="font-mono tabular-nums">{yearRange}</span>
           {vendorCount !== undefined && (
             <span>{vendorCount} proveedor{vendorCount !== 1 ? 'es' : ''}</span>
           )}
@@ -119,7 +119,7 @@ export default function CrimeCard({
       {/* Fraud amount */}
       {estimatedFraudBn !== undefined && (
         <div className="text-right shrink-0">
-          <p className="text-lg font-black text-red-400 tabular-nums leading-tight">
+          <p className="text-lg font-black text-red-400 font-mono tabular-nums leading-tight">
             {estimatedFraudBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B
           </p>
           <p className="text-[10px] text-zinc-500 uppercase tracking-wider">MXN</p>

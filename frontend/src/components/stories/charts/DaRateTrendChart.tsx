@@ -86,10 +86,9 @@ export function DaRateTrendChart() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         RUBLI · Tendencia historica
@@ -191,8 +190,7 @@ export function DaRateTrendChart() {
           stroke="#52525b"
           strokeWidth={1.2}
           initial={{ pathLength: 0 }}
-          whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
+          animate={{ pathLength: 1 }}
           transition={{ duration: 1.4, ease: 'easeOut' }}
         />
 
@@ -203,8 +201,7 @@ export function DaRateTrendChart() {
             <motion.g
               key={d.year}
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1 }}
               transition={{ duration: 0.3, delay: 0.2 + i * 0.05 }}
             >
               <circle

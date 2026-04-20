@@ -42,9 +42,9 @@ export function StoryCartelCorazon() {
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
-      whileInView={{ opacity: 1, y: 0 }}
+      animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         RUBLI · Cártel del Corazón
@@ -198,7 +198,7 @@ export function StoryCartelCorazon() {
         })}
       </svg>
 
-      <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
+      <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>

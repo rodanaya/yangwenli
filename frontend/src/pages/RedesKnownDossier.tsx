@@ -274,7 +274,7 @@ const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
 function DotBar({
   value,
   color,
-  emptyColor = '#2a2420',
+  emptyColor = '#2d2926',
   dots = 20,
   size = 6,
   gap = 2,
@@ -359,7 +359,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
   const active = positioned.find((p) => p.c.id === activeId)
 
   return (
-    <div className="relative rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden">
+    <div className="relative rounded-sm border border-stone-700/30 bg-stone-900/20 overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-white/8">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-400/80"
@@ -643,7 +643,7 @@ function CommunityDossier({
       onMouseEnter={() => onHover(c.id)}
       onMouseLeave={() => onHover(null)}
       className={cn(
-        'rounded-xl border overflow-hidden transition-all',
+        'rounded-sm border overflow-hidden transition-all',
         'bg-surface-card border-white/8',
         isActive ? 'border-white/25 ring-1 ring-white/15' : 'hover:border-white/15',
       )}
@@ -879,7 +879,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
   const totalFlow = links.reduce((s, l) => s + l.value, 0)
 
   return (
-    <div className="rounded-xl border border-stone-700/30 bg-stone-900/20 overflow-hidden">
+    <div className="rounded-sm border border-stone-700/30 bg-stone-900/20 overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-white/8">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
@@ -1000,7 +1000,7 @@ function HeaderStat({
   accent?: string
 }) {
   return (
-    <div className="rounded-xl border border-white/8 bg-stone-900/40 px-4 py-3">
+    <div className="rounded-sm border border-white/8 bg-stone-900/40 px-4 py-3">
       <div
         className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1"
       >
@@ -1176,7 +1176,7 @@ export default function RedesKnownDossier() {
 
       {/* Methodological footer */}
       <div
-        className="rounded-xl border border-white/8 bg-stone-900/30 px-5 py-4 mt-6"
+        className="rounded-sm border border-white/8 bg-stone-900/30 px-5 py-4 mt-6"
       >
         <div className="flex items-start gap-3">
           <Users className="w-4 h-4 text-text-muted/40 shrink-0 mt-0.5" aria-hidden="true" />

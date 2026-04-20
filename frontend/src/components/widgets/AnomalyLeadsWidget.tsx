@@ -75,7 +75,7 @@ function IPSBar({ score }: { score: number }) {
           <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
             {Array.from({ length: N }).map((_, i) => (
               <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                fill={i < filled ? color : '#27272a'}
+                fill={i < filled ? color : '#2d2926'}
                 fillOpacity={i < filled ? 0.85 : 1}
               />
             ))}
@@ -120,7 +120,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
   const vendors: AriaQueueItem[] = data?.data ?? []
 
   return (
-    <div className={cn('bg-background-card border border-border rounded-xl p-5', className)}>
+    <div className={cn('bg-background-card border border-border rounded-sm p-5', className)}>
       {/* Header */}
       <div className="flex items-start justify-between mb-4">
         <div>

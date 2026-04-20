@@ -419,7 +419,7 @@ export default function StateExplorer() {
                     {/* Grade */}
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-lg font-bold tabular-nums ${GRADE_STYLES[grade] ?? 'text-stone-400'}`}
+                        className={`text-lg font-bold font-mono tabular-nums ${GRADE_STYLES[grade] ?? 'text-stone-400'}`}
                         aria-label={`Grade ${grade}`}
                       >
                         {grade}
