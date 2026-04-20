@@ -39,6 +39,8 @@ import {
   ExternalLink,
   Info,
   CheckCircle2,
+  Flame,
+  TrendingUp,
 } from 'lucide-react'
 
 // --- Constants ---------------------------------------------------------------
@@ -618,6 +620,874 @@ function MethodologySection({ t }: { t: (key: string) => string }) {
   )
 }
 
+// --- Most Extreme Case Callout (editorial lede) -------------------------------
+
+function MostExtremeCallout({
+  contract,
+  sectorName,
+}: {
+  contract: PriceAnomalyContract
+  sectorName: string
+}) {
+  const factor = (contract.z_price_ratio ?? 0).toFixed(1)
+  return (
+    <aside
+      className="relative overflow-hidden rounded-xl border border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/30 p-5 md:p-6"
+      role="complementary"
+      aria-label="El contrato más extremo"
+    >
+      {/* Red accent bar */}
+      <div className="absolute top-0 left-0 h-full w-1 bg-red-500" aria-hidden="true" />
+      <div className="flex items-start gap-3 mb-3">
+        <Flame className="w-5 h-5 text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+        <div>
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-red-400 mb-0.5">
+            EL CONTRATO MÁS EXTREMO
+          </p>
+          <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">
+            Primera parada para cualquier investigación
+          </p>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-[1fr_auto] gap-4 md:gap-8 items-end">
+        <div>
+          <p
+            className="text-zinc-100 leading-[1.15] mb-3"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(1.25rem, 2.4vw, 1.75rem)',
+              fontWeight: 600,
+              letterSpacing: '-0.015em',
+            }}
+          >
+            {contract.vendor_id ? (
+              <Link
+                to={`/vendors/${contract.vendor_id}`}
+                className="hover:text-red-300 transition-colors"
+              >
+                {formatVendorName(contract.vendor_name, 60)}
+              </Link>
+            ) : (
+              formatVendorName(contract.vendor_name, 60)
+            )}
+            <span className="text-zinc-500"> cobró </span>
+            <span className="text-red-300 tabular-nums">{formatCompactMXN(contract.amount_mxn)}</span>
+            <span className="text-zinc-500"> a </span>
+            <span className="text-zinc-200">{contract.institution_name}</span>
+            <span className="text-zinc-500"> ({contract.contract_year}).</span>
+          </p>
+          <div className="flex flex-wrap items-center gap-2 text-[11px]">
+            <span
+              className="font-mono uppercase tracking-wide px-2 py-0.5 rounded border"
+              style={{
+                color: SECTOR_COLORS[getSectorCode(contract.sector_id)] ?? SECTOR_COLORS['otros'],
+                borderColor: `${SECTOR_COLORS[getSectorCode(contract.sector_id)] ?? SECTOR_COLORS['otros']}55`,
+                backgroundColor: `${SECTOR_COLORS[getSectorCode(contract.sector_id)] ?? SECTOR_COLORS['otros']}11`,
+              }}
+            >
+              {sectorName}
+            </span>
+            <RiskScoreBadge score={contract.risk_score ?? 0} />
+            <Link
+              to={`/contracts/${contract.contract_id}`}
+              className="inline-flex items-center gap-1 font-mono uppercase tracking-wide text-red-400 hover:text-red-300 border border-red-500/30 hover:border-red-500/60 rounded px-2 py-0.5 transition-colors"
+            >
+              Abrir expediente
+              <ExternalLink className="w-3 h-3" />
+            </Link>
+          </div>
+        </div>
+
+        {/* Hero factor */}
+        <div className="border-l-2 border-red-500 pl-4 md:pl-5 md:text-right">
+          <div
+            className="font-bold text-red-400 tabular-nums leading-none"
+            style={{
+              fontFamily: 'var(--font-family-serif)',
+              fontSize: 'clamp(2.5rem, 6vw, 4rem)',
+              letterSpacing: '-0.03em',
+            }}
+          >
+            {factor}σ
+          </div>
+          <div className="text-[10px] font-mono uppercase tracking-widest text-zinc-500 mt-1">
+            sobre la media sectorial
+          </div>
+        </div>
+      </div>
+    </aside>
+  )
+}
+
+// --- Sector Price Deviation Bars (horizontal, intensity-colored) --------------
+
+function SectorDeviationBars({
+  data,
+  loading,
+}: {
+  data: SectorBarDatum[]
+  loading: boolean
+}) {
+  if (loading) return <Skeleton className="h-56 w-full" />
+  if (!data.length) return null
+
+  // Sort by avg_z descending — worst offenders at top
+  const sorted = [...data].sort((a, b) => b.avgZ - a.avgZ)
+  const maxZ = Math.max(...sorted.map((d) => d.avgZ), 1)
+
+  const ROW_H = 24
+  const ROW_GAP = 4
+  const LABEL_W = 120
+  const BAR_W = 380
+  const VALUE_W = 90
+  const SVG_W = LABEL_W + BAR_W + VALUE_W + 16
+  const svgH = sorted.length * (ROW_H + ROW_GAP) + 10
+
+  // Intensity ramp: z=2→amber, z=5→orange, z=8+→deep red
+  const intensityColor = (z: number): string => {
+    if (z >= 8) return '#b91c1c'
+    if (z >= 5) return '#dc2626'
+    if (z >= 3.5) return '#ea580c'
+    if (z >= 2.5) return '#f59e0b'
+    return '#eab308'
+  }
+
+  return (
+    <svg
+      viewBox={`0 0 ${SVG_W} ${svgH}`}
+      width="100%"
+      role="img"
+      aria-label="Comparación sectorial: desviación promedio de precios"
+    >
+      {/* Reference line at OECD-ish threshold z=3 */}
+      {(() => {
+        const x3 = LABEL_W + (3 / maxZ) * BAR_W
+        return (
+          <g>
+            <line
+              x1={x3}
+              x2={x3}
+              y1={0}
+              y2={svgH - 14}
+              stroke="#22d3ee"
+              strokeWidth={1}
+              strokeDasharray="3 3"
+              opacity={0.45}
+            />
+            <text
+              x={x3}
+              y={svgH - 4}
+              textAnchor="middle"
+              fontSize={8}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="#22d3ee"
+              opacity={0.75}
+            >
+              z=3σ · umbral outlier
+            </text>
+          </g>
+        )
+      })()}
+
+      {sorted.map((sector, i) => {
+        const y0 = i * (ROW_H + ROW_GAP) + 2
+        const cy = y0 + ROW_H / 2
+        const barLen = (sector.avgZ / maxZ) * BAR_W
+        const fill = intensityColor(sector.avgZ)
+
+        return (
+          <g key={sector.code}>
+            {/* Sector label */}
+            <text
+              x={LABEL_W - 8}
+              y={cy}
+              textAnchor="end"
+              dominantBaseline="middle"
+              fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill="#a1a1aa"
+            >
+              {sector.name.length > 14 ? sector.name.slice(0, 14) + '…' : sector.name}
+            </text>
+
+            {/* Sector dot */}
+            <circle cx={LABEL_W - 2} cy={cy} r={2.5} fill={sector.color} opacity={0.7} />
+
+            {/* Track */}
+            <rect
+              x={LABEL_W}
+              y={y0 + 3}
+              width={BAR_W}
+              height={ROW_H - 6}
+              fill="rgba(255,255,255,0.03)"
+              rx={2}
+            />
+
+            {/* Bar */}
+            <rect
+              x={LABEL_W}
+              y={y0 + 3}
+              width={barLen}
+              height={ROW_H - 6}
+              fill={fill}
+              fillOpacity={0.85}
+              rx={2}
+            />
+
+            {/* Value label */}
+            <text
+              x={LABEL_W + barLen + 6}
+              y={cy}
+              dominantBaseline="middle"
+              fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)"
+              fill={fill}
+              fontWeight={600}
+            >
+              +{sector.avgZ.toFixed(1)}σ
+            </text>
+          </g>
+        )
+      })}
+    </svg>
+  )
+}
+
+// --- Sector Price Distribution Curves (density-like) --------------------------
+
+function SectorDistributionCurves({
+  data,
+  loading,
+}: {
+  data: SectorBarDatum[]
+  loading: boolean
+}) {
+  if (loading) return <Skeleton className="h-64 w-full" />
+  if (!data.length) return null
+
+  // Show top 4 most severe sectors as mini density curves
+  const top = [...data].sort((a, b) => b.avgZ - a.avgZ).slice(0, 4)
+
+  const W_PER = 250
+  const H_CURVE = 110
+  const PAD_X = 14
+  const PAD_Y = 18
+
+  // Build a normal-ish density curve + highlight the tail beyond z=3
+  const buildPath = (): string => {
+    // Standard normal-ish: f(z) = e^(-z²/2), domain z ∈ [-3.5, 12]
+    const zMin = -3.5
+    const zMax = 12
+    const N = 120
+    const pts: Array<[number, number]> = []
+    for (let i = 0; i <= N; i++) {
+      const z = zMin + (i / N) * (zMax - zMin)
+      const y = Math.exp(-(z * z) / 2)
+      // normalize z → x pixels
+      const xPx = PAD_X + ((z - zMin) / (zMax - zMin)) * (W_PER - 2 * PAD_X)
+      const yPx = H_CURVE - PAD_Y - y * (H_CURVE - 2 * PAD_Y) * 0.95
+      pts.push([xPx, yPx])
+    }
+    return pts.map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`).join(' ')
+  }
+
+  const zToX = (z: number): number => {
+    const zMin = -3.5
+    const zMax = 12
+    return PAD_X + ((z - zMin) / (zMax - zMin)) * (W_PER - 2 * PAD_X)
+  }
+
+  const baseline = H_CURVE - PAD_Y
+
+  return (
+    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+      {top.map((sector) => {
+        const x3 = zToX(3)
+        const xAvg = zToX(Math.min(sector.avgZ, 12))
+        const xMax = W_PER - PAD_X
+
+        return (
+          <div
+            key={sector.code}
+            className="rounded-lg border border-zinc-700/40 bg-zinc-900/30 p-2"
+            aria-label={`Distribución de precios — ${sector.name}`}
+          >
+            <div className="flex items-center justify-between mb-1 px-1">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="inline-block w-2 h-2 rounded-full"
+                  style={{ backgroundColor: sector.color }}
+                />
+                <span className="text-[11px] font-semibold text-zinc-200">{sector.name}</span>
+              </div>
+              <span className="text-[9px] font-mono text-zinc-500 tabular-nums">
+                {formatNumber(sector.count)} anomalías
+              </span>
+            </div>
+            <svg
+              viewBox={`0 0 ${W_PER} ${H_CURVE}`}
+              width="100%"
+              role="img"
+              aria-label={`Curva de densidad — ${sector.name}`}
+            >
+              {/* Outlier zone (z ≥ 3) shaded red */}
+              <defs>
+                <linearGradient id={`tail-${sector.code}`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.35" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.05" />
+                </linearGradient>
+                <linearGradient id={`body-${sector.code}`} x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor={sector.color} stopOpacity="0.25" />
+                  <stop offset="100%" stopColor={sector.color} stopOpacity="0.03" />
+                </linearGradient>
+              </defs>
+
+              {/* Normal body fill under curve */}
+              <path
+                d={`${buildPath()} L${xMax},${baseline} L${PAD_X},${baseline} Z`}
+                fill={`url(#body-${sector.code})`}
+              />
+
+              {/* Red tail fill (z ≥ 3 region) */}
+              <path
+                d={`M${x3},${baseline} L${x3},${H_CURVE - PAD_Y - Math.exp(-4.5) * (H_CURVE - 2 * PAD_Y) * 0.95} ` +
+                  (() => {
+                    const N = 40
+                    const pts: string[] = []
+                    for (let i = 0; i <= N; i++) {
+                      const z = 3 + (i / N) * 9
+                      const y = Math.exp(-(z * z) / 2)
+                      const px = zToX(z)
+                      const py = H_CURVE - PAD_Y - y * (H_CURVE - 2 * PAD_Y) * 0.95
+                      pts.push(`L${px.toFixed(1)},${py.toFixed(1)}`)
+                    }
+                    return pts.join(' ')
+                  })() +
+                  ` L${xMax},${baseline} Z`}
+                fill={`url(#tail-${sector.code})`}
+              />
+
+              {/* Main curve stroke */}
+              <path d={buildPath()} fill="none" stroke={sector.color} strokeWidth={1.2} opacity={0.85} />
+
+              {/* Baseline axis */}
+              <line
+                x1={PAD_X}
+                x2={xMax}
+                y1={baseline}
+                y2={baseline}
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth={1}
+              />
+
+              {/* z=3 threshold marker */}
+              <line
+                x1={x3}
+                x2={x3}
+                y1={PAD_Y - 4}
+                y2={baseline}
+                stroke="#f87171"
+                strokeWidth={1}
+                strokeDasharray="2 2"
+              />
+              <text
+                x={x3}
+                y={PAD_Y - 6}
+                textAnchor="middle"
+                fontSize={7}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill="#f87171"
+              >
+                z=3
+              </text>
+
+              {/* Avg-z marker for this sector */}
+              <line
+                x1={xAvg}
+                x2={xAvg}
+                y1={baseline - 30}
+                y2={baseline}
+                stroke={sector.color}
+                strokeWidth={1.5}
+              />
+              <circle cx={xAvg} cy={baseline - 30} r={2.5} fill={sector.color} />
+              <text
+                x={xAvg}
+                y={baseline - 34}
+                textAnchor="middle"
+                fontSize={8}
+                fontFamily="var(--font-family-mono, monospace)"
+                fill={sector.color}
+                fontWeight={600}
+              >
+                +{sector.avgZ.toFixed(1)}σ
+              </text>
+
+              {/* z axis labels */}
+              {[0, 3, 6, 9].map((z) => (
+                <text
+                  key={z}
+                  x={zToX(z)}
+                  y={baseline + 10}
+                  textAnchor="middle"
+                  fontSize={7}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="#52525b"
+                >
+                  {z}σ
+                </text>
+              ))}
+            </svg>
+          </div>
+        )
+      })}
+    </div>
+  )
+}
+
+// --- Overpricing Timeline with Value Overlay ----------------------------------
+
+function OverpricingTimelineSection({
+  contracts,
+  loading,
+}: {
+  contracts: PriceAnomalyContract[]
+  loading: boolean
+}) {
+  const yearData = useMemo(() => {
+    if (!contracts.length) return []
+    const m = new Map<
+      number,
+      { year: number; count: number; total_z: number; total_value: number; max_z: number }
+    >()
+    for (const c of contracts) {
+      const yr = c.contract_year
+      if (yr < 2015 || yr > 2025) continue
+      const e = m.get(yr)
+      const z = c.z_price_ratio ?? 0
+      if (e) {
+        e.count++
+        e.total_z += z
+        e.total_value += c.amount_mxn
+        if (z > e.max_z) e.max_z = z
+      } else {
+        m.set(yr, {
+          year: yr,
+          count: 1,
+          total_z: z,
+          total_value: c.amount_mxn,
+          max_z: z,
+        })
+      }
+    }
+    return [...m.values()]
+      .sort((a, b) => a.year - b.year)
+      .map((d) => ({ ...d, avg_z: d.count > 0 ? d.total_z / d.count : 0 }))
+  }, [contracts])
+
+  if (loading) return <Skeleton className="h-56 w-full" />
+  if (!yearData.length) return null
+
+  const peakYear = yearData.reduce((a, b) => (a.count > b.count ? a : b))
+  const peakValueYear = yearData.reduce((a, b) => (a.total_value > b.total_value ? a : b))
+
+  // SVG dimensions
+  const W = 720
+  const H = 180
+  const PAD_L = 42
+  const PAD_R = 16
+  const PAD_T = 16
+  const PAD_B = 28
+  const fieldW = W - PAD_L - PAD_R
+  const fieldH = H - PAD_T - PAD_B
+  const maxCount = Math.max(...yearData.map((d) => d.count), 1)
+  const maxValue = Math.max(...yearData.map((d) => d.total_value), 1)
+  const colW = fieldW / yearData.length
+
+  return (
+    <section className="space-y-3" aria-label="Cronología de sobreprecios">
+      <div>
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          RUBLI · Cronología de sobreprecios
+        </p>
+        <h2
+          className="text-lg font-bold text-zinc-100"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          ¿Cuándo se dispararon los precios anómalos?
+        </h2>
+        <p className="text-xs text-zinc-500 mt-0.5 max-w-2xl">
+          Barras = número de contratos anómalos. La línea punteada sigue el valor total adjudicado
+          en sobreprecio. Un pico en ambos indica gasto concentrado en un ejercicio fiscal.
+        </p>
+      </div>
+
+      <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-2 max-w-2xl">
+        <div className="border-l-2 border-orange-500 pl-3 py-0.5">
+          <div className="text-lg font-mono font-bold text-orange-400 tabular-nums">
+            {peakYear.year}
+          </div>
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+            año con más anomalías · {formatNumber(peakYear.count)}
+          </div>
+        </div>
+        <div className="border-l-2 border-red-500 pl-3 py-0.5">
+          <div className="text-lg font-mono font-bold text-red-400 tabular-nums">
+            {peakValueYear.year}
+          </div>
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+            pico de valor · {formatCompactMXN(peakValueYear.total_value)}
+          </div>
+        </div>
+        <div className="border-l-2 border-amber-500 pl-3 py-0.5">
+          <div className="text-lg font-mono font-bold text-amber-400 tabular-nums">
+            {yearData.length}
+          </div>
+          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+            años con actividad anómala
+          </div>
+        </div>
+      </div>
+
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        width="100%"
+        role="img"
+        aria-label="Timeline: contratos anómalos y valor sobreprecio por año"
+      >
+        {/* Grid lines */}
+        {[0.25, 0.5, 0.75, 1].map((frac) => {
+          const y = PAD_T + fieldH * (1 - frac)
+          return (
+            <line
+              key={frac}
+              x1={PAD_L}
+              x2={W - PAD_R}
+              y1={y}
+              y2={y}
+              stroke="rgba(255,255,255,0.04)"
+              strokeWidth={1}
+            />
+          )
+        })}
+
+        {/* Left axis label — count */}
+        <text
+          x={PAD_L - 8}
+          y={PAD_T + 6}
+          textAnchor="end"
+          fontSize={8}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="#71717a"
+        >
+          contratos
+        </text>
+        <text
+          x={PAD_L - 8}
+          y={PAD_T + fieldH}
+          textAnchor="end"
+          fontSize={8}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="#52525b"
+        >
+          0
+        </text>
+        <text
+          x={PAD_L - 8}
+          y={PAD_T + 14}
+          textAnchor="end"
+          fontSize={8}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="#a1a1aa"
+        >
+          {formatNumber(maxCount)}
+        </text>
+
+        {/* Right axis — value */}
+        <text
+          x={W - PAD_R + 2}
+          y={PAD_T + 6}
+          textAnchor="start"
+          fontSize={8}
+          fontFamily="var(--font-family-mono, monospace)"
+          fill="#a78bfa"
+        >
+          valor
+        </text>
+
+        {/* Bars */}
+        {yearData.map((d, i) => {
+          const barH = (d.count / maxCount) * fieldH
+          const x = PAD_L + i * colW
+          const y = PAD_T + (fieldH - barH)
+          const fill = d.avg_z > 6 ? '#b91c1c' : d.avg_z > 4 ? '#dc2626' : d.avg_z > 3 ? '#ea580c' : '#f59e0b'
+          const gap = Math.min(2, colW * 0.1)
+          return (
+            <g key={d.year}>
+              <rect
+                x={x + gap / 2}
+                y={y}
+                width={colW - gap}
+                height={barH}
+                fill={fill}
+                fillOpacity={0.82}
+                rx={1.5}
+              />
+              {/* Year label — every 2nd year to reduce crowding */}
+              {(i % 2 === 0 || i === yearData.length - 1) && (
+                <text
+                  x={x + colW / 2}
+                  y={H - 10}
+                  textAnchor="middle"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fill="#71717a"
+                >
+                  {d.year}
+                </text>
+              )}
+            </g>
+          )
+        })}
+
+        {/* Value overlay line (right-axis scaled) */}
+        {(() => {
+          const pts = yearData.map((d, i) => {
+            const x = PAD_L + i * colW + colW / 2
+            const y = PAD_T + (fieldH - (d.total_value / maxValue) * fieldH)
+            return [x, y] as [number, number]
+          })
+          const path = pts
+            .map(([x, y], i) => `${i === 0 ? 'M' : 'L'}${x.toFixed(1)},${y.toFixed(1)}`)
+            .join(' ')
+          return (
+            <g>
+              <path d={path} fill="none" stroke="#a78bfa" strokeWidth={1.4} strokeDasharray="4 3" opacity={0.9} />
+              {pts.map(([x, y], i) => (
+                <circle key={i} cx={x} cy={y} r={2.2} fill="#a78bfa" opacity={0.9} />
+              ))}
+            </g>
+          )
+        })()}
+
+        {/* Baseline */}
+        <line
+          x1={PAD_L}
+          x2={W - PAD_R}
+          y1={PAD_T + fieldH}
+          y2={PAD_T + fieldH}
+          stroke="rgba(255,255,255,0.15)"
+          strokeWidth={1}
+        />
+
+        {/* Legend */}
+        <g transform={`translate(${PAD_L + 4}, ${H - 2})`}>
+          <rect x={0} y={-7} width={8} height={6} fill="#dc2626" fillOpacity={0.82} />
+          <text
+            x={12}
+            y={-2}
+            fontSize={8}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="#a1a1aa"
+          >
+            contratos
+          </text>
+          <line x1={70} x2={85} y1={-4} y2={-4} stroke="#a78bfa" strokeWidth={1.4} strokeDasharray="3 2" />
+          <text
+            x={89}
+            y={-2}
+            fontSize={8}
+            fontFamily="var(--font-family-mono, monospace)"
+            fill="#a1a1aa"
+          >
+            valor MXN
+          </text>
+        </g>
+      </svg>
+    </section>
+  )
+}
+
+// --- Risk-Level Price Gap Section ---------------------------------------------
+// Since the endpoint does not expose is_direct_award, we split anomalies by
+// risk_level: critical+high (procurement with multiple red flags, typically
+// direct-award abuse) vs medium+low (cleaner procurement). This surfaces the
+// price premium that corrupt procurement introduces.
+
+function RiskLevelPriceGap({
+  contracts,
+  loading,
+}: {
+  contracts: PriceAnomalyContract[]
+  loading: boolean
+}) {
+  const stats = useMemo(() => {
+    if (!contracts.length) return null
+    const bins = {
+      flagged: { count: 0, total: 0, z_sum: 0, max_amt: 0 },
+      standard: { count: 0, total: 0, z_sum: 0, max_amt: 0 },
+    }
+    for (const c of contracts) {
+      const isFlagged = c.risk_level === 'critical' || c.risk_level === 'high'
+      const bin = isFlagged ? bins.flagged : bins.standard
+      bin.count++
+      bin.total += c.amount_mxn
+      bin.z_sum += c.z_price_ratio ?? 0
+      if (c.amount_mxn > bin.max_amt) bin.max_amt = c.amount_mxn
+    }
+    const flaggedAvg = bins.flagged.count > 0 ? bins.flagged.total / bins.flagged.count : 0
+    const standardAvg = bins.standard.count > 0 ? bins.standard.total / bins.standard.count : 0
+    const flaggedZ = bins.flagged.count > 0 ? bins.flagged.z_sum / bins.flagged.count : 0
+    const standardZ = bins.standard.count > 0 ? bins.standard.z_sum / bins.standard.count : 0
+    const premium = standardAvg > 0 ? (flaggedAvg / standardAvg - 1) * 100 : 0
+    return {
+      flagged: {
+        ...bins.flagged,
+        avg: flaggedAvg,
+        avg_z: flaggedZ,
+      },
+      standard: {
+        ...bins.standard,
+        avg: standardAvg,
+        avg_z: standardZ,
+      },
+      premium,
+      totalCount: bins.flagged.count + bins.standard.count,
+    }
+  }, [contracts])
+
+  if (loading) return <Skeleton className="h-40 w-full" />
+  if (!stats || stats.totalCount === 0) return null
+
+  const maxAvg = Math.max(stats.flagged.avg, stats.standard.avg, 1)
+  const flaggedPct = (stats.flagged.avg / maxAvg) * 100
+  const standardPct = (stats.standard.avg / maxAvg) * 100
+
+  return (
+    <section className="space-y-3" aria-label="Brecha de precio por nivel de riesgo">
+      <div>
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          RUBLI · Prima de corrupción
+        </p>
+        <h2
+          className="text-lg font-bold text-zinc-100"
+          style={{ fontFamily: 'var(--font-family-serif)' }}
+        >
+          El precio que paga el Estado por procurement sospechoso
+        </h2>
+        <p className="text-xs text-zinc-500 mt-0.5 max-w-2xl">
+          Contratos con <strong className="text-orange-400">múltiples banderas de riesgo</strong>{' '}
+          (crítico + alto) vs contratos con riesgo medio o bajo. La diferencia en precio promedio
+          revela la prima que introducen los patrones de corrupción.
+        </p>
+      </div>
+
+      <div className="rounded-xl border border-zinc-700/60 bg-zinc-900/40 p-4 md:p-5 space-y-5">
+        {/* Headline: the premium */}
+        {stats.premium > 0 && stats.standard.count > 0 && stats.flagged.count > 0 && (
+          <div className="flex items-baseline gap-3 flex-wrap">
+            <TrendingUp className="w-5 h-5 text-red-400 flex-shrink-0" aria-hidden="true" />
+            <div
+              className="text-3xl md:text-4xl font-bold text-red-400 tabular-nums leading-none"
+              style={{ fontFamily: 'var(--font-family-serif)' }}
+            >
+              +{stats.premium.toFixed(0)}%
+            </div>
+            <div className="text-sm text-zinc-400">
+              de prima en el precio promedio de contratos con múltiples banderas de riesgo
+            </div>
+          </div>
+        )}
+
+        {/* Horizontal bar comparison */}
+        <div className="space-y-4">
+          {/* Flagged row */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
+                <span className="text-xs font-semibold text-zinc-200">
+                  Crítico + Alto riesgo
+                </span>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  n={formatNumber(stats.flagged.count)}
+                </span>
+              </div>
+              <div className="text-sm font-mono font-bold text-red-400 tabular-nums">
+                {formatCompactMXN(stats.flagged.avg)}
+              </div>
+            </div>
+            <div className="relative h-6 rounded bg-zinc-800/60 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-red-700 to-red-500"
+                style={{ width: `${flaggedPct}%` }}
+              />
+              <div className="absolute inset-0 flex items-center px-2 text-[10px] font-mono text-red-100/90 tracking-wide">
+                precio promedio · +{stats.flagged.avg_z.toFixed(1)}σ
+              </div>
+            </div>
+          </div>
+
+          {/* Standard row */}
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-zinc-500" aria-hidden="true" />
+                <span className="text-xs font-semibold text-zinc-300">
+                  Medio + Bajo riesgo
+                </span>
+                <span className="text-[10px] font-mono text-zinc-500">
+                  n={formatNumber(stats.standard.count)}
+                </span>
+              </div>
+              <div className="text-sm font-mono font-bold text-zinc-300 tabular-nums">
+                {formatCompactMXN(stats.standard.avg)}
+              </div>
+            </div>
+            <div className="relative h-6 rounded bg-zinc-800/60 overflow-hidden">
+              <div
+                className="h-full bg-gradient-to-r from-zinc-600 to-zinc-500"
+                style={{ width: `${standardPct}%` }}
+              />
+              <div className="absolute inset-0 flex items-center px-2 text-[10px] font-mono text-zinc-200/90 tracking-wide">
+                precio promedio · +{stats.standard.avg_z.toFixed(1)}σ
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Detail table */}
+        <div className="grid grid-cols-2 gap-4 pt-3 border-t border-zinc-800">
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+              Flagged · valor total
+            </p>
+            <p className="text-sm font-mono text-red-400 tabular-nums">
+              {formatCompactMXN(stats.flagged.total)}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-widest text-zinc-500 mb-1">
+              Standard · valor total
+            </p>
+            <p className="text-sm font-mono text-zinc-400 tabular-nums">
+              {formatCompactMXN(stats.standard.total)}
+            </p>
+          </div>
+        </div>
+
+        {/* Footnote */}
+        <p className="text-[10px] text-zinc-600 italic leading-relaxed pt-2 border-t border-zinc-800/60">
+          Nota: Segmentación basada en <code className="text-zinc-500">risk_level</code>{' '}
+          del modelo v0.6.5. Los contratos críticos/altos típicamente combinan adjudicación directa,
+          baja competencia y concentración de proveedor — señales asociadas con procurement irregular.
+        </p>
+      </div>
+    </section>
+  )
+}
+
 // =============================================================================
 // MAIN PAGE
 // =============================================================================
@@ -924,6 +1794,16 @@ export default function PriceIntelligence() {
       </header>
 
       {/* ================================================================== */}
+      {/* EDITORIAL CALLOUT — single most extreme case                        */}
+      {/* ================================================================== */}
+      {!loading && extremeCases.length > 0 && (
+        <MostExtremeCallout
+          contract={extremeCases[0]}
+          sectorName={getSectorName(extremeCases[0].sector_id)}
+        />
+      )}
+
+      {/* ================================================================== */}
       {/* FILTER CONTROLS                                                     */}
       {/* ================================================================== */}
       <div className="bg-zinc-900/60 border border-zinc-700/50 rounded-xl p-4 space-y-4">
@@ -1025,6 +1905,47 @@ export default function PriceIntelligence() {
           <p className="text-sm text-zinc-500 mb-4">{t('sectorMapDesc')}</p>
 
           <SectorRiskChart data={chartData} loading={loading} chartT={t} />
+
+          {/* Horizontal deviation bars — worst offenders ranked by avg_z */}
+          {!loading && chartData.length > 0 && (
+            <div className="mt-6">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                RUBLI · Intensidad de desviación
+              </p>
+              <h3
+                className="text-base font-bold text-zinc-100 mb-1"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                ¿Qué sectores pagan los peores sobreprecios?
+              </h3>
+              <p className="text-xs text-zinc-500 mb-3 max-w-2xl">
+                Desviación promedio de precio (Z-score) por sector. Rojo profundo = sobreprecio
+                extremo. La línea cyan marca el umbral de outlier estadístico (z=3σ).
+              </p>
+              <SectorDeviationBars data={chartData} loading={loading} />
+            </div>
+          )}
+
+          {/* Density curves — top 4 sectors with normal body + red tail */}
+          {!loading && chartData.length > 0 && (
+            <div className="mt-6">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                RUBLI · Distribución de precios
+              </p>
+              <h3
+                className="text-base font-bold text-zinc-100 mb-1"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                Dónde termina lo normal y empieza la anomalía
+              </h3>
+              <p className="text-xs text-zinc-500 mb-3 max-w-2xl">
+                Cada curva representa la distribución de precios de un sector. La zona roja (z≥3σ)
+                es el tail de outliers. La marca coloreada indica el z-score promedio observado
+                en los contratos anómalos del sector.
+              </p>
+              <SectorDistributionCurves data={chartData} loading={loading} />
+            </div>
+          )}
 
           {/* Sector detail table */}
           {!loading && chartData.length > 0 && (
@@ -1140,10 +2061,18 @@ export default function PriceIntelligence() {
       </Act>
 
       <Act number="IV" label="THE PATTERNS">
+      {/* Corruption premium: flagged vs standard price gap */}
+      {showComputedSections && <RiskLevelPriceGap contracts={allContracts} loading={loading} />}
+
       {showComputedSections && <ReincidentesSection contracts={allContracts} loading={loading} />}
 
       {/* ================================================================== */}
-      {/* SECTION 5: Anomaly Timeline (only if >= 3 records)                 */}
+      {/* SECTION 5: Overpricing Timeline (richer — bars + value line)       */}
+      {/* ================================================================== */}
+      {showComputedSections && <OverpricingTimelineSection contracts={allContracts} loading={loading} />}
+
+      {/* ================================================================== */}
+      {/* SECTION 5b: Original anomaly timeline (compact sqrt-scaled)        */}
       {/* ================================================================== */}
       {showComputedSections && <AnomalyTimelineSection contracts={allContracts} loading={loading} />}
 

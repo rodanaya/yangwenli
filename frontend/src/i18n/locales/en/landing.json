@@ -201,5 +201,60 @@
     "dataLabel": "Data",
     "methodologyLabel": "Methodology",
     "openSourceLabel": "Open-source procurement intelligence"
+  },
+  "revelation": {
+    "edition": "EDITION · {{date}}",
+    "masthead": "THE RUBLI INVESTIGATION",
+    "dek": "Twenty-three years of Mexican federal procurement, opened for public investigation.",
+    "frontline": "FRONTLINE FINDINGS",
+    "ledeLabel": "THE NUMBERS",
+    "ledePrimary": "9.9 trillion pesos.",
+    "ledeSecondary": "3 million contracts.",
+    "ledeTertiary": "23 years.",
+    "ledeBody": "Every peso the Mexican federal government spent between 2002 and 2025, traced, classified and scored against 748 documented corruption cases.",
+    "ctaInvestigate": "Begin Investigation",
+    "ctaMethodology": "How we did it"
+  },
+  "investigations": {
+    "kicker": "THREE INVESTIGATIONS",
+    "headline": "Where to begin",
+    "sub": "Three entry points into the data. Each leads to documented evidence.",
+    "one": {
+      "number": "01",
+      "kicker": "THE GHOST COMPANIES",
+      "headline": "IMSS and the 9,366 phantom contracts.",
+      "body": "Two vendors — reputed fronts for a ghost network — collected thousands of contracts from the national health institute. Model score: 0.962 on average. Ninety-nine percent flagged critical.",
+      "statValue": "9,366",
+      "statLabel": "phantom contracts · IMSS ghost network",
+      "cta": "Open ARIA queue"
+    },
+    "two": {
+      "number": "02",
+      "kicker": "THE PRICE",
+      "headline": "Where vendors charge three times the market rate.",
+      "body": "Price volatility is the single strongest signal in the v0.6.5 model. In four sectors, the top quartile of vendors charges 3x the sector median on direct awards.",
+      "statValue": "3×",
+      "statLabel": "median price · top-quartile vendors",
+      "cta": "See price intelligence"
+    },
+    "three": {
+      "number": "03",
+      "kicker": "THE NO-BID ECONOMY",
+      "headline": "81.9% of federal spending escapes public tender.",
+      "body": "The OECD integrity threshold for direct awards is 25%. Mexico sits at 81.9% — the highest rate in the OECD sample. The gap has widened every sexenio since 2006.",
+      "statValue": "3.3×",
+      "statLabel": "OECD direct-award limit",
+      "cta": "Browse by procedure"
+    }
+  },
+  "ticker": {
+    "label": "LIVE · CRITICAL FLAGS",
+    "ariaLabel": "Ticker of recent critical-risk contracts"
+  },
+  "scorecards": {
+    "kicker": "THE LEAGUE TABLE",
+    "headline": "2,563 federal institutions ranked by transparency",
+    "sub": "Annual accountability ranking — scored 0–100 across five pillars. Openness, price fairness, vendor diversity, process integrity, external alerts.",
+    "cta": "Open the league table"
   }
 }

@@ -40,6 +40,8 @@ import {
   User,
   Flag,
   Search,
+  Layers,
+  Zap,
 } from 'lucide-react'
 import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { SECTORS } from '@/lib/constants'
@@ -1606,6 +1608,744 @@ function DAConcentrationChart({
 }
 
 // =============================================================================
+// Squarified Treemap (pure SVG) — spend hierarchy at a glance
+// =============================================================================
+
+interface TreemapDatum {
+  category_id: number
+  name: string
+  sector_code: string | null
+  total_value: number
+  total_contracts: number
+  avg_risk: number
+  direct_award_pct: number
+}
+
+interface TreemapRect extends TreemapDatum {
+  x: number
+  y: number
+  w: number
+  h: number
+}
+
+/**
+ * Squarified treemap algorithm (Bruls, Huijing & van Wijk 2000).
+ * Pure function, no deps. Returns rectangles sized by value.
+ */
+function squarify(
+  items: TreemapDatum[],
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+): TreemapRect[] {
+  if (!items.length || w <= 0 || h <= 0) return []
+
+  const total = items.reduce((s, d) => s + d.total_value, 0)
+  if (total <= 0) return []
+
+  const area = w * h
+  const scale = area / total
+
+  const rects: TreemapRect[] = []
+  const sorted = [...items].sort((a, b) => b.total_value - a.total_value)
+
+  function worst(row: TreemapDatum[], sideLength: number): number {
+    if (!row.length) return Infinity
+    const sum = row.reduce((s, d) => s + d.total_value * scale, 0)
+    const rMax = row.reduce((m, d) => Math.max(m, d.total_value * scale), 0)
+    const rMin = row.reduce((m, d) => Math.min(m, d.total_value * scale), Infinity)
+    const s2 = sum * sum
+    const l2 = sideLength * sideLength
+    return Math.max((l2 * rMax) / s2, s2 / (l2 * rMin))
+  }
+
+  function layout(row: TreemapDatum[], cx: number, cy: number, cw: number, ch: number) {
+    const horizontal = cw >= ch
+    const side = horizontal ? ch : cw
+    const sum = row.reduce((s, d) => s + d.total_value * scale, 0)
+    const slice = sum / side
+    let offset = 0
+    for (const d of row) {
+      const length = (d.total_value * scale) / side
+      if (horizontal) {
+        rects.push({ ...d, x: cx, y: cy + offset, w: slice, h: length })
+      } else {
+        rects.push({ ...d, x: cx + offset, y: cy, w: length, h: slice })
+      }
+      offset += length
+    }
+    if (horizontal) return { x: cx + slice, y: cy, w: cw - slice, h: ch }
+    return { x: cx, y: cy + slice, w: cw, h: ch - slice }
+  }
+
+  let remaining = sorted
+  let region = { x, y, w, h }
+
+  while (remaining.length) {
+    const row: TreemapDatum[] = []
+    const side = Math.min(region.w, region.h)
+    let i = 0
+    while (i < remaining.length) {
+      const next = remaining[i]
+      const trial = [...row, next]
+      if (row.length === 0 || worst(trial, side) <= worst(row, side)) {
+        row.push(next)
+        i++
+      } else {
+        break
+      }
+    }
+    region = layout(row, region.x, region.y, region.w, region.h)
+    remaining = remaining.slice(row.length)
+    if (region.w <= 0 || region.h <= 0) break
+  }
+
+  return rects
+}
+
+function TreemapSquarified({
+  categories,
+  lang,
+  height = 480,
+  onSelect,
+}: {
+  categories: CategoryStat[]
+  lang: string
+  height?: number
+  onSelect: (id: number) => void
+}) {
+  const { t } = useTranslation('spending')
+  const [hovered, setHovered] = useState<number | null>(null)
+  const containerRef = useRef<HTMLDivElement>(null)
+  const [width, setWidth] = useState(900)
+
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const ro = new ResizeObserver(entries => {
+      for (const entry of entries) {
+        setWidth(entry.contentRect.width)
+      }
+    })
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [])
+
+  // Top 40 categories — anything smaller becomes illegible
+  const items = useMemo((): TreemapDatum[] => {
+    return [...categories]
+      .filter(c => c.total_value > 0)
+      .sort((a, b) => b.total_value - a.total_value)
+      .slice(0, 40)
+      .map(c => ({
+        category_id: c.category_id,
+        name: localeName(c, lang),
+        sector_code: c.sector_code,
+        total_value: c.total_value,
+        total_contracts: c.total_contracts,
+        avg_risk: c.avg_risk,
+        direct_award_pct: c.direct_award_pct,
+      }))
+  }, [categories, lang])
+
+  const rects = useMemo(
+    () => squarify(items, 0, 0, Math.max(100, width), height),
+    [items, width, height],
+  )
+
+  const hoveredItem = hovered != null ? rects.find(r => r.category_id === hovered) : null
+  const totalShown = items.reduce((s, d) => s + d.total_value, 0)
+  const totalAll = categories.reduce((s, d) => s + d.total_value, 0)
+  const shownPct = totalAll > 0 ? (totalShown / totalAll) * 100 : 0
+
+  if (!items.length) {
+    return (
+      <div
+        ref={containerRef}
+        className="flex items-center justify-center rounded-lg border border-border/30 bg-background-card"
+        style={{ height }}
+      >
+        <p className="text-xs text-text-muted font-mono">{t('treemap.noData', 'Sin datos')}</p>
+      </div>
+    )
+  }
+
+  return (
+    <div ref={containerRef} className="relative select-none">
+      <svg
+        width="100%"
+        height={height}
+        viewBox={`0 0 ${Math.max(100, width)} ${height}`}
+        preserveAspectRatio="none"
+        onMouseLeave={() => setHovered(null)}
+        style={{ display: 'block' }}
+        aria-label="Treemap of top spending categories"
+        role="img"
+      >
+        {rects.map(r => {
+          const sectorColor = r.sector_code ? (SECTOR_COLORS[r.sector_code] ?? '#64748b') : '#64748b'
+          // Opacity modulated by avg_risk — riskier categories pop
+          const riskOpacity = 0.42 + Math.min(r.avg_risk, 0.8) * 0.7
+          const isHov = hovered === r.category_id
+          const dimmed = hovered !== null && !isHov
+          const riskLevel = getRiskLevelFromScore(r.avg_risk)
+          const isCritical = riskLevel === 'critical'
+          const isHigh = riskLevel === 'high'
+
+          // Only label cells large enough to fit text
+          const canLabelName = r.w > 64 && r.h > 28
+          const canLabelValue = r.w > 64 && r.h > 44
+          const canLabelSub = r.w > 110 && r.h > 66
+
+          return (
+            <g
+              key={r.category_id}
+              onMouseEnter={() => setHovered(r.category_id)}
+              onClick={() => onSelect(r.category_id)}
+              style={{ cursor: 'pointer' }}
+            >
+              <rect
+                x={r.x}
+                y={r.y}
+                width={Math.max(0, r.w - 2)}
+                height={Math.max(0, r.h - 2)}
+                fill={sectorColor}
+                fillOpacity={dimmed ? 0.2 : riskOpacity}
+                stroke={isHov ? '#fafafa' : isCritical ? '#dc2626' : isHigh ? '#ea580c' : '#18181b'}
+                strokeWidth={isHov ? 2 : isCritical || isHigh ? 1.5 : 1}
+                style={{ transition: 'fill-opacity 120ms, stroke 120ms, stroke-width 120ms' }}
+              />
+              {/* Risk stripe for critical/high */}
+              {(isCritical || isHigh) && r.w > 24 && r.h > 24 && (
+                <rect
+                  x={r.x + 2}
+                  y={r.y + 2}
+                  width={Math.max(0, Math.min(r.w - 4, 3))}
+                  height={Math.max(0, r.h - 4)}
+                  fill={isCritical ? '#dc2626' : '#ea580c'}
+                  fillOpacity={dimmed ? 0.25 : 0.95}
+                />
+              )}
+              {canLabelName && (
+                <text
+                  x={r.x + 8}
+                  y={r.y + 16}
+                  fontSize={Math.min(13, Math.max(10, Math.sqrt(r.w * r.h) / 12))}
+                  fontWeight={700}
+                  fill="#fafafa"
+                  fillOpacity={dimmed ? 0.35 : 0.96}
+                  style={{
+                    fontFamily: 'var(--font-family-serif)',
+                    pointerEvents: 'none',
+                    textShadow: '0 1px 2px rgba(0,0,0,0.6)',
+                  }}
+                >
+                  {r.name.length > Math.floor(r.w / 7)
+                    ? r.name.slice(0, Math.floor(r.w / 7) - 1) + '…'
+                    : r.name}
+                </text>
+              )}
+              {canLabelValue && (
+                <text
+                  x={r.x + 8}
+                  y={r.y + 32}
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                  fill="#fafafa"
+                  fillOpacity={dimmed ? 0.3 : 0.82}
+                  style={{ pointerEvents: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
+                >
+                  {formatCompactMXN(r.total_value)}
+                </text>
+              )}
+              {canLabelSub && (
+                <text
+                  x={r.x + 8}
+                  y={r.y + 47}
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono)"
+                  fill="#fafafa"
+                  fillOpacity={dimmed ? 0.22 : 0.64}
+                  style={{ pointerEvents: 'none' }}
+                >
+                  {formatNumber(r.total_contracts)} · {(r.avg_risk * 100).toFixed(0)}% riesgo
+                </text>
+              )}
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Tooltip */}
+      {hoveredItem && (
+        <div
+          className="absolute z-20 rounded-lg border p-3 text-xs font-mono shadow-xl pointer-events-none animate-in fade-in duration-100"
+          style={{
+            left: Math.min(hoveredItem.x + 10, (width || 900) - 240),
+            top: Math.min(hoveredItem.y + 10, height - 140),
+            backgroundColor: 'var(--color-background-card)',
+            borderColor: hoveredItem.sector_code ? (SECTOR_COLORS[hoveredItem.sector_code] ?? '#64748b') : '#64748b',
+            maxWidth: 240,
+          }}
+        >
+          <p
+            className="font-bold text-text-primary text-[12px] mb-1 leading-tight"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {hoveredItem.name}
+          </p>
+          <div className="flex items-center gap-1.5 mb-2">
+            <span
+              className="w-2 h-2 rounded-full flex-shrink-0"
+              style={{
+                backgroundColor: hoveredItem.sector_code ? (SECTOR_COLORS[hoveredItem.sector_code] ?? '#64748b') : '#64748b',
+              }}
+            />
+            <span className="text-text-muted/80 capitalize text-[10px]">
+              {hoveredItem.sector_code ?? 'otros'}
+            </span>
+          </div>
+          <div className="space-y-0.5 text-[10px]">
+            <p className="text-text-muted">
+              Gasto: <span className="font-semibold text-text-primary">{formatCompactMXN(hoveredItem.total_value)}</span>
+            </p>
+            <p className="text-text-muted">
+              Contratos: <span className="text-text-primary">{formatNumber(hoveredItem.total_contracts)}</span>
+            </p>
+            <p className="text-text-muted">
+              Riesgo: <span className="font-semibold" style={{ color: getRiskColor(hoveredItem.avg_risk) }}>
+                {(hoveredItem.avg_risk * 100).toFixed(1)}%
+              </span>
+            </p>
+            <p className="text-text-muted">
+              Adj. directa: <span className="text-text-primary">{hoveredItem.direct_award_pct.toFixed(0)}%</span>
+            </p>
+          </div>
+          <p className="text-accent/70 mt-1.5 text-[10px]">Clic para detalles →</p>
+        </div>
+      )}
+
+      {/* Footer legend */}
+      <div className="flex items-center gap-4 mt-3 text-[9px] font-mono text-text-muted/60 flex-wrap">
+        <span>
+          <span className="text-text-primary font-bold">{items.length}</span>{' '}
+          {lang === 'en' ? 'categories shown' : 'categorías mostradas'} · {shownPct.toFixed(0)}%{' '}
+          {lang === 'en' ? 'of total spend' : 'del gasto total'}
+        </span>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#dc2626' }} />
+          <span>{lang === 'en' ? 'Critical risk' : 'Riesgo crítico'}</span>
+        </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-sm" style={{ backgroundColor: '#ea580c' }} />
+          <span>{lang === 'en' ? 'High risk' : 'Riesgo alto'}</span>
+        </div>
+        <span className="ml-auto opacity-70">
+          {lang === 'en' ? 'Size = total spend · Color = sector · Opacity = risk' : 'Tamaño = gasto · Color = sector · Opacidad = riesgo'}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
+// Signal vs Noise — risk-adjusted spending outliers
+// =============================================================================
+
+interface OutlierItem {
+  category: CategoryStat
+  score: number            // composite disproportionality
+  riskExcess: number       // avg_risk - median_risk (in absolute terms)
+  spendPctile: number      // 0..1 percentile of spend
+  reason: 'high-risk-high-spend' | 'high-risk-small' | 'concentration'
+}
+
+function SignalNoiseOutliers({
+  categories,
+  lang,
+  onSelect,
+}: {
+  categories: CategoryStat[]
+  lang: string
+  onSelect: (id: number) => void
+}) {
+  const outliers = useMemo((): OutlierItem[] => {
+    const eligible = categories.filter(c => c.avg_risk > 0 && c.total_contracts >= 30 && c.total_value > 0)
+    if (eligible.length < 5) return []
+
+    const risks = eligible.map(c => c.avg_risk).sort((a, b) => a - b)
+    const median = risks[Math.floor(risks.length / 2)]
+
+    const spendSorted = [...eligible].sort((a, b) => a.total_value - b.total_value)
+    const spendRank = new Map<number, number>()
+    spendSorted.forEach((c, i) => spendRank.set(c.category_id, i / Math.max(1, eligible.length - 1)))
+
+    // Composite: spending volume × risk excess. Weight large-spend-high-risk heavily.
+    const scored = eligible.map(c => {
+      const riskExcess = c.avg_risk - median
+      const spendPctile = spendRank.get(c.category_id) ?? 0
+      // score = risk above median * spend percentile rank * log(contract volume)
+      const score =
+        Math.max(0, riskExcess) *
+        (0.3 + 0.7 * spendPctile) *
+        Math.log10(Math.max(10, c.total_contracts))
+      let reason: OutlierItem['reason'] = 'high-risk-high-spend'
+      if (spendPctile < 0.5 && c.avg_risk >= RISK_THRESHOLDS.high) reason = 'high-risk-small'
+      if (c.direct_award_pct >= 80) reason = 'concentration'
+      return { category: c, score, riskExcess, spendPctile, reason }
+    })
+
+    return scored
+      .filter(o => o.score > 0 && o.riskExcess > 0.05)
+      .sort((a, b) => b.score - a.score)
+      .slice(0, 4)
+  }, [categories])
+
+  if (!outliers.length) return null
+
+  return (
+    <section aria-labelledby="outliers-heading">
+      <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
+        <div className="max-w-2xl">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            RUBLI · {lang === 'en' ? 'Signal vs. Noise' : 'Señal vs. Ruido'}
+          </p>
+          <h2
+            id="outliers-heading"
+            className="text-2xl font-bold text-text-primary leading-tight"
+            style={{ fontFamily: 'var(--font-family-serif)' }}
+          >
+            {lang === 'en'
+              ? <>Where risk and spend <em>converge.</em></>
+              : <>Donde el riesgo y el gasto <em>convergen.</em></>
+            }
+          </h2>
+          <p className="text-sm text-text-secondary mt-2 leading-relaxed">
+            {lang === 'en'
+              ? 'These categories carry risk scores disproportionately high given their spend volume — the needles in the haystack where the biggest corruption risk lives.'
+              : 'Estas categorías presentan riesgo desproporcionadamente alto para su volumen de gasto — las agujas en el pajar donde se concentra el riesgo de corrupción más grande.'
+            }
+          </p>
+        </div>
+        <FuentePill source={lang === 'en' ? 'Composite score · RUBLI' : 'Puntaje compuesto · RUBLI'} />
+      </div>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        {outliers.map((o, idx) => {
+          const cat = o.category
+          const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+          const riskColor = RISK_COLORS[riskLevel]
+          const sectorColor = cat.sector_code ? (SECTOR_COLORS[cat.sector_code] ?? '#64748b') : '#64748b'
+          const excessPct = (o.riskExcess * 100).toFixed(1)
+          const spendPctile = (o.spendPctile * 100).toFixed(0)
+
+          let headline: string
+          if (o.reason === 'high-risk-high-spend') {
+            headline = lang === 'en'
+              ? `${excessPct}pp above median risk — on ${spendPctile}th-percentile spend.`
+              : `${excessPct}pp sobre riesgo mediano — gasto en percentil ${spendPctile}.`
+          } else if (o.reason === 'high-risk-small') {
+            headline = lang === 'en'
+              ? `High risk concentrated in a small-spend category — classic shell pattern.`
+              : `Riesgo alto concentrado en categoría de gasto reducido — patrón de fachada.`
+          } else {
+            headline = lang === 'en'
+              ? `${cat.direct_award_pct.toFixed(0)}% direct awards — ${(cat.direct_award_pct / 25).toFixed(1)}× OECD limit.`
+              : `${cat.direct_award_pct.toFixed(0)}% adj. directa — ${(cat.direct_award_pct / 25).toFixed(1)}× límite OCDE.`
+          }
+
+          return (
+            <button
+              key={cat.category_id}
+              onClick={() => onSelect(cat.category_id)}
+              className="group text-left rounded-xl border border-amber-500/20 bg-amber-500/[0.04] hover:bg-amber-500/[0.07] hover:border-amber-500/40 transition-colors overflow-hidden"
+              style={{ borderLeftColor: riskColor, borderLeftWidth: 3 }}
+            >
+              <div className="p-5">
+                <div className="flex items-center gap-2 mb-2">
+                  <span className="text-[9px] font-mono text-amber-400/70 uppercase tracking-[0.15em]">
+                    #{idx + 1} {lang === 'en' ? 'Outlier' : 'Anomalía'}
+                  </span>
+                  <span className="h-px flex-1 bg-amber-500/20" />
+                  {cat.sector_code && (
+                    <span
+                      className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      style={{
+                        backgroundColor: `${sectorColor}18`,
+                        color: sectorColor,
+                      }}
+                    >
+                      {cat.sector_code}
+                    </span>
+                  )}
+                </div>
+                <p
+                  className="text-xs font-mono uppercase tracking-wide text-amber-400/90 mb-2"
+                  style={{ letterSpacing: '0.08em' }}
+                >
+                  {lang === 'en' ? 'HALLAZGO' : 'HALLAZGO'}
+                </p>
+                <p
+                  className="text-base font-semibold text-text-primary leading-snug mb-3 group-hover:text-amber-100 transition-colors"
+                  style={{ fontFamily: 'var(--font-family-serif)' }}
+                >
+                  {localeName(cat, lang)}
+                </p>
+                <p className="text-sm text-zinc-300 leading-relaxed mb-4">{headline}</p>
+
+                {/* Mini stat row */}
+                <div className="grid grid-cols-3 gap-3 pt-3 border-t border-amber-500/10">
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                      {lang === 'en' ? 'Risk' : 'Riesgo'}
+                    </p>
+                    <p className="text-lg font-mono font-bold tabular-nums" style={{ color: riskColor }}>
+                      {(cat.avg_risk * 100).toFixed(0)}%
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                      {lang === 'en' ? 'Spend' : 'Gasto'}
+                    </p>
+                    <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
+                      {formatCompactMXN(cat.total_value)}
+                    </p>
+                  </div>
+                  <div>
+                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                      {lang === 'en' ? 'AD rate' : 'Adj. dir.'}
+                    </p>
+                    <p
+                      className="text-lg font-mono font-bold tabular-nums"
+                      style={{ color: cat.direct_award_pct > 25 ? '#fb923c' : 'var(--color-text-primary)' }}
+                    >
+                      {cat.direct_award_pct.toFixed(0)}%
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-3 flex items-center gap-1 text-[10px] font-mono text-amber-400/80 uppercase tracking-wide group-hover:text-amber-300 transition-colors">
+                  <span>{lang === 'en' ? 'Investigate this category' : 'Investigar esta categoría'}</span>
+                  <ArrowUpRight className="h-3 w-3" />
+                </div>
+              </div>
+            </button>
+          )
+        })}
+      </div>
+    </section>
+  )
+}
+
+// =============================================================================
+// Vendor Concentration Callout — for selected category
+// =============================================================================
+
+interface TopVendorRow {
+  vendor_id: number
+  vendor_name: string
+  contract_count: number
+  vendor_value: number
+  market_share_pct: number
+  avg_risk: number
+  direct_award_pct: number
+  single_bid_pct: number
+}
+
+function VendorConcentrationCallout({
+  categoryName,
+  categoryTotalValue,
+  hhi,
+  concentrationLabel,
+  top3SharePct,
+  vendors,
+  loading,
+  lang,
+  onNavigate,
+}: {
+  categoryName: string
+  categoryTotalValue: number
+  hhi: number
+  concentrationLabel: 'highly_concentrated' | 'moderately_concentrated' | 'competitive'
+  top3SharePct: number
+  vendors: TopVendorRow[]
+  loading: boolean
+  lang: string
+  onNavigate: (path: string) => void
+}) {
+  if (loading) {
+    return (
+      <div className="rounded-xl border border-border/30 bg-background-card/50 p-5">
+        <Skeleton className="h-4 w-1/3 mb-3" />
+        <Skeleton className="h-12 w-1/2 mb-4" />
+        <div className="space-y-2">
+          {[...Array(5)].map((_, i) => <Skeleton key={i} className="h-6 w-full" />)}
+        </div>
+      </div>
+    )
+  }
+
+  if (!vendors.length) return null
+
+  const top = vendors[0]
+  const isHighlyConc = concentrationLabel === 'highly_concentrated'
+  const isModConc = concentrationLabel === 'moderately_concentrated'
+  const barColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#3b82f6'
+  const pillColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#16a34a'
+
+  const concLabel =
+    concentrationLabel === 'highly_concentrated'
+      ? (lang === 'en' ? 'HIGHLY CONCENTRATED' : 'ALTAMENTE CONCENTRADO')
+      : concentrationLabel === 'moderately_concentrated'
+        ? (lang === 'en' ? 'MODERATELY CONCENTRATED' : 'MODERADAMENTE CONCENTRADO')
+        : (lang === 'en' ? 'COMPETITIVE' : 'COMPETITIVO')
+
+  return (
+    <div
+      className="rounded-xl border overflow-hidden"
+      style={{
+        borderColor: `${pillColor}30`,
+        backgroundColor: `${pillColor}08`,
+        borderLeftColor: pillColor,
+        borderLeftWidth: 3,
+      }}
+    >
+      <div className="p-5">
+        <div className="flex items-center gap-2 mb-1">
+          <Zap className="h-3.5 w-3.5" style={{ color: pillColor }} />
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]" style={{ color: pillColor }}>
+            {lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedores'}
+          </p>
+          <span
+            className="text-[9px] font-mono font-bold px-2 py-0.5 rounded"
+            style={{ color: pillColor, backgroundColor: `${pillColor}18` }}
+          >
+            {concLabel}
+          </span>
+        </div>
+
+        {/* Editorial finding — the hero stat */}
+        <div className="border-l-2 pl-4 py-1 mt-2 mb-4" style={{ borderColor: barColor }}>
+          <div className="flex items-baseline gap-2 flex-wrap">
+            <span className="text-4xl font-mono font-bold tabular-nums" style={{ color: barColor }}>
+              {top.market_share_pct.toFixed(1)}%
+            </span>
+            <span className="text-sm text-zinc-400">
+              {lang === 'en' ? 'held by' : 'controlado por'}{' '}
+              <button
+                onClick={() => onNavigate(`/vendors/${top.vendor_id}`)}
+                className="text-text-primary font-semibold hover:text-amber-400 transition-colors"
+              >
+                {truncate(top.vendor_name, 40)}
+              </button>
+            </span>
+          </div>
+          <p className="text-xs text-zinc-500 mt-1">
+            {lang === 'en'
+              ? `${formatCompactMXN(top.vendor_value)} across ${formatNumber(top.contract_count)} contracts in ${categoryName}`
+              : `${formatCompactMXN(top.vendor_value)} en ${formatNumber(top.contract_count)} contratos en ${categoryName}`
+            }
+          </p>
+        </div>
+
+        {/* Concentration stats strip */}
+        <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-border/20">
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+              HHI
+            </p>
+            <p className="text-lg font-mono font-bold tabular-nums" style={{ color: barColor }}>
+              {hhi.toFixed(3)}
+            </p>
+            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+              {hhi >= 0.25
+                ? (lang === 'en' ? 'Monopolistic' : 'Monopólico')
+                : hhi >= 0.15
+                  ? (lang === 'en' ? 'Concentrated' : 'Concentrado')
+                  : (lang === 'en' ? 'Competitive' : 'Competitivo')
+              }
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+              {lang === 'en' ? 'Top 3 share' : 'Top 3'}
+            </p>
+            <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
+              {top3SharePct.toFixed(0)}%
+            </p>
+            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+              {lang === 'en' ? 'combined' : 'combinado'}
+            </p>
+          </div>
+          <div>
+            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+              {lang === 'en' ? 'Total market' : 'Mercado total'}
+            </p>
+            <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
+              {formatCompactMXN(categoryTotalValue)}
+            </p>
+            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+              {vendors.length} {lang === 'en' ? 'shown' : 'mostrados'}
+            </p>
+          </div>
+        </div>
+
+        {/* Top vendors bar chart */}
+        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-2">
+          {lang === 'en' ? 'Market share — top vendors' : 'Participación — proveedores principales'}
+        </p>
+        <div className="space-y-1">
+          {vendors.slice(0, 8).map((v, idx) => {
+            const riskLevel = getRiskLevelFromScore(v.avg_risk)
+            const riskColor = RISK_COLORS[riskLevel]
+            return (
+              <div
+                key={v.vendor_id}
+                className="group flex items-center gap-2 py-1 px-1 rounded hover:bg-background-elevated/40 transition-colors"
+              >
+                <span className="text-[9px] font-mono text-text-muted/30 w-5 text-right tabular-nums flex-shrink-0">
+                  {idx + 1}
+                </span>
+                <button
+                  onClick={() => onNavigate(`/vendors/${v.vendor_id}`)}
+                  className="text-[11px] text-text-secondary hover:text-accent transition-colors truncate w-44 flex-shrink-0 text-left"
+                >
+                  {truncate(v.vendor_name, 28)}
+                </button>
+                <div className="flex-1 relative h-3.5">
+                  <div className="absolute inset-0 rounded bg-background-elevated/30" />
+                  <div
+                    className="absolute inset-y-0 left-0 rounded transition-all duration-500"
+                    style={{
+                      width: `${Math.min(v.market_share_pct * 2.5, 100)}%`,
+                      backgroundColor: idx === 0 ? barColor : '#3b82f6',
+                      opacity: idx === 0 ? 0.85 : 0.55,
+                    }}
+                  />
+                </div>
+                <span
+                  className="text-[10px] font-mono font-bold tabular-nums w-11 text-right flex-shrink-0"
+                  style={{ color: idx === 0 ? barColor : 'var(--color-text-secondary)' }}
+                >
+                  {v.market_share_pct.toFixed(1)}%
+                </span>
+                <span
+                  className="text-[9px] font-mono tabular-nums w-9 text-right flex-shrink-0 hidden md:block"
+                  style={{ color: riskColor }}
+                >
+                  {(v.avg_risk * 100).toFixed(0)}%
+                </span>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// =============================================================================
 // Main Component
 // =============================================================================
 
@@ -1676,6 +2416,13 @@ export default function SpendingCategories() {
     queryKey: ['categories', 'sexenio'],
     queryFn: () => categoriesApi.getSexenio(),
     staleTime: 10 * 60 * 1000,
+  })
+
+  const { data: topVendorsData, isLoading: topVendorsLoading } = useQuery({
+    queryKey: ['categories', 'top-vendors', selectedCategoryId],
+    queryFn: () => categoriesApi.getTopVendors(selectedCategoryId!, 15),
+    enabled: selectedCategoryId !== null,
+    staleTime: 5 * 60 * 1000,
   })
 
   const allCategories: CategoryStat[] = summaryData?.data ?? []
@@ -1914,19 +2661,28 @@ export default function SpendingCategories() {
       .reduce((s, c) => s + c.total_value, 0)
   }, [allCategories])
 
-  // Loading skeleton
+  // Loading skeleton — mirrors final layout (hero, stats, treemap, ranking)
   if (summaryLoading && !summaryData) {
     return (
-      <div className="space-y-6">
-        <Skeleton className="h-32 w-full" />
+      <div className="space-y-8">
+        <Skeleton className="h-32 w-full rounded-xl" />
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-24 rounded-lg" />
+            <Skeleton key={i} className="h-28 rounded-lg" />
           ))}
         </div>
-        {Array.from({ length: 5 }).map((_, i) => (
-          <Skeleton key={i} className="h-14 w-full" />
-        ))}
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-48" />
+          <Skeleton className="h-8 w-96" />
+          <Skeleton className="h-4 w-full max-w-2xl" />
+          <ChartSkeleton height={480} />
+        </div>
+        <div className="space-y-2">
+          <Skeleton className="h-8 w-64" />
+          {Array.from({ length: 6 }).map((_, i) => (
+            <Skeleton key={i} className="h-12 w-full" />
+          ))}
+        </div>
       </div>
     )
   }
@@ -2016,6 +2772,51 @@ export default function SpendingCategories() {
           color="border-amber-500"
         />
       </div>
+
+      {/* ================================================================= */}
+      {/* 2.4 Squarified Treemap — spend hierarchy at a glance              */}
+      {/* ================================================================= */}
+      {allCategories.length > 0 && (
+        <section aria-labelledby="treemap-heading" className="space-y-4">
+          <div className="flex items-end justify-between gap-3 flex-wrap">
+            <div className="max-w-2xl">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                <Layers className="h-3 w-3 inline-block mr-1 -mt-0.5" />
+                RUBLI · {i18n.language === 'en' ? 'The Anatomy of Federal Spend' : 'La Anatomía del Gasto Federal'}
+              </p>
+              <h2
+                id="treemap-heading"
+                className="text-2xl font-bold text-text-primary leading-tight"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {i18n.language === 'en'
+                  ? <>9.9 trillion pesos, <em>mapped.</em></>
+                  : <>9.9 billones de pesos, <em>mapeados.</em></>
+                }
+              </h2>
+              <p className="text-sm text-text-secondary mt-2 leading-relaxed">
+                {i18n.language === 'en'
+                  ? 'Each rectangle is a partida code. Size is total spend. Color is sector. Darker fill means higher average risk. Click any cell to investigate.'
+                  : 'Cada rectángulo es un código partida. El tamaño es el gasto total. El color es el sector. Mayor intensidad indica mayor riesgo promedio. Clic en cualquier celda para investigar.'
+                }
+              </p>
+            </div>
+            <FuentePill source="COMPRANET · 2002–2025" verified={true} />
+          </div>
+          <div className="rounded-xl border border-border/30 bg-background-card/50 p-2">
+            {summaryLoading ? (
+              <ChartSkeleton height={480} />
+            ) : (
+              <TreemapSquarified
+                categories={allCategories}
+                lang={i18n.language}
+                height={480}
+                onSelect={(id) => setSelectedCategoryId(prev => prev === id ? null : id)}
+              />
+            )}
+          </div>
+        </section>
+      )}
 
       {/* ================================================================= */}
       {/* 2.5 Category Ranking — editorial replacement for 72-cell treemap  */}
@@ -2177,6 +2978,17 @@ export default function SpendingCategories() {
       )}
 
       {/* ================================================================= */}
+      {/* 4.5 Signal vs. Noise — risk-adjusted outliers                     */}
+      {/* ================================================================= */}
+      {allCategories.length > 0 && (
+        <SignalNoiseOutliers
+          categories={allCategories}
+          lang={i18n.language}
+          onSelect={(id) => setSelectedCategoryId(prev => prev === id ? null : id)}
+        />
+      )}
+
+      {/* ================================================================= */}
       {/* 5. Search / Filter Bar                                            */}
       {/* ================================================================= */}
       <div className="space-y-3">
@@ -2314,6 +3126,19 @@ export default function SpendingCategories() {
             onClose={() => setSelectedCategoryId(null)}
             onNavigate={navigate}
             trendItems={selectedCategoryTrend}
+          />
+        )}
+        {selectedCategoryId !== null && selectedCategory && (topVendorsLoading || (topVendorsData?.data?.length ?? 0) > 0) && (
+          <VendorConcentrationCallout
+            categoryName={localeName(selectedCategory, i18n.language)}
+            categoryTotalValue={topVendorsData?.total_value ?? selectedCategory.total_value}
+            hhi={topVendorsData?.hhi ?? 0}
+            concentrationLabel={topVendorsData?.concentration_label ?? 'competitive'}
+            top3SharePct={topVendorsData?.top3_share_pct ?? 0}
+            vendors={(topVendorsData?.data ?? []) as TopVendorRow[]}
+            loading={topVendorsLoading}
+            lang={i18n.language}
+            onNavigate={navigate}
           />
         )}
         {selectedCategoryId !== null && (subcategoryLoading || (subcategoryData?.data?.length ?? 0) > 0) && (

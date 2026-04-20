@@ -22,6 +22,45 @@
     "one": "LAS CABEZAS DE SERIE",
     "two": "LA CLASIFICACIÓN COMPLETA"
   },
+  "hero": {
+    "leagueVerdict": "VEREDICTO DE LA LIGA",
+    "annualRanking": "Ranking anual de rendición de cuentas · Instituciones federales 2002–2025",
+    "scoreRange": "Una puntuación menor a 40 indica falla sistémica en apertura, precios, diversidad de proveedores, integridad del proceso y alertas externas.",
+    "benchmark": "Umbral de integridad OCDE: 60"
+  },
+  "champions": {
+    "kicker": "CUADRO DE HONOR",
+    "headline": "Cinco instituciones dignas de replicar",
+    "sub": "Estas agencias encabezan la clasificación en apertura, precios y diversidad de proveedores. Demuestran que se puede."
+  },
+  "redFlags": {
+    "kicker": "LAS BANDERAS ROJAS",
+    "headline": "Cinco instituciones que fallaron la prueba",
+    "sub": "Las agencias peor calificadas. Cada una por debajo de 40 en los cinco pilares — un veredicto de riesgo sistémico de captura."
+  },
+  "histogram": {
+    "kicker": "LA FORMA DE LA RENDICIÓN DE CUENTAS",
+    "headline": "Distribución de puntuaciones entre {{total}} instituciones federales",
+    "sub": "Cada institución cae en una de cinco bandas. La mediana es {{median}}.",
+    "bandLabel": "{{min}}–{{max}}",
+    "institutions": "instituciones",
+    "ariaLabel": "Histograma de distribución de puntuaciones agrupadas en bandas de 20 puntos"
+  },
+  "pillarRadar": {
+    "ariaLabel": "Desglose por pilar de {{name}}",
+    "title": "Desglose de los cinco pilares",
+    "openness": "Apertura",
+    "price": "Precios",
+    "vendors": "Proveedores",
+    "process": "Proceso",
+    "external": "Externo"
+  },
+  "sectorPicker": {
+    "all": "Todos los sectores",
+    "count": "{{num}}"
+  },
+  "expandRow": "Mostrar desglose de pilares",
+  "collapseRow": "Ocultar desglose de pilares",
   "finding": {
     "critical": "Solo el {{pct}}% de instituciones alcanza nivel Satisfactorio o superior. {{failing}} se encuentran en nivel Crítico.",
     "normal": "Solo el {{pct}}% de las {{total}} instituciones evaluadas alcanza nivel Satisfactorio o superior."

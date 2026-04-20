@@ -21,7 +21,8 @@
 import { useMemo, useRef, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { ariaApi } from '@/api/client'
+import { Link } from 'react-router-dom'
+import { ariaApi, networkApi, type PatternSpotlight } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
 import { FONT_MONO, FONT_SERIF } from '@/lib/editorial'
@@ -557,6 +558,54 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
 }
 
 // ---------------------------------------------------------------------------
+// TopVendorsPanel — shows real ARIA T1 vendors for a community's pattern
+// ---------------------------------------------------------------------------
+
+function TopVendorsPanel({
+  spotlight,
+  color,
+  isEs,
+}: {
+  spotlight: PatternSpotlight | undefined
+  color: string
+  isEs: boolean
+}) {
+  if (!spotlight || spotlight.top_vendors.length === 0) return null
+  return (
+    <div className="pt-3 mt-1 border-t border-white/8">
+      <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2">
+        {isEs ? `Principales investigados (${spotlight.code})` : `Top subjects (${spotlight.code})`}
+      </div>
+      <div className="space-y-1">
+        {spotlight.top_vendors.slice(0, 4).map((v, i) => (
+          <Link
+            key={v.vendor_id}
+            to={`/vendors/${v.vendor_id}`}
+            className="group flex items-center gap-2 rounded px-2 py-1 hover:bg-white/5 transition-colors"
+          >
+            <span
+              className="text-[9px] font-mono font-bold w-3 text-right tabular-nums flex-shrink-0"
+              style={{ color }}
+            >
+              {i + 1}
+            </span>
+            <span className="text-[11px] text-text-secondary truncate flex-1 group-hover:text-white">
+              {v.vendor_name}
+            </span>
+            <span
+              className="text-[10px] font-mono font-bold tabular-nums flex-shrink-0"
+              style={{ color }}
+            >
+              {v.ips_final.toFixed(3)}
+            </span>
+          </Link>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // ACT II — EL DOSSIER
 // One editorial card per community with a network signature (DA rate,
 // single-bid rate, price-anomaly rate), value captured, and verdict.
@@ -569,6 +618,7 @@ function CommunityDossier({
   onHover,
   innerRef,
   isEs,
+  patternSpotlight,
 }: {
   c: Community
   communities: Community[]
@@ -576,6 +626,7 @@ function CommunityDossier({
   onHover: (id: string | null) => void
   innerRef: (el: HTMLDivElement | null) => void
   isEs: boolean
+  patternSpotlight: PatternSpotlight | undefined
 }) {
   const fill = PATTERN_HEX[c.pattern]
   const sectorColor = SECTOR_COLORS[c.sector] ?? '#64748b'
@@ -722,9 +773,12 @@ function CommunityDossier({
             {isEs ? 'Veredicto editorial' : 'Editorial verdict'}
           </div>
           <p className="text-[12px] text-text-secondary leading-relaxed italic">
-            “{c.verdict}”
+            &ldquo;{c.verdict}&rdquo;
           </p>
         </div>
+
+        {/* Real ARIA top vendors for this pattern */}
+        <TopVendorsPanel spotlight={patternSpotlight} color={fill} isEs={isEs} />
       </div>
     </div>
   )
@@ -973,6 +1027,18 @@ export default function RedesKnownDossier() {
 
   const communities = useMemo(() => buildCommunities(isEs), [isEs])
 
+  const { data: spotlightData } = useQuery({
+    queryKey: ['pattern-spotlight'],
+    queryFn: () => networkApi.getPatternSpotlight(),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const spotlightByCode = useMemo(() => {
+    const map: Record<string, PatternSpotlight> = {}
+    spotlightData?.patterns.forEach((p) => { map[p.code] = p })
+    return map
+  }, [spotlightData])
+
   const [hoverId, setHoverId] = useState<string | null>(null)
   const [activeId, setActiveId] = useState<string | null>(null)
   const dossierRefs = useRef<Record<string, HTMLDivElement | null>>({})
@@ -1100,6 +1166,7 @@ export default function RedesKnownDossier() {
               dossierRefs.current[c.id] = el
             }}
             isEs={isEs}
+            patternSpotlight={spotlightByCode[c.pattern]}
           />
         ))}
       </div>

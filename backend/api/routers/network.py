@@ -542,6 +542,121 @@ class CommunityVendorItem(BaseModel):
     total_value: float
 
 
+class PatternVendorItem(BaseModel):
+    vendor_id: int
+    vendor_name: str
+    ips_final: float
+    total_value_mxn: Optional[float]
+    avg_risk_score: Optional[float]
+    primary_sector_name: Optional[str]
+    total_contracts: Optional[int]
+
+
+class PatternSpotlight(BaseModel):
+    code: str
+    vendor_count: int
+    t1_count: int
+    t2_count: int
+    avg_ips: float
+    gt_case_count: int
+    top_vendors: List[PatternVendorItem]
+
+
+class PatternSpotlightResponse(BaseModel):
+    patterns: List[PatternSpotlight]
+
+
+@router.get("/pattern-spotlight", response_model=PatternSpotlightResponse)
+def get_pattern_spotlight():
+    """
+    ARIA pattern spotlight — top T1/T2 vendors per primary corruption pattern (P1-P7).
+    Used by CorruptionClusters and RedesKnownDossier pages for real investigative data.
+    """
+    cached = _network_cache.get("pattern_spotlight")
+    if cached is not None:
+        return cached
+
+    # GT case type → ARIA pattern mapping
+    GT_MAP = {
+        "P1": ("monopoly", "concentrated_monopoly"),
+        "P2": ("ghost_company",),
+        "P3": ("intermediary", "single_bid_capture"),
+        "P4": ("bid_rigging",),
+        "P5": ("overpricing",),
+        "P6": ("institutional_capture",),
+        "P7": ("conflict_of_interest", "bribery", "procurement_fraud"),
+    }
+
+    with get_db() as conn:
+        cursor = conn.cursor()
+
+        # Check aria_queue exists
+        tbl = cursor.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' AND name='aria_queue'"
+        ).fetchone()
+        if not tbl:
+            return PatternSpotlightResponse(patterns=[])
+
+        patterns_out = []
+        for code in ("P1", "P2", "P3", "P4", "P5", "P6", "P7"):
+            # Aggregate stats for this pattern
+            agg = cursor.execute("""
+                SELECT COUNT(*) as total,
+                       SUM(CASE WHEN ips_tier = 1 THEN 1 ELSE 0 END) as t1,
+                       SUM(CASE WHEN ips_tier = 2 THEN 1 ELSE 0 END) as t2,
+                       AVG(ips_final) as avg_ips
+                FROM aria_queue
+                WHERE primary_pattern = ?
+            """, (code,)).fetchone()
+
+            # GT count for this pattern
+            types = GT_MAP.get(code, ())
+            if types:
+                placeholders = ",".join("?" * len(types))
+                gt_count = cursor.execute(
+                    f"SELECT COUNT(*) FROM ground_truth_cases WHERE case_type IN ({placeholders})",
+                    list(types)
+                ).fetchone()[0]
+            else:
+                gt_count = 0
+
+            # Top 5 T1 vendors for this pattern
+            top_rows = cursor.execute("""
+                SELECT aq.vendor_id, aq.vendor_name, aq.ips_final,
+                       aq.total_value_mxn, aq.avg_risk_score,
+                       aq.primary_sector_name, aq.total_contracts
+                FROM aria_queue aq
+                WHERE aq.primary_pattern = ? AND aq.ips_tier <= 2
+                ORDER BY aq.ips_final DESC
+                LIMIT 5
+            """, (code,)).fetchall()
+
+            patterns_out.append(PatternSpotlight(
+                code=code,
+                vendor_count=agg["total"] or 0,
+                t1_count=agg["t1"] or 0,
+                t2_count=agg["t2"] or 0,
+                avg_ips=round(float(agg["avg_ips"] or 0), 3),
+                gt_case_count=gt_count,
+                top_vendors=[
+                    PatternVendorItem(
+                        vendor_id=r["vendor_id"],
+                        vendor_name=r["vendor_name"] or f"ID {r['vendor_id']}",
+                        ips_final=round(float(r["ips_final"]), 3),
+                        total_value_mxn=r["total_value_mxn"],
+                        avg_risk_score=r["avg_risk_score"],
+                        primary_sector_name=r["primary_sector_name"],
+                        total_contracts=r["total_contracts"],
+                    )
+                    for r in top_rows
+                ],
+            ))
+
+    result = PatternSpotlightResponse(patterns=patterns_out)
+    _network_cache.set("pattern_spotlight", result, ttl=7200)
+    return result
+
+
 class CommunityItem(BaseModel):
     community_id: int
     size: int

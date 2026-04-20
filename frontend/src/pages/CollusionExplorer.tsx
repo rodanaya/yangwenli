@@ -35,11 +35,12 @@ import { Act } from '@/components/layout/Act'
 type SortField = 'shared_procedures' | 'co_bid_rate'
 type PatternKind = 'rotation' | 'cover' | 'mixed' | 'unknown'
 
-const DEFAULT_MIN_SHARED = 10
-const DEFAULT_SORT: SortField = 'shared_procedures'
+const DEFAULT_MIN_SHARED = 5
+const DEFAULT_SORT: SortField = 'co_bid_rate'
 const DEFAULT_PER_PAGE = 50
-const RINGS_FETCH_SIZE = 100 // backend max per_page
-const TOP_RINGS_SHOWN = 8
+const RINGS_FETCH_SIZE = 500
+const TOP_RINGS_SHOWN = 20
+const RINGS_MIN_CO_BID_RATE = 50 // minimum co_bid_rate % for ring detection
 
 // ---------------------------------------------------------------------------
 // DotBar — NYT-style categorical magnitude indicator
@@ -661,7 +662,7 @@ export default function CollusionExplorer() {
   const { t, i18n } = useTranslation('collusion')
   const isEs = i18n.language === 'es'
 
-  const [flaggedOnly, setFlaggedOnly] = useState(true)
+  const [flaggedOnly, setFlaggedOnly] = useState(false)
   const [minShared, setMinShared] = useState(DEFAULT_MIN_SHARED)
   const [sortBy, setSortBy] = useState<SortField>(DEFAULT_SORT)
   const [page, setPage] = useState(1)
@@ -694,7 +695,7 @@ export default function CollusionExplorer() {
     setPage(1)
   }
   const handleReset = () => {
-    setFlaggedOnly(true)
+    setFlaggedOnly(false)
     setMinShared(DEFAULT_MIN_SHARED)
     setSortBy(DEFAULT_SORT)
     setPage(1)
@@ -706,6 +707,7 @@ export default function CollusionExplorer() {
     () => ({
       is_potential_collusion: flaggedOnly ? true : undefined,
       min_shared_procedures: minShared,
+      min_co_bid_rate: flaggedOnly ? undefined : RINGS_MIN_CO_BID_RATE,
       sort_by: sortBy,
       page,
       per_page: DEFAULT_PER_PAGE,
@@ -731,14 +733,14 @@ export default function CollusionExplorer() {
   })
 
   // Broad query for ring detection — client-side union-find.
-  // Always flagged-only, always by co_bid_rate, large per_page so we capture enough
-  // edges to discover multi-vendor rings even with sparse pair coverage.
+  // Use co_bid_rate >= 50% threshold (288+ pairs) instead of the strict binary flag (28 pairs).
+  // Large per_page to capture enough edges to discover multi-vendor rings.
   const { data: ringsData, isLoading: ringsLoading } = useQuery({
     queryKey: ['collusion-rings-source'],
     queryFn: () =>
       collusionApi.getPairs({
-        is_potential_collusion: true,
-        min_shared_procedures: 10,
+        min_shared_procedures: DEFAULT_MIN_SHARED,
+        min_co_bid_rate: RINGS_MIN_CO_BID_RATE,
         sort_by: 'co_bid_rate',
         page: 1,
         per_page: RINGS_FETCH_SIZE,

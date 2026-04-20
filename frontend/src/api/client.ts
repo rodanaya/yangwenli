@@ -1637,6 +1637,42 @@ export const networkApi = {
     const { data } = await api.get<CommunitiesResponse>(`/network/communities?${queryParams}`)
     return data
   },
+
+  /**
+   * Get pattern spotlight: top T1/T2 ARIA vendors per corruption typology (P1-P7)
+   */
+  async getPatternSpotlight(): Promise<PatternSpotlightResponse> {
+    const { data } = await api.get<PatternSpotlightResponse>('/network/pattern-spotlight')
+    return data
+  },
+}
+
+// ============================================================================
+// Pattern Spotlight types (used by CorruptionClusters + RedesKnownDossier)
+// ============================================================================
+
+export interface PatternVendorItem {
+  vendor_id: number
+  vendor_name: string
+  ips_final: number
+  total_value_mxn: number | null
+  avg_risk_score: number | null
+  primary_sector_name: string | null
+  total_contracts: number | null
+}
+
+export interface PatternSpotlight {
+  code: string
+  vendor_count: number
+  t1_count: number
+  t2_count: number
+  avg_ips: number
+  gt_case_count: number
+  top_vendors: PatternVendorItem[]
+}
+
+export interface PatternSpotlightResponse {
+  patterns: PatternSpotlight[]
 }
 
 // ============================================================================
@@ -2856,6 +2892,7 @@ export const collusionApi = {
   async getPairs(params: {
     is_potential_collusion?: boolean
     min_shared_procedures?: number
+    min_co_bid_rate?: number
     sort_by?: 'shared_procedures' | 'co_bid_rate'
     page?: number
     per_page?: number

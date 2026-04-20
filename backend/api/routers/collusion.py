@@ -86,22 +86,27 @@ class CollusionStats(BaseModel):
 
 @router.get("/pairs", response_model=CollusionPairsResponse, summary="List co-bidding pairs")
 def get_collusion_pairs(
-    is_potential_collusion: Optional[bool] = Query(True, description="Filter by collusion flag"),
-    min_shared_procedures: int = Query(10, ge=1, description="Minimum shared procedures"),
+    is_potential_collusion: Optional[bool] = Query(None, description="Filter by collusion flag (omit for all)"),
+    min_shared_procedures: int = Query(5, ge=1, description="Minimum shared procedures"),
+    min_co_bid_rate: float = Query(0.0, ge=0.0, le=100.0, description="Minimum co-bid rate percentage"),
     sort_by: str = Query("shared_procedures", pattern="^(shared_procedures|co_bid_rate)$"),
     page: int = Query(1, ge=1),
-    per_page: int = Query(50, ge=1, le=100),
+    per_page: int = Query(50, ge=1, le=500),
     conn=Depends(get_db_dep),
 ):
     """
     Return paginated co-bidding pairs with vendor names.
 
     Results are ordered by shared_procedures or co_bid_rate descending.
-    Use is_potential_collusion=true (default) to see only flagged pairs.
-    Set is_potential_collusion=false to see all pairs regardless of flag.
+    Use min_co_bid_rate (e.g. 50) to filter by suspicious co-bid rate threshold.
+    is_potential_collusion defaults to None (all pairs); pass true for the strict 80%+ flag only.
     """
     conditions = ["cbs.shared_procedures >= ?"]
     params: list = [min_shared_procedures]
+
+    if min_co_bid_rate > 0:
+        conditions.append("cbs.co_bid_rate >= ?")
+        params.append(min_co_bid_rate)
 
     if is_potential_collusion is not None:
         conditions.append("cbs.is_potential_collusion = ?")

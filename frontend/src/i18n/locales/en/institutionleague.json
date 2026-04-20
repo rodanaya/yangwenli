@@ -22,6 +22,45 @@
     "one": "LEADERS OF THE PACK",
     "two": "THE FULL RANKING"
   },
+  "hero": {
+    "leagueVerdict": "LEAGUE VERDICT",
+    "annualRanking": "Annual accountability ranking · Federal institutions 2002–2025",
+    "scoreRange": "A score below 40 flags systemic failure in procurement openness, price fairness, vendor diversity, process integrity and external alerts.",
+    "benchmark": "OECD integrity threshold: 60"
+  },
+  "champions": {
+    "kicker": "THE HONOR ROLL",
+    "headline": "Five institutions worth modeling on",
+    "sub": "These agencies rank highest on openness, price fairness and vendor diversity. They prove it is possible."
+  },
+  "redFlags": {
+    "kicker": "THE RED FLAGS",
+    "headline": "Five institutions that failed the test",
+    "sub": "Bottom-ranked agencies. Each one scores below 40 on the five pillars — a verdict of systemic capture risk."
+  },
+  "histogram": {
+    "kicker": "THE SHAPE OF ACCOUNTABILITY",
+    "headline": "Score distribution across {{total}} federal institutions",
+    "sub": "Every institution fits in one of five bands. The median is {{median}}.",
+    "bandLabel": "{{min}}–{{max}}",
+    "institutions": "institutions",
+    "ariaLabel": "Score distribution histogram showing institutions grouped by 20-point score bands"
+  },
+  "pillarRadar": {
+    "ariaLabel": "Pillar breakdown for {{name}}",
+    "title": "Five-pillar breakdown",
+    "openness": "Openness",
+    "price": "Price",
+    "vendors": "Vendors",
+    "process": "Process",
+    "external": "External"
+  },
+  "sectorPicker": {
+    "all": "All sectors",
+    "count": "{{num}}"
+  },
+  "expandRow": "Show pillar breakdown",
+  "collapseRow": "Hide pillar breakdown",
   "finding": {
     "critical": "Only {{pct}}% of institutions reach Satisfactory or better. {{failing}} are flagged at the Critical level.",
     "normal": "Only {{pct}}% of {{total}} evaluated institutions reach the Satisfactory level or better."

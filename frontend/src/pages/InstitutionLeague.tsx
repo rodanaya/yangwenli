@@ -13,7 +13,7 @@
  * crimson accent for accountability.
  */
 
-import { useMemo, useCallback, lazy, Suspense } from 'react'
+import React, { useMemo, useCallback, lazy, Suspense, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { useNavigate, useSearchParams } from 'react-router-dom'
@@ -27,11 +27,13 @@ import {
   TrendingUp,
   TrendingDown,
   Minus,
-  Medal,
   Crown,
   AlertTriangle,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
+  Trophy,
+  Flag,
 } from 'lucide-react'
 import { scorecardApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
@@ -316,78 +318,402 @@ function TierBadge({ grade, size = 'sm' }: { grade: string; size?: 'sm' | 'md' }
 }
 
 // ---------------------------------------------------------------------------
-// Podium card (redesigned: prominent score, tier badge, no letter grade)
+// ChampionCard — editorial "honor roll" card for top performers
+// Gold accent, score as the visual anchor, verdict-style tier badge
 // ---------------------------------------------------------------------------
 
-function PodiumCard({
+function ChampionCard({
   rank,
   item,
   onNavigate,
 }: {
-  rank: 1 | 2 | 3
+  rank: number
   item: InstitutionScorecardItem
   onNavigate: (id: number) => void
 }) {
   const { t } = useTranslation('institutionleague')
   const getTier = useTierInfo()
   const tier = getTier(item.grade)
-  const podiumColors: Record<number, string> = {
-    1: 'from-yellow-900/30 to-zinc-950/10 border-yellow-700/40',
-    2: 'from-zinc-700/30 to-zinc-900/10 border-zinc-600/40',
-    3: 'from-amber-900/20 to-zinc-950/10 border-amber-800/40',
-  }
-  const topBorder: Record<number, string> = {
-    1: 'border-t-4 border-t-yellow-400',
-    2: 'border-t-4 border-t-zinc-400',
-    3: 'border-t-4 border-t-amber-600',
-  }
-  const medalColors: Record<number, string> = {
-    1: 'text-yellow-400',
-    2: 'text-zinc-400',
-    3: 'text-amber-600',
-  }
+  const isLeader = rank === 1
 
   return (
     <button
       onClick={() => onNavigate(item.institution_id)}
-      className={`
-        relative flex flex-col gap-3 p-5 rounded-xl bg-gradient-to-b border
-        ${podiumColors[rank]}
-        ${topBorder[rank]}
-        hover:border-zinc-500/60 transition-all text-left w-full group
-      `}
+      className={`relative flex flex-col gap-3 p-4 rounded-lg text-left w-full group transition-all
+        border ${isLeader
+          ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-zinc-950/10 hover:border-yellow-400/70'
+          : 'border-emerald-700/30 bg-gradient-to-b from-emerald-950/20 to-zinc-950/10 hover:border-emerald-600/50'
+        }`}
       aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
     >
-      {rank === 1 && (
-        <Crown
-          className="absolute -top-3 left-1/2 -translate-x-1/2 h-7 w-7 text-yellow-400 drop-shadow-[0_0_12px_rgba(250,204,21,0.6)]"
-          aria-hidden="true"
-        />
-      )}
-      <div className="flex items-start justify-between gap-2">
-        <div className="flex items-center gap-2">
-          <Medal className={`h-6 w-6 flex-shrink-0 ${medalColors[rank]}`} aria-hidden="true" />
-          <span className={`text-2xl font-mono font-black ${medalColors[rank]}`}>#{rank}</span>
-        </div>
-        {/* Large score number */}
-        <span className="text-6xl font-black font-mono tabular-nums leading-none" style={{ color: tier.color }}>
+      {/* Top bar: rank + trophy for #1 */}
+      <div className="flex items-center justify-between">
+        <span className={`text-[10px] font-mono font-black tracking-[0.15em] uppercase ${isLeader ? 'text-yellow-400' : 'text-emerald-400'}`}>
+          #{rank}
+        </span>
+        {isLeader ? (
+          <Trophy className="h-4 w-4 text-yellow-400 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]" aria-hidden="true" />
+        ) : (
+          <TrendIcon direction={item.trend_direction} />
+        )}
+      </div>
+
+      {/* Score — the visual anchor */}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-5xl font-black font-mono tabular-nums leading-none" style={{ color: tier.color }}>
           {item.total_score.toFixed(0)}
         </span>
+        <span className="text-zinc-600 text-[11px] font-mono">/100</span>
       </div>
-      <p className="text-zinc-100 text-sm font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors">
+
+      {/* Institution name — clipped */}
+      <p className="text-zinc-100 text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors min-h-[2.5rem]">
         {item.institution_name}
       </p>
-      {item.sector_name && (
-        <p className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide truncate">{item.sector_name}</p>
-      )}
-      {/* Tier badge + percentile */}
-      <div className="flex items-center gap-2 mt-auto">
-        <TierBadge grade={item.grade} size="md" />
-        <span className="text-zinc-500 text-[10px] font-mono tabular-nums">
-          {t('percentileLabel', { n: Math.round(item.national_percentile * 100) })}
-        </span>
+
+      {/* Sector + tier */}
+      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-zinc-800/60">
+        <TierBadge grade={item.grade} size="sm" />
+        {item.sector_name && (
+          <span className="text-zinc-600 text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
+        )}
       </div>
     </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// RedFlagCard — red warning card for bottom performers
+// ---------------------------------------------------------------------------
+
+function RedFlagCard({
+  rank,
+  item,
+  onNavigate,
+}: {
+  rank: number
+  item: InstitutionScorecardItem
+  onNavigate: (id: number) => void
+}) {
+  const { t } = useTranslation('institutionleague')
+  const getTier = useTierInfo()
+  const tier = getTier(item.grade)
+
+  return (
+    <button
+      onClick={() => onNavigate(item.institution_id)}
+      className="relative flex flex-col gap-3 p-4 rounded-lg text-left w-full group transition-all
+        border border-red-900/40 bg-gradient-to-b from-red-950/30 to-zinc-950/10 hover:border-red-700/60"
+      aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
+    >
+      {/* Top bar: rank + flag */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-mono font-black tracking-[0.15em] uppercase text-red-400">
+          #{rank}
+        </span>
+        <Flag className="h-4 w-4 text-red-500 flex-shrink-0" aria-hidden="true" />
+      </div>
+
+      {/* Score — red */}
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-5xl font-black font-mono tabular-nums leading-none text-red-500">
+          {item.total_score.toFixed(0)}
+        </span>
+        <span className="text-zinc-600 text-[11px] font-mono">/100</span>
+      </div>
+
+      {/* Institution name */}
+      <p className="text-zinc-100 text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors min-h-[2.5rem]">
+        {item.institution_name}
+      </p>
+
+      {/* Risk driver pill + tier */}
+      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-zinc-800/60">
+        <TierBadge grade={item.grade} size="sm" />
+        {item.top_risk_driver && (
+          <RiskDriverPill driver={item.top_risk_driver} />
+        )}
+      </div>
+    </button>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// ScoreHistogram — visual distribution of scores across 5 bands
+// Editorial histogram with tier colors; taller bar = more institutions
+// ---------------------------------------------------------------------------
+
+interface HistogramBand {
+  min: number
+  max: number
+  count: number
+  tierKey: TierKey
+}
+
+function ScoreHistogram({
+  distribution,
+  total,
+  median,
+}: {
+  distribution: Record<string, number>
+  total: number
+  median: number
+}) {
+  const { t } = useTranslation('institutionleague')
+  const getTier = useTierByKey()
+
+  // Map 10-letter grades → 5 tier bands (each band = 20 points of score)
+  // Excelente=80–100, Satisfactorio=60–80, Regular=40–60, Deficiente=20–40, Critico=0–20
+  const bands: HistogramBand[] = useMemo(() => {
+    const mk = (min: number, max: number, tierKey: TierKey): HistogramBand => {
+      const grades = TIER_GRADE_MAP[tierKey]
+      const count = grades.reduce((s, g) => s + (distribution[g] ?? 0), 0)
+      return { min, max, count, tierKey }
+    }
+    return [
+      mk(0, 20, 'Critico'),
+      mk(20, 40, 'Deficiente'),
+      mk(40, 60, 'Regular'),
+      mk(60, 80, 'Satisfactorio'),
+      mk(80, 100, 'Excelente'),
+    ]
+  }, [distribution])
+
+  const maxCount = Math.max(...bands.map(b => b.count), 1)
+
+  // Position of median marker on 0–100 axis, in percent
+  const medianPct = Math.max(0, Math.min(100, median))
+
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          {t('histogram.kicker')}
+        </p>
+        <h3 className="text-lg font-serif font-bold text-zinc-100 leading-tight">
+          {t('histogram.headline', { total: formatNumber(total) })}
+        </h3>
+        <p className="text-zinc-500 text-xs mt-1 italic">
+          {t('histogram.sub', { median: median.toFixed(1) })}
+        </p>
+      </div>
+
+      {/* Histogram: 5 bars, shared baseline, fixed height 160px */}
+      <div
+        className="relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-5"
+        role="img"
+        aria-label={t('histogram.ariaLabel')}
+      >
+        <div className="grid grid-cols-5 gap-3 h-[180px] items-end">
+          {bands.map((band) => {
+            const tier = getTier(band.tierKey)
+            const heightPct = Math.max(band.count > 0 ? 6 : 0, (band.count / maxCount) * 100)
+            const bandPct = total > 0 ? ((band.count / total) * 100) : 0
+            return (
+              <div key={band.tierKey} className="flex flex-col items-center justify-end h-full gap-1.5">
+                {/* count label above bar */}
+                <div className="flex flex-col items-center">
+                  <span className="text-lg font-mono font-bold tabular-nums leading-none" style={{ color: tier.color }}>
+                    {formatNumber(band.count)}
+                  </span>
+                  <span className="text-[9px] text-zinc-600 font-mono tabular-nums leading-tight mt-0.5">
+                    {bandPct.toFixed(1)}%
+                  </span>
+                </div>
+                <div
+                  className="w-full rounded-t-md transition-all"
+                  style={{
+                    height: `${heightPct}%`,
+                    background: `linear-gradient(to top, ${tier.color}, ${tier.color}cc)`,
+                    minHeight: band.count > 0 ? '8px' : '0',
+                    boxShadow: `0 0 20px ${tier.color}22`,
+                  }}
+                  title={`${tier.label}: ${band.count}`}
+                />
+              </div>
+            )
+          })}
+        </div>
+
+        {/* X-axis labels: score ranges + tier names */}
+        <div className="grid grid-cols-5 gap-3 mt-3 pt-3 border-t border-zinc-800">
+          {bands.map((band) => {
+            const tier = getTier(band.tierKey)
+            return (
+              <div key={band.tierKey} className="flex flex-col items-center gap-0.5 text-center">
+                <span className="text-[10px] font-mono font-bold tabular-nums text-zinc-400">
+                  {t('histogram.bandLabel', { min: band.min, max: band.max })}
+                </span>
+                <span className="text-[9px] font-mono uppercase tracking-wide truncate w-full" style={{ color: tier.color }}>
+                  {tier.label}
+                </span>
+              </div>
+            )
+          })}
+        </div>
+
+        {/* Median marker line across the chart */}
+        <div
+          className="absolute top-5 bottom-14 border-l border-dashed border-amber-500/60 pointer-events-none"
+          style={{ left: `calc(${medianPct}% * 0.9 + 5%)` }}
+          aria-hidden="true"
+        >
+          <span className="absolute -top-1 -translate-x-1/2 text-[9px] font-mono font-bold uppercase tracking-wide bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded whitespace-nowrap">
+            Median {median.toFixed(0)}
+          </span>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+// ---------------------------------------------------------------------------
+// PillarRadar — SVG spider/radar for the 5 pillars. Shown on row expand.
+// ---------------------------------------------------------------------------
+
+function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
+  const { t } = useTranslation('institutionleague')
+  // Normalize each pillar to 0-1 based on its max
+  const pillars = useMemo(() => [
+    { label: t('pillarRadar.openness'), value: item.pillar_openness / 20 },
+    { label: t('pillarRadar.price'), value: item.pillar_price / 25 },
+    { label: t('pillarRadar.vendors'), value: item.pillar_vendors / 20 },
+    { label: t('pillarRadar.process'), value: item.pillar_process / 15 },
+    { label: t('pillarRadar.external'), value: item.pillar_external / 20 },
+  ], [item, t])
+
+  const size = 200
+  const center = size / 2
+  const radius = 72
+  const labelRadius = 90
+
+  // Compute polygon points
+  const pts = pillars.map((p, i) => {
+    const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
+    const r = Math.max(0, Math.min(1, p.value)) * radius
+    return { x: center + r * Math.cos(angle), y: center + r * Math.sin(angle), angle, value: p.value, label: p.label }
+  })
+  const labelPts = pillars.map((p, i) => {
+    const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
+    return { x: center + labelRadius * Math.cos(angle), y: center + labelRadius * Math.sin(angle), label: p.label, value: p.value }
+  })
+
+  const polyStr = pts.map(p => `${p.x.toFixed(1)},${p.y.toFixed(1)}`).join(' ')
+
+  // Rings at 25/50/75/100%
+  const rings = [0.25, 0.5, 0.75, 1]
+
+  const getTier = useTierInfo()
+  const tier = getTier(item.grade)
+
+  return (
+    <div className="flex flex-col sm:flex-row gap-5 items-center sm:items-start justify-center py-3">
+      <svg
+        width={size}
+        height={size}
+        viewBox={`0 0 ${size} ${size}`}
+        role="img"
+        aria-label={t('pillarRadar.ariaLabel', { name: item.institution_name })}
+      >
+        {/* Rings */}
+        {rings.map(r => (
+          <circle
+            key={r}
+            cx={center}
+            cy={center}
+            r={radius * r}
+            fill="none"
+            stroke="#27272a"
+            strokeWidth="0.5"
+          />
+        ))}
+        {/* Axes */}
+        {pillars.map((_, i) => {
+          const angle = (i * 2 * Math.PI) / pillars.length - Math.PI / 2
+          const x = center + radius * Math.cos(angle)
+          const y = center + radius * Math.sin(angle)
+          return (
+            <line
+              key={i}
+              x1={center}
+              y1={center}
+              x2={x}
+              y2={y}
+              stroke="#27272a"
+              strokeWidth="0.5"
+            />
+          )
+        })}
+        {/* Polygon */}
+        <polygon
+          points={polyStr}
+          fill={tier.color}
+          fillOpacity="0.25"
+          stroke={tier.color}
+          strokeWidth="1.5"
+        />
+        {/* Dots at each vertex */}
+        {pts.map((p, i) => (
+          <circle
+            key={i}
+            cx={p.x}
+            cy={p.y}
+            r="3"
+            fill={tier.color}
+          />
+        ))}
+        {/* Labels */}
+        {labelPts.map((p, i) => {
+          const anchor = p.x < center - 5 ? 'end' : p.x > center + 5 ? 'start' : 'middle'
+          return (
+            <text
+              key={i}
+              x={p.x}
+              y={p.y}
+              textAnchor={anchor}
+              dominantBaseline="middle"
+              fontSize="10"
+              fontFamily="monospace"
+              fill="#a1a1aa"
+              className="uppercase tracking-wide"
+            >
+              {p.label}
+            </text>
+          )
+        })}
+      </svg>
+
+      {/* Numeric breakdown column */}
+      <div className="flex flex-col gap-2 min-w-[160px]">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+          {t('pillarRadar.title')}
+        </p>
+        {[
+          { label: t('pillarRadar.openness'), value: item.pillar_openness, max: 20 },
+          { label: t('pillarRadar.price'), value: item.pillar_price, max: 25 },
+          { label: t('pillarRadar.vendors'), value: item.pillar_vendors, max: 20 },
+          { label: t('pillarRadar.process'), value: item.pillar_process, max: 15 },
+          { label: t('pillarRadar.external'), value: item.pillar_external, max: 20 },
+        ].map((p) => {
+          const pct = (p.value / p.max) * 100
+          const barColor = pct > 65 ? '#4ade80' : pct > 35 ? '#fbbf24' : '#f87171'
+          return (
+            <div key={p.label} className="flex items-center gap-2">
+              <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-20">{p.label}</span>
+              <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full rounded-full transition-all"
+                  style={{ width: `${pct}%`, background: barColor }}
+                />
+              </div>
+              <span className="text-[10px] font-mono tabular-nums text-zinc-400 w-10 text-right">
+                {p.value.toFixed(0)}/{p.max}
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
   )
 }
 
@@ -496,15 +822,27 @@ export default function InstitutionLeague() {
     placeholderData: (prev) => prev,
   })
 
-  // Top 3 for podium (first page, sorted by score desc, no filters)
-  const { data: podiumData } = useQuery<ScorecardListResponse>({
-    queryKey: ['institution-scorecards-federal-top3'],
+  // Top 5 champions (first page, sorted by score desc, no filters)
+  const { data: championsData } = useQuery<ScorecardListResponse>({
+    queryKey: ['institution-scorecards-federal-top5'],
     queryFn: () =>
-      scorecardApi.getInstitutions({ page: 1, per_page: 3, sort_by: 'total_score', order: 'desc', federal_only: true }),
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'desc', federal_only: true }),
     staleTime: 30 * 60 * 1000,
   })
 
-  const podiumItems = podiumData?.data ?? []
+  // Bottom 5 red flags (first page, sorted by score asc, no filters)
+  const { data: redFlagsData } = useQuery<ScorecardListResponse>({
+    queryKey: ['institution-scorecards-federal-bottom5'],
+    queryFn: () =>
+      scorecardApi.getInstitutions({ page: 1, per_page: 5, sort_by: 'total_score', order: 'asc', federal_only: true }),
+    staleTime: 30 * 60 * 1000,
+  })
+
+  const championItems = championsData?.data ?? []
+  const redFlagItems = redFlagsData?.data ?? []
+
+  // Row expansion for pillar radar
+  const [expandedRowId, setExpandedRowId] = useState<number | null>(null)
   const items = listData?.data ?? []
   const total = listData?.total ?? 0
   const totalPages = listData?.total_pages ?? 1
@@ -662,31 +1000,77 @@ export default function InstitutionLeague() {
           </div>
         )}
 
-        {/* Podium -- only when no filters active */}
-        {!hasFilters && podiumItems.length >= 3 && (
-          <section aria-labelledby="podium-heading" className="space-y-3">
-            <div>
-              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
-                {t('podiumKicker')}
-              </p>
-              <h2
-                id="podium-heading"
-                className="text-lg font-serif font-bold text-zinc-100 leading-tight"
-              >
-                {t('podiumHeadline')}
-              </h2>
+        {/* Champions — Top 5 (Honor Roll) */}
+        {!hasFilters && championItems.length >= 3 && (
+          <section aria-labelledby="champions-heading" className="space-y-3">
+            <div className="flex items-start justify-between gap-4 flex-wrap">
+              <div>
+                <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-emerald-500/80 mb-1 flex items-center gap-2">
+                  <Trophy className="h-3 w-3" aria-hidden="true" />
+                  {t('champions.kicker')}
+                </p>
+                <h2
+                  id="champions-heading"
+                  className="text-lg font-serif font-bold text-zinc-100 leading-tight"
+                >
+                  {t('champions.headline')}
+                </h2>
+                <p className="text-zinc-500 text-xs mt-1 italic max-w-2xl">
+                  {t('champions.sub')}
+                </p>
+              </div>
             </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              {podiumItems.slice(0, 3).map((item, idx) => (
-                <PodiumCard
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {championItems.slice(0, 5).map((item, idx) => (
+                <ChampionCard
                   key={item.institution_id}
-                  rank={(idx + 1) as 1 | 2 | 3}
+                  rank={idx + 1}
                   item={item}
                   onNavigate={(id) => navigate(`/institutions/${id}`)}
                 />
               ))}
             </div>
           </section>
+        )}
+
+        {/* Red Flags — Bottom 5 */}
+        {!hasFilters && redFlagItems.length >= 3 && (
+          <section aria-labelledby="redflags-heading" className="space-y-3">
+            <div>
+              <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-red-500/90 mb-1 flex items-center gap-2">
+                <Flag className="h-3 w-3" aria-hidden="true" />
+                {t('redFlags.kicker')}
+              </p>
+              <h2
+                id="redflags-heading"
+                className="text-lg font-serif font-bold text-zinc-100 leading-tight"
+              >
+                {t('redFlags.headline')}
+              </h2>
+              <p className="text-zinc-500 text-xs mt-1 italic max-w-2xl">
+                {t('redFlags.sub')}
+              </p>
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+              {redFlagItems.slice(0, 5).map((item, idx) => (
+                <RedFlagCard
+                  key={item.institution_id}
+                  rank={idx + 1}
+                  item={item}
+                  onNavigate={(id) => navigate(`/institutions/${id}`)}
+                />
+              ))}
+            </div>
+          </section>
+        )}
+
+        {/* Score Distribution Histogram */}
+        {!hasFilters && statsData?.grade_distribution && (
+          <ScoreHistogram
+            distribution={statsData.grade_distribution}
+            total={statsData.total_scored}
+            median={statsData.median_score}
+          />
         )}
 
         </div>
@@ -863,12 +1247,17 @@ export default function InstitutionLeague() {
                       : isWorstPerformer
                         ? '#dc2626'
                         : tier.color
+                    const isExpanded = expandedRowId === item.institution_id
+                    const toggleExpand = (e: React.MouseEvent) => {
+                      e.stopPropagation()
+                      setExpandedRowId(isExpanded ? null : item.institution_id)
+                    }
                     return (
+                      <React.Fragment key={item.institution_id}>
                       <tr
-                        key={item.institution_id}
                         className={`border-b border-zinc-800/40 hover:bg-zinc-800/30 transition-colors cursor-pointer group ${
                           isWorstPerformer ? 'bg-red-950/15' : ''
-                        }`}
+                        } ${isExpanded ? 'bg-zinc-800/20' : ''}`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         role="row"
                         aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
@@ -898,18 +1287,34 @@ export default function InstitutionLeague() {
                           )}
                         </td>
 
-                        {/* Institution name + risk driver pill */}
+                        {/* Institution name + risk driver pill + expand caret */}
                         <td className="px-3 py-3">
-                          <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
-                            {item.institution_name}
-                          </span>
-                          <div className="flex items-center gap-2 flex-wrap">
-                            {item.sector_name && (
-                              <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
-                            )}
-                            {item.top_risk_driver && (
-                              <RiskDriverPill driver={item.top_risk_driver} />
-                            )}
+                          <div className="flex items-start gap-2">
+                            <button
+                              type="button"
+                              onClick={toggleExpand}
+                              className="flex-shrink-0 mt-0.5 p-0.5 rounded hover:bg-zinc-700/40 text-zinc-500 hover:text-zinc-200 transition-colors"
+                              aria-label={isExpanded ? t('collapseRow') : t('expandRow')}
+                              aria-expanded={isExpanded}
+                            >
+                              <ChevronDown
+                                className={`h-3.5 w-3.5 transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                                aria-hidden="true"
+                              />
+                            </button>
+                            <div className="min-w-0 flex-1">
+                              <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
+                                {item.institution_name}
+                              </span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                {item.sector_name && (
+                                  <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
+                                )}
+                                {item.top_risk_driver && (
+                                  <RiskDriverPill driver={item.top_risk_driver} />
+                                )}
+                              </div>
+                            </div>
                           </div>
                         </td>
 
@@ -947,6 +1352,17 @@ export default function InstitutionLeague() {
                           </span>
                         </td>
                       </tr>
+                      {isExpanded && (
+                        <tr
+                          className="border-b border-zinc-800/40 bg-zinc-900/60"
+                          style={{ borderLeft: `4px solid ${tier.color}` }}
+                        >
+                          <td colSpan={7} className="px-5 py-4">
+                            <PillarRadar item={item} />
+                          </td>
+                        </tr>
+                      )}
+                      </React.Fragment>
                     )
                   })}
                 </tbody>

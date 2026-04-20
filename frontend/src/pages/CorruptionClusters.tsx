@@ -18,10 +18,12 @@
  */
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
-import { ArrowUpRight, AlertTriangle } from 'lucide-react'
+import { useQuery } from '@tanstack/react-query'
+import { ArrowUpRight, AlertTriangle, ExternalLink } from 'lucide-react'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
-import { formatNumber } from '@/lib/utils'
+import { formatNumber, formatCompactMXN } from '@/lib/utils'
+import { networkApi, type PatternSpotlight } from '@/api/client'
 
 // ────────────────────────────────────────────────────────────────────────────
 // Pattern metadata — the 7 ARIA typologies
@@ -589,11 +591,166 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
 }
 
 // ============================================================================
+// PatternVendorRow — one real vendor from ARIA, linked to its profile
+// ============================================================================
+function PatternVendorRow({
+  vendor,
+  color,
+  rank,
+}: {
+  vendor: PatternSpotlight['top_vendors'][0]
+  color: string
+  rank: number
+}) {
+  return (
+    <Link
+      to={`/vendors/${vendor.vendor_id}`}
+      className="group flex items-center gap-3 rounded-md px-3 py-2 hover:bg-[#1d1917] transition-colors"
+    >
+      <span
+        className="flex-shrink-0 text-[10px] font-mono font-black w-4 text-right tabular-nums"
+        style={{ color }}
+        aria-hidden
+      >
+        {rank}
+      </span>
+      <div className="min-w-0 flex-1">
+        <div className="text-[12px] text-text-primary font-semibold truncate leading-tight group-hover:text-white">
+          {vendor.vendor_name}
+        </div>
+        <div className="text-[10px] text-text-muted/60 truncate mt-0.5">
+          {vendor.primary_sector_name ?? '—'}
+          {vendor.total_contracts != null && (
+            <span className="ml-2 font-mono">
+              {vendor.total_contracts.toLocaleString()} {vendor.total_contracts === 1 ? 'contrato' : 'contratos'}
+            </span>
+          )}
+        </div>
+      </div>
+      <div className="flex-shrink-0 text-right">
+        <div
+          className="text-[12px] font-mono font-bold tabular-nums leading-none"
+          style={{ color }}
+        >
+          {vendor.ips_final.toFixed(3)}
+        </div>
+        <div className="text-[9px] font-mono text-text-muted/50 mt-0.5">IPS</div>
+      </div>
+      {vendor.total_value_mxn != null && (
+        <div className="flex-shrink-0 text-right hidden md:block">
+          <div className="text-[11px] font-mono text-text-secondary tabular-nums">
+            {formatCompactMXN(vendor.total_value_mxn)}
+          </div>
+        </div>
+      )}
+      <ExternalLink className="h-3 w-3 text-text-muted/30 flex-shrink-0 group-hover:text-text-muted/70 transition-colors" aria-hidden />
+    </Link>
+  )
+}
+
+// ============================================================================
+// PatternVendorCard — one card per pattern in Act IV
+// ============================================================================
+function PatternVendorCard({
+  spotlight,
+  patternMeta,
+  isEs,
+}: {
+  spotlight: PatternSpotlight
+  patternMeta: PatternFull
+  isEs: boolean
+}) {
+  const { color } = patternMeta
+  return (
+    <article
+      className="rounded-lg overflow-hidden"
+      style={{
+        backgroundColor: '#1a1614',
+        border: '1px solid rgba(255,255,255,0.04)',
+        borderLeftWidth: 3,
+        borderLeftColor: color,
+      }}
+    >
+      <header
+        className="flex items-center justify-between px-4 py-3"
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <div className="flex items-center gap-3">
+          <span
+            className="font-mono font-black leading-none"
+            style={{ color, fontSize: 22, letterSpacing: '-0.02em' }}
+            aria-hidden
+          >
+            {spotlight.code}
+          </span>
+          <div>
+            <div className="text-[12px] font-bold text-text-primary leading-tight">
+              {patternMeta.label}
+            </div>
+            <div className="flex items-center gap-3 mt-0.5">
+              <span className="text-[10px] font-mono text-text-muted/60">
+                T1: <span className="font-bold" style={{ color }}>{spotlight.t1_count}</span>
+              </span>
+              <span className="text-[10px] font-mono text-text-muted/60">
+                T2: <span className="font-bold text-amber-400/80">{spotlight.t2_count}</span>
+              </span>
+              <span className="text-[10px] font-mono text-text-muted/60">
+                {isEs ? 'Total' : 'Total'}: {spotlight.vendor_count.toLocaleString()}
+              </span>
+            </div>
+          </div>
+        </div>
+        <div className="text-right">
+          <div className="text-[11px] font-mono text-text-muted/60 uppercase tracking-wider">
+            {isEs ? 'IPS prom.' : 'Avg IPS'}
+          </div>
+          <div className="text-[15px] font-mono font-bold tabular-nums" style={{ color }}>
+            {spotlight.avg_ips.toFixed(3)}
+          </div>
+        </div>
+      </header>
+      <div className="divide-y divide-[rgba(255,255,255,0.04)]">
+        {spotlight.top_vendors.length === 0 ? (
+          <div className="px-4 py-3 text-[11px] text-text-muted/40 italic">
+            {isEs ? 'Sin proveedores T1/T2 activos en esta ventana.' : 'No active T1/T2 vendors in this window.'}
+          </div>
+        ) : (
+          spotlight.top_vendors.map((v, i) => (
+            <PatternVendorRow key={v.vendor_id} vendor={v} color={color} rank={i + 1} />
+          ))
+        )}
+      </div>
+      <footer
+        className="flex items-center justify-between px-4 py-2"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <span className="text-[10px] font-mono text-text-muted/40">
+          {spotlight.gt_case_count} {isEs ? 'casos GT documentados' : 'documented GT cases'}
+        </span>
+        <Link
+          to={`/aria?pattern=${spotlight.code}`}
+          className="inline-flex items-center gap-1 text-[10px] font-mono text-accent hover:underline"
+        >
+          {isEs ? 'Ver cola ARIA' : 'View ARIA queue'}
+          <ArrowUpRight className="h-3 w-3" />
+        </Link>
+      </footer>
+    </article>
+  )
+}
+
+// ============================================================================
 // CorruptionClusters — top-level page
 // ============================================================================
 export default function CorruptionClusters() {
   const { i18n } = useTranslation()
   const isEs = i18n.language === 'es'
+
+  const { data: spotlightData } = useQuery({
+    queryKey: ['pattern-spotlight'],
+    queryFn: () => networkApi.getPatternSpotlight(),
+    staleTime: 30 * 60 * 1000,
+  })
 
   const patternsFull = buildPatternsFull(isEs)
   const gtTypes = buildGtTypes(isEs)
@@ -803,6 +960,62 @@ export default function CorruptionClusters() {
           </Link>
         </div>
       </Act>
+
+      {/* ================================================================ */}
+      {/* ACT IV — INVESTIGADOS PRIORITARIOS / PRIORITY SUBJECTS           */}
+      {/* ================================================================ */}
+      {spotlightData && (
+        <Act
+          number="IV"
+          label={isEs ? 'INVESTIGADOS PRIORITARIOS' : 'PRIORITY SUBJECTS'}
+          title={<>{isEs ? 'Los nombres detrás de cada patrón' : 'The names behind each pattern'}</>}
+          className="mt-10"
+        >
+          <p className="text-xs text-zinc-500 leading-relaxed max-w-prose mb-6">
+            {isEs ? (
+              <>
+                Proveedores Tier 1 y Tier 2 de la cola ARIA clasificados por patrón.
+                El IPS (Índice de Prioridad de Investigación) combina riesgo estadístico,
+                valor contratado, evidencia externa y anomalías de red. Haz clic en
+                cualquier proveedor para ver su perfil completo.
+              </>
+            ) : (
+              <>
+                Tier 1 and Tier 2 vendors from the ARIA queue, classified by pattern.
+                The IPS (Investigation Priority Score) combines statistical risk,
+                contracted value, external evidence, and network anomalies. Click any
+                vendor to see their full profile.
+              </>
+            )}
+          </p>
+          <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            {spotlightData.patterns
+              .slice()
+              .sort((a, b) => b.avg_ips - a.avg_ips)
+              .map((spotlight) => {
+                const meta = patternsFull.find((p) => p.code === spotlight.code)
+                if (!meta) return null
+                return (
+                  <PatternVendorCard
+                    key={spotlight.code}
+                    spotlight={spotlight}
+                    patternMeta={meta}
+                    isEs={isEs}
+                  />
+                )
+              })}
+          </div>
+          <div className="flex items-center justify-end pt-4">
+            <Link
+              to="/aria"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-wider uppercase"
+            >
+              {isEs ? 'Ver todos los investigados en ARIA' : 'View all subjects in ARIA queue'}
+              <ArrowUpRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
+        </Act>
+      )}
     </EditorialPageShell>
   )
 }

@@ -201,5 +201,60 @@
     "dataLabel": "Datos",
     "methodologyLabel": "Metodología",
     "openSourceLabel": "Inteligencia en contrataciones de código abierto"
+  },
+  "revelation": {
+    "edition": "EDICIÓN · {{date}}",
+    "masthead": "LA INVESTIGACIÓN RUBLI",
+    "dek": "Veintitrés años de contrataciones federales mexicanas, abiertos para investigación pública.",
+    "frontline": "HALLAZGOS EN PRIMERA LÍNEA",
+    "ledeLabel": "LAS CIFRAS",
+    "ledePrimary": "9.9 billones de pesos.",
+    "ledeSecondary": "3 millones de contratos.",
+    "ledeTertiary": "23 años.",
+    "ledeBody": "Cada peso que gastó el gobierno federal mexicano entre 2002 y 2025, rastreado, clasificado y comparado contra 748 casos documentados de corrupción.",
+    "ctaInvestigate": "Comenzar investigación",
+    "ctaMethodology": "Cómo lo hicimos"
+  },
+  "investigations": {
+    "kicker": "TRES INVESTIGACIONES",
+    "headline": "Por dónde empezar",
+    "sub": "Tres puntos de entrada a los datos. Cada uno lleva a evidencia documentada.",
+    "one": {
+      "number": "01",
+      "kicker": "LAS EMPRESAS FANTASMA",
+      "headline": "El IMSS y los 9,366 contratos fantasma.",
+      "body": "Dos proveedores — presuntos frentes de una red fantasma — acumularon miles de contratos del instituto nacional de salud. Puntuación promedio del modelo: 0.962. El 99% marcado como crítico.",
+      "statValue": "9,366",
+      "statLabel": "contratos fantasma · red IMSS",
+      "cta": "Abrir cola ARIA"
+    },
+    "two": {
+      "number": "02",
+      "kicker": "EL PRECIO",
+      "headline": "Dónde los proveedores cobran triple del precio de mercado.",
+      "body": "La volatilidad de precios es la señal más fuerte en el modelo v0.6.5. En cuatro sectores, el cuartil superior de proveedores cobra 3x la mediana en adjudicaciones directas.",
+      "statValue": "3×",
+      "statLabel": "mediana · cuartil superior",
+      "cta": "Ver inteligencia de precios"
+    },
+    "three": {
+      "number": "03",
+      "kicker": "LA ECONOMÍA SIN LICITACIÓN",
+      "headline": "81.9% del gasto federal evita licitación pública.",
+      "body": "El umbral de integridad de la OCDE para adjudicaciones directas es 25%. México está en 81.9% — la tasa más alta de la muestra OCDE. La brecha se ha ensanchado cada sexenio desde 2006.",
+      "statValue": "3.3×",
+      "statLabel": "límite OCDE · adjudicación directa",
+      "cta": "Ver por procedimiento"
+    }
+  },
+  "ticker": {
+    "label": "EN VIVO · ALERTAS CRÍTICAS",
+    "ariaLabel": "Ticker de contratos recientes con riesgo crítico"
+  },
+  "scorecards": {
+    "kicker": "LA LIGA DE TRANSPARENCIA",
+    "headline": "2,563 instituciones federales clasificadas por transparencia",
+    "sub": "Ranking anual de rendición de cuentas — puntuadas de 0 a 100 en cinco pilares. Apertura, equidad de precios, diversidad de proveedores, integridad del proceso, alertas externas.",
+    "cta": "Ver la liga"
   }
 }
