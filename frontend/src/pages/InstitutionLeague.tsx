@@ -623,7 +623,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
             cy={center}
             r={radius * r}
             fill="none"
-            stroke="#27272a"
+            stroke="#e2ddd6"
             strokeWidth="0.5"
           />
         ))}

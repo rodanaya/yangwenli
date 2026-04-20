@@ -744,7 +744,7 @@ function RiskHistoryDotMatrix({
               x2={chartW - 4}
               y1={y}
               y2={y}
-              stroke="#27272a"
+              stroke="#e2ddd6"
               strokeDasharray="3 3"
               strokeWidth={0.5}
             />
@@ -778,8 +778,8 @@ function RiskHistoryDotMatrix({
                   cx={xCenter}
                   cy={dotY}
                   r={RH_DOT_R}
-                  fill={isFilled ? color : '#18181b'}
-                  stroke={isFilled ? 'none' : '#27272a'}
+                  fill={isFilled ? color : '#f3f1ec'}
+                  stroke={isFilled ? 'none' : '#e2ddd6'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

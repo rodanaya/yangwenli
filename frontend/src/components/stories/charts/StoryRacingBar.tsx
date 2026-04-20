@@ -111,7 +111,7 @@ export function StoryRacingBar() {
               cy={CY}
               r={r}
               fill="none"
-              stroke="#27272a"
+              stroke="#e2ddd6"
               strokeDasharray="2 4"
               strokeWidth={1}
             />

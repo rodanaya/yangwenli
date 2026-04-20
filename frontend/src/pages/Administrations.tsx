@@ -1721,7 +1721,7 @@ export default function Administrations() {
                           <line x1={W - MR} y1={y} x2={W - MR + 3} y2={y} stroke="#3f3f46" strokeWidth={1} />
                           <text x={W - MR + 5} y={y + 1} fill="#52525b" fontSize={8} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
                           {/* Horizontal grid */}
-                          <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#27272a" strokeWidth={0.5} strokeDasharray="3 4" />
+                          <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#e2ddd6" strokeWidth={0.5} strokeDasharray="3 4" />
                         </g>
                       )
                     })}

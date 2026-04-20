@@ -116,8 +116,8 @@ export function StoryHemoserSplitting() {
                     cx={xCenter}
                     cy={dotY}
                     r={DOT_R}
-                    fill={isFilled ? color : '#18181b'}
-                    stroke={isFilled ? 'none' : '#27272a'}
+                    fill={isFilled ? color : '#f3f1ec'}
+                    stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={0.5}
                     fillOpacity={isPeak && isFilled ? 1 : 0.85}
                     initial={{ opacity: 0 }}

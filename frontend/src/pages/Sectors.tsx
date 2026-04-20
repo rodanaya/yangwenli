@@ -375,8 +375,8 @@ function OECDCompetitionDotMatrix({
                   cx={OE_LABEL_W + i * OE_DOT_GAP + OE_DOT_R}
                   cy={yCenter}
                   r={OE_DOT_R}
-                  fill={isFilled ? color : '#18181b'}
-                  stroke={isFilled ? 'none' : '#27272a'}
+                  fill={isFilled ? color : '#f3f1ec'}
+                  stroke={isFilled ? 'none' : '#e2ddd6'}
                   strokeWidth={0.5}
                   fillOpacity={isFilled ? (aboveOECD ? 0.9 : 0.4) : 1}
                   initial={{ opacity: 0 }}
@@ -462,7 +462,7 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
       </h3>
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#27272a" />
+          <CartesianGrid strokeDasharray="3 3" stroke="#e2ddd6" />
           <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#71717a' }} />
           <YAxis
             tick={{ fontSize: 9, fill: '#71717a' }}

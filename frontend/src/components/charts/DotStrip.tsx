@@ -80,8 +80,8 @@ export function DotStrip({
                 cx={labelW + i * dotGap + dotR}
                 cy={yC}
                 r={dotR}
-                fill={i < filled ? fill : '#18181b'}
-                stroke={i < filled ? 'none' : '#27272a'}
+                fill={i < filled ? fill : '#f3f1ec'}
+                stroke={i < filled ? 'none' : '#e2ddd6'}
                 strokeWidth={0.5}
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}

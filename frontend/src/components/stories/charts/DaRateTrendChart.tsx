@@ -146,7 +146,7 @@ export function DaRateTrendChart() {
               x2={W - PAD.right}
               y1={yFor(v)}
               y2={yFor(v)}
-              stroke="#27272a"
+              stroke="#e2ddd6"
               strokeDasharray="2 4"
               strokeWidth={1}
             />

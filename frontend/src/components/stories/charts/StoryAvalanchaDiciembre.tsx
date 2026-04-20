@@ -99,7 +99,7 @@ export function StoryAvalanchaDiciembre() {
                 x2={W - PADDING_R}
                 y1={y}
                 y2={y}
-                stroke="#27272a"
+                stroke="#e2ddd6"
                 strokeWidth={0.5}
                 strokeDasharray="2 4"
               />

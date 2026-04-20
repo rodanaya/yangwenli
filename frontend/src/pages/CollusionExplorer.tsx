@@ -834,7 +834,7 @@ function RingCanvasSkeleton() {
       {placeholders.map((pos, i) => (
         <g key={i} transform={`translate(${pos.cx}, ${pos.cy})`}>
           <circle r={38 + i % 3 * 8} fill="#1c1c1f" />
-          <circle r={38 + i % 3 * 8} fill="none" stroke="#27272a" strokeWidth={1} />
+          <circle r={38 + i % 3 * 8} fill="none" stroke="#e2ddd6" strokeWidth={1} />
         </g>
       ))}
     </svg>
