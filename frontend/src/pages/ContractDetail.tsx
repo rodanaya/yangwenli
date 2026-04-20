@@ -309,10 +309,10 @@ export default function ContractDetail() {
             <div className="space-y-6">
               {/* Risk score bar */}
               <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
-                <div className="flex items-baseline justify-between mb-3">
+                <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
                   <div className="flex items-baseline gap-3">
                     <span
-                      className="text-4xl font-mono font-bold tabular-nums"
+                      className="text-3xl sm:text-4xl font-mono font-bold tabular-nums"
                       style={{ color: riskPalette.color }}
                     >
                       {riskScorePct}%

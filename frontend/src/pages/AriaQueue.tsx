@@ -184,7 +184,7 @@ function TierNavigationRow({
         </div>
       </div>
 
-      <div className="flex-1 min-w-0 grid grid-cols-3 gap-4">
+      <div className="flex-1 min-w-0 grid grid-cols-2 sm:grid-cols-3 gap-4">
         <div>
           <div className={cn('stat-sm tabular-nums', tier.textColor)}>
             {formatNumber(count)}

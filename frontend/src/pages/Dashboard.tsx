@@ -195,10 +195,10 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
         </div>
       </div>
 
-      <div className="overflow-hidden rounded-md border border-border/30">
+      <div className="overflow-x-auto rounded-md border border-border/30">
         {/* Header row */}
         <div
-          className="grid items-center text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/70 px-3 py-2 border-b border-border/30"
+          className="grid items-center text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/70 px-3 py-2 border-b border-border/30 min-w-[560px]"
           style={{ gridTemplateColumns: '1.8fr 1fr 1.2fr 1fr 1fr 16px' }}
         >
           <span>{t('editorial.colSector', 'Sector')}</span>
@@ -222,7 +222,7 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
               key={s.code}
               onClick={() => navigate(`/sectors/${s.code}`)}
               className={cn(
-                'w-full grid items-center px-3 py-2 text-left transition-colors hover:bg-background-elevated/40',
+                'w-full grid items-center px-3 py-2 text-left transition-colors hover:bg-background-elevated/40 min-w-[560px]',
                 idx < sectors.length - 1 && 'border-b border-border/20'
               )}
               style={{ gridTemplateColumns: '1.8fr 1fr 1.2fr 1fr 1fr 16px' }}
