@@ -26,4 +26,4 @@ passlib[bcrypt]>=1.7.4            # Password hashing
 email-validator>=2.0.0            # Required by pydantic EmailStr
 
 # Error monitoring (optional — no-op when SENTRY_DSN env var is not set)
-sentry-sdk[fastapi]==2.22.0
+sentry-sdk[fastapi]==2.58.0
