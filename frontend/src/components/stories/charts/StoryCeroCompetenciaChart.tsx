@@ -1,21 +1,18 @@
+/**
+ * StoryCeroCompetenciaChart — Pure SVG dot-matrix of competitive %
+ * by sector, sorted ASC. Each dot = 1pp (0-80% domain). OECD 75%
+ * target marked with a cyan vertical line that no strip reaches.
+ */
+
 import { motion } from 'framer-motion'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  Cell,
-} from 'recharts'
-import { useTranslation } from 'react-i18next'
 import { SECTOR_COLORS } from '@/lib/constants'
 
-const OECD_COLOR = '#22d3ee'
+interface SectorRow {
+  sector: string
+  code: string
+  competitive: number
+}
 
-// Map sector names to their canonical color keys
 const SECTOR_KEY_MAP: Record<string, string> = {
   'Agricultura': 'agricultura',
   'Educacion': 'educacion',
@@ -31,58 +28,43 @@ const SECTOR_KEY_MAP: Record<string, string> = {
   'Infraestructura': 'infraestructura',
 }
 
-// Sorted ASCENDING by competitive rate (least competitive at top)
-const data = [
-  { sector: 'Agricultura',     competitive: 6.5 },
-  { sector: 'Educacion',       competitive: 7.7 },
-  { sector: 'Trabajo',         competitive: 11.7 },
-  { sector: 'Hacienda',        competitive: 11.7 },
-  { sector: 'Otros',           competitive: 16.1 },
-  { sector: 'Salud',           competitive: 20.1 },
-  { sector: 'Tecnologia',      competitive: 21.7 },
-  { sector: 'Energia',         competitive: 31.4 },
-  { sector: 'Gobernacion',     competitive: 35.1 },
-  { sector: 'Ambiente',        competitive: 36.3 },
-  { sector: 'Defensa',         competitive: 48.1 },
-  { sector: 'Infraestructura', competitive: 54.2 },
+const DATA: SectorRow[] = [
+  { sector: 'Agricultura',     code: 'agricultura',     competitive: 6.5  },
+  { sector: 'Educacion',       code: 'educacion',       competitive: 7.7  },
+  { sector: 'Trabajo',         code: 'trabajo',         competitive: 11.7 },
+  { sector: 'Hacienda',        code: 'hacienda',        competitive: 11.7 },
+  { sector: 'Otros',           code: 'otros',           competitive: 16.1 },
+  { sector: 'Salud',           code: 'salud',           competitive: 20.1 },
+  { sector: 'Tecnologia',      code: 'tecnologia',      competitive: 21.7 },
+  { sector: 'Energia',         code: 'energia',         competitive: 31.4 },
+  { sector: 'Gobernacion',     code: 'gobernacion',     competitive: 35.1 },
+  { sector: 'Ambiente',        code: 'ambiente',        competitive: 36.3 },
+  { sector: 'Defensa',         code: 'defensa',         competitive: 48.1 },
+  { sector: 'Infraestructura', code: 'infraestructura', competitive: 54.2 },
 ]
 
-function getSectorColor(sectorName: string): string {
-  const key = SECTOR_KEY_MAP[sectorName]
-  return key ? (SECTOR_COLORS[key] || '#64748b') : '#64748b'
-}
+const OECD_TARGET = 75
+const OECD_COLOR = '#22d3ee'
 
-interface PayloadEntry {
-  payload: { sector: string; competitive: number }
-}
+const DOTS = 80        // each dot = 1pp (0-80% domain)
+const DOT_R = 3
+const DOT_GAP = 8
+const STRIP_H = 11
+const LABEL_W = 128
+const COL_W = DOTS * DOT_GAP
+const VALUE_W = 60
+const ROW_H = STRIP_H + 4
 
-function DarkTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  const { t } = useTranslation('spending')
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const da = (100 - d.competitive).toFixed(1)
-  const oecdGap = 75 - d.competitive
-  return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm shadow-xl">
-      <p className="font-mono text-xs font-semibold text-zinc-100">{d.sector}</p>
-      <div className="mt-1 space-y-0.5">
-        <p className="text-zinc-400 text-xs">
-          {t('ceroComp.competitive')}: <span className="text-zinc-100 font-bold">{d.competitive}%</span>
-        </p>
-        <p className="text-red-400 text-xs">
-          {t('ceroComp.directAward')}: <span className="font-bold">{da}%</span>
-        </p>
-        <p className="text-cyan-400 text-[10px] font-mono">
-          {oecdGap > 0 ? t('ceroComp.belowOecd', { n: oecdGap.toFixed(0) }) : t('ceroComp.meetsOecd')}
-        </p>
-      </div>
-    </div>
-  )
+const W = LABEL_W + COL_W + VALUE_W
+const H = 46 + DATA.length * ROW_H + 14
+
+function getSectorColor(code: string): string {
+  const key = SECTOR_KEY_MAP[code] || code
+  return SECTOR_COLORS[key] || '#64748b'
 }
 
 export function StoryCeroCompetenciaChart() {
-  // Count sectors below 25% competitive
-  const criticalSectors = data.filter(d => d.competitive < 25).length
+  const criticalSectors = DATA.filter(d => d.competitive < 25).length
 
   return (
     <motion.div
@@ -92,12 +74,10 @@ export function StoryCeroCompetenciaChart() {
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-900 border border-zinc-800 p-5"
     >
-      {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
         RUBLI · Competencia por Sector
       </p>
 
-      {/* Editorial headline */}
       <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
         Menos de 1 de cada 10 contratos en Agricultura y Educación tuvo competencia real
       </p>
@@ -105,7 +85,6 @@ export function StoryCeroCompetenciaChart() {
         % de contratos con procedimiento competitivo por sector · AMLO 2019-2024
       </p>
 
-      {/* Hero stats */}
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-red-500">{criticalSectors}</div>
@@ -117,72 +96,115 @@ export function StoryCeroCompetenciaChart() {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={380}>
-        <BarChart
-          data={data}
-          layout="vertical"
-          margin={{ top: 8, right: 56, left: 8, bottom: 8 }}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Competitive % by sector, dot matrix, OECD 75% target"
         >
-          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" horizontal={false} />
-          <XAxis
-            type="number"
-            domain={[0, 80]}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickFormatter={(v: number) => `${v}%`}
-          />
-          <YAxis
-            type="category"
-            dataKey="sector"
-            tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            width={100}
-          />
-          <Tooltip
-            content={<DarkTooltip />}
-            cursor={{ fill: '#27272a', opacity: 0.6 }}
-          />
-          <ReferenceLine
-            x={75}
-            stroke={OECD_COLOR}
-            strokeDasharray="6 3"
-            strokeWidth={1.5}
-            label={{
-              value: 'OCDE 75%',
-              fill: OECD_COLOR,
-              fontSize: 9,
-              fontFamily: 'var(--font-family-mono)',
-              position: 'top',
-            }}
-          />
-          <Bar
-            dataKey="competitive"
-            radius={[0, 3, 3, 0]}
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationEasing="ease-out"
-            label={{
-              position: 'right' as const,
-              formatter: (v: unknown) => `${v}%`,
-              fill: '#71717a',
-              fontSize: 9,
-              fontFamily: 'var(--font-family-mono)',
-            }}
+          {/* Header */}
+          <text
+            x={LABEL_W - 6}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
           >
-            {data.map((entry, index) => (
-              <Cell
-                key={index}
-                fill={getSectorColor(entry.sector)}
-                fillOpacity={entry.competitive < 15 ? 1 : 0.7}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            SECTOR
+          </text>
+          <text
+            x={LABEL_W + COL_W + VALUE_W - 2}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
+          >
+            % COMPETITIVO
+          </text>
 
-      {/* Finding callout */}
+          {/* OECD target line */}
+          <line
+            x1={LABEL_W + OECD_TARGET * DOT_GAP + DOT_R}
+            x2={LABEL_W + OECD_TARGET * DOT_GAP + DOT_R}
+            y1={32}
+            y2={46 + DATA.length * ROW_H - 4}
+            stroke={OECD_COLOR}
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+            opacity={0.85}
+          />
+          <text
+            x={LABEL_W + OECD_TARGET * DOT_GAP + DOT_R - 4}
+            y={38}
+            textAnchor="end"
+            fill={OECD_COLOR}
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+          >
+            OCDE 75%
+          </text>
+
+          {/* Rows */}
+          {DATA.map((row, rowIdx) => {
+            const y0 = 52 + rowIdx * ROW_H
+            const color = getSectorColor(row.sector)
+            const opacity = row.competitive < 15 ? 1 : 0.7
+            const filled = Math.round(row.competitive)
+
+            return (
+              <g key={row.sector}>
+                <text
+                  x={LABEL_W - 6}
+                  y={y0 + STRIP_H / 2 + 3}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.sector}
+                </text>
+
+                {Array.from({ length: DOTS }).map((_, i) => {
+                  const isFilled = i < filled
+                  return (
+                    <motion.circle
+                      key={i}
+                      cx={LABEL_W + i * DOT_GAP + DOT_R}
+                      cy={y0 + STRIP_H / 2}
+                      r={DOT_R}
+                      fill={isFilled ? color : '#18181b'}
+                      fillOpacity={isFilled ? opacity : 1}
+                      stroke={isFilled ? 'none' : '#27272a'}
+                      strokeWidth={isFilled ? 0 : 0.5}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                    />
+                  )
+                })}
+
+                <text
+                  x={LABEL_W + COL_W + 8}
+                  y={y0 + STRIP_H / 2 + 3}
+                  fill={color}
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono)"
+                  fontWeight={600}
+                >
+                  {row.competitive.toFixed(1)}%
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
@@ -193,10 +215,11 @@ export function StoryCeroCompetenciaChart() {
         </p>
       </div>
 
-      {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-3">
-        Fuente: COMPRANET · Meta OCDE: 75% competitivo · Análisis RUBLI v6.5
+        Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>
   )
 }
+
+// ✓ dot-matrix rewrite

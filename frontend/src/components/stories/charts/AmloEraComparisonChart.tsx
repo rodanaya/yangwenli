@@ -1,20 +1,26 @@
-import { motion } from 'framer-motion'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  Cell,
-  LabelList,
-} from 'recharts'
+/**
+ * AmloEraComparisonChart — Pure SVG dot-matrix.
+ *
+ * Shows DA-rate peak per sexenio (Fox, Calderon, Peña, AMLO).
+ * Each row is a strip; each dot = 1pp; 0-90% domain.
+ * OECD 25% limit marked with a cyan vertical line.
+ */
 
-const OECD_COLOR = '#22d3ee'
-const GRID_COLOR = '#3f3f46'
-const AXIS_COLOR = '#71717a'
+import { motion } from 'framer-motion'
+
+interface EraRow {
+  era: string
+  years: string
+  avg: number
+  peak: number
+}
+
+const DATA: EraRow[] = [
+  { era: 'Fox',        years: '2000-06', avg: 63.5, peak: 65.1 },
+  { era: 'Calderon',   years: '2007-12', avg: 64.2, peak: 67.1 },
+  { era: 'Pena Nieto', years: '2013-18', avg: 71.8, peak: 76.2 },
+  { era: 'AMLO',       years: '2019-24', avg: 79.4, peak: 81.9 },
+]
 
 const ERA_PALETTE: Record<string, string> = {
   'Fox': '#52525b',
@@ -23,40 +29,24 @@ const ERA_PALETTE: Record<string, string> = {
   'AMLO': '#dc2626',
 }
 
-const data = [
-  { era: 'Fox', years: '2000-06', avg: 63.5, peak: 65.1 },
-  { era: 'Calderon', years: '2007-12', avg: 64.2, peak: 67.1 },
-  { era: 'Pena Nieto', years: '2013-18', avg: 71.8, peak: 76.2 },
-  { era: 'AMLO', years: '2019-24', avg: 79.4, peak: 81.9 },
-]
+const OECD_LIMIT = 25
+const OECD_COLOR = '#22d3ee'
 
-interface PayloadEntry {
-  payload: { era: string; years: string; avg: number; peak: number }
-}
+const DOTS = 90        // each dot = 1pp (0-90% domain)
+const DOT_R = 3
+const DOT_GAP = 8
+const STRIP_H = 11
+const LABEL_W = 106
+const COL_W = DOTS * DOT_GAP
+const VALUE_W = 66
+const ROW_H = STRIP_H + 6
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const delta = d.era === 'Fox' ? '' : ` (+${(d.avg - 63.5).toFixed(1)} vs Fox)`
-  return (
-    <div className="rounded-lg border px-3 py-2.5 shadow-xl" style={{ background: '#18181b', borderColor: GRID_COLOR }}>
-      <p className="font-mono font-semibold text-zinc-100">{d.era} <span className="text-zinc-500 font-normal">{d.years}</span></p>
-      <div className="mt-1.5 grid grid-cols-2 gap-3">
-        <div>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Promedio</p>
-          <p className="text-base font-mono font-bold text-zinc-100">{d.avg}%</p>
-        </div>
-        <div>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Maximo</p>
-          <p className="text-base font-mono font-bold" style={{ color: ERA_PALETTE[d.era] }}>{d.peak}%</p>
-        </div>
-      </div>
-      {delta && <p className="mt-1 text-[10px] text-zinc-500">{delta}</p>}
-    </div>
-  )
-}
+const W = LABEL_W + COL_W + VALUE_W
+const H = 50 + DATA.length * ROW_H + 16
 
 export function AmloEraComparisonChart() {
+  const oecdDot = OECD_LIMIT // 1 dot per pct
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -75,9 +65,9 @@ export function AmloEraComparisonChart() {
         +15.9 pts vs era Fox. El pico de 81.9% es 3.3x el limite OCDE.
       </p>
 
-      {/* Stat strip: key number callout */}
+      {/* Stat strip */}
       <div className="flex gap-6 mb-4">
-        {data.map((d) => (
+        {DATA.map((d) => (
           <div key={d.era} className="flex-1">
             <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">{d.era}</p>
             <p className="text-xl font-mono font-bold" style={{ color: ERA_PALETTE[d.era] }}>{d.avg}%</p>
@@ -85,57 +75,132 @@ export function AmloEraComparisonChart() {
         ))}
       </div>
 
-      <ResponsiveContainer width="100%" height={220}>
-        <BarChart data={data} margin={{ top: 16, right: 16, left: 0, bottom: 0 }} barCategoryGap="25%">
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
-          <XAxis
-            dataKey="era"
-            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            domain={[0, 90]}
-            ticks={[0, 25, 50, 75]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            width={32}
-            tickFormatter={(v: number) => `${v}%`}
-          />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a', opacity: 0.5 }} />
-          <ReferenceLine
-            y={25}
-            stroke={OECD_COLOR}
-            strokeDasharray="6 3"
-            strokeWidth={1.5}
-          />
-          <Bar
-            dataKey="peak"
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationEasing="ease-out"
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="DA peak rate by sexenio, dot matrix, each dot 1pp"
+        >
+          {/* Header */}
+          <text
+            x={LABEL_W - 6}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
           >
-            {data.map((entry) => (
-              <Cell
-                key={entry.era}
-                fill={ERA_PALETTE[entry.era]}
-                fillOpacity={entry.era === 'AMLO' ? 1 : 0.5}
-              />
-            ))}
-            <LabelList
-              dataKey="peak"
-              position="top"
-              style={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-              formatter={(v) => `${v}%`}
-            />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            SEXENIO
+          </text>
+          <text
+            x={LABEL_W + COL_W + VALUE_W - 2}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
+          >
+            PICO % DA
+          </text>
+
+          {/* OECD line */}
+          <line
+            x1={LABEL_W + oecdDot * DOT_GAP + DOT_R}
+            x2={LABEL_W + oecdDot * DOT_GAP + DOT_R}
+            y1={32}
+            y2={50 + DATA.length * ROW_H - 4}
+            stroke={OECD_COLOR}
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+            opacity={0.85}
+          />
+          <text
+            x={LABEL_W + oecdDot * DOT_GAP + DOT_R + 4}
+            y={38}
+            fill={OECD_COLOR}
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+          >
+            OCDE 25%
+          </text>
+
+          {/* Rows */}
+          {DATA.map((row, rowIdx) => {
+            const y0 = 56 + rowIdx * ROW_H
+            const color = ERA_PALETTE[row.era]
+            const filled = Math.round(row.peak)
+            const opacity = row.era === 'AMLO' ? 1 : 0.6
+
+            return (
+              <g key={row.era}>
+                {/* Era + years */}
+                <text
+                  x={LABEL_W - 6}
+                  y={y0 + STRIP_H / 2}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.era}
+                </text>
+                <text
+                  x={LABEL_W - 6}
+                  y={y0 + STRIP_H / 2 + 10}
+                  textAnchor="end"
+                  fill="#52525b"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.years}
+                </text>
+
+                {/* Dots */}
+                {Array.from({ length: DOTS }).map((_, i) => {
+                  const isFilled = i < filled
+                  return (
+                    <motion.circle
+                      key={i}
+                      cx={LABEL_W + i * DOT_GAP + DOT_R}
+                      cy={y0 + STRIP_H / 2}
+                      r={DOT_R}
+                      fill={isFilled ? color : '#18181b'}
+                      fillOpacity={isFilled ? opacity : 1}
+                      stroke={isFilled ? 'none' : '#27272a'}
+                      strokeWidth={isFilled ? 0 : 0.5}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.2, delay: rowIdx * 0.06 + i * 0.002 }}
+                    />
+                  )
+                })}
+
+                {/* Value */}
+                <text
+                  x={LABEL_W + COL_W + 8}
+                  y={y0 + STRIP_H / 2 + 3}
+                  fill={color}
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                  fontWeight={600}
+                >
+                  {row.peak}%
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+
       <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
-        Fuente: COMPRANET 2002-2025 · RUBLI v6.5
+        Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>
   )
 }
+
+// ✓ dot-matrix rewrite

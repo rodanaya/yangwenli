@@ -1,14 +1,6 @@
 import { useMemo } from 'react'
+import { motion } from 'framer-motion'
 import { ScrollReveal } from '@/hooks/useAnimations'
-import {
-  ResponsiveContainer,
-  BarChart,
-  Bar,
-  XAxis,
-  Tooltip as RechartsTooltip,
-  Cell,
-  ReferenceLine,
-} from '@/components/charts'
 
 interface DecemberYear {
   year: number
@@ -19,6 +11,12 @@ interface DecemberYear {
 interface DecemberAvalancheSparklineProps {
   years: DecemberYear[]
 }
+
+// Horizontal dot sparkline: one column per year, vertical stack of dots
+// representing December spending magnitude.
+const DOTS_PER_COL = 14     // vertical resolution
+const COL_W = 16
+const DOT_R = 2.5
 
 export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparklineProps) {
   const { maxVal, worstYear } = useMemo(() => {
@@ -44,6 +42,9 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
     [years],
   )
 
+  const chartW = Math.max(1, chartData.length) * COL_W + 8
+  const chartH = DOTS_PER_COL * 6 + 20
+
   return (
     <ScrollReveal>
       <div
@@ -56,7 +57,7 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
               La Avalancha de Diciembre
             </h3>
             <p className="text-[10px] text-text-muted font-mono mt-0.5">
-              Gasto federal en el mes de diciembre (miles de millones MXN)
+              Gasto federal en el mes de diciembre (miles de millones MXN) · cada punto ~{(maxVal / DOTS_PER_COL).toFixed(1)}B
             </p>
           </div>
           <div className="text-right flex-shrink-0">
@@ -69,64 +70,66 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
           </div>
         </div>
 
-        <div style={{ height: 90 }}>
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 4 }}>
-              <XAxis
-                dataKey="year"
-                tick={{ fontSize: 9, fill: 'var(--color-text-muted)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <RechartsTooltip
-                content={({ active, payload }) => {
-                  if (active && payload && payload.length) {
-                    const d = payload[0].payload as {
-                      year: number
-                      value: number
-                      total: number
-                      pct: string
-                    }
-                    return (
-                      <div className="chart-tooltip text-xs">
-                        <p className="font-bold text-text-primary">{d.year}</p>
-                        <p className="text-text-muted tabular-nums font-mono">
-                          Diciembre: <strong className="text-orange-400">${d.value.toFixed(1)}B</strong>
-                        </p>
-                        <p className="text-text-muted tabular-nums font-mono">
-                          Total anual: ${d.total.toFixed(1)}B ({d.pct}%)
-                        </p>
-                      </div>
-                    )
-                  }
-                  return null
-                }}
-              />
-              <ReferenceLine
-                y={maxVal}
-                stroke="rgba(249,115,22,0.2)"
-                strokeDasharray="3 3"
-              />
-              <Bar dataKey="value" radius={[3, 3, 0, 0]} isAnimationActive>
-                {chartData.map((entry) => (
-                  <Cell
-                    key={entry.year}
-                    fill={
-                      entry.value === maxVal
-                        ? '#dc2626'
-                        : entry.value >= maxVal * 0.85
-                          ? '#f97316'
-                          : 'rgba(161,161,170,0.35)'
-                    }
-                  />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
+        <svg
+          viewBox={`0 0 ${chartW} ${chartH}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="December federal spending by year, vertical dot sparkline"
+        >
+          {chartData.map((d, colIdx) => {
+            const filled = maxVal > 0 ? Math.round((d.value / maxVal) * DOTS_PER_COL) : 0
+            const color =
+              d.value === maxVal
+                ? '#dc2626'
+                : d.value >= maxVal * 0.85
+                  ? '#f97316'
+                  : '#a1a1aa'
+            const baseOpacity = d.value === maxVal ? 1 : d.value >= maxVal * 0.85 ? 0.85 : 0.55
+            const cx = colIdx * COL_W + COL_W / 2
+
+            return (
+              <g key={d.year}>
+                {Array.from({ length: DOTS_PER_COL }).map((_, rowIdx) => {
+                  // Fill from bottom up
+                  const rowFromBottom = DOTS_PER_COL - 1 - rowIdx
+                  const isFilled = rowFromBottom < filled
+                  const cy = 4 + rowIdx * 6 + DOT_R
+                  return (
+                    <motion.circle
+                      key={rowIdx}
+                      cx={cx}
+                      cy={cy}
+                      r={DOT_R}
+                      fill={isFilled ? color : '#27272a'}
+                      fillOpacity={isFilled ? baseOpacity : 1}
+                      stroke={isFilled ? 'none' : 'rgba(63,63,70,0.6)'}
+                      strokeWidth={isFilled ? 0 : 0.4}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.18, delay: colIdx * 0.03 + rowIdx * 0.01 }}
+                    />
+                  )
+                })}
+                <text
+                  x={cx}
+                  y={chartH - 4}
+                  textAnchor="middle"
+                  fill="var(--color-text-muted)"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {String(d.year).slice(-2)}
+                </text>
+              </g>
+            )
+          })}
+        </svg>
       </div>
     </ScrollReveal>
   )
 }
 
 export default DecemberAvalancheSparkline
+
+// ✓ dot-matrix rewrite

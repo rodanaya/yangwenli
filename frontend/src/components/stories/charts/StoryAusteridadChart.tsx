@@ -1,72 +1,48 @@
-import { motion } from 'framer-motion'
-import {
-  ComposedChart,
-  Bar,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
+/**
+ * StoryAusteridadChart — Pure SVG dot-matrix showing the paradox.
+ *
+ * For each of 3 administrations (Calderón, Peña, AMLO), render two
+ * strips: gray (spend in Tn MXN, each dot 0.1T) and red (DA%, each
+ * dot 2pp). Visual tension: spend strip stays flat/shrinks while DA
+ * strip grows red.
+ */
 
-const data = [
-  {
-    era: 'Calderon',
-    spendTn: 2.41,
-    daPct: 42.3,
-    contracts: '481K',
-    cohort: '2007-2012',
-  },
-  {
-    era: 'Pena Nieto',
-    spendTn: 3.06,
-    daPct: 73.1,
-    contracts: '1.23M',
-    cohort: '2013-2018',
-  },
-  {
-    era: 'AMLO',
-    spendTn: 2.76,
-    daPct: 79.4,
-    contracts: '1.05M',
-    cohort: '2019-2024',
-  },
+import { motion } from 'framer-motion'
+
+interface EraRow {
+  era: string
+  spendTn: number
+  daPct: number
+  contracts: string
+  cohort: string
+}
+
+const DATA: EraRow[] = [
+  { era: 'Calderon',   spendTn: 2.41, daPct: 42.3, contracts: '481K',  cohort: '2007-2012' },
+  { era: 'Pena Nieto', spendTn: 3.06, daPct: 73.1, contracts: '1.23M', cohort: '2013-2018' },
+  { era: 'AMLO',       spendTn: 2.76, daPct: 79.4, contracts: '1.05M', cohort: '2019-2024' },
 ]
 
-const BAR_COLORS = ['#52525b', '#71717a', '#a1a1aa']
+const SPEND_DOTS = 40          // each dot = 0.1T (0-4T domain)
+const SPEND_DOT_PER_T = SPEND_DOTS / 4
+const DA_DOTS = 50             // each dot = 2pp (0-100% domain)
+const DA_DOT_PER_PCT = DA_DOTS / 100
 
-interface PayloadEntry {
-  payload: {
-    era: string
-    spendTn: number
-    daPct: number
-    contracts: string
-    cohort: string
-  }
-}
+const SPEND_COLOR = '#a1a1aa'
+const DA_COLOR = '#dc2626'
 
-function DarkTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  return (
-    <div className="rounded border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm shadow-xl">
-      <p className="font-mono text-xs font-semibold text-zinc-100">
-        {d.era} ({d.cohort})
-      </p>
-      <div className="mt-1 space-y-0.5">
-        <p className="text-zinc-400 text-xs">
-          Gasto: <span className="text-zinc-100 font-bold">MXN {d.spendTn.toFixed(2)}T</span>
-        </p>
-        <p className="text-xs" style={{ color: '#dc2626' }}>
-          Adj. Directa: <span className="font-bold">{d.daPct}%</span>
-        </p>
-        <p className="text-zinc-500 text-[10px]">{d.contracts} contratos</p>
-      </div>
-    </div>
-  )
-}
+const DOT_R = 3
+const DOT_GAP = 8
+const STRIP_H = 11
+const LABEL_W = 108
+const MAX_COL_W = Math.max(SPEND_DOTS, DA_DOTS) * DOT_GAP
+const VALUE_W = 72
+const STRIP_GAP = 3
+const ERA_GAP = 14
+const ERA_BLOCK_H = 2 * STRIP_H + STRIP_GAP + 10
+
+const W = LABEL_W + MAX_COL_W + VALUE_W
+const H = 40 + DATA.length * (ERA_BLOCK_H + ERA_GAP) + 10
 
 export function StoryAusteridadChart() {
   return (
@@ -77,12 +53,10 @@ export function StoryAusteridadChart() {
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-900 border border-zinc-800 p-5"
     >
-      {/* Overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
         RUBLI · Austeridad
       </p>
 
-      {/* Editorial headline — the paradox IS the story */}
       <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
         El gasto bajó 10%. La opacidad subió 8 puntos.
       </p>
@@ -90,7 +64,6 @@ export function StoryAusteridadChart() {
         Gasto total y tasa de adjudicación directa por administración · COMPRANET 2007-2024
       </p>
 
-      {/* Two opposing stats — the visual tension */}
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-zinc-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-zinc-300">-10%</div>
@@ -102,89 +75,152 @@ export function StoryAusteridadChart() {
         </div>
       </div>
 
-      <ResponsiveContainer width="100%" height={260}>
-        <ComposedChart data={data} margin={{ top: 8, right: 48, left: 8, bottom: 8 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
-          <XAxis
-            dataKey="era"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={{ stroke: '#3f3f46' }}
-          />
-          {/* Left axis: spend in Tn */}
-          <YAxis
-            yAxisId="spend"
-            orientation="left"
-            domain={[0, 4]}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v.toFixed(1)}T`}
-          />
-          {/* Right axis: DA % */}
-          <YAxis
-            yAxisId="da"
-            orientation="right"
-            domain={[0, 100]}
-            tick={{ fill: '#dc2626', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v}%`}
-          />
-          <Tooltip
-            content={<DarkTooltip />}
-            cursor={{ fill: '#27272a', opacity: 0.6 }}
-          />
-          <Bar
-            yAxisId="spend"
-            dataKey="spendTn"
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationEasing="ease-out"
-            label={{
-              position: 'top' as const,
-              formatter: (v: unknown) => `MXN ${Number(v).toFixed(2)}T`,
-              fill: '#a1a1aa',
-              fontSize: 10,
-              fontWeight: 500,
-              fontFamily: 'var(--font-family-mono)',
-            }}
-          >
-            {data.map((_entry, index) => (
-              <Cell key={index} fill={BAR_COLORS[index]} fillOpacity={0.7} />
-            ))}
-          </Bar>
-          <Line
-            yAxisId="da"
-            type="monotone"
-            dataKey="daPct"
-            stroke="#dc2626"
-            strokeWidth={2.5}
-            dot={{ fill: '#dc2626', r: 5, strokeWidth: 2, stroke: '#18181b' }}
-            isAnimationActive={true}
-            animationDuration={1400}
-            animationEasing="ease-out"
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Spend vs DA rate by administration, dot matrix"
+        >
+          {/* Legend row */}
+          <g>
+            <circle cx={LABEL_W + 4} cy={20} r={3} fill={SPEND_COLOR} />
+            <text x={LABEL_W + 14} y={24} fill={SPEND_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+              GASTO TOTAL (cada punto = 0.1T MXN)
+            </text>
+            <circle cx={LABEL_W + 288} cy={20} r={3} fill={DA_COLOR} />
+            <text x={LABEL_W + 298} y={24} fill={DA_COLOR} fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+              ADJ. DIRECTA (cada punto = 2pp)
+            </text>
+          </g>
 
-      {/* Legend */}
-      <div className="flex items-center gap-5 mt-2 text-[10px] text-zinc-500">
-        <span className="flex items-center gap-1.5">
-          <span className="w-3 h-3 rounded-sm" style={{ background: '#52525b', opacity: 0.7 }} />
-          Gasto total (eje izq.)
-        </span>
-        <span className="flex items-center gap-1.5">
-          <span className="w-4 border-t-2" style={{ borderColor: '#dc2626' }} />
-          % Adj. Directa (eje der.)
-        </span>
+          {/* Era blocks */}
+          {DATA.map((row, rowIdx) => {
+            const blockY = 40 + rowIdx * (ERA_BLOCK_H + ERA_GAP)
+            const spendFilled = Math.round(row.spendTn * SPEND_DOT_PER_T)
+            const daFilled = Math.round(row.daPct * DA_DOT_PER_PCT)
+
+            return (
+              <g key={row.era}>
+                {/* Era + cohort label */}
+                <text
+                  x={LABEL_W - 6}
+                  y={blockY + 4}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                  fontWeight={600}
+                >
+                  {row.era}
+                </text>
+                <text
+                  x={LABEL_W - 6}
+                  y={blockY + 15}
+                  textAnchor="end"
+                  fill="#52525b"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.cohort}
+                </text>
+                <text
+                  x={LABEL_W - 6}
+                  y={blockY + 25}
+                  textAnchor="end"
+                  fill="#52525b"
+                  fontSize={8}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.contracts}
+                </text>
+
+                {/* Spend strip */}
+                {(() => {
+                  const yStrip = blockY + 4
+                  return (
+                    <g>
+                      {Array.from({ length: SPEND_DOTS }).map((_, i) => {
+                        const isFilled = i < spendFilled
+                        return (
+                          <motion.circle
+                            key={`spend-${i}`}
+                            cx={LABEL_W + i * DOT_GAP + DOT_R}
+                            cy={yStrip + STRIP_H / 2}
+                            r={DOT_R}
+                            fill={isFilled ? SPEND_COLOR : '#18181b'}
+                            fillOpacity={isFilled ? 0.75 : 1}
+                            stroke={isFilled ? 'none' : '#27272a'}
+                            strokeWidth={isFilled ? 0 : 0.5}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.2, delay: rowIdx * 0.05 + i * 0.003 }}
+                          />
+                        )
+                      })}
+                      <text
+                        x={LABEL_W + MAX_COL_W + 8}
+                        y={yStrip + STRIP_H / 2 + 3}
+                        fill={SPEND_COLOR}
+                        fontSize={10}
+                        fontFamily="var(--font-family-mono)"
+                        fontWeight={600}
+                      >
+                        ${row.spendTn.toFixed(2)}T
+                      </text>
+                    </g>
+                  )
+                })()}
+
+                {/* DA strip */}
+                {(() => {
+                  const yStrip = blockY + 4 + STRIP_H + STRIP_GAP
+                  return (
+                    <g>
+                      {Array.from({ length: DA_DOTS }).map((_, i) => {
+                        const isFilled = i < daFilled
+                        return (
+                          <motion.circle
+                            key={`da-${i}`}
+                            cx={LABEL_W + i * DOT_GAP + DOT_R}
+                            cy={yStrip + STRIP_H / 2}
+                            r={DOT_R}
+                            fill={isFilled ? DA_COLOR : '#18181b'}
+                            fillOpacity={isFilled ? 0.95 : 1}
+                            stroke={isFilled ? 'none' : '#27272a'}
+                            strokeWidth={isFilled ? 0 : 0.5}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.2, delay: rowIdx * 0.05 + 0.08 + i * 0.003 }}
+                          />
+                        )
+                      })}
+                      <text
+                        x={LABEL_W + MAX_COL_W + 8}
+                        y={yStrip + STRIP_H / 2 + 3}
+                        fill={DA_COLOR}
+                        fontSize={10}
+                        fontFamily="var(--font-family-mono)"
+                        fontWeight={600}
+                      >
+                        {row.daPct}% DA
+                      </text>
+                    </g>
+                  )
+                })()}
+              </g>
+            )
+          })}
+        </svg>
       </div>
 
-      {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-3">
-        Fuente: COMPRANET · Análisis RUBLI v6.5
+        Fuente: COMPRANET · Análisis RUBLI v0.6.5
       </p>
     </motion.div>
   )
 }
+
+// ✓ dot-matrix rewrite

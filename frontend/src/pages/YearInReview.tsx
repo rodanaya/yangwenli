@@ -921,6 +921,44 @@ function NotableRiskContracts({
 // Section: Monthly Spending
 // =============================================================================
 
+// Custom interactive tooltip for the monthly AreaChart
+interface MonthlyTooltipProps {
+  active?: boolean
+  payload?: Array<{ payload: { monthName: string; monthFull: string; value: number; contracts: number; pctVsAvg: number | null } }>
+}
+function MonthlyCustomTooltip({ active, payload }: MonthlyTooltipProps) {
+  if (!active || !payload?.length) return null
+  const d = payload[0].payload
+  const pctColor = d.pctVsAvg == null
+    ? '#a1a1aa'
+    : d.pctVsAvg >= 50 ? '#f87171'
+      : d.pctVsAvg >= 20 ? '#fb923c'
+      : d.pctVsAvg <= -20 ? '#60a5fa'
+      : '#4ade80'
+  return (
+    <div className="rounded-md border border-zinc-700 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl">
+      <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-100">
+        {d.monthFull}
+      </p>
+      <div className="mt-1 space-y-0.5">
+        <p className="text-xs text-zinc-300">
+          <span className="text-zinc-500">Spend:</span>{' '}
+          <span className="font-mono font-bold text-zinc-100 tabular-nums">{formatCompactMXN(d.value)}</span>
+        </p>
+        <p className="text-xs text-zinc-400">
+          <span className="text-zinc-500">Contracts:</span>{' '}
+          <span className="font-mono tabular-nums">{formatNumber(d.contracts)}</span>
+        </p>
+        {d.pctVsAvg != null && (
+          <p className="text-[10px] font-mono mt-1" style={{ color: pctColor }}>
+            {d.pctVsAvg > 0 ? '+' : ''}{d.pctVsAvg.toFixed(1)}% vs monthly avg
+          </p>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function MonthlySpending({
   data,
   year,
@@ -934,13 +972,20 @@ function MonthlySpending({
     return <p className="py-8 text-sm text-text-muted italic text-center">{t('noData')}</p>
   }
 
+  // Compute monthly average for % vs avg context
+  const monthlyAvg = data.months.length > 0
+    ? data.months.reduce((sum, m) => sum + m.value, 0) / data.months.length
+    : 0
+
   // Spanish month labels (use en for consistency; data already has month_name)
   const chartData = data.months.map((m) => ({
     month: m.month,
     monthName: m.month_name.slice(0, 3),
+    monthFull: m.month_name,
     value: m.value,
     contracts: m.contracts,
     isDecember: m.month === 12,
+    pctVsAvg: monthlyAvg > 0 ? ((m.value - monthlyAvg) / monthlyAvg) * 100 : null,
   }))
 
   // December concentration
@@ -979,25 +1024,9 @@ function MonthlySpending({
               width={60}
             />
             <RechartsTooltip
-              cursor={{ stroke: '#dc2626', strokeWidth: 1 }}
-              contentStyle={{
-                background: '#18181b',
-                border: '1px solid #3f3f46',
-                borderRadius: 6,
-                fontSize: 12,
-              }}
-              labelStyle={{ color: '#e4e4e7', fontWeight: 600 }}
-              formatter={((value: unknown, name: unknown, payload: unknown) => {
-                const numValue = typeof value === 'number' ? value : Number(value ?? 0)
-                const pl = payload as { payload: { contracts: number } }
-                if (name === 'value') {
-                  return [
-                    `${formatCompactMXN(numValue)} · ${formatNumber(pl.payload.contracts)} ${t('monthly.contractsLabel')}`,
-                    t('monthly.valueLabel'),
-                  ]
-                }
-                return [numValue, String(name ?? '')]
-              }) as never}
+              cursor={{ stroke: '#dc2626', strokeWidth: 1, strokeDasharray: '3 3' }}
+              content={<MonthlyCustomTooltip />}
+              wrapperStyle={{ outline: 'none' }}
             />
             <Area
               type="monotone"
@@ -1005,6 +1034,7 @@ function MonthlySpending({
               stroke="#ef4444"
               strokeWidth={2}
               fill="url(#monthlyGradient)"
+              activeDot={{ r: 5, fill: '#ef4444', stroke: '#fef2f2', strokeWidth: 2 }}
             />
             {/* December callout */}
             {chartData.find(m => m.isDecember) && (
@@ -1263,10 +1293,10 @@ export default function YearInReview() {
                   key={y}
                   onClick={() => handleYearChange(y)}
                   className={cn(
-                    'px-4 py-1.5 text-base font-bold transition-all rounded-sm',
+                    'px-3.5 py-1.5 text-sm font-bold transition-all rounded-sm border',
                     y === validYear
-                      ? 'bg-text-primary text-background shadow-lg'
-                      : 'text-text-muted hover:text-text-primary border border-border/40 hover:border-border',
+                      ? 'bg-amber-500/10 text-amber-400 border-amber-500/60 shadow-sm'
+                      : 'text-text-muted hover:text-text-primary border-border/40 hover:border-border',
                   )}
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                   aria-current={y === validYear ? 'page' : undefined}
@@ -1505,7 +1535,7 @@ export default function YearInReview() {
               {t('sectorAll.sectionLabel')}
             </p>
             <p
-              className="text-lg font-bold text-text-primary mb-1"
+              className="text-base font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('sectorAll.headline', { year: validYear })}
@@ -1535,7 +1565,7 @@ export default function YearInReview() {
               {t('sectorGrowthFull.sectionLabel')}
             </p>
             <p
-              className="text-lg font-bold text-text-primary mb-1"
+              className="text-base font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
@@ -1567,7 +1597,7 @@ export default function YearInReview() {
                 {t('riskEvolution.sectionLabel')}
               </p>
               <p
-                className="text-lg font-bold text-text-primary mb-1"
+                className="text-base font-bold text-text-primary mb-1"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {t('riskEvolution.headline', { year: validYear })}
@@ -1587,7 +1617,7 @@ export default function YearInReview() {
                 {t('procedureType.sectionLabel')}
               </p>
               <p
-                className="text-lg font-bold text-text-primary mb-4"
+                className="text-base font-bold text-text-primary mb-4"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {t('procedureType.headline')}
@@ -1608,7 +1638,7 @@ export default function YearInReview() {
               {t('monthly.sectionLabel')}
             </p>
             <p
-              className="text-lg font-bold text-text-primary mb-1"
+              className="text-base font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('monthly.headline', { year: validYear })}
@@ -1688,7 +1718,7 @@ export default function YearInReview() {
               {t('topVendorsFull.sectionLabel')}
             </p>
             <p
-              className="text-lg font-bold text-text-primary mb-1"
+              className="text-base font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('topVendorsFull.headline', { year: validYear })}
@@ -1720,7 +1750,7 @@ export default function YearInReview() {
               </p>
             </div>
             <p
-              className="text-lg font-bold text-text-primary mb-1"
+              className="text-base font-bold text-text-primary mb-1"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('notableRisks.headline', { year: validYear })}

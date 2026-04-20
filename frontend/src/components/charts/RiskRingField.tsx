@@ -14,6 +14,7 @@
  * becomes a full panel visual. Fully deterministic — no animation.
  */
 
+import { motion } from 'framer-motion'
 import { halton, mulberry32 } from '@/lib/particle'
 
 const DOT = {
@@ -39,6 +40,12 @@ interface RiskRingFieldProps {
   centerSublabel?: string
   seed?: number
   className?: string
+  /**
+   * When true, dots animate in progressively on first render (constellation
+   * reveal). Critical dots appear first, followed by high/medium/low in that
+   * order. Used on page-level entry points (e.g. SectorProfile).
+   */
+  animate?: boolean
 }
 
 const ORDER: Level[] = ['critical', 'high', 'medium', 'low']
@@ -51,7 +58,18 @@ export function RiskRingField({
   centerSublabel,
   seed = 42,
   className,
+  animate = false,
 }: RiskRingFieldProps) {
+  // Animation tuning: dots stagger in order (critical → low), largest/most-critical
+  // first. Delay and duration keep the full reveal under ~1.6s.
+  const ANIM_BASE_DELAY = 0.08
+  const ANIM_STEP_DELAY = 0.008  // 120 dots × 0.008 = 0.96s span
+  const ANIM_LEVEL_OFFSET: Record<Level, number> = {
+    critical: 0.00,
+    high:     0.20,
+    medium:   0.45,
+    low:      0.70,
+  }
   const cx = size / 2
   const cy = size / 2
 
@@ -133,18 +151,114 @@ export function RiskRingField({
           .filter((d) => d.level === paintLevel)
           .map((d, i) => {
             const s = DOT[paintLevel]
+            if (!animate) {
+              return (
+                <circle
+                  key={`${paintLevel}-${i}`}
+                  cx={d.x}
+                  cy={d.y}
+                  r={s.r}
+                  fill={s.fill}
+                  fillOpacity={s.alpha}
+                />
+              )
+            }
+            const delay =
+              ANIM_BASE_DELAY + ANIM_LEVEL_OFFSET[paintLevel] + i * ANIM_STEP_DELAY
             return (
-              <circle
+              <motion.circle
                 key={`${paintLevel}-${i}`}
                 cx={d.x}
                 cy={d.y}
                 r={s.r}
                 fill={s.fill}
-                fillOpacity={s.alpha}
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: s.alpha }}
+                transition={{
+                  delay,
+                  type: 'spring',
+                  damping: 20,
+                  stiffness: 110,
+                  opacity: { duration: 0.35, delay },
+                }}
+                style={{ originX: `${d.x}px`, originY: `${d.y}px`, transformBox: 'fill-box' }}
               />
             )
           })
       )}
+
+      {/* ── Critical sparkle pulse (only when animate=true) ──────────────── */}
+      {animate &&
+        dots
+          .filter((d) => d.level === 'critical')
+          .slice(0, 3)
+          .map((d, i) => (
+            <motion.circle
+              key={`sparkle-${i}`}
+              cx={d.x}
+              cy={d.y}
+              r={DOT.critical.r}
+              fill={DOT.critical.fill}
+              fillOpacity={0.6}
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: [0, 2.4, 0], opacity: [0, 0.45, 0] }}
+              transition={{
+                delay: 0.6 + i * 0.18,
+                duration: 0.9,
+                ease: 'easeOut',
+                times: [0, 0.4, 1],
+              }}
+              style={{ originX: `${d.x}px`, originY: `${d.y}px`, transformBox: 'fill-box' }}
+            />
+          ))}
+
+      {/* ── Connecting "shooting star" lines between critical dots ──────── */}
+      {animate &&
+        (() => {
+          const criticalDots = dots.filter((d) => d.level === 'critical')
+          // Pick up to 5 nearest-neighbor pairs for a subtle web of light.
+          const edges: Array<{ x1: number; y1: number; x2: number; y2: number }> = []
+          for (let i = 0; i < Math.min(criticalDots.length, 6); i++) {
+            const a = criticalDots[i]
+            let best = -1
+            let bd = Infinity
+            for (let j = i + 1; j < criticalDots.length; j++) {
+              const b = criticalDots[j]
+              const dx = a.x - b.x
+              const dy = a.y - b.y
+              const d = dx * dx + dy * dy
+              if (d < bd) { bd = d; best = j }
+            }
+            if (best >= 0) {
+              const b = criticalDots[best]
+              edges.push({ x1: a.x, y1: a.y, x2: b.x, y2: b.y })
+            }
+          }
+          return edges.map((e, idx) => {
+            const length = Math.hypot(e.x2 - e.x1, e.y2 - e.y1)
+            return (
+              <motion.line
+                key={`critline-${idx}`}
+                x1={e.x1}
+                y1={e.y1}
+                x2={e.x2}
+                y2={e.y2}
+                stroke={DOT.critical.fill}
+                strokeOpacity={0.35}
+                strokeWidth={0.7}
+                strokeLinecap="round"
+                strokeDasharray={length}
+                initial={{ strokeDashoffset: length, opacity: 0 }}
+                animate={{ strokeDashoffset: 0, opacity: 0.35 }}
+                transition={{
+                  delay: 0.9 + idx * 0.1,
+                  duration: 0.7,
+                  ease: 'easeOut',
+                }}
+              />
+            )
+          })
+        })()}
 
       {/* ── Level annotations ─────────────────────────────────────────────── */}
       {ORDER.filter((l) => (byLevel[l] || 0) > 0.5).map((level) => {

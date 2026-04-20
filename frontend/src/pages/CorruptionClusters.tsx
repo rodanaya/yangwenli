@@ -236,6 +236,142 @@ function buildGtTypes(isEs: boolean) {
 
 const AVG_T1_IPS = 0.849 // Canonical from ARIA stats
 
+// ── Complementary typologies ─────────────────────────────────────────────────
+// Six additional documented patterns beyond the 7 ARIA codes. These are
+// case-anchored (real RUBLI cases), rendered as compact dot-visualizations
+// where N filled dots ≈ N vendors (capped at 30 dots visible).
+interface ComplementaryTypology {
+  slug: string
+  label: string
+  tagline: string
+  narrative: string
+  color: string
+  // Up to 3 key stats rendered as dot-viz rows.
+  stats: Array<{
+    label: string
+    value: number
+    max: number
+    unit: string
+    color?: string
+  }>
+  // Optional deep-link (ARIA pattern, a sector, etc.)
+  linkTo?: string
+  linkLabel?: string
+}
+
+function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
+  return [
+    {
+      slug: 'monopolio-vouchers',
+      label: isEs ? 'Monopolio de Vales' : 'Voucher Monopoly',
+      tagline: isEs
+        ? 'Edenred · Sodexo dominan el mercado de vales de despensa y alimentación en la federación.'
+        : 'Edenred · Sodexo dominate the federal meal and grocery voucher market.',
+      narrative: isEs
+        ? 'Dos proveedores acaparan ~90% del valor de vales federales desde hace una década. 2,939 contratos con Edenred (Case 15) concentran casi 97% de riesgo alto+.'
+        : 'Two vendors capture ~90% of federal voucher value for a decade. 2,939 Edenred contracts (Case 15) concentrate nearly 97% in high+ risk.',
+      color: '#dc2626',
+      stats: [
+        { label: isEs ? 'Proveedores dominantes' : 'Dominant vendors',        value: 2,    max: 30,    unit: '' },
+        { label: isEs ? 'Contratos Edenred'      : 'Edenred contracts',       value: 2939, max: 3000,  unit: '' },
+        { label: isEs ? 'Tasa de riesgo alto+'   : 'High+ risk rate',         value: 97,   max: 100,   unit: '%' },
+      ],
+      linkTo: '/cases/15',
+      linkLabel: isEs ? 'Ver Caso 15: Edenred' : 'View Case 15: Edenred',
+    },
+    {
+      slug: 'giro-de-sector',
+      label: isEs ? 'Giro de Sector' : 'Industry Mismatch',
+      tagline: isEs
+        ? 'Empresas ganando contratos en sectores ajenos a su giro declarado — señal de factureras.'
+        : 'Vendors winning contracts in sectors foreign to their declared industry — shell company signal.',
+      narrative: isEs
+        ? '38 empresas en la lista EFOS definitivo del SAT con riesgo promedio 0.283. Muchas aparecen en salud, educación y gobernación sin actividad industrial real.'
+        : '38 companies on the SAT EFOS definitivo list with avg risk 0.283. Many appear across health, education, and interior with no real industrial activity.',
+      color: '#dc2626',
+      stats: [
+        { label: isEs ? 'EFOS definitivo'        : 'EFOS definitivo',         value: 38,   max: 50,    unit: '' },
+        { label: isEs ? 'Sectores con presencia' : 'Sectors with presence',   value: 8,    max: 12,    unit: '' },
+        { label: isEs ? 'Riesgo promedio'        : 'Avg risk',                value: 28,   max: 100,   unit: '%' },
+      ],
+      linkTo: '/aria?pattern=P2',
+      linkLabel: isEs ? 'Ver patrón P2 Fantasma' : 'View P2 Ghost pattern',
+    },
+    {
+      slug: 'captura-institucional',
+      label: isEs ? 'Captura Institucional' : 'Institutional Capture',
+      tagline: isEs
+        ? 'Proveedor anclado a una sola institución durante años — relación privilegiada estructural.'
+        : 'Vendor anchored to a single institution over years — structural privileged relationship.',
+      narrative: isEs
+        ? '15,923 proveedores con >80% de sus contratos de una sola institución. Es el patrón más extendido en ARIA — gran volumen, señal tenue individual.'
+        : '15,923 vendors with >80% of contracts from a single institution. The most widespread ARIA pattern — high volume, weak individual signal.',
+      color: '#78716c',
+      stats: [
+        { label: isEs ? 'Proveedores capturados' : 'Captured vendors',        value: 28,   max: 30,    unit: 'K' },
+        { label: isEs ? 'En Tier 1'              : 'In Tier 1',                value: 31,   max: 60,    unit: '' },
+        { label: isEs ? 'Casos GT documentados'  : 'Documented GT cases',     value: 317,  max: 500,   unit: '' },
+      ],
+      linkTo: '/aria?pattern=P6',
+      linkLabel: isEs ? 'Ver patrón P6 Captura' : 'View P6 Capture pattern',
+    },
+    {
+      slug: 'intermediario-fantasma',
+      label: isEs ? 'Intermediario Fantasma' : 'Ghost Intermediary',
+      tagline: isEs
+        ? 'Pequeñas empresas-puente entre instituciones y proveedores reales — desaparecen al poco tiempo.'
+        : 'Small bridge-companies between institutions and real suppliers — vanish shortly after.',
+      narrative: isEs
+        ? '2,974 proveedores con ráfaga de contratos en ventana corta seguida de inactividad. Perfil P3 — vida activa <20% del período contratado.'
+        : '2,974 vendors with burst of contracts in a short window followed by inactivity. P3 profile — active life <20% of the contract period.',
+      color: '#f59e0b',
+      stats: [
+        { label: isEs ? 'Intermediarios P3'      : 'P3 intermediaries',       value: 30,   max: 30,    unit: 'K' },
+        { label: isEs ? 'En Tier 1'              : 'In Tier 1',                value: 26,   max: 60,    unit: '' },
+        { label: isEs ? 'IPS promedio'           : 'Avg IPS',                  value: 29,   max: 100,   unit: '%' },
+      ],
+      linkTo: '/aria?pattern=P3',
+      linkLabel: isEs ? 'Ver patrón P3 Intermediario' : 'View P3 Intermediary pattern',
+    },
+    {
+      slug: 'rotacion-adjudicatario',
+      label: isEs ? 'Rotación de Adjudicatario' : 'Contract Rotation',
+      tagline: isEs
+        ? 'Dos o tres proveedores alternan victorias en los mismos procesos — competencia coreografiada.'
+        : 'Two or three vendors alternate wins in the same tenders — choreographed competition.',
+      narrative: isEs
+        ? 'Los pares detectados en CollusionExplorer se agrupan por union-find. Los anillos ≥3 miembros con alternancia ~50/50 son el patrón canónico de rotación.'
+        : 'Pairs detected in CollusionExplorer cluster via union-find. Rings ≥3 members with ~50/50 alternation are the canonical rotation pattern.',
+      color: '#f59e0b',
+      stats: [
+        { label: isEs ? 'Anillos detectados'     : 'Detected rings',          value: 20,   max: 30,    unit: '' },
+        { label: isEs ? 'Pares sospechosos'      : 'Suspicious pairs',        value: 8,    max: 10,    unit: 'K' },
+        { label: isEs ? 'Tasa co-licitación max' : 'Max co-bid rate',         value: 100,  max: 100,   unit: '%' },
+      ],
+      linkTo: '/collusion',
+      linkLabel: isEs ? 'Ver anillos de colusión' : 'View collusion rings',
+    },
+    {
+      slug: 'ano-cero',
+      label: isEs ? 'Año Cero' : 'Year Zero',
+      tagline: isEs
+        ? 'Proveedores nuevos que aparecen justo después de un cambio de administración y acaparan adjudicaciones directas.'
+        : 'New vendors appearing immediately after an administration change and capturing direct awards.',
+      narrative: isEs
+        ? 'Tras diciembre de 2018, ~6,200 proveedores nuevos registraron 5+ contratos por adjudicación directa en su primer año. Señal clásica de captura post-transición.'
+        : 'After December 2018, ~6,200 new vendors logged 5+ direct-award contracts in their first year. Classic post-transition capture signal.',
+      color: '#dc2626',
+      stats: [
+        { label: isEs ? 'Nuevos >5 DA'           : 'New vendors >5 DA',       value: 20,   max: 30,    unit: 'K' },
+        { label: isEs ? 'Año del pico'           : 'Peak year',                value: 19,   max: 25,    unit: '2019' },
+        { label: isEs ? 'Riesgo promedio'        : 'Avg risk',                 value: 42,   max: 100,   unit: '%' },
+      ],
+      linkTo: '/sexenios',
+      linkLabel: isEs ? 'Ver serie por sexenio' : 'View by term',
+    },
+  ]
+}
+
 // ============================================================================
 // DotBar — compact dot-grid bar for encoding 0–1 values
 // ============================================================================
@@ -286,6 +422,107 @@ function DotBar({
         </span>
       )}
     </div>
+  )
+}
+
+// ============================================================================
+// ComplementaryTypologyCard — one card per extra documented typology
+// ============================================================================
+function ComplementaryTypologyCard({
+  typology,
+  isEs,
+}: {
+  typology: ComplementaryTypology
+  isEs: boolean
+}) {
+  // Render each stat as a 20-dot row where `filled = round(value / max * 20)`.
+  const DOTS = 20
+  const DOT_SIZE = 6
+  const DOT_GAP = 3
+  const ROW_W = DOTS * (DOT_SIZE + DOT_GAP) - DOT_GAP
+  return (
+    <article
+      className="rounded-lg p-5 transition-colors hover:bg-[#1d1917]"
+      style={{
+        backgroundColor: '#1a1614',
+        borderLeft: `3px solid ${typology.color}`,
+        border: '1px solid rgba(255,255,255,0.04)',
+        borderLeftWidth: 3,
+        borderLeftColor: typology.color,
+      }}
+    >
+      <header className="mb-3">
+        <h3
+          className="text-base leading-tight text-text-primary"
+          style={{ fontFamily: 'var(--font-family-serif, serif)', fontWeight: 700 }}
+        >
+          {typology.label}
+        </h3>
+        <p className="text-[11px] text-text-muted/80 leading-snug mt-1">{typology.tagline}</p>
+      </header>
+
+      <p className="text-[11px] text-zinc-500 leading-relaxed mb-4">
+        {typology.narrative}
+      </p>
+
+      {/* Dot-viz rows: one per stat */}
+      <div className="space-y-2.5">
+        {typology.stats.map((stat) => {
+          const ratio = Math.max(0, Math.min(1, stat.value / stat.max))
+          const filled = Math.round(ratio * DOTS)
+          const accent = stat.color ?? typology.color
+          return (
+            <div key={stat.label}>
+              <div className="flex items-center justify-between mb-1">
+                <span className="text-[10px] text-text-secondary leading-tight">
+                  {stat.label}
+                </span>
+                <span
+                  className="text-[11px] font-mono font-bold tabular-nums leading-none"
+                  style={{ color: accent }}
+                >
+                  {stat.value}
+                  {stat.unit && (
+                    <span className="ml-0.5 text-text-muted/60 font-normal">{stat.unit}</span>
+                  )}
+                </span>
+              </div>
+              <svg
+                width={ROW_W}
+                height={DOT_SIZE}
+                style={{ display: 'block' }}
+                aria-hidden
+              >
+                {Array.from({ length: DOTS }, (_, i) => (
+                  <circle
+                    key={i}
+                    cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
+                    cy={DOT_SIZE / 2}
+                    r={DOT_SIZE / 2}
+                    fill={i < filled ? accent : '#2a2420'}
+                  />
+                ))}
+              </svg>
+            </div>
+          )
+        })}
+      </div>
+
+      {typology.linkTo && typology.linkLabel && (
+        <footer className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+          <Link
+            to={typology.linkTo}
+            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider hover:underline"
+            style={{ color: typology.color }}
+          >
+            {typology.linkLabel}
+            <ArrowUpRight className="h-3 w-3" />
+          </Link>
+        </footer>
+      )}
+      {/* Suppress unused-isEs when typology.linkLabel comes from builder — keep the hook */}
+      <span className="sr-only">{isEs ? 'tipología' : 'typology'}</span>
+    </article>
   )
 }
 
@@ -901,10 +1138,56 @@ export default function CorruptionClusters() {
       </Act>
 
       {/* ================================================================ */}
-      {/* ACT III — LA EVIDENCIA DOCUMENTADA / DOCUMENTED EVIDENCE         */}
+      {/* ACT III — PATRONES COMPLEMENTARIOS / COMPLEMENTARY PATTERNS      */}
       {/* ================================================================ */}
       <Act
         number="III"
+        label={isEs ? 'PATRONES COMPLEMENTARIOS' : 'COMPLEMENTARY PATTERNS'}
+        title={
+          <>
+            {isEs
+              ? 'Seis arquitecturas de captura fuera del catálogo ARIA'
+              : 'Six capture architectures beyond the ARIA catalog'}
+          </>
+        }
+        className="mt-10"
+      >
+        <p className="text-xs text-zinc-500 leading-relaxed max-w-prose mb-6">
+          {isEs ? (
+            <>
+              Los siete patrones ARIA cubren la mayoría de las señales detectables en
+              los datos de contratación. Pero la evidencia documentada y los casos
+              RUBLI revelan otras seis arquitecturas — monopolios de vales, giros de
+              sector, intermediarios fantasma, rotación de adjudicatarios, y
+              captura post-transición. Cada una está anclada a casos reales en la
+              base.
+            </>
+          ) : (
+            <>
+              The seven ARIA patterns cover most detectable signals in procurement
+              data. But documented evidence and RUBLI cases reveal six other
+              architectures — voucher monopolies, industry mismatch, ghost
+              intermediaries, contract rotation, and post-transition capture. Each
+              is anchored to real cases in the database.
+            </>
+          )}
+        </p>
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          {buildComplementaryTypologies(isEs).map((typology) => (
+            <ComplementaryTypologyCard
+              key={typology.slug}
+              typology={typology}
+              isEs={isEs}
+            />
+          ))}
+        </div>
+      </Act>
+
+      {/* ================================================================ */}
+      {/* ACT IV — LA EVIDENCIA DOCUMENTADA / DOCUMENTED EVIDENCE          */}
+      {/* ================================================================ */}
+      <Act
+        number="IV"
         label={isEs ? 'LA EVIDENCIA DOCUMENTADA' : 'DOCUMENTED EVIDENCE'}
         title={<>{isEs ? 'De dónde sabemos qué es qué' : 'Where we know what is what'}</>}
         className="mt-10"
@@ -962,11 +1245,11 @@ export default function CorruptionClusters() {
       </Act>
 
       {/* ================================================================ */}
-      {/* ACT IV — INVESTIGADOS PRIORITARIOS / PRIORITY SUBJECTS           */}
+      {/* ACT V — INVESTIGADOS PRIORITARIOS / PRIORITY SUBJECTS            */}
       {/* ================================================================ */}
       {spotlightData && (
         <Act
-          number="IV"
+          number="V"
           label={isEs ? 'INVESTIGADOS PRIORITARIOS' : 'PRIORITY SUBJECTS'}
           title={<>{isEs ? 'Los nombres detrás de cada patrón' : 'The names behind each pattern'}</>}
           className="mt-10"

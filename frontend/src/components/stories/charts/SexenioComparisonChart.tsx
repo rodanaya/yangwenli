@@ -1,74 +1,59 @@
-import { motion } from 'framer-motion'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  LabelList,
-} from 'recharts'
+/**
+ * SexenioComparisonChart — Pure SVG dot-matrix grouped by sexenio.
+ *
+ * For each of 4 metrics, render 4 stacked dot strips (Fox, Calderon,
+ * Peña Nieto, AMLO). Each dot = 1pp. The visual story: every metric
+ * shows a progressively longer red AMLO strip.
+ */
 
-const GRID_COLOR = '#3f3f46'
-const AXIS_COLOR = '#71717a'
+import { motion } from 'framer-motion'
+
+interface MetricRow {
+  metric: string
+  unit: string
+  fox: number
+  calderon: number
+  pena: number
+  amlo: number
+}
+
+const DATA: MetricRow[] = [
+  { metric: 'Adj. Directa',   unit: '%', fox: 63.5, calderon: 64.2, pena: 71.8, amlo: 79.4 },
+  { metric: 'Licit. unica',   unit: '%', fox: 12.1, calderon: 13.4, pena: 15.7, amlo: 18.2 },
+  { metric: 'Riesgo alto',    unit: '%', fox: 4.2,  calderon: 5.1,  pena: 7.3,  amlo: 11.8 },
+  { metric: 'Concentracion',  unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
+]
 
 const FOX_COLOR = '#52525b'
 const CALDERON_COLOR = '#71717a'
 const PENA_COLOR = '#a1a1aa'
 const AMLO_COLOR = '#dc2626'
 
-const SEXENIO_COLORS: Record<string, string> = {
-  Fox: FOX_COLOR,
-  Calderon: CALDERON_COLOR,
-  'Pena Nieto': PENA_COLOR,
-  AMLO: AMLO_COLOR,
-}
+const SEXENIO_ROWS = [
+  { key: 'fox',      label: 'Fox',        color: FOX_COLOR,      opacity: 0.55 },
+  { key: 'calderon', label: 'Calderón',   color: CALDERON_COLOR, opacity: 0.6  },
+  { key: 'pena',     label: 'Peña',       color: PENA_COLOR,     opacity: 0.7  },
+  { key: 'amlo',     label: 'AMLO',       color: AMLO_COLOR,     opacity: 1    },
+] as const
 
-const data = [
-  { metric: 'Adj. Directa', unit: '%', fox: 63.5, calderon: 64.2, pena: 71.8, amlo: 79.4 },
-  { metric: 'Licit. unica', unit: '%', fox: 12.1, calderon: 13.4, pena: 15.7, amlo: 18.2 },
-  { metric: 'Riesgo alto', unit: '%', fox: 4.2, calderon: 5.1, pena: 7.3, amlo: 11.8 },
-  { metric: 'Concentracion', unit: '%', fox: 18.3, calderon: 19.7, pena: 23.4, amlo: 28.9 },
-]
+type SexenioKey = 'fox' | 'calderon' | 'pena' | 'amlo'
 
-interface PayloadEntry {
-  payload: { metric: string; unit: string; fox: number; calderon: number; pena: number; amlo: number }
-}
+const DOTS = 80        // each dot = 1pp (0-80%)
+const DOT_R = 2.5
+const DOT_GAP = 7
+const STRIP_H = 8
+const SEXENIO_GAP = 2
+const SEXENIO_BLOCK_H = SEXENIO_ROWS.length * (STRIP_H + SEXENIO_GAP) + 4
+const METRIC_GAP = 10
+const LABEL_W = 118
+const COL_W = DOTS * DOT_GAP
+const VALUE_W = 80
 
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const delta = (d.amlo - d.fox).toFixed(1)
-  return (
-    <div className="rounded-lg border px-3 py-2.5 shadow-xl" style={{ background: '#18181b', borderColor: GRID_COLOR }}>
-      <p className="font-mono font-semibold text-zinc-100 mb-1.5">{d.metric}</p>
-      <div className="space-y-1">
-        {[
-          { label: 'Fox', value: d.fox, color: FOX_COLOR },
-          { label: 'Calderon', value: d.calderon, color: CALDERON_COLOR },
-          { label: 'Pena Nieto', value: d.pena, color: PENA_COLOR },
-          { label: 'AMLO', value: d.amlo, color: AMLO_COLOR },
-        ].map((row) => (
-          <div key={row.label} className="flex items-center justify-between gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <span className="h-2 w-2 rounded-sm" style={{ background: row.color }} />
-              <span className="text-zinc-400 font-mono">{row.label}</span>
-            </div>
-            <span className="font-mono font-semibold text-zinc-100">{row.value}{d.unit}</span>
-          </div>
-        ))}
-      </div>
-      <div className="mt-2 pt-1.5 border-t" style={{ borderColor: GRID_COLOR }}>
-        <p className="text-[10px] text-zinc-500">AMLO vs Fox: <span className="text-red-400 font-semibold">+{delta} pts</span></p>
-      </div>
-    </div>
-  )
-}
+const W = LABEL_W + COL_W + VALUE_W
+const H = 50 + DATA.length * (SEXENIO_BLOCK_H + METRIC_GAP) + 20
 
 export function SexenioComparisonChart() {
-  const worstMetric = data.reduce((worst, d) => {
+  const worstMetric = DATA.reduce((worst, d) => {
     const delta = d.amlo - d.fox
     return delta > worst.delta ? { name: d.metric, delta, amloVal: d.amlo } : worst
   }, { name: '', delta: 0, amloVal: 0 })
@@ -91,67 +76,143 @@ export function SexenioComparisonChart() {
         Mayor deterioro: {worstMetric.name} (+{worstMetric.delta.toFixed(1)} pts Fox a AMLO)
       </p>
 
-      {/* Sexenio legend strip */}
+      {/* Sexenio legend */}
       <div className="flex items-center gap-4 mb-3">
-        {Object.entries(SEXENIO_COLORS).map(([name, color]) => (
-          <div key={name} className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: color, opacity: name === 'AMLO' ? 1 : 0.7 }} />
-            <span className="text-[10px] font-mono text-zinc-500">{name}</span>
+        {SEXENIO_ROWS.map((r) => (
+          <div key={r.key} className="flex items-center gap-1.5">
+            <span className="h-2.5 w-2.5 rounded-sm" style={{ background: r.color, opacity: r.opacity }} />
+            <span className="text-[10px] font-mono text-zinc-500">{r.label}</span>
           </div>
         ))}
       </div>
 
-      <ResponsiveContainer width="100%" height={260}>
-        <BarChart data={data} margin={{ top: 16, right: 8, left: 0, bottom: 0 }} barCategoryGap="20%">
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
-          <XAxis
-            dataKey="metric"
-            tick={{ fill: '#d4d4d8', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            interval={0}
-          />
-          <YAxis
-            domain={[0, 85]}
-            ticks={[0, 25, 50, 75]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            width={28}
-            tickFormatter={(v: number) => `${v}`}
-          />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a', opacity: 0.4 }} />
-          <Bar dataKey="fox" radius={[2, 2, 0, 0]} isAnimationActive={true} animationDuration={1000}>
-            {data.map((_d, i) => (
-              <Cell key={i} fill={FOX_COLOR} fillOpacity={0.5} />
-            ))}
-          </Bar>
-          <Bar dataKey="calderon" radius={[2, 2, 0, 0]} isAnimationActive={true} animationDuration={1000}>
-            {data.map((_d, i) => (
-              <Cell key={i} fill={CALDERON_COLOR} fillOpacity={0.5} />
-            ))}
-          </Bar>
-          <Bar dataKey="pena" radius={[2, 2, 0, 0]} isAnimationActive={true} animationDuration={1000}>
-            {data.map((_d, i) => (
-              <Cell key={i} fill={PENA_COLOR} fillOpacity={0.6} />
-            ))}
-          </Bar>
-          <Bar dataKey="amlo" radius={[2, 2, 0, 0]} isAnimationActive={true} animationDuration={1000}>
-            {data.map((_d, i) => (
-              <Cell key={i} fill={AMLO_COLOR} />
-            ))}
-            <LabelList
-              dataKey="amlo"
-              position="top"
-              style={{ fill: AMLO_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)', fontWeight: 600 }}
-              formatter={(v) => `${v}%`}
-            />
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Four metrics by sexenio, dot matrix, each dot 1pp"
+        >
+          {/* Header */}
+          <text
+            x={LABEL_W - 6}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
+          >
+            INDICADOR / SEXENIO
+          </text>
+          <text
+            x={LABEL_W + COL_W + VALUE_W - 2}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
+          >
+            VALOR
+          </text>
+
+          {/* Metric blocks */}
+          {DATA.map((row, metricIdx) => {
+            const blockY = 38 + metricIdx * (SEXENIO_BLOCK_H + METRIC_GAP)
+
+            return (
+              <g key={row.metric}>
+                {/* Metric label at block top */}
+                <text
+                  x={LABEL_W - 6}
+                  y={blockY}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                  fontWeight={600}
+                >
+                  {row.metric}
+                </text>
+
+                {/* Divider under metric label */}
+                <line
+                  x1={LABEL_W - 2}
+                  x2={LABEL_W + COL_W + VALUE_W - 2}
+                  y1={blockY + 4}
+                  y2={blockY + 4}
+                  stroke="#27272a"
+                  strokeWidth={0.5}
+                />
+
+                {/* 4 sexenio strips */}
+                {SEXENIO_ROWS.map((sx, sxIdx) => {
+                  const value = row[sx.key as SexenioKey]
+                  const filled = Math.round(value)
+                  const yStrip = blockY + 10 + sxIdx * (STRIP_H + SEXENIO_GAP)
+
+                  return (
+                    <g key={sx.key}>
+                      {/* Sexenio label */}
+                      <text
+                        x={LABEL_W - 6}
+                        y={yStrip + STRIP_H / 2 + 3}
+                        textAnchor="end"
+                        fill="#71717a"
+                        fontSize={9}
+                        fontFamily="var(--font-family-mono)"
+                      >
+                        {sx.label}
+                      </text>
+
+                      {/* Dots */}
+                      {Array.from({ length: DOTS }).map((_, i) => {
+                        const isFilled = i < filled
+                        return (
+                          <motion.circle
+                            key={i}
+                            cx={LABEL_W + i * DOT_GAP + DOT_R}
+                            cy={yStrip + STRIP_H / 2}
+                            r={DOT_R}
+                            fill={isFilled ? sx.color : '#18181b'}
+                            fillOpacity={isFilled ? sx.opacity : 1}
+                            stroke={isFilled ? 'none' : '#27272a'}
+                            strokeWidth={isFilled ? 0 : 0.5}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.2, delay: metricIdx * 0.05 + sxIdx * 0.04 + i * 0.002 }}
+                          />
+                        )
+                      })}
+
+                      {/* Value */}
+                      <text
+                        x={LABEL_W + COL_W + 8}
+                        y={yStrip + STRIP_H / 2 + 3}
+                        fill={sx.color}
+                        fontSize={9}
+                        fontFamily="var(--font-family-mono)"
+                        fontWeight={sx.key === 'amlo' ? 700 : 500}
+                        opacity={sx.key === 'amlo' ? 1 : 0.85}
+                      >
+                        {value}{row.unit}
+                      </text>
+                    </g>
+                  )
+                })}
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+
       <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
-        Fuente: COMPRANET 2002-2025 · Top 10 = concentracion de los 10 proveedores principales · RUBLI v6.5
+        Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>
   )
 }
+
+// ✓ dot-matrix rewrite

@@ -410,6 +410,7 @@ function RiskDonut({
           centerLabel={`${highPlusPct}%`}
           centerSublabel="high+"
           seed={sorted[0]?.count ?? 42}
+          animate
         />
       </div>
 

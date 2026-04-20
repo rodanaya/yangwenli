@@ -727,7 +727,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'vendor-list',
           title: 'Money flow: health institutions → pharmaceutical triangle 2019-2023',
-          chartId: 'money-sankey',
+          chartId: 'story-triangulo-farmaceutico',
         },
       },
       {
@@ -791,7 +791,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'year-bar',
           title: 'The December effect — monthly contracting patterns over 23 years',
-          chartId: 'seasonality-calendar',
+          chartId: 'story-avalancha-diciembre',
         },
       },
       {
@@ -855,7 +855,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'vendor-list',
           title: 'Vendor concentration — capture of the cardiac equipment market',
-          chartId: 'vendor-concentration',
+          chartId: 'story-cartel-corazon',
         },
       },
       {
@@ -922,7 +922,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'network',
           title: 'Vendor communities — ghost company networks detected',
-          chartId: 'community-bubbles',
+          chartId: 'story-red-fantasma',
         },
       },
       {
@@ -986,7 +986,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'trends',
           title: 'Risk trend by sector — the structural gap in infrastructure',
-          chartId: 'sector-risk-trends',
+          chartId: 'story-infraestructura',
         },
       },
       {
@@ -1048,7 +1048,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'radar',
           title: 'Hacienda fingerprint — how its contracting profile differs from the average',
-          chartId: 'administration-fingerprints',
+          chartId: 'story-sixsigma-hacienda',
         },
       },
       {
@@ -1109,8 +1109,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'network',
-          title: 'PEMEX vendor network — co-contracting communities detected',
-          chartId: 'community-bubbles',
+          title: 'Oceanografía–PEMEX: 11-year contract timeline',
+          chartId: 'story-oceanografia',
         },
       },
       {
@@ -1172,8 +1172,8 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'da-trend',
           highlight: '2023',
-          title: 'Direct award rate by year (2010-2023) — 4 administrations',
-          chartId: 'da-rate-trend',
+          title: 'Direct award rate by administration — five sexenios compared',
+          chartId: 'story-sexenio-sexenio',
         },
       },
       {
@@ -1258,8 +1258,8 @@ export const STORIES: StoryDef[] = [
         },
         chartConfig: {
           type: 'network',
-          title: 'Grupo Higa contracting network — companies linked to Hinojosa Cantú',
-          chartId: 'community-bubbles',
+          title: 'Grupo Higa contracting network — the house of contracts',
+          chartId: 'story-casa-contratos',
         },
       },
       {
@@ -1313,8 +1313,8 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'da-trend',
-          title: 'Direct award rate 2010-2023 — historical trend',
-          chartId: 'da-rate-trend',
+          title: '2023: the year without excuses — direct award 2019-2024',
+          chartId: 'story-ano-sin-excusas',
         },
       },
       {
@@ -1396,8 +1396,8 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'sunburst',
-          title: 'Budget footprint — where AMLO-era health spending went',
-          chartId: 'admin-sunburst',
+          title: 'Seguro Popular vs INSABI — four indicators, all worse after 2020',
+          chartId: 'story-insabi',
         },
       },
       {
@@ -1499,8 +1499,8 @@ export const STORIES: StoryDef[] = [
         ],
         chartConfig: {
           type: 'racing',
-          title: 'The infrastructure rise — federal spending by sector 2002-2025',
-          chartId: 'racing-bar',
+          title: 'Tren Maya by section — 1,525 km of track, zero open tenders',
+          chartId: 'story-tren-maya',
         },
         pullquote: {
           quote: '97.3% of Tren Maya contracts in COMPRANET were assigned without open public bidding',

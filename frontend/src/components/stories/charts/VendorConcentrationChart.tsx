@@ -1,36 +1,34 @@
 /**
- * VendorConcentrationChart — Editorial dark-mode bar chart
+ * VendorConcentrationChart — Pure SVG dot-matrix strips.
  *
- * Shows vendor market concentration by category (% of total spend),
- * color-coded by risk level. Dark zinc-900 aesthetic with monospace
- * axis labels, editorial headline, and OECD context.
+ * Vendor market concentration by category (% of total spend).
+ * Color-coded by risk level. OECD 5% concentration limit marked
+ * at dot #20 with a vertical cyan line.
+ * Each dot = 0.25pp; domain 0-14%.
  */
 
 import { motion } from 'framer-motion'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-  ReferenceLine,
-} from 'recharts'
 import { RISK_COLORS } from '@/lib/constants'
 
-const data = [
-  { vendor: 'Farmaceutica (top 3)', share: 8.4, risk: 'critical' as const },
-  { vendor: 'Energia (CFE/PEMEX)', share: 6.7, risk: 'high' as const },
-  { vendor: 'Construccion (top 5)', share: 5.9, risk: 'high' as const },
-  { vendor: 'Alimentacion (SEGALMEX)', share: 4.8, risk: 'critical' as const },
-  { vendor: 'Tecnologia (top 4)', share: 3.9, risk: 'high' as const },
-  { vendor: 'Logistica (top 3)', share: 3.1, risk: 'medium' as const },
-  { vendor: 'Salud (IMSS red)', share: 2.8, risk: 'critical' as const },
-  { vendor: 'Otros top 20', share: 11.2, risk: 'medium' as const },
+interface VendorRow {
+  vendor: string
+  share: number
+  risk: 'critical' | 'high' | 'medium' | 'low'
+}
+
+const DATA: VendorRow[] = [
+  { vendor: 'Otros top 20',          share: 11.2, risk: 'medium'   },
+  { vendor: 'Farmaceutica (top 3)',  share: 8.4,  risk: 'critical' },
+  { vendor: 'Energia (CFE/PEMEX)',   share: 6.7,  risk: 'high'     },
+  { vendor: 'Construccion (top 5)',  share: 5.9,  risk: 'high'     },
+  { vendor: 'Alimentacion (SEGALMEX)', share: 4.8, risk: 'critical' },
+  { vendor: 'Tecnologia (top 4)',    share: 3.9,  risk: 'high'     },
+  { vendor: 'Logistica (top 3)',     share: 3.1,  risk: 'medium'   },
+  { vendor: 'Salud (IMSS red)',      share: 2.8,  risk: 'critical' },
 ]
 
+const OECD_LIMIT = 5.0
+const OECD_COLOR = '#22d3ee'
 const CHART_RISK_COLORS: Record<string, string> = {
   critical: RISK_COLORS.critical,
   high: RISK_COLORS.high,
@@ -38,26 +36,22 @@ const CHART_RISK_COLORS: Record<string, string> = {
   low: RISK_COLORS.low,
 }
 
-interface PayloadEntry {
-  payload: { vendor: string; share: number; risk: string }
-}
+const DOTS = 56          // each dot = 0.25pp (0-14% domain)
+const DOT_PER_PCT = DOTS / 14
+const DOT_R = 3
+const DOT_GAP = 8
+const STRIP_H = 11
+const LABEL_W = 170
+const COL_W = DOTS * DOT_GAP
+const VALUE_W = 56
+const ROW_H = STRIP_H + 4
 
-function ChartTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const riskLabel = d.risk === 'critical' ? 'Critico' : d.risk === 'high' ? 'Alto' : 'Medio'
-  return (
-    <div className="rounded-lg border border-zinc-700 bg-zinc-900 px-3 py-2 text-xs shadow-xl">
-      <p className="font-semibold text-zinc-100">{d.vendor}</p>
-      <p className="text-zinc-400 mt-0.5 font-mono tabular-nums">{d.share}% del gasto total</p>
-      <p className="mt-0.5 font-mono" style={{ color: CHART_RISK_COLORS[d.risk] }}>
-        Riesgo: {riskLabel}
-      </p>
-    </div>
-  )
-}
+const W = LABEL_W + COL_W + VALUE_W
+const H = 46 + DATA.length * ROW_H + 16
 
 export function VendorConcentrationChart() {
+  const oecdDot = Math.round(OECD_LIMIT * DOT_PER_PCT) // = 20
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -66,72 +60,126 @@ export function VendorConcentrationChart() {
       transition={{ duration: 0.5 }}
       className="bg-zinc-900 rounded-xl p-4 border border-zinc-800"
     >
-      {/* Editorial overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         RUBLI · Market Concentration
       </p>
-      {/* Editorial headline — the finding, not the topic */}
       <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
         Top 20 vendors control 46.8% of federal spending
       </h3>
       <p className="text-xs text-zinc-500 font-mono mb-4">
-        Concentration by vendor category · % of total spend · OECD red line: 5%
+        Concentration by vendor category · % of total spend · OECD limit: 5%
       </p>
 
-      <ResponsiveContainer width="100%" height={300}>
-        <BarChart data={data} margin={{ top: 8, right: 16, left: 4, bottom: 48 }}>
-          <CartesianGrid vertical={false} strokeDasharray="3 3" stroke="#3f3f46" />
-          <XAxis
-            dataKey="vendor"
-            tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={{ stroke: '#3f3f46' }}
-            angle={-25}
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Vendor market concentration dot matrix, each dot 0.25pp, OECD 5% line"
+        >
+          {/* Header */}
+          <text
+            x={LABEL_W - 6}
+            y={22}
             textAnchor="end"
-            height={56}
-            interval={0}
-          />
-          <YAxis
-            domain={[0, 14]}
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v}%`}
-            width={36}
-          />
-          <Tooltip
-            content={<ChartTooltip />}
-            cursor={{ fill: '#3f3f46', opacity: 0.2 }}
-          />
-          {/* OECD 5% concentration threshold */}
-          <ReferenceLine
-            y={5}
-            stroke="#22d3ee"
-            strokeWidth={1.5}
-            strokeDasharray="6 3"
-            label={{
-              value: 'OECD: 5% concentration limit',
-              fill: '#22d3ee',
-              fontSize: 9,
-              fontFamily: 'var(--font-family-mono)',
-              position: 'insideTopRight',
-            }}
-          />
-          <Bar
-            dataKey="share"
-            radius={[3, 3, 0, 0]}
-            isAnimationActive={true}
-            animationDuration={800}
-            animationEasing="ease-out"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
           >
-            {data.map((entry, index) => (
-              <Cell key={index} fill={CHART_RISK_COLORS[entry.risk]} fillOpacity={0.85} />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
+            CATEGORÍA
+          </text>
+          <text
+            x={LABEL_W + COL_W + VALUE_W - 2}
+            y={22}
+            textAnchor="end"
+            fill="#52525b"
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+            letterSpacing="0.1em"
+          >
+            % GASTO
+          </text>
 
-      {/* Risk legend */}
+          {/* OECD 5% line */}
+          <line
+            x1={LABEL_W + oecdDot * DOT_GAP + DOT_R}
+            x2={LABEL_W + oecdDot * DOT_GAP + DOT_R}
+            y1={32}
+            y2={46 + DATA.length * ROW_H - 4}
+            stroke={OECD_COLOR}
+            strokeDasharray="4 3"
+            strokeWidth={1.5}
+            opacity={0.85}
+          />
+          <text
+            x={LABEL_W + oecdDot * DOT_GAP + DOT_R + 4}
+            y={38}
+            fill={OECD_COLOR}
+            fontSize={9}
+            fontFamily="var(--font-family-mono)"
+          >
+            OECD 5%
+          </text>
+
+          {/* Rows */}
+          {DATA.map((row, rowIdx) => {
+            const y0 = 52 + rowIdx * ROW_H
+            const color = CHART_RISK_COLORS[row.risk]
+            const filled = Math.round(row.share * DOT_PER_PCT)
+
+            return (
+              <g key={row.vendor}>
+                {/* Category label */}
+                <text
+                  x={LABEL_W - 6}
+                  y={y0 + STRIP_H / 2 + 3}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.vendor}
+                </text>
+
+                {/* Dots */}
+                {Array.from({ length: DOTS }).map((_, i) => {
+                  const isFilled = i < filled
+                  return (
+                    <motion.circle
+                      key={i}
+                      cx={LABEL_W + i * DOT_GAP + DOT_R}
+                      cy={y0 + STRIP_H / 2}
+                      r={DOT_R}
+                      fill={isFilled ? color : '#18181b'}
+                      fillOpacity={isFilled ? 0.9 : 1}
+                      stroke={isFilled ? 'none' : '#27272a'}
+                      strokeWidth={isFilled ? 0 : 0.5}
+                      initial={{ opacity: 0 }}
+                      whileInView={{ opacity: 1 }}
+                      viewport={{ once: true }}
+                      transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
+                    />
+                  )
+                })}
+
+                {/* Value */}
+                <text
+                  x={LABEL_W + COL_W + 8}
+                  y={y0 + STRIP_H / 2 + 3}
+                  fill={color}
+                  fontSize={10}
+                  fontFamily="var(--font-family-mono)"
+                  fontWeight={600}
+                >
+                  {row.share.toFixed(1)}%
+                </text>
+              </g>
+            )
+          })}
+        </svg>
+      </div>
+
       <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
         {(['critical', 'high', 'medium'] as const).map((level) => (
           <div key={level} className="flex items-center gap-1.5">
@@ -143,15 +191,16 @@ export function VendorConcentrationChart() {
           </div>
         ))}
         <div className="flex items-center gap-1.5 ml-auto">
-          <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: '#22d3ee' }} />
+          <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
           <span className="text-[10px] font-mono text-zinc-500">OECD benchmark</span>
         </div>
       </div>
 
-      {/* Source */}
       <p className="text-[10px] text-zinc-600 mt-2 font-mono">
-        Source: COMPRANET 2002-2025 · RUBLI v0.6.5 risk model
+        Source: COMPRANET 2002-2025 · Each dot = 0.25pp · RUBLI v0.6.5 risk model
       </p>
     </motion.div>
   )
 }
+
+// ✓ dot-matrix rewrite

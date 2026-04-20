@@ -59,6 +59,18 @@ const CHART_REGISTRY: Record<string, React.ComponentType> = {
   'story-hemoser': StoryCharts.StoryHemoserSplitting,
   'story-austeridad': StoryCharts.StoryAusteridadChart,
   'story-cero-competencia': StoryCharts.StoryCeroCompetenciaChart,
+  'story-triangulo-farmaceutico': StoryCharts.StoryTrianguloFarmaceutico,
+  'story-avalancha-diciembre': StoryCharts.StoryAvalanchaDiciembre,
+  'story-cartel-corazon': StoryCharts.StoryCartelCorazon,
+  'story-red-fantasma': StoryCharts.StoryRedFantasma,
+  'story-infraestructura': StoryCharts.StoryInfraestructura,
+  'story-sixsigma-hacienda': StoryCharts.StorySixSigmaHacienda,
+  'story-oceanografia': StoryCharts.StoryOceanografia,
+  'story-sexenio-sexenio': StoryCharts.StorySexenioASexenio,
+  'story-casa-contratos': StoryCharts.StoryCasaContratos,
+  'story-ano-sin-excusas': StoryCharts.StoryAnoSinExcusas,
+  'story-insabi': StoryCharts.StoryInsabi,
+  'story-tren-maya': StoryCharts.StoryTrenMaya,
 }
 
 // Fallback map: chapter.chartConfig.type → chartId when no chartId is specified

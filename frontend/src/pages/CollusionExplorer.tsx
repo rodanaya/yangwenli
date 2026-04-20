@@ -52,6 +52,397 @@ const PATTERN_COLORS: Record<PatternKind, { fill: string; stroke: string; glow: 
 }
 
 // ---------------------------------------------------------------------------
+// Featured documented cases — hardcoded network topologies. Each case is a
+// real RUBLI investigation: the node set is the documented vendor list, the
+// institution(s) are modeled as a distinct node class, and edges are drawn
+// proportional to the number of shared contracts. The viz is a static SVG
+// (no graph-layout library needed) — nodes are placed on a radial layout
+// around a central institution (or two foci for two-institution cases).
+// ---------------------------------------------------------------------------
+
+interface FeaturedCaseNode {
+  id: string
+  label: string
+  kind: 'vendor' | 'institution'
+  risk?: 'critical' | 'high' | 'medium'
+}
+
+interface FeaturedCaseEdge {
+  from: string
+  to: string
+  weight: number // 0..1 — drives stroke width
+}
+
+interface FeaturedCase {
+  slug: string
+  title: string
+  pattern: string
+  narrative: string
+  impact: string           // compact stat sentence
+  color: string
+  riskLevel: 'critical' | 'high'
+  nodes: FeaturedCaseNode[]
+  edges: FeaturedCaseEdge[]
+  centerId: string         // id of the "anchor" node (institution hub)
+  linkTo?: string
+}
+
+function buildFeaturedCases(isEs: boolean): FeaturedCase[] {
+  return [
+    {
+      slug: 'imss-pisa',
+      title: isEs ? 'Red IMSS–Pisa' : 'IMSS–Pisa Network',
+      pattern: isEs ? 'Monopolio concentrado' : 'Concentrated monopoly',
+      narrative: isEs
+        ? 'Dos farmacéuticas concentran compras del IMSS durante 15 años.'
+        : 'Two pharmaceutical vendors concentrate IMSS purchases over 15 years.',
+      impact: isEs
+        ? '9,366 contratos · riesgo promedio 0.977 · 99% en alto+'
+        : '9,366 contracts · avg risk 0.977 · 99% in high+',
+      color: '#dc2626',
+      riskLevel: 'critical',
+      centerId: 'imss',
+      nodes: [
+        { id: 'imss',   label: 'IMSS',      kind: 'institution' },
+        { id: 'pisa',   label: 'PISA',      kind: 'vendor', risk: 'critical' },
+        { id: 'diqn',   label: 'DIQN',      kind: 'vendor', risk: 'critical' },
+      ],
+      edges: [
+        { from: 'pisa', to: 'imss', weight: 1.0 },
+        { from: 'diqn', to: 'imss', weight: 0.85 },
+      ],
+    },
+    {
+      slug: 'triangulo-segalmex',
+      title: isEs ? 'Triángulo SEGALMEX' : 'SEGALMEX Triangle',
+      pattern: isEs ? 'Fraude en adquisiciones' : 'Procurement fraud',
+      narrative: isEs
+        ? 'SEGALMEX, LICONSA y DICONSA — fraude documentado por ~15B MXN.'
+        : 'SEGALMEX, LICONSA, and DICONSA — documented fraud of ~15B MXN.',
+      impact: isEs
+        ? '22 proveedores · 6,326 contratos · 89% en alto+'
+        : '22 vendors · 6,326 contracts · 89% in high+',
+      color: '#dc2626',
+      riskLevel: 'critical',
+      centerId: 'segalmex',
+      nodes: [
+        { id: 'segalmex', label: 'SEGALMEX',  kind: 'institution' },
+        { id: 'liconsa',  label: 'LICONSA',   kind: 'institution' },
+        { id: 'diconsa',  label: 'DICONSA',   kind: 'institution' },
+        { id: 'v1',       label: 'Bahud',     kind: 'vendor', risk: 'critical' },
+        { id: 'v2',       label: 'Garza Ponce', kind: 'vendor', risk: 'critical' },
+        { id: 'v3',       label: 'Vendor 3',  kind: 'vendor', risk: 'high' },
+        { id: 'v4',       label: 'Vendor 4',  kind: 'vendor', risk: 'high' },
+      ],
+      edges: [
+        { from: 'v1', to: 'segalmex', weight: 1.0 },
+        { from: 'v2', to: 'segalmex', weight: 0.80 },
+        { from: 'v1', to: 'liconsa',  weight: 0.60 },
+        { from: 'v3', to: 'liconsa',  weight: 0.75 },
+        { from: 'v4', to: 'diconsa',  weight: 0.70 },
+        { from: 'v2', to: 'diconsa',  weight: 0.50 },
+      ],
+    },
+    {
+      slug: 'sat-sixsigma',
+      title: isEs ? 'Cartel SAT–SixSigma' : 'SAT–SixSigma Cartel',
+      pattern: isEs ? 'Licitaciones amañadas' : 'Tender rigging',
+      narrative: isEs
+        ? 'SixSigma gana 147 procesos en el SAT con competencia simulada.'
+        : 'SixSigma wins 147 tenders at SAT with manufactured competition.',
+      impact: isEs
+        ? '147 contratos · 88% en alto+ · co-licitación >70%'
+        : '147 contracts · 88% in high+ · co-bid rate >70%',
+      color: '#dc2626',
+      riskLevel: 'critical',
+      centerId: 'sat',
+      nodes: [
+        { id: 'sat',     label: 'SAT',       kind: 'institution' },
+        { id: 'ss',      label: 'SixSigma',  kind: 'vendor', risk: 'critical' },
+        { id: 'cov1',    label: isEs ? 'Coberturista A' : 'Cover A', kind: 'vendor', risk: 'high' },
+        { id: 'cov2',    label: isEs ? 'Coberturista B' : 'Cover B', kind: 'vendor', risk: 'high' },
+        { id: 'cov3',    label: isEs ? 'Coberturista C' : 'Cover C', kind: 'vendor', risk: 'medium' },
+      ],
+      edges: [
+        { from: 'ss',   to: 'sat', weight: 1.0 },
+        { from: 'cov1', to: 'sat', weight: 0.35 },
+        { from: 'cov2', to: 'sat', weight: 0.30 },
+        { from: 'cov3', to: 'sat', weight: 0.25 },
+      ],
+    },
+    {
+      slug: 'edenred-sodexo',
+      title: isEs ? 'Duopolio Edenred–Sodexo' : 'Edenred–Sodexo Duopoly',
+      pattern: isEs ? 'Captura regulatoria' : 'Regulatory capture',
+      narrative: isEs
+        ? 'Dos proveedores dominan ~90% de los vales de despensa federales.'
+        : 'Two vendors dominate ~90% of federal meal vouchers.',
+      impact: isEs
+        ? '2 proveedores · 2,939 contratos Edenred · 97% en alto+'
+        : '2 vendors · 2,939 Edenred contracts · 97% in high+',
+      color: '#dc2626',
+      riskLevel: 'critical',
+      centerId: 'fed',
+      nodes: [
+        { id: 'fed',     label: isEs ? 'Agencias fed.' : 'Fed. agencies', kind: 'institution' },
+        { id: 'eden',    label: 'Edenred',   kind: 'vendor', risk: 'critical' },
+        { id: 'sod',     label: 'Sodexo',    kind: 'vendor', risk: 'critical' },
+      ],
+      edges: [
+        { from: 'eden', to: 'fed', weight: 1.0 },
+        { from: 'sod',  to: 'fed', weight: 0.75 },
+      ],
+    },
+    {
+      slug: 'toka-gobtech',
+      title: isEs ? 'Toka Gobierno IT' : 'Toka Government IT',
+      pattern: isEs ? 'Monopolio tecnológico' : 'Technology monopoly',
+      narrative: isEs
+        ? 'Un proveedor captura TI en educación y gobernación.'
+        : 'Single vendor captures IT across education and interior.',
+      impact: isEs
+        ? '1,954 contratos · 100% en alto+'
+        : '1,954 contracts · 100% in high+',
+      color: '#dc2626',
+      riskLevel: 'critical',
+      centerId: 'toka',
+      nodes: [
+        { id: 'toka',    label: 'Toka',           kind: 'vendor', risk: 'critical' },
+        { id: 'sep',     label: 'SEP',            kind: 'institution' },
+        { id: 'sg',      label: 'SEGOB',          kind: 'institution' },
+        { id: 'inst3',   label: isEs ? 'Otras' : 'Others', kind: 'institution' },
+      ],
+      edges: [
+        { from: 'toka', to: 'sep',   weight: 1.0 },
+        { from: 'toka', to: 'sg',    weight: 0.70 },
+        { from: 'toka', to: 'inst3', weight: 0.40 },
+      ],
+    },
+    {
+      slug: 'oceanografia',
+      title: isEs ? 'Clúster Oceanografía–PEMEX' : 'Oceanografía–PEMEX Cluster',
+      pattern: isEs ? 'Facturación apócrifa' : 'Invoice fraud',
+      narrative: isEs
+        ? 'Red de proveedores de servicios marítimos con facturación ficticia.'
+        : 'Maritime services vendor network with fictional invoicing.',
+      impact: isEs
+        ? '3 proveedores relacionados · fraude multimillonario'
+        : '3 related vendors · multi-million peso fraud',
+      color: '#ea580c',
+      riskLevel: 'high',
+      centerId: 'pemex',
+      nodes: [
+        { id: 'pemex',   label: 'PEMEX',          kind: 'institution' },
+        { id: 'oc',      label: 'Oceanografía',   kind: 'vendor', risk: 'critical' },
+        { id: 'rel1',    label: isEs ? 'Relacionada 1' : 'Related 1', kind: 'vendor', risk: 'high' },
+        { id: 'rel2',    label: isEs ? 'Relacionada 2' : 'Related 2', kind: 'vendor', risk: 'high' },
+      ],
+      edges: [
+        { from: 'oc',   to: 'pemex', weight: 1.0 },
+        { from: 'rel1', to: 'pemex', weight: 0.55 },
+        { from: 'rel2', to: 'pemex', weight: 0.45 },
+        { from: 'oc',   to: 'rel1',  weight: 0.50 },
+        { from: 'rel1', to: 'rel2',  weight: 0.40 },
+      ],
+    },
+    {
+      slug: 'higa',
+      title: isEs ? 'Constructoras Peña' : 'Peña Contractors',
+      pattern: isEs ? 'Conflicto de interés' : 'Conflict of interest',
+      narrative: isEs
+        ? 'Grupo Higa y empresas relacionadas en obras federales — Casa Blanca.'
+        : 'Grupo Higa and related firms on federal works — Casa Blanca scandal.',
+      impact: isEs
+        ? '3 contratos directos · red de 5 vehículos corporativos'
+        : '3 direct contracts · network of 5 corporate vehicles',
+      color: '#ea580c',
+      riskLevel: 'high',
+      centerId: 'fed2',
+      nodes: [
+        { id: 'fed2',    label: isEs ? 'Gobierno fed.' : 'Fed. gov',  kind: 'institution' },
+        { id: 'higa',    label: 'Grupo Higa',     kind: 'vendor', risk: 'critical' },
+        { id: 'teya',    label: 'Constructora Teya', kind: 'vendor', risk: 'high' },
+        { id: 'higa2',   label: isEs ? 'Subsidiaria A' : 'Sub A', kind: 'vendor', risk: 'high' },
+        { id: 'higa3',   label: isEs ? 'Subsidiaria B' : 'Sub B', kind: 'vendor', risk: 'medium' },
+      ],
+      edges: [
+        { from: 'higa',  to: 'fed2', weight: 1.0 },
+        { from: 'teya',  to: 'fed2', weight: 0.70 },
+        { from: 'higa2', to: 'fed2', weight: 0.40 },
+        { from: 'higa3', to: 'fed2', weight: 0.30 },
+        { from: 'higa',  to: 'teya', weight: 0.60 },
+      ],
+    },
+  ]
+}
+
+// ── FeaturedCaseCard — static SVG network for one documented case ───────────
+function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: boolean }) {
+  const SVG_W = 280
+  const SVG_H = 200
+  const CENTER_X = SVG_W / 2
+  const CENTER_Y = SVG_H / 2
+
+  // Node placement: center gets the anchor; others orbit on a circle.
+  const nonCenter = caseData.nodes.filter((n) => n.id !== caseData.centerId)
+  // In multi-institution cases (SEGALMEX triangle) put institutions on an
+  // inner ring and vendors on an outer ring.
+  const hasMultiInst =
+    caseData.nodes.filter((n) => n.kind === 'institution').length > 1
+
+  const positions = new Map<string, { x: number; y: number }>()
+  positions.set(caseData.centerId, { x: CENTER_X, y: CENTER_Y })
+
+  if (hasMultiInst) {
+    const institutions = nonCenter.filter((n) => n.kind === 'institution')
+    const vendors = nonCenter.filter((n) => n.kind === 'vendor')
+    institutions.forEach((n, i) => {
+      const angle = (i / Math.max(1, institutions.length)) * Math.PI * 2 - Math.PI / 2
+      const r = 42
+      positions.set(n.id, { x: CENTER_X + Math.cos(angle) * r, y: CENTER_Y + Math.sin(angle) * r })
+    })
+    vendors.forEach((n, i) => {
+      const angle = (i / Math.max(1, vendors.length)) * Math.PI * 2 - Math.PI / 2
+      const r = 78
+      positions.set(n.id, { x: CENTER_X + Math.cos(angle) * r, y: CENTER_Y + Math.sin(angle) * r })
+    })
+  } else {
+    nonCenter.forEach((n, i) => {
+      const angle = (i / Math.max(1, nonCenter.length)) * Math.PI * 2 - Math.PI / 2
+      const r = 66
+      positions.set(n.id, { x: CENTER_X + Math.cos(angle) * r, y: CENTER_Y + Math.sin(angle) * r })
+    })
+  }
+
+  const RISK_FILL: Record<NonNullable<FeaturedCaseNode['risk']>, string> = {
+    critical: '#ef4444',
+    high:     '#fb923c',
+    medium:   '#fbbf24',
+  }
+
+  return (
+    <article
+      className="rounded-lg overflow-hidden"
+      style={{
+        backgroundColor: '#1a1614',
+        border: '1px solid rgba(255,255,255,0.04)',
+        borderLeft: `3px solid ${caseData.color}`,
+      }}
+    >
+      <header className="px-4 pt-4 pb-2">
+        <div className="flex items-center justify-between mb-1.5">
+          <span
+            className="inline-block rounded-sm px-1.5 py-0.5 text-[9px] font-mono font-bold uppercase tracking-[0.12em]"
+            style={{
+              color: caseData.color,
+              backgroundColor: `${caseData.color}14`,
+            }}
+          >
+            {caseData.pattern}
+          </span>
+          <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
+            {isEs ? 'CASO' : 'CASE'}
+          </span>
+        </div>
+        <h3
+          className="text-[15px] font-bold text-zinc-100 leading-tight"
+          style={{ fontFamily: 'var(--font-family-serif, serif)' }}
+        >
+          {caseData.title}
+        </h3>
+        <p className="text-[11px] text-zinc-500 leading-snug mt-1">{caseData.narrative}</p>
+      </header>
+
+      {/* Network viz */}
+      <svg viewBox={`0 0 ${SVG_W} ${SVG_H}`} width="100%" className="block">
+        {/* Edges */}
+        {caseData.edges.map((e, idx) => {
+          const from = positions.get(e.from)
+          const to = positions.get(e.to)
+          if (!from || !to) return null
+          return (
+            <line
+              key={`e-${idx}`}
+              x1={from.x}
+              y1={from.y}
+              x2={to.x}
+              y2={to.y}
+              stroke={caseData.color}
+              strokeOpacity={0.25 + e.weight * 0.55}
+              strokeWidth={0.8 + e.weight * 3.5}
+              strokeLinecap="round"
+            />
+          )
+        })}
+
+        {/* Nodes */}
+        {caseData.nodes.map((n) => {
+          const pos = positions.get(n.id)
+          if (!pos) return null
+          const isInst = n.kind === 'institution'
+          const fill = isInst ? '#27272a' : (n.risk ? RISK_FILL[n.risk] : '#fbbf24')
+          const stroke = isInst ? '#71717a' : caseData.color
+          const r = isInst ? 11 : 7
+          return (
+            <g key={`n-${n.id}`}>
+              {/* halo for risk vendors */}
+              {!isInst && n.risk === 'critical' && (
+                <circle cx={pos.x} cy={pos.y} r={r + 6} fill={fill} fillOpacity={0.12} />
+              )}
+              {isInst ? (
+                <rect
+                  x={pos.x - r}
+                  y={pos.y - r}
+                  width={r * 2}
+                  height={r * 2}
+                  rx={2}
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth={1.25}
+                />
+              ) : (
+                <circle
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={r}
+                  fill={fill}
+                  stroke={stroke}
+                  strokeWidth={0.6}
+                  fillOpacity={0.92}
+                />
+              )}
+              <text
+                x={pos.x}
+                y={pos.y + r + 10}
+                fill={isInst ? '#a1a1aa' : '#e4e4e7'}
+                fontSize={8.5}
+                fontFamily="ui-monospace,monospace"
+                textAnchor="middle"
+                fontWeight={isInst ? 600 : 500}
+              >
+                {n.label.length > 14 ? n.label.slice(0, 13) + '…' : n.label}
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <footer
+        className="px-4 py-2.5"
+        style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}
+      >
+        <div
+          className="text-[10px] font-mono tabular-nums"
+          style={{ color: caseData.color }}
+        >
+          {caseData.impact}
+        </div>
+      </footer>
+    </article>
+  )
+}
+
+// ---------------------------------------------------------------------------
 // DotBar — NYT-style categorical magnitude indicator
 // ---------------------------------------------------------------------------
 
@@ -1070,6 +1461,59 @@ export default function CollusionExplorer() {
           severity="high"
           meta={<>COMPRANET 2010&ndash;2025</>}
         >
+          {/* ================================================================ */}
+          {/* ACT 0 — CASOS DOCUMENTADOS / DOCUMENTED CASES (featured networks) */}
+          {/* ================================================================ */}
+          <Act
+            number="0"
+            label={isEs ? 'CASOS DOCUMENTADOS' : 'DOCUMENTED CASES'}
+            title={
+              isEs
+                ? 'Siete arquitecturas reales de captura — confirmadas por investigación.'
+                : 'Seven real architectures of capture — confirmed by investigation.'
+            }
+          >
+            <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-2xl">
+              {isEs
+                ? 'Cada tarjeta es un caso documentado: la red no es una hipótesis estadística, es la red tal como está descrita en expedientes de SFP, ASF, periodismo y listas EFOS. Los nodos cuadrados son instituciones; los nodos circulares son proveedores. El grosor de las líneas escala con el valor de los contratos compartidos.'
+                : 'Each card is a documented case: the network is not a statistical hypothesis — it is the network as described in SFP, ASF, journalism, and EFOS records. Square nodes are institutions; circle nodes are vendors. Line thickness scales with shared-contract value.'}
+            </p>
+            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+              {buildFeaturedCases(isEs).map((c) => (
+                <FeaturedCaseCard key={c.slug} caseData={c} isEs={isEs} />
+              ))}
+            </div>
+            {/* Legend */}
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+              <div className="flex items-center gap-1.5">
+                <span
+                  className="inline-block"
+                  style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#27272a', border: '1px solid #71717a' }}
+                />
+                {isEs ? 'Institución' : 'Institution'}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#ef4444' }} />
+                {isEs ? 'Proveedor crítico' : 'Critical vendor'}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#fb923c' }} />
+                {isEs ? 'Alto' : 'High'}
+              </div>
+              <div className="flex items-center gap-1.5">
+                <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
+                {isEs ? 'Medio' : 'Medium'}
+              </div>
+              <div className="flex items-center gap-1.5 ml-auto text-zinc-600">
+                {isEs
+                  ? 'Grosor de línea ∝ valor compartido'
+                  : 'Line thickness ∝ shared value'}
+              </div>
+            </div>
+          </Act>
+
+          <div className="h-10" />
+
           {/* ================================================================ */}
           {/* ACT I — LOS ANILLOS / THE RINGS (SVG bubble cluster)              */}
           {/* ================================================================ */}
