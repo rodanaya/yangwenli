@@ -1539,7 +1539,7 @@ function ContractRow({
   const detail = (
     <div className="space-y-3">
       {contract.title && (
-        <p className="text-sm text-text-primary">{contract.title}</p>
+        <p className="text-sm text-text-primary line-clamp-3 break-words" title={contract.title}>{contract.title}</p>
       )}
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -1571,7 +1571,7 @@ function ContractRow({
 
         <div className="text-xs text-text-muted space-y-1">
           {contract.contract_date && <p>{t('columns.date')}: {formatDate(contract.contract_date)}</p>}
-          {contract.procedure_type && <p>{t('columns.procedure')}: {contract.procedure_type}</p>}
+          {contract.procedure_type && <p title={contract.procedure_type}>{t('columns.procedure')}: {abbreviateProcedure(contract.procedure_type)}</p>}
           {contract.contract_number && <p>{t('detail.numberLabel')}: {contract.contract_number}</p>}
           {anomalyInfo && contract.mahalanobis_distance != null && (
             <p>{t('detail.anomalyLabel')}: {anomalyInfo.label} (D²={contract.mahalanobis_distance.toFixed(2)})</p>

@@ -521,13 +521,8 @@ def get_data_quality(response: Response):
             key_issues=[],
             last_calculated=None,
         )
-        # If the cached data has enough to answer the question, return it.
-        # Otherwise fall through to live scan below.
-        # We only use the fast path when we have all the counts we care about.
-        if total > 0:
-            response.headers["Cache-Control"] = "public, max-age=3600"
-            _stats_cache.set("data_quality", result, ttl=7200)
-            return result
+        # Fast path only has aggregate counts, not grade_distribution or overall_score.
+        # Fall through to live scan which produces the full response.
 
     with get_db() as conn:
         cursor = conn.cursor()
