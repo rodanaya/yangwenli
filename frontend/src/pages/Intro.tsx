@@ -563,7 +563,79 @@ export default function Intro() {
         </section>
 
         {/* =====================================================================
-            SECTION 4 — THE LEAGUE TABLE TEASER
+            SECTION 4 — WHO USES RUBLI
+            3-audience value proposition: journalists / researchers / citizens
+            ===================================================================== */}
+        <section className="border-b border-zinc-900">
+          <div className="max-w-6xl mx-auto px-6 py-16">
+            <div className="text-center mb-10">
+              <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-amber-500 mb-2">
+                {t('audiences.kicker')}
+              </p>
+              <h2 className="text-[1.375rem] sm:text-[1.75rem] font-semibold text-zinc-100 tracking-[-0.015em]">
+                {t('audiences.headline')}
+              </h2>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {([
+                {
+                  icon: '✦',
+                  kicker: t('audiences.journalists.kicker'),
+                  headline: t('audiences.journalists.headline'),
+                  body: t('audiences.journalists.body'),
+                  cta: t('audiences.journalists.cta'),
+                  href: '/aria',
+                  accent: 'border-amber-500/30 bg-amber-500/5',
+                  iconColor: 'text-amber-500',
+                },
+                {
+                  icon: '◈',
+                  kicker: t('audiences.researchers.kicker'),
+                  headline: t('audiences.researchers.headline'),
+                  body: t('audiences.researchers.body'),
+                  cta: t('audiences.researchers.cta'),
+                  href: '/methodology',
+                  accent: 'border-blue-500/20 bg-blue-500/5',
+                  iconColor: 'text-blue-400',
+                },
+                {
+                  icon: '◉',
+                  kicker: t('audiences.citizens.kicker'),
+                  headline: t('audiences.citizens.headline'),
+                  body: t('audiences.citizens.body'),
+                  cta: t('audiences.citizens.cta'),
+                  href: '/report-card',
+                  accent: 'border-zinc-700 bg-zinc-900/50',
+                  iconColor: 'text-zinc-400',
+                },
+              ] as const).map((card) => (
+                <button
+                  key={card.kicker}
+                  onClick={() => goToApp(card.href)}
+                  className={`text-left rounded-xl border p-6 transition-all hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-amber-500/40 ${card.accent}`}
+                >
+                  <div className={`text-xl mb-3 ${card.iconColor}`}>{card.icon}</div>
+                  <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-zinc-500 mb-1">
+                    {card.kicker}
+                  </p>
+                  <h3 className="text-[1rem] font-semibold text-zinc-100 leading-snug mb-2">
+                    {card.headline}
+                  </h3>
+                  <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                    {card.body}
+                  </p>
+                  <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1">
+                    {card.cta}
+                    <ArrowRight className="h-3 w-3" />
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        {/* =====================================================================
+            SECTION 5 — THE LEAGUE TABLE TEASER
             Bridges to InstitutionLeague
             ===================================================================== */}
         <section className="border-b border-zinc-900">

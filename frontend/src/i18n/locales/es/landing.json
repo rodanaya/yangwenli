@@ -197,7 +197,7 @@
   "footer": {
     "platform": "RUBLI -- Plataforma de Análisis de Adquisiciones del Gobierno Mexicano",
     "data": "Datos: COMPRANET 2002-2025 | Modelo: v0.6.5 | AUC 0.828",
-    "attribution": "{{data}}: COMPRANET \u2022 {{methodology}}: OECD, IMF CRI \u2022 {{openSource}}",
+    "attribution": "{{data}}: COMPRANET • {{methodology}}: OECD, IMF CRI • {{openSource}}",
     "dataLabel": "Datos",
     "methodologyLabel": "Metodología",
     "openSourceLabel": "Inteligencia en contrataciones de código abierto"
@@ -256,5 +256,27 @@
     "headline": "2,563 instituciones federales clasificadas por transparencia",
     "sub": "Ranking anual de rendición de cuentas — puntuadas de 0 a 100 en cinco pilares. Apertura, equidad de precios, diversidad de proveedores, integridad del proceso, alertas externas.",
     "cta": "Ver la liga"
+  },
+  "audiences": {
+    "kicker": "HECHO PARA INVESTIGADORES",
+    "headline": "¿Quién usa RUBLI?",
+    "journalists": {
+      "kicker": "PERIODISTAS",
+      "headline": "La nota antes que nadie.",
+      "body": "ARIA identifica los proveedores con mayor riesgo — los que superan 0.80 contra 748 casos documentados. Cada hallazgo incluye la cadena de evidencia e impacto financiero.",
+      "cta": "Abrir cola ARIA"
+    },
+    "researchers": {
+      "kicker": "INVESTIGADORES",
+      "headline": "Prueba hipótesis con 23 años de datos.",
+      "body": "Descarga contratos crudos, accede a los z-scores y replica el modelo v0.6.5. Metodología completa con métricas AUC y documentación de casos ground truth.",
+      "cta": "Leer metodología"
+    },
+    "citizens": {
+      "kicker": "CIUDADANOS",
+      "headline": "Mira cómo se gastaron tus impuestos.",
+      "body": "3 millones de contratos federales, cada sector, cada administración desde 2002. El Semáforo califica cada dependencia en salud de compras. Sin registro.",
+      "cta": "Ver semáforo"
+    }
   }
 }

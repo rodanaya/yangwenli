@@ -197,7 +197,7 @@
   "footer": {
     "platform": "RUBLI -- Mexican Government Procurement Analysis Platform",
     "data": "Data: COMPRANET 2002-2025 | Model: v0.6.5 | AUC 0.828",
-    "attribution": "{{data}}: COMPRANET \u2022 {{methodology}}: OECD, IMF CRI \u2022 {{openSource}}",
+    "attribution": "{{data}}: COMPRANET • {{methodology}}: OECD, IMF CRI • {{openSource}}",
     "dataLabel": "Data",
     "methodologyLabel": "Methodology",
     "openSourceLabel": "Open-source procurement intelligence"
@@ -256,5 +256,27 @@
     "headline": "2,563 federal institutions ranked by transparency",
     "sub": "Annual accountability ranking — scored 0–100 across five pillars. Openness, price fairness, vendor diversity, process integrity, external alerts.",
     "cta": "Open the league table"
+  },
+  "audiences": {
+    "kicker": "BUILT FOR INVESTIGATORS",
+    "headline": "Who uses RUBLI",
+    "journalists": {
+      "kicker": "JOURNALISTS",
+      "headline": "Break the story before anyone else.",
+      "body": "ARIA surfaces the highest-risk vendors — those scoring 0.80+ against 748 documented corruption cases. Each lead includes the evidence trail and financial impact.",
+      "cta": "Open ARIA queue"
+    },
+    "researchers": {
+      "kicker": "RESEARCHERS",
+      "headline": "Test hypotheses with 23 years of data.",
+      "body": "Download raw contract data, access z-score features, and replicate the v0.6.5 risk model. Full methodology with AUC metrics and ground truth documentation.",
+      "cta": "Read the methodology"
+    },
+    "citizens": {
+      "kicker": "CITIZENS",
+      "headline": "See how your tax pesos were spent.",
+      "body": "3 million federal contracts, every sector, every administration since 2002. The Report Card grades each ministry on procurement health. No login required.",
+      "cta": "View Report Card"
+    }
   }
 }
