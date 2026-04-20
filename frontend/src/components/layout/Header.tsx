@@ -1,14 +1,17 @@
-import { useState, useEffect, useRef } from 'react'
+import { lazy, Suspense, useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { Search, Moon, Sun, Database, Shield, Menu, LogOut, Briefcase } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
-import { CommandPalette } from '@/components/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { analysisApi } from '@/api/client'
 import { useAuth } from '@/contexts/AuthContext'
+
+const CommandPalette = lazy(() =>
+  import('@/components/CommandPalette').then((m) => ({ default: m.CommandPalette }))
+)
 
 // Route path → nav i18n key mapping
 const ROUTE_I18N_KEYS: Record<string, string> = {
@@ -57,6 +60,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { theme, toggleTheme } = useTheme()
   const { user, logout } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [paletteEverOpened, setPaletteEverOpened] = useState(false)
   const [userMenuOpen, setUserMenuOpen] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
 
@@ -112,6 +116,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault()
+        setPaletteEverOpened(true)
         setSearchOpen((prev) => !prev)
       }
     }
@@ -171,7 +176,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         {/* Search trigger — opens centered CommandPalette modal */}
         {/* Desktop: pill-shaped fake input with hint text */}
         <button
-          onClick={() => setSearchOpen(true)}
+          onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
           className="hidden lg:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border/50 bg-background-elevated/50 text-text-muted hover:border-border hover:bg-background-elevated transition-colors text-xs max-w-[200px] w-[200px] focus:outline-none focus:ring-1 focus:ring-ring"
           aria-label="Open search (Ctrl+K)"
         >
@@ -186,7 +191,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               variant="ghost"
               size="icon"
               className="h-9 w-9 lg:hidden"
-              onClick={() => setSearchOpen(true)}
+              onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
               aria-label="Open search (Ctrl+K)"
             >
               <Search className="h-3.5 w-3.5 text-text-muted" />
@@ -197,7 +202,11 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
           </TooltipContent>
         </Tooltip>
 
-        <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
+        {paletteEverOpened && (
+          <Suspense fallback={null}>
+            <CommandPalette open={searchOpen} onOpenChange={setSearchOpen} />
+          </Suspense>
+        )}
 
         {/* Divider */}
         <div className="h-4 w-px bg-border/40 mx-1 hidden sm:block" />
