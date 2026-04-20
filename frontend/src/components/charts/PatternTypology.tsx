@@ -112,13 +112,21 @@ export function PatternTypology() {
               {p.pct.toFixed(1)}% de contratos
             </div>
 
-            {/* Bar track */}
-            <div className="h-1 rounded-full bg-stone-800 overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${barPct}%`, background: p.color }}
-              />
-            </div>
+            {/* Dot-matrix bar */}
+            {(() => {
+              const N = 24, DR = 2.5, DG = 8
+              const filled = Math.round((barPct / 100) * N)
+              return (
+                <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} aria-hidden="true">
+                  {Array.from({ length: N }).map((_, i) => (
+                    <circle key={i} cx={i * DG + DR} cy={4} r={DR}
+                      fill={i < filled ? p.color : '#2a2522'}
+                      fillOpacity={i < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
 
             <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
               {p.desc}

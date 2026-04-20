@@ -1,20 +1,14 @@
 /**
- * AdminFingerprints — presidential risk fingerprints, 5 rows of pure SVG.
+ * AdminFingerprints — presidential risk fingerprints, dot-matrix edition.
  *
  * One row per administration (Fox → Sheinbaum). Each row shows:
- *   [party tab] [Name + years] [high-risk bar + %] · [direct-award bar + %]
+ *   [party tab] [Name + years] [dot strip: high-risk %] · [dot strip: direct-award %]
  *
- * The AMLO row is visually dominant by design — its high-risk rate (41.8%)
- * is the outlier that anchors the whole comparison. Fox-era direct-award %
- * is rendered as "N/D" because that flag wasn't captured pre-2007.
- *
- * Pure SVG. Static historical facts. No props needed.
+ * Dot-matrix protocol: each filled dot = 1/20 of the MAX_RISK_PCT range.
+ * AMLO row is visually dominant by design — its high-risk rate (41.8%) fills
+ * most of the strip, making the outlier immediately legible.
  */
 
-// ── Static data (precomputed_stats/administrations snapshot) ─────────────
-// These are historical baselines for the 5 Mexican presidencies in scope
-// of the RUBLI dataset (2002-2025). Kept inline: values are ground truth,
-// do not depend on runtime data.
 interface Admin {
   name: string
   fullName: string
@@ -38,24 +32,36 @@ const ADMINS: Admin[] = [
 
 // ── Layout constants ─────────────────────────────────────────────────────
 const SVG_W        = 580
-const ROW_H        = 34
-const ROW_GAP      = 8
-const PAD_T        = 22    // header row
-const PAD_B        = 18    // footer caption
+const ROW_H        = 36
+const ROW_GAP      = 6
+const PAD_T        = 22
+const PAD_B        = 18
 const SVG_H        = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) + PAD_B
+
 const PARTY_TAB_W  = 4
 const PARTY_TAB_GAP = 8
 const LABEL_X      = PARTY_TAB_W + PARTY_TAB_GAP
 const LABEL_W      = 100
-const BAR_RISK_X   = LABEL_X + LABEL_W + 8
-const BAR_RISK_W   = 170
-const PCT_W        = 38
-const DIVIDER_X    = BAR_RISK_X + BAR_RISK_W + PCT_W + 6
-const BAR_DA_X     = DIVIDER_X + 10
-const BAR_DA_W     = 130
 
-// Max values used to normalize bar lengths — chosen to let AMLO's risk
-// and DA rates fill the bar track, making the outlier visually obvious.
+// Dot-matrix params
+const DOT_R        = 3
+const DOT_GAP      = 8
+
+// Risk strip: 20 dots × 8 = 160px
+const N_RISK       = 20
+const BAR_RISK_X   = LABEL_X + LABEL_W + 8
+const BAR_RISK_PX  = N_RISK * DOT_GAP    // 160
+
+// Gap + pct label column
+const PCT_W        = 42
+const DIVIDER_X    = BAR_RISK_X + BAR_RISK_PX + PCT_W + 4
+
+// DA strip: 15 dots × 8 = 120px
+const N_DA         = 15
+const BAR_DA_X     = DIVIDER_X + 10
+const BAR_DA_PX    = N_DA * DOT_GAP      // 120
+
+// Max values — AMLO fills its strip, making the outlier obvious
 const MAX_RISK_PCT = 45
 const MAX_DA_PCT   = 85
 
@@ -66,9 +72,9 @@ const GRID_COLOR   = 'rgba(255,255,255,0.06)'
 const HEADER_COLOR = '#a1a1aa'
 const MUTED_COLOR  = '#71717a'
 const TEXT_COLOR   = '#e5e5e5'
+const EMPTY_DOT    = '#2d2926'   // warm dark — readable on dashboard dark bg
 
 export function AdminFingerprints() {
-  // Identify the max high-risk admin so we can tint it more saturated.
   const maxRiskPct = Math.max(...ADMINS.map((a) => a.highRiskPct))
 
   return (
@@ -80,166 +86,107 @@ export function AdminFingerprints() {
       aria-label="Presidential risk fingerprints: high-risk rate and direct-award percentage by administration, 2001-2025."
     >
       {/* ── Header row ─────────────────────────────────────────────────── */}
-      <text
-        x={LABEL_X}
-        y={12}
-        fill={HEADER_COLOR}
-        fontSize={9}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight="bold"
-        letterSpacing="0.1em"
-      >
+      <text x={LABEL_X} y={12} fill={HEADER_COLOR} fontSize={9}
+        fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         ADMINISTRATION
       </text>
-      <text
-        x={BAR_RISK_X}
-        y={12}
-        fill={HEADER_COLOR}
-        fontSize={9}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight="bold"
-        letterSpacing="0.1em"
-      >
+      <text x={BAR_RISK_X} y={12} fill={HEADER_COLOR} fontSize={9}
+        fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         % HIGH + CRITICAL RISK
       </text>
-      <text
-        x={BAR_DA_X}
-        y={12}
-        fill={HEADER_COLOR}
-        fontSize={9}
-        fontFamily="var(--font-family-mono, monospace)"
-        fontWeight="bold"
-        letterSpacing="0.1em"
-      >
+      <text x={BAR_DA_X} y={12} fill={HEADER_COLOR} fontSize={9}
+        fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         % DIRECT AWARD
       </text>
 
-      {/* ── Header underline ───────────────────────────────────────────── */}
+      {/* Header underline */}
+      <line x1={0} y1={PAD_T - 6} x2={SVG_W} y2={PAD_T - 6} stroke={GRID_COLOR} strokeWidth={1} />
+
+      {/* Divider between risk and DA sections */}
       <line
-        x1={0}
-        y1={PAD_T - 6}
-        x2={SVG_W}
-        y2={PAD_T - 6}
-        stroke={GRID_COLOR}
-        strokeWidth={1}
+        x1={DIVIDER_X} y1={PAD_T - 2}
+        x2={DIVIDER_X} y2={PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4}
+        stroke={GRID_COLOR} strokeWidth={1}
       />
 
-      {/* ── Divider between risk and DA sections (faint vertical rule) ─── */}
-      <line
-        x1={DIVIDER_X}
-        y1={PAD_T - 2}
-        x2={DIVIDER_X}
-        y2={PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4}
-        stroke={GRID_COLOR}
-        strokeWidth={1}
-      />
+      {/* Legend: 1 dot = ~2.25% */}
+      <text x={BAR_RISK_X} y={PAD_T - 8} fill="#52525b" fontSize={8}
+        fontFamily="var(--font-family-mono, monospace)">
+        1 punto ≈ 2.25%
+      </text>
 
       {/* ── Rows ───────────────────────────────────────────────────────── */}
       {ADMINS.map((a, idx) => {
         const rowY = PAD_T + idx * (ROW_H + ROW_GAP)
+        const cy   = rowY + ROW_H / 2
         const isMaxRisk = a.highRiskPct === maxRiskPct
-        const riskBarW = (Math.min(a.highRiskPct, MAX_RISK_PCT) / MAX_RISK_PCT) * BAR_RISK_W
-        const daBarW = a.directAwardPct > 0
-          ? (Math.min(a.directAwardPct, MAX_DA_PCT) / MAX_DA_PCT) * BAR_DA_W
-          : 0
-        const riskAlpha = isMaxRisk ? 1.0 : 0.72
         const isLast = idx === ADMINS.length - 1
+
+        const riskFilled = Math.round((Math.min(a.highRiskPct, MAX_RISK_PCT) / MAX_RISK_PCT) * N_RISK)
+        const daFilled   = a.directAwardPct > 0
+          ? Math.round((Math.min(a.directAwardPct, MAX_DA_PCT) / MAX_DA_PCT) * N_DA)
+          : 0
+        const riskAlpha  = isMaxRisk ? 1.0 : 0.72
 
         return (
           <g key={a.name}>
-            {/* Party color tab (left border) */}
-            <rect
-              x={0}
-              y={rowY}
-              width={PARTY_TAB_W}
-              height={ROW_H}
-              fill={a.partyColor}
-              fillOpacity={0.9}
-            />
+            {/* Party color tab */}
+            <rect x={0} y={rowY} width={PARTY_TAB_W} height={ROW_H} fill={a.partyColor} fillOpacity={0.9} />
 
             {/* Name */}
-            <text
-              x={LABEL_X}
-              y={rowY + 13}
-              fill={TEXT_COLOR}
-              fontSize={12}
-              fontFamily="var(--font-family-serif, Georgia, serif)"
-              fontWeight="600"
-            >
+            <text x={LABEL_X} y={rowY + 14} fill={TEXT_COLOR} fontSize={12}
+              fontFamily="var(--font-family-serif, Georgia, serif)" fontWeight="600">
               {a.name}
             </text>
             {/* Years + party */}
-            <text
-              x={LABEL_X}
-              y={rowY + 26}
-              fill={MUTED_COLOR}
-              fontSize={9}
-              fontFamily="var(--font-family-mono, monospace)"
-              letterSpacing="0.04em"
-            >
+            <text x={LABEL_X} y={rowY + 27} fill={MUTED_COLOR} fontSize={9}
+              fontFamily="var(--font-family-mono, monospace)" letterSpacing="0.04em">
               {a.years} · {a.party}
             </text>
 
-            {/* Risk bar track */}
-            <rect
-              x={BAR_RISK_X}
-              y={rowY + 10}
-              width={BAR_RISK_W}
-              height={14}
-              fill="rgba(255,255,255,0.04)"
-              rx={1}
-            />
-            {/* Risk bar fill */}
-            <rect
-              x={BAR_RISK_X}
-              y={rowY + 10}
-              width={riskBarW}
-              height={14}
-              fill={RISK_COLOR}
-              fillOpacity={riskAlpha}
-              rx={1}
-            />
-            {/* Risk % */}
+            {/* Risk dot strip */}
+            {Array.from({ length: N_RISK }).map((_, i) => (
+              <circle
+                key={`r${i}`}
+                cx={BAR_RISK_X + i * DOT_GAP + DOT_R}
+                cy={cy}
+                r={DOT_R}
+                fill={i < riskFilled ? RISK_COLOR : EMPTY_DOT}
+                fillOpacity={i < riskFilled ? riskAlpha : 1}
+              />
+            ))}
+
+            {/* Risk % label */}
             <text
-              x={BAR_RISK_X + BAR_RISK_W + 6}
-              y={rowY + 20}
+              x={BAR_RISK_X + BAR_RISK_PX + 6}
+              y={cy + 4}
               fill={isMaxRisk ? RISK_COLOR : TEXT_COLOR}
               fontSize={11}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight={isMaxRisk ? 'bold' : 'normal'}
-              dominantBaseline="middle"
             >
               {a.highRiskPct.toFixed(1)}%
             </text>
 
-            {/* DA bar track */}
-            <rect
-              x={BAR_DA_X}
-              y={rowY + 10}
-              width={BAR_DA_W}
-              height={14}
-              fill="rgba(255,255,255,0.04)"
-              rx={1}
-            />
-            {/* DA bar fill (or N/D for Fox era) */}
+            {/* DA dot strip or N/D label */}
             {a.directAwardPct > 0 ? (
               <>
-                <rect
-                  x={BAR_DA_X}
-                  y={rowY + 10}
-                  width={daBarW}
-                  height={14}
-                  fill={DA_COLOR}
-                  fillOpacity={0.8}
-                  rx={1}
-                />
+                {Array.from({ length: N_DA }).map((_, i) => (
+                  <circle
+                    key={`d${i}`}
+                    cx={BAR_DA_X + i * DOT_GAP + DOT_R}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={i < daFilled ? DA_COLOR : EMPTY_DOT}
+                    fillOpacity={i < daFilled ? 0.8 : 1}
+                  />
+                ))}
                 <text
-                  x={BAR_DA_X + BAR_DA_W + 6}
-                  y={rowY + 20}
+                  x={BAR_DA_X + BAR_DA_PX + 6}
+                  y={cy + 4}
                   fill={TEXT_COLOR}
                   fontSize={11}
                   fontFamily="var(--font-family-mono, monospace)"
-                  dominantBaseline="middle"
                 >
                   {a.directAwardPct.toFixed(1)}%
                 </text>
@@ -247,41 +194,32 @@ export function AdminFingerprints() {
             ) : (
               <text
                 x={BAR_DA_X + 6}
-                y={rowY + 20}
+                y={cy + 4}
                 fill={MUTED_COLOR}
                 fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontStyle="italic"
-                dominantBaseline="middle"
               >
                 N/D (flag no capturado)
               </text>
             )}
 
-            {/* Hairline separator below row (except last) */}
+            {/* Hairline separator */}
             {!isLast && (
               <line
-                x1={0}
-                y1={rowY + ROW_H + ROW_GAP / 2}
-                x2={SVG_W}
-                y2={rowY + ROW_H + ROW_GAP / 2}
-                stroke={GRID_COLOR}
-                strokeWidth={0.5}
+                x1={0} y1={rowY + ROW_H + ROW_GAP / 2}
+                x2={SVG_W} y2={rowY + ROW_H + ROW_GAP / 2}
+                stroke={GRID_COLOR} strokeWidth={0.5}
               />
             )}
           </g>
         )
       })}
 
-      {/* ── Footer caption ─────────────────────────────────────────────── */}
-      <text
-        x={LABEL_X}
-        y={SVG_H - 4}
-        fill="#52525b"
-        fontSize={9}
-        fontFamily="var(--font-family-mono, monospace)"
-      >
-        AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag absent pre-2007
+      {/* Footer caption */}
+      <text x={LABEL_X} y={SVG_H - 4} fill="#52525b" fontSize={9}
+        fontFamily="var(--font-family-mono, monospace)">
+        AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007
       </text>
     </svg>
   )

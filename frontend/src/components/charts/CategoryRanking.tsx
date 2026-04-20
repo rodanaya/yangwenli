@@ -308,23 +308,22 @@ function RankingRow({
           {name}
         </span>
 
-        {/* Bar column */}
-        <div className="hidden md:flex relative w-36 h-1.5 flex-shrink-0 rounded-full bg-background-elevated/40 overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{
-              width: `${barWidth}%`,
-              backgroundColor: isCritical
-                ? '#ef4444'
-                : isHigh
-                  ? '#f59e0b'
-                  : riskLevel === 'medium'
-                    ? '#a16207'
-                    : 'rgba(113, 113, 122, 0.6)',
-              opacity: isCritical || isHigh ? 0.85 : 0.55,
-            }}
-          />
-        </div>
+        {/* Dot-matrix bar */}
+        {(() => {
+          const N = 18, DR = 2.5, DG = 7.5
+          const filled = Math.round((barWidth / 100) * N)
+          const dotColor = isCritical ? '#ef4444' : isHigh ? '#f59e0b' : riskLevel === 'medium' ? '#a16207' : 'rgba(113,113,122,0.6)'
+          return (
+            <svg viewBox={`0 0 ${N * DG} 8`} className="hidden md:block w-36 flex-shrink-0" style={{ height: 8 }} aria-hidden="true">
+              {Array.from({ length: N }).map((_, i) => (
+                <circle key={i} cx={i * DG + DR} cy={4} r={DR}
+                  fill={i < filled ? dotColor : '#27272a'}
+                  fillOpacity={i < filled ? (isCritical || isHigh ? 0.85 : 0.55) : 1}
+                />
+              ))}
+            </svg>
+          )
+        })()}
 
         {/* Value */}
         <span className="flex-shrink-0 w-20 text-right font-mono font-bold text-xs text-text-primary tabular-nums">

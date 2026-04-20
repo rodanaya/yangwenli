@@ -1,7 +1,10 @@
 /**
- * SectorMarimekko — horizontal bar chart
- * Bar width = sector spend relative to largest sector (not grand total)
- * Fill = risk composition (low → medium → high → critical, L→R)
+ * SectorMarimekko — dot-matrix edition.
+ *
+ * Each row = one sector. Total filled dots ∝ sector spend (vs largest sector).
+ * Dot color = risk composition (low → medium → high → critical, L→R).
+ * This preserves both the relative spend signal and the risk breakdown
+ * in one compact dot strip per sector.
  */
 
 import { useState } from 'react'
@@ -10,13 +13,13 @@ import { formatCompactMXN } from '@/lib/utils'
 export interface SectorMarimekkoRow {
   code: string
   name: string
-  totalValue: number     // MXN
-  criticalPct: number    // 0-100
+  totalValue: number
+  criticalPct: number
   highPct: number
   mediumPct: number
   lowPct: number
-  color: string          // sector color
-  avgRisk: number        // 0-1
+  color: string
+  avgRisk: number
 }
 
 interface SectorMarimekkoProps {
@@ -25,6 +28,7 @@ interface SectorMarimekkoProps {
   className?: string
 }
 
+// Layout
 const LABEL_W  = 112
 const TAB_W    = 3
 const CHART_W  = 300
@@ -34,12 +38,17 @@ const ROW_H    = 22
 const ROW_GAP  = 4
 const SVG_W    = LABEL_W + TAB_W + CHART_W + GAP + VALUE_W
 
-const SEG_COLORS = {
-  low:      { fill: '#3f3f46', opacity: 0.45 },
-  medium:   { fill: '#a16207', opacity: 0.65 },
-  high:     { fill: '#f59e0b', opacity: 0.88 },
-  critical: { fill: '#ef4444', opacity: 1.0, stroke: '#fca5a5', strokeWidth: 0.5 },
-} as const
+// Dot-matrix protocol
+const DOT_R    = 3
+const DOT_GAP  = 8
+const N_DOTS   = Math.floor(CHART_W / DOT_GAP)  // 37 dots
+
+// Risk segment colors — warm investigative palette
+const DOT_LOW      = '#3f3f46'
+const DOT_MEDIUM   = '#a16207'
+const DOT_HIGH     = '#f59e0b'
+const DOT_CRITICAL = '#ef4444'
+const DOT_EMPTY    = '#1e1c1a'
 
 interface TooltipData {
   code: string
@@ -50,6 +59,14 @@ interface TooltipData {
   avgRisk: number
 }
 
+function dotColorForIndex(i: number, lowN: number, medN: number, highN: number, totalN: number): string {
+  if (i >= totalN) return DOT_EMPTY
+  if (i < lowN) return DOT_LOW
+  if (i < lowN + medN) return DOT_MEDIUM
+  if (i < lowN + medN + highN) return DOT_HIGH
+  return DOT_CRITICAL
+}
+
 export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMarimekkoProps) {
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
@@ -58,10 +75,11 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
   if (maxValue === 0) return null
 
   const nSectors = sorted.length
-  const legendH = 22
-  const svgH = nSectors * (ROW_H + ROW_GAP) + legendH + 16
+  const legendH  = 22
+  const svgH     = nSectors * (ROW_H + ROW_GAP) + legendH + 16
 
   const barStartX = LABEL_W + TAB_W
+  const dotStartX = barStartX + 1   // 1px gap after sector color tab
 
   return (
     <div className={className} style={{ position: 'relative' }}>
@@ -69,40 +87,19 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         viewBox={`0 0 ${SVG_W} ${svgH}`}
         width="100%"
         preserveAspectRatio="xMinYMid meet"
-        aria-label="Sector spend and risk composition chart"
+        aria-label="Sector spend and risk composition dot chart"
         role="img"
       >
         {sorted.map((sector, idx) => {
-          const rowY = idx * (ROW_H + ROW_GAP)
-          const barWidth = (sector.totalValue / maxValue) * CHART_W
+          const rowY    = idx * (ROW_H + ROW_GAP)
+          const cy      = rowY + ROW_H / 2
+          const totalN  = Math.round((sector.totalValue / maxValue) * N_DOTS)
 
-          const segments: Array<{ key: string; pct: number; fill: string; opacity: number; stroke?: string; strokeWidth?: number }> = [
-            { key: 'low',      pct: sector.lowPct,      ...SEG_COLORS.low },
-            { key: 'medium',   pct: sector.mediumPct,   ...SEG_COLORS.medium },
-            { key: 'high',     pct: sector.highPct,     ...SEG_COLORS.high },
-            { key: 'critical', pct: sector.criticalPct, ...SEG_COLORS.critical },
-          ]
-
-          let segX = barStartX
-          const renderedSegs = segments.map((seg) => {
-            const segW = (seg.pct / 100) * barWidth
-            const x = segX
-            segX += segW
-            if (segW < 0.5) return null
-            return (
-              <rect
-                key={seg.key}
-                x={x}
-                y={rowY}
-                width={segW}
-                height={ROW_H}
-                fill={seg.fill}
-                fillOpacity={seg.opacity}
-                stroke={seg.stroke}
-                strokeWidth={seg.strokeWidth ?? 0}
-              />
-            )
-          })
+          // Compute dot allocation per risk tier
+          const lowN  = Math.round((sector.lowPct / 100) * totalN)
+          const medN  = Math.round((sector.mediumPct / 100) * totalN)
+          const highN = Math.round((sector.highPct / 100) * totalN)
+          // critN = totalN - lowN - medN - highN (residual, handled in dotColorForIndex)
 
           const hrPct = sector.highPct + sector.criticalPct
 
@@ -111,35 +108,49 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
               key={sector.code}
               className={onSectorClick ? 'cursor-pointer' : undefined}
               onClick={() => onSectorClick?.(sector.code)}
-              onMouseEnter={() => setTooltip({ code: sector.code, name: sector.name, totalValue: sector.totalValue, highRiskPct: hrPct, criticalPct: sector.criticalPct, avgRisk: sector.avgRisk })}
+              onMouseEnter={() => setTooltip({
+                code: sector.code,
+                name: sector.name,
+                totalValue: sector.totalValue,
+                highRiskPct: hrPct,
+                criticalPct: sector.criticalPct,
+                avgRisk: sector.avgRisk,
+              })}
               onMouseLeave={() => setTooltip(null)}
               role={onSectorClick ? 'button' : undefined}
               aria-label={`${sector.name}: ${formatCompactMXN(sector.totalValue)}`}
             >
               {/* Sector name */}
-              <text x={LABEL_W - 6} y={rowY + ROW_H / 2} textAnchor="end" dominantBaseline="middle"
-                fill="#c4bdb8" fontSize={11} fontFamily="var(--font-family-sans, sans-serif)">
+              <text
+                x={LABEL_W - 6} y={cy} textAnchor="end" dominantBaseline="middle"
+                fill="#c4bdb8" fontSize={11}
+                fontFamily="var(--font-family-sans, sans-serif)"
+              >
                 {sector.name}
               </text>
 
               {/* Sector color tab */}
               <rect x={LABEL_W} y={rowY} width={TAB_W} height={ROW_H} fill={sector.color} />
 
-              {/* Background track */}
-              <rect x={barStartX} y={rowY} width={CHART_W} height={ROW_H}
-                fill="#1c1917" fillOpacity={0.5} />
+              {/* Dot strip */}
+              {Array.from({ length: N_DOTS }).map((_, i) => (
+                <circle
+                  key={i}
+                  cx={dotStartX + i * DOT_GAP + DOT_R}
+                  cy={cy}
+                  r={DOT_R}
+                  fill={dotColorForIndex(i, lowN, medN, highN, totalN)}
+                  fillOpacity={i < totalN ? 0.9 : 1}
+                />
+              ))}
 
-              {/* Risk composition fill */}
-              {renderedSegs}
-
-              {/* H+C % label inside bar right edge — only if wide enough */}
-              {barWidth > 50 && hrPct > 0 && (
+              {/* H+C % label — only if enough dots filled */}
+              {totalN > 12 && hrPct > 0 && (
                 <text
-                  x={barStartX + barWidth - 4}
-                  y={rowY + ROW_H / 2}
-                  textAnchor="end"
+                  x={dotStartX + (totalN - 1) * DOT_GAP + DOT_R * 2 + 4}
+                  y={cy}
                   dominantBaseline="middle"
-                  fill="rgba(255,255,255,0.55)"
+                  fill="rgba(255,255,255,0.45)"
                   fontSize={9}
                   fontFamily="var(--font-family-mono, monospace)"
                 >
@@ -147,10 +158,10 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
                 </text>
               )}
 
-              {/* Value label — always at fixed right position */}
+              {/* Value label — fixed right position */}
               <text
                 x={barStartX + CHART_W + GAP}
-                y={rowY + ROW_H / 2}
+                y={cy}
                 dominantBaseline="middle"
                 fill="#78716c"
                 fontSize={10}
@@ -165,28 +176,38 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         {/* Legend */}
         {(() => {
           const legendY = nSectors * (ROW_H + ROW_GAP) + 8
-          const items = [
-            { label: 'low',      fill: '#3f3f46', opacity: 0.7 },
-            { label: 'medium',   fill: '#a16207', opacity: 0.8 },
-            { label: 'high',     fill: '#f59e0b', opacity: 0.9 },
-            { label: 'critical', fill: '#ef4444', opacity: 1.0 },
+          const items: Array<{ label: string; fill: string }> = [
+            { label: 'bajo',     fill: DOT_LOW },
+            { label: 'medio',    fill: DOT_MEDIUM },
+            { label: 'alto',     fill: DOT_HIGH },
+            { label: 'crítico',  fill: DOT_CRITICAL },
           ]
           let lx = barStartX
           return (
             <g>
-              {items.map(({ label, fill, opacity }) => {
+              {items.map(({ label, fill }) => {
                 const el = (
                   <g key={label}>
-                    <rect x={lx} y={legendY + 3} width={8} height={8} fill={fill} fillOpacity={opacity} rx={1} />
-                    <text x={lx + 11} y={legendY + 7} fill="#52525b" fontSize={9}
+                    <circle cx={lx + DOT_R} cy={legendY + 7} r={DOT_R} fill={fill} fillOpacity={0.9} />
+                    <text x={lx + DOT_R * 2 + 4} y={legendY + 7} fill="#52525b" fontSize={9}
                       fontFamily="var(--font-family-mono, monospace)" dominantBaseline="middle">
                       {label}
                     </text>
                   </g>
                 )
-                lx += label.length * 6 + 22
+                lx += label.length * 5.8 + 20
                 return el
               })}
+              <text
+                x={barStartX + CHART_W + GAP}
+                y={legendY + 7}
+                fill="#3f3f46"
+                fontSize={9}
+                fontFamily="var(--font-family-mono, monospace)"
+                dominantBaseline="middle"
+              >
+                1 punto ≈ {(100 / N_DOTS).toFixed(0)}% del gasto mayor
+              </text>
             </g>
           )
         })()}
@@ -211,13 +232,13 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         >
           <p style={{ fontWeight: 600, color: '#e8e0d8', marginBottom: 6, fontSize: 13 }}>{tooltip.name}</p>
           <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
-            Spend: <span style={{ fontFamily: 'monospace', color: '#c4bdb8' }}>{formatCompactMXN(tooltip.totalValue)}</span>
+            Gasto: <span style={{ fontFamily: 'monospace', color: '#c4bdb8' }}>{formatCompactMXN(tooltip.totalValue)}</span>
           </p>
           <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
-            High + Critical: <span style={{ fontFamily: 'monospace', color: '#f87171' }}>{tooltip.highRiskPct.toFixed(1)}%</span>
+            Alto + Crítico: <span style={{ fontFamily: 'monospace', color: '#f87171' }}>{tooltip.highRiskPct.toFixed(1)}%</span>
           </p>
           <p style={{ color: '#78716c', fontSize: 11 }}>
-            Critical only: <span style={{ fontFamily: 'monospace', color: '#ef4444' }}>{tooltip.criticalPct.toFixed(1)}%</span>
+            Solo crítico: <span style={{ fontFamily: 'monospace', color: '#ef4444' }}>{tooltip.criticalPct.toFixed(1)}%</span>
           </p>
         </div>
       )}

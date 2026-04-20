@@ -1585,17 +1585,25 @@ function DAConcentrationChart({
             <span className="w-36 flex-shrink-0 text-[10px] font-mono text-text-muted/80 truncate group-hover:text-text-primary transition-colors">
               {localeName(cat, lang)}
             </span>
-            <div className="flex-1 relative h-3.5">
-              <div className="absolute inset-0 rounded bg-background-elevated/30" />
-              <div
-                className="absolute inset-y-0 left-0 rounded transition-all duration-300"
-                style={{ width: `${barW}%`, backgroundColor: isOver ? '#fb923c' : '#3b82f6', opacity: 0.72 }}
-              />
-              <div
-                className="absolute inset-y-[-2px] w-px bg-red-500"
-                style={{ left: `${oecdPct}%`, opacity: 0.65 }}
-              />
-            </div>
+            {(() => {
+              const N = 28, DR = 3, DG = 8
+              const filled = Math.round((barW / 100) * N)
+              const oecdDot = Math.round((oecdPct / 100) * N)
+              const dotColor = isOver ? '#fb923c' : '#3b82f6'
+              const svgW = N * DG
+              return (
+                <svg viewBox={`0 0 ${svgW} 14`} className="flex-1 h-3.5" preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, i) => (
+                    <circle key={i} cx={i * DG + DR} cy={7} r={DR}
+                      fill={i < filled ? dotColor : '#27272a'}
+                      fillOpacity={i < filled ? 0.72 : 1}
+                    />
+                  ))}
+                  <line x1={oecdDot * DG} y1={1} x2={oecdDot * DG} y2={13}
+                    stroke="#ef4444" strokeWidth={1.5} strokeDasharray="2,2" />
+                </svg>
+              )
+            })()}
             <span
               className="text-[10px] font-mono font-bold tabular-nums w-9 text-right flex-shrink-0"
               style={{ color: isOver ? '#fb923c' : 'var(--color-text-secondary)' }}
@@ -1611,15 +1619,17 @@ function DAConcentrationChart({
 
       <div className="flex items-center gap-4 pt-3 border-t border-border/20 text-[9px] font-mono text-text-muted/50">
         <div className="flex items-center gap-1.5">
-          <div className="w-px h-3.5 bg-red-500 opacity-70" />
+          <svg viewBox="0 0 8 14" style={{ width: 8, height: 14 }}>
+            <line x1={4} y1={1} x2={4} y2={13} stroke="#ef4444" strokeWidth={1.5} strokeDasharray="2,2" />
+          </svg>
           <span>Límite OCDE 25%</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-3 rounded" style={{ backgroundColor: '#fb923c', opacity: 0.72 }} />
+          <svg viewBox="0 0 8 8" style={{ width: 8, height: 8 }}><circle cx={4} cy={4} r={3} fill="#fb923c" fillOpacity={0.72} /></svg>
           <span>Sobre límite</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="h-2.5 w-3 rounded" style={{ backgroundColor: '#3b82f6', opacity: 0.72 }} />
+          <svg viewBox="0 0 8 8" style={{ width: 8, height: 8 }}><circle cx={4} cy={4} r={3} fill="#3b82f6" fillOpacity={0.72} /></svg>
           <span>Dentro de límite</span>
         </div>
         <span className="ml-auto opacity-60">R: riesgo promedio</span>
