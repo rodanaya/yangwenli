@@ -403,23 +403,23 @@ def get_contract_risk(
             factors = []
 
             # Map factor codes to descriptions and weights (v0.6.5 global coefficients)
-            # Source: CAL-v6.1-202603251039, C=0.01, l1_ratio=0.9673
+            # Source: CAL-v6.1-202603251039, C=0.01, l1_ratio=0.9673 — DB-verified 2026-04-20
             factor_info = {
                 # Behavioral factors (active)
                 "price_volatility": ("Price Volatility", 0.5343, "Behavioral"),
-                "institution_diversity": ("Institution Diversity", -0.3821, "Behavioral"),
-                "vendor_concentration": ("Vendor Concentration", 0.3749, "Behavioral"),
-                "win_rate": ("Win Rate", 0.0488, "Behavioral"),
+                "institution_diversity": ("Institution Diversity", -0.2736, "Behavioral"),
+                "vendor_concentration": ("Vendor Concentration", 0.2736, "Behavioral"),
+                "win_rate": ("Win Rate", 0.0, "Behavioral"),
                 # Procedure factors (active)
                 "direct_award": ("Direct Award", 0.0306, "Procedure"),
-                "ad_period_days": ("Ad Period Duration", 0.0423, "Procedure"),
-                "single_bid": ("Single Bidder", 0.0, "Procedure"),
+                "ad_period_days": ("Ad Period Duration", 0.0781, "Procedure"),
+                "single_bid": ("Single Bidder", 0.0587, "Procedure"),
                 # Pricing factors (active)
-                "price_ratio": ("Price Ratio", 0.2345, "Pricing"),
+                "price_ratio": ("Price Ratio", 0.4159, "Pricing"),
                 # Network factors (active)
-                "network_member_count": ("Network Member Count", 0.1811, "Network"),
+                "network_member_count": ("Network Member Count", 0.1404, "Network"),
                 # Timing factors (active)
-                "same_day_count": ("Same-Day Contracts", 0.0945, "Timing"),
+                "same_day_count": ("Same-Day Contracts", 0.1084, "Timing"),
                 # Zeroed by regularization or sign constraints
                 "sector_spread": ("Sector Spread", 0.0, "Behavioral"),
                 "price_hyp_confidence": ("Price Hypothesis Confidence", 0.0, "Pricing"),

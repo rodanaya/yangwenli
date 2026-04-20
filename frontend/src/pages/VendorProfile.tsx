@@ -109,22 +109,21 @@ function ScrollSection({ children, delay = 0 }: { children: React.ReactNode; del
 // ============================================================================
 
 // ============================================================================
-// Model coefficients for the waterfall chart (v6.0 global model, calibrated 2026-03-13)
-// Source: RISK_METHODOLOGY_v6.md — Optuna TPE (C=1.28, l1_ratio=0.961)
-// Negative coefficients (institution_diversity, ad_period_days)
-// mean that HIGHER values of those features REDUCE risk.
+// Model coefficients for the waterfall chart (v0.6.5 global model)
+// Source: model_calibration DB — CAL-v6.1-202603251039 — DB-verified 2026-04-20
+// Negative coefficients (institution_diversity) mean HIGHER values REDUCE risk.
 // ============================================================================
 const MODEL_COEFFICIENTS: Record<string, number> = {
   price_volatility:     0.5343,
-  institution_diversity: -0.3821,
-  price_ratio:          0.2345,
-  vendor_concentration: 0.3749,
-  network_member_count: 0.1811,
-  same_day_count:       0.0945,
-  win_rate:             0.0488,
-  ad_period_days:       0.0423,
+  price_ratio:          0.4159,
+  institution_diversity: -0.2736,
+  vendor_concentration: 0.2736,
+  network_member_count: 0.1404,
+  same_day_count:       0.1084,
+  ad_period_days:       0.0781,
+  single_bid:           0.0587,
   direct_award:         0.0306,
-  single_bid:           0.000,
+  win_rate:             0.000,
   sector_spread:        0.000,
   industry_mismatch:    0.000,
   year_end:             0.000,

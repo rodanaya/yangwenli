@@ -146,16 +146,16 @@ The active model uses **per-sector statistical risk scoring**. Scores measure si
 | Feature | Coefficient | Interpretation |
 |---------|------------|----------------|
 | **price_volatility** | +0.5343 | Vendor contract-size variance vs. sector norm — strongest signal |
-| **institution_diversity** | −0.3821 | Vendors serving many institutions are less suspicious |
-| **vendor_concentration** | +0.3749 | Disproportionate market share within sector |
-| **price_ratio** | +0.2345 | Contract amount / sector median |
-| **network_member_count** | +0.1811 | Co-contracting network size |
-| **same_day_count** | +0.0945 | Threshold-splitting signal |
-| **win_rate** | +0.0488 | Vendor win rate vs. sector baseline |
+| **price_ratio** | +0.4159 | Contract amount / sector median |
+| **institution_diversity** | −0.2736 | Vendors serving many institutions are less suspicious |
+| **vendor_concentration** | +0.2736 | Disproportionate market share within sector |
+| **network_member_count** | +0.1404 | Co-contracting network size |
+| **same_day_count** | +0.1084 | Threshold-splitting signal |
+| **ad_period_days** | +0.0781 | Publication period anomaly |
+| **single_bid** | +0.0587 | Competitive procedure with only one bidder |
 | **direct_award** | +0.0306 | Non-competitive procedure |
-| **ad_period_days** | +0.0423 | Publication period anomaly |
 
-*7 features regularized to 0 by near-L1 ElasticNet (C=0.01, l1_ratio=0.9673).*
+*7 features regularized to 0 by near-L1 ElasticNet (C=0.01, l1_ratio=0.9673). win_rate zeroed after GT expansion 2026-04.*
 
 ### Risk Levels
 

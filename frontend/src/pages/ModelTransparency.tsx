@@ -37,13 +37,13 @@ interface Coefficient {
 
 const ACTIVE_COEFFICIENTS: Coefficient[] = [
   { factor: 'price_volatility', label: 'Price Volatility', beta: 0.5343, note: 'Strongest signal — vendor contract-size variance vs sector norm' },
-  { factor: 'institution_diversity', label: 'Institution Diversity', beta: -0.3821, note: 'Protective — vendors serving many institutions are less suspicious' },
-  { factor: 'vendor_concentration', label: 'Vendor Concentration', beta: 0.3749, note: 'Vendor value share within sector' },
-  { factor: 'price_ratio', label: 'Price Ratio', beta: 0.2345, note: 'Contract amount / sector median' },
-  { factor: 'network_member_count', label: 'Network Members', beta: 0.1811, note: 'Co-contracting network size' },
-  { factor: 'same_day_count', label: 'Same-Day Contracts', beta: 0.0945, note: 'Threshold splitting signal' },
-  { factor: 'win_rate', label: 'Win Rate', beta: 0.0488, note: 'Vendor win rate vs sector baseline' },
-  { factor: 'ad_period_days', label: 'Ad Period Days', beta: 0.0423, note: 'Publication period length' },
+  { factor: 'price_ratio', label: 'Price Ratio', beta: 0.4159, note: 'Contract amount / sector median' },
+  { factor: 'institution_diversity', label: 'Institution Diversity', beta: -0.2736, note: 'Protective — vendors serving many institutions are less suspicious' },
+  { factor: 'vendor_concentration', label: 'Vendor Concentration', beta: 0.2736, note: 'Vendor value share within sector' },
+  { factor: 'network_member_count', label: 'Network Members', beta: 0.1404, note: 'Co-contracting network size' },
+  { factor: 'same_day_count', label: 'Same-Day Contracts', beta: 0.1084, note: 'Threshold splitting signal' },
+  { factor: 'ad_period_days', label: 'Ad Period Days', beta: 0.0781, note: 'Publication period length' },
+  { factor: 'single_bid', label: 'Single Bid', beta: 0.0587, note: 'Competitive procedure with only one bidder' },
   { factor: 'direct_award', label: 'Direct Award', beta: 0.0306, note: 'Direct award flag' },
 ]
 

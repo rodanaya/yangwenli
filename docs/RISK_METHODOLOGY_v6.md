@@ -14,7 +14,7 @@
 | **Medium** | >= 0.25 | 821,251 | 26.84% | Watch list |
 | **Low** | < 0.25 | 1,817,198 | 59.39% | Standard monitoring |
 
-**HR: 13.49%** ✓ OECD 2-15% compliant · C=0.01, 9 active features
+**HR: 13.49%** ✓ OECD 2-15% compliant · C=0.01, 9 active features (DB-verified 2026-04-20)
 
 > Note: HR=13.49% exceeds the 9% OECD calibration target because ghost companion score boosts (+403K contracts) were applied after OECD intercept calibration. The boosts are a deliberate design decision; see pipeline notes below.
 
@@ -44,20 +44,21 @@ The test AUC exceeds train AUC because the cleaner GT labels (institution-scoped
 | Feature | Coef | Interpretation |
 |---------|------|----------------|
 | price_volatility | +0.5343 | Vendor contract-size variance vs sector norm — strongest signal |
-| institution_diversity | -0.3821 | Distinct institutions served (protective — broad reach = legitimate) |
-| vendor_concentration | +0.3749 | Vendor value share within sector |
-| price_ratio | +0.2345 | Contract amount / sector median |
-| network_member_count | +0.1811 | Co-contracting network size |
-| same_day_count | +0.0945 | Threshold splitting signal |
-| win_rate | +0.0488 | Vendor win rate vs sector baseline |
+| price_ratio | +0.4159 | Contract amount / sector median |
+| institution_diversity | -0.2736 | Distinct institutions served (protective — broad reach = legitimate) |
+| vendor_concentration | +0.2736 | Vendor value share within sector |
+| network_member_count | +0.1404 | Co-contracting network size |
+| same_day_count | +0.1084 | Threshold splitting signal |
+| ad_period_days | +0.0781 | Publication period length |
+| single_bid | +0.0587 | Single-bid competitive procedure |
 | direct_award | +0.0306 | Direct award flag |
-| ad_period_days | +0.0423 | Publication period length |
-| single_bid | 0 | Regularized to zero |
+| win_rate | 0 | Regularized to zero (GT expansion 2026-04) |
 | sector_spread | 0 | Zeroed (sign constraint) |
 | co_bid_rate | 0 | Regularized to zero |
 | price_hyp_confidence | 0 | Regularized to zero |
-| z_year_end | 0 | Regularized to zero |
+| year_end | 0 | Regularized to zero |
 | industry_mismatch | 0 | Regularized to zero |
+| institution_risk | 0 | Regularized to zero |
 | institution_risk | 0 | Regularized to zero |
 
 **Intercept**: -2.3837 · **Score formula**: `min(sigmoid(intercept + β·z) / 0.3000, 1.0)` (then + ghost companion boost)
