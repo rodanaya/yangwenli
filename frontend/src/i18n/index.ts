@@ -95,6 +95,8 @@ import esProcurementCalendar from './locales/es/procurementCalendar.json'
 import enProcurementCalendar from './locales/en/procurementCalendar.json'
 import esInstitutionScorecards from './locales/es/institutionScorecards.json'
 import enInstitutionScorecards from './locales/en/institutionScorecards.json'
+import esAuth from './locales/es/auth.json'
+import enAuth from './locales/en/auth.json'
 
 i18n
   .use(LanguageDetector)
@@ -133,6 +135,7 @@ i18n
         redThread: esRedThread,
         procurementCalendar: esProcurementCalendar,
         institutionScorecards: esInstitutionScorecards,
+        auth: esAuth,
       },
       en: {
         common: enCommon, sectors: enSectors, nav: enNav, dashboard: enDashboard,
@@ -166,6 +169,7 @@ i18n
         redThread: enRedThread,
         procurementCalendar: enProcurementCalendar,
         institutionScorecards: enInstitutionScorecards,
+        auth: enAuth,
       },
     },
     lng: localStorage.getItem('i18nextLng') || 'en', // Default to English when no saved preference

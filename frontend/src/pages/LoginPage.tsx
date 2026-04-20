@@ -1,8 +1,10 @@
 import { useState, type FormEvent } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
 import { useAuth } from '@/contexts/AuthContext'
 
 export default function LoginPage() {
+  const { t } = useTranslation('auth')
   const { login } = useAuth()
   const navigate = useNavigate()
 
@@ -19,7 +21,7 @@ export default function LoginPage() {
       await login(email, password)
       navigate('/workspace')
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Sign in failed')
+      setError(err instanceof Error ? err.message : t('login.error'))
     } finally {
       setSubmitting(false)
     }
@@ -48,14 +50,14 @@ export default function LoginPage() {
             RUBLI
           </h1>
           <p className="mt-1 text-[10px] text-zinc-500 tracking-[0.14em] uppercase font-mono">
-            Red Unificada de Búsqueda de Licitaciones Irregulares
+            {t('tagline')}
           </p>
         </div>
 
         {/* Card */}
         <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
           <h2 className="text-sm font-semibold text-zinc-200 mb-5 tracking-tight">
-            Sign in to your account
+            {t('login.title')}
           </h2>
 
           <form onSubmit={handleSubmit} noValidate className="space-y-4">
@@ -64,7 +66,7 @@ export default function LoginPage() {
                 htmlFor="login-email"
                 className="block text-[11px] font-mono tracking-[0.08em] uppercase text-zinc-500 mb-1.5"
               >
-                Email
+                {t('login.emailLabel')}
               </label>
               <input
                 id="login-email"
@@ -74,7 +76,7 @@ export default function LoginPage() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
-                placeholder="you@example.com"
+                placeholder={t('login.emailPlaceholder')}
               />
             </div>
 
@@ -83,7 +85,7 @@ export default function LoginPage() {
                 htmlFor="login-password"
                 className="block text-[11px] font-mono tracking-[0.08em] uppercase text-zinc-500 mb-1.5"
               >
-                Password
+                {t('login.passwordLabel')}
               </label>
               <input
                 id="login-password"
@@ -93,7 +95,7 @@ export default function LoginPage() {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
-                placeholder="••••••••"
+                placeholder={t('login.passwordPlaceholder')}
               />
             </div>
 
@@ -111,17 +113,17 @@ export default function LoginPage() {
               disabled={submitting}
               className="w-full rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {submitting ? 'Signing in…' : 'Sign in'}
+              {submitting ? t('login.submitting') : t('login.submit')}
             </button>
           </form>
 
           <p className="mt-5 text-center text-xs text-zinc-600 font-mono">
-            No account?{' '}
+            {t('login.noAccount')}{' '}
             <Link
               to="/register"
               className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
             >
-              Create one
+              {t('login.createAccount')}
             </Link>
           </p>
         </div>

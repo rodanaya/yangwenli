@@ -282,7 +282,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 </label>
                 <Select value={form.yearFrom} onValueChange={handleSelectChange('yearFrom')}>
                   <SelectTrigger id="cl-yearFrom" className="h-8 text-xs">
-                    <SelectValue placeholder="Start year…" />
+                    <SelectValue placeholder={t('caseLeadDialog.startYearPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {years.map((y) => (
@@ -297,7 +297,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 </label>
                 <Select value={form.yearTo} onValueChange={handleSelectChange('yearTo')}>
                   <SelectTrigger id="cl-yearTo" className="h-8 text-xs">
-                    <SelectValue placeholder="End year…" />
+                    <SelectValue placeholder={t('caseLeadDialog.endYearPlaceholder')} />
                   </SelectTrigger>
                   <SelectContent>
                     {years.map((y) => (
@@ -402,7 +402,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
                 type="submit"
                 size="sm"
                 disabled={submitState === 'loading' || submitState === 'success'}
-                aria-label="Submit case lead"
+                aria-label={t('caseLeadDialog.submitLeadBtn')}
               >
                 {submitState === 'loading' ? (
                   <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin" aria-hidden="true" />

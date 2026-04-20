@@ -149,6 +149,8 @@
     "sectorLabel": "Affected sector",
     "fromYear": "From year",
     "toYear": "To year",
+    "startYearPlaceholder": "Start year…",
+    "endYearPlaceholder": "End year…",
     "evidenceLabel": "Evidence description",
     "submitBtn": "Submit Case Lead",
     "cancelBtn": "Cancel",

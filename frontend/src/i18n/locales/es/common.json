@@ -157,6 +157,8 @@
     "fraudTypeLabel": "Tipo de fraude sospechado",
     "sectorLabel": "Sector afectado",
     "fromYear": "Desde el año",
+    "startYearPlaceholder": "Año inicial…",
+    "endYearPlaceholder": "Año final…",
     "toYear": "Hasta el año",
     "evidenceLabel": "Descripción de evidencia",
     "submitBtn": "Enviar pista",
