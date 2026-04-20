@@ -20,5 +20,9 @@ ruptures>=1.1.0            # Change-point detection (graceful fallback if missin
 # AI explanation endpoint
 anthropic>=0.40.0          # ai_explain.py — lazy import, needs ANTHROPIC_API_KEY at runtime
 
+# Authentication
+python-jose[cryptography]>=3.3.0  # JWT encode/decode
+passlib[bcrypt]>=1.7.4            # Password hashing
+
 # Error monitoring (optional — no-op when SENTRY_DSN env var is not set)
 sentry-sdk[fastapi]==2.22.0

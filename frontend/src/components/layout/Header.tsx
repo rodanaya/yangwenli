@@ -1,13 +1,14 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useLocation, useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
-import { Search, Moon, Sun, Database, Shield, Menu } from 'lucide-react'
+import { Search, Moon, Sun, Database, Shield, Menu, LogOut, Briefcase } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 import { CommandPalette } from '@/components/CommandPalette'
 import { useTheme } from '@/hooks/useTheme'
 import { analysisApi } from '@/api/client'
+import { useAuth } from '@/contexts/AuthContext'
 
 // Route path → nav i18n key mapping
 const ROUTE_I18N_KEYS: Record<string, string> = {
@@ -54,7 +55,21 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
   const { t } = useTranslation('nav')
   const { t: tc } = useTranslation('common')
   const { theme, toggleTheme } = useTheme()
+  const { user, logout } = useAuth()
   const [searchOpen, setSearchOpen] = useState(false)
+  const [userMenuOpen, setUserMenuOpen] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (!userMenuOpen) return
+    const handler = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setUserMenuOpen(false)
+      }
+    }
+    document.addEventListener('mousedown', handler)
+    return () => document.removeEventListener('mousedown', handler)
+  }, [userMenuOpen])
 
   // Fetch anomaly count for notifications — non-blocking, cached aggressively
   const { data: anomalies } = useQuery({
@@ -265,6 +280,53 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
             <p className="text-xs">{tc('header.toggleTheme')}</p>
           </TooltipContent>
         </Tooltip>
+
+        {/* User menu */}
+        <div className="relative" ref={userMenuRef}>
+          {user ? (
+            <>
+              <button
+                onClick={() => setUserMenuOpen(v => !v)}
+                className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[10px] font-mono tracking-[0.08em] uppercase text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
+                aria-label="User menu"
+              >
+                <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-[9px] font-bold">
+                  {user.name.charAt(0).toUpperCase()}
+                </span>
+                <span className="hidden sm:inline max-w-[80px] truncate">{user.name.split(' ')[0]}</span>
+              </button>
+              {userMenuOpen && (
+                <div className="absolute right-0 top-full mt-1 w-44 rounded-lg border border-zinc-800 bg-zinc-900 shadow-xl z-50 py-1">
+                  <div className="px-3 py-2 border-b border-zinc-800">
+                    <p className="text-xs font-semibold text-zinc-200 truncate">{user.name}</p>
+                    <p className="text-[10px] text-zinc-500 truncate font-mono">{user.email}</p>
+                  </div>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); navigate('/workspace') }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
+                  >
+                    <Briefcase className="h-3.5 w-3.5" />
+                    My Investigations
+                  </button>
+                  <button
+                    onClick={() => { setUserMenuOpen(false); logout() }}
+                    className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition-colors"
+                  >
+                    <LogOut className="h-3.5 w-3.5" />
+                    Sign out
+                  </button>
+                </div>
+              )}
+            </>
+          ) : (
+            <button
+              onClick={() => navigate('/login')}
+              className="flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[10px] font-mono tracking-[0.08em] uppercase text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 border border-zinc-700/50 hover:border-zinc-600 transition-colors"
+            >
+              Sign in
+            </button>
+          )}
+        </div>
       </div>
     </header>
   )

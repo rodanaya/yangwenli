@@ -89,6 +89,7 @@ from .routers.cases import router as cases_router
 from .routers.search import router as search_router
 from .routers.feedback import router as feedback_router
 from .routers.workspace_dossier import router as dossier_router
+from .routers.auth import router as auth_router
 from .routers.subnational import router as subnational_router
 from .routers.issues import router as issues_router
 from .routers.ai_explain import router as ai_router
@@ -167,6 +168,31 @@ def _startup_checks():
     from .config.constants import RISK_THRESHOLDS_V4
 
     checks = []
+
+    # 0. Ensure users table and user_id column exist (idempotent migrations)
+    try:
+        migrate_conn = sqlite3.connect(str(DB_PATH), timeout=10)
+        migrate_conn.execute("PRAGMA foreign_keys = OFF")
+        migrate_conn.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                email TEXT UNIQUE NOT NULL,
+                password_hash TEXT NOT NULL,
+                name TEXT NOT NULL DEFAULT '',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER DEFAULT 1
+            )
+        """)
+        try:
+            migrate_conn.execute(
+                "ALTER TABLE investigation_dossiers ADD COLUMN user_id INTEGER REFERENCES users(id)"
+            )
+        except sqlite3.OperationalError:
+            pass  # Column already exists
+        migrate_conn.commit()
+        migrate_conn.close()
+    except Exception as e:
+        logger.warning("startup_migration_warning", issue=str(e))
 
     # 1. Database exists
     if not DB_PATH.exists():
@@ -314,6 +340,7 @@ _CACHE_PRIVATE_PREFIXES = (
     "/api/v1/watchlist",
     "/api/v1/workspace",
     "/api/v1/feedback",
+    "/api/v1/auth",
 )
 _CACHE_LONG_PREFIXES = (  # 1h — precomputed, only changes when pipeline runs
     "/api/v1/stats",
@@ -391,6 +418,7 @@ app.include_router(cases_router, prefix="/api/v1")
 app.include_router(search_router, prefix="/api/v1")
 app.include_router(feedback_router, prefix="/api/v1")
 app.include_router(dossier_router, prefix="/api/v1")
+app.include_router(auth_router, prefix="/api/v1")
 app.include_router(subnational_router, prefix="/api/v1")
 app.include_router(issues_router, prefix="/api/v1")
 app.include_router(ai_router, prefix="/api/v1")

@@ -41,6 +41,10 @@ tqdm>=4.65.0               # Progress bars
 # AI (used by ai_explain.py router + aria_generate_memos.py)
 anthropic>=0.40.0
 
+# Authentication
+python-jose[cryptography]>=3.3.0  # JWT encode/decode
+passlib[bcrypt]>=1.7.4            # Password hashing
+
 # Testing
 pytest>=7.4.0              # Test framework
 pytest-asyncio>=0.21.0     # Async test support

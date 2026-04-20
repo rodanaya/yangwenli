@@ -1,6 +1,7 @@
 import { lazy, Suspense } from 'react'
 import { NotFound } from './pages/NotFound'
 import { BrowserRouter, Routes, Route, Navigate, useParams } from 'react-router-dom'
+import { AuthProvider } from '@/contexts/AuthContext'
 import { QueryClient, QueryClientProvider, QueryCache, keepPreviousData } from '@tanstack/react-query'
 import { NuqsAdapter } from 'nuqs/adapters/react-router'
 import { TooltipProvider } from '@/components/ui/tooltip'
@@ -49,6 +50,8 @@ const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
 const CapturaHeatmap = lazy(() => import('@/pages/CapturaHeatmap'))
 // Workspace is the new name for Watchlist
 const Workspace = lazy(() => import('@/pages/Watchlist'))
+const LoginPage = lazy(() => import('@/pages/LoginPage'))
+const RegisterPage = lazy(() => import('@/pages/RegisterPage'))
 // StateExpenditure removed — redirects to /map
 const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
@@ -109,10 +112,28 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <ToastProvider>
         <TooltipProvider delayDuration={300}>
+          <AuthProvider>
           <EntityDrawerProvider>
           <BrowserRouter>
           <NuqsAdapter>
           <Routes>
+            {/* Public auth pages — full-screen, no sidebar */}
+            <Route
+              path="login"
+              element={
+                <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                  <LoginPage />
+                </SuspenseBoundary>
+              }
+            />
+            <Route
+              path="register"
+              element={
+                <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                  <RegisterPage />
+                </SuspenseBoundary>
+              }
+            />
             {/* Intro page — full-screen, no sidebar */}
             <Route
               path="intro"
@@ -511,6 +532,7 @@ function App() {
           </NuqsAdapter>
           </BrowserRouter>
           </EntityDrawerProvider>
+          </AuthProvider>
         </TooltipProvider>
       </ToastProvider>
     </QueryClientProvider>
