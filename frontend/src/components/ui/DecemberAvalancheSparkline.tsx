@@ -100,9 +100,9 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
                       cx={cx}
                       cy={cy}
                       r={DOT_R}
-                      fill={isFilled ? color : '#27272a'}
+                      fill={isFilled ? color : '#f3f1ec'}
                       fillOpacity={isFilled ? baseOpacity : 1}
-                      stroke={isFilled ? 'none' : 'rgba(63,63,70,0.6)'}
+                      stroke={isFilled ? 'none' : '#e2ddd6'}
                       strokeWidth={isFilled ? 0 : 0.4}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

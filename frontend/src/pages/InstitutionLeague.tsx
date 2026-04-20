@@ -639,7 +639,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
               y1={center}
               x2={x}
               y2={y}
-              stroke="#27272a"
+              stroke="#e2ddd6"
               strokeWidth="0.5"
             />
           )

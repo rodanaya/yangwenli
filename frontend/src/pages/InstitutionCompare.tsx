@@ -787,7 +787,7 @@ function ComparisonRadar({
       <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
-            <PolarGrid stroke="#27272a" />
+            <PolarGrid stroke="#e2ddd6" />
             <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
             <RechartsTooltip
               content={({ active, payload }) => {

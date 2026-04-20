@@ -2462,7 +2462,7 @@ function SexenioStackedDotColumns({
                     r={DOT_R}
                     fill={fill ?? '#f3f1ec'}
                     fillOpacity={fill ? 0.85 : 1}
-                    stroke={fill ? 'none' : '#27272a'}
+                    stroke={fill ? 'none' : '#e2ddd6'}
                     strokeWidth={fill ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
