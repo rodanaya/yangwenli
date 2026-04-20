@@ -67,7 +67,9 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                       cx={i * DG + DR}
                       cy={5}
                       r={DR}
-                      fill={i < filled ? eraColor : '#2d2926'}
+                      fill={i < filled ? eraColor : '#f3f1ec'}
+                      stroke={i < filled ? undefined : '#e2ddd6'}
+                      strokeWidth={i < filled ? 0 : 0.5}
                       fillOpacity={i < filled ? riskOpacity : 1}
                     />
                   ))}

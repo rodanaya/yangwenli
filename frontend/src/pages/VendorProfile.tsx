@@ -4232,7 +4232,9 @@ export function VendorProfile() {
                                     <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                                       {Array.from({ length: N }).map((_, k) => (
                                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                          fill={k < filled ? '#f59e0b' : '#2d2926'}
+                                          fill={k < filled ? '#f59e0b' : '#f3f1ec'}
+                                          stroke={k < filled ? undefined : '#e2ddd6'}
+                                          strokeWidth={k < filled ? 0 : 0.5}
                                           fillOpacity={k < filled ? 0.85 : 1}
                                         />
                                       ))}
@@ -4590,7 +4592,9 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
                   <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                        fill={k < filled ? '#22d3ee' : '#2d2926'}
+                        fill={k < filled ? '#22d3ee' : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.4 : 0.3}
                       />
                     ))}

@@ -72,7 +72,8 @@ const GRID_COLOR   = 'rgba(255,255,255,0.06)'
 const HEADER_COLOR = '#a1a1aa'
 const MUTED_COLOR  = '#71717a'
 const TEXT_COLOR   = '#e5e5e5'
-const EMPTY_DOT    = '#2d2926'   // warm dark — readable on dashboard dark bg
+const EMPTY_DOT    = '#f3f1ec'   // editorial cream — readable on light bg
+const EMPTY_STROKE = '#e2ddd6'   // subtle border for empty dots
 
 export function AdminFingerprints() {
   const maxRiskPct = Math.max(...ADMINS.map((a) => a.highRiskPct))
@@ -176,6 +177,8 @@ export function AdminFingerprints() {
                 cy={cy}
                 r={DOT_R}
                 fill={i < riskFilled ? RISK_COLOR : EMPTY_DOT}
+                stroke={i < riskFilled ? undefined : EMPTY_STROKE}
+                strokeWidth={i < riskFilled ? 0 : 0.5}
                 fillOpacity={i < riskFilled ? riskAlpha : 1}
               />
             ))}
@@ -202,6 +205,8 @@ export function AdminFingerprints() {
                     cy={cy}
                     r={DOT_R}
                     fill={i < daFilled ? DA_COLOR : EMPTY_DOT}
+                    stroke={i < daFilled ? undefined : EMPTY_STROKE}
+                    strokeWidth={i < daFilled ? 0 : 0.5}
                     fillOpacity={i < daFilled ? 0.8 : 1}
                   />
                 ))}
