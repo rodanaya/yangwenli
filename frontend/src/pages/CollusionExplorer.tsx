@@ -38,7 +38,7 @@ type PatternKind = 'rotation' | 'cover' | 'mixed' | 'unknown'
 const DEFAULT_MIN_SHARED = 10
 const DEFAULT_SORT: SortField = 'shared_procedures'
 const DEFAULT_PER_PAGE = 50
-const RINGS_FETCH_SIZE = 300 // broad fetch for union-find
+const RINGS_FETCH_SIZE = 100 // backend max per_page
 const TOP_RINGS_SHOWN = 8
 
 // ---------------------------------------------------------------------------
