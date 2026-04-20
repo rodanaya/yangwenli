@@ -245,11 +245,20 @@
 
   .text-editorial-display {
     font-family: var(--font-family-serif);
-    font-size: clamp(2.75rem, 5vw, 4rem);
+    font-size: 2.25rem; /* 36px mobile default */
     font-weight: 800;
-    line-height: 1.02;
-    letter-spacing: -0.035em;
+    line-height: 1.05;
+    letter-spacing: -0.03em;
     font-feature-settings: "ss01", "ss03", "kern";
+  }
+  @media (min-width: 640px) {
+    .text-editorial-display { font-size: 3rem; line-height: 1.04; letter-spacing: -0.033em; }
+  }
+  @media (min-width: 768px) {
+    .text-editorial-display { font-size: 3.75rem; line-height: 1.02; letter-spacing: -0.035em; }
+  }
+  @media (min-width: 1024px) {
+    .text-editorial-display { font-size: 4rem; }
   }
 
   .text-editorial-h1 {
@@ -289,12 +298,18 @@
   /* Deck — subtitle/sub-headline below a headline (sans, italic-light feel) */
   .text-deck {
     font-family: var(--font-family-serif);
-    font-size: clamp(1.0625rem, 1.4vw, 1.25rem);
+    font-size: 1rem; /* 16px mobile */
     font-weight: 400;
-    line-height: 1.45;
+    line-height: 1.5;
     letter-spacing: -0.005em;
     color: var(--color-text-secondary);
     font-style: italic;
+  }
+  @media (min-width: 640px) {
+    .text-deck { font-size: 1.125rem; line-height: 1.45; }
+  }
+  @media (min-width: 1024px) {
+    .text-deck { font-size: 1.25rem; }
   }
 
   /* Byline — author/date row, mono caps separated by middots */
@@ -363,11 +378,20 @@
   /* Display number — hero stat as serif, NYT/FT feel */
   .text-display-num {
     font-family: var(--font-family-serif);
-    font-size: clamp(2.5rem, 5vw, 3.75rem);
+    font-size: 1.875rem; /* 30px mobile — fits 2-col grid at 375px */
     font-weight: 800;
-    line-height: 0.95;
-    letter-spacing: -0.04em;
+    line-height: 1;
+    letter-spacing: -0.035em;
     font-variant-numeric: tabular-nums;
+  }
+  @media (min-width: 640px) {
+    .text-display-num { font-size: 2.5rem; line-height: 0.95; letter-spacing: -0.04em; }
+  }
+  @media (min-width: 1024px) {
+    .text-display-num { font-size: 3.25rem; }
+  }
+  @media (min-width: 1280px) {
+    .text-display-num { font-size: 3.75rem; }
   }
 
   /* Cards — clean editorial surfaces */

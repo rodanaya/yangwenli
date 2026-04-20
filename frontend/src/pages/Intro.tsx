@@ -380,7 +380,7 @@ export default function Intro() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="relative z-10 max-w-4xl mx-auto px-6 pt-20 pb-14 sm:pt-28 sm:pb-20"
+            className="relative z-10 max-w-4xl mx-auto px-5 sm:px-6 pt-14 pb-12 sm:pt-28 sm:pb-20"
           >
             {/* Kicker */}
             <div className="mb-6">
@@ -391,7 +391,7 @@ export default function Intro() {
             </div>
 
             {/* The revelation lede — tri-line declarative. */}
-            <h1 className="text-editorial-display text-zinc-50 mb-6 leading-[1.05]">
+            <h1 className="text-editorial-display text-zinc-50 mb-6" style={{ textWrap: 'balance' as const }}>
               <span className="block" style={{ color: CRIMSON }}>{t('revelation.ledePrimary')}</span>
               <span className="block text-zinc-100">{t('revelation.ledeSecondary')}</span>
               <span className="block text-zinc-400 italic">{t('revelation.ledeTertiary')}</span>
@@ -403,31 +403,31 @@ export default function Intro() {
             </p>
 
             {/* CTAs — primary goes to ARIA, not dashboard */}
-            <div className="flex flex-wrap items-center gap-3 mb-14">
+            <div className="flex flex-col sm:flex-row sm:flex-wrap sm:items-center gap-3 mb-12 sm:mb-14">
               <button
                 onClick={() => goToApp('/aria')}
-                className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 sm:py-2.5 text-sm font-semibold bg-amber-500 hover:bg-amber-400 text-zinc-950 transition-colors"
               >
                 {t('revelation.ctaInvestigate')}
                 <ArrowRight className="h-4 w-4" />
               </button>
               <button
                 onClick={() => goToApp('/methodology')}
-                className="inline-flex items-center gap-2 rounded-md px-5 py-2.5 text-sm font-semibold border border-zinc-700 hover:border-zinc-500 text-zinc-200 hover:text-zinc-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 rounded-md px-5 py-3 sm:py-2.5 text-sm font-semibold border border-zinc-700 hover:border-zinc-500 text-zinc-200 hover:text-zinc-50 transition-colors"
               >
                 {t('revelation.ctaMethodology')}
               </button>
             </div>
 
             {/* Four-figure strip — revelations, not stats */}
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-0 gap-y-6 pt-8 border-t border-[rgba(255,255,255,0.08)] sm:divide-x sm:divide-[rgba(255,255,255,0.08)]">
-              <div className="sm:px-5 sm:first:pl-0 space-y-1">
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-x-4 gap-y-6 pt-8 border-t border-[rgba(255,255,255,0.08)] sm:gap-x-0 sm:divide-x sm:divide-[rgba(255,255,255,0.08)]">
+              <div className="sm:px-5 sm:first:pl-0 space-y-1 min-w-0">
                 <div className="text-kicker text-zinc-500">{t('hero.statContracts')}</div>
                 <div className="text-display-num text-zinc-50">
                   {formatNumber(totalContracts)}
                 </div>
               </div>
-              <div className="sm:px-5 space-y-1">
+              <div className="sm:px-5 space-y-1 min-w-0">
                 <div className="text-kicker text-zinc-500">
                   {t('hero.statValue')} &middot; 2002&ndash;2025
                 </div>
@@ -435,7 +435,7 @@ export default function Intro() {
                   {formatCompactMXN(totalValueMxn)}
                 </div>
               </div>
-              <div className="sm:px-5 space-y-1">
+              <div className="sm:px-5 space-y-1 min-w-0">
                 <div className="text-kicker text-kicker--investigation">
                   {t('hero.statHighRisk')}
                 </div>
@@ -446,7 +446,7 @@ export default function Intro() {
                   {t('hero.statHighRiskContext')}
                 </div>
               </div>
-              <div className="sm:px-5 space-y-1">
+              <div className="sm:px-5 space-y-1 min-w-0">
                 <div className="text-kicker text-zinc-500">
                   {t('stories.story2.statLabel')}
                 </div>
@@ -565,68 +565,65 @@ export default function Intro() {
         {/* =====================================================================
             SECTION 4 — WHO USES RUBLI
             3-audience value proposition: journalists / researchers / citizens
+            Unified editorial grid — one bordered frame, hairline dividers.
             ===================================================================== */}
-        <section className="border-b border-zinc-900">
-          <div className="max-w-6xl mx-auto px-6 py-16">
-            <div className="text-center mb-10">
-              <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-amber-500 mb-2">
+        <section className="border-b border-zinc-900 bg-zinc-950">
+          <div className="max-w-6xl mx-auto px-5 sm:px-6 py-16 sm:py-20">
+            <div className="mb-10 sm:mb-12">
+              <span className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-amber-500/80">
                 {t('audiences.kicker')}
-              </p>
-              <h2 className="text-[1.375rem] sm:text-[1.75rem] font-semibold text-zinc-100 tracking-[-0.015em]">
+              </span>
+              <h2 className="text-[1.5rem] sm:text-[2rem] font-semibold text-zinc-100 tracking-[-0.015em] mt-2 leading-[1.1]">
                 {t('audiences.headline')}
               </h2>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+
+            <div className="grid grid-cols-1 md:grid-cols-3 border border-zinc-800 rounded-sm overflow-hidden">
               {([
                 {
-                  icon: '✦',
                   kicker: t('audiences.journalists.kicker'),
                   headline: t('audiences.journalists.headline'),
                   body: t('audiences.journalists.body'),
                   cta: t('audiences.journalists.cta'),
                   href: '/aria',
-                  accent: 'border-amber-500/30 bg-amber-500/5',
-                  iconColor: 'text-amber-500',
+                  kickerColor: 'text-red-400',
                 },
                 {
-                  icon: '◈',
                   kicker: t('audiences.researchers.kicker'),
                   headline: t('audiences.researchers.headline'),
                   body: t('audiences.researchers.body'),
                   cta: t('audiences.researchers.cta'),
                   href: '/methodology',
-                  accent: 'border-blue-500/20 bg-blue-500/5',
-                  iconColor: 'text-blue-400',
+                  kickerColor: 'text-blue-400',
                 },
                 {
-                  icon: '◉',
                   kicker: t('audiences.citizens.kicker'),
                   headline: t('audiences.citizens.headline'),
                   body: t('audiences.citizens.body'),
                   cta: t('audiences.citizens.cta'),
                   href: '/report-card',
-                  accent: 'border-zinc-700 bg-zinc-900/50',
-                  iconColor: 'text-zinc-400',
+                  kickerColor: 'text-green-400',
                 },
-              ] as const).map((card) => (
+              ] as const).map((card, idx) => (
                 <button
                   key={card.kicker}
                   onClick={() => goToApp(card.href)}
-                  className={`text-left rounded-sm border p-6 transition-all hover:brightness-110 focus:outline-none focus:ring-1 focus:ring-amber-500/40 ${card.accent}`}
+                  className={`text-left p-7 sm:p-8 flex flex-col gap-4 transition-colors hover:bg-zinc-900/40 focus:outline-none focus:bg-zinc-900/50 ${
+                    idx < 2 ? 'border-b md:border-b-0 md:border-r border-zinc-800' : ''
+                  }`}
                 >
-                  <div className={`text-xl mb-3 ${card.iconColor}`}>{card.icon}</div>
-                  <p className="text-[10px] font-mono font-bold tracking-[0.18em] uppercase text-zinc-500 mb-1">
+                  <span className={`text-[10px] font-mono font-bold tracking-[0.18em] uppercase ${card.kickerColor}`}>
                     {card.kicker}
-                  </p>
-                  <h3 className="text-[1rem] font-semibold text-zinc-100 leading-snug mb-2">
+                  </span>
+                  <h3 className="text-[1.0625rem] sm:text-lg font-semibold text-zinc-100 leading-snug tracking-[-0.01em]">
                     {card.headline}
                   </h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed mb-4">
+                  <p className="text-sm text-zinc-400 leading-relaxed flex-1">
                     {card.body}
                   </p>
-                  <span className="text-xs font-semibold text-amber-400 inline-flex items-center gap-1">
+                  <span className="text-xs font-semibold text-amber-400 hover:text-amber-300 inline-flex items-center gap-1 self-start mt-1">
                     {card.cta}
-                    <ArrowRight className="h-3 w-3" />
+                    <ArrowUpRight className="h-3.5 w-3.5" />
                   </span>
                 </button>
               ))}
