@@ -1108,8 +1108,8 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={yCenter}
                     r={DOT_R}
-                    fill={isFilled ? item.color : '#18181b'}
-                    stroke={isFilled ? 'none' : '#27272a'}
+                    fill={isFilled ? item.color : '#f3f1ec'}
+                    stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                     initial={{ opacity: 0 }}

@@ -211,7 +211,7 @@ export function StorySexenioASexenio() {
                       cx={cx}
                       cy={y}
                       r={DOT_R}
-                      fill={isFilled ? color : '#18181b'}
+                      fill={isFilled ? color : '#f3f1ec'}
                       stroke={isFilled ? 'none' : isOecdLine ? '#22d3ee44' : '#27272a'}
                       strokeWidth={isFilled ? 0 : 0.6}
                       initial={{ opacity: 0, scale: 0.6 }}

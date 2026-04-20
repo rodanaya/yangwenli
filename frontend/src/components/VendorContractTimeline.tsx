@@ -362,8 +362,8 @@ function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count:
                     cx={xCenter}
                     cy={dotY}
                     r={YC_DOT_R}
-                    fill={isFilled ? '#3b82f6' : '#18181b'}
-                    stroke={isFilled ? 'none' : '#27272a'}
+                    fill={isFilled ? '#3b82f6' : '#f3f1ec'}
+                    stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={0.4}
                     fillOpacity={isFilled ? 0.7 : 1}
                     initial={{ opacity: 0 }}

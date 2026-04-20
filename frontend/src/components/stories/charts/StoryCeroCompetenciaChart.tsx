@@ -176,9 +176,9 @@ export function StoryCeroCompetenciaChart() {
                       cx={LABEL_W + i * DOT_GAP + DOT_R}
                       cy={y0 + STRIP_H / 2}
                       r={DOT_R}
-                      fill={isFilled ? color : '#18181b'}
+                      fill={isFilled ? color : '#f3f1ec'}
                       fillOpacity={isFilled ? opacity : 1}
-                      stroke={isFilled ? 'none' : '#27272a'}
+                      stroke={isFilled ? 'none' : '#e2ddd6'}
                       strokeWidth={isFilled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

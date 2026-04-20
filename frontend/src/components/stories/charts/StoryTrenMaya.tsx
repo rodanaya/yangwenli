@@ -252,8 +252,8 @@ export function StoryTrenMaya() {
                       cx={LABEL_W + i * DOT_GAP_X + DOT_GAP_X / 2}
                       cy={cy}
                       r={DOT_R}
-                      fill={i < filled ? color : '#18181b'}
-                      stroke={i < filled ? 'none' : '#27272a'}
+                      fill={i < filled ? color : '#f3f1ec'}
+                      stroke={i < filled ? 'none' : '#e2ddd6'}
                       strokeWidth={i < filled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

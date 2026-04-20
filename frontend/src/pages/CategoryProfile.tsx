@@ -178,9 +178,9 @@ function SexenioDotColumns({
                     cx={cx}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#18181b'}
+                    fill={isFilled ? color : '#f3f1ec'}
                     fillOpacity={isFilled ? opacity : 1}
-                    stroke={isFilled ? 'none' : '#27272a'}
+                    stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -274,9 +274,9 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
                     cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#18181b'}
+                    fill={isFilled ? color : '#f3f1ec'}
                     fillOpacity={isFilled ? 0.7 : 1}
-                    stroke={isFilled ? 'none' : '#27272a'}
+                    stroke={isFilled ? 'none' : '#e2ddd6'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

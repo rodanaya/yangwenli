@@ -192,8 +192,8 @@ export function StoryAnoSinExcusas() {
                       cx={cx}
                       cy={cy}
                       r={DOT_R}
-                      fill={isFilled ? fillColor : '#18181b'}
-                      stroke={isFilled ? 'none' : '#27272a'}
+                      fill={isFilled ? fillColor : '#f3f1ec'}
+                      stroke={isFilled ? 'none' : '#e2ddd6'}
                       strokeWidth={isFilled ? 0 : 0.6}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}
