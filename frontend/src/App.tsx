@@ -41,7 +41,8 @@ const PriceIntelligence = lazy(() => import('@/pages/PriceIntelligence'))
 const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
-// ExecutiveSummary removed — hardcoded stale data + named company risk scores (legal risk)
+// Executive — editorial 1-pager for decision-makers (redesigned 2026-04-20)
+const Executive = lazy(() => import('@/pages/Executive'))
 const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 // Limitations removed — /limitations redirects to /methodology
@@ -164,7 +165,14 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route path="executive" element={<Navigate to="/dashboard" replace />} />
+              <Route
+                path="executive"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Executive />
+                  </SuspenseBoundary>
+                }
+              />
               <Route
                 path="explore"
                 element={

@@ -83,6 +83,7 @@ function CustomDot({ cx = 0, cy = 0, payload, maxBillions = 3070.3 }: CustomDotP
         fontSize={9}
         fill={payload.color}
         fontWeight="600"
+        fontFamily="var(--font-family-mono, monospace)"
       >
         {payload.sector.slice(0, 6)}
       </text>

@@ -309,7 +309,9 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
             ))}
           </ul>
         ) : (
-          <p className="text-xs text-text-muted italic">No ASF findings on record.</p>
+          <p className="text-xs text-text-muted">
+            Sin hallazgos ASF registrados para esta entidad.
+          </p>
         )}
       </div>
 

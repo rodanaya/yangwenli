@@ -1426,7 +1426,9 @@ function RiskLevelPriceGap({
                   <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                        fill={k < filled ? '#dc2626' : '#2d2926'}
+                        fill={k < filled ? '#dc2626' : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}
@@ -1463,7 +1465,9 @@ function RiskLevelPriceGap({
                   <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                        fill={k < filled ? '#71717a' : '#2d2926'}
+                        fill={k < filled ? '#71717a' : '#f3f1ec'}
+                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
                     ))}

@@ -388,7 +388,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
           )
           const isPos = row.growthPct >= 0
           const color = isPos ? '#4ade80' : '#f87171'
-          const emptyDot = '#2d2926'
+          const emptyDot = '#f3f1ec'
           const rowCenterY = cy + ROW_H / 2
 
           return (
@@ -418,6 +418,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                     cy={rowCenterY}
                     r={DOT_R}
                     fill={isFilled ? color : emptyDot}
+                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                   />
                 )
@@ -434,6 +436,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                     cy={rowCenterY}
                     r={DOT_R}
                     fill={isFilled ? color : emptyDot}
+                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                   />
                 )
@@ -551,7 +555,9 @@ function RiskEvolution({
                     cx={i * DG + DR}
                     cy={5}
                     r={DR}
-                    fill={i < filled ? color : '#2d2926'}
+                    fill={i < filled ? color : '#f3f1ec'}
+                    stroke={i < filled ? undefined : '#e2ddd6'}
+                    strokeWidth={i < filled ? 0 : 0.5}
                     fillOpacity={i < filled ? 0.85 : 1}
                   />
                 ))}

@@ -62,7 +62,8 @@ const INK = '#e7e5e1'           // primary text (warm bone)
 const INK_MUTED = '#a8a29e'     // secondary
 const INK_DIM = '#78716c'       // tertiary
 const INK_FAINT = '#57534e'     // overlines / captions
-const EMPTY_DOT = '#2d2926'     // dotbar empty
+const EMPTY_DOT = '#f3f1ec'     // dotbar empty (editorial cream)
+const EMPTY_STROKE = '#e2ddd6'  // dotbar empty stroke
 
 // ============================================================================
 // INLINE DotBar — NYT-style categorical magnitude indicator
@@ -95,6 +96,8 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : EMPTY_DOT}
+          stroke={i < filled ? undefined : EMPTY_STROKE}
+          strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
     </svg>

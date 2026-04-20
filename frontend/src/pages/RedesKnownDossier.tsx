@@ -274,7 +274,7 @@ const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
 function DotBar({
   value,
   color,
-  emptyColor = '#2d2926',
+  emptyColor = '#f3f1ec',
   dots = 20,
   size = 6,
   gap = 2,
@@ -304,6 +304,8 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : emptyColor}
+          stroke={i < filled ? undefined : '#e2ddd6'}
+          strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
     </svg>

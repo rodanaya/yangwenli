@@ -35,7 +35,7 @@ const SVG_W        = 580
 const ROW_H        = 36
 const ROW_GAP      = 6
 const PAD_T        = 22
-const PAD_B        = 18
+const PAD_B        = 26
 const SVG_H        = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) + PAD_B
 
 const PARTY_TAB_W  = 4
@@ -108,6 +108,30 @@ export function AdminFingerprints() {
         x2={DIVIDER_X} y2={PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4}
         stroke={GRID_COLOR} strokeWidth={1}
       />
+
+      {/* OECD reference lines — cyan dashed hairlines */}
+      {(() => {
+        const riskOecdX = BAR_RISK_X + (15 / MAX_RISK_PCT) * BAR_RISK_PX
+        const daOecdX = BAR_DA_X + (25 / MAX_DA_PCT) * BAR_DA_PX
+        const y1 = PAD_T - 2
+        const y2 = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4
+        return (
+          <>
+            <line x1={riskOecdX} y1={y1} x2={riskOecdX} y2={y2}
+              stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
+            <text x={riskOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
+              fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
+              OCDE 15%
+            </text>
+            <line x1={daOecdX} y1={y1} x2={daOecdX} y2={y2}
+              stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
+            <text x={daOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
+              fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
+              OCDE 25%
+            </text>
+          </>
+        )
+      })()}
 
       {/* Legend: 1 dot = ~2.25% */}
       <text x={BAR_RISK_X} y={PAD_T - 8} fill="#52525b" fontSize={8}

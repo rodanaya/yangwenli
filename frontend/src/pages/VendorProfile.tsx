@@ -596,7 +596,9 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
               <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                    fill={k < filled ? color : '#2d2926'}
+                    fill={k < filled ? color : '#f3f1ec'}
+                    stroke={k < filled ? undefined : '#e2ddd6'}
+                    strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
                 ))}
@@ -647,7 +649,9 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? '#dc2626' : '#2d2926'}
+                      fill={k < filled ? '#dc2626' : '#f3f1ec'}
+                      stroke={k < filled ? undefined : '#e2ddd6'}
+                      strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
                   ))}
@@ -675,7 +679,9 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                     <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                          fill={k < filled ? '#10b981' : '#2d2926'}
+                          fill={k < filled ? '#10b981' : '#f3f1ec'}
+                          stroke={k < filled ? undefined : '#e2ddd6'}
+                          strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
@@ -2024,7 +2030,9 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                    fill={k < filled ? '#ea580c' : '#2d2926'}
+                                    fill={k < filled ? '#ea580c' : '#f3f1ec'}
+                                    stroke={k < filled ? undefined : '#e2ddd6'}
+                                    strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
                                 ))}
@@ -2190,7 +2198,9 @@ export function VendorProfile() {
                         <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                              fill={k < filled ? '#f59e0b' : '#2d2926'}
+                              fill={k < filled ? '#f59e0b' : '#f3f1ec'}
+                              stroke={k < filled ? undefined : '#e2ddd6'}
+                              strokeWidth={k < filled ? 0 : 0.5}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
                           ))}
@@ -2238,7 +2248,9 @@ export function VendorProfile() {
                                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                     {Array.from({ length: N }).map((_, k) => (
                                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                        fill={k < filled ? '#10b981' : '#2d2926'}
+                                        fill={k < filled ? '#10b981' : '#f3f1ec'}
+                                        stroke={k < filled ? undefined : '#e2ddd6'}
+                                        strokeWidth={k < filled ? 0 : 0.5}
                                         fillOpacity={k < filled ? 0.85 : 1}
                                       />
                                     ))}
@@ -2592,6 +2604,7 @@ export function VendorProfile() {
                                         textAnchor="end"
                                         fontSize={10}
                                         fill="var(--color-text-muted)"
+                                        fontFamily="var(--font-family-sans, system-ui)"
                                       >
                                         {label}
                                       </text>
@@ -2772,7 +2785,9 @@ export function VendorProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? sectorColor : '#2d2926'}
+                                      fill={k < filled ? sectorColor : '#f3f1ec'}
+                                      stroke={k < filled ? undefined : '#e2ddd6'}
+                                      strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
                                   ))}
@@ -3476,6 +3491,7 @@ export function VendorProfile() {
                                       textAnchor="middle"
                                       fontSize={8}
                                       fill="#f59e0bcc"
+                                      fontFamily="var(--font-family-mono, monospace)"
                                     >
                                       {t('histogram.thresholdLabel')}
                                     </text>
@@ -3952,12 +3968,15 @@ export function VendorProfile() {
                                   return (
                                     <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
                                       {Array.from({ length: N }).map((_, k) => {
+                                        const isEmpty = k >= partnerEnd
                                         const fill = k < thisFilled ? '#22c55e'
                                           : k < partnerEnd ? partnerColor
-                                          : '#2d2926'
+                                          : '#f3f1ec'
                                         return (
                                           <circle key={k} cx={k * DG + DR} cy={4} r={DR}
                                             fill={fill}
+                                            stroke={isEmpty ? '#e2ddd6' : undefined}
+                                            strokeWidth={isEmpty ? 0.5 : 0}
                                             fillOpacity={k < partnerEnd ? 0.75 : 1}
                                           />
                                         )
@@ -4176,7 +4195,9 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                    fill={k < filled ? dim.color : '#2d2926'}
+                                    fill={k < filled ? dim.color : '#f3f1ec'}
+                                    stroke={k < filled ? undefined : '#e2ddd6'}
+                                    strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
                                 ))}

@@ -811,10 +811,13 @@ function SubcategoryPanel({
             return (
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => {
-                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#2d2926'
+                  const isEmpty = k >= catchEnd
+                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#f3f1ec'
                   return (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                       fill={fill}
+                      stroke={isEmpty ? '#e2ddd6' : undefined}
+                      strokeWidth={isEmpty ? 0.5 : 0}
                       fillOpacity={k < catchEnd ? 0.55 : 1}
                     />
                   )
@@ -886,7 +889,9 @@ function SubcategoryPanel({
                             const isTotal = k < totalFilled
                             return (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={isDa ? baseColor : isTotal ? baseColor : '#2d2926'}
+                                fill={isDa ? baseColor : isTotal ? baseColor : '#f3f1ec'}
+                                stroke={!isTotal ? '#e2ddd6' : undefined}
+                                strokeWidth={!isTotal ? 0.5 : 0}
                                 fillOpacity={isDa ? 0.9 : isTotal ? 0.45 : 1}
                               />
                             )
@@ -1609,7 +1614,9 @@ function DAConcentrationChart({
                 <svg viewBox={`0 0 ${svgW} 14`} className="flex-1 h-3.5" preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={7} r={DR}
-                      fill={i < filled ? dotColor : '#2d2926'}
+                      fill={i < filled ? dotColor : '#f3f1ec'}
+                      stroke={i < filled ? undefined : '#e2ddd6'}
+                      strokeWidth={i < filled ? 0 : 0.5}
                       fillOpacity={i < filled ? 0.72 : 1}
                     />
                   ))}

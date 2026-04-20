@@ -123,6 +123,7 @@ export function CommunityBubbles() {
                   fontSize={r > 35 ? 9 : 7}
                   fill="#f4f4f5"
                   fontWeight="600"
+                  fontFamily="var(--font-family-mono, monospace)"
                   pointerEvents="none"
                 >
                   {community.size ?? '?'}

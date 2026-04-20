@@ -422,7 +422,9 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                     <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                          fill={k < filled ? color : '#2d2926'}
+                          fill={k < filled ? color : '#f3f1ec'}
+                          stroke={k < filled ? undefined : '#e2ddd6'}
+                          strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.45 : 0.3}
                         />
                       ))}

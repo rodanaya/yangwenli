@@ -201,7 +201,9 @@ export function AnimatedFill({ pct, color, delay = 0, height: _height = 'h-4' }:
             cx={i * DG + DR}
             cy={5}
             r={DR}
-            fill={i < filled ? color : '#2d2926'}
+            fill={i < filled ? color : '#f3f1ec'}
+            stroke={i < filled ? undefined : '#e2ddd6'}
+            strokeWidth={i < filled ? 0 : 0.5}
             fillOpacity={i < filled ? 0.85 : 1}
           />
         ))}
