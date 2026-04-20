@@ -151,47 +151,335 @@ This is the aesthetic and philosophical foundation. When an agent makes a visual
 
 ## 3. Typography System (Canonical)
 
-### Font Stack
+> This section is the binding specification. Every text element on the platform must conform. When a component engineer or agent makes a typography decision, they check here first. If the answer is not here, update this document before writing code.
+
+---
+
+### 3.1 Font Stack
 
 ```css
---font-family-serif:  "Playfair Display", Georgia, serif  /* Editorial headlines */
---font-family-sans:   "Inter", system-ui, sans-serif      /* Body, UI, labels */
---font-family-mono:   "JetBrains Mono", "Fira Code", monospace  /* Data values */
+--font-family-serif:  "Playfair Display", Georgia, "Times New Roman", serif;
+--font-family-sans:   "Inter", system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+--font-family-mono:   "JetBrains Mono", "Fira Code", "Cascadia Code", "Consolas", monospace;
 ```
 
-### Usage Rules
+**Loading weights — what to actually load from Google Fonts / local:**
 
-| Context | Font | Weight | When |
-|---------|------|--------|------|
-| Page hero headline | Playfair Display | 700–800 | Section titles, story titles, page names |
-| Editorial pull-quote | Playfair Display italic | 400i | Pull-quotes, lede text |
-| Section header | Inter | 600 | Card headers, section names |
-| Body text | Inter | 400 | Prose, descriptions, explanations |
-| UI label | Inter | 500 | Button text, nav items, tab labels |
-| Data value (big) | JetBrains Mono | 700 | Hero stats: "9.9T MXN", "13.49%" |
-| Data value (table) | JetBrains Mono | 400–500 | Table cells, chart axis values |
-| Caption / footnote | Inter | 400 | Source notes, methodology footnotes |
-
-### Type Scale
-
-```
-Display: 3rem / 48px — Hero stats only (dashboard KPI, story lead stat)
-H1:      2rem / 32px — Page title
-H2:      1.5rem / 24px — Section header
-H3:      1.25rem / 20px — Card header, subsection
-Body:    1rem / 16px — Main content
-Small:   0.875rem / 14px — Labels, secondary text
-Tiny:    0.75rem / 12px — Captions, axis labels, footnotes
+```html
+<!-- Playfair Display: only load what we use -->
+Playfair Display: 400, 400i, 700, 800
+<!-- Inter: full range for flexibility -->
+Inter: 300, 400, 500, 600, 700
+<!-- JetBrains Mono: 400 and 700 only -->
+JetBrains Mono: 400, 500, 700
 ```
 
-### Rules
+Do NOT load font weights you don't use. Each unused weight is a network request that wastes load time.
 
-1. **Max 3 type sizes** visible on any single card or section. More than 3 creates visual noise.
-2. **Serif only for editorial framing** — headlines, story titles, pull-quotes. Never for data labels.
-3. **Mono for all numbers** — every MXN amount, percentage, count displayed in JetBrains Mono.
-4. **ALL CAPS with letter-spacing 0.08–0.12em** for section badges ("EDITORIAL SUMMARY", "RIESGO CRÍTICO", "DATOS").
-5. **No bold body text** — use size hierarchy, not weight, for content structure.
-6. **Line height**: 1.4 for body, 1.1–1.2 for headlines, 1.6 for prose paragraphs.
+---
+
+### 3.2 Type Scale — Full Specification
+
+Every level has a canonical value for desktop AND mobile, plus line-height, letter-spacing, and weight range.
+
+| Level | Desktop | Mobile | Line-height | Letter-spacing | Weight range | Font |
+|-------|---------|--------|-------------|---------------|--------------|------|
+| **Display** | 3rem / 48px | 2.25rem / 36px | 1.05 | −0.02em | 700–800 | Playfair or JetBrains Mono |
+| **H1** | 2rem / 32px | 1.625rem / 26px | 1.15 | −0.01em | 700 | Playfair (editorial) or Inter (UI) |
+| **H2** | 1.5rem / 24px | 1.25rem / 20px | 1.2 | 0em | 600 | Inter |
+| **H3** | 1.25rem / 20px | 1.125rem / 18px | 1.25 | 0em | 600 | Inter |
+| **H4 / Label-lg** | 1rem / 16px | 1rem / 16px | 1.3 | 0em | 500–600 | Inter |
+| **Body** | 1rem / 16px | 1rem / 16px | 1.6 | 0em | 400 | Inter |
+| **Body-sm** | 0.875rem / 14px | 0.875rem / 14px | 1.5 | 0em | 400 | Inter |
+| **Label / Caption** | 0.75rem / 12px | 0.75rem / 12px | 1.4 | 0em | 400–500 | Inter |
+| **Micro / Axis** | 0.6875rem / 11px | 0.6875rem / 11px | 1.35 | 0em | 400 | Inter or Mono |
+| **Nano** | 0.625rem / 10px | 0.625rem / 10px | 1.3 | 0em | 400–500 | Inter Mono |
+
+**Responsive implementation (Tailwind):**
+
+```css
+/* Display — hero KPIs, story leads */
+.type-display { @apply text-3xl md:text-5xl font-bold leading-[1.05] tracking-tight; }
+
+/* H1 — page titles */
+.type-h1 { @apply text-[26px] md:text-[32px] font-bold leading-[1.15] tracking-[-0.01em]; }
+
+/* H2 — section headers */
+.type-h2 { @apply text-xl md:text-2xl font-semibold leading-[1.2]; }
+
+/* H3 — card headers */
+.type-h3 { @apply text-lg md:text-xl font-semibold leading-[1.25]; }
+
+/* Body — main content prose */
+.type-body { @apply text-base font-normal leading-[1.6]; }
+
+/* Label — UI elements, nav, buttons */
+.type-label { @apply text-xs font-medium leading-[1.4]; }
+
+/* Micro — axis labels, badges, footnotes */
+.type-micro { @apply text-[11px] font-normal leading-[1.35]; }
+```
+
+---
+
+### 3.3 Contextual Usage Table — Full Mapping
+
+Every context on the platform maps to exactly one typographic specification.
+
+| Context | Font | Size | Weight | Line-ht | Letter-sp | Color token |
+|---------|------|------|--------|---------|-----------|-------------|
+| **Page title** | Playfair Display | H1 | 700 | 1.15 | −0.01em | `--color-text-primary` |
+| **Story headline** | Playfair Display | H1–Display | 800 | 1.05 | −0.02em | `--color-text-primary` |
+| **Editorial pull-quote** | Playfair Display italic | H2 | 400i | 1.4 | 0em | `--color-text-secondary` |
+| **Investigation lede** | Playfair Display | H3 | 400 | 1.5 | 0em | `--color-text-secondary` |
+| **Section header (card)** | Inter | H3 | 600 | 1.25 | 0em | `--color-text-primary` |
+| **Section sub-label** | Inter | Body-sm | 400 | 1.5 | 0em | `--color-text-secondary` |
+| **Body prose** | Inter | Body | 400 | 1.6 | 0em | `--color-text-primary` |
+| **Methodology / docs prose** | Inter | Body | 400 | 1.7 | 0em | `--color-text-primary` |
+| **UI button label** | Inter | Body-sm | 500 | 1.25 | 0em | contextual (button color) |
+| **Nav item** | Inter | Body-sm | 500 | 1.35 | 0em | `--color-text-secondary` |
+| **Tab label** | Inter | Body-sm | 500 | 1.35 | 0.02em | `--color-text-secondary` |
+| **Badge / pill text** | Inter | Nano | 500 | 1.3 | 0.08em | contextual (badge color) |
+| **Section badge (ALL CAPS)** | Inter | Nano–Micro | 600–700 | 1.2 | 0.12–0.15em | `--color-text-muted` |
+| **Hero KPI stat** | JetBrains Mono | Display | 700 | 1.05 | −0.02em | `--color-text-primary` |
+| **Table value** | JetBrains Mono | Body-sm | 400–500 | 1.4 | 0em | `--color-text-primary` |
+| **Chart axis value** | JetBrains Mono | Micro | 400 | 1.35 | 0em | `--color-text-muted` |
+| **Dot-matrix legend** | JetBrains Mono | Nano | 400 | 1.3 | 0em | `--color-text-muted` |
+| **MXN currency (inline)** | JetBrains Mono | inherit | 500 | inherit | 0em | `--color-text-primary` |
+| **Percentage (inline)** | JetBrains Mono | inherit | 500 | inherit | 0em | contextual (risk color) |
+| **Footnote / source note** | Inter | Micro | 400 | 1.4 | 0em | `--color-text-muted` |
+| **Methodology tooltip** | Inter | Micro | 400 | 1.45 | 0em | `--color-text-secondary` |
+| **Empty state message** | Inter | Body-sm | 400 | 1.5 | 0em | `--color-text-muted` |
+| **Error message** | Inter | Body-sm | 500 | 1.4 | 0em | `#ef4444` |
+| **Input placeholder** | Inter | Body-sm | 400 | 1.5 | 0em | `--color-text-muted` |
+| **Table column header** | Inter | Micro | 600 | 1.3 | 0.08em | `--color-text-muted` |
+
+---
+
+### 3.4 Text Color System
+
+Text colors are **not arbitrary**. Every text element uses one of these four tokens. Never use a raw hex color for text.
+
+| Token | Hex (light) | Hex (dark card/sidebar) | When to use |
+|-------|------------|------------------------|-------------|
+| `--color-text-primary` | `#1a1714` | `#e8e0d8` | Main content, data values, page titles, anything the user must read |
+| `--color-text-secondary` | `#6b6560` | `#a09890` | Sub-labels, descriptions, secondary information |
+| `--color-text-muted` | `#9c9490` | `#706860` | Captions, footnotes, axis labels, placeholders, dates |
+| `--color-text-disabled` | `#c5bfb8` | `#504840` | Disabled states, greyed-out elements, N/A |
+
+**Risk text colors** (always use these for any risk-level annotation):
+
+| Level | Hex | When |
+|-------|-----|------|
+| Critical text | `#ef4444` | Risk level badges, critical alert text |
+| High text | `#f59e0b` | High-risk labels |
+| Medium text | `#a16207` | Medium-risk labels |
+| Low text | `#71717a` | Low-risk labels (NOT green) |
+
+---
+
+### 3.5 Section Badge Convention (ALL CAPS)
+
+Section badges appear above card content to label the data category. They must always be:
+
+```
+Font:           Inter
+Size:           10–11px (Nano to Micro)
+Weight:         600–700
+Case:           UPPERCASE
+Letter-spacing: 0.10–0.15em (Tailwind: tracking-widest)
+Color:          --color-text-muted (default) | or risk color when risk-level badge
+```
+
+**Examples of correct badges:**
+```
+INVESTIGACIÓN  ·  RIESGO CRÍTICO  ·  ADJUDICACIÓN DIRECTA
+EDITORIAL SUMMARY  ·  DATOS  ·  METODOLOGÍA  ·  FUENTE: COMPRANET
+```
+
+**Never do this:**
+```
+❌ "Investigation" (sentence case — too soft for a badge)
+❌ Bold italic badges — badges are NOT italic
+❌ Badge in Playfair Display — serif badges look editorial, not data
+❌ Badge with no letter-spacing — it collapses into a word, not a label
+```
+
+---
+
+### 3.6 Number and Data Formatting in Typography
+
+All numeric values displayed to users must follow this protocol:
+
+**Currency (MXN):**
+```
+Hero stat:   "9.9T MXN"         → JetBrains Mono 700, Display size
+Compact:     "MX$1,234M"        → JetBrains Mono 500, Body-sm size
+Full:        "MX$1,234,567,890" → JetBrains Mono 400, Caption size (tables)
+USD context: "≈ US$580B (2024)" → JetBrains Mono 400, Micro, muted color
+```
+
+**Percentages:**
+```
+Risk rate:   "13.49%"   → JetBrains Mono 700, risk color
+DA rate:     "78.0%"    → JetBrains Mono 500, --color-text-secondary
+Comparison:  "+4.2pp"   → JetBrains Mono 500, green or red by direction
+Axis label:  "10%"      → JetBrains Mono 400, Micro, muted
+```
+
+**Counts:**
+```
+Contract count:  "3,051,294"   → Intl.NumberFormat('es-MX') — comma thousands
+Large counts:    "3.1M"         → JetBrains Mono 500 (compact)
+Rank number:     "01"           → JetBrains Mono 700, tabular-nums, padded to 2 digits
+Year:            "2024"         → JetBrains Mono 400 (not Playfair or Inter)
+```
+
+**Decimal precision rules:**
+```
+MXN compact:   1 decimal (9.9T, 1.3B, 45.2M)
+MXN full:      0 decimal (MX$1,234,567)
+Risk score:    4 decimal (0.6234) in model view; 0 decimal (62%) in user-facing
+Percentage:    1 decimal in labels (13.5%); 0 decimal in badges (14%)
+AUC:           3 decimal (0.828)
+```
+
+**Tabular numbers:** Always add `font-variant-numeric: tabular-nums` (Tailwind: `tabular-nums`) to any column of numbers that should visually align. This applies to tables, ranked lists, dot-matrix labels, and dashboard KPIs.
+
+---
+
+### 3.7 Hierarchy Rules — Max Complexity Per Element
+
+1. **Max 3 type sizes** on any single card or section. 4+ creates visual chaos.
+2. **Max 2 font families** on any single section. Never mix all three on one card.
+3. **Serif (Playfair) for editorial only** — story titles, page heroes, pull-quotes. Never for data labels, table headers, nav items, or UI controls.
+4. **Mono for ALL numbers** — every currency amount, every percentage, every count, every year. Not just "big" numbers. ALL numbers.
+5. **Weight carries meaning**: 700 = primary action or critical value. 600 = section-level. 500 = interactive label. 400 = body content. 300 = footnote level. Never use a random weight.
+6. **Bold body text is forbidden** — `font-weight: 600` in body prose indicates the author panicked. Use size hierarchy instead.
+
+---
+
+### 3.8 Line Height & Spacing — Exact Values
+
+| Usage | `line-height` | `letter-spacing` | Notes |
+|-------|--------------|-----------------|-------|
+| Display / large KPI | 1.05 | −0.02em | Tight — headline serif compression |
+| H1 editorial | 1.15 | −0.01em | Compressed for authority |
+| H2/H3 section | 1.2–1.25 | 0em | Neutral |
+| Body prose | 1.6 | 0em | Generous — never below 1.5 for reading |
+| Body-sm labels | 1.4–1.5 | 0em | Labels need less air |
+| Mono data | 1.4 | 0em | JetBrains already has good internal spacing |
+| ALL CAPS badge | 1.2 | 0.10–0.15em | Wide tracking compensates for caps density |
+| Footnote / axis | 1.35 | 0em | Compact but legible |
+
+---
+
+### 3.9 Dark Context Rules (Dark Cards, Sidebar, Modals)
+
+The sidebar and dark data-panel components require specific overrides:
+
+```css
+/* Dark card text — use these instead of light-mode values */
+--dark-text-primary:   #e8e0d8;   /* Warm off-white — not pure white */
+--dark-text-secondary: #a09890;
+--dark-text-muted:     #706860;
+
+/* Inter on dark: increase weight by 1 step for optical legibility */
+/* Body 400 on light → 400 on dark (fine)                        */
+/* Labels 500 on light → 500 on dark (fine, Inter renders well)  */
+/* Micro 400 on dark → prefer 500 to maintain legibility         */
+```
+
+Dark context does NOT change font family or type scale — only color tokens.
+
+---
+
+### 3.10 Explicit DON'T List
+
+These patterns are forbidden and must be corrected during any audit:
+
+```
+❌ Playfair Display for data labels, table headers, tooltip text, axis values
+❌ JetBrains Mono for descriptive prose, section titles, body paragraphs
+❌ Inter for standalone currency amounts (hero KPIs, table cells)
+❌ font-weight: 600 or 700 on body prose text
+❌ color: green (#22c55e) for "low risk" text — green implies safe
+❌ Bare px values for font-size in TSX (use Tailwind classes)
+❌ Hardcoded hex for text color — use --color-text-* CSS variables
+❌ letter-spacing: 0 on ALL CAPS text — caps without tracking are unreadable
+❌ letter-spacing on body prose — tracking on lowercase text looks wrong
+❌ text-transform: uppercase on serif fonts — Playfair in caps is illegible
+❌ font-style: italic on mono — JetBrains Mono italic is for code only
+❌ More than 3 type sizes on a single card
+❌ font-size below 10px anywhere — violates WCAG minimum
+❌ Mixing Tailwind size classes and inline style font-size on same element
+❌ Serif font at sizes below 14px (Playfair is illegible at micro scale)
+```
+
+---
+
+### 3.11 Responsive Typography — Breakpoint Behavior
+
+```
+Mobile  (< 640px):  1-column layout, no sidebar
+                    Display: 36px | H1: 26px | H2: 20px | H3: 18px
+                    Dot-matrix charts scale with viewBox (100% width)
+                    Mono values same size as desktop — numbers must be legible
+
+Tablet  (640–1024px): Sidebar collapses to icon bar
+                    Display: 42px | H1: 28px | H2: 22px | H3: 20px
+                    Charts fill available width
+
+Desktop (> 1024px): Full sidebar (224px) visible
+                    Display: 48px | H1: 32px | H2: 24px | H3: 20px
+```
+
+Implementation pattern:
+```tsx
+/* Page title — responsive */
+<h1 className="text-[26px] md:text-[32px] font-bold leading-[1.15] tracking-[-0.01em] font-serif">
+
+/* Hero KPI stat — responsive */
+<span className="text-4xl md:text-5xl font-bold tabular-nums font-mono">
+
+/* Section badge — NOT responsive (stays nano everywhere) */
+<span className="text-[10px] font-semibold uppercase tracking-widest text-text-muted">
+```
+
+---
+
+### 3.12 Tailwind Class Reference — Quick Lookup
+
+| Design spec | Tailwind class(es) |
+|-------------|-------------------|
+| Playfair Display | `font-serif` (requires CSS var set to Playfair) |
+| Inter | `font-sans` |
+| JetBrains Mono | `font-mono` |
+| Weight 400 | `font-normal` |
+| Weight 500 | `font-medium` |
+| Weight 600 | `font-semibold` |
+| Weight 700 | `font-bold` |
+| Weight 800 | `font-extrabold` |
+| Display (48px desktop) | `text-5xl` |
+| H1 (32px) | `text-[32px]` or `text-3xl` |
+| H2 (24px) | `text-2xl` |
+| H3 (20px) | `text-xl` |
+| Body (16px) | `text-base` |
+| Body-sm (14px) | `text-sm` |
+| Label/Caption (12px) | `text-xs` |
+| Micro (11px) | `text-[11px]` |
+| Nano (10px) | `text-[10px]` |
+| Line-height 1.05 | `leading-[1.05]` |
+| Line-height 1.15 | `leading-[1.15]` |
+| Line-height 1.6 | `leading-relaxed` |
+| Letter-spacing −0.02em | `tracking-[-0.02em]` or `tracking-tighter` |
+| Letter-spacing 0.08em | `tracking-wide` |
+| Letter-spacing 0.12em | `tracking-wider` |
+| Letter-spacing 0.15em | `tracking-widest` |
+| Tabular nums | `tabular-nums` |
+| Primary text color | `text-text-primary` |
+| Secondary text color | `text-text-secondary` |
+| Muted text color | `text-text-muted` |
 
 ---
 
