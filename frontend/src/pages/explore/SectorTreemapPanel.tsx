@@ -165,17 +165,21 @@ export function SectorTreemapPanel({ selectedSectorId, onSectorClick }: SectorTr
                 {cell.name}
               </span>
 
-              {/* Bar track */}
-              <div className="flex-1 h-[6px] rounded-full bg-border/20 overflow-hidden min-w-0">
-                <div
-                  className="h-full rounded-full transition-all duration-300"
-                  style={{
-                    width: `${barPct}%`,
-                    backgroundColor: barColor,
-                    opacity: 0.85,
-                  }}
-                />
-              </div>
+              {/* Dot-matrix strip */}
+              {(() => {
+                const N = 22, DR = 2, DG = 5
+                const filled = Math.max(1, Math.round((barPct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1 min-w-0" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                        fill={k < filled ? barColor : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
 
               {/* Metric label */}
               <span className="text-[10px] font-mono text-text-muted flex-shrink-0 w-16 text-right">

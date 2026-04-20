@@ -42,12 +42,20 @@ export function MiniBar({ pct, color }: { pct: number; color: string }) {
   const clampedPct = Math.max(0, Math.min(1, pct))
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-12 h-1.5 rounded-full bg-border/40 overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{ width: `${clampedPct * 100}%`, backgroundColor: color }}
-        />
-      </div>
+      {(() => {
+        const N = 12, DR = 1.5, DG = 4
+        const filled = Math.max(1, Math.round(clampedPct * N))
+        return (
+          <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
+            {Array.from({ length: N }).map((_, k) => (
+              <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                fill={k < filled ? color : '#27272a'}
+                fillOpacity={k < filled ? 0.85 : 1}
+              />
+            ))}
+          </svg>
+        )
+      })()}
       <span className="text-xs tabular-nums" style={{ color }}>
         {(clampedPct * 100).toFixed(0)}%
       </span>

@@ -100,20 +100,41 @@ function FeatureBar({ feature, maxContrib }: {
         {feature.label}
       </span>
 
-      <div className="flex-1 flex items-center h-4 relative">
-        {/* Center line */}
-        <div className="absolute left-1/2 top-0 bottom-0 w-px bg-border/50" />
-
-        {/* Bar */}
-        {isPositive ? (
-          <div className="absolute left-1/2 h-2.5 rounded-r-sm bg-risk-critical/60"
-            style={{ width: `${barWidth / 2}%` }}
-          />
-        ) : (
-          <div className="absolute right-1/2 h-2.5 rounded-l-sm bg-risk-low/60"
-            style={{ width: `${barWidth / 2}%` }}
-          />
-        )}
+      <div className="flex-1">
+        {(() => {
+          const DOTS_PER_SIDE = 14, DR = 2, DG = 5
+          const totalW = DOTS_PER_SIDE * DG * 2
+          const filled = Math.max(1, Math.round((barWidth / 100) * DOTS_PER_SIDE))
+          const color = isPositive ? '#ef4444' : '#10b981'
+          return (
+            <svg viewBox={`0 0 ${totalW} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+              {/* Center line */}
+              <line x1={totalW / 2} y1={0} x2={totalW / 2} y2={6} stroke="#3f3f46" strokeWidth={0.6} />
+              {/* Left side */}
+              {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                const cx = totalW / 2 - (i * DG + DR) - 1
+                const isFilled = !isPositive && i < filled
+                return (
+                  <circle key={`l-${i}`} cx={cx} cy={3} r={DR}
+                    fill={isFilled ? color : '#27272a'}
+                    fillOpacity={isFilled ? 0.7 : 1}
+                  />
+                )
+              })}
+              {/* Right side */}
+              {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                const cx = totalW / 2 + (i * DG + DR) + 1
+                const isFilled = isPositive && i < filled
+                return (
+                  <circle key={`r-${i}`} cx={cx} cy={3} r={DR}
+                    fill={isFilled ? color : '#27272a'}
+                    fillOpacity={isFilled ? 0.7 : 1}
+                  />
+                )
+              })}
+            </svg>
+          )
+        })()}
       </div>
 
       <span className={`w-[52px] text-right tabular-nums text-xs shrink-0 font-mono ${

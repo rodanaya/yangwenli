@@ -481,24 +481,40 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-orange-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{formatNumber(stats.decemberContracts)}</span>
               </div>
-              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-orange-500 rounded-full transition-all duration-700"
-                  style={{ width: `${decBarWidth}%` }}
-                />
-              </div>
+              {(() => {
+                const N = 30, DR = 3, DG = 8
+                const filled = Math.max(1, Math.round((decBarWidth / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                        fill={k < filled ? '#f97316' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-stone-500">{t('decemberSection.monthlyAvg')}</span>
                 <span className="text-stone-500 font-mono">{formatNumber(Math.round(stats.avgMonthlyContracts))}</span>
               </div>
-              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-stone-600 rounded-full transition-all duration-700"
-                  style={{ width: `${avgBarWidth}%` }}
-                />
-              </div>
+              {(() => {
+                const N = 30, DR = 3, DG = 8
+                const filled = Math.max(1, Math.round((avgBarWidth / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                        fill={k < filled ? '#78716c' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
           </div>
         </div>
@@ -514,24 +530,40 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
                 <span className="text-red-400">{t('decemberSection.december')}</span>
                 <span className="text-stone-400 font-mono">{decRiskPct}%</span>
               </div>
-              <div className="h-3 bg-stone-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-red-500 rounded-full transition-all duration-700"
-                  style={{ width: `${decRiskBarWidth}%` }}
-                />
-              </div>
+              {(() => {
+                const N = 30, DR = 3, DG = 8
+                const filled = Math.max(1, Math.round((decRiskBarWidth / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                        fill={k < filled ? '#ef4444' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
             <div>
               <div className="flex justify-between text-xs mb-0.5">
                 <span className="text-stone-500">{t('decemberSection.restOfYear')}</span>
                 <span className="text-stone-500 font-mono">{annualRiskPct}%</span>
               </div>
-              <div className="h-2 bg-stone-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-stone-600 rounded-full transition-all duration-700"
-                  style={{ width: `${avgRiskBarWidth}%` }}
-                />
-              </div>
+              {(() => {
+                const N = 30, DR = 2.5, DG = 6.5
+                const filled = Math.max(1, Math.round((avgRiskBarWidth / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={4} r={DR}
+                        fill={k < filled ? '#78716c' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
           </div>
         </div>

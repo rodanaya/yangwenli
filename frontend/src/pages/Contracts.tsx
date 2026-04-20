@@ -1340,19 +1340,25 @@ function ContractRow({
           {/* Mini score bar */}
           {contract.risk_score != null && (
             <div className="flex items-center gap-1.5">
-              <div className="h-1 w-14 bg-background-elevated/10 rounded-full overflow-hidden flex-shrink-0">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(contract.risk_score * 100, 100)}%`,
-                    backgroundColor:
-                      contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
-                      : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
-                      : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
-                      : RISK_COLORS.low,
-                  }}
-                />
-              </div>
+              {(() => {
+                const N = 12, DR = 1.75, DG = 4
+                const pct = Math.min(contract.risk_score, 1)
+                const filled = Math.max(1, Math.round(pct * N))
+                const color = contract.risk_score >= RISK_THRESHOLDS.critical ? RISK_COLORS.critical
+                  : contract.risk_score >= RISK_THRESHOLDS.high ? RISK_COLORS.high
+                  : contract.risk_score >= RISK_THRESHOLDS.medium ? RISK_COLORS.medium
+                  : RISK_COLORS.low
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                        fill={k < filled ? color : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
               <span className="font-mono text-[10px] text-text-muted tabular-nums">{contract.risk_score.toFixed(3)}</span>
             </div>
           )}
@@ -1490,18 +1496,24 @@ function ContractRow({
         <td className="px-3 py-2 text-right">
           {contract.ensemble_anomaly_score != null ? (
             <div className="flex items-center gap-1.5 justify-end" title={`PyOD ensemble score: ${contract.ensemble_anomaly_score.toFixed(3)}`}>
-              <div className="h-1.5 w-14 bg-background-elevated/20 rounded-full overflow-hidden flex-shrink-0">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{
-                    width: `${Math.min(contract.ensemble_anomaly_score * 100, 100)}%`,
-                    backgroundColor:
-                      contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
-                      : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
-                      : '#94a3b8',
-                  }}
-                />
-              </div>
+              {(() => {
+                const N = 12, DR = 1.75, DG = 4
+                const pct = Math.min(contract.ensemble_anomaly_score, 1)
+                const filled = Math.max(1, Math.round(pct * N))
+                const color = contract.ensemble_anomaly_score > 0.7 ? '#ef4444'
+                  : contract.ensemble_anomaly_score > 0.5 ? '#f97316'
+                  : '#94a3b8'
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                        fill={k < filled ? color : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
               <span
                 className="font-mono text-[10px] tabular-nums"
                 style={{

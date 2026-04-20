@@ -413,14 +413,23 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
               className="relative rounded-lg border border-border overflow-hidden"
               style={{ backgroundColor: bgColor }}
             >
-              {/* Fill bar */}
-              <motion.div
-                className="absolute inset-y-0 left-0"
-                initial={{ width: 0 }}
-                animate={inView ? { width: `${width}%` } : {}}
-                transition={{ delay: idx * 0.07 + 0.2, duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
-                style={{ backgroundColor: color + '18' }}
-              />
+              {/* Fill dot-matrix (was: solid bar) */}
+              <div className="absolute bottom-1 left-0 right-0 px-4 opacity-60 pointer-events-none">
+                {(() => {
+                  const N = 40, DR = 1.5, DG = 4
+                  const filled = Math.max(1, Math.round((width / 100) * N))
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => (
+                        <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                          fill={k < filled ? color : '#27272a'}
+                          fillOpacity={k < filled ? 0.45 : 0.3}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
+              </div>
               <div className="relative flex items-center justify-between px-4 py-3">
                 <div className="flex items-center gap-3 min-w-0">
                   <span

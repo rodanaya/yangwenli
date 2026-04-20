@@ -258,27 +258,38 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         {t('distribution.title')}
       </p>
-      {/* Stacked bar */}
-      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label={ariaLabel}>
-        {tiers.map(({ tier, count }) => {
-          const pct = (count / total) * 100
-          if (pct < 0.3) return null
-          return (
-            <div
-              key={tier.key}
-              className="relative flex items-center justify-center overflow-hidden transition-all hover:opacity-100"
-              style={{ width: `${pct}%`, backgroundColor: tier.color, minWidth: '4px', opacity: 0.9 }}
-              title={`${tier.label}: ${count} (${pct.toFixed(1)}%)`}
-            >
-              {pct > 8 && (
-                <span className="text-[9px] font-mono font-black text-black/70 leading-none select-none truncate px-1">
-                  {tier.label}
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {/* Stacked dot-matrix */}
+      {(() => {
+        const N = 60, DR = 3, DG = 8
+        const segments: Array<{ count: number; color: string; label: string }> = tiers
+          .filter((tier) => (tier.count / total) * 100 >= 0.3)
+          .map(({ tier, count }) => ({ count, color: tier.color, label: tier.label }))
+        const cells: { color: string; label: string }[] = []
+        // Distribute dots proportionally across segments
+        segments.forEach((seg) => {
+          const segDots = Math.max(1, Math.round((seg.count / total) * N))
+          for (let k = 0; k < segDots && cells.length < N; k++) {
+            cells.push({ color: seg.color, label: seg.label })
+          }
+        })
+        // Fill remaining with last segment color
+        while (cells.length < N && cells.length > 0) {
+          cells.push(cells[cells.length - 1])
+        }
+        return (
+          <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+            role="img" aria-label={ariaLabel}>
+            {cells.map((c, k) => (
+              <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                fill={c.color}
+                fillOpacity={0.9}
+              >
+                <title>{c.label}</title>
+              </circle>
+            ))}
+          </svg>
+        )
+      })()}
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {tiers.filter(t => t.count > 0).map(({ tier, count }) => {
@@ -700,12 +711,20 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-20">{p.label}</span>
-              <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                <div
-                  className="h-full rounded-full transition-all"
-                  style={{ width: `${pct}%`, background: barColor }}
-                />
-              </div>
+              {(() => {
+                const N = 20, DR = 2, DG = 5
+                const filled = Math.max(1, Math.round((pct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                        fill={k < filled ? barColor : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
               <span className="text-[10px] font-mono tabular-nums text-zinc-400 w-10 text-right">
                 {p.value.toFixed(0)}/{p.max}
               </span>

@@ -168,28 +168,37 @@ function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
         {t('distribution.subtitle', { total: formatNumber(total) })}
       </p>
-      <div className="flex rounded-lg overflow-hidden h-7 gap-[1px]" role="img" aria-label={t('distribution.ariaLabel')}>
-        {tiers.map(({ tier, count }) => {
-          const pct = (count / total) * 100
-          if (pct < 0.3) return null
-          const tierKey = tier.label as string
-          const displayLabel = t(`tiers.${tierKey}`)
-          return (
-            <div
-              key={tier.label}
-              className="relative flex items-center justify-center overflow-hidden"
-              style={{ width: `${pct}%`, backgroundColor: tier.color, minWidth: '4px', opacity: 0.88 }}
-              title={`${displayLabel}: ${count} (${pct.toFixed(1)}%)`}
-            >
-              {pct > 8 && (
-                <span className="text-[9px] font-mono font-black text-black/70 leading-none select-none truncate px-1">
-                  {displayLabel}
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      {/* Stacked dot-matrix */}
+      {(() => {
+        const N = 60, DR = 3, DG = 8
+        const segs = tiers
+          .filter((s) => (s.count / total) * 100 >= 0.3)
+          .map((s) => ({
+            count: s.count,
+            color: s.tier.color,
+            label: t(`tiers.${s.tier.label as string}`),
+          }))
+        const cells: { color: string; label: string }[] = []
+        segs.forEach((seg) => {
+          const segDots = Math.max(1, Math.round((seg.count / total) * N))
+          for (let k = 0; k < segDots && cells.length < N; k++) {
+            cells.push({ color: seg.color, label: seg.label })
+          }
+        })
+        while (cells.length < N && cells.length > 0) {
+          cells.push(cells[cells.length - 1])
+        }
+        return (
+          <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+            role="img" aria-label={t('distribution.ariaLabel')}>
+            {cells.map((c, k) => (
+              <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.88}>
+                <title>{c.label}</title>
+              </circle>
+            ))}
+          </svg>
+        )
+      })()}
       <div className="flex flex-wrap gap-x-4 gap-y-1">
         {tiers.filter((tier) => tier.count > 0).map(({ tier, count }) => {
           const pct = ((count / total) * 100).toFixed(1)
@@ -239,12 +248,20 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
         return (
           <div key={key} className="flex items-center gap-2">
             <span className="text-[9px] font-mono text-zinc-600 w-8 flex-shrink-0">{t(labelKey)}</span>
-            <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-300"
-                style={{ width: `${pct}%`, backgroundColor: color }}
-              />
-            </div>
+            {(() => {
+              const N = 14, DR = 1.5, DG = 4
+              const filled = Math.max(1, Math.round((pct / 100) * N))
+              return (
+                <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, k) => (
+                    <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                      fill={k < filled ? color : '#27272a'}
+                      fillOpacity={k < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
             <span className="text-[9px] font-mono tabular-nums text-zinc-500 w-8 text-right flex-shrink-0">
               {value.toFixed(1)}/{max}
             </span>

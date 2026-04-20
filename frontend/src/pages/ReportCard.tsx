@@ -312,31 +312,35 @@ function HeroImpactSection({
         </div>
       </div>
 
-      {/* Risk bar */}
+      {/* Risk dot-matrix distribution */}
       {dist && totalPct > 0 && (
         <div className="px-6 pb-5 pt-1 border-t border-zinc-800">
-          <div
-            className="flex rounded-full overflow-hidden gap-[2px] h-3"
-            role="img"
-            aria-label="Risk level distribution across all contracts"
-          >
-            {barLevels.map(({ key, color, label }) => {
-              const pct = dist[key]?.count_pct ?? 0
-              if (pct < 0.3) return null
-              return (
-                <div
-                  key={key}
-                  style={{
-                    width: `${pct}%`,
-                    backgroundColor: color,
-                    minWidth: '4px',
-                    opacity: 0.9,
-                  }}
-                  title={`${label}: ${pct.toFixed(1)}%`}
-                />
-              )
-            })}
-          </div>
+          {(() => {
+            const N = 50, DR = 3, DG = 8
+            const segs = barLevels
+              .map(({ key, color, label }) => ({ pct: dist[key]?.count_pct ?? 0, color, label }))
+              .filter((s) => s.pct >= 0.3)
+            const cells: { color: string; label: string }[] = []
+            segs.forEach((seg) => {
+              const segDots = Math.max(1, Math.round((seg.pct / 100) * N))
+              for (let k = 0; k < segDots && cells.length < N; k++) {
+                cells.push({ color: seg.color, label: seg.label })
+              }
+            })
+            while (cells.length < N && cells.length > 0) {
+              cells.push(cells[cells.length - 1])
+            }
+            return (
+              <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none"
+                role="img" aria-label="Risk level distribution across all contracts">
+                {cells.map((c, k) => (
+                  <circle key={k} cx={k * DG + DR} cy={5} r={DR} fill={c.color} fillOpacity={0.9}>
+                    <title>{c.label}</title>
+                  </circle>
+                ))}
+              </svg>
+            )
+          })()}
           <div className="flex flex-wrap gap-x-5 gap-y-1 mt-2">
             {barLevels.map(({ key, color, label }) => {
               const entry = dist[key]
@@ -593,28 +597,36 @@ function RiskBar({ dist }: { dist: RiskDistribution }) {
 
   return (
     <div>
-      <div
-        className="flex rounded-full overflow-hidden gap-[1px] h-2.5"
-        role="img"
-        aria-label="Risk distribution by contract value"
-      >
-        {levels.map(({ key }) => {
-          const val = dist[key]?.value_mxn ?? 0
-          const pct = (val / total) * 100
-          if (pct < 0.5) return null
-          return (
-            <div
-              key={key}
-              style={{
-                width: `${pct}%`,
-                backgroundColor: RISK_LEVEL_COLORS[key],
-                minWidth: '3px',
-              }}
-              title={`${levels.find(l => l.key === key)?.label}: ${pct.toFixed(1)}% ${t('ofValue')}`}
-            />
-          )
-        })}
-      </div>
+      {(() => {
+        const N = 40, DR = 2.5, DG = 6
+        const segs = levels
+          .map(({ key, label }) => {
+            const val = dist[key]?.value_mxn ?? 0
+            const pct = (val / total) * 100
+            return { pct, color: RISK_LEVEL_COLORS[key], label }
+          })
+          .filter((s) => s.pct >= 0.5)
+        const cells: { color: string; label: string }[] = []
+        segs.forEach((seg) => {
+          const segDots = Math.max(1, Math.round((seg.pct / 100) * N))
+          for (let k = 0; k < segDots && cells.length < N; k++) {
+            cells.push({ color: seg.color, label: seg.label })
+          }
+        })
+        while (cells.length < N && cells.length > 0) {
+          cells.push(cells[cells.length - 1])
+        }
+        return (
+          <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none"
+            role="img" aria-label="Risk distribution by contract value">
+            {cells.map((c, k) => (
+              <circle key={k} cx={k * DG + DR} cy={4} r={DR} fill={c.color} fillOpacity={0.9}>
+                <title>{c.label}</title>
+              </circle>
+            ))}
+          </svg>
+        )
+      })()}
       <div className="flex flex-wrap gap-x-4 gap-y-0.5 mt-1.5">
         {levels.map(({ key, label }) => {
           const entry = dist[key]
@@ -856,23 +868,27 @@ function SectorBreakdown({ sectors }: { sectors: PHISector[] }) {
                 {/* Bar */}
                 <div className="flex-1 flex items-center gap-3">
                   <div
-                    className="h-4 rounded-full overflow-hidden flex-1 bg-zinc-800"
+                    className="flex-1"
                     role="meter"
                     aria-valuenow={combinedPct}
                     aria-valuemin={0}
                     aria-valuemax={100}
                     aria-label={`${displayName}: ${combinedPct.toFixed(1)}% ${t('sectorHighRisk')}`}
                   >
-                    <motion.div
-                      className="h-4 rounded-full"
-                      style={{
-                        backgroundColor: color,
-                        opacity: 0.85,
-                      }}
-                      initial={{ width: 0 }}
-                      animate={{ width: `${barWidth}%` }}
-                      transition={{ delay: idx * 0.04 + 0.2, duration: 0.7, ease: 'easeOut' }}
-                    />
+                    {(() => {
+                      const N = 30, DR = 3, DG = 8
+                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
+                      return (
+                        <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                          {Array.from({ length: N }).map((_, k) => (
+                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                              fill={k < filled ? color : '#27272a'}
+                              fillOpacity={k < filled ? 0.85 : 1}
+                            />
+                          ))}
+                        </svg>
+                      )
+                    })()}
                   </div>
 
                   {/* Pct label */}

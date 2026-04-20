@@ -259,11 +259,21 @@ function InstitutionList({
                 />
               </div>
             </div>
-            <div className="ml-6 h-1 bg-white/5 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${barPct}%`, backgroundColor: color }}
-              />
+            <div className="ml-6">
+              {(() => {
+                const N = 24, DR = 2, DG = 5
+                const filled = Math.max(1, Math.round((barPct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                        fill={k < filled ? color : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
           </Link>
         )
@@ -344,12 +354,20 @@ function VendorTable({
                       >
                         {toTitleCase(vendor.vendor_name ?? vendor.name ?? '')}
                       </Link>
-                      <div className="mt-1 h-1 bg-white/5 rounded-full overflow-hidden w-32">
-                        <div
-                          className="h-full rounded-full"
-                          style={{ width: `${barPct}%`, backgroundColor: color }}
-                        />
-                      </div>
+                      {(() => {
+                        const N = 16, DR = 2, DG = 4
+                        const filled = Math.max(1, Math.round((barPct / 100) * N))
+                        return (
+                          <svg viewBox={`0 0 ${N * DG} 5`} className="w-32 mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                            {Array.from({ length: N }).map((_, k) => (
+                              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                fill={k < filled ? color : '#27272a'}
+                                fillOpacity={k < filled ? 0.85 : 1}
+                              />
+                            ))}
+                          </svg>
+                        )
+                      })()}
                     </div>
                   </td>
                   <td className="py-2.5 px-3 text-right font-mono font-bold tabular-nums text-text-primary">
@@ -432,15 +450,21 @@ function RiskDonut({
                 </span>
               </div>
             </div>
-            <div className="h-1 bg-white/8 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{
-                  width: `${d.pct}%`,
-                  backgroundColor: RISK_COLORS[d.level as keyof typeof RISK_COLORS],
-                }}
-              />
-            </div>
+            {(() => {
+              const N = 22, DR = 2, DG = 5
+              const filled = Math.max(1, Math.round((d.pct / 100) * N))
+              const color = RISK_COLORS[d.level as keyof typeof RISK_COLORS]
+              return (
+                <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, k) => (
+                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                      fill={k < filled ? color : '#27272a'}
+                      fillOpacity={k < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
           </div>
         ))}
       </div>
@@ -494,11 +518,21 @@ function FactorRankList({
             {desc && (
               <p className="text-[10px] text-zinc-500 ml-6 mb-1 leading-tight">{desc}</p>
             )}
-            <div className="ml-6 h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all duration-500"
-                style={{ width: `${barWidth}%`, backgroundColor: color }}
-              />
+            <div className="ml-6">
+              {(() => {
+                const N = 22, DR = 2, DG = 5
+                const filled = Math.max(1, Math.round((barWidth / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                        fill={k < filled ? color : '#27272a'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
           </div>
         )

@@ -545,34 +545,28 @@ export function ProgressReveal({
         </div>
       )}
       <div
-        className="w-full overflow-hidden rounded-full bg-zinc-800/60"
-        style={{ height }}
+        className="w-full"
         role="progressbar"
         aria-valuenow={clamped}
         aria-valuemin={0}
         aria-valuemax={100}
         aria-label={label ?? `Progress: ${clamped}%`}
       >
-        <motion.div
-          className="h-full rounded-full"
-          style={{
-            background: `linear-gradient(90deg, ${color}cc, ${color})`,
-            boxShadow: `0 0 12px ${color}60`,
-          }}
-          initial={{ width: '0%' }}
-          animate={
-            isInView && !reduced
-              ? { width: `${clamped}%` }
-              : reduced
-                ? { width: `${clamped}%` }
-                : { width: '0%' }
-          }
-          transition={
-            reduced
-              ? { duration: 0 }
-              : { type: 'spring', stiffness: 50, damping: 15, mass: 1 }
-          }
-        />
+        {(() => {
+          const N = 30, DR = 3, DG = 8
+          const target = isInView || reduced ? clamped : 0
+          const filled = Math.max(target > 0 ? 1 : 0, Math.round((target / 100) * N))
+          return (
+            <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: Math.max(Number(height) || 10, 10) }} preserveAspectRatio="none" aria-hidden="true">
+              {Array.from({ length: N }).map((_, k) => (
+                <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                  fill={k < filled ? color : '#27272a'}
+                  fillOpacity={k < filled ? 0.85 : 1}
+                />
+              ))}
+            </svg>
+          )
+        })()}
       </div>
     </div>
   )

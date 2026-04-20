@@ -67,12 +67,21 @@ function IPSBar({ score }: { score: number }) {
   const pct = Math.min(100, Math.round(score * 100))
   return (
     <div className="flex items-center gap-1.5">
-      <div className="w-14 h-2 bg-slate-700 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full"
-          style={{ width: `${pct}%`, backgroundColor: score > 0.7 ? '#f87171' : score > 0.5 ? '#fb923c' : '#fbbf24' }}
-        />
-      </div>
+      {(() => {
+        const N = 12, DR = 2, DG = 5
+        const filled = Math.max(1, Math.round((pct / 100) * N))
+        const color = score > 0.7 ? '#f87171' : score > 0.5 ? '#fb923c' : '#fbbf24'
+        return (
+          <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
+            {Array.from({ length: N }).map((_, i) => (
+              <circle key={i} cx={i * DG + DR} cy={3} r={DR}
+                fill={i < filled ? color : '#27272a'}
+                fillOpacity={i < filled ? 0.85 : 1}
+              />
+            ))}
+          </svg>
+        )
+      })()}
       <span className="text-[11px] font-mono text-slate-400">{score.toFixed(2)}</span>
     </div>
   )

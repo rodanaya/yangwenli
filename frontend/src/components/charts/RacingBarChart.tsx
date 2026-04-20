@@ -136,11 +136,13 @@ export function RacingBarChart() {
         </div>
       </div>
 
-      {/* Bars */}
+      {/* Dot-matrix strips (was: bars) */}
       <div className="relative h-64 overflow-hidden">
         <AnimatePresence mode="popLayout">
           {entries.map((entry) => {
-            const pct = (entry.value / maxValue) * 100
+            const pct = Math.min(entry.value / maxValue, 1)
+            const N = 40, DR = 3, DG = 8
+            const filled = Math.max(1, Math.round(pct * N))
             return (
               <motion.div
                 key={entry.sectorId}
@@ -155,14 +157,26 @@ export function RacingBarChart() {
                 <span className="text-[10px] text-text-muted w-20 shrink-0 text-right truncate pr-1.5">
                   {entry.name}
                 </span>
-                <div className="flex-1 relative h-full flex items-center">
-                  <motion.div
-                    className="h-5 rounded-r-sm"
-                    style={{ backgroundColor: entry.color, minWidth: 4 }}
-                    animate={{ width: `${Math.max(pct, 2)}%` }}
-                    transition={{ type: 'spring', stiffness: 200, damping: 25 }}
-                  />
-                  <span className="text-[10px] tabular-nums text-text-muted ml-1.5 whitespace-nowrap">
+                <div className="flex-1 relative h-full flex items-center gap-1.5">
+                  <svg
+                    viewBox={`0 0 ${N * DG} 10`}
+                    className="flex-1"
+                    style={{ height: 10 }}
+                    preserveAspectRatio="none"
+                    aria-hidden="true"
+                  >
+                    {Array.from({ length: N }).map((_, i) => (
+                      <circle
+                        key={i}
+                        cx={i * DG + DR}
+                        cy={5}
+                        r={DR}
+                        fill={i < filled ? entry.color : '#2d2926'}
+                        fillOpacity={i < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                  <span className="text-[10px] tabular-nums text-text-muted whitespace-nowrap">
                     {formatCompactMXN(entry.value)}
                   </span>
                 </div>

@@ -54,12 +54,20 @@ function VendorBar({ vendor, maxValue }: { vendor: TopPeriodEntityItem; maxValue
         {vendor.name}
       </Link>
       <div className="flex-1 flex items-center gap-1.5">
-        <div className="flex-1 h-3 bg-background-elevated rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full transition-all duration-500"
-            style={{ width: `${pct}%`, backgroundColor: barColor }}
-          />
-        </div>
+        {(() => {
+          const N = 24, DR = 2.5, DG = 6.5
+          const filled = Math.max(1, Math.round((pct / 100) * N))
+          return (
+            <svg viewBox={`0 0 ${N * DG} 8`} className="flex-1" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+              {Array.from({ length: N }).map((_, i) => (
+                <circle key={i} cx={i * DG + DR} cy={4} r={DR}
+                  fill={i < filled ? barColor : '#27272a'}
+                  fillOpacity={i < filled ? 0.85 : 1}
+                />
+              ))}
+            </svg>
+          )
+        })()}
         <span className="text-[10px] font-mono text-text-muted w-16 text-right shrink-0">
           {formatCompactMXN(vendor.total_value_mxn)}
         </span>

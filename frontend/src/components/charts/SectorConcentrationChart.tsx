@@ -166,23 +166,33 @@ export default function SectorConcentrationChart({
                   {getSectorName(row.sector_name)}
                 </div>
 
-                {/* Bar track */}
+                {/* Dot-matrix strip */}
                 <div
-                  className="flex-1 h-4 rounded-sm bg-zinc-800 overflow-hidden relative"
+                  className="flex-1"
                   role="meter"
                   aria-valuenow={pct}
                   aria-valuemin={0}
                   aria-valuemax={100}
                   aria-label={t('charts.sectorConcentration.concentrationAriaLabel', { pct: pct.toFixed(1) })}
                 >
-                  <div
-                    className="h-full rounded-sm transition-all duration-700"
-                    style={{
-                      width: `${pct}%`,
-                      backgroundColor: barColor,
-                      opacity: 0.85,
-                    }}
-                  />
+                  {(() => {
+                    const N = 30, DR = 3, DG = 8
+                    const filled = Math.round((pct / 100) * N)
+                    return (
+                      <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                        {Array.from({ length: N }).map((_, i) => (
+                          <circle
+                            key={i}
+                            cx={i * DG + DR}
+                            cy={5}
+                            r={DR}
+                            fill={i < filled ? barColor : '#2d2926'}
+                            fillOpacity={i < filled ? 0.85 : 1}
+                          />
+                        ))}
+                      </svg>
+                    )
+                  })()}
                 </div>
 
                 {/* Percentage label */}
@@ -216,7 +226,7 @@ export default function SectorConcentrationChart({
             { color: '#16a34a', label: t('charts.sectorConcentration.legendCompetitive') },
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
-              <div className="h-2 w-3 rounded-sm" style={{ backgroundColor: color, opacity: 0.85 }} />
+              <span className="inline-block rounded-full" style={{ width: 6, height: 6, backgroundColor: color, opacity: 0.85 }} />
               <span className="text-[10px] font-mono text-zinc-500">{label}</span>
             </div>
           ))}

@@ -117,15 +117,22 @@ export default function RedaccionWidget() {
                 <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${TIER_COLORS[story.tier] ?? TIER_COLORS[4]}`}>
                   T{story.tier}
                 </span>
-                <div className="flex-1 h-1 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{
-                      width: `${Math.min(story.ipsScore * 100, 100)}%`,
-                      backgroundColor: ipsColor(story.ipsScore),
-                    }}
-                  />
-                </div>
+                {(() => {
+                  const N = 20, DR = 2, DG = 5
+                  const pct = Math.min(story.ipsScore, 1)
+                  const filled = Math.round(pct * N)
+                  const color = ipsColor(story.ipsScore)
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, i) => (
+                        <circle key={i} cx={i * DG + DR} cy={3} r={DR}
+                          fill={i < filled ? color : '#27272a'}
+                          fillOpacity={i < filled ? 0.85 : 1}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
                 <span className="text-[10px] font-mono text-zinc-500">
                   {(story.ipsScore * 100).toFixed(0)}
                 </span>

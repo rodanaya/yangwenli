@@ -551,13 +551,21 @@ function TopVendorsComparison({
                       )}
                     </div>
                   </div>
-                  {/* Share bar */}
-                  <div className="mt-1.5 h-1 w-full bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all"
-                      style={{ width: `${Math.min(share, 100)}%`, backgroundColor: accentColor }}
-                    />
-                  </div>
+                  {/* Share dot-matrix */}
+                  {(() => {
+                    const N = 22, DR = 2, DG = 5
+                    const filled = Math.max(1, Math.round((Math.min(share, 100) / 100) * N))
+                    return (
+                      <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                        {Array.from({ length: N }).map((_, k) => (
+                          <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                            fill={k < filled ? accentColor : '#27272a'}
+                            fillOpacity={k < filled ? 0.85 : 1}
+                          />
+                        ))}
+                      </svg>
+                    )
+                  })()}
                 </div>
               )
             })}

@@ -167,19 +167,20 @@ export function PairDossierRow({
           <>
             {/* Shares bar — single hairline bar showing scale of the duet vs the larger vendor */}
             <div className="mt-3 flex items-center gap-3">
-              <div
-                className="flex-1 h-[2px] rounded-full overflow-hidden"
-                style={{ background: 'rgba(255,255,255,0.06)' }}
-              >
-                <div
-                  className="h-full"
-                  style={{
-                    width: `${sharesBarPct}%`,
-                    background: accent,
-                    opacity: 0.8,
-                  }}
-                />
-              </div>
+              {(() => {
+                const N = 30, DR = 1.5, DG = 4
+                const filled = Math.max(1, Math.round((sharesBarPct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                        fill={k < filled ? accent : '#27272a'}
+                        fillOpacity={k < filled ? 0.8 : 0.3}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
               <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.15em] tabular-nums">
                 {sharesBarPct.toFixed(0)}% {t('dossier.ofLarger', { defaultValue: 'del mayor' })}
               </span>

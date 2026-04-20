@@ -248,17 +248,22 @@ export function ContractDetailModal({ contractId, open, onOpenChange }: Contract
                             </Badge>
                           )}
                         </div>
-                        <div className="mt-1.5 h-1 bg-background-elevated/40 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full transition-all"
-                            style={{
-                              width: `${Math.min(contract.ensemble_anomaly_score * 100, 100)}%`,
-                              background: isAiConfirmed
-                                ? 'linear-gradient(90deg, #fbbf24, #f87171)'
-                                : 'linear-gradient(90deg, #6b7280, #9ca3af)',
-                            }}
-                          />
-                        </div>
+                        {(() => {
+                          const N = 20, DR = 2, DG = 5
+                          const pct = Math.min(contract.ensemble_anomaly_score, 1)
+                          const filled = Math.max(1, Math.round(pct * N))
+                          const color = isAiConfirmed ? '#f87171' : '#9ca3af'
+                          return (
+                            <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                              {Array.from({ length: N }).map((_, k) => (
+                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                  fill={k < filled ? color : '#27272a'}
+                                  fillOpacity={k < filled ? 0.85 : 1}
+                                />
+                              ))}
+                            </svg>
+                          )
+                        })()}
                       </div>
                       <div className="text-right text-[10px] text-text-muted">
                         <p>{tCommon('contractDetail.ensemble')}</p>

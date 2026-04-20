@@ -1147,22 +1147,24 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
         <div key={field.field_name} className="flex items-center gap-3">
           <div className="w-28 text-sm font-medium truncate">{field.field_name}</div>
           <div className="flex-1">
-            <div className="flex h-2 rounded-full bg-background-elevated overflow-hidden">
-              <div
-                className="rounded-full transition-all"
-                style={{
-                  width: `${field.fill_rate}%`,
-                  backgroundColor:
-                    field.fill_rate >= 90
-                      ? '#4ade80'
-                      : field.fill_rate >= 70
-                        ? '#60a5fa'
-                        : field.fill_rate >= 50
-                          ? '#fbbf24'
-                          : '#f87171',
-                }}
-              />
-            </div>
+            {(() => {
+              const N = 24, DR = 2, DG = 5
+              const filled = Math.max(1, Math.round((field.fill_rate / 100) * N))
+              const color = field.fill_rate >= 90 ? '#4ade80'
+                : field.fill_rate >= 70 ? '#60a5fa'
+                : field.fill_rate >= 50 ? '#fbbf24'
+                : '#f87171'
+              return (
+                <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, k) => (
+                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                      fill={k < filled ? color : '#27272a'}
+                      fillOpacity={k < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
           </div>
           <div className="w-16 text-right text-sm tabular-nums">{field.fill_rate.toFixed(1)}%</div>
         </div>

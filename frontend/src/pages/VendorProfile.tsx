@@ -579,19 +579,22 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
               <span className="text-text-muted/50 ml-1 text-[9px]">SDs above avg</span>
             </span>
           </div>
-          <div className="h-2 bg-white/5 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all duration-1000"
-              style={{
-                width: `${Math.min((f.score / maxScore) * 100, 100)}%`,
-                background: i === 0
-                  ? 'linear-gradient(90deg, #f87171, #dc2626)'
-                  : i === 1
-                  ? 'linear-gradient(90deg, #fb923c, #ea580c)'
-                  : 'linear-gradient(90deg, #fbbf24, #d97706)',
-              }}
-            />
-          </div>
+          {(() => {
+            const N = 24, DR = 2.5, DG = 6.5
+            const pct = Math.min((f.score / maxScore), 1)
+            const filled = Math.max(1, Math.round(pct * N))
+            const color = i === 0 ? '#dc2626' : i === 1 ? '#ea580c' : '#d97706'
+            return (
+              <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, k) => (
+                  <circle key={k} cx={k * DG + DR} cy={4} r={DR}
+                    fill={k < filled ? color : '#27272a'}
+                    fillOpacity={k < filled ? 0.85 : 1}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
           <p className="text-[11px] text-text-muted/80 mt-1 leading-relaxed">{f.explanation}</p>
         </div>
       ))}
@@ -628,12 +631,21 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
               </span>
               <span className="text-risk-critical font-mono text-[10px]">+{f.shap.toFixed(3)}</span>
             </div>
-            <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full bg-gradient-to-r from-risk-high to-risk-critical"
-                style={{ width: `${Math.min((f.shap / maxAbs) * 100, 100)}%` }}
-              />
-            </div>
+            {(() => {
+              const N = 20, DR = 2, DG = 5.5
+              const pct = Math.min(f.shap / maxAbs, 1)
+              const filled = Math.max(1, Math.round(pct * N))
+              return (
+                <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, k) => (
+                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                      fill={k < filled ? '#dc2626' : '#27272a'}
+                      fillOpacity={k < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
           </div>
         ))}
         {shapData.top_protect_factors.length > 0 && (
@@ -647,12 +659,21 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                   </span>
                   <span className="text-risk-low font-mono text-[10px]">{f.shap.toFixed(3)}</span>
                 </div>
-                <div className="h-1.5 bg-white/5 rounded-full overflow-hidden">
-                  <div
-                    className="h-full rounded-full bg-gradient-to-r from-emerald-600 to-emerald-400"
-                    style={{ width: `${Math.min((Math.abs(f.shap) / maxAbs) * 100, 100)}%` }}
-                  />
-                </div>
+                {(() => {
+                  const N = 20, DR = 2, DG = 5.5
+                  const pct = Math.min(Math.abs(f.shap) / maxAbs, 1)
+                  const filled = Math.max(1, Math.round(pct * N))
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => (
+                        <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                          fill={k < filled ? '#10b981' : '#27272a'}
+                          fillOpacity={k < filled ? 0.85 : 1}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
               </div>
             ))}
           </>
@@ -1987,12 +2008,21 @@ export function VendorProfile() {
                             <span className="text-text-secondary capitalize">{f.factor.replace(/_/g, ' ')}</span>
                             <span className="text-risk-high font-mono tabular-nums">+{f.shap.toFixed(3)}</span>
                           </div>
-                          <div className="h-1 bg-white/5 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full bg-gradient-to-r from-amber-600 to-red-500"
-                              style={{ width: `${Math.min((f.shap / (shapData.top_risk_factors[0]?.shap || 0.01)) * 100, 100)}%` }}
-                            />
-                          </div>
+                          {(() => {
+                            const N = 16, DR = 2, DG = 5
+                            const pct = Math.min(f.shap / (shapData.top_risk_factors[0]?.shap || 0.01), 1)
+                            const filled = Math.max(1, Math.round(pct * N))
+                            return (
+                              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                {Array.from({ length: N }).map((_, k) => (
+                                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                    fill={k < filled ? '#ea580c' : '#27272a'}
+                                    fillOpacity={k < filled ? 0.85 : 1}
+                                  />
+                                ))}
+                              </svg>
+                            )
+                          })()}
                         </div>
                       ))}
                       {shapData.top_protect_factors.length > 0 && (
@@ -2144,12 +2174,21 @@ export function VendorProfile() {
                         {vendor.year_end_sector_avg.toFixed(1)}%
                       </span>
                     </div>
-                    <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
-                      <div
-                        className="h-full rounded-full bg-amber-500/70"
-                        style={{ width: `${Math.min(100, (vendor.year_end_pct / Math.max(vendor.year_end_pct, 100)) * 100)}%` }}
-                      />
-                    </div>
+                    {(() => {
+                      const N = 20, DR = 2, DG = 5
+                      const pct = Math.min(vendor.year_end_pct / 100, 1)
+                      const filled = Math.max(1, Math.round(pct * N))
+                      return (
+                        <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                          {Array.from({ length: N }).map((_, k) => (
+                            <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                              fill={k < filled ? '#f59e0b' : '#27272a'}
+                              fillOpacity={k < filled ? 0.85 : 1}
+                            />
+                          ))}
+                        </svg>
+                      )
+                    })()}
                     <p className="text-[10px] text-text-muted/70 italic">{t('yearEnd.description')}</p>
                   </CardContent>
                 </Card>
@@ -2184,12 +2223,20 @@ export function VendorProfile() {
                                   {f.shap.toFixed(3)}
                                 </span>
                               </div>
-                              <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
-                                <div
-                                  className="h-full rounded-full bg-green-500/60"
-                                  style={{ width: `${barPct}%` }}
-                                />
-                              </div>
+                              {(() => {
+                                const N = 16, DR = 2, DG = 5
+                                const filled = Math.max(1, Math.round((barPct / 100) * N))
+                                return (
+                                  <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                    {Array.from({ length: N }).map((_, k) => (
+                                      <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                        fill={k < filled ? '#10b981' : '#27272a'}
+                                        fillOpacity={k < filled ? 0.85 : 1}
+                                      />
+                                    ))}
+                                  </svg>
+                                )
+                              })()}
                             </div>
                           )
                         })}
@@ -2703,12 +2750,20 @@ export function VendorProfile() {
                                 </span>
                               </div>
                             </div>
-                            <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
-                              <div
-                                className="h-full rounded-full"
-                                style={{ width: `${barPct}%`, backgroundColor: `${sectorColor}80` }}
-                              />
-                            </div>
+                            {(() => {
+                              const N = 24, DR = 2, DG = 5
+                              const filled = Math.max(1, Math.round((barPct / 100) * N))
+                              return (
+                                <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                  {Array.from({ length: N }).map((_, k) => (
+                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                      fill={k < filled ? sectorColor : '#27272a'}
+                                      fillOpacity={k < filled ? 0.7 : 1}
+                                    />
+                                  ))}
+                                </svg>
+                              )
+                            })()}
                           </div>
                         </div>
                       )
@@ -3854,13 +3909,34 @@ export function VendorProfile() {
                               </span>
                             </div>
 
-                            {/* Win-split bar */}
+                            {/* Win-split dot-matrix */}
                             {total > 0 && (
                               <div className="mb-2.5">
-                                <div className="flex h-1.5 rounded-full overflow-hidden">
-                                  <div className="bg-green-500/60 transition-all" style={{ width: `${thisWinPct}%` }} />
-                                  <div className={cn('transition-all', roleStyles.bar)} style={{ width: `${partnerWinPct}%` }} />
-                                </div>
+                                {(() => {
+                                  const N = 24, DR = 2.5, DG = 6
+                                  const thisFilled = Math.round((thisWinPct / 100) * N)
+                                  const partnerEnd = thisFilled + Math.round((partnerWinPct / 100) * N)
+                                  const partnerColor =
+                                    role === 'decoy' ? '#f87171'
+                                    : role === 'dominant' ? '#a78bfa'
+                                    : role === 'rotation' ? '#fb923c'
+                                    : '#94a3b8'
+                                  return (
+                                    <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+                                      {Array.from({ length: N }).map((_, k) => {
+                                        const fill = k < thisFilled ? '#22c55e'
+                                          : k < partnerEnd ? partnerColor
+                                          : '#27272a'
+                                        return (
+                                          <circle key={k} cx={k * DG + DR} cy={4} r={DR}
+                                            fill={fill}
+                                            fillOpacity={k < partnerEnd ? 0.75 : 1}
+                                          />
+                                        )
+                                      })}
+                                    </svg>
+                                  )
+                                })()}
                                 <div className="flex justify-between text-[10px] text-text-muted mt-1 font-mono">
                                   <span>{t('coBidding.thisVendorWinsLabel')} {thisWinPct.toFixed(0)}%</span>
                                   <span>{t('coBidding.partnerWinsLabel')} {partnerWinPct.toFixed(0)}%</span>
@@ -4064,12 +4140,21 @@ export function VendorProfile() {
                           <div className="text-sm font-bold font-mono tabular-nums" style={{ color: dim.color }}>
                             {dim.value != null ? dim.value.toFixed(3) : '—'}
                           </div>
-                          <div className="h-1 bg-white/5 rounded-full mt-1 overflow-hidden">
-                            <div
-                              className="h-full rounded-full"
-                              style={{ width: `${Math.min((dim.value ?? 0) * 100, 100)}%`, backgroundColor: dim.color }}
-                            />
-                          </div>
+                          {(() => {
+                            const N = 14, DR = 1.75, DG = 4
+                            const pct = Math.min(dim.value ?? 0, 1)
+                            const filled = Math.max(1, Math.round(pct * N))
+                            return (
+                              <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                                {Array.from({ length: N }).map((_, k) => (
+                                  <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                    fill={k < filled ? dim.color : '#27272a'}
+                                    fillOpacity={k < filled ? 0.85 : 1}
+                                  />
+                                ))}
+                              </svg>
+                            )
+                          })()}
                         </div>
                       ))}
                     </div>
@@ -4091,12 +4176,20 @@ export function VendorProfile() {
                             <div key={pattern} className="flex items-center justify-between text-xs">
                               <span className="text-text-secondary">{pattern}</span>
                               <div className="flex items-center gap-2">
-                                <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden">
-                                  <div
-                                    className="h-full rounded-full bg-accent"
-                                    style={{ width: `${(conf as number) * 100}%` }}
-                                  />
-                                </div>
+                                {(() => {
+                                  const N = 12, DR = 1.75, DG = 4.5
+                                  const filled = Math.max(1, Math.round((conf as number) * N))
+                                  return (
+                                    <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
+                                      {Array.from({ length: N }).map((_, k) => (
+                                        <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                          fill={k < filled ? '#f59e0b' : '#27272a'}
+                                          fillOpacity={k < filled ? 0.85 : 1}
+                                        />
+                                      ))}
+                                    </svg>
+                                  )
+                                })()}
                                 <span className="font-mono text-[10px] w-8 text-right">{((conf as number) * 100).toFixed(0)}%</span>
                               </div>
                             </div>
@@ -4432,11 +4525,23 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
               animation: `vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 70}ms both`,
             }}
           >
-            {/* Background proportion bar */}
-            <div
-              className="absolute inset-y-0 left-0 bg-accent/5 rounded-lg"
-              style={{ width: `${pct}%` }}
-            />
+            {/* Background proportion dot-matrix */}
+            <div className="absolute bottom-1 left-0 right-0 px-3 opacity-50 pointer-events-none">
+              {(() => {
+                const N = 40, DR = 1.5, DG = 4
+                const filled = Math.max(1, Math.round((pct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                        fill={k < filled ? '#22d3ee' : '#27272a'}
+                        fillOpacity={k < filled ? 0.4 : 0.3}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
+            </div>
             <div className="flex items-center gap-2 relative z-10 min-w-0">
               <Building2 className="h-4 w-4 text-text-muted flex-shrink-0" />
               <Link

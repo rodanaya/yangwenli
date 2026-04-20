@@ -768,16 +768,20 @@ export default function CategoryProfile() {
                         </div>
                         <div className="w-28 flex-shrink-0">
                           <div className="flex items-center gap-2">
-                            <div className="flex-1 h-2 bg-border/20 rounded-full overflow-hidden">
-                              <div
-                                className="h-full rounded-full transition-all"
-                                style={{
-                                  width: `${Math.min(v.market_share_pct, 100)}%`,
-                                  backgroundColor: vendorRiskColor,
-                                  opacity: 0.7,
-                                }}
-                              />
-                            </div>
+                            {(() => {
+                              const N = 14, DR = 2, DG = 4.5
+                              const filled = Math.max(1, Math.round((Math.min(v.market_share_pct, 100) / 100) * N))
+                              return (
+                                <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                  {Array.from({ length: N }).map((_, k) => (
+                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                      fill={k < filled ? vendorRiskColor : '#27272a'}
+                                      fillOpacity={k < filled ? 0.7 : 1}
+                                    />
+                                  ))}
+                                </svg>
+                              )
+                            })()}
                             <span className="text-xs font-mono font-bold tabular-nums text-text-primary">
                               {v.market_share_pct.toFixed(1)}%
                             </span>
@@ -872,16 +876,22 @@ export default function CategoryProfile() {
                               {truncate(pair.institution_name, 28)}
                             </span>
                           </div>
-                          <div className="h-0.5 bg-border/20 rounded-full overflow-hidden">
-                            <div
-                              className="h-full rounded-full transition-all duration-500"
-                              style={{
-                                width: `${Math.min((pair.total_value / maxVal) * 100, 100)}%`,
-                                backgroundColor: getRiskColor(pair.avg_risk),
-                                opacity: 0.7,
-                              }}
-                            />
-                          </div>
+                          {(() => {
+                            const pct = Math.min(pair.total_value / maxVal, 1)
+                            const N = 30, DR = 1.5, DG = 4
+                            const filled = Math.max(1, Math.round(pct * N))
+                            const color = getRiskColor(pair.avg_risk)
+                            return (
+                              <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                                {Array.from({ length: N }).map((_, k) => (
+                                  <circle key={k} cx={k * DG + DR} cy={2} r={DR}
+                                    fill={k < filled ? color : '#27272a'}
+                                    fillOpacity={k < filled ? 0.7 : 1}
+                                  />
+                                ))}
+                              </svg>
+                            )
+                          })()}
                         </div>
                         <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
                           {formatCompactMXN(pair.total_value)}

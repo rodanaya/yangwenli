@@ -325,20 +325,28 @@ export default function ContractDetail() {
                     </span>
                   )}
                 </div>
-                {/* Horizontal bar 0-1 */}
-                <div className="relative h-2 bg-zinc-800/60 rounded-full overflow-hidden">
-                  <div
-                    className="absolute inset-y-0 left-0 rounded-full transition-all"
-                    style={{
-                      width: `${Math.min((contract.risk_score ?? 0) * 100, 100)}%`,
-                      backgroundColor: riskPalette.color,
-                    }}
-                  />
-                  {/* Threshold markers */}
-                  <ThresholdMarker position={25} label="MED" />
-                  <ThresholdMarker position={40} label="HIGH" />
-                  <ThresholdMarker position={60} label="CRIT" />
-                </div>
+                {/* Dot-matrix 0-1 with threshold markers */}
+                {(() => {
+                  const N = 40, DR = 3, DG = 8
+                  const pct = Math.min((contract.risk_score ?? 0), 1)
+                  const filled = Math.round(pct * N)
+                  const totalW = N * DG
+                  const markerX = (t: number) => (t / 100) * totalW
+                  return (
+                    <svg viewBox={`0 0 ${totalW} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => (
+                        <circle key={k} cx={k * DG + DR} cy={6} r={DR}
+                          fill={k < filled ? riskPalette.color : '#27272a'}
+                          fillOpacity={k < filled ? 0.85 : 1}
+                        />
+                      ))}
+                      {/* Threshold markers */}
+                      {[25, 40, 60].map((t) => (
+                        <line key={t} x1={markerX(t)} y1={0} x2={markerX(t)} y2={12} stroke="#a1a1aa" strokeWidth={0.6} strokeOpacity={0.5} strokeDasharray="2 2" />
+                      ))}
+                    </svg>
+                  )
+                })()}
                 <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
@@ -744,20 +752,6 @@ function StatBlock({
   )
 }
 
-function ThresholdMarker({ position, label }: { position: number; label: string }) {
-  return (
-    <div
-      className="absolute top-0 bottom-0 w-px bg-zinc-700/80"
-      style={{ left: `${position}%` }}
-      title={`${label} threshold at ${position}%`}
-    >
-      <span className="absolute -top-4 -translate-x-1/2 text-[8px] font-mono text-zinc-600 whitespace-nowrap">
-        {label}
-      </span>
-    </div>
-  )
-}
-
 function AnomalyScoreCard({
   score,
   isHighRisk,
@@ -801,17 +795,22 @@ function AnomalyScoreCard({
           IForest +<br />COPOD
         </span>
       </div>
-      <div className="h-1 bg-zinc-800/60 rounded-full overflow-hidden">
-        <div
-          className="h-full rounded-full transition-all"
-          style={{
-            width: `${Math.min(score * 100, 100)}%`,
-            background: isAiConfirmed
-              ? 'linear-gradient(90deg, #fbbf24, #f87171)'
-              : 'linear-gradient(90deg, #52525b, #a1a1aa)',
-          }}
-        />
-      </div>
+      {(() => {
+        const N = 24, DR = 2, DG = 5.5
+        const pct = Math.min(score, 1)
+        const filled = Math.max(1, Math.round(pct * N))
+        const color = isAiConfirmed ? '#f87171' : '#a1a1aa'
+        return (
+          <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+            {Array.from({ length: N }).map((_, k) => (
+              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                fill={k < filled ? color : '#27272a'}
+                fillOpacity={k < filled ? 0.85 : 1}
+              />
+            ))}
+          </svg>
+        )
+      })()}
     </div>
   )
 }

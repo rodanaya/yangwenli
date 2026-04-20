@@ -56,12 +56,24 @@ export function AdminVendorBreakdown({ vendors, eraColor, loading }: Props) {
                 {formatCompactMXN(v.total_mxn)}
               </span>
             </div>
-            <div className="h-2 bg-background-subtle rounded-full overflow-hidden">
-              <div
-                className="h-full rounded-full transition-all"
-                style={{ width: `${pct}%`, backgroundColor: eraColor, opacity: riskOpacity }}
-              />
-            </div>
+            {(() => {
+              const N = 30, DR = 3, DG = 8
+              const filled = Math.round((pct / 100) * N)
+              return (
+                <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, i) => (
+                    <circle
+                      key={i}
+                      cx={i * DG + DR}
+                      cy={5}
+                      r={DR}
+                      fill={i < filled ? eraColor : '#2d2926'}
+                      fillOpacity={i < filled ? riskOpacity : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
             <div className="text-xs text-text-muted mt-0.5">
               {v.contracts.toLocaleString()} {t('vendorSection.contracts')} &middot; {v.risk_pct.toFixed(0)}% {t('vendorSection.riskScore')}
             </div>

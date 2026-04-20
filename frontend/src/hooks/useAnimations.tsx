@@ -148,8 +148,8 @@ export function AnimatedNumber({ value, duration = 1800, decimals = 0, prefix = 
   )
 }
 
-// AnimatedFill — bar that fills with spring overshoot + shimmer sweep
-export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
+// AnimatedFill — dot-matrix strip (was: animated bar)
+export function AnimatedFill({ pct, color, delay = 0, height: _height = 'h-4' }: {
   pct: number
   color: string
   delay?: number
@@ -182,32 +182,35 @@ export function AnimatedFill({ pct, color, delay = 0, height = 'h-4' }: {
     observer.observe(el)
     return () => { observer.disconnect(); clearTimeout(t1); clearTimeout(t2); clearTimeout(t3) }
   }, [pct, delay])
+  // Consume showShimmer to avoid unused-var warnings (dot-matrix has no shimmer)
+  void showShimmer
+  const N = 30, DR = 3, DG = 8
+  const filled = Math.max(1, Math.round((width / 100) * N))
   return (
-    <div ref={ref} className={`flex-1 ${height} bg-surface-raised rounded overflow-hidden`}>
-      <div
-        className="h-full rounded relative overflow-hidden"
-        style={{
-          width: `${width}%`,
-          background: color,
-          transition: `width 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
-        }}
+    <div ref={ref} className="flex-1">
+      <svg
+        viewBox={`0 0 ${N * DG} 10`}
+        className="w-full"
+        style={{ height: 10, transition: `opacity 700ms ease ${delay}ms` }}
+        preserveAspectRatio="none"
+        aria-hidden="true"
       >
-        <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent" />
-        {showShimmer && (
-          <div
-            className="absolute inset-0"
-            style={{
-              background: 'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.25) 50%, transparent 100%)',
-              animation: 'shimmerSweep 0.8s ease-out forwards',
-            }}
+        {Array.from({ length: N }).map((_, i) => (
+          <circle
+            key={i}
+            cx={i * DG + DR}
+            cy={5}
+            r={DR}
+            fill={i < filled ? color : '#2d2926'}
+            fillOpacity={i < filled ? 0.85 : 1}
           />
-        )}
-      </div>
+        ))}
+      </svg>
     </div>
   )
 }
 
-// AnimatedSegment — animated flex segment, used for stacked bars
+// AnimatedSegment — width-proportional dot group (was: flex segment for stacked bars)
 export function AnimatedSegment({ pct, color, delay }: { pct: number; color: string; delay: number }) {
   const ref = useRef<HTMLDivElement>(null)
   const [width, setWidth] = useState(0)
@@ -226,16 +229,29 @@ export function AnimatedSegment({ pct, color, delay }: { pct: number; color: str
     observer.observe(el)
     return () => observer.disconnect()
   }, [pct, delay])
+  const N_TOTAL = 40
+  const mySlice = Math.max(1, Math.round((width / 100) * N_TOTAL))
+  const DR = 3, DG = 8
   return (
     <div
       ref={ref}
-      className="h-full relative overflow-hidden rounded-sm"
+      className="h-full relative"
       style={{
-        width: `${width}%`,
-        background: color,
-        transition: `width 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
-        minWidth: width > 0 ? '2px' : '0',
+        flexBasis: `${width}%`,
+        minWidth: width > 0 ? '8px' : '0',
+        transition: `flex-basis 700ms cubic-bezier(0.34, 1.56, 0.64, 1) ${delay}ms`,
       }}
-    />
+    >
+      <svg
+        viewBox={`0 0 ${mySlice * DG} 10`}
+        className="w-full h-full"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        {Array.from({ length: mySlice }).map((_, i) => (
+          <circle key={i} cx={i * DG + DR} cy={5} r={DR} fill={color} fillOpacity={0.85} />
+        ))}
+      </svg>
+    </div>
   )
 }

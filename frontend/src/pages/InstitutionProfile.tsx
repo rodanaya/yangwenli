@@ -797,9 +797,20 @@ export function InstitutionProfile() {
                                 <span className="text-xs font-bold font-mono" style={{ color: r.color }}>{r.pct.toFixed(0)}%</span>
                               </div>
                             </div>
-                            <div className="h-1.5 rounded-full bg-background-elevated overflow-hidden">
-                              <div className="h-full rounded-full transition-all duration-500" style={{ width: `${r.pct}%`, backgroundColor: r.color }} />
-                            </div>
+                            {(() => {
+                              const N = 22, DR = 2, DG = 5.5
+                              const filled = Math.max(1, Math.round((r.pct / 100) * N))
+                              return (
+                                <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                                  {Array.from({ length: N }).map((_, k) => (
+                                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                                      fill={k < filled ? r.color : '#27272a'}
+                                      fillOpacity={k < filled ? 0.85 : 1}
+                                    />
+                                  ))}
+                                </svg>
+                              )
+                            })()}
                           </div>
                         ))}
                         {riskProfile?.effective_risk != null && (
@@ -1036,11 +1047,36 @@ export function InstitutionProfile() {
                             <span className="text-xs text-text-secondary">{m.label}</span>
                             <span className="text-xs font-mono font-bold" style={{ color: markerColor }}>P{pct}</span>
                           </div>
-                          <div className="relative h-2 rounded-full bg-background-elevated overflow-visible">
-                            <div className="absolute top-0 h-full rounded-full bg-text-muted/20" style={{ left: `${m.peer_p25}%`, width: `${m.peer_p75 - m.peer_p25}%` }} />
-                            <div className="absolute top-0 h-full w-px bg-text-muted/50" style={{ left: `${m.peer_median}%` }} />
-                            <div className="absolute top-1/2 -translate-y-1/2 h-3 w-1.5 rounded-sm" style={{ left: `${pct}%`, backgroundColor: markerColor }} />
-                          </div>
+                          {(() => {
+                            const N = 40, DR = 2.5, DG = 6
+                            const totalW = N * DG
+                            const p25Idx = Math.round((m.peer_p25 / 100) * N)
+                            const p75Idx = Math.round((m.peer_p75 / 100) * N)
+                            const markerIdx = Math.round((pct / 100) * N)
+                            const medianX = (m.peer_median / 100) * totalW
+                            return (
+                              <svg viewBox={`0 0 ${totalW} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                                {/* Track dots */}
+                                {Array.from({ length: N }).map((_, k) => {
+                                  const inPeerRange = k >= p25Idx && k < p75Idx
+                                  return (
+                                    <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                                      fill={inPeerRange ? '#a1a1aa' : '#27272a'}
+                                      fillOpacity={inPeerRange ? 0.25 : 0.6}
+                                    />
+                                  )
+                                })}
+                                {/* Peer median line */}
+                                <line x1={medianX} y1={0} x2={medianX} y2={10} stroke="#a1a1aa" strokeWidth={0.8} strokeOpacity={0.6} />
+                                {/* This institution marker */}
+                                <circle cx={markerIdx * DG + DR} cy={5} r={DR + 1.2}
+                                  fill={markerColor}
+                                  stroke="#000"
+                                  strokeWidth={0.5}
+                                />
+                              </svg>
+                            )
+                          })()}
                           <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
                             <span>min</span><span>mediana</span><span>max</span>
                           </div>
@@ -1626,10 +1662,23 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           )}
         </div>
       </div>
-      <div className="relative h-2 bg-background-elevated rounded-full overflow-hidden">
-        <div className="absolute top-0 left-0 h-full rounded-full" style={{ width: `${Math.min(100, value)}%`, backgroundColor: barColor }} />
-        <div className="absolute top-0 h-full w-0.5 bg-text-muted/60" style={{ left: `${benchmark}%` }} title={`Promedio nacional: ${benchmark}%`} />
-      </div>
+      {(() => {
+        const N = 30, DR = 2.5, DG = 6
+        const filled = Math.max(1, Math.round((Math.min(100, value) / 100) * N))
+        const benchIdx = Math.round((benchmark / 100) * N)
+        const benchX = benchIdx * DG + DR
+        return (
+          <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+            {Array.from({ length: N }).map((_, k) => (
+              <circle key={k} cx={k * DG + DR} cy={4} r={DR}
+                fill={k < filled ? barColor : '#27272a'}
+                fillOpacity={k < filled ? 0.85 : 1}
+              />
+            ))}
+            <line x1={benchX} y1={0} x2={benchX} y2={8} stroke="#a1a1aa" strokeWidth={0.8} strokeOpacity={0.7} />
+          </svg>
+        )
+      })()}
       <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
         <span>0%</span><span>Prom. {benchmark}%</span><span>100%</span>
       </div>
@@ -1790,9 +1839,20 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   <ChevronRight className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity" />
                 </div>
               </div>
-              <div className="h-1 rounded-full bg-background-elevated overflow-hidden">
-                <div className="h-full rounded-full bg-accent/40 group-hover:bg-accent/60 transition-colors" style={{ width: `${barW}%` }} />
-              </div>
+              {(() => {
+                const N = 30, DR = 2, DG = 5
+                const filled = Math.max(1, Math.round((barW / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                        fill={k < filled ? '#22d3ee' : '#27272a'}
+                        fillOpacity={k < filled ? 0.7 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
             </div>
           </Link>
         )
@@ -1922,23 +1982,33 @@ function LongestTenuredGantt({ vendors }: {
             <div className="w-[140px] flex-shrink-0 truncate text-[10px] text-text-secondary group-hover:text-accent transition-colors pr-2 text-right" title={v.vendor_name}>
               {v.vendor_name.length > 20 ? v.vendor_name.slice(0, 18) + '\u2026' : v.vendor_name}
             </div>
-            <div className="flex-1 relative h-5 bg-background-elevated/30 rounded">
-              <div
-                className="absolute top-0 h-full rounded flex items-center justify-end pr-1 gap-1"
-                style={{
-                  left: `${leftPct}%`,
-                  width: `${widthPct}%`,
-                  backgroundColor: `${barColor}40`,
-                  borderLeft: `2px solid ${barColor}`,
-                }}
-              >
-                <span className="text-[8px] font-mono font-bold" style={{ color: barColor }}>
-                  {v.tenure_years}a / {v.total_contracts}c
-                </span>
-                {isWarning && (
-                  <AlertTriangle className="h-2.5 w-2.5 text-risk-critical flex-shrink-0" />
-                )}
-              </div>
+            <div className="flex-1 relative">
+              {(() => {
+                const N = 40, DR = 2.5, DG = 6
+                const totalW = N * DG
+                const startIdx = Math.round((leftPct / 100) * N)
+                const endIdx = Math.min(N, startIdx + Math.max(1, Math.round((widthPct / 100) * N)))
+                return (
+                  <div className="relative">
+                    <svg viewBox={`0 0 ${totalW} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => {
+                        const inSpan = k >= startIdx && k < endIdx
+                        return (
+                          <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                            fill={inSpan ? barColor : '#27272a'}
+                            fillOpacity={inSpan ? 0.85 : 1}
+                          />
+                        )
+                      })}
+                    </svg>
+                    <span className="absolute top-1/2 -translate-y-1/2 text-[8px] font-mono font-bold pointer-events-none flex items-center gap-1"
+                      style={{ left: `${Math.min(leftPct + widthPct + 1, 85)}%`, color: barColor }}>
+                      {v.tenure_years}a / {v.total_contracts}c
+                      {isWarning && <AlertTriangle className="h-2.5 w-2.5 text-risk-critical" />}
+                    </span>
+                  </div>
+                )
+              })()}
             </div>
           </div>
         )

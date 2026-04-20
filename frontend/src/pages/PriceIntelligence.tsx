@@ -1418,14 +1418,24 @@ function RiskLevelPriceGap({
                 {formatCompactMXN(stats.flagged.avg)}
               </div>
             </div>
-            <div className="relative h-6 rounded bg-zinc-800/60 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-red-700 to-red-500"
-                style={{ width: `${flaggedPct}%` }}
-              />
-              <div className="absolute inset-0 flex items-center px-2 text-[10px] font-mono text-red-100/90 tracking-wide">
+            <div className="relative">
+              {(() => {
+                const N = 40, DR = 3, DG = 8
+                const filled = Math.max(1, Math.round((flaggedPct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={6} r={DR}
+                        fill={k < filled ? '#dc2626' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
+              <p className="text-[10px] font-mono text-red-300/80 mt-1 tracking-wide">
                 precio promedio · +{stats.flagged.avg_z.toFixed(1)}σ
-              </div>
+              </p>
             </div>
           </div>
 
@@ -1445,14 +1455,24 @@ function RiskLevelPriceGap({
                 {formatCompactMXN(stats.standard.avg)}
               </div>
             </div>
-            <div className="relative h-6 rounded bg-zinc-800/60 overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-zinc-600 to-zinc-500"
-                style={{ width: `${standardPct}%` }}
-              />
-              <div className="absolute inset-0 flex items-center px-2 text-[10px] font-mono text-zinc-200/90 tracking-wide">
+            <div className="relative">
+              {(() => {
+                const N = 40, DR = 3, DG = 8
+                const filled = Math.max(1, Math.round((standardPct / 100) * N))
+                return (
+                  <svg viewBox={`0 0 ${N * DG} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
+                    {Array.from({ length: N }).map((_, k) => (
+                      <circle key={k} cx={k * DG + DR} cy={6} r={DR}
+                        fill={k < filled ? '#71717a' : '#2d2926'}
+                        fillOpacity={k < filled ? 0.85 : 1}
+                      />
+                    ))}
+                  </svg>
+                )
+              })()}
+              <p className="text-[10px] font-mono text-zinc-400 mt-1 tracking-wide">
                 precio promedio · +{stats.standard.avg_z.toFixed(1)}σ
-              </div>
+              </p>
             </div>
           </div>
         </div>

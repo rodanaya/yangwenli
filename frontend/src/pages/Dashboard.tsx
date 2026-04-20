@@ -238,15 +238,25 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
                 {formatCompactMXN(s.totalValue)}
               </span>
               <div className="flex items-center justify-end gap-1.5">
-                <div className="h-1 w-8 rounded-sm bg-border/20 overflow-hidden">
-                  <div
-                    className="h-full"
-                    style={{
-                      width: `${Math.min(100, s.avgRisk * 200)}%`,
-                      backgroundColor: riskColor,
-                    }}
-                  />
-                </div>
+                {(() => {
+                  const N = 10, DR = 2, DG = 5
+                  const pct = Math.min(1, s.avgRisk * 2) // scale 0-0.5 to 0-100%
+                  const filled = Math.round(pct * N)
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
+                      {Array.from({ length: N }).map((_, i) => (
+                        <circle
+                          key={i}
+                          cx={i * DG + DR}
+                          cy={3}
+                          r={DR}
+                          fill={i < filled ? riskColor : '#2d2926'}
+                          fillOpacity={i < filled ? 0.85 : 1}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
                 <span className="text-[11px] font-mono text-text-primary tabular-nums w-10 text-right">
                   {(s.avgRisk * 100).toFixed(1)}%
                 </span>

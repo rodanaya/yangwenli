@@ -844,15 +844,21 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
       <td className="px-3 py-2 text-right">
         {institution.avg_risk_score != null ? (
           <div className="flex items-center justify-end gap-1.5">
-            <div className="w-10 h-1.5 rounded-full bg-border/40 overflow-hidden">
-              <div
-                className="h-full rounded-full"
-                style={{
-                  width: `${Math.min(institution.avg_risk_score * 100, 100)}%`,
-                  backgroundColor: riskColor,
-                }}
-              />
-            </div>
+            {(() => {
+              const N = 10, DR = 1.5, DG = 4
+              const pct = Math.min(institution.avg_risk_score, 1)
+              const filled = Math.max(1, Math.round(pct * N))
+              return (
+                <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
+                  {Array.from({ length: N }).map((_, k) => (
+                    <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                      fill={k < filled ? riskColor : '#27272a'}
+                      fillOpacity={k < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
             <span className="text-xs tabular-nums font-semibold w-8 text-right" style={{ color: riskColor }}>
               {(institution.avg_risk_score * 100).toFixed(0)}%
             </span>

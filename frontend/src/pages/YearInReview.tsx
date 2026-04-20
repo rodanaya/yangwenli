@@ -355,7 +355,10 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
 
   const ROW_H = 22
   const LABEL_W = 88
-  const BAR_AREA = 160
+  const DOTS_PER_SIDE = 22
+  const DOT_R = 2.5
+  const DOT_GAP = 6.5
+  const BAR_AREA = DOTS_PER_SIDE * DOT_GAP + 4
   const PCT_W = 44
   const svgW = LABEL_W + BAR_AREA * 2 + PCT_W
   const svgH = sorted.length * ROW_H + 20
@@ -378,20 +381,22 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
 
         {sorted.map((row, ri) => {
           const cy = 14 + ri * ROW_H
-          const barH = ROW_H * 0.52
-          const barY = cy + (ROW_H - barH) / 2
           const clamped = Math.max(-300, Math.min(300, row.growthPct))
-          const barLen = (Math.abs(clamped) / Math.max(maxAbs, 1)) * (BAR_AREA - 6)
+          const filledDots = Math.min(
+            DOTS_PER_SIDE,
+            Math.max(1, Math.round((Math.abs(clamped) / Math.max(maxAbs, 1)) * DOTS_PER_SIDE)),
+          )
           const isPos = row.growthPct >= 0
           const color = isPos ? '#4ade80' : '#f87171'
-          const barX = isPos ? centerX + 2 : centerX - 2 - barLen
+          const emptyDot = '#2d2926'
+          const rowCenterY = cy + ROW_H / 2
 
           return (
             <g key={row.id}>
               {/* Sector label */}
               <text
                 x={LABEL_W - 6}
-                y={cy + ROW_H / 2 + 1}
+                y={rowCenterY + 1}
                 fill="#a1a1aa"
                 fontSize={9.5}
                 textAnchor="end"
@@ -401,32 +406,45 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 {row.name.slice(0, 11)}
               </text>
 
-              {/* Bar background track */}
-              <rect
-                x={isPos ? centerX + 2 : centerX - BAR_AREA + 4}
-                y={barY}
-                width={BAR_AREA - 6}
-                height={barH}
-                rx={1.5}
-                fill="#e2ddd6"
-                fillOpacity={0.5}
-              />
+              {/* LEFT side dots (decline) */}
+              {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                // i=0 is closest to center, moving outward
+                const cx = centerX - 2 - (i * DOT_GAP + DOT_R)
+                const isFilled = !isPos && i < filledDots
+                return (
+                  <circle
+                    key={`l-${i}`}
+                    cx={cx}
+                    cy={rowCenterY}
+                    r={DOT_R}
+                    fill={isFilled ? color : emptyDot}
+                    fillOpacity={isFilled ? 0.85 : 1}
+                  />
+                )
+              })}
 
-              {/* Growth bar */}
-              <rect
-                x={barX}
-                y={barY}
-                width={Math.max(barLen, 1)}
-                height={barH}
-                rx={1.5}
-                fill={color}
-                fillOpacity={0.75}
-              />
+              {/* RIGHT side dots (growth) */}
+              {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                const cx = centerX + 2 + (i * DOT_GAP + DOT_R)
+                const isFilled = isPos && i < filledDots
+                return (
+                  <circle
+                    key={`r-${i}`}
+                    cx={cx}
+                    cy={rowCenterY}
+                    r={DOT_R}
+                    fill={isFilled ? color : emptyDot}
+                    fillOpacity={isFilled ? 0.85 : 1}
+                  />
+                )
+              })}
 
-              {/* Sector color dot */}
+              {/* Sector color tick (tiny accent) */}
               <circle
-                cx={isPos ? centerX + 2 + barLen + 4 : centerX - 2 - barLen - 4}
-                cy={cy + ROW_H / 2}
+                cx={isPos
+                  ? centerX + 2 + filledDots * DOT_GAP + DOT_R + 4
+                  : centerX - 2 - filledDots * DOT_GAP - DOT_R - 4}
+                cy={rowCenterY}
                 r={2}
                 fill={row.color}
                 fillOpacity={0.6}
@@ -435,7 +453,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
               {/* Pct label */}
               <text
                 x={svgW - 2}
-                y={cy + ROW_H / 2 + 1}
+                y={rowCenterY + 1}
                 fill={color}
                 fontSize={8.5}
                 textAnchor="end"
@@ -449,6 +467,9 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
           )
         })}
       </svg>
+      <p className="mt-2 text-[9px] font-mono text-text-muted/70">
+        1 ● = {(maxAbs / DOTS_PER_SIDE).toFixed(0)}% growth
+      </p>
     </div>
   )
 }
@@ -509,86 +530,84 @@ function RiskEvolution({
         />
       </div>
 
-      {/* Visual tape: three stacked horizontal lines */}
+      {/* Visual tape: three stacked dot-matrix strips */}
       <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-5 space-y-4">
-        {/* This year */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
-            {t('riskEvolution.thisYear')}
-          </span>
-          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
-            <motion.div
-              className="absolute inset-y-0 left-0 rounded flex items-center px-2"
-              style={{ backgroundColor: isAboveOECD ? '#dc2626' : '#f59e0b' }}
-              initial={{ width: '0%' }}
-              animate={{ width: `${yearPct}%` }}
-              transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-            >
-              <span className="text-[9px] font-mono font-bold text-white whitespace-nowrap">
-                {yearRow.high_risk_pct.toFixed(1)}%
-              </span>
-            </motion.div>
-            {/* OECD marker line */}
-            <div
-              className="absolute inset-y-0 w-px bg-cyan-400/80"
-              style={{ left: `${oecdPct}%` }}
-              aria-hidden="true"
-            />
-          </div>
-          <span className="font-mono text-xs font-bold text-text-primary w-14 text-right flex-shrink-0 tabular-nums">
-            {yearRow.high_risk_pct.toFixed(1)}%
-          </span>
-        </div>
+        {(() => {
+          const N = 50, DR = 3, DG = 8
+          const oecdIdx = Math.round((oecdPct / 100) * N)
+          const renderStrip = (pct: number, color: string) => {
+            const filled = Math.max(0, Math.min(N, Math.round((pct / 100) * N)))
+            return (
+              <svg
+                viewBox={`0 0 ${N * DG} 10`}
+                className="w-full"
+                style={{ height: 10 }}
+                preserveAspectRatio="none"
+                aria-hidden="true"
+              >
+                {Array.from({ length: N }).map((_, i) => (
+                  <circle
+                    key={i}
+                    cx={i * DG + DR}
+                    cy={5}
+                    r={DR}
+                    fill={i < filled ? color : '#2d2926'}
+                    fillOpacity={i < filled ? 0.85 : 1}
+                  />
+                ))}
+                {/* OECD marker line */}
+                <line
+                  x1={oecdIdx * DG + DR}
+                  y1={0}
+                  x2={oecdIdx * DG + DR}
+                  y2={10}
+                  stroke="#22d3ee"
+                  strokeWidth={1}
+                  strokeOpacity={0.8}
+                />
+              </svg>
+            )
+          }
+          return (
+            <>
+              {/* This year */}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
+                  {t('riskEvolution.thisYear')}
+                </span>
+                <div className="flex-1">{renderStrip(yearPct, isAboveOECD ? '#dc2626' : '#f59e0b')}</div>
+                <span className="font-mono text-xs font-bold text-text-primary w-14 text-right flex-shrink-0 tabular-nums">
+                  {yearRow.high_risk_pct.toFixed(1)}%
+                </span>
+              </div>
 
-        {/* Historical avg */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
-            {t('riskEvolution.historicalAvg')}
-          </span>
-          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 rounded bg-zinc-500/50 flex items-center px-2"
-              style={{ width: `${avgPct}%` }}
-            >
-              <span className="text-[9px] font-mono text-zinc-300 whitespace-nowrap">
-                {historicalAvg.toFixed(1)}%
-              </span>
-            </div>
-            <div
-              className="absolute inset-y-0 w-px bg-cyan-400/80"
-              style={{ left: `${oecdPct}%` }}
-              aria-hidden="true"
-            />
-          </div>
-          <span className="font-mono text-xs text-text-muted w-14 text-right flex-shrink-0 tabular-nums">
-            {historicalAvg.toFixed(1)}%
-          </span>
-        </div>
+              {/* Historical avg */}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
+                  {t('riskEvolution.historicalAvg')}
+                </span>
+                <div className="flex-1">{renderStrip(avgPct, '#a1a1aa')}</div>
+                <span className="font-mono text-xs text-text-muted w-14 text-right flex-shrink-0 tabular-nums">
+                  {historicalAvg.toFixed(1)}%
+                </span>
+              </div>
 
-        {/* OECD threshold line */}
-        <div className="flex items-center gap-3">
-          <span className="text-[10px] uppercase tracking-wider text-cyan-400 w-28 flex-shrink-0">
-            {t('riskEvolution.oecdTarget')}
-          </span>
-          <div className="flex-1 relative h-5 rounded bg-background-elevated/50 overflow-hidden">
-            <div
-              className="absolute inset-y-0 left-0 rounded bg-cyan-400/30 flex items-center px-2"
-              style={{ width: `${oecdPct}%` }}
-            >
-              <span className="text-[9px] font-mono text-cyan-300 whitespace-nowrap">
-                {OECD_HIGH_RISK_THRESHOLD}%
-              </span>
-            </div>
-            <div
-              className="absolute inset-y-0 w-px bg-cyan-400"
-              style={{ left: `${oecdPct}%` }}
-              aria-hidden="true"
-            />
-          </div>
-          <span className="font-mono text-xs text-cyan-400 w-14 text-right flex-shrink-0 tabular-nums">
-            {OECD_HIGH_RISK_THRESHOLD}%
-          </span>
-        </div>
+              {/* OECD threshold */}
+              <div className="flex items-center gap-3">
+                <span className="text-[10px] uppercase tracking-wider text-cyan-400 w-28 flex-shrink-0">
+                  {t('riskEvolution.oecdTarget')}
+                </span>
+                <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
+                <span className="font-mono text-xs text-cyan-400 w-14 text-right flex-shrink-0 tabular-nums">
+                  {OECD_HIGH_RISK_THRESHOLD}%
+                </span>
+              </div>
+              <p className="text-[9px] font-mono text-text-muted/70 pt-1 border-t border-border/20">
+                1 ● = 2% · cyan line = OECD target ({OECD_HIGH_RISK_THRESHOLD}%)
+              </p>
+            </>
+          )
+        })()}
       </div>
 
       {/* Verdict */}
@@ -1539,14 +1558,17 @@ export default function YearInReview() {
               {' '}({sexenio.party}) &middot; {sexenio.period}
             </p>
             <div className="mt-3 flex items-center gap-2">
-              <div className="flex gap-1 flex-1">
+              <div className="flex gap-1.5 flex-1 items-center">
                 {Array.from({ length: sexenio.totalYears }).map((_, i) => (
-                  <div
+                  <span
                     key={i}
-                    className="h-2 flex-1 rounded-sm transition-colors"
+                    className="rounded-full"
                     style={{
+                      width: 10,
+                      height: 10,
                       backgroundColor: i < sexenio.yearInSexenio ? sexenio.color : 'rgba(255,255,255,0.08)',
                     }}
+                    aria-hidden="true"
                   />
                 ))}
               </div>

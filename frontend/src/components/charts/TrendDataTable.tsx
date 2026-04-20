@@ -302,11 +302,25 @@ export default function TrendDataTable({
                         >
                           {row.high_risk_pct.toFixed(1)}%
                         </span>
-                        <div
-                          className="h-0.5 rounded-full bg-gradient-to-r from-orange-500 to-red-500 transition-all"
-                          style={{ width: `${barWidth}%`, maxWidth: '4rem', minWidth: '2px' }}
-                          aria-hidden="true"
-                        />
+                        {(() => {
+                          const N = 10, DR = 1.5, DG = 4
+                          const filled = Math.max(1, Math.round((barWidth / 100) * N))
+                          const color = row.high_risk_pct >= 15 ? '#f87171' : row.high_risk_pct >= 10 ? '#fb923c' : '#fbbf24'
+                          return (
+                            <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
+                              {Array.from({ length: N }).map((_, i) => (
+                                <circle
+                                  key={i}
+                                  cx={i * DG + DR}
+                                  cy={2}
+                                  r={DR}
+                                  fill={i < filled ? color : '#2d2926'}
+                                  fillOpacity={i < filled ? 0.85 : 1}
+                                />
+                              ))}
+                            </svg>
+                          )
+                        })()}
                       </div>
                     </TableCell>
 

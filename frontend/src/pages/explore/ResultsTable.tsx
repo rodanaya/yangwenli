@@ -320,12 +320,21 @@ function VendorRow({ vendor, riskColor }: { vendor: any; riskColor: string }) {
                 <span className={`${riskClass} text-xs font-bold font-mono px-1.5 py-0.5 rounded`}>
                   {(score * 100).toFixed(0)}%
                 </span>
-                <div className="w-full h-1 rounded-full bg-zinc-800 overflow-hidden">
-                  <div
-                    className="h-full rounded-full transition-all duration-500"
-                    style={{ width: `${Math.min(score * 100, 100)}%`, backgroundColor: color }}
-                  />
-                </div>
+                {(() => {
+                  const N = 14, DR = 1.75, DG = 4
+                  const pct = Math.min(score, 1)
+                  const filled = Math.max(1, Math.round(pct * N))
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => (
+                        <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                          fill={k < filled ? color : '#27272a'}
+                          fillOpacity={k < filled ? 0.85 : 1}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
               </>
             )
           })()}

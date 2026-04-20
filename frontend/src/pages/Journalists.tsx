@@ -120,9 +120,20 @@ function BreakingStrip() {
                 {getInvestigationSentence(item)}
               </p>
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-1 bg-zinc-800 rounded-full overflow-hidden">
-                  <div className="h-full rounded-full" style={{ width: `${pct}%`, backgroundColor: color }} />
-                </div>
+                {(() => {
+                  const N = 18, DR = 2, DG = 5
+                  const filled = Math.max(1, Math.round((pct / 100) * N))
+                  return (
+                    <svg viewBox={`0 0 ${N * DG} 5`} className="flex-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                      {Array.from({ length: N }).map((_, k) => (
+                        <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                          fill={k < filled ? color : '#27272a'}
+                          fillOpacity={k < filled ? 0.85 : 1}
+                        />
+                      ))}
+                    </svg>
+                  )
+                })()}
                 <span className="text-[10px] font-mono tabular-nums" style={{ color }}>{pct}%</span>
               </div>
             </Link>

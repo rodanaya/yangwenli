@@ -804,16 +804,24 @@ function SubcategoryPanel({
             <span>{t('subcategory.classifiedPct', { pct: classifiedPct.toFixed(0) })}</span>
             <span className="text-text-muted/40">{t('subcategory.unclassifiedPct', { pct: catchAllPct.toFixed(0) })}</span>
           </div>
-          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden flex">
-            <div
-              className="h-full bg-blue-500/50 transition-all duration-700 rounded-l-full"
-              style={{ width: `${Math.min(classifiedPct, 100)}%` }}
-            />
-            <div
-              className="h-full bg-border/30"
-              style={{ width: `${Math.min(catchAllPct, 100)}%` }}
-            />
-          </div>
+          {(() => {
+            const N = 30, DR = 2.5, DG = 6
+            const classifiedFilled = Math.round((Math.min(classifiedPct, 100) / 100) * N)
+            const catchEnd = Math.min(N, classifiedFilled + Math.round((Math.min(catchAllPct, 100) / 100) * N))
+            return (
+              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, k) => {
+                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#27272a'
+                  return (
+                    <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                      fill={fill}
+                      fillOpacity={k < catchEnd ? 0.55 : 1}
+                    />
+                  )
+                })}
+              </svg>
+            )
+          })()}
         </div>
       </CardHeader>
 
@@ -866,26 +874,26 @@ function SubcategoryPanel({
                         {formatNumber(sub.total_contracts)}
                       </span>
                     </div>
-                    <div className="h-1 bg-border/20 rounded-full overflow-hidden relative">
-                      <div
-                        className="absolute inset-y-0 left-0 rounded-full transition-all duration-700"
-                        style={{
-                          width: `${barWidth}%`,
-                          backgroundColor: sub.is_catch_all ? '#64748b' : getRiskColor(sub.avg_risk),
-                          opacity: 0.55,
-                        }}
-                      />
-                      {!sub.is_catch_all && daBarWidth > 0 && (
-                        <div
-                          className="absolute inset-y-0 left-0 rounded-l-full transition-all duration-700"
-                          style={{
-                            width: `${daBarWidth}%`,
-                            backgroundColor: getRiskColor(sub.avg_risk),
-                            opacity: 0.9,
-                          }}
-                        />
-                      )}
-                    </div>
+                    {(() => {
+                      const N = 24, DR = 2, DG = 5
+                      const totalFilled = Math.max(1, Math.round((barWidth / 100) * N))
+                      const daFilled = sub.is_catch_all ? 0 : Math.round((daBarWidth / 100) * N)
+                      const baseColor = sub.is_catch_all ? '#64748b' : getRiskColor(sub.avg_risk)
+                      return (
+                        <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                          {Array.from({ length: N }).map((_, k) => {
+                            const isDa = k < daFilled
+                            const isTotal = k < totalFilled
+                            return (
+                              <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                fill={isDa ? baseColor : isTotal ? baseColor : '#27272a'}
+                                fillOpacity={isDa ? 0.9 : isTotal ? 0.45 : 1}
+                              />
+                            )
+                          })}
+                        </svg>
+                      )
+                    })()}
                   </div>
                   <span className="w-20 text-right text-xs font-mono font-bold text-text-primary tabular-nums flex-shrink-0">
                     {formatCompactMXN(sub.total_value)}

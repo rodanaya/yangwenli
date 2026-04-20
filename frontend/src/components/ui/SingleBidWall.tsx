@@ -93,32 +93,20 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
                 {pct.toFixed(1)}%
               </p>
             </div>
-            <div
-              className="h-2.5 rounded-full overflow-hidden"
-              style={{ background: 'rgba(255,255,255,0.04)' }}
-            >
-              <div
-                className="h-full rounded-full relative overflow-hidden"
-                style={{
-                  width: `${barWidth}%`,
-                  background: 'linear-gradient(90deg, #dc2626 0%, #ef4444 60%, #f87171 100%)',
-                  transition: 'width 900ms cubic-bezier(0.34, 1.56, 0.64, 1)',
-                  boxShadow: '0 0 12px rgba(239,68,68,0.4)',
-                }}
-              >
-                {/* Shimmer */}
-                <div
-                  className="absolute inset-0"
-                  style={{
-                    background:
-                      'linear-gradient(90deg, transparent 0%, rgba(255,255,255,0.2) 50%, transparent 100%)',
-                    animation: 'shimmerSweep 0.8s ease-out 1.2s forwards',
-                    opacity: 0,
-                    animationFillMode: 'forwards',
-                  }}
-                />
-              </div>
-            </div>
+            {(() => {
+              const N = 50, DR = 3, DG = 8
+              const filled = Math.max(1, Math.round((barWidth / 100) * N))
+              return (
+                <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                  {Array.from({ length: N }).map((_, i) => (
+                    <circle key={i} cx={i * DG + DR} cy={5} r={DR}
+                      fill={i < filled ? '#ef4444' : '#27272a'}
+                      fillOpacity={i < filled ? 0.85 : 1}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
             <p className="text-[10px] text-red-400/40 font-mono mt-1.5 text-center">
               {pct.toFixed(1)}% de todos los contratos — con competencia ficticia
             </p>

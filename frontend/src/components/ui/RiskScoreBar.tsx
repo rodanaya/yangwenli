@@ -8,11 +8,12 @@ import { RISK_THRESHOLDS, RISK_COLORS } from '@/lib/constants'
 
 interface RiskScoreBarProps {
   score: number           // 0-1
-  height?: number         // px, default 4
+  height?: number         // px, default 10 (dot radius 3 + padding)
   width?: string          // CSS width, default '100%'
   showLabel?: boolean
   animated?: boolean
   className?: string
+  dots?: number           // number of dots in the strip, default 24
 }
 
 const getRiskColor = (score: number): string => {
@@ -34,15 +35,18 @@ const getRiskTooltip = (score: number): string => {
 
 export function RiskScoreBar({
   score,
-  height = 4,
   width = '100%',
   showLabel = false,
-  animated = true,
   className,
+  dots = 24,
 }: RiskScoreBarProps) {
   const color = getRiskColor(score)
-  const pct = Math.min(score * 100, 100)
+  const pct = Math.min(Math.max(score, 0), 1)
   const tooltipText = getRiskTooltip(score)
+  const N = dots
+  const DR = 3
+  const DG = 8
+  const filled = Math.round(pct * N)
 
   return (
     <div className={className} style={{ width }}>
@@ -57,20 +61,24 @@ export function RiskScoreBar({
       <TooltipProvider>
         <Tooltip>
           <TooltipTrigger asChild>
-            <div
-              className="rounded-full overflow-hidden bg-background-elevated/40 cursor-default"
-              style={{ height }}
+            <svg
+              viewBox={`0 0 ${N * DG} 10`}
+              className="w-full cursor-default"
+              style={{ height: 10 }}
+              aria-hidden="true"
+              preserveAspectRatio="none"
             >
-              <div
-                className={animated ? 'transition-all duration-1000 ease-out' : ''}
-                style={{
-                  height: '100%',
-                  width: `${pct}%`,
-                  backgroundColor: color,
-                  borderRadius: 'inherit',
-                }}
-              />
-            </div>
+              {Array.from({ length: N }).map((_, i) => (
+                <circle
+                  key={i}
+                  cx={i * DG + DR}
+                  cy={5}
+                  r={DR}
+                  fill={i < filled ? color : '#2d2926'}
+                  fillOpacity={i < filled ? 0.85 : 1}
+                />
+              ))}
+            </svg>
           </TooltipTrigger>
           <TooltipContent className="max-w-xs text-center">
             {tooltipText}

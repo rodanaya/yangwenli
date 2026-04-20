@@ -127,17 +127,19 @@ export function StoryRiskPyramid() {
                   {tier.pct}% · {tier.count}
                 </text>
 
-                {/* Value-share mini bar */}
-                <rect
-                  x={LEFT_LABEL_W + totalWidth + 8}
-                  y={y + 8}
-                  width={(tier.valuePct / maxValuePct) * 70}
-                  height={5}
-                  fill={tier.color}
-                  fillOpacity={0.55}
-                  rx={1}
-                />
-                <text x={LEFT_LABEL_W + totalWidth + 12 + (tier.valuePct / maxValuePct) * 70} y={y + 13} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
+                {/* Value-share mini dot-matrix */}
+                {(() => {
+                  const N = 10, DR = 2, DG = 7
+                  const filled = Math.max(1, Math.round((tier.valuePct / maxValuePct) * N))
+                  const baseX = LEFT_LABEL_W + totalWidth + 8
+                  return Array.from({ length: N }).map((_, k) => (
+                    <circle key={`v-${k}`} cx={baseX + k * DG + DR} cy={y + 10.5} r={DR}
+                      fill={k < filled ? tier.color : '#27272a'}
+                      fillOpacity={k < filled ? 0.55 : 1}
+                    />
+                  ))
+                })()}
+                <text x={LEFT_LABEL_W + totalWidth + 12 + 74} y={y + 13} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)">
                   {tier.valuePct}%
                 </text>
               </g>

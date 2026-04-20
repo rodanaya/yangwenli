@@ -729,12 +729,20 @@ function AdminDossierPanel({
                             {formatNumber(sector.contracts)}
                           </span>
                         </div>
-                        <div className="h-1 bg-background-elevated/50 rounded-full overflow-hidden">
-                          <div
-                            className="h-full rounded-full"
-                            style={{ width: `${pct}%`, backgroundColor: sector.color, opacity: 0.7 }}
-                          />
-                        </div>
+                        {(() => {
+                          const N = 20, DR = 1.75, DG = 4.5
+                          const filled = Math.max(1, Math.round((pct / 100) * N))
+                          return (
+                            <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
+                              {Array.from({ length: N }).map((_, k) => (
+                                <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
+                                  fill={k < filled ? sector.color : '#27272a'}
+                                  fillOpacity={k < filled ? 0.7 : 1}
+                                />
+                              ))}
+                            </svg>
+                          )
+                        })()}
                       </div>
                     </div>
                   )
@@ -1554,16 +1562,24 @@ export default function Administrations() {
                   )}>
                     {a.name}
                   </span>
-                  <div className="flex-1 h-6 bg-background-elevated/50 rounded overflow-hidden relative">
-                    <div
-                      className="h-full rounded transition-all duration-700 ease-out"
-                      style={{
-                        width: `${barWidth}%`,
-                        backgroundColor: isAmlo ? '#dc2626' : `${partyColor}80`,
-                      }}
-                    />
+                  <div className="flex-1 relative flex items-center">
+                    {(() => {
+                      const N = 40, DR = 3, DG = 8
+                      const filled = Math.max(1, Math.round((barWidth / 100) * N))
+                      const color = isAmlo ? '#dc2626' : partyColor
+                      return (
+                        <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
+                          {Array.from({ length: N }).map((_, k) => (
+                            <circle key={k} cx={k * DG + DR} cy={5} r={DR}
+                              fill={k < filled ? color : '#27272a'}
+                              fillOpacity={k < filled ? 0.85 : 1}
+                            />
+                          ))}
+                        </svg>
+                      )
+                    })()}
                     {isAmlo && (
-                      <span className="absolute right-2 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse">
+                      <span className="absolute right-0 top-1/2 -translate-y-1/2 text-[9px] font-bold text-risk-critical animate-pulse pl-2">
                         {t('evidenceSection.amloMultiplier')}
                       </span>
                     )}
@@ -2422,20 +2438,40 @@ function TransitionMiniBar({
     <div className="space-y-1 mt-1.5">
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{fromName}</span>
-        <div className="flex-1 h-2 bg-background-elevated/50 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full bg-text-muted/30"
-            style={{ width: `${fromPct}%` }}
-          />
+        <div className="flex-1">
+          {(() => {
+            const N = 20, DR = 2, DG = 5
+            const filled = Math.max(1, Math.round((fromPct / 100) * N))
+            return (
+              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, k) => (
+                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                    fill={k < filled ? '#a1a1aa' : '#27272a'}
+                    fillOpacity={k < filled ? 0.5 : 1}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
       </div>
       <div className="flex items-center gap-1.5">
         <span className="text-[8px] text-text-muted font-mono w-16 text-right truncate">{toName}</span>
-        <div className="flex-1 h-2 bg-background-elevated/50 rounded-full overflow-hidden">
-          <div
-            className="h-full rounded-full"
-            style={{ width: `${toPct}%`, backgroundColor: toBarColor }}
-          />
+        <div className="flex-1">
+          {(() => {
+            const N = 20, DR = 2, DG = 5
+            const filled = Math.max(1, Math.round((toPct / 100) * N))
+            return (
+              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, k) => (
+                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                    fill={k < filled ? toBarColor : '#27272a'}
+                    fillOpacity={k < filled ? 0.85 : 1}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
       </div>
     </div>
@@ -2724,10 +2760,18 @@ function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin
         aria-label={`${sector.name} under ${adminName}: ${displayText}`}
       >
         <span style={{ color: bgColor }}>{sector.code}</span>
-        <span
-          className="absolute bottom-0 left-0 rounded-b"
-          style={{ height: 2, backgroundColor: bgColor, opacity: 0.6, width: `${intensity * 100}%` }}
-        />
+        <svg className="absolute bottom-0.5 left-1 right-1" viewBox="0 0 20 3" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
+          {(() => {
+            const N = 5, DR = 1, DG = 4
+            const filled = Math.max(1, Math.round(intensity * N))
+            return Array.from({ length: N }).map((_, k) => (
+              <circle key={k} cx={k * DG + DR} cy={1.5} r={DR}
+                fill={k < filled ? bgColor : '#27272a'}
+                fillOpacity={k < filled ? 0.6 : 1}
+              />
+            ))
+          })()}
+        </svg>
       </div>
     </td>
   )

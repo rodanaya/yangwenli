@@ -399,12 +399,20 @@ function CaptureBarChart({
 
                 {/* Horizontal bar */}
                 <div className="flex items-center gap-2">
-                  <div className="flex-1 h-2 bg-zinc-800 rounded-full overflow-hidden">
-                    <div
-                      className="h-full rounded-full transition-all duration-500"
-                      style={{ width: `${Math.min(100, pct)}%`, background: barColor }}
-                    />
-                  </div>
+                  {(() => {
+                    const N = 30, DR = 2.5, DG = 6
+                    const filled = Math.max(1, Math.round((Math.min(100, pct) / 100) * N))
+                    return (
+                      <svg viewBox={`0 0 ${N * DG} 7`} className="flex-1" style={{ height: 7 }} preserveAspectRatio="none" aria-hidden="true">
+                        {Array.from({ length: N }).map((_, k) => (
+                          <circle key={k} cx={k * DG + DR} cy={3.5} r={DR}
+                            fill={k < filled ? barColor : '#27272a'}
+                            fillOpacity={k < filled ? 0.85 : 1}
+                          />
+                        ))}
+                      </svg>
+                    )
+                  })()}
                   <span
                     className="text-sm font-bold tabular-nums shrink-0 w-14 text-right"
                     style={{ color: textColor }}

@@ -9,14 +9,6 @@
  */
 
 import { useState, useMemo } from 'react'
-import {
-  RadialBarChart,
-  RadialBar,
-  PolarAngleAxis,
-  Tooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
 import { useTranslation } from 'react-i18next'
 import { cn } from '@/lib/utils'
 
@@ -58,10 +50,6 @@ function barColor(month: number): string {
 // Custom tooltip
 // =============================================================================
 
-interface TooltipPayloadItem {
-  payload?: MonthDatum
-}
-
 interface MonthDatum {
   month: number
   name: string
@@ -69,34 +57,6 @@ interface MonthDatum {
   avgAmount: number
   avgRisk: number
   value: number
-}
-
-function CustomTooltip({
-  active,
-  payload,
-  t,
-}: {
-  active?: boolean
-  payload?: TooltipPayloadItem[]
-  t: (key: string) => string
-}) {
-  if (!active || !payload?.length) return null
-  const d = payload[0]?.payload
-  if (!d) return null
-
-  const amountM = (d.avgAmount / 1_000_000).toFixed(2)
-  const contractsK = d.contracts >= 1000
-    ? `${(d.contracts / 1000).toFixed(1)}K`
-    : String(d.contracts)
-
-  return (
-    <div className="rounded-lg border border-border/50 bg-background-elevated px-3 py-2 shadow-lg text-xs font-mono">
-      <p className="font-bold text-text-primary mb-1">{d.name}</p>
-      <p className="text-text-secondary">{t('seasonality.tooltip_avgRisk')}: <span className="text-text-primary">{(d.avgRisk * 100).toFixed(2)}%</span></p>
-      <p className="text-text-secondary">{t('seasonality.tooltip_avgAmount')}: <span className="text-text-primary">MX${amountM}M</span></p>
-      <p className="text-text-secondary">{t('seasonality.tooltip_contracts')}: <span className="text-text-primary">{contractsK}</span></p>
-    </div>
-  )
 }
 
 // =============================================================================
@@ -157,58 +117,65 @@ export function SeasonalityCalendar() {
         </button>
       </div>
 
-      {/* Chart */}
-      <div className="relative" style={{ height: 320 }}>
-        <ResponsiveContainer width="100%" height="100%">
-          <RadialBarChart
-            cx="50%"
-            cy="55%"
-            innerRadius="25%"
-            outerRadius="90%"
-            startAngle={200}
-            endAngle={-30}
-            data={chartData}
-            barSize={14}
-          >
-            <PolarAngleAxis
-              type="number"
-              domain={[0, 100]}
-              tick={false}
-            />
-            <RadialBar
-              dataKey="value"
-              background={{ fill: 'var(--color-border)' }}
-              label={false}
+      {/* Vertical dot-matrix columns — one per month */}
+      <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-4">
+        {(() => {
+          const DOTS = 12           // vertical dots per column
+          const DR = 3
+          const DG = 8              // gap between dots vertically
+          const COL_W = 24
+          const HEIGHT = DOTS * DG + DR * 2
+          const svgW = chartData.length * COL_W
+          return (
+            <svg
+              viewBox={`0 0 ${svgW} ${HEIGHT + 18}`}
+              className="w-full"
+              role="img"
+              aria-label="Monthly seasonality dot matrix"
             >
-              {chartData.map((entry) => (
-                <Cell
-                  key={`cell-${entry.month}`}
-                  fill={barColor(entry.month)}
-                  fillOpacity={entry.month === 12 ? 1 : 0.75}
-                  style={
-                    entry.month === 12
-                      ? { filter: 'drop-shadow(0 0 6px #f87171)' }
-                      : undefined
-                  }
-                />
-              ))}
-            </RadialBar>
-            <Tooltip content={<CustomTooltip t={t} />} />
-          </RadialBarChart>
-        </ResponsiveContainer>
-
-        {/* Center stat */}
-        <div
-          className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none"
-          style={{ paddingTop: '10%' }}
-          aria-label="December is 64% higher risk than October average"
-        >
-          <span className="text-2xl font-bold font-mono text-[#f87171]">{t('months.Dec')}</span>
-          <span className="text-sm font-bold font-mono text-text-primary">
-            +{decRiskPctHigher}% {t('seasonality.toggle_risk')}
-          </span>
-          <span className="text-[10px] text-text-muted font-mono">{t('seasonality.center_vsAvg')}</span>
-        </div>
+              {chartData.map((d, colIdx) => {
+                const filled = Math.max(1, Math.round((d.value / 100) * DOTS))
+                const cx = colIdx * COL_W + COL_W / 2
+                const color = barColor(d.month)
+                return (
+                  <g key={d.month}>
+                    {Array.from({ length: DOTS }).map((_, r) => {
+                      // draw bottom-up: rows from index 0 = lowest, DOTS-1 = highest
+                      const rowFromBottom = DOTS - 1 - r
+                      const cy = DR + r * DG
+                      const isFilled = rowFromBottom < filled
+                      return (
+                        <circle
+                          key={r}
+                          cx={cx}
+                          cy={cy}
+                          r={DR}
+                          fill={isFilled ? color : '#2d2926'}
+                          fillOpacity={isFilled ? (d.month === 12 ? 1 : 0.75) : 1}
+                        />
+                      )
+                    })}
+                    <text
+                      x={cx}
+                      y={HEIGHT + 12}
+                      fontSize={9}
+                      fontFamily="monospace"
+                      fill={d.month === 12 ? '#f87171' : '#71717a'}
+                      fontWeight={d.month === 12 ? 700 : 400}
+                      textAnchor="middle"
+                    >
+                      {d.name.slice(0, 3)}
+                    </text>
+                  </g>
+                )
+              })}
+            </svg>
+          )
+        })()}
+        <p className="mt-3 text-center text-xs font-mono text-text-muted">
+          <span className="text-[#f87171] font-bold">{t('months.Dec')}</span>
+          {' '}+{decRiskPctHigher}% {t('seasonality.toggle_risk')} {t('seasonality.center_vsAvg')}
+        </p>
       </div>
 
       {/* December annotation */}

@@ -414,19 +414,40 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                     </div>
                   )}
                 </div>
-                <div className="relative h-2 w-full">
-                  {/* Zero line */}
-                  <div className="absolute inset-y-[-4px] left-1/2 w-px bg-[rgba(255,255,255,0.12)]" />
-                  {/* Value bar */}
-                  <div
-                    className="absolute inset-y-0"
-                    style={{
-                      backgroundColor: color,
-                      left: isPositive ? '50%' : `${50 - barPct / 2}%`,
-                      width: `${barPct / 2}%`,
-                      boxShadow: `0 0 12px ${color}44`,
-                    }}
-                  />
+                <div className="relative w-full">
+                  {(() => {
+                    const DOTS_PER_SIDE = 18, DR = 2.5, DG = 6
+                    const totalW = DOTS_PER_SIDE * DG * 2
+                    const filled = Math.max(1, Math.round((Math.min(100, barPct) / 100) * DOTS_PER_SIDE))
+                    return (
+                      <svg viewBox={`0 0 ${totalW} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
+                        {/* Zero line */}
+                        <line x1={totalW / 2} y1={0} x2={totalW / 2} y2={8} stroke="rgba(255,255,255,0.2)" strokeWidth={0.8} />
+                        {/* Left side (negative) */}
+                        {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                          const cx = totalW / 2 - (i * DG + DR) - 1
+                          const isFilled = !isPositive && i < filled
+                          return (
+                            <circle key={`l-${i}`} cx={cx} cy={4} r={DR}
+                              fill={isFilled ? color : '#27272a'}
+                              fillOpacity={isFilled ? 0.85 : 1}
+                            />
+                          )
+                        })}
+                        {/* Right side (positive) */}
+                        {Array.from({ length: DOTS_PER_SIDE }).map((_, i) => {
+                          const cx = totalW / 2 + (i * DG + DR) + 1
+                          const isFilled = isPositive && i < filled
+                          return (
+                            <circle key={`r-${i}`} cx={cx} cy={4} r={DR}
+                              fill={isFilled ? color : '#27272a'}
+                              fillOpacity={isFilled ? 0.85 : 1}
+                            />
+                          )
+                        })}
+                      </svg>
+                    )
+                  })()}
                 </div>
                 <div
                   className="text-right font-mono tabular-nums text-sm w-20"
@@ -463,26 +484,30 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           deck="Within the OECD 2–15 % benchmark range, with structural false-positive exclusions and ghost-companion boosts applied."
         />
 
-        {/* Unified distribution strip — one continuous bar */}
-        <div
-          className="flex h-10 w-full overflow-hidden mb-2"
-          style={{ border: '1px solid rgba(255,255,255,0.08)' }}
-        >
-          {RISK_DISTRIBUTION.map((row) => (
-            <div
-              key={row.level}
-              title={`${row.level}: ${row.pct.toFixed(2)}% (${formatNumber(row.count)})`}
-              className="flex items-center justify-center text-[10px] font-mono uppercase tracking-wider text-black/80 transition-opacity hover:opacity-90"
-              style={{
-                width: `${row.pct}%`,
-                backgroundColor: row.color,
-                minWidth: 0,
-              }}
-            >
-              {row.pct > 5 ? `${row.pct.toFixed(1)}%` : ''}
-            </div>
-          ))}
-        </div>
+        {/* Unified distribution dot-matrix (was: stacked bar) */}
+        {(() => {
+          const N = 80, DR = 3, DG = 8
+          const cells: { color: string; label: string }[] = []
+          RISK_DISTRIBUTION.forEach((row) => {
+            const segDots = Math.max(1, Math.round((row.pct / 100) * N))
+            for (let k = 0; k < segDots && cells.length < N; k++) {
+              cells.push({ color: row.color, label: row.level })
+            }
+          })
+          while (cells.length < N && cells.length > 0) {
+            cells.push(cells[cells.length - 1])
+          }
+          return (
+            <svg viewBox={`0 0 ${N * DG} 12`} className="w-full mb-2" style={{ height: 36 }} preserveAspectRatio="none"
+              role="img" aria-label="Unified risk distribution">
+              {cells.map((c, k) => (
+                <circle key={k} cx={k * DG + DR} cy={6} r={DR} fill={c.color} fillOpacity={0.9}>
+                  <title>{c.label}</title>
+                </circle>
+              ))}
+            </svg>
+          )
+        })()}
         <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-6">
           <span>Low</span>
           <span className="text-zinc-300">High-risk threshold →</span>

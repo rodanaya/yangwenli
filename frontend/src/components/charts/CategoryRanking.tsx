@@ -210,19 +210,23 @@ function RankingRow({
           ...(hovered && { borderColor: 'rgba(239, 68, 68, 0.3)' }),
         }}
       >
-        {/* Background value bar — subtle */}
-        <div className="absolute inset-0 pointer-events-none">
-          <div
-            className="h-full transition-all duration-500"
-            style={{
-              width: `${barWidth}%`,
-              backgroundColor: isCritical
-                ? 'rgba(239, 68, 68, 0.08)'
-                : isHigh
-                  ? 'rgba(245, 158, 11, 0.06)'
-                  : 'rgba(63, 63, 70, 0.18)',
-            }}
-          />
+        {/* Background dot-matrix — subtle, full-width aligned */}
+        <div className="absolute bottom-1 left-0 right-0 px-4 pointer-events-none opacity-40">
+          {(() => {
+            const N = 60, DR = 2, DG = 6
+            const filled = Math.max(1, Math.round((barWidth / 100) * N))
+            const color = isCritical ? '#ef4444' : isHigh ? '#f59e0b' : '#71717a'
+            return (
+              <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, i) => (
+                  <circle key={i} cx={i * DG + DR} cy={3} r={DR}
+                    fill={i < filled ? color : '#27272a'}
+                    fillOpacity={i < filled ? 0.45 : 0.3}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
 
         <div className="relative px-4 py-3 flex items-center gap-4">

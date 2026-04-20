@@ -78,16 +78,20 @@ function RiskBarDemo({ t }: { t: (key: string) => string }) {
           >
             {label}
           </span>
-          <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
-            <div
-              className="h-full rounded-full transition-all"
-              style={{
-                width: `${pct}%`,
-                backgroundColor: color,
-                opacity: active ? 1 : 0.35,
-              }}
-            />
-          </div>
+          {(() => {
+            const N = 20, DR = 2, DG = 5
+            const filled = Math.max(1, Math.round((pct / 100) * N))
+            return (
+              <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
+                {Array.from({ length: N }).map((_, k) => (
+                  <circle key={k} cx={k * DG + DR} cy={3} r={DR}
+                    fill={k < filled ? color : '#27272a'}
+                    fillOpacity={k < filled ? (active ? 1 : 0.35) : 1}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
           {active && (
             <span className="text-[10px] font-mono shrink-0" style={{ color }}>
               0.68
