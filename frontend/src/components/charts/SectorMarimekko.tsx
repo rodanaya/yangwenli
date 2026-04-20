@@ -48,7 +48,8 @@ const DOT_LOW      = '#3f3f46'
 const DOT_MEDIUM   = '#a16207'
 const DOT_HIGH     = '#f59e0b'
 const DOT_CRITICAL = '#ef4444'
-const DOT_EMPTY    = '#1e1c1a'
+const DOT_EMPTY    = '#f3f1ec'
+const DOT_EMPTY_STROKE = '#e2ddd6'
 
 interface TooltipData {
   code: string
@@ -133,16 +134,21 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
               <rect x={LABEL_W} y={rowY} width={TAB_W} height={ROW_H} fill={sector.color} />
 
               {/* Dot strip */}
-              {Array.from({ length: N_DOTS }).map((_, i) => (
-                <circle
-                  key={i}
-                  cx={dotStartX + i * DOT_GAP + DOT_R}
-                  cy={cy}
-                  r={DOT_R}
-                  fill={dotColorForIndex(i, lowN, medN, highN, totalN)}
-                  fillOpacity={i < totalN ? 0.9 : 1}
-                />
-              ))}
+              {Array.from({ length: N_DOTS }).map((_, i) => {
+                const isEmpty = i >= totalN
+                return (
+                  <circle
+                    key={i}
+                    cx={dotStartX + i * DOT_GAP + DOT_R}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={dotColorForIndex(i, lowN, medN, highN, totalN)}
+                    stroke={isEmpty ? DOT_EMPTY_STROKE : undefined}
+                    strokeWidth={isEmpty ? 0.5 : 0}
+                    fillOpacity={isEmpty ? 1 : 0.9}
+                  />
+                )
+              })}
 
               {/* H+C % label — only if enough dots filled */}
               {totalN > 12 && hrPct > 0 && (

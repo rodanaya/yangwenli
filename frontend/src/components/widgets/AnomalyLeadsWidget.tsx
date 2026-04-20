@@ -75,7 +75,9 @@ function IPSBar({ score }: { score: number }) {
           <svg viewBox={`0 0 ${N * DG} 6`} width={N * DG} height={6} aria-hidden="true">
             {Array.from({ length: N }).map((_, i) => (
               <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                fill={i < filled ? color : '#2d2926'}
+                fill={i < filled ? color : '#f3f1ec'}
+                stroke={i < filled ? undefined : '#e2ddd6'}
+                strokeWidth={i < filled ? 0 : 0.5}
                 fillOpacity={i < filled ? 0.85 : 1}
               />
             ))}

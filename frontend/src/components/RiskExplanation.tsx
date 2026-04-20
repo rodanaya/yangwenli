@@ -116,7 +116,9 @@ function FeatureBar({ feature, maxContrib }: {
                 const isFilled = !isPositive && i < filled
                 return (
                   <circle key={`l-${i}`} cx={cx} cy={3} r={DR}
-                    fill={isFilled ? color : '#2d2926'}
+                    fill={isFilled ? color : '#f3f1ec'}
+                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.7 : 1}
                   />
                 )
@@ -127,7 +129,9 @@ function FeatureBar({ feature, maxContrib }: {
                 const isFilled = isPositive && i < filled
                 return (
                   <circle key={`r-${i}`} cx={cx} cy={3} r={DR}
-                    fill={isFilled ? color : '#2d2926'}
+                    fill={isFilled ? color : '#f3f1ec'}
+                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.7 : 1}
                   />
                 )
