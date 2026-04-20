@@ -1285,7 +1285,7 @@ export type LegalStatus =
   | 'impunity'
   | 'unresolved'
 
-export type CompranetVisibility = 'high' | 'partial' | 'invisible'
+export type CompranetVisibility = 'high' | 'partial' | 'invisible' | 'none'
 
 export interface KeyActor {
   name: string
