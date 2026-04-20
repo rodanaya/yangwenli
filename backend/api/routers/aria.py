@@ -204,32 +204,35 @@ def get_aria_queue(
         if run_row:
             run_summary = _row_to_dict(run_row)
 
-    # Novel-leads summary (always included, values 0 if table absent)
-    summary: dict = {
-        "total_t1": 0,
-        "novel_leads_t1": 0,
-        "known_gt_t1": 0,
-        "novel_leads_t2": 0,
-    }
-    try:
-        t1_row = conn.execute(
-            "SELECT COUNT(*), SUM(CASE WHEN in_ground_truth = 1 THEN 1 ELSE 0 END) "
-            "FROM aria_queue WHERE ips_tier = 1"
-        ).fetchone()
-        if t1_row:
-            t1_total = t1_row[0] or 0
-            t1_gt = t1_row[1] or 0
-            summary["total_t1"] = t1_total
-            summary["known_gt_t1"] = t1_gt
-            summary["novel_leads_t1"] = t1_total - t1_gt
-        t2_row = conn.execute(
-            "SELECT COUNT(*) - SUM(CASE WHEN in_ground_truth = 1 THEN 1 ELSE 0 END) "
-            "FROM aria_queue WHERE ips_tier = 2"
-        ).fetchone()
-        if t2_row:
-            summary["novel_leads_t2"] = t2_row[0] or 0
-    except Exception as e:
-        logger.warning(f"Failed to compute ARIA summary stats (novel_leads): {e}")
+    # Novel-leads summary (cached 60s — these aggregate 318K rows on every page load)
+    summary: dict = app_cache.get(_STATS_CACHE_KEY, "tier_summary") or {}
+    if not summary:
+        summary = {
+            "total_t1": 0,
+            "novel_leads_t1": 0,
+            "known_gt_t1": 0,
+            "novel_leads_t2": 0,
+        }
+        try:
+            t1_row = conn.execute(
+                "SELECT COUNT(*), SUM(CASE WHEN in_ground_truth = 1 THEN 1 ELSE 0 END) "
+                "FROM aria_queue WHERE ips_tier = 1"
+            ).fetchone()
+            if t1_row:
+                t1_total = t1_row[0] or 0
+                t1_gt = t1_row[1] or 0
+                summary["total_t1"] = t1_total
+                summary["known_gt_t1"] = t1_gt
+                summary["novel_leads_t1"] = t1_total - t1_gt
+            t2_row = conn.execute(
+                "SELECT COUNT(*) - SUM(CASE WHEN in_ground_truth = 1 THEN 1 ELSE 0 END) "
+                "FROM aria_queue WHERE ips_tier = 2"
+            ).fetchone()
+            if t2_row:
+                summary["novel_leads_t2"] = t2_row[0] or 0
+            app_cache.set(_STATS_CACHE_KEY, "tier_summary", summary, maxsize=16, ttl=60)
+        except Exception as e:
+            logger.warning(f"Failed to compute ARIA summary stats (novel_leads): {e}")
 
     return {
         "data": data,
