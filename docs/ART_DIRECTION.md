@@ -1,5 +1,5 @@
 # RUBLI Art Direction — Visual Identity & Data Standards
-*Version 1.0 | 2026-04-20 | Active Design Bible*
+*Version 1.1 | 2026-04-20 | Active Design Bible*
 
 > This document is the canonical reference for all three remodeling agents (TIPO, GRAFIKA, ESCENA). Every design decision made during the overnight audit must be consistent with the principles defined here. When in doubt, refer back to this document.
 
@@ -23,6 +23,62 @@ The aesthetic draws from:
 - **Financial Times** — Salmon/cream ground, financial data clarity
 - **Der Spiegel** — Investigative weight, hard typography
 - **INEGI** — Mexican institutional context, not imported aesthetics
+
+---
+
+## 1.5 The Dot Philosophy — Polka & Kandinsky
+
+### Polka Dots as Data Grammar (PRIMARY INFLUENCE)
+
+The polka dot is not decoration. It is the fundamental unit of truth in RUBLI.
+
+Inspired by **Yayoi Kusama**'s obsessive dot language: the infinity dot field communicates that each instance is discrete yet part of an overwhelming whole. In RUBLI: each dot = one contract = one moment when public money changed hands. The field of dots = the aggregate truth of 3.1 million moments.
+
+**The philosophical rules:**
+- Every dot earns its place — it represents a measurable unit (stated in the legend)
+- A half-filled row is honest: it means exactly that percentage happened
+- Dense dot fields communicate volume without distorting scale
+- The empty dot (ghost) is not absence — it is the benchmark, the expectation, the OECD line
+- Dots do not lie: no Y-axis truncation, no 3D perspective, no gradient washes
+
+**Visual dialect from polka dot tradition:**
+- Consistent diameter — no size variation within a strip (each dot = same unit)
+- Regular grid — dots align to invisible columns and rows
+- High contrast — filled dots pop against the empty field
+- Color carries meaning — never arbitrary, always mapped to data semantics
+
+### Kandinsky's "Point and Line to Plane" (THEORETICAL FRAMEWORK)
+
+Wassily Kandinsky's 1926 treatise *Punkt und Linie zu Fläche* defines the grammar of visual elements that maps directly onto RUBLI's visualization hierarchy:
+
+```
+Point  → A single contract          → one dot
+Line   → A vendor's history         → one dot-strip
+Plane  → A sector's landscape       → a heatmap / constellation field
+```
+
+This hierarchy is not accidental — it is the design principle behind every visualization choice:
+- A single dot-strip answers "how much?" for one entity
+- A set of parallel strips answers "how does this compare?"
+- A constellation plane answers "what is the shape of an entire ecosystem?"
+
+**From Kandinsky, we adopt:**
+- **Warm colors advance** (critical risk in red/amber comes forward visually)
+- **Cool colors recede** (OECD reference lines in cyan sit behind the data)
+- **Geometric precision** — no rounded forms in data (dots are exact circles, lines are hairlines, not soft curves)
+- **The diagonal** carries urgency (trend lines angled down/up signal change)
+- **Tension through proximity** — dots crowded together near the OECD line create visual tension that communicates risk
+
+**From Kandinsky, we do NOT adopt:**
+- Abstract expressionism — the data must remain legible, not interpreted
+- Free color assignment — our colors are semantically fixed (sector palette, risk palette)
+- Decorative geometry — shapes that do not encode data are forbidden
+
+### The Synthesis: Data Pointillism
+
+The name for what we practice: **data pointillism**. Like Seurat's *La Grande Jatte* — standing close, you see individual dots; stepping back, you see the corruption landscape of Mexico. Each dot precise. The whole, overwhelming.
+
+This is the aesthetic and philosophical foundation. When an agent makes a visualization decision, the question is always: **does this respect the dot as the fundamental unit of data truth?**
 
 ---
 
