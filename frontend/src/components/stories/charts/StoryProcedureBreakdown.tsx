@@ -1,28 +1,54 @@
 /**
- * StoryProcedureBreakdown — Editorial: the death of open competition
+ * StoryProcedureBreakdown — Pure SVG three-stripe dot matrix.
  *
- * Stacked horizontal bars showing how direct awards dominate Mexican
- * procurement. Agriculture tops 93.4% — but even the "best" sector
- * (Infrastructure) awards only 60% via open tender.
+ * Each sector is a row containing three horizontal mini-strips:
+ *   - Red strip    = direct award (%)
+ *   - Orange strip = single bid (%)
+ *   - Green strip  = open tender (%)
+ * Each dot = 2pp. Reader scans the matrix and sees red dominate,
+ * green shrink — Infraestructura stands out as the only green-heavy row.
  */
 
 import { motion } from 'framer-motion'
-import { ProcedureBreakdown } from '@/components/charts/ProcedureBreakdown'
 
-const SECTOR_PROCEDURES = [
-  { sector_name: 'Agricultura',     sector_code: 'agricultura',     direct_award_pct: 93.4, single_bid_pct: 3.2,  open_tender_pct: 3.4  },
-  { sector_name: 'Hacienda',        sector_code: 'hacienda',        direct_award_pct: 80.0, single_bid_pct: 5.1,  open_tender_pct: 14.9 },
-  { sector_name: 'Trabajo',         sector_code: 'trabajo',         direct_award_pct: 75.9, single_bid_pct: 8.7,  open_tender_pct: 15.4 },
-  { sector_name: 'Tecnologia',      sector_code: 'tecnologia',      direct_award_pct: 71.8, single_bid_pct: 14.2, open_tender_pct: 14.0 },
-  { sector_name: 'Educacion',       sector_code: 'educacion',       direct_award_pct: 72.3, single_bid_pct: 12.1, open_tender_pct: 15.6 },
-  { sector_name: 'Gobernacion',     sector_code: 'gobernacion',     direct_award_pct: 60.3, single_bid_pct: 13.5, open_tender_pct: 26.2 },
-  { sector_name: 'Salud',           sector_code: 'salud',           direct_award_pct: 63.8, single_bid_pct: 15.2, open_tender_pct: 21.0 },
-  { sector_name: 'Ambiente',        sector_code: 'ambiente',        direct_award_pct: 62.1, single_bid_pct: 11.8, open_tender_pct: 26.1 },
-  { sector_name: 'Defensa',         sector_code: 'defensa',         direct_award_pct: 56.3, single_bid_pct: 22.1, open_tender_pct: 21.6 },
-  { sector_name: 'Energia',         sector_code: 'energia',         direct_award_pct: 55.7, single_bid_pct: 9.3,  open_tender_pct: 35.0 },
-  { sector_name: 'Otros',           sector_code: 'otros',           direct_award_pct: 52.0, single_bid_pct: 9.8,  open_tender_pct: 38.2 },
-  { sector_name: 'Infraestructura', sector_code: 'infraestructura', direct_award_pct: 31.9, single_bid_pct: 8.2,  open_tender_pct: 59.9 },
+interface SectorRow {
+  name: string
+  direct: number
+  single: number
+  open: number
+}
+
+const DATA: SectorRow[] = [
+  { name: 'Agricultura',    direct: 93.4, single: 3.2,  open: 3.4  },
+  { name: 'Hacienda',       direct: 80.0, single: 5.1,  open: 14.9 },
+  { name: 'Trabajo',        direct: 75.9, single: 8.7,  open: 15.4 },
+  { name: 'Educación',      direct: 72.3, single: 12.1, open: 15.6 },
+  { name: 'Tecnología',     direct: 71.8, single: 14.2, open: 14.0 },
+  { name: 'Salud',          direct: 63.8, single: 15.2, open: 21.0 },
+  { name: 'Ambiente',       direct: 62.1, single: 11.8, open: 26.1 },
+  { name: 'Gobernación',    direct: 60.3, single: 13.5, open: 26.2 },
+  { name: 'Defensa',        direct: 56.3, single: 22.1, open: 21.6 },
+  { name: 'Energía',        direct: 55.7, single: 9.3,  open: 35.0 },
+  { name: 'Otros',          direct: 52.0, single: 9.8,  open: 38.2 },
+  { name: 'Infraestructura',direct: 31.9, single: 8.2,  open: 59.9 },
 ]
+
+const COLORS = {
+  direct: '#dc2626',
+  single: '#ea580c',
+  open:   '#16a34a',
+}
+
+const DOTS = 50 // each dot = 2pp
+const DOT_R = 3
+const DOT_GAP = 8
+const STRIP_H = 9
+const LABEL_W = 110
+const TRIO_H = 3 * STRIP_H + 2 * 2 + 6 // strips + gaps + padding
+const COL_W = DOTS * DOT_GAP
+
+const W = LABEL_W + COL_W + 70
+const H = 50 + DATA.length * TRIO_H + 10
 
 export function StoryProcedureBreakdown() {
   return (
@@ -33,65 +59,140 @@ export function StoryProcedureBreakdown() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      {/* Section overline */}
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
-        RUBLI · Procedure Analysis
+        RUBLI · Procedimiento por sector
       </p>
 
-      {/* Editorial headline */}
       <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
-        9 of 12 sectors award more than half their contracts without competition
+        9 de 12 sectores adjudican más de la mitad de sus contratos sin competencia
       </h3>
       <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
-        The OECD recommends that no more than 25% of public contracts be direct awards.
-        In Mexico, not a single sector meets this benchmark. Agriculture leads at 93.4% direct
-        awards — only 3.4% of its contracts go through open tender.
+        Cada sector es un bloque con tres bandas: roja = adjudicación directa,
+        naranja = licitación con un solo oferente, verde = licitación abierta.
+        Cada punto vale 2 puntos porcentuales.
       </p>
 
-      {/* Hero stat + OECD reference */}
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
-          <div className="text-4xl font-mono font-bold text-red-400">93.4%</div>
+          <div className="text-3xl font-mono font-bold text-red-400">93.4%</div>
           <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
-            Agriculture direct awards · <span className="text-cyan-400">OECD max: 25%</span>
+            Agricultura · adj. directa · <span className="text-cyan-400">OCDE máx 25%</span>
           </div>
         </div>
         <div className="border-l-2 border-emerald-500 pl-3 py-1">
-          <div className="text-4xl font-mono font-bold text-emerald-400">59.9%</div>
+          <div className="text-3xl font-mono font-bold text-emerald-400">59.9%</div>
           <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
-            Infrastructure open tender · best sector, still <span className="text-cyan-400">below OECD norm (75%+)</span>
+            Infraestructura · licitación abierta · único sector {'>'}50%
           </div>
         </div>
       </div>
 
-      {/* Chart */}
-      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-4">
-        <ProcedureBreakdown data={SECTOR_PROCEDURES} height={360} />
+      <div className="rounded-xl border border-zinc-800 bg-zinc-950 p-5">
+        <svg
+          viewBox={`0 0 ${W} ${H}`}
+          className="w-full h-auto"
+          role="img"
+          aria-label="Procedure breakdown dot matrix: 12 sectors, 3 strips each (direct award, single bid, open tender)"
+        >
+          {/* Header */}
+          <text x={LABEL_W - 8} y={24} textAnchor="end" fill="#52525b" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.1em">
+            SECTOR
+          </text>
+          <g transform={`translate(${LABEL_W}, 20)`}>
+            <circle cx={3} cy={2} r={3} fill={COLORS.direct} />
+            <text x={11} y={6} fill="#dc2626" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+              DIRECTA
+            </text>
+            <circle cx={80} cy={2} r={3} fill={COLORS.single} />
+            <text x={88} y={6} fill="#ea580c" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+              UN SOLO OFERENTE
+            </text>
+            <circle cx={205} cy={2} r={3} fill={COLORS.open} />
+            <text x={213} y={6} fill="#16a34a" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+              LICITACIÓN ABIERTA
+            </text>
+          </g>
+
+          {/* Rows */}
+          {DATA.map((row, rowIdx) => {
+            const y0 = 50 + rowIdx * TRIO_H
+
+            return (
+              <g key={row.name}>
+                {/* Sector label */}
+                <text
+                  x={LABEL_W - 8}
+                  y={y0 + TRIO_H / 2}
+                  textAnchor="end"
+                  fill="#d4d4d8"
+                  fontSize={11}
+                  fontFamily="var(--font-family-mono)"
+                >
+                  {row.name}
+                </text>
+
+                {/* Three dot strips */}
+                {([
+                  { key: 'direct', pct: row.direct, color: COLORS.direct },
+                  { key: 'single', pct: row.single, color: COLORS.single },
+                  { key: 'open',   pct: row.open,   color: COLORS.open   },
+                ] as const).map((strip, stripIdx) => {
+                  const yStrip = y0 + stripIdx * (STRIP_H + 1)
+                  const filled = Math.round(strip.pct / 2)
+                  return (
+                    <g key={strip.key}>
+                      {Array.from({ length: DOTS }).map((_, i) => {
+                        const isFilled = i < filled
+                        return (
+                          <motion.circle
+                            key={i}
+                            cx={LABEL_W + i * DOT_GAP + DOT_R}
+                            cy={yStrip + STRIP_H / 2}
+                            r={DOT_R}
+                            fill={isFilled ? strip.color : '#18181b'}
+                            stroke={isFilled ? 'none' : '#27272a'}
+                            strokeWidth={isFilled ? 0 : 0.5}
+                            initial={{ opacity: 0 }}
+                            whileInView={{ opacity: 1 }}
+                            viewport={{ once: true }}
+                            transition={{ duration: 0.2, delay: rowIdx * 0.03 + stripIdx * 0.08 + i * 0.002 }}
+                          />
+                        )
+                      })}
+                      {/* Percentage */}
+                      <text
+                        x={LABEL_W + COL_W + 8}
+                        y={yStrip + STRIP_H / 2 + 3}
+                        fill={strip.color}
+                        fontSize={9}
+                        fontFamily="var(--font-family-mono)"
+                        fontWeight={600}
+                      >
+                        {strip.pct.toFixed(1)}%
+                      </text>
+                    </g>
+                  )
+                })}
+              </g>
+            )
+          })}
+        </svg>
       </div>
 
-      {/* Finding callout */}
       <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
         <p className="text-sm text-zinc-200">
-          Defensa has the highest single-bid rate (22.1%) among all sectors — meaning
-          nearly a quarter of its &ldquo;competitive&rdquo; procedures received only one bid.
-          Combined with its 56.3% direct award rate, effectively 78.4% of defense contracts
-          face no real competition.
+          Defensa tiene la tasa más alta de licitación con un solo oferente (22.1%) —
+          casi una cuarta parte de sus "competencias" reciben una sola propuesta.
+          Combinado con 56.3% de adjudicación directa, efectivamente el 78.4% de los
+          contratos de Defensa carecen de competencia real.
         </p>
       </div>
 
-      {/* OECD benchmark line */}
-      <div className="flex items-center gap-2">
-        <div className="h-px flex-1 bg-cyan-500/30" />
-        <span className="text-[10px] font-mono text-cyan-400">OECD max direct award: 25%</span>
-        <div className="h-px flex-1 bg-cyan-500/30" />
-      </div>
-
-      {/* Source */}
-      <p className="text-[10px] text-zinc-600">
-        Source: COMPRANET 2002-2025 · 3.05M contracts · OECD Public Procurement Report 2023
+      <p className="text-[10px] text-zinc-600 font-mono">
+        Fuente: COMPRANET 2002-2025 · 3.05M contratos · OCDE Public Procurement Report 2023
       </p>
     </motion.div>
   )

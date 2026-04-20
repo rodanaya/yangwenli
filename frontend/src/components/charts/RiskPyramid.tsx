@@ -1,20 +1,4 @@
-/**
- * RiskPyramid — Side-by-side mirrored bar chart
- *
- * Left pyramid: contract count (narrow at top = critical, wide at bottom = low)
- * Right pyramid: contract value (wide at top = critical holds 41.8% of money)
- */
-
 import { useTranslation } from 'react-i18next'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  Cell,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from 'recharts'
 
 interface PyramidRow {
   level: string
@@ -28,150 +12,133 @@ interface PyramidRow {
 }
 
 const PYRAMID_DATA: PyramidRow[] = [
-  { level: 'critical', label: 'Critical Risk', pctContracts: 6.0, pctValue: 41.8, contracts: 184031, billions: 4147.04, color: '#f87171', description: '≥0.60 score' },
-  { level: 'high', label: 'High Risk', pctContracts: 7.5, pctValue: 6.1, contracts: 228814, billions: 602.88, color: '#fb923c', description: '0.40–0.60 score' },
-  { level: 'medium', label: 'Medium Risk', pctContracts: 26.8, pctValue: 13.9, contracts: 821251, billions: 1380.64, color: '#fbbf24', description: '0.25–0.40 score' },
-  { level: 'low', label: 'Low Risk', pctContracts: 59.4, pctValue: 38.2, contracts: 1817198, billions: 3797.00, color: '#4ade80', description: '<0.25 score' },
+  { level: 'critical', label: 'Critical Risk', pctContracts: 6.0,  pctValue: 41.8, contracts: 184031,  billions: 4147.04, color: '#f87171', description: '≥0.60 score' },
+  { level: 'high',     label: 'High Risk',     pctContracts: 7.5,  pctValue: 6.1,  contracts: 228814,  billions: 602.88,  color: '#fb923c', description: '0.40–0.60' },
+  { level: 'medium',   label: 'Medium Risk',   pctContracts: 26.8, pctValue: 13.9, contracts: 821251,  billions: 1380.64, color: '#fbbf24', description: '0.25–0.40' },
+  { level: 'low',      label: 'Low Risk',      pctContracts: 59.4, pctValue: 38.2, contracts: 1817198, billions: 3797.00, color: '#4ade80', description: '<0.25 score' },
 ]
 
-// For left chart: negative values so bars grow left
-const leftData = PYRAMID_DATA.map(d => ({ ...d, value: -d.pctContracts }))
-// For right chart: positive values
-const rightData = PYRAMID_DATA.map(d => ({ ...d, value: d.pctValue }))
+// ── Dot matrix parameters ──────────────────────────────────────────────────────
+const DOT_R        = 2.2
+const DOT_SPACING  = 5.5   // center-to-center
+const DOT_TOTAL    = 48    // dots per row per side (each dot ≈ 2% of the metric)
+const LEFT_PAD     = 30    // room for left % label
+const RIGHT_PAD    = 30
+const CENTER_W     = 90    // width of center label zone
+const PANEL_SPAN   = DOT_R * 2 + (DOT_TOTAL - 1) * DOT_SPACING   // ≈ 261
 
-function formatCount(n: number): string {
-  if (n >= 1_000_000) return `${(n / 1_000_000).toFixed(1)}M`
-  if (n >= 1_000) return `${(n / 1_000).toFixed(0)}K`
-  return String(n)
-}
+const SVG_W = LEFT_PAD + PANEL_SPAN + CENTER_W + PANEL_SPAN + RIGHT_PAD  // ≈ 641
+const PAD_T = 26   // room for column header text
+const ROW_H = 30
+const SVG_H = PAD_T + 4 * ROW_H + 14   // ≈ 160
 
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: Array<{ payload: PyramidRow }>
-  side: 'left' | 'right'
-}
-
-function PyramidTooltip({ active, payload, side }: CustomTooltipProps) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  return (
-    <div className="bg-surface border border-border rounded-lg p-3 shadow-xl text-xs space-y-1">
-      <div className="flex items-center gap-2">
-        <span className="w-2 h-2 rounded-full inline-block" style={{ background: d.color }} />
-        <span className="font-semibold text-text-primary">{d.label}</span>
-        <span className="text-text-muted">{d.description}</span>
-      </div>
-      {side === 'left' ? (
-        <>
-          <div className="text-text-secondary">{d.pctContracts}% of all contracts</div>
-          <div className="text-text-muted">{formatCount(d.contracts)} contracts</div>
-        </>
-      ) : (
-        <>
-          <div className="text-text-secondary">{d.pctValue}% of total value</div>
-          <div className="text-text-muted">{d.billions.toLocaleString('en-MX', { maximumFractionDigits: 0 })}B MXN</div>
-        </>
-      )}
-    </div>
-  )
-}
+const LEFT_DOT0_CX  = LEFT_PAD + DOT_R                              // first left dot cx
+const CENTER_X      = LEFT_PAD + PANEL_SPAN + CENTER_W / 2          // label zone center
+const RIGHT_DOT0_CX = LEFT_PAD + PANEL_SPAN + CENTER_W + DOT_R      // first right dot cx
+const RIGHT_LAST_CX = RIGHT_DOT0_CX + (DOT_TOTAL - 1) * DOT_SPACING
 
 export function RiskPyramid() {
   const { t } = useTranslation('procurement')
 
   return (
     <div className="space-y-4">
-      {/* Legend row */}
-      <div className="flex items-center justify-center gap-6 text-xs text-text-muted">
-        {PYRAMID_DATA.map(d => (
-          <div key={d.level} className="flex items-center gap-1.5">
-            <span className="w-2.5 h-2.5 rounded-sm inline-block" style={{ background: d.color }} />
-            <span>{d.label}</span>
-          </div>
-        ))}
-      </div>
 
-      {/* Column headers */}
-      <div className="grid grid-cols-[1fr_120px_1fr] gap-2 text-center text-xs font-semibold text-text-muted uppercase tracking-wide">
-        <div>Contract Count (%)</div>
-        <div />
-        <div>Contract Value (%)</div>
-      </div>
+      {/* dot matrix SVG */}
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        width="100%"
+        preserveAspectRatio="xMidYMid meet"
+        role="img"
+        aria-label="Risk distribution dot matrix: left panel shows share of contract count, right panel shows share of contract value, per risk tier."
+      >
+        {/* column headers */}
+        <text x={LEFT_PAD + PANEL_SPAN / 2} y={13} textAnchor="middle"
+              fill="#71717a" fontSize={7.5} fontFamily="monospace" letterSpacing="0.06em">
+          CONTRACT COUNT
+        </text>
+        <text x={LEFT_PAD + PANEL_SPAN / 2} y={21} textAnchor="middle"
+              fill="#3f3f46" fontSize={6} fontFamily="monospace">
+          each dot ≈ 2 pct of contracts
+        </text>
+        <text x={LEFT_PAD + PANEL_SPAN + CENTER_W + PANEL_SPAN / 2} y={13} textAnchor="middle"
+              fill="#71717a" fontSize={7.5} fontFamily="monospace" letterSpacing="0.06em">
+          CONTRACT VALUE
+        </text>
+        <text x={LEFT_PAD + PANEL_SPAN + CENTER_W + PANEL_SPAN / 2} y={21} textAnchor="middle"
+              fill="#3f3f46" fontSize={6} fontFamily="monospace">
+          each dot ≈ 2 pct of total MXN
+        </text>
 
-      {/* Side-by-side pyramid charts */}
-      <div className="grid grid-cols-[1fr_120px_1fr] gap-2 items-center">
-        {/* Left: contract count (bars go left, so domain is [-80, 0]) */}
-        <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={leftData}
-              layout="vertical"
-              margin={{ top: 4, right: 0, bottom: 4, left: 0 }}
-              barCategoryGap="20%"
-            >
-              <XAxis
-                type="number"
-                domain={[-80, 0]}
-                tickFormatter={v => `${Math.abs(v)}%`}
-                tick={{ fontSize: 10, fill: 'var(--color-text-muted, #71717a)' }}
-                axisLine={false}
-                tickLine={false}
+        {/* rows */}
+        {PYRAMID_DATA.map((d, ri) => {
+          const rowY      = PAD_T + ri * ROW_H
+          const leftFill  = Math.round((d.pctContracts / 100) * DOT_TOTAL)
+          const rightFill = Math.round((d.pctValue     / 100) * DOT_TOTAL)
+
+          return (
+            <g key={d.level}>
+              {/* left dots — right-aligned fill (pyramid narrows at top) */}
+              {Array.from({ length: DOT_TOTAL }, (_, i) => {
+                const filled = i >= DOT_TOTAL - leftFill
+                return (
+                  <circle
+                    key={i}
+                    cx={LEFT_DOT0_CX + i * DOT_SPACING}
+                    cy={rowY}
+                    r={DOT_R}
+                    fill={filled ? d.color : '#27272a'}
+                    fillOpacity={filled ? 0.88 : 0.32}
+                  />
+                )
+              })}
+
+              {/* left % label */}
+              <text x={LEFT_PAD - 4} y={rowY + 4} textAnchor="end"
+                    fill={d.color} fontSize={7} fontFamily="monospace" opacity={0.85}>
+                {d.pctContracts}%
+              </text>
+
+              {/* center label pill */}
+              <rect
+                x={LEFT_PAD + PANEL_SPAN + 6} y={rowY - 10}
+                width={CENTER_W - 12} height={20}
+                fill={d.color} fillOpacity={0.12} rx={10}
               />
-              <YAxis type="category" dataKey="label" hide />
-              <RechartsTooltip content={<PyramidTooltip side="left" />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="value" radius={[2, 0, 0, 2]}>
-                {leftData.map(d => (
-                  <Cell key={d.level} fill={d.color} fillOpacity={0.75} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-
-        {/* Center axis labels */}
-        <div className="flex flex-col justify-around h-56 py-2">
-          {PYRAMID_DATA.map(d => (
-            <div key={d.level} className="flex justify-center">
-              <span
-                className="text-[10px] font-bold px-2 py-0.5 rounded-full text-text-primary"
-                style={{ background: d.color }}
-              >
+              <text x={CENTER_X} y={rowY - 2} textAnchor="middle"
+                    fill="#52525b" fontSize={5.5} fontFamily="monospace">
+                {d.description}
+              </text>
+              <text x={CENTER_X} y={rowY + 7} textAnchor="middle"
+                    fill={d.color} fontSize={8} fontFamily="monospace" fontWeight="bold">
                 {d.level.toUpperCase()}
-              </span>
-            </div>
-          ))}
-        </div>
+              </text>
 
-        {/* Right: contract value */}
-        <div className="h-56">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart
-              data={rightData}
-              layout="vertical"
-              margin={{ top: 4, right: 0, bottom: 4, left: 0 }}
-              barCategoryGap="20%"
-            >
-              <XAxis
-                type="number"
-                domain={[0, 80]}
-                tickFormatter={v => `${v}%`}
-                tick={{ fontSize: 10, fill: 'var(--color-text-muted, #71717a)' }}
-                axisLine={false}
-                tickLine={false}
-              />
-              <YAxis type="category" dataKey="label" hide />
-              <RechartsTooltip content={<PyramidTooltip side="right" />} cursor={{ fill: 'rgba(255,255,255,0.04)' }} />
-              <Bar dataKey="value" radius={[0, 2, 2, 0]}>
-                {rightData.map(d => (
-                  <Cell key={d.level} fill={d.color} />
-                ))}
-              </Bar>
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
+              {/* right dots — left-aligned fill (value concentration visible) */}
+              {Array.from({ length: DOT_TOTAL }, (_, i) => {
+                const filled = i < rightFill
+                return (
+                  <circle
+                    key={i}
+                    cx={RIGHT_DOT0_CX + i * DOT_SPACING}
+                    cy={rowY}
+                    r={DOT_R}
+                    fill={filled ? d.color : '#27272a'}
+                    fillOpacity={filled ? 0.88 : 0.32}
+                  />
+                )
+              })}
 
-      {/* Stats row below chart */}
+              {/* right % label */}
+              <text x={RIGHT_LAST_CX + 6} y={rowY + 4} textAnchor="start"
+                    fill={d.color} fontSize={7} fontFamily="monospace" opacity={0.85}>
+                {d.pctValue}%
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* stats cards */}
       <div className="grid grid-cols-4 gap-3">
         {PYRAMID_DATA.map(d => (
           <div key={d.level} className="rounded-lg p-3 bg-surface-elevated border border-border text-center space-y-1">
@@ -187,7 +154,7 @@ export function RiskPyramid() {
         ))}
       </div>
 
-      {/* Callout */}
+      {/* callout */}
       <div className="rounded-lg border border-risk-critical/30 bg-risk-critical/5 p-3">
         <p className="text-xs text-text-secondary leading-relaxed">
           {t('risk_pyramid.callout')}

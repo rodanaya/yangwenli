@@ -1,148 +1,163 @@
+/**
+ * DaBySectorChart — Pure SVG dot-strip chart.
+ *
+ * Each sector is a row of dots. Each dot represents 2 percentage points
+ * of direct-award rate. Sector color fills dots; 25% OECD limit shown
+ * as a vertical cyan ceiling line. Reader scans rows like a barcode —
+ * every sector crosses the ceiling.
+ */
+
 import { motion } from 'framer-motion'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  Cell,
-} from 'recharts'
 import { SECTOR_COLORS } from '@/lib/constants'
 
-const OECD_COLOR = '#22d3ee'
-const GRID_COLOR = '#3f3f46'
-const AXIS_COLOR = '#71717a'
+const SECTORS = [
+  { code: 'agricultura',    name: 'Agricultura',    rate: 93.4 },
+  { code: 'defensa',        name: 'Defensa',        rate: 89.2 },
+  { code: 'gobernacion',    name: 'Gobernación',    rate: 85.1 },
+  { code: 'tecnologia',     name: 'Tecnología',     rate: 82.7 },
+  { code: 'salud',          name: 'Salud',          rate: 78.9 },
+  { code: 'trabajo',        name: 'Trabajo',        rate: 78.3 },
+  { code: 'energia',        name: 'Energía',        rate: 77.6 },
+  { code: 'hacienda',       name: 'Hacienda',       rate: 76.8 },
+  { code: 'infraestructura',name: 'Infraestructura',rate: 74.2 },
+  { code: 'ambiente',       name: 'Ambiente',       rate: 73.9 },
+  { code: 'educacion',      name: 'Educación',      rate: 71.5 },
+  { code: 'otros',          name: 'Otros',          rate: 68.3 },
+]
 
-const sectorColorMap: Record<string, string> = {
-  Agricultura: SECTOR_COLORS.agricultura,
-  Defensa: SECTOR_COLORS.defensa,
-  Gobernacion: SECTOR_COLORS.gobernacion,
-  Tecnologia: SECTOR_COLORS.tecnologia,
-  Salud: SECTOR_COLORS.salud,
-  Trabajo: SECTOR_COLORS.trabajo,
-  Energia: SECTOR_COLORS.energia,
-  Hacienda: SECTOR_COLORS.hacienda,
-  Infraestructura: SECTOR_COLORS.infraestructura,
-  Ambiente: SECTOR_COLORS.ambiente,
-  Educacion: SECTOR_COLORS.educacion,
-  Otros: SECTOR_COLORS.otros,
-}
+const DOTS_TOTAL = 50 // each dot = 2 percentage points
+const DOT_R = 4
+const DOT_GAP = 11
+const ROW_H = 22
+const LABEL_W = 120
+const LEFT_PAD = 16
 
-const rawData = [
-  { sector: 'Agricultura', rate: 93.4 },
-  { sector: 'Defensa', rate: 89.2 },
-  { sector: 'Gobernacion', rate: 85.1 },
-  { sector: 'Tecnologia', rate: 82.7 },
-  { sector: 'Salud', rate: 78.9 },
-  { sector: 'Trabajo', rate: 78.3 },
-  { sector: 'Energia', rate: 77.6 },
-  { sector: 'Hacienda', rate: 76.8 },
-  { sector: 'Infraestructura', rate: 74.2 },
-  { sector: 'Ambiente', rate: 73.9 },
-  { sector: 'Educacion', rate: 71.5 },
-  { sector: 'Otros', rate: 68.3 },
-].reverse()
+const W = LEFT_PAD + LABEL_W + DOTS_TOTAL * DOT_GAP + 80
+const H = 50 + SECTORS.length * ROW_H + 20
 
-interface PayloadEntry {
-  payload: { sector: string; rate: number }
-}
-
-function CustomTooltip({ active, payload }: { active?: boolean; payload?: PayloadEntry[] }) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const multiplier = (d.rate / 25).toFixed(1)
-  return (
-    <div className="rounded-lg border px-3 py-2 text-sm shadow-xl" style={{ background: '#18181b', borderColor: GRID_COLOR }}>
-      <p className="font-mono font-semibold text-zinc-100">{d.sector}</p>
-      <p className="mt-1 text-lg font-mono font-bold" style={{ color: sectorColorMap[d.sector] || '#a1a1aa' }}>
-        {d.rate}%
-      </p>
-      <p className="text-[10px] text-zinc-500 uppercase tracking-wide">
-        {multiplier}x limite OCDE
-      </p>
-    </div>
-  )
+function colorFor(code: string): string {
+  return (SECTOR_COLORS as Record<string, string>)[code] || '#64748b'
 }
 
 export function DaBySectorChart() {
+  const oecdDots = Math.round(25 / 2) // = 13 dots (at 2pp each)
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true }}
       transition={{ duration: 0.5 }}
-      className="rounded-xl bg-zinc-900 p-5"
+      className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
     >
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
         RUBLI · Por sector
       </p>
       <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
-        Todos los sectores superan el limite OCDE — Agricultura llega a 93%
+        Cada fila es un sector — cada punto vale 2 puntos porcentuales
       </h3>
       <p className="text-xs text-zinc-500 mb-4">
-        El sector mas bajo (Otros, 68%) todavia triplica el umbral del 25%
+        Todos cruzan la línea OCDE. Agricultura llega a 93% · Otros, el menor, triplica el límite.
       </p>
-      <ResponsiveContainer width="100%" height={360}>
-        <BarChart
-          data={rawData}
-          layout="vertical"
-          margin={{ top: 0, right: 40, left: 0, bottom: 0 }}
+
+      <svg
+        viewBox={`0 0 ${W} ${H}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Direct award rate by sector as dot strip, 12 sectors, OECD ceiling at 25%"
+      >
+        {/* OECD ceiling line */}
+        <line
+          x1={LEFT_PAD + LABEL_W + oecdDots * DOT_GAP}
+          x2={LEFT_PAD + LABEL_W + oecdDots * DOT_GAP}
+          y1={20}
+          y2={H - 20}
+          stroke="#22d3ee"
+          strokeWidth={1.5}
+          strokeDasharray="4 3"
+        />
+        <text
+          x={LEFT_PAD + LABEL_W + oecdDots * DOT_GAP}
+          y={15}
+          textAnchor="middle"
+          fill="#22d3ee"
+          fontSize={10}
+          fontFamily="var(--font-family-mono)"
+          fontWeight={600}
         >
-          <CartesianGrid vertical={true} horizontal={false} strokeDasharray="3 3" stroke={GRID_COLOR} />
-          <XAxis
-            type="number"
-            domain={[0, 100]}
-            ticks={[0, 25, 50, 75, 100]}
-            tick={{ fill: AXIS_COLOR, fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v}%`}
-          />
-          <YAxis
-            type="category"
-            dataKey="sector"
-            width={95}
-            tick={{ fill: '#d4d4d8', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <Tooltip content={<CustomTooltip />} cursor={{ fill: '#27272a', opacity: 0.6 }} />
-          <ReferenceLine
-            x={25}
-            stroke={OECD_COLOR}
-            strokeDasharray="6 3"
-            strokeWidth={1.5}
-            label={{
-              value: 'OCDE 25%',
-              fill: OECD_COLOR,
-              fontSize: 10,
-              fontFamily: 'var(--font-family-mono)',
-              position: 'insideTopRight',
-            }}
-          />
-          <Bar
-            dataKey="rate"
-            radius={[0, 3, 3, 0]}
-            barSize={18}
-            isAnimationActive={true}
-            animationDuration={1200}
-            animationEasing="ease-out"
-          >
-            {rawData.map((entry) => (
-              <Cell
-                key={entry.sector}
-                fill={sectorColorMap[entry.sector] || '#64748b'}
-                fillOpacity={entry.rate >= 85 ? 1 : 0.7}
-              />
-            ))}
-          </Bar>
-        </BarChart>
-      </ResponsiveContainer>
-      <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
-        Fuente: COMPRANET 2002-2025 · RUBLI v6.5
+          OCDE 25%
+        </text>
+
+        {/* Rows */}
+        {SECTORS.map((s, rowIdx) => {
+          const y = 40 + rowIdx * ROW_H
+          const filledDots = Math.round(s.rate / 2)
+          const color = colorFor(s.code)
+          return (
+            <g key={s.code}>
+              {/* Sector label */}
+              <text
+                x={LEFT_PAD + LABEL_W - 8}
+                y={y + 4}
+                textAnchor="end"
+                fill="#d4d4d8"
+                fontSize={11}
+                fontFamily="var(--font-family-mono)"
+              >
+                {s.name}
+              </text>
+
+              {/* Dot strip */}
+              {Array.from({ length: DOTS_TOTAL }).map((_, i) => {
+                const isFilled = i < filledDots
+                const isAboveOecd = i >= oecdDots && isFilled
+                return (
+                  <motion.circle
+                    key={i}
+                    cx={LEFT_PAD + LABEL_W + i * DOT_GAP + DOT_R}
+                    cy={y}
+                    r={DOT_R}
+                    fill={isFilled ? color : '#18181b'}
+                    fillOpacity={isAboveOecd ? 1 : isFilled ? 0.5 : 1}
+                    stroke={isFilled ? 'none' : '#27272a'}
+                    strokeWidth={isFilled ? 0 : 1}
+                    initial={{ opacity: 0, scale: 0 }}
+                    whileInView={{ opacity: 1, scale: 1 }}
+                    viewport={{ once: true }}
+                    transition={{ duration: 0.2, delay: rowIdx * 0.04 + i * 0.005 }}
+                  />
+                )
+              })}
+
+              {/* Percentage label */}
+              <text
+                x={LEFT_PAD + LABEL_W + DOTS_TOTAL * DOT_GAP + 10}
+                y={y + 4}
+                fill={color}
+                fontSize={11}
+                fontFamily="var(--font-family-mono)"
+                fontWeight={700}
+              >
+                {s.rate}%
+              </text>
+            </g>
+          )
+        })}
+      </svg>
+
+      <div className="mt-3 flex items-center gap-4 text-[10px] text-zinc-500 font-mono">
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full opacity-50" style={{ background: '#64748b' }} />
+          Debajo de OCDE
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full" style={{ background: '#64748b' }} />
+          Sobre OCDE — riesgo
+        </span>
+      </div>
+
+      <p className="mt-2 text-[10px] text-zinc-600 font-mono">
+        Fuente: COMPRANET 2002-2025 · 3.05M contratos · RUBLI v0.6.5
       </p>
     </motion.div>
   )

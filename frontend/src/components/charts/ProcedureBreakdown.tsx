@@ -1,22 +1,4 @@
-/**
- * Procedure Breakdown Chart Component
- * Shows stacked bar chart of procedure types by sector
- *
- * Design: dark editorial (zinc-900 bg), monospace labels, risk-tinted bars.
- */
-
 import { memo, useMemo } from 'react'
-import {
-  BarChart,
-  Bar,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  Legend,
-} from 'recharts'
-import { formatPercent } from '@/lib/utils'
 
 interface ProcedureBreakdownData {
   sector_name: string
@@ -28,15 +10,17 @@ interface ProcedureBreakdownData {
 
 interface ProcedureBreakdownProps {
   data: ProcedureBreakdownData[]
-  height?: number
+  height?: number   // kept for API compatibility — drives container max-height
   onSectorClick?: (sectorCode: string) => void
 }
 
-// Dark editorial procedure colors — risk-coded
-const PROCEDURE_COLORS = {
-  direct_award: '#f87171', // red-400 — most restrictive
-  single_bid: '#fb923c',   // orange-400 — concerning
-  open_tender: '#4ade80',  // green-400 — most competitive
+// Dots per 100%: 50 dots = 100%, each dot ≈ 2%
+const N_DOTS = 50
+
+const COLORS = {
+  direct:  '#f87171',  // red-400 — most restrictive
+  single:  '#fb923c',  // orange-400 — concerning
+  tender:  '#4ade80',  // green-400 — most competitive
 }
 
 export const ProcedureBreakdown = memo(function ProcedureBreakdown({
@@ -44,104 +28,93 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   height = 300,
   onSectorClick,
 }: ProcedureBreakdownProps) {
-  const chartData = useMemo(() => {
-    return data
-      .map((d) => ({
-        name: d.sector_name,
-        code: d.sector_code,
-        'Direct Award': d.direct_award_pct,
-        'Single Bid': d.single_bid_pct,
-        'Open Tender': d.open_tender_pct,
-      }))
-      .sort((a, b) => b['Direct Award'] - a['Direct Award'])
-  }, [data])
+  const sorted = useMemo(
+    () => [...data].sort((a, b) => b.direct_award_pct - a.direct_award_pct),
+    [data]
+  )
 
   return (
-    <div role="img" aria-label="Procedure type breakdown by sector: direct award, single bid, and open tender percentages" style={{ height: `${height}px` }}>
-      <ResponsiveContainer width="100%" height="100%">
-        <BarChart data={chartData} layout="vertical" onClick={(data: any) => {
-          if (onSectorClick && data?.activePayload?.[0]?.payload?.code) {
-            onSectorClick(data.activePayload[0].payload.code)
-          }
-        }} style={{ cursor: onSectorClick ? 'pointer' : 'default' }}>
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="#3f3f46"
-            horizontal={false}
-          />
-          <XAxis
-            type="number"
-            tick={{ fill: '#71717a', fontSize: 11, fontFamily: "var(--font-family-mono)" }}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickLine={false}
-            tickFormatter={(v) => `${v}%`}
-            domain={[0, 100]}
-          />
-          <YAxis
-            type="category"
-            dataKey="name"
-            tick={{ fill: '#a1a1aa', fontSize: 11, fontFamily: "var(--font-family-mono)" }}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickLine={false}
-            width={90}
-          />
-          <Tooltip
-            content={({ active, payload, label }) => {
-              if (active && payload && payload.length) {
-                return (
-                  <div
-                    className="rounded-lg p-3 shadow-2xl text-xs"
-                    style={{ backgroundColor: '#18181b', border: '1px solid #3f3f46' }}
-                  >
-                    <p className="font-medium text-zinc-100 font-mono mb-1">{label}</p>
-                    {payload.map((entry) => (
-                      <div key={entry.dataKey} className="flex items-center gap-2 text-xs">
-                        <div
-                          className="w-2 h-2 rounded-full"
-                          style={{ backgroundColor: entry.color }}
-                        />
-                        <span className="text-zinc-400">{entry.dataKey}</span>
-                        <span className="font-mono ml-auto text-zinc-200">
-                          {formatPercent((entry.value as number) / 100)}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                )
+    <div style={{ maxHeight: `${height}px`, overflowY: 'auto' }} className="space-y-0.5 pr-1">
+      {/* legend */}
+      <div className="flex items-center gap-5 pb-2 text-xs text-zinc-500 font-mono">
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.direct }} />
+          Direct Award
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.single }} />
+          Single Bid
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.tender }} />
+          Open Tender
+        </span>
+      </div>
+
+      {sorted.map((sector) => {
+        const daDots = Math.round((sector.direct_award_pct / 100) * N_DOTS)
+        const sbDots = Math.round((sector.single_bid_pct   / 100) * N_DOTS)
+        const otDots = N_DOTS - daDots - sbDots
+
+        return (
+          <div
+            key={sector.sector_code}
+            className="flex items-center gap-2 py-[3px] group"
+          >
+            {/* sector label */}
+            <button
+              className={[
+                'text-right w-[88px] shrink-0 text-[10px] font-mono truncate',
+                'text-zinc-500 group-hover:text-zinc-300 transition-colors',
+                onSectorClick ? 'cursor-pointer' : 'cursor-default',
+              ].join(' ')}
+              onClick={() => onSectorClick?.(sector.sector_code)}
+              tabIndex={onSectorClick ? 0 : -1}
+            >
+              {sector.sector_name}
+            </button>
+
+            {/* dot strip */}
+            <div
+              className="flex items-center gap-[2px] flex-1 cursor-pointer"
+              onClick={() => onSectorClick?.(sector.sector_code)}
+              role={onSectorClick ? 'button' : undefined}
+              aria-label={
+                onSectorClick
+                  ? `${sector.sector_name}: ${sector.direct_award_pct.toFixed(0)}% direct, ${sector.single_bid_pct.toFixed(0)}% single bid, ${sector.open_tender_pct.toFixed(0)}% open`
+                  : undefined
               }
-              return null
-            }}
-          />
-          <Legend
-            verticalAlign="bottom"
-            height={36}
-            formatter={(value) => (
-              <span style={{ color: '#71717a', fontSize: 11, fontFamily: "var(--font-family-mono)" }}>{value}</span>
-            )}
-          />
-          <Bar
-            dataKey="Direct Award"
-            stackId="a"
-            fill={PROCEDURE_COLORS.direct_award}
-            fillOpacity={0.85}
-            radius={[0, 0, 0, 0]}
-          />
-          <Bar
-            dataKey="Single Bid"
-            stackId="a"
-            fill={PROCEDURE_COLORS.single_bid}
-            fillOpacity={0.85}
-            radius={[0, 0, 0, 0]}
-          />
-          <Bar
-            dataKey="Open Tender"
-            stackId="a"
-            fill={PROCEDURE_COLORS.open_tender}
-            fillOpacity={0.85}
-            radius={[0, 4, 4, 0]}
-          />
-        </BarChart>
-      </ResponsiveContainer>
+            >
+              {Array.from({ length: daDots }, (_, i) => (
+                <span
+                  key={`da-${i}`}
+                  className="inline-block w-[6px] h-[6px] rounded-full shrink-0"
+                  style={{ background: COLORS.direct, opacity: 0.85 }}
+                />
+              ))}
+              {Array.from({ length: Math.max(0, sbDots) }, (_, i) => (
+                <span
+                  key={`sb-${i}`}
+                  className="inline-block w-[6px] h-[6px] rounded-full shrink-0"
+                  style={{ background: COLORS.single, opacity: 0.85 }}
+                />
+              ))}
+              {Array.from({ length: Math.max(0, otDots) }, (_, i) => (
+                <span
+                  key={`ot-${i}`}
+                  className="inline-block w-[6px] h-[6px] rounded-full shrink-0"
+                  style={{ background: COLORS.tender, opacity: 0.85 }}
+                />
+              ))}
+            </div>
+
+            {/* direct award % label */}
+            <span className="text-[10px] text-zinc-600 font-mono w-8 text-right shrink-0">
+              {sector.direct_award_pct.toFixed(0)}%
+            </span>
+          </div>
+        )
+      })}
     </div>
   )
 })
