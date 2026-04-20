@@ -11,17 +11,16 @@ import sqlite3
 from datetime import datetime, timezone, timedelta
 from typing import Optional
 
+import bcrypt as _bcrypt
+
 from fastapi import APIRouter, Depends, HTTPException, status
 from pydantic import BaseModel, EmailStr, Field
-from passlib.context import CryptContext
 from jose import jwt
 
 from ..dependencies import get_db
 from ..middleware.auth_jwt import JWT_SECRET, JWT_ALGORITHM, get_current_user
 
 router = APIRouter(prefix="/auth", tags=["auth"])
-
-_pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
 
 JWT_EXPIRE_DAYS = 30
 
@@ -55,11 +54,11 @@ class AuthResponse(BaseModel):
 # ── Helpers ──────────────────────────────────────────────────────────────────
 
 def _hash_password(plain: str) -> str:
-    return _pwd_context.hash(plain)
+    return _bcrypt.hashpw(plain.encode(), _bcrypt.gensalt(rounds=12)).decode()
 
 
 def _verify_password(plain: str, hashed: str) -> bool:
-    return _pwd_context.verify(plain, hashed)
+    return _bcrypt.checkpw(plain.encode(), hashed.encode())
 
 
 def _make_token(user_id: int, email: str) -> str:

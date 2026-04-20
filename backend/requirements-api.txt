@@ -22,7 +22,7 @@ anthropic>=0.40.0          # ai_explain.py — lazy import, needs ANTHROPIC_API_
 
 # Authentication
 python-jose[cryptography]>=3.3.0  # JWT encode/decode
-passlib[bcrypt]>=1.7.4            # Password hashing
+bcrypt>=4.0.0                     # Password hashing (direct, avoids passlib compat issues)
 email-validator>=2.0.0            # Required by pydantic EmailStr
 
 # Error monitoring (optional — no-op when SENTRY_DSN env var is not set)
