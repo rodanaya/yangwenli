@@ -13,7 +13,7 @@
     "sortByValue": "Mayor gasto",
     "sortByValueHint": "Por monto total",
     "sortByRisk": "Mayor riesgo",
-    "sortByRiskHint": "Por score promedio",
+    "sortByRiskHint": "Por puntuación promedio",
     "oecdLimit": "límite OCDE",
     "withinOecdLimit": "Dentro de límite OCDE",
     "contracts": "{{count}} contratos",

@@ -52,7 +52,6 @@ export function StoryAvalanchaDiciembre() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
@@ -129,7 +128,6 @@ export function StoryAvalanchaDiciembre() {
           strokeDasharray="4 3"
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
           transition={{ duration: 1, delay: 0.3 }}
         />
         <text
@@ -165,7 +163,6 @@ export function StoryAvalanchaDiciembre() {
                     strokeWidth={0.5}
                     initial={{ opacity: 0, y: 20 }}
                     whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
                     transition={{ duration: 0.3, delay: mi * 0.04 + di * 0.02 }}
                   />
                 )
@@ -210,8 +207,7 @@ export function StoryAvalanchaDiciembre() {
             stroke="#fbbf24"
             strokeWidth={1}
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
           />
           <motion.text
@@ -222,8 +218,7 @@ export function StoryAvalanchaDiciembre() {
             fontFamily="var(--font-family-mono)"
             fontWeight={600}
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 1.5 }}
           >
             2.3× el promedio anual

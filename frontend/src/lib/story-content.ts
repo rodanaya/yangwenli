@@ -1891,7 +1891,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'network',
           title: 'PEMEX vendor network — co-contracting communities detected',
-          chartId: 'network-graph',
+          chartId: 'story-red-fantasma',
         },
       },
       {
@@ -1966,7 +1966,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'scatter',
           title: 'COVID vendors — company age vs. contracted amount',
-          chartId: 'vendor-age-scatter',
+          chartId: 'vendor-concentration',
         },
       },
       {
@@ -2004,7 +2004,7 @@ export const STORIES: StoryDef[] = [
         chartConfig: {
           type: 'breakdown',
           title: 'COVID spending distribution by vendor type',
-          chartId: 'covid-breakdown',
+          chartId: 'risk-by-sector',
         },
       },
     ],

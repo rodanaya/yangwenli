@@ -38,7 +38,6 @@ export function StorySixSigmaHacienda() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
@@ -105,7 +104,6 @@ export function StorySixSigmaHacienda() {
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
                   transition={{ duration: 0.2, delay: i * 0.012 }}
                 />
               )
@@ -129,7 +127,6 @@ export function StorySixSigmaHacienda() {
                   strokeWidth={0.5}
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
                   transition={{ duration: 0.2, delay: 0.6 + i * 0.012 }}
                 />
               )
@@ -192,7 +189,6 @@ export function StorySixSigmaHacienda() {
                   strokeWidth={1}
                   initial={{ opacity: 0, scale: 0 }}
                   whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
                   transition={{ duration: 0.2, delay: i * 0.005 }}
                 />
               )

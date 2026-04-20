@@ -49,7 +49,6 @@ export function StoryAusteridadChart() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-900 border border-zinc-800 p-5"
     >
@@ -153,8 +152,7 @@ export function StoryAusteridadChart() {
                             stroke={isFilled ? 'none' : '#27272a'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
+                            animate={{ opacity: 1 }}
                             transition={{ duration: 0.2, delay: rowIdx * 0.05 + i * 0.003 }}
                           />
                         )
@@ -191,8 +189,7 @@ export function StoryAusteridadChart() {
                             stroke={isFilled ? 'none' : '#27272a'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
+                            animate={{ opacity: 1 }}
                             transition={{ duration: 0.2, delay: rowIdx * 0.05 + 0.08 + i * 0.003 }}
                           />
                         )

@@ -33,7 +33,6 @@ export function StoryHemoserSplitting() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-900 border border-zinc-800 p-5"
     >
@@ -122,8 +121,7 @@ export function StoryHemoserSplitting() {
                     strokeWidth={0.5}
                     fillOpacity={isPeak && isFilled ? 1 : 0.85}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: colIdx * 0.04 + (filled - i) * 0.005 }}
                   />
                 )

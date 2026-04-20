@@ -54,7 +54,6 @@ export function StorySexenioASexenio() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -217,7 +216,6 @@ export function StorySexenioASexenio() {
                       strokeWidth={isFilled ? 0 : 0.6}
                       initial={{ opacity: 0, scale: 0.6 }}
                       whileInView={{ opacity: 1, scale: 1 }}
-                      viewport={{ once: true }}
                       transition={{ duration: 0.3, delay: colIdx * 0.08 + i * 0.008 }}
                     />
                   )

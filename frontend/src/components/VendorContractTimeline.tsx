@@ -367,8 +367,7 @@ function YearCountDotMatrix({ barData }: { barData: Array<{ year: number; count:
                     strokeWidth={0.4}
                     fillOpacity={isFilled ? 0.7 : 1}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: colIdx * 0.02 + (filled - i) * 0.004 }}
                   />
                 )

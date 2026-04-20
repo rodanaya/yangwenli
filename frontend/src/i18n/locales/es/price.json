@@ -39,7 +39,7 @@
   "methodologyPara2": "Complementariamente, el sistema utiliza el método de rango intercuartílico (IQR) para detectar valores atípicos. El umbral de alerta se establece en Q3 + 1.5× IQR (valor atípico estadístico) y Q3 + 3.0× IQR (sobrevalorización extrema).",
   "methodologyPara3Title": "price_volatility:",
   "methodologyPara3": "Mide la varianza de los montos de un proveedor respecto a la norma del sector. Alta volatilidad sugiere precios inconsistentes o manipulación selectiva. Es el predictor más fuerte del modelo de riesgo v0.6.5 (coeficiente +0.53).",
-  "methodologyDisclaimer": "Los scores de riesgo son indicadores estadísticos que miden similitud con patrones de corrupción documentados. Un score alto no constituye prueba de irregularidad.",
+  "methodologyDisclaimer": "Las puntuaciones de riesgo son indicadores estadísticos que miden similitud con patrones de corrupción documentados. Una puntuación alta no constituye prueba de irregularidad.",
   "viewFullMethodology": "Ver metodología completa",
   "zThresholdLabel": "Z-Score mínimo:",
   "zThresholdHint": "Valores más altos = solo los casos más extremos",

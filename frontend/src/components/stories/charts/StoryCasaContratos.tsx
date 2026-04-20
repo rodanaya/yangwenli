@@ -57,7 +57,6 @@ export function StoryCasaContratos() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -131,7 +130,6 @@ export function StoryCasaContratos() {
                 strokeWidth={1 + (v.contracts / maxContracts) * 3}
                 initial={{ pathLength: 0, opacity: 0 }}
                 whileInView={{ pathLength: 1, opacity: 0.6 }}
-                viewport={{ once: true }}
                 transition={{ duration: 0.6, delay: 0.3 + i * 0.1 }}
               />
             )
@@ -158,7 +156,6 @@ export function StoryCasaContratos() {
                 key={v.name}
                 initial={{ opacity: 0, scale: 0.3 }}
                 whileInView={{ opacity: 1, scale: 1 }}
-                viewport={{ once: true }}
                 transition={{ duration: 0.5, delay: 0.6 + i * 0.1, type: 'spring', stiffness: 120 }}
               >
                 {/* Pulsing ring on high-risk */}
@@ -225,7 +222,6 @@ export function StoryCasaContratos() {
           <motion.g
             initial={{ opacity: 0, scale: 0.5 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.6 }}
           >
             <circle cx={CX} cy={CY} r={54} fill="#1e3a5f" fillOpacity={0.5} stroke="#3b82f6" strokeWidth={1.5} />

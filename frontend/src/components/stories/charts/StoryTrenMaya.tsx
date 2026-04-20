@@ -57,7 +57,6 @@ export function StoryTrenMaya() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -257,8 +256,7 @@ export function StoryTrenMaya() {
                       stroke={i < filled ? 'none' : '#27272a'}
                       strokeWidth={i < filled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: rowIdx * 0.08 + i * 0.004 }}
                     />
                   ))

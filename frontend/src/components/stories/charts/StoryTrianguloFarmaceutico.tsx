@@ -72,7 +72,6 @@ export function StoryTrianguloFarmaceutico() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
@@ -125,7 +124,6 @@ export function StoryTrianguloFarmaceutico() {
           strokeDasharray="4 6"
           initial={{ pathLength: 0 }}
           whileInView={{ pathLength: 1 }}
-          viewport={{ once: true }}
           transition={{ duration: 1.5 }}
         />
 
@@ -147,7 +145,6 @@ export function StoryTrianguloFarmaceutico() {
               strokeLinecap="round"
               initial={{ pathLength: 0, opacity: 0 }}
               whileInView={{ pathLength: 1, opacity: 1 }}
-              viewport={{ once: true }}
               transition={{ duration: 0.8, delay: 0.2 + i * 0.06 }}
             />
           )
@@ -169,8 +166,7 @@ export function StoryTrianguloFarmaceutico() {
               fontSize={9}
               fontFamily="var(--font-family-mono)"
               initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              viewport={{ once: true }}
+              animate={{ opacity: 1 }}
               transition={{ delay: 1.2 }}
             >
               ${edge.value}B
@@ -184,7 +180,6 @@ export function StoryTrianguloFarmaceutico() {
             key={inst.id}
             initial={{ scale: 0, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.4, delay: i * 0.1 }}
           >
             <circle cx={inst.x} cy={inst.y} r={28} fill="#18181b" stroke="#3b82f6" strokeWidth={2} />
@@ -218,7 +213,6 @@ export function StoryTrianguloFarmaceutico() {
             key={v.id}
             initial={{ scale: 0, opacity: 0 }}
             whileInView={{ scale: 1, opacity: 1 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.4, delay: 0.5 + i * 0.1 }}
           >
             <circle
@@ -294,8 +288,7 @@ export function StoryTrianguloFarmaceutico() {
                         stroke={isFilled ? 'none' : '#27272a'}
                         strokeWidth={isFilled ? 0 : 0.5}
                         initial={{ opacity: 0 }}
-                        whileInView={{ opacity: 1 }}
-                        viewport={{ once: true }}
+                        animate={{ opacity: 1 }}
                         transition={{ duration: 0.15, delay: i * 0.01 }}
                       />
                     </g>

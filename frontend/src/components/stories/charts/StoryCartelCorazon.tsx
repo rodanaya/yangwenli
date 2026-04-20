@@ -43,7 +43,6 @@ export function StoryCartelCorazon() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
@@ -149,8 +148,7 @@ export function StoryCartelCorazon() {
                     stroke={isFilled ? 'none' : '#27272a'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: idx * 0.06 + i * 0.003 }}
                   />
                 )
@@ -180,8 +178,7 @@ export function StoryCartelCorazon() {
                     stroke={isFilled ? 'none' : '#27272a'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: idx * 0.06 + 0.4 + i * 0.003 }}
                   />
                 )

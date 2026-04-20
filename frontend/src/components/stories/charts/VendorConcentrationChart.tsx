@@ -56,7 +56,6 @@ export function VendorConcentrationChart() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="bg-zinc-900 rounded-xl p-4 border border-zinc-800"
     >
@@ -156,8 +155,7 @@ export function VendorConcentrationChart() {
                       stroke={isFilled ? 'none' : '#27272a'}
                       strokeWidth={isFilled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
                     />
                   )

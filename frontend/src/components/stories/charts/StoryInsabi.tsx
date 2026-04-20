@@ -75,7 +75,6 @@ export function StoryInsabi() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -214,8 +213,7 @@ export function StoryInsabi() {
                     stroke={i < spFilled ? 'none' : '#27272a'}
                     strokeWidth={i < spFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: rowIdx * 0.1 + i * 0.004 }}
                   />
                 ))}
@@ -244,8 +242,7 @@ export function StoryInsabi() {
                       stroke={i < insabiFilled ? 'none' : '#27272a'}
                       strokeWidth={i < insabiFilled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.2, delay: 0.4 + rowIdx * 0.1 + i * 0.004 }}
                     />
                   )

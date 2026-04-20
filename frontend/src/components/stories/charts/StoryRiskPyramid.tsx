@@ -34,7 +34,6 @@ export function StoryRiskPyramid() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -119,7 +118,6 @@ export function StoryRiskPyramid() {
                     fill={tier.color}
                     initial={{ opacity: 0, scale: 0 }}
                     whileInView={{ opacity: 1, scale: 1 }}
-                    viewport={{ once: true }}
                     transition={{ duration: 0.2, delay: rowIdx * 0.15 + i * 0.012 }}
                   />
                 ))}

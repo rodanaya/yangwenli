@@ -10,7 +10,7 @@
     "stat_flagged": "De riesgo alto",
     "stat_value": "Analizados (MXN)",
     "enter": "Entrar",
-    "transparency": "TRANSPARENCIA PROCURATORIA",
+    "transparency": "TRANSPARENCIA EN CONTRATACIONES",
     "contracts": "contratos",
     "highRisk": "Alto riesgo",
     "documentedCases": "Casos documentados",
@@ -191,7 +191,7 @@
     "yearsOfContracts": "años de contratos",
     "riskScore": "Puntuación de Riesgo",
     "ariaLabel": "Caso documentado destacado",
-    "description": "Esta empresa farmacéutica recibió contratos gubernamentales con un {{directAwardPct}}% de adjudicaciones directas. El modelo de riesgo asigna una puntuacion de {{riskScore}} — el mas alto posible — señalando que su patron de contratacion coincide casi perfectamente con casos documentados de fraude.",
+    "description": "Esta empresa farmacéutica recibió contratos gubernamentales con un {{directAwardPct}}% de adjudicaciones directas. El modelo de riesgo asigna una puntuación de {{riskScore}} — el más alto posible — indicando que su patrón de contratación coincide con casos documentados de corrupción.",
     "cta": "Ver investigación completa"
   },
   "footer": {

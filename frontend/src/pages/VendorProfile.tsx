@@ -9,6 +9,7 @@ import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
 import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, getRiskLevel } from '@/lib/utils'
+import { realUSDLabel } from '@/lib/currency'
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
 import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
@@ -803,7 +804,7 @@ function ActionOverflowMenu({ children, label = 'More actions' }: { children: Re
 // ============================================================================
 
 export function VendorProfile() {
-  const { t } = useTranslation('vendors')
+  const { t, i18n } = useTranslation('vendors')
   const { t: tc } = useTranslation('common')
   const { id } = useParams<{ id: string }>()
   const vendorId = Number(id)
@@ -1355,6 +1356,11 @@ export function VendorProfile() {
             value: formatCompactMXN(vendor.total_value_mxn),
             label: t('kpi.totalValue', 'Contract Value'),
             color: 'var(--color-accent)',
+            sub: realUSDLabel(
+              vendor.total_value_mxn,
+              vendor.last_contract_year ?? vendor.first_contract_year ?? 2024,
+              i18n.language,
+            ) ?? undefined,
           },
           ...(vendor.avg_risk_score !== undefined ? [{
             value: `${((vendor.avg_risk_score) * 100).toFixed(0)}/100`,

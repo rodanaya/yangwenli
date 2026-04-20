@@ -6,6 +6,7 @@ import { useQuery } from '@tanstack/react-query'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { realUSDLabel } from '@/lib/currency'
 import { analysisApi, ariaApi } from '@/api/client'
 import type { AriaQueueItem, FastDashboardData } from '@/api/types'
 import {
@@ -268,7 +269,7 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
 
 export function Dashboard() {
   const navigate = useNavigate()
-  const { t } = useTranslation('dashboard')
+  const { t, i18n } = useTranslation('dashboard')
   const { t: tc } = useTranslation('common')
   const { t: ts } = useTranslation('sectors')
 
@@ -452,6 +453,9 @@ export function Dashboard() {
           value: kpiLoading ? '—' : formatCompactMXN(criticalHighValue || ariaElevatedValue),
           label: t('editorial.stripValue', 'at risk'),
           color: 'var(--color-accent)',
+          sub: kpiLoading
+            ? undefined
+            : realUSDLabel(criticalHighValue || ariaElevatedValue, 2024, i18n.language) ?? undefined,
         },
         {
           value: `${(modelAuc * 100).toFixed(1)}%`,

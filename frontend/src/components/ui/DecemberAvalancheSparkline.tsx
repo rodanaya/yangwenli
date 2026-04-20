@@ -105,8 +105,7 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
                       stroke={isFilled ? 'none' : 'rgba(63,63,70,0.6)'}
                       strokeWidth={isFilled ? 0 : 0.4}
                       initial={{ opacity: 0 }}
-                      whileInView={{ opacity: 1 }}
-                      viewport={{ once: true }}
+                      animate={{ opacity: 1 }}
                       transition={{ duration: 0.18, delay: colIdx * 0.03 + rowIdx * 0.01 }}
                     />
                   )

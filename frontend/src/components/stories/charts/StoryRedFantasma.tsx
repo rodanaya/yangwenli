@@ -94,7 +94,6 @@ export function StoryRedFantasma() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
     >
@@ -149,7 +148,6 @@ export function StoryRedFantasma() {
               strokeDasharray="3 4"
               initial={{ scale: 0, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
             />
           )
@@ -172,7 +170,6 @@ export function StoryRedFantasma() {
                 strokeWidth={0.6}
                 initial={{ pathLength: 0 }}
                 whileInView={{ pathLength: 1 }}
-                viewport={{ once: true }}
                 transition={{ duration: 0.8, delay: 0.5 }}
               />
             )
@@ -184,8 +181,7 @@ export function StoryRedFantasma() {
           <motion.g
             key={`label-${cluster.cluster}`}
             initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
+            animate={{ opacity: 1 }}
             transition={{ delay: 0.3 }}
           >
             <text
@@ -220,7 +216,6 @@ export function StoryRedFantasma() {
               key={ghost.id}
               initial={{ scale: 0, opacity: 0 }}
               whileInView={{ scale: 1, opacity: 1 }}
-              viewport={{ once: true }}
               transition={{
                 duration: 0.4,
                 delay: 0.8 + i * 0.025,

@@ -2465,8 +2465,7 @@ function SexenioStackedDotColumns({
                     stroke={fill ? 'none' : '#27272a'}
                     strokeWidth={fill ? 0 : 1}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}
                   />
                 )

@@ -55,7 +55,6 @@ export function StoryProcedureBreakdown() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
@@ -153,8 +152,7 @@ export function StoryProcedureBreakdown() {
                             stroke={isFilled ? 'none' : '#27272a'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
-                            whileInView={{ opacity: 1 }}
-                            viewport={{ once: true }}
+                            animate={{ opacity: 1 }}
                             transition={{ duration: 0.2, delay: rowIdx * 0.03 + stripIdx * 0.08 + i * 0.002 }}
                           />
                         )

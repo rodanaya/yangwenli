@@ -95,7 +95,6 @@ export function StoryNuevosRicos() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
       transition={{ duration: 0.5 }}
       className="rounded-xl bg-zinc-950 border border-zinc-800/60 p-5"
     >
@@ -195,7 +194,6 @@ export function StoryNuevosRicos() {
             strokeWidth={1}
             initial={{ opacity: 0, scale: 0 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.3, delay: 0.1 + i * 0.03 }}
           />
         ))}
@@ -206,7 +204,6 @@ export function StoryNuevosRicos() {
             key={c.era}
             initial={{ opacity: 0, scale: 0 }}
             whileInView={{ opacity: 1, scale: 1 }}
-            viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.8 + i * 0.15 }}
           >
             <circle

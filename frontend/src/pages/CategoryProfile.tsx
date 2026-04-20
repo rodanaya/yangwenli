@@ -183,8 +183,7 @@ function SexenioDotColumns({
                     stroke={isFilled ? 'none' : '#27272a'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}
                   />
                 )
@@ -280,8 +279,7 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
                     stroke={isFilled ? 'none' : '#27272a'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
-                    whileInView={{ opacity: 1 }}
-                    viewport={{ once: true }}
+                    animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: rowIdx * 0.03 + i * 0.002 }}
                   />
                 )
