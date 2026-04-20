@@ -111,11 +111,13 @@ function TierFilterPill({
   tier,
   count,
   isActive,
+  loading,
   onClick,
 }: {
   tier: TierConfig
   count: number
   isActive: boolean
+  loading?: boolean
   onClick: () => void
 }) {
   const { t } = useTranslation('aria')
@@ -133,7 +135,10 @@ function TierFilterPill({
       <span className={cn('font-mono font-bold', isActive ? tier.textColor : 'text-zinc-500')}>
         {t(tier.labelKey).replace(/^Nivel\s+/i, 'T')}
       </span>
-      <span className="tabular-nums">{formatNumber(count)}</span>
+      {loading
+        ? <span className="w-6 h-2.5 rounded bg-zinc-700 animate-pulse" />
+        : <span className="tabular-nums">{formatNumber(count)}</span>
+      }
     </button>
   )
 }
@@ -681,6 +686,7 @@ export default function AriaPage() {
                     tier={cfg}
                     count={tierCounts[cfg.tier]}
                     isActive={tierFilter === cfg.tier}
+                    loading={statsLoading}
                     onClick={() => {
                       setTierFilter(tierFilter === cfg.tier ? null : cfg.tier)
                       setPage(1)
