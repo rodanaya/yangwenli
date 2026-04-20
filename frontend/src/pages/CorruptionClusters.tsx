@@ -19,6 +19,7 @@
 import { Link } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
+import { motion } from 'framer-motion'
 import { ArrowUpRight, AlertTriangle, ExternalLink } from 'lucide-react'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
@@ -530,27 +531,52 @@ function ComplementaryTypologyCard({
 // EvidenceStrip — Act III, horizontal stacked bar of GT types
 // ============================================================================
 function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildGtTypes>; gtTotal: number }) {
+  const DOTS = 50
+  const DOT_R = 3
+  const DOT_GAP = 8
+  const LEGEND_H = 16
+  const svgW = DOTS * DOT_GAP + DOT_R * 2
+  const svgH = 24 + LEGEND_H
+  // Build colored dot assignments based on proportions
+  const dots: string[] = []
+  let pos = 0
+  gtTypes.forEach((t) => {
+    const n = Math.round((t.count / gtTotal) * DOTS)
+    for (let i = 0; i < n && pos < DOTS; i++, pos++) dots.push(t.color)
+  })
+  while (dots.length < DOTS) dots.push('')
   return (
     <div>
-      <div className="flex h-6 w-full overflow-hidden rounded border border-border/30">
-        {gtTypes.map((t) => {
-          const pct = (t.count / gtTotal) * 100
-          return (
-            <div
-              key={t.type}
-              className="relative group"
-              style={{ width: `${pct}%`, backgroundColor: t.color, opacity: 0.75 }}
-              title={`${t.type}: ${t.count} (${pct.toFixed(1)}%)`}
-            >
-              {pct > 8 && (
-                <span className="absolute inset-0 flex items-center justify-center text-[9px] font-mono font-bold text-white/90">
-                  {t.count}
-                </span>
-              )}
-            </div>
-          )
-        })}
-      </div>
+      <svg
+        viewBox={`0 0 ${svgW} ${svgH}`}
+        className="w-full h-auto"
+        role="img"
+        aria-label="Ground truth case type distribution"
+      >
+        {dots.map((color, i) => (
+          <motion.circle
+            key={i}
+            cx={i * DOT_GAP + DOT_R}
+            cy={DOT_R + 4}
+            r={DOT_R}
+            fill={color || '#f3f1ec'}
+            stroke={color ? 'none' : '#e2ddd6'}
+            strokeWidth={0.5}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.2, delay: i * 0.005 }}
+          />
+        ))}
+        <text
+          x={0}
+          y={svgH - 2}
+          fill="var(--color-text-muted, #9c9490)"
+          fontSize={8}
+          fontFamily="var(--font-family-mono, monospace)"
+        >
+          ● 1 punto = {Math.round(gtTotal / DOTS)} casos
+        </text>
+      </svg>
       <div className="mt-3 grid grid-cols-2 md:grid-cols-4 gap-x-4 gap-y-1.5">
         {gtTypes.map((t) => (
           <div key={t.type} className="flex items-center gap-2">
@@ -704,7 +730,9 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
               width: 6,
               height: 6,
               borderRadius: '50%',
-              backgroundColor: i < filled ? color : '#2a2420',
+              backgroundColor: i < filled ? color : '#f3f1ec',
+              border: i < filled ? 'none' : '1px solid #e2ddd6',
+              boxSizing: 'border-box',
             }}
           />
         ))}
@@ -804,7 +832,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         <div className="flex items-center gap-2">
           <span
             className="inline-block"
-            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2a2420' }}
+            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#f3f1ec', border: '1px solid #e2ddd6', boxSizing: 'border-box' }}
           />
           <span>0</span>
         </div>

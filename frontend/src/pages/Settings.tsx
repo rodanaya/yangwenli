@@ -66,8 +66,10 @@ const EXPORT_LIMITS = {
 }
 
 const GRADE_COLORS: Record<string, string> = {
-  'S':  '#34d399',
-  'A':  '#4ade80',
+  // Neutral/zinc for top grades per ART_DIRECTION §2 —
+  // green implies safety on a corruption platform
+  'S':  '#a3a3a3',
+  'A':  '#a3a3a3',
   'B+': '#a3e635',
   'B':  '#60a5fa',
   'C+': '#fcd34d',
@@ -195,8 +197,7 @@ function GeneralTab() {
       className="space-y-6 max-w-2xl"
       variants={staggerContainer}
       initial="initial"
-      whileInView="animate"
-      viewport={{ once: true, margin: '-50px' }}
+      animate="animate"
     >
 
       {/* Data info */}

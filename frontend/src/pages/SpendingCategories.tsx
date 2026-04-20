@@ -364,16 +364,24 @@ function CategoryDetailPanel({
                         {truncate(pair.institution_name, 28)}
                       </span>
                     </div>
-                    <div className="h-0.5 bg-border/20 rounded-full overflow-hidden">
-                      <div
-                        className="h-full rounded-full transition-all duration-500"
-                        style={{
-                          width: `${Math.min((pair.total_value / maxValue) * 100, 100)}%`,
-                          backgroundColor: getRiskColor(pair.avg_risk),
-                          opacity: 0.7,
-                        }}
-                      />
-                    </div>
+                    {(() => {
+                      const DOTS = 30, DOT_R = 2.5, DOT_GAP = 6
+                      const ratio = Math.min(pair.total_value / maxValue, 1)
+                      const filled = Math.round(ratio * DOTS)
+                      const barColor = getRiskColor(pair.avg_risk)
+                      return (
+                        <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
+                          {Array.from({ length: DOTS }).map((_, i) => (
+                            <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
+                              fill={i < filled ? barColor : '#f3f1ec'}
+                              stroke={i < filled ? 'none' : '#e2ddd6'}
+                              strokeWidth={0.5}
+                              fillOpacity={i < filled ? 0.85 : 1}
+                            />
+                          ))}
+                        </svg>
+                      )
+                    })()}
                   </div>
                   <span className="w-20 text-right text-xs font-black font-mono text-text-primary tabular-nums flex-shrink-0">
                     {formatCompactMXN(pair.total_value)}
@@ -495,15 +503,23 @@ function CategorySummaryCard({
               {riskLevel}
             </span>
           </div>
-          {/* Risk bar */}
-          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden mt-2">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(category.avg_risk * 100, 100)}%`,
-                backgroundColor: riskColor,
-              }}
-            />
+          {/* Risk bar — dot-matrix */}
+          <div className="mt-2">
+            {(() => {
+              const DOTS = 25, DOT_R = 2.5, DOT_GAP = 6
+              const filled = Math.round(Math.min(category.avg_risk, 1) * DOTS)
+              return (
+                <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
+                  {Array.from({ length: DOTS }).map((_, i) => (
+                    <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
+                      fill={i < filled ? riskColor : '#f3f1ec'}
+                      stroke={i < filled ? 'none' : '#e2ddd6'}
+                      strokeWidth={0.5}
+                    />
+                  ))}
+                </svg>
+              )
+            })()}
           </div>
         </div>
 
@@ -521,21 +537,27 @@ function CategorySummaryCard({
               {t('detail.oecdLimit')}
             </p>
           )}
-          {/* DA bar */}
-          <div className="h-1.5 bg-border/20 rounded-full overflow-hidden mt-2 relative">
-            <div
-              className="h-full rounded-full transition-all duration-500"
-              style={{
-                width: `${Math.min(category.direct_award_pct ?? 0, 100)}%`,
-                backgroundColor: isHighDA ? '#fb923c' : '#3b82f6',
-              }}
-            />
-            {/* OECD marker at 25% */}
-            <div
-              className="absolute top-0 bottom-0 w-px bg-cyan-400/60"
-              style={{ left: '25%' }}
-              title={t('detail.oecdLimit')}
-            />
+          {/* DA bar — dot-matrix with OECD marker */}
+          <div className="mt-2 relative">
+            {(() => {
+              const DOTS = 25, DOT_R = 2.5, DOT_GAP = 6
+              const daPct = Math.min((category.direct_award_pct ?? 0) / 100, 1)
+              const filled = Math.round(daPct * DOTS)
+              const daColor = isHighDA ? '#f59e0b' : '#a06820'
+              const oecdX = Math.round(0.25 * DOTS) * DOT_GAP
+              return (
+                <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
+                  {Array.from({ length: DOTS }).map((_, i) => (
+                    <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
+                      fill={i < filled ? daColor : '#f3f1ec'}
+                      stroke={i < filled ? 'none' : '#e2ddd6'}
+                      strokeWidth={0.5}
+                    />
+                  ))}
+                  <line x1={oecdX} y1={0} x2={oecdX} y2={8} stroke="#22d3ee" strokeWidth={0.75} strokeDasharray="1.5,1.5" />
+                </svg>
+              )
+            })()}
           </div>
         </div>
 
@@ -2312,16 +2334,25 @@ function VendorConcentrationCallout({
                 >
                   {truncate(v.vendor_name, 28)}
                 </button>
-                <div className="flex-1 relative h-3.5">
-                  <div className="absolute inset-0 rounded bg-background-elevated/30" />
-                  <div
-                    className="absolute inset-y-0 left-0 rounded transition-all duration-500"
-                    style={{
-                      width: `${Math.min(v.market_share_pct * 2.5, 100)}%`,
-                      backgroundColor: idx === 0 ? barColor : '#3b82f6',
-                      opacity: idx === 0 ? 0.85 : 0.55,
-                    }}
-                  />
+                <div className="flex-1 relative h-3.5 flex items-center">
+                  {(() => {
+                    const DOTS = 30, DOT_R = 2.5, DOT_GAP = 6
+                    const ratio = Math.min(v.market_share_pct * 2.5 / 100, 1)
+                    const filled = Math.round(ratio * DOTS)
+                    const dotColor = idx === 0 ? barColor : '#a06820'
+                    return (
+                      <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
+                        {Array.from({ length: DOTS }).map((_, i) => (
+                          <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
+                            fill={i < filled ? dotColor : '#f3f1ec'}
+                            stroke={i < filled ? 'none' : '#e2ddd6'}
+                            strokeWidth={0.5}
+                            fillOpacity={i < filled ? (idx === 0 ? 0.9 : 0.75) : 1}
+                          />
+                        ))}
+                      </svg>
+                    )
+                  })()}
                 </div>
                 <span
                   className="text-[10px] font-mono font-bold tabular-nums w-11 text-right flex-shrink-0"

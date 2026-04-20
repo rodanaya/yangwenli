@@ -743,8 +743,7 @@ export function Methodology() {
         className="flex flex-wrap gap-2"
         variants={staggerContainer}
         initial="initial"
-        whileInView="animate"
-        viewport={{ once: true, margin: '-50px' }}
+        animate="animate"
         aria-label="Additional dataset context"
       >
         {(
@@ -774,8 +773,7 @@ export function Methodology() {
           className="space-y-4"
           variants={staggerContainer}
           initial="initial"
-          whileInView="animate"
-          viewport={{ once: true, margin: '-50px' }}
+          animate="animate"
         >
 
           {/* Section 2: Model Overview */}

@@ -287,19 +287,30 @@ function SectorDistributionFull({
               <span className="text-xs text-text-secondary w-32 truncate flex-shrink-0 group-hover:text-text-primary transition-colors">
                 {s.name}
               </span>
-              <div className="flex-1 relative h-6 rounded overflow-hidden bg-background-elevated/30">
-                <motion.div
-                  className="absolute inset-y-0 left-0 rounded"
-                  style={{ backgroundColor: s.color, opacity: 0.55 }}
-                  initial={{ width: '0%' }}
-                  animate={{ width: `${barPct}%` }}
-                  transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-                />
-                <div className="absolute inset-0 flex items-center px-2 pointer-events-none">
-                  <span className="text-[10px] font-mono text-text-primary/90 font-semibold">
-                    {formatCompactMXN(s.value)}
-                  </span>
-                </div>
+              <div className="flex-1 flex items-center gap-2">
+                <svg viewBox={`0 0 ${40 * 7} 20`} className="flex-1 h-5" preserveAspectRatio="none">
+                  {Array.from({ length: 40 }).map((_, i) => {
+                    const isFilled = i < Math.round((barPct / 100) * 40)
+                    return (
+                      <motion.circle
+                        key={i}
+                        cx={i * 7 + 3}
+                        cy={10}
+                        r={2.5}
+                        fill={isFilled ? s.color : '#f3f1ec'}
+                        stroke={isFilled ? 'none' : '#e2ddd6'}
+                        strokeWidth={0.5}
+                        fillOpacity={isFilled ? 0.85 : 1}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        transition={{ duration: 0.2, delay: 0.02 * i }}
+                      />
+                    )
+                  })}
+                </svg>
+                <span className="text-[10px] font-mono text-text-primary/90 font-semibold w-16 text-right tabular-nums flex-shrink-0">
+                  {formatCompactMXN(s.value)}
+                </span>
               </div>
               <span className="text-[10px] font-mono text-text-muted w-16 text-right flex-shrink-0 tabular-nums">
                 {formatNumber(s.contracts)}
@@ -356,7 +367,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         viewBox={`0 0 ${svgW} ${svgH}`}
         width="100%"
         role="img"
-        aria-label="Sector year-over-year growth diverging bar chart"
+        aria-label="Sector year-over-year growth diverging dot chart"
       >
         {/* Header */}
         <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#52525b" fontSize={7.5} textAnchor="middle" fontFamily="monospace">← decline</text>
@@ -397,7 +408,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 width={BAR_AREA - 6}
                 height={barH}
                 rx={1.5}
-                fill="#27272a"
+                fill="#e2ddd6"
                 fillOpacity={0.5}
               />
 
@@ -644,31 +655,52 @@ function ProcedureTypeSection({
         })}
       </p>
 
-      {/* Stacked bar */}
+      {/* Dot-matrix: direct vs competitive */}
       <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-5">
-        <div className="flex w-full h-10 rounded overflow-hidden mb-3">
-          <motion.div
-            className="flex items-center justify-start pl-3 relative"
-            style={{ backgroundColor: isAboveOECD ? '#dc2626' : '#ea580c' }}
-            initial={{ width: '0%' }}
-            animate={{ width: `${directPct}%` }}
-            transition={{ duration: 0.9, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="text-[10px] font-mono font-bold text-white uppercase tracking-wider whitespace-nowrap">
-              {directPct.toFixed(1)}% {t('procedureType.direct')}
-            </span>
-          </motion.div>
-          <motion.div
-            className="flex items-center justify-end pr-3 bg-emerald-600/40"
-            initial={{ width: '0%' }}
-            animate={{ width: `${competitivePct}%` }}
-            transition={{ duration: 0.9, delay: 0.2, ease: [0.22, 1, 0.36, 1] }}
-          >
-            <span className="text-[10px] font-mono font-bold text-emerald-100 uppercase tracking-wider whitespace-nowrap">
-              {competitivePct.toFixed(1)}% {t('procedureType.competitive')}
-            </span>
-          </motion.div>
-        </div>
+        {(() => {
+          const N_DOTS = 50
+          const DOT_R = 3
+          const DOT_GAP = 8
+          const directDots = Math.round((directPct / 100) * N_DOTS)
+          const svgW = N_DOTS * DOT_GAP + DOT_R * 2
+          const directColor = isAboveOECD ? '#dc2626' : '#ea580c'
+          const competitiveColor = '#059669'
+          return (
+            <>
+              <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase tracking-wider">
+                <span className="font-bold" style={{ color: directColor }}>
+                  {directPct.toFixed(1)}% {t('procedureType.direct')}
+                </span>
+                <span className="font-bold" style={{ color: competitiveColor }}>
+                  {competitivePct.toFixed(1)}% {t('procedureType.competitive')}
+                </span>
+              </div>
+              <svg
+                viewBox={`0 0 ${svgW} 12`}
+                className="w-full h-5 mb-2"
+                role="img"
+                aria-label={`Direct award ${directPct.toFixed(1)}% vs competitive ${competitivePct.toFixed(1)}%`}
+              >
+                {Array.from({ length: N_DOTS }).map((_, i) => (
+                  <motion.circle
+                    key={i}
+                    cx={i * DOT_GAP + DOT_R}
+                    cy={6}
+                    r={DOT_R}
+                    fill={i < directDots ? directColor : competitiveColor}
+                    fillOpacity={0.85}
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    transition={{ duration: 0.25, delay: i * 0.008 }}
+                  />
+                ))}
+              </svg>
+              <p className="text-[10px] font-mono text-text-muted mb-2">
+                {t('procedureType.direct')} / {t('procedureType.competitive')} · 1 punto = 2%
+              </p>
+            </>
+          )
+        })()}
 
         {/* OECD & historical reference markers */}
         <div className="relative h-4 mb-1">

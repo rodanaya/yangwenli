@@ -236,11 +236,6 @@ function CaseCard({
       .replace(/ - .*$/, '')
   )
 
-  const riskBarColor =
-    priority.level === 'critical' ? 'bg-risk-critical' :
-    priority.level === 'high'     ? 'bg-risk-high' :
-    priority.level === 'medium'   ? 'bg-risk-medium' : 'bg-risk-low'
-
   return (
     <div
       onClick={onClick}
@@ -354,12 +349,26 @@ function CaseCard({
           )}
         </div>
 
-        {/* Risk bar */}
-        <div className="h-px w-full bg-border/20 mt-3 rounded-full overflow-hidden">
-          <div
-            className={cn('h-full rounded-full transition-all duration-700', riskBarColor)}
-            style={{ width: `${Math.min(caseItem.suspicion_score * 100, 100)}%` }}
-          />
+        {/* Risk bar — dot-matrix */}
+        <div className="mt-3">
+          {(() => {
+            const DOTS = 30, DOT_R = 2.5, DOT_GAP = 6
+            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
+            const riskColor = caseItem.suspicion_score >= 0.6 ? '#ef4444'
+              : caseItem.suspicion_score >= 0.4 ? '#f59e0b'
+              : caseItem.suspicion_score >= 0.25 ? '#a16207' : '#71717a'
+            return (
+              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} className="w-full h-2.5" preserveAspectRatio="none">
+                {Array.from({ length: DOTS }).map((_, i) => (
+                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
+                    fill={i < filled ? riskColor : '#f3f1ec'}
+                    stroke={i < filled ? 'none' : '#e2ddd6'}
+                    strokeWidth={0.5}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
 
         {/* Verify panel — stops click propagation so opening it doesn't navigate */}
@@ -855,18 +864,25 @@ function CaseTableRow({
             </span>
             <RiskScoreDisclaimer />
           </div>
-          {/* Mini progress bar in table cell */}
-          <div className="h-0.5 w-12 bg-border rounded-full overflow-hidden">
-            <div
-              className={cn(
-                'h-full rounded-full',
-                priority.level === 'critical' ? 'bg-risk-critical' :
-                priority.level === 'high' ? 'bg-risk-high' :
-                priority.level === 'medium' ? 'bg-risk-medium' : 'bg-risk-low'
-              )}
-              style={{ width: `${Math.min(caseItem.suspicion_score * 100, 100)}%` }}
-            />
-          </div>
+          {/* Mini dot-matrix in table cell */}
+          {(() => {
+            const DOTS = 20, DOT_R = 2, DOT_GAP = 5
+            const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
+            const riskColor = priority.level === 'critical' ? '#ef4444'
+              : priority.level === 'high' ? '#f59e0b'
+              : priority.level === 'medium' ? '#a16207' : '#71717a'
+            return (
+              <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-16 h-2" preserveAspectRatio="none">
+                {Array.from({ length: DOTS }).map((_, i) => (
+                  <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
+                    fill={i < filled ? riskColor : '#f3f1ec'}
+                    stroke={i < filled ? 'none' : '#e2ddd6'}
+                    strokeWidth={0.5}
+                  />
+                ))}
+              </svg>
+            )
+          })()}
         </div>
       </td>
 

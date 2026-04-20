@@ -76,21 +76,43 @@ function RiskBar({ sector }: RiskBarProps) {
     .join(' | ')
 
   return (
-    <div
-      className="flex h-1.5 w-full rounded-full overflow-hidden gap-px"
-      role="meter"
-      aria-label={titleText}
-      title={titleText}
-    >
-      {segments.map((s) =>
-        s.pct > 0.3 ? (
-          <div
-            key={s.label}
-            className="h-full transition-all duration-500"
-            style={{ width: `${s.pct}%`, backgroundColor: s.color }}
-          />
-        ) : null
-      )}
+    <div role="img" aria-label={titleText} title={titleText}>
+      {(() => {
+        const DOTS = 50
+        const DOT_R = 3
+        const DOT_GAP = 7
+        const critN = Math.round((critPct / 100) * DOTS)
+        const highN = Math.round((highPct / 100) * DOTS)
+        const medN = Math.round((medPct / 100) * DOTS)
+        const svgW = DOTS * DOT_GAP + DOT_R * 2
+        const svgH = 14
+        const dots: string[] = [
+          ...Array(critN).fill(RISK_COLORS.critical),
+          ...Array(highN).fill(RISK_COLORS.high),
+          ...Array(medN).fill(RISK_COLORS.medium),
+        ]
+        while (dots.length < DOTS) dots.push(RISK_COLORS.low)
+        return (
+          <svg
+            viewBox={`0 0 ${svgW} ${svgH}`}
+            className="w-full"
+            style={{ height: 14 }}
+            preserveAspectRatio="none"
+            aria-hidden="true"
+          >
+            {dots.slice(0, DOTS).map((color, i) => (
+              <circle
+                key={i}
+                cx={i * DOT_GAP + DOT_R}
+                cy={svgH / 2}
+                r={DOT_R}
+                fill={color}
+                fillOpacity={0.8}
+              />
+            ))}
+          </svg>
+        )
+      })()}
     </div>
   )
 }
