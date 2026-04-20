@@ -35,6 +35,15 @@ INDEXES = [
     # NEW: New vendor risk score query
     ("idx_vendor_stats_new_vendor_risk_score",
      "CREATE INDEX IF NOT EXISTS idx_vendor_stats_new_vendor_risk_score ON vendor_stats(new_vendor_risk_score)"),
+    # CRITICAL (audit Apr-2026): ARIA queue full-scan fix — ORDER BY ips_final DESC without tier filter
+    # was causing 30s+ query; this standalone index covers the common no-tier case
+    ("idx_aria_queue_ips_final",
+     "CREATE INDEX IF NOT EXISTS idx_aria_queue_ips_final ON aria_queue(ips_final DESC)"),
+    # HIGH (audit Apr-2026): Covering indexes for collusion pairs endpoint
+    ("idx_cobid_collusion_shared",
+     "CREATE INDEX IF NOT EXISTS idx_cobid_collusion_shared ON co_bidding_stats(is_potential_collusion, shared_procedures DESC)"),
+    ("idx_cobid_collusion_rate",
+     "CREATE INDEX IF NOT EXISTS idx_cobid_collusion_rate ON co_bidding_stats(is_potential_collusion, co_bid_rate DESC)"),
 ]
 
 def table_exists(conn, name):
