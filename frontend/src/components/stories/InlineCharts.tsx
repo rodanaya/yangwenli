@@ -269,7 +269,7 @@ export function InlineBarChart({
                   y={y + BAR_HEIGHT / 2 + 1}
                   textAnchor="end"
                   dominantBaseline="middle"
-                  fontSize={9}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="rgba(255,255,255,0.7)"
                 >
@@ -299,7 +299,7 @@ export function InlineBarChart({
           <text
             x={refX(data.referenceLine.value) + 3}
             y={svgH - 4}
-            fontSize={9}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fill={data.referenceLine.color ?? '#6366f1'}
             opacity={0.9}
@@ -311,7 +311,7 @@ export function InlineBarChart({
           <text
             x={refX(data.referenceLine2.value) + 3}
             y={svgH - 4}
-            fontSize={9}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fill={data.referenceLine2.color ?? '#14b8a6'}
             opacity={0.9}
@@ -407,7 +407,7 @@ export function InlineLineChart({
             <text
               x={W - PAD.right + 2}
               y={plotY(data.referenceLine.value) + 4}
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? '#6366f1'}
               opacity={0.9}
@@ -457,7 +457,7 @@ export function InlineLineChart({
               x={plotX(i)}
               y={plotY(pt.value) - 10}
               textAnchor="middle"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#fbbf24"
             >
@@ -474,7 +474,7 @@ export function InlineLineChart({
               x={plotX(i)}
               y={H - 4}
               textAnchor="middle"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#71717a"
             >
@@ -489,9 +489,9 @@ export function InlineLineChart({
             x={6}
             y={PAD.top + plotH / 2}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
-            fill="#52525b"
+            fill="#a1a1aa"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
             {data.yLabel}
@@ -569,7 +569,7 @@ export function InlineAreaChart({
             <text
               x={W - PAD.right + 2}
               y={plotY(data.referenceLine.value) + 4}
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? '#6366f1'}
               opacity={0.9}
@@ -609,7 +609,7 @@ export function InlineAreaChart({
               x={plotX(i)}
               y={plotY(pt.value) - 10}
               textAnchor="middle"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#fbbf24"
             >
@@ -626,7 +626,7 @@ export function InlineAreaChart({
               x={plotX(i)}
               y={H - 4}
               textAnchor="middle"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#71717a"
             >
@@ -640,9 +640,9 @@ export function InlineAreaChart({
             x={6}
             y={PAD.top + plotH / 2}
             textAnchor="middle"
-            fontSize={9}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
-            fill="#52525b"
+            fill="#a1a1aa"
             transform={`rotate(-90, 6, ${PAD.top + plotH / 2})`}
           >
             {data.yLabel}
@@ -708,7 +708,7 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={by - 4}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="#fbbf24"
                 >
@@ -722,7 +722,7 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={by - 4}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="#fbbf24"
                 >
@@ -736,9 +736,9 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={PAD.top + plotH + 6}
                   textAnchor="end"
-                  fontSize={8}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#52525b"
+                  fill="#a1a1aa"
                   transform={`rotate(-45, ${bx + barW / 2}, ${PAD.top + plotH + 6})`}
                 >
                   {pt.label}
@@ -748,9 +748,9 @@ export function InlineSpikeChart({
                   x={bx + barW / 2}
                   y={PAD.top + plotH + 14}
                   textAnchor="middle"
-                  fontSize={9}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#52525b"
+                  fill="#a1a1aa"
                 >
                   {pt.label}
                 </text>
@@ -775,7 +775,7 @@ export function InlineSpikeChart({
             <text
               x={PAD.left + 2}
               y={PAD.top + plotH - (data.referenceLine.value / mx) * plotH - 3}
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill={data.referenceLine.color ?? '#6366f1'}
               opacity={0.9}
@@ -833,9 +833,9 @@ export function InlineDivergingBar({
           x={centerX}
           y={H - 4}
           textAnchor="middle"
-          fontSize={9}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
-          fill="#52525b"
+          fill="#a1a1aa"
         >
           0
         </text>

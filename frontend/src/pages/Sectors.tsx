@@ -364,7 +364,7 @@ function OECDCompetitionDotMatrix({
         y={OE_TOP_PAD - 4}
         textAnchor="middle"
         fill="#22d3ee"
-        fontSize={9}
+        fontSize={10}
         fontFamily="var(--font-family-mono)"
         fontWeight={600}
       >
@@ -384,7 +384,7 @@ function OECDCompetitionDotMatrix({
               y={yCenter + 3}
               textAnchor="end"
               fill="#a1a1aa"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
               {item.name.length > 12 ? item.name.slice(0, 12) + '…' : item.name}
@@ -411,7 +411,7 @@ function OECDCompetitionDotMatrix({
               x={OE_LABEL_W + OE_DOTS * OE_DOT_GAP + 6}
               y={yCenter + 3}
               fill={aboveOECD ? color : '#71717a'}
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono)"
               fontWeight={aboveOECD ? 700 : 400}
             >
@@ -485,9 +485,9 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
       <ResponsiveContainer width="100%" height={220}>
         <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
           <CartesianGrid strokeDasharray="3 3" stroke="#3d3734" />
-          <XAxis dataKey="year" tick={{ fontSize: 9, fill: '#71717a' }} />
+          <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
           <YAxis
-            tick={{ fontSize: 9, fill: '#71717a' }}
+            tick={{ fontSize: 10, fill: '#a1a1aa' }}
             tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
             domain={[0, 'auto']}
           />
@@ -507,7 +507,7 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
             }}
           />
           <Legend
-            wrapperStyle={{ fontSize: '10px' }}
+            wrapperStyle={{ fontSize: '11px' }}
             formatter={(value: string) => t(value)}
           />
           {top6.map((s) => (

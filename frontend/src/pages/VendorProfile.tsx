@@ -343,7 +343,7 @@ function RiskWaterfallChart({
                 x={LABEL_W - 5}
                 y={y + ROW_H / 2 + 1}
                 fill="#a1a1aa"
-                fontSize={9}
+                fontSize={10}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="var(--font-family-mono, monospace)"
@@ -365,7 +365,7 @@ function RiskWaterfallChart({
                 x={isPos ? centerX + barPx + 4 : centerX - barPx - 4}
                 y={y + ROW_H / 2 + 1}
                 fill={color}
-                fontSize={8.5}
+                fontSize={10}
                 textAnchor={isPos ? 'start' : 'end'}
                 dominantBaseline="middle"
                 fontFamily="var(--font-family-mono, monospace)"
@@ -2944,11 +2944,11 @@ export function VendorProfile() {
                           <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
                           <XAxis
                             dataKey="year"
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
                           />
                           <YAxis
                             yAxisId="left"
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                             width={28}
                           />
                           <YAxis
@@ -2956,7 +2956,7 @@ export function VendorProfile() {
                             orientation="right"
                             domain={[0, 1]}
                             tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                             width={32}
                           />
                           <RechartsTooltip
@@ -2966,7 +2966,7 @@ export function VendorProfile() {
                               border: '1px solid rgba(255,255,255,0.12)',
                               borderRadius: '0.375rem',
                               padding: '0.5rem 0.75rem',
-                              fontSize: '0.8125rem',
+                              fontSize: '0.875rem',
                               color: '#e4e4e7',
                               boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
                             }}
@@ -2977,7 +2977,7 @@ export function VendorProfile() {
                               return [Number(value).toLocaleString(), name ?? '']
                             }}
                           />
-                          <RechartsLegend wrapperStyle={{ fontSize: 9 }} />
+                          <RechartsLegend wrapperStyle={{ fontSize: 10 }} />
                           <Area
                             yAxisId="left"
                             type="monotone"
@@ -3046,18 +3046,18 @@ export function VendorProfile() {
                             <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
                             <XAxis
                               dataKey="year"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
                             />
                             <YAxis
                               yAxisId="left"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                               width={30}
                               tickFormatter={(v: number) => `${v.toFixed(0)}M`}
                             />
                             <YAxis
                               yAxisId="right"
                               orientation="right"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 9 }}
+                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
                               width={24}
                               tickFormatter={(v: number) => `${v}%`}
                               domain={[0, 100]}
@@ -3493,7 +3493,7 @@ export function VendorProfile() {
                                       x={cx}
                                       y={TOP_PAD - 6}
                                       textAnchor="middle"
-                                      fontSize={8}
+                                      fontSize={10}
                                       fill="#f59e0bcc"
                                       fontFamily="var(--font-family-mono, monospace)"
                                     >
@@ -3525,7 +3525,7 @@ export function VendorProfile() {
                                     x={cx}
                                     y={viewH - 6}
                                     textAnchor="middle"
-                                    fontSize={8}
+                                    fontSize={10}
                                     fill="var(--color-text-muted)"
                                     fontFamily="var(--font-family-mono)"
                                   >
@@ -5170,7 +5170,7 @@ function PeriodistaPanel({
                               x={cx}
                               y={viewH - 8}
                               textAnchor="middle"
-                              fontSize={9}
+                              fontSize={10}
                               fill="var(--color-text-muted)"
                               fontFamily="var(--font-family-mono)"
                             >

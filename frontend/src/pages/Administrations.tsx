@@ -1730,7 +1730,7 @@ export default function Administrations() {
                       return (
                         <g key={f}>
                           <line x1={ML - 3} y1={y} x2={ML} y2={y} stroke="#3f3f46" strokeWidth={1} />
-                          <text x={ML - 5} y={y + 1} fill="#52525b" fontSize={8} textAnchor="end" dominantBaseline="middle" fontFamily="monospace">{formatNumber(val)}</text>
+                          <text x={ML - 5} y={y + 1} fill="#a1a1aa" fontSize={10} textAnchor="end" dominantBaseline="middle" fontFamily="monospace">{formatNumber(val)}</text>
                         </g>
                       )
                     })}
@@ -1740,7 +1740,7 @@ export default function Administrations() {
                       return (
                         <g key={pct}>
                           <line x1={W - MR} y1={y} x2={W - MR + 3} y2={y} stroke="#3f3f46" strokeWidth={1} />
-                          <text x={W - MR + 5} y={y + 1} fill="#52525b" fontSize={8} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
+                          <text x={W - MR + 5} y={y + 1} fill="#a1a1aa" fontSize={10} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
                           {/* Horizontal grid */}
                           <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#3d3734" strokeWidth={0.5} strokeDasharray="3 4" />
                         </g>
@@ -1778,7 +1778,7 @@ export default function Administrations() {
                       return (
                         <g key={ev.id ?? ev.year}>
                           <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#475569" strokeWidth={1} strokeDasharray="3 3" />
-                          <text x={x + 3} y={MT + 6} fill="#64748b" fontSize={8} fontFamily="monospace">{(ev.title ?? '').slice(0, 12)}</text>
+                          <text x={x + 3} y={MT + 6} fill="#71717a" fontSize={10} fontFamily="monospace">{(ev.title ?? '').slice(0, 12)}</text>
                         </g>
                       )
                     })}
@@ -1791,7 +1791,7 @@ export default function Administrations() {
                       return (
                         <g key={`brk-${b.year}-${b.metric}`}>
                           <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 2" />
-                          <text x={x + 2} y={MT + 14} fill="#f59e0b" fontSize={9} fontFamily="monospace">!</text>
+                          <text x={x + 2} y={MT + 14} fill="#f59e0b" fontSize={10} fontFamily="monospace">!</text>
                         </g>
                       )
                     })}
@@ -1815,7 +1815,7 @@ export default function Administrations() {
 
                     {/* Year labels */}
                     {years.map((yr, i) => (
-                      <text key={yr.year} x={xOf(i)} y={H - 4} fill="#52525b" fontSize={9} textAnchor="middle" fontFamily="monospace">
+                      <text key={yr.year} x={xOf(i)} y={H - 4} fill="#a1a1aa" fontSize={10} textAnchor="middle" fontFamily="monospace">
                         {yr.year}
                       </text>
                     ))}
@@ -1825,7 +1825,7 @@ export default function Administrations() {
                       <g key={ln.key} transform={`translate(${ML + i * 102}, ${MT - 3})`}>
                         <line x1={0} y1={5} x2={14} y2={5} stroke={ln.color} strokeWidth={1.8} />
                         <circle cx={7} cy={5} r={2.2} fill={ln.color} />
-                        <text x={17} y={9} fill="#71717a" fontSize={9} fontFamily="monospace">{ln.label}</text>
+                        <text x={17} y={9} fill="#71717a" fontSize={10} fontFamily="monospace">{ln.label}</text>
                       </g>
                     ))}
                   </svg>
@@ -2376,7 +2376,7 @@ function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typ
                 textAnchor="middle"
                 dominantBaseline="middle"
                 fill="#71717a"
-                fontSize={8}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
                 {AXIS_LABELS[i]}
@@ -3093,10 +3093,10 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
                 {/* Administration background bands */}
-                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox', fill: '#71717a', fontSize: 9 }} />
-                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderon', fill: '#71717a', fontSize: 9 }} />
-                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN', fill: '#71717a', fontSize: 9 }} />
-                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO', fill: '#71717a', fontSize: 9 }} />
+                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox', fill: '#71717a', fontSize: 10 }} />
+                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderon', fill: '#71717a', fontSize: 10 }} />
+                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN', fill: '#71717a', fontSize: 10 }} />
+                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO', fill: '#71717a', fontSize: 10 }} />
                 {/* Direct award national average benchmark */}
                 <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
@@ -3109,7 +3109,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                     label={{
                       value: adminLabels[year],
                       position: 'top',
-                      fontSize: 9,
+                      fontSize: 10,
                       fill: '#6b7280',
                     }}
                   />
@@ -3127,7 +3127,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                       label={{
                         value: `~${bp.year}`,
                         position: 'insideTopRight',
-                        fontSize: 8,
+                        fontSize: 10,
                         fill: '#f59e0b',
                       }}
                     />
@@ -3197,7 +3197,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
                 <XAxis
                   dataKey="label"
-                  tick={{ fill: '#71717a', fontSize: 9, fontFamily: 'var(--font-family-mono)' }}
+                  tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
                   interval={0}
                 />
                 <YAxis
