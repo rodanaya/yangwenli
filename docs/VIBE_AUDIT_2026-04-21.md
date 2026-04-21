@@ -28,8 +28,43 @@
 ## KNOWN PRE-AUDIT ISSUES (carry forward)
 
 - `StateExplorer.tsx`: zero i18n integration — hundreds of hardcoded English strings
-- Dashboard & VendorProfile dark-card empty dots: should be `#2d2926`, may have been regressed to cream `#f3f1ec` by supplementary GRAFIKA pass — verify visually
-- `whileInView` regression risk: verify any new components added since Apr 20 don't use it
+- Dashboard & VendorProfile dark-card empty dots: ✅ FIXED (commit 8233261) — all dark-context dots now `#2d2926`/`#3d3734`; cream `#f3f1ec` only on light editorial pages
+- `whileInView` regression risk: ALPHA verified zero occurrences — CLEAN
+
+---
+
+## OUT-OF-BAND FIXES (user-directed, between waves)
+
+### Fix 1: Dark empty dots on all dot-matrix charts — commit 8233261
+Files: SpendingCategories.tsx, Administrations.tsx, Dashboard.tsx, AdminFingerprints.tsx, DotStrip.tsx
+Change: empty dot fill `#f3f1ec` (cream) → `#2d2926` (dark), stroke `#e2ddd6` → `#3d3734`
+Impact: Eliminates the "white blobs on dark background" visual issue across all administration/spending charts.
+
+### Enhancement: Sexenio Spending chart editorial upgrade — commit 1107842
+**Chart**: "Spending by Administration: How Government Purchases Changed"
+**File**: `frontend/src/pages/SpendingCategories.tsx` — `SexenioStackedDotColumns` component
+**Data** (totals verified against DB):
+| Administration | Total | Years | Party |
+|---------------|-------|-------|-------|
+| Fox | 614.4B MXN | 01–06 | PAN |
+| Calderón | 1.6T MXN | 07–12 | PAN |
+| Peña Nieto | 2.0T MXN | 13–18 | PRI |
+| AMLO | 1.9T MXN | 19–24 | MORENA |
+| Sheinbaum | 557.1B MXN | 25– | MORENA (partial) |
+
+**Changes made:**
+- Value label: `fontSize=9 #a1a1aa` → `fontSize=13 bold #d4d4d8` — number now dominates as the primary reading target
+- "MXN" unit: separated to small `fontSize=7` subscript so the number reads clean
+- Party accent bar: 2px colored `<rect>` above each column (PAN `#1a5276` blue, PRI `#c41e3a` red, MORENA `#7b2d8b` purple) — embeds political context without annotation clutter
+- Administration years: "01–06" / "07–12" etc in `font-mono` below each name
+- Partial-term marker: "partial" text below Sheinbaum — her 557.1B reflects only ~1yr of a 6-yr term
+- Scale context: "≈50B MXN/dot" in top-left so readers can decode column height differences
+- VALUE_H: 18→28 / LABEL_H: 28→46 / container: 380→430px for proper breathing room
+- Empty dots: `fillOpacity` 0.7 (were 1.0 — full opacity cream was the "white" complaint)
+- Filled dots: `fillOpacity` 0.85→0.9 (stronger contrast filled vs empty)
+- Legend dot: `r=4` → `r=5` (more legible at small sizes)
+
+**GAMMA wave** should also audit `/administrations` which has similar dot-matrix columns — verify the same enhancements apply there.
 
 ---
 
