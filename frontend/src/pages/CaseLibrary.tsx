@@ -196,7 +196,7 @@ function HeroSection() {
       </div>
 
       {/* 4-stat strip */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-zinc-800 rounded-lg overflow-hidden mb-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-zinc-800 rounded-sm overflow-hidden mb-4">
         {[
           {
             value: String(totalCases),
@@ -304,7 +304,7 @@ function CaseCard({
     <motion.article
       variants={staggerItem}
       whileHover={{ y: -2, transition: { duration: 0.15 } }}
-      className={`relative group flex flex-col overflow-hidden rounded-lg border border-zinc-800/80 border-l-[3px] ${leftBorder} hover:border-zinc-700 transition-all duration-200 bg-zinc-900`}
+      className={`relative group flex flex-col overflow-hidden rounded-sm border border-zinc-800/80 border-l-[3px] ${leftBorder} hover:border-zinc-700 transition-all duration-200 bg-zinc-900`}
     >
       {/* Case number watermark */}
       <div
@@ -686,7 +686,7 @@ export default function CaseLibrary() {
       {isLoading && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => (
-            <div key={i} className="rounded-lg border border-zinc-800 bg-zinc-900 p-4">
+            <div key={i} className="rounded-sm border border-zinc-800 bg-zinc-900 p-4">
               <Skeleton className="h-4 w-32 mb-3" />
               <Skeleton className="h-5 w-3/4 mb-2" />
               <Skeleton className="h-3 w-full mb-1" />

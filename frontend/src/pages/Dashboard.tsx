@@ -493,7 +493,7 @@ export function Dashboard() {
 
       {/* ERROR BANNER */}
       {dashError && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-risk-critical/30 bg-risk-critical/5">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-risk-critical/30 bg-risk-critical/5">
           <AlertTriangle className="h-4 w-4 text-risk-critical flex-shrink-0" />
           <p className="text-sm text-risk-critical flex-1">
             {t('dashboardLoadError')}
@@ -715,7 +715,7 @@ export function Dashboard() {
         <ErrorBoundary fallback={null}>
           {topVendor && (
             <section
-              className="rounded-lg p-5"
+              className="rounded-sm p-5"
               style={{
                 borderLeft: `3px solid var(--color-accent)`,
                 border: '1px solid var(--color-border)',
@@ -894,7 +894,7 @@ export function Dashboard() {
         <div className="grid gap-3 sm:grid-cols-3">
           <button
             onClick={() => navigate('/aria')}
-            className="flex flex-col gap-2 p-5 rounded-lg border border-border/40 hover:border-accent/40 transition-all text-left"
+            className="flex flex-col gap-2 p-5 rounded-sm border border-border/40 hover:border-accent/40 transition-all text-left"
             style={{ borderTopWidth: '3px', borderTopColor: RISK_COLORS.critical }}
           >
             <div className="flex items-center gap-2">
@@ -916,7 +916,7 @@ export function Dashboard() {
 
           <button
             onClick={() => navigate('/sectors')}
-            className="flex flex-col gap-2 p-5 rounded-lg border border-border/40 hover:border-accent/40 transition-all text-left"
+            className="flex flex-col gap-2 p-5 rounded-sm border border-border/40 hover:border-accent/40 transition-all text-left"
             style={{ borderTopWidth: '3px', borderTopColor: 'var(--color-accent)' }}
           >
             <div className="flex items-center gap-2">
@@ -935,7 +935,7 @@ export function Dashboard() {
 
           <button
             onClick={() => navigate('/contracts')}
-            className="flex flex-col gap-2 p-5 rounded-lg border border-border/40 hover:border-accent/40 transition-all text-left"
+            className="flex flex-col gap-2 p-5 rounded-sm border border-border/40 hover:border-accent/40 transition-all text-left"
             style={{ borderTopWidth: '3px', borderTopColor: '#818cf8' }}
           >
             <div className="flex items-center gap-2">
@@ -971,7 +971,7 @@ export function Dashboard() {
 function SectionErrorFallback() {
   const { t } = useTranslation('dashboard')
   return (
-    <div className="rounded-lg border border-border/30 p-4 text-center">
+    <div className="rounded-sm border border-border/30 p-4 text-center">
       <p className="text-xs text-text-muted">{t('sectionLoadError', 'This section could not be loaded.')}</p>
     </div>
   )

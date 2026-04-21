@@ -939,7 +939,7 @@ export default function AriaPage() {
         {/* 6. METHODOLOGY FOOTER — minimal                                */}
         {/* ============================================================== */}
         <section>
-          <div className="rounded-lg border border-zinc-800 bg-zinc-900/30 p-4">
+          <div className="rounded-sm border border-zinc-800 bg-zinc-900/30 p-4">
             <div className="flex items-start gap-3">
               <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
               <div className="text-xs text-zinc-500 space-y-1 leading-relaxed">

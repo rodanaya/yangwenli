@@ -111,7 +111,7 @@ function BreakingStrip() {
             <Link
               key={item.vendor_id}
               to={`/thread/${item.vendor_id}`}
-              className="group rounded-lg border border-zinc-800 bg-zinc-900/60 p-4 hover:border-zinc-700 transition-colors"
+              className="group rounded-sm border border-zinc-800 bg-zinc-900/60 p-4 hover:border-zinc-700 transition-colors"
             >
               <p className="text-xs font-semibold text-zinc-200 leading-snug mb-1 group-hover:text-white transition-colors" title={item.vendor_name}>
                 {name}
@@ -127,8 +127,8 @@ function BreakingStrip() {
                     <svg viewBox={`0 0 ${N * DG} 5`} className="flex-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                          fill={k < filled ? color : '#f3f1ec'}
-                          stroke={k < filled ? undefined : '#e2ddd6'}
+                          fill={k < filled ? color : '#2d2926'}
+                          stroke={k < filled ? undefined : '#3d3734'}
                           strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
@@ -538,14 +538,14 @@ export default function Journalists() {
               <div className="flex flex-col sm:flex-row gap-3 flex-shrink-0 sm:mt-6">
                 <button
                   onClick={() => navigate('/methodology')}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm text-sm font-semibold bg-[#dc2626] text-white hover:bg-[#b91c1c] transition-colors"
                 >
                   <BookOpen className="h-4 w-4" />
                   {t('methodology.viewMethodology')}
                 </button>
                 <button
                   onClick={() => navigate('/settings?tab=export')}
-                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-lg text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
+                  className="inline-flex items-center justify-center gap-2 px-5 py-2.5 rounded-sm text-sm font-semibold border border-zinc-700 text-zinc-300 hover:bg-zinc-800 transition-colors"
                 >
                   <Download className="h-4 w-4" />
                   {t('methodology.downloadData')}

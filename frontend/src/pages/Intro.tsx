@@ -64,10 +64,11 @@ function LangToggle() {
 // ---------------------------------------------------------------------------
 function RiskPill({ level }: { level: string }) {
   const colors: Record<string, { bg: string; color: string; label: string }> = {
-    critical: { bg: 'rgba(220,38,38,0.12)', color: '#f87171', label: 'CRITICAL' },
-    high:     { bg: 'rgba(234,88,12,0.12)', color: '#fb923c', label: 'HIGH' },
-    medium:   { bg: 'rgba(234,179,8,0.12)', color: '#facc15', label: 'MEDIUM' },
-    low:      { bg: 'rgba(22,163,74,0.12)', color: '#4ade80', label: 'LOW' },
+    critical: { bg: 'rgba(239,68,68,0.12)',  color: '#ef4444', label: 'CRITICAL' },
+    high:     { bg: 'rgba(245,158,11,0.12)', color: '#f59e0b', label: 'HIGH' },
+    medium:   { bg: 'rgba(161,98,7,0.12)',   color: '#a16207', label: 'MEDIUM' },
+    // Low risk uses zinc (neutral) — green implies safety, forbidden on a corruption platform
+    low:      { bg: 'rgba(113,113,122,0.12)', color: '#71717a', label: 'LOW' },
   }
   const key = (level || 'low').toLowerCase()
   const c = colors[key] ?? colors.low
@@ -536,7 +537,7 @@ export default function Intro() {
 
             {/* Worst sector callout — preserved */}
             {worstSector && (
-              <div className="mt-8 rounded-lg border border-zinc-800 bg-zinc-900/30 p-5 flex items-start gap-4">
+              <div className="mt-8 rounded-sm border border-zinc-800 bg-zinc-900/30 p-5 flex items-start gap-4">
                 <AlertTriangle className="h-5 w-5 text-amber-500 flex-shrink-0 mt-0.5" />
                 <div className="flex-1 min-w-0">
                   <p className="stat-label text-amber-500 mb-1">{t('stories.worstSector.label')}</p>
