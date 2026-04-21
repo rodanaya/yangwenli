@@ -47,6 +47,9 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
   const order: RiskStrataRow['level'][] = ['critical', 'high', 'medium', 'low']
   const sorted = order.map((lvl) => rows.find((r) => r.level === lvl)).filter(Boolean) as RiskStrataRow[]
 
+  // Scale bars relative to max pct so small values (6%, 7%) are still visible
+  const maxPct = Math.max(...sorted.map((r) => r.pct), 1)
+
   // Hero block height
   const HERO_H = 56
   const svgH = HERO_H + sorted.length * (ROW_H + ROW_GAP) + 36
@@ -75,7 +78,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
         const rowY = HERO_H + idx * (ROW_H + ROW_GAP)
         const fill = STRATA_COLORS[row.level] ?? '#3f3f46'
         const opacity = STRATA_OPACITY[row.level] ?? 0.5
-        const barFill = (row.pct / 100) * BAR_W
+        const barFill = (row.pct / maxPct) * BAR_W
 
         return (
           <g key={row.level}>
