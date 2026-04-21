@@ -531,7 +531,7 @@ function AdminDossierPanel({
               )}
             </div>
             {dossier.scandals.length === 0 ? (
-              <div className="rounded-lg border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
+              <div className="rounded-sm border border-border/20 bg-background-elevated/20 px-3 py-3 text-center">
                 <Shield className="h-4 w-4 text-text-muted/40 mx-auto mb-1" />
                 <p className="text-xs text-text-muted italic leading-relaxed">
                   {t('dossier.noScandals')}
@@ -549,7 +549,7 @@ function AdminDossierPanel({
                   return (
                     <div
                       key={scandal.key}
-                      className="rounded-lg border bg-background-elevated/20 overflow-hidden transition-colors hover:bg-background-elevated/40"
+                      className="rounded-sm border bg-background-elevated/20 overflow-hidden transition-colors hover:bg-background-elevated/40"
                       style={{ borderColor: `${sevColor}30`, borderLeftWidth: 3, borderLeftColor: sevColor }}
                     >
                       <div className="px-3 py-2">
@@ -661,7 +661,7 @@ function AdminDossierPanel({
               {fingerprintItems.map(({ labelKey, value, icon: Icon }) => (
                 <div
                   key={labelKey}
-                  className="rounded-lg border border-border/30 bg-background-elevated/30 px-3 py-2"
+                  className="rounded-sm border border-border/30 bg-background-elevated/30 px-3 py-2"
                 >
                   <div className="flex items-center gap-1 mb-0.5">
                     <Icon className="h-3 w-3 text-text-muted flex-shrink-0" />
@@ -1062,7 +1062,7 @@ export default function Administrations() {
       <div className="flex items-center justify-center min-h-[60vh] p-6">
         <div className="text-center max-w-md space-y-4">
           <div className="w-12 h-12 rounded-full bg-destructive/10 flex items-center justify-center mx-auto">
-            <span className="text-destructive text-xl">⚠</span>
+            <AlertTriangle className="h-5 w-5 text-destructive" aria-hidden="true" />
           </div>
           <h2 className="text-xl font-bold text-text-primary">{t('loadError', 'Data unavailable')}</h2>
           <p className="text-sm text-text-secondary leading-relaxed">
@@ -1159,7 +1159,7 @@ export default function Administrations() {
       </div>
 
       {/* Tab Switcher — standalone row */}
-      <div className="flex flex-wrap items-center gap-1 rounded-lg border border-border/50 p-0.5 bg-background-elevated/30 w-fit">
+      <div className="flex flex-wrap items-center gap-1 rounded-sm border border-border/50 p-0.5 bg-background-elevated/30 w-fit">
           <button
             onClick={() => setActiveTab('overview')}
             className={cn(
@@ -1312,7 +1312,7 @@ export default function Administrations() {
             <button
               onClick={() => setSelectedAdmin(admin.name)}
               className={cn(
-                'relative text-left w-full rounded-lg overflow-hidden transition-all duration-300',
+                'relative text-left w-full rounded-sm overflow-hidden transition-all duration-300',
                 isSelected
                   ? 'bg-background-card shadow-lg ring-1'
                   : 'bg-background-card/60 hover:bg-background-card hover:shadow-md'
@@ -1493,7 +1493,7 @@ export default function Administrations() {
 
       {/* Incomplete data warning for Sheinbaum */}
       {selectedAdmin === 'Sheinbaum' && (
-        <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-risk-medium/30 bg-risk-medium/5">
+        <div className="flex items-start gap-3 px-4 py-3 rounded-sm border border-risk-medium/30 bg-risk-medium/5">
           <AlertTriangle className="h-4 w-4 text-risk-medium mt-0.5 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-risk-medium">{t('incompleteDataset')}</p>
@@ -1545,7 +1545,7 @@ export default function Administrations() {
       </div>
 
       {/* High-risk rate comparison — dramatic bar visualization */}
-      <div className="bg-background-card rounded-lg border border-border/40 p-5 mb-4">
+      <div className="bg-background-card rounded-sm border border-border/40 p-5 mb-4">
         <div className="text-[9px] tracking-[0.25em] uppercase font-bold text-accent mb-3">
           {t('evidenceSection.registryTitle')}
         </div>
@@ -1791,7 +1791,7 @@ export default function Administrations() {
                       return (
                         <g key={`brk-${b.year}-${b.metric}`}>
                           <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#f59e0b" strokeWidth={1} strokeDasharray="4 2" />
-                          <text x={x + 2} y={MT + 14} fill="#f59e0b" fontSize={9} fontFamily="monospace">⚡</text>
+                          <text x={x + 2} y={MT + 14} fill="#f59e0b" fontSize={9} fontFamily="monospace">!</text>
                         </g>
                       )
                     })}
@@ -1990,7 +1990,7 @@ export default function Administrations() {
                 <ScrollReveal key={`${tr.from}-${tr.to}`} delay={i * 100} direction="up">
                 <div
                   className={cn(
-                    'rounded-lg border p-3 transition-all',
+                    'rounded-sm border p-3 transition-all',
                     isRelevant
                       ? 'border-accent/30 bg-accent/5'
                       : 'border-border/20 bg-card opacity-60'
@@ -2192,7 +2192,7 @@ function ProcurementGradeCard({ agg }: { agg: AdminAgg }) {
 
   return (
     <div
-      className="rounded-lg border bg-background-elevated/20 p-3 mt-3"
+      className="rounded-sm border bg-background-elevated/20 p-3 mt-3"
       style={{ borderColor: `${gradeColor}30` }}
     >
       <div className="text-[8px] tracking-[0.25em] uppercase font-bold text-text-muted mb-2 font-mono">
@@ -3318,7 +3318,7 @@ function PoliticalCycleView() {
         <CardContent>
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Election years card */}
-            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+            <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
               <div className="text-[11px] text-text-muted uppercase tracking-wider">Election Years</div>
               <div
                 className="text-3xl font-bold font-mono"
@@ -3338,7 +3338,7 @@ function PoliticalCycleView() {
             </div>
 
             {/* Non-election years card */}
-            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+            <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
               <div className="text-[11px] text-text-muted uppercase tracking-wider">Non-Election Years</div>
               <div
                 className="text-3xl font-bold font-mono"
@@ -3358,7 +3358,7 @@ function PoliticalCycleView() {
             </div>
 
             {/* Delta card */}
-            <div className="rounded-lg border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
+            <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
               <div className="text-[11px] text-text-muted uppercase tracking-wider">Risk Delta</div>
               {election_year_effect.risk_delta !== undefined ? (
                 <>

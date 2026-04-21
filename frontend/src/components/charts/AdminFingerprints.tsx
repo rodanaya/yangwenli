@@ -9,6 +9,11 @@
  * most of the strip, making the outlier immediately legible.
  */
 
+const fmtB = (v: number) => {
+  const b = v / 1e9
+  return b >= 1000 ? `${(b / 1000).toFixed(1)}T` : `${Math.round(b)}B`
+}
+
 interface Admin {
   name: string
   fullName: string
@@ -35,10 +40,10 @@ const SVG_W        = 580
 const ROW_H        = 36
 const ROW_GAP      = 6
 const PAD_T        = 22
-const PAD_B        = 26
+const PAD_B        = 38
 const SVG_H        = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) + PAD_B
 
-const PARTY_TAB_W  = 4
+const PARTY_TAB_W  = 6
 const PARTY_TAB_GAP = 8
 const LABEL_X      = PARTY_TAB_W + PARTY_TAB_GAP
 const LABEL_W      = 100
@@ -67,7 +72,7 @@ const MAX_DA_PCT   = 85
 
 // Colors
 const RISK_COLOR   = '#dc2626'
-const DA_COLOR     = '#78716c'
+const DA_COLOR     = '#7c93a8'
 const GRID_COLOR   = 'rgba(255,255,255,0.06)'
 const HEADER_COLOR = '#a1a1aa'
 const MUTED_COLOR  = '#71717a'
@@ -153,8 +158,23 @@ export function AdminFingerprints() {
           : 0
         const riskAlpha  = isMaxRisk ? 1.0 : 0.72
 
+        const isSheinbaum = idx === ADMINS.length - 1
+        const spendLabel = `${fmtB(a.value)}${isSheinbaum ? '*' : ''}`
+
         return (
           <g key={a.name}>
+            {/* AMLO outlier — very faint amber wash behind the entire row */}
+            {isMaxRisk && (
+              <rect
+                x={0}
+                y={rowY - ROW_GAP / 2}
+                width={SVG_W}
+                height={ROW_H + ROW_GAP}
+                fill="#f59e0b"
+                fillOpacity={0.04}
+              />
+            )}
+
             {/* Party color tab */}
             <rect x={0} y={rowY} width={PARTY_TAB_W} height={ROW_H} fill={a.partyColor} fillOpacity={0.9} />
 
@@ -163,10 +183,10 @@ export function AdminFingerprints() {
               fontFamily="var(--font-family-serif, Georgia, serif)" fontWeight="600">
               {a.name}
             </text>
-            {/* Years + party */}
+            {/* Years + party + spend */}
             <text x={LABEL_X} y={rowY + 27} fill={MUTED_COLOR} fontSize={9}
               fontFamily="var(--font-family-mono, monospace)" letterSpacing="0.04em">
-              {a.years} · {a.party}
+              {a.years} · {a.party} · {spendLabel}
             </text>
 
             {/* Risk dot strip */}
@@ -188,7 +208,7 @@ export function AdminFingerprints() {
               x={BAR_RISK_X + BAR_RISK_PX + 6}
               y={cy + 4}
               fill={isMaxRisk ? RISK_COLOR : TEXT_COLOR}
-              fontSize={11}
+              fontSize={isMaxRisk ? 13 : 11}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight={isMaxRisk ? 'bold' : 'normal'}
             >
@@ -221,16 +241,30 @@ export function AdminFingerprints() {
                 </text>
               </>
             ) : (
-              <text
-                x={BAR_DA_X + 6}
-                y={cy + 4}
-                fill={MUTED_COLOR}
-                fontSize={10}
-                fontFamily="var(--font-family-mono, monospace)"
-                fontStyle="italic"
-              >
-                N/D (flag no capturado)
-              </text>
+              <>
+                {Array.from({ length: N_DA }).map((_, i) => (
+                  <circle
+                    key={`d${i}`}
+                    cx={BAR_DA_X + i * DOT_GAP + DOT_R}
+                    cy={cy}
+                    r={DOT_R}
+                    fill={EMPTY_DOT}
+                    stroke={EMPTY_STROKE}
+                    strokeWidth={0.5}
+                    fillOpacity={0.4}
+                  />
+                ))}
+                <text
+                  x={BAR_DA_X}
+                  y={cy + DOT_R + 9}
+                  fill="#52525b"
+                  fontSize={7}
+                  fontFamily="var(--font-family-mono, monospace)"
+                  fontStyle="italic"
+                >
+                  datos pre-2007
+                </text>
+              </>
             )}
 
             {/* Hairline separator */}
@@ -246,9 +280,13 @@ export function AdminFingerprints() {
       })}
 
       {/* Footer caption */}
-      <text x={LABEL_X} y={SVG_H - 4} fill="#52525b" fontSize={9}
+      <text x={LABEL_X} y={SVG_H - 16} fill="#52525b" fontSize={9}
         fontFamily="var(--font-family-mono, monospace)">
         AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007
+      </text>
+      <text x={LABEL_X} y={SVG_H - 4} fill="#3f3f46" fontSize={8}
+        fontFamily="var(--font-family-mono, monospace)" fontStyle="italic">
+        * Sheinbaum: sexenio parcial (datos 2025 al corte)
       </text>
     </svg>
   )

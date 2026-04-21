@@ -333,7 +333,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
           const risk = item.avg_risk_score ?? 0
           const pctHigh = risk * 100
           return (
-            <div key={item.year} className="bg-zinc-900 border border-zinc-800 rounded-lg p-3">
+            <div key={item.year} className="bg-zinc-900 border border-zinc-800 rounded-sm p-3">
               <p className="text-xs text-zinc-500 mb-1">{item.year}</p>
               <p className="text-sm font-bold text-white font-mono tabular-nums">{formatCompactMXN(item.total_value)}</p>
               <p className="text-xs mt-0.5 font-mono tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
@@ -410,7 +410,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
               initial={{ opacity: 0, x: -20 }}
               animate={inView ? { opacity: 1, x: 0 } : {}}
               transition={{ delay: idx * 0.07, duration: 0.4, ease: [0.16, 1, 0.3, 1] }}
-              className="relative rounded-lg border border-border overflow-hidden"
+              className="relative rounded-sm border border-border overflow-hidden"
               style={{ backgroundColor: bgColor }}
             >
               {/* Fill dot-matrix (was: solid bar) */}
@@ -648,12 +648,12 @@ function ChapterMoney({ timeline, t }: {
       {/* Annotations */}
       {peakYear && (
         <div className="flex flex-wrap gap-4 mb-8">
-          <div className="bg-background border border-border rounded-lg px-4 py-3">
+          <div className="bg-background border border-border rounded-sm px-4 py-3">
             <p className="editorial-label text-text-muted mb-1">{t('money.peakByValue')}</p>
             <p className="text-white font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
           </div>
           {peakRiskYear && (
-            <div className="bg-background border border-red-900/50 rounded-lg px-4 py-3">
+            <div className="bg-background border border-red-900/50 rounded-sm px-4 py-3">
               <p className="editorial-label text-red-500 mb-1">{t('money.peakByRisk')}</p>
               <p className="text-white font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
@@ -901,7 +901,7 @@ function ChapterVerdict({
         )}
 
         {patternMeta && aria?.primary_pattern && (
-          <div className="rounded-lg border p-4 mb-4" style={{ backgroundColor: patternMeta.bg, borderColor: patternMeta.color + '44' }}>
+          <div className="rounded-sm border p-4 mb-4" style={{ backgroundColor: patternMeta.bg, borderColor: patternMeta.color + '44' }}>
             <p className="text-xs font-semibold uppercase tracking-widest mb-1" style={{ color: patternMeta.color }}>
               {aria.primary_pattern} · {patternMeta.label}
             </p>

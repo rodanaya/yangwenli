@@ -322,7 +322,7 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
 
   return (
     <article
-      className="rounded-lg overflow-hidden"
+      className="rounded-sm overflow-hidden"
       style={{
         backgroundColor: '#1a1614',
         border: '1px solid rgba(255,255,255,0.04)',
@@ -913,7 +913,7 @@ function RingDetailPanel({
         ].map(({ value, label, color }) => (
           <div
             key={label}
-            className="rounded-lg bg-zinc-950/60 border border-zinc-800/60 p-3 text-center"
+            className="rounded-sm bg-zinc-950/60 border border-zinc-800/60 p-3 text-center"
           >
             <div className={`font-mono text-xl font-bold leading-none ${color}`}>{value}</div>
             <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-500 mt-1">
@@ -959,7 +959,7 @@ function RingDetailPanel({
               return (
                 <div
                   key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                  className="flex items-center justify-between gap-3 rounded-lg bg-zinc-950/60 border border-zinc-800/50 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-sm bg-zinc-950/60 border border-zinc-800/50 px-3 py-2"
                 >
                   <div className="min-w-0 flex-1">
                     <div className="text-[11px] text-zinc-300 truncate">{pair.vendor_name_a}</div>
@@ -1064,7 +1064,7 @@ function Filters({
           max={500}
           value={minShared}
           onChange={(e) => setMinShared(Math.max(1, Number(e.target.value)))}
-          className="w-20 rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="w-20 rounded-sm border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         />
       </div>
 
@@ -1081,7 +1081,7 @@ function Filters({
           id="sort-select"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortField)}
-          className="rounded-lg border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="rounded-sm border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         >
           <option value="shared_procedures">{t('filters.sortShared')}</option>
           <option value="co_bid_rate">{t('filters.sortRate')}</option>
@@ -1131,7 +1131,7 @@ function ConnectionRow({
     : 'bg-amber-500'
 
   return (
-    <div className="relative flex items-center gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 transition-colors px-4 py-3 overflow-hidden">
+    <div className="relative flex items-center gap-3 rounded-sm border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 transition-colors px-4 py-3 overflow-hidden">
       <div
         className={`absolute left-0 top-0 bottom-0 w-[2px] ${accentBar}`}
         aria-hidden="true"
@@ -1644,7 +1644,7 @@ export default function CollusionExplorer() {
             {pairsLoading ? (
               <div className="space-y-2">
                 {Array.from({ length: 10 }).map((_, i) => (
-                  <Skeleton key={i} className="h-16 rounded-lg" />
+                  <Skeleton key={i} className="h-16 rounded-sm" />
                 ))}
               </div>
             ) : pairsError ? (
@@ -1686,7 +1686,7 @@ export default function CollusionExplorer() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={t('pagination.previous')}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
@@ -1701,7 +1701,7 @@ export default function CollusionExplorer() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={t('pagination.next')}
                 >
                   {t('pagination.next')}

@@ -18,14 +18,14 @@ interface SexenioStratumProps {
 const SVG_W   = 840
 const PAD_L   = 36
 const PAD_R   = 8
-const PAD_T   = 30    // admin label row
+const PAD_T   = 40    // admin label row (two-line label: name + spend)
 const PAD_B   = 32    // year labels + caption
 const ROWS    = 22    // dot rows per column
 const DOT_R   = 3
 const DOT_GAP = 8
 const FIELD_W = SVG_W - PAD_L - PAD_R    // 796
 const FIELD_H = ROWS * DOT_GAP            // 176
-const SVG_H   = PAD_T + FIELD_H + PAD_B   // 238
+const SVG_H   = PAD_T + FIELD_H + PAD_B   // 248
 
 const OECD_PCT  = 15
 const TOOLTIP_W = 108
@@ -59,6 +59,16 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
   const [hoveredYear, setHoveredYear] = useState<number | null>(null)
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.year - b.year), [rows])
+
+  const adminTotals = useMemo(() =>
+    ADMIN_BANDS.reduce((acc, band) => {
+      const total = sorted
+        .filter(r => r.year >= band.startYear && r.year <= band.endYear)
+        .reduce((s, r) => s + (r.value_mxn || 0), 0)
+      acc[band.label] = total
+      return acc
+    }, {} as Record<string, number>),
+  [sorted])
 
   const { colW, maxSqrtVal } = useMemo(() => {
     if (!sorted.length) return { colW: 0, maxSqrtVal: 1 }
@@ -145,16 +155,26 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
             width={band.x2 - band.x1 - 2} height={1.5}
             fill={band.color} fillOpacity={hoveredRow ? 0.2 : 0.5}
           />
-          {/* Admin label */}
+          {/* Admin label — two lines: name + spend total */}
           <text
-            x={band.labelX} y={PAD_T - 8}
-            fill={band.color} fontSize={6.5}
+            x={band.labelX} y={PAD_T - 14}
+            fill={band.color} fontSize={8} fontWeight="600"
             fontFamily="var(--font-family-mono, monospace)"
             textAnchor="middle"
-            opacity={hoveredRow ? 0.2 : 0.75}
+            opacity={hoveredRow ? 0.2 : 0.85}
             style={{ pointerEvents: 'none' }}
           >
             {band.label}
+          </text>
+          <text
+            x={band.labelX} y={PAD_T - 5}
+            fill={band.color} fontSize={6.5}
+            fontFamily="var(--font-family-mono, monospace)"
+            textAnchor="middle"
+            opacity={hoveredRow ? 0.15 : 0.6}
+            style={{ pointerEvents: 'none' }}
+          >
+            {adminTotals[band.label] ? fmtB(adminTotals[band.label]) : '—'}
           </text>
         </g>
       ))}
@@ -245,12 +265,12 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
         )
       })}
 
-      {/* ── Year labels (every 4 years + current + hovered) ─────────────── */}
+      {/* ── Year labels (every 2 years + current + hovered) ─────────────── */}
       {sorted.map((row, i) => {
         const lx        = PAD_L + i * colW + colW / 2
         const isCurrent = row.year === CURRENT_YEAR
         const isHov     = row.year === hoveredYear
-        const showLabel = row.year % 4 === 2 || isCurrent || row.year === startYear || isHov
+        const showLabel = row.year % 2 === 0 || isCurrent || row.year === startYear || isHov
         if (!showLabel) return null
         return (
           <text

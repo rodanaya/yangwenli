@@ -207,10 +207,12 @@ class AnalysisService(BaseService):
             )
         else:
             # ── Fast path: precomputed table ────────────────────────────────
+            # sector_id is denormalized onto itv (idx_itv_sector_value) to avoid
+            # a temp-B-tree sort on 32K rows (infraestructura worst case).
             where_parts2 = ["itv.total_value_mxn > 0"]
             params2: list[Any] = []
             if sector_id is not None:
-                where_parts2.append("i.sector_id = ?")
+                where_parts2.append("itv.sector_id = ?")
                 params2.append(sector_id)
             where_clause2 = " AND ".join(where_parts2)
 

@@ -1225,7 +1225,7 @@ export function VendorProfile() {
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
       {/* ── TOP-OF-PAGE CRITICAL ALERT — shown above everything for EFOS/GT vendors ── */}
       {(isEfosDefinitivo || isGroundTruth) && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-red-500/40 bg-red-950/30">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-red-500/40 bg-red-950/30">
           <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/30 border border-red-500/60 flex items-center justify-center">
             <AlertTriangle className="h-4 w-4 text-red-300" />
           </div>
@@ -1252,7 +1252,7 @@ export function VendorProfile() {
         </div>
       )}
       {(isEfosPresunto || isSfpSanctioned) && !isEfosDefinitivo && !isGroundTruth && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-950/20">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-amber-500/30 bg-amber-950/20">
           <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
           <p className="text-sm text-amber-300 flex-1">
             {isEfosPresunto && 'SAT EFOS Presunto — Listed as alleged ghost company (investigation ongoing).'}
@@ -1615,10 +1615,11 @@ export function VendorProfile() {
             <Link
               key={c.case_id}
               to={`/cases/${c.scandal_slug}`}
-              className="text-xs px-2 py-0.5 rounded font-medium"
+              className="inline-flex items-center gap-1.5 text-xs px-2 py-0.5 rounded font-medium"
               style={{ background: '#dc262620', color: '#fca5a5', border: '1px solid #dc262640' }}
             >
-              ⚠ {c.case_name}
+              <AlertTriangle className="h-3 w-3" aria-hidden="true" />
+              {c.case_name}
             </Link>
           ))}
           {groundTruthError && (
@@ -1707,42 +1708,42 @@ export function VendorProfile() {
 
       {/* "Why is this vendor risky?" — consolidated red-flags evidence block */}
       {(() => {
-        const flags: Array<{ icon: string; text: string; severity: 'critical' | 'high' | 'medium' }> = []
+        const flags: Array<{ text: string; severity: 'critical' | 'high' | 'medium' }> = []
         // Ground truth
         if (groundTruthStatus?.is_known_bad) {
-          flags.push({ icon: '⚠️', text: 'Documented in known corruption cases (model training ground truth)', severity: 'critical' })
+          flags.push({ text: 'Documented in known corruption cases (model training ground truth)', severity: 'critical' })
         }
         // External sanctions
         if (externalFlags?.sat_efos?.stage === 'definitivo') {
-          flags.push({ icon: '🔴', text: 'SAT confirmed ghost company (Art. 69-B EFOS Definitivo)', severity: 'critical' })
+          flags.push({ text: 'SAT confirmed ghost company (Art. 69-B EFOS Definitivo)', severity: 'critical' })
         } else if (externalFlags?.sat_efos?.stage === 'presunto') {
-          flags.push({ icon: '🟡', text: 'SAT-listed as alleged ghost company (EFOS Presunto — under investigation)', severity: 'high' })
+          flags.push({ text: 'SAT-listed as alleged ghost company (EFOS Presunto — under investigation)', severity: 'high' })
         }
         if (externalFlags?.sfp_sanctions && externalFlags.sfp_sanctions.length > 0) {
-          flags.push({ icon: '🔴', text: `${externalFlags.sfp_sanctions.length} SFP sanction record${externalFlags.sfp_sanctions.length > 1 ? 's' : ''} on file`, severity: 'critical' })
+          flags.push({ text: `${externalFlags.sfp_sanctions.length} SFP sanction record${externalFlags.sfp_sanctions.length > 1 ? 's' : ''} on file`, severity: 'critical' })
         }
         // Risk score
         const score = vendor.avg_risk_score ?? 0
         if (score >= RISK_THRESHOLDS.critical) {
-          flags.push({ icon: '🔴', text: `Critical risk score (${(score * 100).toFixed(0)}/100) — strongest similarity to documented corruption patterns`, severity: 'critical' })
+          flags.push({ text: `Critical risk score (${(score * 100).toFixed(0)}/100) — strongest similarity to documented corruption patterns`, severity: 'critical' })
         } else if (score >= RISK_THRESHOLDS.high) {
-          flags.push({ icon: '🟠', text: `High risk score (${(score * 100).toFixed(0)}/100) — strong similarity to documented corruption patterns`, severity: 'high' })
+          flags.push({ text: `High risk score (${(score * 100).toFixed(0)}/100) — strong similarity to documented corruption patterns`, severity: 'high' })
         }
         // Procurement patterns
         const effectiveDirectAwardPct = vendor.direct_award_rate_corrected ?? vendor.direct_award_pct ?? 0
         if (effectiveDirectAwardPct > 70) {
-          flags.push({ icon: '🟠', text: t('flags.highDirectAward', { pct: effectiveDirectAwardPct.toFixed(0) }), severity: 'high' })
+          flags.push({ text: t('flags.highDirectAward', { pct: effectiveDirectAwardPct.toFixed(0) }), severity: 'high' })
         }
         if ((vendor.single_bid_pct ?? 0) > 40) {
-          flags.push({ icon: '🟡', text: t('flags.highSingleBid', { pct: vendor.single_bid_pct?.toFixed(0) }), severity: 'medium' })
+          flags.push({ text: t('flags.highSingleBid', { pct: vendor.single_bid_pct?.toFixed(0) }), severity: 'medium' })
         }
         // Co-bidding
         if (hasCoBiddingRisk) {
-          flags.push({ icon: '🟡', text: t('flags.suspiciousCoBidding'), severity: 'medium' })
+          flags.push({ text: t('flags.suspiciousCoBidding'), severity: 'medium' })
         }
         // Network clustering
         if ((vendor.cobid_clustering_coeff ?? 0) > 0.6) {
-          flags.push({ icon: '🟠', text: t('flags.highClustering', { pct: ((vendor.cobid_clustering_coeff ?? 0) * 100).toFixed(0) }), severity: 'high' })
+          flags.push({ text: t('flags.highClustering', { pct: ((vendor.cobid_clustering_coeff ?? 0) * 100).toFixed(0) }), severity: 'high' })
         }
         // Waterfall top factor
         if (waterfallData && waterfallData.length > 0) {
@@ -1750,7 +1751,7 @@ export function VendorProfile() {
           if (topFactor && topFactor.z_score > 2) {
             const explanation = FACTOR_EXPLANATIONS[topFactor.feature]
             if (explanation) {
-              flags.push({ icon: '🟡', text: t('flags.primaryDriver', { factor: topFactor.label_en || topFactor.feature, z: topFactor.z_score.toFixed(1) }), severity: 'medium' })
+              flags.push({ text: t('flags.primaryDriver', { factor: topFactor.label_en || topFactor.feature, z: topFactor.z_score.toFixed(1) }), severity: 'medium' })
             }
           }
         }
@@ -1759,23 +1760,26 @@ export function VendorProfile() {
 
         return (
           <div
-            className="rounded-lg p-4"
+            className="rounded-sm p-4"
             style={{ border: '1px solid var(--color-border)', background: 'var(--color-background-elevated)' }}
           >
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
               {t('flags.sectionLabel')}
             </p>
             <div className="space-y-2">
-              {flags.map((flag, i) => (
-                <div key={i} className={`flex items-start gap-2 text-sm ${
-                  flag.severity === 'critical' ? 'text-red-300' :
-                  flag.severity === 'high' ? 'text-amber-300' :
-                  'text-text-secondary'
-                }`}>
-                  <span className="flex-shrink-0 text-base leading-none mt-0.5">{flag.icon}</span>
-                  <span>{flag.text}</span>
-                </div>
-              ))}
+              {flags.map((flag, i) => {
+                const dotColor = flag.severity === 'critical' ? '#dc2626' : flag.severity === 'high' ? '#ea580c' : '#eab308'
+                return (
+                  <div key={i} className={`flex items-start gap-2 text-sm ${
+                    flag.severity === 'critical' ? 'text-red-300' :
+                    flag.severity === 'high' ? 'text-amber-300' :
+                    'text-text-secondary'
+                  }`}>
+                    <span className="flex-shrink-0 mt-1.5 h-2 w-2 rounded-full" style={{ backgroundColor: dotColor }} aria-hidden="true" />
+                    <span>{flag.text}</span>
+                  </div>
+                )
+              })}
             </div>
             <p className="text-[10px] text-text-muted/60 mt-3 border-t border-border/30 pt-2">
               {t('flags.disclaimer')}
@@ -1825,7 +1829,7 @@ export function VendorProfile() {
 
       {/* Co-Bidding Alert (v3.2) */}
       {!coBiddersLoading && hasCoBiddingRisk && (
-        <div className="flex items-start gap-3 px-4 py-3 rounded-lg border border-amber-500/30 bg-amber-500/5">
+        <div className="flex items-start gap-3 px-4 py-3 rounded-sm border border-amber-500/30 bg-amber-500/5">
           <div className="shrink-0 mt-0.5 h-8 w-8 rounded-full bg-amber-500/15 flex items-center justify-center">
             <Users className="h-4 w-4 text-amber-400" />
           </div>
@@ -1840,7 +1844,7 @@ export function VendorProfile() {
               ) : null}
             </div>
             <p className="text-xs text-text-muted">{t('coBidding.description')}</p>
-            <p className="text-[10px] text-amber-300/50 mt-1.5">⚠ {t('coBidding.heuristicNote')}</p>
+            <p className="text-[10px] text-amber-300/50 mt-1.5 flex items-center gap-1"><AlertTriangle className="h-3 w-3 flex-shrink-0" aria-hidden="true" /><span>{t('coBidding.heuristicNote')}</span></p>
           </div>
         </div>
       )}
@@ -1848,7 +1852,7 @@ export function VendorProfile() {
       {/* F2: Ground truth known-bad banner — prominent alert above KPIs */}
       {groundTruthStatus?.is_known_bad && (groundTruthStatus.cases?.length ?? 0) > 0 && (
         <div
-          className="rounded-lg border-2 border-red-500/60 bg-red-950/40 p-4"
+          className="rounded-sm border-2 border-red-500/60 bg-red-950/40 p-4"
           style={{ animation: 'vpSlideIn 400ms cubic-bezier(0.16, 1, 0.3, 1) both' }}
         >
           <div className="flex items-start gap-3">
@@ -1926,7 +1930,7 @@ export function VendorProfile() {
           {/* ── HERO RISK PANEL — full-width editorial lede, shows gauge + top drivers side-by-side ── */}
           <ScrollReveal direction="up" delay={0}>
           <div
-            className="mb-6 rounded-lg p-5 md:p-6"
+            className="mb-6 rounded-sm p-5 md:p-6"
             style={{
               border: '1px solid var(--color-border)',
               background: 'var(--color-background-elevated)',
@@ -3851,7 +3855,7 @@ export function VendorProfile() {
           <div className="space-y-6">
             {/* High Clustering Alert Banner */}
             {vendor?.cobid_clustering_coeff != null && vendor.cobid_clustering_coeff > 0.6 && (
-              <div className="flex items-start gap-3 p-4 rounded-lg border border-red-500/40 bg-red-500/[0.06]">
+              <div className="flex items-start gap-3 p-4 rounded-sm border border-red-500/40 bg-red-500/[0.06]">
                 <AlertTriangle className="h-4 w-4 text-red-400 shrink-0 mt-0.5" />
                 <p className="text-sm text-red-300">
                   <span className="font-semibold">High network clustering detected.</span>{' '}
@@ -3888,7 +3892,7 @@ export function VendorProfile() {
                       {coBidders.suspicious_patterns.map((sp, i) => (
                         <div
                           key={i}
-                          className="flex items-start gap-2 p-3 rounded-lg border-l-2 border-l-risk-high border border-risk-high/20 bg-risk-high/[0.04]"
+                          className="flex items-start gap-2 p-3 rounded-sm border-l-2 border-l-risk-high border border-risk-high/20 bg-risk-high/[0.04]"
                         >
                           <AlertTriangle className="h-3.5 w-3.5 text-risk-high shrink-0 mt-0.5" />
                           <div className="min-w-0">
@@ -3935,7 +3939,7 @@ export function VendorProfile() {
                           <div
                             key={partner.vendor_id}
                             className={cn(
-                              'rounded-lg border border-l-4 p-3 transition-colors hover:bg-background-elevated/20',
+                              'rounded-sm border border-l-4 p-3 transition-colors hover:bg-background-elevated/20',
                               roleStyles.border,
                               roleStyles.bg,
                             )}
@@ -4011,12 +4015,12 @@ export function VendorProfile() {
                       <div className="flex gap-3">
                         {/* Clustering Coefficient pill */}
                         <div className={cn(
-                          'flex-1 rounded-lg border px-4 py-3',
+                          'flex-1 rounded-sm border px-4 py-3',
                           vendor.cobid_clustering_coeff > 0.6
                             ? 'border-red-500/40 bg-red-500/[0.06]'
                             : vendor.cobid_clustering_coeff >= 0.3
                             ? 'border-amber-500/40 bg-amber-500/[0.06]'
-                            : 'border-green-500/40 bg-green-500/[0.06]'
+                            : 'border-zinc-500/40 bg-zinc-500/[0.06]'
                         )}>
                           <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1 flex items-center gap-1">
                             {t('network.clusteringCoefficient')}
@@ -4028,7 +4032,7 @@ export function VendorProfile() {
                               ? 'text-red-400'
                               : vendor.cobid_clustering_coeff >= 0.3
                               ? 'text-amber-400'
-                              : 'text-green-400'
+                              : 'text-zinc-400'
                           )}>
                             {(vendor.cobid_clustering_coeff * 100).toFixed(0)}%
                           </p>
@@ -4038,7 +4042,7 @@ export function VendorProfile() {
                               ? 'text-red-400/80'
                               : vendor.cobid_clustering_coeff >= 0.3
                               ? 'text-amber-400/80'
-                              : 'text-green-400/80'
+                              : 'text-zinc-400/80'
                           )}>
                             {vendor.cobid_clustering_coeff > 0.6
                               ? t('network.highClustering')
@@ -4050,7 +4054,7 @@ export function VendorProfile() {
 
                         {/* Closed Triangles pill */}
                         {vendor.cobid_triangle_count != null && (
-                          <div className="flex-1 rounded-lg border border-border/60 bg-background-card px-4 py-3">
+                          <div className="flex-1 rounded-sm border border-border/60 bg-background-card px-4 py-3">
                             <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1">
                               {t('network.closedTriangles')}
                             </p>
@@ -4115,7 +4119,7 @@ export function VendorProfile() {
             ) : ariaData ? (
               <>
                 {/* Tier + IPS banner */}
-                <div className="flex items-start gap-4 p-4 rounded-lg border border-border bg-background-elevated/50">
+                <div className="flex items-start gap-4 p-4 rounded-sm border border-border bg-background-elevated/50">
                   <div className="flex flex-col items-center gap-1">
                     <span className="text-[10px] text-text-muted uppercase tracking-wider">Tier</span>
                     <div
@@ -4362,7 +4366,7 @@ function KPICard({ title, value, icon: Icon, format = 'number', subtitle, varian
 
   return (
     <div
-      className="rounded-lg p-4"
+      className="rounded-sm p-4"
       style={{ border: `1px solid ${borderColor}`, background: 'var(--color-background-elevated)' }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -4562,7 +4566,7 @@ function PatternBar({ label, value, isPercent100 = false }: { label: string; val
 
 function SummaryRow({ label, value }: { label: string; value: string }) {
   return (
-    <div className="flex justify-between items-center p-3 rounded-lg bg-background-elevated">
+    <div className="flex justify-between items-center p-3 rounded-sm bg-background-elevated">
       <span className="text-sm text-text-muted">{label}</span>
       <span className="font-medium font-mono tabular-nums">{value}</span>
     </div>
@@ -4577,7 +4581,7 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
         return (
           <div
             key={inst.institution_id}
-            className="relative flex items-center justify-between p-3 rounded-lg overflow-hidden interactive"
+            className="relative flex items-center justify-between p-3 rounded-sm overflow-hidden interactive"
             style={{
               opacity: 0,
               animation: `vpFadeUp 500ms cubic-bezier(0.16, 1, 0.3, 1) ${i * 70}ms both`,
@@ -4663,7 +4667,7 @@ function VendorProfileSkeleton() {
       <div className="flex items-center gap-4">
         <Skeleton className="h-8 w-8" />
         <div className="flex items-center gap-3">
-          <Skeleton className="h-12 w-12 rounded-lg" />
+          <Skeleton className="h-12 w-12 rounded-sm" />
           <div className="space-y-2">
             <Skeleton className="h-6 w-48" />
             <Skeleton className="h-4 w-32" />
@@ -5260,7 +5264,7 @@ function PeriodistaPanel({
             <button
               onClick={handleCopyLede}
               className={cn(
-                'inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-all',
                 copiedLede
                   ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
                   : 'bg-background-card text-text-secondary border border-border hover:bg-background-elevated'
@@ -5286,7 +5290,7 @@ function PeriodistaPanel({
       <div>
         <button
           onClick={onExportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
+          className="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
         >
           <Download className="h-4 w-4" />
           Descargar evidencia CSV
