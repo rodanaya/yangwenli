@@ -294,7 +294,8 @@ def get_fast_dashboard(response: Response):
         stats = {}
         cached_at = None
         for row in rows:
-            stats[row['stat_key']] = json.loads(row['stat_value'])
+            val = row['stat_value']
+            stats[row['stat_key']] = json.loads(val) if isinstance(val, str) else val
             if row['updated_at']:
                 cached_at = row['updated_at']
 
