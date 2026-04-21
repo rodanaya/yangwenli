@@ -38,7 +38,7 @@ export default defineConfig({
     isProduction &&
       compression({
         algorithms: ['gzip'],
-        exclude: [/\.(png|jpg|jpeg|gif|svg|ico|woff|woff2)$/],
+        exclude: [/\.(html|png|jpg|jpeg|gif|svg|ico|woff|woff2)$/],
         threshold: 1024, // Only compress files > 1KB
       }),
 
