@@ -81,7 +81,7 @@ export function PatternTypology() {
           <div
             key={p.key}
             className={[
-              'rounded-lg border p-3.5',
+              'rounded-sm border p-3.5',
               isFlagship
                 ? 'lg:col-span-2 border-red-500/30 bg-red-500/[0.04] shadow-[0_0_24px_rgba(220,38,38,0.06)]'
                 : 'border-stone-800/60 bg-stone-900/30',

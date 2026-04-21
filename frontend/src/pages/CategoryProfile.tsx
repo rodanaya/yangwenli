@@ -435,9 +435,9 @@ export default function CategoryProfile() {
   }
 
   const riskLevel = category ? getRiskLevelFromScore(category.avg_risk) : 'low'
-  const riskColor = category ? getRiskColor(category.avg_risk) : '#4ade80'
+  const riskColor = category ? getRiskColor(category.avg_risk) : '#71717a'
   const daPct = category?.direct_award_pct ?? 0
-  const daColor = daPct > 50 ? '#f87171' : daPct > 25 ? '#fbbf24' : '#4ade80'
+  const daColor = daPct > 50 ? '#f87171' : daPct > 25 ? '#fbbf24' : '#71717a'
 
   const topContracts = (topContractsData?.data ?? []) as Array<{
     id: number

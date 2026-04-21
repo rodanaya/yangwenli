@@ -84,7 +84,7 @@ function RiskDistributionPanel({
         <h3 className="text-sm font-bold text-text-primary">
           {t('editorial.riskDistTitle', 'Risk distribution')}
         </h3>
-        <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
+        <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-[0.15em] flex-shrink-0">
           {formatNumber(totalContracts)}
         </span>
       </div>
@@ -130,14 +130,14 @@ function TierCard({
   return (
     <button
       onClick={onClick}
-      className="group text-left rounded-md border border-border/30 p-4 transition-all hover:border-border/60 hover:bg-background-elevated/30"
+      className="group text-left rounded-sm border border-border/30 p-4 transition-all hover:border-border/60 hover:bg-background-elevated/30"
       style={{ borderLeftWidth: '3px', borderLeftColor: color }}
     >
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[10px] font-mono font-bold tracking-[0.15em]" style={{ color }}>
           {tier}
         </span>
-        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider truncate">
+        <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] truncate">
           {label}
         </span>
       </div>
@@ -195,10 +195,10 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
         </div>
       </div>
 
-      <div className="overflow-x-auto rounded-md border border-border/30">
+      <div className="overflow-x-auto rounded-sm border border-border/30">
         {/* Header row */}
         <div
-          className="grid items-center text-[10px] font-mono font-bold uppercase tracking-wider text-text-muted/70 px-3 py-2 border-b border-border/30 min-w-[560px]"
+          className="grid items-center text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted/70 px-3 py-2 border-b border-border/30 min-w-[560px]"
           style={{ gridTemplateColumns: '1.8fr 1fr 1.2fr 1fr 1fr 16px' }}
         >
           <span>{t('editorial.colSector', 'Sector')}</span>
@@ -520,7 +520,7 @@ export function Dashboard() {
                 <h3 className="text-sm font-bold text-text-primary">
                   {t('editorial.sexenioTitle', '23 years of federal procurement')}
                 </h3>
-                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] flex-shrink-0">
                   {t('editorial.sexenioRange', '2002–2025')}
                 </span>
               </div>
@@ -540,7 +540,7 @@ export function Dashboard() {
                 <h3 className="text-sm font-bold text-text-primary">
                   {t('editorial.constellationTitle', 'Risk concentration field')}
                 </h3>
-                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] flex-shrink-0">
                   {formatNumber(overview.total_contracts)}
                 </span>
               </div>
@@ -556,7 +556,7 @@ export function Dashboard() {
               <div
                 role="tablist"
                 aria-label="Constellation clustering mode"
-                className="inline-flex items-center gap-1 mb-4 rounded-full border border-border/40 bg-background-elevated/40 p-0.5"
+                className="inline-flex items-center gap-1 mb-4 rounded-sm border border-border/40 bg-background-elevated/40 p-0.5"
               >
                 {([
                   { key: 'patterns', label: 'PATRONES' },
@@ -572,7 +572,7 @@ export function Dashboard() {
                       aria-selected={active}
                       onClick={() => setConstellationMode(opt.key)}
                       className={cn(
-                        'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-full transition-colors',
+                        'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-sm transition-colors',
                         active
                           ? 'bg-risk-critical/15 text-risk-critical border border-risk-critical/40 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]'
                           : 'text-text-muted/70 border border-transparent hover:text-text-primary hover:bg-background-elevated/60'
@@ -618,7 +618,7 @@ export function Dashboard() {
                   <h3 className="text-sm font-bold text-text-primary">
                     {t('editorial.sectorChartTitle', 'Risk by sector')}
                   </h3>
-                  <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-wider flex-shrink-0">
+                  <span className="text-[10px] font-mono text-text-muted/70 uppercase tracking-[0.15em] flex-shrink-0">
                     v0.6.5
                   </span>
                 </div>
@@ -628,7 +628,7 @@ export function Dashboard() {
                 {dashLoading ? (
                   <div className="space-y-3">
                     <Skeleton className="h-4 w-48" />
-                    <Skeleton className="h-[320px] w-full rounded" />
+                    <Skeleton className="h-80 w-full rounded-sm" />
                   </div>
                 ) : (
                   <SectorMarimekko
@@ -651,7 +651,7 @@ export function Dashboard() {
               ) : (
                 <div className="space-y-3">
                   <Skeleton className="h-4 w-32" />
-                  <Skeleton className="h-[280px] w-full rounded" />
+                  <Skeleton className="h-64 w-full rounded-sm" />
                 </div>
               )}
             </ErrorBoundary>
