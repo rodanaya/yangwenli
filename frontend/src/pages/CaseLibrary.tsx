@@ -120,7 +120,10 @@ function CaseRow({
 }) {
   const accent = FRAUD_TYPE_LEFT[cas.fraud_type] ?? FRAUD_TYPE_LEFT.other
   const legal = LEGAL_STATUS_STYLE[cas.legal_status] ?? LEGAL_STATUS_STYLE.unresolved
-  const name = lang === 'es' ? cas.name_es : cas.name_en
+  const name = lang === 'es' && cas.name_es ? cas.name_es : cas.name_en
+  // summary_es only exists on ScandalDetail; list endpoint returns summary_en only.
+  const summaryEs = (cas as ScandalListItem & { summary_es?: string }).summary_es
+  const summary = lang === 'es' && summaryEs ? summaryEs : cas.summary_en
 
   const yearLabel = cas.contract_year_start
     ? cas.contract_year_end && cas.contract_year_end !== cas.contract_year_start
@@ -179,7 +182,7 @@ function CaseRow({
                   border: '1px solid rgba(212,146,42,0.22)',
                 }}
               >
-                GT TRAINING
+                {lang === 'es' ? 'ENTRENAMIENTO GT' : 'GT TRAINING'}
               </span>
             )}
           </div>
@@ -195,7 +198,7 @@ function CaseRow({
             className="text-[12px] text-zinc-500 mt-1.5 line-clamp-2 leading-relaxed pr-6"
             style={{ fontFamily: 'var(--font-family-sans)' }}
           >
-            {cas.summary_en}
+            {summary}
           </p>
 
           {/* Status line */}
@@ -218,7 +221,7 @@ function CaseRow({
               <>
                 <span className="text-zinc-600">·</span>
                 <span className="text-zinc-500 tracking-wider">
-                  {t(`severity.${cas.severity}`)} SEVERITY
+                  {t(`severity.${cas.severity}`)} {lang === 'es' ? 'SEVERIDAD' : 'SEVERITY'}
                 </span>
               </>
             )}
@@ -238,10 +241,10 @@ function CaseRow({
               )}
           </div>
           <div
-            className="text-[9px] uppercase tracking-[0.15em] text-zinc-600 mt-1"
+            className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 mt-1"
             style={{ fontFamily: 'var(--font-family-mono)' }}
           >
-            MXN · EST. LOSS
+            {lang === 'es' ? 'MXN · PÉRDIDA EST.' : 'MXN · EST. LOSS'}
           </div>
         </div>
 
@@ -358,19 +361,19 @@ export default function CaseLibrary() {
                 color: '#8a8a86',
               }}
             >
-              RUBLI · CASE ARCHIVE
+              {i18n.language === 'es' ? 'RUBLI · ARCHIVO DE CASOS' : 'RUBLI · CASE ARCHIVE'}
             </p>
             <h1
               className="text-[24px] leading-tight text-zinc-100"
               style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
             >
-              The Archive
+              {i18n.language === 'es' ? 'El Archivo' : 'The Archive'}
             </h1>
             <p
               className="text-[13px] text-zinc-500 mt-1.5"
               style={{ fontFamily: 'var(--font-family-sans)' }}
             >
-              {totalCases} {t('subtitle').includes('documented') ? 'documented corruption cases' : 'casos documentados de corrupción'} · {yearSpan}
+              {totalCases} {i18n.language === 'es' ? 'casos documentados de corrupción' : 'documented corruption cases'} · {yearSpan}
             </p>
           </div>
           <div className="flex-shrink-0">
@@ -403,18 +406,18 @@ export default function CaseLibrary() {
           {[
             {
               value: totalCases.toString(),
-              label: 'TOTAL CASES',
+              label: i18n.language === 'es' ? 'CASOS TOTALES' : 'TOTAL CASES',
               accent: '#e5e5e3',
             },
             {
               value: totalLoss > 0 ? formatMXNHero(totalLoss) : '—',
               sub: totalLoss > 0 ? 'MXN' : '',
-              label: 'DOCUMENTED LOSSES',
+              label: i18n.language === 'es' ? 'PÉRDIDAS DOCUMENTADAS' : 'DOCUMENTED LOSSES',
               accent: '#ef4444',
             },
             {
               value: prosecutedCount.toString(),
-              label: 'PROSECUTED OR CONVICTED',
+              label: i18n.language === 'es' ? 'PROCESADOS O CONDENADOS' : 'PROSECUTED OR CONVICTED',
               accent: '#22d3ee',
             },
           ].map((s) => (
@@ -499,7 +502,7 @@ export default function CaseLibrary() {
               className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
-              TYPE
+              {i18n.language === 'es' ? 'TIPO' : 'TYPE'}
             </span>
             <FilterPill
               label={t('filters.all')}
@@ -526,7 +529,7 @@ export default function CaseLibrary() {
               className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
-              ADMIN
+              {i18n.language === 'es' ? 'ADMIN' : 'ADMIN'}
             </span>
             <FilterPill
               label={t('filters.all')}
@@ -553,7 +556,7 @@ export default function CaseLibrary() {
               className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
-              STATUS
+              {i18n.language === 'es' ? 'ESTADO' : 'STATUS'}
             </span>
             <FilterPill
               label={t('filters.all')}
@@ -626,10 +629,14 @@ export default function CaseLibrary() {
               <span>
                 {t('resultCount', { count: data.length })}
                 {hasFilters && (
-                  <span className="text-zinc-600 ml-1">(filtered)</span>
+                  <span className="text-zinc-600 ml-1">
+                    ({i18n.language === 'es' ? 'filtrado' : 'filtered'})
+                  </span>
                 )}
               </span>
-              <span className="text-zinc-600">SORTED BY LOSS · DESC</span>
+              <span className="text-zinc-600">
+                {i18n.language === 'es' ? 'ORDENADO POR PÉRDIDA · DESC' : 'SORTED BY LOSS · DESC'}
+              </span>
             </div>
 
             {data.length === 0 ? (
@@ -688,10 +695,12 @@ export default function CaseLibrary() {
               className="mt-8 text-[10px] tracking-wider uppercase text-zinc-600 flex items-center gap-2"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
-              <span>SOURCE</span>
+              <span>{i18n.language === 'es' ? 'FUENTE' : 'SOURCE'}</span>
               <span className="text-zinc-700">·</span>
               <span className="text-zinc-500">
-                Judicial records, ASF audits, SAT EFOS registry, journalism investigations
+                {i18n.language === 'es'
+                  ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, investigaciones periodísticas'
+                  : 'Judicial records, ASF audits, SAT EFOS registry, journalism investigations'}
               </span>
               <ArrowRight className="h-3 w-3 ml-1 text-zinc-700" />
             </p>

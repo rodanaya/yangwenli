@@ -1096,7 +1096,7 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                 y={yCenter + 10}
                 textAnchor="end"
                 fill="#71717a"
-                fontSize={9}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
                 {item.years}

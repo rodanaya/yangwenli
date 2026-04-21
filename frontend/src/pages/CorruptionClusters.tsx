@@ -16,7 +16,8 @@
  *   - The 7×5 affliction matrix encodes confirmed T1 vendor counts per
  *     pattern × sector combination (hardcoded from ARIA queue data).
  */
-import { Link } from 'react-router-dom'
+import { useEffect } from 'react'
+import { Link, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
@@ -575,7 +576,7 @@ function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildG
           x={0}
           y={svgH - 2}
           fill="var(--color-text-muted, #9c9490)"
-          fontSize={8}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
           ● 1 punto = {Math.round(gtTotal / DOTS)} casos
@@ -1014,6 +1015,23 @@ function PatternVendorCard({
 export default function CorruptionClusters() {
   const { i18n } = useTranslation()
   const isEs = i18n.language === 'es'
+  const location = useLocation()
+
+  // Scroll to hash-anchored pattern (e.g. /clusters#p1) after mount.
+  // React Router does not auto-scroll to hash fragments, so we do it manually.
+  useEffect(() => {
+    if (!location.hash) return
+    const id = location.hash.slice(1)
+    const scrollToAnchor = () => {
+      const el = document.getElementById(id)
+      if (el) {
+        el.scrollIntoView({ behavior: 'smooth', block: 'start' })
+      }
+    }
+    // Defer until DOM paints after data loads
+    const t = setTimeout(scrollToAnchor, 300)
+    return () => clearTimeout(t)
+  }, [location.hash])
 
   const { data: spotlightData } = useQuery({
     queryKey: ['pattern-spotlight'],

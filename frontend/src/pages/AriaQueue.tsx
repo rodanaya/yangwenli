@@ -805,8 +805,12 @@ export default function AriaPage() {
         {/* ============================================================== */}
         <div className="surface-card--evidence surface-card p-4 mb-4">
           <p className="text-sm text-text-secondary leading-relaxed max-w-prose">
-            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-accent block mb-1">How to read this queue</span>
-            Each row is a vendor ranked by IPS — the Investigation Priority Score. IPS combines risk score, anomaly signals, network centrality, and external registry matches (EFOS, SFP, RUPC). T1 vendors should be investigated immediately. Click any row to open the full dossier.
+            <span className="font-mono text-[10px] font-bold tracking-widest uppercase text-accent block mb-1">
+              {isEs ? 'Cómo leer esta cola' : 'How to read this queue'}
+            </span>
+            {isEs
+              ? 'Cada fila es un proveedor ordenado por IPS — el Índice de Prioridad de Investigación. IPS combina puntaje de riesgo, señales de anomalía, centralidad de red y coincidencias en registros externos (EFOS, SFP, RUPC). Los proveedores T1 deben investigarse de inmediato. Haga clic en cualquier fila para abrir el dossier completo.'
+              : 'Each row is a vendor ranked by IPS — the Investigation Priority Score. IPS combines risk score, anomaly signals, network centrality, and external registry matches (EFOS, SFP, RUPC). T1 vendors should be investigated immediately. Click any row to open the full dossier.'}
           </p>
         </div>
 
@@ -887,14 +891,27 @@ export default function AriaPage() {
             <div className="surface-card p-10 text-center">
               <Search className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
               <p className="text-sm font-medium text-zinc-300 mb-1">
-                {search ? t('emptyState.noSearchResults', { query: search }) : t('leads.empty', { defaultValue: 'Sin resultados' })}
+                {search
+                  ? t('emptyState.noSearchResults', { query: search })
+                  : tierFilter != null
+                    ? (isEs
+                        ? `Sin proveedores en ${t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)}`
+                        : `No vendors in ${t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)}`)
+                    : t('leads.empty', { defaultValue: isEs ? 'Sin resultados' : 'No results' })}
               </p>
+              {!search && tierFilter != null && (
+                <p className="text-xs text-zinc-500 mt-1">
+                  {isEs
+                    ? 'Ajusta los filtros o revisa otros niveles.'
+                    : 'Adjust filters or review other tiers.'}
+                </p>
+              )}
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearAll}
                   className="mt-3 px-3 py-1.5 rounded-sm text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
                 >
-                  {t('filterBar.clearAll', { defaultValue: 'Limpiar filtros' })}
+                  {t('filterBar.clearAll', { defaultValue: isEs ? 'Limpiar filtros' : 'Clear filters' })}
                 </button>
               )}
             </div>

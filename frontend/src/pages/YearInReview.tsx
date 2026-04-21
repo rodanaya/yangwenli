@@ -373,8 +373,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         aria-label="Sector year-over-year growth diverging dot chart"
       >
         {/* Header */}
-        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#52525b" fontSize={7.5} textAnchor="middle" fontFamily="monospace">← decline</text>
-        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#52525b" fontSize={7.5} textAnchor="middle" fontFamily="monospace">growth →</text>
+        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#71717a" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#71717a" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
 
         {/* Zero axis */}
         <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="#3f3f46" strokeWidth={0.75} />
@@ -398,7 +398,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 x={LABEL_W - 6}
                 y={rowCenterY + 1}
                 fill="#a1a1aa"
-                fontSize={9.5}
+                fontSize={10}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"
@@ -459,7 +459,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                 x={svgW - 2}
                 y={rowCenterY + 1}
                 fill={color}
-                fontSize={8.5}
+                fontSize={10}
                 textAnchor="end"
                 dominantBaseline="middle"
                 fontFamily="monospace"

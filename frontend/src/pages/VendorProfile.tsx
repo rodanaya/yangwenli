@@ -907,11 +907,12 @@ export function VendorProfile() {
   })
 
   // Fetch co-bidding analysis (v3.2)
-  const { data: coBidders, isLoading: coBiddersLoading } = useQuery({
+  const { data: coBidders, isLoading: coBiddersLoading, isError: coBiddersError } = useQuery({
     queryKey: ['vendor', vendorId, 'co-bidders'],
     queryFn: () => networkApi.getCoBidders(vendorId, 5, 10),
     enabled: !!vendorId,
     staleTime: 10 * 60 * 1000,
+    retry: false,
   })
 
   // Fetch external registry flags (SFP, RUPC, ASF)
@@ -3869,6 +3870,22 @@ export function VendorProfile() {
               <div className="space-y-2">
                 {[...Array(4)].map((_, i) => <Skeleton key={i} className="h-14 w-full" />)}
               </div>
+            ) : coBiddersError ? (
+              <Card className="surface-card">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+                    <div className="flex-1">
+                      <p className="text-sm text-text-secondary font-medium">
+                        Co-bidding data unavailable
+                      </p>
+                      <p className="text-xs text-text-muted mt-1">
+                        Could not load co-bidding analysis. The network signal service may be temporarily unavailable — structured contract data remains accessible.
+                      </p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             ) : hasCoBiddingRisk ? (
               <Card className="surface-card border-amber-500/40 bg-amber-500/[0.02]">
                 <CardHeader className="pb-3">
@@ -4636,16 +4653,27 @@ function ContractRow({ contract, onView }: { contract: ContractListItem; onView?
       style={{ borderLeft: `3px solid ${borderColor}` }}
       onClick={() => onView?.(contract.id)}
     >
-      <div className="flex items-center gap-3 min-w-0">
+      <div className="flex items-center gap-3 min-w-0 flex-1">
         <FileText className="h-4 w-4 text-text-muted flex-shrink-0" />
-        <div className="min-w-0">
-          <p className="text-sm font-medium truncate max-w-[300px]">{contract.title || 'Untitled'}</p>
-          <div className="flex items-center gap-2 text-xs text-text-muted">
-            <span>{contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year}</span>
+        <div className="min-w-0 flex-1">
+          <p
+            className="text-sm font-medium leading-snug"
+            style={{
+              display: '-webkit-box',
+              WebkitLineClamp: 2,
+              WebkitBoxOrient: 'vertical',
+              overflow: 'hidden',
+            }}
+            title={contract.title || undefined}
+          >
+            {contract.title || 'Untitled'}
+          </p>
+          <div className="flex items-center gap-2 text-xs text-text-muted mt-0.5">
+            <span className="whitespace-nowrap">{contract.contract_date ? formatDate(contract.contract_date) : contract.contract_year}</span>
             {contract.institution_name && (
               <>
                 <span>·</span>
-                <span className="truncate max-w-[150px]">{contract.institution_name}</span>
+                <span className="truncate">{contract.institution_name}</span>
               </>
             )}
           </div>
@@ -5024,18 +5052,20 @@ function PeriodistaPanel({
   useTranslation('vendors')
   const [copiedLede, setCopiedLede] = useState(false)
 
-  const { data: narrative, isLoading: narrativeLoading } = useQuery<VendorNarrativeResponse>({
+  const { data: narrative, isLoading: narrativeLoading, isError: narrativeError } = useQuery<VendorNarrativeResponse>({
     queryKey: ['vendor', vendorId, 'narrative'],
     queryFn: () => vendorApi.getNarrative(vendorId),
     enabled: !!vendorId && activeTab === 'periodista',
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
 
-  const { data: similarCasesResponse, isLoading: casesLoading } = useQuery<VendorSimilarCasesResponse>({
+  const { data: similarCasesResponse, isLoading: casesLoading, isError: casesError } = useQuery<VendorSimilarCasesResponse>({
     queryKey: ['vendor', vendorId, 'similar-cases'],
     queryFn: () => vendorApi.getSimilarCases(vendorId),
     enabled: !!vendorId && activeTab === 'periodista',
     staleTime: 5 * 60 * 1000,
+    retry: false,
   })
   const similarCases = similarCasesResponse?.similar_cases
 
@@ -5080,6 +5110,18 @@ function PeriodistaPanel({
           <div className="space-y-3">
             <Skeleton className="h-8 w-60" />
             <Skeleton className="h-[200px] w-full" />
+          </div>
+        ) : narrativeError ? (
+          <div className="flex items-start gap-2 p-4 rounded-sm border border-amber-500/20 bg-amber-500/5">
+            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm text-text-secondary">
+                No se pudo cargar la narrativa del proveedor.
+              </p>
+              <p className="text-[11px] text-text-muted mt-1">
+                El servicio de análisis temporal no está disponible. Los datos estructurados siguen accesibles en las otras pestañas.
+              </p>
+            </div>
           </div>
         ) : narrative ? (
           <div className="space-y-4">
@@ -5206,6 +5248,13 @@ function PeriodistaPanel({
             {[1, 2, 3].map((i) => (
               <Skeleton key={i} className="h-32 w-full rounded-sm" />
             ))}
+          </div>
+        ) : casesError ? (
+          <div className="flex items-start gap-2 p-4 rounded-sm border border-amber-500/20 bg-amber-500/5">
+            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
+            <p className="text-sm text-text-secondary">
+              No se pudieron cargar los casos similares. El servicio de análisis comparativo está temporalmente no disponible.
+            </p>
           </div>
         ) : similarCases && similarCases.length > 0 ? (
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

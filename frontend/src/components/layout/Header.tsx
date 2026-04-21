@@ -178,7 +178,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
         <button
           onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
           className="hidden lg:flex items-center gap-2 h-7 px-2.5 rounded-md border border-border/50 bg-background-elevated/50 text-text-muted hover:border-border hover:bg-background-elevated transition-colors text-xs max-w-[200px] w-[200px] focus:outline-none focus:ring-1 focus:ring-ring"
-          aria-label="Open search (Ctrl+K)"
+          aria-label={`${tc('search')} (Ctrl+K)`}
         >
           <Search className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
           <span className="flex-1 text-left truncate">{tc('header.searchPlaceholder')}</span>
@@ -192,7 +192,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               size="icon"
               className="h-9 w-9 lg:hidden"
               onClick={() => { setPaletteEverOpened(true); setSearchOpen(true); }}
-              aria-label="Open search (Ctrl+K)"
+              aria-label={`${tc('search')} (Ctrl+K)`}
             >
               <Search className="h-3.5 w-3.5 text-text-muted" />
             </Button>
@@ -297,7 +297,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               <button
                 onClick={() => setUserMenuOpen(v => !v)}
                 className="flex items-center gap-1.5 h-7 px-2 rounded-md text-[10px] font-mono tracking-[0.08em] uppercase text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/60 transition-colors"
-                aria-label="User menu"
+                aria-label={tc('header.userMenu')}
               >
                 <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-amber-500/20 text-amber-400 text-[9px] font-bold">
                   {user.name.charAt(0).toUpperCase()}
@@ -315,14 +315,14 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-zinc-200 hover:bg-zinc-800/50 transition-colors"
                   >
                     <Briefcase className="h-3.5 w-3.5" />
-                    My Investigations
+                    {tc('header.myInvestigations')}
                   </button>
                   <button
                     onClick={() => { setUserMenuOpen(false); logout() }}
                     className="w-full flex items-center gap-2 px-3 py-2 text-xs text-zinc-400 hover:text-red-400 hover:bg-zinc-800/50 transition-colors"
                   >
                     <LogOut className="h-3.5 w-3.5" />
-                    Sign out
+                    {tc('header.signOut')}
                   </button>
                 </div>
               )}
@@ -332,7 +332,7 @@ export function Header({ onMenuClick }: { onMenuClick?: () => void }) {
               onClick={() => navigate('/login')}
               className="flex items-center gap-1.5 h-7 px-2.5 rounded-md text-[10px] font-mono tracking-[0.08em] uppercase text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800/60 border border-zinc-700/50 hover:border-zinc-600 transition-colors"
             >
-              Sign in
+              {tc('header.signIn')}
             </button>
           )}
         </div>

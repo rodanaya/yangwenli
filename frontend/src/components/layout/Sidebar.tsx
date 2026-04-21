@@ -141,6 +141,7 @@ function NavSection({
 export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: SidebarProps) {
   const location = useLocation()
   const { t, i18n } = useTranslation('nav')
+  const { t: tc } = useTranslation('common')
 
   // Close mobile sidebar on any navigation
   useEffect(() => {
@@ -260,7 +261,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
 
       {/* Main navigation */}
       <ScrollArea className="flex-1 py-3">
-        <nav className="px-2 space-y-3" aria-label="Main navigation">
+        <nav className="px-2 space-y-3" aria-label={t('mainNavigation')}>
           {NAV_SECTIONS.map((section) => (
             <NavSection key={section.sectionKey} title={t(section.sectionKey)} collapsed={isCollapsed}>
               {section.items.map((itemDef) => {
@@ -336,14 +337,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             href="/privacy"
             className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
           >
-            Privacy
+            {tc('legal.privacy')}
           </a>
           <span className="text-white/15 text-[10px]" aria-hidden="true">·</span>
           <a
             href="/terms"
             className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
           >
-            Terms
+            {tc('legal.terms')}
           </a>
         </div>
       )}

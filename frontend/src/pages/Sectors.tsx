@@ -28,6 +28,7 @@ import { ArrowRight, ChevronDown, Building2 } from 'lucide-react'
 import SectorConcentrationChart from '@/components/charts/SectorConcentrationChart'
 import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
+import { SectorModelCoefficients } from '@/components/sectors/SectorModelCoefficients'
 import {
   XAxis,
   YAxis,
@@ -212,7 +213,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
           <div className="flex items-center gap-1">
             <Building2 className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             <span>
-              {formatNumber(sector.total_vendors)} {t('card.vendors')}
+              {formatNumber(sector.total_vendors ?? 0)} {t('card.vendors')}
             </span>
           </div>
           <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-zinc-500'}`}>
@@ -242,9 +243,9 @@ function SectorCard({ sector, rank }: SectorCardProps) {
 
         {/* Market depth micro-stats */}
         <p className="text-[10px] text-zinc-500 tabular-nums mt-auto pt-1 border-t border-white/5">
-          {formatNumber(sector.total_institutions)} instituciones
+          {formatNumber(sector.total_institutions ?? 0)} instituciones
           <span className="mx-1 text-zinc-700">·</span>
-          {formatNumber(sector.total_vendors)} proveedores
+          {formatNumber(sector.total_vendors ?? 0)} proveedores
         </p>
       </div>
 
@@ -602,6 +603,7 @@ function RiskRankingStrip({
 export function Sectors() {
   const { t } = useTranslation('sectors')
   const [sortKey, setSortKey] = useState<SortKey>('total_value_mxn')
+  const [selectedCoefSectorId, setSelectedCoefSectorId] = useState<number | null>(null)
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors', 'list'],
@@ -836,6 +838,64 @@ export function Sectors() {
             </div>
           </>
         )}
+
+        {/* Risk Factor Analysis — per-sector model coefficients */}
+        {!isLoading && !error && sectors.length > 0 && (() => {
+          const sectorsByRisk = [...sectors].sort(
+            (a, b) => b.avg_risk_score - a.avg_risk_score,
+          )
+          const defaultSector = sectorsByRisk[0]
+          const activeSectorId = selectedCoefSectorId ?? defaultSector.sector_id
+          const activeSector =
+            sectors.find((s) => s.sector_id === activeSectorId) ?? defaultSector
+          const activeSectorName = t(activeSector.sector_code) as string
+          return (
+            <section className="mt-10" aria-label="Análisis de factores de riesgo por sector">
+              <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
+                <div>
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                    RUBLI · Análisis de factores
+                  </p>
+                  <h2 className="text-xl font-bold text-white leading-tight">
+                    Qué empuja el riesgo en cada sector
+                  </h2>
+                  <p className="text-xs text-zinc-500 mt-1 max-w-2xl">
+                    Coeficientes del modelo logístico v0.6.5 — positivos aumentan el riesgo, negativos son protectores.
+                  </p>
+                </div>
+                <div className="relative inline-flex items-center gap-2">
+                  <span className="text-xs text-zinc-400 font-medium">Sector:</span>
+                  <div className="relative">
+                    <select
+                      value={activeSectorId}
+                      onChange={(e) =>
+                        setSelectedCoefSectorId(Number(e.target.value))
+                      }
+                      className="appearance-none rounded-lg border border-white/10 bg-zinc-800/80 pl-3 pr-8 py-1.5 text-sm text-white font-medium cursor-pointer hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+                      aria-label="Seleccionar sector para ver coeficientes del modelo"
+                    >
+                      {sectorsByRisk.map((s) => (
+                        <option key={s.sector_id} value={s.sector_id}>
+                          {t(s.sector_code)} — {(s.avg_risk_score * 100).toFixed(1)}%
+                        </option>
+                      ))}
+                    </select>
+                    <ChevronDown
+                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"
+                      aria-hidden="true"
+                    />
+                  </div>
+                </div>
+              </div>
+              <ErrorBoundary fallback={null}>
+                <SectorModelCoefficients
+                  sectorId={activeSector.sector_id}
+                  sectorName={activeSectorName}
+                />
+              </ErrorBoundary>
+            </section>
+          )
+        })()}
 
         {/* Market Concentration Chart */}
         <div className="mt-8">

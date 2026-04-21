@@ -763,8 +763,8 @@ function RiskHistoryDotMatrix({
               x={RH_LEFT_PAD - 6}
               y={y + 3}
               textAnchor="end"
-              fill="#6b7280"
-              fontSize={8}
+              fill="#a1a1aa"
+              fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
               {value}%
@@ -802,8 +802,8 @@ function RiskHistoryDotMatrix({
               x={xCenter}
               y={RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + 12}
               textAnchor="middle"
-              fill="#6b7280"
-              fontSize={9}
+              fill="#a1a1aa"
+              fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
               {item.year}

@@ -373,7 +373,7 @@ const CoefficientChart = memo(function CoefficientChart() {
                 y={yCenter + 3}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={9}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
                 {item.name.length > 20 ? item.name.slice(0, 20) + '…' : item.name}
@@ -403,7 +403,7 @@ const CoefficientChart = memo(function CoefficientChart() {
                 x={MD_LABEL_W + MD_DOTS * MD_DOT_GAP + 6}
                 y={yCenter + 3}
                 fill={color}
-                fontSize={9}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >
@@ -445,7 +445,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
                 y={yCenter + 3}
                 textAnchor="end"
                 fill="var(--color-text-muted)"
-                fontSize={9}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
                 {item.name.length > 20 ? item.name.slice(0, 20) + '…' : item.name}
@@ -472,7 +472,7 @@ const V33WeightsChart = memo(function V33WeightsChart() {
                 x={MD_LABEL_W + MD_DOTS * MD_DOT_GAP + 6}
                 y={yCenter + 3}
                 fill="var(--color-accent)"
-                fontSize={9}
+                fontSize={10}
                 fontFamily="var(--font-family-mono)"
                 fontWeight={600}
               >

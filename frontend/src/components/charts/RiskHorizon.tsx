@@ -133,7 +133,7 @@ export function RiskHorizon({
               x={labelWidth + plotW + 6}
               y={y0 + (rowHeight - 4) / 2}
               fill={row.values[row.values.length - 1] > bandStep * 2 ? RISK_PALETTE.critical : '#a1a1aa'}
-              fontSize={9}
+              fontSize={10}
               dominantBaseline="middle"
             >
               {(row.values[row.values.length - 1] * 100).toFixed(1)}%
@@ -153,7 +153,7 @@ export function RiskHorizon({
                 x={x}
                 y={totalH - 4}
                 fill="#71717a"
-                fontSize={8}
+                fontSize={10}
                 textAnchor="middle"
               >
                 {xLabels[xi]}

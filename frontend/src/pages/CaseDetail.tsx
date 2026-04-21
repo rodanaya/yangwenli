@@ -210,6 +210,26 @@ function titleCase(s: string): string {
   return s.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
 }
 
+// Format a date string (ISO 'YYYY-MM-DD' or 'YYYY-MM') to 'Mon YYYY' in locale
+function formatDateShort(raw: string | null | undefined, lang: string): string {
+  if (!raw) return ''
+  // Accept '2024-03' or '2024-03-15T...' — take first 7 chars
+  const ym = raw.slice(0, 7)
+  const parts = ym.split('-')
+  if (parts.length < 2) return raw
+  const year = Number(parts[0])
+  const month = Number(parts[1])
+  if (!year || !month || month < 1 || month > 12) return raw
+  const locale = lang === 'es' ? 'es-MX' : 'en-US'
+  try {
+    return new Intl.DateTimeFormat(locale, { month: 'short', year: 'numeric' }).format(
+      new Date(year, month - 1, 1),
+    )
+  } catch {
+    return ym
+  }
+}
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Shared typography
 // ─────────────────────────────────────────────────────────────────────────────
@@ -939,7 +959,7 @@ function CaseBody({
           onMouseEnter={(e) => ((e.currentTarget as HTMLButtonElement).style.color = CRIMSON_HI)}
           onMouseLeave={(e) => ((e.currentTarget as HTMLButtonElement).style.color = TEXT_MUTED)}
         >
-          <ArrowLeft size={12} /> Back to case library
+          <ArrowLeft size={12} /> {lang === 'es' ? 'Volver al archivo' : 'Back to case library'}
         </button>
       </div>
 
@@ -1584,7 +1604,7 @@ function CaseBody({
                     </div>
                     <div style={{ fontSize: 11, color: TEXT_MUTED, marginTop: 3, ...MONO, letterSpacing: '0.03em' }}>
                       {src.outlet}
-                      {src.date ? ` · ${src.date.slice(0, 7)}` : ''}
+                      {src.date ? ` · ${formatDateShort(src.date, lang)}` : ''}
                     </div>
                   </div>
                 </div>

@@ -84,7 +84,15 @@
     "switchToDark": "Cambiar a modo oscuro",
     "openMenu": "Abrir menú",
     "toggleTheme": "Cambiar tema",
-    "home": "Inicio"
+    "home": "Inicio",
+    "userMenu": "Menú de usuario",
+    "myInvestigations": "Mis investigaciones",
+    "signOut": "Cerrar sesión",
+    "signIn": "Iniciar sesión"
+  },
+  "legal": {
+    "privacy": "Privacidad",
+    "terms": "Términos"
   },
   "unknown": "Desconocido",
   "untitled": "Sin título",

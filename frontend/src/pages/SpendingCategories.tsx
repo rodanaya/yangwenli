@@ -1436,13 +1436,13 @@ function QuadrantScatterSVG({
           <line x1={0} y1={yRiskLine} x2={plotW} y2={yRiskLine} stroke="var(--color-border)" strokeDasharray="4 3" opacity={0.55} />
 
           {/* Quadrant corner labels */}
-          <text x={xMedian + 6} y={11} fontSize={7.5} fontFamily="monospace" fill="#dc262665">ALTO RIESGO · ALTO VALOR</text>
-          <text x={6} y={11} fontSize={7.5} fontFamily="monospace" fill="#eab30855">ALTO RIESGO</text>
-          <text x={xMedian + 6} y={plotH - 5} fontSize={7.5} fontFamily="monospace" fill="#3b82f655">ALTO VALOR</text>
-          <text x={6} y={plotH - 5} fontSize={7.5} fontFamily="monospace" fill="#52525b55">RIESGO BAJO</text>
+          <text x={xMedian + 6} y={11} fontSize={10} fontFamily="monospace" fill="#dc262665">ALTO RIESGO · ALTO VALOR</text>
+          <text x={6} y={11} fontSize={10} fontFamily="monospace" fill="#eab30855">ALTO RIESGO</text>
+          <text x={xMedian + 6} y={plotH - 5} fontSize={10} fontFamily="monospace" fill="#3b82f655">ALTO VALOR</text>
+          <text x={6} y={plotH - 5} fontSize={10} fontFamily="monospace" fill="#71717a55">RIESGO BAJO</text>
 
           {/* 15% risk annotation */}
-          <text x={plotW - 4} y={yRiskLine - 4} textAnchor="end" fontSize={7.5} fontFamily="monospace" fill="#71717a80">15% riesgo</text>
+          <text x={plotW - 4} y={yRiskLine - 4} textAnchor="end" fontSize={10} fontFamily="monospace" fill="#71717a80">15% riesgo</text>
 
           {/* Axes */}
           <line x1={0} y1={plotH} x2={plotW} y2={plotH} stroke="var(--color-border)" />
@@ -1452,7 +1452,7 @@ function QuadrantScatterSVG({
           {[0, 0.25, 0.5, 0.75, 1].map(p => (
             <g key={p}>
               <line x1={p * plotW} y1={plotH} x2={p * plotW} y2={plotH + 4} stroke="var(--color-border)" />
-              <text x={p * plotW} y={plotH + 14} textAnchor="middle" fontSize={8.5} fontFamily="monospace" fill="var(--color-text-muted)">
+              <text x={p * plotW} y={plotH + 14} textAnchor="middle" fontSize={10} fontFamily="monospace" fill="var(--color-text-muted)">
                 {formatCompactMXN(p * maxValue)}
               </text>
             </g>
@@ -1462,18 +1462,18 @@ function QuadrantScatterSVG({
           {[0, 0.1, 0.2, 0.3, 0.4, 0.5].filter(r => r <= maxRisk + 0.05).map(r => (
             <g key={r}>
               <line x1={-4} y1={yScale(r)} x2={0} y2={yScale(r)} stroke="var(--color-border)" />
-              <text x={-8} y={yScale(r) + 3} textAnchor="end" fontSize={8.5} fontFamily="monospace" fill="var(--color-text-muted)">
+              <text x={-8} y={yScale(r) + 3} textAnchor="end" fontSize={10} fontFamily="monospace" fill="var(--color-text-muted)">
                 {(r * 100).toFixed(0)}%
               </text>
             </g>
           ))}
 
           {/* Axis labels */}
-          <text x={plotW / 2} y={plotH + 38} textAnchor="middle" fontSize={8} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
+          <text x={plotW / 2} y={plotH + 38} textAnchor="middle" fontSize={10} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
             GASTO TOTAL (MXN)
           </text>
           <g transform={`rotate(-90) translate(${-(plotH / 2)}, ${-46})`}>
-            <text textAnchor="middle" fontSize={8} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
+            <text textAnchor="middle" fontSize={10} fontFamily="monospace" fill="var(--color-text-muted)" opacity={0.7}>
               RIESGO PROMEDIO
             </text>
           </g>
@@ -1518,7 +1518,7 @@ function QuadrantScatterSVG({
                 x={cx}
                 y={cy - 8}
                 textAnchor="middle"
-                fontSize={7.5}
+                fontSize={10}
                 fontFamily="monospace"
                 fill={d.fill}
                 fillOpacity={dimmed ? 0.12 : isHov ? 1 : 0.82}
@@ -2489,8 +2489,8 @@ function SexenioStackedDotColumns({
         {/* Scale context — top left */}
         <text
           x={8} y={10}
-          fontSize="8"
-          fill="#52525b"
+          fontSize="10"
+          fill="#71717a"
           fontFamily="var(--font-family-mono)"
         >
           {`≈${bPerDot}B MXN/dot`}
@@ -2611,8 +2611,8 @@ function SexenioStackedDotColumns({
                 <text
                   x={cx} y={bottomY + 37}
                   textAnchor="middle"
-                  fontSize="7"
-                  fill="#52525b"
+                  fontSize="10"
+                  fill="#71717a"
                   fontFamily="var(--font-family-mono)"
                 >
                   partial

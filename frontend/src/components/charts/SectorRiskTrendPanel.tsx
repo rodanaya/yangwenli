@@ -632,7 +632,7 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
               label={{
                 value: scandal.shortLabel,
                 position: idx % 2 === 0 ? 'insideTopRight' : 'insideTopLeft',
-                fontSize: 9,
+                fontSize: 10,
                 fill: scandal.color,
                 fontFamily: 'var(--font-mono, monospace)',
                 opacity: 0.9,

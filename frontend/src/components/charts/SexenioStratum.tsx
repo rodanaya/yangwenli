@@ -168,7 +168,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           </text>
           <text
             x={band.labelX} y={PAD_T - 5}
-            fill={band.color} fontSize={9}
+            fill={band.color} fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             textAnchor="middle"
             opacity={hoveredRow ? 0.15 : 0.6}
@@ -195,7 +195,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
       />
       <text
         x={PAD_L - 4} y={oecdY + 1}
-        fill={OECD_COLOR} fontSize={9}
+        fill={OECD_COLOR} fontSize={10}
         fontFamily="var(--font-family-mono, monospace)"
         textAnchor="end" dominantBaseline="middle" opacity={0.7}
       >15%</text>
@@ -277,7 +277,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
             key={`lbl-${row.year}`}
             x={lx} y={SVG_H - 10}
             fill={isCurrent ? PULSE_COLOR : isHov ? '#a1a1aa' : TEXT_MUTED}
-            fontSize={isCurrent ? 10 : 9}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={isCurrent || isHov ? 'bold' : 'normal'}
             textAnchor="middle"
@@ -292,7 +292,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
       {/* ── Left axis label ──────────────────────────────────────────────── */}
       <text
         x={PAD_L - 10} y={PAD_T + FIELD_H / 2}
-        fill="#71717a" fontSize={9}
+        fill="#71717a" fontSize={10}
         fontFamily="var(--font-family-mono, monospace)"
         textAnchor="middle"
         transform={`rotate(-90, ${PAD_L - 10}, ${PAD_T + FIELD_H / 2})`}
@@ -302,7 +302,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
       {/* ── Caption bottom right ─────────────────────────────────────────── */}
       <text
         x={SVG_W - PAD_R} y={SVG_H - 2}
-        fill="#52525b" fontSize={8}
+        fill="#71717a" fontSize={10}
         fontFamily="var(--font-family-mono, monospace)"
         textAnchor="end" opacity={0.5}
       >puntos ≈ √gasto · ámbar = alto/crítico · — — = OECD 15%</text>
@@ -313,26 +313,26 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           <rect
             x={tooltipX - TOOLTIP_W / 2} y={PAD_T + 4}
             width={TOOLTIP_W} height={72}
-            fill="#18181b" stroke="#52525b" strokeWidth={0.5} rx={2}
+            fill="#18181b" stroke="#3f3f46" strokeWidth={0.5} rx={2}
           />
           <text x={tooltipX} y={PAD_T + 18} textAnchor="middle"
                 fill="#f4f4f5" fontSize={12} fontFamily="monospace" fontWeight="bold">
             {hoveredRow.year}
           </text>
           <text x={tooltipX} y={PAD_T + 32} textAnchor="middle"
-                fill="#a1a1aa" fontSize={9} fontFamily="monospace">
+                fill="#a1a1aa" fontSize={10} fontFamily="monospace">
             {fmtB(hoveredRow.value_mxn)} MXN
           </text>
           <text x={tooltipX} y={PAD_T + 44} textAnchor="middle"
-                fill="#a1a1aa" fontSize={9} fontFamily="monospace">
+                fill="#a1a1aa" fontSize={10} fontFamily="monospace">
             {hoveredRow.contracts.toLocaleString()} contratos
           </text>
           <text x={tooltipX} y={PAD_T + 56} textAnchor="middle"
-                fill="#f59e0b" fontSize={9} fontFamily="monospace">
+                fill="#f59e0b" fontSize={10} fontFamily="monospace">
             {hoveredRow.high_risk_pct.toFixed(1)}% alto/crítico
           </text>
           <text x={tooltipX} y={PAD_T + 68} textAnchor="middle"
-                fill="#71717a" fontSize={8} fontFamily="monospace">
+                fill="#71717a" fontSize={10} fontFamily="monospace">
             clic para explorar →
           </text>
         </g>

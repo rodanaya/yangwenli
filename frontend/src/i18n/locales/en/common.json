@@ -75,7 +75,15 @@
     "switchToDark": "Switch to dark mode",
     "openMenu": "Open menu",
     "toggleTheme": "Toggle theme",
-    "home": "Home"
+    "home": "Home",
+    "userMenu": "User menu",
+    "myInvestigations": "My Investigations",
+    "signOut": "Sign out",
+    "signIn": "Sign in"
+  },
+  "legal": {
+    "privacy": "Privacy",
+    "terms": "Terms"
   },
   "unknown": "Unknown",
   "untitled": "Untitled",

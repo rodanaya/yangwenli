@@ -63,6 +63,8 @@ import { MetodologiaTooltip } from '@/components/ui/MetodologiaTooltip'
 import AdministrationFingerprints from '@/components/charts/AdministrationFingerprints'
 import { AdminSectorSunburst } from '@/components/charts/AdminSectorSunburst'
 import { AdminSectorHeatmap } from '@/components/charts/AdminSectorHeatmap'
+import { SectorAdminHeatmap } from '@/components/charts/SectorAdminHeatmap'
+import { AdminConcentrationTimeline } from '@/components/charts/AdminConcentrationTimeline'
 import { AdminVendorBreakdown } from '@/components/charts/AdminVendorBreakdown'
 import { AdminRiskTrajectory } from '@/components/charts/AdminRiskTrajectory'
 import { ShareButton } from '@/components/ShareButton'
@@ -1458,6 +1460,48 @@ export default function Administrations() {
           </div>
         </ScrollReveal>
       )}
+
+      {/* ── RIESGO PROMEDIO — SECTOR × ADMINISTRACIÓN ── */}
+      <ScrollReveal direction="fade">
+        <section className="card" aria-labelledby="sector-admin-risk-heading">
+          <CardHeader className="pb-2">
+            <CardTitle
+              id="sector-admin-risk-heading"
+              className="text-sm font-mono flex items-center gap-2"
+            >
+              <BarChart3 className="h-4 w-4 text-accent" />
+              Riesgo Promedio — Sector × Administración
+            </CardTitle>
+            <p className="text-xs text-text-muted">
+              Puntuación de riesgo v0.6.5 ponderada por contratos, comparable entre sectores y sexenios.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <SectorAdminHeatmap />
+          </CardContent>
+        </section>
+      </ScrollReveal>
+
+      {/* ── CONCENTRACIÓN DE MERCADO POR ADMINISTRACIÓN ── */}
+      <ScrollReveal direction="fade">
+        <section className="card" aria-labelledby="admin-concentration-heading">
+          <CardHeader className="pb-2">
+            <CardTitle
+              id="admin-concentration-heading"
+              className="text-sm font-mono flex items-center gap-2"
+            >
+              <TrendingUp className="h-4 w-4 text-accent" />
+              Concentración de Mercado por Administración
+            </CardTitle>
+            <p className="text-xs text-text-muted">
+              Participación del proveedor principal en los cuatro sectores de mayor gasto, con bandas de sexenio.
+            </p>
+          </CardHeader>
+          <CardContent>
+            <AdminConcentrationTimeline height={300} />
+          </CardContent>
+        </section>
+      </ScrollReveal>
 
       {/* Editorial Narrative — INVESTIGACION */}
       <motion.div
@@ -3122,7 +3166,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                 <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderón · PAN · 06–12', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
                 <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN · PRI · 12–18', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
                 <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO · MORENA · 18–24', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <ReferenceArea x1={2024} x2={2025} fill={ADMIN_COLORS['Sheinbaum']} fillOpacity={0.06} label={{ value: 'Sheinbaum · MORENA · 24–', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <ReferenceArea x1={2024} x2={2026} fill={ADMIN_COLORS['Sheinbaum']} fillOpacity={0.06} label={{ value: 'Sheinbaum · MORENA · 24+', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
                 {/* Direct award national average benchmark */}
                 <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
@@ -3191,6 +3235,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   strokeWidth={1.75}
                   strokeDasharray="4 2"
                   dot={false}
+                  isAnimationActive={false}
                 />
               </ComposedChart>
             </ResponsiveContainer>

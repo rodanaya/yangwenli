@@ -25,7 +25,7 @@ import { investigationApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { Button } from '@/components/ui/button'
 import { Skeleton } from '@/components/ui/skeleton'
-import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
+import { formatCompactMXN, formatDate, formatNumber, toTitleCase } from '@/lib/utils'
 import { SECTOR_COLORS, getSectorNameEN, getRiskLevelFromScore } from '@/lib/constants'
 import type {
   InvestigationValidationStatus,
@@ -1176,7 +1176,13 @@ export function InvestigationCaseDetail() {
                       <div className="flex items-center gap-2 mb-1">
                         {ev.date_published && (
                           <span style={{ fontSize: 10, fontFamily: 'monospace', color: INK_DIM, letterSpacing: '0.05em' }}>
-                            {ev.date_published}
+                            {(() => {
+                              try {
+                                return formatDate(ev.date_published)
+                              } catch {
+                                return ev.date_published
+                              }
+                            })()}
                           </span>
                         )}
                         {ev.date_published && (

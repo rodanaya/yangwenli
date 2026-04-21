@@ -1537,14 +1537,25 @@ function ContractRow({
 
       {/* View link */}
       <td className="px-2 py-2 text-right">
-        <button
-          className="text-text-muted hover:text-accent transition-colors p-1"
-          title={t('table.viewFullDetails')}
-          onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
-          aria-label={`View details for ${contract.contract_number || contract.id}`}
-        >
-          <Eye className="h-3.5 w-3.5" />
-        </button>
+        <div className="inline-flex items-center gap-1">
+          <button
+            className="text-text-muted hover:text-accent transition-colors p-1"
+            title={t('table.viewFullDetails')}
+            onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
+            aria-label={`View details for ${contract.contract_number || contract.id}`}
+          >
+            <Eye className="h-3.5 w-3.5" />
+          </button>
+          <Link
+            to={`/contracts/${contract.id}`}
+            className="text-text-muted hover:text-accent transition-colors p-1"
+            title="Open full dossier page"
+            onClick={(e) => e.stopPropagation()}
+            aria-label={`Open full page for ${contract.contract_number || contract.id}`}
+          >
+            <ExternalLink className="h-3.5 w-3.5" />
+          </Link>
+        </div>
       </td>
     </>
   )
@@ -1628,13 +1639,24 @@ function ContractRow({
             COMPRANET
           </a>
         )}
-        <button
-          className="text-xs text-accent hover:underline ml-auto flex items-center gap-1"
-          onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
-        >
-          <Eye className="h-3 w-3" />
-          {t('table.fullDetails')}
-        </button>
+        <div className="ml-auto flex items-center gap-3">
+          <button
+            className="text-xs text-accent hover:underline flex items-center gap-1"
+            onClick={(e) => { e.stopPropagation(); onView(contract.id) }}
+          >
+            <Eye className="h-3 w-3" />
+            {t('table.fullDetails')}
+          </button>
+          <Link
+            to={`/contracts/${contract.id}`}
+            onClick={(e) => e.stopPropagation()}
+            className="text-xs text-accent hover:underline flex items-center gap-1"
+            title="Open full page"
+          >
+            <ExternalLink className="h-3 w-3" />
+            Full page
+          </Link>
+        </div>
       </div>
     </div>
   )

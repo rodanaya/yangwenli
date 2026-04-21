@@ -204,32 +204,34 @@ export default function ContractDetail() {
           {contract.vendor_id ? (
             <Link
               to={`/vendors/${contract.vendor_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors max-w-full min-w-0"
+              title={toTitleCase(contract.vendor_name || '')}
             >
-              <User className="h-3.5 w-3.5 text-zinc-500" />
-              <span className="font-medium">{toTitleCase(contract.vendor_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-zinc-600" />
+              <User className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+              <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || '-')}</span>
+              <ChevronRight className="h-3 w-3 text-zinc-600 shrink-0" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400">
-              <User className="h-3.5 w-3.5" />
-              {toTitleCase(contract.vendor_name || 'Unknown vendor')}
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400 max-w-full min-w-0">
+              <User className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || 'Unknown vendor')}</span>
             </span>
           )}
-          <span className="text-zinc-700">→</span>
+          <span className="text-zinc-700 shrink-0">→</span>
           {contract.institution_id ? (
             <Link
               to={`/institutions/${contract.institution_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors max-w-full min-w-0"
+              title={toTitleCase(contract.institution_name || '')}
             >
-              <Building2 className="h-3.5 w-3.5 text-zinc-500" />
-              <span className="font-medium">{toTitleCase(contract.institution_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-zinc-600" />
+              <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+              <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || '-')}</span>
+              <ChevronRight className="h-3 w-3 text-zinc-600 shrink-0" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400">
-              <Building2 className="h-3.5 w-3.5" />
-              {toTitleCase(contract.institution_name || 'Unknown institution')}
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400 max-w-full min-w-0">
+              <Building2 className="h-3.5 w-3.5 shrink-0" />
+              <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || 'Unknown institution')}</span>
             </span>
           )}
         </div>
@@ -238,8 +240,16 @@ export default function ContractDetail() {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-6 border-y border-zinc-800/80">
           <StatBlock
             label="Contract value"
-            value={formatCompactMXN(contract.amount_mxn)}
-            sub={formatCompactUSD(contract.amount_mxn, contract.contract_year)}
+            value={
+              contract.amount_mxn && contract.amount_mxn > 0
+                ? formatCompactMXN(contract.amount_mxn)
+                : '—'
+            }
+            sub={
+              contract.amount_mxn && contract.amount_mxn > 0
+                ? formatCompactUSD(contract.amount_mxn, contract.contract_year)
+                : 'Amount not reported'
+            }
           />
           <StatBlock
             label="Signed"
@@ -523,13 +533,18 @@ export default function ContractDetail() {
           {/* ----- Description ----- */}
           {contract.description && (
             <Section overline="Record · Description" title="Object of the contract">
-              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5 max-h-[28rem] overflow-y-auto">
                 <p
-                  className="text-[15px] text-zinc-300 leading-relaxed"
+                  className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {toTitleCase(contract.description)}
                 </p>
+                {contract.description.length > 600 && (
+                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600 mt-3 pt-3 border-t border-zinc-800/60">
+                    {contract.description.length.toLocaleString()} chars · scroll for full text
+                  </p>
+                )}
               </div>
             </Section>
           )}

@@ -178,9 +178,9 @@ function SectorRiskChart({
               y={cy}
               textAnchor="end"
               dominantBaseline="middle"
-              fontSize={9.5}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
-              fill="#71717a"
+              fill="#a1a1aa"
             >
               {sector.name.length > 12 ? sector.name.slice(0, 12) + '…' : sector.name}
             </text>
@@ -212,7 +212,7 @@ function SectorRiskChart({
               x={LABEL_W + barW + 6}
               y={cy}
               dominantBaseline="middle"
-              fontSize={9}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill={sector.color}
               fillOpacity={0.85}
@@ -553,8 +553,8 @@ function AnomalyTimelineSection({
                     fill={fill} fillOpacity={0.80} rx={1} />
                   {(i % 4 === 0 || i === yearData.length - 1) && (
                     <text x={x + colW / 2} y={H - 6} textAnchor="middle"
-                      fontSize={7.5} fontFamily="var(--font-family-mono, monospace)"
-                      fill="#52525b">
+                      fontSize={10} fontFamily="var(--font-family-mono, monospace)"
+                      fill="#71717a">
                       {d.year}
                     </text>
                   )}
@@ -563,8 +563,8 @@ function AnomalyTimelineSection({
             })}
             <line x1={PAD_L} y1={H - PAD_B} x2={W - 8} y2={H - PAD_B}
               stroke="rgba(255,255,255,0.06)" strokeWidth={1} />
-            <text x={PAD_L - 4} y={PAD_T + fieldH / 2} fontSize={7}
-              fontFamily="var(--font-family-mono, monospace)" fill="#3f3f46"
+            <text x={PAD_L - 4} y={PAD_T + fieldH / 2} fontSize={10}
+              fontFamily="var(--font-family-mono, monospace)" fill="#71717a"
               textAnchor="middle" transform={`rotate(-90,${PAD_L - 4},${PAD_T + fieldH / 2})`}
               opacity={0.6}>√ count</text>
           </svg>
@@ -779,7 +779,7 @@ function SectorDeviationBars({
               x={x3}
               y={svgH - 4}
               textAnchor="middle"
-              fontSize={8}
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fill="#22d3ee"
               opacity={0.75}
@@ -995,7 +995,7 @@ function SectorDistributionCurves({
                 x={x3}
                 y={PAD_Y - 6}
                 textAnchor="middle"
-                fontSize={7}
+                fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill="#f87171"
               >
@@ -1016,7 +1016,7 @@ function SectorDistributionCurves({
                 x={xAvg}
                 y={baseline - 34}
                 textAnchor="middle"
-                fontSize={8}
+                fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 fill={sector.color}
                 fontWeight={600}
@@ -1031,9 +1031,9 @@ function SectorDistributionCurves({
                   x={zToX(z)}
                   y={baseline + 10}
                   textAnchor="middle"
-                  fontSize={7}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
-                  fill="#52525b"
+                  fill="#71717a"
                 >
                   {z}σ
                 </text>
@@ -1177,7 +1177,7 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + 6}
           textAnchor="end"
-          fontSize={8}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
           fill="#71717a"
         >
@@ -1187,9 +1187,9 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + fieldH}
           textAnchor="end"
-          fontSize={8}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
-          fill="#52525b"
+          fill="#71717a"
         >
           0
         </text>
@@ -1197,7 +1197,7 @@ function OverpricingTimelineSection({
           x={PAD_L - 8}
           y={PAD_T + 14}
           textAnchor="end"
-          fontSize={8}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
           fill="#a1a1aa"
         >
@@ -1209,7 +1209,7 @@ function OverpricingTimelineSection({
           x={W - PAD_R + 2}
           y={PAD_T + 6}
           textAnchor="start"
-          fontSize={8}
+          fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
           fill="#a78bfa"
         >
@@ -1240,7 +1240,7 @@ function OverpricingTimelineSection({
                   x={x + colW / 2}
                   y={H - 10}
                   textAnchor="middle"
-                  fontSize={8}
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
                   fill="#71717a"
                 >
@@ -1287,7 +1287,7 @@ function OverpricingTimelineSection({
           <text
             x={12}
             y={-2}
-            fontSize={8}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fill="#a1a1aa"
           >
@@ -1297,7 +1297,7 @@ function OverpricingTimelineSection({
           <text
             x={89}
             y={-2}
-            fontSize={8}
+            fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fill="#a1a1aa"
           >

@@ -164,8 +164,8 @@ function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
           cx={i * (size + gap) + size / 2}
           cy={size / 2}
           r={size / 2}
-          fill={i < filled ? color : '#2d2926'}
-          stroke={i < filled ? undefined : '#3d3734'}
+          fill={i < filled ? color : '#27272a'}
+          stroke={i < filled ? undefined : '#3f3f46'}
           strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
@@ -484,7 +484,7 @@ export function ConcentrationConstellation({
                 y={a.y + ringR + 8}
                 fill={meta.color}
                 fillOpacity={isHovered ? 1 : 0.80}
-                fontSize={7}
+                fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 fontWeight="bold"
                 textAnchor="middle"
@@ -547,7 +547,7 @@ export function ConcentrationConstellation({
                 x={annoX}
                 y={a.y + 12}
                 fill="#71717a"
-                fontSize={9.5}
+                fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
               >
@@ -561,7 +561,7 @@ export function ConcentrationConstellation({
         <text
           x={PAD_L}
           y={SVG_H - 10}
-          fill="#52525b"
+          fill="#71717a"
           fontSize={10}
           fontFamily="var(--font-family-mono, monospace)"
         >
@@ -615,7 +615,7 @@ export function ConcentrationConstellation({
             {/* DotBar — highRiskPct visualized as filled dots */}
             <div className="mb-1.5">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[9px] font-mono uppercase tracking-wider text-stone-500">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500">
                   {isEs ? 'Alto + crítico' : 'High + critical'}
                 </span>
                 <span className="text-[10px] font-mono font-bold" style={{ color: meta.color }}>
