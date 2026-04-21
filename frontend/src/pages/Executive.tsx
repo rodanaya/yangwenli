@@ -59,92 +59,62 @@ const SECTOR_COLORS: Record<TimelineCase['sector'], string> = {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Timeline — Horizontal dot-strip 2002-2025 (expanded to 200px)
+// Timeline — Vertical list 2002-2025 (replaces horizontal dot-strip)
 // ─────────────────────────────────────────────────────────────────────────────
 function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
-  const YEAR_MIN = 2002
-  const YEAR_MAX = 2025
-  const years = YEAR_MAX - YEAR_MIN
-
   return (
-    <div className="py-4">
-      <div className="relative h-[200px]">
-        {/* Baseline — centered vertically */}
-        <div className="absolute left-0 right-0 top-[100px] h-px bg-[#e2ddd6]" />
-        {/* Year ticks */}
-        {[2002, 2006, 2012, 2018, 2024].map((y) => {
-          const pct = ((y - YEAR_MIN) / years) * 100
-          return (
-            <div
-              key={y}
-              className="absolute top-[96px] h-2 w-px bg-[#9c9490]"
-              style={{ left: `${pct}%` }}
+    <div className="divide-y divide-[#1c1a16]">
+      {TIMELINE_CASES.map((c, idx) => {
+        const color = SECTOR_COLORS[c.sector]
+        return (
+          <motion.div
+            key={`${c.year}-${idx}`}
+            className="flex items-center gap-3 py-2.5"
+            initial={{ opacity: 0, x: -6 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ delay: idx * 0.04, duration: 0.2 }}
+          >
+            <span className="font-mono text-[12px] font-semibold text-text-muted tabular-nums w-10 shrink-0 text-right">
+              {c.year}
+            </span>
+            <span
+              className="h-2 w-2 shrink-0 flex-none"
+              style={{
+                backgroundColor: c.severity === 'critical' ? color : 'transparent',
+                border: `1.5px solid ${color}`,
+                borderRadius: '1px',
+              }}
+            />
+            <span className="flex-1 text-[13px] text-text-secondary leading-[1.35]">
+              {c.label[lang]}
+            </span>
+            <span
+              className="text-[9px] font-mono font-bold px-1.5 py-0.5 shrink-0"
+              style={{
+                color,
+                backgroundColor: `${color}12`,
+                border: `1px solid ${color}30`,
+                borderRadius: '2px',
+              }}
             >
-              <div className="absolute top-4 -translate-x-1/2 text-[10px] font-mono text-text-muted">
-                {y}
-              </div>
-            </div>
-          )
-        })}
-        {/* Cases */}
-        {TIMELINE_CASES.map((c, idx) => {
-          const pct = ((c.year - YEAR_MIN) / years) * 100
-          const color = SECTOR_COLORS[c.sector]
-          const above = idx % 2 === 0
-          // Dot sits on baseline (top: 100), labels alternate above (60) / below (140)
-          const dotTop = 94
-          const labelTop = above ? -46 : 18
-          return (
-            <motion.div
-              key={c.year + c.label.en}
-              className="absolute"
-              style={{ left: `${pct}%`, top: `${dotTop}px` }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: idx * 0.05, duration: 0.25 }}
+              {c.sector.slice(0, 5).toUpperCase()}
+            </span>
+            <span
+              className="text-[9px] font-mono font-bold px-2 py-0.5 shrink-0 min-w-[3.5rem] text-center"
+              style={{
+                color: c.severity === 'critical' ? '#dc2626' : '#f59e0b',
+                backgroundColor: c.severity === 'critical' ? '#dc262610' : '#f59e0b10',
+                border: `1px solid ${c.severity === 'critical' ? '#dc262635' : '#f59e0b35'}`,
+                borderRadius: '2px',
+              }}
             >
-              {/* Connector line from dot to label */}
-              <div
-                className="absolute left-1/2 w-px -translate-x-1/2 bg-[#d4cfc7]"
-                style={{
-                  top: above ? `-40px` : `12px`,
-                  height: '40px',
-                }}
-              />
-              <div
-                className="h-3 w-3 -translate-x-1/2 rounded-full border-2"
-                style={{
-                  backgroundColor: c.severity === 'critical' ? color : '#faf9f6',
-                  borderColor: color,
-                }}
-                aria-label={c.label[lang]}
-                title={c.label[lang]}
-              />
-              <div
-                className="absolute left-1/2 w-[140px] -translate-x-1/2 text-center text-[10px] font-medium leading-[1.3] text-text-secondary pointer-events-none"
-                style={{ top: `${labelTop}px` }}
-              >
-                <span className="font-mono text-text-muted">{c.year}</span>
-                <br />
-                <span>{c.label[lang]}</span>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-      <div className="mt-3 flex flex-wrap items-center gap-x-4 gap-y-2 text-[10px] font-mono text-text-muted">
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full bg-[#dc2626]" />
-          {lang === 'en' ? 'Critical' : 'Crítico'}
-        </span>
-        <span className="inline-flex items-center gap-1.5">
-          <span className="h-2 w-2 rounded-full border-2 border-[#dc2626] bg-[#faf9f6]" />
-          {lang === 'en' ? 'High' : 'Alto'}
-        </span>
-        <span className="text-text-muted">
-          {lang === 'en' ? 'Color = sector · Position = year of discovery' : 'Color = sector · Posición = año de descubrimiento'}
-        </span>
-      </div>
+              {c.severity === 'critical'
+                ? (lang === 'en' ? 'CRITICAL' : 'CRÍTICO')
+                : (lang === 'en' ? 'HIGH' : 'ALTO')}
+            </span>
+          </motion.div>
+        )
+      })}
     </div>
   )
 }
@@ -216,36 +186,36 @@ export default function Executive() {
     },
   ]
 
-  // ─── Signal cards (top 3 model predictors, replaces 5 findings) ─────────────
+  // ─── Signal cards (top 3 model predictors) ───────────────────────────────────
   const signals = [
     {
       num: '01',
-      coef: 'β = +0.534',
+      weight: '+0.534',
       name: lang === 'en' ? 'Price Volatility' : 'Volatilidad de Precio',
       body:
         lang === 'en'
-          ? 'Vendors with wildly varying contract amounts — the strongest single predictor. IMSS ghost company network: 9,366 contracts, 99.9% detection.'
+          ? 'Vendors with wildly varying contract amounts — the strongest single predictor. IMSS ghost company network: 9,366 contracts, 99.9% detection rate.'
           : 'Proveedores con montos de contrato altamente variables — el predictor individual más fuerte. Red de empresas fantasma IMSS: 9,366 contratos, 99.9% de detección.',
       color: '#dc2626',
     },
     {
       num: '02',
-      coef: 'β = +0.375',
+      weight: '+0.375',
       name: lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedor',
       body:
         lang === 'en'
-          ? 'Dominant vendors capturing outsized market share. Toka IT Monopoly, Edenred Voucher Monopoly.'
-          : 'Proveedores dominantes capturando una cuota de mercado desproporcionada. Monopolio TIC Toka, Monopolio de Vales Edenred.',
+          ? 'Dominant vendors capturing outsized market share within a sector. Toka IT Monopoly: 100% high-risk detection. Edenred Voucher Monopoly: 96.7% high+.'
+          : 'Proveedores dominantes capturando una cuota de mercado desproporcionada en un sector. Monopolio TIC Toka: 100% detección alto riesgo.',
       color: '#f59e0b',
     },
     {
       num: '03',
-      coef: 'β = +0.235',
+      weight: '+0.235',
       name: lang === 'en' ? 'Price Ratio' : 'Razón de Precio',
       body:
         lang === 'en'
-          ? 'Contract amounts far above sector median. Segalmex, PEMEX-Cotemar.'
-          : 'Montos de contrato muy por encima de la mediana del sector. Segalmex, PEMEX-Cotemar.',
+          ? 'Contract amounts far above sector median. Segalmex food fraud: avg score 0.664. PEMEX-Cotemar irregularities: 100% critical-risk detection.'
+          : 'Montos de contrato muy por encima de la mediana del sector. Fraude Segalmex: puntaje promedio 0.664. PEMEX-Cotemar: 100% detección crítica.',
       color: '#a06820',
     },
   ]
@@ -375,11 +345,14 @@ export default function Executive() {
                   <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
                     {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
                   </div>
+                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mt-2 opacity-55">
+                    {lang === 'en' ? 'PRED. WEIGHT' : 'PESO PRED.'}
+                  </div>
                   <div
-                    className="font-mono font-bold text-[22px] mt-2 tabular-nums"
+                    className="font-mono font-bold text-[26px] mt-0.5 tabular-nums leading-none"
                     style={{ color: s.color }}
                   >
-                    {s.coef}
+                    {s.weight}
                   </div>
                 </div>
                 <div>
