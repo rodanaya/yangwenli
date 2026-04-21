@@ -28,7 +28,7 @@ import {
   Search,
   Newspaper,
   Grid3x3,
-
+  FileText,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -67,6 +67,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.overview',
     items: [
       { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
+      { i18nKey: 'executive', href: '/executive', icon: FileText },
       { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
     ],
   },
