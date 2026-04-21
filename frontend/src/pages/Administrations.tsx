@@ -736,8 +736,8 @@ function AdminDossierPanel({
                             <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                               {Array.from({ length: N }).map((_, k) => (
                                 <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : '#f3f1ec'}
-                                  stroke={k < filled ? undefined : '#e2ddd6'}
+                                  fill={k < filled ? sector.color : '#2d2926'}
+                                  stroke={k < filled ? undefined : '#3d3734'}
                                   strokeWidth={k < filled ? 0 : 0.5}
                                   fillOpacity={k < filled ? 0.7 : 1}
                                 />
@@ -1574,8 +1574,8 @@ export default function Administrations() {
                         <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : '#f3f1ec'}
-                              stroke={k < filled ? undefined : '#e2ddd6'}
+                              fill={k < filled ? color : '#2d2926'}
+                              stroke={k < filled ? undefined : '#3d3734'}
                               strokeWidth={k < filled ? 0 : 0.5}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
@@ -2451,8 +2451,8 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? '#a1a1aa' : '#f3f1ec'}
-                    stroke={k < filled ? undefined : '#e2ddd6'}
+                    fill={k < filled ? '#a1a1aa' : '#2d2926'}
+                    stroke={k < filled ? undefined : '#3d3734'}
                     strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.5 : 1}
                   />
@@ -2472,8 +2472,8 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? toBarColor : '#f3f1ec'}
-                    stroke={k < filled ? undefined : '#e2ddd6'}
+                    fill={k < filled ? toBarColor : '#2d2926'}
+                    stroke={k < filled ? undefined : '#3d3734'}
                     strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
@@ -2775,8 +2775,8 @@ function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin
             const filled = Math.max(1, Math.round(intensity * N))
             return Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={1.5} r={DR}
-                fill={k < filled ? bgColor : '#f3f1ec'}
-                stroke={k < filled ? undefined : '#e2ddd6'}
+                fill={k < filled ? bgColor : '#2d2926'}
+                stroke={k < filled ? undefined : '#3d3734'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.6 : 1}
               />

@@ -2524,10 +2524,10 @@ function SexenioStackedDotColumns({
                     cx={cx}
                     cy={cy}
                     r={DOT_R}
-                    fill={fill ?? '#f3f1ec'}
-                    fillOpacity={fill ? 0.85 : 1}
-                    stroke={fill ? 'none' : '#e2ddd6'}
-                    strokeWidth={fill ? 0 : 1}
+                    fill={fill ?? '#2d2926'}
+                    fillOpacity={fill ? 0.85 : 0.7}
+                    stroke={fill ? 'none' : '#3d3734'}
+                    strokeWidth={fill ? 0 : 0.5}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     transition={{ duration: 0.2, delay: colIdx * 0.03 + i * 0.002 }}

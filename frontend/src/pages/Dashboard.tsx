@@ -250,10 +250,10 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
                           cx={i * DG + DR}
                           cy={3}
                           r={DR}
-                          fill={i < filled ? riskColor : '#f3f1ec'}
-                          stroke={i < filled ? undefined : '#e2ddd6'}
+                          fill={i < filled ? riskColor : '#2d2926'}
+                          stroke={i < filled ? undefined : '#3d3734'}
                           strokeWidth={i < filled ? 0 : 0.5}
-                          fillOpacity={i < filled ? 0.85 : 1}
+                          fillOpacity={i < filled ? 0.85 : 0.7}
                         />
                       ))}
                     </svg>

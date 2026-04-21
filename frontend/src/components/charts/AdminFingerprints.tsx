@@ -72,8 +72,8 @@ const GRID_COLOR   = 'rgba(255,255,255,0.06)'
 const HEADER_COLOR = '#a1a1aa'
 const MUTED_COLOR  = '#71717a'
 const TEXT_COLOR   = '#e5e5e5'
-const EMPTY_DOT    = '#f3f1ec'   // editorial cream — readable on light bg
-const EMPTY_STROKE = '#e2ddd6'   // subtle border for empty dots
+const EMPTY_DOT    = '#2d2926'   // dark — blends with dark card background
+const EMPTY_STROKE = '#3d3734'   // subtle border for empty dots
 
 export function AdminFingerprints() {
   const maxRiskPct = Math.max(...ADMINS.map((a) => a.highRiskPct))
