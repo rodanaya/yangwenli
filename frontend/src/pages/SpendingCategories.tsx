@@ -2426,7 +2426,22 @@ interface SexenioCategory {
  * SexenioStackedDotColumns — vertical stacked dot-matrix columns.
  * Replaces a stacked BarChart. Each administration is a column; dots stack
  * bottom-up, colored by category proportion of that admin's total.
+ *
+ * Editorial enhancements: prominent value labels, party accent bars, years,
+ * partial-term marker for Sheinbaum, scale context note.
  */
+
+// Party metadata keyed by administration display name
+const SEXENIO_META: Record<string, { years: string; partyColor: string; partial?: boolean }> = {
+  'Fox':        { years: '01–06', partyColor: '#1a5276' },
+  'Calderon':   { years: '07–12', partyColor: '#1a5276' },
+  'Calderón':   { years: '07–12', partyColor: '#1a5276' },
+  'Pena Nieto': { years: '13–18', partyColor: '#c41e3a' },
+  'Peña Nieto': { years: '13–18', partyColor: '#c41e3a' },
+  'AMLO':       { years: '19–24', partyColor: '#7b2d8b' },
+  'Sheinbaum':  { years: '25–',   partyColor: '#7b2d8b', partial: true },
+}
+
 function SexenioStackedDotColumns({
   data,
   categories,
@@ -2434,15 +2449,15 @@ function SexenioStackedDotColumns({
   data: SexenioStackedDatum[]
   categories: SexenioCategory[]
 }) {
-  const ROWS = 40
-  const COL_W = 32
-  const DOT_GAP = 8
-  const DOT_R = 3
-  const LABEL_H = 28
-  const VALUE_H = 18
+  const ROWS      = 40
+  const COL_W     = 32
+  const DOT_GAP   = 8
+  const DOT_R     = 3
+  const VALUE_H   = 28   // space for amount + "MXN" unit + party accent bar
+  const LABEL_H   = 46   // space for admin name + years + optional "partial"
   const LEGEND_COLS = 2
 
-  // Compute per-admin totals and max-total for scaling columns
+  // Compute per-admin totals and max-total for scaling column heights
   const adminTotals = data.map(d =>
     categories.reduce((s, c) => s + (Number(d[c.key]) || 0), 0)
   )
@@ -2452,80 +2467,113 @@ function SexenioStackedDotColumns({
   const offsetX = (width - colsTotalWidth) / 2
   const chartHeight = ROWS * DOT_GAP + LABEL_H + VALUE_H + 16
 
-  // Build legend: categories split into rows
-  const legendRowH = 18
-  const legendRows = Math.ceil(categories.length / LEGEND_COLS)
+  // Scale context: approx MXN per dot (rounded to nearest 5B)
+  const rawBPerDot = maxTotal / ROWS / 1e9
+  const bPerDot = Math.max(1, Math.round(rawBPerDot / 5) * 5)
+
+  // Build legend
+  const legendRowH   = 18
+  const legendRows   = Math.ceil(categories.length / LEGEND_COLS)
   const legendHeight = legendRows * legendRowH + 16
-  const totalHeight = chartHeight + legendHeight
-  const legendY = chartHeight + 4
+  const totalHeight  = chartHeight + legendHeight
+  const legendY      = chartHeight + 4
 
   return (
     <div
-      style={{ height: 380 }}
+      style={{ height: 430 }}
       role="img"
       aria-label="Dot matrix chart showing contract value by administration and top categories"
     >
-      <svg viewBox={`0 0 ${width} ${totalHeight}`} className="w-full h-auto max-h-[370px]">
-        {data.map((d, colIdx) => {
-          const total = adminTotals[colIdx]
-          const filledTotal = total > 0 ? Math.max(1, Math.round((total / maxTotal) * ROWS)) : 0
-          const cx = offsetX + colIdx * (COL_W + 40) + COL_W / 2
+      <svg viewBox={`0 0 ${width} ${totalHeight}`} className="w-full h-auto max-h-[420px]">
 
-          // Build per-category filled counts proportional to category share of total,
-          // within the admin's filledTotal rows.
+        {/* Scale context — top left */}
+        <text
+          x={8} y={10}
+          fontSize="8"
+          fill="#52525b"
+          fontFamily="var(--font-family-mono)"
+        >
+          {`≈${bPerDot}B MXN/dot`}
+        </text>
+
+        {data.map((d, colIdx) => {
+          const total       = adminTotals[colIdx]
+          const filledTotal = total > 0 ? Math.max(1, Math.round((total / maxTotal) * ROWS)) : 0
+          const cx          = offsetX + colIdx * (COL_W + 40) + COL_W / 2
+          const meta        = SEXENIO_META[d.admin] ?? { years: '', partyColor: '#52525b' }
+          const bottomY     = VALUE_H + ROWS * DOT_GAP
+
+          // Per-category filled dot counts (proportional to category share of total)
           const catFilled: number[] = []
           let remaining = filledTotal
           categories.forEach((c, i) => {
             const v = Number(d[c.key]) || 0
-            if (total <= 0) {
-              catFilled.push(0)
-              return
-            }
-            const fill =
-              i === categories.length - 1
-                ? remaining
-                : Math.round((v / total) * filledTotal)
+            if (total <= 0) { catFilled.push(0); return }
+            const fill = i === categories.length - 1
+              ? remaining
+              : Math.round((v / total) * filledTotal)
             const capped = Math.max(0, Math.min(fill, remaining))
             catFilled.push(capped)
             remaining -= capped
           })
 
-          // Map dot index (bottom-up) → category color
+          // Map dot index (bottom-up 0→ROWS-1) to category color
           const dotColors: (string | null)[] = Array(ROWS).fill(null)
           let cursor = 0
           catFilled.forEach((count, ci) => {
             for (let k = 0; k < count; k++) {
-              if (cursor < ROWS) {
-                dotColors[cursor] = categories[ci].color
-                cursor++
-              }
+              if (cursor < ROWS) { dotColors[cursor] = categories[ci].color; cursor++ }
             }
           })
 
+          // Compact amount string without trailing " MXN" — unit shown separately
+          const amountStr = formatCompactMXN(total).replace(' MXN', '')
+
           return (
             <g key={`admin-${colIdx}`}>
+
+              {/* Prominent editorial value — the number the eye lands on first */}
               <text
-                x={cx}
-                y={12}
+                x={cx} y={13}
                 textAnchor="middle"
-                fontSize="9"
-                fill="#a1a1aa"
+                fontSize="13"
+                fontWeight="600"
+                fill="#d4d4d8"
                 fontFamily="var(--font-family-mono)"
               >
-                {formatCompactMXN(total)}
+                {amountStr}
               </text>
+              <text
+                x={cx} y={21}
+                textAnchor="middle"
+                fontSize="7"
+                fill="#71717a"
+                fontFamily="var(--font-family-mono)"
+              >
+                MXN
+              </text>
+
+              {/* Party accent bar — thin colored line above the dot column */}
+              <rect
+                x={cx - COL_W / 2}
+                y={24}
+                width={COL_W}
+                height={2}
+                rx={1}
+                fill={meta.partyColor}
+                opacity={0.9}
+              />
+
+              {/* Dot column — bottom-up fill */}
               {Array.from({ length: ROWS }).map((_, i) => {
-                // i=0 → bottom
-                const cy = VALUE_H + (ROWS - 1 - i) * DOT_GAP + DOT_GAP / 2
+                const cy   = VALUE_H + (ROWS - 1 - i) * DOT_GAP + DOT_GAP / 2
                 const fill = dotColors[i]
                 return (
                   <motion.circle
                     key={`dot-${colIdx}-${i}`}
-                    cx={cx}
-                    cy={cy}
-                    r={DOT_R}
+                    cx={cx} cy={cy} r={DOT_R}
                     fill={fill ?? '#2d2926'}
-                    fillOpacity={fill ? 0.85 : 0.7}
+                    fillOpacity={fill ? 0.9 : 0.7}
                     stroke={fill ? 'none' : '#3d3734'}
                     strokeWidth={fill ? 0 : 0.5}
                     initial={{ opacity: 0 }}
@@ -2534,33 +2582,58 @@ function SexenioStackedDotColumns({
                   />
                 )
               })}
+
+              {/* Administration name */}
               <text
-                x={cx}
-                y={VALUE_H + ROWS * DOT_GAP + 18}
+                x={cx} y={bottomY + 14}
                 textAnchor="middle"
                 fontSize="11"
-                fill="var(--color-text-secondary)"
+                fontWeight="500"
+                fill="var(--color-text-primary)"
                 fontFamily="var(--font-family-mono)"
               >
                 {d.admin}
               </text>
+
+              {/* Term years */}
+              <text
+                x={cx} y={bottomY + 26}
+                textAnchor="middle"
+                fontSize="8"
+                fill="#71717a"
+                fontFamily="var(--font-family-mono)"
+              >
+                {meta.years}
+              </text>
+
+              {/* Partial-term marker (Sheinbaum: term started 2025, data incomplete) */}
+              {meta.partial && (
+                <text
+                  x={cx} y={bottomY + 37}
+                  textAnchor="middle"
+                  fontSize="7"
+                  fill="#52525b"
+                  fontFamily="var(--font-family-mono)"
+                >
+                  partial
+                </text>
+              )}
             </g>
           )
         })}
 
-        {/* Legend */}
+        {/* Category legend */}
         {categories.map((c, i) => {
-          const col = i % LEGEND_COLS
-          const row = Math.floor(i / LEGEND_COLS)
+          const col      = i % LEGEND_COLS
+          const row      = Math.floor(i / LEGEND_COLS)
           const colWidth = width / LEGEND_COLS
-          const lx = col * colWidth + 20
-          const ly = legendY + row * legendRowH + 12
+          const lx       = col * colWidth + 20
+          const ly       = legendY + row * legendRowH + 12
           return (
             <g key={`legend-${i}`}>
-              <circle cx={lx} cy={ly - 3} r={4} fill={c.color} />
+              <circle cx={lx} cy={ly - 3} r={5} fill={c.color} fillOpacity={0.9} />
               <text
-                x={lx + 10}
-                y={ly}
+                x={lx + 13} y={ly}
                 fontSize="10"
                 fill="var(--color-text-secondary)"
                 fontFamily="var(--font-family-sans)"
