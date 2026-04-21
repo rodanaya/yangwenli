@@ -535,7 +535,7 @@ function RiskEvolution({
       </div>
 
       {/* Visual tape: three stacked dot-matrix strips */}
-      <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-5 space-y-4">
+      <div className="rounded-sm border border-border/30 bg-background-elevated/30 p-5 space-y-4">
         {(() => {
           const N = 50, DR = 3, DG = 8
           const oecdIdx = Math.round((oecdPct / 100) * N)
@@ -619,7 +619,7 @@ function RiskEvolution({
       {/* Verdict */}
       <div
         className={cn(
-          'mt-4 rounded-lg border px-4 py-3 flex items-start gap-3',
+          'mt-4 rounded-sm border px-4 py-3 flex items-start gap-3',
           isAboveOECD ? 'border-red-500/30 bg-red-500/5' : 'border-emerald-500/30 bg-emerald-500/5',
         )}
       >
@@ -681,7 +681,7 @@ function ProcedureTypeSection({
       </p>
 
       {/* Dot-matrix: direct vs competitive */}
-      <div className="rounded-lg border border-border/30 bg-background-elevated/30 p-5">
+      <div className="rounded-sm border border-border/30 bg-background-elevated/30 p-5">
         {(() => {
           const N_DOTS = 50
           const DOT_R = 3
@@ -1058,7 +1058,7 @@ function MonthlySpending({
 
   return (
     <div>
-      <div className="h-[240px] rounded-lg border border-border/30 bg-background-elevated/20 p-4">
+      <div className="h-[240px] rounded-sm border border-border/30 bg-background-elevated/20 p-4">
         <ResponsiveContainer width="100%" height="100%">
           <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <defs>
@@ -1110,7 +1110,7 @@ function MonthlySpending({
       {/* December callout */}
       {decMonth && (
         <div
-          className="mt-3 flex items-center gap-3 rounded-lg border px-4 py-3"
+          className="mt-3 flex items-center gap-3 rounded-sm border px-4 py-3"
           style={{
             borderColor: `${decColor}40`,
             backgroundColor: `${decColor}0D`,
@@ -1542,7 +1542,7 @@ export default function YearInReview() {
 
           {/* Sexenio context */}
           <motion.div
-            className="rounded-lg border px-5 py-4"
+            className="rounded-sm border px-5 py-4"
             style={{
               borderColor: `${sexenio.partyColor}30`,
               backgroundColor: `${sexenio.partyColor}08`,
@@ -1726,7 +1726,7 @@ export default function YearInReview() {
                 {t('spotlight.label')}
               </p>
               <div
-                className="rounded-lg border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
+                className="rounded-sm border border-border/40 bg-card/60 p-5 cursor-pointer hover:border-accent/30 transition-colors"
                 onClick={() => navigate(`/vendors/${topVendor.vendor_id}`)}
                 role="button"
                 tabIndex={0}

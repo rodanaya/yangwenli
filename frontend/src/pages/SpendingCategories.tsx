@@ -1107,7 +1107,7 @@ function TopFindingsBar({
             <button
               key={cat.category_id}
               onClick={() => onSelect(cat.category_id)}
-              className="group text-left p-3 rounded-lg border border-border/30 bg-background-card hover:bg-background-elevated/60 hover:border-accent/40 transition-colors"
+              className="group text-left p-3 rounded-sm border border-border/30 bg-background-card hover:bg-background-elevated/60 hover:border-accent/40 transition-colors"
               style={{ borderLeft: `3px solid ${sectorColor}` }}
             >
               <div className="flex items-center justify-between mb-2">
@@ -1221,7 +1221,7 @@ function SectorGroupedCategories({
 
   if (categories.length === 0) {
     return (
-      <div className="text-center py-12 text-sm text-text-muted border border-dashed border-border/30 rounded-lg">
+      <div className="text-center py-12 text-sm text-text-muted border border-dashed border-border/30 rounded-sm">
         {t('table.noResults')}
       </div>
     )
@@ -1265,7 +1265,7 @@ function SectorGroupedCategories({
         const riskColor = RISK_COLORS[riskLevel]
 
         return (
-          <div key={sectorCode} className="rounded-lg border border-border/30 overflow-hidden">
+          <div key={sectorCode} className="rounded-sm border border-border/30 overflow-hidden">
             {/* Sector header */}
             <button
               className="w-full flex items-center gap-3 px-4 py-2.5 bg-background-elevated/20 hover:bg-background-elevated/40 transition-colors text-left"
@@ -1815,7 +1815,7 @@ function TreemapSquarified({
     return (
       <div
         ref={containerRef}
-        className="flex items-center justify-center rounded-lg border border-border/30 bg-background-card"
+        className="flex items-center justify-center rounded-sm border border-border/30 bg-background-card"
         style={{ height }}
       >
         <p className="text-sm font-normal text-text-muted text-center max-w-xs">
@@ -2246,7 +2246,7 @@ function VendorConcentrationCallout({
   const isHighlyConc = concentrationLabel === 'highly_concentrated'
   const isModConc = concentrationLabel === 'moderately_concentrated'
   const barColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#3b82f6'
-  const pillColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#16a34a'
+  const pillColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#71717a'
 
   const concLabel =
     concentrationLabel === 'highly_concentrated'
@@ -2971,7 +2971,7 @@ export default function SpendingCategories() {
         <Skeleton className="h-32 w-full rounded-sm" />
         <div className="grid gap-6 grid-cols-1 md:grid-cols-3">
           {Array.from({ length: 3 }).map((_, i) => (
-            <Skeleton key={i} className="h-28 rounded-lg" />
+            <Skeleton key={i} className="h-28 rounded-sm" />
           ))}
         </div>
         <div className="space-y-3">
@@ -3215,7 +3215,7 @@ export default function SpendingCategories() {
               return (
                 <div
                   key={cat.category_id}
-                  className="flex items-center gap-4 px-4 py-3 rounded-lg border border-border/30 bg-background-card hover:bg-background-elevated/50 transition-colors cursor-pointer group"
+                  className="flex items-center gap-4 px-4 py-3 rounded-sm border border-border/30 bg-background-card hover:bg-background-elevated/50 transition-colors cursor-pointer group"
                   onClick={() => {
                     setSelectedCategoryId(prev => prev === cat.category_id ? null : cat.category_id)
                   }}
@@ -3374,7 +3374,7 @@ export default function SpendingCategories() {
         </div>
 
         {selectedCategoryId !== null && selectedCategory && (
-          <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-accent/5 border border-accent/20 mb-3 text-xs animate-in fade-in duration-200">
+          <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-accent/5 border border-accent/20 mb-3 text-xs animate-in fade-in duration-200">
             <span className="font-mono text-text-muted/60 uppercase tracking-wider text-[10px] flex-shrink-0">{t('table.selected')}:</span>
             <span className="font-semibold text-accent truncate flex-1">{localeName(selectedCategory, i18n.language)}</span>
             <button
@@ -3396,7 +3396,7 @@ export default function SpendingCategories() {
         {summaryLoading ? (
           <div className="space-y-2">
             {Array.from({ length: 6 }).map((_, i) => (
-              <Skeleton key={i} className="h-10 w-full rounded-lg" />
+              <Skeleton key={i} className="h-10 w-full rounded-sm" />
             ))}
           </div>
         ) : (
@@ -3418,7 +3418,7 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       <div ref={detailPanelRef} className="scroll-mt-4 space-y-4">
         {selectedCategoryId === null && sortedCategories.length > 0 && (
-          <div className="flex items-center gap-2 rounded-lg border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
+          <div className="flex items-center gap-2 rounded-sm border border-dashed border-accent/30 bg-accent/5 px-4 py-3 text-xs text-text-muted">
             <ArrowUpRight className="h-3.5 w-3.5 text-accent flex-shrink-0" />
             <span>{t('filters.tableHint')}</span>
           </div>

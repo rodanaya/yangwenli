@@ -568,7 +568,7 @@ function InsightCard({
   }[type]
 
   return (
-    <div className={cn('rounded-lg border p-4', styles.border)}>
+    <div className={cn('rounded-sm border p-4', styles.border)}>
       <div className={cn('flex items-center gap-1.5 text-sm font-semibold mb-1', styles.text)}>
         <Icon className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
         {title}
@@ -830,13 +830,13 @@ function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
           />
           <ReferenceLine
             y={0.25}
-            stroke="#4ade80"
+            stroke="#71717a"
             strokeDasharray="4 3"
             strokeOpacity={0.6}
             label={{
               value: 'Low concentration',
               position: 'insideTopLeft',
-              fill: '#4ade80',
+              fill: '#a1a1aa',
               fontSize: 10,
             }}
           />
@@ -972,7 +972,7 @@ function SectorProfileSkeleton() {
         </div>
       </div>
       <div className="flex gap-2">
-        {[0,1,2].map((i) => <Skeleton key={i} className="h-9 w-32 rounded-lg" />)}
+        {[0,1,2].map((i) => <Skeleton key={i} className="h-9 w-32 rounded-sm" />)}
       </div>
       <Skeleton className="h-64 w-full rounded-sm" />
     </div>
@@ -1284,7 +1284,7 @@ export function SectorProfile() {
               id={`tab-${tab.id}`}
               onClick={() => setActiveTab(tab.id)}
               className={cn(
-                'flex-1 rounded-lg px-4 py-2 text-sm font-semibold transition-all duration-150',
+                'flex-1 rounded-sm px-4 py-2 text-sm font-semibold transition-all duration-150',
                 activeTab === tab.id
                   ? 'text-white shadow-sm'
                   : 'text-zinc-400 hover:text-zinc-200'

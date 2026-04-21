@@ -734,7 +734,7 @@ export default function ProcurementCalendar() {
 
         {/* Election year banner */}
         {isElectionYear && (
-          <div className="flex items-start gap-3 rounded-lg border border-amber-700/40 bg-amber-950/20 px-4 py-3">
+          <div className="flex items-start gap-3 rounded-sm border border-amber-700/40 bg-amber-950/20 px-4 py-3">
             <Zap className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
             <p className="text-xs text-amber-300 leading-relaxed">
               <span className="font-semibold">{t('electionBanner.title')}</span> &mdash; {t('electionBanner.body')}
@@ -752,7 +752,7 @@ export default function ProcurementCalendar() {
 
           <div
             ref={scrollRef}
-            className="bg-stone-900/60 border border-stone-800 rounded-lg p-4"
+            className="bg-stone-900/60 border border-stone-800 rounded-sm p-4"
           >
             {isLoading ? (
               <CalendarSkeleton />
@@ -788,7 +788,7 @@ export default function ProcurementCalendar() {
           >
             {/* Most active day */}
             {stats.peakDay && (
-              <div className="border border-stone-800 bg-stone-900/40 rounded-lg p-3">
+              <div className="border border-stone-800 bg-stone-900/40 rounded-sm p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600 mb-1">
                   {t('insights.mostActiveDay')}
                 </div>
@@ -803,7 +803,7 @@ export default function ProcurementCalendar() {
 
             {/* Highest risk day */}
             {stats.highestRiskDay && (
-              <div className="border border-red-900/40 bg-red-950/10 rounded-lg p-3">
+              <div className="border border-red-900/40 bg-red-950/10 rounded-sm p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-red-600 mb-1">
                   {t('insights.peakRiskDay')}
                 </div>
@@ -819,7 +819,7 @@ export default function ProcurementCalendar() {
 
             {/* December vs rest */}
             {stats.hasDecemberData && (
-              <div className="border border-orange-900/40 bg-orange-950/10 rounded-lg p-3">
+              <div className="border border-orange-900/40 bg-orange-950/10 rounded-sm p-3">
                 <div className="text-[10px] font-mono uppercase tracking-wider text-orange-600 mb-1">
                   {t('insights.decemberRisk')}
                 </div>
@@ -834,7 +834,7 @@ export default function ProcurementCalendar() {
 
             {/* Election year flag */}
             <div className={cn(
-              'border rounded-lg p-3',
+              'border rounded-sm p-3',
               isElectionYear
                 ? 'border-amber-900/40 bg-amber-950/10'
                 : 'border-stone-800 bg-stone-900/40'
@@ -874,7 +874,7 @@ export default function ProcurementCalendar() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               {/* December spike annotation */}
               {decemberSpikeRatio !== null && decemberSpikeRatio > 1.2 && (
-                <div className="border border-orange-800/50 bg-orange-950/20 rounded-lg px-4 py-3 flex gap-3 items-start">
+                <div className="border border-orange-800/50 bg-orange-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
                   <TrendingUp className="w-4 h-4 text-orange-400 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-orange-300">
@@ -889,7 +889,7 @@ export default function ProcurementCalendar() {
 
               {/* Election year note */}
               {isElectionYear && (
-                <div className="border border-amber-800/50 bg-amber-950/20 rounded-lg px-4 py-3 flex gap-3 items-start">
+                <div className="border border-amber-800/50 bg-amber-950/20 rounded-sm px-4 py-3 flex gap-3 items-start">
                   <AlertTriangle className="w-4 h-4 text-amber-400 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold text-amber-300">
@@ -904,7 +904,7 @@ export default function ProcurementCalendar() {
 
               {/* High risk day annotation */}
               {stats.highestRiskDay && stats.highestRiskDay.risk_rate > 0.25 && (
-                <div className={cn('border rounded-lg px-4 py-3 flex gap-3 items-start', getRiskBadgeColor(stats.highestRiskDay.risk_rate))}>
+                <div className={cn('border rounded-sm px-4 py-3 flex gap-3 items-start', getRiskBadgeColor(stats.highestRiskDay.risk_rate))}>
                   <Info className="w-4 h-4 mt-0.5 shrink-0" />
                   <div>
                     <div className="text-sm font-semibold">

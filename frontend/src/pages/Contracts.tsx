@@ -573,7 +573,7 @@ export function Contracts() {
       ]}
     >
       {/* Investigation preset shelf */}
-      <div className="surface-card border border-border/50 rounded-lg p-4 mb-4">
+      <div className="surface-card border border-border/50 rounded-sm p-4 mb-4">
         <p className="lede-dateline mb-3">Investigation presets</p>
         <div className="flex flex-wrap gap-2">
           {CONTRACT_PRESET_DEFS.map((preset) => {
@@ -673,7 +673,7 @@ export function Contracts() {
         <input
           type="text"
           placeholder={t('searchPlaceholder')}
-          className="h-11 w-full rounded-lg border border-border bg-background-card pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-colors"
+          className="h-11 w-full rounded-sm border border-border bg-background-card pl-11 pr-4 text-sm focus:outline-none focus:ring-2 focus:ring-accent/50 focus:border-accent/50 transition-colors"
           value={searchInput}
           onChange={(e) => setSearchInput(e.target.value)}
           aria-label="Search contracts by vendor or institution"
@@ -714,7 +714,7 @@ export function Contracts() {
       </div>
 
       {/* Filter bar */}
-      <div className="bg-background-elevated border border-border rounded-lg p-4 mb-2">
+      <div className="bg-background-elevated border border-border rounded-sm p-4 mb-2">
         <div className="text-[10px] uppercase tracking-wide text-text-muted mb-3 font-semibold">
           {t('filters.heading')}
         </div>
@@ -1474,9 +1474,9 @@ function ContractRow({
               <span
                 title={`Anomalía multivariada detectada (distancia=${contract.mahalanobis_distance.toFixed(1)})`}
                 aria-label="Multivariate anomaly detected"
-                className="text-amber-400 cursor-help leading-none"
+                className="text-amber-400 cursor-help leading-none inline-flex"
               >
-                ⚠
+                <AlertTriangle className="h-3 w-3" />
               </span>
             )}
             <span

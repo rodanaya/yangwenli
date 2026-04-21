@@ -241,7 +241,7 @@ function ExtremeCaseCard({
 
   return (
     <article
-      className="border border-zinc-700/60 rounded-lg bg-zinc-900/40 p-4 hover:border-orange-500/40 transition-colors"
+      className="border border-zinc-700/60 rounded-sm bg-zinc-900/40 p-4 hover:border-orange-500/40 transition-colors"
       role="article"
       aria-label={t('cardAriaLabel', { vendorName: contract.vendor_name })}
     >
@@ -910,7 +910,7 @@ function SectorDistributionCurves({
         return (
           <div
             key={sector.code}
-            className="rounded-lg border border-zinc-700/40 bg-zinc-900/30 p-2"
+            className="rounded-sm border border-zinc-700/40 bg-zinc-900/30 p-2"
             aria-label={`Distribución de precios — ${sector.name}`}
           >
             <div className="flex items-center justify-between mb-1 px-1">
@@ -1576,7 +1576,7 @@ export default function PriceIntelligence() {
   if (anomalyQuery.isError) {
     return (
       <div className="max-w-4xl mx-auto p-6">
-        <div className="flex items-center gap-3 p-6 text-zinc-400 border border-zinc-700/60 rounded-lg bg-zinc-900/40">
+        <div className="flex items-center gap-3 p-6 text-zinc-400 border border-zinc-700/60 rounded-sm bg-zinc-900/40">
           <AlertTriangle className="h-5 w-5 text-red-400 flex-shrink-0" />
           <div>
             <p className="text-sm font-semibold text-zinc-200">{t('compranetUnavailableTitle')}</p>

@@ -461,7 +461,7 @@ function TierChip({ tierName, active, count, onClick, t }: TierChipProps) {
   return (
     <button
       onClick={onClick}
-      className="flex items-center gap-2 rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border-2"
+      className="flex items-center gap-2 rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 border-2"
       style={{
         backgroundColor: active ? tier.color : tier.bg,
         borderColor: tier.color,
@@ -619,7 +619,7 @@ export default function InstitutionScorecards() {
         <Act number="I" label="THE GRADES" className="space-y-6">
 
           {/* Explainer context */}
-          <div className="rounded-lg border border-violet-500/20 bg-violet-500/5 px-4 py-3">
+          <div className="rounded-sm border border-violet-500/20 bg-violet-500/5 px-4 py-3">
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-violet-400 mb-1">
               HALLAZGO
             </p>
@@ -636,7 +636,7 @@ export default function InstitutionScorecards() {
             {statsLoading ? (
               <div className="space-y-3">
                 <Skeleton className="h-2.5 w-48" />
-                <Skeleton className="h-7 w-full rounded-lg" />
+                <Skeleton className="h-7 w-full rounded-sm" />
                 <div className="flex gap-4 flex-wrap">
                   {Array.from({ length: 5 }).map((_, i) => (
                     <Skeleton key={i} className="h-3 w-24" />
@@ -661,7 +661,7 @@ export default function InstitutionScorecards() {
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
-              className={`rounded-lg px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+              className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                 selectedTier === null
                   ? 'bg-white text-zinc-900 border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
                   : 'bg-transparent text-zinc-300 border-white/20 hover:border-white/40'
@@ -707,7 +707,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={key}
                     onClick={() => handleSortChange(key)}
-                    className={`flex items-center gap-1 rounded-lg px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                       sortBy === key
                         ? 'bg-zinc-700 border-white/20 text-white'
                         : 'bg-transparent border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
@@ -736,13 +736,13 @@ export default function InstitutionScorecards() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t('filters.search')}
-                  className="w-full rounded-lg border border-white/10 bg-zinc-800/80 pl-8 pr-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-colors"
+                  className="w-full rounded-sm border border-white/10 bg-zinc-800/80 pl-8 pr-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-colors"
                   aria-label={t('aria.searchByName')}
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-lg border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-white/20 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                className="rounded-sm border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-white/20 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               >
                 {t('filters.go')}
               </button>
@@ -830,7 +830,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               aria-label={t('pagination.previous')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -857,7 +857,7 @@ export default function InstitutionScorecards() {
                   <button
                     key={pageNum}
                     onClick={() => setPage(pageNum)}
-                    className={`w-8 h-8 rounded-lg text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
+                    className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                       pageNum === page
                         ? 'bg-white text-zinc-900'
                         : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
@@ -874,7 +874,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="flex items-center gap-1.5 rounded-lg border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               aria-label={t('pagination.next')}
             >
               {t('pagination.next')}

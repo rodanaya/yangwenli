@@ -356,7 +356,7 @@ export default function ContractDetail() {
 
                 {/* Disclaimer for high-risk */}
                 {isHighRisk && (
-                  <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-500/5 border border-amber-500/20 px-3 py-2">
+                  <div className="mt-4 flex items-start gap-2 rounded-sm bg-amber-500/5 border border-amber-500/20 px-3 py-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500/80 mt-0.5 shrink-0" />
                     <p className="text-[11px] text-zinc-400 leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is

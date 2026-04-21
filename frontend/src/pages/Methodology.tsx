@@ -67,7 +67,7 @@ const RISK_LEVELS_V6 = [
   { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: '#f87171' },
   { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: '#fb923c' },
   { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: '#4ade80' },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: '#71717a' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -334,7 +334,7 @@ const CoefficientChart = memo(function CoefficientChart() {
   const chartData = useMemo(() => V6_COEFFICIENTS.map((c) => ({
     name: t(`featureNames.${c.nameKey}`),
     coeff: c.coeff,
-    fill: c.coeff > 0 ? '#4ade80' : c.coeff < 0 ? '#f87171' : '#64748b',
+    fill: c.coeff > 0 ? '#f59e0b' : c.coeff < 0 ? '#52525b' : '#64748b',
   })), [t])
 
   // Scale: coefficients range from -0.6 to +1.3; we use a symmetric 0-based axis.
@@ -508,7 +508,7 @@ function ModelEvolutionTimeline() {
       <div
         key={step.version}
         className={cn(
-          'w-40 flex-shrink-0 rounded-lg border p-3 text-[11px] space-y-1.5',
+          'w-40 flex-shrink-0 rounded-sm border p-3 text-[11px] space-y-1.5',
           step.active
             ? 'border-accent/40 bg-accent/5'
             : step.overlay
@@ -865,11 +865,11 @@ export function Methodology() {
 
               <div className="grid grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#4ade80]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  <div className="h-2.5 w-2.5 rounded-full bg-[#f87171]" aria-hidden="true" />
+                  <div className="h-2.5 w-2.5 rounded-full bg-[#52525b]" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendDecreasesRisk')}</span>
                 </div>
                 <div className="flex items-center gap-1.5">

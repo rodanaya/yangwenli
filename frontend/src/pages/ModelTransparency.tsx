@@ -51,7 +51,7 @@ const RISK_DISTRIBUTION = [
   { level: 'Critical', threshold: '≥ 0.60', count: 184_031, pct: 6.01, color: '#dc2626' },
   { level: 'High',     threshold: '≥ 0.40', count: 228_814, pct: 7.48, color: '#ea580c' },
   { level: 'Medium',   threshold: '≥ 0.25', count: 821_251, pct: 26.84, color: '#eab308' },
-  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: '#16a34a' },
+  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: '#71717a' },
 ]
 
 interface VersionEntry {

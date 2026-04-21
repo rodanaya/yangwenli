@@ -80,11 +80,12 @@ import { DotStrip } from '@/components/charts/DotStrip'
 // SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
 
 // ---- Risk level palette ----
+// Low uses zinc (not green) per ART canon: green implies safety on a corruption platform.
 const LEVEL_COLORS: Record<string, string> = {
   critical: '#dc2626',
   high: '#ea580c',
   medium: '#eab308',
-  low: '#16a34a',
+  low: '#71717a',
   unknown: '#64748b',
 }
 
@@ -674,7 +675,7 @@ export function InstitutionProfile() {
 
       {/* ---- INVESTIGATION LEDE ---- */}
       <div
-        className="rounded-lg p-5 leading-relaxed text-[15px] text-text-secondary mb-6"
+        className="rounded-sm p-5 leading-relaxed text-[15px] text-text-secondary mb-6"
         style={{
           fontFamily: "var(--font-family-serif)",
           borderLeft: `3px solid ${riskColor}`,
@@ -700,7 +701,7 @@ export function InstitutionProfile() {
       {/* ---- GROUND TRUTH WARNING BANNER ---- */}
       {groundTruthStatus?.is_ground_truth_related && (
         <div
-          className="flex items-start gap-3 rounded-lg border border-risk-critical/40 bg-risk-critical/5 px-4 py-3"
+          className="flex items-start gap-3 rounded-sm border border-risk-critical/40 bg-risk-critical/5 px-4 py-3"
           role="alert"
           aria-live="polite"
         >

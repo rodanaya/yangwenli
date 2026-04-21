@@ -350,7 +350,7 @@ function ChampionCard({
   return (
     <button
       onClick={() => onNavigate(item.institution_id)}
-      className={`relative flex flex-col gap-3 p-4 rounded-lg text-left w-full group transition-all
+      className={`relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
         border ${isLeader
           ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-zinc-950/10 hover:border-yellow-400/70'
           : 'border-emerald-700/30 bg-gradient-to-b from-emerald-950/20 to-zinc-950/10 hover:border-emerald-600/50'
@@ -413,7 +413,7 @@ function RedFlagCard({
   return (
     <button
       onClick={() => onNavigate(item.institution_id)}
-      className="relative flex flex-col gap-3 p-4 rounded-lg text-left w-full group transition-all
+      className="relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
         border border-red-900/40 bg-gradient-to-b from-red-950/30 to-zinc-950/10 hover:border-red-700/60"
       aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
     >
@@ -511,7 +511,7 @@ function ScoreHistogram({
 
       {/* Histogram: 5 bars, shared baseline, fixed height 160px */}
       <div
-        className="relative rounded-lg border border-zinc-800 bg-zinc-900/50 p-5"
+        className="relative rounded-sm border border-zinc-800 bg-zinc-900/50 p-5"
         role="img"
         aria-label={t('histogram.ariaLabel')}
       >
@@ -1174,7 +1174,7 @@ export default function InstitutionLeague() {
           </div>
 
           {isError && (
-            <div className="flex items-center gap-3 p-4 rounded-lg bg-red-950/40 border border-red-800/40 text-red-300 text-sm">
+            <div className="flex items-center gap-3 p-4 rounded-sm bg-red-950/40 border border-red-800/40 text-red-300 text-sm">
               <AlertTriangle className="h-4 w-4 flex-shrink-0" aria-hidden="true" />
               {t('error')}
             </div>

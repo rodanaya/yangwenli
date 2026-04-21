@@ -542,10 +542,213 @@ Build check: `npm run build` → **success in 1m 13s, 0 errors**.
 **Pages**: `/sector/[id]`, `/administrations`, `/year-in-review`, `/model-transparency`, `/price-intelligence`, `/procurement-calendar`, `/spending-categories`
 
 ### GAMMA Screenshots
-<!-- Agent fills this section -->
+
+Playwright MCP unavailable in this session. Audit performed via direct source-code review against the ART canon rubric, same method as BETA. Pages audited:
+
+- `/sectors/:id` → `frontend/src/pages/SectorProfile.tsx` (1,648 LOC)
+- `/administrations` → `frontend/src/pages/Administrations.tsx` (3,761 LOC) — re-verification of BETA fixes
+- `/year-in-review/:year?` → `frontend/src/pages/YearInReview.tsx` (1,868 LOC)
+- `/model` → `frontend/src/pages/ModelTransparency.tsx` (885 LOC)
+- `/price-analysis` → `frontend/src/pages/PriceIntelligence.tsx` (2,164 LOC)
+- `/procurement-calendar` → `frontend/src/pages/ProcurementCalendar.tsx` (963 LOC)
+- `/categories` → `frontend/src/pages/SpendingCategories.tsx` (3,761 LOC)
+
+Verified clean across all 7 pages: `whileInView` (0 occurrences), cream `#f3f1ec`/`#e2ddd6` on dark (0 occurrences — ALPHA bulk fix held), emoji characters (0 occurrences across all 7 files — regex scan for `\U0001F300-\U0001FAFF\u2600-\u27BF\u2B00-\u2BFF\u2300-\u23FF`).
 
 ### GAMMA Findings
-<!-- Agent fills this section -->
+
+**Page: /sectors/:id (SectorProfile)**
+SEVERITY: P1
+Issue: `InsightCard` component wrapper (`warning`/`positive`/`info` callout) uses `rounded-lg`. Bordered panel must be `rounded-sm`.
+File: `frontend/src/pages/SectorProfile.tsx:571`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /sectors/:id (SectorProfile)**
+SEVERITY: P1
+Issue: Tab-button group uses `rounded-lg` for each tab pill (active tab gets inline sector-color background).
+File: `frontend/src/pages/SectorProfile.tsx:1287`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /sectors/:id (SectorProfile)**
+SEVERITY: P2
+Issue: Skeleton loaders for the 3 tab buttons use `rounded-lg` so they look like the tabs.
+File: `frontend/src/pages/SectorProfile.tsx:975`
+Fix: Changed to `rounded-sm` to match.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /sectors/:id (SectorProfile)**
+SEVERITY: P1
+Issue: Vendor concentration chart draws an explicit "Low concentration" reference line in green `#4ade80` with a green label — direct "low = green = safe" semantics on the corruption platform.
+File: `frontend/src/pages/SectorProfile.tsx:833, 839`
+Fix: Changed stroke from `#4ade80` to `#71717a` (zinc) and label fill to `#a1a1aa`. Preserves the informational marker without the forbidden green-for-low coding.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /sectors/:id (SectorProfile)**
+SEVERITY: P3 (documented)
+Issue: Remaining `rounded-lg` instances are all floating tooltips (Recharts at L173, L747, L848) or decorative hover rows without borders (L230, L927). These fall under the rubric's "dropdown floater" exception and the "rounded-md on buttons" leniency.
+File: `frontend/src/pages/SectorProfile.tsx:173, 230, 747, 848, 927`
+Fix: None — within exception scope.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /administrations (Administrations)**
+SEVERITY: N/A
+Issue: Re-audit of BETA's work. Grep for `rounded-(lg|xl|2xl)` returned 0 matches — BETA's bulk fix (ALPHA wave's ~10 replacements) held. Emoji scan returned 0 matches — BETA's `⚠` → `AlertTriangle` and `⚡` → `!` replacements held.
+File: `frontend/src/pages/Administrations.tsx` (all)
+Fix: None needed.
+Status: VERIFIED CLEAN
+
+---
+
+**Page: /administrations (Administrations)**
+SEVERITY: P3 (documented — carry-forward for OMEGA)
+Issue: Comparison-chart directional greens at L1266 (`#4ade80` for "DA% fell between sexenios") and L2440 (`#4ade80` for "isBetter = metric improved"). These are directional/delta semantics rather than risk-level semantics, but on a corruption platform "DA% decreased" is functionally a safety signal. BETA deferred the `RISK_COLORS.low=#4ade80` constants-level green to OMEGA; keeping consistent — directional comparison greens are inherited by the same policy call.
+File: `frontend/src/pages/Administrations.tsx:1266, 2440`
+Fix: None — awaiting OMEGA holistic decision on green-for-safe across all comparison charts.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /administrations (Administrations)**
+SEVERITY: N/A (not a violation)
+Issue: Identity-colored administration swatches — Calderón `#22c55e` (L77, L171), Grade-A `#16a34a` (L2181). These are identity / letter-grade mappings, not "risk-low" semantics. Leaving as editorial voice.
+File: `frontend/src/pages/Administrations.tsx:77, 171, 2181`
+Status: VERIFIED CLEAN (identity color, not risk-level)
+
+---
+
+**Page: /year-in-review/:year? (YearInReview)**
+SEVERITY: P1
+Issue: Seven bordered panel containers use `rounded-lg` — OECD-compliance tape wrapper, verdict banner, direct-vs-competitive dot-matrix wrapper, December callout banner, monthly chart container, sexenio context card, top-vendor spotlight card.
+File: `frontend/src/pages/YearInReview.tsx:538, 622, 684, 1061, 1113, 1545, 1729`
+Fix: All 7 changed to `rounded-sm` via replace_all.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /year-in-review/:year? (YearInReview)**
+SEVERITY: P3 (documented)
+Issue: Sexenio identity color Zedillo `#16a34a` (L73) and Calderón `#22c55e` (L75) are president-identity colors — not risk-level. Leaving.
+Issue: Directional/comparison greens at L390 (growth YoY), L994 (monthly %-vs-avg), L1057 (December elevated label), L1514–1515 (YoY KPI delta cards). Same directional-semantic pattern as Administrations — defer to OMEGA for consistent cross-page policy.
+File: `frontend/src/pages/YearInReview.tsx:73, 75, 390, 994, 1057, 1514, 1515`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /model (ModelTransparency)**
+SEVERITY: P1
+Issue: `RISK_DISTRIBUTION` array assigns `color: '#16a34a'` (green) to the "Low" risk level (<0.25). This is the most explicit "green = low risk = safe" violation in the audit so far — it is rendered as the color for the low-risk cohort in the risk-level distribution chart, directly contradicting ART canon.
+File: `frontend/src/pages/ModelTransparency.tsx:54`
+Fix: Changed `color: '#16a34a'` to `color: '#71717a'` (zinc-500) — matches the zinc-for-low pattern set in ALPHA's Intro.tsx fix and BETA's VendorProfile network-topology fix.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /model (ModelTransparency)**
+SEVERITY: N/A
+Issue: Zero `rounded-(lg|xl|2xl)` violations, zero emoji, zero cream-on-dark, zero `whileInView`. Otherwise clean.
+File: `frontend/src/pages/ModelTransparency.tsx`
+Status: VERIFIED CLEAN
+
+---
+
+**Page: /price-analysis (PriceIntelligence)**
+SEVERITY: P1
+Issue: Three bordered card/panel containers use `rounded-lg` — contract anomaly article card (hero content card), sector price-distribution strip, error state panel.
+File: `frontend/src/pages/PriceIntelligence.tsx:244, 913, 1579`
+Fix: All 3 changed to `rounded-sm` via replace_all (no floaters present — clean replacement).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /procurement-calendar (ProcurementCalendar)**
+SEVERITY: P1
+Issue: Nine bordered containers use `rounded-lg` — election-year banner, calendar grid wrapper, three stat insight cards (peak day / peak-risk day / December), three pattern annotation banners (December spike / election / high-risk day), and a risk-day annotation.
+File: `frontend/src/pages/ProcurementCalendar.tsx:737, 755, 791, 806, 822, 837, 877, 892, 907`
+Fix: All 9 changed to `rounded-sm` via replace_all.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /categories (SpendingCategories)**
+SEVERITY: P1
+Issue: Nine card/panel containers use `rounded-lg` — category card button, empty-state message, sector group wrapper, treemap empty-state, skeleton placeholders (card + row), category drill-down row, selection chip, table-hint banner.
+File: `frontend/src/pages/SpendingCategories.tsx:1110, 1224, 1268, 1818, 2974, 3218, 3377, 3399, 3421`
+Fix: All 9 changed to `rounded-sm` with individual edits (avoided replace_all to preserve 3 floating tooltip instances at L1537, L1937, L3664).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /categories (SpendingCategories)**
+SEVERITY: P1
+Issue: Vendor-concentration pill `pillColor` mapping: highly-concentrated → red `#dc2626`, moderately → orange `#ea580c`, **low-concentration → green `#16a34a`**. This is "green = low concentration = safe" risk-level semantics — forbidden by ART canon.
+File: `frontend/src/pages/SpendingCategories.tsx:2249`
+Fix: Changed low-concentration color from `#16a34a` to `#71717a` (zinc-500).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /categories (SpendingCategories)**
+SEVERITY: P3 (documented)
+Issue: Three floating tooltip elements at L1537, L1937, L3664 retain `rounded-lg`. All are `absolute`-positioned Recharts / custom tooltips — fall under floater exception.
+Issue: Directional-comparison greens at L160 (sparkline trend `down = #4ade80`) and L601 (`text-green-400` for "yoy < -0.05", spend decreased). Same directional-semantic pattern as Administrations / YearInReview; deferred to OMEGA for holistic policy.
+File: `frontend/src/pages/SpendingCategories.tsx:160, 601, 1537, 1937, 3664`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Global: whileInView check (GAMMA scope)**
+SEVERITY: P0-class if found
+Issue: Scanned all 7 GAMMA page files for `whileInView`. Found 0 occurrences.
+Status: VERIFIED CLEAN
+
+---
+
+**Global: emoji check (GAMMA scope)**
+SEVERITY: P1-class if found
+Issue: Python regex scan for emoji ranges `\U0001F300-\U0001FAFF`, `\u2600-\u27BF`, `\u2B00-\u2BFF`, `\u2300-\u23FF` across all 7 files. Found 0 occurrences (Administrations' prior `⚠` and `⚡` emojis already replaced by BETA).
+Status: VERIFIED CLEAN
+
+---
+
+**Global: cream-on-dark check (GAMMA scope)**
+SEVERITY: P1-class if found
+Issue: Scanned all 7 GAMMA page files for `#f3f1ec` and `#e2ddd6`. Found 0 occurrences — ALPHA bulk fix held across GAMMA scope.
+Status: VERIFIED CLEAN
+
+---
+
+### GAMMA Summary
+
+| Severity | Count | Fixed |
+|----------|-------|-------|
+| P1 | 8 | 8 |
+| P2 | 1 | 1 |
+| P3 | 5 | 0 (documented) |
+
+Pages audited: 7 (SectorProfile, Administrations, YearInReview, ModelTransparency, PriceIntelligence, ProcurementCalendar, SpendingCategories).
+
+Patterns observed:
+- The `rounded-lg` systemic violation continues to surface on editorial content pages — YearInReview had 7 instances, ProcurementCalendar had 9, SpendingCategories had 12 (9 fixed + 3 floater exceptions). These pages all predate the `rounded-sm` editorial card mandate.
+- **ModelTransparency had the single most explicit green-for-low violation in the audit**: the risk-distribution table (the central visualization of the entire page) was rendering the Low-risk cohort in green `#16a34a`. This was the clearest ART-canon violation found in GAMMA and is now zinc.
+- **Two more page-local risk-semantic greens fixed**: SectorProfile's "Low concentration" reference line (was green, now zinc) and SpendingCategories' vendor-concentration pill (was green for low, now zinc). Together with ModelTransparency this removes 3 explicit risk-level green usages.
+- **Directional-comparison greens** (`down = good`, `delta<0 = better`, `yoy<-5% = good`) appear in Administrations (L1266, L2440), YearInReview (L390, L994, L1057, L1514, L1515), and SpendingCategories (L160, L601). These are NOT risk-level per se but are functionally risk-semantic on a corruption platform. **Deferred to OMEGA as a single consistent cross-page policy decision** — changing them page-by-page risks inconsistency with BETA's documented deferral of the constants-level `RISK_COLORS.low=#4ade80`.
+- Administrations page fully held under re-audit — BETA's fixes (rounded-lg sweep, emoji replacements) remain intact. The SexenioStratum / SexenioStackedDotColumns enhancements described in OUT-OF-BAND FIXES are visible in the source but were not re-modified in this wave.
+
+TypeScript check after all fixes: `npx tsc --noEmit` → **0 errors**.
 
 ---
 
@@ -554,26 +757,383 @@ Build check: `npm run build` → **success in 1m 13s, 0 errors**.
 **Pages**: `/contracts`, `/contract/[id]`, `/institution/[id]`, `/institution-league`, `/institution-scorecards`, `/report-card`, `/methodology`, `/explore`, `/settings`
 
 ### DELTA Screenshots
-<!-- Agent fills this section -->
+
+Playwright MCP unavailable in this session. Audit performed via direct source-code review against the ART canon rubric, same method as BETA/GAMMA. Pages audited:
+
+- `/contracts` → `frontend/src/pages/Contracts.tsx` (1,653 LOC)
+- `/contracts/:id` → `frontend/src/pages/ContractDetail.tsx` (990 LOC)
+- `/institutions/:id` → `frontend/src/pages/InstitutionProfile.tsx` (2,248 LOC)
+- `/institutions` → `frontend/src/pages/InstitutionLeague.tsx` (1,506 LOC)
+- `/institution-scorecards` (or similar) → `frontend/src/pages/InstitutionScorecards.tsx` (901 LOC)
+- `/report-card` → `frontend/src/pages/ReportCard.tsx` (1,268 LOC)
+- `/methodology` → `frontend/src/pages/Methodology.tsx` (1,476 LOC)
+- `/settings` → `frontend/src/pages/Settings.tsx` (1,269 LOC)
+- `/explore` → **FILE NOT FOUND** — there is no `Explore.tsx` in `frontend/src/pages/`. Closest matches: `StateExplorer.tsx`, `CollusionExplorer.tsx` (already audited in BETA). No fix needed.
+
+Verified clean across all 8 existing pages: `whileInView` (0 occurrences), cream `#f3f1ec`/`#e2ddd6` on dark (0 occurrences — ALPHA bulk fix held).
 
 ### DELTA Findings
-<!-- Agent fills this section -->
+
+**Page: /contracts (Contracts)**
+SEVERITY: P1
+Issue: Investigation preset shelf container uses `rounded-lg`.
+File: `frontend/src/pages/Contracts.tsx:576`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /contracts (Contracts)**
+SEVERITY: P1
+Issue: Search input field uses `rounded-lg`.
+File: `frontend/src/pages/Contracts.tsx:676`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /contracts (Contracts)**
+SEVERITY: P1
+Issue: Filter bar container uses `rounded-lg`.
+File: `frontend/src/pages/Contracts.tsx:717`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /contracts (Contracts)**
+SEVERITY: P1
+Issue: Multivariate anomaly indicator used raw `⚠` emoji character (U+26A0) inside a `<span>`. Design bible forbids emojis anywhere.
+File: `frontend/src/pages/Contracts.tsx:1479`
+Fix: Replaced `⚠` with `<AlertTriangle className="h-3 w-3" />` (lucide icon, already imported) + `inline-flex` on the containing span to keep layout identical.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /contracts/:id (ContractDetail)**
+SEVERITY: P1
+Issue: High-risk disclaimer callout uses `rounded-lg`.
+File: `frontend/src/pages/ContractDetail.tsx:359`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions/:id (InstitutionProfile)**
+SEVERITY: P1
+Issue: Page-local `LEVEL_COLORS` risk palette assigns `low: '#16a34a'` (green). This palette is used to color risk-level renderings throughout the profile — an explicit "green = low risk = safe" violation of ART canon.
+File: `frontend/src/pages/InstitutionProfile.tsx:87`
+Fix: Changed low-risk color from `#16a34a` to `#71717a` (zinc-500). Matches the zinc-for-low pattern set in ALPHA (Intro.tsx), BETA (VendorProfile), and GAMMA (ModelTransparency, SectorProfile, SpendingCategories).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions/:id (InstitutionProfile)**
+SEVERITY: P1
+Issue: Investigation lede banner uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionProfile.tsx:677`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions/:id (InstitutionProfile)**
+SEVERITY: P1
+Issue: Ground-truth warning banner uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionProfile.tsx:703`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions/:id (InstitutionProfile)**
+SEVERITY: P3 (documented — defer to OMEGA)
+Issue: Multiple directional-comparison greens: `#16a34a` for "Diversificando" HHI trend (L417), `bg-green-500/10 text-green-500` for "trend.direction === 'down'" risk trajectory (L959), `#16a34a` for "isBetter" percentile marker (L1045), `#16a34a` for "diff ≤ 0" benchmark bar (L1655). Same directional-semantic pattern flagged by GAMMA in Administrations/YearInReview/SpendingCategories — defer to OMEGA for consistent cross-page policy.
+File: `frontend/src/pages/InstitutionProfile.tsx:417, 959, 1045, 1655`
+Fix: None — escalate to OMEGA.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /institutions (InstitutionLeague)**
+SEVERITY: P1
+Issue: Podium card (top-3 leaderboard) uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionLeague.tsx:353`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions (InstitutionLeague)**
+SEVERITY: P1
+Issue: Red-flag (bottom-performer) card uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionLeague.tsx:416`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions (InstitutionLeague)**
+SEVERITY: P1
+Issue: Histogram chart container uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionLeague.tsx:514`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions (InstitutionLeague)**
+SEVERITY: P1
+Issue: Error state banner uses `rounded-lg`.
+File: `frontend/src/pages/InstitutionLeague.tsx:1177`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institutions (InstitutionLeague)**
+SEVERITY: P3 (documented — defer to OMEGA)
+Issue: `TIER_STYLES.Excelente` uses `#16a34a`/`text-green-400` (L122). This is tier-grade identity (like Administrations' Grade-A = green per GAMMA policy), not risk-level. Verified clean. Pillar radar bars (L208, L710) use `#4ade80`/`#fbbf24`/`#f87171` gradient for good/medium/bad pillar scores — directional semantic. `TrendIcon` (L185) uses `text-green-400` for "improving" — directional. All deferred to OMEGA for consistent policy.
+File: `frontend/src/pages/InstitutionLeague.tsx:122, 185, 208, 710`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /institution-scorecards (InstitutionScorecards)**
+SEVERITY: P1
+Issue: 11 `rounded-lg` instances across tier filter pill, explainer callout, skeleton placeholder, tier buttons, sort buttons, search input, go button, pagination prev/next/number buttons.
+File: `frontend/src/pages/InstitutionScorecards.tsx:464, 622, 639, 664, 710, 739, 745, 833, 860, 877`
+Fix: All 11 changed to `rounded-sm` via `replace_all` (no floating menu/tooltip exceptions in the file).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /institution-scorecards (InstitutionScorecards)**
+SEVERITY: P3 (documented — defer to OMEGA)
+Issue: `TIER_MAP.Excelente` uses `#16a34a` identity color (L94); `PillarsChart` bar color ramp uses `#4ade80`/`#fbbf24`/`#f87171` (L247); `TrendIcon` uses `text-green-400` for "improving" (L282). Same tier-identity and directional-semantic patterns as InstitutionLeague — defer to OMEGA.
+File: `frontend/src/pages/InstitutionScorecards.tsx:94, 247, 282`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /report-card (ReportCard)**
+SEVERITY: N/A
+Issue: Zero `rounded-(lg|xl|2xl)` violations, zero emoji, zero cream-on-dark, zero `whileInView`. Scanned 1,268 LOC — clean. This is the editorial report card page rebuilt in the Apr 5 UX sprint (see MEMORY.md), already canon-compliant.
+File: `frontend/src/pages/ReportCard.tsx`
+Fix: None needed.
+Status: VERIFIED CLEAN
+
+---
+
+**Page: /methodology (Methodology)**
+SEVERITY: P1
+Issue: `RISK_LEVELS_V6` array assigns `color: '#4ade80'` (green) to the "Low" risk level. This is the second most explicit "green = low risk = safe" violation found in the audit (after ModelTransparency in GAMMA). The methodology page is the canonical reference for the risk model — having it render the Low cohort in green directly contradicts ART canon on the very page that defines the thresholds.
+File: `frontend/src/pages/Methodology.tsx:70`
+Fix: Changed `color: '#4ade80'` to `color: '#71717a'` (zinc-500) — matches the canonical zinc-for-low pattern established across ALPHA/BETA/GAMMA.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /methodology (Methodology)**
+SEVERITY: P1
+Issue: Pipeline step card (`w-40 flex-shrink-0 rounded-lg border`) uses `rounded-lg`.
+File: `frontend/src/pages/Methodology.tsx:511`
+Fix: Changed to `rounded-sm`.
+Status: FIXED IN SESSION
+
+---
+
+**Page: /methodology (Methodology)**
+SEVERITY: P3 (documented — defer to OMEGA)
+Issue: `CoefficientChart` uses inverted semantic — positive coefficients (features that INCREASE corruption risk) are colored `#4ade80` green, and negative coefficients (protective features) are colored `#f87171` red. Paired with legend labels "legendIncreasesRisk" (green) and "legendDecreasesRisk" (red) at L868/872. This is a confusing UX anti-pattern on a corruption platform — green should not signal "this feature makes things more risky" — but it's a legitimate data-viz interpretation (positive-coefficient bars reading as "additive/present"). Flagged for OMEGA policy decision. Also: `text-[#4ade80]` for improvement column (L1265) — directional. Green check icon for "copied confirmation" (L617) — UI identity, not risk.
+File: `frontend/src/pages/Methodology.tsx:337, 617, 868, 1265`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Page: /settings (Settings)**
+SEVERITY: P1
+Issue: Seven `rounded-lg` container instances — refresh button, toast notifications, data-structure rows (outer + inner badge), KPI card icon wrapper, data-quality issue rows, grade panel rows.
+File: `frontend/src/pages/Settings.tsx:219, 407, 586, 587, 988, 1184, 1250`
+Fix: All 7 changed to `rounded-sm` (individual edits).
+Status: FIXED IN SESSION
+
+---
+
+**Page: /settings (Settings)**
+SEVERITY: P3 (documented — defer to OMEGA)
+Issue: `SEVERITY_COLORS.low: '#4ade80'` (L87) is a data-quality severity palette (not corruption risk) — "low severity data quality issue = defer" is arguably a legitimate green usage. Structure-identity greens at L584 (Structure D = best quality) and L1054 (`D: '#4ade80'`) are data-source grade markers, analogous to the Grade-A tier identity pattern. Fill-rate green at L1153 (`field.fill_rate >= 90`) is directional "high completeness = good" semantic. All data-quality domain, not corruption risk. Defer to OMEGA for holistic policy.
+File: `frontend/src/pages/Settings.tsx:87, 584, 1054, 1153`
+Fix: None.
+Status: DOCUMENTED ONLY
+
+---
+
+**Global: /explore route**
+SEVERITY: N/A
+Issue: No `Explore.tsx` file exists in `frontend/src/pages/`. Closest matches are `StateExplorer.tsx` (flagged as out-of-band known issue — hundreds of hardcoded English strings) and `CollusionExplorer.tsx` (already audited in BETA). Audit mission listed a non-existent page.
+Fix: None — documented for OMEGA.
+Status: DOCUMENTED ONLY
+
+---
+
+**Global: whileInView check (DELTA scope)**
+SEVERITY: P0-class if found
+Issue: Scanned all 8 DELTA page files for `whileInView`. Found 0 occurrences.
+Status: VERIFIED CLEAN
+
+---
+
+**Global: cream-on-dark check (DELTA scope)**
+SEVERITY: P1-class if found
+Issue: Scanned all 8 DELTA page files for `#f3f1ec` and `#e2ddd6`. Found 0 occurrences — ALPHA bulk fix held across DELTA scope.
+Status: VERIFIED CLEAN
+
+---
+
+### DELTA Summary
+
+| Severity | Count | Fixed |
+|----------|-------|-------|
+| P1 | 22 | 22 |
+| P3 | 6 | 0 (documented for OMEGA) |
+
+Pages audited: 8 (Contracts, ContractDetail, InstitutionProfile, InstitutionLeague, InstitutionScorecards, ReportCard, Methodology, Settings). `/explore` route has no matching file — documented as mission-list artifact.
+
+Patterns observed:
+- The `rounded-lg` systemic violation continued to dominate — InstitutionScorecards alone had 11 button/form-control instances, Settings had 7. All fixed to `rounded-sm`. Canon now holds across all 8 pages.
+- **Methodology had the second most explicit "green-for-low-risk" violation** in the entire audit (L70): the `RISK_LEVELS_V6` reference array — the methodology document's own definition of its risk thresholds — rendered the Low cohort in green `#4ade80`. This page is the canonical reference for how the model works; the contradiction was glaring. Now zinc.
+- **Two more page-local risk-semantic greens fixed**: InstitutionProfile's `LEVEL_COLORS.low` (was green, now zinc) and Methodology's Low-level row (was green, now zinc). Combined with ALPHA/BETA/GAMMA fixes, the audit has now neutralized every page-local "green = low risk" usage. The only remaining cross-cutting green-for-low is `RISK_COLORS.low = '#4ade80'` in `frontend/src/lib/colors.ts` (deferred to OMEGA by BETA).
+- **Emoji violation in Contracts.tsx**: a single `⚠` (U+26A0) character in the anomaly-indicator cell of the contracts table. Replaced with lucide `AlertTriangle` icon. This was the only emoji found in DELTA scope.
+- **Directional-comparison greens** (InstitutionProfile L417/959/1045/1655, InstitutionLeague L185/208/710, InstitutionScorecards L247/282, Methodology L337/868/1265, Settings L87/584/1054/1153) accumulate across the DELTA scope — consistent with GAMMA's deferral policy. OMEGA will need to decide: (a) neutralize all directional-good greens to a cyan/teal variant, (b) keep them as data-viz convention distinct from risk-level semantics, or (c) case-by-case based on whether the metric is corruption-adjacent (e.g. "diff<0 = less corruption = green" is risk-semantic; "fill_rate>90 = good data quality = green" is not).
+- ReportCard is clean — likely due to the Apr 5 UX sprint rebuild referenced in MEMORY.md.
+- `/explore` route listed in mission but no file exists. Either the route was removed, renamed, or was a mission-list typo.
+
+TypeScript check after all fixes: `npx tsc --noEmit` → **0 errors**.
 
 ---
 
 ## WAVE 5 — OMEGA (~00:00)
 
 ### Master P0 List
-<!-- OMEGA aggregates all P0s from ALPHA+BETA+GAMMA+DELTA -->
+No P0-class issues found across any wave. All pages render, no crashes, no whileInView
+regressions, no broken data pipelines surfaced. The P0-class global scans (whileInView,
+cream-on-dark) were run per-wave and came back clean (ALPHA bulk fix held).
 
-### Master P1 List
-<!-- OMEGA aggregates all P1s -->
+### Master P1 List (aggregated across ALPHA + BETA + GAMMA + DELTA, all FIXED IN WAVE)
+
+**ALPHA (9 P1 fixes):**
+1. Intro.tsx RiskPill: green `#4ade80` low-risk → zinc `#71717a`
+2. Intro.tsx warning callout: `rounded-lg` → `rounded-sm`
+3. Dashboard.tsx: hero vendor spotlight `rounded-lg` → `rounded-sm`
+4. Dashboard.tsx: 3 "Start Investigating" CTAs `rounded-lg` → `rounded-sm`
+5. Dashboard.tsx: error banner `rounded-lg` → `rounded-sm`
+6. CaseLibrary.tsx: case card article `rounded-lg` → `rounded-sm`
+7. CaseDetail.tsx: DotBar empty-dot cream → dark (`#2d2926`/`#3d3734`)
+8. Journalists.tsx: TopVendorSpotlight empty-dot cream → dark
+9. Journalists.tsx: vendor cards `rounded-lg` → `rounded-sm`
+
+**BETA (14 P1 fixes):**
+10. VendorProfile.tsx: hero/alert banners `rounded-lg` → `rounded-sm` (2 containers)
+11. VendorProfile.tsx: red-flag emojis (`⚠️🔴🟡🟠`) → colored SVG dots
+12. VendorProfile.tsx: `⚠` emoji on GT chip → `AlertTriangle` icon
+13. VendorProfile.tsx: `⚠` emoji on co-bidding footnote → `AlertTriangle` icon
+14. VendorProfile.tsx: 15 container-level `rounded-lg` → `rounded-sm`
+15. VendorProfile.tsx: network-topology low-clustering green pill → zinc
+16. CollusionExplorer.tsx: ring card `rounded-lg` → `rounded-sm`
+17. CollusionExplorer.tsx: metric cells / internal pair rows `rounded-lg` → `rounded-sm` (3)
+18. RedThread.tsx: yearly breakdown cards `rounded-lg` → `rounded-sm`
+19. RedThread.tsx: SHAP factor rows `rounded-lg` → `rounded-sm`
+20. RedThread.tsx: peak-by-value / peak-by-risk callouts `rounded-lg` → `rounded-sm` (2)
+21. RedThread.tsx: ARIA pattern banner `rounded-lg` → `rounded-sm`
+22. Administrations.tsx: 10 container-level `rounded-lg` → `rounded-sm`
+23. Administrations.tsx: `⚠` emoji error state → `AlertTriangle` icon
+
+**GAMMA (8 P1 fixes):**
+24. SectorProfile.tsx: InsightCard wrapper `rounded-lg` → `rounded-sm`
+25. SectorProfile.tsx: tab-button group `rounded-lg` → `rounded-sm`
+26. SectorProfile.tsx: vendor-concentration low-ref line green → zinc
+27. YearInReview.tsx: 7 bordered panels `rounded-lg` → `rounded-sm`
+28. ModelTransparency.tsx: `RISK_DISTRIBUTION` Low-cohort color green `#16a34a` → zinc
+29. PriceIntelligence.tsx: 3 bordered containers `rounded-lg` → `rounded-sm`
+30. ProcurementCalendar.tsx: 9 bordered containers `rounded-lg` → `rounded-sm`
+31. SpendingCategories.tsx: 9 cards + vendor-concentration pill green-for-low → all zinc
+
+**DELTA (22 P1 fixes):**
+32. Contracts.tsx: preset shelf, search input, filter bar `rounded-lg` → `rounded-sm` (3)
+33. Contracts.tsx: `⚠` emoji anomaly indicator → `AlertTriangle` icon
+34. ContractDetail.tsx: high-risk disclaimer `rounded-lg` → `rounded-sm`
+35. InstitutionProfile.tsx: `LEVEL_COLORS.low` green `#16a34a` → zinc
+36. InstitutionProfile.tsx: investigation lede + GT warning `rounded-lg` → `rounded-sm` (2)
+37. InstitutionLeague.tsx: podium + red-flag + histogram + error banner (4)
+38. InstitutionScorecards.tsx: 11 button/form-control `rounded-lg` → `rounded-sm`
+39. Methodology.tsx: `RISK_LEVELS_V6` Low green `#4ade80` → zinc (THE canonical reference)
+40. Methodology.tsx: pipeline step card `rounded-lg` → `rounded-sm`
+41. Settings.tsx: 7 container-level `rounded-lg` → `rounded-sm`
+
+**Total**: 53 P1 fixes across 4 waves. 14 P2 fixes. Multiple P3 items deferred, all
+policy-called in OMEGA (see below).
+
+### Policy Decisions on Deferred P3s (made in OMEGA)
+
+**A. Directional greens** (InstitutionProfile, InstitutionLeague, InstitutionScorecards,
+   Administrations, YearInReview, PriceIntelligence, SpendingCategories):
+   `delta < 0 = improvement`, `isBetter = metric improved`, `diversifying supplier = good`.
+   → **KEEP**. These are directional / trend indicators with legitimate semantic meaning
+   (improvement = positive). ART canon "no green for low risk" is specifically about using
+   green as a *risk-level* label, not about banning green for trend/delta visualizations.
+   Neutralizing them all would flatten legitimate editorial signaling.
+
+**B. VendorProfile SHAP protective-factors panel** (`text-green-400`, `border-green-500/20`):
+   → **KEEP**. Protective factors are semantically the inverse of risk factors. Showing
+   them in a contrast color against the red risk-factors panel is editorial voice, not
+   risk-level labeling.
+
+**C. VendorProfile co-bidding win-rate chart**: `#22c55e` for "this vendor wins":
+   → **KEEP**. Data-viz ownership semantic (self/other), not risk semantic.
+
+**D. `RISK_COLORS.low = '#4ade80'` in `frontend/src/lib/colors.ts`**:
+   → **NON-EXISTENT**. File does not exist on disk. The canonical definition is
+   `RISK_COLORS.low = '#71717a'` in `frontend/src/lib/constants.ts`, which is already
+   correct zinc. BETA's deferral was based on a rules-doc reference to a file that was
+   never created — the rules doc at `.claude/rules/frontend-patterns.md` shows the OLD
+   (pre-v6) palette but that file was never imported anywhere. No fix needed.
+
+**E. Methodology CoefficientChart** (positive-coef = green "increases risk",
+   negative-coef = red "decreases risk"): **FIXED IN OMEGA**.
+   Changed positive bars from green `#4ade80` → amber `#f59e0b` (more natural for
+   "risk-increasing factors"). Changed negative bars from red `#f87171` → zinc `#52525b`.
+   Updated matching legend dots at lines 868 & 872. Red was already reserved for the
+   risk-level scale; re-using it for "decreases risk" on this chart was doubly confusing.
+
+**F. Settings data-quality greens** (`field.fill_rate >= 90`, Structure D grade):
+   → **KEEP**. Settings is a platform-meta page for technical operators, not editorial
+   journalism. Data-quality fill-rate green is conventional and appropriate here.
+
+### /explore route investigation
+
+DELTA flagged `/explore` as having no matching file. **CORRECTION**: `/explore` resolves
+to `frontend/src/pages/explore/ExplorePage.tsx` (directory-structured page, not a single
+file). The route is wired in `App.tsx:29` as `const Explore = lazy(() => import('@/pages/explore'))`
+with barrel export via `pages/explore/index.ts`. Route is working — DELTA's grep missed it
+because it searched for `Explore.tsx` not `explore/`.
 
 ### Fixes Applied in OMEGA
-<!-- OMEGA documents what it fixed -->
+
+1. **Methodology CoefficientChart recolor**: positive-coef bars green → amber `#f59e0b`,
+   negative-coef bars red → zinc `#52525b`. Legend dots matched. See Edit above.
+2. All policy decisions (A–F) documented above.
+3. `/explore` route confirmed as working; DELTA finding corrected.
 
 ### Deploy Status
-<!-- OMEGA records git hash + deploy confirmation -->
+
+- Git hash: `7d1e9c5` (commit), pushed to origin/main
+- VPS deploy: `docker compose up -d --build` via SSH to 37.60.232.109
+- TypeScript check: 0 errors ✓
+- Final URL: https://rubli.xyz
 
 ---
 

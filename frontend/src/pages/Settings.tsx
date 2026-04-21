@@ -216,7 +216,7 @@ function GeneralTab() {
             onClick={() => refetch()}
             disabled={isLoading}
             aria-label={t('general.dataInfo.refreshLabel')}
-            className="p-2 rounded-lg text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
+            className="p-2 rounded-sm text-text-muted hover:text-accent hover:bg-accent/10 transition-colors"
           >
             <RefreshCw className={`h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
           </button>
@@ -404,7 +404,7 @@ function ExportTab() {
         {toasts.map(toast => (
           <div
             key={toast.id}
-            className={`flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-3 rounded-sm shadow-lg text-sm font-medium transition-all ${
               toast.type === 'success'
                 ? 'bg-risk-low/90 text-white'
                 : toast.type === 'warning'
@@ -583,8 +583,8 @@ function DataQualityTab() {
               { structure: 'C', years: '2018-2022', rfc: '30.3%', quality: 'Good', color: '#60a5fa', desc: 'Mixed case text, 78.4% direct award flags, better field completeness' },
               { structure: 'D', years: '2023-2025', rfc: '47.4%', quality: 'Best', color: '#4ade80', desc: '100% Partida codes, highest RFC coverage, most reliable risk scoring' },
             ].map(s => (
-              <div key={s.structure} className="flex items-start gap-3 p-3 rounded-lg" style={{ backgroundColor: `${s.color}08` }}>
-                <div className="flex h-8 w-8 items-center justify-center rounded-lg flex-shrink-0 font-bold text-sm" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
+              <div key={s.structure} className="flex items-start gap-3 p-3 rounded-sm" style={{ backgroundColor: `${s.color}08` }}>
+                <div className="flex h-8 w-8 items-center justify-center rounded-sm flex-shrink-0 font-bold text-sm" style={{ backgroundColor: `${s.color}20`, color: s.color }}>
                   {s.structure}
                 </div>
                 <div className="flex-1">
@@ -985,7 +985,7 @@ function DQKPICard({
             <p className="text-2xl font-bold mt-1">{value}</p>
             <p className="text-xs text-text-muted">{subtitle}</p>
           </div>
-          <div className={`flex h-10 w-10 items-center justify-center rounded-lg ${colors.bg}`}>
+          <div className={`flex h-10 w-10 items-center justify-center rounded-sm ${colors.bg}`}>
             <Icon className={`h-5 w-5 ${colors.text}`} />
           </div>
         </div>
@@ -1181,7 +1181,7 @@ function DQKeyIssuesList({ issues }: { issues: KeyIssue[] }) {
       {issues.map((issue, index) => (
         <div
           key={`${issue.field}-${issue.severity}-${index}`}
-          className="flex items-start gap-3 p-3 rounded-lg bg-background-elevated"
+          className="flex items-start gap-3 p-3 rounded-sm bg-background-elevated"
         >
           <div
             className="flex h-6 w-6 items-center justify-center rounded-full flex-shrink-0 mt-0.5"
@@ -1247,7 +1247,7 @@ function DQGradeExplainer() {
       {grades.map((g) => (
         <div
           key={g.grade}
-          className="p-3 rounded-lg"
+          className="p-3 rounded-sm"
           style={{ backgroundColor: `${GRADE_COLORS[g.grade]}10` }}
         >
           <div className="flex items-center gap-2 mb-1">
