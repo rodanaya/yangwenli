@@ -100,8 +100,8 @@ export function SingleBidWall({ count, valueBn }: SingleBidWallProps) {
                 <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={5} r={DR}
-                      fill={i < filled ? '#ef4444' : '#f3f1ec'}
-                      stroke={i < filled ? undefined : '#e2ddd6'}
+                      fill={i < filled ? '#ef4444' : '#2d2926'}
+                      stroke={i < filled ? undefined : '#3d3734'}
                       strokeWidth={i < filled ? 0 : 0.5}
                       fillOpacity={i < filled ? 0.85 : 1}
                     />

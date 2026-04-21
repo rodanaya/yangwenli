@@ -634,7 +634,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
             cy={center}
             r={radius * r}
             fill="none"
-            stroke="#e2ddd6"
+            stroke="#3d3734"
             strokeWidth="0.5"
           />
         ))}
@@ -650,7 +650,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
               y1={center}
               x2={x}
               y2={y}
-              stroke="#e2ddd6"
+              stroke="#3d3734"
               strokeWidth="0.5"
             />
           )
@@ -718,8 +718,8 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
                   <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : '#f3f1ec'}
-                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        fill={k < filled ? barColor : '#2d2926'}
+                        stroke={k < filled ? undefined : '#3d3734'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />

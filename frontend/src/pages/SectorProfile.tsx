@@ -267,8 +267,8 @@ function InstitutionList({
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#f3f1ec'}
-                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        fill={k < filled ? color : '#2d2926'}
+                        stroke={k < filled ? undefined : '#3d3734'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
@@ -363,8 +363,8 @@ function VendorTable({
                           <svg viewBox={`0 0 ${N * DG} 5`} className="w-32 mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                             {Array.from({ length: N }).map((_, k) => (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={k < filled ? color : '#f3f1ec'}
-                                stroke={k < filled ? undefined : '#e2ddd6'}
+                                fill={k < filled ? color : '#2d2926'}
+                                stroke={k < filled ? undefined : '#3d3734'}
                                 strokeWidth={k < filled ? 0 : 0.5}
                                 fillOpacity={k < filled ? 0.85 : 1}
                               />
@@ -462,8 +462,8 @@ function RiskDonut({
                 <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? color : '#f3f1ec'}
-                      stroke={k < filled ? undefined : '#e2ddd6'}
+                      fill={k < filled ? color : '#2d2926'}
+                      stroke={k < filled ? undefined : '#3d3734'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
@@ -532,8 +532,8 @@ function FactorRankList({
                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? color : '#f3f1ec'}
-                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        fill={k < filled ? color : '#2d2926'}
+                        stroke={k < filled ? undefined : '#3d3734'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />

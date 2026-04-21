@@ -804,8 +804,8 @@ export function InstitutionProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? r.color : '#f3f1ec'}
-                                      stroke={k < filled ? undefined : '#e2ddd6'}
+                                      fill={k < filled ? r.color : '#2d2926'}
+                                      stroke={k < filled ? undefined : '#3d3734'}
                                       strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.85 : 1}
                                     />
@@ -1063,8 +1063,8 @@ export function InstitutionProfile() {
                                   const inPeerRange = k >= p25Idx && k < p75Idx
                                   return (
                                     <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                                      fill={inPeerRange ? '#a1a1aa' : '#f3f1ec'}
-                                      stroke={inPeerRange ? undefined : '#e2ddd6'}
+                                      fill={inPeerRange ? '#a1a1aa' : '#2d2926'}
+                                      stroke={inPeerRange ? undefined : '#3d3734'}
                                       strokeWidth={inPeerRange ? 0 : 0.5}
                                       fillOpacity={inPeerRange ? 0.25 : 0.6}
                                     />
@@ -1675,8 +1675,8 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                fill={k < filled ? barColor : '#f3f1ec'}
-                stroke={k < filled ? undefined : '#e2ddd6'}
+                fill={k < filled ? barColor : '#2d2926'}
+                stroke={k < filled ? undefined : '#3d3734'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
@@ -1852,8 +1852,8 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? '#22d3ee' : '#f3f1ec'}
-                        stroke={k < filled ? undefined : '#e2ddd6'}
+                        fill={k < filled ? '#22d3ee' : '#2d2926'}
+                        stroke={k < filled ? undefined : '#3d3734'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.7 : 1}
                       />
@@ -2003,8 +2003,8 @@ function LongestTenuredGantt({ vendors }: {
                         const inSpan = k >= startIdx && k < endIdx
                         return (
                           <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                            fill={inSpan ? barColor : '#f3f1ec'}
-                            stroke={inSpan ? undefined : '#e2ddd6'}
+                            fill={inSpan ? barColor : '#2d2926'}
+                            stroke={inSpan ? undefined : '#3d3734'}
                             strokeWidth={inSpan ? 0 : 0.5}
                             fillOpacity={inSpan ? 0.85 : 1}
                           />

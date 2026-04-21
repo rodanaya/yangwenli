@@ -119,7 +119,7 @@ export function StoryTrianguloFarmaceutico() {
         <motion.path
           d={`M ${INSTITUTIONS[0].x} ${INSTITUTIONS[0].y} L ${INSTITUTIONS[1].x} ${INSTITUTIONS[1].y} L ${INSTITUTIONS[2].x} ${INSTITUTIONS[2].y} Z`}
           fill="none"
-          stroke="#e2ddd6"
+          stroke="#3d3734"
           strokeWidth={1}
           strokeDasharray="4 6"
           initial={{ pathLength: 0 }}
@@ -284,8 +284,8 @@ export function StoryTrianguloFarmaceutico() {
                         cx={i * 8 + 4}
                         cy={7}
                         r={3}
-                        fill={isFilled ? v.color : '#f3f1ec'}
-                        stroke={isFilled ? 'none' : '#e2ddd6'}
+                        fill={isFilled ? v.color : '#2d2926'}
+                        stroke={isFilled ? 'none' : '#3d3734'}
                         strokeWidth={isFilled ? 0 : 0.5}
                         initial={{ opacity: 0 }}
                         animate={{ opacity: 1 }}

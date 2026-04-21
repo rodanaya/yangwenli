@@ -61,8 +61,8 @@ function VendorBar({ vendor, maxValue }: { vendor: TopPeriodEntityItem; maxValue
             <svg viewBox={`0 0 ${N * DG} 8`} className="flex-1" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
               {Array.from({ length: N }).map((_, i) => (
                 <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                  fill={i < filled ? barColor : '#f3f1ec'}
-                  stroke={i < filled ? undefined : '#e2ddd6'}
+                  fill={i < filled ? barColor : '#2d2926'}
+                  stroke={i < filled ? undefined : '#3d3734'}
                   strokeWidth={i < filled ? 0 : 0.5}
                   fillOpacity={i < filled ? 0.85 : 1}
                 />

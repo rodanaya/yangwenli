@@ -178,9 +178,9 @@ function SexenioDotColumns({
                     cx={cx}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#f3f1ec'}
+                    fill={isFilled ? color : '#2d2926'}
                     fillOpacity={isFilled ? opacity : 1}
-                    stroke={isFilled ? 'none' : '#e2ddd6'}
+                    stroke={isFilled ? 'none' : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -274,9 +274,9 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
                     cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#f3f1ec'}
+                    fill={isFilled ? color : '#2d2926'}
                     fillOpacity={isFilled ? 0.7 : 1}
-                    stroke={isFilled ? 'none' : '#e2ddd6'}
+                    stroke={isFilled ? 'none' : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -775,8 +775,8 @@ export default function CategoryProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? vendorRiskColor : '#f3f1ec'}
-                                      stroke={k < filled ? undefined : '#e2ddd6'}
+                                      fill={k < filled ? vendorRiskColor : '#2d2926'}
+                                      stroke={k < filled ? undefined : '#3d3734'}
                                       strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
@@ -887,8 +887,8 @@ export default function CategoryProfile() {
                               <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                                    fill={k < filled ? color : '#f3f1ec'}
-                                    stroke={k < filled ? undefined : '#e2ddd6'}
+                                    fill={k < filled ? color : '#2d2926'}
+                                    stroke={k < filled ? undefined : '#3d3734'}
                                     strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.7 : 1}
                                   />

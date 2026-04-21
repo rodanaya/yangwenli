@@ -422,8 +422,8 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                     <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                          fill={k < filled ? color : '#f3f1ec'}
-                          stroke={k < filled ? undefined : '#e2ddd6'}
+                          fill={k < filled ? color : '#2d2926'}
+                          stroke={k < filled ? undefined : '#3d3734'}
                           strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.45 : 0.3}
                         />
@@ -755,7 +755,7 @@ function RiskHistoryDotMatrix({
               x2={chartW - 4}
               y1={y}
               y2={y}
-              stroke="#e2ddd6"
+              stroke="#3d3734"
               strokeDasharray="3 3"
               strokeWidth={0.5}
             />
@@ -789,8 +789,8 @@ function RiskHistoryDotMatrix({
                   cx={xCenter}
                   cy={dotY}
                   r={RH_DOT_R}
-                  fill={isFilled ? color : '#f3f1ec'}
-                  stroke={isFilled ? 'none' : '#e2ddd6'}
+                  fill={isFilled ? color : '#2d2926'}
+                  stroke={isFilled ? 'none' : '#3d3734'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}

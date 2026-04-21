@@ -297,8 +297,8 @@ function SectorDistributionFull({
                         cx={i * 7 + 3}
                         cy={10}
                         r={2.5}
-                        fill={isFilled ? s.color : '#f3f1ec'}
-                        stroke={isFilled ? 'none' : '#e2ddd6'}
+                        fill={isFilled ? s.color : '#2d2926'}
+                        stroke={isFilled ? 'none' : '#3d3734'}
                         strokeWidth={0.5}
                         fillOpacity={isFilled ? 0.85 : 1}
                         initial={{ opacity: 0 }}
@@ -388,7 +388,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
           )
           const isPos = row.growthPct >= 0
           const color = isPos ? '#4ade80' : '#f87171'
-          const emptyDot = '#f3f1ec'
+          const emptyDot = '#2d2926'
           const rowCenterY = cy + ROW_H / 2
 
           return (
@@ -418,7 +418,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                     cy={rowCenterY}
                     r={DOT_R}
                     fill={isFilled ? color : emptyDot}
-                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    stroke={isFilled ? undefined : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                   />
@@ -436,7 +436,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
                     cy={rowCenterY}
                     r={DOT_R}
                     fill={isFilled ? color : emptyDot}
-                    stroke={isFilled ? undefined : '#e2ddd6'}
+                    stroke={isFilled ? undefined : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                   />
@@ -555,8 +555,8 @@ function RiskEvolution({
                     cx={i * DG + DR}
                     cy={5}
                     r={DR}
-                    fill={i < filled ? color : '#f3f1ec'}
-                    stroke={i < filled ? undefined : '#e2ddd6'}
+                    fill={i < filled ? color : '#2d2926'}
+                    stroke={i < filled ? undefined : '#3d3734'}
                     strokeWidth={i < filled ? 0 : 0.5}
                     fillOpacity={i < filled ? 0.85 : 1}
                   />

@@ -148,7 +148,7 @@ export function StorySixSigmaHacienda() {
             </text>
 
             {/* Divider */}
-            <line x1={140} y1={35} x2={140} y2={175} stroke="#e2ddd6" strokeWidth={1} strokeDasharray="3 3" />
+            <line x1={140} y1={35} x2={140} y2={175} stroke="#3d3734" strokeWidth={1} strokeDasharray="3 3" />
 
             {/* Callout */}
             <text x={140} y={230} textAnchor="middle" fill="#fbbf24" fontSize={10} fontFamily="var(--font-family-mono)" fontWeight={600}>

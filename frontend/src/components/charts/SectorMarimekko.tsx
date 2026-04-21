@@ -48,8 +48,8 @@ const DOT_LOW      = '#3f3f46'
 const DOT_MEDIUM   = '#a16207'
 const DOT_HIGH     = '#f59e0b'
 const DOT_CRITICAL = '#ef4444'
-const DOT_EMPTY    = '#f3f1ec'
-const DOT_EMPTY_STROKE = '#e2ddd6'
+const DOT_EMPTY    = '#2d2926'
+const DOT_EMPTY_STROKE = '#3d3734'
 
 interface TooltipData {
   code: string

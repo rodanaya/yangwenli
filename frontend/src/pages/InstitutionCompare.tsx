@@ -559,8 +559,8 @@ function TopVendorsComparison({
                       <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                            fill={k < filled ? accentColor : '#f3f1ec'}
-                            stroke={k < filled ? undefined : '#e2ddd6'}
+                            fill={k < filled ? accentColor : '#2d2926'}
+                            stroke={k < filled ? undefined : '#3d3734'}
                             strokeWidth={k < filled ? 0 : 0.5}
                             fillOpacity={k < filled ? 0.85 : 1}
                           />
@@ -646,9 +646,9 @@ function PairedDotStrips({
               cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
               cy={cy}
               r={DOT_R}
-              fill={isFilled ? color : '#f3f1ec'}
+              fill={isFilled ? color : '#2d2926'}
               fillOpacity={isFilled ? 0.85 : 1}
-              stroke={isFilled ? 'none' : '#e2ddd6'}
+              stroke={isFilled ? 'none' : '#3d3734'}
               strokeWidth={isFilled ? 0 : 1}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -797,7 +797,7 @@ function ComparisonRadar({
       <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
-            <PolarGrid stroke="#e2ddd6" />
+            <PolarGrid stroke="#3d3734" />
             <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
             <RechartsTooltip
               content={({ active, payload }) => {

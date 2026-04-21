@@ -379,7 +379,7 @@ function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
 function DotBar({
   value,
   color,
-  emptyColor = '#f3f1ec',
+  emptyColor = '#2d2926',
   dots = 20,
   size = 7,
   gap = 3,
@@ -406,7 +406,7 @@ function DotBar({
             cy={size / 2}
             r={size / 2}
             fill={i < filled ? color : emptyColor}
-            stroke={i < filled ? undefined : '#e2ddd6'}
+            stroke={i < filled ? undefined : '#3d3734'}
             strokeWidth={i < filled ? 0 : 0.5}
           />
         ))}
@@ -502,8 +502,8 @@ function ComplementaryTypologyCard({
                     cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
                     cy={DOT_SIZE / 2}
                     r={DOT_SIZE / 2}
-                    fill={i < filled ? accent : '#f3f1ec'}
-                    stroke={i < filled ? undefined : '#e2ddd6'}
+                    fill={i < filled ? accent : '#2d2926'}
+                    stroke={i < filled ? undefined : '#3d3734'}
                     strokeWidth={i < filled ? 0 : 0.5}
                   />
                 ))}
@@ -563,8 +563,8 @@ function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildG
             cx={i * DOT_GAP + DOT_R}
             cy={DOT_R + 4}
             r={DOT_R}
-            fill={color || '#f3f1ec'}
-            stroke={color ? 'none' : '#e2ddd6'}
+            fill={color || '#2d2926'}
+            stroke={color ? 'none' : '#3d3734'}
             strokeWidth={0.5}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -734,7 +734,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
               width: 6,
               height: 6,
               borderRadius: '50%',
-              backgroundColor: i < filled ? color : '#f3f1ec',
+              backgroundColor: i < filled ? color : '#2d2926',
               border: i < filled ? 'none' : '1px solid #e2ddd6',
               boxSizing: 'border-box',
             }}
@@ -836,7 +836,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         <div className="flex items-center gap-2">
           <span
             className="inline-block"
-            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#f3f1ec', border: '1px solid #e2ddd6', boxSizing: 'border-box' }}
+            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2d2926', border: '1px solid #e2ddd6', boxSizing: 'border-box' }}
           />
           <span>0</span>
         </div>

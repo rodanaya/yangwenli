@@ -86,8 +86,8 @@ export function RiskPyramid() {
                     cx={LEFT_DOT0_CX + i * DOT_SPACING}
                     cy={rowY}
                     r={DOT_R}
-                    fill={filled ? d.color : '#f3f1ec'}
-                    stroke={filled ? undefined : '#e2ddd6'}
+                    fill={filled ? d.color : '#2d2926'}
+                    stroke={filled ? undefined : '#3d3734'}
                     strokeWidth={filled ? 0 : 0.5}
                     fillOpacity={filled ? 0.88 : 0.32}
                   />
@@ -124,8 +124,8 @@ export function RiskPyramid() {
                     cx={RIGHT_DOT0_CX + i * DOT_SPACING}
                     cy={rowY}
                     r={DOT_R}
-                    fill={filled ? d.color : '#f3f1ec'}
-                    stroke={filled ? undefined : '#e2ddd6'}
+                    fill={filled ? d.color : '#2d2926'}
+                    stroke={filled ? undefined : '#3d3734'}
                     strokeWidth={filled ? 0 : 0.5}
                     fillOpacity={filled ? 0.88 : 0.32}
                   />

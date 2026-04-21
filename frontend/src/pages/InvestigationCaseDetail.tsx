@@ -62,8 +62,8 @@ const INK = '#e7e5e1'           // primary text (warm bone)
 const INK_MUTED = '#a8a29e'     // secondary
 const INK_DIM = '#78716c'       // tertiary
 const INK_FAINT = '#57534e'     // overlines / captions
-const EMPTY_DOT = '#f3f1ec'     // dotbar empty (editorial cream)
-const EMPTY_STROKE = '#e2ddd6'  // dotbar empty stroke
+const EMPTY_DOT = '#2d2926'     // dotbar empty (editorial cream)
+const EMPTY_STROKE = '#3d3734'  // dotbar empty stroke
 
 // ============================================================================
 // INLINE DotBar — NYT-style categorical magnitude indicator

@@ -166,9 +166,9 @@ export function AmloEraComparisonChart() {
                       cx={LABEL_W + i * DOT_GAP + DOT_R}
                       cy={y0 + STRIP_H / 2}
                       r={DOT_R}
-                      fill={isFilled ? color : '#f3f1ec'}
+                      fill={isFilled ? color : '#2d2926'}
                       fillOpacity={isFilled ? opacity : 1}
-                      stroke={isFilled ? 'none' : '#e2ddd6'}
+                      stroke={isFilled ? 'none' : '#3d3734'}
                       strokeWidth={isFilled ? 0 : 0.5}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

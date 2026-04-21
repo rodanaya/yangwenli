@@ -141,7 +141,7 @@ export function SexenioComparisonChart() {
                   x2={LABEL_W + COL_W + VALUE_W - 2}
                   y1={blockY + 4}
                   y2={blockY + 4}
-                  stroke="#e2ddd6"
+                  stroke="#3d3734"
                   strokeWidth={0.5}
                 />
 
@@ -174,9 +174,9 @@ export function SexenioComparisonChart() {
                             cx={LABEL_W + i * DOT_GAP + DOT_R}
                             cy={yStrip + STRIP_H / 2}
                             r={DOT_R}
-                            fill={isFilled ? sx.color : '#f3f1ec'}
+                            fill={isFilled ? sx.color : '#2d2926'}
                             fillOpacity={isFilled ? sx.opacity : 1}
-                            stroke={isFilled ? 'none' : '#e2ddd6'}
+                            stroke={isFilled ? 'none' : '#3d3734'}
                             strokeWidth={isFilled ? 0 : 0.5}
                             initial={{ opacity: 0 }}
                             animate={{ opacity: 1 }}

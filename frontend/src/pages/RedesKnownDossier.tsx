@@ -274,7 +274,7 @@ const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
 function DotBar({
   value,
   color,
-  emptyColor = '#f3f1ec',
+  emptyColor = '#2d2926',
   dots = 20,
   size = 6,
   gap = 2,
@@ -304,7 +304,7 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : emptyColor}
-          stroke={i < filled ? undefined : '#e2ddd6'}
+          stroke={i < filled ? undefined : '#3d3734'}
           strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}

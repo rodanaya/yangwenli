@@ -1109,8 +1109,8 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={yCenter}
                     r={DOT_R}
-                    fill={isFilled ? item.color : '#f3f1ec'}
-                    stroke={isFilled ? 'none' : '#e2ddd6'}
+                    fill={isFilled ? item.color : '#2d2926'}
+                    stroke={isFilled ? 'none' : '#3d3734'}
                     strokeWidth={0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                     initial={{ opacity: 0 }}
@@ -1158,8 +1158,8 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? color : '#f3f1ec'}
-                      stroke={k < filled ? undefined : '#e2ddd6'}
+                      fill={k < filled ? color : '#2d2926'}
+                      stroke={k < filled ? undefined : '#3d3734'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />

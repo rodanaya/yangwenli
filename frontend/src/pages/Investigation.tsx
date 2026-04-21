@@ -361,8 +361,8 @@ function CaseCard({
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} className="w-full h-2.5" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={5} r={DOT_R}
-                    fill={i < filled ? riskColor : '#f3f1ec'}
-                    stroke={i < filled ? 'none' : '#e2ddd6'}
+                    fill={i < filled ? riskColor : '#2d2926'}
+                    stroke={i < filled ? 'none' : '#3d3734'}
                     strokeWidth={0.5}
                   />
                 ))}
@@ -875,8 +875,8 @@ function CaseTableRow({
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-16 h-2" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (
                   <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                    fill={i < filled ? riskColor : '#f3f1ec'}
-                    stroke={i < filled ? 'none' : '#e2ddd6'}
+                    fill={i < filled ? riskColor : '#2d2926'}
+                    stroke={i < filled ? 'none' : '#3d3734'}
                     strokeWidth={0.5}
                   />
                 ))}

@@ -255,8 +255,8 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
                 <svg viewBox={`0 0 ${N * DG} 4`} className="flex-1" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                      fill={k < filled ? color : '#f3f1ec'}
-                      stroke={k < filled ? undefined : '#e2ddd6'}
+                      fill={k < filled ? color : '#2d2926'}
+                      stroke={k < filled ? undefined : '#3d3734'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />

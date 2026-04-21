@@ -144,8 +144,8 @@ export function StoryCartelCorazon() {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y0 + STRIP_H / 2}
                     r={DOT_R}
-                    fill={isFilled ? '#52525b' : '#f3f1ec'}
-                    stroke={isFilled ? 'none' : '#e2ddd6'}
+                    fill={isFilled ? '#52525b' : '#2d2926'}
+                    stroke={isFilled ? 'none' : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -174,8 +174,8 @@ export function StoryCartelCorazon() {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={y0 + STRIP_H + 6 + STRIP_H / 2}
                     r={DOT_R}
-                    fill={isFilled ? (isOverpay ? '#dc2626' : '#71717a') : '#f3f1ec'}
-                    stroke={isFilled ? 'none' : '#e2ddd6'}
+                    fill={isFilled ? (isOverpay ? '#dc2626' : '#71717a') : '#2d2926'}
+                    stroke={isFilled ? 'none' : '#3d3734'}
                     strokeWidth={isFilled ? 0 : 0.5}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}

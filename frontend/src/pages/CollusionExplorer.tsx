@@ -450,7 +450,7 @@ function DotBar({
   value,
   max = 1,
   color = '#dc2626',
-  emptyColor = '#f3f1ec',
+  emptyColor = '#2d2926',
   dots = 20,
   size = 6,
   gap = 2,
@@ -475,7 +475,7 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : emptyColor}
-          stroke={i < filled ? undefined : '#e2ddd6'}
+          stroke={i < filled ? undefined : '#3d3734'}
           strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
@@ -836,7 +836,7 @@ function RingCanvasSkeleton() {
       {placeholders.map((pos, i) => (
         <g key={i} transform={`translate(${pos.cx}, ${pos.cy})`}>
           <circle r={38 + i % 3 * 8} fill="#1c1c1f" />
-          <circle r={38 + i % 3 * 8} fill="none" stroke="#e2ddd6" strokeWidth={1} />
+          <circle r={38 + i % 3 * 8} fill="none" stroke="#3d3734" strokeWidth={1} />
         </g>
       ))}
     </svg>

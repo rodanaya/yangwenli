@@ -108,9 +108,9 @@ export function StoryCasaContratos() {
           aria-label="Vendor capture pattern around SCT/SHCP institutions"
         >
           {/* Atmospheric rings */}
-          <circle cx={CX} cy={CY} r={ORBIT_R + 40} fill="none" stroke="#e2ddd6" strokeWidth={0.5} />
-          <circle cx={CX} cy={CY} r={ORBIT_R} fill="none" stroke="#e2ddd6" strokeWidth={0.75} strokeDasharray="2 4" />
-          <circle cx={CX} cy={CY} r={ORBIT_R - 40} fill="none" stroke="#e2ddd6" strokeWidth={0.5} />
+          <circle cx={CX} cy={CY} r={ORBIT_R + 40} fill="none" stroke="#3d3734" strokeWidth={0.5} />
+          <circle cx={CX} cy={CY} r={ORBIT_R} fill="none" stroke="#3d3734" strokeWidth={0.75} strokeDasharray="2 4" />
+          <circle cx={CX} cy={CY} r={ORBIT_R - 40} fill="none" stroke="#3d3734" strokeWidth={0.5} />
 
           {/* Lines to each vendor */}
           {VENDORS.map((v, i) => {

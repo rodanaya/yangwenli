@@ -171,8 +171,8 @@ export function RacingBarChart() {
                         cx={i * DG + DR}
                         cy={5}
                         r={DR}
-                        fill={i < filled ? entry.color : '#f3f1ec'}
-                        stroke={i < filled ? undefined : '#e2ddd6'}
+                        fill={i < filled ? entry.color : '#2d2926'}
+                        stroke={i < filled ? undefined : '#3d3734'}
                         strokeWidth={i < filled ? 0 : 0.5}
                         fillOpacity={i < filled ? 0.85 : 1}
                       />

@@ -429,8 +429,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = !isPositive && i < filled
                           return (
                             <circle key={`l-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#f3f1ec'}
-                              stroke={isFilled ? undefined : '#e2ddd6'}
+                              fill={isFilled ? color : '#2d2926'}
+                              stroke={isFilled ? undefined : '#3d3734'}
                               strokeWidth={isFilled ? 0 : 0.5}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
@@ -442,8 +442,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = isPositive && i < filled
                           return (
                             <circle key={`r-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#f3f1ec'}
-                              stroke={isFilled ? undefined : '#e2ddd6'}
+                              fill={isFilled ? color : '#2d2926'}
+                              stroke={isFilled ? undefined : '#3d3734'}
                               strokeWidth={isFilled ? 0 : 0.5}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
