@@ -33,10 +33,10 @@ const TOOLTIP_W = 108
 // ── Colors ──────────────────────────────────────────────────────────────────
 const DOT_AMBER        = '#f59e0b'   // high + critical risk
 const DOT_ZINC         = '#52525b'   // low + medium risk
-const DOT_EMPTY        = '#2d2926'   // unfilled
-const DOT_EMPTY_STROKE = '#3d3734'
+const DOT_EMPTY        = '#27272a'   // unfilled
+const DOT_EMPTY_STROKE = '#3f3f46'
 const OECD_COLOR       = '#06b6d4'
-const TEXT_MUTED       = '#52525b'
+const TEXT_MUTED       = '#71717a'
 const PULSE_COLOR      = '#f59e0b'
 const CURRENT_YEAR     = 2025
 
@@ -157,8 +157,8 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           />
           {/* Admin label — two lines: name + spend total */}
           <text
-            x={band.labelX} y={PAD_T - 14}
-            fill={band.color} fontSize={8} fontWeight="600"
+            x={band.labelX} y={PAD_T - 16}
+            fill={band.color} fontSize={11} fontWeight="600"
             fontFamily="var(--font-family-mono, monospace)"
             textAnchor="middle"
             opacity={hoveredRow ? 0.2 : 0.85}
@@ -168,7 +168,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           </text>
           <text
             x={band.labelX} y={PAD_T - 5}
-            fill={band.color} fontSize={6.5}
+            fill={band.color} fontSize={9}
             fontFamily="var(--font-family-mono, monospace)"
             textAnchor="middle"
             opacity={hoveredRow ? 0.15 : 0.6}
@@ -195,9 +195,9 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
       />
       <text
         x={PAD_L - 4} y={oecdY + 1}
-        fill={OECD_COLOR} fontSize={6}
+        fill={OECD_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)"
-        textAnchor="end" dominantBaseline="middle" opacity={0.6}
+        textAnchor="end" dominantBaseline="middle" opacity={0.7}
       >15%</text>
 
       {/* ── Dot columns ──────────────────────────────────────────────────── */}
@@ -277,7 +277,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
             key={`lbl-${row.year}`}
             x={lx} y={SVG_H - 10}
             fill={isCurrent ? PULSE_COLOR : isHov ? '#a1a1aa' : TEXT_MUTED}
-            fontSize={isCurrent ? 7 : 6}
+            fontSize={isCurrent ? 10 : 9}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={isCurrent || isHov ? 'bold' : 'normal'}
             textAnchor="middle"
@@ -292,48 +292,48 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
       {/* ── Left axis label ──────────────────────────────────────────────── */}
       <text
         x={PAD_L - 10} y={PAD_T + FIELD_H / 2}
-        fill="#3f3f46" fontSize={6}
+        fill="#71717a" fontSize={9}
         fontFamily="var(--font-family-mono, monospace)"
         textAnchor="middle"
         transform={`rotate(-90, ${PAD_L - 10}, ${PAD_T + FIELD_H / 2})`}
-        opacity={0.40}
+        opacity={0.5}
       >√ SPEND</text>
 
       {/* ── Caption bottom right ─────────────────────────────────────────── */}
       <text
-        x={SVG_W - PAD_R} y={SVG_H - 10}
-        fill="#3f3f46" fontSize={5.5}
+        x={SVG_W - PAD_R} y={SVG_H - 2}
+        fill="#52525b" fontSize={8}
         fontFamily="var(--font-family-mono, monospace)"
-        textAnchor="end" opacity={0.40}
-      >dots ≈ √spend · amber = high/critical risk · — — = OECD 15% · click to explore</text>
+        textAnchor="end" opacity={0.5}
+      >puntos ≈ √gasto · ámbar = alto/crítico · — — = OECD 15%</text>
 
       {/* ── Tooltip ──────────────────────────────────────────────────────── */}
       {hoveredRow && (
         <g style={{ pointerEvents: 'none' }}>
           <rect
             x={tooltipX - TOOLTIP_W / 2} y={PAD_T + 4}
-            width={TOOLTIP_W} height={60}
-            fill="#18181b" stroke="#3f3f46" strokeWidth={0.5} rx={2}
+            width={TOOLTIP_W} height={72}
+            fill="#18181b" stroke="#52525b" strokeWidth={0.5} rx={2}
           />
-          <text x={tooltipX} y={PAD_T + 17} textAnchor="middle"
-                fill="#f4f4f5" fontSize={9} fontFamily="monospace" fontWeight="bold">
+          <text x={tooltipX} y={PAD_T + 18} textAnchor="middle"
+                fill="#f4f4f5" fontSize={12} fontFamily="monospace" fontWeight="bold">
             {hoveredRow.year}
           </text>
-          <text x={tooltipX} y={PAD_T + 28} textAnchor="middle"
-                fill="#a1a1aa" fontSize={6.5} fontFamily="monospace">
+          <text x={tooltipX} y={PAD_T + 32} textAnchor="middle"
+                fill="#a1a1aa" fontSize={9} fontFamily="monospace">
             {fmtB(hoveredRow.value_mxn)} MXN
           </text>
-          <text x={tooltipX} y={PAD_T + 38} textAnchor="middle"
-                fill="#a1a1aa" fontSize={6.5} fontFamily="monospace">
-            {hoveredRow.contracts.toLocaleString()} contracts
+          <text x={tooltipX} y={PAD_T + 44} textAnchor="middle"
+                fill="#a1a1aa" fontSize={9} fontFamily="monospace">
+            {hoveredRow.contracts.toLocaleString()} contratos
           </text>
-          <text x={tooltipX} y={PAD_T + 48} textAnchor="middle"
-                fill="#f59e0b" fontSize={6.5} fontFamily="monospace">
-            {hoveredRow.high_risk_pct.toFixed(1)}% high/critical
+          <text x={tooltipX} y={PAD_T + 56} textAnchor="middle"
+                fill="#f59e0b" fontSize={9} fontFamily="monospace">
+            {hoveredRow.high_risk_pct.toFixed(1)}% alto/crítico
           </text>
-          <text x={tooltipX} y={PAD_T + 58} textAnchor="middle"
-                fill="#52525b" fontSize={5.5} fontFamily="monospace">
-            click to explore →
+          <text x={tooltipX} y={PAD_T + 68} textAnchor="middle"
+                fill="#71717a" fontSize={8} fontFamily="monospace">
+            clic para explorar →
           </text>
         </g>
       )}

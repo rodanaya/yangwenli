@@ -68,7 +68,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
         fontWeight="bold" dominantBaseline="middle">
         {hrRate.toFixed(1)}%
       </text>
-      <text x={0} y={50} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono, monospace)"
+      <text x={0} y={50} fill="#a1a1aa" fontSize={10} fontFamily="var(--font-family-mono, monospace)"
         dominantBaseline="middle" letterSpacing="0.08em">
         HIGH-RISK RATE · OECD 2–15%
       </text>
@@ -88,7 +88,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
               y={rowY + ROW_H / 2}
               textAnchor="end"
               dominantBaseline="middle"
-              fill={row.level === 'critical' || row.level === 'high' ? '#a8a29e' : '#52525b'}
+              fill={row.level === 'critical' || row.level === 'high' ? '#a1a1aa' : '#71717a'}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
             >
@@ -108,7 +108,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
               x={LABEL_W + BAR_W + GAP}
               y={rowY + ROW_H / 2}
               dominantBaseline="middle"
-              fill={row.level === 'critical' ? '#f87171' : row.level === 'high' ? '#fbbf24' : '#52525b'}
+              fill={row.level === 'critical' ? '#f87171' : row.level === 'high' ? '#fbbf24' : '#71717a'}
               fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight={row.level === 'critical' || row.level === 'high' ? 'bold' : 'normal'}
@@ -121,8 +121,8 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
               x={LABEL_W + BAR_W + GAP + PCT_W}
               y={rowY + ROW_H / 2}
               dominantBaseline="middle"
-              fill="#3f3f46"
-              fontSize={9}
+              fill="#71717a"
+              fontSize={10}
               fontFamily="var(--font-family-mono, monospace)"
             >
               {formatNumber(row.count)}

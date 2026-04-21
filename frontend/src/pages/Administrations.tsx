@@ -1662,27 +1662,52 @@ export default function Administrations() {
                   </tr>
                 </thead>
                 <tbody>
-                  {ADMIN_METRIC_KEYS.map((metric) => (
-                    <tr key={metric.key}>
-                      <td className="data-cell text-text-muted">{t(metric.labelKey)}</td>
-                      {adminAggs.map((a) => {
-                        const value = a[metric.key] as number
-                        return (
-                          <td
-                            key={a.name}
-                            className={cn(
-                              'data-cell text-right font-mono',
-                              a.name === selectedAdmin
-                                ? 'font-semibold text-text-primary'
-                                : 'text-text-muted'
-                            )}
-                          >
-                            {a.contracts > 0 ? metric.format(value) : '—'}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  ))}
+                  {ADMIN_METRIC_KEYS.map((metric) => {
+                    // Compute min/max for this metric across admins with data — drives the ranking bar width
+                    const activeValues = adminAggs
+                      .filter((a) => a.contracts > 0)
+                      .map((a) => a[metric.key] as number)
+                    const minVal = activeValues.length > 0 ? Math.min(...activeValues) : 0
+                    const maxVal = activeValues.length > 0 ? Math.max(...activeValues) : 0
+                    const range = maxVal - minVal
+                    return (
+                      <tr key={metric.key}>
+                        <td className="data-cell text-text-muted">{t(metric.labelKey)}</td>
+                        {adminAggs.map((a) => {
+                          const value = a[metric.key] as number
+                          const hasData = a.contracts > 0
+                          const barPct = hasData && range > 0
+                            ? ((value - minVal) / range) * 100
+                            : hasData ? 100 : 0
+                          const adminColor = ADMIN_COLORS[a.name]
+                          return (
+                            <td
+                              key={a.name}
+                              className={cn(
+                                'data-cell text-right font-mono align-top',
+                                a.name === selectedAdmin
+                                  ? 'font-semibold text-text-primary'
+                                  : 'text-text-muted'
+                              )}
+                            >
+                              <div>{hasData ? metric.format(value) : '—'}</div>
+                              {hasData && (
+                                <div
+                                  className="mt-1 h-[2px] rounded-sm ml-auto"
+                                  style={{
+                                    width: `${Math.max(4, barPct)}%`,
+                                    backgroundColor: adminColor,
+                                    opacity: a.name === selectedAdmin ? 0.85 : 0.45,
+                                  }}
+                                  aria-hidden="true"
+                                />
+                              )}
+                            </td>
+                          )
+                        })}
+                      </tr>
+                    )
+                  })}
                 </tbody>
               </table>
             </div>
@@ -3092,11 +3117,12 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
                 />
                 <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
-                {/* Administration background bands */}
-                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox', fill: '#71717a', fontSize: 10 }} />
-                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderon', fill: '#71717a', fontSize: 10 }} />
-                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN', fill: '#71717a', fontSize: 10 }} />
-                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO', fill: '#71717a', fontSize: 10 }} />
+                {/* Administration background bands — labels show name · party · year range */}
+                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox · PAN · 02–06', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderón · PAN · 06–12', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN · PRI · 12–18', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO · MORENA · 18–24', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
+                <ReferenceArea x1={2024} x2={2025} fill={ADMIN_COLORS['Sheinbaum']} fillOpacity={0.06} label={{ value: 'Sheinbaum · MORENA · 24–', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
                 {/* Direct award national average benchmark */}
                 <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
                 {/* Admin transition reference lines */}
@@ -3154,6 +3180,16 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
                   name="High Risk %"
                   stroke={RISK_COLORS.high}
                   strokeWidth={2}
+                  dot={false}
+                />
+                {/* 4th line: avg_risk score, scaled ×100 to share the 0–100% Y-axis */}
+                <Line
+                  type="monotone"
+                  dataKey={(row: YearOverYearChange) => (row.avg_risk ?? 0) * 100}
+                  name="Avg Risk Score ×100"
+                  stroke="#8b5cf6"
+                  strokeWidth={1.75}
+                  strokeDasharray="4 2"
                   dot={false}
                 />
               </ComposedChart>

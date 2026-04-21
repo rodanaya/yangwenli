@@ -48,8 +48,8 @@ const DOT_LOW      = '#3f3f46'
 const DOT_MEDIUM   = '#a16207'
 const DOT_HIGH     = '#f59e0b'
 const DOT_CRITICAL = '#ef4444'
-const DOT_EMPTY    = '#2d2926'
-const DOT_EMPTY_STROKE = '#3d3734'
+const DOT_EMPTY    = '#27272a'
+const DOT_EMPTY_STROKE = '#3f3f46'
 
 interface TooltipData {
   code: string
@@ -156,8 +156,8 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
                   x={dotStartX + (totalN - 1) * DOT_GAP + DOT_R * 2 + 4}
                   y={cy}
                   dominantBaseline="middle"
-                  fill="rgba(255,255,255,0.45)"
-                  fontSize={9}
+                  fill="rgba(255,255,255,0.55)"
+                  fontSize={10}
                   fontFamily="var(--font-family-mono, monospace)"
                 >
                   {hrPct.toFixed(0)}%
@@ -169,7 +169,7 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
                 x={barStartX + CHART_W + GAP}
                 y={cy}
                 dominantBaseline="middle"
-                fill="#78716c"
+                fill="#a1a1aa"
                 fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
               >
@@ -195,7 +195,7 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
                 const el = (
                   <g key={label}>
                     <circle cx={lx + DOT_R} cy={legendY + 7} r={DOT_R} fill={fill} fillOpacity={0.9} />
-                    <text x={lx + DOT_R * 2 + 4} y={legendY + 7} fill="#52525b" fontSize={9}
+                    <text x={lx + DOT_R * 2 + 4} y={legendY + 7} fill="#a1a1aa" fontSize={10}
                       fontFamily="var(--font-family-mono, monospace)" dominantBaseline="middle">
                       {label}
                     </text>
@@ -207,8 +207,8 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
               <text
                 x={barStartX + CHART_W + GAP}
                 y={legendY + 7}
-                fill="#3f3f46"
-                fontSize={9}
+                fill="#71717a"
+                fontSize={10}
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
               >

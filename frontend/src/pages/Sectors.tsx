@@ -155,6 +155,8 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   const highPlusCritical = (sector.high_risk_count ?? 0) + (sector.critical_risk_count ?? 0)
   const daPct = sector.direct_award_pct ?? 0
   const exceedsOECD = daPct > 25
+  const sbPct = sector.single_bid_pct ?? 0
+  const sbDotColor = sbPct > 25 ? 'bg-red-500' : sbPct >= 15 ? 'bg-amber-500' : 'bg-emerald-500'
 
   return (
     <Link
@@ -230,6 +232,20 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             <span>{(sector.avg_risk_score * 100).toFixed(1)}% {t('profile.avgRisk')}</span>
           </div>
         </div>
+
+        {/* Single-bid signal */}
+        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+          <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotColor}`} aria-hidden="true" />
+          <span className="font-mono tabular-nums">{sbPct.toFixed(1)}%</span>
+          <span className="text-zinc-500">licitación única</span>
+        </div>
+
+        {/* Market depth micro-stats */}
+        <p className="text-[10px] text-zinc-500 tabular-nums mt-auto pt-1 border-t border-white/5">
+          {formatNumber(sector.total_institutions)} instituciones
+          <span className="mx-1 text-zinc-700">·</span>
+          {formatNumber(sector.total_vendors)} proveedores
+        </p>
       </div>
 
       {/* Footer link */}
@@ -527,6 +543,60 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
   )
 }
 
+// ── RiskRankingStrip ─────────────────────────────────────────────────────────
+// Compact ranking of all 12 sectors by avg_risk_score descending, with
+// horizontal bars proportional to the maximum score.
+
+function RiskRankingStrip({
+  sectors,
+  t,
+}: {
+  sectors: SectorStatistics[]
+  t: (k: string) => string
+}) {
+  const ranked = useMemo(
+    () => [...sectors].sort((a, b) => b.avg_risk_score - a.avg_risk_score),
+    [sectors]
+  )
+  const maxScore = ranked[0]?.avg_risk_score ?? 0
+
+  if (!ranked.length) return null
+
+  return (
+    <div className="surface-card p-4 mb-8">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        RIESGO — TODOS LOS SECTORES
+      </p>
+      <div className="flex flex-col">
+        {ranked.map((s) => {
+          const color = SECTOR_COLORS[s.sector_code] ?? '#64748b'
+          const pct = maxScore > 0 ? (s.avg_risk_score / maxScore) * 100 : 0
+          return (
+            <div
+              key={s.sector_id}
+              className="flex items-center gap-3"
+              style={{ height: 24 }}
+            >
+              <span className="text-[11px] text-zinc-300 w-28 flex-shrink-0 truncate">
+                {t(s.sector_code)}
+              </span>
+              <div className="flex-1 h-1.5 bg-zinc-800/60 rounded-sm overflow-hidden">
+                <div
+                  className="h-full rounded-sm"
+                  style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.9 }}
+                />
+              </div>
+              <span className="text-[11px] font-mono tabular-nums text-zinc-400 w-12 text-right flex-shrink-0">
+                {(s.avg_risk_score * 100).toFixed(1)}%
+              </span>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function Sectors() {
@@ -708,6 +778,11 @@ export function Sectors() {
             {/* Risk Trend per Sector (top 6 by value) */}
             <SectorRiskTrendPanel sectors={sectors} t={t} />
           </div>
+        )}
+
+        {/* ── RISK RANKING STRIP — all 12 sectors by avg risk score ── */}
+        {!isLoading && sectors.length > 0 && (
+          <RiskRankingStrip sectors={sectors} t={t} />
         )}
 
         {/* Controls row */}
