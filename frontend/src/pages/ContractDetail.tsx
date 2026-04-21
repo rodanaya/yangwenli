@@ -192,8 +192,9 @@ export default function ContractDetail() {
 
         {/* Large serif headline */}
         <h1
-          className="text-3xl md:text-4xl lg:text-5xl font-bold text-zinc-100 leading-[1.08] tracking-tight mb-6"
+          className="text-2xl md:text-3xl font-bold text-zinc-100 leading-[1.15] tracking-tight mb-6 line-clamp-3"
           style={{ fontFamily: 'var(--font-family-serif)' }}
+          title={contract.title || undefined}
         >
           {toTitleCase(contract.title || 'Untitled Contract')}
         </h1>
