@@ -99,8 +99,13 @@ def list_sectors(
 
             # Fast path: use precomputed_stats for all-years case
             if year is None:
-                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
-                row = cursor.fetchone()
+                try:
+                    cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
+                    row = cursor.fetchone()
+                except sqlite3.Error as e:
+                    logger.warning(f"Precomputed stats read failed (corrupted pages?): {e}. Falling back to live query.")
+                    row = None
+
                 if row:
                     import json
                     sector_data = json.loads(row[0])
@@ -150,7 +155,7 @@ def list_sectors(
                     _cache.set(cache_key, response, SECTORS_CACHE_TTL)
                     return response
 
-            # Slow path: live query when filtering by year
+            # Slow path: live query when filtering by year (or precomputed read failed)
             # safe: year_filter is a hardcoded SQL fragment, year value is parameterized
             year_filter = "AND c.contract_year = ?" if year else ""
             params = [year] if year else []
@@ -268,8 +273,12 @@ def get_sector(
 
             # Fast path: use precomputed_stats sectors key
             s = None
-            cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
-            ps_row = cursor.fetchone()
+            ps_row = None
+            try:
+                cursor.execute("SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'")
+                ps_row = cursor.fetchone()
+            except sqlite3.Error as e:
+                logger.warning(f"Precomputed sectors read failed: {e}")
             if ps_row:
                 sector_data = json.loads(ps_row[0])
                 for item in sector_data:
@@ -626,9 +635,13 @@ def get_analysis_overview(request: Request):
             ov_row = cursor.execute(
                 "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'overview'"
             ).fetchone()
-            sec_row = cursor.execute(
-                "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
-            ).fetchone()
+            sec_row = None
+            try:
+                sec_row = cursor.execute(
+                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
+                ).fetchone()
+            except sqlite3.Error as e:
+                logger.warning(f"Precomputed sectors read failed: {e}")
 
             if ov_row and sec_row:
                 ov = json.loads(ov_row[0])
@@ -778,10 +791,14 @@ def get_risk_distribution(
 
             # Per-sector fast path: use precomputed sectors key (has risk level counts)
             if sector_id is not None and year is None:
-                cursor.execute(
-                    "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
-                )
-                sec_ps_row = cursor.fetchone()
+                sec_ps_row = None
+                try:
+                    cursor.execute(
+                        "SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'"
+                    )
+                    sec_ps_row = cursor.fetchone()
+                except sqlite3.Error as e:
+                    logger.warning(f"Precomputed sectors read failed: {e}")
                 if sec_ps_row:
                     sector_data = json.loads(sec_ps_row[0])
                     s = next(

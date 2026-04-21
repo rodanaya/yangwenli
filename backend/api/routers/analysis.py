@@ -2171,10 +2171,14 @@ def get_anomalies(
                     ))
 
             # 2. Sector-level anomalies from precomputed stats
-            cursor.execute("""
-                SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'
-            """)
-            sectors_row = cursor.fetchone()
+            sectors_row = None
+            try:
+                cursor.execute("""
+                    SELECT stat_value FROM precomputed_stats WHERE stat_key = 'sectors'
+                """)
+                sectors_row = cursor.fetchone()
+            except sqlite3.Error as e:
+                logger.warning(f"Precomputed sectors read failed: {e}")
             if sectors_row:
                 sectors = json.loads(sectors_row['stat_value'])
                 for sector in sectors[:5]:  # Top 5 sectors by risk
