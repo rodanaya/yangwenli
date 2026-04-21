@@ -2546,7 +2546,7 @@ function SexenioStackedDotColumns({
               <text
                 x={cx} y={21}
                 textAnchor="middle"
-                fontSize="7"
+                fontSize="10"
                 fill="#71717a"
                 fontFamily="var(--font-family-mono)"
               >
@@ -2599,7 +2599,7 @@ function SexenioStackedDotColumns({
               <text
                 x={cx} y={bottomY + 26}
                 textAnchor="middle"
-                fontSize="8"
+                fontSize="10"
                 fill="#71717a"
                 fontFamily="var(--font-family-mono)"
               >

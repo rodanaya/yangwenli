@@ -160,7 +160,7 @@ function SexenioDotColumns({
                 x={cx}
                 y={10}
                 textAnchor="middle"
-                fontSize="9"
+                fontSize="10"
                 fill="#a1a1aa"
                 fontFamily="var(--font-family-mono)"
               >
@@ -204,7 +204,7 @@ function SexenioDotColumns({
                 x={cx}
                 y={TOOLTIP_H + ROWS * DOT_GAP + 26}
                 textAnchor="middle"
-                fontSize="9"
+                fontSize="10"
                 fill={getRiskColor(d.avg_risk)}
                 fontFamily="var(--font-family-mono)"
               >
@@ -297,7 +297,7 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
                 x={width - 4}
                 y={cy + 3}
                 textAnchor="end"
-                fontSize="9"
+                fontSize="10"
                 fill={getRiskColor(d.avg_risk)}
                 fontFamily="var(--font-family-mono)"
               >
