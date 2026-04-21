@@ -1130,10 +1130,12 @@ because it searched for `Explore.tsx` not `explore/`.
 
 ### Deploy Status
 
-- Git hash: `7d1e9c5` (commit), pushed to origin/main
-- VPS deploy: `docker compose up -d --build` via SSH to 37.60.232.109
+- Git hash: `cddad47` (commit), pushed to origin/main
+- VPS deploy: `docker compose -f docker-compose.prod.yml --env-file .env.prod up -d --build` at /opt/rubli
+- Containers rebuilt: rubli-backend, rubli-frontend, rubli-magyar (backend + frontend healthy)
 - TypeScript check: 0 errors ✓
 - Final URL: https://rubli.xyz
+- Commit summary: 14 files changed, 641 insertions(+), 80 deletions(-)
 
 ---
 
