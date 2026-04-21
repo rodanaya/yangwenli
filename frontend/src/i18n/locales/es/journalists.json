@@ -5,7 +5,10 @@
     "subtitle": "Análisis de datos e investigación periodística sobre 23 años de contratación pública federal",
     "lastUpdated": "Última actualización de datos: marzo 2026",
     "compranetLabel": "contratos",
-    "satEfosLabel": "empresas fantasma"
+    "satEfosLabel": "empresas fantasma",
+    "desk": "Mesa de Investigaciones",
+    "updated": "Actualizado",
+    "activeLabel": "Pistas activas"
   },
   "hero": {
     "platform": "Plataforma de Inteligencia en Contrataciones Públicas",
@@ -26,7 +29,15 @@
     "salud": "Salud",
     "infra": "Infraestructura",
     "case": "Casos",
-    "thematic": "Temático"
+    "thematic": "Temático",
+    "ghost": "Empresas Fantasma",
+    "monopoly": "Monopolio",
+    "overpricing": "Sobreprecio",
+    "fraud": "Fraude",
+    "eraPena": "Sexenio Peña",
+    "eraAmlo": "Era 4T",
+    "eraCross": "Múltiples sexenios",
+    "aria": "Filtrar investigaciones"
   },
   "grid": {
     "noStories": "No hay historias para este filtro."

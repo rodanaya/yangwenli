@@ -22,8 +22,32 @@ import { ScrollReveal, AnimatedNumber } from '@/hooks/useAnimations'
 import { slideUp, fadeIn, staggerContainer } from '@/lib/animations'
 import { cn } from '@/lib/utils'
 import * as StoryCharts from '@/components/stories/charts'
+import {
+  InlineDotGrid,
+  InlineBarChart,
+  InlineLineChart,
+  InlineAreaChart,
+  InlineSpikeChart,
+  InlineDivergingBar,
+} from '@/components/stories/InlineCharts'
+import type { StoryInlineChartData } from '@/lib/story-content'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
+
+// ---------------------------------------------------------------------------
+// Inline chart map — type string → component
+// ---------------------------------------------------------------------------
+
+type InlineChartComponent = React.ComponentType<{ data: StoryInlineChartData; title: string }>
+
+const INLINE_CHART_MAP: Record<string, InlineChartComponent> = {
+  'inline-dot-grid': InlineDotGrid,
+  'inline-bar': InlineBarChart,
+  'inline-line': InlineLineChart,
+  'inline-area': InlineAreaChart,
+  'inline-spike': InlineSpikeChart,
+  'inline-diverging': InlineDivergingBar,
+}
 
 // ---------------------------------------------------------------------------
 // Chart registry — maps chartId to component
@@ -216,7 +240,30 @@ function ChapterSection({
         )}
 
         {chapter.chartConfig && (() => {
-          const chartId = chapter.chartConfig.chartId || TYPE_TO_CHART_ID[chapter.chartConfig.type]
+          const cfg = chapter.chartConfig
+
+          // Inline data-driven charts — rendered when cfg.data is present
+          if (cfg.data) {
+            const InlineChart = INLINE_CHART_MAP[cfg.type]
+            return (
+              <ScrollReveal className="my-8">
+                {InlineChart ? (
+                  <InlineChart data={cfg.data} title={cfg.title} />
+                ) : (
+                  <div
+                    className="bg-zinc-900 rounded-sm p-6 text-zinc-500 text-sm text-center"
+                    role="img"
+                    aria-label={cfg.title}
+                  >
+                    {cfg.title}
+                  </div>
+                )}
+              </ScrollReveal>
+            )
+          }
+
+          // Existing registry-based charts (unchanged)
+          const chartId = cfg.chartId || TYPE_TO_CHART_ID[cfg.type]
           const ChartComponent = chartId ? CHART_REGISTRY[chartId] : undefined
           return (
             <ScrollReveal className="my-8">
@@ -226,9 +273,9 @@ function ChapterSection({
                 <div
                   className="bg-zinc-900 rounded-sm p-6 text-zinc-500 text-sm text-center"
                   role="img"
-                  aria-label={chapter.chartConfig.title}
+                  aria-label={cfg.title}
                 >
-                  {chapter.chartConfig.title}
+                  {cfg.title}
                 </div>
               )}
             </ScrollReveal>

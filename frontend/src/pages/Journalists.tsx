@@ -229,6 +229,7 @@ function IntensityBar({ value, color }: { value: number; color: string }) {
 
 function FeaturedCard({ item }: { item: Investigation }) {
   const navigate = useNavigate()
+  const { t } = useTranslation('journalists')
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
 
@@ -260,7 +261,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         <div className="lg:col-span-3">
           <div className="flex items-center gap-3 mb-6">
             <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-red-500">
-              FEATURED INVESTIGATION
+              {t('featuredLabel')}
             </span>
             <span className="h-px w-8 bg-red-500/50" />
             <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
@@ -744,10 +745,10 @@ export default function Journalists() {
             </span>
             <span className="text-zinc-700">·</span>
             <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500">
-              Investigations Desk
+              {t('masthead.desk', { defaultValue: 'Investigations Desk' })}
             </span>
             <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600 tabular-nums">
-              Updated {updatedDate}
+              {t('masthead.updated', { defaultValue: 'Updated' })} {updatedDate}
             </span>
           </div>
 

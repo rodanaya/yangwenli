@@ -39,3 +39,11 @@ export { StoryCasaContratos } from './StoryCasaContratos'
 export { StoryAnoSinExcusas } from './StoryAnoSinExcusas'
 export { StoryInsabi } from './StoryInsabi'
 export { StoryTrenMaya } from './StoryTrenMaya'
+export {
+  InlineDotGrid,
+  InlineBarChart,
+  InlineLineChart,
+  InlineAreaChart,
+  InlineSpikeChart,
+  InlineDivergingBar,
+} from '../InlineCharts'

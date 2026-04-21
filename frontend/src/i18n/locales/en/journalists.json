@@ -5,7 +5,10 @@
     "subtitle": "Data analysis and investigative reporting on 23 years of Mexican federal procurement",
     "lastUpdated": "Last data update: March 2026",
     "compranetLabel": "contracts",
-    "satEfosLabel": "shell companies"
+    "satEfosLabel": "shell companies",
+    "desk": "Investigations Desk",
+    "updated": "Updated",
+    "activeLabel": "Active leads"
   },
   "hero": {
     "platform": "Public Procurement Intelligence Platform",
@@ -26,7 +29,15 @@
     "salud": "Health",
     "infra": "Infrastructure",
     "case": "Cases",
-    "thematic": "Thematic"
+    "thematic": "Thematic",
+    "ghost": "Ghost Companies",
+    "monopoly": "Monopoly",
+    "overpricing": "Overpricing",
+    "fraud": "Procurement Fraud",
+    "eraPena": "Peña era",
+    "eraAmlo": "4T era",
+    "eraCross": "Cross-era",
+    "aria": "Filter investigations"
   },
   "grid": {
     "noStories": "No stories for this filter."
