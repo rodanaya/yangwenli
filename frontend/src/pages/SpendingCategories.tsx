@@ -157,7 +157,7 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
   const lastVal = values[values.length - 1]
   const firstNonZero = values.find(v => v > 0) ?? 0
   const trend = lastVal > firstNonZero * 1.1 ? 'up' : lastVal < firstNonZero * 0.9 ? 'down' : 'flat'
-  const trendColor = trend === 'up' ? '#fb923c' : trend === 'down' ? '#4ade80' : color
+  const trendColor = trend === 'up' ? '#fb923c' : trend === 'down' ? '#71717a' : color
 
   return (
     <svg
@@ -285,7 +285,7 @@ function CategoryDetailPanel({
         {(topContractsLoading || topContracts.length > 0) && (
           <div className="border-b border-border/20">
             <div className="px-4 py-2 bg-background-elevated/20 border-b border-border/10">
-              <p className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60">{t('detail.mostExpensiveContracts')}</p>
+              <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">{t('detail.mostExpensiveContracts')}</p>
             </div>
             {topContractsLoading ? (
               <div className="space-y-1.5 p-3">
@@ -328,7 +328,7 @@ function CategoryDetailPanel({
           </p>
         ) : (
           <>
-            <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+            <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
               <span className="w-4 flex-shrink-0">#</span>
               <div className="flex-1 min-w-0 flex items-center gap-2">
                 <User className="h-3 w-3 flex-shrink-0" />
@@ -445,7 +445,7 @@ function CategorySummaryCard({
             {localeName(category, i18n.language)}
           </h3>
           {category.sector_code && (
-            <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted/60 px-1.5 py-0.5 rounded bg-background-elevated/50 flex-shrink-0">
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 px-1.5 py-0.5 rounded bg-background-elevated/50 flex-shrink-0">
               {category.sector_code}
             </span>
           )}
@@ -453,7 +453,7 @@ function CategorySummaryCard({
         <div className="flex items-center gap-2 flex-shrink-0">
           <button
             onClick={() => onNavigate(`/contracts?category_id=${category.category_id}`)}
-            className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded font-mono uppercase tracking-wider"
+            className="flex items-center gap-1 text-[10px] text-accent hover:text-accent/80 transition-colors border border-accent/30 px-2 py-1 rounded font-mono uppercase tracking-[0.15em]"
           >
             <ExternalLink className="h-3 w-3" />
             {t('detail.contracts')}
@@ -829,7 +829,7 @@ function SubcategoryPanel({
       </CardHeader>
 
       <CardContent className="p-0">
-        <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+        <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
           <div className="flex-1 min-w-0">{t('subcategory.colSubcategory')}</div>
           <span className="w-20 text-right flex-shrink-0">{t('subcategory.colAmount')}</span>
           <span className="w-12 text-right flex-shrink-0">%</span>
@@ -863,7 +863,7 @@ function SubcategoryPanel({
                   <div className="flex-1 min-w-0">
                     <div className="text-xs font-medium text-text-primary mb-1.5 flex items-center gap-1.5">
                       {sub.is_catch_all && (
-                        <span className="text-[9px] font-mono bg-background-elevated px-1 py-0.5 rounded text-text-muted/50 uppercase tracking-wider flex-shrink-0">
+                        <span className="text-[9px] font-mono bg-background-elevated px-1 py-0.5 rounded text-text-muted/50 uppercase tracking-[0.15em] flex-shrink-0">
                           {t('subcategory.other')}
                         </span>
                       )}
@@ -939,17 +939,17 @@ function SubcategoryPanel({
                     )}
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-3">
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('detail.contracts')}</p>
+                        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">{t('detail.contracts')}</p>
                         <p className="text-sm font-mono font-bold text-text-primary">{formatNumber(sub.total_contracts)}</p>
                       </div>
                       {sub.year_min != null && sub.year_max != null && (
                         <div>
-                          <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.activeYears')}</p>
+                          <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">{t('subcategory.activeYears')}</p>
                           <p className="text-sm font-mono font-bold text-text-primary">{sub.year_min}–{sub.year_max}</p>
                         </div>
                       )}
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.directAward')}</p>
+                        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">{t('subcategory.directAward')}</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighDA ? '#fb923c' : 'var(--color-text-primary)' }}
@@ -958,7 +958,7 @@ function SubcategoryPanel({
                         </p>
                       </div>
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-0.5">{t('subcategory.singleBid')}</p>
+                        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">{t('subcategory.singleBid')}</p>
                         <p
                           className="text-sm font-mono font-bold"
                           style={{ color: isHighSB ? '#fb923c' : 'var(--color-text-primary)' }}
@@ -969,7 +969,7 @@ function SubcategoryPanel({
                     </div>
                     {sub.top_vendor_name && (
                       <div className="mb-3 flex items-center gap-2">
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted flex-shrink-0">{t('subcategory.topVendor')}</p>
+                        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted flex-shrink-0">{t('subcategory.topVendor')}</p>
                         {sub.top_vendor_id ? (
                           <button
                             onClick={(e) => { e.stopPropagation(); onNavigate(`/vendors/${sub.top_vendor_id}`) }}
@@ -985,7 +985,7 @@ function SubcategoryPanel({
                     )}
                     {sub.example_titles.length > 0 && (
                       <div>
-                        <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted mb-1.5">
+                        <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
                           {t('subcategory.exampleTitles')}
                         </p>
                         <div className="space-y-1.5">
@@ -1086,7 +1086,7 @@ function TopFindingsBar({
               key={v.key}
               onClick={() => setView(v.key)}
               className={cn(
-                'px-3 py-1 text-[10px] rounded transition-colors font-mono uppercase tracking-wider',
+                'px-3 py-1 text-[10px] rounded transition-colors font-mono uppercase tracking-[0.15em]',
                 view === v.key
                   ? 'bg-accent/20 text-accent'
                   : 'text-text-muted hover:text-text-primary',
@@ -1111,11 +1111,11 @@ function TopFindingsBar({
               style={{ borderLeft: `3px solid ${sectorColor}` }}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-[9px] font-mono text-text-muted/60 uppercase tracking-wider tabular-nums">
+                <span className="text-[9px] font-mono text-text-muted/60 uppercase tracking-[0.15em] tabular-nums">
                   #{idx + 1}
                 </span>
                 {cat.sector_code && (
-                  <span className="text-[9px] font-mono text-text-muted/50 uppercase tracking-wider">
+                  <span className="text-[9px] font-mono text-text-muted/50 uppercase tracking-[0.15em]">
                     {cat.sector_code}
                   </span>
                 )}
@@ -1237,7 +1237,7 @@ function SectorGroupedCategories({
   return (
     <div className="space-y-2">
       {/* Sort controls */}
-      <div className="flex items-center gap-1 pb-2 text-[10px] font-mono uppercase tracking-wider text-text-muted/60 flex-wrap">
+      <div className="flex items-center gap-1 pb-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60 flex-wrap">
         <span className="mr-1 text-text-muted/40">{t('subcategory.sortLabel')}:</span>
         {SORT_OPTS.map(({ field, label }) => (
           <button
@@ -2124,7 +2124,7 @@ function SignalNoiseOutliers({
                   <span className="h-px flex-1 bg-amber-500/20" />
                   {cat.sector_code && (
                     <span
-                      className="text-[9px] font-mono uppercase tracking-wider px-1.5 py-0.5 rounded"
+                      className="text-[9px] font-mono uppercase tracking-[0.15em] px-1.5 py-0.5 rounded"
                       style={{
                         backgroundColor: `${sectorColor}18`,
                         color: sectorColor,
@@ -2151,7 +2151,7 @@ function SignalNoiseOutliers({
                 {/* Mini stat row */}
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-amber-500/10">
                   <div>
-                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
                       {lang === 'en' ? 'Risk' : 'Riesgo'}
                     </p>
                     <p className="text-lg font-mono font-bold tabular-nums" style={{ color: riskColor }}>
@@ -2159,7 +2159,7 @@ function SignalNoiseOutliers({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
                       {lang === 'en' ? 'Spend' : 'Gasto'}
                     </p>
                     <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
@@ -2167,7 +2167,7 @@ function SignalNoiseOutliers({
                     </p>
                   </div>
                   <div>
-                    <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+                    <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
                       {lang === 'en' ? 'AD rate' : 'Adj. dir.'}
                     </p>
                     <p
@@ -2306,7 +2306,7 @@ function VendorConcentrationCallout({
         {/* Concentration stats strip */}
         <div className="grid grid-cols-3 gap-4 mb-4 pb-4 border-b border-border/20">
           <div>
-            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
               HHI
             </p>
             <p className="text-lg font-mono font-bold tabular-nums" style={{ color: barColor }}>
@@ -2322,7 +2322,7 @@ function VendorConcentrationCallout({
             </p>
           </div>
           <div>
-            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
               {lang === 'en' ? 'Top 3 share' : 'Top 3'}
             </p>
             <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
@@ -2333,7 +2333,7 @@ function VendorConcentrationCallout({
             </p>
           </div>
           <div>
-            <p className="text-[9px] font-mono uppercase tracking-wider text-text-muted/60 mb-0.5">
+            <p className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted/60 mb-0.5">
               {lang === 'en' ? 'Total market' : 'Mercado total'}
             </p>
             <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
@@ -3269,7 +3269,7 @@ export default function SpendingCategories() {
                     >
                       {(cat.avg_risk * 100).toFixed(1)}%
                     </span>
-                    <p className="text-[10px] text-text-muted mt-0.5 uppercase tracking-wider font-mono">
+                    <p className="text-[10px] text-text-muted mt-0.5 uppercase tracking-[0.15em] font-mono">
                       {getRiskLabel(cat.avg_risk)}
                     </p>
                   </div>
@@ -3375,7 +3375,7 @@ export default function SpendingCategories() {
 
         {selectedCategoryId !== null && selectedCategory && (
           <div className="flex items-center gap-2 px-3 py-2 rounded-sm bg-accent/5 border border-accent/20 mb-3 text-xs animate-in fade-in duration-200">
-            <span className="font-mono text-text-muted/60 uppercase tracking-wider text-[10px] flex-shrink-0">{t('table.selected')}:</span>
+            <span className="font-mono text-text-muted/60 uppercase tracking-[0.15em] text-[10px] flex-shrink-0">{t('table.selected')}:</span>
             <span className="font-semibold text-accent truncate flex-1">{localeName(selectedCategory, i18n.language)}</span>
             <button
               onClick={() => setTimeout(() => detailPanelRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' }), 50)}

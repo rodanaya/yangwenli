@@ -585,7 +585,7 @@ export function Contracts() {
                 onClick={() => isActive ? clearAllFilters() : applyPreset(preset.id)}
                 title={t(preset.descriptionKey)}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-mono tracking-wide transition-all',
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-mono tracking-wide transition-all',
                   isActive
                     ? 'bg-amber-500/15 border-amber-500/40 text-amber-400'
                     : 'border-border/50 bg-background-elevated text-text-secondary hover:text-text-primary hover:border-accent/40 hover:bg-background-elevated/80'
@@ -1560,7 +1560,7 @@ function ContractRow({
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {factors.length > 0 && (
           <div>
-            <p className="text-xs font-mono uppercase tracking-wider text-text-muted mb-1.5">Risk Factors</p>
+            <p className="text-xs font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">Risk Factors</p>
             <div className="flex flex-wrap gap-1.5">
               {factors.map((raw) => {
                 const parsed = parseFactorLabel(raw)

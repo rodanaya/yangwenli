@@ -476,7 +476,7 @@ function AdminDossierPanel({
         {agg && (
           <div className="text-right flex-shrink-0 space-y-2">
             <div>
-              <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
+              <div className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5">
                 {t('dossier.fingerprint.highRisk')}
               </div>
               <div
@@ -487,7 +487,7 @@ function AdminDossierPanel({
               </div>
             </div>
             <div>
-              <div className="text-[9px] text-text-muted uppercase tracking-wider font-mono mb-0.5">
+              <div className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5">
                 MXN at risk
               </div>
               <div className="text-sm font-bold font-mono text-text-primary">
@@ -505,7 +505,7 @@ function AdminDossierPanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <BookOpen className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.politicalContext')}
               </span>
             </div>
@@ -521,7 +521,7 @@ function AdminDossierPanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.knownScandals')}
               </span>
               {dossier.scandals.length > 0 && (
@@ -555,7 +555,7 @@ function AdminDossierPanel({
                       <div className="px-3 py-2">
                         <div className="flex items-center gap-1.5 mb-1">
                           <span
-                            className="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded-sm uppercase tracking-wider"
+                            className="text-[8px] font-bold font-mono px-1.5 py-0.5 rounded-sm uppercase tracking-[0.15em]"
                             style={{
                               backgroundColor: `${sevColor}20`,
                               color: sevColor,
@@ -597,7 +597,7 @@ function AdminDossierPanel({
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <Landmark className="h-3.5 w-3.5 text-accent" />
-                <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                   {t('dossier.keyFigures')}
                 </span>
               </div>
@@ -627,9 +627,9 @@ function AdminDossierPanel({
                   return figures.map((fig) => (
                     <div
                       key={fig.label}
-                      className="rounded-md border border-border/20 bg-background-elevated/20 px-2 py-2 text-center"
+                      className="rounded-sm border border-border/20 bg-background-elevated/20 px-2 py-2 text-center"
                     >
-                      <div className="text-[8px] text-text-muted uppercase tracking-wider font-mono mb-0.5 truncate">
+                      <div className="text-[8px] text-text-muted uppercase tracking-[0.15em] font-mono mb-0.5 truncate">
                         {fig.label}
                       </div>
                       <div className="text-sm font-bold font-mono" style={{ color: fig.color }}>
@@ -653,7 +653,7 @@ function AdminDossierPanel({
           <div>
             <div className="flex items-center gap-1.5 mb-3">
               <BarChart3 className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('dossier.procurementFingerprint')}
               </span>
             </div>
@@ -665,7 +665,7 @@ function AdminDossierPanel({
                 >
                   <div className="flex items-center gap-1 mb-0.5">
                     <Icon className="h-3 w-3 text-text-muted flex-shrink-0" />
-                    <span className="text-[9px] text-text-muted uppercase tracking-wider font-mono truncate">
+                    <span className="text-[9px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
                       {t(labelKey)}
                     </span>
                   </div>
@@ -689,7 +689,7 @@ function AdminDossierPanel({
           <div>
             <div className="flex items-center gap-1.5 mb-2">
               <Users className="h-3.5 w-3.5 text-accent" />
-              <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+              <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                 {t('vendorSection.title')}
               </span>
             </div>
@@ -705,7 +705,7 @@ function AdminDossierPanel({
             <div>
               <div className="flex items-center gap-1.5 mb-2">
                 <Activity className="h-3.5 w-3.5 text-accent" />
-                <span className="text-[10px] uppercase tracking-wider font-bold text-text-muted font-mono">
+                <span className="text-[10px] uppercase tracking-[0.15em] font-bold text-text-muted font-mono">
                   {t('dossier.topSectors')}
                 </span>
               </div>
@@ -1163,7 +1163,7 @@ export default function Administrations() {
           <button
             onClick={() => setActiveTab('overview')}
             className={cn(
-              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
               activeTab === 'overview'
                 ? 'bg-accent/20 text-accent'
                 : 'text-text-muted hover:text-text-primary'
@@ -1174,7 +1174,7 @@ export default function Administrations() {
           <button
             onClick={() => setActiveTab('patterns')}
             className={cn(
-              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
               activeTab === 'patterns'
                 ? 'bg-accent/20 text-accent'
                 : 'text-text-muted hover:text-text-primary'
@@ -1185,7 +1185,7 @@ export default function Administrations() {
           <button
             onClick={() => setActiveTab('political')}
             className={cn(
-              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
               activeTab === 'political'
                 ? 'bg-accent/20 text-accent'
                 : 'text-text-muted hover:text-text-primary'
@@ -1196,7 +1196,7 @@ export default function Administrations() {
           <button
             onClick={() => setActiveTab('compare')}
             className={cn(
-              'px-3 py-1.5 rounded-md text-xs font-medium transition-colors',
+              'px-3 py-1.5 rounded-sm text-xs font-medium transition-colors',
               activeTab === 'compare'
                 ? 'bg-accent/20 text-accent'
                 : 'text-text-muted hover:text-text-primary'
@@ -1263,7 +1263,7 @@ export default function Administrations() {
         const deltaValue = top.dDA.value
         const direction = deltaValue > 0 ? t('lede.rose') : t('lede.fell')
         const absDelta = Math.abs(deltaValue).toFixed(1)
-        const accent = deltaValue > 0 ? '#f87171' : '#4ade80'
+        const accent = deltaValue > 0 ? '#f87171' : '#71717a'
         return (
           <FeaturedComparison
             kicker={t('lede.kicker', { direction, absDelta })}
@@ -1477,13 +1477,13 @@ export default function Administrations() {
         </p>
         <div className="pt-1 border-t border-border/30 grid grid-cols-1 md:grid-cols-2 gap-3">
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-risk-high mb-1">{t('keyRisk')}</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-risk-high mb-1">{t('keyRisk')}</p>
             <p className="text-xs text-text-muted leading-relaxed">
               {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.keyRisk`)}
             </p>
           </div>
           <div>
-            <p className="text-[10px] uppercase tracking-wider font-semibold text-text-muted mb-1">{t('legacy')}</p>
+            <p className="text-[10px] uppercase tracking-[0.15em] font-semibold text-text-muted mb-1">{t('legacy')}</p>
             <p className="text-xs text-text-muted leading-relaxed">
               {t(`editorial.${ERA_EDITORIAL_KEYS[selectedAdmin]}.legacy`)}
             </p>
@@ -1606,7 +1606,7 @@ export default function Administrations() {
       </div>
 
       {/* Inflation disclaimer */}
-      <div className="mb-4 flex items-start gap-2 rounded-md border border-blue-500/20 bg-blue-500/8 px-3 py-2.5">
+      <div className="mb-4 flex items-start gap-2 rounded-sm border border-blue-500/20 bg-blue-500/8 px-3 py-2.5">
         <AlertTriangle className="mt-0.5 h-3.5 w-3.5 flex-shrink-0 text-blue-400/70" aria-hidden="true" />
         <p className="text-[11px] text-text-muted leading-relaxed">
           {t('evidenceSection.inflationNote')}
@@ -1840,7 +1840,7 @@ export default function Administrations() {
               <div className="mt-3 pt-3 border-t border-border/20">
                 <div className="flex items-center gap-1.5 mb-2">
                   <AlertTriangle className="h-3 w-3 text-risk-medium" />
-                  <span className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono">
+                  <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono">
                     {t('aiDetectedAnomalies')}
                   </span>
                   <span className="text-[10px] text-text-muted">— {t('anomaliesNote')}</span>
@@ -1944,7 +1944,7 @@ export default function Administrations() {
             </table>
             {topSectorCorrelations.length > 0 && (
               <div className="mt-3 pt-3 border-t border-border/20">
-                <div className="text-[10px] font-bold uppercase tracking-wider text-text-muted font-mono mb-1.5">
+                <div className="text-[10px] font-bold uppercase tracking-[0.15em] text-text-muted font-mono mb-1.5">
                   {t('sectorCorrelations')} — {t('sectorCorrelationsNote')}
                 </div>
                 <div className="space-y-1">
@@ -2031,7 +2031,7 @@ export default function Administrations() {
                   {fromAgg && toAgg && (
                     <div className="mt-3 pt-2 border-t border-border/20 grid grid-cols-1 sm:grid-cols-3 gap-3">
                       <div>
-                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.directAward')}</div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-[0.15em] mb-0.5">{t('transitionMetrics.directAward')}</div>
                         <TransitionMiniBar
                           fromName={tr.from}
                           toName={tr.to}
@@ -2041,7 +2041,7 @@ export default function Administrations() {
                         />
                       </div>
                       <div>
-                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.highRisk')}</div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-[0.15em] mb-0.5">{t('transitionMetrics.highRisk')}</div>
                         <TransitionMiniBar
                           fromName={tr.from}
                           toName={tr.to}
@@ -2051,7 +2051,7 @@ export default function Administrations() {
                         />
                       </div>
                       <div>
-                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-wider mb-0.5">{t('transitionMetrics.singleBid')}</div>
+                        <div className="text-[8px] text-text-muted font-mono uppercase tracking-[0.15em] mb-0.5">{t('transitionMetrics.singleBid')}</div>
                         <TransitionMiniBar
                           fromName={tr.from}
                           toName={tr.to}
@@ -2098,13 +2098,13 @@ export default function Administrations() {
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Ground truth note */}
             <div>
-              <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-0.5">
+              <h4 className="text-xs font-semibold text-text-muted tracking-[0.15em] uppercase mb-0.5">
                 {t('documentedCases')}
               </h4>
               <p className="text-xs text-text-muted/70 italic mb-3">
                 {t('documentedCasesNote')}
               </p>
-              <div className="flex items-start gap-2 rounded-md border border-border/30 bg-card-hover/20 p-3">
+              <div className="flex items-start gap-2 rounded-sm border border-border/30 bg-card-hover/20 p-3">
                 <AlertTriangle className="h-3.5 w-3.5 text-text-muted mt-0.5 flex-shrink-0" />
                 <p className="text-xs text-text-secondary leading-relaxed">
                   {t('groundTruthNote')}
@@ -2114,7 +2114,7 @@ export default function Administrations() {
 
             {/* Events */}
             <div>
-              <h4 className="text-xs font-semibold text-text-muted tracking-wider uppercase mb-2">
+              <h4 className="text-xs font-semibold text-text-muted tracking-[0.15em] uppercase mb-2">
                 {t('keyEvents', { admin: selectedAdmin, start: selectedMeta.dataStart, end: Math.min(selectedMeta.end - 1, 2025) })}
               </h4>
               <HardcodedEventsTimeline adminName={selectedAdmin} />
@@ -2216,9 +2216,9 @@ function ProcurementGradeCard({ agg }: { agg: AdminAgg }) {
             return (
               <div
                 key={d.label}
-                className="rounded-md border border-border/20 bg-background-elevated/30 px-1.5 py-1 text-center"
+                className="rounded-sm border border-border/20 bg-background-elevated/30 px-1.5 py-1 text-center"
               >
-                <div className="text-[7px] text-text-muted uppercase tracking-wider font-mono truncate">
+                <div className="text-[7px] text-text-muted uppercase tracking-[0.15em] font-mono truncate">
                   {d.label}
                 </div>
                 <div className="text-xs font-bold font-mono" style={{ color: detailColor }}>
@@ -2437,7 +2437,7 @@ function TransitionMiniBar({
   const toPct = Math.min(100, (Math.abs(toValue) / safeMax) * 100)
   const isWorse = invertColor ? toValue < fromValue : toValue > fromValue
   const isBetter = invertColor ? toValue > fromValue : toValue < fromValue
-  const toBarColor = isWorse ? '#f87171' : isBetter ? '#4ade80' : '#94a3b8'
+  const toBarColor = isWorse ? '#f87171' : isBetter ? '#71717a' : '#94a3b8'
 
   return (
     <div className="space-y-1 mt-1.5">
@@ -2567,7 +2567,7 @@ function HardcodedEventsTimeline({ adminName }: { adminName: AdminName }) {
         return (
           <div
             key={i}
-            className="flex items-start gap-2.5 rounded-md border-l-2 pl-2.5 py-1.5"
+            className="flex items-start gap-2.5 rounded-sm border-l-2 pl-2.5 py-1.5"
             style={{ borderLeftColor: color }}
           >
             <Icon className="h-3 w-3 mt-0.5 flex-shrink-0" style={{ color }} />
@@ -2619,7 +2619,7 @@ function StatCard({
     <div className="card hover-lift p-4">
         <div className="flex items-center gap-1.5 mb-1">
           <Icon className="h-3.5 w-3.5 text-text-muted" />
-          <span className="text-xs font-mono text-text-muted uppercase tracking-wider">{label}</span>
+          <span className="text-xs font-mono text-text-muted uppercase tracking-[0.15em]">{label}</span>
         </div>
         <div className="text-lg font-bold font-mono" style={{ color }}>
           <span ref={countRef}>{displayValue}</span>
@@ -2676,9 +2676,9 @@ function TransitionMetric({
   const abs = Math.abs(d)
 
   return (
-    <div className={cn('text-center rounded-md border border-border/20 px-2 py-1.5', bgColor)}>
+    <div className={cn('text-center rounded-sm border border-border/20 px-2 py-1.5', bgColor)}>
       <div className="flex items-center justify-center gap-0.5 mb-1">
-        <div className="text-[9px] text-text-muted font-mono uppercase tracking-wider">{label}</div>
+        <div className="text-[9px] text-text-muted font-mono uppercase tracking-[0.15em]">{label}</div>
         {significance !== undefined && significance >= 1.8 && (
           <span
             className={cn(
@@ -2822,7 +2822,7 @@ function AdminSectorMatrix({
           </div>
           <div className="flex items-center gap-2 flex-shrink-0">
             {/* Metric toggle */}
-            <div className="flex items-center gap-0.5 rounded-md border border-border/40 p-0.5 bg-background-elevated/30">
+            <div className="flex items-center gap-0.5 rounded-sm border border-border/40 p-0.5 bg-background-elevated/30">
               {(Object.keys(METRIC_LABELS) as MatrixMetric[]).map((m) => (
                 <button
                   key={m}
@@ -3000,7 +3000,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={0} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.directAwardCard')}</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.directAwardCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.da > 50 ? 'text-risk-critical' : allTimeAvg.da > 30 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.da.toFixed(1)}%
             </div>
@@ -3022,7 +3022,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={80} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.singleBidCard')}</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.singleBidCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.sb > 30 ? 'text-risk-critical' : allTimeAvg.sb > 15 ? 'text-risk-high' : 'text-risk-medium')}>
               {allTimeAvg.sb.toFixed(1)}%
             </div>
@@ -3039,7 +3039,7 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <ScrollReveal delay={160} direction="up">
         <div className="card">
           <CardContent className="p-4">
-            <div className="text-xs font-mono text-text-muted uppercase tracking-wider mb-1">{t('patternsView.highRiskCard')}</div>
+            <div className="text-xs font-mono text-text-muted uppercase tracking-[0.15em] mb-1">{t('patternsView.highRiskCard')}</div>
             <div className={cn('text-2xl font-bold font-mono', allTimeAvg.hr > 15 ? 'text-risk-critical' : allTimeAvg.hr > 8 ? 'text-risk-high' : 'text-risk-low')}>
               {allTimeAvg.hr.toFixed(1)}%
             </div>
@@ -3319,7 +3319,7 @@ function PoliticalCycleView() {
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
             {/* Election years card */}
             <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
-              <div className="text-[11px] text-text-muted uppercase tracking-wider">Election Years</div>
+              <div className="text-[11px] text-text-muted uppercase tracking-[0.15em]">Election Years</div>
               <div
                 className="text-3xl font-bold font-mono"
                 style={{ color: RISK_COLORS.high }}
@@ -3339,7 +3339,7 @@ function PoliticalCycleView() {
 
             {/* Non-election years card */}
             <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
-              <div className="text-[11px] text-text-muted uppercase tracking-wider">Non-Election Years</div>
+              <div className="text-[11px] text-text-muted uppercase tracking-[0.15em]">Non-Election Years</div>
               <div
                 className="text-3xl font-bold font-mono"
                 style={{ color: RISK_COLORS.low }}
@@ -3359,7 +3359,7 @@ function PoliticalCycleView() {
 
             {/* Delta card */}
             <div className="rounded-sm border border-border/40 bg-background-elevated/20 p-4 text-center space-y-1">
-              <div className="text-[11px] text-text-muted uppercase tracking-wider">Risk Delta</div>
+              <div className="text-[11px] text-text-muted uppercase tracking-[0.15em]">Risk Delta</div>
               {election_year_effect.risk_delta !== undefined ? (
                 <>
                   <div
@@ -3586,7 +3586,7 @@ function ComparePeriodView() {
 
           {/* Administration presets */}
           <div>
-            <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Quick Presets → Period A</div>
+            <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-[0.15em]">Quick Presets → Period A</div>
             <div className="flex flex-wrap gap-1.5">
               {ADMIN_PRESETS.map((preset) => (
                 <button
@@ -3612,7 +3612,7 @@ function ComparePeriodView() {
           {/* Year selectors */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-8">
             <div>
-              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-[0.15em]">
                 Period A
                 {p1Start === p2Start && p1End === p2End ? (
                   <span className="ml-2 text-amber-500/80">Periods are identical</span>
@@ -3641,7 +3641,7 @@ function ComparePeriodView() {
               </div>
             </div>
             <div>
-              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-wider">Period B</div>
+              <div className="text-xs text-text-muted font-medium mb-2 uppercase tracking-[0.15em]">Period B</div>
               <div className="flex items-center gap-2">
                 <input
                   type="number"
@@ -3710,11 +3710,11 @@ function ComparePeriodView() {
               <table className="w-full text-sm" role="table" aria-label="Period comparison results">
                 <thead>
                   <tr className="border-b border-border/30">
-                    <th className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-wider w-1/4">Metric</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Period A</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Period B</th>
-                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-wider">Δ (B − A)</th>
-                    <th className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-wider">Signal</th>
+                    <th className="text-left py-2 pr-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em] w-1/4">Metric</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period A</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Period B</th>
+                    <th className="text-right py-2 px-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Δ (B − A)</th>
+                    <th className="text-center py-2 pl-4 text-xs font-medium text-text-muted uppercase tracking-[0.15em]">Signal</th>
                   </tr>
                 </thead>
                 <tbody>

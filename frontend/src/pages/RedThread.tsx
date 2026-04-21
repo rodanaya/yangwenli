@@ -78,7 +78,7 @@ const RISK_DOT_COLORS: Record<string, string> = {
   critical: '#f87171',
   high:     '#fb923c',
   medium:   '#fbbf24',
-  low:      '#4ade80',
+  low:      '#71717a',
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -402,7 +402,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
         {sorted.map((f, idx) => {
           const isPositive = f.contribution > 0
           const width = (Math.abs(f.contribution) / maxAbs) * 100
-          const color = isPositive ? '#f87171' : '#4ade80'
+          const color = isPositive ? '#f87171' : '#71717a'
           const bgColor = isPositive ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)'
           return (
             <motion.div
@@ -724,7 +724,7 @@ function riskColor(pct: number): string {
   if (pct > 50) return '#dc2626'
   if (pct > 30) return '#ea580c'
   if (pct > 15) return '#eab308'
-  return '#4ade80'
+  return '#71717a'
 }
 
 function RiskHistoryDotMatrix({

@@ -244,7 +244,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
     <div className="space-y-1" aria-label={t('pillarsChart.ariaLabel')}>
       {pillars.map(({ key, labelKey, value, max }) => {
         const pct = Math.min((value / max) * 100, 100)
-        const color = pct > 70 ? '#4ade80' : pct > 40 ? '#fbbf24' : '#f87171'
+        const color = pct > 70 ? '#71717a' : pct > 40 ? '#fbbf24' : '#f87171'
         return (
           <div key={key} className="flex items-center gap-2">
             <span className="text-[9px] font-mono text-zinc-600 w-8 flex-shrink-0">{t(labelKey)}</span>

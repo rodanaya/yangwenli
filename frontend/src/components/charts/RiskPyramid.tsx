@@ -15,7 +15,7 @@ const PYRAMID_DATA: PyramidRow[] = [
   { level: 'critical', label: 'Critical Risk', pctContracts: 6.0,  pctValue: 41.8, contracts: 184031,  billions: 4147.04, color: '#f87171', description: '≥0.60 score' },
   { level: 'high',     label: 'High Risk',     pctContracts: 7.5,  pctValue: 6.1,  contracts: 228814,  billions: 602.88,  color: '#fb923c', description: '0.40–0.60' },
   { level: 'medium',   label: 'Medium Risk',   pctContracts: 26.8, pctValue: 13.9, contracts: 821251,  billions: 1380.64, color: '#fbbf24', description: '0.25–0.40' },
-  { level: 'low',      label: 'Low Risk',      pctContracts: 59.4, pctValue: 38.2, contracts: 1817198, billions: 3797.00, color: '#4ade80', description: '<0.25 score' },
+  { level: 'low',      label: 'Low Risk',      pctContracts: 59.4, pctValue: 38.2, contracts: 1817198, billions: 3797.00, color: '#71717a', description: '<0.25 score' },
 ]
 
 // ── Dot matrix parameters ──────────────────────────────────────────────────────

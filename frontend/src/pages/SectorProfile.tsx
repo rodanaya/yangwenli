@@ -317,19 +317,19 @@ function VendorTable({
         >
           <thead>
             <tr className="border-b border-white/8">
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
+              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
                 #
               </th>
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
+              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
                 {t('table.sector')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
+              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
                 {t('table.totalValueMxn')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider hidden sm:table-cell">
+              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em] hidden sm:table-cell">
                 {t('table.totalContracts')}
               </th>
-              <th className="text-center py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-wider">
+              <th className="text-center py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
                 {t('table.avgRiskScore')}
               </th>
             </tr>
@@ -1314,7 +1314,7 @@ export function SectorProfile() {
               <div className="flex items-center gap-2 mb-2">
                 <h2
                   id="phi-grade-heading"
-                  className="text-sm font-bold text-zinc-300 uppercase tracking-wider"
+                  className="text-sm font-bold text-zinc-300 uppercase tracking-[0.15em]"
                 >
                   Procurement Health Index
                 </h2>

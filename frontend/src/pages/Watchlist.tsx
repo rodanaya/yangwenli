@@ -45,6 +45,7 @@ import {
   Folder,
   Plus,
   Crosshair,
+  ClipboardList,
 } from 'lucide-react'
 import { formatDate, formatNumber } from '@/lib/utils'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -170,7 +171,7 @@ function FilterChip<T extends string>({ active, onClick, label }: FilterChipProp
   return (
     <button
       onClick={onClick}
-      className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+      className={`px-3 py-1 rounded-sm text-xs font-medium border transition-colors ${
         active
           ? 'bg-accent text-white border-accent'
           : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
@@ -264,7 +265,7 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
 export function DossierEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
-      <div className="rounded-full bg-accent/10 p-4 mb-5">
+      <div className="rounded-sm bg-accent/10 p-4 mb-5">
         <Folder className="h-10 w-10 text-accent opacity-70" />
       </div>
       <h3 className="text-base font-semibold text-text-primary mb-2">
@@ -292,7 +293,7 @@ function DossierSkeletons() {
   return (
     <div className="space-y-3">
       {[1, 2, 3].map((i) => (
-        <div key={i} className="rounded-lg border border-border p-4 space-y-2">
+        <div key={i} className="rounded-sm border border-border p-4 space-y-2">
           <Skeleton className="h-4 w-2/5" />
           <Skeleton className="h-3 w-3/4" />
           <Skeleton className="h-3 w-1/4" />
@@ -326,7 +327,7 @@ function DossierStatsBar({ dossierId, dossierName }: DossierStatsBarProps) {
   const firstVendor = vendorItems[0]
 
   return (
-    <div className="flex items-center gap-4 px-4 py-2.5 rounded-lg border border-border/60 bg-background-elevated/40 text-xs">
+    <div className="flex items-center gap-4 px-4 py-2.5 rounded-sm border border-border/60 bg-background-elevated/40 text-xs">
       {isLoading ? (
         <>
           <Skeleton className="h-3 w-24" />
@@ -570,7 +571,7 @@ export function Watchlist() {
     return (
       <div className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="p-2 rounded-lg bg-risk-critical/10 border border-risk-critical/20">
+          <div className="p-2 rounded-sm bg-risk-critical/10 border border-risk-critical/20">
             <AlertTriangle className="h-4 w-4 text-risk-critical" />
           </div>
           <div>
@@ -619,7 +620,7 @@ export function Watchlist() {
           <a
             href={`/api/v1/watchlist/folders/export/${activeFolderId}`}
             download={`folder-${activeFolderId}-dossier.json`}
-            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-md text-xs text-accent hover:bg-accent/10 transition-colors"
+            className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-sm text-xs text-accent hover:bg-accent/10 transition-colors"
           >
             <Download className="h-3.5 w-3.5" />
             {t('exportDossier')}
@@ -736,7 +737,7 @@ export function Watchlist() {
               <FolderOpen className="h-3.5 w-3.5" />
               Dossiers
               {(dossiers?.length ?? 0) > 0 && (
-                <span className="ml-1 text-[10px] bg-accent/15 text-accent rounded-full px-1.5 py-px font-medium">
+                <span className="ml-1 text-[10px] bg-accent/15 text-accent rounded-sm px-1.5 py-px font-medium">
                   {dossiers?.length}
                 </span>
               )}
@@ -875,7 +876,7 @@ export function Watchlist() {
                         {/* 3-column get-started guide */}
                         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 max-w-2xl mx-auto">
                           <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <div className="text-2xl mb-2">🔍</div>
+                            <Crosshair className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
                             <p className="text-xs font-semibold text-text-primary mb-1">Watch a vendor</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Track risk changes for high-priority vendors in the ARIA queue</p>
                             <Button
@@ -888,7 +889,7 @@ export function Watchlist() {
                             </Button>
                           </div>
                           <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <div className="text-2xl mb-2">📋</div>
+                            <ClipboardList className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
                             <p className="text-xs font-semibold text-text-primary mb-1">Explore contracts</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Find vendors or institutions and click the eye icon to start tracking</p>
                             <Button
@@ -901,7 +902,7 @@ export function Watchlist() {
                             </Button>
                           </div>
                           <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <div className="text-2xl mb-2">📁</div>
+                            <FolderOpen className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
                             <p className="text-xs font-semibold text-text-primary mb-1">Open a case</p>
                             <p className="text-[10px] text-text-muted leading-snug mb-3">Browse the 43 documented cases and track involved parties</p>
                             <Button
@@ -983,7 +984,7 @@ export function Watchlist() {
                 <button
                   key={value}
                   onClick={() => setDossierStatusFilter(value)}
-                  className={`px-3 py-1 rounded-full text-xs font-medium border transition-colors ${
+                  className={`px-3 py-1 rounded-sm text-xs font-medium border transition-colors ${
                     dossierStatusFilter === value
                       ? 'bg-accent text-white border-accent'
                       : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'

@@ -240,7 +240,7 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
                   textAnchor="middle"
                   fontSize={10}
                   fontWeight={700}
-                  fill="#4ade80"
+                  fill="#71717a"
                   fontFamily="var(--font-family-mono, monospace)"
                 >
                   {'↓'} {s.delta.toFixed(1)}pp

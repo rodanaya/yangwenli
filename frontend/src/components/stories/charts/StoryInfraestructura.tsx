@@ -120,7 +120,7 @@ export function StoryInfraestructura() {
             UN OFERENTE
           </text>
           <circle cx={200} cy={2} r={3} fill={COLORS.open} />
-          <text x={209} y={6} fill="#4ade80" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
+          <text x={209} y={6} fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)" fontWeight={600}>
             LICITACIÓN ABIERTA
           </text>
         </g>

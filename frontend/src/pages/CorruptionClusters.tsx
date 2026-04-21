@@ -517,7 +517,7 @@ function ComplementaryTypologyCard({
         <footer className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(255,255,255,0.06)' }}>
           <Link
             to={typology.linkTo}
-            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-wider hover:underline"
+            className="inline-flex items-center gap-1 text-[10px] font-mono uppercase tracking-[0.15em] hover:underline"
             style={{ color: typology.color }}
           >
             {typology.linkLabel}
@@ -673,7 +673,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           >
             {pattern.t1}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-wider mt-1">
+          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             Tier 1
           </div>
         </div>
@@ -681,7 +681,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           <div className="text-lg font-mono font-bold leading-none tabular-nums text-text-primary">
             {pattern.vendors.toLocaleString()}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-wider mt-1">
+          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             {isEs ? 'Proveedores' : 'Vendors'}
           </div>
         </div>
@@ -689,7 +689,7 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
           <div className="text-lg font-mono font-bold leading-none tabular-nums text-text-primary">
             {pattern.gtCases}
           </div>
-          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-wider mt-1">
+          <div className="text-[9px] font-mono text-text-muted/70 uppercase tracking-[0.15em] mt-1">
             {isEs ? 'Casos GT' : 'GT Cases'}
           </div>
         </div>
@@ -831,7 +831,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         </tbody>
       </table>
       {/* Legend: dot density scale */}
-      <div className="mt-4 flex items-center gap-4 text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
+      <div className="mt-4 flex items-center gap-4 text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
         <span>{isEs ? 'Densidad:' : 'Density:'}</span>
         <div className="flex items-center gap-2">
           <span
@@ -970,7 +970,7 @@ function PatternVendorCard({
           </div>
         </div>
         <div className="text-right">
-          <div className="text-[11px] font-mono text-text-muted/60 uppercase tracking-wider">
+          <div className="text-[11px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
             {isEs ? 'IPS prom.' : 'Avg IPS'}
           </div>
           <div className="text-[15px] font-mono font-bold tabular-nums" style={{ color }}>
@@ -1103,7 +1103,7 @@ export default function CorruptionClusters() {
         </div>
 
         {/* Legend: color = severity class */}
-        <div className="flex flex-wrap items-center gap-4 pt-4 text-[10px] font-mono text-text-muted tracking-wider uppercase">
+        <div className="flex flex-wrap items-center gap-4 pt-4 text-[10px] font-mono text-text-muted tracking-[0.15em] uppercase">
           <div className="flex items-center gap-1.5">
             <span className="h-2 w-2 rounded-sm" style={{ backgroundColor: '#dc2626' }} />
             {isEs ? 'Severidad crítica' : 'Critical severity'}
@@ -1137,7 +1137,7 @@ export default function CorruptionClusters() {
             <h3 className="text-sm font-bold text-text-primary">
               {isEs ? 'Proveedores T1 por patrón × sector' : 'T1 vendors by pattern × sector'}
             </h3>
-            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
+            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
               {isEs ? 'Top 5 sectores · ARIA T1' : 'Top 5 sectors · ARIA T1'}
             </span>
           </div>
@@ -1229,7 +1229,7 @@ export default function CorruptionClusters() {
             <h3 className="text-sm font-bold text-text-primary">
               {isEs ? 'Casos documentados por tipo de corrupción' : 'Documented cases by corruption type'}
             </h3>
-            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider">
+            <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em]">
               {gtTotal.toLocaleString()} {isEs ? 'casos · GT v1.1' : 'cases · GT v1.1'}
             </span>
           </div>
@@ -1268,7 +1268,7 @@ export default function CorruptionClusters() {
         <div className="flex items-center justify-end pt-4">
           <Link
             to="/aria"
-            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-wider uppercase"
+            className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
           >
             {isEs ? 'Explorar cola ARIA completa' : 'Explore full ARIA queue'}
             <ArrowUpRight className="h-3.5 w-3.5" />
@@ -1323,7 +1323,7 @@ export default function CorruptionClusters() {
           <div className="flex items-center justify-end pt-4">
             <Link
               to="/aria"
-              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-wider uppercase"
+              className="inline-flex items-center gap-1.5 text-[11px] font-mono text-accent hover:underline tracking-[0.15em] uppercase"
             >
               {isEs ? 'Ver todos los investigados en ARIA' : 'View all subjects in ARIA queue'}
               <ArrowUpRight className="h-3.5 w-3.5" />

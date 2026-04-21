@@ -62,7 +62,7 @@ function RiskBarDemo({ t }: { t: (key: string) => string }) {
     { label: t('welcome.step2Critical'), pct: 68, color: '#f87171', active: true },
     { label: t('welcome.step2High'),     pct: 45, color: '#fb923c', active: false },
     { label: t('welcome.step2Medium'),   pct: 22, color: '#fbbf24', active: false },
-    { label: t('welcome.step2Low'),      pct: 6,  color: '#4ade80', active: false },
+    { label: t('welcome.step2Low'),      pct: 6,  color: '#71717a', active: false },
   ]
 
   return (

@@ -157,7 +157,7 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
           <AnimatedGauge
             value={oecdTarget}
             maxValue={100}
-            color="#4ade80"
+            color="#71717a"
             label={t('competition.oecdMin')}
             sublabel="OECD"
           />

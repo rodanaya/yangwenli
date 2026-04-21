@@ -98,7 +98,7 @@ function getConcentrationBadge(label: string, t: (key: string) => string) {
     case 'moderately_concentrated':
       return { text: t('profile.concentration.moderate'), color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' }
     default:
-      return { text: t('profile.concentration.competitive'), color: '#4ade80', bg: 'rgba(74,222,128,0.1)' }
+      return { text: t('profile.concentration.competitive'), color: '#71717a', bg: 'rgba(113,113,122,0.1)' }
   }
 }
 
@@ -481,7 +481,7 @@ export default function CategoryProfile() {
               </h1>
               {category.sector_code && (
                 <span
-                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-wider"
+                  className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-sm text-[10px] font-mono uppercase tracking-[0.15em]"
                   style={{
                     color: sectorColor,
                     backgroundColor: `${sectorColor}15`,
@@ -605,7 +605,7 @@ export default function CategoryProfile() {
                         if (!active || !payload?.length) return null
                         return (
                           <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1"
+                            className="rounded-sm border p-3 text-xs font-mono shadow-lg space-y-1"
                             style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
                           >
                             <p className="font-bold text-text-primary">{label}</p>
@@ -717,7 +717,7 @@ export default function CategoryProfile() {
                     const badge = getConcentrationBadge(topVendorsData.concentration_label, t)
                     return (
                       <span
-                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono uppercase tracking-wider"
+                        className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm text-[10px] font-mono uppercase tracking-[0.15em]"
                         style={{ color: badge.color, backgroundColor: badge.bg, border: `1px solid ${badge.color}30` }}
                       >
                         {badge.text}
@@ -734,7 +734,7 @@ export default function CategoryProfile() {
               </CardHeader>
               <CardContent className="p-0">
                 {/* Header row */}
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-6 flex-shrink-0">#</span>
                   <span className="flex-1 min-w-0">{t('profile.table.vendor')}</span>
                   <span className="w-28 text-right flex-shrink-0">{t('profile.table.share')}</span>
@@ -841,7 +841,7 @@ export default function CategoryProfile() {
               </div>
             ) : (vendorInstData?.data?.length ?? 0) > 0 ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <div className="flex-1 min-w-0 flex items-center gap-2">
                     <User className="h-3 w-3 flex-shrink-0" />
@@ -946,7 +946,7 @@ export default function CategoryProfile() {
               </div>
             ) : topContracts.length > 0 ? (
               <>
-                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-wider text-text-muted/60">
+                <div className="flex items-center gap-3 px-4 py-2 border-b border-border/30 bg-background-elevated/30 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted/60">
                   <span className="w-4 flex-shrink-0">#</span>
                   <span className="flex-1 min-w-0">{t('profile.table.description')}</span>
                   <span className="w-20 text-right flex-shrink-0">{t('profile.table.amount')}</span>

@@ -340,7 +340,7 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
           >
             {caseData.pattern}
           </span>
-          <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-wider">
+          <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.15em]">
             {isEs ? 'CASO' : 'CASE'}
           </span>
         </div>
@@ -875,7 +875,7 @@ function RingDetailPanel({
             {isEs ? 'ANILLO' : 'RING'} {ringLetter}
           </p>
           <div
-            className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-[10px] font-mono border ${meta.tone}`}
+            className={`inline-flex items-center gap-1.5 rounded-sm px-2.5 py-1 text-[10px] font-mono border ${meta.tone}`}
           >
             <PatternIcon className={`h-3 w-3 ${meta.color}`} aria-hidden="true" />
             <span className={meta.color}>{meta.label}</span>
@@ -932,7 +932,7 @@ function RingDetailPanel({
           {memberArr.map((name) => (
             <span
               key={name}
-              className={`text-[10px] font-mono px-2 py-0.5 rounded-full border truncate max-w-[220px] ${
+              className={`text-[10px] font-mono px-2 py-0.5 rounded-sm border truncate max-w-[220px] ${
                 ring.dominantVendor === name
                   ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
                   : 'border-zinc-700/60 bg-zinc-800/50 text-zinc-300'
@@ -1486,7 +1486,7 @@ export default function CollusionExplorer() {
               ))}
             </div>
             {/* Legend */}
-            <div className="mt-5 flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-wider text-zinc-500">
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
               <div className="flex items-center gap-1.5">
                 <span
                   className="inline-block"

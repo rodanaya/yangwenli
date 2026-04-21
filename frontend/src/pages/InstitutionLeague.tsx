@@ -205,7 +205,7 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
     >
       {pillars.map(({ key, value, max }) => {
         const pct = Math.min(100, Math.max(2, (value / max) * 100))
-        const bg = pct > 65 ? '#4ade80' : pct > 35 ? '#fbbf24' : '#f87171'
+        const bg = pct > 65 ? '#71717a' : pct > 35 ? '#fbbf24' : '#f87171'
         return (
           <div key={key} className="flex flex-col items-center gap-[2px]">
             <div className="w-[18px] h-7 bg-zinc-800/80 rounded-[2px] flex flex-col justify-end overflow-hidden">
@@ -707,7 +707,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           { label: t('pillarRadar.external'), value: item.pillar_external, max: 20 },
         ].map((p) => {
           const pct = (p.value / p.max) * 100
-          const barColor = pct > 65 ? '#4ade80' : pct > 35 ? '#fbbf24' : '#f87171'
+          const barColor = pct > 65 ? '#71717a' : pct > 35 ? '#fbbf24' : '#f87171'
           return (
             <div key={p.label} className="flex items-center gap-2">
               <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-20">{p.label}</span>
@@ -1302,7 +1302,7 @@ export default function InstitutionLeague() {
                             </span>
                           </div>
                           {isWorstPerformer && (
-                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-wider text-red-500 whitespace-nowrap">
+                            <div className="mt-1 text-[8px] font-mono font-bold uppercase tracking-[0.15em] text-red-500 whitespace-nowrap">
                               {t('worstPerformerBadge')}
                             </div>
                           )}

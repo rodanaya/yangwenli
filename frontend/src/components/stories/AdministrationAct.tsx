@@ -146,7 +146,7 @@ export default function AdministrationAct({
           <div className="relative">
             <AnimatedFill
               pct={Math.min(stats.daPct, 100)}
-              color={stats.daPct > OECD_DA_BENCHMARK ? partyStyle.accent : '#4ade80'}
+              color={stats.daPct > OECD_DA_BENCHMARK ? partyStyle.accent : '#71717a'}
               height="h-2.5"
               delay={300}
             />

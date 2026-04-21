@@ -543,12 +543,12 @@ function ModelEvolutionTimeline() {
             {step.metric}
           </span>
           {step.active && (
-            <span className="text-[9px] font-bold tracking-wider uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
+            <span className="text-[9px] font-bold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded bg-accent/10 text-accent">
               {t('evolution.active')}
             </span>
           )}
           {step.overlay && (
-            <span className="text-[9px] font-semibold tracking-wider uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted">
+            <span className="text-[9px] font-semibold tracking-[0.15em] uppercase px-1.5 py-0.5 rounded bg-border/30 text-text-muted">
               {t('evolution.overlay')}
             </span>
           )}
@@ -786,7 +786,7 @@ export function Methodology() {
               </p>
 
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
-                <p className="text-xs font-semibold uppercase tracking-wider text-accent mb-2">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent mb-2">
                   {t('body.overview.formulaLabel')}
                 </p>
                 <Formula>
@@ -800,7 +800,7 @@ export function Methodology() {
               {/* Risk level thresholds table */}
               <div>
                 <div className="flex items-center gap-1.5 mb-2">
-                  <p className="text-xs font-semibold uppercase tracking-wider text-text-muted font-mono">
+                  <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted font-mono">
                     {t('body.overview.riskThresholdsLabel')}
                   </p>
                   <RiskScoreDisclaimer />
@@ -904,7 +904,7 @@ export function Methodology() {
 
               {/* Finding 1: Vendor Concentration */}
               <div className="p-3 rounded-md bg-accent/5 border border-accent/10">
-                <p className="text-xs font-semibold uppercase tracking-wider text-accent mb-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-accent mb-1">
                   {t('body.findings.finding1Label')}
                 </p>
                 <p className="text-sm font-bold text-text-primary">
@@ -917,7 +917,7 @@ export function Methodology() {
 
               {/* Finding 2: Reversed factors */}
               <div className="p-3 rounded-md bg-risk-medium/5 border border-risk-medium/10">
-                <p className="text-xs font-semibold uppercase tracking-wider text-risk-medium mb-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-risk-medium mb-1">
                   {t('body.findings.finding2Label')}
                 </p>
                 <p className="text-sm font-bold text-text-primary">
@@ -950,7 +950,7 @@ export function Methodology() {
 
               {/* Finding 3: Co-bidding */}
               <div className="p-3 rounded-md bg-background-elevated/50 border border-border/50">
-                <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('body.findings.finding3Label')}
                 </p>
                 <p className="text-xs text-text-secondary leading-relaxed">
@@ -1239,7 +1239,7 @@ export function Methodology() {
 
               {/* Comparison table */}
               <div>
-                <p className="text-xs font-semibold uppercase tracking-wider text-text-muted mb-2 font-mono">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 font-mono">
                   {t('body.v33section.modelComparisonLabel')}
                 </p>
                 <div className="overflow-x-auto">
@@ -1262,7 +1262,7 @@ export function Methodology() {
                           <td className="py-2 pr-3 text-right font-mono text-accent font-semibold">
                             {row.v60}
                           </td>
-                          <td className="py-2 text-right font-mono text-[#4ade80]">
+                          <td className="py-2 text-right font-mono text-[#71717a]">
                             {row.improvement}
                           </td>
                         </tr>
@@ -1329,7 +1329,7 @@ export function Methodology() {
 
               {/* Amount validation */}
               <div className="p-3 rounded-md bg-risk-critical/5 border border-risk-critical/10">
-                <p className="text-xs font-semibold uppercase tracking-wider text-risk-critical mb-1">
+                <p className="text-xs font-semibold uppercase tracking-[0.15em] text-risk-critical mb-1">
                   {t('body.dataSources.amountValidationLabel')}
                 </p>
                 <div className="space-y-1 text-xs text-text-secondary">

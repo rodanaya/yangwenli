@@ -95,7 +95,7 @@ export default function ContractDetail() {
           <p className="text-[11px] text-zinc-600 font-mono mb-6">ID: {contractId}</p>
           <button
             onClick={() => navigate('/contracts')}
-            className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 border border-zinc-800 rounded-md px-3 py-1.5"
+            className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 border border-zinc-800 rounded-sm px-3 py-1.5"
           >
             <ArrowLeft className="h-3 w-3" />
             Back to contracts
@@ -203,14 +203,14 @@ export default function ContractDetail() {
           {contract.vendor_id ? (
             <Link
               to={`/vendors/${contract.vendor_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
             >
               <User className="h-3.5 w-3.5 text-zinc-500" />
               <span className="font-medium">{toTitleCase(contract.vendor_name || '-')}</span>
               <ChevronRight className="h-3 w-3 text-zinc-600" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 text-zinc-400">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400">
               <User className="h-3.5 w-3.5" />
               {toTitleCase(contract.vendor_name || 'Unknown vendor')}
             </span>
@@ -219,14 +219,14 @@ export default function ContractDetail() {
           {contract.institution_id ? (
             <Link
               to={`/institutions/${contract.institution_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors"
             >
               <Building2 className="h-3.5 w-3.5 text-zinc-500" />
               <span className="font-medium">{toTitleCase(contract.institution_name || '-')}</span>
               <ChevronRight className="h-3 w-3 text-zinc-600" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full border border-zinc-800 bg-zinc-900/40 text-zinc-400">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400">
               <Building2 className="h-3.5 w-3.5" />
               {toTitleCase(contract.institution_name || 'Unknown institution')}
             </span>
@@ -349,7 +349,7 @@ export default function ContractDetail() {
                     </svg>
                   )
                 })()}
-                <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-wider text-zinc-600">
+                <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
                 </div>
@@ -429,7 +429,7 @@ export default function ContractDetail() {
                             style={{ backgroundColor: getFactorCategoryColor(parsed.category) }}
                           />
                           <span>{parsed.label}</span>
-                          <span className="text-[10px] text-zinc-600 font-mono ml-1 uppercase tracking-wider">
+                          <span className="text-[10px] text-zinc-600 font-mono ml-1 uppercase tracking-[0.15em]">
                             {parsed.category}
                           </span>
                         </li>
@@ -542,7 +542,7 @@ export default function ContractDetail() {
               <div className="space-y-3">
                 {contract.data_quality_grade && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1">
                       Grade
                     </p>
                     <p className="text-2xl font-mono font-bold text-zinc-200">
@@ -552,7 +552,7 @@ export default function ContractDetail() {
                 )}
                 {contract.source_structure && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-wider text-zinc-500 mb-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1">
                       Source structure
                     </p>
                     <p className="text-sm font-mono text-zinc-300">
@@ -602,7 +602,7 @@ export default function ContractDetail() {
                   <div className="flex items-center gap-2 min-w-0">
                     <User className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">
                         Vendor profile
                       </p>
                       <p className="text-xs text-zinc-300 truncate group-hover:text-zinc-100">
@@ -621,7 +621,7 @@ export default function ContractDetail() {
                   <div className="flex items-center gap-2 min-w-0">
                     <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-wider">
+                      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">
                         Institution
                       </p>
                       <p className="text-xs text-zinc-300 truncate group-hover:text-zinc-100">
@@ -639,7 +639,7 @@ export default function ContractDetail() {
                 >
                   <div className="flex items-center gap-2">
                     <FileText className="h-3.5 w-3.5" />
-                    <span className="text-xs font-mono uppercase tracking-wider">
+                    <span className="text-xs font-mono uppercase tracking-[0.15em]">
                       Investigation thread
                     </span>
                   </div>
@@ -938,7 +938,7 @@ function IdRow({ label, value }: { label: string; value: string }) {
   }
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[10px] uppercase tracking-wider text-zinc-500">{label}</span>
+      <span className="text-[10px] uppercase tracking-[0.15em] text-zinc-500">{label}</span>
       <button
         onClick={copy}
         className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-zinc-100 group"

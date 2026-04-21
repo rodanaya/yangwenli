@@ -203,12 +203,12 @@ function PlainLanguageRiskCard({
       {/* Header */}
       <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
-          <span className="text-lg leading-none" role="img" aria-hidden>📰</span>
-          <span className="text-amber-400/80 text-[11px] font-semibold uppercase tracking-wider">
+          <FileText className="h-3.5 w-3.5 text-amber-400/80" aria-hidden />
+          <span className="text-amber-400/80 text-[11px] font-semibold uppercase tracking-[0.15em]">
             {t('plainLanguage.whatThisMeans')}
           </span>
         </div>
-        <span className="text-amber-500/50 text-[10px] font-medium uppercase tracking-wider">
+        <span className="text-amber-500/50 text-[10px] font-medium uppercase tracking-[0.15em]">
           {t('plainLanguage.forReporters')}
         </span>
       </div>
@@ -3200,7 +3200,7 @@ export function VendorProfile() {
                                 {score != null ? (score * 100).toFixed(0) : '—'}
                               </div>
                               {score != null && level && (
-                                <span className="text-[8px] font-semibold uppercase tracking-wider" style={{ color }}>
+                                <span className="text-[8px] font-semibold uppercase tracking-[0.15em]" style={{ color }}>
                                   {level === 'critical' ? t('riskBadge.critical') : level === 'high' ? t('riskBadge.high') : level === 'medium' ? t('riskBadge.medium') : t('riskBadge.low')}
                                 </span>
                               )}
@@ -3382,7 +3382,7 @@ export function VendorProfile() {
                     <div className="mt-4 border-t border-border/30 pt-4">
                       <div className="flex items-center gap-2 mb-3">
                         <Brain className="h-3.5 w-3.5 text-accent" />
-                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-wider">SHAP Analysis</p>
+                        <p className="text-xs font-semibold text-text-secondary uppercase tracking-[0.15em]">SHAP Analysis</p>
                         <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded">Per-Vendor</span>
                       </div>
                       <SHAPPanel shapData={shapData} />
@@ -4121,7 +4121,7 @@ export function VendorProfile() {
                 {/* Tier + IPS banner */}
                 <div className="flex items-start gap-4 p-4 rounded-sm border border-border bg-background-elevated/50">
                   <div className="flex flex-col items-center gap-1">
-                    <span className="text-[10px] text-text-muted uppercase tracking-wider">Tier</span>
+                    <span className="text-[10px] text-text-muted uppercase tracking-[0.15em]">Tier</span>
                     <div
                       className={cn(
                         'w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold border-2',
@@ -4155,7 +4155,7 @@ export function VendorProfile() {
                     )}
                     {ariaData.review_status && (
                       <span className={cn(
-                        'inline-block text-[10px] font-medium px-2 py-0.5 rounded mt-1.5 uppercase tracking-wider',
+                        'inline-block text-[10px] font-medium px-2 py-0.5 rounded mt-1.5 uppercase tracking-[0.15em]',
                         ariaData.review_status === 'confirmed' ? 'bg-risk-critical/15 text-risk-critical' :
                         ariaData.review_status === 'dismissed' ? 'bg-zinc-500/15 text-zinc-400' :
                         ariaData.review_status === 'reviewing' ? 'bg-accent/15 text-accent' :

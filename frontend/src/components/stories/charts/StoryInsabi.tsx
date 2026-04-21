@@ -123,7 +123,7 @@ export function StoryInsabi() {
           <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={26} textAnchor="middle" fill="#16a34a" fontSize={11} fontFamily="var(--font-family-serif)" fontWeight={700}>
             Seguro Popular
           </text>
-          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="#4ade80" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
+          <text x={LABEL_W + STRIP_W / 2 + VALUE_W / 2} y={42} textAnchor="middle" fill="#71717a" fontSize={9} fontFamily="var(--font-family-mono)" letterSpacing="0.08em">
             2015-2019
           </text>
 

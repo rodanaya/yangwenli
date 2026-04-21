@@ -125,7 +125,7 @@ function TierFilterPill({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
+        'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
         isActive
           ? cn(tier.pillBg, tier.pillText, 'border-current')
           : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
@@ -167,7 +167,7 @@ function TierNavigationRow({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left flex items-center gap-4 px-4 py-3 rounded-md border border-zinc-800 border-l-4 transition-all',
+        'w-full text-left flex items-center gap-4 px-4 py-3 rounded-sm border border-zinc-800 border-l-4 transition-all',
         tier.accent,
         isActive
           ? 'bg-background-elevated border-opacity-100'
@@ -179,7 +179,7 @@ function TierNavigationRow({
         <div className={cn('text-[10px] font-mono font-bold uppercase tracking-[0.15em]', tier.textColor)}>
           {t(tier.labelKey)}
         </div>
-        <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
+        <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
           {t(tier.nameKey)}
         </div>
       </div>
@@ -189,7 +189,7 @@ function TierNavigationRow({
           <div className={cn('stat-sm tabular-nums', tier.textColor)}>
             {formatNumber(count)}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
             {t('leads.vendorCount')}
           </div>
         </div>
@@ -197,7 +197,7 @@ function TierNavigationRow({
           <div className="stat-sm font-mono tabular-nums text-zinc-200">
             {avgRisk != null ? `${(avgRisk * 100).toFixed(0)}%` : '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
             {t('tierCard.avgRisk')}
           </div>
         </div>
@@ -205,7 +205,7 @@ function TierNavigationRow({
           <div className="stat-sm font-mono tabular-nums text-zinc-200">
             {valueAtRisk != null && valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wider mt-0.5">
+          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
             {t('tierCard.valueAtRisk')}
           </div>
         </div>
@@ -238,7 +238,7 @@ function PatternChip({
     <button
       onClick={onClick}
       className={cn(
-        'inline-flex items-center gap-2 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors',
+        'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
         isActive
           ? cn(meta.bg, meta.text, meta.border)
           : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
@@ -304,10 +304,10 @@ function ReviewPopover({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-8 z-50 w-56 rounded-lg border border-zinc-800 bg-zinc-950 shadow-xl p-3 space-y-2"
+      className="absolute right-0 top-8 z-50 w-56 rounded-sm border border-zinc-800 bg-zinc-950 shadow-xl p-3 space-y-2"
       onClick={(e) => e.stopPropagation()}
     >
-      <p className="text-[10px] uppercase tracking-wider font-mono text-zinc-500 font-bold mb-2">
+      <p className="text-[10px] uppercase tracking-[0.15em] font-mono text-zinc-500 font-bold mb-2">
         {t('reviewPopover.reviewStatus')}
       </p>
       {statuses.map((s) => {
@@ -410,14 +410,14 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-md border border-zinc-800 border-l-4 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer',
+          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-sm border border-zinc-800 border-l-4 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer',
           tierCfg.accent
         )}
       >
         {/* Tier badge */}
         <div className="shrink-0 w-10 sm:w-12 text-center">
           <div className={cn(
-            'inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-wider',
+            'inline-block px-1.5 py-0.5 rounded text-[10px] font-mono font-bold uppercase tracking-[0.15em]',
             tierCfg.pillBg,
             tierCfg.pillText
           )}>
@@ -463,7 +463,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
         <div className="shrink-0 flex items-center gap-2">
           <div
             className={cn(
-              'inline-flex items-baseline gap-0.5 px-2 py-1 rounded-md border tabular-nums',
+              'inline-flex items-baseline gap-0.5 px-2 py-1 rounded-sm border tabular-nums',
               IPS_BG_COLOR(ips)
             )}
             title={t('ipsBreakdown.title')}
@@ -471,7 +471,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
             <span className={cn('font-mono font-bold text-base leading-none', IPS_TEXT_COLOR(ips))}>
               {ipsPct}
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-wider text-zinc-500">IPS</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-zinc-500">IPS</span>
           </div>
         </div>
 
@@ -665,14 +665,14 @@ export default function AriaPage() {
                   placeholder={t('leads.searchPlaceholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-md text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
                 />
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
                 <button
                   onClick={() => { setTierFilter(null); setPage(1) }}
                   className={cn(
-                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-md border text-xs font-medium transition-colors',
+                    'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
                     tierFilter == null
                       ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
                       : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
@@ -710,7 +710,7 @@ export default function AriaPage() {
                 {t('threatLevels')}
               </p>
               <span className="text-[10px] text-zinc-600 font-mono">·</span>
-              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-wider">
+              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-[0.15em]">
                 {t('tierCard.clickFilter')}
               </p>
             </div>
@@ -719,7 +719,7 @@ export default function AriaPage() {
           {statsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 4 }).map((_, i) => (
-                <Skeleton key={i} className="h-16 rounded-md" />
+                <Skeleton key={i} className="h-16 rounded-sm" />
               ))}
             </div>
           ) : (
@@ -773,7 +773,7 @@ export default function AriaPage() {
               <button
                 onClick={() => { setNewVendorOnly(!newVendorOnly); setPage(1) }}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors',
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                   newVendorOnly
                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
@@ -787,7 +787,7 @@ export default function AriaPage() {
               <button
                 onClick={() => { setNovelOnly(!novelOnly); setPage(1) }}
                 className={cn(
-                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md border text-xs font-medium transition-colors',
+                  'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                   novelOnly
                     ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
                     : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
@@ -827,7 +827,7 @@ export default function AriaPage() {
                     <span className="text-[10px] text-zinc-600 font-mono">·</span>
                     <button
                       onClick={clearAll}
-                      className="text-[10px] font-mono uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors"
+                      className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors"
                     >
                       {t('filterBar.clearAll')} ({activeFilterCount})
                     </button>
@@ -852,7 +852,7 @@ export default function AriaPage() {
 
           {/* Review status filter — compact chip row */}
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            <span className="text-[10px] uppercase tracking-wider font-mono text-zinc-500">
+            <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-zinc-500">
               {t('table.review')}
             </span>
             {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
@@ -880,7 +880,7 @@ export default function AriaPage() {
           {leadsLoading ? (
             <div className="space-y-2">
               {Array.from({ length: 10 }).map((_, i) => (
-                <Skeleton key={i} className="h-14 rounded-md" />
+                <Skeleton key={i} className="h-14 rounded-sm" />
               ))}
             </div>
           ) : leadsItems.length === 0 ? (
@@ -892,7 +892,7 @@ export default function AriaPage() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearAll}
-                  className="mt-3 px-3 py-1.5 rounded-md text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
+                  className="mt-3 px-3 py-1.5 rounded-sm text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
                 >
                   {t('filterBar.clearAll', { defaultValue: 'Limpiar filtros' })}
                 </button>
@@ -917,7 +917,7 @@ export default function AriaPage() {
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-md text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
               >
                 {t('pagination.previous', { defaultValue: '← Anterior' })}
               </button>
@@ -927,7 +927,7 @@ export default function AriaPage() {
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-md text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
               >
                 {t('pagination.next', { defaultValue: 'Siguiente →' })}
               </button>
@@ -943,7 +943,7 @@ export default function AriaPage() {
             <div className="flex items-start gap-3">
               <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
               <div className="text-xs text-zinc-500 space-y-1 leading-relaxed">
-                <p className="font-mono uppercase tracking-wider text-[10px] font-bold text-zinc-400">
+                <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-zinc-400">
                   {t('about.title', { defaultValue: 'Sobre ARIA' })}
                 </p>
                 <p>{t('about.description')}</p>

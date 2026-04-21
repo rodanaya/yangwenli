@@ -387,7 +387,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
             Math.max(1, Math.round((Math.abs(clamped) / Math.max(maxAbs, 1)) * DOTS_PER_SIDE)),
           )
           const isPos = row.growthPct >= 0
-          const color = isPos ? '#4ade80' : '#f87171'
+          const color = isPos ? '#71717a' : '#f87171'
           const emptyDot = '#2d2926'
           const rowCenterY = cy + ROW_H / 2
 
@@ -578,7 +578,7 @@ function RiskEvolution({
             <>
               {/* This year */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.thisYear')}
                 </span>
                 <div className="flex-1">{renderStrip(yearPct, isAboveOECD ? '#dc2626' : '#f59e0b')}</div>
@@ -589,7 +589,7 @@ function RiskEvolution({
 
               {/* Historical avg */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-wider text-text-muted w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.historicalAvg')}
                 </span>
                 <div className="flex-1">{renderStrip(avgPct, '#a1a1aa')}</div>
@@ -600,7 +600,7 @@ function RiskEvolution({
 
               {/* OECD threshold */}
               <div className="flex items-center gap-3">
-                <span className="text-[10px] uppercase tracking-wider text-cyan-400 w-28 flex-shrink-0">
+                <span className="text-[10px] uppercase tracking-[0.15em] text-cyan-400 w-28 flex-shrink-0">
                   {t('riskEvolution.oecdTarget')}
                 </span>
                 <div className="flex-1">{renderStrip(oecdPct, '#22d3ee')}</div>
@@ -632,7 +632,7 @@ function RiskEvolution({
         <div>
           <p
             className={cn(
-              'text-[10px] font-mono font-bold uppercase tracking-wider mb-0.5',
+              'text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-0.5',
               isAboveOECD ? 'text-red-400' : 'text-emerald-400',
             )}
           >
@@ -692,7 +692,7 @@ function ProcedureTypeSection({
           const competitiveColor = '#059669'
           return (
             <>
-              <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase tracking-wider">
+              <div className="flex items-center justify-between mb-2 text-[10px] font-mono uppercase tracking-[0.15em]">
                 <span className="font-bold" style={{ color: directColor }}>
                   {directPct.toFixed(1)}% {t('procedureType.direct')}
                 </span>
@@ -792,19 +792,19 @@ function TopVendorsTable({
     <div>
       {/* Column headers */}
       <div className="grid grid-cols-[40px_1fr_120px_90px_70px] gap-3 px-3 py-2 border-b border-border/30 mb-1">
-        <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted font-bold">
+        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
           {t('topVendorsFull.rankColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted font-bold">
+        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold">
           {t('topVendorsFull.vendorColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted font-bold text-right">
+        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.valueColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted font-bold text-right">
+        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.contractsColumn')}
         </span>
-        <span className="text-[9px] font-mono uppercase tracking-wider text-text-muted font-bold text-right">
+        <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted font-bold text-right">
           {t('topVendorsFull.riskColumn')}
         </span>
       </div>
@@ -870,7 +870,7 @@ function TopVendorsTable({
       {vendors.length > 5 && (
         <button
           onClick={() => setExpanded((v) => !v)}
-          className="mt-3 flex items-center gap-1.5 text-xs font-mono uppercase tracking-wider text-amber-400 hover:text-amber-300 transition-colors"
+          className="mt-3 flex items-center gap-1.5 text-xs font-mono uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors"
         >
           <ChevronDown
             className={cn('h-3.5 w-3.5 transition-transform', expanded && 'rotate-180')}
@@ -991,10 +991,10 @@ function MonthlyCustomTooltip({ active, payload }: MonthlyTooltipProps) {
     : d.pctVsAvg >= 50 ? '#f87171'
       : d.pctVsAvg >= 20 ? '#fb923c'
       : d.pctVsAvg <= -20 ? '#60a5fa'
-      : '#4ade80'
+      : '#71717a'
   return (
     <div className="rounded-md border border-zinc-700 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl">
-      <p className="text-[11px] font-mono font-bold uppercase tracking-wider text-zinc-100">
+      <p className="text-[11px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-100">
         {d.monthFull}
       </p>
       <div className="mt-1 space-y-0.5">
@@ -1054,7 +1054,7 @@ function MonthlySpending({
     : decPct >= 15 ? t('monthly.elevated')
     : t('monthly.normal')
   const decColor = decPct >= 30 ? '#f87171'
-    : decPct >= 15 ? '#fb923c' : '#4ade80'
+    : decPct >= 15 ? '#fb923c' : '#71717a'
 
   return (
     <div>
@@ -1118,7 +1118,7 @@ function MonthlySpending({
         >
           <Calendar className="h-4 w-4 flex-shrink-0" style={{ color: decColor }} aria-hidden="true" />
           <div className="flex-1 min-w-0">
-            <p className="text-[10px] font-mono uppercase tracking-wider font-bold" style={{ color: decColor }}>
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] font-bold" style={{ color: decColor }}>
               {t('monthly.decemberSpike')} · {year}
             </p>
             <p className="text-sm text-text-secondary mt-0.5">
@@ -1342,7 +1342,7 @@ export default function YearInReview() {
           <div className="relative overflow-hidden rounded-sm border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
             <div className="flex items-center gap-2 flex-wrap">
               <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
-              <span className="text-[10px] uppercase tracking-wider text-text-muted mr-1">
+              <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted mr-1">
                 {t('yearSelector')}:
               </span>
               {FEATURED_YEARS.map((y) => (
@@ -1511,8 +1511,8 @@ export default function YearInReview() {
                 const color = item.delta == null
                   ? '#a1a1aa'
                   : item.invertColor
-                    ? (isUp ? '#f87171' : '#4ade80')
-                    : (isUp ? '#4ade80' : '#f87171')
+                    ? (isUp ? '#f87171' : '#71717a')
+                    : (isUp ? '#71717a' : '#f87171')
                 const Icon = isUp ? TrendingUp : TrendingDown
                 return (
                   <div
@@ -1734,7 +1734,7 @@ export default function YearInReview() {
                   if (e.key === 'Enter') navigate(`/vendors/${topVendor.vendor_id}`)
                 }}
               >
-                <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">
+                <p className="text-[10px] uppercase tracking-[0.15em] text-text-muted mb-1">
                   {t('spotlight.topVendorLabel', { year: validYear })}
                 </p>
                 <h3

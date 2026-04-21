@@ -409,7 +409,7 @@ function Legend() {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-xs text-stone-500">
-      <span className="font-mono uppercase tracking-wider text-stone-600 text-[10px]">{t('legend.riskLevel')}</span>
+      <span className="font-mono uppercase tracking-[0.15em] text-stone-600 text-[10px]">{t('legend.riskLevel')}</span>
       {swatches.map((s) => (
         <div key={s.label} className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-sm" style={{ backgroundColor: s.color }} />
@@ -472,7 +472,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {/* Volume comparison */}
         <div className="space-y-2">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600">
+          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-stone-600">
             {t('decemberSection.volume')}
           </div>
           <div className="space-y-1.5">
@@ -525,7 +525,7 @@ function DiciembreSection({ stats, year }: { stats: YearStats; year: number }) {
 
         {/* Risk comparison */}
         <div className="space-y-2">
-          <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600">
+          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-stone-600">
             {t('decemberSection.riskRate')}
           </div>
           <div className="space-y-1.5">
@@ -789,7 +789,7 @@ export default function ProcurementCalendar() {
             {/* Most active day */}
             {stats.peakDay && (
               <div className="border border-stone-800 bg-stone-900/40 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-stone-600 mb-1">
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-stone-600 mb-1">
                   {t('insights.mostActiveDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-stone-200">
@@ -804,7 +804,7 @@ export default function ProcurementCalendar() {
             {/* Highest risk day */}
             {stats.highestRiskDay && (
               <div className="border border-red-900/40 bg-red-950/10 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-red-600 mb-1">
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-red-600 mb-1">
                   {t('insights.peakRiskDay')}
                 </div>
                 <div className="text-lg font-bold font-mono text-red-400">
@@ -820,7 +820,7 @@ export default function ProcurementCalendar() {
             {/* December vs rest */}
             {stats.hasDecemberData && (
               <div className="border border-orange-900/40 bg-orange-950/10 rounded-sm p-3">
-                <div className="text-[10px] font-mono uppercase tracking-wider text-orange-600 mb-1">
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-orange-600 mb-1">
                   {t('insights.decemberRisk')}
                 </div>
                 <div className="text-lg font-bold font-mono text-orange-400">
@@ -840,7 +840,7 @@ export default function ProcurementCalendar() {
                 : 'border-stone-800 bg-stone-900/40'
             )}>
               <div className={cn(
-                'text-[10px] font-mono uppercase tracking-wider mb-1',
+                'text-[10px] font-mono uppercase tracking-[0.15em] mb-1',
                 isElectionYear ? 'text-amber-600' : 'text-stone-600'
               )}>
                 {t('insights.yearType')}
