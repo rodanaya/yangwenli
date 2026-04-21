@@ -548,7 +548,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
 function RelatedSection({ story }: { story: StoryDef }) {
   const { t } = useTranslation('common')
   const navigate = useNavigate()
-  const related = getRelatedStories(story)
+  const related = getRelatedStories(story.slug)
   if (related.length === 0) return null
 
   return (

@@ -58,6 +58,17 @@
     "tooltipTitle": "Risk model v0.6.5",
     "tooltipBody": "Logistic regression with 9 active features, 1 global + 12 per-sector models, AUC=0.828. Trained with 748 documented corruption cases. PU-learning (Elkan & Noto 2008)."
   },
+  "filterAll": "All",
+  "filterGhost": "Ghost Companies",
+  "filterMonopoly": "Monopoly",
+  "filterOverpricing": "Overpricing",
+  "filterFraud": "Fraud",
+  "filterEra": "Political Era",
+  "featuredLabel": "FEATURED INVESTIGATION",
+  "readInvestigation": "Read investigation",
+  "liveInvestigations": "active investigations",
+  "contractsAnalyzed": "contracts analyzed",
+  "activeLeads": "active cases",
   "stories": {
     "la-cuarta-adjudicacion": {
       "headline": "The Fourth Direct Award",

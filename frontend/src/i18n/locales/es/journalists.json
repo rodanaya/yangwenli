@@ -58,6 +58,17 @@
     "tooltipTitle": "Modelo de riesgo v0.6.5",
     "tooltipBody": "Regresión logística con 9 características activas, 13 sub-modelos sectoriales, AUC=0.828. Entrenado con 748 casos documentados de corrupción. PU-learning (Elkan & Noto 2008)."
   },
+  "filterAll": "Todas",
+  "filterGhost": "Empresas Fantasma",
+  "filterMonopoly": "Monopolio",
+  "filterOverpricing": "Sobreprecio",
+  "filterFraud": "Fraude",
+  "filterEra": "Era Política",
+  "featuredLabel": "INVESTIGACIÓN PRINCIPAL",
+  "readInvestigation": "Leer investigación",
+  "liveInvestigations": "investigaciones activas",
+  "contractsAnalyzed": "contratos analizados",
+  "activeLeads": "casos activos",
   "stories": {
     "la-cuarta-adjudicacion": {
       "headline": "La Cuarta Adjudicación",

@@ -20,6 +20,7 @@
 import React, { useState } from 'react'
 import { useParams, useNavigate, Link } from 'react-router-dom'
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { investigationApi } from '@/api/client'
 import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { Button } from '@/components/ui/button'
@@ -125,13 +126,13 @@ const LEVEL_COLOR: Record<PriorityLevel, string> = {
 
 const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   icon: React.ElementType
-  label: string
+  labelKey: string
   color: string
 }> = {
-  pending:       { icon: Clock,        label: 'Pending',       color: '#f59e0b' },
-  corroborated:  { icon: CheckCircle2, label: 'Corroborated',  color: '#22c55e' },
-  refuted:       { icon: XCircle,      label: 'Refuted',       color: '#ef4444' },
-  inconclusive:  { icon: HelpCircle,   label: 'Inconclusive',  color: '#78716c' },
+  pending:       { icon: Clock,        labelKey: 'caseDetail.statusPending',       color: '#f59e0b' },
+  corroborated:  { icon: CheckCircle2, labelKey: 'caseDetail.statusCorroborated',  color: '#22c55e' },
+  refuted:       { icon: XCircle,      labelKey: 'caseDetail.statusRefuted',       color: '#ef4444' },
+  inconclusive:  { icon: HelpCircle,   labelKey: 'caseDetail.statusInconclusive',  color: '#78716c' },
 }
 
 const EVIDENCE_STRENGTH_COLOR: Record<string, string> = {
@@ -144,7 +145,7 @@ const EVIDENCE_STRENGTH_COLOR: Record<string, string> = {
   unknown: '#78716c',
 }
 
-function StatusPill({ status }: { status: InvestigationValidationStatus }) {
+function StatusPill({ status, t }: { status: InvestigationValidationStatus; t: (key: string) => string }) {
   const config = STATUS_CONFIG[status] || STATUS_CONFIG.pending
   const Icon = config.icon
   return (
@@ -157,7 +158,7 @@ function StatusPill({ status }: { status: InvestigationValidationStatus }) {
       }}
     >
       <Icon className="h-3 w-3" />
-      {config.label}
+      {t(config.labelKey)}
     </span>
   )
 }
@@ -170,6 +171,7 @@ export function InvestigationCaseDetail() {
   const { caseId } = useParams<{ caseId: string }>()
   const navigate = useNavigate()
   const queryClient = useQueryClient()
+  const { t } = useTranslation('investigation')
 
   // Modals / forms
   const [showStatusModal, setShowStatusModal] = useState(false)
@@ -269,13 +271,13 @@ export function InvestigationCaseDetail() {
       <div style={{ minHeight: '100vh', background: BG, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 32 }}>
         <div style={{ textAlign: 'center', maxWidth: 480 }}>
           <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.2em', color: INK_FAINT, marginBottom: 16, textTransform: 'uppercase' }}>
-            Investigation · Not Found
+            {t('caseDetail.notFoundLabel')}
           </p>
           <h1 style={{ fontSize: 32, fontFamily: 'serif', color: INK, marginBottom: 12, lineHeight: 1.1, letterSpacing: '-0.02em' }}>
-            Case {caseId} not found
+            {t('caseDetail.notFoundTitle', { caseId })}
           </h1>
           <p style={{ color: INK_DIM, fontSize: 14, marginBottom: 32, lineHeight: 1.6 }}>
-            This investigation may not exist or failed to load. Check the case ID and try again.
+            {t('caseDetail.notFoundBody')}
           </p>
           <button
             onClick={() => navigate('/investigation')}
@@ -292,7 +294,7 @@ export function InvestigationCaseDetail() {
               background: 'transparent',
             }}
           >
-            ← All investigations
+            {t('caseDetail.allInvestigations')}
           </button>
         </div>
       </div>
@@ -365,7 +367,7 @@ export function InvestigationCaseDetail() {
               }}
             >
               <ArrowLeft className="h-3 w-3" />
-              Investigations
+              {t('caseDetail.breadcrumb')}
             </button>
             <span style={{ color: INK_FAINT, fontSize: 10 }}>/</span>
             <span
@@ -396,7 +398,7 @@ export function InvestigationCaseDetail() {
                   marginBottom: 10,
                 }}
               >
-                Investigation Case · P{priority.n} {priority.level.toUpperCase()}
+                {t('caseDetail.caseLabel')} · P{priority.n} {priority.level.toUpperCase()}
               </p>
               <h1
                 style={{
@@ -412,7 +414,7 @@ export function InvestigationCaseDetail() {
                 {cleanTitle}
               </h1>
               <div className="flex flex-wrap items-center gap-2">
-                <StatusPill status={detail.validation_status} />
+                <StatusPill status={detail.validation_status} t={t} />
                 {/* Confidence */}
                 <span
                   className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[10px] font-mono uppercase tracking-[0.14em]"
@@ -423,7 +425,7 @@ export function InvestigationCaseDetail() {
                   }}
                 >
                   <Shield className="h-3 w-3" />
-                  {confidencePct}% confidence
+                  {t('caseDetail.confidencePct', { pct: confidencePct })}
                 </span>
                 {/* Fraud type */}
                 {detail.case_type && (
@@ -521,7 +523,7 @@ export function InvestigationCaseDetail() {
                   cursor: 'pointer',
                 }}
               >
-                Change status
+                {t('caseDetail.changeStatusBtn')}
               </button>
               <button
                 onClick={() => setShowEvidenceForm(true)}
@@ -540,7 +542,7 @@ export function InvestigationCaseDetail() {
                 }}
               >
                 <Plus className="h-3.5 w-3.5" />
-                Add evidence
+                {t('caseDetail.addEvidenceBtn')}
               </button>
               {detail.validation_status === 'corroborated' && (
                 <button
@@ -560,7 +562,7 @@ export function InvestigationCaseDetail() {
                   }}
                 >
                   <ArrowUpRight className="h-3.5 w-3.5" />
-                  Promote to GT
+                  {t('caseDetail.promoteToGT')}
                 </button>
               )}
             </div>
@@ -575,20 +577,20 @@ export function InvestigationCaseDetail() {
           {/* Vendors */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
             <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
-              Vendors involved
+              {t('caseDetail.vendorsInvolved')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
               {formatNumber(detail.vendor_count || detail.vendors.length)}
             </div>
             <div style={{ fontSize: 11, color: INK_DIM, marginTop: 6 }}>
-              across {formatNumber(detail.total_contracts)} contracts
+              {t('caseDetail.acrossContracts', { n: formatNumber(detail.total_contracts) })}
             </div>
           </div>
 
           {/* Total value */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
             <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
-              Total value
+              {t('caseDetail.totalValue')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: INK, lineHeight: 1, letterSpacing: '-0.01em' }}>
               {formatCompactMXN(detail.total_value_mxn)}
@@ -597,14 +599,14 @@ export function InvestigationCaseDetail() {
               <DotBar value={valueRatio} max={1} color="#f59e0b" dots={20} size={5} gap={2} />
             </div>
             <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
-              scale: 0–100B MXN
+              {t('caseDetail.scaleMXN')}
             </div>
           </div>
 
           {/* Avg suspicion score */}
           <div style={{ backgroundColor: CARD, padding: '20px 24px' }}>
             <div style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, marginBottom: 8 }}>
-              Suspicion score
+              {t('caseDetail.suspicionScore')}
             </div>
             <div style={{ fontSize: 36, fontFamily: 'monospace', fontWeight: 700, color: LEVEL_COLOR[priority.level], lineHeight: 1, letterSpacing: '-0.01em' }}>
               {(detail.suspicion_score * 100).toFixed(0)}
@@ -614,7 +616,7 @@ export function InvestigationCaseDetail() {
               <DotBar value={detail.suspicion_score} max={1} color={LEVEL_COLOR[priority.level]} dots={20} size={5} gap={2} />
             </div>
             <div style={{ fontSize: 10, color: INK_FAINT, marginTop: 6, fontFamily: 'monospace' }}>
-              critical ≥ 60 · high ≥ 40
+              {t('caseDetail.riskThresholdHint')}
             </div>
           </div>
         </section>
@@ -636,7 +638,7 @@ export function InvestigationCaseDetail() {
             <div className="flex items-center gap-2 mb-4">
               <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
               <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK_DIM, fontWeight: 700 }}>
-                Case narrative
+                {t('caseDetail.caseNarrative')}
               </p>
             </div>
 
@@ -752,7 +754,7 @@ export function InvestigationCaseDetail() {
             {detail.signals_triggered.length > 0 && (
               <div style={{ marginTop: 16, paddingTop: 16, borderTop: `1px solid ${BORDER}` }}>
                 <p style={{ fontSize: 10, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 8, fontWeight: 600 }}>
-                  Signals triggered
+                  {t('caseDetail.signalsTriggered')}
                 </p>
                 <div className="flex flex-wrap gap-1.5">
                   {detail.signals_triggered.map((signal) => (
@@ -787,7 +789,7 @@ export function InvestigationCaseDetail() {
               <div className="flex items-center gap-2">
                 <Users className="h-4 w-4" style={{ color: INK_DIM }} />
                 <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
-                  Vendor evidence
+                  {t('caseDetail.vendorsInvolved')}
                 </h2>
                 <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
                   ({detail.vendors.length})
@@ -812,7 +814,7 @@ export function InvestigationCaseDetail() {
                     }}
                   >
                     <Shield className="h-3 w-3" />
-                    ASF lookup
+                    {t('caseDetail.asfLookupBtn')}
                   </a>
                   <a
                     href={`https://www.google.com/search?q=${encodeURIComponent(`"${toTitleCase(firstVendor.name)}" corrupción contrato gobierno México`)}`}
@@ -831,7 +833,7 @@ export function InvestigationCaseDetail() {
                     }}
                   >
                     <Newspaper className="h-3 w-3" />
-                    News
+                    {t('caseDetail.newsBtn')}
                   </a>
                 </div>
               )}
@@ -901,7 +903,7 @@ export function InvestigationCaseDetail() {
                               <span style={{ fontSize: 11, opacity: 0.6 }}>%</span>
                             </div>
                             <div style={{ fontSize: 9, fontFamily: 'monospace', color: INK_FAINT, textTransform: 'uppercase', letterSpacing: '0.08em', marginTop: 2 }}>
-                              Risk
+                              {t('caseDetail.riskLabel')}
                             </div>
                           </>
                         ) : (
@@ -921,7 +923,7 @@ export function InvestigationCaseDetail() {
                     <div className="grid grid-cols-2 gap-3 mb-3" style={{ fontSize: 11 }}>
                       <div>
                         <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
-                          Contracts
+                          {t('caseDetail.contractsLabel')}
                         </div>
                         <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
                           {v.contract_count != null ? formatNumber(v.contract_count) : '—'}
@@ -929,7 +931,7 @@ export function InvestigationCaseDetail() {
                       </div>
                       <div>
                         <div style={{ fontSize: 9, fontFamily: 'monospace', letterSpacing: '0.14em', textTransform: 'uppercase', color: INK_FAINT, marginBottom: 3 }}>
-                          Value
+                          {t('caseDetail.valueLabel')}
                         </div>
                         <div style={{ fontSize: 13, fontFamily: 'monospace', color: INK, fontWeight: 600 }}>
                           {v.contract_value_mxn != null ? formatCompactMXN(v.contract_value_mxn) : '—'}
@@ -954,7 +956,7 @@ export function InvestigationCaseDetail() {
                         }}
                       >
                         <ExternalLink className="h-3 w-3" />
-                        Contracts
+                        {t('caseDetail.contractsLabel')}
                       </Link>
                       <Link
                         to={`/thread/${v.vendor_id}`}
@@ -967,7 +969,7 @@ export function InvestigationCaseDetail() {
                           color: '#ef4444',
                         }}
                       >
-                        Red Thread →
+                        {t('caseDetail.redThread')}
                       </Link>
                     </div>
                   </div>
@@ -986,7 +988,7 @@ export function InvestigationCaseDetail() {
             <div className="flex items-baseline gap-2 mb-4">
               <HelpCircle className="h-4 w-4" style={{ color: INK_DIM }} />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
-                Investigation questions
+                {t('caseDetail.investigationQuestions')}
               </h2>
               <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
                 ({detail.questions.length})
@@ -1052,7 +1054,7 @@ export function InvestigationCaseDetail() {
                               fontWeight: 600,
                             }}
                           >
-                            High priority
+                            {t('caseDetail.highPriorityLabel')}
                           </span>
                         )}
                         {q.supporting_evidence && q.supporting_evidence.length > 0 && (
@@ -1063,7 +1065,7 @@ export function InvestigationCaseDetail() {
                               color: INK_DIM,
                             }}
                           >
-                            · {q.supporting_evidence.length} supporting evidence
+                            · {t('caseDetail.supportingEvidence_other', { count: q.supporting_evidence.length })}
                           </span>
                         )}
                       </div>
@@ -1084,7 +1086,7 @@ export function InvestigationCaseDetail() {
             <div className="flex items-center gap-2">
               <FileText className="h-4 w-4" style={{ color: INK_DIM }} />
               <h2 style={{ fontSize: 11, fontFamily: 'monospace', letterSpacing: '0.18em', textTransform: 'uppercase', color: INK, fontWeight: 700 }}>
-                Evidence log
+                {t('caseDetail.evidenceLog')}
               </h2>
               {parsedEvidence.length > 0 && (
                 <span style={{ fontSize: 11, color: INK_DIM, fontFamily: 'monospace' }}>
@@ -1109,7 +1111,7 @@ export function InvestigationCaseDetail() {
               }}
             >
               <Plus className="h-3 w-3" />
-              Add evidence
+              {t('caseDetail.addEvidenceBtn')}
             </button>
           </div>
 
@@ -1124,10 +1126,10 @@ export function InvestigationCaseDetail() {
               }}
             >
               <p style={{ fontSize: 12, color: INK_DIM, fontFamily: 'monospace', letterSpacing: '0.08em' }}>
-                No external evidence logged yet.
+                {t('caseDetail.noEvidenceLogged')}
               </p>
               <p style={{ fontSize: 11, color: INK_FAINT, marginTop: 6 }}>
-                Attach news articles, ASF audits, or legal filings to corroborate this case.
+                {t('caseDetail.attachEvidenceHint')}
               </p>
             </div>
           ) : (
@@ -1222,7 +1224,7 @@ export function InvestigationCaseDetail() {
                             letterSpacing: '-0.005em',
                           }}
                         >
-                          {ev.source_title || 'Untitled source'}
+                          {ev.source_title || t('caseDetail.untitledSource')}
                           <ExternalLink className="h-3 w-3 mt-0.5 flex-shrink-0 opacity-60" />
                         </a>
                       ) : (
@@ -1235,7 +1237,7 @@ export function InvestigationCaseDetail() {
                             lineHeight: 1.35,
                           }}
                         >
-                          {ev.source_title || 'Untitled source'}
+                          {ev.source_title || t('caseDetail.untitledSource')}
                         </p>
                       )}
 
@@ -1274,7 +1276,7 @@ export function InvestigationCaseDetail() {
                   marginBottom: 12,
                 }}
               >
-                Log new evidence
+                {t('caseDetail.logNewEvidence')}
               </p>
               <div className="space-y-2">
                 <input
@@ -1288,7 +1290,7 @@ export function InvestigationCaseDetail() {
                     color: INK,
                     outline: 'none',
                   }}
-                  placeholder="Source URL (https://…)"
+                  placeholder={t('caseDetail.sourceUrlPlaceholder')}
                   value={evidenceUrl}
                   onChange={(e) => setEvidenceUrl(e.target.value)}
                 />
