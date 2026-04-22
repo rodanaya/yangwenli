@@ -134,8 +134,9 @@ const RADAR_PRESETS: { id: RadarPreset; label: string; axes: { key: string; labe
 // =============================================================================
 
 export default function TrendsTab() {
-  const { t } = useTranslation('explore')
+  const { t, i18n } = useTranslation('explore')
   const { t: ts } = useTranslation('sectors')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [selectedYear, setSelectedYear] = useState(2024)
   const [radarPreset, setRadarPreset] = useState<RadarPreset>('risk')
   const [radarShowAll, setRadarShowAll] = useState(false)
@@ -835,9 +836,13 @@ export default function TrendsTab() {
               </div>
             ) : (
               <div className="py-12 text-center">
-                <p className="text-sm text-text-muted">Sin datos de sector para este corte.</p>
+                <p className="text-sm text-text-muted">
+                  {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
+                </p>
                 <p className="text-[11px] text-text-muted mt-1">
-                  Ajusta el rango de años o el tipo de métrica.
+                  {lang === 'en'
+                    ? 'Adjust the year range or metric type.'
+                    : 'Ajusta el rango de años o el tipo de métrica.'}
                 </p>
               </div>
             )}
@@ -930,9 +935,13 @@ export default function TrendsTab() {
               </div>
             ) : (
               <div className="py-12 text-center">
-                <p className="text-sm text-text-muted">Sin datos de sector para este corte.</p>
+                <p className="text-sm text-text-muted">
+                  {lang === 'en' ? 'No sector data for this slice.' : 'Sin datos de sector para este corte.'}
+                </p>
                 <p className="text-[11px] text-text-muted mt-1">
-                  Ajusta el rango de años o el tipo de métrica.
+                  {lang === 'en'
+                    ? 'Adjust the year range or metric type.'
+                    : 'Ajusta el rango de años o el tipo de métrica.'}
                 </p>
               </div>
             )}

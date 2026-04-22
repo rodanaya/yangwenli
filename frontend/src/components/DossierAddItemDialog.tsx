@@ -27,7 +27,8 @@ export function DossierAddItemDialog({
   dossierId,
   dossierName,
 }: DossierAddItemDialogProps) {
-  const { t } = useTranslation('workspace')
+  const { t, i18n } = useTranslation('workspace')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const queryClient = useQueryClient()
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<VendorListItem[]>([])
@@ -103,7 +104,7 @@ export function DossierAddItemDialog({
       <DialogContent className="max-w-sm">
         <DialogHeader>
           <DialogTitle className="text-sm font-semibold">
-            Agregar proveedor a dossier
+            {lang === 'en' ? 'Add vendor to dossier' : 'Agregar proveedor a dossier'}
           </DialogTitle>
           <p className="text-xs text-text-muted mt-0.5 truncate">
             {dossierName}
@@ -116,11 +117,11 @@ export function DossierAddItemDialog({
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none" />
             <Input
               autoFocus
-              placeholder="Buscar proveedores..."
+              placeholder={lang === 'en' ? 'Search vendors...' : 'Buscar proveedores...'}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="pl-8 text-sm"
-              aria-label="Buscar proveedores"
+              aria-label={lang === 'en' ? 'Search vendors' : 'Buscar proveedores'}
             />
           </div>
 
@@ -128,7 +129,7 @@ export function DossierAddItemDialog({
           <div className="min-h-[80px] max-h-[220px] overflow-y-auto space-y-1">
             {isIdle ? (
               <p className="text-xs text-text-muted text-center py-6">
-                Escribe al menos 2 caracteres para buscar
+                {lang === 'en' ? 'Type at least 2 characters to search' : 'Escribe al menos 2 caracteres para buscar'}
               </p>
             ) : searching ? (
               <div className="space-y-1.5 px-1">

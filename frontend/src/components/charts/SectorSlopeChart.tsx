@@ -8,6 +8,7 @@
  */
 
 import { memo, useMemo, useState, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
 import type { SectorYearItem } from '@/api/types'
 
@@ -83,6 +84,8 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
   periodBEnd = 2024,
   height = 420,
 }: SectorSlopeChartProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [hoveredSector, setHoveredSector] = useState<string | null>(null)
 
   const slopes = useMemo(
@@ -121,10 +124,14 @@ export const SectorSlopeChart = memo(function SectorSlopeChart({
     return (
       <div className="flex flex-col items-center justify-center h-[200px] px-6 text-center border border-border rounded-sm bg-background-card">
         <p className="text-sm text-text-muted">
-          Sin datos suficientes para comparar los dos períodos seleccionados.
+          {lang === 'en'
+            ? 'Not enough data to compare the two selected periods.'
+            : 'Sin datos suficientes para comparar los dos períodos seleccionados.'}
         </p>
         <p className="text-[11px] text-text-muted mt-1">
-          Ambos rangos deben incluir al menos un sector con contratos.
+          {lang === 'en'
+            ? 'Both ranges must include at least one sector with contracts.'
+            : 'Ambos rangos deben incluir al menos un sector con contratos.'}
         </p>
       </div>
     )

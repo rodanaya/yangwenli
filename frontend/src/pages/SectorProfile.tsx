@@ -692,6 +692,9 @@ interface TimelineYear {
 }
 
 function RiskTrendChart({ years }: { years: TimelineYear[] }) {
+  const { i18n } = useTranslation('sectors')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const data = years
     .filter((d) => d.year >= 2010)
     .map((d) => ({
@@ -706,9 +709,13 @@ function RiskTrendChart({ years }: { years: TimelineYear[] }) {
   if (!data.length) {
     return (
       <div className="py-8 text-center">
-        <p className="text-sm text-text-muted">Sin datos de evolución de riesgo para este sector.</p>
+        <p className="text-sm text-text-muted">
+          {lang === 'en' ? 'No risk trend data for this sector.' : 'Sin datos de evolución de riesgo para este sector.'}
+        </p>
         <p className="text-[11px] text-text-muted mt-1">
-          Requiere al menos dos años con contratos calificados.
+          {lang === 'en'
+            ? 'Requires at least two years with scored contracts.'
+            : 'Requiere al menos dos años con contratos calificados.'}
         </p>
       </div>
     )

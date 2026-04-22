@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 
 export interface SexenioYearRow {
@@ -56,6 +57,8 @@ const fmtB = (v: number) => {
 
 export function SexenioStratum({ rows, className }: SexenioStratumProps) {
   const navigate = useNavigate()
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [hoveredYear, setHoveredYear] = useState<number | null>(null)
 
   const sorted = useMemo(() => [...rows].sort((a, b) => a.year - b.year), [rows])
@@ -305,7 +308,10 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
         fill="#71717a" fontSize={10}
         fontFamily="var(--font-family-mono, monospace)"
         textAnchor="end" opacity={0.5}
-      >puntos ≈ √gasto · ámbar = alto/crítico · — — = OECD 15%</text>
+      >{lang === 'en'
+        ? 'dots ≈ √spend · amber = high/critical · — — = OECD 15%'
+        : 'puntos ≈ √gasto · ámbar = alto/crítico · — — = OECD 15%'
+      }</text>
 
       {/* ── Tooltip ──────────────────────────────────────────────────────── */}
       {hoveredRow && (
@@ -325,15 +331,15 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           </text>
           <text x={tooltipX} y={PAD_T + 44} textAnchor="middle"
                 fill="#a1a1aa" fontSize={10} fontFamily="monospace">
-            {hoveredRow.contracts.toLocaleString()} contratos
+            {hoveredRow.contracts.toLocaleString()} {lang === 'en' ? 'contracts' : 'contratos'}
           </text>
           <text x={tooltipX} y={PAD_T + 56} textAnchor="middle"
                 fill="#f59e0b" fontSize={10} fontFamily="monospace">
-            {hoveredRow.high_risk_pct.toFixed(1)}% alto/crítico
+            {hoveredRow.high_risk_pct.toFixed(1)}% {lang === 'en' ? 'high/critical' : 'alto/crítico'}
           </text>
           <text x={tooltipX} y={PAD_T + 68} textAnchor="middle"
                 fill="#71717a" fontSize={10} fontFamily="monospace">
-            clic para explorar →
+            {lang === 'en' ? 'click to explore →' : 'clic para explorar →'}
           </text>
         </g>
       )}

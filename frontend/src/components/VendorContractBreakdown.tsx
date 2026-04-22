@@ -1,4 +1,5 @@
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { cn, formatCompactMXN } from '@/lib/utils'
 
@@ -139,6 +140,9 @@ export function VendorContractBreakdown({
   loading = false,
   className,
 }: VendorContractBreakdownProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   // --- Procedure type aggregation ---
   const procedureData = useMemo(() => {
     const counts: Record<string, number> = {}
@@ -237,10 +241,12 @@ export function VendorContractBreakdown({
             {procedureData.length === 0 ? (
               <div className="h-44 flex flex-col items-center justify-center px-4 text-center">
                 <p className="text-xs text-text-muted">
-                  Sin registros de tipo de procedimiento.
+                  {lang === 'en' ? 'No procedure type records.' : 'Sin registros de tipo de procedimiento.'}
                 </p>
                 <p className="text-[10px] text-text-muted mt-1">
-                  Dato faltante en COMPRANET para este proveedor.
+                  {lang === 'en'
+                    ? 'Field missing in COMPRANET for this vendor.'
+                    : 'Dato faltante en COMPRANET para este proveedor.'}
                 </p>
               </div>
             ) : (
@@ -294,10 +300,12 @@ export function VendorContractBreakdown({
             {riskData.length === 0 ? (
               <div className="h-44 flex flex-col items-center justify-center px-4 text-center">
                 <p className="text-xs text-text-muted">
-                  Sin puntuaciones de riesgo v0.6.5.
+                  {lang === 'en' ? 'No v0.6.5 risk scores.' : 'Sin puntuaciones de riesgo v0.6.5.'}
                 </p>
                 <p className="text-[10px] text-text-muted mt-1">
-                  Contratos sin features z-score en el modelo actual.
+                  {lang === 'en'
+                    ? 'Contracts missing z-score features in the current model.'
+                    : 'Contratos sin features z-score en el modelo actual.'}
                 </p>
               </div>
             ) : (

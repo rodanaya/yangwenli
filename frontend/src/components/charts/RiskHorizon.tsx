@@ -10,6 +10,7 @@
  * Reads as a textile: faint amber threads where the system is calm,
  * crimson where it strains. Pure SVG, deterministic, no Recharts.
  */
+import { useTranslation } from 'react-i18next'
 import { HAIRLINE_STROKE, FONT_MONO, RISK_PALETTE } from '@/lib/editorial'
 
 export interface RiskHorizonRow {
@@ -45,14 +46,19 @@ export function RiskHorizon({
   width = DEFAULT_W,
   className,
 }: RiskHorizonProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   if (rows.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center h-32 px-6 text-center border border-border rounded-sm bg-background-card">
         <p className="text-sm text-text-muted">
-          Sin datos de riesgo para esta cohorte.
+          {lang === 'en' ? 'No risk data for this cohort.' : 'Sin datos de riesgo para esta cohorte.'}
         </p>
         <p className="text-[11px] text-text-muted mt-1">
-          El horizonte requiere al menos una fila de valores anuales.
+          {lang === 'en'
+            ? 'The horizon chart requires at least one row of annual values.'
+            : 'El horizonte requiere al menos una fila de valores anuales.'}
         </p>
       </div>
     )

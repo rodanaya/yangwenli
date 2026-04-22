@@ -237,6 +237,8 @@ function ExtremeCaseCard({
   sectorName: string
   t: (key: string, opts?: Record<string, unknown>) => string
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const overpricingFactor = (contract.z_price_ratio ?? 0).toFixed(1)
 
   return (
@@ -296,7 +298,7 @@ function ExtremeCaseCard({
         <Link
           to={`/contracts/${contract.contract_id}`}
           className="inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-semibold text-blue-400 bg-blue-400/10 hover:bg-blue-400/20 transition-colors"
-          aria-label={`Ver detalle del contrato ${contract.contract_id}`}
+          aria-label={lang === 'en' ? `View contract detail ${contract.contract_id}` : `Ver detalle del contrato ${contract.contract_id}`}
         >
           {t('viewContract')}
           <ExternalLink className="w-3 h-3" />
@@ -323,6 +325,9 @@ function ReincidentesSection({
   contracts: PriceAnomalyContract[]
   loading: boolean
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const reincidentes = useMemo(() => {
     if (!contracts.length) return []
     const vendorMap = new Map<
@@ -391,7 +396,7 @@ function ReincidentesSection({
         </p>
       </div>
       <div className="overflow-x-auto">
-        <table className="w-full text-sm" aria-label="Proveedores reincidentes">
+        <table className="w-full text-sm" aria-label={lang === 'en' ? 'Repeat-offender vendors' : 'Proveedores reincidentes'}>
           <thead>
             <tr className="border-b border-zinc-700/60">
               <th className="text-left py-2 px-3 text-[10px] font-semibold uppercase tracking-widest text-zinc-500">
@@ -629,12 +634,14 @@ function MostExtremeCallout({
   contract: PriceAnomalyContract
   sectorName: string
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const factor = (contract.z_price_ratio ?? 0).toFixed(1)
   return (
     <aside
       className="relative overflow-hidden rounded-sm border border-red-500/30 bg-gradient-to-br from-red-950/40 via-zinc-900/60 to-zinc-900/30 p-5 md:p-6"
       role="complementary"
-      aria-label="El contrato más extremo"
+      aria-label={lang === 'en' ? 'The most extreme contract' : 'El contrato más extremo'}
     >
       {/* Red accent bar */}
       <div className="absolute top-0 left-0 h-full w-1 bg-red-500" aria-hidden="true" />
@@ -729,6 +736,9 @@ function SectorDeviationBars({
   data: SectorBarDatum[]
   loading: boolean
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   if (loading) return <Skeleton className="h-56 w-full" />
   if (!data.length) return null
 
@@ -758,7 +768,7 @@ function SectorDeviationBars({
       viewBox={`0 0 ${SVG_W} ${svgH}`}
       width="100%"
       role="img"
-      aria-label="Comparación sectorial: desviación promedio de precios"
+      aria-label={lang === 'en' ? 'Sector comparison: average price deviation' : 'Comparación sectorial: desviación promedio de precios'}
     >
       {/* Reference line at OECD-ish threshold z=3 */}
       {(() => {
@@ -863,6 +873,9 @@ function SectorDistributionCurves({
   data: SectorBarDatum[]
   loading: boolean
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   if (loading) return <Skeleton className="h-64 w-full" />
   if (!data.length) return null
 
@@ -911,7 +924,7 @@ function SectorDistributionCurves({
           <div
             key={sector.code}
             className="rounded-sm border border-zinc-700/40 bg-zinc-900/30 p-2"
-            aria-label={`Distribución de precios — ${sector.name}`}
+            aria-label={lang === 'en' ? `Price distribution — ${sector.name}` : `Distribución de precios — ${sector.name}`}
           >
             <div className="flex items-center justify-between mb-1 px-1">
               <div className="flex items-center gap-1.5">
@@ -1055,6 +1068,9 @@ function OverpricingTimelineSection({
   contracts: PriceAnomalyContract[]
   loading: boolean
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const yearData = useMemo(() => {
     if (!contracts.length) return []
     const m = new Map<
@@ -1106,7 +1122,7 @@ function OverpricingTimelineSection({
   const colW = fieldW / yearData.length
 
   return (
-    <section className="space-y-3" aria-label="Cronología de sobreprecios">
+    <section className="space-y-3" aria-label={lang === 'en' ? 'Overpricing timeline' : 'Cronología de sobreprecios'}>
       <div>
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
           RUBLI · Cronología de sobreprecios
@@ -1154,7 +1170,7 @@ function OverpricingTimelineSection({
         viewBox={`0 0 ${W} ${H}`}
         width="100%"
         role="img"
-        aria-label="Timeline: contratos anómalos y valor sobreprecio por año"
+        aria-label={lang === 'en' ? 'Timeline: anomalous contracts and overpricing value by year' : 'Timeline: contratos anómalos y valor sobreprecio por año'}
       >
         {/* Grid lines */}
         {[0.25, 0.5, 0.75, 1].map((frac) => {
@@ -1322,6 +1338,9 @@ function RiskLevelPriceGap({
   contracts: PriceAnomalyContract[]
   loading: boolean
 }) {
+  const { i18n } = useTranslation('price')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const stats = useMemo(() => {
     if (!contracts.length) return null
     const bins = {
@@ -1365,7 +1384,7 @@ function RiskLevelPriceGap({
   const standardPct = (stats.standard.avg / maxAvg) * 100
 
   return (
-    <section className="space-y-3" aria-label="Brecha de precio por nivel de riesgo">
+    <section className="space-y-3" aria-label={lang === 'en' ? 'Price gap by risk level' : 'Brecha de precio por nivel de riesgo'}>
       <div>
         <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
           RUBLI · Prima de corrupción
@@ -1408,7 +1427,7 @@ function RiskLevelPriceGap({
               <div className="flex items-center gap-2">
                 <span className="w-2 h-2 rounded-full bg-red-500" aria-hidden="true" />
                 <span className="text-xs font-semibold text-zinc-200">
-                  Crítico + Alto riesgo
+                  {lang === 'en' ? 'Critical + High risk' : 'Crítico + Alto riesgo'}
                 </span>
                 <span className="text-[10px] font-mono text-zinc-500">
                   n={formatNumber(stats.flagged.count)}

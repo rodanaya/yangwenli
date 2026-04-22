@@ -5,6 +5,7 @@
  */
 
 import { useMemo, useState, useRef, useCallback } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import ReactECharts from 'echarts-for-react'
@@ -62,6 +63,8 @@ export function NetworkGraphModal({
 }: NetworkGraphModalProps) {
   const navigate = useNavigate()
   const [depth, setDepth] = useState<1 | 2>(1)
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const chartRef = useRef<any>(null)
 
@@ -334,12 +337,12 @@ export function NetworkGraphModal({
               {/* Left: node color legend */}
               <div className="space-y-2">
                 <p className="text-[10px] font-mono uppercase tracking-widest text-text-muted/50 mb-1">
-                  Leyenda
+                  {lang === 'en' ? 'Legend' : 'Leyenda'}
                 </p>
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1.5 text-xs text-text-muted">
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block w-3 h-3 rounded-full bg-[#3b82f6]" aria-hidden="true" />
-                    Institución
+                    {lang === 'en' ? 'Institution' : 'Institución'}
                   </span>
                   {(['critical', 'high', 'medium', 'low'] as const).map((level) => (
                     <span key={level} className="flex items-center gap-1.5 capitalize">
@@ -348,7 +351,9 @@ export function NetworkGraphModal({
                         style={{ backgroundColor: RISK_COLORS[level] }}
                         aria-hidden="true"
                       />
-                      {level === 'critical' ? 'Crítico' : level === 'high' ? 'Alto' : level === 'medium' ? 'Medio' : 'Bajo'}
+                      {lang === 'en'
+                        ? level === 'critical' ? 'Critical' : level === 'high' ? 'High' : level === 'medium' ? 'Medium' : 'Low'
+                        : level === 'critical' ? 'Crítico' : level === 'high' ? 'Alto' : level === 'medium' ? 'Medio' : 'Bajo'}
                     </span>
                   ))}
                 </div>
@@ -357,25 +362,25 @@ export function NetworkGraphModal({
                 <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-text-muted/60 mt-1">
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block h-px w-6 bg-[#f87171]/60 border-t-2 border-[#f87171]/60" aria-hidden="true" />
-                    Conexión de alto riesgo
+                    {lang === 'en' ? 'High-risk connection' : 'Conexión de alto riesgo'}
                   </span>
                   <span className="flex items-center gap-1.5">
                     <span className="inline-block h-px w-6 bg-[#475569]/60 border-t-2 border-[#475569]/60" aria-hidden="true" />
-                    Conexión normal
+                    {lang === 'en' ? 'Normal connection' : 'Conexión normal'}
                   </span>
                   <span className="text-text-muted/40">
-                    Tamaño de nodo = valor contractual
+                    {lang === 'en' ? 'Node size = contract value' : 'Tamaño de nodo = valor contractual'}
                   </span>
                 </div>
               </div>
 
               {/* Right: node/edge count */}
               <div className="text-xs text-text-muted/50 text-right">
-                <span className="font-mono">{data.total_nodes}</span> nodos ·{' '}
-                <span className="font-mono">{data.total_links}</span> conexiones
+                <span className="font-mono">{data.total_nodes}</span> {lang === 'en' ? 'nodes' : 'nodos'} ·{' '}
+                <span className="font-mono">{data.total_links}</span> {lang === 'en' ? 'connections' : 'conexiones'}
                 {data.total_nodes >= 60 && (
                   <span className="block text-[10px] text-amber-500/60 mt-0.5">
-                    Mostrando top 60 nodos por valor
+                    {lang === 'en' ? 'Showing top 60 nodes by value' : 'Mostrando top 60 nodos por valor'}
                   </span>
                 )}
               </div>

@@ -5336,7 +5336,9 @@ function PeriodistaPanel({
           </div>
         ) : (
           <p className="text-sm text-text-muted">
-            No se encontraron casos similares con suficiente historial de datos.
+            {isEsPP
+              ? 'No se encontraron casos similares con suficiente historial de datos.'
+              : 'No similar cases found with sufficient data history.'}
           </p>
         )}
       </div>

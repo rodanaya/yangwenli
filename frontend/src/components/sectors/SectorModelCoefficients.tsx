@@ -19,6 +19,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { sectorApi } from '@/api/client'
 
 interface SectorModelCoefficientsProps {
@@ -69,6 +70,9 @@ function SectorModelCoefficients({
   sectorName,
   className,
 }: SectorModelCoefficientsProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const { data, isLoading, error } = useQuery({
     queryKey: ['sector-model-coefficients', sectorId],
     queryFn: () => sectorApi.getModelCoefficients(sectorId),
@@ -149,7 +153,7 @@ function SectorModelCoefficients({
       <div className="mt-5 overflow-x-auto">
         <svg
           role="img"
-          aria-label="Coeficientes del modelo logístico por característica"
+          aria-label={lang === 'en' ? 'Logistic model coefficients by feature' : 'Coeficientes del modelo logístico por característica'}
           width="100%"
           viewBox={`0 0 600 ${CHART_H}`}
           preserveAspectRatio="xMinYMid meet"

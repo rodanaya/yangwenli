@@ -132,6 +132,8 @@ function adminForYear(year: number): string {
 }
 
 function ConcentrationTooltip({ active, payload, label }: TooltipProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   if (!active || !payload || payload.length === 0) return null
   const year = typeof label === 'number' ? label : Number(label)
   return (
@@ -166,7 +168,7 @@ function ConcentrationTooltip({ active, payload, label }: TooltipProps) {
         )
       })}
       <div className="text-zinc-500 mt-1" style={{ fontSize: 10 }}>
-        Participación del proveedor principal
+        {lang === 'en' ? 'Top vendor share' : 'Participación del proveedor principal'}
       </div>
     </div>
   )
@@ -202,8 +204,8 @@ function AdminConcentrationTimeline({
     return Array.from(byYear.values()).sort((a, b) => a.year - b.year)
   }, [data])
 
-  const heading = title ?? 'CONCENTRACIÓN DE MERCADO POR ADMINISTRACIÓN'
-  const subtitle = 'Porcentaje del valor total adjudicado al proveedor principal'
+  const heading = title ?? (lang === 'en' ? 'MARKET CONCENTRATION BY ADMINISTRATION' : 'CONCENTRACIÓN DE MERCADO POR ADMINISTRACIÓN')
+  const subtitle = lang === 'en' ? 'Percentage of total awarded value captured by top vendor' : 'Porcentaje del valor total adjudicado al proveedor principal'
 
   return (
     <div className={className}>
@@ -230,10 +232,10 @@ function AdminConcentrationTimeline({
           className="flex items-center justify-center text-zinc-400 font-mono"
           style={{ height, fontSize: 11 }}
         >
-          No se pudieron cargar los datos de concentración.
+          {lang === 'en' ? 'Could not load concentration data.' : 'No se pudieron cargar los datos de concentración.'}
         </div>
       ) : (
-        <div role="img" aria-label="Línea de tiempo de concentración de mercado por administración">
+        <div role="img" aria-label={lang === 'en' ? 'Market concentration timeline by administration' : 'Línea de tiempo de concentración de mercado por administración'}>
           <ResponsiveContainer width="100%" height={height}>
             <LineChart
               data={chartData}
