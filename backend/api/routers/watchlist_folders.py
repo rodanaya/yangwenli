@@ -73,6 +73,18 @@ def _ensure_tables(conn: sqlite3.Connection):
     global _folders_tables_ready
     if _folders_tables_ready:
         return
+    # Read-only check: skip write lock entirely if all tables already exist.
+    # CREATE TABLE IF NOT EXISTS always acquires a write lock even when tables exist,
+    # which can fail on a DB with freelist corruption.
+    existing = {
+        r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type='table'"
+            " AND name IN ('watchlist_items','investigation_folders','investigation_folder_items')"
+        ).fetchall()
+    }
+    if existing >= {"watchlist_items", "investigation_folders", "investigation_folder_items"}:
+        _folders_tables_ready = True
+        return
     # watchlist_items must exist before investigation_folder_items references it via FK
     conn.execute("""
         CREATE TABLE IF NOT EXISTS watchlist_items (
