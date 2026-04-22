@@ -3264,57 +3264,72 @@ def get_threshold_gaming():
     with get_db() as conn:
         cursor = conn.cursor()
 
-        row = cursor.execute("""
-            SELECT
-                COUNT(*) as total_flagged,
-                ROUND(SUM(amount_mxn) / 1e9, 2) as total_value_bn,
-                COUNT(*) * 100.0 / (
-                    SELECT COUNT(*) FROM contracts
-                    WHERE is_direct_award = 0 AND amount_mxn > 0
-                ) as pct_of_competitive
-            FROM contracts
-            WHERE is_threshold_gaming = 1
-        """).fetchone()
+        try:
+            row = cursor.execute("""
+                SELECT
+                    COUNT(*) as total_flagged,
+                    ROUND(SUM(amount_mxn) / 1e9, 2) as total_value_bn,
+                    COUNT(*) * 100.0 / (
+                        SELECT COUNT(*) FROM contracts
+                        WHERE is_direct_award = 0 AND amount_mxn > 0
+                    ) as pct_of_competitive
+                FROM contracts
+                WHERE is_threshold_gaming = 1
+            """).fetchone()
 
-        total = row["total_flagged"] or 0
+            total = row["total_flagged"] or 0
 
-        sector_rows = cursor.execute("""
-            SELECT s.name_es as sector, s.code as sector_code,
-                   COUNT(*) as flagged_count,
-                   COUNT(*) * 100.0 / (
-                       SELECT COUNT(*) FROM contracts c2
-                       WHERE c2.sector_id = c.sector_id AND c2.is_direct_award = 0 AND c2.amount_mxn > 0
-                   ) as flagged_pct,
-                   ROUND(SUM(c.amount_mxn) / 1e9, 2) as value_bn
-            FROM contracts c
-            JOIN sectors s ON c.sector_id = s.id
-            WHERE c.is_threshold_gaming = 1
-            GROUP BY c.sector_id
-            ORDER BY flagged_count DESC
-        """).fetchall()
+            sector_rows = cursor.execute("""
+                SELECT s.name_es as sector, s.code as sector_code,
+                       COUNT(*) as flagged_count,
+                       COUNT(*) * 100.0 / (
+                           SELECT COUNT(*) FROM contracts c2
+                           WHERE c2.sector_id = c.sector_id AND c2.is_direct_award = 0 AND c2.amount_mxn > 0
+                       ) as flagged_pct,
+                       ROUND(SUM(c.amount_mxn) / 1e9, 2) as value_bn
+                FROM contracts c
+                JOIN sectors s ON c.sector_id = s.id
+                WHERE c.is_threshold_gaming = 1
+                GROUP BY c.sector_id
+                ORDER BY flagged_count DESC
+            """).fetchall()
 
-        by_sector = [
-            {
-                "sector": r["sector"],
-                "sector_code": r["sector_code"],
-                "flagged_count": r["flagged_count"],
-                "flagged_pct": round(float(r["flagged_pct"] or 0), 2),
-                "estimated_value_bn": float(r["value_bn"] or 0),
+            by_sector = [
+                {
+                    "sector": r["sector"],
+                    "sector_code": r["sector_code"],
+                    "flagged_count": r["flagged_count"],
+                    "flagged_pct": round(float(r["flagged_pct"] or 0), 2),
+                    "estimated_value_bn": float(r["value_bn"] or 0),
+                }
+                for r in sector_rows
+            ]
+
+            result = {
+                "total_flagged": total,
+                "pct_of_competitive_procedures": round(float(row["pct_of_competitive"] or 0), 2),
+                "total_value_bn": float(row["total_value_bn"] or 0),
+                "by_sector": by_sector,
+                "note": (
+                    "Based on Szucs (2023): contracts clustered just below legal thresholds "
+                    "indicate systematic threshold gaming to avoid competitive bidding requirements. "
+                    "Flagged = within 5% below the licitacion publica mandatory threshold."
+                ),
             }
-            for r in sector_rows
-        ]
-
-        result = {
-            "total_flagged": total,
-            "pct_of_competitive_procedures": round(float(row["pct_of_competitive"] or 0), 2),
-            "total_value_bn": float(row["total_value_bn"] or 0),
-            "by_sector": by_sector,
-            "note": (
-                "Based on Szucs (2023): contracts clustered just below legal thresholds "
-                "indicate systematic threshold gaming to avoid competitive bidding requirements. "
-                "Flagged = within 5% below the licitacion publica mandatory threshold."
-            ),
-        }
+        except Exception as exc:
+            if "no such column" in str(exc).lower():
+                result = {
+                    "total_flagged": 0,
+                    "pct_of_competitive_procedures": 0.0,
+                    "total_value_bn": 0.0,
+                    "by_sector": [],
+                    "note": (
+                        "Threshold-gaming analysis requires running the compute_z_features pipeline "
+                        "to populate the is_threshold_gaming column. Data not yet available."
+                    ),
+                }
+            else:
+                raise
 
         _threshold_gaming_cache["tg"] = {"ts": _time.time(), "data": result}
         return result

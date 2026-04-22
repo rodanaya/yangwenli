@@ -111,7 +111,8 @@ def _build_summary(conn) -> dict:
     precomputed = {}
     cur.execute("SELECT stat_key, stat_value FROM precomputed_stats")
     for row in cur.fetchall():
-        precomputed[row["stat_key"]] = json.loads(row["stat_value"])
+        val = row["stat_value"]
+        precomputed[row["stat_key"]] = json.loads(val) if isinstance(val, str) else val
 
     overview = precomputed.get("overview", {})
     sectors_raw = precomputed.get("sectors", [])

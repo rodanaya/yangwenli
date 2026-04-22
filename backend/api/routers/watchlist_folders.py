@@ -73,6 +73,24 @@ def _ensure_tables(conn: sqlite3.Connection):
     global _folders_tables_ready
     if _folders_tables_ready:
         return
+    # watchlist_items must exist before investigation_folder_items references it via FK
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS watchlist_items (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            item_type VARCHAR(20) NOT NULL CHECK (item_type IN ('vendor', 'institution', 'contract')),
+            item_id INTEGER NOT NULL,
+            reason TEXT NOT NULL,
+            priority VARCHAR(10) NOT NULL DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+            status VARCHAR(15) NOT NULL DEFAULT 'watching' CHECK (status IN ('watching', 'investigating', 'resolved')),
+            notes TEXT,
+            alert_threshold REAL,
+            alerts_enabled INTEGER NOT NULL DEFAULT 1,
+            risk_score_at_creation REAL,
+            created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+            UNIQUE(item_type, item_id)
+        )
+    """)
     conn.execute("""
         CREATE TABLE IF NOT EXISTS investigation_folders (
             id INTEGER PRIMARY KEY AUTOINCREMENT,
