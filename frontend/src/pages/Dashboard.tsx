@@ -96,11 +96,13 @@ function RiskDistributionPanel({
         })}
       </p>
 
-      <RiskStrata
-        rows={strataRows}
-        totalContracts={totalContracts}
-        hrRate={hrRate}
-      />
+      <div style={{ maxWidth: '360px' }}>
+        <RiskStrata
+          rows={strataRows}
+          totalContracts={totalContracts}
+          hrRate={hrRate}
+        />
+      </div>
 
       <p className="text-[10px] text-text-muted/60 mt-2 font-mono">
         {t('editorial.riskOecdNote', 'High-risk: {{rate}}% · OECD 2-15%', { rate: hrRate.toFixed(1) })}
