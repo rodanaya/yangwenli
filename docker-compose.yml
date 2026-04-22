@@ -14,8 +14,7 @@ services:
       - ./backend/RUBLI_NORMALIZED.db:/app/RUBLI_NORMALIZED.db
     environment:
       - PYTHONPATH=/app
-      # Add your production domain before deploying (e.g., https://yourdomain.com)
-      - CORS_ORIGINS=http://localhost:3009,http://127.0.0.1:3009,http://rubli-frontend
+      - CORS_ORIGINS=http://localhost:3009,http://127.0.0.1:3009,http://rubli-frontend,https://rubli.xyz,https://www.rubli.xyz
     healthcheck:
       test: ["CMD", "python", "-c", "import httpx; httpx.get('http://localhost:8001/health', timeout=5)"]
       interval: 30s
