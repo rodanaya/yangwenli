@@ -45,7 +45,11 @@
     "critical": "Crítico",
     "high": "Alto",
     "medium": "Medio",
-    "low": "Bajo"
+    "low": "Bajo",
+    "directAward": "adj. directa",
+    "singleBid": "licitación única",
+    "institutions": "instituciones",
+    "providers": "proveedores"
   },
   "chips": {
     "criticalRisk": "Riesgo Crítico",
@@ -262,6 +266,17 @@
   "trendChart": {
     "eyebrow": "Tendencia temporal",
     "title": "Riesgo promedio por sector 2015-2025"
+  },
+  "riskRanking": {
+    "eyebrow": "RIESGO — TODOS LOS SECTORES"
+  },
+  "riskFactors": {
+    "eyebrow": "RUBLI · Análisis de factores",
+    "title": "Qué empuja el riesgo en cada sector",
+    "description": "Coeficientes del modelo logístico v0.6.5 — positivos aumentan el riesgo, negativos son protectores.",
+    "sectorLabel": "Sector:",
+    "sectorAriaLabel": "Seleccionar sector para ver coeficientes del modelo",
+    "sectionAriaLabel": "Análisis de factores de riesgo por sector"
   },
   "featured": {
     "kicker": "Lede sectorial · {{sector}}",

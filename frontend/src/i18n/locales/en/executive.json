@@ -551,22 +551,22 @@
   "recommendations": {
     "sectionLabel": "Recommended next steps — by audience",
     "a1": {
-      "audience": "For Investigators (ASF / SFP)",
-      "s1": "Start with the critical-risk contracts — filter by sector (Salud, Agricultura) and institution to triage the highest-value cases first.",
-      "s2": "Cross-reference the 38 SAT-confirmed EFOS ghost vendors (Case 22) against active contracts. Any current procurement relationship warrants immediate review.",
-      "s3": "Run vendor network analysis on co-bidding clusters — 8,701 vendors show suspicious co-bid rates above 50%, a hallmark of bid rotation."
+      "audience": "For Investigators",
+      "s1": "Focus on Tier 1 ARIA vendors (320) for immediate case referrals — these have been independently flagged by the risk model, anomaly detection, and external registries.",
+      "s2": "Cross-reference with SAT EFOS ghost company registry (13,960 entities). Any active procurement relationship with a definitive-status EFOS vendor warrants immediate review.",
+      "s3": "Price volatility is the strongest signal — 99.9% detection rate on the IMSS ghost network. Prioritize vendors whose contract amounts swing wildly across institutions."
     },
     "a2": {
-      "audience": "For Procurement Reformers",
-      "s1": "The 71% direct award rate is the single largest vulnerability. Mandate competitive procedures for all contracts above 500K MXN, with limited emergency exceptions.",
-      "s2": "Require publication of justification memos for direct awards within 24 hours of signing — not retroactively.",
-      "s3": "December contract volume spikes 1.33× — enforce quarterly budget release schedules to eliminate year-end spending dumps."
+      "audience": "For Journalists",
+      "s1": "The AMLO administration shows 2.4× the high-risk rate of the Fox era — a structural shift worth quantifying by sector and institution in your coverage.",
+      "s2": "48.6% of contracts show co-bidding patterns consistent with bid rings. Map the most frequent co-bidding clusters to surface potential cartels in your state or sector.",
+      "s3": "COVID-19 emergency procurement: 5,371 contracts, avg risk score 0.821. The pandemic-era case files offer a ready-made investigation track with public records."
     },
     "a3": {
-      "audience": "For Journalists & Civil Society",
-      "s1": "Use the Sector page to identify which agencies account for the highest value-at-risk in your area of coverage.",
-      "s2": "The Vendor Profile tool shows 27 documented ground truth vendors alongside statistical risk — compare institutional exposure.",
-      "s3": "Filter the contract explorer to risk_level=critical and sector=salud to reproduce the IMSS ghost company patterns independently."
+      "audience": "For Reformers",
+      "s1": "Direct award rate peaked at 79.4% under AMLO — OECD limit is 25%. Bringing Mexico within the international benchmark would require structural legislative change.",
+      "s2": "Single-bid competitive procedures affect 16.5% of contracts (505,219) — a red flag masquerading as a competitive process. Demand minimum-bidder thresholds enforced in law.",
+      "s3": "Price outliers exceed sector median by more than 3× in 17,373 contracts. A mandatory price-reasonableness review above that threshold would recover billions in over-payments."
     }
   },
 

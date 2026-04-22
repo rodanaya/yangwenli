@@ -822,7 +822,9 @@ export function Dashboard() {
                 'High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.'
               )}
             </p>
-            <AdminFingerprints />
+            <div className="w-full overflow-hidden">
+              <AdminFingerprints />
+            </div>
           </ErrorBoundary>
         </section>
 

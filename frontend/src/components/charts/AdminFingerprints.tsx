@@ -9,6 +9,8 @@
  * most of the strip, making the outlier immediately legible.
  */
 
+import { useTranslation } from 'react-i18next'
+
 const fmtB = (v: number) => {
   const b = v / 1e9
   return b >= 1000 ? `${(b / 1000).toFixed(1)}T` : `${Math.round(b)}B`
@@ -37,7 +39,7 @@ const ADMINS: Admin[] = [
 
 // ── Layout constants ─────────────────────────────────────────────────────
 const SVG_W        = 580
-const ROW_H        = 36
+const ROW_H        = 28
 const ROW_GAP      = 6
 const PAD_T        = 22
 const PAD_B        = 38
@@ -81,13 +83,15 @@ const EMPTY_DOT    = '#27272a'   // dark — blends with dark card background
 const EMPTY_STROKE = '#3f3f46'   // subtle border for empty dots
 
 export function AdminFingerprints() {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const maxRiskPct = Math.max(...ADMINS.map((a) => a.highRiskPct))
 
   return (
     <svg
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
       width="100%"
-      preserveAspectRatio="xMidYMid meet"
+      preserveAspectRatio="xMinYMin meet"
       role="img"
       aria-label="Presidential risk fingerprints: high-risk rate and direct-award percentage by administration, 2001-2025."
     >
@@ -127,13 +131,13 @@ export function AdminFingerprints() {
               stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
             <text x={riskOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
               fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
-              OCDE 15%
+              {lang === 'en' ? 'OECD 15%' : 'OCDE 15%'}
             </text>
             <line x1={daOecdX} y1={y1} x2={daOecdX} y2={y2}
               stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
             <text x={daOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
               fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
-              OCDE 25%
+              {lang === 'en' ? 'OECD 25%' : 'OCDE 25%'}
             </text>
           </>
         )
@@ -142,7 +146,7 @@ export function AdminFingerprints() {
       {/* Legend: 1 dot = ~2.25% */}
       <text x={BAR_RISK_X} y={PAD_T - 8} fill="#52525b" fontSize={8}
         fontFamily="var(--font-family-mono, monospace)">
-        1 punto ≈ 2.25%
+        {lang === 'en' ? '1 dot ≈ 2.25%' : '1 punto ≈ 2.25%'}
       </text>
 
       {/* ── Rows ───────────────────────────────────────────────────────── */}
@@ -262,7 +266,7 @@ export function AdminFingerprints() {
                   fontFamily="var(--font-family-mono, monospace)"
                   fontStyle="italic"
                 >
-                  datos pre-2007
+                  {lang === 'en' ? 'pre-2007 data' : 'datos pre-2007'}
                 </text>
               </>
             )}
@@ -282,11 +286,15 @@ export function AdminFingerprints() {
       {/* Footer caption */}
       <text x={LABEL_X} y={SVG_H - 16} fill="#52525b" fontSize={9}
         fontFamily="var(--font-family-mono, monospace)">
-        AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007
+        {lang === 'en'
+          ? 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award data unavailable pre-2007'
+          : 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007'}
       </text>
       <text x={LABEL_X} y={SVG_H - 4} fill="#3f3f46" fontSize={8}
         fontFamily="var(--font-family-mono, monospace)" fontStyle="italic">
-        * Sheinbaum: sexenio parcial (datos 2025 al corte)
+        {lang === 'en'
+          ? '* Sheinbaum: partial term (2025 data through cutoff)'
+          : '* Sheinbaum: sexenio parcial (datos 2025 al corte)'}
       </text>
     </svg>
   )

@@ -77,13 +77,13 @@ function normalizeRelative(a: number, b: number): [number, number] {
   return [a / max, b / max]
 }
 
-function buildRadarData(instA: InstitutionDetailResponse, instB: InstitutionDetailResponse) {
+function buildRadarData(instA: InstitutionDetailResponse, instB: InstitutionDetailResponse, isEs: boolean) {
   return RADAR_METRICS.map((m) => {
     const rawA = (instA[m.key] as number | undefined) ?? 0
     const rawB = (instB[m.key] as number | undefined) ?? 0
     const [normA, normB] = normalizeRelative(rawA, rawB)
     return {
-      factor: m.labelEs,
+      factor: isEs ? m.labelEs : m.label,
       instA: Math.round(normA * 100) / 100,
       instB: Math.round(normB * 100) / 100,
     }
@@ -96,6 +96,7 @@ function buildRadarData(instA: InstitutionDetailResponse, instB: InstitutionDeta
 
 interface MetricDef {
   label: string
+  labelEs: string
   getValue: (i: InstitutionDetailResponse) => number | null
   format: (n: number) => string
   higherIsBad: boolean
@@ -103,49 +104,57 @@ interface MetricDef {
 
 const METRICS: MetricDef[] = [
   {
-    label: 'Total de contratos',
+    label: 'Total contracts',
+    labelEs: 'Total de contratos',
     getValue: (i) => i.total_contracts ?? null,
     format: (n) => formatNumber(n),
     higherIsBad: false,
   },
   {
-    label: 'Gasto total',
+    label: 'Total spending',
+    labelEs: 'Gasto total',
     getValue: (i) => i.total_amount_mxn ?? null,
     format: (n) => formatCompactMXN(n),
     higherIsBad: false,
   },
   {
-    label: 'Adjudicacion directa',
+    label: 'Direct award',
+    labelEs: 'Adjudicacion directa',
     getValue: (i) => i.direct_award_pct ?? null,
     format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
-    label: 'Riesgo promedio',
+    label: 'Avg risk score',
+    labelEs: 'Riesgo promedio',
     getValue: (i) => i.avg_risk_score ?? null,
     format: (n) => `${(n * 100).toFixed(1)}%`,
     higherIsBad: true,
   },
   {
-    label: 'Contratos alto riesgo',
+    label: 'High risk contracts',
+    labelEs: 'Contratos alto riesgo',
     getValue: (i) => i.high_risk_pct ?? null,
     format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
-    label: 'Licitante unico',
+    label: 'Single bid',
+    labelEs: 'Licitante unico',
     getValue: (i) => i.single_bid_pct ?? null,
     format: (n) => formatPercentSafe(n, false),
     higherIsBad: true,
   },
   {
-    label: 'Proveedores unicos',
+    label: 'Unique vendors',
+    labelEs: 'Proveedores unicos',
     getValue: (i) => i.vendor_count ?? null,
     format: (n) => formatNumber(n),
     higherIsBad: false,
   },
   {
-    label: 'Indice HHI',
+    label: 'HHI index',
+    labelEs: 'Indice HHI',
     getValue: (i) => i.supplier_diversity?.hhi_current_year ?? null,
     format: (n) => formatNumber(Math.round(n)),
     higherIsBad: true,
@@ -196,6 +205,8 @@ function InstitutionPreviewCard({
   accentColor: string
   side: string
 }) {
+  const { i18n: cardI18n } = useTranslation('institutions')
+  const isEsCard = cardI18n.language.startsWith('es')
   const riskScore = institution.avg_risk_score ?? 0
   const riskLevel = getRiskLevelFromScore(riskScore)
 
@@ -230,19 +241,19 @@ function InstitutionPreviewCard({
       </div>
       <div className="grid grid-cols-3 gap-3 mt-3 pt-3 border-t border-border/30">
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Contracts</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Contratos' : 'Contracts'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatNumber(institution.total_contracts ?? 0)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Valor</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Valor' : 'Value'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {formatCompactMXN(institution.total_amount_mxn ?? 0)}
           </p>
         </div>
         <div>
-          <p className="text-[10px] text-text-muted uppercase tracking-wide">Adj. Directa</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wide">{isEsCard ? 'Adj. Directa' : 'Direct Award'}</p>
           <p className="text-sm font-bold text-text-primary font-mono tabular-nums">
             {institution.direct_award_pct != null ? formatPercentSafe(institution.direct_award_pct, false) : '--'}
           </p>
@@ -251,9 +262,9 @@ function InstitutionPreviewCard({
       <Link
         to={`/institutions/${institution.id}`}
         className="inline-flex items-center gap-1 text-xs text-accent hover:underline mt-3"
-        aria-label={`Ver perfil completo de ${institution.name}`}
+        aria-label={isEsCard ? `Ver perfil completo de ${institution.name}` : `View full profile for ${institution.name}`}
       >
-        Ver perfil completo
+        {isEsCard ? 'Ver perfil completo' : 'View full profile'}
       </Link>
     </div>
   )
@@ -267,7 +278,8 @@ function VeredictoHeader({
   instA: InstitutionDetailResponse
   instB: InstitutionDetailResponse
 }) {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const isEs = i18n.language.startsWith('es')
   const hhiA = instA.supplier_diversity?.hhi_current_year ?? 0
   const hhiB = instB.supplier_diversity?.hhi_current_year ?? 0
   const levelA = getHHILevel(hhiA)
@@ -281,12 +293,18 @@ function VeredictoHeader({
   if (hhiA > 0 && hhiB > 0) {
     if (ratio > 1.2) {
       const rStr = ratio.toFixed(1)
-      narrative = `${toTitleCase(instA.siglas || instA.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instB.siglas || instB.name)}`
+      narrative = isEs
+        ? `${toTitleCase(instA.siglas || instA.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instB.siglas || instB.name)}`
+        : `${toTitleCase(instA.siglas || instA.name)} shows ${rStr}x more vendor concentration than ${toTitleCase(instB.siglas || instB.name)}`
     } else if (ratio < 0.8) {
       const rStr = (1 / ratio).toFixed(1)
-      narrative = `${toTitleCase(instB.siglas || instB.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instA.siglas || instA.name)}`
+      narrative = isEs
+        ? `${toTitleCase(instB.siglas || instB.name)} muestra ${rStr}x mas concentracion de proveedores que ${toTitleCase(instA.siglas || instA.name)}`
+        : `${toTitleCase(instB.siglas || instB.name)} shows ${rStr}x more vendor concentration than ${toTitleCase(instA.siglas || instA.name)}`
     } else {
-      narrative = 'Ambas instituciones presentan niveles de concentracion similares'
+      narrative = isEs
+        ? 'Ambas instituciones presentan niveles de concentracion similares'
+        : 'Both institutions show similar concentration levels'
     }
   }
 
@@ -372,26 +390,30 @@ function MetricTable({
   instA: InstitutionDetailResponse
   instB: InstitutionDetailResponse
 }) {
+  const { i18n } = useTranslation('institutions')
+  const isEs = i18n.language.startsWith('es')
   const nameA = toTitleCase(instA.siglas || instA.name).slice(0, 25)
   const nameB = toTitleCase(instB.siglas || instB.name).slice(0, 25)
 
   return (
-    <section className="mb-10" aria-label="Comparacion de metricas">
+    <section className="mb-10" aria-label={isEs ? 'Comparacion de metricas' : 'Metric comparison'}>
       <h3
         className="text-lg font-bold text-text-primary mb-1"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
-        Metricas Clave
+        {isEs ? 'Metricas Clave' : 'Key Metrics'}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Valores resaltados en rojo indican la institucion con peor desempeno en esa metrica.
+        {isEs
+          ? 'Valores resaltados en rojo indican la institucion con peor desempeno en esa metrica.'
+          : 'Values highlighted in red indicate the institution with worse performance on that metric.'}
       </p>
       <div className="overflow-x-auto rounded-lg border border-border/60">
-        <table className="w-full text-sm" aria-label="Comparacion de metricas institucionales">
+        <table className="w-full text-sm" aria-label={isEs ? 'Comparacion de metricas institucionales' : 'Institutional metric comparison'}>
           <thead>
             <tr className="border-b border-border bg-zinc-900/40">
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
-                Metrica
+                {isEs ? 'Metrica' : 'Metric'}
               </th>
               <th className="px-4 py-3 text-center text-xs font-semibold uppercase tracking-wide" style={{ color: COLOR_A }}>
                 {nameA}
@@ -416,7 +438,7 @@ function MetricTable({
               if (vA !== null && vB !== null) {
                 const d = vB - vA
                 if (Math.abs(d) < 0.0001 && Math.abs(d) < 1) {
-                  deltaEl = <td className="px-4 py-3 text-center text-xs text-text-muted font-mono">Igual</td>
+                  deltaEl = <td className="px-4 py-3 text-center text-xs text-text-muted font-mono">{isEs ? 'Igual' : 'Equal'}</td>
                 } else {
                   const worse = m.higherIsBad ? d > 0 : d < 0
                   const sign = d > 0 ? '+' : ''
@@ -439,7 +461,7 @@ function MetricTable({
                   key={m.label}
                   className="border-b border-border/20 hover:bg-zinc-800/20 transition-colors"
                 >
-                  <td className="px-4 py-3 text-xs text-text-secondary font-medium">{m.label}</td>
+                  <td className="px-4 py-3 text-xs text-text-secondary font-medium">{isEs ? m.labelEs : m.label}</td>
                   <td className={cn(
                     'px-4 py-3 text-center text-xs font-mono tabular-nums',
                     aIsWorse ? 'text-red-400 font-semibold' : 'text-text-primary',
@@ -479,7 +501,8 @@ function TopVendorsComparison({
   totalA: number
   totalB: number
 }) {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const isEs = i18n.language.startsWith('es')
   const top5A = vendorsA.slice(0, 5)
   const top5B = vendorsB.slice(0, 5)
 
@@ -532,7 +555,7 @@ function TopVendorsComparison({
                           {formatCompactMXN(v.total_value_mxn)}
                         </span>
                         <span className="text-xs text-text-muted font-mono tabular-nums">
-                          {v.contract_count.toLocaleString()} contr.
+                          {v.contract_count.toLocaleString()} {isEs ? 'contr.' : 'contr.'}
                         </span>
                       </div>
                     </div>
@@ -545,7 +568,7 @@ function TopVendorsComparison({
                           <span
                             className="inline-block w-2 h-2 rounded-full"
                             style={{ backgroundColor: riskColor }}
-                            title={`Riesgo: ${riskLevel}`}
+                            title={isEs ? `Riesgo: ${riskLevel}` : `Risk: ${riskLevel}`}
                           />
                         </div>
                       )}
@@ -578,15 +601,17 @@ function TopVendorsComparison({
   }
 
   return (
-    <section className="mb-10" aria-label="Comparacion de proveedores principales">
+    <section className="mb-10" aria-label={isEs ? 'Comparacion de proveedores principales' : 'Top vendor comparison'}>
       <h3
         className="text-lg font-bold text-text-primary mb-1"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
-        Principales Proveedores
+        {isEs ? 'Principales Proveedores' : 'Top Vendors'}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Top 5 proveedores por valor contratado. El porcentaje indica la participacion del proveedor en el gasto total de la institucion.
+        {isEs
+          ? 'Top 5 proveedores por valor contratado. El porcentaje indica la participacion del proveedor en el gasto total de la institucion.'
+          : 'Top 5 vendors by contracted value. The percentage indicates each vendor\'s share of total institutional spending.'}
       </p>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <VendorColumn vendors={top5A} accentColor={COLOR_A} instName={nameA} total={totalA} />
@@ -734,25 +759,28 @@ function RiskDistribution({
   const medPctB = Math.max(0, Math.min(100 - highPctB, riskScoreB * 100))
   const lowPctB = Math.max(0, 100 - highPctB - medPctB)
 
+  const { i18n: riskDistI18n } = useTranslation('institutions')
+  const isEsRisk = riskDistI18n.language.startsWith('es')
+
   const chartData = [
-    { level: 'Critico', a: critPctA, b: critPctB, color: RISK_COLORS.critical },
-    { level: 'Alto', a: highOnlyPctA, b: highOnlyPctB, color: RISK_COLORS.high },
-    { level: 'Medio', a: medPctA, b: medPctB, color: RISK_COLORS.medium },
-    { level: 'Bajo', a: lowPctA, b: lowPctB, color: RISK_COLORS.low },
+    { level: isEsRisk ? 'Critico' : 'Critical', a: critPctA, b: critPctB, color: RISK_COLORS.critical },
+    { level: isEsRisk ? 'Alto' : 'High', a: highOnlyPctA, b: highOnlyPctB, color: RISK_COLORS.high },
+    { level: isEsRisk ? 'Medio' : 'Medium', a: medPctA, b: medPctB, color: RISK_COLORS.medium },
+    { level: isEsRisk ? 'Bajo' : 'Low', a: lowPctA, b: lowPctB, color: RISK_COLORS.low },
   ]
 
   return (
-    <section className="mb-10" aria-label="Distribucion de riesgo">
+    <section className="mb-10" aria-label={isEsRisk ? 'Distribucion de riesgo' : 'Risk distribution'}>
       <h3
         className="text-lg font-bold text-text-primary mb-1"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
-        Distribucion de Riesgo
+        {isEsRisk ? 'Distribucion de Riesgo' : 'Risk Distribution'}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Porcentaje estimado de contratos por nivel de riesgo.
+        {isEsRisk ? 'Porcentaje estimado de contratos por nivel de riesgo.' : 'Estimated percentage of contracts by risk level.'}
         {totalA > 0 && totalB > 0 && (
-          <span> Base: {formatNumber(totalA)} vs {formatNumber(totalB)} contratos.</span>
+          <span> {isEsRisk ? 'Base:' : 'Base:'} {formatNumber(totalA)} vs {formatNumber(totalB)} {isEsRisk ? 'contratos.' : 'contracts.'}</span>
         )}
       </p>
       <div className="rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Dot matrix chart comparing risk level distribution between two institutions">
@@ -783,16 +811,21 @@ function ComparisonRadar({
   aName: string
   bName: string
 }) {
+  const { i18n: radarI18n } = useTranslation('institutions')
+  const isEsRadar = radarI18n.language.startsWith('es')
+
   return (
-    <section className="mb-10" aria-label="Radar de comportamiento">
+    <section className="mb-10" aria-label={isEsRadar ? 'Radar de comportamiento' : 'Behavior radar'}>
       <h3
         className="text-lg font-bold text-text-primary mb-1"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
-        Radar de Contratacion
+        {isEsRadar ? 'Radar de Contratacion' : 'Procurement Radar'}
       </h3>
       <p className="text-xs text-text-muted mb-4">
-        Comparacion normalizada de 6 dimensiones de contratacion. 100% corresponde al valor mas alto entre ambas instituciones.
+        {isEsRadar
+          ? 'Comparacion normalizada de 6 dimensiones de contratacion. 100% corresponde al valor mas alto entre ambas instituciones.'
+          : 'Normalized comparison of 6 procurement dimensions. 100% corresponds to the highest value between both institutions.'}
       </p>
       <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
         <ResponsiveContainer width="100%" height="100%">
@@ -812,7 +845,7 @@ function ComparisonRadar({
                     <p style={{ color: COLOR_B }}>
                       {bName.slice(0, 22)}: {(d.instB * 100).toFixed(0)}%
                     </p>
-                    <p className="text-text-muted mt-1 text-[10px]">Normalizado uno respecto al otro</p>
+                    <p className="text-text-muted mt-1 text-[10px]">{isEsRadar ? 'Normalizado uno respecto al otro' : 'Normalized relative to each other'}</p>
                   </div>
                 )
               }}
@@ -875,6 +908,8 @@ function InstitutionSearchInput({
   accentColor: string
   selectedInstitution?: InstitutionDetailResponse | null
 }) {
+  const { i18n: searchI18n } = useTranslation('institutions')
+  const isEsSearch = searchI18n.language.startsWith('es')
   const { data: results } = useQuery({
     queryKey: ['institution-search', query],
     queryFn: () => institutionApi.search(query, 5),
@@ -898,21 +933,21 @@ function InstitutionSearchInput({
         <input
           id={id}
           type="text"
-          placeholder="Buscar por nombre..."
+          placeholder={isEsSearch ? 'Buscar por nombre...' : 'Search by name...'}
           value={query}
           onChange={(e) => {
             setQuery(e.target.value)
             setSelectedId(null)
           }}
           className="bg-transparent text-sm text-text-primary placeholder:text-text-muted/50 outline-none w-full"
-          aria-label={`Buscar ${label}`}
+          aria-label={isEsSearch ? `Buscar ${label}` : `Search ${label}`}
           autoComplete="off"
         />
         {selectedId && (
           <button
             onClick={() => { setQuery(''); setSelectedId(null) }}
             className="text-text-muted hover:text-text-primary text-xs"
-            aria-label="Limpiar seleccion"
+            aria-label={isEsSearch ? 'Limpiar seleccion' : 'Clear selection'}
           >
             x
           </button>
@@ -975,7 +1010,8 @@ function InstitutionSearchInput({
 // ============================================================================
 
 export default function InstitutionCompare() {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const isEs = i18n.language.startsWith('es')
   const [searchParams, setSearchParams] = useSearchParams()
   const idA = searchParams.get('a')
   const idB = searchParams.get('b')
@@ -1028,8 +1064,8 @@ export default function InstitutionCompare() {
   })
 
   const radarData = useMemo(
-    () => (instA && instB ? buildRadarData(instA, instB) : []),
-    [instA, instB],
+    () => (instA && instB ? buildRadarData(instA, instB, isEs) : []),
+    [instA, instB, isEs],
   )
 
   const isLoading = loadingA || loadingB
@@ -1052,18 +1088,20 @@ export default function InstitutionCompare() {
         <Link
           to="/institutions/health"
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-primary transition-colors uppercase tracking-wide"
-          aria-label="Regresar a Instituciones"
+          aria-label={isEs ? 'Regresar a Instituciones' : 'Back to Institutions'}
         >
           <ArrowLeft className="h-3 w-3" />
-          Instituciones
+          {isEs ? 'Instituciones' : 'Institutions'}
         </Link>
       </div>
 
       {/* Editorial headline */}
       <EditorialHeadline
-        section="COMPARATIVA INSTITUCIONAL"
-        headline="Dos Instituciones, Una Radiografia"
-        subtitle="Compara el patron de contratacion, concentracion y riesgo de dos dependencias federales"
+        section={isEs ? 'COMPARATIVA INSTITUCIONAL' : 'INSTITUTION COMPARISON'}
+        headline={isEs ? 'Dos Instituciones, Una Radiografia' : 'Two Institutions, One X-Ray'}
+        subtitle={isEs
+          ? 'Compara el patron de contratacion, concentracion y riesgo de dos dependencias federales'
+          : 'Compare the contracting pattern, concentration and risk of two federal agencies'}
         className="mb-8"
       />
 
@@ -1097,15 +1135,17 @@ export default function InstitutionCompare() {
               onClick={handleCompare}
               disabled={!selectedA || !selectedB || selectedA === selectedB}
               className="px-8"
-              aria-label="Comparar instituciones"
+              aria-label={isEs ? 'Comparar instituciones' : 'Compare institutions'}
             >
               <Scale className="h-4 w-4 mr-2" />
-              Comparar
+              {isEs ? 'Comparar' : 'Compare'}
             </Button>
           </div>
           {selectedA && selectedB && selectedA === selectedB && (
             <p className="text-xs text-red-400 text-center mt-2">
-              Selecciona dos instituciones diferentes para comparar.
+              {isEs
+                ? 'Selecciona dos instituciones diferentes para comparar.'
+                : 'Select two different institutions to compare.'}
             </p>
           )}
         </div>
@@ -1181,7 +1221,7 @@ export default function InstitutionCompare() {
               }}
               className="text-xs text-accent hover:underline"
             >
-              Cambiar instituciones
+              {isEs ? 'Cambiar instituciones' : 'Change institutions'}
             </button>
           </div>
         </>

@@ -18,22 +18,30 @@ interface SharedContractsModalProps {
   onClose: () => void
 }
 
-const RISK_BADGE: Record<string, { bg: string; text: string; border: string; label: string }> = {
-  critical: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/25', label: 'Crítico' },
-  high:     { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/25', label: 'Alto' },
-  medium:   { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/25', label: 'Medio' },
-  low:      { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/25', label: 'Bajo' },
+const RISK_BADGE_STYLE: Record<string, { bg: string; text: string; border: string }> = {
+  critical: { bg: 'bg-red-500/15', text: 'text-red-400', border: 'border-red-500/25' },
+  high:     { bg: 'bg-orange-500/15', text: 'text-orange-400', border: 'border-orange-500/25' },
+  medium:   { bg: 'bg-amber-500/15', text: 'text-amber-400', border: 'border-amber-500/25' },
+  low:      { bg: 'bg-green-500/15', text: 'text-green-400', border: 'border-green-500/25' },
 }
 
-function RiskBadge({ level }: { level: string | null }) {
+const RISK_BADGE_LABELS: Record<string, { es: string; en: string }> = {
+  critical: { es: 'Crítico', en: 'Critical' },
+  high:     { es: 'Alto', en: 'High' },
+  medium:   { es: 'Medio', en: 'Medium' },
+  low:      { es: 'Bajo', en: 'Low' },
+}
+
+function RiskBadge({ level, lang }: { level: string | null; lang: 'es' | 'en' }) {
   if (!level) return <span className="text-zinc-600 text-[10px] font-mono">—</span>
   const key = level.toLowerCase()
-  const style = RISK_BADGE[key] ?? RISK_BADGE.low
+  const style = RISK_BADGE_STYLE[key] ?? RISK_BADGE_STYLE.low
+  const labels = RISK_BADGE_LABELS[key] ?? RISK_BADGE_LABELS.low
   return (
     <span
       className={`inline-flex items-center rounded-full px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-wider border ${style.bg} ${style.text} ${style.border}`}
     >
-      {style.label}
+      {labels[lang]}
     </span>
   )
 }
@@ -49,7 +57,8 @@ export function SharedContractsModal({
   vendorBName,
   onClose,
 }: SharedContractsModalProps) {
-  const { t } = useTranslation('common')
+  const { t, i18n } = useTranslation('common')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [page, setPage] = useState(1)
   const modalRef = useRef<HTMLDivElement>(null)
 
@@ -120,7 +129,7 @@ export function SharedContractsModal({
                 id="shared-contracts-title"
                 className="text-sm font-semibold text-zinc-100 uppercase tracking-wide"
               >
-                Contratos Compartidos en Licitaciones
+                {lang === 'en' ? 'Shared Contracts in Tenders' : 'Contratos Compartidos en Licitaciones'}
               </h2>
             </div>
             <p className="text-xs text-zinc-400 truncate">
@@ -133,7 +142,7 @@ export function SharedContractsModal({
             type="button"
             onClick={onClose}
             className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-colors"
-            aria-label="Cerrar modal"
+            aria-label={lang === 'en' ? 'Close modal' : 'Cerrar modal'}
           >
             <X className="h-4 w-4" />
           </button>
@@ -146,13 +155,13 @@ export function SharedContractsModal({
               <AlertTriangle className="h-3.5 w-3.5 text-amber-400 shrink-0" aria-hidden="true" />
               <span className="text-xs font-mono text-amber-300">
                 <span className="font-bold text-amber-200">{formatNumber(summary.shared_procedure_count)}</span>
-                {' '}procedimientos compartidos
+                {' '}{lang === 'en' ? 'shared procedures' : 'procedimientos compartidos'}
               </span>
             </div>
             <div className="h-3 w-px bg-amber-500/20" aria-hidden="true" />
             <span className="text-xs font-mono text-amber-300">
               <span className="font-bold text-amber-200">{formatCompactMXN(summary.total_shared_amount)}</span>
-              {' '}en contratos combinados
+              {' '}{lang === 'en' ? 'in combined contracts' : 'en contratos combinados'}
             </span>
           </div>
         )}
@@ -163,7 +172,7 @@ export function SharedContractsModal({
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <div className="h-6 w-6 border-2 border-zinc-700 border-t-amber-500 rounded-full animate-spin" />
               <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">
-                Cargando contratos…
+                {lang === 'en' ? 'Loading contracts…' : 'Cargando contratos…'}
               </span>
             </div>
           ) : error ? (
@@ -176,51 +185,53 @@ export function SharedContractsModal({
             <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-amber-900/20">
               <FileText className="h-6 w-6 text-zinc-700" aria-hidden="true" />
               <p className="text-sm font-normal text-zinc-400 max-w-sm text-center">
-                Estos dos proveedores no comparten contratos en el período analizado.
+                {lang === 'en'
+                  ? 'These two vendors do not share contracts in the analyzed period.'
+                  : 'Estos dos proveedores no comparten contratos en el período analizado.'}
               </p>
             </div>
           ) : (
             <div className="overflow-x-auto">
-              <table className="w-full text-xs" aria-label="Contratos compartidos">
+              <table className="w-full text-xs" aria-label={lang === 'en' ? 'Shared contracts' : 'Contratos compartidos'}>
                 <thead className="sticky top-0 z-10">
                   <tr className="border-b border-white/8 bg-[#0f1117]">
                     <th
                       scope="col"
                       className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
                     >
-                      Licitación
+                      {lang === 'en' ? 'Tender' : 'Licitación'}
                     </th>
                     <th
                       scope="col"
                       className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
                     >
-                      Proveedor
+                      {lang === 'en' ? 'Vendor' : 'Proveedor'}
                     </th>
                     <th
                       scope="col"
                       className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
                     >
-                      Monto
+                      {lang === 'en' ? 'Amount' : 'Monto'}
                     </th>
                     <th
                       scope="col"
                       className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
                     >
                       <Calendar className="h-3 w-3 inline mr-1" aria-hidden="true" />
-                      Fecha
+                      {lang === 'en' ? 'Date' : 'Fecha'}
                     </th>
                     <th
                       scope="col"
                       className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
                     >
-                      Riesgo
+                      {lang === 'en' ? 'Risk' : 'Riesgo'}
                     </th>
                     <th
                       scope="col"
                       className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
                     >
                       <Building2 className="h-3 w-3 inline mr-1" aria-hidden="true" />
-                      Institución
+                      {lang === 'en' ? 'Institution' : 'Institución'}
                     </th>
                   </tr>
                 </thead>
@@ -245,7 +256,7 @@ export function SharedContractsModal({
                             )}
                             {c.is_single_bid && (
                               <span className="text-[9px] font-mono uppercase bg-red-500/10 border border-red-500/20 text-red-400 px-1 rounded">
-                                1 oferta
+                                {lang === 'en' ? '1 bid' : '1 oferta'}
                               </span>
                             )}
                           </div>
@@ -280,7 +291,7 @@ export function SharedContractsModal({
 
                       {/* Riesgo */}
                       <td className="px-4 py-2.5 text-center">
-                        <RiskBadge level={c.risk_level} />
+                        <RiskBadge level={c.risk_level} lang={lang} />
                       </td>
 
                       {/* Institución */}
@@ -305,7 +316,7 @@ export function SharedContractsModal({
           <div
             className="flex items-center justify-between px-5 py-3 border-t border-white/8 shrink-0"
             role="navigation"
-            aria-label="Paginación de contratos"
+            aria-label={lang === 'en' ? 'Contract pagination' : 'Paginación de contratos'}
           >
             <button
               type="button"
@@ -314,13 +325,13 @@ export function SharedContractsModal({
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
-              Anterior
+              {lang === 'en' ? 'Previous' : 'Anterior'}
             </button>
 
             <span className="text-[10px] font-mono text-zinc-500" aria-live="polite">
-              Página {page} de {totalPages}
+              {lang === 'en' ? 'Page' : 'Página'} {page} {lang === 'en' ? 'of' : 'de'} {totalPages}
               {pagination && (
-                <> &middot; {formatNumber(pagination.total)} contratos</>
+                <> &middot; {formatNumber(pagination.total)} {lang === 'en' ? 'contracts' : 'contratos'}</>
               )}
             </span>
 
@@ -330,7 +341,7 @@ export function SharedContractsModal({
               disabled={page >= totalPages}
               className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
-              Siguiente
+              {lang === 'en' ? 'Next' : 'Siguiente'}
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />
             </button>
           </div>

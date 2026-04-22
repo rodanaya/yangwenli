@@ -551,22 +551,22 @@
   "recommendations": {
     "sectionLabel": "Próximos pasos recomendados — por audiencia",
     "a1": {
-      "audience": "Para Investigadores (ASF / SFP)",
-      "s1": "Comienza con los contratos de riesgo crítico — filtra por sector (Salud, Agricultura) e institución para priorizar los casos de mayor valor.",
-      "s2": "Cruza los 38 proveedores fantasma EFOS confirmados por el SAT (Caso 22) contra contratos activos. Cualquier relación de contratación actual amerita revisión inmediata.",
-      "s3": "Ejecuta análisis de red de proveedores en clusters de co-licitación — 8,701 proveedores muestran tasas de co-licitación sospechosas superiores al 50%, indicador clásico de rotación de ofertas."
+      "audience": "Para Investigadores",
+      "s1": "Concéntrate en los 320 proveedores Nivel 1 de ARIA para derivación inmediata de casos — están señalados de forma independiente por el modelo de riesgo, la detección de anomalías y los registros externos.",
+      "s2": "Cruza con el registro de empresas fantasma EFOS del SAT (13,960 entidades). Cualquier relación activa de contratación con un proveedor EFOS definitivo amerita revisión inmediata.",
+      "s3": "La volatilidad de precios es la señal más fuerte — 99.9% de detección en la red fantasma del IMSS. Prioriza proveedores cuyos montos de contrato varían drásticamente entre instituciones."
     },
     "a2": {
-      "audience": "Para Reformadores de Contrataciones",
-      "s1": "La tasa de adjudicación directa del 71% es la mayor vulnerabilidad individual. Mandatar procedimientos competitivos para todos los contratos superiores a 500K MXN, con excepciones de emergencia limitadas.",
-      "s2": "Exigir la publicación de memorandos de justificación para adjudicaciones directas dentro de las 24 horas posteriores a la firma — no de forma retroactiva.",
-      "s3": "El volumen de contratos en diciembre se dispara 1.33× — aplicar calendarios de liberación presupuestal trimestral para eliminar el vaciado de fin de año."
+      "audience": "Para Periodistas",
+      "s1": "La administración AMLO muestra 2.4× la tasa de alto riesgo respecto a la era Fox — un cambio estructural que vale la pena cuantificar por sector e institución en tu cobertura.",
+      "s2": "El 48.6% de los contratos muestra patrones de co-licitación consistentes con redes de licitación concertada. Mapea los clústeres de co-licitación más frecuentes para identificar posibles cárteles en tu estado o sector.",
+      "s3": "Compras de emergencia COVID-19: 5,371 contratos, puntaje de riesgo promedio 0.821. El expediente pandémico ofrece una ruta de investigación lista para usar con registros públicos."
     },
     "a3": {
-      "audience": "Para Periodistas y Sociedad Civil",
-      "s1": "Usa la página de Sectores para identificar qué dependencias concentran el mayor valor en riesgo en tu área de cobertura.",
-      "s2": "La herramienta de Perfil de Proveedor muestra 27 proveedores documentados de verdad base junto al riesgo estadístico — compara la exposición institucional.",
-      "s3": "Filtra el explorador de contratos por risk_level=critical y sector=salud para reproducir de forma independiente los patrones de empresas fantasma del IMSS."
+      "audience": "Para Reformadores",
+      "s1": "La tasa de adjudicación directa alcanzó 79.4% bajo AMLO — el límite OCDE es 25%. Acercar a México al referente internacional requeriría un cambio legislativo estructural.",
+      "s2": "Los procedimientos competitivos de un solo postor afectan al 16.5% de los contratos (505,219) — una bandera roja disfrazada de proceso competitivo. Exige umbrales mínimos de licitantes aplicados por ley.",
+      "s3": "Los precios atípicos superan la mediana sectorial en más de 3× en 17,373 contratos. Una revisión obligatoria de razonabilidad de precios por encima de ese umbral recuperaría miles de millones en sobreprecios."
     }
   },
 

@@ -547,6 +547,8 @@ const FACTOR_EXPLANATIONS: Record<string, string> = {
 }
 
 function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallContribution[] }) {
+  const { i18n: barI18n } = useTranslation('vendors')
+  const isEsBar = barI18n.language.startsWith('es')
   const topFactors = useMemo(() => {
     return [...waterfallData]
       .filter((f) => f.contribution > 0)
@@ -565,10 +567,14 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
     return (
       <div>
         <p className="text-xs text-text-muted">
-          Sin factores de riesgo que expliquen la puntuación.
+          {isEsBar
+            ? 'Sin factores de riesgo que expliquen la puntuación.'
+            : 'No risk factors explain the score.'}
         </p>
         <p className="text-[11px] text-text-muted mt-1">
-          Todos los z-scores están dentro de rangos normales para su sector.
+          {isEsBar
+            ? 'Todos los z-scores están dentro de rangos normales para su sector.'
+            : 'All z-scores are within normal ranges for this sector.'}
         </p>
       </div>
     )
@@ -3221,7 +3227,12 @@ export function VendorProfile() {
                       const delta = v6 - v3
                       const absDelta = Math.abs(delta)
                       const verdict = absDelta < 0.05 ? 'stable' : delta > 0 ? 'worsening' : 'improving'
-                      const verdictLabel = verdict === 'worsening' ? 'Riesgo creciente' : verdict === 'improving' ? 'Riesgo decreciente' : 'Riesgo estable'
+                      const isEsVerdict = i18n.language.startsWith('es')
+                      const verdictLabel = verdict === 'worsening'
+                        ? (isEsVerdict ? 'Riesgo creciente' : 'Growing risk')
+                        : verdict === 'improving'
+                          ? (isEsVerdict ? 'Riesgo decreciente' : 'Declining risk')
+                          : (isEsVerdict ? 'Riesgo estable' : 'Stable risk')
                       const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? '#71717a' : 'var(--color-text-muted)'
                       return (
                         <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
@@ -3351,7 +3362,9 @@ export function VendorProfile() {
                     <span className="editorial-label">LA HUELLA DIGITAL</span>
                   </div>
                   <p className="text-xs text-text-muted mb-3">
-                    Firma única de riesgo · Área proporcional a la contribución SHAP de cada factor
+                    {i18n.language.startsWith('es')
+                      ? 'Firma única de riesgo · Área proporcional a la contribución SHAP de cada factor'
+                      : 'Unique risk fingerprint · Area proportional to each factor\'s SHAP contribution'}
                   </p>
                   <div className="flex justify-center">
                     <VendorFingerprintChart
@@ -3363,7 +3376,9 @@ export function VendorProfile() {
                     />
                   </div>
                   <p className="text-xs text-text-muted/50 italic mt-3 text-center">
-                    Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP
+                    {i18n.language.startsWith('es')
+                      ? 'Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP'
+                      : 'Red petals = risk factors · Blue petals = protective factors · Area proportional to SHAP value'}
                   </p>
                 </div>
               )}
@@ -4523,12 +4538,18 @@ function RiskGauge({
 }
 
 function RiskFactorList({ factors }: { factors: Array<{ factor: string; count: number; percentage: number }> }) {
+  const { i18n: rflI18n } = useTranslation('vendors')
+  const isEsRfl = rflI18n.language.startsWith('es')
   if (factors.length === 0) {
     return (
       <div>
-        <p className="text-sm text-text-muted">Sin banderas de riesgo disparadas.</p>
+        <p className="text-sm text-text-muted">
+          {isEsRfl ? 'Sin banderas de riesgo disparadas.' : 'No risk flags triggered.'}
+        </p>
         <p className="text-[11px] text-text-muted mt-1">
-          Los contratos de este proveedor no activaron los 8 indicadores v0.6.5.
+          {isEsRfl
+            ? 'Los contratos de este proveedor no activaron los 8 indicadores v0.6.5.'
+            : 'This vendor\'s contracts did not trigger any of the 8 v0.6.5 indicators.'}
         </p>
       </div>
     )
@@ -5049,7 +5070,8 @@ function PeriodistaPanel({
   activeTab: string
   onExportCSV?: () => void
 }) {
-  useTranslation('vendors')
+  const { i18n: ppI18n } = useTranslation('vendors')
+  const isEsPP = ppI18n.language.startsWith('es')
   const [copiedLede, setCopiedLede] = useState(false)
 
   const { data: narrative, isLoading: narrativeLoading, isError: narrativeError } = useQuery<VendorNarrativeResponse>({

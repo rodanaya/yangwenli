@@ -4,6 +4,7 @@
  */
 
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AlertTriangle, AlertOctagon, AlertCircle, Info, ExternalLink } from 'lucide-react'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
 import type { AnomalyItem } from '@/api/types'
@@ -42,15 +43,22 @@ export const AlertPanel = memo(function AlertPanel({
   maxItems = 5,
   onInvestigate,
 }: AlertPanelProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+
   const displayedAnomalies = anomalies.slice(0, maxItems)
 
   if (displayedAnomalies.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 px-6 text-center text-text-muted">
         <AlertCircle className="h-8 w-8 mb-2 opacity-50" />
-        <p className="text-sm">No se detectaron anomalías activas.</p>
+        <p className="text-sm">
+          {lang === 'en' ? 'No active anomalies detected.' : 'No se detectaron anomalías activas.'}
+        </p>
         <p className="text-[11px] text-text-muted mt-1">
-          El modelo v0.6.5 no encontró señales por encima del umbral crítico para este filtro.
+          {lang === 'en'
+            ? 'The v0.6.5 model found no signals above the critical threshold for this filter.'
+            : 'El modelo v0.6.5 no encontró señales por encima del umbral crítico para este filtro.'}
         </p>
       </div>
     )

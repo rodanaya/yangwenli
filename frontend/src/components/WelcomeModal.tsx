@@ -11,23 +11,24 @@ import {
 } from '@/components/ui/dialog'
 import { Button } from '@/components/ui/button'
 import {
-  Shield,
-  BarChart3,
-  Search,
   Target,
+  BarChart3,
+  BookOpen,
+  FolderOpen,
   ArrowRight,
   ChevronRight,
   ChevronLeft,
   Folder,
   User,
-  Command,
+  Search,
 } from 'lucide-react'
 
-const STORAGE_KEY = 'rubli-welcome-dismissed'
+
+const STORAGE_KEY = 'rubli_welcome_v21'
 
 const STEPS = [
   {
-    icon: Shield,
+    icon: Target,
     titleKey: 'welcome.step1Title',
     descKey: 'welcome.step1Desc',
     color: 'text-accent',
@@ -41,14 +42,14 @@ const STEPS = [
     bgColor: 'bg-risk-high/10',
   },
   {
-    icon: Search,
+    icon: BookOpen,
     titleKey: 'welcome.step3Title',
     descKey: 'welcome.step3Desc',
     color: 'text-blue-400',
     bgColor: 'bg-blue-400/10',
   },
   {
-    icon: Target,
+    icon: FolderOpen,
     titleKey: 'welcome.step4Title',
     descKey: 'welcome.step4Desc',
     color: 'text-signal-live',
@@ -104,40 +105,6 @@ function RiskBarDemo({ t }: { t: (key: string) => string }) {
       <p className="text-[11px] text-text-muted text-center mt-3 leading-snug italic">
         {t('welcome.step2Caveat')}
       </p>
-    </div>
-  )
-}
-
-// ── Step 3: Keyboard shortcut display ────────────────────────────────────────
-function SearchDemo({ t }: { t: (key: string) => string }) {
-  const isMac =
-    typeof navigator !== 'undefined' &&
-    /Mac|iPhone|iPad|iPod/.test(navigator.platform)
-
-  return (
-    <div className="w-full max-w-xs mx-auto mt-4 space-y-4">
-      {/* Shortcut badge */}
-      <div className="flex items-center justify-center gap-2">
-        <kbd className="flex items-center gap-1 px-2 py-1 rounded border border-border bg-background-elevated text-xs font-mono text-text-primary">
-          {isMac ? (
-            <Command className="h-3 w-3" />
-          ) : (
-            <span>Ctrl</span>
-          )}
-        </kbd>
-        <span className="text-text-muted text-xs">+</span>
-        <kbd className="px-2 py-1 rounded border border-border bg-background-elevated text-xs font-mono text-text-primary">
-          K
-        </kbd>
-      </div>
-
-      {/* Mock search bar */}
-      <div className="flex items-center gap-2 px-3 py-2 rounded-lg border border-border/60 bg-background-elevated/80">
-        <Search className="h-3.5 w-3.5 text-text-muted shrink-0" />
-        <span className="text-xs text-text-muted italic">
-          {t('welcome.step3SearchPlaceholder')}
-        </span>
-      </div>
     </div>
   )
 }
@@ -227,12 +194,12 @@ export function WelcomeModal() {
             <div>
               <DialogTitle className="flex items-center gap-2 leading-none">
                 <span className="text-white font-black text-xl tracking-tight">RUBLI</span>
-                <span className="text-[9px] font-bold text-[#d4922a] bg-[#d4922a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">v0.2.5</span>
+                <span className="text-[9px] font-bold text-[#d4922a] bg-[#d4922a]/15 px-1.5 py-0.5 rounded tracking-widest uppercase leading-none">v2.1</span>
               </DialogTitle>
             </div>
           </div>
           <DialogDescription className="text-[#5a6280] text-xs leading-relaxed font-mono mt-1">
-            Red Unificada de Búsqueda de Licitaciones Irregulares — inteligencia procuratoria impulsada por IA
+            Red Unificada de Búsqueda de Licitaciones Irregulares — v2.1 · 40+ páginas · inteligencia procuratoria impulsada por IA
           </DialogDescription>
         </DialogHeader>
 
@@ -251,7 +218,6 @@ export function WelcomeModal() {
 
             {/* Step-specific visual extras */}
             {step === 1 && <RiskBarDemo t={t} />}
-            {step === 2 && <SearchDemo t={t} />}
             {step === 3 && <WorkflowDemo t={t} />}
           </div>
 

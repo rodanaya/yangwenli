@@ -1021,13 +1021,13 @@ export default function CategoryProfile() {
         <section>
           <div className="mb-4">
             <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-              RUBLI · Subcategorias
+              {t('profile.sections.eyebrow')}{t('profile.sections.subcategories')}
             </p>
             <h2
               className="text-lg font-bold text-text-primary leading-tight"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              Desglose por subcategoria
+              {t('profile.sections.subcategoriesSubtitle')}
             </h2>
           </div>
           <Card>
@@ -1045,7 +1045,7 @@ export default function CategoryProfile() {
                 />
               ) : (
                 <div className="flex items-center justify-center h-32 text-text-muted text-sm">
-                  Sin subcategorias disponibles.
+                  {t('profile.empty.noSubcategories')}
                 </div>
               )}
             </CardContent>

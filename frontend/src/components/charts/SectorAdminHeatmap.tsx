@@ -12,6 +12,7 @@
  */
 import { memo, useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
+import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { SECTORS } from '@/lib/constants'
 import type { SectorYearItem } from '@/api/types'
@@ -57,6 +58,13 @@ const RISK_LABEL_ES: Record<RiskLevel, string> = {
   high:     'Alto',
   medium:   'Medio',
   low:      'Bajo',
+}
+
+const RISK_LABEL_EN: Record<RiskLevel, string> = {
+  critical: 'Critical',
+  high:     'High',
+  medium:   'Medium',
+  low:      'Low',
 }
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -121,6 +129,10 @@ function getCell(cells: Cell[], sectorId: number, adminName: string): Cell | und
 export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
   className,
 }: SectorAdminHeatmapProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+  const RISK_LABEL = lang === 'en' ? RISK_LABEL_EN : RISK_LABEL_ES
+
   const { data, isLoading, isError } = useQuery({
     queryKey: ['analysis', 'sector-year-breakdown'],
     queryFn: () => analysisApi.getSectorYearBreakdown(),
@@ -135,7 +147,7 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
   if (isLoading) {
     return (
       <div className={className}>
-        <HeatmapHeader />
+        <HeatmapHeader lang={lang} />
         <div className="mt-4">
           <div className="grid" style={gridTemplate()}>
             {/* top-left empty */}
@@ -156,9 +168,11 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
   if (isError || !data) {
     return (
       <div className={className}>
-        <HeatmapHeader />
+        <HeatmapHeader lang={lang} />
         <div className="mt-4 rounded border border-zinc-800 bg-zinc-900/50 px-4 py-8 text-center text-sm text-zinc-400">
-          No se pudo cargar el desglose sector × administración.
+          {lang === 'en'
+            ? 'Could not load the sector × administration breakdown.'
+            : 'No se pudo cargar el desglose sector × administración.'}
         </div>
       </div>
     )
@@ -167,7 +181,7 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
   // ── Rendered heatmap ──
   return (
     <div className={className}>
-      <HeatmapHeader />
+      <HeatmapHeader lang={lang} />
 
       <div className="relative mt-4 overflow-x-auto">
         <div className="inline-grid min-w-full" style={gridTemplate()}>
@@ -194,16 +208,18 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
               sectorId={sector.id}
               sectorName={sector.name}
               cells={cells}
+              riskLabel={RISK_LABEL}
+              lang={lang}
               onHover={(info) => setTooltip(info)}
               onLeave={() => setTooltip(null)}
             />
           ))}
         </div>
 
-        {tooltip && <HeatmapTooltip {...tooltip} />}
+        {tooltip && <HeatmapTooltip {...tooltip} riskLabel={RISK_LABEL} lang={lang} />}
       </div>
 
-      <Legend />
+      <Legend lang={lang} riskLabel={RISK_LABEL} />
     </div>
   )
 })
@@ -212,14 +228,18 @@ export default SectorAdminHeatmap
 
 // ── Sub-components ───────────────────────────────────────────────────────────
 
-function HeatmapHeader() {
+function HeatmapHeader({ lang }: { lang: string }) {
   return (
     <div className="border-l-2 border-zinc-600 pl-3">
       <h3 className="font-serif text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-300">
-        Riesgo Promedio — Sector × Administración
+        {lang === 'en'
+          ? 'Average Risk — Sector × Administration'
+          : 'Riesgo Promedio — Sector × Administración'}
       </h3>
       <p className="mt-1 text-xs text-zinc-500">
-        Puntuación promedio del modelo v0.6.5 por sector y período presidencial
+        {lang === 'en'
+          ? 'Average v0.6.5 model score by sector and presidential term'
+          : 'Puntuación promedio del modelo v0.6.5 por sector y período presidencial'}
       </p>
     </div>
   )
@@ -229,11 +249,13 @@ interface RowGroupProps {
   sectorId: number
   sectorName: string
   cells: Cell[]
+  riskLabel: Record<RiskLevel, string>
+  lang: string
   onHover: (info: TooltipState) => void
   onLeave: () => void
 }
 
-function RowGroup({ sectorId, sectorName, cells, onHover, onLeave }: RowGroupProps) {
+function RowGroup({ sectorId, sectorName, cells, riskLabel, lang, onHover, onLeave }: RowGroupProps) {
   return (
     <>
       <div className="flex items-center justify-end border-b border-zinc-900 pr-3 text-[12px] text-zinc-300">
@@ -270,8 +292,8 @@ function RowGroup({ sectorId, sectorName, cells, onHover, onLeave }: RowGroupPro
             role="gridcell"
             aria-label={
               score !== null && level
-                ? `${sectorName}, ${admin.name}: ${score.toFixed(2)} (${RISK_LABEL_ES[level]})`
-                : `${sectorName}, ${admin.name}: sin datos`
+                ? `${sectorName}, ${admin.name}: ${score.toFixed(2)} (${riskLabel[level]})`
+                : `${sectorName}, ${admin.name}: ${lang === 'en' ? 'no data' : 'sin datos'}`
             }
           >
             {score !== null ? score.toFixed(2) : <span className="text-zinc-600">—</span>}
@@ -298,7 +320,7 @@ function SkeletonRow() {
   )
 }
 
-function HeatmapTooltip(props: TooltipState) {
+function HeatmapTooltip(props: TooltipState & { riskLabel: Record<RiskLevel, string>; lang: string }) {
   return (
     <div
       className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm"
@@ -320,35 +342,38 @@ function HeatmapTooltip(props: TooltipState) {
             color: '#fff',
           }}
         >
-          {RISK_LABEL_ES[props.riskLevel]}
+          {props.riskLabel[props.riskLevel]}
         </span>
       </div>
       {props.contracts > 0 && (
         <div className="mt-0.5 text-[10px] text-zinc-500">
-          {props.contracts.toLocaleString('es-MX')} contratos
+          {props.contracts.toLocaleString('es-MX')}{' '}
+          {props.lang === 'en' ? 'contracts' : 'contratos'}
         </div>
       )}
     </div>
   )
 }
 
-function Legend() {
-  const items: { level: RiskLevel; label: string; range: string }[] = [
-    { level: 'low',      label: 'Bajo',     range: '< 0.25' },
-    { level: 'medium',   label: 'Medio',    range: '0.25–0.40' },
-    { level: 'high',     label: 'Alto',     range: '0.40–0.60' },
-    { level: 'critical', label: 'Crítico',  range: '≥ 0.60' },
+function Legend({ lang, riskLabel }: { lang: string; riskLabel: Record<RiskLevel, string> }) {
+  const items: { level: RiskLevel; range: string }[] = [
+    { level: 'low',      range: '< 0.25' },
+    { level: 'medium',   range: '0.25–0.40' },
+    { level: 'high',     range: '0.40–0.60' },
+    { level: 'critical', range: '≥ 0.60' },
   ]
   return (
     <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-zinc-500">
-      <span className="uppercase tracking-wide">Nivel de riesgo:</span>
+      <span className="uppercase tracking-wide">
+        {lang === 'en' ? 'Risk level:' : 'Nivel de riesgo:'}
+      </span>
       {items.map((it) => (
         <span key={it.level} className="inline-flex items-center gap-1.5">
           <span
             className="inline-block h-3 w-3 rounded-sm"
             style={{ backgroundColor: RISK_CELL_BG[it.level] }}
           />
-          <span className="text-zinc-400">{it.label}</span>
+          <span className="text-zinc-400">{riskLabel[it.level]}</span>
           <span className="font-mono text-zinc-600">{it.range}</span>
         </span>
       ))}

@@ -257,6 +257,73 @@
     "sub": "Ranking anual de rendición de cuentas — puntuadas de 0 a 100 en cinco pilares. Apertura, equidad de precios, diversidad de proveedores, integridad del proceso, alertas externas.",
     "cta": "Ver la liga"
   },
+  "v21": {
+    "badge": "RUBLI v2.1",
+    "kicker": "ABRIL 2026 · NOTAS DE VERSIÓN",
+    "headline": "Cuentas, espacios de trabajo, diez investigaciones.",
+    "body": "La versión 2.1 suma lo que lectores y reporteros nos venían pidiendo. Las cuentas de usuario y el espacio de trabajo personal te permiten guardar proveedores, contratos y casos entre sesiones. Diez investigaciones de largo aliento se integran a la plataforma — cada una construida con los mismos 3.1 millones de contratos que ve el modelo. Un reporte anual, una liga institucional y un calendario de contrataciones completan la actualización.",
+    "item1": "investigaciones",
+    "item2": "proveedores en Tier 1",
+    "item3": "instituciones clasificadas",
+    "item4": "casos ground truth",
+    "signIn": "Iniciar sesión"
+  },
+  "pillars": {
+    "kicker": "SEIS PUNTOS DE ENTRADA",
+    "headline": "Seis maneras de entrar a los datos",
+    "sub": "Cada pilar es una herramienta de investigación funcional. Elige la más cercana a la pregunta que ya te estás haciendo.",
+    "aria": {
+      "kicker": "COLA ARIA",
+      "headline": "La cola de investigación priorizada",
+      "body": "Algoritmo Automatizado de Investigación de Riesgos. 318K proveedores evaluados, 320 en Tier 1 — la cohorte de mayor riesgo, ordenada por ensamble, huella financiera y sanciones externas.",
+      "statLabel": "Tier 1 · Inmediato",
+      "cta": "Abrir cola"
+    },
+    "stories": {
+      "kicker": "INVESTIGACIONES",
+      "headline": "Diez investigaciones, cada una una lectura larga",
+      "body": "Desde la anomalía del billón de pesos hasta el sexenio de las adjudicaciones directas — diez narrativas construidas con los mismos datos que ve el modelo, con gráficas, evidencia y citas.",
+      "statLabel": "Publicadas",
+      "cta": "Leer historias"
+    },
+    "vendors": {
+      "kicker": "PERFILES DE PROVEEDORES",
+      "headline": "Cada proveedor, puntuado y explicado",
+      "body": "320,000 perfiles. Puntuaciones de riesgo con explicaciones SHAP, tasas de adjudicación directa, diversidad institucional y lazos de red. Cada número rastreable a un contrato.",
+      "statLabel": "Proveedores perfilados",
+      "cta": "Buscar proveedores"
+    },
+    "model": {
+      "kicker": "MODELO DE RIESGO v0.6.5",
+      "headline": "Conforme a OCDE, transparente, reproducible",
+      "body": "9 variables z-score activas en 13 modelos por sector. AUC entrenamiento 0.798, AUC prueba 0.828 en validación estratificada por proveedor. 748 casos documentados, corrección PU-learning. Cada decisión documentada.",
+      "statLabel": "AUC prueba · v0.6.5",
+      "cta": "Leer metodología"
+    },
+    "workspace": {
+      "kicker": "ESPACIO DE TRABAJO",
+      "headline": "Tu carpeta privada de investigación",
+      "body": "Guarda proveedores, contratos y casos en carpetas nombradas. Toma notas entre sesiones. Exporta paquetes de evidencia. Funciona en distintos dispositivos al iniciar sesión.",
+      "statValue": "NUEVO",
+      "statLabel": "Añadido en v2.1",
+      "cta": "Abrir espacio"
+    },
+    "calendar": {
+      "kicker": "CALENDARIO DE CONTRATACIONES",
+      "headline": "Cuándo se mueve el dinero",
+      "body": "Diciembre concentra una fracción desproporcionada del gasto anual. El calendario revela los estallidos de fin de año, las transiciones de sexenio y los grupos pre-electorales donde la supervisión se adelgaza.",
+      "statLabel": "Mes pico de gasto",
+      "cta": "Ver calendario"
+    }
+  },
+  "finalCta": {
+    "kicker": "EMPEZAR",
+    "headline": "Empieza a investigar.",
+    "body": "La cola ARIA es el camino más corto de la pregunta a la evidencia. Si prefieres leer primero, la metodología documenta cada decisión del modelo, cada caso ground truth y cada limitación conocida.",
+    "primary": "Empezar a investigar",
+    "secondary": "Leer la metodología",
+    "credibility": "COMPRANET 2002–2025 · MODELO v0.6.5 · AUC 0.828 · CÓDIGO ABIERTO"
+  },
   "audiences": {
     "kicker": "HECHO PARA INVESTIGADORES",
     "headline": "¿Quién usa RUBLI?",

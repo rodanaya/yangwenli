@@ -45,7 +45,11 @@
     "critical": "Critical",
     "high": "High",
     "medium": "Medium",
-    "low": "Low"
+    "low": "Low",
+    "directAward": "direct award",
+    "singleBid": "single bid",
+    "institutions": "institutions",
+    "providers": "providers"
   },
   "chips": {
     "criticalRisk": "Critical Risk",
@@ -262,6 +266,17 @@
   "trendChart": {
     "eyebrow": "Temporal trend",
     "title": "Avg risk by sector 2015–2025"
+  },
+  "riskRanking": {
+    "eyebrow": "RISK — ALL SECTORS"
+  },
+  "riskFactors": {
+    "eyebrow": "RUBLI · Risk factor analysis",
+    "title": "What drives risk in each sector",
+    "description": "Logistic model coefficients v0.6.5 — positive values increase risk, negative values are protective.",
+    "sectorLabel": "Sector:",
+    "sectorAriaLabel": "Select sector to view model coefficients",
+    "sectionAriaLabel": "Risk factor analysis by sector"
   },
   "featured": {
     "kicker": "Sector lede · {{sector}}",

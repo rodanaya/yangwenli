@@ -368,6 +368,89 @@ export default function Executive() {
           </div>
         </section>
 
+        {/* ─── ARIA Investigation Pipeline ─── */}
+        <section className="mb-12">
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2">
+            {lang === 'en' ? 'ARIA · Investigation Pipeline' : 'ARIA · Canal de Investigación'}
+          </div>
+          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'The Automated Risk Investigation Algorithm (ARIA) triages 318,441 vendors into four priority tiers by combining risk scores, anomaly detection, financial scale, and external registry flags.'
+              : 'El Algoritmo Automatizado de Investigación de Riesgo (ARIA) clasifica 318,441 proveedores en cuatro niveles de prioridad combinando puntuaciones de riesgo, detección de anomalías, escala financiera y señales de registros externos.'}
+          </p>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+            {[
+              {
+                tier: 'T1',
+                count: 320,
+                label: lang === 'en' ? 'Immediate' : 'Inmediato',
+                sub: lang === 'en' ? 'Urgent referrals' : 'Referencias urgentes',
+                color: '#dc2626',
+              },
+              {
+                tier: 'T2',
+                count: 1234,
+                label: lang === 'en' ? 'Priority' : 'Prioridad',
+                sub: lang === 'en' ? 'Active review' : 'Revisión activa',
+                color: '#ea580c',
+              },
+              {
+                tier: 'T3',
+                count: 5016,
+                label: lang === 'en' ? 'Review' : 'Revisión',
+                sub: lang === 'en' ? 'Watch list' : 'Lista de vigilancia',
+                color: '#eab308',
+              },
+              {
+                tier: 'T4',
+                count: 311871,
+                label: lang === 'en' ? 'Monitor' : 'Monitoreo',
+                sub: lang === 'en' ? 'Passive tracking' : 'Seguimiento pasivo',
+                color: '#64748b',
+              },
+            ].map((t, idx) => (
+              <motion.div
+                key={t.tier}
+                className="surface-card p-4 border-l-2 rounded-sm"
+                style={{ borderLeftColor: t.color }}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.05 + idx * 0.06 }}
+              >
+                <div className="flex items-baseline justify-between mb-1">
+                  <span
+                    className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]"
+                    style={{ color: t.color }}
+                  >
+                    {t.tier}
+                  </span>
+                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                    {t.label}
+                  </span>
+                </div>
+                <div
+                  className="font-mono font-bold text-[24px] leading-none tabular-nums"
+                  style={{ color: t.color }}
+                >
+                  {formatNumber(t.count)}
+                </div>
+                <div className="text-[10px] text-text-muted mt-1.5 leading-[1.4]">
+                  {t.sub}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+          <div className="mt-4 flex justify-end">
+            <button
+              onClick={() => navigate('/aria')}
+              className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide text-[#a06820] hover:text-[#c98730] transition-colors"
+            >
+              {lang === 'en' ? 'Open full ARIA queue' : 'Abrir cola ARIA completa'}
+              <ArrowUpRight className="h-3 w-3" />
+            </button>
+          </div>
+        </section>
+
         {/* ─── Amber divider ─── */}
         <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
 

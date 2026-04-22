@@ -69,10 +69,24 @@
   --color-signal-warn: #d97706;
   --color-signal-danger: #dc2626;
 
-  /* Typography */
-  --font-family-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
-  --font-family-sans: "Inter", system-ui, -apple-system, sans-serif;
-  --font-family-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  /* Typography — canonical per ART_DIRECTION.md §3.1
+     Tailwind v4 maps `font-serif`/`font-sans`/`font-mono` utilities to the
+     short-form tokens below. The long-form aliases are kept for existing
+     `var(--font-family-*)` consumers (utility classes in this file). */
+  --font-mono: "JetBrains Mono", "Fira Code", "SF Mono", Consolas, monospace;
+  --font-sans: "Inter", system-ui, -apple-system, sans-serif;
+  --font-serif: "Playfair Display", Georgia, "Times New Roman", serif;
+  --font-family-mono: var(--font-mono);
+  --font-family-sans: var(--font-sans);
+  --font-family-serif: var(--font-serif);
+
+  /* Editorial border-radius — ART_DIRECTION.md §5 & §11
+     Cards are 2px (editorial, not SaaS-rounded). Tailwind's `rounded-sm`
+     maps to --radius-sm. We expose --radius as the editorial default
+     alongside a slightly larger variant for pill/badge chrome. */
+  --radius: 2px;
+  --radius-sm: 2px;
+  --radius-editorial: 2px;
 
   /* Typography Scale */
   --font-size-display: 3rem;

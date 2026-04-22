@@ -257,6 +257,73 @@
     "sub": "Annual accountability ranking — scored 0–100 across five pillars. Openness, price fairness, vendor diversity, process integrity, external alerts.",
     "cta": "Open the league table"
   },
+  "v21": {
+    "badge": "RUBLI v2.1",
+    "kicker": "APRIL 2026 · RELEASE NOTE",
+    "headline": "Accounts, workspaces, ten investigative stories.",
+    "body": "Version 2.1 adds what readers and reporters have been asking for. User accounts and a personal workspace let you save vendors, contracts, and cases across sessions. Ten long-form stories ship with the platform — each one built from the same 3.1 million contracts the model saw. A year-in-review report, an institutional league table, and a procurement calendar round out the update.",
+    "item1": "investigative stories",
+    "item2": "Tier 1 vendors flagged",
+    "item3": "institutions ranked",
+    "item4": "ground-truth cases",
+    "signIn": "Sign in"
+  },
+  "pillars": {
+    "kicker": "SIX ENTRY POINTS",
+    "headline": "Six ways into the data",
+    "sub": "Every pillar is a working investigation tool. Pick the one closest to the question you are already asking.",
+    "aria": {
+      "kicker": "ARIA QUEUE",
+      "headline": "The ranked investigation queue",
+      "body": "Automated Risk Investigation Algorithm. 318K vendors scored, 320 at Tier 1 — the highest-risk cohort, prioritized by ensemble score, financial footprint, and external sanctions.",
+      "statLabel": "Tier 1 · Immediate",
+      "cta": "Open queue"
+    },
+    "stories": {
+      "kicker": "INVESTIGATIVE STORIES",
+      "headline": "Ten investigations, each a long-form read",
+      "body": "From the billion-peso anomaly to the sexenio of direct awards — ten narrative investigations built on the same data the model sees, with charts, evidence, and footnotes.",
+      "statLabel": "Stories shipped",
+      "cta": "Read stories"
+    },
+    "vendors": {
+      "kicker": "VENDOR PROFILES",
+      "headline": "Every vendor, scored and explained",
+      "body": "320,000 vendor profiles. Risk scores with SHAP explanations, direct-award rates, institution diversity, and network ties. Every number traceable to a contract.",
+      "statLabel": "Vendors profiled",
+      "cta": "Search vendors"
+    },
+    "model": {
+      "kicker": "RISK MODEL v0.6.5",
+      "headline": "OECD-compliant, transparent, reproducible",
+      "body": "9 active z-score features across 13 per-sector models. Train AUC 0.798, test AUC 0.828 on vendor-stratified holdout. 748 documented cases, PU-learning corrected. Every decision documented.",
+      "statLabel": "Test AUC · v0.6.5",
+      "cta": "Read methodology"
+    },
+    "workspace": {
+      "kicker": "WORKSPACE",
+      "headline": "Your private research folder",
+      "body": "Save vendors, contracts, and cases into named folders. Keep notes across sessions. Export evidence packets. Works across devices once you sign in.",
+      "statValue": "NEW",
+      "statLabel": "Added in v2.1",
+      "cta": "Open workspace"
+    },
+    "calendar": {
+      "kicker": "PROCUREMENT CALENDAR",
+      "headline": "When the money moves",
+      "body": "December alone accounts for a disproportionate share of annual spend. The calendar surfaces year-end bursts, sexenio transitions, and pre-election clusters where oversight gets thin.",
+      "statLabel": "Peak spending month",
+      "cta": "See the calendar"
+    }
+  },
+  "finalCta": {
+    "kicker": "BEGIN",
+    "headline": "Start investigating.",
+    "body": "The ARIA queue is the shortest path from question to evidence. If you prefer to read first, the methodology documents every modeling decision, every ground-truth case, every known limitation.",
+    "primary": "Start investigating",
+    "secondary": "Read the methodology",
+    "credibility": "COMPRANET 2002–2025 · MODEL v0.6.5 · AUC 0.828 · OPEN SOURCE"
+  },
   "audiences": {
     "kicker": "BUILT FOR INVESTIGATORS",
     "headline": "Who uses RUBLI",

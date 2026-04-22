@@ -8,6 +8,7 @@
  */
 
 import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { formatCompactMXN } from '@/lib/utils'
 
 export interface SectorMarimekkoRow {
@@ -69,6 +70,8 @@ function dotColorForIndex(i: number, lowN: number, medN: number, highN: number, 
 }
 
 export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMarimekkoProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const [tooltip, setTooltip] = useState<TooltipData | null>(null)
 
   const sorted = [...sectors].sort((a, b) => b.totalValue - a.totalValue)
@@ -182,12 +185,19 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         {/* Legend */}
         {(() => {
           const legendY = nSectors * (ROW_H + ROW_GAP) + 8
-          const items: Array<{ label: string; fill: string }> = [
-            { label: 'bajo',     fill: DOT_LOW },
-            { label: 'medio',    fill: DOT_MEDIUM },
-            { label: 'alto',     fill: DOT_HIGH },
-            { label: 'crítico',  fill: DOT_CRITICAL },
-          ]
+          const items: Array<{ label: string; fill: string }> = lang === 'en'
+            ? [
+                { label: 'low',      fill: DOT_LOW },
+                { label: 'medium',   fill: DOT_MEDIUM },
+                { label: 'high',     fill: DOT_HIGH },
+                { label: 'critical', fill: DOT_CRITICAL },
+              ]
+            : [
+                { label: 'bajo',     fill: DOT_LOW },
+                { label: 'medio',    fill: DOT_MEDIUM },
+                { label: 'alto',     fill: DOT_HIGH },
+                { label: 'crítico',  fill: DOT_CRITICAL },
+              ]
           let lx = barStartX
           return (
             <g>
@@ -212,7 +222,9 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
               >
-                1 punto ≈ {(100 / N_DOTS).toFixed(0)}% del gasto mayor
+                {lang === 'en'
+                  ? `1 dot ≈ ${(100 / N_DOTS).toFixed(0)}% of top spend`
+                  : `1 punto ≈ ${(100 / N_DOTS).toFixed(0)}% del gasto mayor`}
               </text>
             </g>
           )
@@ -238,13 +250,16 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
         >
           <p style={{ fontWeight: 600, color: '#e8e0d8', marginBottom: 6, fontSize: 13 }}>{tooltip.name}</p>
           <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
-            Gasto: <span style={{ fontFamily: 'monospace', color: '#c4bdb8' }}>{formatCompactMXN(tooltip.totalValue)}</span>
+            {lang === 'en' ? 'Spend:' : 'Gasto:'}{' '}
+            <span style={{ fontFamily: 'monospace', color: '#c4bdb8' }}>{formatCompactMXN(tooltip.totalValue)}</span>
           </p>
           <p style={{ color: '#78716c', fontSize: 11, marginBottom: 2 }}>
-            Alto + Crítico: <span style={{ fontFamily: 'monospace', color: '#f87171' }}>{tooltip.highRiskPct.toFixed(1)}%</span>
+            {lang === 'en' ? 'High + Critical:' : 'Alto + Crítico:'}{' '}
+            <span style={{ fontFamily: 'monospace', color: '#f87171' }}>{tooltip.highRiskPct.toFixed(1)}%</span>
           </p>
           <p style={{ color: '#78716c', fontSize: 11 }}>
-            Solo crítico: <span style={{ fontFamily: 'monospace', color: '#ef4444' }}>{tooltip.criticalPct.toFixed(1)}%</span>
+            {lang === 'en' ? 'Critical only:' : 'Solo crítico:'}{' '}
+            <span style={{ fontFamily: 'monospace', color: '#ef4444' }}>{tooltip.criticalPct.toFixed(1)}%</span>
           </p>
         </div>
       )}

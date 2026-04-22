@@ -217,7 +217,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             </span>
           </div>
           <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-zinc-500'}`}>
-            {daPct.toFixed(0)}% adj. directa
+            {daPct.toFixed(0)}% {t('card.directAward')}
           </span>
         </div>
 
@@ -238,14 +238,14 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
           <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotColor}`} aria-hidden="true" />
           <span className="font-mono tabular-nums">{sbPct.toFixed(1)}%</span>
-          <span className="text-zinc-500">licitación única</span>
+          <span className="text-zinc-500">{t('card.singleBid')}</span>
         </div>
 
         {/* Market depth micro-stats */}
         <p className="text-[10px] text-zinc-500 tabular-nums mt-auto pt-1 border-t border-white/5">
-          {formatNumber(sector.total_institutions ?? 0)} instituciones
+          {formatNumber(sector.total_institutions ?? 0)} {t('card.institutions')}
           <span className="mx-1 text-zinc-700">·</span>
-          {formatNumber(sector.total_vendors ?? 0)} proveedores
+          {formatNumber(sector.total_vendors ?? 0)} {t('card.providers')}
         </p>
       </div>
 
@@ -566,7 +566,7 @@ function RiskRankingStrip({
   return (
     <div className="surface-card p-4 mb-8">
       <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
-        RIESGO — TODOS LOS SECTORES
+        {t('riskRanking.eyebrow')}
       </p>
       <div className="flex flex-col">
         {ranked.map((s) => {
@@ -850,21 +850,21 @@ export function Sectors() {
             sectors.find((s) => s.sector_id === activeSectorId) ?? defaultSector
           const activeSectorName = t(activeSector.sector_code) as string
           return (
-            <section className="mt-10" aria-label="Análisis de factores de riesgo por sector">
+            <section className="mt-10" aria-label={t('riskFactors.sectionAriaLabel')}>
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
                 <div>
                   <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
-                    RUBLI · Análisis de factores
+                    {t('riskFactors.eyebrow')}
                   </p>
                   <h2 className="text-xl font-bold text-white leading-tight">
-                    Qué empuja el riesgo en cada sector
+                    {t('riskFactors.title')}
                   </h2>
                   <p className="text-xs text-zinc-500 mt-1 max-w-2xl">
-                    Coeficientes del modelo logístico v0.6.5 — positivos aumentan el riesgo, negativos son protectores.
+                    {t('riskFactors.description')}
                   </p>
                 </div>
                 <div className="relative inline-flex items-center gap-2">
-                  <span className="text-xs text-zinc-400 font-medium">Sector:</span>
+                  <span className="text-xs text-zinc-400 font-medium">{t('riskFactors.sectorLabel')}</span>
                   <div className="relative">
                     <select
                       value={activeSectorId}
@@ -872,7 +872,7 @@ export function Sectors() {
                         setSelectedCoefSectorId(Number(e.target.value))
                       }
                       className="appearance-none rounded-lg border border-white/10 bg-zinc-800/80 pl-3 pr-8 py-1.5 text-sm text-white font-medium cursor-pointer hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
-                      aria-label="Seleccionar sector para ver coeficientes del modelo"
+                      aria-label={t('riskFactors.sectorAriaLabel')}
                     >
                       {sectorsByRisk.map((s) => (
                         <option key={s.sector_id} value={s.sector_id}>

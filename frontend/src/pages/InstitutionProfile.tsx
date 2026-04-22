@@ -120,7 +120,8 @@ interface OfficialsResponse {
 // ---- Main component ----
 
 export function InstitutionProfile() {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const { id } = useParams<{ id: string }>()
 
   // ---- Localized label maps ----
@@ -350,7 +351,9 @@ export function InstitutionProfile() {
     if (highRiskVendors && highRiskVendors.length > 0) {
       items.push({
         type: 'high_risk_vendor',
-        label: `${highRiskVendors.length} proveedor${highRiskVendors.length > 1 ? 'es' : ''} de alto riesgo`,
+        label: lang === 'en'
+          ? `${highRiskVendors.length} high-risk vendor${highRiskVendors.length > 1 ? 's' : ''}`
+          : `${highRiskVendors.length} proveedor${highRiskVendors.length > 1 ? 'es' : ''} de alto riesgo`,
         count: highRiskVendors.length,
         href: '#vendors',
         riskLevel: highRiskVendors.some((v) => (v.avg_risk_score ?? 0) >= 0.5) ? 'critical' : 'high',
@@ -360,7 +363,9 @@ export function InstitutionProfile() {
     if (sectorCases && sectorCases.length > 0) {
       items.push({
         type: 'scandal',
-        label: `${sectorCases.length} escandalo${sectorCases.length > 1 ? 's' : ''} documentado${sectorCases.length > 1 ? 's' : ''} en el sector`,
+        label: lang === 'en'
+          ? `${sectorCases.length} documented scandal${sectorCases.length > 1 ? 's' : ''} in the sector`
+          : `${sectorCases.length} escandalo${sectorCases.length > 1 ? 's' : ''} documentado${sectorCases.length > 1 ? 's' : ''} en el sector`,
         count: sectorCases.length,
         href: `/cases`,
       })
@@ -369,7 +374,9 @@ export function InstitutionProfile() {
     if (asfData && asfData.findings.length > 0) {
       items.push({
         type: 'asf_finding',
-        label: `${asfData.findings.length} ano${asfData.findings.length > 1 ? 's' : ''} con hallazgos ASF`,
+        label: lang === 'en'
+          ? `${asfData.findings.length} year${asfData.findings.length > 1 ? 's' : ''} with ASF findings`
+          : `${asfData.findings.length} ano${asfData.findings.length > 1 ? 's' : ''} con hallazgos ASF`,
         count: asfData.findings.length,
         href: '#asf',
         riskLevel: 'high',
@@ -381,7 +388,9 @@ export function InstitutionProfile() {
       if (concMetric && concMetric.percentile > 75) {
         items.push({
           type: 'investigation_case',
-          label: `P${concMetric.percentile} concentracion vs pares`,
+          label: lang === 'en'
+            ? `P${concMetric.percentile} concentration vs peers`
+            : `P${concMetric.percentile} concentracion vs pares`,
           href: '#concentration',
           riskLevel: concMetric.percentile > 90 ? 'critical' : 'high',
         })
@@ -414,9 +423,9 @@ export function InstitutionProfile() {
     if (!history || history.length < 3) return null
     const last3 = history.slice(-3)
     const slope = (last3[last3.length - 1].hhi - last3[0].hhi) / (last3.length - 1)
-    if (slope > 50) return { label: 'Concentrando', color: '#dc2626' }
-    if (slope < -50) return { label: 'Diversificando', color: '#16a34a' }
-    return { label: 'Estable', color: '#eab308' }
+    if (slope > 50) return { label: lang === 'en' ? 'Concentrating' : 'Concentrando', color: '#dc2626' }
+    if (slope < -50) return { label: lang === 'en' ? 'Diversifying' : 'Diversificando', color: '#16a34a' }
+    return { label: lang === 'en' ? 'Stable' : 'Estable', color: '#eab308' }
   }, [institution?.supplier_diversity?.history])
 
   // ---- Loading / error states ----
@@ -494,7 +503,7 @@ export function InstitutionProfile() {
             <span className="text-zinc-300">RUBLI</span>
           </span>
           <span className="text-zinc-700">·</span>
-          <span>Institución</span>
+          <span>{lang === 'en' ? 'Institution' : 'Institución'}</span>
           {institution.siglas ? (
             <>
               <span className="text-zinc-700">·</span>
@@ -985,7 +994,7 @@ export function InstitutionProfile() {
                   </div>
                 ) : (
                   <div className="h-40 flex items-center justify-center text-sm text-text-muted">
-                    Datos insuficientes
+                    {lang === 'en' ? 'Insufficient data' : 'Datos insuficientes'}
                   </div>
                 )}
               </CardContent>
@@ -997,7 +1006,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Shield className="h-3.5 w-3.5 text-accent" />
-                  Desglose de factores de riesgo
+                  {lang === 'en' ? 'Risk factor breakdown' : 'Desglose de factores de riesgo'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1022,10 +1031,10 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Users className="h-3.5 w-3.5 text-accent" />
-                  Comparacion con pares
+                  {lang === 'en' ? 'Peer comparison' : 'Comparacion con pares'}
                   {peerComparison && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
-                      vs {peerComparison.peer_count} instituciones similares
+                      vs {peerComparison.peer_count} {lang === 'en' ? 'similar institutions' : 'instituciones similares'}
                     </span>
                   )}
                 </CardTitle>
@@ -1083,14 +1092,14 @@ export function InstitutionProfile() {
                             )
                           })()}
                           <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60 font-mono">
-                            <span>min</span><span>mediana</span><span>max</span>
+                            <span>min</span><span>{lang === 'en' ? 'median' : 'mediana'}</span><span>max</span>
                           </div>
                         </div>
                       )
                     })}
                   </div>
                 ) : (
-                  <p className="text-xs text-text-muted">Pares insuficientes para comparar</p>
+                  <p className="text-xs text-text-muted">{lang === 'en' ? 'Insufficient peers to compare' : 'Pares insuficientes para comparar'}</p>
                 )}
               </CardContent>
             </div>
@@ -1138,7 +1147,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <BarChart3 className="h-3.5 w-3.5 text-accent" />
-                  Concentracion de proveedores
+                  {lang === 'en' ? 'Vendor concentration' : 'Concentracion de proveedores'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1160,7 +1169,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <TrendingUp className="h-3.5 w-3.5 text-accent" />
-                  Lealtad de proveedores — relaciones de largo plazo
+                  {lang === 'en' ? 'Vendor loyalty — long-term relationships' : 'Lealtad de proveedores — relaciones de largo plazo'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1172,7 +1181,7 @@ export function InstitutionProfile() {
                   <div className="relative overflow-x-auto" ref={vendorLoyaltyChartRef}>
                     <ChartDownloadButton targetRef={vendorLoyaltyChartRef} filename={`institution-${institutionId}-vendor-loyalty`} className="absolute top-0 right-0 z-10" />
                     <VendorLoyaltyHeatmap vendorLoyalty={vendorLoyalty} />
-                    <p className="mt-2 text-[10px] text-text-muted/50 italic">Celdas = numero de contratos; color = riesgo promedio</p>
+                    <p className="mt-2 text-[10px] text-text-muted/50 italic">{lang === 'en' ? 'Cells = number of contracts; color = avg risk' : 'Celdas = numero de contratos; color = riesgo promedio'}</p>
                   </div>
                 ) : null}
               </CardContent>
@@ -1220,8 +1229,9 @@ export function InstitutionProfile() {
             {/* EFOS/SFP cross-ref note */}
             <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
               <p className="text-[10px] text-text-muted leading-relaxed">
-                Cruce con EFOS (SAT Art. 69-B) y sanciones SFP disponible en perfiles de proveedores.
-                Haga clic en cualquier proveedor para verificar su estatus en registros externos.
+                {lang === 'en'
+                  ? 'Cross-reference with EFOS (SAT Art. 69-B) and SFP sanctions available in vendor profiles. Click any vendor to verify their status in external registries.'
+                  : 'Cruce con EFOS (SAT Art. 69-B) y sanciones SFP disponible en perfiles de proveedores. Haga clic en cualquier proveedor para verificar su estatus en registros externos.'}
               </p>
             </div>
 
@@ -1231,7 +1241,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <FileText className="h-3.5 w-3.5 text-accent" />
-                  Principales categorias de contratacion
+                  {lang === 'en' ? 'Top procurement categories' : 'Principales categorias de contratacion'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1265,8 +1275,9 @@ export function InstitutionProfile() {
         <TabPanel tabKey="officials">
           <div className="space-y-4">
             <p className="text-[11px] text-text-muted italic leading-relaxed max-w-2xl">
-              Basado en Coviello &amp; Gagliarducci (2017) — la permanencia de funcionarios correlaciona con tasas de licitante unico.
-              Datos disponibles para contratos 2018+ (COMPRANET Estructura C/D).
+              {lang === 'en'
+                ? 'Based on Coviello & Gagliarducci (2017) — official tenure correlates with single-bidder rates. Data available for contracts 2018+ (COMPRANET Structure C/D).'
+                : 'Basado en Coviello & Gagliarducci (2017) — la permanencia de funcionarios correlaciona con tasas de licitante unico. Datos disponibles para contratos 2018+ (COMPRANET Estructura C/D).'}
             </p>
 
             {officialsLoading ? (
@@ -1292,13 +1303,13 @@ export function InstitutionProfile() {
                     <thead>
                       <tr className="border-b border-border/50">
                         {([
-                          { key: 'official_name' as const, label: 'Funcionario', align: 'left' },
-                          { key: 'first_contract_year' as const, label: 'Periodo', align: 'center' },
-                          { key: 'total_contracts' as const, label: 'Contratos', align: 'right' },
-                          { key: 'single_bid_pct' as const, label: '% Licitante Unico', align: 'right' },
-                          { key: 'direct_award_pct' as const, label: '% Adj. Directa', align: 'right' },
-                          { key: 'vendor_diversity' as const, label: 'Proveedores', align: 'right' },
-                          { key: 'avg_risk_score' as const, label: 'Riesgo Prom.', align: 'right' },
+                          { key: 'official_name' as const, label: lang === 'en' ? 'Official' : 'Funcionario', align: 'left' },
+                          { key: 'first_contract_year' as const, label: lang === 'en' ? 'Period' : 'Periodo', align: 'center' },
+                          { key: 'total_contracts' as const, label: lang === 'en' ? 'Contracts' : 'Contratos', align: 'right' },
+                          { key: 'single_bid_pct' as const, label: lang === 'en' ? '% Single Bidder' : '% Licitante Unico', align: 'right' },
+                          { key: 'direct_award_pct' as const, label: lang === 'en' ? '% Direct Award' : '% Adj. Directa', align: 'right' },
+                          { key: 'vendor_diversity' as const, label: lang === 'en' ? 'Vendors' : 'Proveedores', align: 'right' },
+                          { key: 'avg_risk_score' as const, label: lang === 'en' ? 'Avg Risk' : 'Riesgo Prom.', align: 'right' },
                         ]).map((col) => (
                           <th
                             key={col.key}
@@ -1377,7 +1388,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <DollarSign className="h-3.5 w-3.5 text-accent" />
-                  Evolucion del gasto
+                  {lang === 'en' ? 'Spending evolution' : 'Evolucion del gasto'}
                   {riskTimeline?.timeline?.length && riskTimeline.timeline.length > 1 && (
                     <span className="ml-auto text-[10px] font-normal text-text-muted normal-case">
                       {riskTimeline.timeline[0].year}--{riskTimeline.timeline[riskTimeline.timeline.length - 1].year}
@@ -1396,7 +1407,7 @@ export function InstitutionProfile() {
                     <SpendingOverTimeChart data={riskTimeline!.timeline} />
                   </div>
                 ) : (
-                  <div className="h-40 flex items-center justify-center text-sm text-text-muted">Datos insuficientes</div>
+                  <div className="h-40 flex items-center justify-center text-sm text-text-muted">{lang === 'en' ? 'Insufficient data' : 'Datos insuficientes'}</div>
                 )}
               </CardContent>
             </div>
@@ -1407,10 +1418,10 @@ export function InstitutionProfile() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <AlertTriangle className="h-3.5 w-3.5 text-risk-high" />
-                    Contratos de mayor riesgo
+                  {lang === 'en' ? 'Highest-risk contracts' : 'Contratos de mayor riesgo'}
                   </CardTitle>
                   <Link to={`/contracts?institution_id=${institutionId}&sort_by=risk_score&sort_order=desc`} className="text-xs text-accent hover:underline flex items-center gap-1">
-                    Ver todos <ExternalLink className="h-3 w-3" />
+                    {lang === 'en' ? 'View all' : 'Ver todos'} <ExternalLink className="h-3 w-3" />
                   </Link>
                 </div>
               </CardHeader>
@@ -1437,10 +1448,10 @@ export function InstitutionProfile() {
                 <div className="flex items-center justify-between">
                   <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                     <FileText className="h-3.5 w-3.5 text-accent" />
-                    Contratos recientes
+                  {lang === 'en' ? 'Recent contracts' : 'Contratos recientes'}
                   </CardTitle>
                   <Link to={`/contracts?institution_id=${institutionId}`} className="text-xs text-accent hover:underline flex items-center gap-1">
-                    Ver todos <ExternalLink className="h-3 w-3" />
+                    {lang === 'en' ? 'View all' : 'Ver todos'} <ExternalLink className="h-3 w-3" />
                   </Link>
                 </div>
               </CardHeader>
@@ -1473,7 +1484,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-3">
                 <CardTitle className="flex items-center gap-2 text-sm font-medium">
                   <AlertTriangle className="h-4 w-4 text-amber-500" />
-                  Hallazgos de auditoria ASF
+                  {lang === 'en' ? 'ASF Audit Findings' : 'Hallazgos de auditoria ASF'}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -1492,11 +1503,11 @@ export function InstitutionProfile() {
                     <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 text-center">
                       <div>
                         <div className="text-lg font-semibold">{formatCompactMXN(asfData.total_amount_mxn)}</div>
-                        <div className="text-xs text-text-muted">Total cuestionado</div>
+                        <div className="text-xs text-text-muted">{lang === 'en' ? 'Total questioned' : 'Total cuestionado'}</div>
                       </div>
                       <div>
                         <div className="text-lg font-semibold">{asfData.years_audited}</div>
-                        <div className="text-xs text-text-muted">Anos auditados</div>
+                        <div className="text-xs text-text-muted">{lang === 'en' ? 'Years audited' : 'Anos auditados'}</div>
                       </div>
                       <div>
                         <div className="text-lg font-semibold">
@@ -1504,7 +1515,7 @@ export function InstitutionProfile() {
                             ? `${((asfData.findings[asfData.findings.length - 1].recovery_rate ?? 0) * 100).toFixed(0)}%`
                             : 'N/A'}
                         </div>
-                        <div className="text-xs text-text-muted">Tasa de solventacion</div>
+                        <div className="text-xs text-text-muted">{lang === 'en' ? 'Resolution rate' : 'Tasa de solventacion'}</div>
                       </div>
                     </div>
                     <div role="img" aria-label="Chart showing audit findings and recovery rate over time">
@@ -1535,7 +1546,7 @@ export function InstitutionProfile() {
                         formatVal={(v) => formatCompactMXN(v)}
                         dots={40}
                       />
-                      <p className="text-[10px] text-text-muted font-mono mt-1">Monto observado por año</p>
+                      <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Observed amount by year' : 'Monto observado por año'}</p>
                     </div>
                   </div>
                 )}
@@ -1548,17 +1559,18 @@ export function InstitutionProfile() {
                 <CardContent className="pt-4 pb-4">
                   <div className="flex items-center gap-2 mb-2">
                     <Shield className="h-4 w-4 text-risk-critical" />
-                    <h3 className="text-sm font-bold text-risk-critical">Caso de corrupcion documentado</h3>
+                    <h3 className="text-sm font-bold text-risk-critical">{lang === 'en' ? 'Documented corruption case' : 'Caso de corrupcion documentado'}</h3>
                   </div>
                   <p className="text-xs text-text-secondary leading-relaxed">
-                    Esta institucion esta vinculada a <span className="font-semibold">{groundTruthStatus.case_name}</span>
+                    {lang === 'en' ? 'This institution is linked to' : 'Esta institucion esta vinculada a'}{' '}
+                    <span className="font-semibold">{groundTruthStatus.case_name}</span>
                     {groundTruthStatus.case_type && <> ({groundTruthStatus.case_type.replace(/_/g, ' ')})</>}.
                     {groundTruthStatus.contract_count != null && groundTruthStatus.contract_count > 0 && (
-                      <> {formatNumber(groundTruthStatus.contract_count)} contratos senalados.</>
+                      <> {formatNumber(groundTruthStatus.contract_count)} {lang === 'en' ? 'contracts flagged.' : 'contratos senalados.'}</>
                     )}
                   </p>
                   <Link to="/cases" className="text-xs text-accent hover:underline mt-2 inline-flex items-center gap-1">
-                    Ver biblioteca de casos <ExternalLink className="h-3 w-3" />
+                    {lang === 'en' ? 'View case library' : 'Ver biblioteca de casos'} <ExternalLink className="h-3 w-3" />
                   </Link>
                 </CardContent>
               </div>
@@ -1574,7 +1586,7 @@ export function InstitutionProfile() {
                     <>
                       <div className="flex items-center gap-2 mb-3">
                         <AlertTriangle className="h-4 w-4 text-risk-high opacity-70" />
-                        <h2 className="text-sm font-bold text-text-primary">Escandalos documentados en el sector</h2>
+                        <h2 className="text-sm font-bold text-text-primary">{lang === 'en' ? 'Documented scandals in the sector' : 'Escandalos documentados en el sector'}</h2>
                         <span className="text-xs text-text-muted">({sectorCases!.length})</span>
                       </div>
                       <div className="space-y-1.5">
@@ -1602,7 +1614,7 @@ export function InstitutionProfile() {
               <CardHeader className="pb-2 pt-4">
                 <CardTitle className="flex items-center gap-2 text-xs font-semibold tracking-wider uppercase text-text-secondary font-mono">
                   <Calendar className="h-3.5 w-3.5 text-accent" />
-                  Linea de tiempo cruzada
+                  {lang === 'en' ? 'Cross-registry timeline' : 'Linea de tiempo cruzada'}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pb-4">
@@ -1616,8 +1628,9 @@ export function InstitutionProfile() {
             {/* Cross-registry note */}
             <div className="px-3 py-2 rounded border border-border/30 bg-background-elevated/30">
               <p className="text-[10px] text-text-muted leading-relaxed">
-                Registros externos: SAT EFOS (Art. 69-B), sanciones SFP, registro RUPC, hallazgos ASF.
-                Consulte perfiles de proveedores individuales para estatus EFOS/SFP.
+                {lang === 'en'
+                  ? 'External registries: SAT EFOS (Art. 69-B), SFP sanctions, RUPC registry, ASF findings. Consult individual vendor profiles for EFOS/SFP status.'
+                  : 'Registros externos: SAT EFOS (Art. 69-B), sanciones SFP, registro RUPC, hallazgos ASF. Consulte perfiles de proveedores individuales para estatus EFOS/SFP.'}
               </p>
             </div>
           </div>
@@ -1653,6 +1666,8 @@ function DetailRow({ label, value, valueColor }: { label: string; value?: string
 function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
   label: string; value: number; benchmark: number; diff: number | null; highThreshold: number
 }) {
+  const { i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const barColor = diff != null && diff > highThreshold ? '#dc2626' : diff != null && diff > 0 ? '#ea580c' : '#16a34a'
   return (
     <div>
@@ -1662,7 +1677,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           <span className="text-xs font-bold font-mono" style={{ color: barColor }}>{value.toFixed(1)}%</span>
           {diff != null && (
             <span className={cn('text-[10px] font-mono', diff > 0 ? 'text-risk-high' : 'text-risk-low')}>
-              {diff > 0 ? '+' : ''}{diff.toFixed(1)}pp vs prom.
+              {diff > 0 ? '+' : ''}{diff.toFixed(1)}pp {lang === 'en' ? 'vs avg.' : 'vs prom.'}
             </span>
           )}
         </div>
@@ -1687,7 +1702,7 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
         )
       })()}
       <div className="flex justify-between mt-0.5 text-[10px] text-text-muted/60">
-        <span>0%</span><span>Prom. {benchmark}%</span><span>100%</span>
+        <span>0%</span><span>{lang === 'en' ? 'Avg.' : 'Prom.'} {benchmark}%</span><span>100%</span>
       </div>
     </div>
   )
@@ -1702,6 +1717,8 @@ function RiskTimelineChart({
   data: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   riskColor: string
 }) {
+  const { i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const chartData = data.map((pt) => ({
     year: pt.year,
     risk: pt.avg_risk_score != null ? Math.round(pt.avg_risk_score * 1000) / 10 : null,
@@ -1731,8 +1748,8 @@ function RiskTimelineChart({
                 return (
                   <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
                     <p className="font-bold text-text-primary">{label}</p>
-                    <p style={{ color: riskColor }}>Riesgo: {risk != null ? `${risk}%` : '--'}</p>
-                    <p className="text-text-muted">{formatNumber(contracts)} contratos</p>
+                    <p style={{ color: riskColor }}>{lang === 'en' ? 'Risk:' : 'Riesgo:'} {risk != null ? `${risk}%` : '--'}</p>
+                    <p className="text-text-muted">{formatNumber(contracts)} {lang === 'en' ? 'contracts' : 'contratos'}</p>
                     <p className="text-text-muted">{formatCompactMXN(value)}</p>
                   </div>
                 )
