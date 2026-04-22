@@ -2097,7 +2097,7 @@ function HHITrendChart({ history }: {
               return null
             }}
           />
-          <ReferenceLine yAxisId="left" y={2500} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: 'Mercado concentrado', position: 'right', fontSize: 9, fill: '#dc2626' }} />
+          <ReferenceLine yAxisId="left" y={2500} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: lang === 'en' ? 'Concentrated market' : 'Mercado concentrado', position: 'right', fontSize: 9, fill: '#dc2626' }} />
           <Area yAxisId="left" type="monotone" dataKey="hhi" stroke="#eab308" strokeWidth={2} fill="url(#hhiAreaGrad)" dot={{ r: 2, fill: '#eab308' }} />
           <Line yAxisId="right" type="monotone" dataKey="vendors" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} />
         </ComposedChart>
@@ -2112,7 +2112,8 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
   timeline: Array<{ year: number; contract_count: number; total_value: number }>
   asfFindings: Array<{ year: number; amount_mxn?: number; observations_total?: number }>
 }) {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   if (timeline.length === 0 && asfFindings.length === 0) {
     return <p className="text-xs text-text-muted py-4 text-center">{t('profile.noExternalEvents')}</p>
   }
@@ -2147,8 +2148,8 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
                 return (
                   <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
                     <p className="font-bold text-text-primary">{label}</p>
-                    {ct != null && ct > 0 && <p style={{ color: 'var(--color-accent-data)' }}>Contratos: {ct}</p>}
-                    {asf != null && asf > 0 && <p style={{ color: '#f59e0b' }}>ASF observaciones: {asf}</p>}
+                    {ct != null && ct > 0 && <p style={{ color: 'var(--color-accent-data)' }}>{lang === 'en' ? 'Contracts:' : 'Contratos:'} {ct}</p>}
+                    {asf != null && asf > 0 && <p style={{ color: '#f59e0b' }}>{lang === 'en' ? 'ASF observations:' : 'ASF observaciones:'} {asf}</p>}
                   </div>
                 )
               }
@@ -2168,7 +2169,7 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
           formatVal={(v) => Number(v).toLocaleString()}
           dots={40}
         />
-        <p className="text-[10px] text-text-muted font-mono mt-1">Contratos por año</p>
+        <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Contracts per year' : 'Contratos por año'}</p>
       </div>
     </div>
   )
