@@ -1774,7 +1774,8 @@ function RiskTimelineChart({
 function SpendingOverTimeChart({ data }: {
   data: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
 }) {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const chartData = data.map((pt) => ({
     year: pt.year,
     valueBillions: pt.total_value / 1e9,
@@ -1806,9 +1807,9 @@ function SpendingOverTimeChart({ data }: {
                 return (
                   <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
                     <p className="font-bold text-text-primary">{label}</p>
-                    {valB != null && <p className="text-text-secondary">Gasto: {formatCompactMXN(valB * 1e9)}</p>}
-                    {ct != null && <p className="text-text-muted">Contratos: {formatNumber(ct)}</p>}
-                    {risk != null && <p className="text-text-muted">Riesgo promedio: {risk.toFixed(1)}%</p>}
+                    {valB != null && <p className="text-text-secondary">{lang === 'en' ? 'Spend:' : 'Gasto:'} {formatCompactMXN(valB * 1e9)}</p>}
+                    {ct != null && <p className="text-text-muted">{lang === 'en' ? 'Contracts:' : 'Contratos:'} {formatNumber(ct)}</p>}
+                    {risk != null && <p className="text-text-muted">{lang === 'en' ? 'Avg risk:' : 'Riesgo promedio:'} {risk.toFixed(1)}%</p>}
                   </div>
                 )
               }
@@ -1830,7 +1831,7 @@ function SpendingOverTimeChart({ data }: {
           formatVal={(v) => `${v.toFixed(1)}B`}
           dots={40}
         />
-        <p className="text-[10px] text-text-muted font-mono mt-1">Gasto (B MXN) por año</p>
+        <p className="text-[10px] text-text-muted font-mono mt-1">{lang === 'en' ? 'Spend (B MXN) by year' : 'Gasto (B MXN) por año'}</p>
       </div>
     </div>
   )
@@ -1901,7 +1902,8 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     year_range: number[]
   }
 }) {
-  const { t } = useTranslation('institutions')
+  const { t, i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const allYears = vendorLoyalty.year_range ?? []
   const displayYears = allYears.slice(-8)
   const topVendors = vendorLoyalty.vendors.slice(0, 8)
@@ -1909,7 +1911,7 @@ function VendorLoyaltyHeatmap({ vendorLoyalty }: {
     <table className="w-full border-separate" style={{ borderSpacing: 2 }} aria-label="Vendor loyalty over time">
       <thead>
         <tr>
-          <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">Proveedor</th>
+          <th className="text-left text-[10px] text-text-muted font-normal pb-1 pr-2 min-w-[100px]">{lang === 'en' ? 'Vendor' : 'Proveedor'}</th>
           {displayYears.map((yr) => (
             <th key={yr} className="text-center text-[10px] text-text-muted font-mono font-normal pb-1 min-w-[28px]">{yr}</th>
           ))}
@@ -1969,6 +1971,8 @@ function LongestTenuredGantt({ vendors }: {
   }>
 }) {
   const navigate = useNavigate()
+  const { i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const allYears = vendors.flatMap((v) => [v.first_contract_year, v.last_contract_year])
   const minYear = Math.min(...allYears)
   const maxYear = Math.max(...allYears)
@@ -2042,7 +2046,9 @@ function LongestTenuredGantt({ vendors }: {
         )
       })}
       <p className="text-[10px] text-text-muted/50 italic mt-2">
-        Color de barra = riesgo promedio (verde a rojo). Icono de alerta = permanencia {'>'}10 anos Y riesgo {'>'}30%.
+        {lang === 'en'
+          ? `Bar color = avg risk (green to red). Alert icon = tenure >10 years AND risk >30%.`
+          : `Color de barra = riesgo promedio (verde a rojo). Icono de alerta = permanencia >10 anos Y riesgo >30%.`}
       </p>
     </div>
   )
@@ -2053,6 +2059,8 @@ function LongestTenuredGantt({ vendors }: {
 function HHITrendChart({ history }: {
   history: Array<{ year: number; hhi: number; unique_vendors: number }>
 }) {
+  const { i18n } = useTranslation('institutions')
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const chartData = history.map((pt) => ({
     year: pt.year,
     hhi: pt.hhi,
@@ -2082,7 +2090,7 @@ function HHITrendChart({ history }: {
                   <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
                     <p className="font-bold text-text-primary">{label}</p>
                     {hhi != null && <p className="text-text-secondary">HHI: {hhi.toFixed(0)}</p>}
-                    {vendors != null && <p className="text-text-muted">Proveedores: {vendors}</p>}
+                    {vendors != null && <p className="text-text-muted">{lang === 'en' ? 'Vendors:' : 'Proveedores:'} {vendors}</p>}
                   </div>
                 )
               }

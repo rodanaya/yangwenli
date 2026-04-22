@@ -2334,10 +2334,14 @@ export function VendorProfile() {
                     ) : (
                       <div>
                         <p className="text-xs text-text-muted">
-                          Sin análisis de patrones para este proveedor.
+                          {i18n.language.startsWith('es')
+                            ? 'Sin análisis de patrones para este proveedor.'
+                            : 'No pattern analysis for this vendor.'}
                         </p>
                         <p className="text-[11px] text-text-muted mt-1">
-                          El resumen LLM se genera solo para proveedores ARIA T1–T2.
+                          {i18n.language.startsWith('es')
+                            ? 'El resumen LLM se genera solo para proveedores ARIA T1–T2.'
+                            : 'The LLM summary is only generated for ARIA T1–T2 vendors.'}
                         </p>
                       </div>
                     )}
@@ -5094,7 +5098,7 @@ function PeriodistaPanel({
   // Build auto-generated lede paragraph
   const ledeParagraph = useMemo(() => {
     if (!narrative) return null
-    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'Patrón irregular'
+    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || (isEsPP ? 'Patrón irregular' : 'Irregular pattern')
     const riskScore = avgRiskScore ?? 0
     const riskLevelLabel = getRiskLevel(riskScore)
     const riskLabelEs: Record<string, string> = {
@@ -5103,15 +5107,26 @@ function PeriodistaPanel({
       medium: 'medio',
       low: 'bajo',
     }
-    let text = `Este proveedor muestra el patrón "${arcLabel}". `
-    if (similarCases && similarCases.length > 0) {
-      const topCase = similarCases[0]
-      const pct = Math.round(topCase.similarity_score * 100)
-      text += `Sus patrones de contratación tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucró ${topCase.case_type}. `
+    let text: string
+    if (isEsPP) {
+      text = `Este proveedor muestra el patrón "${arcLabel}". `
+      if (similarCases && similarCases.length > 0) {
+        const topCase = similarCases[0]
+        const pct = Math.round(topCase.similarity_score * 100)
+        text += `Sus patrones de contratación tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucró ${topCase.case_type}. `
+      }
+      text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, está clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
+    } else {
+      text = `This vendor shows the "${arcLabel}" pattern. `
+      if (similarCases && similarCases.length > 0) {
+        const topCase = similarCases[0]
+        const pct = Math.round(topCase.similarity_score * 100)
+        text += `Its contracting patterns are ${pct}% similar to the '${topCase.case_name}' case, which involved ${topCase.case_type}. `
+      }
+      text += `With an average risk score of ${riskScore.toFixed(2)}, it is classified as ${riskLevelLabel}.`
     }
-    text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, está clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
     return text
-  }, [narrative, similarCases, avgRiskScore])
+  }, [narrative, similarCases, avgRiskScore, isEsPP])
 
   const handleCopyLede = () => {
     if (!ledeParagraph) return
@@ -5125,7 +5140,7 @@ function PeriodistaPanel({
       {/* 1. Narrativa del proveedor */}
       <div>
         <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          Narrativa
+          {isEsPP ? 'Narrativa' : 'Narrative'}
         </h3>
 
         {narrativeLoading ? (
@@ -5138,10 +5153,14 @@ function PeriodistaPanel({
             <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
             <div className="flex-1">
               <p className="text-sm text-text-secondary">
-                No se pudo cargar la narrativa del proveedor.
+                {isEsPP
+                  ? 'No se pudo cargar la narrativa del proveedor.'
+                  : 'Could not load the vendor narrative.'}
               </p>
               <p className="text-[11px] text-text-muted mt-1">
-                El servicio de análisis temporal no está disponible. Los datos estructurados siguen accesibles en las otras pestañas.
+                {isEsPP
+                  ? 'El servicio de análisis temporal no está disponible. Los datos estructurados siguen accesibles en las otras pestañas.'
+                  : 'The temporal analysis service is unavailable. Structured data remains accessible in the other tabs.'}
               </p>
             </div>
           </div>
