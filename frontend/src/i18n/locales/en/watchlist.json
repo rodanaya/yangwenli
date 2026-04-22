@@ -111,10 +111,32 @@
     "name": "Name"
   },
   "workspaceEmpty": {
-    "title": "Your investigation workspace is empty",
-    "description": "Add vendors and institutions to track their risk score changes over time. Get notified when a low-risk vendor becomes high-risk.",
-    "hint": "Use the eye icon on any vendor or institution profile to start tracking."
+    "title": "Your investigation starts here.",
+    "description": "Save vendors, institutions, and contracts to track risk-score changes over time. Begin by watching a high-priority vendor, exploring the procurement data, or opening a documented case.",
+    "hint": "Use the eye icon on any vendor or institution profile to start tracking.",
+    "watchVendorTitle": "Watch a vendor",
+    "watchVendorDesc": "Track risk changes for high-priority vendors in the ARIA queue.",
+    "watchVendorCta": "Browse T1 queue",
+    "exploreTitle": "Explore contracts",
+    "exploreDesc": "Find vendors or institutions and click the eye icon to start tracking.",
+    "exploreCta": "Search vendors",
+    "caseTitle": "Open a documented case",
+    "caseDesc": "Browse 1,363 documented cases and add involved parties to your workspace.",
+    "caseCta": "View cases"
   },
+  "dossierEmpty": {
+    "kicker": "WORKSPACE",
+    "title": "Your investigation starts here.",
+    "lede": "Create a dossier to begin tracking vendors, institutions, and contracts under a single case file.",
+    "steps": "Create a dossier  ·  Add vendors under investigation  ·  Export your findings",
+    "cta": "Create your first dossier"
+  },
+  "dossierTabHeader": {
+    "lede": "Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts — private to your account, exportable anytime.",
+    "new": "New dossier"
+  },
+  "tip": "Tip: open a vendor from the explorer or the ARIA queue, then use the eye icon to add them to your workspace.",
+  "sortBy": "Sort by",
   "hideRiskFactors": "Hide risk factors",
   "showRiskFactors": "Show risk factors",
   "openInvestigation": "Open in Investigation Queue",

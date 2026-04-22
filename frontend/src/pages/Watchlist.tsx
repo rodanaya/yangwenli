@@ -116,7 +116,7 @@ function TypeBadge({ type }: { type: WatchlistItem['item_type'] }) {
   }
   const { label, Icon, cls } = config[type]
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs ${cls}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs ${cls}`}>
       <Icon className="h-3 w-3" />
       {label}
     </span>
@@ -130,7 +130,7 @@ function PriorityBadge({ priority }: { priority: WatchlistItem['priority'] }) {
     low: 'bg-risk-low/15 text-risk-low border-risk-low/30',
   }
   return (
-    <span className={`inline-flex items-center px-2 py-0.5 rounded border text-xs capitalize ${styles[priority]}`}>
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-sm border text-xs capitalize ${styles[priority]}`}>
       {priority}
     </span>
   )
@@ -149,7 +149,7 @@ function StatusBadge({ status }: { status: WatchlistItem['status'] }) {
   }
   const Icon = icons[status]
   return (
-    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded border text-xs capitalize ${styles[status]}`}>
+    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-sm border text-xs capitalize ${styles[status]}`}>
       <Icon className="h-3 w-3" />
       {status}
     </span>
@@ -251,7 +251,7 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
       onClick={() => setConfirming(true)}
       disabled={disabled}
       title="Remove from watchlist"
-      className="p-1 rounded hover:bg-risk-critical/10 text-text-muted hover:text-risk-critical transition-colors disabled:opacity-40"
+      className="p-1 rounded-sm hover:bg-risk-critical/10 text-text-muted hover:text-risk-critical transition-colors disabled:opacity-40"
     >
       <Trash2 className="h-4 w-4" />
     </button>
@@ -263,23 +263,34 @@ function RemoveButton({ onConfirm, disabled }: { onConfirm: () => void; disabled
 // ============================================================================
 
 export function DossierEmptyState({ onCreateClick }: { onCreateClick: () => void }) {
+  const { t } = useTranslation('watchlist')
   return (
     <div className="flex flex-col items-center justify-center py-16 px-6 text-center">
       <div className="rounded-sm bg-accent/10 p-4 mb-5">
         <Folder className="h-10 w-10 text-accent opacity-70" />
       </div>
-      <h3 className="text-base font-semibold text-text-primary mb-2">
-        Start Your Investigation
-      </h3>
-      <p className="text-sm text-text-muted max-w-sm leading-relaxed mb-5">
-        Create a dossier to organize vendors, institutions and contracts under a single investigation.
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted mb-3">
+        {t('dossierEmpty.kicker')}
       </p>
-      <div className="text-xs text-text-muted/70 space-y-1 mb-6">
-        <p>1. Create a dossier &rarr; 2. Add vendors you're investigating &rarr; 3. Analyze their contracts &amp; export</p>
-      </div>
-      <Button size="sm" onClick={onCreateClick}>
+      <h3
+        className="font-bold text-text-primary leading-[1.1] mb-3"
+        style={{
+          fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+          fontSize: 'clamp(1.5rem, 2.4vw, 2rem)',
+          letterSpacing: '-0.02em',
+        }}
+      >
+        {t('dossierEmpty.title')}
+      </h3>
+      <p className="text-sm text-text-secondary max-w-md leading-relaxed mb-4">
+        {t('dossierEmpty.lede')}
+      </p>
+      <p className="text-[11px] font-mono uppercase tracking-[0.12em] text-text-muted/70 mb-6">
+        {t('dossierEmpty.steps')}
+      </p>
+      <Button size="sm" onClick={onCreateClick} className="rounded-sm">
         <Plus className="h-4 w-4 mr-1.5" />
-        Create First Dossier
+        {t('dossierEmpty.cta')}
       </Button>
     </div>
   )
@@ -731,13 +742,13 @@ export function Watchlist() {
           <TabsList className="mb-4">
             <TabsTrigger value="entities" className="flex items-center gap-1.5">
               <Eye className="h-3.5 w-3.5" />
-              Tracked Entities
+              {t('tabs.entities')}
             </TabsTrigger>
             <TabsTrigger value="dossiers" className="flex items-center gap-1.5">
               <FolderOpen className="h-3.5 w-3.5" />
-              Dossiers
+              {t('tabs.dossiers')}
               {(dossiers?.length ?? 0) > 0 && (
-                <span className="ml-1 text-[10px] bg-accent/15 text-accent rounded-sm px-1.5 py-px font-medium">
+                <span className="ml-1 text-[10px] bg-accent/15 text-accent rounded-sm px-1.5 py-px font-medium font-mono tabular-nums">
                   {dossiers?.length}
                 </span>
               )}
@@ -796,27 +807,29 @@ export function Watchlist() {
                     {t('table.trackedEntities')}
                   </span>
                   <div className="flex items-center gap-2">
-                    <span className="text-[10px] text-text-muted font-normal">Sort:</span>
+                    <span className="text-[10px] text-text-muted font-mono uppercase tracking-[0.12em]">{t('sort.label')}</span>
                     {([
-                      { field: 'risk' as SortField, label: 'Risk' },
-                      { field: 'risk_delta' as SortField, label: 'Change' },
-                      { field: 'added' as SortField, label: 'Added' },
-                      { field: 'name' as SortField, label: 'Name' },
-                    ]).map(({ field, label }) => (
+                      { field: 'risk' as SortField, labelKey: 'sort.risk' },
+                      { field: 'risk_delta' as SortField, labelKey: 'sort.change' },
+                      { field: 'added' as SortField, labelKey: 'sort.added' },
+                      { field: 'name' as SortField, labelKey: 'sort.name' },
+                    ]).map(({ field, labelKey }) => (
                       <button
                         key={field}
                         onClick={() => toggleSort(field)}
-                        className={`text-[10px] px-2 py-0.5 rounded border transition-colors ${
+                        className={`text-[10px] px-2 py-0.5 rounded-sm border transition-colors ${
                           sortField === field
                             ? 'bg-accent/10 text-accent border-accent/30 font-medium'
                             : 'text-text-muted border-border/40 hover:text-accent hover:border-accent/30'
                         }`}
                       >
-                        {label}
+                        {t(labelKey)}
                         {sortField === field && (sortDir === 'desc' ? ' ↓' : ' ↑')}
                       </button>
                     ))}
-                    <Badge variant="secondary">{items.length} {items.length !== 1 ? t('table.items') : t('table.item')}</Badge>
+                    <Badge variant="secondary" className="rounded-sm font-mono tabular-nums">
+                      {items.length} {items.length !== 1 ? t('table.items') : t('table.item')}
+                    </Badge>
                   </div>
                 </CardTitle>
               </CardHeader>
@@ -864,65 +877,99 @@ export function Watchlist() {
                       )
                     }
                     return (
-                      <div className="p-8">
-                        {/* Onboarding header */}
-                        <div className="text-center mb-8">
-                          <Crosshair className="h-10 w-10 mx-auto mb-3 text-accent opacity-40" />
-                          <p className="text-base font-semibold text-text-primary mb-1">{t('workspaceEmpty.title')}</p>
-                          <p className="text-xs text-text-muted max-w-sm mx-auto leading-relaxed">
+                      <div className="p-10">
+                        {/* Editorial lede */}
+                        <div className="text-center mb-10 max-w-2xl mx-auto">
+                          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-accent mb-4">
+                            {t('dossierEmpty.kicker')}
+                          </p>
+                          <h2
+                            className="font-bold text-text-primary leading-[1.1] mb-4"
+                            style={{
+                              fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
+                              fontSize: 'clamp(1.75rem, 3vw, 2.25rem)',
+                              letterSpacing: '-0.025em',
+                            }}
+                          >
+                            {t('workspaceEmpty.title')}
+                          </h2>
+                          <p className="text-sm text-text-secondary leading-relaxed max-w-xl mx-auto">
                             {t('workspaceEmpty.description')}
                           </p>
                         </div>
+
                         {/* 3-column get-started guide */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6 max-w-2xl mx-auto">
-                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <Crosshair className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
-                            <p className="text-xs font-semibold text-text-primary mb-1">Watch a vendor</p>
-                            <p className="text-[10px] text-text-muted leading-snug mb-3">Track risk changes for high-priority vendors in the ARIA queue</p>
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 max-w-3xl mx-auto">
+                          <div className="rounded-sm border border-border/50 p-5 text-left hover:border-accent/40 transition-colors">
+                            <Crosshair className="h-5 w-5 text-accent/80 mb-3" />
+                            <p className="text-sm font-semibold text-text-primary mb-1.5">
+                              {t('workspaceEmpty.watchVendorTitle')}
+                            </p>
+                            <p className="text-xs text-text-muted leading-snug mb-4 min-h-[2.5rem]">
+                              {t('workspaceEmpty.watchVendorDesc')}
+                            </p>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full text-[10px]"
+                              className="w-full text-xs rounded-sm font-mono uppercase tracking-wider"
                               onClick={() => navigate('/aria?tier=1')}
                             >
-                              <Crosshair className="h-3 w-3 mr-1" /> Browse T1 Queue
+                              <Crosshair className="h-3 w-3 mr-1.5" />
+                              {t('workspaceEmpty.watchVendorCta')}
                             </Button>
                           </div>
-                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <ClipboardList className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
-                            <p className="text-xs font-semibold text-text-primary mb-1">Explore contracts</p>
-                            <p className="text-[10px] text-text-muted leading-snug mb-3">Find vendors or institutions and click the eye icon to start tracking</p>
+                          <div className="rounded-sm border border-border/50 p-5 text-left hover:border-accent/40 transition-colors">
+                            <ClipboardList className="h-5 w-5 text-accent/80 mb-3" />
+                            <p className="text-sm font-semibold text-text-primary mb-1.5">
+                              {t('workspaceEmpty.exploreTitle')}
+                            </p>
+                            <p className="text-xs text-text-muted leading-snug mb-4 min-h-[2.5rem]">
+                              {t('workspaceEmpty.exploreDesc')}
+                            </p>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full text-[10px]"
+                              className="w-full text-xs rounded-sm font-mono uppercase tracking-wider"
                               onClick={() => navigate('/explore?tab=vendors')}
                             >
-                              <Search className="h-3 w-3 mr-1" /> Search vendors
+                              <Search className="h-3 w-3 mr-1.5" />
+                              {t('workspaceEmpty.exploreCta')}
                             </Button>
                           </div>
-                          <div className="rounded-sm border border-border/40 p-4 text-center hover:border-accent/30 transition-colors">
-                            <FolderOpen className="h-6 w-6 text-zinc-400 mx-auto mb-2" />
-                            <p className="text-xs font-semibold text-text-primary mb-1">Open a case</p>
-                            <p className="text-[10px] text-text-muted leading-snug mb-3">Browse the 43 documented cases and track involved parties</p>
+                          <div className="rounded-sm border border-border/50 p-5 text-left hover:border-accent/40 transition-colors">
+                            <FolderOpen className="h-5 w-5 text-accent/80 mb-3" />
+                            <p className="text-sm font-semibold text-text-primary mb-1.5">
+                              {t('workspaceEmpty.caseTitle')}
+                            </p>
+                            <p className="text-xs text-text-muted leading-snug mb-4 min-h-[2.5rem]">
+                              {t('workspaceEmpty.caseDesc')}
+                            </p>
                             <Button
                               variant="outline"
                               size="sm"
-                              className="w-full text-[10px]"
+                              className="w-full text-xs rounded-sm font-mono uppercase tracking-wider"
                               onClick={() => navigate('/cases')}
                             >
-                              <FileText className="h-3 w-3 mr-1" /> View cases
+                              <FileText className="h-3 w-3 mr-1.5" />
+                              {t('workspaceEmpty.caseCta')}
                             </Button>
                           </div>
                         </div>
-                        <p className="text-[10px] text-text-muted/50 text-center">
-                          <Eye className="h-3 w-3 inline mx-0.5" /> {t('workspaceEmpty.hint')}
-                        </p>
+
+                        {/* Tip note */}
+                        <div className="max-w-3xl mx-auto border-t border-border/40 pt-4">
+                          <p className="text-[11px] text-text-muted/80 text-center leading-relaxed">
+                            <Eye className="h-3 w-3 inline mr-1 mb-0.5" />
+                            <span className="font-mono uppercase tracking-[0.12em] text-text-muted mr-1">Tip ·</span>
+                            {t('tip')}
+                          </p>
+                        </div>
                       </div>
                     )
                   })()
                 ) : (
-                  /* Table */
+                  /* Table + tip footer */
+                  <div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm" aria-label="Watchlist vendors">
                       <thead>
@@ -954,6 +1001,13 @@ export function Watchlist() {
                       </tbody>
                     </table>
                   </div>
+                  <div className="border-t border-border/40 px-4 py-2.5">
+                    <p className="text-[10px] text-text-muted/80 leading-relaxed">
+                      <span className="font-mono uppercase tracking-[0.12em] text-text-muted mr-1">Tip ·</span>
+                      {t('tip')}
+                    </p>
+                  </div>
+                  </div>
                 )}
               </CardContent>
             </Card>
@@ -962,13 +1016,13 @@ export function Watchlist() {
           {/* ---- DOSSIERS TAB ---- */}
           <TabsContent value="dossiers" className="space-y-4">
             {/* Dossier tab header row */}
-            <div className="flex items-center justify-between">
-              <p className="text-xs text-text-muted">
-                Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts.
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-xs text-text-secondary leading-relaxed max-w-2xl">
+                {t('dossierTabHeader.lede')}
               </p>
-              <Button size="sm" onClick={() => setDossierDialogOpen(true)}>
+              <Button size="sm" className="rounded-sm shrink-0" onClick={() => setDossierDialogOpen(true)}>
                 <Plus className="h-4 w-4 mr-1.5" />
-                New Dossier
+                {t('dossierTabHeader.new')}
               </Button>
             </div>
 
@@ -976,11 +1030,11 @@ export function Watchlist() {
             <div className="flex items-center gap-1.5">
               <Filter className="h-3.5 w-3.5 text-text-muted shrink-0" />
               {([
-                { value: 'all', label: 'Todos' },
-                { value: 'active', label: 'Activos' },
-                { value: 'archived', label: 'Archivados' },
-                { value: 'closed', label: 'Cerrados' },
-              ] as const).map(({ value, label }) => (
+                { value: 'all', labelKey: 'dossierStatus.all' },
+                { value: 'active', labelKey: 'dossierStatus.active' },
+                { value: 'archived', labelKey: 'dossierStatus.archived' },
+                { value: 'closed', labelKey: 'dossierStatus.closed' },
+              ] as const).map(({ value, labelKey }) => (
                 <button
                   key={value}
                   onClick={() => setDossierStatusFilter(value)}
@@ -990,7 +1044,7 @@ export function Watchlist() {
                       : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
                   }`}
                 >
-                  {label}
+                  {t(labelKey)}
                 </button>
               ))}
             </div>
@@ -1003,11 +1057,11 @@ export function Watchlist() {
                   <Button
                     variant="outline"
                     size="sm"
-                    className="text-xs h-7"
+                    className="text-xs h-7 rounded-sm"
                     onClick={() => setAddItemDossierId(activeDossierId)}
                   >
                     <Users className="h-3.5 w-3.5 mr-1.5" />
-                    Buscar proveedores
+                    {t('dossierTab.searchVendors')}
                   </Button>
                 </div>
               </div>
@@ -1209,7 +1263,7 @@ function WatchlistRow({
             <button
               onClick={() => setExpanded((v) => !v)}
               title={expanded ? 'Hide risk factors' : 'Show risk factors'}
-              className="p-1 rounded hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
+              className="p-1 rounded-sm hover:bg-accent/10 text-text-muted hover:text-accent transition-colors"
             >
               {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
             </button>
@@ -1219,7 +1273,7 @@ function WatchlistRow({
             <button
               onClick={() => onInvestigate(item)}
               title="Open in Investigation Queue"
-              className="flex items-center gap-1 px-2 py-1 rounded text-xs border border-border hover:border-accent hover:text-accent transition-colors text-text-muted"
+              className="flex items-center gap-1 px-2 py-1 rounded-sm text-xs border border-border hover:border-accent hover:text-accent transition-colors text-text-muted"
             >
               <Search className="h-3 w-3" />
               {t('investigate')}

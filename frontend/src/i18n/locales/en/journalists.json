@@ -211,5 +211,52 @@
       "subheadline": "COMPRANET was created in 1996 to make procurement transparent. What it became was a system where the rules of competition could be observed — and gamed — simultaneously.",
       "statLabel": "years of procurement data in COMPRANET"
     }
+  },
+  "cards": {
+    "readStory": "Read story",
+    "readInvestigation": "Read investigation",
+    "scale": "Scale"
+  },
+  "investigations": {
+    "el-ejercito-fantasma": {
+      "headline": "The Ghost Army: 6,034 Vendors That Look Like Nothing",
+      "sub": "RUBLI found 6,034 ghost-pattern vendors · only 42 officially confirmed"
+    },
+    "el-gran-precio": {
+      "headline": "The Bigger the Contract, the Higher the Risk",
+      "sub": "23,469 large contracts · MX$6.24T · avg risk score 0.70"
+    },
+    "el-monopolio-invisible": {
+      "headline": "The 44 Monopolists: Vendors Who Ate Their Sector",
+      "sub": "Grupo Fármacos · MX$133B · 6,303 contracts · one institution"
+    },
+    "la-ilusion-competitiva": {
+      "headline": "The Competition That Never Was",
+      "sub": "49.4% single-bid rate in \"competitive\" procedures · 2023"
+    },
+    "captura-institucional": {
+      "headline": "Inside Institutional Capture: 15,923 Vendors, 787B in Three Agencies",
+      "sub": "IMSS · CFE · PEMEX · P6 pattern at Mexico's largest institutions"
+    },
+    "marea-de-adjudicaciones": {
+      "headline": "The Direct Award Tide: From 60% to 82% in 13 Years",
+      "sub": "82.2% non-competitive in 2023 · every administration worse than the last"
+    },
+    "el-sexenio-del-riesgo": {
+      "headline": "The Riskiest Administration in 23 Years",
+      "sub": "AMLO era HR 17.6% · Fox 7.9% · Calderón 9.7% · Peña Nieto 12.4%"
+    },
+    "la-industria-del-intermediario": {
+      "headline": "The Intermediary Industry: 2,974 Vendors, 518B MXN",
+      "sub": "Infrastructure 174B · Health 129B · Energy 121B · RUBLI P3 pattern"
+    },
+    "el-umbral-de-los-300k": {
+      "headline": "The 300,000 Peso Threshold Trap",
+      "sub": "75,474 contracts at exactly MX$300K · statistical impossibility without coordination"
+    },
+    "volatilidad-el-precio-del-riesgo": {
+      "headline": "Price Volatility: The Algorithm's Smoking Gun",
+      "sub": "Strongest predictor in v0.6.5 model · coefficient +0.5343 across 3M contracts"
+    }
   }
 }

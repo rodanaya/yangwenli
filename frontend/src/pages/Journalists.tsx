@@ -233,6 +233,9 @@ function FeaturedCard({ item }: { item: Investigation }) {
   const status = STATUS_META[item.status]
   const accent = FRAUD_COLOR[item.type]
 
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
+
   return (
     <button
       onClick={() => navigate(`/stories/${item.slug}`)}
@@ -242,7 +245,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         'overflow-hidden transition-colors duration-200',
         'hover:border-[rgba(255,255,255,0.14)]'
       )}
-      aria-label={item.headline}
+      aria-label={headline}
     >
       {/* Accent glow */}
       <div
@@ -278,17 +281,17 @@ function FeaturedCard({ item }: { item: Investigation }) {
               letterSpacing: '-0.025em',
             }}
           >
-            {item.headline}
+            {headline}
           </h2>
 
           <p className="text-sm sm:text-base text-zinc-400 font-mono tabular-nums mb-8">
-            {item.sub}
+            {sub}
           </p>
 
           <div className="flex flex-wrap items-center gap-2.5 mb-8">
             <span
               className={cn(
-                'inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] border',
+                'inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] border rounded-sm',
                 status.color,
                 status.border,
                 status.bg
@@ -296,13 +299,13 @@ function FeaturedCard({ item }: { item: Investigation }) {
             >
               [{status.label}]
             </span>
-            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-zinc-400 border border-[rgba(255,255,255,0.08)] bg-zinc-900/60">
+            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-zinc-400 border border-[rgba(255,255,255,0.08)] bg-zinc-900/60 rounded-sm">
               {ERA_LABEL[item.era]}
             </span>
           </div>
 
           <span className="inline-flex items-center gap-2 text-sm font-semibold text-red-500 group-hover:text-red-400 transition-colors">
-            Read Investigation
+            {t('cards.readInvestigation')}
             <span className="inline-block transition-transform duration-200 group-hover:translate-x-1">
               →
             </span>
@@ -358,9 +361,13 @@ function FeaturedCard({ item }: { item: Investigation }) {
 // ---------------------------------------------------------------------------
 
 function GridCard({ item }: { item: Investigation }) {
+  const { t } = useTranslation('journalists')
   const accent = FRAUD_COLOR[item.type]
   const status = STATUS_META[item.status]
   const intensity = item.amount / MAX_AMOUNT
+
+  const headline = t(`investigations.${item.slug}.headline`, { defaultValue: item.headline })
+  const sub = t(`investigations.${item.slug}.sub`, { defaultValue: item.sub })
 
   return (
     <Link
@@ -370,7 +377,7 @@ function GridCard({ item }: { item: Investigation }) {
         'bg-[#161210] border border-[rgba(255,255,255,0.07)] rounded-sm',
         'transition-colors duration-200 hover:border-[rgba(255,255,255,0.16)]'
       )}
-      aria-label={item.headline}
+      aria-label={headline}
     >
       {/* Left accent bar */}
       <div
@@ -403,8 +410,13 @@ function GridCard({ item }: { item: Investigation }) {
             letterSpacing: '-0.015em',
           }}
         >
-          {item.headline}
+          {headline}
         </h3>
+
+        {/* One-line lede */}
+        <p className="text-xs text-zinc-400 font-mono tabular-nums leading-snug line-clamp-2">
+          {sub}
+        </p>
 
         {/* Hero number */}
         <div>
@@ -416,7 +428,7 @@ function GridCard({ item }: { item: Investigation }) {
           </div>
           <p className="text-[11px] text-zinc-500 font-mono mt-2 tabular-nums">
             {item.contracts.toLocaleString('en-US')} contracts ·{' '}
-            {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? ''}
+            {sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? ''}
           </p>
         </div>
 
@@ -424,15 +436,15 @@ function GridCard({ item }: { item: Investigation }) {
         <div className="flex items-center gap-3">
           <IntensityBar value={intensity} color="#f59e0b" />
           <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-600">
-            Scale
+            {t('cards.scale')}
           </span>
         </div>
 
-        {/* Footer: status pill + arrow */}
+        {/* Footer: status pill + read story link */}
         <div className="mt-auto pt-3 border-t border-[rgba(255,255,255,0.05)] flex items-center justify-between">
           <span
             className={cn(
-              'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border',
+              'inline-flex items-center px-1.5 py-[2px] text-[9px] font-mono font-bold tracking-[0.14em] border rounded-sm',
               status.color,
               status.border,
               status.bg
@@ -441,10 +453,15 @@ function GridCard({ item }: { item: Investigation }) {
             [{status.label}]
           </span>
           <span
-            className="text-zinc-500 group-hover:text-zinc-100 transition-colors text-lg leading-none"
-            aria-hidden="true"
+            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-zinc-500 group-hover:text-zinc-100 transition-colors"
           >
-            →
+            {t('cards.readStory')}
+            <span
+              className="inline-block transition-transform duration-200 group-hover:translate-x-0.5"
+              aria-hidden="true"
+            >
+              →
+            </span>
           </span>
         </div>
       </div>

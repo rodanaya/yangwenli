@@ -211,5 +211,52 @@
       "subheadline": "COMPRANET fue creado en 1996 para hacer transparentes las compras públicas. Lo que se convirtió fue en un sistema donde las reglas de competencia podían cumplirse — y burlarse — al mismo tiempo.",
       "statLabel": "años de datos de contratación en COMPRANET"
     }
+  },
+  "cards": {
+    "readStory": "Leer historia",
+    "readInvestigation": "Leer investigación",
+    "scale": "Escala"
+  },
+  "investigations": {
+    "el-ejercito-fantasma": {
+      "headline": "El Ejército Fantasma: 6,034 Proveedores Que No Existen",
+      "sub": "RUBLI identificó 6,034 proveedores con patrón fantasma · solo 42 confirmados oficialmente"
+    },
+    "el-gran-precio": {
+      "headline": "Cuanto Más Grande el Contrato, Mayor el Riesgo",
+      "sub": "23,469 contratos grandes · MX$6.24B · puntaje de riesgo promedio 0.70"
+    },
+    "el-monopolio-invisible": {
+      "headline": "Los 44 Monopolistas: Los Proveedores Que Devoraron su Sector",
+      "sub": "Grupo Fármacos · MX$133B · 6,303 contratos · una sola institución"
+    },
+    "la-ilusion-competitiva": {
+      "headline": "La Competencia Que Nunca Existió",
+      "sub": "49.4% de licitaciones con un solo postor en procesos \"competitivos\" · 2023"
+    },
+    "captura-institucional": {
+      "headline": "Captura Institucional: 15,923 Proveedores, 787B en Tres Dependencias",
+      "sub": "IMSS · CFE · PEMEX · patrón P6 en las instituciones más grandes del país"
+    },
+    "marea-de-adjudicaciones": {
+      "headline": "La Marea de las Adjudicaciones Directas: De 60% a 82% en 13 Años",
+      "sub": "82.2% sin licitación en 2023 · cada sexenio peor que el anterior"
+    },
+    "el-sexenio-del-riesgo": {
+      "headline": "El Sexenio Más Riesgoso en 23 Años",
+      "sub": "AMLO HR 17.6% · Fox 7.9% · Calderón 9.7% · Peña Nieto 12.4%"
+    },
+    "la-industria-del-intermediario": {
+      "headline": "La Industria del Intermediario: 2,974 Proveedores, 518B MXN",
+      "sub": "Infraestructura 174B · Salud 129B · Energía 121B · patrón RUBLI P3"
+    },
+    "el-umbral-de-los-300k": {
+      "headline": "La Trampa del Umbral de los 300 Mil Pesos",
+      "sub": "75,474 contratos por exactamente MX$300K · imposibilidad estadística sin coordinación"
+    },
+    "volatilidad-el-precio-del-riesgo": {
+      "headline": "Volatilidad de Precios: La Pistola Humeante del Algoritmo",
+      "sub": "Predictor más fuerte del modelo v0.6.5 · coeficiente +0.5343 en 3M de contratos"
+    }
   }
 }

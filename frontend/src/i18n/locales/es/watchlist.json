@@ -111,10 +111,32 @@
     "name": "Nombre"
   },
   "workspaceEmpty": {
-    "title": "Tu espacio de investigación está vacío",
-    "description": "Agrega proveedores e instituciones para rastrear cambios en su puntaje de riesgo a lo largo del tiempo.",
-    "hint": "Usa el ícono de ojo en cualquier perfil de proveedor o institución para comenzar a rastrear."
+    "title": "Tu investigación comienza aquí.",
+    "description": "Guarda proveedores, instituciones y contratos para rastrear cambios en el puntaje de riesgo a lo largo del tiempo. Empieza por vigilar un proveedor de alta prioridad, explorar los datos de contratación o abrir un caso documentado.",
+    "hint": "Usa el ícono de ojo en cualquier perfil de proveedor o institución para comenzar a rastrear.",
+    "watchVendorTitle": "Vigilar un proveedor",
+    "watchVendorDesc": "Sigue los cambios de riesgo en proveedores prioritarios de la cola ARIA.",
+    "watchVendorCta": "Ver cola T1",
+    "exploreTitle": "Explorar contratos",
+    "exploreDesc": "Encuentra proveedores o instituciones y usa el ícono de ojo para empezar a seguirlos.",
+    "exploreCta": "Buscar proveedores",
+    "caseTitle": "Abrir un caso documentado",
+    "caseDesc": "Explora 1,363 casos documentados y agrega a los involucrados a tu espacio.",
+    "caseCta": "Ver casos"
   },
+  "dossierEmpty": {
+    "kicker": "ESPACIO DE TRABAJO",
+    "title": "Tu investigación comienza aquí.",
+    "lede": "Crea un dossier para rastrear proveedores, instituciones y contratos bajo un mismo expediente.",
+    "steps": "Crea un dossier  ·  Agrega proveedores bajo investigación  ·  Exporta tus hallazgos",
+    "cta": "Crear tu primer dossier"
+  },
+  "dossierTabHeader": {
+    "lede": "Organiza tus investigaciones en carpetas de caso. Cada dossier contiene proveedores, instituciones y contratos — privado para tu cuenta, exportable en cualquier momento.",
+    "new": "Nuevo dossier"
+  },
+  "tip": "Tip: abre un proveedor desde el explorador o la cola ARIA, y usa el ícono de ojo para agregarlo a tu espacio de trabajo.",
+  "sortBy": "Ordenar por",
   "hideRiskFactors": "Ocultar factores de riesgo",
   "showRiskFactors": "Mostrar factores de riesgo",
   "openInvestigation": "Abrir en Cola de Investigación",
