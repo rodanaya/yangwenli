@@ -98,15 +98,15 @@ export function AdminFingerprints() {
       {/* ── Header row ─────────────────────────────────────────────────── */}
       <text x={LABEL_X} y={12} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
-        ADMINISTRATION
+        {lang === 'en' ? 'ADMINISTRATION' : 'ADMINISTRACIÓN'}
       </text>
       <text x={BAR_RISK_X} y={12} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
-        % HIGH + CRITICAL RISK
+        {lang === 'en' ? '% HIGH + CRITICAL RISK' : '% RIESGO ALTO + CRÍTICO'}
       </text>
       <text x={BAR_DA_X} y={12} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
-        % DIRECT AWARD
+        {lang === 'en' ? '% DIRECT AWARD' : '% ADJUDICACIÓN DIRECTA'}
       </text>
 
       {/* Header underline */}
