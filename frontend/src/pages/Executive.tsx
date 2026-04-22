@@ -299,7 +299,7 @@ export default function Executive() {
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
             {lang === 'en' ? 'Headline Numbers' : 'Cifras Clave'}
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
             {kpis.map((k, idx) => (
               <motion.div
                 key={k.label}
@@ -331,39 +331,85 @@ export default function Executive() {
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
             {lang === 'en' ? 'Top Fraud Signals · Model Coefficients' : 'Principales Señales de Fraude · Coeficientes del Modelo'}
           </div>
-          <div className="space-y-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {signals.map((s, idx) => (
               <motion.article
                 key={s.num}
-                className="surface-card border-l-2 rounded-sm p-5 grid grid-cols-1 md:grid-cols-[120px_1fr] gap-4 md:gap-6"
+                className="surface-card border-l-2 rounded-sm p-5"
                 style={{ borderLeftColor: s.color }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.1 + idx * 0.08 }}
               >
-                <div>
-                  <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
+                <div className="flex items-center justify-between mb-3">
+                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                     {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
-                  </div>
-                  <div className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted mt-2 opacity-55">
-                    {lang === 'en' ? 'PRED. WEIGHT' : 'PESO PRED.'}
-                  </div>
-                  <div
-                    className="font-mono font-bold text-[26px] mt-0.5 tabular-nums leading-none"
+                  </span>
+                  <span
+                    className="font-mono font-bold text-[22px] tabular-nums leading-none"
                     style={{ color: s.color }}
                   >
                     {s.weight}
-                  </div>
+                  </span>
                 </div>
-                <div>
-                  <h3 className="font-semibold text-[17px] leading-[1.3] text-text-primary mb-1.5">
-                    {s.name}
-                  </h3>
-                  <p className="text-sm text-text-secondary leading-[1.6]">
-                    {s.body}
-                  </p>
-                </div>
+                <h3 className="font-semibold text-[15px] leading-[1.3] text-text-primary mb-2">
+                  {s.name}
+                </h3>
+                <p className="text-xs text-text-secondary leading-[1.6]">
+                  {s.body}
+                </p>
               </motion.article>
+            ))}
+          </div>
+        </section>
+
+        {/* ─── Amber divider ─── */}
+        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
+
+        {/* ─── Documented Cases Timeline ─── */}
+        <section className="mb-12">
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
+            <Clock className="h-3 w-3" />
+            {lang === 'en' ? 'Documented corruption cases · 2002–2025' : 'Casos documentados de corrupción · 2002–2025'}
+          </div>
+          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+            {lang === 'en'
+              ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
+              : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
+          </p>
+          <div className="surface-card rounded-sm p-6">
+            <CaseTimeline lang={lang} />
+          </div>
+        </section>
+
+        {/* ─── Recommendations by Audience ─── */}
+        <section className="mb-12">
+          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
+            {t('recommendations.sectionLabel')}
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            {audiences.map((a, idx) => (
+              <motion.div
+                key={a.key}
+                className="surface-card rounded-sm p-5 border-l-2 border-[#a06820]/40"
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.1 + idx * 0.08 }}
+              >
+                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-3">
+                  {t(`recommendations.${a.key}.audience`)}
+                </div>
+                <ul className="space-y-3">
+                  {(['s1', 's2', 's3'] as const).map((s, sIdx) => (
+                    <li key={s} className="text-xs text-text-secondary leading-[1.6] flex gap-2">
+                      <span className="font-mono text-text-muted tabular-nums shrink-0">
+                        {String(sIdx + 1).padStart(2, '0')}
+                      </span>
+                      <span>{t(`recommendations.${a.key}.${s}`)}</span>
+                    </li>
+                  ))}
+                </ul>
+              </motion.div>
             ))}
           </div>
         </section>
@@ -448,57 +494,6 @@ export default function Executive() {
               {lang === 'en' ? 'Open full ARIA queue' : 'Abrir cola ARIA completa'}
               <ArrowUpRight className="h-3 w-3" />
             </button>
-          </div>
-        </section>
-
-        {/* ─── Amber divider ─── */}
-        <div className="h-[2px] bg-gradient-to-r from-transparent via-[#a06820] to-transparent opacity-40 mb-10" />
-
-        {/* ─── Documented Cases Timeline ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2 flex items-center gap-2">
-            <Clock className="h-3 w-3" />
-            {lang === 'en' ? 'Documented corruption cases · 2002–2025' : 'Casos documentados de corrupción · 2002–2025'}
-          </div>
-          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
-            {lang === 'en'
-              ? 'Ten landmark cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement — form the backbone of the model\'s ground truth. The model detects these patterns years before the scandal becomes public.'
-              : 'Diez casos emblemáticos — empresas fantasma IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 — forman la base de verdad del modelo. El modelo detecta estos patrones años antes de que el escándalo se haga público.'}
-          </p>
-          <div className="surface-card rounded-sm p-6">
-            <CaseTimeline lang={lang} />
-          </div>
-        </section>
-
-        {/* ─── Recommendations by Audience ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {t('recommendations.sectionLabel')}
-          </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {audiences.map((a, idx) => (
-              <motion.div
-                key={a.key}
-                className="surface-card rounded-sm p-5 border-l-2 border-[#a06820]/40"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.1 + idx * 0.08 }}
-              >
-                <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-[#a06820] mb-3">
-                  {t(`recommendations.${a.key}.audience`)}
-                </div>
-                <ul className="space-y-3">
-                  {(['s1', 's2', 's3'] as const).map((s, sIdx) => (
-                    <li key={s} className="text-xs text-text-secondary leading-[1.6] flex gap-2">
-                      <span className="font-mono text-text-muted tabular-nums shrink-0">
-                        {String(sIdx + 1).padStart(2, '0')}
-                      </span>
-                      <span>{t(`recommendations.${a.key}.${s}`)}</span>
-                    </li>
-                  ))}
-                </ul>
-              </motion.div>
-            ))}
           </div>
         </section>
 

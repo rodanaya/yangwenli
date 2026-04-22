@@ -25,7 +25,6 @@ import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
-import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
@@ -1248,15 +1247,6 @@ export default function YearInReview() {
   const sexenio = getSexenioInfo(validYear)
   const isLoading = yoyLoading || syLoading
 
-  const dynamicSubtitle = useMemo(() => {
-    if (!yearRow) return t('loading')
-    return t('heroSubtitle', {
-      contracts: formatNumber(yearRow.contracts),
-      spending: formatCompactMXN(yearRow.total_value),
-      riskPct: yearRow.high_risk_pct.toFixed(1),
-    })
-  }, [yearRow, t])
-
   const ledeText = useMemo(() => {
     if (!yearRow) return ''
     if (validYear === 2020 || validYear === 2021) {
@@ -1302,19 +1292,14 @@ export default function YearInReview() {
   return (
     <div className="max-w-[1040px] mx-auto px-4 py-8">
       <EditorialPageShell
-        kicker={`YEAR IN REVIEW · ${validYear}`}
-        headline={
-          <>A year in procurement:{' '}
-            <span style={{ color: 'var(--color-risk-high)' }}>{validYear}</span>
-          </>
-        }
+        kicker="YEAR IN REVIEW"
+        headline="Mexico Federal Procurement"
         paragraph={
           yearRow
-            ? `${validYear} procurement data from Mexico's federal COMPRANET registry. ${formatNumber(yearRow.contracts)} contracts awarded, totaling ${formatCompactMXN(yearRow.total_value)}. High-risk rate: ${yearRow.high_risk_pct.toFixed(1)}%.`
-            : `${validYear} procurement data from Mexico's federal COMPRANET registry.`
+            ? `${formatNumber(yearRow.contracts)} contracts awarded in ${validYear}, totaling ${formatCompactMXN(yearRow.total_value)}. High-risk rate: ${yearRow.high_risk_pct.toFixed(1)}%.`
+            : 'Mexico federal COMPRANET procurement data, 2002–2025.'
         }
         stats={isLoading ? undefined : yearRow ? [
-          { value: validYear.toString(), label: 'Year' },
           { value: formatNumber(yearRow.contracts), label: 'Contracts' },
           { value: formatCompactMXN(yearRow.total_value), label: 'Total spend', color: 'var(--color-accent)' },
           {
@@ -1379,15 +1364,6 @@ export default function YearInReview() {
               </div>
             </div>
           </div>
-
-          {/* Editorial headline */}
-          <motion.div variants={fadeIn} initial="initial" animate="animate">
-            <EditorialHeadline
-              section={`${t('annualReport')} ${validYear}`}
-              headline={`${validYear}: ${t('title')}`}
-              subtitle={dynamicSubtitle}
-            />
-          </motion.div>
 
           {/* Lede */}
           {yearRow && (
@@ -1587,62 +1563,66 @@ export default function YearInReview() {
         </Act>
 
         {/* ── ACT II: BY SECTOR ── */}
-        <Act number="II" label="BY SECTOR" className="space-y-8">
+        <Act number="II" label="BY SECTOR">
 
-          {/* Full sector distribution (ALL 12) */}
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
-              {t('sectorAll.sectionLabel')}
-            </p>
-            <p
-              className="text-base font-bold text-text-primary mb-1"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-            >
-              {t('sectorAll.headline', { year: validYear })}
-            </p>
-            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-              {t('sectorAll.subtitle')}
-            </p>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-start">
 
-            {syLoading ? (
-              <div className="space-y-2">
-                {Array.from({ length: 12 }).map((_, i) => (
-                  <Skeleton key={i} className="h-7" />
-                ))}
-              </div>
-            ) : (
-              <SectorDistributionFull
-                data={sectorYearData}
-                year={validYear}
-                onSectorClick={handleSectorClick}
-              />
-            )}
-          </div>
-
-          {/* Sector growth — diverging chart */}
-          <div>
-            <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
-              {t('sectorGrowthFull.sectionLabel')}
-            </p>
-            <p
-              className="text-base font-bold text-text-primary mb-1"
-              style={{ fontFamily: 'var(--font-family-serif)' }}
-            >
-              {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
-            </p>
-            <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
-              {t('sectorGrowthFull.subtitle')}
-            </p>
-
-            {syLoading ? (
-              <Skeleton className="h-[380px]" />
-            ) : sectorGrowthRows.some((r) => r.growthPct != null) ? (
-              <SectorGrowthDiverging rows={sectorGrowthRows} />
-            ) : (
-              <p className="py-8 text-sm text-text-muted italic text-center">
-                {t('sectorGrowthFull.noComparison', { prior: validYear - 1 })}
+            {/* Full sector distribution (ALL 12) */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                {t('sectorAll.sectionLabel')}
               </p>
-            )}
+              <p
+                className="text-base font-bold text-text-primary mb-1"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {t('sectorAll.headline', { year: validYear })}
+              </p>
+              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+                {t('sectorAll.subtitle')}
+              </p>
+
+              {syLoading ? (
+                <div className="space-y-2">
+                  {Array.from({ length: 12 }).map((_, i) => (
+                    <Skeleton key={i} className="h-7" />
+                  ))}
+                </div>
+              ) : (
+                <SectorDistributionFull
+                  data={sectorYearData}
+                  year={validYear}
+                  onSectorClick={handleSectorClick}
+                />
+              )}
+            </div>
+
+            {/* Sector growth — diverging chart */}
+            <div>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-1">
+                {t('sectorGrowthFull.sectionLabel')}
+              </p>
+              <p
+                className="text-base font-bold text-text-primary mb-1"
+                style={{ fontFamily: 'var(--font-family-serif)' }}
+              >
+                {t('sectorGrowthFull.headline', { prior: validYear - 1 })}
+              </p>
+              <p className="text-xs text-text-muted mb-4 max-w-2xl leading-relaxed">
+                {t('sectorGrowthFull.subtitle')}
+              </p>
+
+              {syLoading ? (
+                <Skeleton className="h-[380px]" />
+              ) : sectorGrowthRows.some((r) => r.growthPct != null) ? (
+                <SectorGrowthDiverging rows={sectorGrowthRows} />
+              ) : (
+                <p className="py-8 text-sm text-text-muted italic text-center">
+                  {t('sectorGrowthFull.noComparison', { prior: validYear - 1 })}
+                </p>
+              )}
+            </div>
+
           </div>
 
         </Act>
