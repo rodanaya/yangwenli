@@ -9,6 +9,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
 [![FastAPI](https://img.shields.io/badge/FastAPI-0.100+-green.svg)](https://fastapi.tiangolo.com/)
 [![React](https://img.shields.io/badge/React-18-blue.svg)](https://react.dev/)
+[![Version](https://img.shields.io/badge/version-2.1.0-blue.svg)](https://rubli.xyz)
 [![License](https://img.shields.io/badge/license-Apache%202.0-green.svg)](LICENSE)
 
 🔴 **Live at [rubli.xyz](https://rubli.xyz)**
@@ -79,10 +80,10 @@ rubli/
 │   │   ├── services/         # Business logic layer
 │   │   └── main.py           # GZip, CORS, startup checks
 │   ├── scripts/              # ETL, risk model training, ARIA pipeline, GT mining
-│   └── RUBLI_NORMALIZED.db   # SQLite (~6.2 GB — not in repo)
+│   └── RUBLI_NORMALIZED.db   # SQLite (~6.4 GB — not in repo)
 ├── frontend/                 # React 18 + TypeScript + Vite
 │   └── src/
-│       ├── pages/            # 36+ page components
+│       ├── pages/            # 40+ page components
 │       ├── components/       # Shared UI — dot-matrix charts, editorial components
 │       ├── api/              # Typed API client
 │       ├── i18n/             # ES/EN translations (22+ namespaces)
@@ -105,7 +106,7 @@ rubli/
 | Visualization | Custom dot-matrix SVG charts (signature visualization), Recharts for time series |
 | Risk Model | Per-sector logistic regression, Elkan & Noto PU-learning, SHAP explanations |
 | i18n | react-i18next — Spanish (primary) and English |
-| Auth | JWT (python-jose), bcrypt, email-validator |
+| Auth | JWT (python-jose), bcrypt (direct, not passlib), email-validator — `POST /api/v1/auth/{register,login,me,logout}` |
 | Deploy | Docker Compose + Caddy (auto-TLS via Let's Encrypt) |
 
 ---
@@ -116,47 +117,50 @@ rubli/
 
 | Page | Route | Description |
 |------|-------|-------------|
-| Dashboard | `/` | Intelligence brief — risk distribution, sector heatmap, ARIA alerts |
+| Dashboard | `/dashboard` | Intelligence brief — risk distribution, sector heatmap, ARIA alerts |
 | Executive Summary | `/executive` | 9-section flagship report for journalists and policymakers |
+| Year in Review | `/year-in-review` | Annual snapshot — spending, risk rate, administration comparison |
 
 ### Investigate
 
 | Page | Route | Description |
 |------|-------|-------------|
 | ARIA Queue | `/aria` | Investigation priority queue — T1/T2/T3/T4 tiers, 7 pattern types |
-| Procurement Intelligence | `/procurement-intelligence` | Live alert ticker, sector heatmap, top risk signals |
-| Patterns | `/patterns` | Concentration, co-bidding, year-end clustering, threshold splitting |
-| Temporal Pulse | `/temporal` | Monthly rhythm analysis, seasonal corruption signals |
 | Administrations | `/administrations` | Presidential comparison: Fox through Sheinbaum (dot-matrix fingerprints) |
-| Institution Health | `/institutions/health` | HHI concentration rankings, institutional risk league |
-| Price Intelligence | `/price-analysis` | Pricing anomalies, IQR outlier scatter plots |
 | Contracts | `/contracts` | Full contract table — risk filtering, sector, year, bookmarks |
 | Spending Categories | `/categories` | CUCOP category-level spend analysis — sexenio comparison |
-| Red Flags | `/red-flags` | Risk factor co-occurrence and interaction maps |
-| State Expenditure | `/state-expenditure` | Federal funds in state/municipal procurement (484K contracts) |
-| Watchlist | `/watchlist` | Tracked vendors and institutions |
+| Price Intelligence | `/price-analysis` | Pricing anomalies, IQR outlier scatter plots |
+| Procurement Calendar | `/procurement-calendar` | Month-by-month award timing — year-end rush, December spikes |
+| Collusion Analysis | `/collusion` | Co-bidding ring detection, bid-rotation patterns |
+| Vendor Clusters | `/clusters` | Community detection — vendor networks by co-contracting graph |
+| State Expenditure | `/states` | Federal funds in state/municipal procurement (484K contracts) |
+| Explore | `/explore` | Open-ended filter/search across all contracts |
+| Workspace | `/workspace` | Saved vendors, investigation folders, tracked cases |
 
 ### Profiles
 
 | Page | Route | Description |
 |------|-------|-------------|
-| Vendor Profile | `/vendors/:id` | SHAP radar, external records, network, collusion signals |
-| Red Thread | `/thread/:id` | Scroll-driven 6-chapter investigative narrative per vendor |
+| Vendor Profile | `/vendors/:id` | SHAP radar, external records, circuit-board network, collusion signals |
+| Vendor Compare | `/vendors/compare` | Side-by-side risk profile comparison for 2 vendors |
+| Red Thread | `/thread/:vendorId` | Scroll-driven 6-chapter investigative narrative per vendor |
 | Institution Profile | `/institutions/:id` | Vendor concentration, sector exposure, risk trends |
+| Institution Compare | `/institutions/compare` | Side-by-side institution risk comparison |
+| Institution Scorecards | `/scorecards` | Graded transparency scorecards per institution |
+| Institution Report Card | `/report-card` | Semáforo grading — Excelente / Satisfactorio / Regular / Deficiente / Crítico |
 | Sector Profile | `/sectors/:id` | OECD benchmarks, red flag rates, top vendors |
 | Contract Detail | `/contracts/:id` | Full risk breakdown with confidence intervals |
-| Case Detail | `/cases/:id` | Fraud type, timeline, detection signals, impact KPIs |
+| Case Detail | `/cases/:slug` | Fraud type, timeline, detection signals, impact KPIs |
+| Investigative Story | `/stories/:slug` | Long-form editorial narrative with bespoke inline charts |
 
 ### Understand
 
 | Page | Route | Description |
 |------|-------|-------------|
 | Sectors | `/sectors` | 12-sector taxonomy with dot-matrix spend visualization |
-| Ground Truth | `/ground-truth` | 748 validated corruption cases and per-case detection rates |
-| Stories | `/journalists` | Pre-built investigative editorial narratives |
+| Investigations | `/journalists` | 10 original investigative narratives with bespoke inline charts |
 | Model Transparency | `/model` | v0.6.5 coefficients, feature importance, per-sector sub-models |
-| Methodology | `/methodology` | Full risk scoring methodology |
-| Limitations | `/limitations` | Known blind spots, workarounds, what the model cannot detect |
+| Methodology | `/methodology` | Full risk scoring methodology and known limitations |
 | API Explorer | `/api-explorer` | Interactive catalog of all 60+ backend endpoints |
 
 ---
@@ -257,7 +261,7 @@ Each filled dot = one unit of data (stated in the legend). Empty dots = the benc
 const N_DOTS  = 50      // dots per row
 const DOT_R   = 3       // dot radius (px)
 const DOT_GAP = 8       // center-to-center spacing (px)
-// EMPTY fill: #f3f1ec (light context) | #27272a (dark context)
+// EMPTY fill: #f3f1ec (light context) | #2d2926 (dark context)
 ```
 
 This visualization protocol is used across: Administrations, Sectors, Vendor Profiles, Spending Categories, Ground Truth cases, ARIA queue, and chart components.
@@ -304,7 +308,7 @@ All procurement data from **COMPRANET**, Mexico's federal electronic procurement
 
 - Python 3.11+
 - Node.js 18+
-- The SQLite database file (`RUBLI_NORMALIZED.db`, ~6.2 GB — not included in repo)
+- The SQLite database file (`RUBLI_NORMALIZED.db`, ~6.4 GB — not included in repo)
 
 ### Development
 
@@ -359,9 +363,15 @@ npm run build
 | `GET /api/v1/vendors/{id}` | Vendor profile with SHAP radar and risk metrics |
 | `GET /api/v1/aria/queue` | ARIA investigation queue with tier/pattern filters |
 | `GET /api/v1/analysis/risk-overview` | Platform-wide risk distribution |
+| `GET /api/v1/analysis/threshold-gaming` | Threshold-splitting pattern detection |
 | `GET /api/v1/analysis/patterns/co-bidding` | Co-bidding collusion analysis |
 | `GET /api/v1/network/co-bidders/{id}` | Vendor co-bidding network |
 | `GET /api/v1/search` | Federated search across contracts, vendors, institutions |
+| `POST /api/v1/auth/register` | Create user account |
+| `POST /api/v1/auth/login` | Authenticate and receive JWT |
+| `GET /api/v1/auth/me` | Current user profile |
+| `POST /api/v1/auth/logout` | Invalidate session |
+| `GET /api/v1/watchlist/folders` | Investigation workspace folders |
 
 ---
 
@@ -397,6 +407,35 @@ Full interactive limitations: [`rubli.xyz/limitations`](https://rubli.xyz/limita
 - Elkan & Noto (2008) — *Learning classifiers from only positive and unlabeled data* (PU-learning correction)
 - IMF Working Paper 2022/094 — *Assessing Vulnerabilities to Corruption in Public Procurement*
 - OECD (2023) — *Public Procurement Performance Report* (2–15% high-risk benchmark)
+
+---
+
+## Changelog
+
+### v2.1.0 (April 2026)
+- **10 original investigative stories** — long-form editorial narratives with bespoke inline charts, each built on RUBLI data (`/stories/:slug`)
+- **User authentication** — JWT register/login/me/logout via `POST /api/v1/auth/*`; bcrypt (direct, not passlib for Python 3.11 compatibility)
+- **Year in Review** — annual summary page with dot-matrix spending and administration comparison
+- **Investigation Workspace** — renamed from Watchlist; supports folders, case pinning, and review workflow
+- **Vendor Compare / Institution Compare** — side-by-side dual-panel risk profiles
+- **Procurement Calendar** — month-by-month award timing visualization (December/year-end spike analysis)
+- **Collusion Analysis page** — co-bidding ring detection with network visualization
+- **Vendor Clusters** — Louvain community detection via co-contracting graph
+- **Institution Scorecards & Report Card** — graded transparency assessment (Excelente → Crítico scale)
+- **Circuit-board network** — 120-node force-directed network replaces the table in Vendor Profile
+- **Executive Summary vertical timeline** — chronological risk narrative across 6 presidential terms
+- **Dark empty dots** — dot-matrix empty fill corrected to `#2d2926` across all dark-context charts
+- **Design audit** — full compliance pass: `rounded-sm` cards, no emoji in data UI, zinc `#71717a` for low-risk
+- **SQLite corruption resilience** — `_ensure_tables()` now does a read-only existence check before acquiring write lock (prevents `database disk image is malformed` on freelist-corrupted DBs)
+- **Sector / dashboard latency** — removed live fallback queries from fast endpoints; all stats served from precomputed table
+
+### v2.0.0 (March 2026)
+- **Risk model v0.6.5** — institution-scoped ground truth labels, FP exclusions (BAXTER, FRESENIUS, INFRA, PRAXAIR), curriculum learning; HR=13.49% OECD-compliant
+- **ARIA pipeline v1.1** — 318K vendor queue, 4 tiers, 7 pattern classifiers, external registry cross-reference (EFOS, SFP, RUPC)
+- **Ground truth expanded** to 748 windowed/institution-scoped cases (603 vendors)
+- **SHAP explanations** — exact linear SHAP per vendor (456K rows in `vendor_shap_v52`)
+- **Red Thread** — scroll-driven 6-chapter investigative narrative per vendor
+- **Executive Summary** — 9-section flagship report
 
 ---
 
