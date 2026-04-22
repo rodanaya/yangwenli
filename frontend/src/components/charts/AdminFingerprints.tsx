@@ -39,10 +39,10 @@ const ADMINS: Admin[] = [
 
 // ── Layout constants ─────────────────────────────────────────────────────
 const SVG_W        = 580
-const ROW_H        = 28
-const ROW_GAP      = 6
-const PAD_T        = 22
-const PAD_B        = 38
+const ROW_H        = 22  // was 28 — compact dashboard fit
+const ROW_GAP      = 3   // was 6
+const PAD_T        = 14  // was 22
+const PAD_B        = 26  // was 38
 const SVG_H        = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) + PAD_B
 
 const PARTY_TAB_W  = 6
@@ -96,25 +96,25 @@ export function AdminFingerprints() {
       aria-label="Presidential risk fingerprints: high-risk rate and direct-award percentage by administration, 2001-2025."
     >
       {/* ── Header row ─────────────────────────────────────────────────── */}
-      <text x={LABEL_X} y={12} fill={HEADER_COLOR} fontSize={9}
+      <text x={LABEL_X} y={10} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         {lang === 'en' ? 'ADMINISTRATION' : 'ADMINISTRACIÓN'}
       </text>
-      <text x={BAR_RISK_X} y={12} fill={HEADER_COLOR} fontSize={9}
+      <text x={BAR_RISK_X} y={10} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         {lang === 'en' ? '% HIGH + CRITICAL RISK' : '% RIESGO ALTO + CRÍTICO'}
       </text>
-      <text x={BAR_DA_X} y={12} fill={HEADER_COLOR} fontSize={9}
+      <text x={BAR_DA_X} y={10} fill={HEADER_COLOR} fontSize={9}
         fontFamily="var(--font-family-mono, monospace)" fontWeight="bold" letterSpacing="0.1em">
         {lang === 'en' ? '% DIRECT AWARD' : '% ADJUDICACIÓN DIRECTA'}
       </text>
 
       {/* Header underline */}
-      <line x1={0} y1={PAD_T - 6} x2={SVG_W} y2={PAD_T - 6} stroke={GRID_COLOR} strokeWidth={1} />
+      <line x1={0} y1={PAD_T - 3} x2={SVG_W} y2={PAD_T - 3} stroke={GRID_COLOR} strokeWidth={1} />
 
       {/* Divider between risk and DA sections */}
       <line
-        x1={DIVIDER_X} y1={PAD_T - 2}
+        x1={DIVIDER_X} y1={PAD_T - 1}
         x2={DIVIDER_X} y2={PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4}
         stroke={GRID_COLOR} strokeWidth={1}
       />
@@ -123,31 +123,25 @@ export function AdminFingerprints() {
       {(() => {
         const riskOecdX = BAR_RISK_X + (15 / MAX_RISK_PCT) * BAR_RISK_PX
         const daOecdX = BAR_DA_X + (25 / MAX_DA_PCT) * BAR_DA_PX
-        const y1 = PAD_T - 2
+        const y1 = PAD_T - 1
         const y2 = PAD_T + ADMINS.length * (ROW_H + ROW_GAP) - 4
         return (
           <>
             <line x1={riskOecdX} y1={y1} x2={riskOecdX} y2={y2}
               stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
-            <text x={riskOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
+            <text x={riskOecdX + 2} y={y2 + 8} fill="#22d3ee" fontSize={8}
               fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
               {lang === 'en' ? 'OECD 15%' : 'OCDE 15%'}
             </text>
             <line x1={daOecdX} y1={y1} x2={daOecdX} y2={y2}
               stroke="#22d3ee" strokeWidth={1} strokeDasharray="2,2" strokeOpacity={0.55} />
-            <text x={daOecdX + 2} y={y2 + 10} fill="#22d3ee" fontSize={8}
+            <text x={daOecdX + 2} y={y2 + 8} fill="#22d3ee" fontSize={8}
               fontFamily="var(--font-family-mono, monospace)" fillOpacity={0.75}>
               {lang === 'en' ? 'OECD 25%' : 'OCDE 25%'}
             </text>
           </>
         )
       })()}
-
-      {/* Legend: 1 dot = ~2.25% */}
-      <text x={BAR_RISK_X} y={PAD_T - 8} fill="#52525b" fontSize={8}
-        fontFamily="var(--font-family-mono, monospace)">
-        {lang === 'en' ? '1 dot ≈ 2.25%' : '1 punto ≈ 2.25%'}
-      </text>
 
       {/* ── Rows ───────────────────────────────────────────────────────── */}
       {ADMINS.map((a, idx) => {
@@ -183,12 +177,12 @@ export function AdminFingerprints() {
             <rect x={0} y={rowY} width={PARTY_TAB_W} height={ROW_H} fill={a.partyColor} fillOpacity={0.9} />
 
             {/* Name */}
-            <text x={LABEL_X} y={rowY + 14} fill={TEXT_COLOR} fontSize={12}
+            <text x={LABEL_X} y={rowY + 13} fill={TEXT_COLOR} fontSize={11}
               fontFamily="var(--font-family-serif, Georgia, serif)" fontWeight="600">
               {a.name}
             </text>
             {/* Years + party + spend */}
-            <text x={LABEL_X} y={rowY + 27} fill={MUTED_COLOR} fontSize={9}
+            <text x={LABEL_X} y={rowY + 20} fill={MUTED_COLOR} fontSize={8}
               fontFamily="var(--font-family-mono, monospace)" letterSpacing="0.04em">
               {a.years} · {a.party} · {spendLabel}
             </text>
@@ -212,7 +206,7 @@ export function AdminFingerprints() {
               x={BAR_RISK_X + BAR_RISK_PX + 6}
               y={cy + 4}
               fill={isMaxRisk ? RISK_COLOR : TEXT_COLOR}
-              fontSize={isMaxRisk ? 13 : 11}
+              fontSize={isMaxRisk ? 12 : 10}
               fontFamily="var(--font-family-mono, monospace)"
               fontWeight={isMaxRisk ? 'bold' : 'normal'}
             >
@@ -284,13 +278,13 @@ export function AdminFingerprints() {
       })}
 
       {/* Footer caption */}
-      <text x={LABEL_X} y={SVG_H - 16} fill="#52525b" fontSize={9}
+      <text x={LABEL_X} y={SVG_H - 14} fill="#52525b" fontSize={9}
         fontFamily="var(--font-family-mono, monospace)">
         {lang === 'en'
           ? 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award data unavailable pre-2007'
           : 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007'}
       </text>
-      <text x={LABEL_X} y={SVG_H - 4} fill="#3f3f46" fontSize={8}
+      <text x={LABEL_X} y={SVG_H - 3} fill="#3f3f46" fontSize={8}
         fontFamily="var(--font-family-mono, monospace)" fontStyle="italic">
         {lang === 'en'
           ? '* Sheinbaum: partial term (2025 data through cutoff)'
