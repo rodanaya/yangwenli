@@ -97,115 +97,6 @@ function getRiskLevel(score: number): string {
 // Hero banner
 // =============================================================================
 
-function HeroBannerStats({
-  year,
-  contracts,
-  totalValue,
-  highRiskPct,
-  isLoading,
-}: {
-  year: number
-  contracts: number
-  totalValue: number
-  highRiskPct: number
-  isLoading: boolean
-}) {
-  const { t } = useTranslation('yearinreview')
-  const riskColor = highRiskPct >= 15 ? '#f87171' : highRiskPct >= 10 ? '#fb923c' : '#fbbf24'
-
-  const stats: { value: string; label: string; color: string }[] = [
-    {
-      value: isLoading ? '—' : formatNumber(contracts),
-      label: t('heroStats.totalContracts'),
-      color: '#60a5fa',
-    },
-    {
-      value: isLoading ? '—' : formatCompactMXN(totalValue),
-      label: t('heroStats.totalSpending'),
-      color: '#a78bfa',
-    },
-    {
-      value: isLoading ? '—' : `${highRiskPct.toFixed(1)}%`,
-      label: t('heroStats.highRiskRate'),
-      color: riskColor,
-    },
-  ]
-
-  return (
-    <div
-      className="relative overflow-hidden rounded-sm"
-      style={{ background: 'linear-gradient(160deg, #1a1310 0%, #110e0c 60%, #0d0b09 100%)' }}
-    >
-      {/* Crimson atmospheric glow at top */}
-      <div
-        className="absolute inset-0 pointer-events-none"
-        aria-hidden="true"
-        style={{ background: 'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(220,38,38,0.10) 0%, transparent 65%)' }}
-      />
-      {/* Subtle spike watermark */}
-      <svg
-        className="absolute right-8 top-1/2 -translate-y-1/2 opacity-[0.04] pointer-events-none"
-        width="120" height="160" viewBox="0 0 32 44" aria-hidden="true"
-      >
-        <line x1="2" y1="38" x2="12" y2="38" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
-        <line x1="20" y1="38" x2="30" y2="38" stroke="#dc2626" strokeWidth="1.5" strokeLinecap="round"/>
-        <polyline points="12,38 16,4 20,38" stroke="#dc2626" strokeWidth="3" strokeLinecap="round" strokeLinejoin="miter" fill="none"/>
-        <circle cx="16" cy="4" r="3" fill="#dc2626"/>
-      </svg>
-      <div className="relative z-10 px-6 pt-10 pb-8 text-center">
-        <motion.p
-          className="text-[10px] uppercase tracking-[0.4em] text-red-400/60 mb-3"
-          initial={{ opacity: 0, y: -8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.05 }}
-        >
-          {t('edition')}
-        </motion.p>
-        <motion.div
-          initial={{ opacity: 0, scale: 0.88 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.22, 1, 0.36, 1] }}
-        >
-          <span
-            className="block text-[60px] sm:text-[80px] font-black leading-none font-mono tabular-nums text-white"
-            style={{ fontFamily: 'var(--font-family-serif)', letterSpacing: '-0.04em' }}
-          >
-            {year}
-          </span>
-        </motion.div>
-        <motion.p
-          className="text-base sm:text-lg text-stone-300/70 mt-2 mb-8"
-          style={{ fontFamily: 'var(--font-family-serif)' }}
-          initial={{ opacity: 0, y: 8 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.5, delay: 0.25 }}
-        >
-          {t('title')} &mdash; {t('subtitle')}
-        </motion.p>
-        <motion.div
-          className="grid grid-cols-3 gap-4 sm:gap-8 max-w-lg mx-auto"
-          variants={staggerContainer}
-          initial="initial"
-          animate="animate"
-        >
-          {stats.map((s) => (
-            <motion.div key={s.label} variants={staggerItem} className="flex flex-col items-center gap-1">
-              <span
-                className="text-xl sm:text-2xl font-black font-mono tabular-nums leading-none"
-                style={{ color: s.color, fontFamily: 'var(--font-family-serif)' }}
-              >
-                {s.value}
-              </span>
-              <span className="text-[9px] sm:text-[10px] uppercase tracking-[0.25em] text-stone-400/70 text-center leading-tight">
-                {s.label}
-              </span>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </div>
-  )
-}
 
 // =============================================================================
 // Section: Full Sector Distribution (ALL 12 sectors)
@@ -372,8 +263,8 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         aria-label="Sector year-over-year growth diverging dot chart"
       >
         {/* Header */}
-        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#71717a" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
-        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#71717a" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
+        <text x={LABEL_W + BAR_AREA * 0.5} y={9} fill="#f87171" fontSize={10} textAnchor="middle" fontFamily="monospace">← decline</text>
+        <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#4ade80" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
 
         {/* Zero axis */}
         <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="#3f3f46" strokeWidth={0.75} />
@@ -386,7 +277,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
             Math.max(1, Math.round((Math.abs(clamped) / Math.max(maxAbs, 1)) * DOTS_PER_SIDE)),
           )
           const isPos = row.growthPct >= 0
-          const color = isPos ? '#71717a' : '#f87171'
+          const color = isPos ? '#4ade80' : '#f87171'
           const emptyDot = '#2d2926'
           const rowCenterY = cy + ROW_H / 2
 
@@ -1293,7 +1184,7 @@ export default function YearInReview() {
     <div className="max-w-[1040px] mx-auto px-4 py-8">
       <EditorialPageShell
         kicker="YEAR IN REVIEW"
-        headline="Mexico Federal Procurement"
+        headline={`Mexico Federal Procurement · ${validYear}`}
         severity="medium"
         loading={isLoading}
       >
@@ -1341,15 +1232,6 @@ export default function YearInReview() {
               </div>
             </div>
           </div>
-
-          {/* Hero stats — shown after year selector so they reflect the chosen year */}
-          <HeroBannerStats
-            year={validYear}
-            contracts={yearRow?.contracts ?? 0}
-            totalValue={yearRow?.total_value ?? 0}
-            highRiskPct={yearRow?.high_risk_pct ?? 0}
-            isLoading={isLoading}
-          />
 
           {/* Lede */}
           {yearRow && (
@@ -1473,8 +1355,8 @@ export default function YearInReview() {
                 const color = item.delta == null
                   ? '#a1a1aa'
                   : item.invertColor
-                    ? (isUp ? '#f87171' : '#71717a')
-                    : (isUp ? '#71717a' : '#f87171')
+                    ? (isUp ? '#f87171' : '#4ade80')
+                    : (isUp ? '#4ade80' : '#f87171')
                 const Icon = isUp ? TrendingUp : TrendingDown
                 return (
                   <div
