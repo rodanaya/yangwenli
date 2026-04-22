@@ -1578,7 +1578,9 @@ function DAConcentrationChart({
   if (!top.length) return (
     <div className="py-8 text-center border-t border-amber-900/20">
       <p className="text-sm font-normal text-text-muted">
-        Sin datos de adjudicación directa para las categorías con suficiente volumen (≥10 contratos).
+        {lang === 'en'
+          ? 'No direct-award data for categories with sufficient volume (≥10 contracts).'
+          : 'Sin datos de adjudicación directa para las categorías con suficiente volumen (≥10 contratos).'}
       </p>
     </div>
   )
@@ -1598,7 +1600,7 @@ function DAConcentrationChart({
             key={cat.category_id}
             onClick={() => onSelect(cat.category_id)}
             className="w-full group flex items-center gap-2 px-1 py-[3px] rounded hover:bg-background-elevated/30 transition-colors text-left"
-            title={`${localeName(cat, lang)} — ${cat.direct_award_pct.toFixed(0)}% adjudicación directa`}
+            title={`${localeName(cat, lang)} — ${cat.direct_award_pct.toFixed(0)}% ${lang === 'en' ? 'direct award' : 'adjudicación directa'}`}
           >
             <span className="text-[9px] font-mono text-text-muted/30 w-4 flex-shrink-0 tabular-nums text-right">{idx + 1}</span>
             <span className="w-36 flex-shrink-0 text-[10px] font-mono text-text-muted/80 truncate group-hover:text-text-primary transition-colors">
@@ -1643,17 +1645,17 @@ function DAConcentrationChart({
           <svg viewBox="0 0 8 14" style={{ width: 8, height: 14 }}>
             <line x1={4} y1={1} x2={4} y2={13} stroke="#ef4444" strokeWidth={1.5} strokeDasharray="2,2" />
           </svg>
-          <span>Límite OCDE 25%</span>
+          <span>{lang === 'en' ? 'OECD limit 25%' : 'Límite OCDE 25%'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg viewBox="0 0 8 8" style={{ width: 8, height: 8 }}><circle cx={4} cy={4} r={3} fill="#fb923c" fillOpacity={0.72} /></svg>
-          <span>Sobre límite</span>
+          <span>{lang === 'en' ? 'Over limit' : 'Sobre límite'}</span>
         </div>
         <div className="flex items-center gap-1.5">
           <svg viewBox="0 0 8 8" style={{ width: 8, height: 8 }}><circle cx={4} cy={4} r={3} fill="#3b82f6" fillOpacity={0.72} /></svg>
-          <span>Dentro de límite</span>
+          <span>{lang === 'en' ? 'Within limit' : 'Dentro de límite'}</span>
         </div>
-        <span className="ml-auto opacity-60">R: riesgo promedio</span>
+        <span className="ml-auto opacity-60">{lang === 'en' ? 'R: avg risk' : 'R: riesgo promedio'}</span>
       </div>
     </div>
   )
@@ -3726,13 +3728,13 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       <div className="flex items-center gap-3 py-3 border-t border-zinc-800">
         <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
-          Ver también
+          {i18n.language === 'en' ? 'See also' : 'Ver también'}
         </span>
         <button
           onClick={() => navigate('/price-analysis')}
           className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-zinc-700/60 hover:border-zinc-500 rounded px-2.5 py-1"
         >
-          Análisis de Precios Anómalos
+          {i18n.language === 'en' ? 'Anomalous Price Analysis' : 'Análisis de Precios Anómalos'}
           <ExternalLink className="w-3 h-3" />
         </button>
       </div>
@@ -3748,7 +3750,9 @@ export default function SpendingCategories() {
               className="text-sm text-text-secondary leading-relaxed mb-3"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
-              Las categorías de medicamentos y equipo médico representan una parte sustancial del gasto en salud &mdash; y presentan indicadores de riesgo elevados.
+              {i18n.language === 'en'
+                ? 'Medicine and medical equipment categories represent a substantial share of health spending — and show elevated risk indicators.'
+                : 'Las categorías de medicamentos y equipo médico representan una parte sustancial del gasto en salud \u2014 y presentan indicadores de riesgo elevados.'}
             </p>
             <ImpactoHumano amountMxn={healthCategorySpend} />
           </div>

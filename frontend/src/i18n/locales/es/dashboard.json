@@ -63,7 +63,32 @@
   "pendingReview": "pendientes de revisión",
   "valueAtRiskLabel": "valor en riesgo",
   "navigateDeeper": "Explorar Más",
-  "patterns": "Patrones de Riesgo",
+  "patterns": {
+    "typology": {
+      "ofContracts": "de contratos",
+      "footnote": "1 ● ≈ 2% de contratos clasificados · severity = nivel de riesgo estructural",
+      "coBidding": {
+        "label": "Co-licitación",
+        "desc": "Proveedores licitando juntos — posible anillo de colusión"
+      },
+      "singleBid": {
+        "label": "Licitación única",
+        "desc": "Proceso competitivo con solo 1 licitante"
+      },
+      "splitContracts": {
+        "label": "Fraccionamiento",
+        "desc": "Múltiples contratos el mismo día al mismo proveedor"
+      },
+      "decemberRush": {
+        "label": "Diciembre urgente",
+        "desc": "Aceleración del gasto de fin de año en diciembre"
+      },
+      "priceOutliers": {
+        "label": "Precio anómalo",
+        "desc": "Montos de contrato 3× sobre la mediana sectorial"
+      }
+    }
+  },
   "patternsDesc": "Licitación única, contratos divididos, co-licitación",
   "network": "Red de Proveedores",
   "networkDesc": "Análisis de relaciones",
@@ -195,10 +220,22 @@
   "ariaTickerLoading": "Pipeline ARIA cargando...",
   "ariaRisk": "RIESGO",
   "aiSignals": {
-    "erraticPricing": { "label": "Precios Erráticos", "description": "Volatilidad de precios vs. norma del sector" },
-    "focusedBuyer": { "label": "Comprador Concentrado", "description": "Sirve a muy pocas instituciones" },
-    "winRateSpike": { "label": "Tasa de Adjudicación Anómala", "description": "Tasa de adjudicación anormal para el sector" },
-    "marketCapture": { "label": "Captura de Mercado", "description": "Domina el gasto del sector" }
+    "erraticPricing": {
+      "label": "Precios Erráticos",
+      "description": "Volatilidad de precios vs. norma del sector"
+    },
+    "focusedBuyer": {
+      "label": "Comprador Concentrado",
+      "description": "Sirve a muy pocas instituciones"
+    },
+    "winRateSpike": {
+      "label": "Tasa de Adjudicación Anómala",
+      "description": "Tasa de adjudicación anormal para el sector"
+    },
+    "marketCapture": {
+      "label": "Captura de Mercado",
+      "description": "Domina el gasto del sector"
+    }
   },
   "liveData": "DATOS EN VIVO",
   "tooltipAllSuffix": "(todos)",

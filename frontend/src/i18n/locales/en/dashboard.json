@@ -63,7 +63,32 @@
   "pendingReview": "pending review",
   "valueAtRiskLabel": "value at risk",
   "navigateDeeper": "Explore Further",
-  "patterns": "Risk Patterns",
+  "patterns": {
+    "typology": {
+      "ofContracts": "of contracts",
+      "footnote": "1 ● ≈ 2% of classified contracts · severity = structural risk level",
+      "coBidding": {
+        "label": "Co-bidding",
+        "desc": "Vendors bidding together — possible bid ring"
+      },
+      "singleBid": {
+        "label": "Single bid",
+        "desc": "Competitive process with only 1 bidder"
+      },
+      "splitContracts": {
+        "label": "Contract splitting",
+        "desc": "Multiple same-day contracts to same vendor"
+      },
+      "decemberRush": {
+        "label": "December rush",
+        "desc": "Year-end spending rush in December"
+      },
+      "priceOutliers": {
+        "label": "Anomalous price",
+        "desc": "Contract amounts 3× above sector median"
+      }
+    }
+  },
   "patternsDesc": "Single bid, split contracts, co-bidding patterns",
   "network": "Vendor Network",
   "networkDesc": "Vendor relationship analysis",
@@ -195,10 +220,22 @@
   "ariaTickerLoading": "ARIA pipeline loading...",
   "ariaRisk": "RISK",
   "aiSignals": {
-    "erraticPricing": { "label": "Erratic Pricing", "description": "Price volatility vs. sector norm" },
-    "focusedBuyer": { "label": "Focused Buyer", "description": "Serves very few institutions" },
-    "winRateSpike": { "label": "Win Rate Spike", "description": "Abnormal win rate for sector" },
-    "marketCapture": { "label": "Market Capture", "description": "Dominates sector spending" }
+    "erraticPricing": {
+      "label": "Erratic Pricing",
+      "description": "Price volatility vs. sector norm"
+    },
+    "focusedBuyer": {
+      "label": "Focused Buyer",
+      "description": "Serves very few institutions"
+    },
+    "winRateSpike": {
+      "label": "Win Rate Spike",
+      "description": "Abnormal win rate for sector"
+    },
+    "marketCapture": {
+      "label": "Market Capture",
+      "description": "Dominates sector spending"
+    }
   },
   "liveData": "LIVE DATA",
   "tooltipAllSuffix": "(all)",

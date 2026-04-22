@@ -10,12 +10,14 @@
  * Pure JSX + Tailwind. No props, no state, no data fetching.
  */
 
+import { useTranslation } from 'react-i18next'
+
 type Severity = 'critical' | 'high' | 'medium'
 
 interface Pattern {
   key: string
-  label: string
-  desc: string
+  labelKey: string
+  descKey: string
   count: number
   pct: number
   color: string
@@ -25,8 +27,8 @@ interface Pattern {
 const PATTERNS: Pattern[] = [
   {
     key: 'co_bidding',
-    label: 'Co-licitación',
-    desc: 'Vendors bidding together — possible bid ring',
+    labelKey: 'patterns.typology.coBidding.label',
+    descKey: 'patterns.typology.coBidding.desc',
     count: 1485424,
     pct: 48.6,
     color: '#dc2626',
@@ -34,8 +36,8 @@ const PATTERNS: Pattern[] = [
   },
   {
     key: 'single_bid',
-    label: 'Licitación única',
-    desc: 'Competitive process with only 1 bidder',
+    labelKey: 'patterns.typology.singleBid.label',
+    descKey: 'patterns.typology.singleBid.desc',
     count: 505219,
     pct: 16.5,
     color: '#f59e0b',
@@ -43,8 +45,8 @@ const PATTERNS: Pattern[] = [
   },
   {
     key: 'split_contracts',
-    label: 'Fraccionamiento',
-    desc: 'Multiple same-day contracts to same vendor',
+    labelKey: 'patterns.typology.splitContracts.label',
+    descKey: 'patterns.typology.splitContracts.desc',
     count: 247946,
     pct: 8.1,
     color: '#f59e0b',
@@ -52,8 +54,8 @@ const PATTERNS: Pattern[] = [
   },
   {
     key: 'december_rush',
-    label: 'Diciembre urgente',
-    desc: 'Year-end spending rush in December',
+    labelKey: 'patterns.typology.decemberRush.label',
+    descKey: 'patterns.typology.decemberRush.desc',
     count: 52637,
     pct: 1.7,
     color: '#78716c',
@@ -61,8 +63,8 @@ const PATTERNS: Pattern[] = [
   },
   {
     key: 'price_outliers',
-    label: 'Precio anómalo',
-    desc: 'Contract amounts 3× above sector median',
+    labelKey: 'patterns.typology.priceOutliers.label',
+    descKey: 'patterns.typology.priceOutliers.desc',
     count: 17373,
     pct: 0.6,
     color: '#78716c',
@@ -71,6 +73,7 @@ const PATTERNS: Pattern[] = [
 ]
 
 export function PatternTypology() {
+  const { t } = useTranslation('dashboard')
   return (
     <div>
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -89,7 +92,7 @@ export function PatternTypology() {
           >
             <div className="flex items-start justify-between gap-2 mb-2">
               <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500">
-                {p.label}
+                {t(p.labelKey)}
               </span>
               <span
                 className="text-[10px] font-mono px-1.5 py-0.5 rounded border"
@@ -110,7 +113,7 @@ export function PatternTypology() {
             </div>
 
             <div className="text-[10px] font-mono text-stone-400 mb-2">
-              {p.pct.toFixed(1)}% de contratos
+              {p.pct.toFixed(1)}% {t('patterns.typology.ofContracts')}
             </div>
 
             {/* Dot-matrix bar */}
@@ -132,14 +135,14 @@ export function PatternTypology() {
             })()}
 
             <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
-              {p.desc}
+              {t(p.descKey)}
             </p>
           </div>
         )
       })}
       </div>
       <p className="text-[10px] font-mono text-text-muted mt-2">
-        1 ● ≈ 2% de contratos clasificados · severity = nivel de riesgo estructural
+        {t('patterns.typology.footnote')}
       </p>
     </div>
   )
