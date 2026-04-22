@@ -1294,36 +1294,13 @@ export default function YearInReview() {
       <EditorialPageShell
         kicker="YEAR IN REVIEW"
         headline="Mexico Federal Procurement"
-        paragraph={
-          yearRow
-            ? `${formatNumber(yearRow.contracts)} contracts awarded in ${validYear}, totaling ${formatCompactMXN(yearRow.total_value)}. High-risk rate: ${yearRow.high_risk_pct.toFixed(1)}%.`
-            : 'Mexico federal COMPRANET procurement data, 2002–2025.'
-        }
-        stats={isLoading ? undefined : yearRow ? [
-          { value: formatNumber(yearRow.contracts), label: 'Contracts' },
-          { value: formatCompactMXN(yearRow.total_value), label: 'Total spend', color: 'var(--color-accent)' },
-          {
-            value: `${yearRow.high_risk_pct.toFixed(1)}%`,
-            label: 'High-risk',
-            color: yearRow.high_risk_pct >= 15 ? 'var(--color-risk-critical)' : 'var(--color-risk-high)',
-          },
-        ] : undefined}
         severity="medium"
         loading={isLoading}
       >
         {/* ── ACT I: HERO + YEAR SELECTOR ── */}
         <Act number="I" label="THE YEAR IN NUMBERS" className="space-y-8">
 
-          {/* Hero */}
-          <HeroBannerStats
-            year={validYear}
-            contracts={yearRow?.contracts ?? 0}
-            totalValue={yearRow?.total_value ?? 0}
-            highRiskPct={yearRow?.high_risk_pct ?? 0}
-            isLoading={isLoading}
-          />
-
-          {/* Year selector */}
+          {/* Year selector — comes FIRST so user picks the year before seeing stats */}
           <div className="relative overflow-hidden rounded-sm border border-border/40 bg-gradient-to-br from-background-elevated/80 to-background px-6 py-5">
             <div className="flex items-center gap-2 flex-wrap">
               <Calendar className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
@@ -1364,6 +1341,15 @@ export default function YearInReview() {
               </div>
             </div>
           </div>
+
+          {/* Hero stats — shown after year selector so they reflect the chosen year */}
+          <HeroBannerStats
+            year={validYear}
+            contracts={yearRow?.contracts ?? 0}
+            totalValue={yearRow?.total_value ?? 0}
+            highRiskPct={yearRow?.high_risk_pct ?? 0}
+            isLoading={isLoading}
+          />
 
           {/* Lede */}
           {yearRow && (

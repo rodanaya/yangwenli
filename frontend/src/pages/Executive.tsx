@@ -61,60 +61,138 @@ const SECTOR_COLORS: Record<TimelineCase['sector'], string> = {
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline — Vertical list 2002-2025 (replaces horizontal dot-strip)
 // ─────────────────────────────────────────────────────────────────────────────
+// SVG horizontal dot-strip timeline 2002–2025.
+// Dots colored by sector; filled = critical, outlined = high.
+// Labels alternate above/below the axis to avoid overlap.
 function CaseTimeline({ lang }: { lang: 'en' | 'es' }) {
+  const SVG_W = 820
+  const SVG_H = 220
+  const AXIS_Y = 110
+  const YEAR_MIN = 2002
+  const YEAR_MAX = 2025
+  const AXIS_X0 = 16
+  const AXIS_X1 = SVG_W - 16
+
+  const yearToX = (year: number) =>
+    AXIS_X0 + ((year - YEAR_MIN) / (YEAR_MAX - YEAR_MIN)) * (AXIS_X1 - AXIS_X0)
+
+  const TICK_YEARS = [2002, 2006, 2010, 2014, 2018, 2022, 2025]
+
+  // Short labels to avoid overlap in the dense 2018-2023 cluster
+  const SHORT: Record<string, { en: string; es: string }> = {
+    '2008-salud':           { en: 'IMSS ghost',    es: 'IMSS fantasma' },
+    '2010-gobernacion':     { en: 'Estafa Maestra', es: 'Estafa Maestra' },
+    '2012-energia':         { en: 'Oceanografía',  es: 'Oceanografía' },
+    '2014-infraestructura': { en: 'Grupo Higa',    es: 'Grupo Higa' },
+    '2016-energia':         { en: 'Odebrecht',     es: 'Odebrecht' },
+    '2018-tecnologia':      { en: 'IT overpricing', es: 'Sobreprecio TIC' },
+    '2019-agricultura':     { en: 'Segalmex',      es: 'Segalmex' },
+    '2020-salud':           { en: 'COVID-19',      es: 'COVID-19' },
+    '2022-hacienda':        { en: 'Edenred',       es: 'Edenred' },
+    '2023-tecnologia':      { en: 'Toka',          es: 'Toka' },
+  }
+
+  const DOT_R_CRIT = 7
+  const DOT_R_HIGH = 5
+
   return (
-    <div className="divide-y divide-[#1c1a16]">
-      {TIMELINE_CASES.map((c, idx) => {
-        const color = SECTOR_COLORS[c.sector]
-        return (
-          <motion.div
-            key={`${c.year}-${idx}`}
-            className="flex items-center gap-3 py-2.5"
-            initial={{ opacity: 0, x: -6 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ delay: idx * 0.04, duration: 0.2 }}
-          >
-            <span className="font-mono text-[12px] font-semibold text-text-muted tabular-nums w-10 shrink-0 text-right">
-              {c.year}
-            </span>
+    <div>
+      <svg
+        viewBox={`0 0 ${SVG_W} ${SVG_H}`}
+        className="w-full"
+        style={{ height: SVG_H }}
+        role="img"
+        aria-label="Timeline of documented corruption cases 2002–2025"
+      >
+        {/* Main axis */}
+        <line x1={AXIS_X0} x2={AXIS_X1} y1={AXIS_Y} y2={AXIS_Y} stroke="#2a2520" strokeWidth={1.5} />
+
+        {/* Tick marks and year labels */}
+        {TICK_YEARS.map(y => (
+          <g key={y}>
+            <line x1={yearToX(y)} x2={yearToX(y)} y1={AXIS_Y - 4} y2={AXIS_Y + 4} stroke="#3a3530" strokeWidth={1} />
+            <text
+              x={yearToX(y)} y={AXIS_Y + 16}
+              textAnchor="middle" fill="#52525b"
+              fontSize={9} fontFamily="var(--font-family-mono, monospace)"
+            >
+              {y}
+            </text>
+          </g>
+        ))}
+
+        {/* Case dots + labels */}
+        {TIMELINE_CASES.map((c, idx) => {
+          const key = `${c.year}-${c.sector}`
+          const shortLabel = SHORT[key]?.[lang] ?? c.label[lang]
+          const x = yearToX(c.year)
+          const above = idx % 2 === 0
+          const color = SECTOR_COLORS[c.sector]
+          const isCrit = c.severity === 'critical'
+          const r = isCrit ? DOT_R_CRIT : DOT_R_HIGH
+          const lineY1 = above ? AXIS_Y - r - 3 : AXIS_Y + r + 3
+          const lineY2 = above ? AXIS_Y - r - 32 : AXIS_Y + r + 32
+          const yearLabelY = above ? lineY2 - 14 : lineY2 + 10
+          const nameLabelY = above ? lineY2 - 3 : lineY2 + 22
+
+          return (
+            <g key={`${c.year}-${idx}`}>
+              {/* Vertical connector */}
+              <line
+                x1={x} x2={x} y1={lineY1} y2={lineY2}
+                stroke={color} strokeWidth={0.7} strokeDasharray="2 2" opacity={0.45}
+              />
+              {/* Dot */}
+              <circle
+                cx={x} cy={AXIS_Y} r={r}
+                fill={isCrit ? color : 'transparent'}
+                stroke={color} strokeWidth={isCrit ? 0 : 1.5}
+                fillOpacity={isCrit ? 0.85 : 1}
+              />
+              {/* Year number */}
+              <text
+                x={x} y={yearLabelY}
+                textAnchor="middle"
+                fill={color} opacity={0.9}
+                fontSize={9} fontWeight="bold"
+                fontFamily="var(--font-family-mono, monospace)"
+              >
+                {c.year}
+              </text>
+              {/* Short case name */}
+              <text
+                x={x} y={nameLabelY}
+                textAnchor="middle"
+                fill="#78716c"
+                fontSize={8}
+                fontFamily="var(--font-family-sans, sans-serif)"
+              >
+                {shortLabel}
+              </text>
+              <title>{c.label[lang]} ({c.year}) — {c.severity}</title>
+            </g>
+          )
+        })}
+      </svg>
+
+      {/* Legend strip */}
+      <div className="mt-3 flex flex-wrap gap-x-5 gap-y-1.5">
+        {TIMELINE_CASES.map((c, idx) => (
+          <div key={idx} className="flex items-center gap-1.5">
             <span
-              className="h-2 w-2 shrink-0 flex-none"
               style={{
-                backgroundColor: c.severity === 'critical' ? color : 'transparent',
-                border: `1.5px solid ${color}`,
-                borderRadius: '1px',
+                display: 'inline-block', width: 8, height: 8, borderRadius: 2,
+                backgroundColor: c.severity === 'critical' ? SECTOR_COLORS[c.sector] : 'transparent',
+                border: `1.5px solid ${SECTOR_COLORS[c.sector]}`,
+                flexShrink: 0,
               }}
             />
-            <span className="flex-1 text-[13px] text-text-secondary leading-[1.35]">
-              {c.label[lang]}
+            <span className="text-[10px] font-mono text-text-muted">
+              {c.year} · {c.label[lang]}
             </span>
-            <span
-              className="text-[9px] font-mono font-bold px-1.5 py-0.5 shrink-0"
-              style={{
-                color,
-                backgroundColor: `${color}12`,
-                border: `1px solid ${color}30`,
-                borderRadius: '2px',
-              }}
-            >
-              {c.sector.slice(0, 5).toUpperCase()}
-            </span>
-            <span
-              className="text-[9px] font-mono font-bold px-2 py-0.5 shrink-0 min-w-[3.5rem] text-center"
-              style={{
-                color: c.severity === 'critical' ? '#dc2626' : '#f59e0b',
-                backgroundColor: c.severity === 'critical' ? '#dc262610' : '#f59e0b10',
-                border: `1px solid ${c.severity === 'critical' ? '#dc262635' : '#f59e0b35'}`,
-                borderRadius: '2px',
-              }}
-            >
-              {c.severity === 'critical'
-                ? (lang === 'en' ? 'CRITICAL' : 'CRÍTICO')
-                : (lang === 'en' ? 'HIGH' : 'ALTO')}
-            </span>
-          </motion.div>
-        )
-      })}
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
@@ -190,32 +268,47 @@ export default function Executive() {
   const signals = [
     {
       num: '01',
-      weight: '+0.534',
+      finding: '99.9%',
+      findingLabel:
+        lang === 'en'
+          ? 'detection rate — IMSS ghost contracts (9,366 awarded)'
+          : 'tasa de detección — contratos fantasma IMSS (9,366 adjudicados)',
+      coeff: '+0.534',
       name: lang === 'en' ? 'Price Volatility' : 'Volatilidad de Precio',
       body:
         lang === 'en'
-          ? 'Vendors with wildly varying contract amounts — the strongest single predictor. IMSS ghost company network: 9,366 contracts, 99.9% detection rate.'
-          : 'Proveedores con montos de contrato altamente variables — el predictor individual más fuerte. Red de empresas fantasma IMSS: 9,366 contratos, 99.9% de detección.',
+          ? 'Vendors whose contract amounts swing wildly across institutions and years. This is the model\'s single strongest predictor — capturing the erratic billing signature of shell and ghost-company networks.'
+          : 'Proveedores cuyos montos de contrato varían drásticamente entre instituciones y años. Este es el predictor individual más fuerte del modelo — capturando la firma de facturación errática de redes de empresas fantasma.',
       color: '#dc2626',
     },
     {
       num: '02',
-      weight: '+0.375',
+      finding: '100%',
+      findingLabel:
+        lang === 'en'
+          ? 'detection — Toka IT monopoly; 96.7% — Edenred voucher monopoly'
+          : 'detección — monopolio TIC Toka; 96.7% — monopolio Edenred',
+      coeff: '+0.375',
       name: lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedor',
       body:
         lang === 'en'
-          ? 'Dominant vendors capturing outsized market share within a sector. Toka IT Monopoly: 100% high-risk detection. Edenred Voucher Monopoly: 96.7% high+.'
-          : 'Proveedores dominantes capturando una cuota de mercado desproporcionada en un sector. Monopolio TIC Toka: 100% detección alto riesgo.',
+          ? 'A vendor capturing an outsized share of spending within a single sector. Monopoly suppliers consistently score critical or high — regardless of whether they operate through competitive tenders or direct awards.'
+          : 'Un proveedor que captura una proporción desproporcionada del gasto en un sector. Los proveedores monopolísticos puntúan consistentemente en riesgo crítico o alto, independientemente de si operan mediante licitaciones o adjudicaciones directas.',
       color: '#f59e0b',
     },
     {
       num: '03',
-      weight: '+0.235',
+      finding: '100%',
+      findingLabel:
+        lang === 'en'
+          ? 'critical detection — PEMEX-Cotemar; Segalmex avg score 0.66'
+          : 'detección crítica — PEMEX-Cotemar; Segalmex puntaje promedio 0.66',
+      coeff: '+0.235',
       name: lang === 'en' ? 'Price Ratio' : 'Razón de Precio',
       body:
         lang === 'en'
-          ? 'Contract amounts far above sector median. Segalmex food fraud: avg score 0.664. PEMEX-Cotemar irregularities: 100% critical-risk detection.'
-          : 'Montos de contrato muy por encima de la mediana del sector. Fraude Segalmex: puntaje promedio 0.664. PEMEX-Cotemar: 100% detección crítica.',
+          ? 'Contract amounts that consistently exceed the sector median — normalized by year so inflation and sector size cannot explain the gap. Overpricing at scale leaves a clear statistical trace.'
+          : 'Montos de contrato que consistentemente superan la mediana del sector, normalizados por año para que la inflación o el tamaño sectorial no expliquen la brecha. El sobreprecio a escala deja una huella estadística clara.',
       color: '#a06820',
     },
   ]
@@ -285,8 +378,8 @@ export default function Executive() {
 
           <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
             {lang === 'en'
-              ? `RUBLI analyzed ${formatNumber(stats.totalContracts)} federal contracts totaling ${formatCompactMXN(stats.totalValue)} awarded between 2002 and 2025. A sector-calibrated risk model (AUC 0.828, validated against 748 documented corruption cases) flags ${stats.highCriticalRate.toFixed(2)}% as high or critical risk — an estimated ${formatCompactMXN(stats.valueAtRisk)} in potentially irregular spending. These are statistical signals that warrant investigation, not verdicts.`
-              : `RUBLI analizó ${formatNumber(stats.totalContracts)} contratos federales por un valor de ${formatCompactMXN(stats.totalValue)} adjudicados entre 2002 y 2025. Un modelo de riesgo calibrado por sector (AUC 0.828, validado contra 748 casos documentados de corrupción) señala el ${stats.highCriticalRate.toFixed(2)}% como riesgo alto o crítico — un valor estimado de ${formatCompactMXN(stats.valueAtRisk)} en gasto potencialmente irregular. Son señales estadísticas que ameritan investigación, no veredictos.`
+              ? `Ten documented corruption cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement, and six others — built the pattern library that now screens ${formatNumber(stats.totalContracts)} federal contracts. ${formatNumber(stats.highCriticalCount)} of them, representing an estimated ${formatCompactMXN(stats.valueAtRisk)}, show procurement anomalies consistent with those documented patterns. These are investigation signals, not verdicts.`
+              : `Diez casos documentados de corrupción — empresas fantasma del IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 y seis más — construyeron la biblioteca de patrones que ahora examina ${formatNumber(stats.totalContracts)} contratos federales. ${formatNumber(stats.highCriticalCount)} de ellos, con un valor estimado de ${formatCompactMXN(stats.valueAtRisk)}, muestran anomalías de contratación consistentes con esos patrones documentados. Son señales de investigación, no veredictos.`
             }
           </p>
         </motion.header>
@@ -329,7 +422,7 @@ export default function Executive() {
         {/* ─── Signal Cards (top 3 predictors) ─── */}
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-4">
-            {lang === 'en' ? 'Top Fraud Signals · Model Coefficients' : 'Principales Señales de Fraude · Coeficientes del Modelo'}
+            {lang === 'en' ? 'Three fraud fingerprints — what the data reveals' : 'Tres huellas de fraude — lo que revelan los datos'}
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             {signals.map((s, idx) => (
@@ -345,14 +438,22 @@ export default function Executive() {
                   <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                     {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
                   </span>
-                  <span
-                    className="font-mono font-bold text-[22px] tabular-nums leading-none"
-                    style={{ color: s.color }}
-                  >
-                    {s.weight}
+                  <span className="text-[9px] font-mono text-text-muted tabular-nums">
+                    β={s.coeff}
                   </span>
                 </div>
-                <h3 className="font-semibold text-[15px] leading-[1.3] text-text-primary mb-2">
+                <div className="mb-3">
+                  <span
+                    className="font-mono font-bold text-[34px] tabular-nums leading-none block"
+                    style={{ color: s.color }}
+                  >
+                    {s.finding}
+                  </span>
+                  <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">
+                    {s.findingLabel}
+                  </p>
+                </div>
+                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-2">
                   {s.name}
                 </h3>
                 <p className="text-xs text-text-secondary leading-[1.6]">

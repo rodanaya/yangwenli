@@ -12,7 +12,7 @@ interface StatItem {
 interface EditorialPageShellProps {
   kicker: string                    // "ARIA QUEUE · 17 APR 2026"
   headline: ReactNode               // serif, can contain accented spans
-  paragraph: ReactNode              // 2–3 sentence editorial paragraph
+  paragraph?: ReactNode             // optional 2–3 sentence editorial paragraph
   stats?: StatItem[]                // 3–4 inline stats
   meta?: ReactNode                  // top-right "v0.6.5 · synced 2m ago"
   actions?: ReactNode               // optional CTA row below stat strip
@@ -70,9 +70,9 @@ export function EditorialPageShell({
             <Skeleton className="h-4 w-5/6 max-w-prose" />
             <Skeleton className="h-4 w-4/6 max-w-prose" />
           </div>
-        ) : (
+        ) : paragraph ? (
           <p className="lede-paragraph mb-6">{paragraph}</p>
-        )}
+        ) : null}
 
         {/* Stat strip */}
         {stats && stats.length > 0 && (
