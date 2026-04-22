@@ -13,6 +13,7 @@
  */
 
 import { useMemo } from 'react'
+import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import { api } from '@/api/client'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -178,6 +179,8 @@ function AdminConcentrationTimeline({
   className,
   title,
 }: AdminConcentrationTimelineProps) {
+  const { i18n } = useTranslation()
+  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
   const { data, isLoading, isError } = useConcentrationTimeline()
 
   const chartData = useMemo<ChartRow[]>(() => {
@@ -220,7 +223,7 @@ function AdminConcentrationTimeline({
         <div
           className="bg-zinc-800 rounded animate-pulse w-full"
           style={{ height }}
-          aria-label="Cargando"
+          aria-label={lang === 'en' ? 'Loading' : 'Cargando'}
         />
       ) : isError || !data || chartData.length === 0 ? (
         <div
