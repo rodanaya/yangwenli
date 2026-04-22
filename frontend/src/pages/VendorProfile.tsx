@@ -1283,7 +1283,7 @@ export function VendorProfile() {
         const textColor  = isCritical ? '#fca5a5' : '#fdba74'
         const PATTERN_LABELS: Record<string, string> = {
           P1: 'Monopoly capture — single vendor dominates sector spending',
-          P2: 'Ghost company network — pattern matches SAT-identified shell entities',
+          P2: 'Shell company behavioral pattern — procurement anomalies consistent with simulated operations (SAT Art. 69-B confirmed: 42 of 6,034 flagged vendors)',
           P3: 'Intermediary abuse — suspicious pass-through contract structure',
           P4: 'Threshold splitting — multiple same-day contracts just below review limits',
           P5: 'Single-bid concentration — repeated wins without competition',

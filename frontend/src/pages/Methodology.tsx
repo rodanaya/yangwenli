@@ -763,6 +763,121 @@ export function Methodology() {
         ))}
       </motion.div>
 
+      {/* ── Confidence Tier Framework ─────────────────────────────── */}
+      <section id="confidence-tiers" className="scroll-mt-20">
+        <div className="fern-card">
+          <div className="px-6 pt-5 pb-4">
+            <div className="flex items-center gap-2 mb-1">
+              <Shield className="h-4 w-4 text-accent" aria-hidden="true" />
+              <span className="text-xs font-mono font-bold uppercase tracking-[0.18em] text-accent">
+                HOW TO INTERPRET FINDINGS · CONFIDENCE TIERS
+              </span>
+            </div>
+            <p className="text-xs text-text-muted mt-1 max-w-2xl">
+              Not all RUBLI findings carry equal certainty. Every claim — whether in a risk score,
+              an ARIA flag, or a story — belongs to one of three tiers. The tier determines the
+              language you should use when citing or reporting it.
+            </p>
+          </div>
+          <div className="px-6 pb-6 border-t border-border/30">
+            <div className="grid gap-4 sm:grid-cols-3 mt-4">
+
+              {/* Tier I */}
+              <div className="rounded-sm border border-[#ef4444]/25 bg-[#ef4444]/5 p-4 space-y-3">
+                <div>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#f87171]">TIER I</span>
+                  <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                    Externally Confirmed
+                  </h3>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  An independent authority — SAT, SFP, or a documented judicial process — has
+                  formally established fraud, simulated operations, or a procurement irregularity.
+                </p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Sources in RUBLI</p>
+                  <ul className="text-xs text-text-muted space-y-0.5">
+                    <li>· SAT EFOS Definitivo list (13,960 vendors)</li>
+                    <li>· SFP sanctions registry (544 vendors)</li>
+                    <li>· Ground truth cases (748 documented investigations)</li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-[#ef4444]/15">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
+                  <p className="text-xs text-[#f87171] italic">"confirmed" · "documented" · "formally established"</p>
+                </div>
+              </div>
+
+              {/* Tier II */}
+              <div className="rounded-sm border border-[#f59e0b]/25 bg-[#f59e0b]/5 p-4 space-y-3">
+                <div>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-[#fbbf24]">TIER II</span>
+                  <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                    Corroborated
+                  </h3>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  Algorithmic risk signal plus at least one independent external source pointing
+                  in the same direction. Neither source alone is conclusive; together they
+                  warrant priority investigation.
+                </p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Examples</p>
+                  <ul className="text-xs text-text-muted space-y-0.5">
+                    <li>· Critical risk score + EFOS Presunto match</li>
+                    <li>· Multiple independent ARIA patterns (P2 + P3)</li>
+                    <li>· High risk + RUPC exclusion list</li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-[#f59e0b]/15">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
+                  <p className="text-xs text-[#fbbf24] italic">"corroborated by" · "flagged and independently noted" · "warrants investigation"</p>
+                </div>
+              </div>
+
+              {/* Tier III */}
+              <div className="rounded-sm border border-border/40 bg-background-elevated/30 p-4 space-y-3">
+                <div>
+                  <span className="text-[10px] font-mono font-bold tracking-[0.2em] text-text-muted">TIER III</span>
+                  <h3 className="text-sm font-bold text-text-primary mt-0.5" style={{ fontFamily: 'var(--font-family-serif)' }}>
+                    Statistical Pattern
+                  </h3>
+                </div>
+                <p className="text-xs text-text-secondary leading-relaxed">
+                  RUBLI's algorithm detected procurement characteristics that statistically
+                  resemble known corruption cases. No external source corroborates the flag.
+                  <strong className="text-text-primary"> Most RUBLI findings are Tier III.</strong>
+                </p>
+                <div className="space-y-1">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted">Scale</p>
+                  <ul className="text-xs text-text-muted space-y-0.5">
+                    <li>· 412K contracts at high/critical risk score</li>
+                    <li>· 6,034 vendors with shell-company behavioral pattern</li>
+                    <li>· Collusion ring detections (co-bidding heuristic)</li>
+                  </ul>
+                </div>
+                <div className="pt-2 border-t border-border/30">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.14em] text-text-muted mb-1">Say</p>
+                  <p className="text-xs text-text-secondary italic">"statistical pattern consistent with" · "flagged for investigation" · "behavioral anomaly"</p>
+                </div>
+              </div>
+
+            </div>
+
+            <div className="mt-4 p-3 rounded-md bg-border/10 border border-border/30">
+              <p className="text-xs text-text-muted leading-relaxed">
+                <span className="font-semibold text-text-secondary">Critical rule: </span>
+                Never use Tier I language ("confirmed," "proven") for Tier III findings. The RUBLI
+                risk score is not a verdict — it is a triage signal. A score of 0.90 means strong
+                resemblance to documented corruption patterns, not a 90% probability of guilt.
+                Shell company behavioral pattern flags (P2 pattern) have a 0.7% SAT confirmation rate —
+                the other 99.3% are unconfirmed algorithmic detections.
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Model Evolution Flowchart */}
       <ModelEvolutionTimeline />
 
