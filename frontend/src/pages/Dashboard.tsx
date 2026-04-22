@@ -289,6 +289,7 @@ export function Dashboard() {
 
   // ── UI state ──────────────────────────────────────────────────────────────
   const [constellationMode, setConstellationMode] = useState<ConstellationMode>('patterns')
+  const [actITab, setActITab] = useState<'timeline' | 'field'>('timeline')
 
   // ── Data fetching ─────────────────────────────────────────────────────────
 
@@ -514,92 +515,111 @@ export function Dashboard() {
       {/* ================================================================ */}
       <Act number="I" label="THE FIELD">
 
-        {/* Sexenio Stratum — 23-year horizontal timeline */}
-        {sexenioRows.length > 0 && (
+        {/* Timeline + Field — single tabbed card */}
+        {(sexenioRows.length > 0 || (constellationRows.length > 0 && overview)) && (
           <section className="surface-card p-5">
             <ErrorBoundary fallback={<SectionErrorFallback />}>
-              <div className="flex items-baseline justify-between gap-3 mb-1">
+              <div className="flex items-center justify-between gap-3 mb-3">
                 <h3 className="text-sm font-bold text-text-primary">
-                  {t('editorial.sexenioTitle', '23 years of federal procurement')}
+                  {actITab === 'timeline'
+                    ? t('editorial.sexenioTitle', '23 years of federal procurement')
+                    : t('editorial.constellationTitle', 'Risk concentration field')}
                 </h3>
-                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] flex-shrink-0">
-                  {t('editorial.sexenioRange', '2002–2025')}
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
-              </p>
-              <SexenioStratum rows={sexenioRows} />
-            </ErrorBoundary>
-          </section>
-        )}
-
-        {/* Concentration Constellation — risk dot field */}
-        {constellationRows.length > 0 && overview && (
-          <section className="surface-card p-5">
-            <ErrorBoundary fallback={<SectionErrorFallback />}>
-              <div className="flex items-baseline justify-between gap-3 mb-1">
-                <h3 className="text-sm font-bold text-text-primary">
-                  {t('editorial.constellationTitle', 'Risk concentration field')}
-                </h3>
-                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-[0.15em] flex-shrink-0">
-                  {formatNumber(overview.total_contracts)}
-                </span>
-              </div>
-              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-                {constellationMode === 'sectors'
-                  ? t('editorial.constellationSubtitleSectors', 'Cada punto representa un conjunto de contratos. Los críticos se agrupan en los 12 sectores federales — donde el dinero público se concentra.')
-                  : constellationMode === 'sexenios'
-                  ? t('editorial.constellationSubtitleSexenios', 'Cada punto representa un conjunto de contratos. Los críticos se distribuyen entre los 6 sexenios presidenciales — 23 años de contratación.')
-                  : t('editorial.constellationSubtitle', 'Cada punto representa un conjunto de contratos. Los contratos críticos se auto-organizan en 7 patrones ARIA — las 7 arquitecturas de captura del Estado.')}
-              </p>
-
-              {/* Mode pillbox — PATRONES / SECTORES / SEXENIOS ──────────── */}
-              <div
-                role="tablist"
-                aria-label="Constellation clustering mode"
-                className="inline-flex items-center gap-1 mb-4 rounded-sm border border-border/40 bg-background-elevated/40 p-0.5"
-              >
-                {([
-                  { key: 'patterns', label: 'PATRONES' },
-                  { key: 'sectors',  label: 'SECTORES' },
-                  { key: 'sexenios', label: 'SEXENIOS' },
-                ] as const).map((opt) => {
-                  const active = constellationMode === opt.key
-                  return (
-                    <button
-                      key={opt.key}
-                      type="button"
-                      role="tab"
-                      aria-selected={active}
-                      onClick={() => setConstellationMode(opt.key)}
-                      className={cn(
-                        'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-sm transition-colors',
-                        active
-                          ? 'bg-risk-critical/15 text-risk-critical border border-risk-critical/40 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]'
-                          : 'text-text-muted/70 border border-transparent hover:text-text-primary hover:bg-background-elevated/60'
-                      )}
-                    >
-                      {opt.label}
-                    </button>
-                  )
-                })}
+                <div
+                  role="tablist"
+                  aria-label="Field view mode"
+                  className="inline-flex items-center gap-1 rounded-sm border border-border/40 bg-background-elevated/40 p-0.5 flex-shrink-0"
+                >
+                  {([
+                    { key: 'timeline' as const, label: 'TIMELINE' },
+                    { key: 'field'    as const, label: 'FIELD' },
+                  ]).map((tab) => {
+                    const active = actITab === tab.key
+                    return (
+                      <button
+                        key={tab.key}
+                        type="button"
+                        role="tab"
+                        aria-selected={active}
+                        onClick={() => setActITab(tab.key)}
+                        className={cn(
+                          'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-sm transition-colors',
+                          active
+                            ? 'bg-risk-critical/15 text-risk-critical border border-risk-critical/40'
+                            : 'text-text-muted/70 border border-transparent hover:text-text-primary hover:bg-background-elevated/60'
+                        )}
+                      >
+                        {tab.label}
+                      </button>
+                    )
+                  })}
+                </div>
               </div>
 
-              <ConcentrationConstellation
-                rows={constellationRows}
-                totalContracts={overview.total_contracts ?? 0}
-                mode={constellationMode}
-                onClusterClick={(code) => {
-                  if (constellationMode === 'sectors') {
-                    navigate(`/sectors/${code}`)
-                  } else if (constellationMode === 'sexenios') {
-                    navigate(`/stories/${code}`)
-                  } else {
-                    navigate(`/clusters#${code.toLowerCase()}`)
-                  }
-                }}
-              />
+              {actITab === 'timeline' ? (
+                <>
+                  <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                    {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
+                  </p>
+                  <SexenioStratum rows={sexenioRows} />
+                </>
+              ) : (
+                <>
+                  <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                    {constellationMode === 'sectors'
+                      ? t('editorial.constellationSubtitleSectors', 'Cada punto representa un conjunto de contratos. Los críticos se agrupan en los 12 sectores federales — donde el dinero público se concentra.')
+                      : constellationMode === 'sexenios'
+                      ? t('editorial.constellationSubtitleSexenios', 'Cada punto representa un conjunto de contratos. Los críticos se distribuyen entre los 6 sexenios presidenciales — 23 años de contratación.')
+                      : t('editorial.constellationSubtitle', 'Cada punto representa un conjunto de contratos. Los contratos críticos se auto-organizan en 7 patrones ARIA — las 7 arquitecturas de captura del Estado.')}
+                  </p>
+                  <div
+                    role="tablist"
+                    aria-label="Constellation clustering mode"
+                    className="inline-flex items-center gap-1 mb-4 rounded-sm border border-border/40 bg-background-elevated/40 p-0.5"
+                  >
+                    {([
+                      { key: 'patterns', label: 'PATRONES' },
+                      { key: 'sectors',  label: 'SECTORES' },
+                      { key: 'sexenios', label: 'SEXENIOS' },
+                    ] as const).map((opt) => {
+                      const active = constellationMode === opt.key
+                      return (
+                        <button
+                          key={opt.key}
+                          type="button"
+                          role="tab"
+                          aria-selected={active}
+                          onClick={() => setConstellationMode(opt.key)}
+                          className={cn(
+                            'text-[10px] font-mono font-bold tracking-[0.15em] px-3 py-1 rounded-sm transition-colors',
+                            active
+                              ? 'bg-risk-critical/15 text-risk-critical border border-risk-critical/40 shadow-[inset_0_0_0_1px_rgba(220,38,38,0.08)]'
+                              : 'text-text-muted/70 border border-transparent hover:text-text-primary hover:bg-background-elevated/60'
+                          )}
+                        >
+                          {opt.label}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  {constellationRows.length > 0 && overview && (
+                    <ConcentrationConstellation
+                      rows={constellationRows}
+                      totalContracts={overview.total_contracts ?? 0}
+                      mode={constellationMode}
+                      onClusterClick={(code) => {
+                        if (constellationMode === 'sectors') {
+                          navigate(`/sectors/${code}`)
+                        } else if (constellationMode === 'sexenios') {
+                          navigate(`/stories/${code}`)
+                        } else {
+                          navigate(`/clusters#${code.toLowerCase()}`)
+                        }
+                      }}
+                    />
+                  )}
+                </>
+              )}
             </ErrorBoundary>
           </section>
         )}
@@ -611,9 +631,9 @@ export function Dashboard() {
       {/* ================================================================ */}
       <Act number="II" label="THE CONCENTRATION">
 
-        <div className="grid gap-6 lg:grid-cols-5">
-          {/* Left: Marimekko sector spend × risk chart (~60%) */}
-          <div className="surface-card lg:col-span-3 p-5">
+        <div className="grid gap-6 lg:grid-cols-2">
+          {/* Left: Marimekko sector spend × risk chart */}
+          <div className="surface-card p-5">
             <ErrorBoundary fallback={<SectionErrorFallback />}>
               <div>
                 <div className="flex items-baseline justify-between gap-3 mb-1">
@@ -645,8 +665,8 @@ export function Dashboard() {
             </ErrorBoundary>
           </div>
 
-          {/* Right: risk distribution geological strata (~40%) */}
-          <div className="surface-card lg:col-span-2 p-5">
+          {/* Right: risk distribution waffle chart */}
+          <div className="surface-card p-5">
             <ErrorBoundary fallback={<SectionErrorFallback />}>
               {riskDist && overview ? (
                 <RiskDistributionPanel data={riskDist} totalContracts={overview.total_contracts ?? 0} />
@@ -807,49 +827,52 @@ export function Dashboard() {
       {/* ================================================================ */}
       <Act number="V" label="THE PATTERNS">
 
-        {/* Presidential Fingerprints */}
-        <section className="surface-card p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.adminTitle', 'Risk profile by administration')}
-              </h3>
-              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
-                2001–2025
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-              {t(
-                'editorial.adminSubtitle',
-                'High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.'
-              )}
-            </p>
-            <div className="w-full overflow-hidden">
-              <AdminFingerprints />
-            </div>
-          </ErrorBoundary>
-        </section>
+        {/* Presidential Fingerprints + Pattern Typology — side by side */}
+        <div className="grid gap-4 lg:grid-cols-2">
 
-        {/* Pattern Typology */}
-        <section className="surface-card p-5">
-          <ErrorBoundary fallback={<SectionErrorFallback />}>
-            <div className="flex items-baseline justify-between gap-3 mb-1">
-              <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.patternsTitle', 'Identified risk patterns')}
-              </h3>
-              <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
-                v0.6.5
-              </span>
-            </div>
-            <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
-              {t(
-                'editorial.patternsSubtitle',
-                'Five procurement red flags across 3,051,294 contracts. Co-licitación alone flags 1.5M contracts — nearly half the entire dataset.'
-              )}
-            </p>
-            <PatternTypology />
-          </ErrorBoundary>
-        </section>
+          <section className="surface-card p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <div className="flex items-baseline justify-between gap-3 mb-1">
+                <h3 className="text-sm font-bold text-text-primary">
+                  {t('editorial.adminTitle', 'Risk profile by administration')}
+                </h3>
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                  2001–2025
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                {t(
+                  'editorial.adminSubtitle',
+                  'High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.'
+                )}
+              </p>
+              <div className="w-full overflow-hidden">
+                <AdminFingerprints />
+              </div>
+            </ErrorBoundary>
+          </section>
+
+          <section className="surface-card p-5">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <div className="flex items-baseline justify-between gap-3 mb-1">
+                <h3 className="text-sm font-bold text-text-primary">
+                  {t('editorial.patternsTitle', 'Identified risk patterns')}
+                </h3>
+                <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
+                  v0.6.5
+                </span>
+              </div>
+              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                {t(
+                  'editorial.patternsSubtitle',
+                  'Five procurement red flags across 3,051,294 contracts. Co-licitación alone flags 1.5M contracts — nearly half the entire dataset.'
+                )}
+              </p>
+              <PatternTypology />
+            </ErrorBoundary>
+          </section>
+
+        </div>
 
         {/* Cross-section signals: 2-col grid */}
         <div className="grid gap-4 sm:grid-cols-2">
