@@ -375,7 +375,11 @@
     "colContracts": "Contratos",
     "colValue": "Valor total",
     "colAvgRisk": "Riesgo prom.",
-    "colHighCrit": "% Alto+Crít"
+    "colHighCrit": "% Alto+Crít",
+    "adminTitle": "Perfil de riesgo por sexenio",
+    "adminSubtitle": "Tasa de alto riesgo y adjudicación directa por administración presidencial. Era AMLO: 41.8% alto riesgo vs. era Fox 17.7%.",
+    "patternsTitle": "Patrones de riesgo identificados",
+    "patternsSubtitle": "Cinco señales de alerta en 3,051,294 contratos. La co-licitación sola marca 1.5M contratos — casi la mitad del conjunto de datos."
   },
   "stories": {
     "source": "Fuente",

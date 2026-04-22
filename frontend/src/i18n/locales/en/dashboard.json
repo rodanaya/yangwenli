@@ -375,7 +375,11 @@
     "colContracts": "Contracts",
     "colValue": "Total value",
     "colAvgRisk": "Avg risk",
-    "colHighCrit": "% High+Crit"
+    "colHighCrit": "% High+Crit",
+    "adminTitle": "Risk profile by administration",
+    "adminSubtitle": "High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.",
+    "patternsTitle": "Identified risk patterns",
+    "patternsSubtitle": "Five procurement red flags across 3,051,294 contracts. Co-bidding alone flags 1.5M contracts — nearly half the entire dataset."
   },
   "stories": {
     "source": "Source",

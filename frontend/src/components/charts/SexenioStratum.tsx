@@ -33,7 +33,7 @@ const TOOLTIP_W = 108
 
 // ── Colors ──────────────────────────────────────────────────────────────────
 const DOT_AMBER        = '#f59e0b'   // high + critical risk
-const DOT_ZINC         = '#52525b'   // low + medium risk
+const DOT_ZINC         = '#71717a'   // low + medium risk
 const DOT_EMPTY        = '#27272a'   // unfilled
 const DOT_EMPTY_STROKE = '#3f3f46'
 const OECD_COLOR       = '#06b6d4'
@@ -43,11 +43,11 @@ const CURRENT_YEAR     = 2025
 
 // ── Administration bands ────────────────────────────────────────────────────
 const ADMIN_BANDS = [
-  { startYear: 2002, endYear: 2006, color: '#1a5276', label: 'Fox' },
-  { startYear: 2007, endYear: 2012, color: '#1a5276', label: 'Calderón' },
-  { startYear: 2013, endYear: 2018, color: '#c41e3a', label: 'P. Nieto' },
-  { startYear: 2019, endYear: 2024, color: '#7b2d8b', label: 'AMLO' },
-  { startYear: 2025, endYear: 2030, color: '#7b2d8b', label: 'Sheinbaum' },
+  { startYear: 2002, endYear: 2006, color: '#60a5fa', label: 'Fox' },
+  { startYear: 2007, endYear: 2012, color: '#60a5fa', label: 'Calderón' },
+  { startYear: 2013, endYear: 2018, color: '#f87171', label: 'P. Nieto' },
+  { startYear: 2019, endYear: 2024, color: '#c084fc', label: 'AMLO' },
+  { startYear: 2025, endYear: 2030, color: '#2dd4bf', label: 'Sheinbaum' },
 ] as const
 
 const fmtB = (v: number) => {

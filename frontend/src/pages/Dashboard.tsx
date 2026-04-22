@@ -810,7 +810,7 @@ export function Dashboard() {
           <ErrorBoundary fallback={<SectionErrorFallback />}>
             <div className="flex items-baseline justify-between gap-3 mb-1">
               <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.adminTitle', 'Perfil de riesgo por sexenio')}
+                {t('editorial.adminTitle', 'Risk profile by administration')}
               </h3>
               <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
                 2001–2025
@@ -833,7 +833,7 @@ export function Dashboard() {
           <ErrorBoundary fallback={<SectionErrorFallback />}>
             <div className="flex items-baseline justify-between gap-3 mb-1">
               <h3 className="text-sm font-bold text-text-primary">
-                {t('editorial.patternsTitle', 'Patrones de riesgo identificados')}
+                {t('editorial.patternsTitle', 'Identified risk patterns')}
               </h3>
               <span className="text-[10px] font-mono text-text-muted/60 uppercase tracking-wider flex-shrink-0">
                 v0.6.5
