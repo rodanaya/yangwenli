@@ -26,6 +26,8 @@ import { SexenioStratum, type SexenioYearRow } from '@/components/charts/Sexenio
 import { ConcentrationConstellation, type ConstellationRiskRow, type ConstellationMode } from '@/components/charts/ConcentrationConstellation'
 import { AdminFingerprints } from '@/components/charts/AdminFingerprints'
 import { PatternTypology } from '@/components/charts/PatternTypology'
+import { CollisionFlash } from '@/components/charts/CollisionFlash'
+import { CategoryHotspot } from '@/components/charts/CategoryHotspot'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 
@@ -848,6 +850,23 @@ export function Dashboard() {
             <PatternTypology />
           </ErrorBoundary>
         </section>
+
+        {/* Cross-section signals: 2-col grid */}
+        <div className="grid gap-4 sm:grid-cols-2">
+          {/* Collision Flash — top co-bidding pair */}
+          <section className="surface-card p-4">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <CollisionFlash />
+            </ErrorBoundary>
+          </section>
+
+          {/* Category Hotspot — top-risk spending categories */}
+          <section className="surface-card p-4">
+            <ErrorBoundary fallback={<SectionErrorFallback />}>
+              <CategoryHotspot />
+            </ErrorBoundary>
+          </section>
+        </div>
 
       </Act>
 
