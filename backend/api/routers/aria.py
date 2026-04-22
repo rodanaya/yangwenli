@@ -962,3 +962,100 @@ def list_aria_memos(
         data=data,
         pagination={"limit": limit, "offset": offset, "total": total},
     )
+
+
+# ---------------------------------------------------------------------------
+# GET /aria/ghost-suspects
+# Ranked investigation queue from ghost_confidence_scores table.
+# ---------------------------------------------------------------------------
+
+@router.get("/ghost-suspects")
+def get_ghost_suspects(
+    tier: Optional[str] = Query(None, description="confirmed | multi_signal | behavioral"),
+    min_signals: int = Query(0, ge=0),
+    page: int = Query(1, ge=1),
+    per_page: int = Query(50, ge=1, le=200),
+    conn: sqlite3.Connection = Depends(get_db_dep),
+):
+    """Ghost company confidence queue for ARIA P2 vendors.
+
+    Returns vendors ranked by ghost_confidence_score DESC with tier breakdown.
+    Signals are independent — each adds evidence without double-counting.
+    """
+    # Check table exists
+    exists = conn.execute(
+        "SELECT 1 FROM sqlite_master WHERE type='table' AND name='ghost_confidence_scores'"
+    ).fetchone()
+    if not exists:
+        raise HTTPException(
+            status_code=503,
+            detail="Ghost confidence scores not yet computed. Run: python -m scripts.compute_ghost_confidence",
+        )
+
+    conditions = ["1=1"]
+    params: list = []
+    if tier:
+        conditions.append("ghost_confidence_tier = ?")
+        params.append(tier)
+    if min_signals > 0:
+        conditions.append("ghost_signal_count >= ?")
+        params.append(min_signals)
+
+    where = " AND ".join(conditions)
+
+    total = conn.execute(
+        f"SELECT COUNT(*) FROM ghost_confidence_scores WHERE {where}", params
+    ).fetchone()[0]
+
+    offset = (page - 1) * per_page
+    rows = conn.execute(
+        f"""
+        SELECT
+            vendor_id, vendor_name,
+            ghost_signal_count, ghost_confidence_score, ghost_confidence_tier,
+            sig_efos_definitivo, sig_efos_soft, sig_sfp_sanctioned,
+            sig_disappeared, sig_p7_intersection, sig_invalid_rfc,
+            sig_young_company, sig_high_risk, sig_ultra_micro,
+            sig_short_lived, sig_temporal_burst,
+            total_contracts, total_value_mxn, years_active,
+            avg_risk_score, primary_sector_name, top_institution,
+            shell_flags, efos_stage
+        FROM ghost_confidence_scores
+        WHERE {where}
+        ORDER BY ghost_confidence_score DESC, ghost_signal_count DESC
+        LIMIT ? OFFSET ?
+        """,
+        params + [per_page, offset],
+    ).fetchall()
+
+    data = []
+    for r in rows:
+        d = dict(r)
+        # Parse shell_flags JSON if present
+        if d.get("shell_flags"):
+            try:
+                d["shell_flags"] = json.loads(d["shell_flags"])
+            except (json.JSONDecodeError, TypeError):
+                d["shell_flags"] = []
+        else:
+            d["shell_flags"] = []
+        data.append(d)
+
+    # Tier summary stats
+    tier_counts = {}
+    for t in ("confirmed", "multi_signal", "behavioral"):
+        n = conn.execute(
+            "SELECT COUNT(*) FROM ghost_confidence_scores WHERE ghost_confidence_tier = ?", (t,)
+        ).fetchone()[0]
+        tier_counts[t] = n
+
+    return {
+        "data": data,
+        "tier_summary": tier_counts,
+        "pagination": {
+            "page": page,
+            "per_page": per_page,
+            "total": total,
+            "total_pages": math.ceil(total / per_page),
+        },
+    }

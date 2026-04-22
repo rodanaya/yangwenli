@@ -2319,6 +2319,43 @@ export interface AriaQueueResponse {
 }
 
 // ---------------------------------------------------------------------------
+// Ghost Company Confidence Scores
+// ---------------------------------------------------------------------------
+
+export interface GhostSuspect {
+  vendor_id: number
+  vendor_name: string | null
+  ghost_signal_count: number
+  ghost_confidence_score: number
+  ghost_confidence_tier: 'confirmed' | 'multi_signal' | 'behavioral'
+  sig_efos_definitivo: 0 | 1
+  sig_efos_soft: 0 | 1
+  sig_sfp_sanctioned: 0 | 1
+  sig_disappeared: 0 | 1
+  sig_p7_intersection: 0 | 1
+  sig_invalid_rfc: 0 | 1
+  sig_young_company: 0 | 1
+  sig_high_risk: 0 | 1
+  sig_ultra_micro: 0 | 1
+  sig_short_lived: 0 | 1
+  sig_temporal_burst: 0 | 1
+  total_contracts: number | null
+  total_value_mxn: number | null
+  years_active: number | null
+  avg_risk_score: number | null
+  primary_sector_name: string | null
+  top_institution: string | null
+  shell_flags: string[]
+  efos_stage: string | null
+}
+
+export interface GhostSuspectsResponse {
+  data: GhostSuspect[]
+  tier_summary: { confirmed: number; multi_signal: number; behavioral: number }
+  pagination: PaginationMeta
+}
+
+// ---------------------------------------------------------------------------
 // Story Packages
 // ---------------------------------------------------------------------------
 

@@ -2759,6 +2759,20 @@ export const ariaApi = {
     const { data } = await api.get<AriaMemoListResponse>(`/aria/memos?${queryParams}`)
     return data
   },
+
+  /**
+   * Fetch ghost company confidence scores (P2 suspects ranked by multi-signal convergence)
+   */
+  async getGhostSuspects(params: {
+    tier?: string
+    min_signals?: number
+    page?: number
+    per_page?: number
+  } = {}): Promise<import('./types').GhostSuspectsResponse> {
+    const queryParams = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<import('./types').GhostSuspectsResponse>(`/aria/ghost-suspects?${queryParams}`)
+    return data
+  },
 }
 
 // ============================================================================
