@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
@@ -8,10 +8,6 @@ import { Header } from './Header'
 import { AppBanner } from './AppBanner'
 import { MobileBottomNav } from './MobileBottomNav'
 import { pageVariants } from '@/lib/animations'
-
-const WelcomeModal = lazy(() =>
-  import('@/components/WelcomeModal').then((m) => ({ default: m.WelcomeModal }))
-)
 
 export function MainLayout() {
   const [sidebarCollapsed, setSidebarCollapsed] = useState(
@@ -38,11 +34,6 @@ export function MainLayout() {
       <a href="#main-content" className="skip-link">
         {t('skipToContent')}
       </a>
-
-      {/* First-visit onboarding — lazy-loaded, only matters on first visit */}
-      <Suspense fallback={null}>
-        <WelcomeModal />
-      </Suspense>
 
       {/* Mobile backdrop — tapping closes the sidebar */}
       {mobileSidebarOpen && (

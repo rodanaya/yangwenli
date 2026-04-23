@@ -408,28 +408,15 @@
     .text-display-num { font-size: 3.75rem; }
   }
 
-  /* Cards — clean editorial surfaces */
-  .card {
-    @apply bg-background-card border border-border rounded-xl;
-    transition: box-shadow 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
-  }
-
-  .card:hover {
-    @apply border-border-hover;
-    box-shadow: 0 2px 12px -4px rgba(0,0,0,0.08);
-  }
-
-  html.dark .card:hover {
-    box-shadow: 0 0 20px -5px var(--color-accent-glow);
-  }
-
+  /* DEPRECATED: .card, .card-elevated, .fern-card are kept only as
+   * backward-compatibility aliases. All three now render as .surface-card —
+   * the canonical editorial surface. New code should use .surface-card.
+   * A later pass will migrate the class names. */
+  .card,
   .card-elevated {
-    @apply bg-background-elevated border border-border rounded-xl;
-    box-shadow: 0 1px 8px -2px rgba(0,0,0,0.06);
-  }
-
-  html.dark .card-elevated {
-    box-shadow: 0 4px 24px -8px rgba(0,0,0,0.3);
+    background: var(--color-bg-card);
+    border: 1px solid var(--color-border);
+    border-radius: 0.5rem;
   }
 
   .text-gradient {
@@ -663,31 +650,12 @@
     color: var(--color-text-muted);
   }
 
-  /* Clean surface card — Fern uses very clean, barely-there cards */
+  /* DEPRECATED: .fern-card — kept only as backward-compat alias for .surface-card.
+   * New code should use .surface-card. */
   .fern-card {
-    background: var(--color-background-card);
+    background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 0.75rem;
-    transition: border-color 0.15s ease, box-shadow 0.15s ease;
-  }
-  .fern-card:hover {
-    border-color: var(--color-border-hover);
-    box-shadow: 0 4px 16px -6px rgba(26,23,20,0.08);
-  }
-  html.dark .fern-card:hover {
-    box-shadow: 0 4px 20px -8px rgba(0,0,0,0.3);
-  }
-
-  /* Dark-mode editorial enhancements */
-  html.dark .fern-card {
-    background: var(--color-background-card);
-    border-color: var(--color-border);
-    /* Subtle top-edge highlight for perceived depth */
-    box-shadow: 0 1px 0 0 rgba(255,255,255,0.04) inset, 0 -1px 0 0 rgba(0,0,0,0.2) inset;
-  }
-  html.dark .fern-card:hover {
-    border-color: var(--color-border-hover);
-    box-shadow: 0 0 24px -6px var(--color-accent-glow), 0 1px 0 0 rgba(255,255,255,0.05) inset;
+    border-radius: 0.5rem;
   }
 
   /* Shimmer overlay for cards/panels — different from animate-shimmer (which sweeps the bg color) */

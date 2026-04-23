@@ -1,7 +1,7 @@
 /**
  * AnnotationPin — sticky note icon that users click to add private notes
  * to any contract or vendor. Notes persisted to localStorage.
- * Route to /annotations page lists all saved notes.
+ * The /workspace page lists all saved notes.
  */
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'

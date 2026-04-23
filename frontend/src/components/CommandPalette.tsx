@@ -10,8 +10,8 @@ import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
   AlertTriangle, BarChart3, BookOpen, Building2, FileText, Filter,
-  FlaskConical, GitBranch, Globe, LayoutDashboard, Network, Scale,
-  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon, Activity, Telescope,
+  FlaskConical, GitBranch, LayoutDashboard, Network, Scale,
+  Shield, TrendingUp, Users, Zap, Bookmark, X as XIcon,
 } from 'lucide-react'
 import {
   CommandDialog,
@@ -59,13 +59,10 @@ const QUICK_ACTIONS: QuickAction[] = [
   { id: 'network',      label: 'Network Graph',            icon: Network,         href: '/network',                          shortcut: 'G N' },
   { id: 'workspace',    label: 'Workspace / Watchlist',    icon: Shield,          href: '/workspace',                        shortcut: 'G W' },
   { id: 'cases',        label: 'Case Library',             icon: BookOpen,        href: '/cases',                            shortcut: 'G L' },
-  { id: 'intelligence', label: 'Procurement Intelligence', icon: Zap,             href: '/procurement-intelligence' },
-  { id: 'temporal',     label: 'Temporal Patterns',        icon: GitBranch,       href: '/administrations' },
-  { id: 'seismograph',  label: 'El Sismógrafo',            description: 'Multi-channel risk tremor visualization 2010–2025', icon: Activity, href: '/seismograph' },
-  { id: 'telescope',    label: 'El Telescopio',            description: 'Contract universe — all sectors as nebulae in space', icon: Telescope, href: '/telescope' },
+  { id: 'aria',         label: 'ARIA Queue',               description: 'Tier 1 — 320 vendors for immediate review', icon: Zap, href: '/aria', shortcut: 'G Q' },
+  { id: 'administrations', label: 'Administrations',        description: 'Cross-sexenio procurement comparison', icon: GitBranch, href: '/administrations' },
   { id: 'methodology',  label: 'Risk Methodology',         icon: FlaskConical,    href: '/methodology' },
   { id: 'model',        label: 'Model Transparency',       icon: Scale,           href: '/model' },
-  { id: 'ground-truth', label: 'Ground Truth Cases',       icon: Globe,           href: '/ground-truth' },
 ]
 
 // Research actions — shown when palette opens with no query
