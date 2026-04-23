@@ -22,7 +22,6 @@ const EntityProfileDrawer = lazy(() =>
 )
 
 // Lazy load all page components for code splitting
-const Intro = lazy(() => import('@/pages/Intro'))
 const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
@@ -80,13 +79,6 @@ function SectorRedirect() {
   return <Navigate to={`/sectors/${id}`} replace />
 }
 
-// First-visit routing: redirect "/" to Intro for new users, ARIA for returning users
-function FirstVisitRedirect() {
-  const seen = localStorage.getItem('rubli_seen_intro')
-  if (!seen) return <Navigate to="/intro" replace />
-  return <Navigate to="/aria" replace />
-}
-
 // Enhanced QueryClient configuration for better caching and UX
 const queryClient = new QueryClient({
   queryCache: new QueryCache({
@@ -135,19 +127,22 @@ function App() {
                 </SuspenseBoundary>
               }
             />
-            {/* Intro page — full-screen, no sidebar */}
-            <Route
-              path="intro"
-              element={
-                <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                  <Intro />
-                </SuspenseBoundary>
-              }
-            />
-            {/* Legacy /landing redirect */}
-            <Route path="landing" element={<Navigate to="/intro" replace />} />
+            {/* Retired: /intro and /landing now redirect to the front page (/) */}
+            <Route path="intro" element={<Navigate to="/" replace />} />
+            <Route path="landing" element={<Navigate to="/" replace />} />
             <Route path="/" element={<MainLayout />}>
-              <Route index element={<FirstVisitRedirect />} />
+              {/* Front page — Executive briefing + the galleries map. */}
+              <Route
+                index
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Executive />
+                  </SuspenseBoundary>
+                }
+              />
+              {/* Retired: /executive is now /. Keep redirect for external links. */}
+              <Route path="executive" element={<Navigate to="/" replace />} />
+              <Route path="executive-summary" element={<Navigate to="/" replace />} />
               <Route
                 path="report-card"
                 element={<Navigate to="/institutions?tab=reporte" replace />}
@@ -156,20 +151,11 @@ function App() {
               <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
               <Route path="league" element={<Navigate to="/institutions" replace />} />
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
-              <Route path="executive-summary" element={<Navigate to="/dashboard" replace />} />
               <Route
                 path="dashboard"
                 element={
                   <SuspenseBoundary fallback={<DashboardSkeleton />}>
                     <Dashboard />
-                  </SuspenseBoundary>
-                }
-              />
-              <Route
-                path="executive"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <Executive />
                   </SuspenseBoundary>
                 }
               />

@@ -198,8 +198,8 @@ export default function Privacy() {
           </ul>
           <p className="mt-3">
             {isEs
-              ? <>Utilizamos una cookie funcional mínima <Tag>rubli_seen_intro</Tag> almacenada en <Tag>localStorage</Tag> para recordar si ya ha visto la pantalla de introducción. No contiene datos personales, no caduca en el servidor y nunca se transmite a nuestros servidores.</>
-              : <>We use a minimal functional cookie <Tag>rubli_seen_intro</Tag> stored in <Tag>localStorage</Tag> to remember whether you have seen the introduction screen. This contains no personal data, does not expire server-side, and is never transmitted to our servers.</>
+              ? <>Podemos almacenar preferencias funcionales mínimas (idioma, vista guardada) en <Tag>localStorage</Tag> del navegador. No contienen datos personales, permanecen en su dispositivo y nunca se transmiten a nuestros servidores.</>
+              : <>We may store minimal functional preferences (language, saved view) in browser <Tag>localStorage</Tag>. These contain no personal data, stay on your device, and are never transmitted to our servers.</>
             }
           </p>
         </Section>

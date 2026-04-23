@@ -21,9 +21,11 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Printer, ArrowUpRight, Shield, Clock } from 'lucide-react'
-import { analysisApi } from '@/api/client'
+import { analysisApi, contractApi } from '@/api/client'
+import type { ContractListItem, ContractListResponse } from '@/api/types'
 import { useQuery } from '@tanstack/react-query'
 import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { SECTOR_COLORS } from '@/lib/constants'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline data — major documented corruption cases 2002-2025
@@ -48,15 +50,7 @@ const TIMELINE_CASES: TimelineCase[] = [
   { year: 2023, label: { en: 'Toka IT monopoly', es: 'Monopolio TIC Toka' }, sector: 'tecnologia', severity: 'critical' },
 ]
 
-const SECTOR_COLORS: Record<TimelineCase['sector'], string> = {
-  salud: '#dc2626',
-  agricultura: '#22c55e',
-  infraestructura: '#ea580c',
-  energia: '#eab308',
-  tecnologia: '#8b5cf6',
-  gobernacion: '#be123c',
-  hacienda: '#16a34a',
-}
+// Sector colors — use the canonical palette imported from @/lib/constants.
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Timeline — Vertical list 2002-2025 (replaces horizontal dot-strip)
@@ -212,6 +206,20 @@ export default function Executive() {
     staleTime: 5 * 60 * 1000,
   })
 
+  // Recent critical contracts — live news-wire for the front page
+  const { data: recentCriticalData } = useQuery<ContractListResponse>({
+    queryKey: ['executive', 'recentCritical'],
+    queryFn: () => contractApi.getAll({
+      risk_level: 'critical',
+      per_page: 5,
+      sort_by: 'contract_date',
+      sort_order: 'desc',
+    }),
+    staleTime: 10 * 60 * 1000,
+    retry: 1,
+  })
+  const recentCritical: ContractListItem[] = recentCriticalData?.data ?? []
+
   const stats = useMemo(() => {
     const d = dashboard
     const totalContracts = d?.overview?.total_contracts ?? 3_051_294
@@ -318,6 +326,74 @@ export default function Executive() {
     { key: 'a1' },
     { key: 'a2' },
     { key: 'a3' },
+  ]
+
+  // ─── The Galleries — four wings of the platform ─────────────────────────────
+  const galleries = [
+    {
+      numeral: 'I',
+      title: lang === 'en' ? 'THE QUEUE' : 'LA COLA',
+      path: '/aria',
+      color: '#dc2626',
+      stat: '320',
+      statLabel:
+        lang === 'en'
+          ? 'Tier 1 — immediate review'
+          : 'Nivel 1 — revisión inmediata',
+      body:
+        lang === 'en'
+          ? 'Every vendor in the federal system, triaged by risk score, anomaly detection, financial scale, and external registry flags. The operational queue — start here if you want to act.'
+          : 'Cada proveedor del sistema federal, clasificado por puntaje de riesgo, detección de anomalías, escala financiera y señales de registros externos. La cola operativa — comienza aquí si quieres actuar.',
+      cta: lang === 'en' ? 'Enter the queue' : 'Entrar a la cola',
+    },
+    {
+      numeral: 'II',
+      title: lang === 'en' ? 'THE CASES' : 'LOS CASOS',
+      path: '/cases',
+      color: '#a06820',
+      stat: '22',
+      statLabel:
+        lang === 'en'
+          ? 'Documented scandals · 2002–2025'
+          : 'Escándalos documentados · 2002–2025',
+      body:
+        lang === 'en'
+          ? 'From IMSS ghost companies to Odebrecht and Segalmex — the corruption canon, each case with linked vendors, contracts, and legal status. These labeled portraits trained the model.'
+          : 'De empresas fantasma del IMSS a Odebrecht y Segalmex — el canon de corrupción, cada caso con proveedores, contratos y estatus legal. Estos retratos etiquetados entrenaron al modelo.',
+      cta: lang === 'en' ? 'Read the canon' : 'Leer el canon',
+    },
+    {
+      numeral: 'III',
+      title: lang === 'en' ? 'THE ANATOMY' : 'LA ANATOMÍA',
+      path: '/sectors',
+      color: '#22c55e',
+      stat: '12 · 5 · 2,563',
+      statLabel:
+        lang === 'en'
+          ? 'Sectors · Presidencies · Institutions'
+          : 'Sectores · Presidencias · Instituciones',
+      body:
+        lang === 'en'
+          ? 'Mexican procurement cut twelve ways — across five presidencies, through 2,563 federal buyers, 9.9 trillion pesos. The place to understand the whole before drilling into the parts.'
+          : 'La contratación mexicana cortada en doce formas — a través de cinco presidencias, 2,563 compradores federales, 9.9 billones de pesos. El lugar para entender el todo antes de los detalles.',
+      cta: lang === 'en' ? 'Open the atlas' : 'Abrir el atlas',
+    },
+    {
+      numeral: 'IV',
+      title: lang === 'en' ? 'THE METHOD' : 'EL MÉTODO',
+      path: '/methodology',
+      color: '#64748b',
+      stat: '0.828',
+      statLabel:
+        lang === 'en'
+          ? 'Test AUC · vendor-stratified'
+          : 'AUC de prueba · estratificado por proveedor',
+      body:
+        lang === 'en'
+          ? 'How the model reasons — per-sector logistic regression with PU-learning correction — and where it fails. Ground truth, SHAP, confidence tiers, blind spots. Nothing hidden.'
+          : 'Cómo razona el modelo — regresión logística por sector con corrección PU — y dónde falla. Verdad fundamental, SHAP, niveles de confianza, puntos ciegos. Nada oculto.',
+      cta: lang === 'en' ? 'Read the methodology' : 'Leer la metodología',
+    },
   ]
 
   return (
@@ -515,88 +591,132 @@ export default function Executive() {
           </div>
         </section>
 
-        {/* ─── ARIA Investigation Pipeline ─── */}
+        {/* ─── The Galleries — four wings of the platform ─── */}
         <section className="mb-12">
           <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2">
-            {lang === 'en' ? 'ARIA · Investigation Pipeline' : 'ARIA · Canal de Investigación'}
+            {lang === 'en' ? 'The Galleries' : 'Las Salas'}
           </div>
-          <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+          <p className="text-sm text-text-secondary leading-[1.6] mb-5 italic max-w-[68ch]">
             {lang === 'en'
-              ? 'The Automated Risk Investigation Algorithm (ARIA) triages 318,441 vendors into four priority tiers by combining risk scores, anomaly detection, financial scale, and external registry flags.'
-              : 'El Algoritmo Automatizado de Investigación de Riesgo (ARIA) clasifica 318,441 proveedores en cuatro niveles de prioridad combinando puntuaciones de riesgo, detección de anomalías, escala financiera y señales de registros externos.'}
+              ? 'A self-guided tour in four wings. Each room enters at a different altitude — from live ML triage to the documented canon to the method beneath it.'
+              : 'Un recorrido autoguiado en cuatro salas. Cada una entra a una altitud distinta — del triaje ML en vivo al canon documentado al método que los sostiene.'}
           </p>
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-            {[
-              {
-                tier: 'T1',
-                count: 320,
-                label: lang === 'en' ? 'Immediate' : 'Inmediato',
-                sub: lang === 'en' ? 'Urgent referrals' : 'Referencias urgentes',
-                color: '#dc2626',
-              },
-              {
-                tier: 'T2',
-                count: 1234,
-                label: lang === 'en' ? 'Priority' : 'Prioridad',
-                sub: lang === 'en' ? 'Active review' : 'Revisión activa',
-                color: '#ea580c',
-              },
-              {
-                tier: 'T3',
-                count: 5016,
-                label: lang === 'en' ? 'Review' : 'Revisión',
-                sub: lang === 'en' ? 'Watch list' : 'Lista de vigilancia',
-                color: '#eab308',
-              },
-              {
-                tier: 'T4',
-                count: 311871,
-                label: lang === 'en' ? 'Monitor' : 'Monitoreo',
-                sub: lang === 'en' ? 'Passive tracking' : 'Seguimiento pasivo',
-                color: '#64748b',
-              },
-            ].map((t, idx) => (
-              <motion.div
-                key={t.tier}
-                className="surface-card p-4 border-l-2 rounded-sm"
-                style={{ borderLeftColor: t.color }}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {galleries.map((g, idx) => (
+              <motion.button
+                key={g.path}
+                onClick={() => navigate(g.path)}
+                className="surface-card rounded-sm p-6 text-left border-l-2 hover:bg-white/[0.03] transition-colors group focus:outline-none focus:ring-1 focus:ring-[#a06820]/40"
+                style={{ borderLeftColor: g.color }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 + idx * 0.06 }}
               >
-                <div className="flex items-baseline justify-between mb-1">
-                  <span
-                    className="text-[10px] font-mono font-bold uppercase tracking-[0.15em]"
-                    style={{ color: t.color }}
-                  >
-                    {t.tier}
-                  </span>
-                  <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
-                    {t.label}
-                  </span>
+                <div className="flex items-start justify-between mb-3">
+                  <div className="flex items-baseline gap-2">
+                    <span
+                      className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] tabular-nums"
+                      style={{ color: g.color }}
+                    >
+                      {g.numeral}
+                    </span>
+                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-primary">
+                      {g.title}
+                    </span>
+                  </div>
+                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted group-hover:text-text-primary transition-colors" />
                 </div>
                 <div
-                  className="font-mono font-bold text-[24px] leading-none tabular-nums"
-                  style={{ color: t.color }}
+                  className="font-mono font-bold text-[30px] leading-none tabular-nums mb-1"
+                  style={{ color: g.color }}
                 >
-                  {formatNumber(t.count)}
+                  {g.stat}
                 </div>
-                <div className="text-[10px] text-text-muted mt-1.5 leading-[1.4]">
-                  {t.sub}
+                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
+                  {g.statLabel}
                 </div>
-              </motion.div>
+                <p className="text-[13px] text-text-secondary leading-[1.65] mb-4">
+                  {g.body}
+                </p>
+                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[#a06820] group-hover:text-[#c98730] transition-colors inline-flex items-center gap-1">
+                  {g.cta} →
+                </span>
+              </motion.button>
             ))}
           </div>
-          <div className="mt-4 flex justify-end">
-            <button
-              onClick={() => navigate('/aria')}
-              className="inline-flex items-center gap-1.5 text-xs font-mono uppercase tracking-wide text-[#a06820] hover:text-[#c98730] transition-colors"
-            >
-              {lang === 'en' ? 'Open full ARIA queue' : 'Abrir cola ARIA completa'}
-              <ArrowUpRight className="h-3 w-3" />
-            </button>
-          </div>
         </section>
+
+        {/* ─── Recent Critical Alerts — live news wire ─── */}
+        {recentCritical.length > 0 && (
+          <section className="mb-12">
+            <div className="flex items-center justify-between mb-2">
+              <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted flex items-center gap-2">
+                <span className="h-1.5 w-1.5 rounded-full bg-[#dc2626] animate-pulse" aria-hidden />
+                {lang === 'en' ? 'Recent critical alerts' : 'Alertas críticas recientes'}
+              </div>
+              <button
+                onClick={() => navigate('/contracts?risk_level=critical')}
+                className="text-[11px] font-mono uppercase tracking-[0.12em] text-[#a06820] hover:text-[#c98730] transition-colors inline-flex items-center gap-1"
+              >
+                {lang === 'en' ? 'View all' : 'Ver todas'}
+                <ArrowUpRight className="h-3 w-3" />
+              </button>
+            </div>
+            <p className="text-sm text-text-secondary leading-[1.6] mb-4 max-w-[68ch]">
+              {lang === 'en'
+                ? 'Five contracts most recently flagged at critical risk by the live model. Each is an investigation signal — not a verdict.'
+                : 'Los cinco contratos marcados más recientemente en riesgo crítico por el modelo. Cada uno es una señal de investigación — no un veredicto.'}
+            </p>
+            <div className="surface-card rounded-sm overflow-hidden divide-y divide-border/50">
+              {recentCritical.slice(0, 5).map((c) => {
+                const sectorColor = c.sector_name
+                  ? SECTOR_COLORS[c.sector_name.toLowerCase()] ?? '#64748b'
+                  : '#64748b'
+                return (
+                  <button
+                    key={c.id}
+                    onClick={() => navigate(`/contracts/${c.id}`)}
+                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-white/[0.03] transition-colors focus:outline-none focus:bg-white/[0.05]"
+                  >
+                    <span
+                      className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
+                      style={{ backgroundColor: 'rgba(220,38,38,0.12)', color: '#dc2626' }}
+                    >
+                      {lang === 'en' ? 'CRITICAL' : 'CRÍTICO'}
+                    </span>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-semibold text-text-primary truncate">
+                        {c.vendor_name || (lang === 'en' ? 'Unknown vendor' : 'Proveedor desconocido')}
+                      </p>
+                      <p className="text-xs text-text-muted truncate mt-0.5">
+                        {c.title || c.institution_name || '—'}
+                      </p>
+                    </div>
+                    <div className="hidden md:flex flex-shrink-0 w-36 items-center gap-2">
+                      <span
+                        className="h-1.5 w-1.5 rounded-full flex-shrink-0"
+                        style={{ backgroundColor: sectorColor }}
+                      />
+                      <span className="text-xs text-text-secondary capitalize truncate">
+                        {c.sector_name || '—'}
+                      </span>
+                    </div>
+                    <div className="flex-shrink-0 text-right">
+                      <div className="text-sm font-mono tabular-nums text-text-primary">
+                        {formatCompactMXN(c.amount_mxn)}
+                      </div>
+                      {c.contract_date && (
+                        <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                          {new Date(c.contract_date).toISOString().slice(0, 10)}
+                        </div>
+                      )}
+                    </div>
+                  </button>
+                )
+              })}
+            </div>
+          </section>
+        )}
 
         {/* ─── CTA ─── */}
         <section className="mb-12 print-hide">
