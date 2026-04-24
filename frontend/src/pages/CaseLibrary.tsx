@@ -694,24 +694,98 @@ export default function CaseLibrary() {
                   {t('filters.clearFilters')}
                 </button>
               </div>
-            ) : (
-              <div
-                style={{
-                  border: `1px solid ${BORDER}`,
-                  borderBottom: 'none',
-                }}
-              >
-                {data.map((cas) => (
-                  <CaseRow
-                    key={cas.id}
-                    cas={cas}
-                    onClick={() => navigate(caseUrl(cas))}
-                    t={t}
-                    lang={i18n.language}
-                  />
-                ))}
-              </div>
-            )}
+            ) : (() => {
+              // Editorial tier break: the top 3 cases (by loss, via existing sort)
+              // get a "FEATURED" section header so the reader immediately sees the
+              // most damaging scandals; the rest render compactly below. Art
+              // Director + UX/IA critics flagged the uniform list as having no
+              // featured case and no rhythm change — "a database dump."
+              // Only applied to the unfiltered view; filtered results render flat.
+              const showFeatured = !hasFilters && data.length > 6
+              const featured = showFeatured ? data.slice(0, 3) : []
+              const rest = showFeatured ? data.slice(3) : data
+              return (
+                <>
+                  {showFeatured && (
+                    <>
+                      <div
+                        className="flex items-center gap-3 mb-3"
+                        style={{ fontFamily: 'var(--font-family-mono)' }}
+                      >
+                        <span
+                          className="h-px flex-1"
+                          style={{ background: 'rgba(212,146,42,0.3)' }}
+                        />
+                        <span
+                          className="text-[10px] font-bold tracking-[0.2em] uppercase"
+                          style={{ color: '#d4922a' }}
+                        >
+                          {i18n.language === 'es'
+                            ? 'Los tres casos de mayor daño documentado'
+                            : 'The three largest documented cases'}
+                        </span>
+                        <span
+                          className="h-px flex-1"
+                          style={{ background: 'rgba(212,146,42,0.3)' }}
+                        />
+                      </div>
+                      <div
+                        style={{
+                          border: `1px solid ${BORDER}`,
+                          borderBottom: 'none',
+                          marginBottom: 24,
+                        }}
+                      >
+                        {featured.map((cas) => (
+                          <div
+                            key={cas.id}
+                            style={{ background: 'rgba(212,146,42,0.03)' }}
+                          >
+                            <CaseRow
+                              cas={cas}
+                              onClick={() => navigate(caseUrl(cas))}
+                              t={t}
+                              lang={i18n.language}
+                            />
+                          </div>
+                        ))}
+                      </div>
+                      <div
+                        className="flex items-center gap-3 mb-3"
+                        style={{ fontFamily: 'var(--font-family-mono)' }}
+                      >
+                        <span
+                          className="text-[10px] font-bold tracking-[0.2em] uppercase text-text-muted"
+                        >
+                          {i18n.language === 'es'
+                            ? `El resto del archivo · ${rest.length} casos`
+                            : `The rest of the archive · ${rest.length} cases`}
+                        </span>
+                        <span
+                          className="h-px flex-1 bg-border"
+                        />
+                      </div>
+                    </>
+                  )}
+                  <div
+                    style={{
+                      border: `1px solid ${BORDER}`,
+                      borderBottom: 'none',
+                    }}
+                  >
+                    {rest.map((cas) => (
+                      <CaseRow
+                        key={cas.id}
+                        cas={cas}
+                        onClick={() => navigate(caseUrl(cas))}
+                        t={t}
+                        lang={i18n.language}
+                      />
+                    ))}
+                  </div>
+                </>
+              )
+            })()}
 
             {/* Footnote */}
             <p
