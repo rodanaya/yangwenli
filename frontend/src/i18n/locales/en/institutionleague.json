@@ -2,14 +2,14 @@
   "eyebrow": "INSTITUTION TRANSPARENCY LEAGUE",
   "title": "Institution Transparency League",
   "subtitle": "Rankings based on competition rate, single-bid rate, price fairness, and risk indicators across {{total}} scored institutions",
-  "kicker": "INSTITUTIONS · FEDERAL ACCOUNTABILITY LEAGUE",
-  "meta": "FEDERAL · 2002–2025 · v0.6.5",
+  "kicker": "INSTITUTIONS · WHERE THE HIGH-RISK MONEY IS",
+  "meta": "FEDERAL · 2018–2025 · v0.6.5",
   "headline": {
-    "before": "Who is accountable",
-    "accent": "for how Mexico spends?"
+    "before": "Five agencies account for",
+    "accent": "1.25 trillion pesos in high-risk awards."
   },
-  "lede": "Competitive ranking of {{total}} federal institutions scored 0–100 across five pillars — openness, price fairness, vendor diversity, process integrity and external alerts. Every agency, first to last, no excuses.",
-  "lede_none": "Competitive ranking of federal institutions scored 0–100 across five pillars — openness, price fairness, vendor diversity, process integrity and external alerts. Every agency, first to last, no excuses.",
+  "lede": "IMSS alone carries 799.6 billion MXN in Critical or High-flagged contracts since 2018 — more than the next four institutions combined. Its direct-award rate is 81 percent, triple the OECD ceiling. ISSSTE, IMSS-BIENESTAR, CONAGUA, and the defunct INSABI — dissolved in 2023 but still holding 3,560 contracts on the books — fill out the top five. INSABI's 43 percent high-risk ratio is the worst of any federal agency above the 2,000-contract floor.",
+  "lede_none": "IMSS alone carries 799.6 billion MXN in Critical or High-flagged contracts since 2018 — more than the next four institutions combined. Its direct-award rate is 81 percent, triple the OECD ceiling.",
   "podiumTitle": "Top Performers",
   "podiumSubtitle": "Institutions with the highest transparency scores",
   "podiumHeadline": "The three most transparent institutions",

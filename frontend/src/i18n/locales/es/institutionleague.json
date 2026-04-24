@@ -2,14 +2,14 @@
   "eyebrow": "LIGA DE TRANSPARENCIA INSTITUCIONAL",
   "title": "Liga de Transparencia Institucional",
   "subtitle": "Clasificaciones basadas en tasa de competencia, licitaciones unicas, equidad de precios e indicadores de riesgo en {{total}} instituciones evaluadas",
-  "kicker": "INSTITUCIONES · RANKING FEDERAL",
-  "meta": "FEDERAL · 2002–2025 · v0.6.5",
+  "kicker": "INSTITUCIONES · DÓNDE ESTÁ EL DINERO DE ALTO RIESGO",
+  "meta": "FEDERAL · 2018–2025 · v0.6.5",
   "headline": {
-    "before": "¿Quién lidera la transparencia",
-    "accent": "en México?"
+    "before": "Cinco dependencias concentran",
+    "accent": "1.25 billones de pesos en contratos de alto riesgo."
   },
-  "lede": "Clasificación competitiva de {{total}} instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.",
-  "lede_none": "Clasificación competitiva de instituciones federales evaluadas sobre una puntuación 0–100 basada en cinco pilares: apertura, precios, proveedores, proceso e incidencias externas. Del primer lugar al último — sin excusas.",
+  "lede": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE. ISSSTE, IMSS-BIENESTAR, CONAGUA y el extinto INSABI — disuelto en 2023 pero aún con 3,560 contratos vigentes — completan el top cinco. La razón de alto riesgo del INSABI — 43 por ciento — es la peor de cualquier dependencia federal con más de 2,000 contratos.",
+  "lede_none": "Solo el IMSS acumula 799,600 millones MXN en adjudicaciones marcadas Crítico o Alto desde 2018 — más que las siguientes cuatro instituciones juntas. Su tasa de adjudicación directa es 81 por ciento, el triple del umbral OCDE.",
   "podiumTitle": "Mejores Instituciones",
   "podiumSubtitle": "Instituciones con las puntuaciones de transparencia más altas",
   "podiumHeadline": "Las tres instituciones más transparentes",
