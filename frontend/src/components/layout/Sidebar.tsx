@@ -181,7 +181,15 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
     <>
     <aside
       className={cn(
-        'fixed left-0 top-0 h-screen flex flex-col border-r border-white/5 bg-[color:var(--color-sidebar)] z-50',
+        // Mobile: auto-height drawer. Sidebar sizes to its actual content
+        // instead of stretching to 100vh. Below the natural bottom, the
+        // dimmed page backdrop shows through — the pattern every good
+        // mobile drawer uses (Gmail, YouTube, Stripe). This eliminates
+        // the "half-empty dark zone" that user flagged three times.
+        // If content ever exceeds viewport, overflow-y-auto kicks in.
+        // Desktop: full viewport height with flex-col anchoring footer.
+        'fixed left-0 top-0 flex flex-col border-r border-white/5 bg-[color:var(--color-sidebar)] z-50',
+        'max-h-screen overflow-y-auto md:h-screen md:overflow-y-visible',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
         'w-64 -translate-x-full',
@@ -235,8 +243,12 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         )}
       </div>
 
-      {/* Main navigation */}
-      <ScrollArea className="flex-1 py-3">
+      {/* Main navigation.
+          On mobile, ScrollArea does NOT flex-grow — nav, intel strip, and
+          footer pack at natural heights, and the drawer's auto-height
+          shrinks to fit. On desktop, flex-1 expands into viewport height
+          so the footer anchors at the bottom of a tall window. */}
+      <ScrollArea className="py-3 md:flex-1">
         <nav className="px-2 space-y-3" aria-label={t('mainNavigation')}>
           {NAV_SECTIONS.map((section) => (
             <NavSection key={section.sectionKey} title={t(section.sectionKey)} collapsed={isCollapsed}>
