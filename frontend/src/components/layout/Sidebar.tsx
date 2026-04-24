@@ -277,35 +277,40 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
             </div>
           )}
 
-          {/* Editorial intel strip — fills the lower portion of the sidebar
-              (previously just empty dark space on mobile/tall viewports, which
-              user-flagged as "still black"). Uses existing aria-stats query
-              — no new requests. Turns dead scroll area into a live signal. */}
-          {!isCollapsed && ariaT1Count > 0 && (
-            <div className="mt-8 mx-2 px-3 py-3 rounded-sm border border-white/8 bg-white/[0.015]">
-              <div className="flex items-center gap-1.5 mb-2">
-                <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-red-400/80">
-                  {i18n.language === 'es' ? 'Vivo · Cola T1' : 'Live · T1 Queue'}
-                </span>
-              </div>
-              <p className="text-[11px] leading-snug text-[color:var(--color-text-on-dark-secondary)] mb-2">
-                {i18n.language === 'es'
-                  ? <><span className="font-mono tabular-nums font-bold text-[color:var(--color-text-on-dark-primary)]">{ariaT1Count}</span> proveedores activan todas las señales de corrupción del modelo.</>
-                  : <><span className="font-mono tabular-nums font-bold text-[color:var(--color-text-on-dark-primary)]">{ariaT1Count}</span> vendors trip every corruption signal the model tracks.</>
-                }
-              </p>
-              <a
-                href="/aria"
-                className="text-[10px] font-mono tracking-[0.12em] uppercase text-red-400/90 hover:text-red-300 transition-colors inline-flex items-center gap-1"
-              >
-                {i18n.language === 'es' ? 'Abrir cola' : 'Open queue'}
-                <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
-              </a>
-            </div>
-          )}
         </nav>
       </ScrollArea>
+
+      {/* Editorial intel strip — pinned just above the system-status footer.
+          Previous attempt placed it INSIDE the ScrollArea but ScrollArea has
+          flex-1 so the strip stuck to the top of the expanding region,
+          leaving the dark space BELOW it (user flagged twice as "still
+          black"). Moved out of ScrollArea: with flex-col + ScrollArea
+          taking flex-1, anything following it gets pushed to the bottom of
+          the sidebar, right above the footer — which is exactly where the
+          dark gap lives. */}
+      {!isCollapsed && ariaT1Count > 0 && (
+        <div className="mx-2 mb-2 px-3 py-3 rounded-sm border border-white/8 bg-white/[0.015]">
+          <div className="flex items-center gap-1.5 mb-2">
+            <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
+            <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-red-400/80">
+              {i18n.language === 'es' ? 'Vivo · Cola T1' : 'Live · T1 Queue'}
+            </span>
+          </div>
+          <p className="text-[11px] leading-snug text-[color:var(--color-text-on-dark-secondary)] mb-2">
+            {i18n.language === 'es'
+              ? <><span className="font-mono tabular-nums font-bold text-[color:var(--color-text-on-dark-primary)]">{ariaT1Count}</span> proveedores activan todas las señales de corrupción del modelo.</>
+              : <><span className="font-mono tabular-nums font-bold text-[color:var(--color-text-on-dark-primary)]">{ariaT1Count}</span> vendors trip every corruption signal the model tracks.</>
+            }
+          </p>
+          <a
+            href="/aria"
+            className="text-[10px] font-mono tracking-[0.12em] uppercase text-red-400/90 hover:text-red-300 transition-colors inline-flex items-center gap-1"
+          >
+            {i18n.language === 'es' ? 'Abrir cola' : 'Open queue'}
+            <svg className="h-2.5 w-2.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M17 8l4 4m0 0l-4 4m4-4H3" /></svg>
+          </a>
+        </div>
+      )}
 
       {/* System status panel */}
       <div className="px-2 py-2 border-t border-white/5">
