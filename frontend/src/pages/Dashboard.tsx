@@ -448,18 +448,47 @@ export function Dashboard() {
     <EditorialPageShell
       kicker={t('editorial.kicker', 'RUBLI · INTELLIGENCE BRIEF')}
       headline={
-        <>
-          {t('editorial.headline', '{{value}} vendors require immediate investigation', {
-            value: formatNumber(t1Count),
-          })}
-        </>
+        topVendor ? (
+          <>
+            {i18n.language === 'es' ? (
+              <>
+                <span style={{ color: 'var(--color-risk-critical)' }}>{topVendor.vendor_name}</span>{' '}
+                encabeza la cola de investigación.{' '}
+                <span className="text-text-secondary">Otros {formatNumber(Math.max(0, t1Count - 1))} coinciden con el patrón.</span>
+              </>
+            ) : (
+              <>
+                <span style={{ color: 'var(--color-risk-critical)' }}>{topVendor.vendor_name}</span>{' '}
+                tops the investigation queue.{' '}
+                <span className="text-text-secondary">{formatNumber(Math.max(0, t1Count - 1))} more match the pattern.</span>
+              </>
+            )}
+          </>
+        ) : (
+          <>
+            {t('editorial.headline', '{{value}} vendors require immediate investigation', {
+              value: formatNumber(t1Count),
+            })}
+          </>
+        )
       }
-      paragraph={t('editorial.subhead', {
-        totalValue: formatCompactMXN(overview?.total_value_mxn ?? 0),
-        riskValue: formatCompactMXN(criticalHighValue || ariaElevatedValue),
-        contracts: formatNumber(overview?.total_contracts ?? 0),
-        defaultValue: 'RUBLI analyzed {{contracts}} federal contracts worth {{totalValue}} (2002-2025). {{riskValue}} sits in contracts flagged high or critical risk — patterns consistent with documented corruption cases.',
-      })}
+      paragraph={
+        i18n.language === 'es' ? (
+          <>
+            {formatNumber(t1Count)} proveedores están en ARIA Nivel 1 — el grupo cuya huella de contratación coincide con{' '}
+            <strong className="text-text-primary">Segalmex, Odebrecht, Fantasmas del IMSS, Edenred</strong> y 18 casos más ya procesados.
+            Juntos manejan <strong className="text-text-primary">{formatCompactMXN(criticalHighValue || ariaElevatedValue)}</strong> en contratos federales —
+            aproximadamente el presupuesto federal anual de salud más el de defensa. No son acusaciones: son los archivos que el modelo recomienda abrir primero.
+          </>
+        ) : (
+          <>
+            {formatNumber(t1Count)} vendors sit in ARIA Tier 1 — the group whose procurement fingerprint matches{' '}
+            <strong className="text-text-primary">Segalmex, Odebrecht, IMSS Ghost, Edenred</strong>, and 18 other prosecuted cases.
+            Together they hold <strong className="text-text-primary">{formatCompactMXN(criticalHighValue || ariaElevatedValue)}</strong> in federal contracts —
+            roughly one year of Mexico&apos;s federal health budget plus defense. These are not accusations: they are the files the model recommends opening first.
+          </>
+        )
+      }
       stats={[
         {
           value: kpiLoading ? '—' : formatNumber(t1Count),

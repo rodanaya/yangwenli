@@ -3433,32 +3433,10 @@ function PoliticalCycleView() {
                   />
                 )
               })()}
-              <div className="mt-3 grid gap-3 sm:grid-cols-2">
-                <div>
-                  <p className="text-[10px] text-text-muted font-mono mb-1">Avg Risk %</p>
-                  <DotStrip
-                    data={breakdownData.map((d) => ({
-                      label: d.label,
-                      value: d.avg_risk_pct,
-                      color: RISK_COLORS.high,
-                    }))}
-                    formatVal={(v) => `${v.toFixed(2)}%`}
-                    dots={36}
-                  />
-                </div>
-                <div>
-                  <p className="text-[10px] text-text-muted font-mono mb-1">High Risk %</p>
-                  <DotStrip
-                    data={breakdownData.map((d) => ({
-                      label: d.label,
-                      value: d.high_risk_pct,
-                      color: RISK_COLORS.critical,
-                    }))}
-                    formatVal={(v) => `${v.toFixed(1)}%`}
-                    dots={36}
-                  />
-                </div>
-              </div>
+              {/* Removed dual DotStrip block (avg_risk + high_risk per sexenio year):
+                  the composed chart above shows the same breakdown; the two
+                  bar-like strips were the "two different bar charts on the same
+                  page" regression the user flagged. One canonical chart per finding. */}
               <p className="text-[11px] text-text-muted mt-2 font-mono">
                 Year 1 = first year of administration, Year 6 = final year before election.
                 Higher risk in late sexenio years may indicate &quot;budget dump&quot; spending.

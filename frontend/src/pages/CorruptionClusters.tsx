@@ -380,7 +380,10 @@ function buildComplementaryTypologies(isEs: boolean): ComplementaryTypology[] {
 function DotBar({
   value,
   color,
-  emptyColor = '#2d2926',
+  // Bible §4 canonical light-mode empty dot: cream elevated fill, warm border.
+  // Previously '#2d2926' / '#3d3734' which render BLACK on the cream page.
+  emptyColor = '#f3f1ec',
+  emptyStroke = '#e2ddd6',
   dots = 20,
   size = 7,
   gap = 3,
@@ -389,6 +392,7 @@ function DotBar({
   value: number
   color: string
   emptyColor?: string
+  emptyStroke?: string
   dots?: number
   size?: number
   gap?: number
@@ -407,7 +411,7 @@ function DotBar({
             cy={size / 2}
             r={size / 2}
             fill={i < filled ? color : emptyColor}
-            stroke={i < filled ? undefined : '#3d3734'}
+            stroke={i < filled ? undefined : emptyStroke}
             strokeWidth={i < filled ? 0 : 0.5}
           />
         ))}

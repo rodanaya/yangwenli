@@ -8,27 +8,16 @@ import {
   LayoutDashboard,
   BarChart3,
   BookOpen,
-  Settings,
   ChevronLeft,
   ChevronRight,
   Library,
-  Briefcase,
   X,
   MessageSquarePlus,
   Shield,
-  FolderSearch,
   History,
-  CalendarDays,
   Building2,
-  GitMerge,
-  TrendingUp,
-  Layers,
   Network,
   Activity,
-  Search,
-  Newspaper,
-  Grid3x3,
-  FileText,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -61,54 +50,37 @@ interface NavSectionDef {
   items: NavItemDef[]
 }
 
+// 7-item editorial sidebar per architect audit. Previous 19-item nav collapsed
+// based on redundancy matrix (direct_award % appeared on 24 of 41 pages;
+// investigate section had 8 doorways into the same queue). Minor destinations
+// reachable via: Dashboard KPI links, CommandPalette (Cmd+K), in-page drill.
 const NAV_SECTIONS: NavSectionDef[] = [
   {
-    // Summaries & overviews — most common entry points
     sectionKey: 'sections.overview',
     items: [
-      { i18nKey: 'dashboard', href: '/dashboard', icon: LayoutDashboard },
-      { i18nKey: 'executive', href: '/executive', icon: FileText },
-      { i18nKey: 'yearInReview', href: '/year-in-review', icon: CalendarDays },
+      { i18nKey: 'dashboard', href: '/', icon: LayoutDashboard },
     ],
   },
   {
-    // Active investigation bureau — journalist-facing
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
-      { i18nKey: 'typologies', href: '/clusters', icon: Grid3x3 },
-      { i18nKey: 'theArchive', href: '/investigation', icon: FolderSearch },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
-      { i18nKey: 'journalists', href: '/journalists', icon: Newspaper },
-      { i18nKey: 'collusion', href: '/collusion', icon: GitMerge },
       { i18nKey: 'network', href: '/network', icon: Network },
-      { i18nKey: 'workspace', href: '/workspace', icon: Briefcase, badgeSource: 'watchlist' },
     ],
   },
   {
-    // Editorial analysis — data-driven stories
     sectionKey: 'sections.analysis',
     items: [
-      { i18nKey: 'categories', href: '/categories', icon: Layers },
       { i18nKey: 'sectors', href: '/sectors', icon: BarChart3 },
-      { i18nKey: 'priceAnalysis', href: '/price-analysis', icon: TrendingUp },
-      { i18nKey: 'administrations', href: '/administrations', icon: History },
       { i18nKey: 'institutionLeague', href: '/institutions', icon: Building2 },
+      { i18nKey: 'administrations', href: '/administrations', icon: History },
     ],
   },
   {
-    // Raw data & exploration
-    sectionKey: 'sections.data',
-    items: [
-      { i18nKey: 'explore', href: '/explore', icon: Search },
-    ],
-  },
-  {
-    // Platform meta — methodology & settings
     sectionKey: 'sections.platform',
     items: [
       { i18nKey: 'methodology', href: '/methodology', icon: BookOpen },
-      { i18nKey: 'settings', href: '/settings', icon: Settings },
     ],
   },
 ]

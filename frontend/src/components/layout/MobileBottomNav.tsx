@@ -25,7 +25,7 @@ export function MobileBottomNav({ onMenuClick }: Props) {
 
   return (
     <nav
-      className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-border bg-[color:var(--color-sidebar)]/95 backdrop-blur-md md:hidden"
+      className="fixed bottom-0 left-0 right-0 z-40 flex items-stretch border-t border-border bg-background-card/95 backdrop-blur-md md:hidden"
       aria-label={t('sections.investigar')}
       style={{ paddingBottom: 'env(safe-area-inset-bottom)' }}
     >
@@ -42,12 +42,12 @@ export function MobileBottomNav({ onMenuClick }: Props) {
               'flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium transition-colors',
               isActive
                 ? 'text-[color:var(--color-accent)]'
-                : 'text-[color:var(--color-text-on-dark-muted)] active:text-[color:var(--color-text-on-dark-primary)]'
+                : 'text-text-muted active:text-text-primary'
             )}
             aria-current={isActive ? 'page' : undefined}
           >
             <Icon
-              className={cn('h-5 w-5', isActive ? 'text-[color:var(--color-accent)]' : 'text-[color:var(--color-text-on-dark-muted)]')}
+              className={cn('h-5 w-5', isActive ? 'text-[color:var(--color-accent)]' : 'text-text-muted')}
               aria-hidden="true"
             />
             <span className="truncate max-w-[56px] text-center">{label}</span>
@@ -58,10 +58,10 @@ export function MobileBottomNav({ onMenuClick }: Props) {
       {/* More — opens full sidebar overlay */}
       <button
         onClick={onMenuClick}
-        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium text-[color:var(--color-text-on-dark-muted)] active:text-[color:var(--color-text-on-dark-primary)] transition-colors"
+        className="flex flex-1 flex-col items-center justify-center gap-0.5 py-2 min-h-[56px] text-[10px] font-medium text-text-muted active:text-text-primary transition-colors"
         aria-label={t('openMenu')}
       >
-        <Menu className="h-5 w-5 text-[color:var(--color-text-on-dark-muted)]" aria-hidden="true" />
+        <Menu className="h-5 w-5 text-text-muted" aria-hidden="true" />
         <span>{t('mobileMore')}</span>
       </button>
     </nav>

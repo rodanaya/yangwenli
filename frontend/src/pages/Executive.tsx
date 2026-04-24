@@ -447,15 +447,27 @@ export default function Executive() {
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             {lang === 'en'
-              ? <>1 in 7 pesos of federal spending carries <span style={{ color: '#dc2626' }}>indicators of corruption</span>.</>
-              : <>1 de cada 7 pesos del gasto federal tiene <span style={{ color: '#dc2626' }}>indicadores de corrupción</span>.</>
+              ? <>One vendor took <span style={{ color: '#dc2626' }}>133.2 billion pesos</span> from IMSS. <span className="text-text-secondary">320 more match the pattern.</span></>
+              : <>Un proveedor tomó <span style={{ color: '#dc2626' }}>133.2 mil millones de pesos</span> del IMSS. <span className="text-text-secondary">Otros 320 coinciden con el patrón.</span></>
             }
           </h1>
 
           <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
             {lang === 'en'
-              ? `Ten documented corruption cases — IMSS ghost companies, Segalmex, Odebrecht, COVID-19 emergency procurement, and six others — built the pattern library that now screens ${formatNumber(stats.totalContracts)} federal contracts. ${formatNumber(stats.highCriticalCount)} of them, representing an estimated ${formatCompactMXN(stats.valueAtRisk)}, show procurement anomalies consistent with those documented patterns. These are investigation signals, not verdicts.`
-              : `Diez casos documentados de corrupción — empresas fantasma del IMSS, Segalmex, Odebrecht, compras de emergencia COVID-19 y seis más — construyeron la biblioteca de patrones que ahora examina ${formatNumber(stats.totalContracts)} contratos federales. ${formatNumber(stats.highCriticalCount)} de ellos, con un valor estimado de ${formatCompactMXN(stats.valueAtRisk)}, muestran anomalías de contratación consistentes con esos patrones documentados. Son señales de investigación, no veredictos.`
+              ? <>
+                  <strong className="text-text-primary">Grupo Farmacos Especializados</strong> won 6,303 federal health contracts over fourteen years.
+                  Seventy-nine percent were awarded without competitive bidding — 3× the OECD ceiling.
+                  RUBLI's model — trained on <strong className="text-text-primary">Segalmex, Odebrecht, IMSS Ghost, COVID emergency procurement</strong>, and 18 other prosecuted scandals — now flags <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contracts</strong> with the same fingerprint.
+                  Together they represent <strong className="text-text-primary">{formatCompactMXN(stats.valueAtRisk)} MXN</strong> — roughly one year of Mexico&apos;s federal health budget plus defense.
+                  These are investigation signals, not verdicts.
+                </>
+              : <>
+                  <strong className="text-text-primary">Grupo Farmacos Especializados</strong> ganó 6,303 contratos federales de salud en catorce años.
+                  El 79% fueron adjudicaciones directas — 3× el umbral OCDE.
+                  El modelo de RUBLI — entrenado con <strong className="text-text-primary">Segalmex, Odebrecht, Fantasmas del IMSS, compras de emergencia COVID</strong> y 18 escándalos más ya procesados — ahora señala <strong className="text-text-primary">{formatNumber(stats.highCriticalCount)} contratos</strong> con la misma huella.
+                  Juntos representan <strong className="text-text-primary">{formatCompactMXN(stats.valueAtRisk)} MXN</strong> — aproximadamente el presupuesto federal anual de salud más el de defensa.
+                  Son señales de investigación, no veredictos.
+                </>
             }
           </p>
         </motion.header>

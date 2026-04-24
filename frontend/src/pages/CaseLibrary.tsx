@@ -94,9 +94,11 @@ function FilterPill({
       className="px-3 py-1 text-[11px] font-medium tracking-wide transition-colors"
       style={{
         fontFamily: 'var(--font-family-mono)',
-        background: active ? 'rgba(212,146,42,0.12)' : 'transparent',
-        color: active ? '#d4922a' : '#9a9a96',
-        border: `1px solid ${active ? 'rgba(212,146,42,0.35)' : BORDER_STRONG}`,
+        // Active: strong amber fill + white text (unmistakable).
+        // Default: transparent, muted text, warm-gray border (clearly ghost).
+        background: active ? 'var(--color-accent)' : 'transparent',
+        color: active ? '#ffffff' : 'var(--color-text-muted)',
+        border: `1px solid ${active ? 'var(--color-accent)' : 'var(--color-border)'}`,
       }}
     >
       {label.toUpperCase()}
@@ -354,27 +356,44 @@ export default function CaseLibrary() {
           className="flex items-start justify-between gap-6 pb-6 mb-8"
           style={{ borderBottom: `1px solid ${BORDER_STRONG}` }}
         >
-          <div>
+          <div className="max-w-[780px]">
             <p
-              className="text-[10px] font-semibold tracking-[0.2em] uppercase mb-2"
-              style={{
-                fontFamily: 'var(--font-family-mono)',
-                color: '#8a8a86',
-              }}
+              className="text-[10px] font-semibold tracking-[0.2em] uppercase mb-3"
+              style={{ fontFamily: 'var(--font-family-mono)', color: '#8a8a86' }}
             >
-              {i18n.language === 'es' ? 'RUBLI · ARCHIVO DE CASOS' : 'RUBLI · CASE ARCHIVE'}
+              {i18n.language === 'es' ? 'RUBLI · ARCHIVO DE CASOS · IMPUNIDAD' : 'RUBLI · CASE ARCHIVE · IMPUNITY'}
             </p>
             <h1
-              className="text-[24px] leading-tight text-text-primary"
-              style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
+              className="text-[32px] md:text-[42px] leading-[1.05] text-text-primary mb-4"
+              style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 700, letterSpacing: '-0.015em' }}
             >
-              {i18n.language === 'es' ? 'El Archivo' : 'The Archive'}
+              {i18n.language === 'es' ? (
+                <>
+                  <span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} de {totalCases}</span> escándalos de contratación pública en México siguen sin enjuiciarse.
+                </>
+              ) : (
+                <>
+                  <span style={{ color: 'var(--color-risk-critical)' }}>{Math.max(0, totalCases - prosecutedCount)} out of {totalCases}</span> Mexican procurement scandals remain unprosecuted.
+                </>
+              )}
             </h1>
             <p
-              className="text-[13px] text-text-muted mt-1.5"
+              className="text-[14px] text-text-secondary leading-[1.6] max-w-[64ch]"
               style={{ fontFamily: 'var(--font-family-sans)' }}
             >
-              {totalCases} {i18n.language === 'es' ? 'casos documentados de corrupción' : 'documented corruption cases'} · {yearSpan}
+              {i18n.language === 'es' ? (
+                <>
+                  De Odebrecht (10 años, cero condenas en México) a Segalmex (15.4 mil millones robados) y Línea 12 (26 muertos, cero cargos).
+                  Este archivo documenta <strong className="text-text-primary">${formatMXNHero(totalLoss)} MXN</strong> en pérdidas conocidas a lo largo del período {yearSpan}.
+                  Solo <strong className="text-text-primary">{prosecutedCount}</strong> ha producido una condena firme.
+                </>
+              ) : (
+                <>
+                  From Odebrecht (10 years, zero Mexican convictions) to Segalmex (15.4B MXN stolen) to Línea 12 (26 dead, zero charges filed).
+                  This archive documents <strong className="text-text-primary">${formatMXNHero(totalLoss)} MXN</strong> in known losses between {yearSpan}.
+                  Only <strong className="text-text-primary">{prosecutedCount}</strong> has produced a final conviction.
+                </>
+              )}
             </p>
           </div>
           <div className="flex-shrink-0">

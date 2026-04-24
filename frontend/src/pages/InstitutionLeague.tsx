@@ -965,17 +965,18 @@ export default function InstitutionLeague() {
           severity={failingCount > 0 ? 'critical' : 'high'}
           loading={isLoading}
         >
-      {/* Editorial finding headline — urgent red when failing institutions exist */}
+      {/* Editorial finding headline — bible §2 cream-mode callout: tint stays
+          subtle so the card doesn't read as alarm on a cream page. */}
       {editorialHeadline && (
-        <div className={`mb-6 pl-5 py-3 rounded-r-lg flex items-start gap-4 ${
+        <div className={`mb-6 pl-5 py-3 rounded-r-sm flex items-start gap-4 ${
           failingCount > 0
-            ? 'border-l-4 border-red-500 bg-red-950/30'
-            : 'border-l-4 border-amber-500 bg-amber-950/20'
+            ? 'border-l-4 border-[color:var(--color-risk-critical)] bg-[color:var(--color-risk-critical)]/8'
+            : 'border-l-4 border-[color:var(--color-accent)] bg-[color:var(--color-accent)]/8'
         }`}>
-          <Crown className={`h-5 w-5 flex-shrink-0 mt-0.5 ${failingCount > 0 ? 'text-red-400' : 'text-amber-500'}`} aria-hidden="true" />
+          <Crown className={`h-5 w-5 flex-shrink-0 mt-0.5 ${failingCount > 0 ? 'text-[color:var(--color-risk-critical)]' : 'text-[color:var(--color-accent)]'}`} aria-hidden="true" />
           <div>
             <p className={`text-[10px] font-mono font-bold uppercase tracking-[0.15em] mb-1 ${
-              failingCount > 0 ? 'text-red-400' : 'text-amber-500/70'
+              failingCount > 0 ? 'text-[color:var(--color-risk-critical)]' : 'text-[color:var(--color-accent)]'
             }`}>
               {t('hallazgo')}
             </p>
