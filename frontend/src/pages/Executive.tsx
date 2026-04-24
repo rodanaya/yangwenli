@@ -328,74 +328,6 @@ export default function Executive() {
     { key: 'a3' },
   ]
 
-  // ─── The Galleries — four wings of the platform ─────────────────────────────
-  const galleries = [
-    {
-      numeral: 'I',
-      title: lang === 'en' ? 'THE QUEUE' : 'LA COLA',
-      path: '/aria',
-      color: '#dc2626',
-      stat: '320',
-      statLabel:
-        lang === 'en'
-          ? 'Tier 1 — immediate review'
-          : 'Nivel 1 — revisión inmediata',
-      body:
-        lang === 'en'
-          ? 'Every vendor in the federal system, triaged by risk score, anomaly detection, financial scale, and external registry flags. The operational queue — start here if you want to act.'
-          : 'Cada proveedor del sistema federal, clasificado por puntaje de riesgo, detección de anomalías, escala financiera y señales de registros externos. La cola operativa — comienza aquí si quieres actuar.',
-      cta: lang === 'en' ? 'Enter the queue' : 'Entrar a la cola',
-    },
-    {
-      numeral: 'II',
-      title: lang === 'en' ? 'THE CASES' : 'LOS CASOS',
-      path: '/cases',
-      color: '#a06820',
-      stat: '22',
-      statLabel:
-        lang === 'en'
-          ? 'Documented scandals · 2002–2025'
-          : 'Escándalos documentados · 2002–2025',
-      body:
-        lang === 'en'
-          ? 'From IMSS ghost companies to Odebrecht and Segalmex — the corruption canon, each case with linked vendors, contracts, and legal status. These labeled portraits trained the model.'
-          : 'De empresas fantasma del IMSS a Odebrecht y Segalmex — el canon de corrupción, cada caso con proveedores, contratos y estatus legal. Estos retratos etiquetados entrenaron al modelo.',
-      cta: lang === 'en' ? 'Read the canon' : 'Leer el canon',
-    },
-    {
-      numeral: 'III',
-      title: lang === 'en' ? 'THE ANATOMY' : 'LA ANATOMÍA',
-      path: '/sectors',
-      color: '#22c55e',
-      stat: '12 · 5 · 2,563',
-      statLabel:
-        lang === 'en'
-          ? 'Sectors · Presidencies · Institutions'
-          : 'Sectores · Presidencias · Instituciones',
-      body:
-        lang === 'en'
-          ? 'Mexican procurement cut twelve ways — across five presidencies, through 2,563 federal buyers, 9.9 trillion pesos. The place to understand the whole before drilling into the parts.'
-          : 'La contratación mexicana cortada en doce formas — a través de cinco presidencias, 2,563 compradores federales, 9.9 billones de pesos. El lugar para entender el todo antes de los detalles.',
-      cta: lang === 'en' ? 'Open the atlas' : 'Abrir el atlas',
-    },
-    {
-      numeral: 'IV',
-      title: lang === 'en' ? 'THE METHOD' : 'EL MÉTODO',
-      path: '/methodology',
-      color: '#64748b',
-      stat: '0.828',
-      statLabel:
-        lang === 'en'
-          ? 'Test AUC · vendor-stratified'
-          : 'AUC de prueba · estratificado por proveedor',
-      body:
-        lang === 'en'
-          ? 'How the model reasons — per-sector logistic regression with PU-learning correction — and where it fails. Ground truth, SHAP, confidence tiers, blind spots. Nothing hidden.'
-          : 'Cómo razona el modelo — regresión logística por sector con corrección PU — y dónde falla. Verdad fundamental, SHAP, niveles de confianza, puntos ciegos. Nada oculto.',
-      cta: lang === 'en' ? 'Read the methodology' : 'Leer la metodología',
-    },
-  ]
-
   return (
     <>
       {/* Print-only styles: hide sidebar and chrome */}
@@ -599,61 +531,6 @@ export default function Executive() {
                   ))}
                 </ul>
               </motion.div>
-            ))}
-          </div>
-        </section>
-
-        {/* ─── The Galleries — four wings of the platform ─── */}
-        <section className="mb-12">
-          <div className="text-[10px] font-mono font-semibold uppercase tracking-[0.15em] text-text-muted mb-2">
-            {lang === 'en' ? 'The Galleries' : 'Las Salas'}
-          </div>
-          <p className="text-sm text-text-secondary leading-[1.6] mb-5 italic max-w-[68ch]">
-            {lang === 'en'
-              ? 'A self-guided tour in four wings. Each room enters at a different altitude — from live ML triage to the documented canon to the method beneath it.'
-              : 'Un recorrido autoguiado en cuatro salas. Cada una entra a una altitud distinta — del triaje ML en vivo al canon documentado al método que los sostiene.'}
-          </p>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {galleries.map((g, idx) => (
-              <motion.button
-                key={g.path}
-                onClick={() => navigate(g.path)}
-                className="surface-card rounded-sm p-6 text-left border-l-2 hover:bg-background-elevated/[0.03] transition-colors group focus:outline-none focus:ring-1 focus:ring-[#a06820]/40"
-                style={{ borderLeftColor: g.color }}
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.05 + idx * 0.06 }}
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-baseline gap-2">
-                    <span
-                      className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] tabular-nums"
-                      style={{ color: g.color }}
-                    >
-                      {g.numeral}
-                    </span>
-                    <span className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-primary">
-                      {g.title}
-                    </span>
-                  </div>
-                  <ArrowUpRight className="h-3.5 w-3.5 text-text-muted group-hover:text-text-primary transition-colors" />
-                </div>
-                <div
-                  className="font-mono font-bold text-[30px] leading-none tabular-nums mb-1"
-                  style={{ color: g.color }}
-                >
-                  {g.stat}
-                </div>
-                <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
-                  {g.statLabel}
-                </div>
-                <p className="text-[13px] text-text-secondary leading-[1.65] mb-4">
-                  {g.body}
-                </p>
-                <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-[#a06820] group-hover:text-[#c98730] transition-colors inline-flex items-center gap-1">
-                  {g.cta} →
-                </span>
-              </motion.button>
             ))}
           </div>
         </section>
