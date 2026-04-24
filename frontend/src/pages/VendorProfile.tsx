@@ -1532,17 +1532,48 @@ export function VendorProfile() {
               </span>
             </>
           )}
-          {scorecard && (
-            <>
-              <span className="text-text-muted/30">·</span>
-              <span className="inline-flex items-center gap-1.5">
-                <GradeBadge10 grade={scorecard.grade} size="md" />
-                <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
-                  {t('integrityGrade', 'Integrity Grade')}
-                </span>
-              </span>
-            </>
-          )}
+          {/* Integrity grade pill — only rendered when the vendor has enough
+              contract history to score meaningfully. The vendor scorecard is
+              currently mis-calibrated at the low-volume end: 79% of all
+              138K vendors get "Excelente" because a tiny contract footprint
+              with no negative signals defaults to top-tier. To stop showing
+              reporters a meaningless "Excelente" on the vendor profile, we
+              gate on >= 10 contracts AND >= 10M MXN total value. Vendors
+              below that floor render a plain "Sin historial suficiente" /
+              "Insufficient history" label instead of a letter-backed tier.
+              Full backend re-calibration (percentile-based thresholds) is
+              tracked as Option B in the session plan. */}
+          {scorecard && (() => {
+            const enoughData =
+              (vendor.total_contracts ?? 0) >= 10 &&
+              (vendor.total_value_mxn ?? 0) >= 10_000_000
+            return (
+              <>
+                <span className="text-text-muted/30">·</span>
+                {enoughData ? (
+                  <span className="inline-flex items-center gap-1.5">
+                    <GradeBadge10 grade={scorecard.grade} size="md" />
+                    <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted">
+                      {t('integrityGrade', 'Integrity Grade')}
+                    </span>
+                  </span>
+                ) : (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-sm text-[10px] font-mono tracking-wide uppercase text-text-muted border border-border bg-background-elevated"
+                    title={
+                      i18n.language.startsWith('es')
+                        ? 'El puntaje de integridad requiere al menos 10 contratos y 10M MXN de historial.'
+                        : 'Integrity grade requires at least 10 contracts and 10M MXN of history to score meaningfully.'
+                    }
+                  >
+                    {i18n.language.startsWith('es')
+                      ? 'Sin historial suficiente'
+                      : 'Insufficient history'}
+                  </span>
+                )}
+              </>
+            )
+          })()}
           {/* Ground truth case links */}
           {groundTruthStatus?.is_known_bad && groundTruthStatus.cases?.map((c) => (
             <Link
