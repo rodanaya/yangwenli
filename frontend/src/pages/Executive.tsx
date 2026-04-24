@@ -273,15 +273,23 @@ export default function Executive() {
   ]
 
   // ─── Signal cards (top 3 model predictors) ───────────────────────────────────
+  // Headlines use the model coefficient (β) rather than a detection-rate
+  // percentage because three saturated percentages (99.9% / 100% / 100%)
+  // read as cherry-picked and carry zero ranking information. β values are
+  // inherently different magnitudes AND hierarchize the signals: price
+  // volatility (0.53) is more than 2× stronger than price ratio (0.23).
   const signals = [
     {
       num: '01',
-      finding: '99.9%',
+      finding: '+0.53',
       findingLabel:
         lang === 'en'
-          ? 'detection rate — IMSS ghost contracts (9,366 awarded)'
-          : 'tasa de detección — contratos fantasma IMSS (9,366 adjudicados)',
-      coeff: '+0.534',
+          ? 'model coefficient · strongest signal'
+          : 'coeficiente del modelo · señal más fuerte',
+      detection:
+        lang === 'en'
+          ? '99.9% detection on IMSS ghost network (9,366 contracts)'
+          : '99.9% de detección en la red fantasma del IMSS (9,366 contratos)',
       name: lang === 'en' ? 'Price Volatility' : 'Volatilidad de Precio',
       body:
         lang === 'en'
@@ -291,12 +299,15 @@ export default function Executive() {
     },
     {
       num: '02',
-      finding: '100%',
+      finding: '+0.37',
       findingLabel:
         lang === 'en'
-          ? 'detection — Toka IT monopoly; 96.7% — Edenred voucher monopoly'
-          : 'detección — monopolio TIC Toka; 96.7% — monopolio Edenred',
-      coeff: '+0.375',
+          ? 'model coefficient · 2nd strongest'
+          : 'coeficiente del modelo · 2ª más fuerte',
+      detection:
+        lang === 'en'
+          ? '100% on Toka IT monopoly (1,954); 96.7% on Edenred (2,939)'
+          : '100% en el monopolio TIC Toka (1,954); 96.7% en Edenred (2,939)',
       name: lang === 'en' ? 'Vendor Concentration' : 'Concentración de Proveedor',
       body:
         lang === 'en'
@@ -306,12 +317,15 @@ export default function Executive() {
     },
     {
       num: '03',
-      finding: '100%',
+      finding: '+0.23',
       findingLabel:
         lang === 'en'
-          ? 'critical detection — PEMEX-Cotemar; Segalmex avg score 0.66'
-          : 'detección crítica — PEMEX-Cotemar; Segalmex puntaje promedio 0.66',
-      coeff: '+0.235',
+          ? 'model coefficient · 3rd strongest'
+          : 'coeficiente del modelo · 3ª más fuerte',
+      detection:
+        lang === 'en'
+          ? '100% critical on PEMEX-Cotemar (51); Segalmex avg 0.66'
+          : '100% crítico en PEMEX-Cotemar (51); Segalmex promedio 0.66',
       name: lang === 'en' ? 'Price Ratio' : 'Razón de Precio',
       body:
         lang === 'en'
@@ -375,7 +389,7 @@ export default function Executive() {
           </div>
 
           <h1
-            className="font-serif font-extrabold text-[40px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-5"
+            className="font-serif font-extrabold text-[40px] md:text-[56px] leading-[1.02] tracking-[-0.02em] text-text-primary mb-3"
             style={{ fontFamily: "'Playfair Display', Georgia, serif" }}
           >
             {lang === 'en'
@@ -383,6 +397,15 @@ export default function Executive() {
               : <>Un proveedor tomó <span style={{ color: '#dc2626' }}>133.2 mil millones de pesos</span> del IMSS. <span className="text-text-secondary">Otros 320 coinciden con el patrón.</span></>
             }
           </h1>
+
+          {/* Dateline — publisher + data provenance. Cold-reader reviewer
+              (AP/Reuters persona) flagged the lack of byline as the #1 blocker
+              to trusting the hero claim. */}
+          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5">
+            {lang === 'en'
+              ? 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026 · MODEL v0.6.5'
+              : 'POR RUBLI · DATOS: COMPRANET 2002–2025 · ACTUALIZADO ABR 2026 · MODELO v0.6.5'}
+          </p>
 
           <p className="text-base leading-[1.7] text-text-secondary max-w-[68ch]">
             {lang === 'en'
@@ -458,24 +481,24 @@ export default function Executive() {
                   <span className="text-[9px] font-mono uppercase tracking-[0.15em] text-text-muted">
                     {lang === 'en' ? 'SIGNAL' : 'SEÑAL'} {s.num}
                   </span>
-                  <span className="text-[9px] font-mono text-text-muted tabular-nums">
-                    β={s.coeff}
-                  </span>
                 </div>
                 <div className="mb-3">
                   <span
                     className="font-mono font-bold text-[34px] tabular-nums leading-none block"
                     style={{ color: s.color }}
                   >
-                    {s.finding}
+                    β {s.finding}
                   </span>
                   <p className="text-[10px] text-text-muted mt-1 leading-[1.4]">
                     {s.findingLabel}
                   </p>
                 </div>
-                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-2">
+                <h3 className="font-semibold text-[14px] leading-[1.3] text-text-primary mb-1">
                   {s.name}
                 </h3>
+                <p className="text-[10px] font-mono text-text-muted leading-[1.5] mb-3">
+                  {s.detection}
+                </p>
                 <p className="text-xs text-text-secondary leading-[1.6]">
                   {s.body}
                 </p>

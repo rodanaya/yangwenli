@@ -9,6 +9,13 @@ interface StatItem {
   sub?: string
 }
 
+// Canonical publisher stamp — rendered as a dateline between headline and
+// lede on every page. Cold-open reviewers flagged that naked editorial
+// claims ("One vendor took 133.2 billion pesos") need a visible publisher,
+// data source, and last-updated date before a journalist will trust them.
+// Pages can override via the `dateline` prop; the default covers every page.
+const DEFAULT_DATELINE = 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · UPDATED APR 2026'
+
 interface EditorialPageShellProps {
   kicker: string                    // "ARIA QUEUE · 17 APR 2026"
   headline: ReactNode               // serif, can contain accented spans
@@ -16,6 +23,7 @@ interface EditorialPageShellProps {
   stats?: StatItem[]                // 3–4 inline stats
   meta?: ReactNode                  // top-right "v0.6.5 · synced 2m ago"
   actions?: ReactNode               // optional CTA row below stat strip
+  dateline?: ReactNode              // byline/publisher stamp; defaults to canonical
   loading?: boolean
   severity?: 'critical' | 'high' | 'medium' | 'low'
   className?: string
@@ -23,7 +31,7 @@ interface EditorialPageShellProps {
 }
 
 export function EditorialPageShell({
-  kicker, headline, paragraph, stats, meta, actions, loading, severity, className, children
+  kicker, headline, paragraph, stats, meta, actions, dateline, loading, severity, className, children
 }: EditorialPageShellProps) {
   const severityAccent = {
     critical: 'border-risk-critical',
@@ -60,7 +68,16 @@ export function EditorialPageShell({
             <Skeleton className="h-9 w-1/2" />
           </div>
         ) : (
-          <h1 className="lede-headline measure-headline mb-4">{headline}</h1>
+          <h1 className="lede-headline measure-headline mb-3">{headline}</h1>
+        )}
+
+        {/* Dateline — publisher / data source / updated date. A journalist
+            cold-reading the page needs to know who published this and what
+            the data window is before trusting the lede. */}
+        {!loading && (
+          <p className="font-mono text-[10px] tracking-[0.14em] uppercase text-text-muted mb-5 max-w-prose">
+            {dateline ?? DEFAULT_DATELINE}
+          </p>
         )}
 
         {/* Paragraph */}

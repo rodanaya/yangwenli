@@ -1353,6 +1353,15 @@ export function VendorProfile() {
       </div>
 
       {/* ── EDITORIAL HERO HEADER ─────────────────────────────── */}
+      {/* Legal framing: the headline used to read "Grupo Farmacos — 98/100
+          risk" in large serif next to a legally-named company. Investigative-
+          editor review flagged this as libel-bait — a numeric risk next to a
+          company name reads as a verdict, not an indicator, and the
+          methodology itself (RISK_METHODOLOGY_v6.md) is explicit that scores
+          are "risk indicators … NOT calibrated corruption probabilities."
+          We now frame the number as a "PATTERN MATCH" strength and add a
+          visible "NOT A FINDING" disclaimer between the dateline and the
+          lede paragraph. */}
       <EditorialPageShell
         kicker={`VENDOR DOSSIER · ${(vendor?.name ? toTitleCase(vendor.name) : 'LOADING...').toUpperCase()}`}
         headline={
@@ -1362,12 +1371,17 @@ export function VendorProfile() {
               <>
                 {' '}—{' '}
                 <span style={{ color: riskColor }}>
-                  {((vendor.avg_risk_score) * 100).toFixed(0)}/100 risk
+                  {riskLevel === 'critical' ? 'Critical' : riskLevel === 'high' ? 'High' : riskLevel === 'medium' ? 'Medium' : 'Low'} pattern match
                 </span>
               </>
             )}
           </>
         }
+        dateline={(() => {
+          const base = 'BUILT BY RUBLI · DATA: COMPRANET 2002–2025 · MODEL v0.6.5'
+          const legalCaveat = ' · STATISTICAL INDICATOR, NOT A FINDING OF WRONGDOING'
+          return `${base}${legalCaveat}`
+        })()}
         paragraph={(() => {
           const narrative = buildVendorNarrative(vendor, riskProfile ?? null)
           if (narrative.length > 0 && narrative[0].text) return narrative[0].text
@@ -1375,7 +1389,7 @@ export function VendorProfile() {
           const valTxt = formatCompactMXN(vendor.total_value_mxn)
           const ctTxt = vendor.total_contracts.toLocaleString()
           const riskTxt = vendor.avg_risk_score !== undefined
-            ? ` Risk score ${((vendor.avg_risk_score) * 100).toFixed(0)}/100 (${riskLevel}).`
+            ? ` Pattern-match score ${((vendor.avg_risk_score) * 100).toFixed(0)}/100 (${riskLevel}).`
             : ''
           return `${ctTxt} contracts totaling ${valTxt} in ${sectorTxt}.${riskTxt}`
         })()}
@@ -1399,7 +1413,7 @@ export function VendorProfile() {
           },
           ...(vendor.avg_risk_score !== undefined ? [{
             value: `${((vendor.avg_risk_score) * 100).toFixed(0)}/100`,
-            label: t('kpi.riskScore', 'Risk Score'),
+            label: t('kpi.patternMatch', 'Pattern Match'),
             color: riskColor,
             sub: vendor.avg_confidence_lower != null && vendor.avg_confidence_upper != null
               ? `CI ${(vendor.avg_confidence_lower * 100).toFixed(0)}–${(vendor.avg_confidence_upper * 100).toFixed(0)}%`

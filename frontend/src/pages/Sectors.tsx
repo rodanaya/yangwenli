@@ -579,7 +579,7 @@ function RiskRankingStrip({
 // ── Page ──────────────────────────────────────────────────────────────────────
 
 export function Sectors() {
-  const { t } = useTranslation('sectors')
+  const { t, i18n } = useTranslation('sectors')
   const [sortKey, setSortKey] = useState<SortKey>('total_value_mxn')
   const [selectedCoefSectorId, setSelectedCoefSectorId] = useState<number | null>(null)
 
@@ -710,26 +710,48 @@ export function Sectors() {
           const topSectorName = t(topRiskSector.sector_code) as string
           const topRiskPct = (topRiskSector.avg_risk_score * 100).toFixed(1)
           const topDaPct = (topRiskSector.direct_award_pct ?? 0).toFixed(0)
+          // Agriculture's high average-risk score is driven heavily by the
+          // Segalmex ground-truth case (LICONSA, DICONSA, 6,326 contracts
+          // labeled positive). Reporters landing here would otherwise read
+          // "Agriculture is the most corrupt sector" as a standalone finding
+          // — which the investigative-editor review flagged as a claim the
+          // platform cannot defend. See memory/agriculture-health-risk-analysis.md.
+          const isAgricultureArtifact = topRiskSector.sector_code === 'agricultura'
           return (
-            <FeaturedFinding
-              kicker={t('featured.kicker', { sector: topSectorName.toUpperCase() })}
-              accent={topSectorColor}
-              headline={
-                <>
-                  <span style={{ color: topSectorColor }}>{topSectorName}</span>
-                  {' '}{t('featured.leadsRisk')}{' '}
-                  <span className="font-mono tabular-nums">{topRiskPct}%</span>
-                  {' '}{t('featured.avgRiskSuffix')}
-                </>
-              }
-              deck={t('featured.deck', { exceedingOECD, topRiskPct, topDaPct })}
-              meta={[
-                { label: t('featured.meta.leaderRisk'), value: `${topRiskPct}%`, accent: true },
-                { label: t('featured.meta.totalValue'), value: formatSpend(totalValue) },
-                { label: t('featured.meta.contracts'), value: formatNumber(totalContracts) },
-                { label: t('featured.meta.sectorsBeyond'), value: `${exceedingOECD} / 12` },
-              ]}
-            />
+            <>
+              <FeaturedFinding
+                kicker={t('featured.kicker', { sector: topSectorName.toUpperCase() })}
+                accent={topSectorColor}
+                headline={
+                  <>
+                    <span style={{ color: topSectorColor }}>{topSectorName}</span>
+                    {' '}{t('featured.leadsRisk')}{' '}
+                    <span className="font-mono tabular-nums">{topRiskPct}%</span>
+                    {' '}{t('featured.avgRiskSuffix')}
+                  </>
+                }
+                deck={t('featured.deck', { exceedingOECD, topRiskPct, topDaPct })}
+                meta={[
+                  { label: t('featured.meta.leaderRisk'), value: `${topRiskPct}%`, accent: true },
+                  { label: t('featured.meta.totalValue'), value: formatSpend(totalValue) },
+                  { label: t('featured.meta.contracts'), value: formatNumber(totalContracts) },
+                  { label: t('featured.meta.sectorsBeyond'), value: `${exceedingOECD} / 12` },
+                ]}
+              />
+              {isAgricultureArtifact && (
+                <div className="mb-8 -mt-4 pl-5 pr-4 py-3 rounded-r-sm border-l-4 border-[color:var(--color-border-hover)] bg-[color:var(--color-background-card)]">
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
+                    {i18n.language === 'es' ? 'Advertencia de artefacto' : 'Artifact caveat'}
+                  </p>
+                  <p className="text-[13px] leading-relaxed text-text-secondary max-w-prose">
+                    {i18n.language === 'es'
+                      ? <>El puntaje promedio de Agricultura está inflado por un solo caso de verdad fundamental: <strong className="text-text-primary">Segalmex (2019–2022)</strong>, donde LICONSA y DICONSA etiquetaron 6,326 contratos como positivos. Esto distorsiona el puntaje sectorial. <strong className="text-text-primary">Agricultura no es necesariamente "el sector más corrupto"</strong> — es el sector cuyos casos documentados dominan el conjunto de entrenamiento.</>
+                      : <>Agriculture's average score is inflated by a single ground-truth case: <strong className="text-text-primary">Segalmex (2019–2022)</strong>, where LICONSA and DICONSA labeled 6,326 contracts as positives. This distorts the sector-level score. <strong className="text-text-primary">Agriculture is not necessarily "the most corrupt sector"</strong> — it is the sector whose documented cases dominate the training set.</>
+                    }
+                  </p>
+                </div>
+              )}
+            </>
           )
         })()}
 

@@ -524,17 +524,24 @@ export function EntityProfileDrawer() {
     }
   }, [isOpen])
 
+  // Unmount entirely when closed. The previous implementation kept the aside
+  // in the DOM and used transform: translateX(100%) to slide it off-screen,
+  // but because the element still extends the document's paintable canvas,
+  // it appeared on the right edge of every page in screenshots, zoomed
+  // browsers, and any context that captured beyond the viewport. The header
+  // also fell through to "Institution Profile" (the else branch of a ternary
+  // on entityType) when there was no entity, reading as an empty panel on
+  // every route. 5-agent review flagged this as the single most damaging
+  // first-impression defect. Simpler to render nothing.
+  if (!isOpen || state.entityId === null || state.entityType === null) return null
+
   return (
     <>
       {/* Backdrop — closes drawer on click */}
       <div
         role="presentation"
         onClick={close}
-        className="fixed inset-0 z-40 bg-[color:var(--color-sidebar)]/40 backdrop-blur-[1px] transition-opacity duration-200"
-        style={{
-          opacity: isOpen ? 1 : 0,
-          pointerEvents: isOpen ? 'auto' : 'none',
-        }}
+        className="fixed inset-0 z-40 bg-[color:var(--color-sidebar)]/40 backdrop-blur-[1px]"
         aria-hidden="true"
       />
 
@@ -543,16 +550,10 @@ export function EntityProfileDrawer() {
         ref={panelRef}
         role="dialog"
         aria-modal="true"
-        aria-label="Entity profile"
-        aria-hidden={!isOpen}
-        inert={!isOpen || undefined}
+        aria-label={state.entityType === 'vendor' ? 'Vendor profile' : 'Institution profile'}
         onKeyDown={handleKeyDown}
         className="fixed top-0 right-0 h-full z-50 bg-background-card border-l border-border shadow-2xl flex flex-col"
-        style={{
-          width: 420,
-          transform: isOpen ? 'translateX(0)' : 'translateX(100%)',
-          transition: 'transform 0.25s cubic-bezier(0.4, 0, 0.2, 1)',
-        }}
+        style={{ width: 420 }}
       >
         {/* Header bar */}
         <div className="flex items-center justify-between px-4 py-3 border-b border-border shrink-0">
@@ -573,12 +574,10 @@ export function EntityProfileDrawer() {
 
         {/* Scrollable content */}
         <div className="flex-1 overflow-y-auto px-4 py-4">
-          {isOpen && state.entityId !== null && state.entityType !== null && (
-            state.entityType === 'vendor' ? (
-              <VendorDrawerContent vendorId={state.entityId} />
-            ) : (
-              <InstitutionDrawerContent institutionId={state.entityId} />
-            )
+          {state.entityType === 'vendor' ? (
+            <VendorDrawerContent vendorId={state.entityId} />
+          ) : (
+            <InstitutionDrawerContent institutionId={state.entityId} />
           )}
         </div>
       </aside>
