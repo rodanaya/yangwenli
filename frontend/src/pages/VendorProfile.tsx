@@ -27,9 +27,6 @@ import { ChartDownloadButton } from '@/components/ChartDownloadButton'
 import { TableExportButton } from '@/components/TableExportButton'
 import { RiskFeedbackButton } from '@/components/RiskFeedbackButton'
 import { ContractDetailModal } from '@/components/ContractDetailModal'
-import VendorContractTimeline from '@/components/VendorContractTimeline'
-import VendorContractRiskMatrix from '@/components/VendorContractRiskMatrix'
-import VendorContractBreakdown from '@/components/VendorContractBreakdown'
 import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
@@ -3291,53 +3288,22 @@ export function VendorProfile() {
               </CardContent>
             </Card>
 
-            {/* Contract Analysis — new visualization section */}
-            <div className="space-y-4 mb-6">
-              <div className="editorial-rule">
-                <span className="editorial-label">ANÁLISIS DE CONTRATOS</span>
-              </div>
-
-              {/* Donut charts row — uses larger chart dataset */}
-              <VendorContractBreakdown
-                contracts={(contracts?.data ?? []).map((c) => ({
-                  procedure_type: c.procedure_type ?? null,
-                  risk_level: c.risk_level ?? null,
-                  amount_mxn: c.amount_mxn ?? 0,
-                }))}
-                loading={contractsLoading}
-              />
-
-              {/* Timeline + Risk Matrix side by side — uses larger chart dataset */}
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-                <VendorContractTimeline
-                  contracts={(contracts?.data ?? []).map((c) => ({
-                    id: c.id,
-                    title: c.title ?? '',
-                    amount_mxn: c.amount_mxn ?? 0,
-                    contract_date: c.contract_date ?? '',
-                    year: c.contract_year ?? (c.contract_date ? new Date(c.contract_date).getFullYear() : 0),
-                    procedure_type: c.procedure_type ?? '',
-                    institution_name: c.institution_name ?? '',
-                    risk_score: c.risk_score ?? null,
-                    risk_level: c.risk_level ?? null,
-                  }))}
-                  vendorName={vendor?.name ?? ''}
-                />
-                <VendorContractRiskMatrix
-                  contracts={(contracts?.data ?? []).map((c) => ({
-                    id: c.id,
-                    title: c.title ?? '',
-                    amount_mxn: c.amount_mxn ?? 0,
-                    risk_score: c.risk_score ?? null,
-                    risk_level: c.risk_level ?? null,
-                    procedure_type: c.procedure_type ?? '',
-                    institution_name: c.institution_name ?? '',
-                    contract_date: c.contract_date ?? '',
-                  }))}
-                  vendorName={vendor?.name ?? ''}
-                />
-              </div>
-            </div>
+            {/* Former "ANÁLISIS DE CONTRATOS" block (VendorContractBreakdown +
+                VendorContractTimeline + VendorContractRiskMatrix) removed in
+                the 2026-04 editorial pass. User flagged the breakdown's math
+                as broken — "RISK DISTRIBUTION Critical 50 (50%), Low 0 (0%)"
+                and "PROCEDURE TYPE Restricted 80%, Direct Award 10%" that
+                didn't add to 100%. Root cause: components aggregated off the
+                paginated contract sample (50 rows loaded for a vendor with
+                1,944 total), so the percentages were accurate for the sample
+                but read as vendor-wide totals. The hero KPI strip already
+                carries the true aggregates (direct_award_rate_corrected,
+                avg_risk_score, total_contracts). The timeline duplicated the
+                Risk Trend chart already rendered on the Risk Analysis tab.
+                If vendor-wide procedure/risk aggregates are ever needed,
+                build them against a dedicated /vendors/:id/aggregate
+                endpoint, not a client-side recompute of the paginated
+                table. */}
 
             {/* Full Contracts Table with filter bar */}
             <Card className="surface-card">
