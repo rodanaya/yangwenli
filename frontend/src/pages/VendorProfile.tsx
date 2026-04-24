@@ -1530,6 +1530,19 @@ export function VendorProfile() {
                 <Download className="h-3.5 w-3.5" />
                 {csvExporting ? t('exporting') : t('exportCSV')}
               </button>
+              {/* Dossier export — ZIP with HTML brief (print-to-PDF),
+                  CSV of top contracts, JSON manifest, README. The
+                  reporter-ready package; addresses the investigative-
+                  editor review's #1 missing feature. */}
+              <a
+                role="menuitem"
+                href={`/api/v1/dossier/vendor/${vendorId}`}
+                download
+                className="w-full text-left flex items-center gap-2 px-3 py-2 text-xs text-text-secondary hover:bg-background-elevated hover:text-accent transition-colors"
+              >
+                <Download className="h-3.5 w-3.5" />
+                {i18n.language === 'es' ? 'Descargar dossier (ZIP)' : 'Download dossier (ZIP)'}
+              </a>
               <div className="px-2 py-1">
                 <GenerateReportButton
                   reportType="vendor"

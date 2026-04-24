@@ -665,6 +665,19 @@ export function InstitutionProfile() {
         ]}
         meta={<>RUBLI · v0.6.5</>}
         severity="medium"
+        actions={
+          /* Dossier export — reporter-ready ZIP (HTML brief + CSV +
+             JSON manifest + README). Addresses the investigative-editor
+             review's #1 missing feature. */
+          <a
+            href={`/api/v1/dossier/institution/${institutionId}`}
+            download
+            className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border border-border text-xs font-medium text-text-secondary hover:text-text-primary hover:border-border transition-colors"
+          >
+            <svg className="h-3.5 w-3.5" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24" aria-hidden="true"><path strokeLinecap="round" strokeLinejoin="round" d="M4 16v2a2 2 0 002 2h12a2 2 0 002-2v-2M7 10l5 5 5-5M12 15V3" /></svg>
+            Dossier (ZIP)
+          </a>
+        }
       >
 
       {/* ---- HIDDEN HEADLINE (kept for backward i18n / a11y links) ---- */}

@@ -104,6 +104,7 @@ from .routers.analysis_vendor_sector import router as analysis_vendor_sector_rou
 from .routers.collusion import router as collusion_router
 from .routers.intersection import router as intersection_router
 from .routers.capture import router as capture_router
+from .routers.dossier import router as dossier_export_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -412,6 +413,7 @@ app.include_router(analysis_vendor_sector_router, prefix="/api/v1")
 app.include_router(collusion_router, prefix="/api/v1")
 app.include_router(intersection_router, prefix="/api/v1")
 app.include_router(capture_router, prefix="/api/v1")
+app.include_router(dossier_export_router, prefix="/api/v1")
 app.include_router(watchlist_folders_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")
