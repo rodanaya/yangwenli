@@ -80,28 +80,28 @@ export function StoryCard(props: StoryCardProps) {
       whileTap={{ scale: 0.98 }}
       onClick={onClick}
       className={cn(
-        'relative bg-zinc-900 border border-zinc-800 rounded-sm p-5 text-left w-full',
+        'relative bg-background-card border border-border rounded-sm p-5 text-left w-full',
         'flex flex-col gap-3 transition-colors cursor-pointer group overflow-hidden'
       )}
       aria-label={headline}
     >
       {/* Top badges */}
       <div className="flex items-center gap-2 flex-wrap">
-        <span className="text-[10px] font-semibold tracking-widest uppercase text-zinc-500">
+        <span className="text-[10px] font-semibold tracking-widest uppercase text-text-muted">
           {TYPE_LABELS[type]}
         </span>
       </div>
 
       {/* Headline */}
       <h3
-        className="text-lg font-bold text-white leading-tight line-clamp-2"
+        className="text-lg font-bold text-text-primary leading-tight line-clamp-2"
         style={{ fontFamily: 'var(--font-family-serif)' }}
       >
         {headline}
       </h3>
 
       {/* Subheadline */}
-      <p className="text-sm text-zinc-400 leading-relaxed line-clamp-2">
+      <p className="text-sm text-text-secondary leading-relaxed line-clamp-2">
         {subheadline}
       </p>
 
@@ -120,7 +120,7 @@ export function StoryCard(props: StoryCardProps) {
             <span>{leadStatValue}</span>
           )}
         </div>
-        <p className="text-xs text-zinc-500 mt-0.5 leading-snug">{leadStatLabel}</p>
+        <p className="text-xs text-text-muted mt-0.5 leading-snug">{leadStatLabel}</p>
       </div>
 
       {/* Animated fill bar */}
@@ -129,13 +129,13 @@ export function StoryCard(props: StoryCardProps) {
       </div>
 
       {/* Footer */}
-      <div className="flex items-center gap-3 pt-1 text-[11px] text-zinc-500">
+      <div className="flex items-center gap-3 pt-1 text-[11px] text-text-muted">
         <span className="inline-flex items-center gap-1">
           <Clock className="h-3 w-3" />
           {estimatedMinutes} min
         </span>
         {era && (
-          <span className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-400 font-medium">
+          <span className="px-1.5 py-0.5 rounded bg-background-elevated text-text-secondary font-medium">
             {era}
           </span>
         )}

@@ -96,16 +96,16 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
         >
           <StickyNote
             className="h-3.5 w-3.5"
-            style={{ color: hasAnnotation ? '#fbbf24' : '#64748b' }}
+            style={{ color: hasAnnotation ? 'var(--color-accent)' : 'var(--color-text-muted)' }}
             aria-hidden="true"
           />
         </button>
       </Dialog.Trigger>
 
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 z-40 bg-black/50 backdrop-blur-sm" />
+        <Dialog.Overlay className="fixed inset-0 z-40 bg-[color:var(--color-sidebar)]/50 backdrop-blur-sm" />
         <Dialog.Content
-          className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm rounded-lg border border-border bg-background-card p-5 shadow-2xl focus:outline-none"
+          className="fixed left-1/2 top-1/2 z-50 -translate-x-1/2 -translate-y-1/2 w-full max-w-sm rounded-sm border border-border bg-background-card p-5 shadow-2xl focus:outline-none"
           aria-describedby="annotation-dialog-desc"
         >
           {/* Header */}
@@ -136,13 +136,13 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
             onChange={(e) => setText(e.target.value)}
             placeholder={t('annotationPin.placeholder')}
             rows={4}
-            className="w-full rounded-md border border-border bg-background-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-muted/50 resize-none focus:outline-none focus:ring-1 focus:ring-accent"
+            className="w-full rounded-sm border border-border bg-background-elevated px-3 py-2 text-sm text-text-primary placeholder:text-text-muted/50 resize-none focus:outline-none focus:ring-1 focus:ring-accent"
             aria-label="Annotation text"
             maxLength={MAX_CHARS + 50} // allow slight over so user sees the warning
           />
 
           {/* Char count */}
-          <p className={`text-right text-[10px] mt-1 ${overLimit ? 'text-red-400' : 'text-text-muted/50'}`}>
+          <p className={`text-right text-[10px] mt-1 ${overLimit ? 'text-[color:var(--color-risk-critical)]' : 'text-text-muted/50'}`}>
             {overLimit ? t('annotationPin.overLimit', { count: Math.abs(charsLeft) }) : t('annotationPin.charsLeft', { count: charsLeft })}
           </p>
 
@@ -153,7 +153,7 @@ export function AnnotationPin({ entityType, entityId, entityName, className }: A
                 variant="ghost"
                 size="sm"
                 onClick={handleDelete}
-                className="text-red-400 hover:text-red-300 hover:bg-red-500/10 gap-1.5"
+                className="text-[color:var(--color-risk-critical)] hover:opacity-80 hover:bg-[color:var(--color-risk-critical)]/10 gap-1.5"
                 aria-label="Delete annotation"
               >
                 <Trash2 className="h-3.5 w-3.5" />

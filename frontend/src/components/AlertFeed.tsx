@@ -53,7 +53,7 @@ export function AlertFeed({ days = 7, limit = 10, className }: AlertFeedProps) {
         <div className="relative">
           <Bell className="h-4 w-4 text-text-muted" aria-hidden="true" />
           {criticalCount > 0 && (
-            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-risk-critical text-[9px] font-bold text-white">
+            <span className="absolute -top-1.5 -right-1.5 flex h-4 w-4 items-center justify-center rounded-full bg-risk-critical text-[9px] font-bold text-text-primary">
               {criticalCount > 9 ? '9+' : criticalCount}
             </span>
           )}

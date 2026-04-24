@@ -85,14 +85,14 @@ export function StoryCommunityBubbles() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Red de proveedores vinculados
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         22 proveedores co-contratan con una sola institución pública
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada nodo es un proveedor; el tamaño es su participación en el valor total; el color
         es su tier de riesgo. Los de alto riesgo se agrupan cerca del hub — patrón consistente
         con captura institucional.
@@ -101,25 +101,25 @@ export function StoryCommunityBubbles() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-400">{criticalCount}</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             proveedores de riesgo crítico
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-orange-400">{highCount}</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             de riesgo alto
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-amber-400">22</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             miembros de la comunidad detectada
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -208,7 +208,7 @@ export function StoryCommunityBubbles() {
         </svg>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-zinc-500">
+        <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           {[
             { label: 'Crítico ≥ 0.60', color: '#dc2626' },
             { label: 'Alto ≥ 0.40',    color: '#ea580c' },
@@ -220,7 +220,7 @@ export function StoryCommunityBubbles() {
               {label}
             </span>
           ))}
-          <span className="text-zinc-600 ml-auto">Tamaño = participación en valor</span>
+          <span className="text-text-muted ml-auto">Tamaño = participación en valor</span>
         </div>
       </div>
 
@@ -228,7 +228,7 @@ export function StoryCommunityBubbles() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Los proveedores de mayor riesgo orbitan cerca del hub — direcciones compartidas,
           representantes legales comunes, o patrones de co-licitación indican posibles redes
           de empresas fantasma.
@@ -236,7 +236,7 @@ export function StoryCommunityBubbles() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-[10px] text-zinc-600 font-mono">
+        <p className="text-[10px] text-text-muted font-mono">
           Fuente: detección de comunidades Louvain · 200K+ proveedores · RUBLI v0.6.5
         </p>
         <a

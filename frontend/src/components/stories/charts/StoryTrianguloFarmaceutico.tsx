@@ -73,16 +73,16 @@ export function StoryTrianguloFarmaceutico() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Triángulo Farmacéutico
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Tres instituciones, tres proveedores, 285 mil millones de pesos
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         El grueso del gasto farmacéutico federal 2019-2023 fluyó desde IMSS, ISSSTE
         y la Secretaría de Salud hacia tres proveedores dominantes. El ancho de cada
         arista es proporcional al valor contratado.
@@ -91,19 +91,19 @@ export function StoryTrianguloFarmaceutico() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-500">$128B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Fármacos Especializados · score 0.89
           </div>
         </div>
         <div className="border-l-2 border-red-400 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-400">$92B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             Maypo Internacional · score 0.84
           </div>
         </div>
         <div className="border-l-2 border-red-300 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-300">$65B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             DIMM · score 0.81
           </div>
         </div>
@@ -262,15 +262,15 @@ export function StoryTrianguloFarmaceutico() {
       </svg>
 
       {/* DA rate dot strips */}
-      <div className="space-y-2 pt-2 border-t border-zinc-800">
-        <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+      <div className="space-y-2 pt-2 border-t border-border">
+        <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
           Adjudicación directa por proveedor · cada punto = 2pp · OCDE máx 25%
         </p>
         {VENDORS.map((v) => {
           const filled = Math.round(v.daRate / 2)
           return (
             <div key={v.id} className="flex items-center gap-3">
-              <div className="w-32 text-[11px] font-mono text-zinc-300">{v.label}</div>
+              <div className="w-32 text-[11px] font-mono text-text-secondary">{v.label}</div>
               <svg viewBox="0 0 420 14" className="flex-1 h-3">
                 {Array.from({ length: 50 }).map((_, i) => {
                   const isFilled = i < filled
@@ -305,7 +305,7 @@ export function StoryTrianguloFarmaceutico() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Los tres proveedores comparten el mismo patrón: adjudicación directa por
           encima del 75% — más de 3x el límite OCDE — y scores de riesgo v0.6.5
           superiores a 0.81. Fármacos Especializados concentró el 45% del gasto
@@ -313,7 +313,7 @@ export function StoryTrianguloFarmaceutico() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2019-2023 · análisis RUBLI · modelo v0.6.5 · COFECE DE-011-2016
       </p>
     </motion.div>

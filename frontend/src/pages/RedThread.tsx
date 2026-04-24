@@ -19,14 +19,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import type { TFunction } from 'i18next'
 import { motion, useScroll, useInView, AnimatePresence } from 'framer-motion'
-import {
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  Tooltip,
-  ResponsiveContainer,
-} from 'recharts'
+import { EditorialAreaChart } from '@/components/charts/editorial'
 import { vendorApi, ariaApi, networkApi } from '@/api/client'
 import { cn, formatCompactMXN, formatNumber, getRiskLevel } from '@/lib/utils'
 import { SECTOR_COLORS } from '@/lib/constants'
@@ -62,23 +55,33 @@ const CHAPTER_ICONS: Record<ChapterId, React.ElementType> = {
   verdict:  Gavel,
 }
 
+// Pattern palette — mapped to canonical design tokens (bible §2). No invented
+// 7-color palette: we reuse risk + sector tokens so pattern chips read as part
+// of the editorial system.
+//   P1 Monopoly       → risk-critical (structural, severe)
+//   P2 Ghost companies → risk-critical (worst signal)
+//   P3 Intermediary   → risk-high
+//   P4 Splitting      → risk-high
+//   P5 Overpricing    → accent-data (evidence, numeric)
+//   P6 Capture        → accent (gold — institutional)
+//   P7 Misc           → sector-hacienda (green treasury — neutral)
 function getPatternMeta(t: TFunction): Record<string, { label: string; color: string; bg: string; description: string }> {
   return {
-    P1: { label: t('patterns.P1.label'), color: '#f87171', bg: 'rgba(248,113,113,0.1)',  description: t('patterns.P1.description') },
-    P2: { label: t('patterns.P2.label'), color: '#c084fc', bg: 'rgba(192,132,252,0.1)', description: t('patterns.P2.description') },
-    P3: { label: t('patterns.P3.label'), color: '#fb923c', bg: 'rgba(251,146,60,0.1)',  description: t('patterns.P3.description') },
-    P4: { label: t('patterns.P4.label'), color: '#fbbf24', bg: 'rgba(251,191,36,0.1)',  description: t('patterns.P4.description') },
-    P5: { label: t('patterns.P5.label'), color: '#60a5fa', bg: 'rgba(96,165,250,0.1)',  description: t('patterns.P5.description') },
-    P6: { label: t('patterns.P6.label'), color: '#f472b6', bg: 'rgba(244,114,182,0.1)', description: t('patterns.P6.description') },
-    P7: { label: t('patterns.P7.label'), color: '#34d399', bg: 'rgba(52,211,153,0.1)',  description: t('patterns.P7.description') },
+    P1: { label: t('patterns.P1.label'), color: 'var(--color-risk-critical)',       bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P1.description') },
+    P2: { label: t('patterns.P2.label'), color: 'var(--color-risk-critical)',       bg: 'rgba(239,68,68,0.10)',   description: t('patterns.P2.description') },
+    P3: { label: t('patterns.P3.label'), color: 'var(--color-risk-high)',           bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P3.description') },
+    P4: { label: t('patterns.P4.label'), color: 'var(--color-risk-high)',           bg: 'rgba(245,158,11,0.10)',  description: t('patterns.P4.description') },
+    P5: { label: t('patterns.P5.label'), color: 'var(--color-accent-data)',         bg: 'rgba(37,99,235,0.10)',   description: t('patterns.P5.description') },
+    P6: { label: t('patterns.P6.label'), color: 'var(--color-accent)',              bg: 'rgba(160,104,32,0.10)',  description: t('patterns.P6.description') },
+    P7: { label: t('patterns.P7.label'), color: 'var(--color-sector-hacienda)',     bg: 'rgba(22,163,74,0.10)',   description: t('patterns.P7.description') },
   }
 }
 
 const RISK_DOT_COLORS: Record<string, string> = {
-  critical: '#f87171',
-  high:     '#fb923c',
-  medium:   '#fbbf24',
-  low:      '#71717a',
+  critical: 'var(--color-risk-critical)',
+  high:     'var(--color-risk-high)',
+  medium:   'var(--color-risk-medium)',
+  low:      'var(--color-text-muted)',
 }
 
 // ─── Sub-components ─────────────────────────────────────────────────────────
@@ -88,6 +91,23 @@ function ChapterLabel({ children }: { children: React.ReactNode }) {
     <h2 className="editorial-label text-[var(--color-accent)] mb-4 tracking-[0.18em]">
       {children}
     </h2>
+  )
+}
+
+/**
+ * RedThreadChapter — editorial chapter header primitive.
+ * Replaces the copy-pasted (ChapterLabel + h2.font-serif) pairing that was
+ * duplicated across 5 chapters. Use `label` for the gold kicker and `title`
+ * for the serif headline. Optional `id` enables anchor scrolling.
+ */
+function RedThreadChapter({ label, title, id }: { label: string; title: React.ReactNode; id?: string }) {
+  return (
+    <header id={id}>
+      <ChapterLabel>{label}</ChapterLabel>
+      <h2 className="font-serif text-xl font-bold text-text-primary mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
+        {title}
+      </h2>
+    </header>
   )
 }
 
@@ -133,7 +153,7 @@ function ChapterSubject({ vendor, aria, t }: {
         initial={{ opacity: 0, y: 40 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
-        className="font-serif font-bold text-white leading-[1.05] mb-8"
+        className="font-serif font-bold text-text-primary leading-[1.05] mb-8"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontSize: 'clamp(2rem, 4.5vw, 3.5rem)',
@@ -202,7 +222,7 @@ function ChapterSubject({ vendor, aria, t }: {
         ].map((s) => (
           <div key={s.label} className="bg-background border border-border rounded-sm p-5">
             <p className="editorial-label text-text-muted mb-1">{s.label}</p>
-            <p className="text-2xl font-black text-white font-mono tabular-nums">{s.value}</p>
+            <p className="text-2xl font-black text-text-primary font-mono tabular-nums">{s.value}</p>
             <AnnotationNote>{s.note}</AnnotationNote>
           </div>
         ))}
@@ -216,7 +236,7 @@ function ChapterSubject({ vendor, aria, t }: {
         // introText uses {{name}} placeholder — vendor.name is escaped to prevent XSS
         dangerouslySetInnerHTML={{
           __html: t('subject.introText', {
-            name: `<strong class="text-white">${formatVendorName(vendor.name, 60)
+            name: `<strong class="text-text-primary">${formatVendorName(vendor.name, 60)
               .replace(/&/g, '&amp;')
               .replace(/</g, '&lt;')
               .replace(/>/g, '&gt;')
@@ -262,24 +282,24 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
 
   return (
     <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
-      <ChapterLabel>{t('chapters.headings.timeline')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
-      </h2>
-      <p className="text-zinc-400 mb-12 max-w-xl">
+      <RedThreadChapter
+        label={t('chapters.headings.timeline')}
+        title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
+      />
+      <p className="text-text-secondary mb-12 max-w-xl">
         {t('timeline.dotDescription')}
       </p>
 
       <div ref={ref} className="relative">
         {/* Year axis */}
-        <div className="flex justify-between text-xs text-zinc-500 mb-3 px-1">
+        <div className="flex justify-between text-xs text-text-muted mb-3 px-1">
           {years.filter((_, i) => i % 3 === 0 || i === years.length - 1).map((y) => (
             <span key={y}>{y}</span>
           ))}
         </div>
 
         {/* Dot field — one dot per year, spread across timeline */}
-        <div className="relative h-48 bg-zinc-900 border border-zinc-800 rounded-sm overflow-hidden px-4 py-2">
+        <div className="relative h-48 bg-background-card border border-border rounded-sm overflow-hidden px-4 py-2">
           {sortedTimeline.map((item, idx) => {
             const xPct = maxYear > minYear ? ((item.year - minYear) / (maxYear - minYear)) * 94 + 3 : 50
             const risk = item.avg_risk_score ?? 0
@@ -316,10 +336,10 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
           {Object.entries(RISK_DOT_COLORS).map(([level, color]) => (
             <div key={level} className="flex items-center gap-2">
               <div className="w-3 h-3 rounded-full" style={{ backgroundColor: color }} />
-              <span className="text-xs text-zinc-500 capitalize">{level}</span>
+              <span className="text-xs text-text-muted capitalize">{level}</span>
             </div>
           ))}
-          <div className="ml-auto text-xs text-zinc-600">
+          <div className="ml-auto text-xs text-text-muted">
             {t('timeline.legend.sizeLabel')}
           </div>
         </div>
@@ -333,10 +353,10 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
           const risk = item.avg_risk_score ?? 0
           const pctHigh = risk * 100
           return (
-            <div key={item.year} className="bg-zinc-900 border border-zinc-800 rounded-sm p-3">
-              <p className="text-xs text-zinc-500 mb-1">{item.year}</p>
-              <p className="text-sm font-bold text-white font-mono tabular-nums">{formatCompactMXN(item.total_value)}</p>
-              <p className="text-xs mt-0.5 font-mono tabular-nums" style={{ color: pctHigh > 40 ? '#f87171' : pctHigh > 25 ? '#fb923c' : '#6b7280' }}>
+            <div key={item.year} className="bg-background-card border border-border rounded-sm p-3">
+              <p className="text-xs text-text-muted mb-1">{item.year}</p>
+              <p className="text-sm font-bold text-text-primary font-mono tabular-nums">{formatCompactMXN(item.total_value)}</p>
+              <p className="text-xs mt-0.5 font-mono tabular-nums" style={{ color: pctHigh > 40 ? 'var(--color-risk-critical)' : pctHigh > 25 ? 'var(--color-risk-high)' : 'var(--color-text-muted)' }}>
                 {item.contract_count} · {Math.round(pctHigh)}% risk
               </p>
             </div>
@@ -371,10 +391,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
 
   return (
     <section id="chapter-pattern" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>{t('chapters.headings.pattern')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {t('pattern.heading')}
-      </h2>
+      <RedThreadChapter label={t('chapters.headings.pattern')} title={t('pattern.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('pattern.description')}
       </p>
@@ -391,7 +408,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
           <div className="flex items-center gap-3 mb-3">
             <AlertTriangle className="w-5 h-5" style={{ color: meta.color }} />
             <span className="editorial-label" style={{ color: meta.color }}>{ariaPattern}</span>
-            <span className="text-lg font-bold text-white ml-2">{meta.label}</span>
+            <span className="text-lg font-bold text-text-primary ml-2">{meta.label}</span>
           </div>
           <p className="text-text-primary text-sm leading-relaxed">{meta.description}</p>
         </motion.div>
@@ -402,7 +419,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
         {sorted.map((f, idx) => {
           const isPositive = f.contribution > 0
           const width = (Math.abs(f.contribution) / maxAbs) * 100
-          const color = isPositive ? '#f87171' : '#71717a'
+          const color = isPositive ? 'var(--color-risk-critical)' : 'var(--color-text-muted)'
           const bgColor = isPositive ? 'rgba(248,113,113,0.08)' : 'rgba(74,222,128,0.08)'
           return (
             <motion.div
@@ -439,16 +456,16 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                     style={{ backgroundColor: color }}
                   />
                   <div className="min-w-0">
-                    <span className="text-sm text-zinc-200">{f.label_en}</span>
+                    <span className="text-sm text-text-secondary">{f.label_en}</span>
                     {f.z_score !== 0 && (
-                      <span className="text-xs text-zinc-500 font-mono tabular-nums ml-2">
+                      <span className="text-xs text-text-muted font-mono tabular-nums ml-2">
                         z={f.z_score.toFixed(2)}
                       </span>
                     )}
                   </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
-                  <span className="text-xs text-zinc-500">
+                  <span className="text-xs text-text-muted">
                     {isPositive ? t('pattern.raisesRisk') : t('pattern.lowersRisk')}
                   </span>
                   <span
@@ -483,9 +500,9 @@ function classifyRole(coBidder: { win_count: number; co_bid_count: number }, t: 
   bg: string
 } {
   const winRate = coBidder.co_bid_count > 0 ? coBidder.win_count / coBidder.co_bid_count : 0
-  if (winRate < 0.15) return { label: t('roles.possibleDecoy'),     color: '#f87171', bg: 'rgba(248,113,113,0.12)' }
-  if (winRate >= 0.3 && winRate <= 0.7) return { label: t('roles.rotationPattern'),  color: '#fb923c', bg: 'rgba(251,146,60,0.12)' }
-  if (winRate > 0.6)  return { label: t('roles.possibleAccomplice'), color: '#fbbf24', bg: 'rgba(251,191,36,0.12)' }
+  if (winRate < 0.15) return { label: t('roles.possibleDecoy'),     color: 'var(--color-risk-critical)', bg: 'rgba(239,68,68,0.12)' }
+  if (winRate >= 0.3 && winRate <= 0.7) return { label: t('roles.rotationPattern'),  color: 'var(--color-risk-high)', bg: 'rgba(245,158,11,0.12)' }
+  if (winRate > 0.6)  return { label: t('roles.possibleAccomplice'), color: 'var(--color-risk-medium)', bg: 'rgba(161,98,7,0.12)' }
   return { label: t('roles.coBidder'), color: '#94a3b8', bg: 'rgba(148,163,184,0.10)' }
 }
 
@@ -497,10 +514,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
 }) {
   return (
     <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>{t('chapters.headings.network')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {t('network.heading')}
-      </h2>
+      <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('network.description')}
       </p>
@@ -508,7 +522,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
         <div className="bg-background border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.institutionsServed')}</p>
-          <p className="text-2xl font-bold text-white font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</p>
+          <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{formatNumber(vendor.total_institutions)}</p>
           <AnnotationNote>
             {vendor.total_institutions <= 3
               ? t('network.institutionsNote.few')
@@ -520,7 +534,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
 
         <div className="bg-background border border-border rounded-sm p-6">
           <p className="editorial-label text-text-muted mb-2">{t('network.sectorsActive')}</p>
-          <p className="text-2xl font-bold text-white font-mono tabular-nums">{vendor.sectors_count}</p>
+          <p className="text-2xl font-bold text-text-primary font-mono tabular-nums">{vendor.sectors_count}</p>
           <AnnotationNote>
             {vendor.sectors_count <= 1
               ? t('network.sectorsNote.single')
@@ -554,7 +568,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
                   >
                     <div className="flex-1 min-w-0">
                       <p
-                        className="text-white text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors"
+                        className="text-text-primary text-sm font-medium truncate group-hover:text-[#dc2626] transition-colors"
                         title={cb.vendor_name}
                       >
                         {formatVendorName(cb.vendor_name, 40)}
@@ -587,7 +601,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
           <GitBranch className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
-          <p className="text-white font-semibold mb-1">{t('network.openNetworkGraph')}</p>
+          <p className="text-text-primary font-semibold mb-1">{t('network.openNetworkGraph')}</p>
           <p className="text-text-muted text-sm">
             {t('network.openNetworkGraphDesc')}
           </p>
@@ -604,7 +618,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
           <Building2 className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
-          <p className="text-white font-semibold mb-1">{t('network.coBidderAnalysis')}</p>
+          <p className="text-text-primary font-semibold mb-1">{t('network.coBidderAnalysis')}</p>
           <p className="text-text-muted text-sm">
             {t('network.coBidderAnalysisDesc')}
           </p>
@@ -626,7 +640,7 @@ function ChapterMoney({ timeline, t }: {
 
   const chartData = timeline.map((item) => ({
     year: item.year,
-    value: item.total_value / 1e6, // in millions
+    value: item.total_value, // raw MXN; primitive renders compact
     risk: (item.avg_risk_score ?? 0) * 100,
     contracts: item.contract_count,
   }))
@@ -637,10 +651,10 @@ function ChapterMoney({ timeline, t }: {
 
   return (
     <section id="chapter-money" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>{t('chapters.headings.money')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {t('money.heading', { value: formatCompactMXN(totalValue) })}
-      </h2>
+      <RedThreadChapter
+        label={t('chapters.headings.money')}
+        title={t('money.heading', { value: formatCompactMXN(totalValue) })}
+      />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('money.description')}
       </p>
@@ -650,12 +664,12 @@ function ChapterMoney({ timeline, t }: {
         <div className="flex flex-wrap gap-4 mb-8">
           <div className="bg-background border border-border rounded-sm px-4 py-3">
             <p className="editorial-label text-text-muted mb-1">{t('money.peakByValue')}</p>
-            <p className="text-white font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
+            <p className="text-text-primary font-bold">{t('money.peakValueLabel', { year: peakYear.year, value: formatCompactMXN(peakYear.total_value) })}</p>
           </div>
           {peakRiskYear && (
             <div className="bg-background border border-red-900/50 rounded-sm px-4 py-3">
               <p className="editorial-label text-red-500 mb-1">{t('money.peakByRisk')}</p>
-              <p className="text-white font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
+              <p className="text-text-primary font-bold">{t('money.peakRiskLabel', { year: peakRiskYear.year, pct: ((peakRiskYear.avg_risk_score ?? 0) * 100).toFixed(1) })}</p>
             </div>
           )}
         </div>
@@ -672,25 +686,14 @@ function ChapterMoney({ timeline, t }: {
               transition={{ duration: 0.6 }}
               className="h-52"
             >
-              <ResponsiveContainer width="100%" height="100%">
-                <AreaChart data={chartData} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-                  <defs>
-                    <linearGradient id="valueGrad" x1="0" y1="0" x2="0" y2="1">
-                      <stop offset="5%"  stopColor="#dc2626" stopOpacity={0.3} />
-                      <stop offset="95%" stopColor="#dc2626" stopOpacity={0.02} />
-                    </linearGradient>
-                  </defs>
-                  <XAxis dataKey="year" tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} />
-                  <YAxis tick={{ fill: '#6b7280', fontSize: 11 }} axisLine={false} tickLine={false} width={50} tickFormatter={(v) => `${v}M`} />
-                  <Tooltip
-                    contentStyle={{ background: '#1c1c1e', border: '1px solid #3f3f46', borderRadius: 8, fontSize: 12 }}
-                    labelStyle={{ color: '#e5e7eb' }}
-                    itemStyle={{ color: '#dc2626' }}
-                    formatter={(v: unknown) => [`${(v as number).toFixed(1)}M MXN`, t('money.tooltipValue')]}
-                  />
-                  <Area type="monotone" dataKey="value" stroke="#dc2626" strokeWidth={2} fill="url(#valueGrad)" />
-                </AreaChart>
-              </ResponsiveContainer>
+              <EditorialAreaChart
+                data={chartData}
+                xKey="year"
+                yKey="value"
+                colorToken="risk-critical"
+                yFormat="mxn-compact"
+                height={208}
+              />
             </motion.div>
           )}
         </AnimatePresence>
@@ -724,7 +727,7 @@ function riskColor(pct: number): string {
   if (pct > 50) return '#dc2626'
   if (pct > 30) return '#ea580c'
   if (pct > 15) return '#eab308'
-  return '#71717a'
+  return 'var(--color-text-muted)'
 }
 
 function RiskHistoryDotMatrix({
@@ -763,7 +766,7 @@ function RiskHistoryDotMatrix({
               x={RH_LEFT_PAD - 6}
               y={y + 3}
               textAnchor="end"
-              fill="#a1a1aa"
+              fill="var(--color-text-muted)"
               fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
@@ -802,7 +805,7 @@ function RiskHistoryDotMatrix({
               x={xCenter}
               y={RH_TOP_PAD + RH_ROWS * RH_DOT_GAP + 12}
               textAnchor="middle"
-              fill="#a1a1aa"
+              fill="var(--color-text-muted)"
               fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
@@ -846,10 +849,7 @@ function ChapterVerdict({
 
   return (
     <section id="chapter-verdict" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
-      <ChapterLabel>{t('chapters.headings.verdict')}</ChapterLabel>
-      <h2 className="font-serif text-xl font-bold text-white mb-3" style={{ fontFamily: 'var(--font-family-serif)' }}>
-        {t('verdict.heading')}
-      </h2>
+      <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('verdict.description')}
       </p>
@@ -915,9 +915,9 @@ function ChapterVerdict({
             <p className="editorial-label text-text-muted mb-2">{t('verdict.ariaMemoTitle')}</p>
             <div className="text-text-primary text-sm leading-relaxed space-y-1.5">
               {aria.memo_text.split('\n').map((line, i) => {
-                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-white text-sm mt-3">{line.slice(4)}</h4>
-                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-white text-base mt-4">{line.slice(3)}</h3>
-                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-white text-lg mt-4">{line.slice(2)}</h2>
+                if (line.startsWith('### ')) return <h4 key={i} className="font-semibold text-text-primary text-sm mt-3">{line.slice(4)}</h4>
+                if (line.startsWith('## ')) return <h3 key={i} className="font-bold text-text-primary text-base mt-4">{line.slice(3)}</h3>
+                if (line.startsWith('# ')) return <h2 key={i} className="font-bold text-text-primary text-lg mt-4">{line.slice(2)}</h2>
                 if (line.trim() === '') return <div key={i} className="h-1" />
                 // Pipe table row
                 if (line.trim().startsWith('|') && line.trim().endsWith('|')) {
@@ -935,7 +935,7 @@ function ChapterVerdict({
                 const parts = line.split(/\*\*(.+?)\*\*/g)
                 return (
                   <p key={i}>
-                    {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-white">{part}</strong> : part)}
+                    {parts.map((part, j) => j % 2 === 1 ? <strong key={j} className="font-semibold text-text-primary">{part}</strong> : part)}
                   </p>
                 )
               })}
@@ -948,7 +948,7 @@ function ChapterVerdict({
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <button
           onClick={() => navigate(`/vendors/${vendorId}`)}
-          className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-white font-semibold rounded-sm px-5 py-3.5 transition-colors"
+          className="flex items-center justify-center gap-2 bg-[#dc2626] hover:bg-red-700 text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors"
         >
           <Building2 className="w-4 h-4" />
           {t('verdict.fullVendorProfile')}
@@ -961,7 +961,7 @@ function ChapterVerdict({
             window.print()
             window.addEventListener('afterprint', () => { document.title = prev }, { once: true })
           }}
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
+          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
         >
           <Download className="w-4 h-4" />
           {t('verdict.exportPdf')}
@@ -969,7 +969,7 @@ function ChapterVerdict({
 
         <Link
           to="/workspace"
-          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-white font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
+          className="flex items-center justify-center gap-2 bg-background-elevated hover:bg-background-elevated text-text-primary font-semibold rounded-sm px-5 py-3.5 transition-colors border border-border"
         >
           <BookmarkPlus className="w-4 h-4" />
           {t('verdict.addToWorkspace')}
@@ -1032,7 +1032,7 @@ function ChapterNav({ active, chapters }: { active: number; chapters: Array<{ id
         >
           <span className={cn(
             'text-xs opacity-0 group-hover:opacity-100 transition-opacity text-text-muted hidden md:block',
-            active === idx && 'opacity-100 text-white'
+            active === idx && 'opacity-100 text-text-primary'
           )}>
             {ch.label}
           </span>
@@ -1177,13 +1177,13 @@ export default function RedThread() {
       <div className="sticky top-0 z-40 px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
         <button
           onClick={() => navigate('/aria')}
-          className="flex items-center gap-2 text-text-muted hover:text-white transition-colors text-sm"
+          className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('nav.back')}
         </button>
         <div className="flex items-center gap-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-[#dc2626] animate-pulse" />
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-risk-critical)] animate-pulse" />
           <span className="text-xs text-text-secondary uppercase tracking-widest">{t('nav.redThread')}</span>
           <span className="text-xs text-text-muted">·</span>
           <span className="text-xs text-text-muted max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>

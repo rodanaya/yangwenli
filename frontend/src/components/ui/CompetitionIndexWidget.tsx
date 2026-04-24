@@ -77,7 +77,7 @@ function AnimatedGauge({
         <path
           d={describeArc(cx, cy, r, startAngle, startAngle + totalAngle)}
           fill="none"
-          stroke="rgba(255,255,255,0.06)"
+          stroke="var(--color-border)"
           strokeWidth={10}
           strokeLinecap="round"
         />
@@ -108,7 +108,7 @@ function AnimatedGauge({
           x={cx}
           y={cy + 14}
           textAnchor="middle"
-          fill="rgba(255,255,255,0.45)"
+          fill="var(--color-text-muted)"
           fontSize="9"
           fontWeight="600"
           fontFamily="var(--font-family-mono)"
@@ -129,12 +129,12 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
   const gap = oecdTarget - competitionIndex
 
   const gaugeColor =
-    competitionIndex >= 50 ? '#4ade80' : competitionIndex >= 30 ? '#fb923c' : '#f87171'
+    competitionIndex >= 50 ? 'var(--color-risk-low)' : competitionIndex >= 30 ? 'var(--color-risk-high)' : 'var(--color-risk-critical)'
 
   return (
     <ScrollReveal>
       <div
-        className="rounded-sm border border-border/30 bg-background-card/60 p-5"
+        className="rounded-sm border border-border bg-background-card p-5"
         style={{ borderTopWidth: '3px', borderTopColor: gaugeColor }}
       >
         <div className="mb-4">
@@ -157,7 +157,7 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
           <AnimatedGauge
             value={oecdTarget}
             maxValue={100}
-            color="#71717a"
+            color="var(--color-oecd)"
             label={t('competition.oecdMin')}
             sublabel="OECD"
           />
@@ -169,12 +169,12 @@ export function CompetitionIndexWidget({ daPct, year }: CompetitionIndexWidgetPr
               {t('competition.mexicoLabel')}: {competitionIndex.toFixed(0)}%
             </span>
             <span className="mx-2 text-border">|</span>
-            <span className="text-green-400 font-bold">{t('competition.oecdMin')}: {oecdTarget}%</span>
+            <span className="text-oecd font-bold">{t('competition.oecdMin')}: {oecdTarget}%</span>
           </p>
           {gap > 0 && (
             <p
               className="text-sm font-black font-mono tabular-nums"
-              style={{ color: '#f87171' }}
+              style={{ color: 'var(--color-risk-critical)' }}
             >
               {t('competition.gapLabel')}: {gap.toFixed(0)} pts
             </p>

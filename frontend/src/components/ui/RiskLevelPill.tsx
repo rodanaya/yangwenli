@@ -35,9 +35,9 @@ const RISK_STYLES = {
     dot: '#a16207',
   },
   low: {
-    bg: 'bg-zinc-800/50',
-    text: 'text-zinc-500',
-    border: 'border-zinc-700/30',
+    bg: 'bg-background-elevated',
+    text: 'text-text-muted',
+    border: 'border-border',
     dot: '#71717a',
   },
 } as const

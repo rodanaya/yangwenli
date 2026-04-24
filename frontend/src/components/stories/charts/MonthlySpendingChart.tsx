@@ -68,25 +68,25 @@ export function MonthlySpendingChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 p-5"
+      className="rounded-sm bg-background-card p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Estacionalidad
       </p>
-      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Diciembre concentra $71B — 48% mas que el promedio mensual
       </h3>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         El "rush" de fin de ano: Oct-Dic acumulan el 30% del gasto anual en solo 3 meses
       </p>
 
       {/* Hero stat */}
       <div className="border-l-2 pl-3 py-0.5 mb-4" style={{ borderColor: ALERT_COLOR }}>
         <p className="text-3xl font-mono font-bold" style={{ color: ALERT_COLOR }}>$71B</p>
-        <p className="text-[10px] text-zinc-500 uppercase tracking-wide">Gasto Diciembre 2023 — 1.5x el mes promedio</p>
+        <p className="text-[10px] text-text-muted uppercase tracking-wide">Gasto Diciembre 2023 — 1.5x el mes promedio</p>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -196,7 +196,7 @@ export function MonthlySpendingChart() {
         </svg>
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
+      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
         Fuente: COMPRANET 2023 · Cada punto = 1.6B MXN · RUBLI v0.6.5
       </p>
     </motion.div>

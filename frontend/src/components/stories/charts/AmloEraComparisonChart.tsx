@@ -52,15 +52,15 @@ export function AmloEraComparisonChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 p-5"
+      className="rounded-sm bg-background-card p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Comparacion sexenal
       </p>
-      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         AMLO promedio 79.4% — cada sexenio supera al anterior
       </h3>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         +15.9 pts vs era Fox. El pico de 81.9% es 3.3x el limite OCDE.
       </p>
 
@@ -68,13 +68,13 @@ export function AmloEraComparisonChart() {
       <div className="flex gap-6 mb-4">
         {DATA.map((d) => (
           <div key={d.era} className="flex-1">
-            <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-500">{d.era}</p>
+            <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted">{d.era}</p>
             <p className="text-xl font-mono font-bold" style={{ color: ERA_PALETTE[d.era] }}>{d.avg}%</p>
           </div>
         ))}
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -194,7 +194,7 @@ export function AmloEraComparisonChart() {
         </svg>
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
+      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
         Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>

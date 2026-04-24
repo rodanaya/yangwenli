@@ -13,14 +13,9 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { motion } from 'framer-motion'
 import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  Tooltip as RechartsTooltip,
-  ReferenceLine,
-  AreaChart,
-  Area,
-} from 'recharts'
+  EditorialAreaChart,
+  type ChartAnnotation,
+} from '@/components/charts/editorial'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
@@ -28,7 +23,7 @@ import { Act } from '@/components/layout/Act'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
 import { ImpactoHumano } from '@/components/ui/ImpactoHumano'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { SECTORS, RISK_COLORS } from '@/lib/constants'
+import { SECTORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { analysisApi, vendorApi, contractApi } from '@/api/client'
 import type {
   YearOverYearChange,
@@ -68,13 +63,25 @@ interface SexenioInfo {
   totalYears: number
 }
 
+// Political palette — intentionally distinct from SECTOR_COLORS (12-sector canonical palette).
+// Uses design tokens so the 6 sexenios read as editorial accents, not sector codes.
+// Order: muted → data → accent → risk-high → risk-critical → secondary (for visual cadence).
+const SEXENIO_PALETTE = [
+  'var(--color-text-muted)',        // Zedillo   — noise floor
+  'var(--color-accent-data)',       // Fox       — blue
+  'var(--color-text-secondary)',    // Calderon  — neutral secondary
+  'var(--color-risk-high)',         // Peña Nieto — amber signal
+  'var(--color-risk-critical)',     // AMLO      — red signal
+  'var(--color-accent)',            // Sheinbaum — amber gold (current)
+] as const
+
 function getSexenioInfo(year: number): SexenioInfo {
-  if (year <= 2000) return { president: 'Ernesto Zedillo', party: 'PRI', period: '1994-2000', color: '#16a34a', partyColor: '#008000', yearInSexenio: year - 1994 + 1, totalYears: 6 }
-  if (year <= 2006) return { president: 'Vicente Fox', party: 'PAN', period: '2000-2006', color: '#3b82f6', partyColor: '#002395', yearInSexenio: year - 2000 + 1, totalYears: 6 }
-  if (year <= 2012) return { president: 'Felipe Calderon', party: 'PAN', period: '2006-2012', color: '#22c55e', partyColor: '#002395', yearInSexenio: year - 2006 + 1, totalYears: 6 }
-  if (year <= 2018) return { president: 'Enrique Pena Nieto', party: 'PRI', period: '2012-2018', color: '#ef4444', partyColor: '#008000', yearInSexenio: year - 2012 + 1, totalYears: 6 }
-  if (year <= 2024) return { president: 'Andres Manuel Lopez Obrador', party: 'MORENA', period: '2018-2024', color: '#a16207', partyColor: '#8B0000', yearInSexenio: year - 2018 + 1, totalYears: 6 }
-  return { president: 'Claudia Sheinbaum', party: 'MORENA', period: '2024-2030', color: '#14b8a6', partyColor: '#8B0000', yearInSexenio: year - 2024 + 1, totalYears: 6 }
+  if (year <= 2000) return { president: 'Ernesto Zedillo', party: 'PRI', period: '1994-2000', color: SEXENIO_PALETTE[0], partyColor: '#008000', yearInSexenio: year - 1994 + 1, totalYears: 6 }
+  if (year <= 2006) return { president: 'Vicente Fox', party: 'PAN', period: '2000-2006', color: SEXENIO_PALETTE[1], partyColor: '#002395', yearInSexenio: year - 2000 + 1, totalYears: 6 }
+  if (year <= 2012) return { president: 'Felipe Calderon', party: 'PAN', period: '2006-2012', color: SEXENIO_PALETTE[2], partyColor: '#002395', yearInSexenio: year - 2006 + 1, totalYears: 6 }
+  if (year <= 2018) return { president: 'Enrique Pena Nieto', party: 'PRI', period: '2012-2018', color: SEXENIO_PALETTE[3], partyColor: '#008000', yearInSexenio: year - 2012 + 1, totalYears: 6 }
+  if (year <= 2024) return { president: 'Andres Manuel Lopez Obrador', party: 'MORENA', period: '2018-2024', color: SEXENIO_PALETTE[4], partyColor: '#8B0000', yearInSexenio: year - 2018 + 1, totalYears: 6 }
+  return { president: 'Claudia Sheinbaum', party: 'MORENA', period: '2024-2030', color: SEXENIO_PALETTE[5], partyColor: '#8B0000', yearInSexenio: year - 2024 + 1, totalYears: 6 }
 }
 
 function getRiskLevelColor(level: string): string {
@@ -86,12 +93,9 @@ function getRiskLevelColor(level: string): string {
   }
 }
 
-function getRiskLevel(score: number): string {
-  if (score >= 0.60) return 'critical'
-  if (score >= 0.40) return 'high'
-  if (score >= 0.25) return 'medium'
-  return 'low'
-}
+// Use canonical getRiskLevelFromScore from @/lib/constants (imported above).
+// Local alias kept for readability in this file.
+const getRiskLevel = getRiskLevelFromScore
 
 // =============================================================================
 // Hero banner
@@ -267,7 +271,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
         <text x={LABEL_W + BAR_AREA * 1.5} y={9} fill="#4ade80" fontSize={10} textAnchor="middle" fontFamily="monospace">growth →</text>
 
         {/* Zero axis */}
-        <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="#3f3f46" strokeWidth={0.75} />
+        <line x1={centerX} y1={12} x2={centerX} y2={svgH - 4} stroke="var(--color-border)" strokeWidth={0.75} />
 
         {sorted.map((row, ri) => {
           const cy = 14 + ri * ROW_H
@@ -287,7 +291,7 @@ function SectorGrowthDiverging({ rows }: { rows: SectorGrowthRow[] }) {
               <text
                 x={LABEL_W - 6}
                 y={rowCenterY + 1}
-                fill="#a1a1aa"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 textAnchor="end"
                 dominantBaseline="middle"
@@ -415,7 +419,7 @@ function RiskEvolution({
         <HallazgoStat
           value={`${historicalAvg.toFixed(1)}%`}
           label={t('riskEvolution.historicalAvg')}
-          color="border-zinc-500"
+          color="border-border"
         />
         <HallazgoStat
           value={`${OECD_HIGH_RISK_THRESHOLD}%`}
@@ -482,7 +486,7 @@ function RiskEvolution({
                 <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted w-28 flex-shrink-0">
                   {t('riskEvolution.historicalAvg')}
                 </span>
-                <div className="flex-1">{renderStrip(avgPct, '#a1a1aa')}</div>
+                <div className="flex-1">{renderStrip(avgPct, 'var(--color-text-muted)')}</div>
                 <span className="font-mono text-xs text-text-muted w-14 text-right flex-shrink-0 tabular-nums">
                   {historicalAvg.toFixed(1)}%
                 </span>
@@ -624,8 +628,8 @@ function ProcedureTypeSection({
             className="absolute top-0 bottom-0 flex flex-col items-center"
             style={{ left: `${historicalAvg}%`, transform: 'translateX(-50%)' }}
           >
-            <div className="h-2 w-px bg-zinc-500" />
-            <span className="text-[9px] font-mono text-zinc-500 whitespace-nowrap">
+            <div className="h-2 w-px bg-background-elevated" />
+            <span className="text-[9px] font-mono text-text-muted whitespace-nowrap">
               {historicalAvg.toFixed(0)}% avg
             </span>
           </div>
@@ -868,44 +872,6 @@ function NotableRiskContracts({
 // Section: Monthly Spending
 // =============================================================================
 
-// Custom interactive tooltip for the monthly AreaChart
-interface MonthlyTooltipProps {
-  active?: boolean
-  payload?: Array<{ payload: { monthName: string; monthFull: string; value: number; contracts: number; pctVsAvg: number | null } }>
-}
-function MonthlyCustomTooltip({ active, payload }: MonthlyTooltipProps) {
-  if (!active || !payload?.length) return null
-  const d = payload[0].payload
-  const pctColor = d.pctVsAvg == null
-    ? '#a1a1aa'
-    : d.pctVsAvg >= 50 ? '#f87171'
-      : d.pctVsAvg >= 20 ? '#fb923c'
-      : d.pctVsAvg <= -20 ? '#60a5fa'
-      : '#71717a'
-  return (
-    <div className="rounded-md border border-zinc-700 bg-zinc-900/95 backdrop-blur-sm px-3 py-2 shadow-xl">
-      <p className="text-[11px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-100">
-        {d.monthFull}
-      </p>
-      <div className="mt-1 space-y-0.5">
-        <p className="text-xs text-zinc-300">
-          <span className="text-zinc-500">Spend:</span>{' '}
-          <span className="font-mono font-bold text-zinc-100 tabular-nums">{formatCompactMXN(d.value)}</span>
-        </p>
-        <p className="text-xs text-zinc-400">
-          <span className="text-zinc-500">Contracts:</span>{' '}
-          <span className="font-mono tabular-nums">{formatNumber(d.contracts)}</span>
-        </p>
-        {d.pctVsAvg != null && (
-          <p className="text-[10px] font-mono mt-1" style={{ color: pctColor }}>
-            {d.pctVsAvg > 0 ? '+' : ''}{d.pctVsAvg.toFixed(1)}% vs monthly avg
-          </p>
-        )}
-      </div>
-    </div>
-  )
-}
-
 function MonthlySpending({
   data,
   year,
@@ -944,57 +910,25 @@ function MonthlySpending({
     : decPct >= 15 ? t('monthly.elevated')
     : t('monthly.normal')
   const decColor = decPct >= 30 ? '#f87171'
-    : decPct >= 15 ? '#fb923c' : '#71717a'
+    : decPct >= 15 ? '#fb923c' : 'var(--color-text-muted)'
+
+  const decemberRow = chartData.find((m) => m.isDecember)
+  const monthlyAnnotations: ChartAnnotation[] = decemberRow
+    ? [{ kind: 'vrule', x: decemberRow.monthName, label: '↑ Dec', tone: 'warn' }]
+    : []
 
   return (
     <div>
-      <div className="h-[240px] rounded-sm border border-border/30 bg-background-elevated/20 p-4">
-        <ResponsiveContainer width="100%" height="100%">
-          <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
-            <defs>
-              <linearGradient id="monthlyGradient" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#dc2626" stopOpacity={0.6} />
-                <stop offset="100%" stopColor="#dc2626" stopOpacity={0.05} />
-              </linearGradient>
-            </defs>
-            <XAxis
-              dataKey="monthName"
-              tick={{ fill: '#71717a', fontSize: 10 }}
-              axisLine={{ stroke: '#3f3f46' }}
-              tickLine={false}
-            />
-            <YAxis
-              tick={{ fill: '#71717a', fontSize: 10 }}
-              tickFormatter={(v) => formatCompactMXN(v)}
-              axisLine={false}
-              tickLine={false}
-              width={60}
-            />
-            <RechartsTooltip
-              cursor={{ stroke: '#dc2626', strokeWidth: 1, strokeDasharray: '3 3' }}
-              content={<MonthlyCustomTooltip />}
-              wrapperStyle={{ outline: 'none' }}
-            />
-            <Area
-              type="monotone"
-              dataKey="value"
-              stroke="#ef4444"
-              strokeWidth={2}
-              fill="url(#monthlyGradient)"
-              activeDot={{ r: 5, fill: '#ef4444', stroke: '#fef2f2', strokeWidth: 2 }}
-            />
-            {/* December callout */}
-            {chartData.find(m => m.isDecember) && (
-              <ReferenceLine
-                x={chartData.find(m => m.isDecember)!.monthName}
-                stroke="#fbbf24"
-                strokeWidth={1.5}
-                strokeDasharray="3 3"
-                label={{ value: '↑ Dec', fill: '#fbbf24', fontSize: 9, position: 'insideTopRight' }}
-              />
-            )}
-          </AreaChart>
-        </ResponsiveContainer>
+      <div className="rounded-sm border border-border/30 bg-background-elevated/20 p-4">
+        <EditorialAreaChart
+          data={chartData}
+          xKey="monthName"
+          yKey="value"
+          colorToken="risk-critical"
+          yFormat="mxn-compact"
+          annotations={monthlyAnnotations}
+          height={208}
+        />
       </div>
 
       {/* December callout */}
@@ -1302,7 +1236,7 @@ export default function YearInReview() {
                   label={t('heroStats.yoyChange')}
                   annotation={priorRow ? formatCompactMXN(priorRow.total_value) : undefined}
                   color={
-                    spendingChangePct == null ? 'border-zinc-500'
+                    spendingChangePct == null ? 'border-border'
                       : spendingChangePct > 0 ? 'border-emerald-500'
                         : 'border-red-500'
                   }
@@ -1353,7 +1287,7 @@ export default function YearInReview() {
               ].map((item) => {
                 const isUp = item.delta != null && item.delta > 0
                 const color = item.delta == null
-                  ? '#a1a1aa'
+                  ? 'var(--color-text-muted)'
                   : item.invertColor
                     ? (isUp ? '#f87171' : '#4ade80')
                     : (isUp ? '#4ade80' : '#f87171')
@@ -1361,7 +1295,7 @@ export default function YearInReview() {
                 return (
                   <div
                     key={item.label}
-                    className="rounded-md border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
+                    className="rounded-sm border border-border/30 bg-background-elevated/40 px-3 py-2 flex items-center gap-2"
                   >
                     <div className="flex-1 min-w-0">
                       <p className="text-[10px] text-text-muted uppercase tracking-wide truncate">{item.label}</p>

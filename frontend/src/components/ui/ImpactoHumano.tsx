@@ -45,17 +45,17 @@ export function ImpactoHumano({ amountMxn, className }: ImpactoHumanoProps) {
   return (
     <div
       className={cn(
-        'rounded p-3 text-sm',
-        'bg-amber-950/30 border border-amber-800/40',
+        'rounded-sm p-3 text-sm',
+        'bg-background-elevated border border-accent/25',
         className
       )}
     >
-      <div className="text-amber-400 font-semibold text-xs uppercase tracking-wide mb-2">
+      <div className="text-accent font-semibold text-xs uppercase tracking-wide mb-2">
         {t('impacto.label')}
       </div>
       {comparisons.map((c, i) => (
         <div key={i} className="flex items-baseline gap-1.5 text-text-secondary">
-          <span className="text-amber-500">&rarr;</span>
+          <span className="text-accent">&rarr;</span>
           <span>
             <span className="font-semibold text-text-primary font-mono tabular-nums">
               {c.count.toLocaleString()}

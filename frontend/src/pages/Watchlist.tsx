@@ -173,7 +173,7 @@ function FilterChip<T extends string>({ active, onClick, label }: FilterChipProp
       onClick={onClick}
       className={`px-3 py-1 rounded-sm text-xs font-medium border transition-colors ${
         active
-          ? 'bg-accent text-white border-accent'
+          ? 'bg-accent text-text-primary border-accent'
           : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
       }`}
     >
@@ -1040,7 +1040,7 @@ export function Watchlist() {
                   onClick={() => setDossierStatusFilter(value)}
                   className={`px-3 py-1 rounded-sm text-xs font-medium border transition-colors ${
                     dossierStatusFilter === value
-                      ? 'bg-accent text-white border-accent'
+                      ? 'bg-accent text-text-primary border-accent'
                       : 'bg-background border-border text-text-muted hover:border-accent hover:text-accent'
                   }`}
                 >

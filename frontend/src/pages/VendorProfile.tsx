@@ -36,19 +36,11 @@ import { buildVendorNarrative } from '@/lib/narratives'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem, ContractHistogramResponse } from '@/api/types'
 import {
-  AreaChart,
-  Area,
-  ComposedChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  ReferenceLine,
-  ReferenceArea,
-  Legend as RechartsLegend,
-} from '@/components/charts'
+  EditorialAreaChart,
+  EditorialComposedChart,
+  type ChartAnnotation,
+  type ComposedLayer,
+} from '@/components/charts/editorial'
 import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 import {
   Users,
@@ -296,7 +288,7 @@ function RiskWaterfallChart({
 
   const barColor = (entry: WaterfallEntry) => {
     if (entry.factorKey === '__total__') return RISK_COLORS[getRiskLevel(riskScore)]
-    if (entry.isNegative) return '#71717a'
+    if (entry.isNegative) return 'var(--color-text-muted)'
     return entry.contribution > 0.15 ? '#f87171' : '#fb923c'
   }
 
@@ -342,7 +334,7 @@ function RiskWaterfallChart({
               <text
                 x={LABEL_W - 5}
                 y={y + ROW_H / 2 + 1}
-                fill="#a1a1aa"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 textAnchor="end"
                 dominantBaseline="middle"
@@ -602,8 +594,8 @@ function TopRiskFactorBars({ waterfallData }: { waterfallData: VendorWaterfallCo
               <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                    fill={k < filled ? color : '#2d2926'}
-                    stroke={k < filled ? undefined : '#3d3734'}
+                    fill={k < filled ? color : 'var(--color-background-elevated)'}
+                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                     strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
@@ -655,8 +647,8 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? '#dc2626' : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? '#dc2626' : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
@@ -685,8 +677,8 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
                     <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                          fill={k < filled ? '#10b981' : '#2d2926'}
-                          stroke={k < filled ? undefined : '#3d3734'}
+                          fill={k < filled ? '#10b981' : 'var(--color-background-elevated)'}
+                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                           strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
@@ -1231,37 +1223,39 @@ export function VendorProfile() {
   return (
     <div className="max-w-5xl mx-auto px-4 py-6 space-y-10">
       {/* ── TOP-OF-PAGE CRITICAL ALERT — shown above everything for EFOS/GT vendors ── */}
+      {/* Bible §2: critical alert on cream uses pale red tint (risk-critical/10)
+          with strong border + dark-red text; NOT the old red-950 dark-mode wash. */}
       {(isEfosDefinitivo || isGroundTruth) && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-red-500/40 bg-red-950/30">
-          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-red-500/30 border border-red-500/60 flex items-center justify-center">
-            <AlertTriangle className="h-4 w-4 text-red-300" />
+        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-[color:var(--color-risk-critical)]/40 bg-[color:var(--color-risk-critical)]/8">
+          <div className="flex-shrink-0 w-8 h-8 rounded-full bg-[color:var(--color-risk-critical)]/15 border border-[color:var(--color-risk-critical)]/40 flex items-center justify-center">
+            <AlertTriangle className="h-4 w-4 text-[color:var(--color-risk-critical)]" />
           </div>
           <div className="flex-1 min-w-0">
             {isEfosDefinitivo && (
-              <p className="text-sm font-bold text-red-200">
+              <p className="text-sm font-bold text-[color:var(--color-risk-critical)]">
                 {t('criticalAlert.efosDefinitivoTitle')}
               </p>
             )}
             {isGroundTruth && !isEfosDefinitivo && (
-              <p className="text-sm font-bold text-red-200">
+              <p className="text-sm font-bold text-[color:var(--color-risk-critical)]">
                 {t('criticalAlert.groundTruthTitle', { count: (groundTruthStatus?.cases?.length ?? 0) })}
               </p>
             )}
-            <p className="text-xs text-red-400/80 mt-0.5">
+            <p className="text-xs text-text-secondary mt-0.5">
               {isEfosDefinitivo
                 ? t('criticalAlert.efosDefinitivoBody')
                 : t('criticalAlert.groundTruthBody')}
             </p>
           </div>
-          <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-red-500/20 text-red-300 border border-red-500/40 animate-pulse">
+          <span className="shrink-0 text-[10px] font-black uppercase tracking-widest px-2 py-1 rounded bg-[color:var(--color-risk-critical)]/15 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/40 animate-pulse">
             {t('criticalAlert.highRiskLabel')}
           </span>
         </div>
       )}
       {(isEfosPresunto || isSfpSanctioned) && !isEfosDefinitivo && !isGroundTruth && (
-        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-amber-500/30 bg-amber-950/20">
-          <AlertTriangle className="h-4 w-4 text-amber-400 shrink-0" />
-          <p className="text-sm text-amber-300 flex-1">
+        <div className="flex items-center gap-3 px-4 py-3 rounded-sm border border-[color:var(--color-risk-high)]/30 bg-[color:var(--color-risk-high)]/8">
+          <AlertTriangle className="h-4 w-4 text-[color:var(--color-risk-high)] shrink-0" />
+          <p className="text-sm text-[color:var(--color-risk-high)] flex-1">
             {isEfosPresunto && 'SAT EFOS Presunto — Listed as alleged ghost company (investigation ongoing).'}
             {isSfpSanctioned && !isEfosPresunto && `SFP sanction record${(externalFlags?.sfp_sanctions?.length ?? 1) > 1 ? 's' : ''} on file — sanctioned by federal comptroller.`}
           </p>
@@ -1342,9 +1336,9 @@ export function VendorProfile() {
 
             {/* Confidence note */}
             {ariaData.pattern_confidence > 0 && (
-              <p className="mt-3 text-[10px] font-mono text-zinc-500">
+              <p className="mt-3 text-[10px] font-mono text-text-muted">
                 Pattern confidence: {(ariaData.pattern_confidence * 100).toFixed(0)}% ·{' '}
-                <Link to={`/aria?vendor=${vendorId}`} className="underline underline-offset-2 hover:text-zinc-300 transition-colors">
+                <Link to={`/aria?vendor=${vendorId}`} className="underline underline-offset-2 hover:text-text-secondary transition-colors">
                   View in ARIA queue →
                 </Link>
               </p>
@@ -1464,7 +1458,7 @@ export function VendorProfile() {
               title="Open scroll-driven investigation narrative"
               aria-label="Open Red Thread investigation narrative"
             >
-              <span className="w-2 h-2 rounded-full bg-white/80 animate-pulse flex-shrink-0" />
+              <span className="w-2 h-2 rounded-full bg-background-elevated animate-pulse flex-shrink-0" />
               {t('readInvestigation', 'Read the Investigation')}
             </button>
 
@@ -1875,7 +1869,7 @@ export function VendorProfile() {
                   <div key={c.case_id} className="flex items-center gap-2 flex-wrap">
                     <Link
                       to={`/cases/${c.scandal_slug}`}
-                      className="text-sm font-semibold text-red-200 underline hover:text-white transition-colors"
+                      className="text-sm font-semibold text-red-200 underline hover:text-text-primary transition-colors"
                     >
                       {c.case_name}
                     </Link>
@@ -2021,7 +2015,7 @@ export function VendorProfile() {
                       </p>
                       <button
                         onClick={() => setActiveTab('risk')}
-                        className="text-[10px] font-mono uppercase tracking-wide text-accent hover:text-white transition-colors"
+                        className="text-[10px] font-mono uppercase tracking-wide text-accent hover:text-text-primary transition-colors"
                       >
                         Full analysis →
                       </button>
@@ -2041,8 +2035,8 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                    fill={k < filled ? '#ea580c' : '#2d2926'}
-                                    stroke={k < filled ? undefined : '#3d3734'}
+                                    fill={k < filled ? '#ea580c' : 'var(--color-background-elevated)'}
+                                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                     strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
@@ -2209,8 +2203,8 @@ export function VendorProfile() {
                         <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                              fill={k < filled ? '#f59e0b' : '#2d2926'}
-                              stroke={k < filled ? undefined : '#3d3734'}
+                              fill={k < filled ? '#f59e0b' : 'var(--color-background-elevated)'}
+                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                               strokeWidth={k < filled ? 0 : 0.5}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
@@ -2259,8 +2253,8 @@ export function VendorProfile() {
                                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                     {Array.from({ length: N }).map((_, k) => (
                                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                        fill={k < filled ? '#10b981' : '#2d2926'}
-                                        stroke={k < filled ? undefined : '#3d3734'}
+                                        fill={k < filled ? '#10b981' : 'var(--color-background-elevated)'}
+                                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                         strokeWidth={k < filled ? 0 : 0.5}
                                         fillOpacity={k < filled ? 0.85 : 1}
                                       />
@@ -2800,8 +2794,8 @@ export function VendorProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? sectorColor : '#2d2926'}
-                                      stroke={k < filled ? undefined : '#3d3734'}
+                                      fill={k < filled ? sectorColor : 'var(--color-background-elevated)'}
+                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                       strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
@@ -2853,58 +2847,23 @@ export function VendorProfile() {
                         filename={`vendor-${vendorId}-risk-trend`}
                         className="absolute top-0 right-0 z-10"
                       />
-                      <ResponsiveContainer width="100%" height="100%">
-                        <AreaChart data={riskTrendData}>
-                          <defs>
-                            <linearGradient id="riskGrad" x1="0" y1="0" x2="0" y2="1">
-                              <stop offset="5%" stopColor={riskColor} stopOpacity={0.3} />
-                              <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
-                            </linearGradient>
-                          </defs>
-                          <RechartsTooltip
-                            content={({ active, payload }) => {
-                              if (active && payload?.[0]) {
-                                const d = payload[0].payload
-                                return (
-                                  <div className="chart-tooltip">
-                                    <p className="font-medium text-zinc-200">{d.year}</p>
-                                    <p className="text-zinc-400 font-mono tabular-nums">{(d.avg * 100).toFixed(1)}%</p>
-                                  </div>
-                                )
-                              }
-                              return null
-                            }}
+                      {(() => {
+                        const annotations: ChartAnnotation[] = [
+                          { kind: 'vrule', x: 2018, label: 'Admin Change', tone: 'warn' },
+                          { kind: 'vrule', x: 2020, label: 'COVID', tone: 'critical' },
+                        ]
+                        return (
+                          <EditorialAreaChart
+                            data={riskTrendData}
+                            xKey="year"
+                            yKey="avg"
+                            colorToken="risk-high"
+                            yFormat="decimal"
+                            annotations={annotations}
+                            height={100}
                           />
-                          {riskProfile?.risk_confidence_lower != null &&
-                            riskProfile?.risk_confidence_upper != null && (
-                              <ReferenceArea
-                                y1={riskProfile.risk_confidence_lower}
-                                y2={riskProfile.risk_confidence_upper}
-                                fill={riskColor}
-                                fillOpacity={0.08}
-                              />
-                            )}
-                          <ReferenceLine
-                            x={2020}
-                            stroke="#ef4444"
-                            strokeDasharray="3 2"
-                            label={{ value: 'COVID', position: 'top', fill: '#ef4444aa', fontSize: 10 }}
-                          />
-                          <ReferenceLine
-                            x={2018}
-                            stroke="#f59e0b"
-                            strokeDasharray="3 2"
-                            label={{ value: 'Admin Change', position: 'top', fill: '#f59e0baa', fontSize: 10 }}
-                          />
-                          <Area
-                            type="monotone"
-                            dataKey="avg"
-                            stroke={riskColor}
-                            fill="url(#riskGrad)"
-                            strokeWidth={2}
-                          />
-                        </AreaChart>
-                      </ResponsiveContainer>
+                        )
+                      })()}
                     </div>
                     {riskProfile?.risk_trend && (
                       <div className="flex items-center justify-center gap-1.5 mt-2 text-xs text-text-muted">
@@ -2950,66 +2909,24 @@ export function VendorProfile() {
                       aria-label="Composed chart showing contract lifecycle activity by year for this vendor"
                     >
                       <span className="sr-only">Composed chart showing the number of contracts and total value by year throughout this vendor's contract lifecycle.</span>
-                      <ResponsiveContainer width="100%" height="100%">
-                        <ComposedChart data={lifecycleData.timeline} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                          <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
-                          <XAxis
-                            dataKey="year"
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                      {(() => {
+                        type LifecycleRow = (typeof lifecycleData.timeline)[number]
+                        const layers: ComposedLayer<LifecycleRow>[] = [
+                          { kind: 'area', key: 'contract_count', label: tc('contracts'), colorToken: 'risk-high', axis: 'left' },
+                          { kind: 'line', key: 'avg_risk_score', label: tc('riskScore'), colorToken: 'risk-critical', axis: 'right' },
+                        ]
+                        return (
+                          <EditorialComposedChart
+                            data={lifecycleData.timeline}
+                            xKey="year"
+                            layers={layers}
+                            yFormat="integer"
+                            rightYFormat="decimal"
+                            rightYDomain={[0, 1]}
+                            height={120}
                           />
-                          <YAxis
-                            yAxisId="left"
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                            width={28}
-                          />
-                          <YAxis
-                            yAxisId="right"
-                            orientation="right"
-                            domain={[0, 1]}
-                            tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                            tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                            width={32}
-                          />
-                          <RechartsTooltip
-                            wrapperClassName="chart-tooltip-wrapper"
-                            contentStyle={{
-                              background: '#1c1c1f',
-                              border: '1px solid rgba(255,255,255,0.12)',
-                              borderRadius: '0.375rem',
-                              padding: '0.5rem 0.75rem',
-                              fontSize: '0.875rem',
-                              color: '#e4e4e7',
-                              boxShadow: '0 4px 16px rgba(0,0,0,0.4)',
-                            }}
-                            itemStyle={{ color: '#a1a1aa' }}
-                            labelStyle={{ color: '#e4e4e7', fontWeight: 500 }}
-                            formatter={(value: unknown, name?: string) => {
-                              if (name === 'Risk') return [`${(Number(value) * 100).toFixed(1)}%`, name]
-                              return [Number(value).toLocaleString(), name ?? '']
-                            }}
-                          />
-                          <RechartsLegend wrapperStyle={{ fontSize: 10 }} />
-                          <Area
-                            yAxisId="left"
-                            type="monotone"
-                            dataKey="contract_count"
-                            name={tc('contracts')}
-                            stroke={riskColor}
-                            strokeWidth={1}
-                            fill={riskColor}
-                            fillOpacity={0.18}
-                          />
-                          <Line
-                            yAxisId="right"
-                            type="monotone"
-                            dataKey="avg_risk_score"
-                            name={tc('riskScore')}
-                            stroke={riskColor}
-                            strokeWidth={2}
-                            dot={{ r: 2 }}
-                          />
-                        </ComposedChart>
-                      </ResponsiveContainer>
+                        )
+                      })()}
                     </div>
                   </CardContent>
                 </Card>
@@ -3052,70 +2969,24 @@ export function VendorProfile() {
                         aria-label="Composed chart showing cumulative value and win rate per year from rolling stats"
                       >
                         <span className="sr-only">Bar and line chart showing cumulative contract value in millions and win rate percentage per year.</span>
-                        <ResponsiveContainer width="100%" height="100%">
-                          <ComposedChart data={chartData} margin={{ top: 4, right: 4, bottom: 0, left: 0 }}>
-                            <CartesianGrid strokeDasharray="2 2" stroke="rgba(255,255,255,0.05)" />
-                            <XAxis
-                              dataKey="year"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
+                        {(() => {
+                          type RollingRow = (typeof chartData)[number]
+                          const layers: ComposedLayer<RollingRow>[] = [
+                            { kind: 'area', key: 'total_value_m', label: 'Value (M MXN)', colorToken: 'accent-data', axis: 'left' },
+                            { kind: 'line', key: 'win_rate', label: 'Win rate %', colorToken: 'risk-high', axis: 'right' },
+                          ]
+                          return (
+                            <EditorialComposedChart
+                              data={chartData}
+                              xKey="year"
+                              layers={layers}
+                              yFormat="mxn-compact"
+                              rightYFormat="pct"
+                              rightYDomain={[0, 100]}
+                              height={120}
                             />
-                            <YAxis
-                              yAxisId="left"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                              width={30}
-                              tickFormatter={(v: number) => `${v.toFixed(0)}M`}
-                            />
-                            <YAxis
-                              yAxisId="right"
-                              orientation="right"
-                              tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                              width={24}
-                              tickFormatter={(v: number) => `${v}%`}
-                              domain={[0, 100]}
-                            />
-                            <RechartsTooltip
-                              content={({ active, payload }) => {
-                                if (active && payload?.length) {
-                                  const d = payload[0]?.payload as { year: number; total_value_m: number; win_rate: number | null }
-                                  return (
-                                    <div className="chart-tooltip space-y-0.5">
-                                      <p className="font-medium text-zinc-200">{d.year}</p>
-                                      <p className="text-zinc-400">
-                                        Value: <span className="text-zinc-200 font-mono tabular-nums">{d.total_value_m.toFixed(1)}M MXN</span>
-                                      </p>
-                                      {d.win_rate != null && (
-                                        <p className="text-zinc-400">
-                                          Win rate: <span className="text-zinc-200 font-mono tabular-nums">{d.win_rate}%</span>
-                                        </p>
-                                      )}
-                                    </div>
-                                  )
-                                }
-                                return null
-                              }}
-                            />
-                            <Area
-                              yAxisId="left"
-                              type="monotone"
-                              dataKey="total_value_m"
-                              name="Value (M MXN)"
-                              stroke="var(--color-accent-data)"
-                              strokeWidth={1}
-                              fill="var(--color-accent-data)"
-                              fillOpacity={0.2}
-                            />
-                            <Line
-                              yAxisId="right"
-                              type="monotone"
-                              dataKey="win_rate"
-                              name="Win rate %"
-                              stroke={riskColor}
-                              strokeWidth={2}
-                              dot={{ r: 2 }}
-                              connectNulls
-                            />
-                          </ComposedChart>
-                        </ResponsiveContainer>
+                          )
+                        })()}
                       </div>
                       <p className="text-[10px] text-text-muted mt-1">
                         Cumulative value (bars, left axis) and competitive win rate % (line, right axis) by year.
@@ -3237,7 +3108,7 @@ export function VendorProfile() {
                         : verdict === 'improving'
                           ? (isEsVerdict ? 'Riesgo decreciente' : 'Declining risk')
                           : (isEsVerdict ? 'Riesgo estable' : 'Stable risk')
-                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? '#71717a' : 'var(--color-text-muted)'
+                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? 'var(--color-text-muted)' : 'var(--color-text-muted)'
                       return (
                         <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
                           {verdict === 'worsening' && <TrendingUp className="h-3 w-3" style={{ color: verdictColor }} />}
@@ -3968,7 +3839,7 @@ export function VendorProfile() {
                           decoy:    { border: 'border-l-red-500',    bg: 'bg-red-500/[0.03]',    badge: 'bg-red-500/15 text-red-400 border-red-500/30',         bar: 'bg-red-400/50',    label: t('coBidding.roleDecoy') },
                           dominant: { border: 'border-l-purple-500', bg: 'bg-purple-500/[0.03]', badge: 'bg-purple-500/15 text-purple-400 border-purple-500/30', bar: 'bg-purple-400/50', label: t('coBidding.roleDominant') },
                           rotation: { border: 'border-l-orange-500', bg: 'bg-orange-500/[0.03]', badge: 'bg-orange-500/15 text-orange-400 border-orange-500/30', bar: 'bg-orange-400/50', label: t('coBidding.roleRotation') },
-                          moderate: { border: 'border-l-slate-600',  bg: '',                     badge: 'bg-background-elevated text-text-muted border-border',  bar: 'bg-slate-400/40',  label: t('coBidding.roleModerate') },
+                          moderate: { border: 'border-l-slate-600',  bg: '',                     badge: 'bg-background-elevated text-text-muted border-border',  bar: 'bg-text-muted',  label: t('coBidding.roleModerate') },
                         }[role]
 
                         return (
@@ -4011,11 +3882,11 @@ export function VendorProfile() {
                                         const isEmpty = k >= partnerEnd
                                         const fill = k < thisFilled ? '#22c55e'
                                           : k < partnerEnd ? partnerColor
-                                          : '#2d2926'
+                                          : 'var(--color-background-elevated)'
                                         return (
                                           <circle key={k} cx={k * DG + DR} cy={4} r={DR}
                                             fill={fill}
-                                            stroke={isEmpty ? '#3d3734' : undefined}
+                                            stroke={isEmpty ? 'var(--color-border-hover)' : undefined}
                                             strokeWidth={isEmpty ? 0.5 : 0}
                                             fillOpacity={k < partnerEnd ? 0.75 : 1}
                                           />
@@ -4056,7 +3927,7 @@ export function VendorProfile() {
                             ? 'border-red-500/40 bg-red-500/[0.06]'
                             : vendor.cobid_clustering_coeff >= 0.3
                             ? 'border-amber-500/40 bg-amber-500/[0.06]'
-                            : 'border-zinc-500/40 bg-zinc-500/[0.06]'
+                            : 'border-border bg-background-elevated/[0.06]'
                         )}>
                           <p className="text-[10px] text-text-muted uppercase tracking-wide mb-1 flex items-center gap-1">
                             {t('network.clusteringCoefficient')}
@@ -4068,7 +3939,7 @@ export function VendorProfile() {
                               ? 'text-red-400'
                               : vendor.cobid_clustering_coeff >= 0.3
                               ? 'text-amber-400'
-                              : 'text-zinc-400'
+                              : 'text-text-secondary'
                           )}>
                             {(vendor.cobid_clustering_coeff * 100).toFixed(0)}%
                           </p>
@@ -4078,7 +3949,7 @@ export function VendorProfile() {
                               ? 'text-red-400/80'
                               : vendor.cobid_clustering_coeff >= 0.3
                               ? 'text-amber-400/80'
-                              : 'text-zinc-400/80'
+                              : 'text-text-secondary'
                           )}>
                             {vendor.cobid_clustering_coeff > 0.6
                               ? t('network.highClustering')
@@ -4193,7 +4064,7 @@ export function VendorProfile() {
                       <span className={cn(
                         'inline-block text-[10px] font-medium px-2 py-0.5 rounded mt-1.5 uppercase tracking-[0.15em]',
                         ariaData.review_status === 'confirmed' ? 'bg-risk-critical/15 text-risk-critical' :
-                        ariaData.review_status === 'dismissed' ? 'bg-zinc-500/15 text-zinc-400' :
+                        ariaData.review_status === 'dismissed' ? 'bg-background-elevated text-text-secondary' :
                         ariaData.review_status === 'reviewing' ? 'bg-accent/15 text-accent' :
                         'bg-amber-500/15 text-amber-400'
                       )}>
@@ -4235,8 +4106,8 @@ export function VendorProfile() {
                               <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                    fill={k < filled ? dim.color : '#2d2926'}
-                                    stroke={k < filled ? undefined : '#3d3734'}
+                                    fill={k < filled ? dim.color : 'var(--color-background-elevated)'}
+                                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                     strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.85 : 1}
                                   />
@@ -4272,8 +4143,8 @@ export function VendorProfile() {
                                     <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                                       {Array.from({ length: N }).map((_, k) => (
                                         <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                          fill={k < filled ? '#f59e0b' : '#2d2926'}
-                                          stroke={k < filled ? undefined : '#3d3734'}
+                                          fill={k < filled ? '#f59e0b' : 'var(--color-background-elevated)'}
+                                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                           strokeWidth={k < filled ? 0 : 0.5}
                                           fillOpacity={k < filled ? 0.85 : 1}
                                         />
@@ -4638,8 +4509,8 @@ function InstitutionList({ data, maxValue }: { data: any[]; maxValue: number }) 
                   <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                        fill={k < filled ? '#22d3ee' : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? '#22d3ee' : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.4 : 0.3}
                       />

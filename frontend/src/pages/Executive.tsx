@@ -268,7 +268,7 @@ export default function Executive() {
       value: '0.828',
       label: lang === 'en' ? 'MODEL AUC' : 'AUC DEL MODELO',
       context: lang === 'en' ? 'Vendor-stratified validation' : 'Validación estratificada por proveedor',
-      color: '#71717a',
+      color: 'var(--color-text-muted)',
     },
   ]
 
@@ -606,7 +606,7 @@ export default function Executive() {
               <motion.button
                 key={g.path}
                 onClick={() => navigate(g.path)}
-                className="surface-card rounded-sm p-6 text-left border-l-2 hover:bg-white/[0.03] transition-colors group focus:outline-none focus:ring-1 focus:ring-[#a06820]/40"
+                className="surface-card rounded-sm p-6 text-left border-l-2 hover:bg-background-elevated/[0.03] transition-colors group focus:outline-none focus:ring-1 focus:ring-[#a06820]/40"
                 style={{ borderLeftColor: g.color }}
                 initial={{ opacity: 0, y: 6 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -676,7 +676,7 @@ export default function Executive() {
                   <button
                     key={c.id}
                     onClick={() => navigate(`/contracts/${c.id}`)}
-                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-white/[0.03] transition-colors focus:outline-none focus:bg-white/[0.05]"
+                    className="w-full text-left p-4 flex items-center gap-4 hover:bg-background-elevated transition-colors focus:outline-none focus:bg-background-elevated"
                   >
                     <span
                       className="inline-flex items-center px-1.5 py-0.5 rounded-sm text-[10px] font-mono font-bold tracking-[0.1em] flex-shrink-0 w-[72px] justify-center"
@@ -741,7 +741,7 @@ export default function Executive() {
             <div className="flex flex-wrap gap-3">
               <button
                 onClick={() => navigate('/aria')}
-                className="inline-flex items-center gap-1.5 bg-[#a06820] hover:bg-[#835616] text-white font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#a06820]/40"
+                className="inline-flex items-center gap-1.5 bg-[#a06820] hover:bg-[#835616] text-text-primary font-medium text-sm px-4 py-2 rounded-sm transition-colors focus:outline-none focus:ring-2 focus:ring-[#a06820]/40"
               >
                 {lang === 'en' ? 'Open ARIA queue' : 'Abrir cola ARIA'}
                 <ArrowUpRight className="h-3.5 w-3.5" />

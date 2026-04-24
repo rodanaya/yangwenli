@@ -132,25 +132,25 @@ export function DataInfographics() {
           </div>
           <div>
             <h2
-              className="text-xl font-bold text-white"
+              className="text-xl font-bold text-text-primary"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {t('infographics.sectionTitle')}
             </h2>
-            <p className="text-xs text-zinc-500 mt-0.5">
+            <p className="text-xs text-text-muted mt-0.5">
               {t('infographics.sectionSubtitle')}
             </p>
           </div>
         </div>
-        <span className="text-xs text-zinc-600 font-mono tabular-nums">
+        <span className="text-xs text-text-muted font-mono tabular-nums">
           {active + 1} / {INFOGRAPHICS.length}
         </span>
       </div>
 
       {/* Main viewer */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-900/60 overflow-hidden">
+      <div className="rounded-sm border border-border bg-background-card overflow-hidden">
         {/* Chart area */}
-        <div className="relative bg-[#040810] min-h-[340px] flex items-center justify-center p-4">
+        <div className="relative bg-background-elevated min-h-[340px] flex items-center justify-center p-4">
           <AnimatePresence mode="wait">
             <motion.img
               key={current.id}
@@ -167,22 +167,22 @@ export function DataInfographics() {
           {/* Nav arrows */}
           <button
             onClick={prev}
-            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-zinc-800/80 border border-zinc-700 hover:bg-zinc-700 transition-colors"
+            className="absolute left-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background-elevated border border-border hover:bg-background-elevated transition-colors"
             aria-label="Previous"
           >
-            <ChevronLeft className="h-5 w-5 text-zinc-300" />
+            <ChevronLeft className="h-5 w-5 text-text-secondary" />
           </button>
           <button
             onClick={next}
-            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-zinc-800/80 border border-zinc-700 hover:bg-zinc-700 transition-colors"
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-2 rounded-full bg-background-elevated border border-border hover:bg-background-elevated transition-colors"
             aria-label="Next"
           >
-            <ChevronRight className="h-5 w-5 text-zinc-300" />
+            <ChevronRight className="h-5 w-5 text-text-secondary" />
           </button>
         </div>
 
         {/* Caption area */}
-        <div className="p-6 border-t border-zinc-800">
+        <div className="p-6 border-t border-border">
           <AnimatePresence mode="wait">
             <motion.div
               key={current.id + '-caption'}
@@ -205,15 +205,15 @@ export function DataInfographics() {
                       {tag}
                     </span>
                   </div>
-                  <h3 className="text-base font-bold text-white mb-2">{title}</h3>
-                  <p className="text-sm text-zinc-400 leading-relaxed">{caption}</p>
-                  <p className="text-xs text-zinc-600 mt-3 font-mono">
+                  <h3 className="text-base font-bold text-text-primary mb-2">{title}</h3>
+                  <p className="text-sm text-text-secondary leading-relaxed">{caption}</p>
+                  <p className="text-xs text-text-muted mt-3 font-mono">
                     {t('infographics.source')}: {current.source}
                   </p>
                 </div>
                 <button
                   onClick={handleDownload}
-                  className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-zinc-700 text-zinc-400 hover:bg-zinc-800 hover:text-white transition-colors"
+                  className="flex-shrink-0 inline-flex items-center gap-2 px-3 py-2 rounded-lg text-xs font-semibold border border-border text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
                   title={`${t('infographics.download')} SVG`}
                 >
                   <Download className="h-3.5 w-3.5" />
@@ -234,13 +234,13 @@ export function DataInfographics() {
             className={`flex-shrink-0 w-24 h-14 rounded-lg overflow-hidden border transition-all ${
               i === active
                 ? 'border-[#dc2626] opacity-100 scale-100'
-                : 'border-zinc-800 opacity-50 hover:opacity-75 hover:border-zinc-600'
+                : 'border-border opacity-50 hover:opacity-75 hover:border-border'
             }`}
           >
             <img
               src={inf.src}
               alt={isEs ? inf.title_es : inf.title_en}
-              className="w-full h-full object-cover bg-[#040810]"
+              className="w-full h-full object-cover bg-background-elevated"
             />
           </button>
         ))}

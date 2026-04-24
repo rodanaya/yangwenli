@@ -131,7 +131,7 @@ function BarTrend({ data, labels, color, active }: { data: number[]; labels: str
               animate={{ height: active ? px : 0 }}
               transition={{ duration: 0.6, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
             />
-            <span className="text-[9px] text-zinc-500 font-mono">{labels[i]}</span>
+            <span className="text-[9px] text-text-muted font-mono">{labels[i]}</span>
           </div>
         )
       })}
@@ -164,8 +164,8 @@ function BarSector({ data, labels, color, active }: { data: number[]; labels: st
     <div className="flex flex-col gap-1.5 w-full">
       {data.map((v, i) => (
         <div key={i} className="flex items-center gap-2">
-          <span className="text-[9px] text-zinc-500 font-mono w-9 shrink-0">{labels[i]}</span>
-          <div className="flex-1 h-3 rounded-full bg-white/5 overflow-hidden">
+          <span className="text-[9px] text-text-muted font-mono w-9 shrink-0">{labels[i]}</span>
+          <div className="flex-1 h-3 rounded-full bg-background-elevated overflow-hidden">
             <motion.div
               className="h-full rounded-full"
               style={{ backgroundColor: i === 0 ? color : 'rgba(255,255,255,0.2)' }}
@@ -174,7 +174,7 @@ function BarSector({ data, labels, color, active }: { data: number[]; labels: st
               transition={{ duration: 0.7, delay: i * 0.08, ease: [0.16, 1, 0.3, 1] }}
             />
           </div>
-          <span className="text-[9px] text-zinc-400 font-mono w-8 text-right">{v}%</span>
+          <span className="text-[9px] text-text-secondary font-mono w-8 text-right">{v}%</span>
         </div>
       ))}
     </div>
@@ -186,7 +186,7 @@ function FlagList({ data, labels, color, active }: { data: number[]; labels: str
     <div className="flex flex-col gap-2 w-full">
       {data.map((v, i) => (
         <div key={i} className="flex items-center justify-between">
-          <span className="text-[10px] text-zinc-400">{labels[i]}</span>
+          <span className="text-[10px] text-text-secondary">{labels[i]}</span>
           <motion.span
             className="text-sm font-bold font-mono tabular-nums"
             style={{ color: i === 0 ? color : 'rgba(255,255,255,0.5)' }}
@@ -246,7 +246,7 @@ function RingChart({ data, labels, active }: { data: number[]; labels: string[];
             transition={{ duration: 0.35, delay: i * 0.08 }}
           >
             <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: RING_COLORS[i] }} />
-            <span className="text-[10px] text-zinc-400">{l}</span>
+            <span className="text-[10px] text-text-secondary">{l}</span>
           </motion.div>
         ))}
       </div>
@@ -345,7 +345,7 @@ export default function StoryInfographic() {
 
   return (
     <div
-      className="relative overflow-hidden rounded-sm border border-zinc-800 bg-zinc-950"
+      className="relative overflow-hidden rounded-sm border border-border bg-background"
       style={{ fontFamily: 'var(--font-family-sans)' }}
     >
       {/* Colored top accent line */}
@@ -358,21 +358,21 @@ export default function StoryInfographic() {
       <div className="p-5 sm:p-6">
         {/* Header row */}
         <div className="flex items-center justify-between mb-4">
-          <span className="text-[10px] font-bold tracking-[0.15em] text-zinc-500 uppercase font-mono">
+          <span className="text-[10px] font-bold tracking-[0.15em] text-text-muted uppercase font-mono">
             {t('storyCarouselTitle')}
           </span>
           <div className="flex items-center gap-1">
             <button
               onClick={() => setPlaying(p => !p)}
-              className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors"
+              className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
               aria-label={playing ? t('pauseCarousel') : t('playCarousel')}
             >
               {playing ? <Pause className="h-3 w-3" /> : <Play className="h-3 w-3" />}
             </button>
-            <button onClick={prev} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label={t('prevSlide')}>
+            <button onClick={prev} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('prevSlide')}>
               <ChevronLeft className="h-4 w-4" />
             </button>
-            <button onClick={goNext} className="p-1.5 rounded-md text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800 transition-colors" aria-label={t('nextSlide')}>
+            <button onClick={goNext} className="p-1.5 rounded-md text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors" aria-label={t('nextSlide')}>
               <ChevronRight className="h-4 w-4" />
             </button>
           </div>
@@ -391,26 +391,26 @@ export default function StoryInfographic() {
           >
             {/* Chapter tag + stat */}
             <div className="mb-3">
-              <span className="text-[9px] font-mono text-zinc-600 tracking-widest uppercase">{slide.chapter}</span>
+              <span className="text-[9px] font-mono text-text-muted tracking-widest uppercase">{slide.chapter}</span>
               <div
                 className="text-4xl sm:text-5xl font-black leading-none mt-1 mb-1"
                 style={{ color: slide.color, fontFamily: 'var(--font-family-serif)' }}
               >
                 <StatNumber slide={slide} active={true} />
               </div>
-              <div className="text-[11px] text-zinc-500 font-mono">{slide.statLabel}</div>
+              <div className="text-[11px] text-text-muted font-mono">{slide.statLabel}</div>
             </div>
 
             {/* Headline */}
             <h3
-              className="text-base sm:text-lg font-bold text-zinc-100 leading-snug mb-2"
+              className="text-base sm:text-lg font-bold text-text-primary leading-snug mb-2"
               style={{ fontFamily: 'var(--font-family-serif)' }}
             >
               {slide.headline}
             </h3>
 
             {/* Body */}
-            <p className="text-[12px] text-zinc-400 leading-relaxed mb-4">
+            <p className="text-[12px] text-text-secondary leading-relaxed mb-4">
               {slide.body}
             </p>
 
@@ -420,7 +420,7 @@ export default function StoryInfographic() {
             </div>
 
             {/* Source */}
-            <div className="text-[9px] text-zinc-700 font-mono border-t border-zinc-900 pt-2">
+            <div className="text-[9px] text-text-primary font-mono border-t border-border pt-2">
               {t('stories.source')}: {slide.source}
             </div>
           </motion.div>

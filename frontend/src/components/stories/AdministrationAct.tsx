@@ -31,19 +31,19 @@ const PARTY_COLORS: Record<PartyKey, { border: string; badge: string; badgeText:
   PAN: {
     border: '#3b82f6',
     badge: 'bg-blue-600',
-    badgeText: 'text-white',
+    badgeText: 'text-text-primary',
     accent: '#3b82f6',
   },
   PRI: {
     border: '#16a34a',
     badge: 'bg-green-600',
-    badgeText: 'text-white',
+    badgeText: 'text-text-primary',
     accent: '#16a34a',
   },
   MORENA: {
     border: '#dc2626',
     badge: 'bg-red-700',
-    badgeText: 'text-white',
+    badgeText: 'text-text-primary',
     accent: '#dc2626',
   },
 }
@@ -84,7 +84,7 @@ export default function AdministrationAct({
       <article
         className={cn(
           'relative rounded-lg overflow-hidden transition-colors',
-          isHighlight ? 'bg-zinc-900/80' : 'bg-zinc-900/40'
+          isHighlight ? 'bg-background-card' : 'bg-background-card'
         )}
         style={{
           borderLeft: `4px solid ${partyStyle.border}`,
@@ -96,7 +96,7 @@ export default function AdministrationAct({
         <div className="flex items-center justify-between px-5 pt-5 pb-3">
           <div className="flex items-center gap-3">
             <h3 className={cn(
-              'font-bold text-zinc-100',
+              'font-bold text-text-primary',
               isHighlight ? 'text-xl md:text-2xl' : 'text-lg md:text-xl'
             )}>
               {presidentLabel}
@@ -111,7 +111,7 @@ export default function AdministrationAct({
               {party}
             </span>
           </div>
-          <span className="text-sm text-zinc-500 tabular-nums font-mono">{years}</span>
+          <span className="text-sm text-text-muted tabular-nums font-mono">{years}</span>
         </div>
 
         {/* Stats grid */}
@@ -119,9 +119,9 @@ export default function AdministrationAct({
           {statCards.map((s) => (
             <div
               key={s.label}
-              className="rounded-md bg-zinc-800/60 px-3 py-2.5"
+              className="rounded-md bg-background-elevated px-3 py-2.5"
             >
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500 mb-1">{s.label}</p>
+              <p className="text-[10px] uppercase tracking-wider text-text-muted mb-1">{s.label}</p>
               <AnimatedNumber
                 value={s.value}
                 suffix={s.suffix}
@@ -131,7 +131,7 @@ export default function AdministrationAct({
                   'text-lg font-bold tabular-nums',
                   s.label === t('actCard.directAward') && s.value > OECD_DA_BENCHMARK
                     ? 'text-red-400'
-                    : 'text-zinc-100'
+                    : 'text-text-primary'
                 )}
               />
             </div>
@@ -140,7 +140,7 @@ export default function AdministrationAct({
 
         {/* DA% comparison bar */}
         <div className="px-5 pb-4">
-          <div className="flex items-center gap-3 text-[10px] text-zinc-500 mb-1">
+          <div className="flex items-center gap-3 text-[10px] text-text-muted mb-1">
             <span>{t('actCard.daVsOecd', { pct: OECD_DA_BENCHMARK })}</span>
           </div>
           <div className="relative">
@@ -152,24 +152,24 @@ export default function AdministrationAct({
             />
             {/* OECD benchmark marker */}
             <div
-              className="absolute top-0 h-2.5 border-r-2 border-dashed border-zinc-400"
+              className="absolute top-0 h-2.5 border-r-2 border-dashed border-border"
               style={{ left: `${OECD_DA_BENCHMARK}%` }}
               aria-hidden="true"
             />
           </div>
           <div className="flex justify-between mt-1">
-            <span className="text-[10px] text-zinc-600">0%</span>
-            <span className="text-[10px] text-zinc-500">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
-            <span className="text-[10px] text-zinc-600">100%</span>
+            <span className="text-[10px] text-text-muted">0%</span>
+            <span className="text-[10px] text-text-muted">{t('actCard.oecdBenchmark', { pct: OECD_DA_BENCHMARK })}</span>
+            <span className="text-[10px] text-text-muted">100%</span>
           </div>
         </div>
 
         {/* Notable case */}
         {stats.notableCase && (
           <div className="px-5 pb-3">
-            <div className="flex items-center gap-2 text-xs text-zinc-500">
+            <div className="flex items-center gap-2 text-xs text-text-muted">
               <span className="inline-block w-1.5 h-1.5 rounded-full bg-amber-500" aria-hidden="true" />
-              <span>{t('actCard.notableCase')} <span className="text-zinc-300 font-medium">{stats.notableCase}</span></span>
+              <span>{t('actCard.notableCase')} <span className="text-text-secondary font-medium">{stats.notableCase}</span></span>
               {stats.notableCaseValue && (
                 <span className="text-red-400 font-bold">{stats.notableCaseValue}</span>
               )}
@@ -179,13 +179,13 @@ export default function AdministrationAct({
 
         {/* Verdict */}
         <div
-          className="px-5 py-4 border-t border-zinc-800"
+          className="px-5 py-4 border-t border-border"
           style={{
             backgroundColor: isHighlight ? `${partyStyle.border}08` : undefined,
           }}
         >
           <p className={cn(
-            'italic text-zinc-300 leading-relaxed',
+            'italic text-text-secondary leading-relaxed',
             isHighlight ? 'text-base md:text-lg' : 'text-sm md:text-base'
           )}>
             {verdict}

@@ -11,21 +11,22 @@ import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
 
 // ─────────────────────────────────────────────────────────────────────────────
-// Editorial palette (warm dark) — preserved from original
+// Bible §2: cream page + white cards + warm border + dark ink.
+// Named palette tokens kept for minimal-diff refactor; mapped to CSS vars.
 // ─────────────────────────────────────────────────────────────────────────────
-const BG = '#141210'
-const PANEL = '#1a1614'
-const PANEL_2 = '#201b18'
-const BORDER = 'rgba(255,255,255,0.07)'
-const BORDER_STRONG = 'rgba(255,255,255,0.12)'
-const TEXT_PRIMARY = '#e7e5e1'
-const TEXT_SECONDARY = '#a8a29e'
-const TEXT_MUTED = '#78716c'
-const TEXT_FAINT = '#57534e'
-const CRIMSON_HI = '#ef4444'
-const AMBER = '#f59e0b'
-const EMERALD = '#10b981'
-const CYAN = '#22d3ee'
+const BG = 'var(--color-background)'
+const PANEL = 'var(--color-background-card)'
+const PANEL_2 = 'var(--color-background-elevated)'
+const BORDER = 'var(--color-border)'
+const BORDER_STRONG = 'var(--color-border-hover)'
+const TEXT_PRIMARY = 'var(--color-text-primary)'
+const TEXT_SECONDARY = 'var(--color-text-secondary)'
+const TEXT_MUTED = 'var(--color-text-muted)'
+const TEXT_FAINT = 'var(--color-text-muted)'
+const CRIMSON_HI = 'var(--color-risk-critical)'
+const AMBER = 'var(--color-risk-high)'
+const EMERALD = 'var(--color-accent)'  // bible: no green; use amber gold for positive signal
+const CYAN = 'var(--color-oecd)'
 
 const DOT_EMPTY_FILL = '#2d2926'
 const DOT_EMPTY_STROKE = '#3d3734'

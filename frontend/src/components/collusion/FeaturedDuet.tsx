@@ -101,7 +101,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
           >
             Caso destacado · {label}
           </span>
-          <span className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em] tabular-nums">
+          <span className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] tabular-nums">
             Asimetría {metrics.asymmetry.toFixed(0)}% ·{' '}
             {formatNumber(pair.shared_procedures)}{' '}
             {t('dossier.sharedSuffix', { defaultValue: 'procs compartidos' })}
@@ -117,7 +117,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             aria-label={`${t('pairCard.viewProfile')}: ${nameA}`}
           >
             <div
-              className="text-zinc-50 group-hover:text-white transition-colors"
+              className="text-text-primary group-hover:text-text-primary transition-colors"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontWeight: 600,
@@ -128,7 +128,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             >
               {nameA}
             </div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em] mt-1 tabular-nums">
+            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
               {formatNumber(pair.vendor_a_procedures)}{' '}
               {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} ·{' '}
               {metrics.shareA.toFixed(0)}%{' '}
@@ -153,7 +153,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             aria-label={`${t('pairCard.viewProfile')}: ${nameB}`}
           >
             <div
-              className="text-zinc-50 group-hover:text-white transition-colors"
+              className="text-text-primary group-hover:text-text-primary transition-colors"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontWeight: 600,
@@ -164,7 +164,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
             >
               {nameB}
             </div>
-            <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em] mt-1 tabular-nums">
+            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
               {formatNumber(pair.vendor_b_procedures)}{' '}
               {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} ·{' '}
               {metrics.shareB.toFixed(0)}%{' '}
@@ -175,7 +175,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
 
         {/* Deck quote — generous, pull-quote scale */}
         <blockquote
-          className="max-w-3xl text-zinc-200 mb-5"
+          className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -200,7 +200,7 @@ export function FeaturedDuet({ pair, onViewContracts }: FeaturedDuetProps) {
                 pair.vendor_name_b,
               )
             }
-            className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-white transition-colors"
+            className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
           >
             <FileText className="h-3.5 w-3.5" aria-hidden="true" />
             {t('pairCard.sharedContracts')}

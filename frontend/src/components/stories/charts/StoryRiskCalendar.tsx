@@ -18,15 +18,15 @@ export function StoryRiskCalendar() {
       className="w-full space-y-4"
     >
       {/* Section overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Risk Calendar
       </p>
 
       {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Ten years of procurement risk — December never cools down
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Each cell in this heatmap represents one month&apos;s average risk score across all
         federal contracts. The pattern is unmistakable: the rightmost column (December)
         is consistently the darkest shade. The 2020 row shows an exceptional horizontal
@@ -34,24 +34,24 @@ export function StoryRiskCalendar() {
       </p>
 
       {/* Annotation strip */}
-      <div className="flex items-center gap-4 py-2 border-y border-zinc-800">
+      <div className="flex items-center gap-4 py-2 border-y border-border">
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-red-400" />
-          <span className="text-[10px] text-zinc-400">High/Critical risk months</span>
+          <span className="text-[10px] text-text-secondary">High/Critical risk months</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-amber-400" />
-          <span className="text-[10px] text-zinc-400">Medium risk</span>
+          <span className="text-[10px] text-text-secondary">Medium risk</span>
         </div>
         <div className="flex items-center gap-1.5">
           <span className="w-3 h-3 rounded-sm bg-emerald-700" />
-          <span className="text-[10px] text-zinc-400">Low risk</span>
+          <span className="text-[10px] text-text-secondary">Low risk</span>
         </div>
-        <span className="text-[10px] text-zinc-600 ml-auto">Hover cells for detail</span>
+        <span className="text-[10px] text-text-muted ml-auto">Hover cells for detail</span>
       </div>
 
       {/* Chart */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <RiskCalendarHeatmap />
       </div>
 
@@ -59,14 +59,14 @@ export function StoryRiskCalendar() {
       <div className="grid grid-cols-2 gap-3">
         <div className="rounded-lg border border-red-500/20 bg-red-500/5 p-3">
           <div className="text-[10px] font-mono text-red-400 uppercase tracking-wide">2020 — COVID SPIKE</div>
-          <p className="text-xs text-zinc-300 mt-1">
+          <p className="text-xs text-text-secondary mt-1">
             Emergency procurement bypassed normal competitive procedures. Average risk
             scores reached their highest sustained levels in the 10-year window.
           </p>
         </div>
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3">
           <div className="text-[10px] font-mono text-amber-400 uppercase tracking-wide">DECEMBER PATTERN</div>
-          <p className="text-xs text-zinc-300 mt-1">
+          <p className="text-xs text-text-secondary mt-1">
             Year-end budget exhaustion is visible in every single row. December risk averages
             are 64% higher than the October trough — the most reliable seasonal signal in
             the data.
@@ -75,7 +75,7 @@ export function StoryRiskCalendar() {
       </div>
 
       {/* Source */}
-      <p className="text-[10px] text-zinc-600">
+      <p className="text-[10px] text-text-muted">
         Source: COMPRANET 2016-2025 · monthly average risk scores · RUBLI v0.6.5
       </p>
     </motion.div>

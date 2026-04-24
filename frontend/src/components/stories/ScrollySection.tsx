@@ -92,7 +92,7 @@ export default function ScrollySection({
     <div className="w-full lg:w-[60%] relative">
       {/* Mobile: chart at top */}
       <div className="lg:hidden mb-8 px-4">
-        <div className="h-64 rounded-lg overflow-hidden bg-zinc-900/40">
+        <div className="h-64 rounded-lg overflow-hidden bg-background-card">
           {chartComponent}
         </div>
       </div>

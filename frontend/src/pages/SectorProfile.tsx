@@ -55,17 +55,12 @@ import {
   Info,
 } from 'lucide-react'
 import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  AreaChart,
-  Area,
-  LineChart,
-  Line,
-  ReferenceLine,
-} from '@/components/charts'
+  EditorialAreaChart,
+  EditorialLineChart,
+  type ChartAnnotation,
+  type ColorToken,
+  type LineSeries,
+} from '@/components/charts/editorial'
 import { RiskRingField, type RiskRingRow } from '@/components/charts/RiskRingField'
 
 // ── constants ────────────────────────────────────────────────────────────────
@@ -128,10 +123,11 @@ type TabId = 'overview' | 'vendors' | 'risk'
 
 function TrendArea({
   data,
-  color,
+  colorToken = 'accent-data',
 }: {
   data: Array<{ year: number; total_value_mxn: number; total_contracts: number }>
-  color: string
+  /** Token-locked color. Optional override; default is accent-data. */
+  colorToken?: ColorToken
 }) {
   const chartData = data
     .filter((d) => d.year >= 2010)
@@ -144,53 +140,14 @@ function TrendArea({
       aria-label="Area chart showing contract value trend by year"
     >
       <span className="sr-only">Area chart showing annual contract value in billions MXN.</span>
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 8, right: 8, bottom: 0, left: 8 }}>
-          <defs>
-            <linearGradient id="trendGradSP" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={color} stopOpacity={0.5} />
-              <stop offset="95%" stopColor={color} stopOpacity={0.02} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.25} />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-          />
-          <YAxis
-            tick={{ fill: 'var(--color-text-muted)', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v}B`}
-          />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload?.length) {
-                const d = payload[0].payload as { year: number; value: number; contracts: number }
-                return (
-                  <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs">
-                    <p className="font-bold text-text-primary">{d.year}</p>
-                    <p className="text-text-muted">{formatCompactMXN(d.value * 1e9)}</p>
-                    <p className="text-text-muted">{formatNumber(d.contracts)} contracts</p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Area
-            type="monotone"
-            dataKey="value"
-            stroke={color}
-            fill="url(#trendGradSP)"
-            strokeWidth={2.5}
-            dot={false}
-            activeDot={{ r: 5, fill: color, stroke: 'var(--color-background)', strokeWidth: 2 }}
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <EditorialAreaChart
+        data={chartData}
+        xKey="year"
+        yKey="value"
+        colorToken={colorToken}
+        yFormat="mxn-compact"
+        height={256}
+      />
     </div>
   )
 }
@@ -227,11 +184,11 @@ function InstitutionList({
           <Link
             key={i}
             to={`/institutions/${f.source_id}`}
-            className="group block rounded-lg px-3 py-2 hover:bg-white/5 transition-all"
+            className="group block rounded-lg px-3 py-2 hover:bg-background-elevated transition-all"
           >
             <div className="flex items-center justify-between gap-2 mb-1">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[10px] font-mono text-zinc-500 w-4 flex-shrink-0">
+                <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
                   #{i + 1}
                 </span>
                 <span
@@ -254,7 +211,7 @@ function InstitutionList({
                   </span>
                 )}
                 <ExternalLink
-                  className="h-3 w-3 text-zinc-500 opacity-0 group-hover:opacity-100 transition-opacity"
+                  className="h-3 w-3 text-text-muted opacity-0 group-hover:opacity-100 transition-opacity"
                   aria-hidden="true"
                 />
               </div>
@@ -267,8 +224,8 @@ function InstitutionList({
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? color : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
@@ -316,20 +273,20 @@ function VendorTable({
           aria-label={t('profile.topVendors')}
         >
           <thead>
-            <tr className="border-b border-white/8">
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
+            <tr className="border-b border-border">
+              <th className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 #
               </th>
-              <th className="text-left py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
+              <th className="text-left py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.sector')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
+              <th className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.totalValueMxn')}
               </th>
-              <th className="text-right py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em] hidden sm:table-cell">
+              <th className="text-right py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em] hidden sm:table-cell">
                 {t('table.totalContracts')}
               </th>
-              <th className="text-center py-2.5 px-3 text-xs font-semibold text-zinc-400 font-mono uppercase tracking-[0.15em]">
+              <th className="text-center py-2.5 px-3 text-xs font-semibold text-text-secondary font-mono uppercase tracking-[0.15em]">
                 {t('table.avgRiskScore')}
               </th>
             </tr>
@@ -343,9 +300,9 @@ function VendorTable({
               return (
                 <tr
                   key={vendor.vendor_id}
-                  className="border-b border-white/5 hover:bg-white/3 transition-colors"
+                  className="border-b border-border hover:bg-background-elevated transition-colors"
                 >
-                  <td className="py-2.5 px-3 text-xs font-mono text-zinc-500 tabular-nums">
+                  <td className="py-2.5 px-3 text-xs font-mono text-text-muted tabular-nums">
                     {index + 1}
                   </td>
                   <td className="py-2.5 px-3">
@@ -363,8 +320,8 @@ function VendorTable({
                           <svg viewBox={`0 0 ${N * DG} 5`} className="w-32 mt-1" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                             {Array.from({ length: N }).map((_, k) => (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={k < filled ? color : '#2d2926'}
-                                stroke={k < filled ? undefined : '#3d3734'}
+                                fill={k < filled ? color : 'var(--color-background-elevated)'}
+                                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                 strokeWidth={k < filled ? 0 : 0.5}
                                 fillOpacity={k < filled ? 0.85 : 1}
                               />
@@ -377,7 +334,7 @@ function VendorTable({
                   <td className="py-2.5 px-3 text-right font-mono font-bold tabular-nums text-text-primary">
                     {formatCompactMXN(vendor.total_value_mxn)}
                   </td>
-                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-zinc-400 hidden sm:table-cell">
+                  <td className="py-2.5 px-3 text-right font-mono tabular-nums text-text-secondary hidden sm:table-cell">
                     {formatNumber(vendor.total_contracts ?? vendor.contract_count ?? 0)}
                   </td>
                   <td className="py-2.5 px-3 text-center">
@@ -391,7 +348,7 @@ function VendorTable({
       </div>
       <div className="mt-4 flex justify-end">
         <Link to={`/vendors?sector_id=${sectorId}`}>
-          <Button variant="ghost" size="sm" className="text-xs text-zinc-400 hover:text-white">
+          <Button variant="ghost" size="sm" className="text-xs text-text-secondary hover:text-text-primary">
             {t('profile.viewAll')}
             <ExternalLink className="ml-1.5 h-3 w-3" aria-hidden="true" />
           </Button>
@@ -445,11 +402,11 @@ function RiskDonut({
                   className="h-2 w-2 rounded-full"
                   style={{ backgroundColor: RISK_COLORS[d.level as keyof typeof RISK_COLORS] }}
                 />
-                <span className="capitalize text-zinc-300">{d.level}</span>
+                <span className="capitalize text-text-secondary">{d.level}</span>
               </div>
               <div className="flex items-center gap-2">
-                <span className="tabular-nums font-mono text-zinc-400">{d.pct.toFixed(1)}%</span>
-                <span className="tabular-nums font-mono text-zinc-500 text-[10px]">
+                <span className="tabular-nums font-mono text-text-secondary">{d.pct.toFixed(1)}%</span>
+                <span className="tabular-nums font-mono text-text-muted text-[10px]">
                   {formatNumber(d.count)}
                 </span>
               </div>
@@ -462,8 +419,8 @@ function RiskDonut({
                 <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? color : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? color : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />
@@ -504,13 +461,13 @@ function FactorRankList({
           <div key={d.factor}>
             <div className="flex items-center justify-between mb-0.5 gap-2">
               <div className="flex items-center gap-2 min-w-0">
-                <span className="text-[10px] font-mono text-zinc-500 w-4 flex-shrink-0">
+                <span className="text-[10px] font-mono text-text-muted w-4 flex-shrink-0">
                   #{i + 1}
                 </span>
                 <span className="text-xs font-semibold text-text-primary truncate">{label}</span>
               </div>
               <div className="flex items-center gap-2 flex-shrink-0">
-                <span className="text-[10px] font-mono text-zinc-400 tabular-nums">
+                <span className="text-[10px] font-mono text-text-secondary tabular-nums">
                   {d.percentage.toFixed(1)}%
                 </span>
                 <span
@@ -522,7 +479,7 @@ function FactorRankList({
               </div>
             </div>
             {desc && (
-              <p className="text-[10px] text-zinc-500 ml-6 mb-1 leading-tight">{desc}</p>
+              <p className="text-[10px] text-text-muted ml-6 mb-1 leading-tight">{desc}</p>
             )}
             <div className="ml-6">
               {(() => {
@@ -532,8 +489,8 @@ function FactorRankList({
                   <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? color : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? color : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
@@ -573,7 +530,7 @@ function InsightCard({
         <Icon className="h-3.5 w-3.5 flex-shrink-0" aria-hidden="true" />
         {title}
       </div>
-      <p className="text-xs text-zinc-400 leading-relaxed">{body}</p>
+      <p className="text-xs text-text-secondary leading-relaxed">{body}</p>
     </div>
   )
 }
@@ -634,7 +591,7 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
 
   return (
     <div
-      className="rounded-sm border border-white/8 bg-zinc-900/40 p-4"
+      className="rounded-sm border border-border bg-background/40 p-4"
       aria-label="Procurement Health Index governance grade"
     >
       <div className="flex items-start gap-5">
@@ -647,17 +604,17 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
             {grade}
           </span>
           {score != null && (
-            <span className="text-[11px] font-mono text-zinc-500 mt-1 tabular-nums">
+            <span className="text-[11px] font-mono text-text-muted mt-1 tabular-nums">
               {score.toFixed(1)}/100
             </span>
           )}
-          <span className="text-[9px] uppercase tracking-widest text-zinc-600 mt-1 font-semibold">
+          <span className="text-[9px] uppercase tracking-widest text-text-muted mt-1 font-semibold">
             PHI
           </span>
         </div>
 
         {/* Divider */}
-        <div className="w-px self-stretch bg-white/8" aria-hidden="true" />
+        <div className="w-px self-stretch bg-background-elevated" aria-hidden="true" />
 
         {/* Indicator trio */}
         <div className="flex flex-1 gap-4 flex-wrap">
@@ -666,13 +623,13 @@ function PhiGradePanel({ data }: { data: PhiDetailData }) {
               <span
                 className={cn(
                   'text-xl font-black tabular-nums leading-none',
-                  ind.highlight ? 'text-amber-400' : 'text-white'
+                  ind.highlight ? 'text-amber-400' : 'text-text-primary'
                 )}
               >
                 {ind.value ?? '—'}
               </span>
-              <span className="text-[11px] text-zinc-300 mt-0.5 font-semibold">{ind.label}</span>
-              <span className="text-[10px] text-zinc-500 mt-0.5">{ind.benchmark}</span>
+              <span className="text-[11px] text-text-secondary mt-0.5 font-semibold">{ind.label}</span>
+              <span className="text-[10px] text-text-muted mt-0.5">{ind.benchmark}</span>
             </div>
           ))}
         </div>
@@ -731,59 +688,22 @@ function RiskTrendChart({ years }: { years: TimelineYear[] }) {
         Dual-line chart: amber line shows average risk score × 100, red line shows percentage of
         high-risk contracts, from 2010 to present.
       </span>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" opacity={0.4} />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
+      {(() => {
+        type RiskRow = (typeof data)[number]
+        const series: LineSeries<RiskRow>[] = [
+          { key: 'avg_risk', label: 'Avg Risk Score ×100', colorToken: 'risk-high' },
+          { key: 'high_risk_pct', label: 'High-Risk %', colorToken: 'risk-critical' },
+        ]
+        return (
+          <EditorialLineChart
+            data={data}
+            xKey="year"
+            series={series}
+            yFormat="pct"
+            height={180}
           />
-          <YAxis
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            tickFormatter={(v: number) => `${v}%`}
-            domain={[0, 'auto']}
-          />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                return (
-                  <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    {payload.map((p) => (
-                      <p key={p.dataKey as string} style={{ color: p.color as string }}>
-                        {p.name}: {(p.value as number).toFixed(1)}%
-                      </p>
-                    ))}
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="avg_risk"
-            name="Avg Risk Score ×100"
-            stroke="#f59e0b"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: '#f59e0b', stroke: 'var(--color-background)', strokeWidth: 2 }}
-          />
-          <Line
-            type="monotone"
-            dataKey="high_risk_pct"
-            name="High-Risk %"
-            stroke="#ef4444"
-            strokeWidth={2}
-            dot={false}
-            activeDot={{ r: 4, fill: '#ef4444', stroke: 'var(--color-background)', strokeWidth: 2 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+        )
+      })()}
     </div>
   )
 }
@@ -803,7 +723,7 @@ function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
 
   if (!data.length) {
     return (
-      <p className="text-sm text-zinc-500 py-6 text-center">
+      <p className="text-sm text-text-muted py-6 text-center">
         No concentration history data available.
       </p>
     )
@@ -819,61 +739,25 @@ function ConcentrationGiniChart({ history }: { history: ConcentrationYear[] }) {
         Gini coefficient from 0 (perfectly equal) to 1 (full monopoly). Reference line at 0.25
         marks low-concentration threshold.
       </span>
-      <ResponsiveContainer width="100%" height="100%">
-        <LineChart data={data} margin={{ top: 8, right: 16, bottom: 0, left: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" opacity={0.4} />
-          <XAxis
-            dataKey="year"
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
+      {(() => {
+        const series: LineSeries<ConcentrationYear>[] = [
+          { key: 'gini', label: 'Gini', colorToken: 'risk-high' },
+        ]
+        const annotations: ChartAnnotation[] = [
+          { kind: 'hrule', y: 0.25, label: 'Low concentration', tone: 'info' },
+        ]
+        return (
+          <EditorialLineChart
+            data={data}
+            xKey="year"
+            series={series}
+            yFormat="decimal"
+            yDomain={[0, 1]}
+            annotations={annotations}
+            height={160}
           />
-          <YAxis
-            tick={{ fill: '#a1a1aa', fontSize: 11 }}
-            tickLine={false}
-            axisLine={false}
-            domain={[0, 1]}
-            tickFormatter={(v: number) => v.toFixed(1)}
-          />
-          <ReferenceLine
-            y={0.25}
-            stroke="#71717a"
-            strokeDasharray="4 3"
-            strokeOpacity={0.6}
-            label={{
-              value: 'Low concentration',
-              position: 'insideTopLeft',
-              fill: '#a1a1aa',
-              fontSize: 10,
-            }}
-          />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                const d = payload[0].payload as ConcentrationYear
-                return (
-                  <div className="rounded-lg border border-border bg-background-card p-2 shadow-lg text-xs space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    <p className="text-amber-300">Gini: {d.gini.toFixed(3)}</p>
-                    <p className="text-zinc-400">Top vendor share: {(d.top_vendor_share * 100).toFixed(1)}%</p>
-                    <p className="text-zinc-500">{d.vendor_count} vendors</p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Line
-            type="monotone"
-            dataKey="gini"
-            name="Gini"
-            stroke="#f59e0b"
-            strokeWidth={2.5}
-            dot={false}
-            activeDot={{ r: 4, fill: '#f59e0b', stroke: 'var(--color-background)', strokeWidth: 2 }}
-          />
-        </LineChart>
-      </ResponsiveContainer>
+        )
+      })()}
     </div>
   )
 }
@@ -931,9 +815,9 @@ function InvestigationCallout({
           <Link
             key={c.id}
             to={`/cases/${c.slug}`}
-            className="flex items-center justify-between gap-2 group rounded-lg px-2 py-1.5 hover:bg-white/5 transition-colors"
+            className="flex items-center justify-between gap-2 group rounded-lg px-2 py-1.5 hover:bg-background-elevated transition-colors"
           >
-            <span className="text-xs text-zinc-300 group-hover:text-white transition-colors truncate">
+            <span className="text-xs text-text-secondary group-hover:text-text-primary transition-colors truncate">
               {c.name_en}
             </span>
             <span
@@ -970,7 +854,7 @@ function SectorProfileSkeleton() {
   return (
     <div className="max-w-6xl mx-auto space-y-6 pb-12 px-4 sm:px-6">
       <Skeleton className="h-4 w-32 mt-4" />
-      <div className="rounded-sm border border-white/8 bg-zinc-900/60 p-6 sm:p-8 space-y-4">
+      <div className="rounded-sm border border-border bg-background/60 p-6 sm:p-8 space-y-4">
         <Skeleton className="h-8 w-48" />
         <div className="flex gap-6">
           <Skeleton className="h-16 w-32" />
@@ -1168,6 +1052,9 @@ export function SectorProfile() {
   }
 
   const sectorColor = SECTOR_COLORS[sector.code] ?? sector.color ?? '#64748b'
+  // Token-locked sector color for primitive charts (bible §2)
+  const sectorColorToken: ColorToken =
+    (sector.code && (`sector-${sector.code}` as ColorToken)) || 'neutral'
   const stats = sector.statistics
   const riskLevel = getRiskLevelFromScore(stats?.avg_risk_score ?? 0)
   const highRiskPct =
@@ -1200,16 +1087,16 @@ export function SectorProfile() {
       >
         <Link
           to="/sectors"
-          className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-zinc-500 hover:text-white transition-colors"
+          className="inline-flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-text-muted hover:text-text-primary transition-colors"
         >
           <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
           {t('profile.backToSectors')}
         </Link>
-        <div className="flex items-center gap-3 text-xs text-zinc-500">
+        <div className="flex items-center gap-3 text-xs text-text-muted">
           {prevSector && (
             <button
               onClick={() => navigate(`/sectors/${prevSector.id}`)}
-              className="inline-flex items-center gap-1 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1 hover:text-text-primary transition-colors"
               aria-label={`${t('profile.prev')}: ${t(prevSector.code)}`}
             >
               <ArrowLeft className="h-3 w-3" aria-hidden="true" />
@@ -1217,12 +1104,12 @@ export function SectorProfile() {
             </button>
           )}
           {prevSector && nextSector && (
-            <span className="text-zinc-700" aria-hidden="true">|</span>
+            <span className="text-text-primary" aria-hidden="true">|</span>
           )}
           {nextSector && (
             <button
               onClick={() => navigate(`/sectors/${nextSector.id}`)}
-              className="inline-flex items-center gap-1 hover:text-white transition-colors"
+              className="inline-flex items-center gap-1 hover:text-text-primary transition-colors"
               aria-label={`${t('profile.next')}: ${t(nextSector.code)}`}
             >
               {t(nextSector.code)}
@@ -1278,7 +1165,7 @@ export function SectorProfile() {
       <Act number="I" label="EVIDENCIA · ANÁLISIS DEL SECTOR">
       <div>
         <div
-          className="flex gap-1 rounded-sm bg-zinc-900/60 border border-white/8 p-1 mb-6"
+          className="flex gap-1 rounded-sm bg-background/60 border border-border p-1 mb-6"
           role="tablist"
           aria-label="Sector detail tabs"
         >
@@ -1293,8 +1180,8 @@ export function SectorProfile() {
               className={cn(
                 'flex-1 rounded-sm px-4 py-2 text-sm font-semibold transition-all duration-150',
                 activeTab === tab.id
-                  ? 'text-white shadow-sm'
-                  : 'text-zinc-400 hover:text-zinc-200'
+                  ? 'text-text-primary shadow-sm'
+                  : 'text-text-secondary hover:text-text-secondary'
               )}
               style={
                 activeTab === tab.id
@@ -1321,7 +1208,7 @@ export function SectorProfile() {
               <div className="flex items-center gap-2 mb-2">
                 <h2
                   id="phi-grade-heading"
-                  className="text-sm font-bold text-zinc-300 uppercase tracking-[0.15em]"
+                  className="text-sm font-bold text-text-secondary uppercase tracking-[0.15em]"
                 >
                   Procurement Health Index
                 </h2>
@@ -1347,20 +1234,20 @@ export function SectorProfile() {
               <div>
                 <h2
                   id="spending-trend-heading"
-                  className="text-base font-bold text-white"
+                  className="text-base font-bold text-text-primary"
                 >
                   {t('profile.spendTrend')}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">
+                <p className="text-xs text-text-secondary mt-0.5">
                   {t('profile.spendTrendSubtitle', { year: currentYear })}
                 </p>
               </div>
             </div>
-            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-4">
+            <div className="rounded-sm border border-border bg-background/40 p-4">
               {sector.trends?.length ? (
-                <TrendArea data={sector.trends} color={sectorColor} />
+                <TrendArea data={sector.trends} colorToken={sectorColorToken} />
               ) : (
-                <p className="text-sm text-zinc-500 py-8 text-center">
+                <p className="text-sm text-text-muted py-8 text-center">
                   {t('profile.noTrendData')}
                 </p>
               )}
@@ -1374,25 +1261,25 @@ export function SectorProfile() {
                 <div>
                   <h2
                     id="risk-trend-heading"
-                    className="text-base font-bold text-white"
+                    className="text-base font-bold text-text-primary"
                   >
                     Risk Profile Over Time
                   </h2>
-                  <p className="text-xs text-zinc-400 mt-0.5">
+                  <p className="text-xs text-text-secondary mt-0.5">
                     Average risk score and high-risk contract share per year
                   </p>
                 </div>
               </div>
-              <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-4">
+              <div className="rounded-sm border border-border bg-background/40 p-4">
                 <RiskTrendChart years={timelineData.years} />
                 <div className="flex items-center gap-4 mt-2 ml-1">
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-4 rounded-full bg-amber-400" aria-hidden="true" />
-                    <span className="text-[10px] text-zinc-400">Avg Risk Score ×100</span>
+                    <span className="text-[10px] text-text-secondary">Avg Risk Score ×100</span>
                   </div>
                   <div className="flex items-center gap-1.5">
                     <div className="h-2 w-4 rounded-full bg-red-500" aria-hidden="true" />
-                    <span className="text-[10px] text-zinc-400">High-Risk %</span>
+                    <span className="text-[10px] text-text-secondary">High-Risk %</span>
                   </div>
                 </div>
               </div>
@@ -1415,21 +1302,21 @@ export function SectorProfile() {
               <div>
                 <h2
                   id="institutions-heading"
-                  className="text-base font-bold text-white flex items-center gap-2"
+                  className="text-base font-bold text-text-primary flex items-center gap-2"
                 >
                   <Building2 className="h-4 w-4" style={{ color: sectorColor }} aria-hidden="true" />
                   {t('profile.topInstitutions')}
                 </h2>
-                <p className="text-xs text-zinc-400 mt-0.5">{t('profile.topInstitutionsSubtitle')}</p>
+                <p className="text-xs text-text-secondary mt-0.5">{t('profile.topInstitutionsSubtitle')}</p>
               </div>
               <Link to={`/institutions?sector_id=${sectorId}`}>
-                <Button variant="ghost" size="sm" className="text-xs text-zinc-400 hover:text-white">
+                <Button variant="ghost" size="sm" className="text-xs text-text-secondary hover:text-text-primary">
                   {t('profile.viewAll')}
                   <ExternalLink className="ml-1.5 h-3 w-3" aria-hidden="true" />
                 </Button>
               </Link>
             </div>
-            <div className="rounded-sm border border-white/8 bg-zinc-900/40">
+            <div className="rounded-sm border border-border bg-background/40">
               {moneyFlowLoading || institutionsLoading ? (
                 <div className="p-4 space-y-2">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1458,7 +1345,7 @@ export function SectorProfile() {
                   />
                 </div>
               ) : (
-                <p className="py-8 text-center text-sm text-zinc-500">
+                <p className="py-8 text-center text-sm text-text-muted">
                   {t('profile.noInstitutionData')}
                 </p>
               )}
@@ -1476,15 +1363,15 @@ export function SectorProfile() {
         >
           <div className="flex items-center justify-between">
             <div>
-              <h2 className="text-base font-bold text-white flex items-center gap-2">
+              <h2 className="text-base font-bold text-text-primary flex items-center gap-2">
                 <TrendingUp className="h-4 w-4" style={{ color: sectorColor }} aria-hidden="true" />
                 {t('profile.topVendors')}
               </h2>
-              <p className="text-xs text-zinc-400 mt-0.5">{t('profile.topVendorsSubtitle')}</p>
+              <p className="text-xs text-text-secondary mt-0.5">{t('profile.topVendorsSubtitle')}</p>
             </div>
           </div>
 
-          <div className="rounded-sm border border-white/8 bg-zinc-900/40 overflow-hidden">
+          <div className="rounded-sm border border-border bg-background/40 overflow-hidden">
             {vendorsLoading ? (
               <div className="p-4 space-y-3">
                 {Array.from({ length: 8 }).map((_, i) => (
@@ -1500,7 +1387,7 @@ export function SectorProfile() {
                 />
               </div>
             ) : (
-              <p className="py-8 text-center text-sm text-zinc-500">
+              <p className="py-8 text-center text-sm text-text-muted">
                 {t('profile.noVendorData')}
               </p>
             )}
@@ -1519,12 +1406,12 @@ export function SectorProfile() {
           <section aria-labelledby="risk-distribution-heading">
             <h2
               id="risk-distribution-heading"
-              className="text-base font-bold text-white mb-1"
+              className="text-base font-bold text-text-primary mb-1"
             >
               {t('profile.riskDistribution')}
             </h2>
-            <p className="text-xs text-zinc-400 mb-4">{t('profile.riskDistributionSubtitle')}</p>
-            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
+            <p className="text-xs text-text-secondary mb-4">{t('profile.riskDistributionSubtitle')}</p>
+            <div className="rounded-sm border border-border bg-background/40 p-5">
               {riskLoading ? (
                 <div className="flex items-center gap-6">
                   <Skeleton className="h-44 w-44 rounded-full flex-shrink-0" />
@@ -1535,7 +1422,7 @@ export function SectorProfile() {
               ) : riskDist?.data ? (
                 <RiskDonut data={riskDist.data} color={sectorColor} />
               ) : (
-                <p className="py-6 text-center text-sm text-zinc-500">
+                <p className="py-6 text-center text-sm text-text-muted">
                   {t('profile.noRiskData')}
                 </p>
               )}
@@ -1546,12 +1433,12 @@ export function SectorProfile() {
           <section aria-labelledby="risk-factors-heading">
             <h2
               id="risk-factors-heading"
-              className="text-base font-bold text-white mb-1"
+              className="text-base font-bold text-text-primary mb-1"
             >
               {t('profile.topRiskFactors')}
             </h2>
-            <p className="text-xs text-zinc-400 mb-4">{t('profile.topRiskFactorsSubtitle')}</p>
-            <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
+            <p className="text-xs text-text-secondary mb-4">{t('profile.topRiskFactorsSubtitle')}</p>
+            <div className="rounded-sm border border-border bg-background/40 p-5">
               {riskFactorsLoading ? (
                 <div className="space-y-3">
                   {Array.from({ length: 5 }).map((_, i) => (
@@ -1564,7 +1451,7 @@ export function SectorProfile() {
                   color={sectorColor}
                 />
               ) : (
-                <p className="py-6 text-center text-sm text-zinc-500">
+                <p className="py-6 text-center text-sm text-text-muted">
                   {t('profile.noFactorData')}
                 </p>
               )}
@@ -1576,14 +1463,14 @@ export function SectorProfile() {
             <section aria-labelledby="gini-chart-heading">
               <h2
                 id="gini-chart-heading"
-                className="text-base font-bold text-white mb-1"
+                className="text-base font-bold text-text-primary mb-1"
               >
                 Market Concentration Over Time
               </h2>
-              <p className="text-xs text-zinc-400 mb-4">
+              <p className="text-xs text-text-secondary mb-4">
                 Gini coefficient — 1.0 = full monopoly, 0 = perfect competition
               </p>
-              <div className="rounded-sm border border-white/8 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-border bg-background/40 p-5">
                 <ConcentrationGiniChart history={concentrationHistory.history} />
               </div>
             </section>
@@ -1594,7 +1481,7 @@ export function SectorProfile() {
             <section aria-labelledby="procurement-patterns-heading">
               <h2
                 id="procurement-patterns-heading"
-                className="text-base font-bold text-white mb-4"
+                className="text-base font-bold text-text-primary mb-4"
               >
                 Procurement Patterns
               </h2>
@@ -1627,18 +1514,18 @@ export function SectorProfile() {
                       'rounded-sm border p-4',
                       item.warn
                         ? 'border-amber-500/30 bg-amber-500/5'
-                        : 'border-white/8 bg-zinc-900/40'
+                        : 'border-border bg-background/40'
                     )}
                   >
                     <p
                       className={cn(
                         'text-2xl font-black tabular-nums',
-                        item.warn ? 'text-amber-400' : 'text-white'
+                        item.warn ? 'text-amber-400' : 'text-text-primary'
                       )}
                     >
                       {item.value}
                     </p>
-                    <p className="text-[11px] text-zinc-400 mt-0.5 capitalize">{item.label}</p>
+                    <p className="text-[11px] text-text-secondary mt-0.5 capitalize">{item.label}</p>
                   </div>
                 ))}
               </div>

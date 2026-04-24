@@ -89,7 +89,7 @@ function ContractTooltip({
   const color = getRiskColor(d.risk_level)
 
   return (
-    <div className="rounded-md border border-white/10 bg-background-card p-3 text-xs shadow-lg max-w-xs">
+    <div className="rounded-md border border-border bg-background-card p-3 text-xs shadow-lg max-w-xs">
       <p className="font-semibold text-text-primary mb-1 leading-snug">{title}</p>
       <div className="space-y-0.5 text-text-muted">
         <p>
@@ -200,7 +200,7 @@ export default function VendorContractTimeline({
       <div
         className={cn(
           'bg-surface-secondary rounded-lg p-4 flex items-center justify-center',
-          'border-2 border-dashed border-white/10',
+          'border-2 border-dashed border-border',
           'min-h-[220px]',
           className,
         )}
@@ -229,7 +229,10 @@ export default function VendorContractTimeline({
         <RiskLegend />
       </div>
 
-      {/* Scatter chart */}
+      {/* Scatter chart — TODO(charts): EditorialScatterChart supports sizeKey
+          but lacks per-point custom dot shape (sqrt-of-z radius scaling). The
+          variable dot sizing is core to this widget's value semantics. Tokens
+          migrated to bible-aligned values; structural migration deferred. */}
       <div aria-hidden="true">
         <ResponsiveContainer width="100%" height={160}>
           <ScatterChart margin={{ top: 8, right: 12, bottom: 4, left: 0 }}>
@@ -258,7 +261,7 @@ export default function VendorContractTimeline({
               ticks={years}
               tickLine={false}
               axisLine={false}
-              tick={{ fontSize: 10, fill: '#94a3b8' }}
+              tick={{ fontSize: 11, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
               tickFormatter={v => String(v)}
             />
 
@@ -275,7 +278,7 @@ export default function VendorContractTimeline({
 
             <Tooltip
               content={<ContractTooltip />}
-              cursor={{ strokeDasharray: '3 3', stroke: '#475569' }}
+              cursor={{ strokeDasharray: '3 3', stroke: 'var(--color-border-hover)' }}
             />
 
             <Scatter

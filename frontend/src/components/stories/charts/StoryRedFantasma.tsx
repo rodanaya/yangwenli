@@ -95,16 +95,16 @@ export function StoryRedFantasma() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Red Fantasma
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         42 empresas, 5 domicilios — la geografía del fraude de facturación
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Constelación de proveedores EFOS definitivo que comparten un puñado de
         direcciones fiscales. Cada nodo es un proveedor; tamaño = número de
         contratos; color = score de riesgo v0.6.5.
@@ -113,15 +113,15 @@ export function StoryRedFantasma() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-500">11,208</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">empresas EFOS definitivo (SAT)</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">empresas EFOS definitivo (SAT)</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-orange-400">38</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">confirmadas por RFC en COMPRANET</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">confirmadas por RFC en COMPRANET</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400">0.28</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">score promedio · subdetectadas</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">score promedio · subdetectadas</div>
         </div>
       </div>
 
@@ -244,7 +244,7 @@ export function StoryRedFantasma() {
       </svg>
 
       {/* Legend */}
-      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono text-zinc-500 pt-2 border-t border-zinc-800">
+      <div className="flex flex-wrap gap-x-5 gap-y-2 text-[10px] font-mono text-text-muted pt-2 border-t border-border">
         <div className="flex items-center gap-1.5">
           <div className="w-3 h-3 rounded-full bg-red-600"></div>
           <span>score ≥ 0.85</span>
@@ -262,7 +262,7 @@ export function StoryRedFantasma() {
           <span>0.55-0.65</span>
         </div>
         <div className="flex items-center gap-1.5">
-          <div className="w-3 h-3 rounded-full bg-stone-500"></div>
+          <div className="w-3 h-3 rounded-full bg-text-muted"></div>
           <span>&lt; 0.55 · subdetectado</span>
         </div>
       </div>
@@ -271,7 +271,7 @@ export function StoryRedFantasma() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Los EFOS definitivo comparten una firma estructural: pocos contratos
           (típicamente 2-5), vida corta (2-3 años) y domicilios fiscales compartidos.
           El modelo v0.6.5 los subdetecta (score 0.28) porque fue entrenado con
@@ -279,7 +279,7 @@ export function StoryRedFantasma() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: SAT Art. 69-B CFF · cruce con COMPRANET 2018-2024 · 38 RFC confirmados + 125 por nombre
       </p>
     </motion.div>

@@ -150,8 +150,8 @@ export function SeasonalityCalendar() {
                           cx={cx}
                           cy={cy}
                           r={DR}
-                          fill={isFilled ? color : '#2d2926'}
-                          stroke={isFilled ? undefined : '#3d3734'}
+                          fill={isFilled ? color : '#f3f1ec'}
+                          stroke={isFilled ? undefined : '#e2ddd6'}
                           strokeWidth={isFilled ? 0 : 0.5}
                           fillOpacity={isFilled ? (d.month === 12 ? 1 : 0.75) : 1}
                         />

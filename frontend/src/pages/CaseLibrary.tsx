@@ -18,10 +18,11 @@ import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 // Art direction
 // ─────────────────────────────────────────────────────────────────────────────
 
-const PAGE_BG = '#0f0d0c'
-const CARD_BG = '#141210'
-const BORDER = 'rgba(255,255,255,0.05)'
-const BORDER_STRONG = 'rgba(255,255,255,0.09)'
+// Bible §2: page ground = #faf9f6 cream; card = #ffffff white; border = #e2ddd6
+const PAGE_BG = 'var(--color-background)'
+const CARD_BG = 'var(--color-background-card)'
+const BORDER = 'var(--color-border)'
+const BORDER_STRONG = 'var(--color-border-hover)'
 
 const FRAUD_TYPE_LEFT: Record<string, string> = {
   ghost_company: '#ef4444',
@@ -45,9 +46,9 @@ const LEGAL_STATUS_STYLE: Record<
   investigation: { dot: '#f59e0b', label: 'UNDER INVESTIGATION', text: '#fcd34d' },
   prosecuted: { dot: '#3b82f6', label: 'PROSECUTED', text: '#93c5fd' },
   convicted: { dot: '#22d3ee', label: 'CONVICTED', text: '#67e8f9' },
-  acquitted: { dot: '#a1a1aa', label: 'ACQUITTED', text: '#a1a1aa' },
-  dismissed: { dot: '#71717a', label: 'DISMISSED', text: '#a1a1aa' },
-  unresolved: { dot: '#71717a', label: 'UNRESOLVED', text: '#a1a1aa' },
+  acquitted: { dot: 'var(--color-text-muted)', label: 'ACQUITTED', text: 'var(--color-text-muted)' },
+  dismissed: { dot: 'var(--color-text-muted)', label: 'DISMISSED', text: 'var(--color-text-muted)' },
+  unresolved: { dot: 'var(--color-text-muted)', label: 'UNRESOLVED', text: 'var(--color-text-muted)' },
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -188,14 +189,14 @@ function CaseRow({
           </div>
 
           <h3
-            className="text-[15px] leading-snug text-zinc-100 group-hover:text-amber-300 transition-colors"
+            className="text-[15px] leading-snug text-text-primary group-hover:text-amber-300 transition-colors"
             style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
           >
             {name}
           </h3>
 
           <p
-            className="text-[12px] text-zinc-500 mt-1.5 line-clamp-2 leading-relaxed pr-6"
+            className="text-[12px] text-text-muted mt-1.5 line-clamp-2 leading-relaxed pr-6"
             style={{ fontFamily: 'var(--font-family-sans)' }}
           >
             {summary}
@@ -215,12 +216,12 @@ function CaseRow({
                 {legal.label}
               </span>
             </span>
-            <span className="text-zinc-600">·</span>
-            <span className="text-zinc-500 tabular-nums">{yearLabel}</span>
+            <span className="text-text-muted">·</span>
+            <span className="text-text-muted tabular-nums">{yearLabel}</span>
             {cas.severity >= 3 && (
               <>
-                <span className="text-zinc-600">·</span>
-                <span className="text-zinc-500 tracking-wider">
+                <span className="text-text-muted">·</span>
+                <span className="text-text-muted tracking-wider">
                   {t(`severity.${cas.severity}`)} {lang === 'es' ? 'SEVERIDAD' : 'SEVERITY'}
                 </span>
               </>
@@ -231,17 +232,17 @@ function CaseRow({
         {/* Middle: amount */}
         <div className="flex-shrink-0 text-right min-w-[120px]">
           <div
-            className="text-[22px] text-zinc-100 leading-none tracking-tight tabular-nums"
+            className="text-[22px] text-text-primary leading-none tracking-tight tabular-nums"
             style={{ fontFamily: 'var(--font-family-mono)', fontWeight: 600 }}
           >
             {formatMXN(cas.amount_mxn_low)}
             {cas.amount_mxn_high &&
               cas.amount_mxn_high !== cas.amount_mxn_low && (
-                <span className="text-zinc-600 text-[14px]"> +</span>
+                <span className="text-text-muted text-[14px]"> +</span>
               )}
           </div>
           <div
-            className="text-[10px] uppercase tracking-[0.15em] text-zinc-600 mt-1"
+            className="text-[10px] uppercase tracking-[0.15em] text-text-muted mt-1"
             style={{ fontFamily: 'var(--font-family-mono)' }}
           >
             {lang === 'es' ? 'MXN · PÉRDIDA EST.' : 'MXN · EST. LOSS'}
@@ -250,7 +251,7 @@ function CaseRow({
 
         {/* Right: chevron */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRight className="h-4 w-4 text-zinc-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </button>
@@ -364,13 +365,13 @@ export default function CaseLibrary() {
               {i18n.language === 'es' ? 'RUBLI · ARCHIVO DE CASOS' : 'RUBLI · CASE ARCHIVE'}
             </p>
             <h1
-              className="text-[24px] leading-tight text-zinc-100"
+              className="text-[24px] leading-tight text-text-primary"
               style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
             >
               {i18n.language === 'es' ? 'El Archivo' : 'The Archive'}
             </h1>
             <p
-              className="text-[13px] text-zinc-500 mt-1.5"
+              className="text-[13px] text-text-muted mt-1.5"
               style={{ fontFamily: 'var(--font-family-sans)' }}
             >
               {totalCases} {i18n.language === 'es' ? 'casos documentados de corrupción' : 'documented corruption cases'} · {yearSpan}
@@ -413,7 +414,10 @@ export default function CaseLibrary() {
               value: totalLoss > 0 ? formatMXNHero(totalLoss) : '—',
               sub: totalLoss > 0 ? 'MXN' : '',
               label: i18n.language === 'es' ? 'PÉRDIDAS DOCUMENTADAS' : 'DOCUMENTED LOSSES',
-              accent: '#ef4444',
+              // Bible §2: red = critical RISK only. Documented losses total is
+              // a historical number, not a risk signal. Amber-gold = editorial
+              // accent for notable figures.
+              accent: '#a06820',
             },
             {
               value: prosecutedCount.toString(),
@@ -436,13 +440,13 @@ export default function CaseLibrary() {
               >
                 {s.value}
                 {s.sub && (
-                  <span className="text-[14px] text-zinc-500 ml-1.5">
+                  <span className="text-[14px] text-text-muted ml-1.5">
                     {s.sub}
                   </span>
                 )}
               </div>
               <div
-                className="text-[10px] tracking-[0.15em] uppercase text-zinc-500 mt-2"
+                className="text-[10px] tracking-[0.15em] uppercase text-text-muted mt-2"
                 style={{ fontFamily: 'var(--font-family-mono)' }}
               >
                 {s.label}
@@ -456,7 +460,7 @@ export default function CaseLibrary() {
           {/* Search */}
           <div className="flex items-center gap-3">
             <div className="relative flex-1 max-w-md">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
               <input
                 type="text"
                 value={search ?? ''}
@@ -473,7 +477,7 @@ export default function CaseLibrary() {
                 <button
                   type="button"
                   onClick={() => setSearch(null)}
-                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300"
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-text-muted hover:text-text-secondary"
                   aria-label="Clear search"
                 >
                   <X className="h-3.5 w-3.5" />
@@ -487,7 +491,7 @@ export default function CaseLibrary() {
                   setFilters({})
                   setSearch(null)
                 }}
-                className="text-[10px] tracking-wider uppercase text-zinc-500 hover:text-amber-400 transition-colors flex items-center gap-1"
+                className="text-[10px] tracking-wider uppercase text-text-muted hover:text-amber-400 transition-colors flex items-center gap-1"
                 style={{ fontFamily: 'var(--font-family-mono)' }}
               >
                 <X className="h-3 w-3" />
@@ -499,7 +503,7 @@ export default function CaseLibrary() {
           {/* Type filter */}
           <div className="flex items-center gap-2 flex-wrap">
             <span
-              className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
+              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
               {i18n.language === 'es' ? 'TIPO' : 'TYPE'}
@@ -526,7 +530,7 @@ export default function CaseLibrary() {
           {/* Admin filter */}
           <div className="flex items-center gap-2 flex-wrap">
             <span
-              className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
+              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
               {i18n.language === 'es' ? 'ADMIN' : 'ADMIN'}
@@ -553,7 +557,7 @@ export default function CaseLibrary() {
           {/* Status filter */}
           <div className="flex items-center gap-2 flex-wrap">
             <span
-              className="text-[10px] tracking-[0.15em] uppercase text-zinc-600 w-14 flex-shrink-0"
+              className="text-[10px] tracking-[0.15em] uppercase text-text-muted w-14 flex-shrink-0"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
               {i18n.language === 'es' ? 'ESTADO' : 'STATUS'}
@@ -612,7 +616,7 @@ export default function CaseLibrary() {
               >
                 {t('loadError')}
               </p>
-              <p className="text-[12px] text-zinc-500 leading-relaxed">
+              <p className="text-[12px] text-text-muted leading-relaxed">
                 {t('loadErrorDetail')}
               </p>
             </div>
@@ -629,12 +633,12 @@ export default function CaseLibrary() {
               <span>
                 {t('resultCount', { count: data.length })}
                 {hasFilters && (
-                  <span className="text-zinc-600 ml-1">
+                  <span className="text-text-muted ml-1">
                     ({i18n.language === 'es' ? 'filtrado' : 'filtered'})
                   </span>
                 )}
               </span>
-              <span className="text-zinc-600">
+              <span className="text-text-muted">
                 {i18n.language === 'es' ? 'ORDENADO POR PÉRDIDA · DESC' : 'SORTED BY LOSS · DESC'}
               </span>
             </div>
@@ -648,12 +652,12 @@ export default function CaseLibrary() {
                 }}
               >
                 <p
-                  className="text-[14px] text-zinc-300 mb-2"
+                  className="text-[14px] text-text-secondary mb-2"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {t('noResults')}
                 </p>
-                <p className="text-[12px] text-zinc-500 max-w-md mx-auto leading-relaxed">
+                <p className="text-[12px] text-text-muted max-w-md mx-auto leading-relaxed">
                   {search
                     ? t('noResultsExplain', { query: search })
                     : t('noResultsHint')}
@@ -692,17 +696,17 @@ export default function CaseLibrary() {
 
             {/* Footnote */}
             <p
-              className="mt-8 text-[10px] tracking-wider uppercase text-zinc-600 flex items-center gap-2"
+              className="mt-8 text-[10px] tracking-wider uppercase text-text-muted flex items-center gap-2"
               style={{ fontFamily: 'var(--font-family-mono)' }}
             >
               <span>{i18n.language === 'es' ? 'FUENTE' : 'SOURCE'}</span>
-              <span className="text-zinc-700">·</span>
-              <span className="text-zinc-500">
+              <span className="text-text-primary">·</span>
+              <span className="text-text-muted">
                 {i18n.language === 'es'
                   ? 'Registros judiciales, auditorías ASF, registro SAT EFOS, investigaciones periodísticas'
                   : 'Judicial records, ASF audits, SAT EFOS registry, journalism investigations'}
               </span>
-              <ArrowRight className="h-3 w-3 ml-1 text-zinc-700" />
+              <ArrowRight className="h-3 w-3 ml-1 text-text-primary" />
             </p>
           </>
         )}

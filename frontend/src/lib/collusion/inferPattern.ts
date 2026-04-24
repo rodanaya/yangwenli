@@ -114,7 +114,7 @@ export function patternKickerClass(p: CollusionPattern): string {
     case 'rotation':
       return 'text-kicker text-kicker--analysis'
     default:
-      return 'text-kicker text-zinc-500'
+      return 'text-kicker text-text-muted'
   }
 }
 

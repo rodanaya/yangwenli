@@ -314,8 +314,8 @@ export default function TrendDataTable({
                                   cx={i * DG + DR}
                                   cy={2}
                                   r={DR}
-                                  fill={i < filled ? color : '#2d2926'}
-                                  stroke={i < filled ? undefined : '#3d3734'}
+                                  fill={i < filled ? color : '#f3f1ec'}
+                                  stroke={i < filled ? undefined : '#e2ddd6'}
                                   strokeWidth={i < filled ? 0 : 0.5}
                                   fillOpacity={i < filled ? 0.85 : 1}
                                 />
@@ -348,7 +348,7 @@ export default function TrendDataTable({
                           'rounded p-1 opacity-0 group-hover:opacity-100 transition-all',
                           isCopied
                             ? 'text-green-400 opacity-100'
-                            : 'text-text-muted hover:text-text-primary hover:bg-white/10'
+                            : 'text-text-muted hover:text-text-primary hover:bg-background-elevated'
                         )}
                         aria-label={`Copy row data for ${row.year}`}
                         title={isCopied ? 'Copied!' : 'Copy row'}

@@ -18,15 +18,10 @@ import { cn, formatNumber, formatCompactMXN } from '@/lib/utils'
 import { SECTOR_COLORS, RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
 import { categoriesApi } from '@/api/client'
 import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Area,
-  Line,
-  ComposedChart,
-} from '@/components/charts'
+  EditorialComposedChart,
+  type ComposedLayer,
+  type ColorToken,
+} from '@/components/charts/editorial'
 import {
   ArrowLeft,
   ArrowUpRight,
@@ -98,7 +93,7 @@ function getConcentrationBadge(label: string, t: (key: string) => string) {
     case 'moderately_concentrated':
       return { text: t('profile.concentration.moderate'), color: '#fbbf24', bg: 'rgba(251,191,36,0.1)' }
     default:
-      return { text: t('profile.concentration.competitive'), color: '#71717a', bg: 'rgba(113,113,122,0.1)' }
+      return { text: t('profile.concentration.competitive'), color: 'var(--color-text-muted)', bg: 'rgba(113,113,122,0.1)' }
   }
 }
 
@@ -161,7 +156,7 @@ function SexenioDotColumns({
                 y={10}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#a1a1aa"
+                fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono)"
               >
                 {formatCompactMXN(d.value)}
@@ -178,9 +173,9 @@ function SexenioDotColumns({
                     cx={cx}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#2d2926'}
+                    fill={isFilled ? color : 'var(--color-background-elevated)'}
                     fillOpacity={isFilled ? opacity : 1}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -274,9 +269,9 @@ function SubcatDotStrips({ data, color }: { data: SubcatDotDatum[]; color: strin
                     cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
                     cy={cy}
                     r={DOT_R}
-                    fill={isFilled ? color : '#2d2926'}
+                    fill={isFilled ? color : 'var(--color-background-elevated)'}
                     fillOpacity={isFilled ? 0.7 : 1}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={isFilled ? 0 : 1}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -435,9 +430,9 @@ export default function CategoryProfile() {
   }
 
   const riskLevel = category ? getRiskLevelFromScore(category.avg_risk) : 'low'
-  const riskColor = category ? getRiskColor(category.avg_risk) : '#71717a'
+  const riskColor = category ? getRiskColor(category.avg_risk) : 'var(--color-text-muted)'
   const daPct = category?.direct_award_pct ?? 0
-  const daColor = daPct > 50 ? '#f87171' : daPct > 25 ? '#fbbf24' : '#71717a'
+  const daColor = daPct > 50 ? '#f87171' : daPct > 25 ? '#fbbf24' : 'var(--color-text-muted)'
 
   const topContracts = (topContractsData?.data ?? []) as Array<{
     id: number
@@ -557,7 +552,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('profile.sections.eyebrow')}{t('profile.sections.timeline')}
           </p>
           <h2
@@ -572,75 +567,32 @@ export default function CategoryProfile() {
             {trendsLoading ? (
               <ChartSkeleton height={320} type="area" />
             ) : timelineData.length > 0 ? (
-              <div style={{ height: 320 }} role="img" aria-label="Area chart showing contract value and risk score trends over time">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData} margin={{ top: 10, right: 40, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
+              <div role="img" aria-label="Area chart showing contract value and risk score trends over time">
+                {(() => {
+                  // Pre-multiply risk to display as 0-100% via 'pct' format on right axis.
+                  const data = timelineData.map((r) => ({
+                    ...r,
+                    avg_risk_pct: (Number(r.avg_risk) || 0) * 100,
+                  }))
+                  const sectorToken: ColorToken = category?.sector_code
+                    ? (`sector-${category.sector_code}` as ColorToken)
+                    : 'neutral'
+                  const layers: ComposedLayer<typeof data[number]>[] = [
+                    { kind: 'area', key: 'value', label: t('profile.tooltip.spend'), colorToken: sectorToken, axis: 'left' },
+                    { kind: 'line', key: 'avg_risk_pct', label: t('profile.tooltip.risk'), colorToken: 'risk-high', style: 'dashed', axis: 'right' },
+                  ]
+                  return (
+                    <EditorialComposedChart
+                      data={data}
+                      xKey="year"
+                      layers={layers}
+                      yFormat="mxn-compact"
+                      rightYFormat="pct"
+                      rightYDomain={[0, 60]}
+                      height={320}
                     />
-                    <YAxis
-                      yAxisId="value"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      width={72}
-                    />
-                    <YAxis
-                      yAxisId="risk"
-                      orientation="right"
-                      domain={[0, 0.6]}
-                      tick={{ fill: '#fb923c', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: '#fb923c30' }}
-                      tickLine={false}
-                      tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-                      width={45}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        return (
-                          <div
-                            className="rounded-sm border p-3 text-xs font-mono shadow-lg space-y-1"
-                            style={{ backgroundColor: '#18181b', borderColor: '#3f3f46' }}
-                          >
-                            <p className="font-bold text-text-primary">{label}</p>
-                            {payload.map((p, i) => (
-                              <p key={i} style={{ color: String(p.color) }}>
-                                {p.name === 'value' ? t('profile.tooltip.spend') : t('profile.tooltip.risk')}:{' '}
-                                <span className="font-bold">
-                                  {p.name === 'value' ? formatCompactMXN(Number(p.value)) : `${(Number(p.value) * 100).toFixed(1)}%`}
-                                </span>
-                              </p>
-                            ))}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Area
-                      yAxisId="value"
-                      type="monotone"
-                      dataKey="value"
-                      fill={sectorColor}
-                      fillOpacity={0.15}
-                      stroke={sectorColor}
-                      strokeWidth={2}
-                    />
-                    <Line
-                      yAxisId="risk"
-                      type="monotone"
-                      dataKey="avg_risk"
-                      stroke="#fb923c"
-                      strokeWidth={2}
-                      strokeDasharray="6 3"
-                      dot={{ r: 2, fill: '#fb923c', strokeWidth: 0 }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  )
+                })()}
               </div>
             ) : (
               <div className="flex items-center justify-center h-48 text-text-muted text-sm">
@@ -656,7 +608,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('profile.sections.eyebrow')}{t('profile.sections.byAdmin')}
           </p>
           <h2
@@ -693,7 +645,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('profile.sections.eyebrow')}{t('profile.sections.concentration')}
           </p>
           <h2
@@ -775,8 +727,8 @@ export default function CategoryProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? vendorRiskColor : '#2d2926'}
-                                      stroke={k < filled ? undefined : '#3d3734'}
+                                      fill={k < filled ? vendorRiskColor : 'var(--color-background-elevated)'}
+                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                       strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.7 : 1}
                                     />
@@ -823,7 +775,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('profile.sections.eyebrow')}{t('profile.sections.relations')}
           </p>
           <h2
@@ -887,8 +839,8 @@ export default function CategoryProfile() {
                               <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 4 }} preserveAspectRatio="none" aria-hidden="true">
                                 {Array.from({ length: N }).map((_, k) => (
                                   <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                                    fill={k < filled ? color : '#2d2926'}
-                                    stroke={k < filled ? undefined : '#3d3734'}
+                                    fill={k < filled ? color : 'var(--color-background-elevated)'}
+                                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                     strokeWidth={k < filled ? 0 : 0.5}
                                     fillOpacity={k < filled ? 0.7 : 1}
                                   />
@@ -928,7 +880,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <section>
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('profile.sections.eyebrow')}{t('profile.sections.contracts')}
           </p>
           <h2
@@ -1020,7 +972,7 @@ export default function CategoryProfile() {
       {(subcategoryLoading || (subcatBarData.length > 0)) && (
         <section>
           <div className="mb-4">
-            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+            <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
               {t('profile.sections.eyebrow')}{t('profile.sections.subcategories')}
             </p>
             <h2

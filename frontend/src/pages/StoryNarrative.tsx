@@ -176,19 +176,19 @@ function ChapterSources({ sources }: { sources: string[] }) {
     <div className="mt-8 mb-2">
       <button
         onClick={() => setOpen((o) => !o)}
-        className="inline-flex items-center gap-1.5 text-xs text-zinc-600 hover:text-zinc-400 transition-colors group"
+        className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors group"
         aria-expanded={open}
       >
-        <FileText className="h-3 w-3 group-hover:text-zinc-400" />
+        <FileText className="h-3 w-3 group-hover:text-text-secondary" />
         <span className="font-mono">{open ? '−' : '+'}</span>
         <span>{sources.length} source{sources.length !== 1 ? 's' : ''}</span>
-        <span className="text-zinc-700">&mdash; {open ? 'collapse' : 'view citations'}</span>
+        <span className="text-text-primary">&mdash; {open ? 'collapse' : 'view citations'}</span>
       </button>
       {open && (
-        <ol className="mt-3 space-y-1.5 border-l-2 border-zinc-800 pl-4">
+        <ol className="mt-3 space-y-1.5 border-l-2 border-border pl-4">
           {sources.map((s, i) => (
-            <li key={i} className="text-[11px] text-zinc-500 font-mono leading-relaxed">
-              <span className="text-zinc-700 mr-2 select-none">[{i + 1}]</span>
+            <li key={i} className="text-[11px] text-text-muted font-mono leading-relaxed">
+              <span className="text-text-primary mr-2 select-none">[{i + 1}]</span>
               {s}
             </li>
           ))}
@@ -229,7 +229,7 @@ function ChapterSection({
       <div className="max-w-prose mx-auto px-4 sm:px-0">
         {chapter.prose.map((paragraph, i) => (
           <ScrollReveal key={i} delay={i * 60}>
-            <p className="text-zinc-200 leading-relaxed mb-6 text-lg">
+            <p className="text-text-secondary leading-relaxed mb-6 text-lg">
               {paragraph}
             </p>
           </ScrollReveal>
@@ -251,7 +251,7 @@ function ChapterSection({
                   <InlineChart data={cfg.data} title={cfg.title} />
                 ) : (
                   <div
-                    className="bg-zinc-900 rounded-sm p-6 text-zinc-500 text-sm text-center"
+                    className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
                     role="img"
                     aria-label={cfg.title}
                   >
@@ -271,7 +271,7 @@ function ChapterSection({
                 <ChartComponent />
               ) : (
                 <div
-                  className="bg-zinc-900 rounded-sm p-6 text-zinc-500 text-sm text-center"
+                  className="bg-background-card rounded-sm p-6 text-text-muted text-sm text-center"
                   role="img"
                   aria-label={cfg.title}
                 >
@@ -335,7 +335,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           className="flex items-center gap-3 mb-6 flex-wrap"
         >
           <OutletBadge outlet={story.outlet} />
-          <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-zinc-500">
+          <span className="text-[10px] font-semibold tracking-[0.2em] uppercase text-text-muted">
             {getTypeLabel(story.type, t)}
           </span>
           {story.era && (
@@ -353,7 +353,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={slideUp}
           initial="initial"
           animate="animate"
-          className="font-bold text-white leading-[1.05] mb-5"
+          className="font-bold text-text-primary leading-[1.05] mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(2rem, 5vw, 3.75rem)',
@@ -368,7 +368,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="italic text-zinc-300 leading-[1.55] max-w-2xl mb-8"
+          className="italic text-text-secondary leading-[1.55] max-w-2xl mb-8"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(1.05rem, 1.5vw, 1.25rem)',
@@ -382,10 +382,10 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
           variants={fadeIn}
           initial="initial"
           animate="animate"
-          className="flex flex-wrap items-center gap-3 text-sm text-zinc-500 mb-10"
+          className="flex flex-wrap items-center gap-3 text-sm text-text-muted mb-10"
         >
           <span>{story.byline}</span>
-          <span className="w-px h-4 bg-zinc-700" aria-hidden="true" />
+          <span className="w-px h-4 bg-background-elevated" aria-hidden="true" />
           <span className="inline-flex items-center gap-1.5">
             <Clock className="h-3.5 w-3.5" />
             {story.estimatedMinutes} min {t('storyType.readTime', 'read')}
@@ -401,7 +401,7 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               </span>
             )
           })()}
-          <span className="text-[11px] text-zinc-700 font-mono">
+          <span className="text-[11px] text-text-primary font-mono">
             {story.chapters.length} {story.chapters.length === 1 ? 'chapter' : 'chapters'}
           </span>
         </motion.div>
@@ -434,9 +434,9 @@ function StoryHero({ story, accentColor }: { story: StoryDef; accentColor: strin
               <span>{story.leadStat.value}</span>
             )}
           </div>
-          <p className="text-zinc-400 text-base mt-2">{story.leadStat.label}</p>
+          <p className="text-text-secondary text-base mt-2">{story.leadStat.label}</p>
           {story.leadStat.sublabel && (
-            <p className="text-zinc-500 text-sm mt-1">{story.leadStat.sublabel}</p>
+            <p className="text-text-muted text-sm mt-1">{story.leadStat.sublabel}</p>
           )}
         </motion.div>
 
@@ -485,7 +485,7 @@ function ChapterNav({
             <span
               className={cn(
                 'transition-opacity text-xs whitespace-nowrap pr-2',
-                isActive ? 'opacity-100 text-zinc-200' : 'opacity-0 group-hover:opacity-100 text-zinc-400'
+                isActive ? 'opacity-100 text-text-secondary' : 'opacity-0 group-hover:opacity-100 text-text-secondary'
               )}
             >
               {ch.title}
@@ -518,7 +518,7 @@ function MethodologySection({ story }: { story: StoryDef }) {
   return (
     <ScrollReveal>
       <section
-        className="max-w-prose mx-auto px-4 sm:px-0 my-16 py-8 border-t border-zinc-800"
+        className="max-w-prose mx-auto px-4 sm:px-0 my-16 py-8 border-t border-border"
         aria-label={t('story.methodology')}
       >
         {/* Investigation status badge */}
@@ -530,12 +530,12 @@ function MethodologySection({ story }: { story: StoryDef }) {
         )}
 
         <h3
-          className="text-xl font-bold text-zinc-200 mb-4"
+          className="text-xl font-bold text-text-secondary mb-4"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.methodology')}
         </h3>
-        <div className="text-sm text-zinc-400 leading-relaxed space-y-3">
+        <div className="text-sm text-text-secondary leading-relaxed space-y-3">
           <p>
             {t('story.methodologyP1')}{' '}
             <ProseStat value="3,051,294" color="text-red-400" animate={false} />{' '}
@@ -551,14 +551,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
 
         {/* Next steps for journalists */}
         {story.nextSteps && story.nextSteps.length > 0 && (
-          <div className="mt-8 p-4 rounded-lg border border-zinc-700/60 bg-zinc-900/60">
-            <h4 className="text-sm font-semibold text-zinc-300 mb-3 flex items-center gap-2">
+          <div className="mt-8 p-4 rounded-sm border border-border bg-background-card">
+            <h4 className="text-sm font-semibold text-text-secondary mb-3 flex items-center gap-2">
               <ChevronRight className="h-4 w-4 text-red-400" />
               {t('story.nextSteps')}
             </h4>
             <ul className="space-y-2">
               {story.nextSteps.map((step, i) => (
-                <li key={i} className="flex gap-2 text-xs text-zinc-400 leading-relaxed">
+                <li key={i} className="flex gap-2 text-xs text-text-secondary leading-relaxed">
                   <span className="text-red-500 font-bold shrink-0 mt-0.5">{i + 1}.</span>
                   <span>{step}</span>
                 </li>
@@ -570,14 +570,14 @@ function MethodologySection({ story }: { story: StoryDef }) {
         <div className="flex gap-3 mt-6">
           <Link
             to="/methodology"
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.fullMethodology')}
             <ExternalLink className="h-3 w-3" />
           </Link>
           <Link
             to="/model"
-            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs font-medium px-3 py-1.5 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
           >
             {t('story.modelTransparency')}
             <ExternalLink className="h-3 w-3" />
@@ -605,7 +605,7 @@ function RelatedSection({ story }: { story: StoryDef }) {
         aria-label={t('story.investigateMore')}
       >
         <h3
-          className="text-xl font-bold text-zinc-200 mb-6"
+          className="text-xl font-bold text-text-secondary mb-6"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.investigateMore')}
@@ -661,7 +661,7 @@ function PlatformLinks({ story }: { story: StoryDef }) {
     <ScrollReveal>
       <section className="max-w-prose mx-auto px-4 sm:px-0 my-12">
         <h3
-          className="text-lg font-bold text-zinc-300 mb-4"
+          className="text-lg font-bold text-text-secondary mb-4"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {t('story.viewOnPlatform')}
@@ -671,15 +671,15 @@ function PlatformLinks({ story }: { story: StoryDef }) {
             <Link
               key={link.to}
               to={link.to}
-              className="flex items-center justify-between p-3 rounded-lg bg-zinc-900/50 border border-zinc-800 hover:border-zinc-600 transition-colors group"
+              className="flex items-center justify-between p-3 rounded-sm bg-background-card border border-border hover:border-border transition-colors group"
             >
               <div>
-                <p className="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">
+                <p className="text-sm font-medium text-text-secondary group-hover:text-text-primary transition-colors">
                   {link.label}
                 </p>
-                <p className="text-xs text-zinc-500">{link.description}</p>
+                <p className="text-xs text-text-muted">{link.description}</p>
               </div>
-              <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-zinc-400 transition-colors shrink-0" />
+              <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-text-secondary transition-colors shrink-0" />
             </Link>
           ))}
         </div>
@@ -712,7 +712,7 @@ function ShareBar({ story }: { story: StoryDef }) {
     <div className="max-w-prose mx-auto px-4 sm:px-0 my-8">
       <button
         onClick={handleShare}
-        className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full border border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:border-zinc-500 transition-colors"
+        className="inline-flex items-center gap-2 text-xs font-medium px-4 py-2 rounded-full border border-border text-text-secondary hover:text-text-secondary hover:border-border transition-colors"
       >
         <Share2 className="h-3.5 w-3.5" />
         {t('story.shareInvestigation')}
@@ -819,7 +819,7 @@ export default function StoryNarrative() {
   return (
     <div className="min-h-screen bg-black">
       {/* Sticky header: back link + reading progress */}
-      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-zinc-800/50">
+      <div className="sticky top-0 z-50 bg-black/80 backdrop-blur-sm border-b border-border">
         {/* Progress bar */}
         <div
           className="absolute bottom-0 left-0 h-[2px] transition-all duration-100"
@@ -829,12 +829,12 @@ export default function StoryNarrative() {
         <div className="max-w-4xl mx-auto px-4 sm:px-6 py-2 flex items-center justify-between">
           <Link
             to="/journalists"
-            className="inline-flex items-center gap-1.5 text-xs text-zinc-500 hover:text-zinc-300 transition-colors"
+            className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-text-secondary transition-colors"
           >
             <ArrowLeft className="h-3.5 w-3.5" />
             {t('story.allStories')}
           </Link>
-          <span className="text-[10px] text-zinc-600 font-mono tabular-nums">
+          <span className="text-[10px] text-text-muted font-mono tabular-nums">
             {Math.round(scrollPct)}%
           </span>
         </div>

@@ -123,7 +123,7 @@ export function TableExportButton({
     state === 'loading' ? (
       <Loader2 className="h-3.5 w-3.5 animate-spin" aria-hidden="true" />
     ) : state === 'done' ? (
-      <Check className="h-3.5 w-3.5 text-emerald-400" aria-hidden="true" />
+      <Check className="h-3.5 w-3.5 text-[color:var(--color-signal-live)]" aria-hidden="true" />
     ) : (
       <Download className="h-3.5 w-3.5" aria-hidden="true" />
     )

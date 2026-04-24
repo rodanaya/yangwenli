@@ -17,7 +17,8 @@ export function ChartDownloadButton({ targetRef, filename = 'chart', className }
     if (!targetRef.current) return
     setLoading(true)
     try {
-      const dataUrl = await toPng(targetRef.current, { cacheBust: true, backgroundColor: '#0f172a' })
+      // Bible §2: PNG export ground matches platform cream page
+      const dataUrl = await toPng(targetRef.current, { cacheBust: true, backgroundColor: '#faf9f6' })
       const link = document.createElement('a')
       link.download = `${filename}.png`
       link.href = dataUrl

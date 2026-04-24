@@ -49,14 +49,14 @@ export function StoryAnoSinExcusas() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Tasa de adjudicación directa · 2019-2024
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         2023: el año récord sin pandemia, sin emergencia declarada, sin excusa operativa
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada fila es un año. Cada punto vale 2pp de adjudicación directa. La línea cian
         marca el máximo OCDE (25%). El fondo gris indica años con pandemia activa. 2023
         batió el récord histórico verificable con ninguna de las dos excusas disponibles.
@@ -65,25 +65,25 @@ export function StoryAnoSinExcusas() {
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">82.2%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             adj. directa 2023 · récord verificable
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">3.3x</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             sobre el máximo OCDE de 25%
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">+3.0pp</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             vs. 2022 · sin emergencia que justifique
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[680px]"
@@ -262,14 +262,14 @@ export function StoryAnoSinExcusas() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Durante los años de pandemia (2020-2021), la tasa subió 5pp. Sin pandemia, en 2023,
           subió otros 3pp más hasta el récord. La emergencia sanitaria no se convirtió en
           excepción temporal: se volvió hábito administrativo permanente.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2019-2024 · Structure B-D · OCDE Public Procurement Report 2023
       </p>
     </motion.div>

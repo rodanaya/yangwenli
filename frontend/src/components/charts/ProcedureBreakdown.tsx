@@ -36,7 +36,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
   return (
     <div style={{ maxHeight: `${height}px`, overflowY: 'auto' }} className="space-y-0.5 pr-1">
       {/* legend */}
-      <div className="flex items-center gap-5 pb-2 text-xs text-zinc-500 font-mono">
+      <div className="flex items-center gap-5 pb-2 text-xs text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
           <span className="inline-block w-2 h-2 rounded-full" style={{ background: COLORS.direct }} />
           Direct Award
@@ -65,7 +65,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             <button
               className={[
                 'text-right w-[88px] shrink-0 text-[10px] font-mono truncate',
-                'text-zinc-500 group-hover:text-zinc-300 transition-colors',
+                'text-text-muted group-hover:text-text-secondary transition-colors',
                 onSectorClick ? 'cursor-pointer' : 'cursor-default',
               ].join(' ')}
               onClick={() => onSectorClick?.(sector.sector_code)}
@@ -109,7 +109,7 @@ export const ProcedureBreakdown = memo(function ProcedureBreakdown({
             </div>
 
             {/* direct award % label */}
-            <span className="text-[10px] text-zinc-600 font-mono w-8 text-right shrink-0">
+            <span className="text-[10px] text-text-muted font-mono w-8 text-right shrink-0">
               {sector.direct_award_pct.toFixed(0)}%
             </span>
           </div>

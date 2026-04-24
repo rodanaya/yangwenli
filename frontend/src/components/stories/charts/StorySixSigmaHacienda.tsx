@@ -39,16 +39,16 @@ export function StorySixSigmaHacienda() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · SixSigma en Hacienda
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         El SAT persigue el fraude — y fue víctima de uno: 147 licitaciones diseñadas para perder
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         SixSigma ganaba tras licitar en procesos nominalmente competitivos. El
         modelo v0.6.5 detecta la anomalía sin conocer el expediente: tasa de éxito
         atípica y concentración institucional que sobresale contra la línea base
@@ -58,23 +58,23 @@ export function StorySixSigmaHacienda() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-500">92%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">win rate SixSigma</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">win rate SixSigma</div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-cyan-400">~16%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">línea base sector Hacienda</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">línea base sector Hacienda</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400">87.8%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">contratos en riesgo alto/crítico</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos en riesgo alto/crítico</div>
         </div>
       </div>
 
       {/* Win-rate comparison + contract strip */}
       <div className="grid md:grid-cols-[280px_1fr] gap-5">
         {/* Two columns comparison */}
-        <div className="rounded-lg bg-zinc-900/60 border border-zinc-800 p-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        <div className="rounded-lg bg-background-card border border-border p-4">
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
             Tasa de éxito — 50 procesos simulados
           </p>
           <svg viewBox="0 0 280 310" className="w-full h-auto" role="img" aria-label="Win rate comparison: SixSigma versus sector baseline">
@@ -167,8 +167,8 @@ export function StorySixSigmaHacienda() {
         </div>
 
         {/* 147 contracts strip */}
-        <div className="rounded-lg bg-zinc-900/60 border border-zinc-800 p-4">
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-3">
+        <div className="rounded-lg bg-background-card border border-border p-4">
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
             Los 147 contratos · distribución de riesgo v0.6.5
           </p>
           <svg viewBox="0 0 420 260" className="w-full h-auto" role="img" aria-label="147 SixSigma contracts colored by risk level">
@@ -195,7 +195,7 @@ export function StorySixSigmaHacienda() {
             })}
           </svg>
 
-          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-zinc-500 mt-3 pt-2 border-t border-zinc-800">
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-[10px] font-mono text-text-muted mt-3 pt-2 border-t border-border">
             <div className="flex items-center gap-1.5">
               <div className="w-3 h-3 rounded-full bg-red-600"></div>
               <span>Crítico · 84 (57%)</span>
@@ -220,7 +220,7 @@ export function StorySixSigmaHacienda() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Ningún contrato individual despierta sospecha — montos razonables,
           plazos en regla, formato de licitación pública. La anomalía emerge del
           conjunto: el mismo proveedor gana licitación tras licitación, con un
@@ -228,7 +228,7 @@ export function StorySixSigmaHacienda() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · 147 contratos SAT-SixSigma · modelo v0.6.5 score promedio 0.756
       </p>
     </motion.div>

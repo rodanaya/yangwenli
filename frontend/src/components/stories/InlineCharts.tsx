@@ -47,13 +47,13 @@ function ChartCard({
 }) {
   return (
     <figure
-      className="w-full bg-zinc-950/80 border border-zinc-800/60 rounded-sm overflow-hidden"
+      className="w-full bg-background/80 border border-border rounded-sm overflow-hidden"
       role="img"
       aria-label={title}
     >
       <figcaption className="px-4 pt-4 pb-2">
         <span
-          className="text-sm font-semibold text-zinc-200 tracking-tight"
+          className="text-sm font-semibold text-text-secondary tracking-tight"
           style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}
         >
           {title}
@@ -61,7 +61,7 @@ function ChartCard({
       </figcaption>
       <div className="px-2 pb-2">{children}</div>
       {annotation && (
-        <p className="px-4 pb-3 text-[11px] text-zinc-500 font-mono leading-relaxed">
+        <p className="px-4 pb-3 text-[11px] text-text-muted font-mono leading-relaxed">
           {annotation}
         </p>
       )}
@@ -149,19 +149,19 @@ export function InlineDotGrid({
       {/* Legend */}
       <div className="flex flex-wrap gap-x-4 gap-y-1 px-2 pt-2 pb-1">
         {data.points.map((pt, i) => (
-          <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono text-zinc-400">
+          <div key={i} className="flex items-center gap-1.5 text-[11px] font-mono text-text-secondary">
             <span
               className="inline-block w-2.5 h-2.5 rounded-full shrink-0"
               style={{ backgroundColor: getColor(pt, i), opacity: pt.highlight ? 1 : 0.5 }}
             />
             <span>{pt.label}</span>
-            <span className="text-zinc-600 tabular-nums">
+            <span className="text-text-muted tabular-nums">
               {pt.value.toLocaleString()}
             </span>
           </div>
         ))}
         {scale < 1 && (
-          <span className="text-[10px] font-mono text-zinc-700 self-center">
+          <span className="text-[10px] font-mono text-text-primary self-center">
             (displaying {MAX_DOTS} of {total.toLocaleString()} proportionally)
           </span>
         )}

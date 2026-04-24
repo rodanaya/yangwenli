@@ -170,9 +170,9 @@ const STATUS_META: Record<
   },
   solo_datos: {
     label: 'DATA LEAD',
-    color: 'text-zinc-500',
-    border: 'border-zinc-600/30',
-    bg: 'bg-zinc-800/40',
+    color: 'text-text-muted',
+    border: 'border-border',
+    bg: 'bg-background-elevated',
   },
 }
 
@@ -241,7 +241,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
       onClick={() => navigate(`/stories/${item.slug}`)}
       className={cn(
         'group relative block w-full text-left',
-        'bg-[#161210] border border-[rgba(255,255,255,0.07)] rounded-sm',
+        'bg-background-card border border-border rounded-sm',
         'overflow-hidden transition-colors duration-200',
         'hover:border-[rgba(255,255,255,0.14)]'
       )}
@@ -267,13 +267,13 @@ function FeaturedCard({ item }: { item: Investigation }) {
               {t('featuredLabel')}
             </span>
             <span className="h-px w-8 bg-red-500/50" />
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
               {FRAUD_LABEL[item.type]}
             </span>
           </div>
 
           <h2
-            className="text-white leading-[1.08] mb-5 font-serif"
+            className="text-text-primary leading-[1.08] mb-5 font-serif"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontSize: 'clamp(1.75rem, 3.6vw, 2.75rem)',
@@ -284,7 +284,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
             {headline}
           </h2>
 
-          <p className="text-sm sm:text-base text-zinc-400 font-mono tabular-nums mb-8">
+          <p className="text-sm sm:text-base text-text-secondary font-mono tabular-nums mb-8">
             {sub}
           </p>
 
@@ -299,7 +299,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
             >
               [{status.label}]
             </span>
-            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-zinc-400 border border-[rgba(255,255,255,0.08)] bg-zinc-900/60 rounded-sm">
+            <span className="inline-flex items-center px-2 py-[3px] text-[10px] font-mono font-bold tracking-[0.12em] text-text-secondary border border-[rgba(255,255,255,0.08)] bg-background-card rounded-sm">
               {ERA_LABEL[item.era]}
             </span>
           </div>
@@ -316,7 +316,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
         <div className="lg:col-span-2 flex flex-col justify-between gap-6 lg:border-l lg:border-[rgba(255,255,255,0.06)] lg:pl-10">
           <div>
             <div
-              className="font-mono font-bold text-zinc-50 leading-none"
+              className="font-mono font-bold text-text-primary leading-none"
               style={{
                 fontSize: 'clamp(3rem, 6vw, 5rem)',
                 letterSpacing: '-0.04em',
@@ -324,7 +324,7 @@ function FeaturedCard({ item }: { item: Investigation }) {
             >
               {formatBillions(item.amount)}
             </div>
-            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-3">
+            <p className="text-[11px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3">
               Validated contract spend
             </p>
           </div>
@@ -334,18 +334,18 @@ function FeaturedCard({ item }: { item: Investigation }) {
               className="border-l-2 pl-3"
               style={{ borderColor: accent }}
             >
-              <div className="text-2xl font-mono font-bold text-zinc-100 tabular-nums">
+              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
                 {item.contracts.toLocaleString('en-US')}
               </div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 mt-1">
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
                 Contracts
               </p>
             </div>
             <div className="border-l-2 border-[rgba(255,255,255,0.12)] pl-3">
-              <div className="text-2xl font-mono font-bold text-zinc-100 tabular-nums">
+              <div className="text-2xl font-mono font-bold text-text-primary tabular-nums">
                 {item.sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? '—'}
               </div>
-              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 mt-1">
+              <p className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted mt-1">
                 Time span
               </p>
             </div>
@@ -374,7 +374,7 @@ function GridCard({ item }: { item: Investigation }) {
       to={`/stories/${item.slug}`}
       className={cn(
         'group relative flex flex-col',
-        'bg-[#161210] border border-[rgba(255,255,255,0.07)] rounded-sm',
+        'bg-background-card border border-border rounded-sm',
         'transition-colors duration-200 hover:border-[rgba(255,255,255,0.16)]'
       )}
       aria-label={headline}
@@ -395,14 +395,14 @@ function GridCard({ item }: { item: Investigation }) {
             {FRAUD_LABEL[item.type]}
           </span>
           <span className="h-px flex-1 bg-[rgba(255,255,255,0.05)]" />
-          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-zinc-600">
+          <span className="text-[9px] font-mono uppercase tracking-[0.12em] text-text-muted">
             {ERA_LABEL[item.era]}
           </span>
         </div>
 
         {/* Headline */}
         <h3
-          className="text-zinc-50 leading-[1.18] font-serif"
+          className="text-text-primary leading-[1.18] font-serif"
           style={{
             fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
             fontSize: '17px',
@@ -414,19 +414,19 @@ function GridCard({ item }: { item: Investigation }) {
         </h3>
 
         {/* One-line lede */}
-        <p className="text-xs text-zinc-400 font-mono tabular-nums leading-snug line-clamp-2">
+        <p className="text-xs text-text-secondary font-mono tabular-nums leading-snug line-clamp-2">
           {sub}
         </p>
 
         {/* Hero number */}
         <div>
           <div
-            className="font-mono font-bold text-zinc-50 leading-none tabular-nums"
+            className="font-mono font-bold text-text-primary leading-none tabular-nums"
             style={{ fontSize: '2rem', letterSpacing: '-0.03em' }}
           >
             {formatBillions(item.amount)}
           </div>
-          <p className="text-[11px] text-zinc-500 font-mono mt-2 tabular-nums">
+          <p className="text-[11px] text-text-muted font-mono mt-2 tabular-nums">
             {item.contracts.toLocaleString('en-US')} contracts ·{' '}
             {sub.match(/\d{4}[–-]\d{4}/)?.[0] ?? ''}
           </p>
@@ -435,7 +435,7 @@ function GridCard({ item }: { item: Investigation }) {
         {/* Intensity bar */}
         <div className="flex items-center gap-3">
           <IntensityBar value={intensity} color="#f59e0b" />
-          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-600">
+          <span className="text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted">
             {t('cards.scale')}
           </span>
         </div>
@@ -453,7 +453,7 @@ function GridCard({ item }: { item: Investigation }) {
             [{status.label}]
           </span>
           <span
-            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-zinc-500 group-hover:text-zinc-100 transition-colors"
+            className="inline-flex items-center gap-1 text-[11px] font-mono uppercase tracking-[0.1em] text-text-muted group-hover:text-text-primary transition-colors"
           >
             {t('cards.readStory')}
             <span
@@ -561,8 +561,8 @@ function FilterStrip({
             className={cn(
               'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-[11px] font-mono uppercase tracking-[0.1em] border transition-colors',
               isActive
-                ? 'bg-zinc-100 text-zinc-950 border-zinc-100 font-bold'
-                : 'bg-transparent text-zinc-400 border-[rgba(255,255,255,0.08)] hover:text-zinc-100 hover:border-[rgba(255,255,255,0.2)]'
+                ? 'bg-background-elevated text-text-primary border-border font-bold'
+                : 'bg-transparent text-text-secondary border-[rgba(255,255,255,0.08)] hover:text-text-primary hover:border-[rgba(255,255,255,0.2)]'
             )}
           >
             {f.accent && !isActive && (
@@ -576,7 +576,7 @@ function FilterStrip({
             <span
               className={cn(
                 'tabular-nums text-[10px]',
-                isActive ? 'text-zinc-500' : 'text-zinc-600'
+                isActive ? 'text-text-muted' : 'text-text-muted'
               )}
             >
               {counts[f.key]}
@@ -618,12 +618,12 @@ function AriaLiveTicker() {
             LIVE
           </span>
         </span>
-        <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-400 tabular-nums">
+        <span className="text-[11px] font-mono uppercase tracking-[0.12em] text-text-secondary tabular-nums">
           {total > 0 ? total.toLocaleString('en-US') : items.length}{' '}
           {t('ticker.label', { defaultValue: 'vendors under active investigation' })}
         </span>
         <span className="h-px flex-1 bg-[rgba(255,255,255,0.06)]" />
-        <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600">
+        <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
           ARIA · TIER 1
         </span>
       </div>
@@ -643,12 +643,12 @@ function AriaLiveTicker() {
               to={`/thread/${item.vendor_id}`}
               className={cn(
                 'group flex items-center justify-between gap-3',
-                'px-3 py-2.5 bg-[#161210] border border-[rgba(255,255,255,0.05)]',
+                'px-3 py-2.5 bg-background-card border border-border',
                 'rounded-sm hover:border-[rgba(255,255,255,0.15)] transition-colors'
               )}
             >
               <span
-                className="text-[11px] text-zinc-300 font-mono truncate group-hover:text-zinc-50"
+                className="text-[11px] text-text-secondary font-mono truncate group-hover:text-text-primary"
                 title={item.vendor_name}
               >
                 {name}
@@ -747,7 +747,7 @@ export default function Journalists() {
   })
 
   return (
-    <div className="min-h-screen" style={{ background: '#0f0d0c' }}>
+    <div className="min-h-screen" style={{ background: 'var(--color-background)' }}>
       <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
         {/* =================================================================
             MASTHEAD
@@ -756,21 +756,21 @@ export default function Journalists() {
           <div className="flex items-center gap-3 mb-6 pb-3 border-b border-[rgba(255,255,255,0.07)]">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-zinc-300">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.22em] text-text-secondary">
                 RUBLI
               </span>
             </span>
-            <span className="text-zinc-700">·</span>
-            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500">
+            <span className="text-text-primary">·</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted">
               {t('masthead.desk', { defaultValue: 'Investigations Desk' })}
             </span>
-            <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600 tabular-nums">
+            <span className="ml-auto text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums">
               {t('masthead.updated', { defaultValue: 'Updated' })} {updatedDate}
             </span>
           </div>
 
           <h1
-            className="text-zinc-50"
+            className="text-text-primary"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontSize: 'clamp(2.5rem, 6.5vw, 5rem)',
@@ -784,7 +784,7 @@ export default function Journalists() {
           </h1>
 
           <p
-            className="mt-6 max-w-3xl text-zinc-400"
+            className="mt-6 max-w-3xl text-text-secondary"
             style={{
               fontFamily: 'var(--font-family-serif, "Playfair Display", serif)',
               fontStyle: 'italic',
@@ -799,21 +799,21 @@ export default function Journalists() {
           </p>
 
           {/* Subline: counts */}
-          <div className="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-3 text-[11px] font-mono uppercase tracking-[0.12em] text-zinc-500">
+          <div className="mt-8 flex flex-wrap items-baseline gap-x-8 gap-y-3 text-[11px] font-mono uppercase tracking-[0.12em] text-text-muted">
             <span>
-              <span className="text-zinc-100 font-bold tabular-nums">
+              <span className="text-text-primary font-bold tabular-nums">
                 {totalCount}
               </span>{' '}
               {t('masthead.totalLabel', { defaultValue: 'Investigations' })}
             </span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-text-primary">·</span>
             <span>
               <span className="text-red-500 font-bold tabular-nums">
                 {prosecutedCount}
               </span>{' '}
               {t('masthead.prosecutedLabel', { defaultValue: 'Prosecuted' })}
             </span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-text-primary">·</span>
             <span>
               <span className="text-amber-400 font-bold tabular-nums">
                 {activeLeadsCount}
@@ -836,11 +836,11 @@ export default function Journalists() {
         <section className="mb-8">
           <div className="flex items-end justify-between gap-6 mb-5">
             <div>
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-zinc-500 mb-1.5">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-text-muted mb-1.5">
                 {t('grid.kicker', { defaultValue: 'The Full Dossier' })}
               </p>
               <h2
-                className="text-zinc-100"
+                className="text-text-primary"
                 style={{
                   fontFamily:
                     'var(--font-family-serif, "Playfair Display", serif)',
@@ -852,7 +852,7 @@ export default function Journalists() {
                 {t('grid.title', { defaultValue: 'All investigations' })}
               </h2>
             </div>
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600 tabular-nums pb-2">
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted tabular-nums pb-2">
               {filtered.length} / {remaining.length}{' '}
               {t('grid.showing', { defaultValue: 'showing' })}
             </span>
@@ -870,7 +870,7 @@ export default function Journalists() {
           ))}
           {filtered.length === 0 && (
             <div className="col-span-full py-16 text-center border border-dashed border-[rgba(255,255,255,0.08)] rounded-sm">
-              <p className="text-sm font-mono text-zinc-500">
+              <p className="text-sm font-mono text-text-muted">
                 {t('grid.empty', {
                   defaultValue: 'No investigations match this filter.',
                 })}
@@ -888,23 +888,23 @@ export default function Journalists() {
             FOOTER
         ================================================================= */}
         <footer className="mt-16 pt-8 pb-16 border-t border-[rgba(255,255,255,0.07)]">
-          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600">
+          <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
             <span>
               Source:{' '}
-              <span className="text-zinc-400">COMPRANET / SHCP</span>
+              <span className="text-text-secondary">COMPRANET / SHCP</span>
             </span>
-            <span className="text-zinc-800">·</span>
+            <span className="text-text-primary">·</span>
             <span>
               Risk model{' '}
-              <span className="text-zinc-400 tabular-nums">v0.6.5</span>
+              <span className="text-text-secondary tabular-nums">v0.6.5</span>
             </span>
-            <span className="text-zinc-800">·</span>
+            <span className="text-text-primary">·</span>
             <span>
-              Test AUC <span className="text-zinc-400 tabular-nums">0.828</span>
+              Test AUC <span className="text-text-secondary tabular-nums">0.828</span>
             </span>
-            <span className="text-zinc-800">·</span>
+            <span className="text-text-primary">·</span>
             <span>
-              <span className="text-zinc-400 tabular-nums">3,051,294</span>{' '}
+              <span className="text-text-secondary tabular-nums">3,051,294</span>{' '}
               contracts analyzed
             </span>
           </div>

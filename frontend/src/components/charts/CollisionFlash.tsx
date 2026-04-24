@@ -51,7 +51,7 @@ export function CollisionFlash({ className }: { className?: string }) {
   if (isLoading) {
     return (
       <div className={className}>
-        <div className="h-[88px] bg-zinc-800/40 rounded animate-pulse" />
+        <div className="h-[88px] bg-background-elevated/40 rounded animate-pulse" />
       </div>
     )
   }
@@ -74,7 +74,7 @@ export function CollisionFlash({ className }: { className?: string }) {
         </span>
         <Link
           to="/collusion"
-          className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5 transition-colors"
+          className="text-[10px] font-mono text-text-muted hover:text-text-secondary flex items-center gap-0.5 transition-colors"
         >
           {lang === 'en' ? 'all pairs' : 'todos'}
           <ArrowRight className="h-2.5 w-2.5" />
@@ -88,10 +88,10 @@ export function CollisionFlash({ className }: { className?: string }) {
           to={`/vendors/${pair.vendor_id_a}`}
           className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 transition-colors"
         >
-          <span className="block text-[11px] font-mono font-semibold text-zinc-200 leading-tight truncate">
+          <span className="block text-[11px] font-mono font-semibold text-text-primary leading-tight truncate">
             {nameA}
           </span>
-          <span className="text-[9px] font-mono text-zinc-500">
+          <span className="text-[9px] font-mono text-text-muted">
             {pair.vendor_a_procedures.toLocaleString()} {lang === 'en' ? 'procedures' : 'procedimientos'}
           </span>
         </Link>
@@ -117,22 +117,22 @@ export function CollisionFlash({ className }: { className?: string }) {
           to={`/vendors/${pair.vendor_id_b}`}
           className="flex-1 min-w-0 px-2 py-1.5 rounded border border-red-900/40 bg-red-950/20 hover:bg-red-950/40 transition-colors"
         >
-          <span className="block text-[11px] font-mono font-semibold text-zinc-200 leading-tight truncate">
+          <span className="block text-[11px] font-mono font-semibold text-text-primary leading-tight truncate">
             {nameB}
           </span>
-          <span className="text-[9px] font-mono text-zinc-500">
+          <span className="text-[9px] font-mono text-text-muted">
             {pair.vendor_b_procedures.toLocaleString()} {lang === 'en' ? 'procedures' : 'procedimientos'}
           </span>
         </Link>
       </div>
 
       {/* Stats row */}
-      <div className="flex items-center gap-3 text-[10px] font-mono text-zinc-500">
+      <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted">
         <span>
-          <span className="text-zinc-300">{pair.shared_procedures.toLocaleString()}</span>
+          <span className="text-text-secondary">{pair.shared_procedures.toLocaleString()}</span>
           {' '}{lang === 'en' ? 'shared procedures' : 'procedimientos compartidos'}
         </span>
-        <span className="text-zinc-700">·</span>
+        <span className="text-text-muted">·</span>
         <span style={{ color: '#f87171' }}>
           {coRate}% {lang === 'en' ? 'co-bid rate' : 'tasa de co-licitación'}
         </span>

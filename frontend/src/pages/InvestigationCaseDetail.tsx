@@ -54,12 +54,13 @@ import {
 // PALETTE — warm-dark editorial surface
 // ============================================================================
 
-const BG = '#141210'            // page
-const CARD = '#1a1614'          // card surface
-const CARD_HI = '#221d1a'       // card on card (elevated)
-const BORDER = 'rgba(231,229,225,0.08)'
-const BORDER_HI = 'rgba(231,229,225,0.14)'
-const INK = '#e7e5e1'           // primary text (warm bone)
+// Bible §2: cream page ground, white cards, warm border, dark ink.
+const BG = 'var(--color-background)'           // page — cream #faf9f6
+const CARD = 'var(--color-background-card)'    // card surface — white
+const CARD_HI = 'var(--color-background-elevated)' // elevated card
+const BORDER = 'var(--color-border)'
+const BORDER_HI = 'var(--color-border-hover)'
+const INK = 'var(--color-text-primary)'        // primary text — dark ink
 const INK_MUTED = '#a8a29e'     // secondary
 const INK_DIM = '#78716c'       // tertiary
 const INK_FAINT = '#57534e'     // overlines / captions
@@ -121,7 +122,7 @@ const LEVEL_COLOR: Record<PriorityLevel, string> = {
   critical: '#ef4444',
   high: '#f59e0b',
   medium: '#a16207',
-  low: '#71717a',
+  low: 'var(--color-text-muted)',
 }
 
 const STATUS_CONFIG: Record<InvestigationValidationStatus, {

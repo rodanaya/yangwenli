@@ -75,7 +75,7 @@ export function PairDossierRow({
 
   return (
     <article
-      className="group relative bg-zinc-950 hover:bg-zinc-900/40 transition-colors"
+      className="group relative bg-background hover:bg-background-card transition-colors"
       style={{
         borderTop: '1px solid rgba(255,255,255,0.06)',
         borderBottom: '1px solid rgba(255,255,255,0.06)',
@@ -100,7 +100,7 @@ export function PairDossierRow({
           <span className={kickerClass} style={{ color: flagged ? accent : undefined }}>
             {label}
           </span>
-          <span className="text-[10px] font-mono text-zinc-700 uppercase tracking-[0.15em] ml-auto tabular-nums">
+          <span className="text-[10px] font-mono text-text-primary uppercase tracking-[0.15em] ml-auto tabular-nums">
             {formatNumber(pair.shared_procedures)} {t('dossier.sharedSuffix', { defaultValue: 'procs compartidos' })}
           </span>
         </div>
@@ -114,7 +114,7 @@ export function PairDossierRow({
             aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_a}`}
           >
             <div
-              className="truncate text-zinc-100 group-hover/v:text-white transition-colors"
+              className="truncate text-text-primary group-hover/v:text-text-primary transition-colors"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontWeight: 600,
@@ -124,7 +124,7 @@ export function PairDossierRow({
             >
               {nameA}
             </div>
-            <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em] mt-0.5 tabular-nums">
+            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
               {formatNumber(pair.vendor_a_procedures)} {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} · {metrics.shareA.toFixed(0)}% {t('dossier.overlapWith', { defaultValue: 'con pareja' })}
             </div>
           </button>
@@ -146,7 +146,7 @@ export function PairDossierRow({
             aria-label={`${t('pairCard.viewProfile')}: ${pair.vendor_name_b}`}
           >
             <div
-              className="truncate text-zinc-100 group-hover/v:text-white transition-colors"
+              className="truncate text-text-primary group-hover/v:text-text-primary transition-colors"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontWeight: 600,
@@ -156,7 +156,7 @@ export function PairDossierRow({
             >
               {nameB}
             </div>
-            <div className="text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em] mt-0.5 tabular-nums">
+            <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-0.5 tabular-nums">
               {formatNumber(pair.vendor_b_procedures)} {t('dossier.procsSuffix', { defaultValue: 'procedimientos' })} · {metrics.shareB.toFixed(0)}% {t('dossier.overlapWith', { defaultValue: 'con pareja' })}
             </div>
           </button>
@@ -183,14 +183,14 @@ export function PairDossierRow({
                   </svg>
                 )
               })()}
-              <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.15em] tabular-nums">
+              <span className="text-[9px] font-mono text-text-muted uppercase tracking-[0.15em] tabular-nums">
                 {sharesBarPct.toFixed(0)}% {t('dossier.ofLarger', { defaultValue: 'del mayor' })}
               </span>
             </div>
 
             {/* Deck quote — italic serif, like a lede */}
             <p
-              className="mt-3 text-zinc-300 max-w-3xl"
+              className="mt-3 text-text-secondary max-w-3xl"
               style={{
                 fontFamily: 'var(--font-family-serif)',
                 fontStyle: 'italic',
@@ -214,7 +214,7 @@ export function PairDossierRow({
                     pair.vendor_name_b,
                   )
                 }
-                className="inline-flex items-center gap-1.5 text-zinc-400 hover:text-zinc-100 transition-colors"
+                className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary transition-colors"
               >
                 <FileText className="h-3 w-3" aria-hidden="true" />
                 {t('pairCard.sharedContracts')}
@@ -236,7 +236,7 @@ export function PairDossierRow({
 
         {/* Compact variant: single-line action cluster on the right */}
         {variant === 'compact' && (
-          <div className="mt-2 flex items-center justify-end gap-3 text-[10px] font-mono text-zinc-600 uppercase tracking-[0.12em]">
+          <div className="mt-2 flex items-center justify-end gap-3 text-[10px] font-mono text-text-muted uppercase tracking-[0.12em]">
             <button
               type="button"
               onClick={() =>
@@ -247,7 +247,7 @@ export function PairDossierRow({
                   pair.vendor_name_b,
                 )
               }
-              className="inline-flex items-center gap-1 text-zinc-500 hover:text-zinc-200 transition-colors"
+              className="inline-flex items-center gap-1 text-text-muted hover:text-text-secondary transition-colors"
             >
               <FileText className="h-3 w-3" aria-hidden="true" />
               {t('pairCard.sharedContracts')}

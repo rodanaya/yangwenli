@@ -71,7 +71,7 @@ export default function ProseStat({
       {displayValue}
       {showTooltip && label && (
         <span
-          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 rounded bg-zinc-900 text-zinc-200 text-xs font-normal whitespace-nowrap pointer-events-none z-50 shadow-lg"
+          className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-2.5 py-1 rounded bg-background-card text-text-secondary text-xs font-normal whitespace-nowrap pointer-events-none z-50 shadow-lg"
           role="tooltip"
           style={{
             textDecoration: 'none',

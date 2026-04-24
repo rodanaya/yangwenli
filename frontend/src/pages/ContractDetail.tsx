@@ -82,7 +82,7 @@ export default function ContractDetail() {
     if (score >= 0.6) return { color: '#dc2626', label: 'CRITICAL', bg: 'bg-red-600/10', border: 'border-red-600/30' }
     if (score >= 0.4) return { color: '#ea580c', label: 'HIGH', bg: 'bg-orange-600/10', border: 'border-orange-600/30' }
     if (score >= 0.25) return { color: '#eab308', label: 'MEDIUM', bg: 'bg-amber-600/10', border: 'border-amber-600/30' }
-    return { color: '#71717a', label: 'LOW', bg: 'bg-zinc-700/20', border: 'border-zinc-600/30' }
+    return { color: 'var(--color-text-muted)', label: 'LOW', bg: 'bg-background-elevated', border: 'border-border' }
   }, [contract?.risk_score])
 
   // ----- Error state ------------------------------------------------------
@@ -90,12 +90,12 @@ export default function ContractDetail() {
     return (
       <div className="min-h-[60vh] flex items-center justify-center">
         <div className="text-center max-w-md">
-          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-zinc-600" />
-          <p className="text-zinc-400 mb-2">Contract not found or unavailable.</p>
-          <p className="text-[11px] text-zinc-600 font-mono mb-6">ID: {contractId}</p>
+          <ShieldAlert className="h-10 w-10 mx-auto mb-4 text-text-muted" />
+          <p className="text-text-secondary mb-2">Contract not found or unavailable.</p>
+          <p className="text-[11px] text-text-muted font-mono mb-6">ID: {contractId}</p>
           <button
             onClick={() => navigate('/contracts')}
-            className="inline-flex items-center gap-2 text-xs text-zinc-400 hover:text-zinc-200 border border-zinc-800 rounded-sm px-3 py-1.5"
+            className="inline-flex items-center gap-2 text-xs text-text-secondary hover:text-text-secondary border border-border rounded-sm px-3 py-1.5"
           >
             <ArrowLeft className="h-3 w-3" />
             Back to contracts
@@ -121,16 +121,16 @@ export default function ContractDetail() {
   return (
     <div className="max-w-[1280px] mx-auto px-4 md:px-8 py-6 md:py-10">
       {/* ----- Breadcrumb ----- */}
-      <nav className="flex items-center gap-1.5 text-[11px] text-zinc-500 mb-8">
+      <nav className="flex items-center gap-1.5 text-[11px] text-text-muted mb-8">
         <Link
           to="/contracts"
-          className="inline-flex items-center gap-1 hover:text-zinc-300 transition-colors"
+          className="inline-flex items-center gap-1 hover:text-text-secondary transition-colors"
         >
           <ArrowLeft className="h-3 w-3" />
           Contracts
         </Link>
-        <ChevronRight className="h-3 w-3 text-zinc-700" />
-        <span className="text-zinc-400 font-mono tabular-nums">
+        <ChevronRight className="h-3 w-3 text-text-primary" />
+        <span className="text-text-secondary font-mono tabular-nums">
           {contract.contract_number || `#${contract.id}`}
         </span>
       </nav>
@@ -138,28 +138,28 @@ export default function ContractDetail() {
       {/* ----- EDITORIAL HERO ----- */}
       <header className="mb-10 md:mb-14">
         {/* Dateline strip */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-3 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-zinc-300">RUBLI</span>
+            <span className="text-text-secondary">RUBLI</span>
           </span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span>Contrato</span>
           {contract.contract_number && (
             <>
-              <span className="text-zinc-700">·</span>
-              <span className="text-zinc-300 font-mono tabular-nums">{contract.contract_number}</span>
+              <span className="text-text-primary">·</span>
+              <span className="text-text-secondary font-mono tabular-nums">{contract.contract_number}</span>
             </>
           )}
           {contract.risk_model_version && (
             <>
-              <span className="text-zinc-700">·</span>
+              <span className="text-text-primary">·</span>
               <span className="font-mono tabular-nums">{contract.risk_model_version}</span>
             </>
           )}
           {contract.contract_year && (
             <>
-              <span className="text-zinc-700">·</span>
+              <span className="text-text-primary">·</span>
               <span className="font-mono tabular-nums">{contract.contract_year}</span>
             </>
           )}
@@ -178,7 +178,7 @@ export default function ContractDetail() {
             {riskPalette.label} · {riskScorePct}%
           </span>
           {contract.sector_name && (
-            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+            <span className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
               SECTOR · {contract.sector_name}
             </span>
           )}
@@ -192,7 +192,7 @@ export default function ContractDetail() {
 
         {/* Large serif headline */}
         <h1
-          className="text-2xl md:text-3xl font-bold text-zinc-100 leading-[1.15] tracking-tight mb-6 line-clamp-3"
+          className="text-2xl md:text-3xl font-bold text-text-primary leading-[1.15] tracking-tight mb-6 line-clamp-3"
           style={{ fontFamily: 'var(--font-family-serif)' }}
           title={contract.title || undefined}
         >
@@ -204,32 +204,32 @@ export default function ContractDetail() {
           {contract.vendor_id ? (
             <Link
               to={`/vendors/${contract.vendor_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors max-w-full min-w-0"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary hover:border-border hover:bg-background/80 transition-colors max-w-full min-w-0"
               title={toTitleCase(contract.vendor_name || '')}
             >
-              <User className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+              <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
               <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-zinc-600 shrink-0" />
+              <ChevronRight className="h-3 w-3 text-text-muted shrink-0" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400 max-w-full min-w-0">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
               <User className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.vendor_name || 'Unknown vendor')}</span>
             </span>
           )}
-          <span className="text-zinc-700 shrink-0">→</span>
+          <span className="text-text-primary shrink-0">→</span>
           {contract.institution_id ? (
             <Link
               to={`/institutions/${contract.institution_id}`}
-              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-200 hover:border-zinc-700 hover:bg-zinc-900/80 transition-colors max-w-full min-w-0"
+              className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary hover:border-border hover:bg-background/80 transition-colors max-w-full min-w-0"
               title={toTitleCase(contract.institution_name || '')}
             >
-              <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+              <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
               <span className="font-medium truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || '-')}</span>
-              <ChevronRight className="h-3 w-3 text-zinc-600 shrink-0" />
+              <ChevronRight className="h-3 w-3 text-text-muted shrink-0" />
             </Link>
           ) : (
-            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-zinc-800 bg-zinc-900/40 text-zinc-400 max-w-full min-w-0">
+            <span className="inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border border-border bg-background/40 text-text-secondary max-w-full min-w-0">
               <Building2 className="h-3.5 w-3.5 shrink-0" />
               <span className="truncate max-w-[260px] md:max-w-[360px]">{toTitleCase(contract.institution_name || 'Unknown institution')}</span>
             </span>
@@ -237,7 +237,7 @@ export default function ContractDetail() {
         </div>
 
         {/* Key stats bar — editorial stat grid */}
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-6 border-y border-zinc-800/80">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 md:gap-8 py-6 border-y border-border">
           <StatBlock
             label="Contract value"
             value={
@@ -319,7 +319,7 @@ export default function ContractDetail() {
           <Section overline="Finding · Risk Assessment" title="What the model sees">
             <div className="space-y-6">
               {/* Risk score bar */}
-              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
+              <div className="rounded-sm border border-border bg-background/40 p-5">
                 <div className="flex items-baseline justify-between mb-3 gap-2 flex-wrap">
                   <div className="flex items-baseline gap-3">
                     <span
@@ -331,7 +331,7 @@ export default function ContractDetail() {
                     <RiskBadge score={contract.risk_score ?? 0} className="text-[11px]" />
                   </div>
                   {contract.risk_confidence_lower != null && contract.risk_confidence_upper != null && (
-                    <span className="text-[11px] text-zinc-500 font-mono tabular-nums">
+                    <span className="text-[11px] text-text-muted font-mono tabular-nums">
                       95% CI [{(contract.risk_confidence_lower * 100).toFixed(1)}% – {(contract.risk_confidence_upper * 100).toFixed(1)}%]
                     </span>
                   )}
@@ -347,20 +347,20 @@ export default function ContractDetail() {
                     <svg viewBox={`0 0 ${totalW} 12`} className="w-full" style={{ height: 12 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={6} r={DR}
-                          fill={k < filled ? riskPalette.color : '#2d2926'}
-                          stroke={k < filled ? undefined : '#3d3734'}
+                          fill={k < filled ? riskPalette.color : 'var(--color-background-elevated)'}
+                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                           strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.85 : 1}
                         />
                       ))}
                       {/* Threshold markers */}
                       {[25, 40, 60].map((t) => (
-                        <line key={t} x1={markerX(t)} y1={0} x2={markerX(t)} y2={12} stroke="#a1a1aa" strokeWidth={0.6} strokeOpacity={0.5} strokeDasharray="2 2" />
+                        <line key={t} x1={markerX(t)} y1={0} x2={markerX(t)} y2={12} stroke="var(--color-text-muted)" strokeWidth={0.6} strokeOpacity={0.5} strokeDasharray="2 2" />
                       ))}
                     </svg>
                   )
                 })()}
-                <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600">
+                <div className="flex items-center justify-between mt-2 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
                   <span>0.00 · Low</span>
                   <span>1.00 · Critical</span>
                 </div>
@@ -369,7 +369,7 @@ export default function ContractDetail() {
                 {isHighRisk && (
                   <div className="mt-4 flex items-start gap-2 rounded-sm bg-amber-500/5 border border-amber-500/20 px-3 py-2">
                     <AlertTriangle className="h-3.5 w-3.5 text-amber-500/80 mt-0.5 shrink-0" />
-                    <p className="text-[11px] text-zinc-400 leading-relaxed">
+                    <p className="text-[11px] text-text-secondary leading-relaxed">
                       High risk score indicates similarity to documented corruption patterns — it is
                       an investigative signal, not a verdict.
                     </p>
@@ -384,7 +384,7 @@ export default function ContractDetail() {
                 contract.is_high_value ||
                 contract.is_threshold_gaming) && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-2">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-2">
                     Procurement flags
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -423,7 +423,7 @@ export default function ContractDetail() {
               {/* Raw risk factors */}
               {contract.risk_factors && contract.risk_factors.length > 0 && (
                 <div>
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-3">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-3">
                     Risk factors triggered
                   </p>
                   <ul className="space-y-1.5">
@@ -432,7 +432,7 @@ export default function ContractDetail() {
                       return (
                         <li
                           key={factor}
-                          className="flex items-center gap-2.5 text-sm text-zinc-300"
+                          className="flex items-center gap-2.5 text-sm text-text-secondary"
                           title={factor}
                         >
                           <span
@@ -440,7 +440,7 @@ export default function ContractDetail() {
                             style={{ backgroundColor: getFactorCategoryColor(parsed.category) }}
                           />
                           <span>{parsed.label}</span>
-                          <span className="text-[10px] text-zinc-600 font-mono ml-1 uppercase tracking-[0.15em]">
+                          <span className="text-[10px] text-text-muted font-mono ml-1 uppercase tracking-[0.15em]">
                             {parsed.category}
                           </span>
                         </li>
@@ -533,15 +533,15 @@ export default function ContractDetail() {
           {/* ----- Description ----- */}
           {contract.description && (
             <Section overline="Record · Description" title="Object of the contract">
-              <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5 max-h-[28rem] overflow-y-auto">
+              <div className="rounded-sm border border-border bg-background/40 p-5 max-h-[28rem] overflow-y-auto">
                 <p
-                  className="text-[15px] text-zinc-300 leading-relaxed whitespace-pre-wrap break-words"
+                  className="text-[15px] text-text-secondary leading-relaxed whitespace-pre-wrap break-words"
                   style={{ fontFamily: 'var(--font-family-serif)' }}
                 >
                   {toTitleCase(contract.description)}
                 </p>
                 {contract.description.length > 600 && (
-                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-600 mt-3 pt-3 border-t border-zinc-800/60">
+                  <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-3 pt-3 border-t border-border">
                     {contract.description.length.toLocaleString()} chars · scroll for full text
                   </p>
                 )}
@@ -558,23 +558,23 @@ export default function ContractDetail() {
               <div className="space-y-3">
                 {contract.data_quality_grade && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
                       Grade
                     </p>
-                    <p className="text-2xl font-mono font-bold text-zinc-200">
+                    <p className="text-2xl font-mono font-bold text-text-secondary">
                       {contract.data_quality_grade}
                     </p>
                   </div>
                 )}
                 {contract.source_structure && (
                   <div>
-                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                    <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1">
                       Source structure
                     </p>
-                    <p className="text-sm font-mono text-zinc-300">
+                    <p className="text-sm font-mono text-text-secondary">
                       Structure {contract.source_structure}
                     </p>
-                    <p className="text-[11px] text-zinc-600 mt-1">
+                    <p className="text-[11px] text-text-muted mt-1">
                       {contract.source_structure === 'A'
                         ? '2002-2010 · 0.1% RFC coverage'
                         : contract.source_structure === 'B'
@@ -601,7 +601,7 @@ export default function ContractDetail() {
                 <ExternalLink className="h-3.5 w-3.5 group-hover:translate-x-0.5 transition-transform" />
                 View on COMPRANET
               </a>
-              <p className="text-[11px] text-zinc-500 mt-2 leading-relaxed">
+              <p className="text-[11px] text-text-muted mt-2 leading-relaxed">
                 Official government procurement record.
               </p>
             </SidebarCard>
@@ -613,39 +613,39 @@ export default function ContractDetail() {
               {contract.vendor_id && (
                 <Link
                   to={`/vendors/${contract.vendor_id}`}
-                  className="flex items-center justify-between group py-2 border-b border-zinc-800/60 last:border-b-0"
+                  className="flex items-center justify-between group py-2 border-b border-border last:border-b-0"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <User className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                    <User className="h-3.5 w-3.5 text-text-muted shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">
+                      <p className="text-[10px] text-text-muted uppercase tracking-[0.15em]">
                         Vendor profile
                       </p>
-                      <p className="text-xs text-zinc-300 truncate group-hover:text-zinc-100">
+                      <p className="text-xs text-text-secondary truncate group-hover:text-text-primary">
                         {toTitleCase(contract.vendor_name || '-')}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400 shrink-0 ml-2" />
+                  <ChevronRight className="h-3 w-3 text-text-muted group-hover:text-text-secondary shrink-0 ml-2" />
                 </Link>
               )}
               {contract.institution_id && (
                 <Link
                   to={`/institutions/${contract.institution_id}`}
-                  className="flex items-center justify-between group py-2 border-b border-zinc-800/60 last:border-b-0"
+                  className="flex items-center justify-between group py-2 border-b border-border last:border-b-0"
                 >
                   <div className="flex items-center gap-2 min-w-0">
-                    <Building2 className="h-3.5 w-3.5 text-zinc-500 shrink-0" />
+                    <Building2 className="h-3.5 w-3.5 text-text-muted shrink-0" />
                     <div className="min-w-0">
-                      <p className="text-[10px] text-zinc-500 uppercase tracking-[0.15em]">
+                      <p className="text-[10px] text-text-muted uppercase tracking-[0.15em]">
                         Institution
                       </p>
-                      <p className="text-xs text-zinc-300 truncate group-hover:text-zinc-100">
+                      <p className="text-xs text-text-secondary truncate group-hover:text-text-primary">
                         {toTitleCase(contract.institution_name || '-')}
                       </p>
                     </div>
                   </div>
-                  <ChevronRight className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400 shrink-0 ml-2" />
+                  <ChevronRight className="h-3 w-3 text-text-muted group-hover:text-text-secondary shrink-0 ml-2" />
                 </Link>
               )}
               {contract.vendor_id && (
@@ -687,8 +687,8 @@ export default function ContractDetail() {
       </div>
 
       {/* ----- Footer attribution ----- */}
-      <footer className="mt-16 pt-6 border-t border-zinc-800/80">
-        <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-zinc-600">
+      <footer className="mt-16 pt-6 border-t border-border">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-[11px] text-text-muted">
           <div className="flex items-center gap-2">
             <Database className="h-3 w-3" />
             <span>Source: COMPRANET · Federal Procurement Data</span>
@@ -724,11 +724,11 @@ function Section({
   return (
     <section>
       <div className="mb-5 border-l-[3px] border-red-600 pl-5">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-zinc-500 mb-1">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-1">
           {overline}
         </p>
         <h2
-          className="text-xl md:text-2xl font-bold text-zinc-100 tracking-tight"
+          className="text-xl md:text-2xl font-bold text-text-primary tracking-tight"
           style={{ fontFamily: 'var(--font-family-serif)' }}
         >
           {title}
@@ -754,18 +754,18 @@ function StatBlock({
 }) {
   return (
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
         {label}
       </p>
       <p
         className={`text-xl md:text-2xl font-bold font-mono tabular-nums leading-tight ${
-          emphasis ? 'text-amber-400' : 'text-zinc-100'
+          emphasis ? 'text-amber-400' : 'text-text-primary'
         }`}
         style={valueColor ? { color: valueColor } : undefined}
       >
         {value}
       </p>
-      {sub && <p className="text-[11px] text-zinc-500 mt-1">{sub}</p>}
+      {sub && <p className="text-[11px] text-text-muted mt-1">{sub}</p>}
     </div>
   )
 }
@@ -779,14 +779,14 @@ function AnomalyScoreCard({
 }) {
   const isAiConfirmed = isHighRisk && score >= 0.5
   return (
-    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-4">
+    <div className="rounded-sm border border-border bg-background/40 p-4">
       <div className="flex items-baseline justify-between mb-3">
         <div>
-          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-0.5">
+          <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-0.5">
             ML Anomaly · Ensemble
           </p>
           <div className="flex items-baseline gap-2">
-            <span className="text-2xl font-mono font-bold text-zinc-100 tabular-nums">
+            <span className="text-2xl font-mono font-bold text-text-primary tabular-nums">
               {(score * 100).toFixed(0)}%
             </span>
             {isAiConfirmed && (
@@ -809,7 +809,7 @@ function AnomalyScoreCard({
             )}
           </div>
         </div>
-        <span className="text-[10px] text-zinc-500 font-mono text-right leading-tight">
+        <span className="text-[10px] text-text-muted font-mono text-right leading-tight">
           IForest +<br />COPOD
         </span>
       </div>
@@ -817,13 +817,13 @@ function AnomalyScoreCard({
         const N = 24, DR = 2, DG = 5.5
         const pct = Math.min(score, 1)
         const filled = Math.max(1, Math.round(pct * N))
-        const color = isAiConfirmed ? '#f87171' : '#a1a1aa'
+        const color = isAiConfirmed ? '#f87171' : 'var(--color-text-muted)'
         return (
           <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                fill={k < filled ? color : '#2d2926'}
-                stroke={k < filled ? undefined : '#3d3734'}
+                fill={k < filled ? color : 'var(--color-background-elevated)'}
+                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
@@ -847,11 +847,11 @@ function DetailItem({
   if (!value) return null
   return (
     <div>
-      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1 flex items-center gap-1.5">
+      <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1 flex items-center gap-1.5">
         {Icon && <Icon className="h-3 w-3" />}
         {label}
       </p>
-      <p className="text-sm text-zinc-200 leading-snug">{toTitleCase(value)}</p>
+      <p className="text-sm text-text-secondary leading-snug">{toTitleCase(value)}</p>
     </div>
   )
 }
@@ -864,12 +864,12 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
 
   const delayColor =
     delay == null
-      ? 'text-zinc-400'
+      ? 'text-text-secondary'
       : delay < 5
       ? 'text-red-500'
       : delay < 15
       ? 'text-orange-500'
-      : 'text-zinc-300'
+      : 'text-text-secondary'
 
   const delayNote =
     delay == null
@@ -881,43 +881,43 @@ function PoliticalContextCard({ contract }: { contract: ContractDetailType }) {
       : 'Within standard publication window'
 
   return (
-    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-5">
+    <div className="rounded-sm border border-border bg-background/40 p-5">
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
         {delay != null && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1.5 flex items-center gap-1.5">
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
               <Clock className="h-3 w-3" />
               Publication → Award
             </p>
             <p className={`text-2xl font-bold font-mono tabular-nums ${delayColor}`}>
               {delay}d
             </p>
-            {delayNote && <p className="text-[11px] text-zinc-500 mt-1">{delayNote}</p>}
+            {delayNote && <p className="text-[11px] text-text-muted mt-1">{delayNote}</p>}
           </div>
         )}
         {sexenioYear != null && admin && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5">
               Sexenio year
             </p>
-            <p className="text-2xl font-bold font-mono tabular-nums text-zinc-100">
+            <p className="text-2xl font-bold font-mono tabular-nums text-text-primary">
               Yr {sexenioYear}/6
             </p>
-            <p className="text-[11px] text-zinc-500 mt-1">
+            <p className="text-[11px] text-text-muted mt-1">
               {admin} administration
             </p>
           </div>
         )}
         {isElection && (
           <div>
-            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-1.5 flex items-center gap-1.5">
+            <p className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mb-1.5 flex items-center gap-1.5">
               <Zap className="h-3 w-3" />
               Timing
             </p>
             <p className="text-lg font-bold text-amber-400 leading-tight">
               Election year
             </p>
-            <p className="text-[11px] text-zinc-500 mt-1">
+            <p className="text-[11px] text-text-muted mt-1">
               Awarded during federal electoral cycle
             </p>
           </div>
@@ -935,8 +935,8 @@ function SidebarCard({
   children: React.ReactNode
 }) {
   return (
-    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-4">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-zinc-500 mb-3">
+    <div className="rounded-sm border border-border bg-background/40 p-4">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
         {overline}
       </p>
       {children}
@@ -954,14 +954,14 @@ function IdRow({ label, value }: { label: string; value: string }) {
   }
   return (
     <div className="flex items-center justify-between gap-2">
-      <span className="text-[10px] uppercase tracking-[0.15em] text-zinc-500">{label}</span>
+      <span className="text-[10px] uppercase tracking-[0.15em] text-text-muted">{label}</span>
       <button
         onClick={copy}
-        className="inline-flex items-center gap-1.5 text-zinc-300 hover:text-zinc-100 group"
+        className="inline-flex items-center gap-1.5 text-text-secondary hover:text-text-primary group"
         title="Copy to clipboard"
       >
         <span className="font-mono tabular-nums">{value}</span>
-        <Copy className="h-3 w-3 text-zinc-600 group-hover:text-zinc-400" />
+        <Copy className="h-3 w-3 text-text-muted group-hover:text-text-secondary" />
       </button>
     </div>
   )
@@ -979,7 +979,7 @@ function ContractDetailSkeleton() {
         <Skeleton className="h-6 w-32 mb-4" />
         <Skeleton className="h-12 w-4/5 mb-4" />
         <Skeleton className="h-10 w-2/3 mb-6" />
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-zinc-800/80">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-6 py-6 border-y border-border">
           {Array.from({ length: 4 }).map((_, i) => (
             <div key={i}>
               <Skeleton className="h-3 w-20 mb-2" />

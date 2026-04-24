@@ -75,7 +75,7 @@ export function InstitutionBadge({
   return (
     <div
       title={tooltipText}
-      className={`inline-flex items-center justify-center rounded font-bold font-mono text-white flex-shrink-0 ${className}`}
+      className={`inline-flex items-center justify-center rounded font-bold font-mono text-text-primary flex-shrink-0 ${className}`}
       style={{
         width: size,
         height: size,
@@ -142,7 +142,7 @@ export function InstitutionLogoBanner({
 
   return (
     <span
-      className={`inline-flex items-center px-2 rounded text-white font-bold font-mono ${className}`}
+      className={`inline-flex items-center px-2 rounded text-text-primary font-bold font-mono ${className}`}
       style={{ backgroundColor: bg, height, fontSize: height * 0.45 }}
       title={group?.name ?? name}
     >

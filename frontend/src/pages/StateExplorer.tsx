@@ -29,10 +29,10 @@ type SortKey = 'avg_risk_score' | 'total_value_mxn' | 'contract_count' | 'direct
 type SortDir = 'asc' | 'desc'
 
 const RISK_STYLES: Record<string, string> = {
-  critical: 'bg-red-900/30 text-red-400 border border-red-800/40',
-  high:     'bg-orange-900/30 text-orange-400 border border-orange-800/40',
-  medium:   'bg-yellow-900/30 text-yellow-400 border border-yellow-800/40',
-  low:      'bg-green-900/30 text-green-400 border border-green-800/40',
+  critical: 'bg-risk-critical/10 text-risk-critical border border-risk-critical/25',
+  high:     'bg-risk-high/10 text-risk-high border border-risk-high/25',
+  medium:   'bg-risk-medium/10 text-risk-medium border border-risk-medium/25',
+  low:      'bg-risk-low/10 text-risk-low border border-risk-low/25',
 }
 
 const RISK_LABEL: Record<string, string> = {
@@ -51,7 +51,7 @@ function getGrade(score: number): string {
 }
 
 const GRADE_STYLES: Record<string, string> = {
-  A: 'text-green-400',
+  A: 'text-risk-low',
   B: 'text-yellow-400',
   C: 'text-amber-400',
   D: 'text-orange-400',
@@ -63,7 +63,7 @@ const GRADE_STYLES: Record<string, string> = {
 // ---------------------------------------------------------------------------
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
-  if (col !== sortKey) return <ArrowUpDown className="h-3 w-3 text-stone-600" />
+  if (col !== sortKey) return <ArrowUpDown className="h-3 w-3 text-text-muted" />
   if (sortDir === 'desc') return <ArrowDown className="h-3 w-3 text-amber-400" />
   return <ArrowUp className="h-3 w-3 text-amber-400" />
 }
@@ -156,7 +156,7 @@ export default function StateExplorer() {
   }
 
   return (
-    <div className="min-h-screen bg-[#1a1714] text-stone-200">
+    <div className="min-h-screen bg-background text-text-primary">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 py-6">
       <EditorialPageShell
         kicker="STATE EXPLORER · GEOGRAPHIC DISTRIBUTION"
@@ -202,7 +202,7 @@ export default function StateExplorer() {
           <HallazgoStat
             value={formatNumber(states.length)}
             label="States analyzed"
-            color="border-stone-500"
+            color="border-border"
           />
           <HallazgoStat
             value={highestRisk ? highestRisk.state_name : '—'}
@@ -212,7 +212,7 @@ export default function StateExplorer() {
           <HallazgoStat
             value={lowestRisk ? lowestRisk.state_name : '—'}
             label={lowestRisk ? `Lowest risk — ${(lowestRisk.avg_risk_score * 100).toFixed(1)}% avg` : 'Lowest risk'}
-            color="border-green-500"
+            color="border-risk-low"
           />
           <HallazgoStat
             value={formatCompactMXN(totalValue)}
@@ -224,19 +224,19 @@ export default function StateExplorer() {
         {/* Search + sort controls */}
         <div className="flex flex-col sm:flex-row gap-3 items-start sm:items-center">
           <div className="relative flex-1 max-w-sm">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-stone-500" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
             <input
               type="text"
               placeholder="Search by state name..."
               value={search}
               onChange={e => setSearch(e.target.value)}
-              className="w-full bg-stone-900 border border-stone-700 rounded-md pl-9 pr-3 py-2 text-sm text-stone-200 placeholder-stone-600 focus:outline-none focus:border-amber-600/60 focus:ring-1 focus:ring-amber-600/30"
+              className="w-full bg-background-card border border-border rounded-md pl-9 pr-3 py-2 text-sm text-text-secondary placeholder-stone-600 focus:outline-none focus:border-amber-600/60 focus:ring-1 focus:ring-amber-600/30"
               aria-label="Search states"
             />
           </div>
 
           <div className="flex gap-2 flex-wrap text-xs font-mono">
-            <span className="text-stone-500 self-center">Sort:</span>
+            <span className="text-text-muted self-center">Sort:</span>
             {(
               [
                 { key: 'avg_risk_score', label: 'Risk Score' },
@@ -251,7 +251,7 @@ export default function StateExplorer() {
                 className={`px-3 py-1.5 rounded border transition-colors ${
                   sortKey === key
                     ? 'border-amber-600/60 bg-amber-600/10 text-amber-400'
-                    : 'border-stone-700 bg-stone-900 text-stone-400 hover:border-stone-600 hover:text-stone-300'
+                    : 'border-border bg-background-card text-text-secondary hover:border-border hover:text-text-secondary'
                 }`}
                 aria-pressed={sortKey === key}
               >
@@ -265,22 +265,22 @@ export default function StateExplorer() {
         </div>
 
         {/* Results count */}
-        <p className="text-xs text-stone-500 font-mono -mt-4">
+        <p className="text-xs text-text-muted font-mono -mt-4">
           {filtered.length} of {states.length} states
         </p>
 
         {/* Table */}
-        <div className="overflow-x-auto rounded-lg border border-stone-800">
+        <div className="overflow-x-auto rounded-lg border border-border">
           <table className="w-full text-sm" role="table" aria-label="State risk rankings">
             <thead>
-              <tr className="border-b border-stone-800 bg-stone-900/60">
-                <th className="text-left px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 w-12">
+              <tr className="border-b border-border bg-background-card">
+                <th className="text-left px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted w-12">
                   #
                 </th>
-                <th className="text-left px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500">
+                <th className="text-left px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
                   State
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-right">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-right">
                   <button
                     onClick={() => toggleSort('avg_risk_score')}
                     className="inline-flex items-center gap-1 hover:text-amber-400 transition-colors"
@@ -290,7 +290,7 @@ export default function StateExplorer() {
                     <SortIcon col="avg_risk_score" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-right hidden md:table-cell">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-right hidden md:table-cell">
                   <button
                     onClick={() => toggleSort('total_value_mxn')}
                     className="inline-flex items-center gap-1 hover:text-amber-400 transition-colors"
@@ -300,7 +300,7 @@ export default function StateExplorer() {
                     <SortIcon col="total_value_mxn" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-right hidden lg:table-cell">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-right hidden lg:table-cell">
                   <button
                     onClick={() => toggleSort('contract_count')}
                     className="inline-flex items-center gap-1 hover:text-amber-400 transition-colors"
@@ -310,10 +310,10 @@ export default function StateExplorer() {
                     <SortIcon col="contract_count" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-right hidden lg:table-cell">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-right hidden lg:table-cell">
                   Institutions
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-right hidden xl:table-cell">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-right hidden xl:table-cell">
                   <button
                     onClick={() => toggleSort('direct_award_rate')}
                     className="inline-flex items-center gap-1 hover:text-amber-400 transition-colors"
@@ -323,7 +323,7 @@ export default function StateExplorer() {
                     <SortIcon col="direct_award_rate" sortKey={sortKey} sortDir={sortDir} />
                   </button>
                 </th>
-                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-stone-500 text-center">
+                <th className="px-4 py-3 text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted text-center">
                   Grade
                 </th>
               </tr>
@@ -336,7 +336,7 @@ export default function StateExplorer() {
                   <tr
                     key={state.state_code}
                     onClick={() => navigate(`/states/${state.state_code}`)}
-                    className="border-b border-stone-800/60 hover:bg-stone-800/40 cursor-pointer transition-colors group"
+                    className="border-b border-border/60 hover:bg-background-elevated cursor-pointer transition-colors group"
                     role="row"
                     tabIndex={0}
                     onKeyDown={e => {
@@ -348,23 +348,23 @@ export default function StateExplorer() {
                     aria-label={`${state.state_name}, risk grade ${grade}`}
                   >
                     {/* Rank */}
-                    <td className="px-4 py-3 text-xs font-mono text-stone-600 tabular-nums">
+                    <td className="px-4 py-3 text-xs font-mono text-text-muted tabular-nums">
                       {idx + 1}
                     </td>
 
                     {/* State name + code */}
                     <td className="px-4 py-3">
                       <div className="flex items-center gap-2.5">
-                        <MapPin className="h-3.5 w-3.5 text-stone-600 flex-shrink-0 group-hover:text-amber-500 transition-colors" />
+                        <MapPin className="h-3.5 w-3.5 text-text-muted flex-shrink-0 group-hover:text-amber-500 transition-colors" />
                         <div>
-                          <span className="font-medium text-stone-200 group-hover:text-amber-400 transition-colors">
+                          <span className="font-medium text-text-secondary group-hover:text-amber-400 transition-colors">
                             {state.state_name}
                           </span>
-                          <span className="ml-2 text-[10px] font-mono text-stone-600">
+                          <span className="ml-2 text-[10px] font-mono text-text-muted">
                             {state.state_code}
                           </span>
                           {state.top_institution && (
-                            <p className="text-[10px] text-stone-600 mt-0.5 truncate max-w-[220px]">
+                            <p className="text-[10px] text-text-muted mt-0.5 truncate max-w-[220px]">
                               {state.top_institution}
                             </p>
                           )}
@@ -375,7 +375,7 @@ export default function StateExplorer() {
                     {/* Avg risk */}
                     <td className="px-4 py-3 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        <span className="text-xs font-mono text-stone-400 tabular-nums">
+                        <span className="text-xs font-mono text-text-secondary tabular-nums">
                           {(state.avg_risk_score * 100).toFixed(1)}%
                         </span>
                         <span
@@ -387,17 +387,17 @@ export default function StateExplorer() {
                     </td>
 
                     {/* Total value */}
-                    <td className="px-4 py-3 text-right font-mono text-xs text-stone-400 tabular-nums hidden md:table-cell">
+                    <td className="px-4 py-3 text-right font-mono text-xs text-text-secondary tabular-nums hidden md:table-cell">
                       {formatCompactMXN(state.total_value_mxn)}
                     </td>
 
                     {/* Contracts */}
-                    <td className="px-4 py-3 text-right font-mono text-xs text-stone-400 tabular-nums hidden lg:table-cell">
+                    <td className="px-4 py-3 text-right font-mono text-xs text-text-secondary tabular-nums hidden lg:table-cell">
                       {formatNumber(state.contract_count)}
                     </td>
 
                     {/* Institutions */}
-                    <td className="px-4 py-3 text-right font-mono text-xs text-stone-400 tabular-nums hidden lg:table-cell">
+                    <td className="px-4 py-3 text-right font-mono text-xs text-text-secondary tabular-nums hidden lg:table-cell">
                       {formatNumber(state.institution_count)}
                     </td>
 
@@ -409,7 +409,7 @@ export default function StateExplorer() {
                             ? 'text-red-400'
                             : state.direct_award_rate > 0.50
                             ? 'text-orange-400'
-                            : 'text-stone-400'
+                            : 'text-text-secondary'
                         }
                       >
                         {formatPercent(state.direct_award_rate)}
@@ -419,7 +419,7 @@ export default function StateExplorer() {
                     {/* Grade */}
                     <td className="px-4 py-3 text-center">
                       <span
-                        className={`text-lg font-bold font-mono tabular-nums ${GRADE_STYLES[grade] ?? 'text-stone-400'}`}
+                        className={`text-lg font-bold font-mono tabular-nums ${GRADE_STYLES[grade] ?? 'text-text-secondary'}`}
                         aria-label={`Grade ${grade}`}
                       >
                         {grade}
@@ -431,7 +431,7 @@ export default function StateExplorer() {
 
               {filtered.length === 0 && (
                 <tr>
-                  <td colSpan={8} className="px-4 py-12 text-center text-stone-600 text-sm">
+                  <td colSpan={8} className="px-4 py-12 text-center text-text-muted text-sm">
                     No states match your search.
                   </td>
                 </tr>
@@ -441,7 +441,7 @@ export default function StateExplorer() {
         </div>
 
         {/* Legend */}
-        <div className="flex flex-wrap gap-4 text-[10px] font-mono text-stone-600 pb-4">
+        <div className="flex flex-wrap gap-4 text-[10px] font-mono text-text-muted pb-4">
           <span className="font-bold uppercase tracking-wide">Grade:</span>
           {(['A', 'B', 'C', 'D', 'F'] as const).map(g => (
             <span key={g} className={`${GRADE_STYLES[g]}`}>

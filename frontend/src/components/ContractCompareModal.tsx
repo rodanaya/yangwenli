@@ -56,8 +56,8 @@ function RiskBar({ score }: { score?: number }) {
           <svg viewBox={`0 0 ${N * DG} 4`} width={N * DG} height={4} aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                fill={k < filled ? color : '#2d2926'}
-                stroke={k < filled ? undefined : '#3d3734'}
+                fill={k < filled ? color : 'var(--color-border)'}
+                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
@@ -114,7 +114,7 @@ export function ContractCompareModal({
     >
       {/* Backdrop */}
       <div
-        style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.55)' }}
+        style={{ position: 'absolute', inset: 0, background: 'rgba(26,23,20,0.55)' }}
         onClick={() => onOpenChange(false)}
       />
 
@@ -128,10 +128,10 @@ export function ContractCompareModal({
           maxHeight: '90vh',
           overflowY: 'auto',
         }}
-        className="border bg-background rounded-lg shadow-xl"
+        className="border border-border bg-background-card rounded-sm shadow-xl"
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background z-10">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-border sticky top-0 bg-background-card z-10">
           <div className="flex items-center gap-2">
             <GitCompareArrows className="h-4 w-4 text-accent" />
             <h2 className="text-sm font-semibold">

@@ -467,7 +467,7 @@ function CircuitBoard({
 
   return (
     <div className="rounded-sm border border-amber-900/20 overflow-hidden">
-      <div className="px-5 pt-4 pb-3 border-b border-white/5">
+      <div className="px-5 pt-4 pb-3 border-b border-border">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/70"
           style={{ fontFamily: FONT_MONO }}
@@ -489,7 +489,7 @@ function CircuitBoard({
         </p>
       </div>
 
-      <div style={{ background: '#070604' }}>
+      <div style={{ background: 'var(--color-background-elevated)' }}>
         <svg
           viewBox={`0 0 ${W} ${H}`}
           width="100%"
@@ -510,7 +510,7 @@ function CircuitBoard({
           </defs>
 
           {/* PCB substrate */}
-          <rect width={W} height={H} fill="#070604" />
+          <rect width={W} height={H} fill="var(--color-background-elevated)" />
           <rect width={W} height={H} fill="url(#cb-grid)" />
 
           {/* Hub→vendor traces */}
@@ -652,7 +652,7 @@ function CircuitBoard({
         </svg>
       </div>
 
-      <div className="px-5 py-3 border-t border-white/5 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="px-5 py-3 border-t border-border flex flex-wrap items-center gap-x-5 gap-y-2">
         <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted/40">
           {isEs ? 'Riesgo:' : 'Risk:'}
         </span>
@@ -725,8 +725,8 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
   const active = positioned.find((p) => p.c.id === activeId)
 
   return (
-    <div className="relative rounded-sm border border-stone-700/30 bg-stone-900/20 overflow-hidden">
-      <div className="px-5 pt-4 pb-3 border-b border-white/8">
+    <div className="relative rounded-sm border border-border/30 bg-background-card overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-border">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-400/80"
           style={{ fontFamily: FONT_MONO }}
@@ -761,7 +761,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             y1={H - 14}
             x2={W - 40}
             y2={H - 14}
-            stroke="rgba(255,255,255,0.06)"
+            stroke="var(--color-border)"
             strokeDasharray="2 4"
           />
 
@@ -794,7 +794,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                   r={r}
                   fill={fill}
                   fillOpacity={isActive ? 0.9 : 0.72}
-                  stroke={isActive ? '#fafafa' : '#09090b'}
+                  stroke={isActive ? 'var(--color-text-primary)' : 'var(--color-background-card)'}
                   strokeWidth={isActive ? 1.6 : 1.2}
                 />
                 {/* Pattern code label inside */}
@@ -823,7 +823,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 <text
                   y={r + 14}
                   textAnchor="middle"
-                  fill="#a1a1aa"
+                  fill="var(--color-text-muted)"
                   fontSize={10}
                   style={{ fontFamily: FONT_MONO }}
                 >
@@ -837,7 +837,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
         {/* Floating tooltip for active community */}
         {active && (
           <div
-            className="pointer-events-none absolute z-10 rounded-lg border border-white/15 bg-stone-950/95 shadow-xl px-3.5 py-2.5 text-[11px] backdrop-blur-sm"
+            className="pointer-events-none absolute z-10 rounded-sm border border-border bg-background/95 shadow-xl px-3.5 py-2.5 text-[11px] backdrop-blur-sm"
             style={{
               left: `${Math.min(80, (active.x / W) * 100)}%`,
               top: `${(active.y / H) * 100}%`,
@@ -846,21 +846,21 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
             }}
           >
             <div
-              className="flex items-center gap-2 mb-1.5 pb-1.5 border-b border-white/8"
+              className="flex items-center gap-2 mb-1.5 pb-1.5 border-b border-border"
             >
               <span
                 className="w-2 h-2 rounded-full shrink-0"
                 style={{ backgroundColor: PATTERN_HEX[active.c.pattern] }}
               />
               <span
-                className="text-[13px] font-bold text-white leading-tight"
+                className="text-[13px] font-bold text-text-primary leading-tight"
                 style={{ fontFamily: FONT_SERIF }}
               >
                 {active.c.name}
               </span>
             </div>
             <div className="flex items-center justify-between gap-3 text-[10px]">
-              <span className="text-zinc-500 uppercase tracking-wider">{isEs ? 'Vendedores' : 'Vendors'}</span>
+              <span className="text-text-muted uppercase tracking-wider">{isEs ? 'Vendedores' : 'Vendors'}</span>
               <DotBar
                 value={active.c.vendors / 900}
                 color={PATTERN_HEX[active.c.pattern]}
@@ -868,13 +868,13 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 size={4}
                 gap={2}
               />
-              <span className="text-zinc-300 font-mono font-bold tabular-nums min-w-[40px] text-right">
+              <span className="text-text-secondary font-mono font-bold tabular-nums min-w-[40px] text-right">
                 {formatNumber(active.c.vendors)}
               </span>
             </div>
             <div className="flex items-center justify-between gap-2 mt-1.5 text-[11px]">
-              <span className="text-zinc-400">{isEs ? 'Valor' : 'Value'}</span>
-              <span className="text-white font-mono font-bold">
+              <span className="text-text-secondary">{isEs ? 'Valor' : 'Value'}</span>
+              <span className="text-text-primary font-mono font-bold">
                 {formatCompactMXN(active.c.value)}
               </span>
             </div>
@@ -890,7 +890,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
                 {active.c.pattern} · {buildPatternLabel(isEs)[active.c.pattern]}
               </span>
             </div>
-            <div className="mt-1.5 text-[10px] text-zinc-500 italic">
+            <div className="mt-1.5 text-[10px] text-text-muted italic">
               {isEs ? 'Clic para ver dossier →' : 'Click to view dossier →'}
             </div>
           </div>
@@ -898,7 +898,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
       </div>
 
       {/* Legend strip */}
-      <div className="px-5 py-3 border-t border-white/8 flex flex-wrap items-center gap-x-5 gap-y-2">
+      <div className="px-5 py-3 border-t border-border flex flex-wrap items-center gap-x-5 gap-y-2">
         <span className="text-[9px] font-mono uppercase tracking-[0.2em] text-text-muted/50">
           {isEs ? 'Patrones:' : 'Patterns:'}
         </span>
@@ -938,7 +938,7 @@ function TopVendorsPanel({
 }) {
   if (!spotlight || spotlight.top_vendors.length === 0) return null
   return (
-    <div className="pt-3 mt-1 border-t border-white/8">
+    <div className="pt-3 mt-1 border-t border-border">
       <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2">
         {isEs ? `Principales investigados (${spotlight.code})` : `Top subjects (${spotlight.code})`}
       </div>
@@ -947,7 +947,7 @@ function TopVendorsPanel({
           <Link
             key={v.vendor_id}
             to={`/vendors/${v.vendor_id}`}
-            className="group flex items-center gap-2 rounded px-2 py-1 hover:bg-white/5 transition-colors"
+            className="group flex items-center gap-2 rounded px-2 py-1 hover:bg-background-card transition-colors"
           >
             <span
               className="text-[9px] font-mono font-bold w-3 text-right tabular-nums flex-shrink-0"
@@ -955,7 +955,7 @@ function TopVendorsPanel({
             >
               {i + 1}
             </span>
-            <span className="text-[11px] text-text-secondary truncate flex-1 group-hover:text-white">
+            <span className="text-[11px] text-text-secondary truncate flex-1 group-hover:text-text-primary">
               {v.vendor_name}
             </span>
             <span
@@ -1010,8 +1010,8 @@ function CommunityDossier({
       onMouseLeave={() => onHover(null)}
       className={cn(
         'rounded-sm border overflow-hidden transition-all',
-        'bg-surface-card border-white/8',
-        isActive ? 'border-white/25 ring-1 ring-white/15' : 'hover:border-white/15',
+        'bg-surface-card border-border',
+        isActive ? 'border-border ring-1 ring-border' : 'hover:border-border',
       )}
       style={{
         borderLeftWidth: 4,
@@ -1066,7 +1066,7 @@ function CommunityDossier({
             {isEs ? 'Valor capturado' : 'Value captured'}
           </div>
           <div
-            className="text-3xl font-mono font-black tabular-nums text-white leading-none"
+            className="text-3xl font-mono font-black tabular-nums text-text-primary leading-none"
             style={{ color: fill }}
           >
             {formatCompactMXN(c.value)}
@@ -1104,7 +1104,7 @@ function CommunityDossier({
         </div>
 
         {/* Network signature */}
-        <div className="pt-3 mt-1 border-t border-white/8">
+        <div className="pt-3 mt-1 border-t border-border">
           <div
             className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-2"
           >
@@ -1132,7 +1132,7 @@ function CommunityDossier({
         </div>
 
         {/* Verdict */}
-        <div className="pt-3 border-t border-white/8">
+        <div className="pt-3 border-t border-border">
           <div
             className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1.5"
           >
@@ -1245,8 +1245,8 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
   const totalFlow = links.reduce((s, l) => s + l.value, 0)
 
   return (
-    <div className="rounded-sm border border-stone-700/30 bg-stone-900/20 overflow-hidden">
-      <div className="px-5 pt-4 pb-3 border-b border-white/8">
+    <div className="rounded-sm border border-border/30 bg-background-card overflow-hidden">
+      <div className="px-5 pt-4 pb-3 border-b border-border">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
           style={{ fontFamily: FONT_MONO }}
@@ -1264,7 +1264,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
             <>
               Cada partícula representa una fracción del valor capturado. Los flujos rojos
               marcan comunidades con riesgo promedio ≥ 65%. Total mostrado:{' '}
-              <span className="text-white font-mono font-bold">
+              <span className="text-text-primary font-mono font-bold">
                 {formatCompactMXN(totalFlow)}
               </span>{' '}
               a través de las 5 comunidades más grandes.
@@ -1273,7 +1273,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
             <>
               Each particle represents a fraction of value captured. Red flows
               mark communities with average risk ≥ 65%. Total shown:{' '}
-              <span className="text-white font-mono font-bold">
+              <span className="text-text-primary font-mono font-bold">
                 {formatCompactMXN(totalFlow)}
               </span>{' '}
               across the 5 largest communities.
@@ -1366,7 +1366,7 @@ function HeaderStat({
   accent?: string
 }) {
   return (
-    <div className="rounded-sm border border-white/8 bg-stone-900/40 px-4 py-3">
+    <div className="rounded-sm border border-border bg-background-card px-4 py-3">
       <div
         className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted/50 mb-1"
       >
@@ -1374,7 +1374,7 @@ function HeaderStat({
       </div>
       <div
         className="text-2xl font-mono font-black tabular-nums leading-none"
-        style={{ color: accent ?? '#fafafa' }}
+        style={{ color: accent ?? 'var(--color-text-primary)' }}
       >
         {value}
       </div>
@@ -1448,30 +1448,32 @@ export default function RedesKnownDossier() {
           {isEs ? (
             <>
               No buscamos proveedores corruptos uno por uno. Buscamos{' '}
-              <span className="text-white font-semibold">comunidades</span> que capturan
+              <span className="text-text-primary font-semibold">comunidades</span> que capturan
               instituciones. Estas son las diez redes más grandes detectadas por algoritmo
               de comunidades Louvain sobre{' '}
-              <span className="text-white font-mono">3.05M</span> contratos federales.
+              <span className="text-text-primary font-mono">3.05M</span> contratos federales.
             </>
           ) : (
             <>
               We do not hunt corrupt vendors one by one. We hunt{' '}
-              <span className="text-white font-semibold">communities</span> that capture
+              <span className="text-text-primary font-semibold">communities</span> that capture
               institutions. These are the ten largest networks detected by the Louvain
               community algorithm over{' '}
-              <span className="text-white font-mono">3.05M</span> federal contracts.
+              <span className="text-text-primary font-mono">3.05M</span> federal contracts.
             </>
           )}
         </p>
 
-        <div className="inline-flex items-center gap-3 rounded-lg border border-red-500/20 bg-red-500/5 px-4 py-2">
-          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
+        {/* Bible §2: this is a factual lede, not a critical-risk alert.
+            Amber accent reads "notable finding" without the salmon-pink alarm. */}
+        <div className="inline-flex items-center gap-3 rounded-sm border border-[color:var(--color-accent)]/25 bg-[color:var(--color-accent)]/8 px-4 py-2">
+          <span className="h-2 w-2 rounded-full bg-[color:var(--color-accent)] animate-pulse flex-shrink-0" />
           <span className="text-sm font-mono">
-            <span className="text-red-400 font-bold">10</span>
+            <span className="text-[color:var(--color-accent)] font-bold">10</span>
             <span className="text-text-muted/70 ml-1.5">
               {isEs ? 'comunidades controlan ' : 'communities control '}
             </span>
-            <span className="text-red-400 font-bold">MX$1.40T</span>
+            <span className="text-[color:var(--color-accent)] font-bold">MX$1.40T</span>
             <span className="text-text-muted/70 ml-1.5">
               {isEs ? 'en contratos federales' : 'in federal contracts'}
             </span>
@@ -1545,7 +1547,7 @@ export default function RedesKnownDossier() {
 
       {/* Methodological footer */}
       <div
-        className="rounded-sm border border-white/8 bg-stone-900/30 px-5 py-4 mt-6"
+        className="rounded-sm border border-border bg-background-card px-5 py-4 mt-6"
       >
         <div className="flex items-start gap-3">
           <Users className="w-4 h-4 text-text-muted/40 shrink-0 mt-0.5" aria-hidden="true" />
@@ -1563,7 +1565,7 @@ export default function RedesKnownDossier() {
                   operan en la misma institución en ventanas de tiempo solapadas, o
                   comparten patrones de adjudicación). Las firmas de red provienen del
                   motor ARIA v1.1 (Run{' '}
-                  <span className="font-mono text-white/80">28d5c453</span>) combinado con
+                  <span className="font-mono text-text-primary/80">28d5c453</span>) combinado con
                   el modelo de riesgo v0.6.5 (AUC test 0.828). Los veredictos son
                   editoriales; las métricas son del motor.
                 </>
@@ -1573,7 +1575,7 @@ export default function RedesKnownDossier() {
                   co-contracting network (vendors that appear together in procedures,
                   operate at the same institution in overlapping time windows, or share
                   award patterns). Network signatures come from the ARIA v1.1 engine
-                  (Run <span className="font-mono text-white/80">28d5c453</span>)
+                  (Run <span className="font-mono text-text-primary/80">28d5c453</span>)
                   combined with risk model v0.6.5 (test AUC 0.828). Verdicts are
                   editorial; metrics come from the engine.
                 </>

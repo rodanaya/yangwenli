@@ -56,7 +56,7 @@ function EntitySide({
   const content = (
     <>
       <div
-        className="text-zinc-50 group-hover:text-white transition-colors"
+        className="text-text-primary group-hover:text-accent transition-colors"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontWeight: 600,
@@ -68,7 +68,7 @@ function EntitySide({
         {entity.name}
       </div>
       {entity.subtitle && (
-        <div className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.12em] mt-1 tabular-nums">
+        <div className="text-[10px] font-mono text-text-muted uppercase tracking-[0.12em] mt-1 tabular-nums">
           {entity.subtitle}
         </div>
       )}
@@ -113,9 +113,9 @@ export function FeaturedComparison({
       aria-label={kicker}
       className="relative mb-10 overflow-hidden"
       style={{
-        background: `linear-gradient(180deg, ${tint}0a 0%, rgba(9,9,11,0) 70%)`,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: `linear-gradient(180deg, ${tint}14 0%, var(--color-background-card) 70%)`,
+        borderTop: '1px solid var(--color-border)',
+        borderBottom: '1px solid var(--color-border)',
         borderLeft: `3px solid ${accent}`,
       }}
     >
@@ -145,7 +145,7 @@ export function FeaturedComparison({
 
         {/* Deck quote */}
         <blockquote
-          className="max-w-3xl text-zinc-200 mb-5"
+          className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',

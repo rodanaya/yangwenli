@@ -32,20 +32,20 @@ export default function InvestigationLede({
   return (
     <div
       className={cn(
-        'bg-zinc-900/60 border border-zinc-800 rounded-lg p-4 relative overflow-hidden',
+        'bg-background-card border border-border rounded-sm p-4 relative overflow-hidden',
         className
       )}
       style={{ borderTopWidth: '3px', borderTopColor: borderColor }}
     >
       {/* Section eyebrow */}
-      <p className="text-xs tracking-wider text-zinc-400 mb-1.5">
+      <p className="text-xs tracking-wider text-text-muted mb-1.5">
         {t('lede.eyebrow')}
         {sector && <> &middot; {sector.toUpperCase()}</>}
         {yearsActive && <> &middot; {yearsActive}</>}
       </p>
 
       {/* Lede sentence */}
-      <p className="text-sm text-zinc-300 mt-1 leading-relaxed">
+      <p className="text-sm text-text-secondary mt-1 leading-relaxed">
         {topFinding} &middot; {t('lede.contractsSuffix', { n: contractCount.toLocaleString(), value: totalValue })}
       </p>
 

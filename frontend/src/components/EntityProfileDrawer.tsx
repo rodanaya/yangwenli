@@ -10,18 +10,16 @@ import { lazy, Suspense, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
 import {
-  LineChart,
-  Line,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from 'recharts'
+  EditorialSparkline,
+  type ColorToken,
+} from '@/components/charts/editorial'
 import { X, ExternalLink, Search, FileText, AlertTriangle } from 'lucide-react'
 import { RiskBadge } from '@/components/ui/badge'
 import { Skeleton } from '@/components/ui/skeleton'
 import { useEntityDrawer } from '@/contexts/EntityDrawerContext'
 import { vendorApi, institutionApi } from '@/api/client'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
-import { RISK_COLORS, getRiskLevelFromScore } from '@/lib/constants'
+import { getRiskLevelFromScore } from '@/lib/constants'
 import { formatCompactMXN, formatNumber, toTitleCase } from '@/lib/utils'
 
 // Lazy-load the heavy ECharts graph component so the bundle only pays for it
@@ -52,9 +50,10 @@ interface AsfCase {
 // Helpers
 // ---------------------------------------------------------------------------
 
-function riskColor(score: number | null | undefined): string {
-  if (score == null) return RISK_COLORS.low
-  return RISK_COLORS[getRiskLevelFromScore(score)]
+function riskColorToken(score: number | null | undefined): ColorToken {
+  if (score == null) return 'risk-low'
+  const lvl = getRiskLevelFromScore(score)
+  return `risk-${lvl}` as ColorToken
 }
 
 // ---------------------------------------------------------------------------
@@ -77,35 +76,16 @@ function RiskSparkline({
     )
   }
 
-  const lineColor = riskColor(latestScore)
+  const colorToken = riskColorToken(latestScore)
 
   return (
-    <ResponsiveContainer width="100%" height={80}>
-      <LineChart data={points} margin={{ top: 4, right: 4, bottom: 4, left: 4 }}>
-        <RechartsTooltip
-          content={({ active, payload }) => {
-            if (!active || !payload?.length) return null
-            const d = payload[0].payload as RiskTimelinePoint
-            return (
-              <div className="rounded border border-border bg-background-card px-2 py-1 text-xs">
-                <span className="text-text-muted">{d.year}: </span>
-                <span style={{ color: lineColor }}>
-                  {(d.avg_risk * 100).toFixed(0)}%
-                </span>
-              </div>
-            )
-          }}
-        />
-        <Line
-          type="monotone"
-          dataKey="avg_risk"
-          stroke={lineColor}
-          strokeWidth={2}
-          dot={{ fill: lineColor, r: 2, strokeWidth: 0 }}
-          activeDot={{ r: 3, strokeWidth: 0 }}
-        />
-      </LineChart>
-    </ResponsiveContainer>
+    <EditorialSparkline
+      data={points}
+      yKey="avg_risk"
+      colorToken={colorToken}
+      kind="line"
+      height={48}
+    />
   )
 }
 
@@ -270,13 +250,10 @@ function VendorDrawerContent({ vendorId }: { vendorId: number }) {
         <Suspense
           fallback={
             <div
-              className="flex items-center justify-center rounded"
-              style={{ height: 220, backgroundColor: '#0d1117' }}
+              className="flex items-center justify-center rounded-sm bg-background-elevated"
+              style={{ height: 220 }}
             >
-              <Skeleton
-                className="h-8 w-8 rounded-full"
-                style={{ backgroundColor: '#2d3748' }}
-              />
+              <Skeleton className="h-8 w-8 rounded-full" />
             </div>
           }
         >
@@ -444,13 +421,10 @@ function InstitutionDrawerContent({ institutionId }: { institutionId: number }) 
         <Suspense
           fallback={
             <div
-              className="flex items-center justify-center rounded"
-              style={{ height: 220, backgroundColor: '#0d1117' }}
+              className="flex items-center justify-center rounded-sm bg-background-elevated"
+              style={{ height: 220 }}
             >
-              <Skeleton
-                className="h-8 w-8 rounded-full"
-                style={{ backgroundColor: '#2d3748' }}
-              />
+              <Skeleton className="h-8 w-8 rounded-full" />
             </div>
           }
         >
@@ -556,7 +530,7 @@ export function EntityProfileDrawer() {
       <div
         role="presentation"
         onClick={close}
-        className="fixed inset-0 z-40 bg-black/40 backdrop-blur-[1px] transition-opacity duration-200"
+        className="fixed inset-0 z-40 bg-[color:var(--color-sidebar)]/40 backdrop-blur-[1px] transition-opacity duration-200"
         style={{
           opacity: isOpen ? 1 : 0,
           pointerEvents: isOpen ? 'auto' : 'none',

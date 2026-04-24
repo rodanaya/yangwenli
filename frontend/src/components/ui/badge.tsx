@@ -7,7 +7,7 @@ import { AlertTriangle, AlertCircle, AlertOctagon, CheckCircle } from 'lucide-re
 import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip'
 
 const badgeVariants = cva(
-  'inline-flex items-center rounded-md px-2 py-0.5 text-xs font-medium transition-colors',
+  'inline-flex items-center rounded-sm px-2 py-0.5 text-xs font-medium transition-colors',
   {
     variants: {
       variant: {

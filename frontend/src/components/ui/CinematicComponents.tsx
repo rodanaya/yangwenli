@@ -268,7 +268,7 @@ export function MarqueeBanner({
   return (
     <div
       className={cn(
-        'relative overflow-hidden bg-zinc-950 py-3 text-sm font-medium tracking-wide',
+        'relative overflow-hidden bg-background py-3 text-sm font-medium tracking-wide',
         className
       )}
       aria-label={`Scrolling information: ${items.join(', ')}`}

@@ -138,7 +138,7 @@ export function FlowParticle({
           key={`sl-${n.id}`}
           x={srcX - 6}
           y={srcY[n.id]}
-          fill="#a1a1aa"
+          fill="var(--color-text-muted)"
           fontSize={10}
           textAnchor="end"
           dominantBaseline="middle"
@@ -153,7 +153,7 @@ export function FlowParticle({
           key={`tl-${n.id}`}
           x={tgtX + 6}
           y={tgtY[n.id]}
-          fill="#a1a1aa"
+          fill="var(--color-text-muted)"
           fontSize={10}
           textAnchor="start"
           dominantBaseline="middle"

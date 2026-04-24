@@ -30,15 +30,10 @@ import { MiniRiskField } from '@/components/charts/MiniRiskField'
 import { FeaturedFinding } from '@/components/editorial/FeaturedFinding'
 import { SectorModelCoefficients } from '@/components/sectors/SectorModelCoefficients'
 import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
-} from '@/components/charts'
+  EditorialLineChart,
+  type LineSeries,
+  type ColorToken,
+} from '@/components/charts/editorial'
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
@@ -157,12 +152,13 @@ function SectorCard({ sector, rank }: SectorCardProps) {
   const daPct = sector.direct_award_pct ?? 0
   const exceedsOECD = daPct > 25
   const sbPct = sector.single_bid_pct ?? 0
-  const sbDotColor = sbPct > 25 ? 'bg-red-500' : sbPct >= 15 ? 'bg-amber-500' : 'bg-emerald-500'
+  // Bible §3.10: no green for low risk. Use zinc neutral for "clean".
+  const sbDotColor = sbPct > 25 ? 'bg-red-500' : sbPct >= 15 ? 'bg-amber-500' : 'bg-zinc-400'
 
   return (
     <Link
       to={`/sectors/${sector.sector_id}`}
-      className="surface-card group flex flex-col hover:bg-zinc-800/70 hover:border-white/15 transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+      className="surface-card group flex flex-col hover:bg-background-elevated hover:border-border transition-all duration-200 overflow-hidden focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-offset-background"
       aria-label={`${t(sector.sector_code)} — ${formatSpend(sector.total_value_mxn)}, ${riskLevel} risk`}
     >
       {/* Full-width color header strip */}
@@ -182,13 +178,13 @@ function SectorCard({ sector, rank }: SectorCardProps) {
             >
               #{rank}
             </span>
-            <h2 className="text-base font-bold text-white leading-tight mt-0.5">
+            <h2 className="text-base font-bold text-text-primary leading-tight mt-0.5">
               {t(sector.sector_code)}
             </h2>
           </div>
           <div className="flex items-center gap-1.5">
             {/* OECD compliance badge — zinc neutral when compliant, red when exceeding */}
-            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-zinc-800/60 text-zinc-400 border border-zinc-700/50'}`}>
+            <span className={`text-[9px] font-mono font-bold px-1.5 py-0.5 rounded ${exceedsOECD ? 'bg-red-500/10 text-red-400 border border-red-500/20' : 'bg-background-elevated text-text-secondary border border-border'}`}>
               OCDE {exceedsOECD ? '\u2717' : '\u2713'}
             </span>
             <RiskBadge level={riskLevel} />
@@ -198,10 +194,10 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         {/* Spend + sparkline row */}
         <div className="flex items-end justify-between gap-2">
           <div>
-            <p className="text-2xl font-black font-mono tabular-nums text-white leading-none">
+            <p className="text-2xl font-black font-mono tabular-nums text-text-primary leading-none">
               {formatSpend(sector.total_value_mxn)}
             </p>
-            <p className="text-[11px] text-zinc-400 mt-0.5">
+            <p className="text-[11px] text-text-secondary mt-0.5">
               {formatNumber(sector.total_contracts)} {t('card.contracts')}
             </p>
           </div>
@@ -209,14 +205,14 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         </div>
 
         {/* Vendor count + DA pct row */}
-        <div className="flex items-center justify-between gap-1 text-[11px] text-zinc-500">
+        <div className="flex items-center justify-between gap-1 text-[11px] text-text-muted">
           <div className="flex items-center gap-1">
             <Building2 className="h-3 w-3 flex-shrink-0" aria-hidden="true" />
             <span>
               {formatNumber(sector.total_vendors ?? 0)} {t('card.vendors')}
             </span>
           </div>
-          <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-zinc-500'}`}>
+          <span className={`font-mono text-[10px] tabular-nums ${exceedsOECD ? 'text-red-400' : 'text-text-muted'}`}>
             {daPct.toFixed(0)}% {t('card.directAward')}
           </span>
         </div>
@@ -224,7 +220,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         {/* Risk distribution bar */}
         <div className="space-y-1.5">
           <RiskBar sector={sector} />
-          <div className="flex items-center justify-between text-[10px] font-mono text-zinc-500">
+          <div className="flex items-center justify-between text-[10px] font-mono text-text-muted">
             <span>
               {highPlusCritical > 0
                 ? `${formatNumber(highPlusCritical)} ${t('profile.highPlusCritical')}`
@@ -235,23 +231,23 @@ function SectorCard({ sector, rank }: SectorCardProps) {
         </div>
 
         {/* Single-bid signal */}
-        <div className="flex items-center gap-1.5 text-[11px] text-zinc-400">
+        <div className="flex items-center gap-1.5 text-[11px] text-text-secondary">
           <span className={`h-1.5 w-1.5 rounded-full flex-shrink-0 ${sbDotColor}`} aria-hidden="true" />
           <span className="font-mono tabular-nums">{sbPct.toFixed(1)}%</span>
-          <span className="text-zinc-500">{t('card.singleBid')}</span>
+          <span className="text-text-muted">{t('card.singleBid')}</span>
         </div>
 
         {/* Market depth micro-stats */}
-        <p className="text-[10px] text-zinc-500 tabular-nums mt-auto pt-1 border-t border-white/5">
+        <p className="text-[10px] text-text-muted tabular-nums mt-auto pt-1 border-t border-border">
           {formatNumber(sector.total_institutions ?? 0)} {t('card.institutions')}
-          <span className="mx-1 text-zinc-700">·</span>
+          <span className="mx-1 text-text-primary">·</span>
           {formatNumber(sector.total_vendors ?? 0)} {t('card.providers')}
         </p>
       </div>
 
       {/* Footer link */}
       <div
-        className="flex items-center justify-end gap-1 px-4 py-2 border-t border-white/5 text-[11px] font-semibold transition-colors"
+        className="flex items-center justify-end gap-1 px-4 py-2 border-t border-border text-[11px] font-semibold transition-colors"
         style={{ color: `${color}cc` }}
       >
         <span className="group-hover:underline">{t('page.exploreLink')}</span>
@@ -266,7 +262,7 @@ function SectorCard({ sector, rank }: SectorCardProps) {
 function SectorCardSkeleton() {
   return (
     <div className="surface-card overflow-hidden">
-      <div className="h-1.5 w-full bg-zinc-800" />
+      <div className="h-1.5 w-full bg-background-elevated" />
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1.5">
@@ -312,12 +308,12 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
 
   return (
     <div className="relative inline-flex items-center gap-2">
-      <span className="text-xs text-zinc-400 font-medium">{t('page.sortBy')}:</span>
+      <span className="text-xs text-text-secondary font-medium">{t('page.sortBy')}:</span>
       <div className="relative">
         <select
           value={value}
           onChange={(e) => onChange(e.target.value as SortKey)}
-          className="appearance-none rounded-lg border border-white/10 bg-zinc-800/80 pl-3 pr-8 py-1.5 text-sm text-white font-medium cursor-pointer hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+          className="appearance-none rounded-lg border border-border bg-background-elevated pl-3 pr-8 py-1.5 text-sm text-text-primary font-medium cursor-pointer hover:border-border focus:outline-none focus:ring-2 focus:ring-border transition-colors"
           aria-label={t('page.sortBy')}
         >
           {options.map((o) => (
@@ -327,7 +323,7 @@ function SortDropdown({ value, onChange }: SortDropdownProps) {
           ))}
         </select>
         <ChevronDown
-          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"
+          className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary"
           aria-hidden="true"
         />
       </div>
@@ -400,7 +396,7 @@ function OECDCompetitionDotMatrix({
               x={OE_LABEL_W - 6}
               y={yCenter + 3}
               textAnchor="end"
-              fill="#a1a1aa"
+              fill="var(--color-text-muted)"
               fontSize={10}
               fontFamily="var(--font-family-mono)"
             >
@@ -414,8 +410,8 @@ function OECDCompetitionDotMatrix({
                   cx={OE_LABEL_W + i * OE_DOT_GAP + OE_DOT_R}
                   cy={yCenter}
                   r={OE_DOT_R}
-                  fill={isFilled ? color : '#2d2926'}
-                  stroke={isFilled ? 'none' : '#3d3734'}
+                  fill={isFilled ? color : 'var(--color-background-elevated)'}
+                  stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                   strokeWidth={0.5}
                   fillOpacity={isFilled ? (aboveOECD ? 0.9 : 0.4) : 1}
                   initial={{ opacity: 0 }}
@@ -427,7 +423,7 @@ function OECDCompetitionDotMatrix({
             <text
               x={OE_LABEL_W + OE_DOTS * OE_DOT_GAP + 6}
               y={yCenter + 3}
-              fill={aboveOECD ? color : '#71717a'}
+              fill={aboveOECD ? color : 'var(--color-text-muted)'}
               fontSize={10}
               fontFamily="var(--font-family-mono)"
               fontWeight={aboveOECD ? 700 : 400}
@@ -491,55 +487,37 @@ function SectorRiskTrendPanel({ sectors, t }: { sectors: SectorStatistics[]; t: 
     )
   }
 
+  // Pre-multiply by 100 so the y-axis renders 0–100% via 'pct' formatter.
+  const seriesData = chartData.map((row) => {
+    const out: Record<string, number> = { year: row.year as number }
+    for (const s of top6) {
+      const raw = row[s.sector_code]
+      if (typeof raw === 'number') out[s.sector_code] = raw * 100
+    }
+    return out
+  })
+  const series: LineSeries<typeof seriesData[number]>[] = top6.map((s) => ({
+    key: s.sector_code,
+    label: t(s.sector_code),
+    colorToken: `sector-${s.sector_code}` as ColorToken,
+    emphasis: 'secondary',
+  }))
+
   return (
     <div className="surface-card p-4" role="img" aria-label="Line chart showing average risk score by sector from 2015 to 2025">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         {t('trendChart.eyebrow')}
       </p>
-      <h3 className="text-sm font-bold text-white mb-3">
+      <h3 className="text-sm font-bold text-text-primary mb-3">
         {t('trendChart.title')}
       </h3>
-      <ResponsiveContainer width="100%" height={220}>
-        <LineChart data={chartData} margin={{ top: 0, right: 8, left: 0, bottom: 0 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="#3d3734" />
-          <XAxis dataKey="year" tick={{ fontSize: 10, fill: '#a1a1aa' }} />
-          <YAxis
-            tick={{ fontSize: 10, fill: '#a1a1aa' }}
-            tickFormatter={(v: number) => `${(v * 100).toFixed(0)}%`}
-            domain={[0, 'auto']}
-          />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (!active || !payload?.length) return null
-              return (
-                <div className="bg-zinc-900 border border-zinc-700 rounded px-3 py-2 text-xs">
-                  <p className="text-white font-semibold mb-1">{label}</p>
-                  {payload.map((p) => (
-                    <p key={String(p.dataKey)} style={{ color: String(p.color) }}>
-                      {t(String(p.dataKey))}: {((p.value as number) * 100).toFixed(1)}%
-                    </p>
-                  ))}
-                </div>
-              )
-            }}
-          />
-          <Legend
-            wrapperStyle={{ fontSize: '11px' }}
-            formatter={(value: string) => t(value)}
-          />
-          {top6.map((s) => (
-            <Line
-              key={s.sector_code}
-              type="monotone"
-              dataKey={s.sector_code}
-              stroke={SECTOR_COLORS[s.sector_code] ?? '#64748b'}
-              strokeWidth={1.5}
-              dot={false}
-              connectNulls
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+      <EditorialLineChart
+        data={seriesData}
+        xKey="year"
+        series={series}
+        yFormat="pct"
+        height={220}
+      />
     </div>
   )
 }
@@ -565,7 +543,7 @@ function RiskRankingStrip({
 
   return (
     <div className="surface-card p-4 mb-8">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-3">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-3">
         {t('riskRanking.eyebrow')}
       </p>
       <div className="flex flex-col">
@@ -578,16 +556,16 @@ function RiskRankingStrip({
               className="flex items-center gap-3"
               style={{ height: 24 }}
             >
-              <span className="text-[11px] text-zinc-300 w-28 flex-shrink-0 truncate">
+              <span className="text-[11px] text-text-secondary w-28 flex-shrink-0 truncate">
                 {t(s.sector_code)}
               </span>
-              <div className="flex-1 h-1.5 bg-zinc-800/60 rounded-sm overflow-hidden">
+              <div className="flex-1 h-1.5 bg-background-elevated rounded-sm overflow-hidden">
                 <div
                   className="h-full rounded-sm"
                   style={{ width: `${pct}%`, backgroundColor: color, opacity: 0.9 }}
                 />
               </div>
-              <span className="text-[11px] font-mono tabular-nums text-zinc-400 w-12 text-right flex-shrink-0">
+              <span className="text-[11px] font-mono tabular-nums text-text-secondary w-12 text-right flex-shrink-0">
                 {(s.avg_risk_score * 100).toFixed(1)}%
               </span>
             </div>
@@ -640,7 +618,7 @@ export function Sectors() {
     <div className="min-h-screen">
 
       {/* ── DARK HEADER ──────────────────────────────────────────────────────── */}
-      <header className="relative bg-zinc-950 border-b border-white/8 overflow-hidden">
+      <header className="relative bg-background border-b border-border overflow-hidden">
         {/* Subtle grid background */}
         <div
           className="absolute inset-0 opacity-[0.03]"
@@ -664,23 +642,23 @@ export function Sectors() {
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12 md:py-16">
           {/* Dateline strip */}
-          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
+          <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-4 pb-2 border-b border-[rgba(255,255,255,0.06)] max-w-2xl">
             <span className="inline-flex items-center gap-1.5">
               <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-              <span className="text-zinc-300">RUBLI</span>
+              <span className="text-text-secondary">RUBLI</span>
             </span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-text-primary">·</span>
             <span>Sectores</span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-text-primary">·</span>
             <span className="font-mono tabular-nums">COMPRANET 2002–2025</span>
-            <span className="text-zinc-700">·</span>
+            <span className="text-text-primary">·</span>
             <span className="font-mono tabular-nums">v0.6.5</span>
           </div>
           <p className="text-kicker text-kicker--investigation mb-3">
             {t('page.kicker', { defaultValue: 'Panorama sectorial' })}
           </p>
           <h1
-            className="text-white leading-[1.02]"
+            className="text-text-primary leading-[1.02]"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: 'clamp(2.25rem, 5vw, 3.75rem)',
@@ -691,7 +669,7 @@ export function Sectors() {
             {t('page.title')}
           </h1>
           <p
-            className="mt-4 max-w-2xl text-zinc-300"
+            className="mt-4 max-w-2xl text-text-secondary"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontStyle: 'italic',
@@ -707,14 +685,14 @@ export function Sectors() {
             {isLoading ? (
               <Skeleton className="h-6 w-64" />
             ) : (
-              <p className="text-sm font-semibold text-zinc-300 tracking-wide">
-                <span className="text-white font-black">12</span>{' '}
-                <span className="text-zinc-500">{t('statCards.sectorsTracked').toLowerCase()}</span>
-                <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
-                <span className="text-white font-black font-mono tabular-nums">{formatSpend(totalValue)}</span>
-                <span className="mx-2 text-zinc-700" aria-hidden="true">·</span>
-                <span className="text-white font-black font-mono tabular-nums">{formatNumber(totalContracts)}</span>{' '}
-                <span className="text-zinc-500">{t('statCards.totalContracts').toLowerCase()}</span>
+              <p className="text-sm font-semibold text-text-secondary tracking-wide">
+                <span className="text-text-primary font-black">12</span>{' '}
+                <span className="text-text-muted">{t('statCards.sectorsTracked').toLowerCase()}</span>
+                <span className="mx-2 text-text-primary" aria-hidden="true">·</span>
+                <span className="text-text-primary font-black font-mono tabular-nums">{formatSpend(totalValue)}</span>
+                <span className="mx-2 text-text-primary" aria-hidden="true">·</span>
+                <span className="text-text-primary font-black font-mono tabular-nums">{formatNumber(totalContracts)}</span>{' '}
+                <span className="text-text-muted">{t('statCards.totalContracts').toLowerCase()}</span>
               </p>
             )}
           </div>
@@ -760,10 +738,10 @@ export function Sectors() {
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
             {/* OECD Competition Gap Dot Matrix */}
             <div className="surface-card p-4" role="img" aria-label="Dot matrix comparing direct award rates by sector against the OECD 25% benchmark">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                 {t('finding.competitionGapLabel')}
               </p>
-              <h3 className="text-sm font-bold text-white mb-3">
+              <h3 className="text-sm font-bold text-text-primary mb-3">
                 {t('finding.directAwardVsOECD')}
               </h3>
               <OECDCompetitionDotMatrix
@@ -789,7 +767,7 @@ export function Sectors() {
 
         {/* Controls row */}
         <div className="flex items-center justify-between mb-6">
-          <p className="text-sm text-zinc-400">
+          <p className="text-sm text-text-secondary">
             {isLoading ? (
               <Skeleton className="h-4 w-32 inline-block" />
             ) : (
@@ -853,25 +831,25 @@ export function Sectors() {
             <section className="mt-10" aria-label={t('riskFactors.sectionAriaLabel')}>
               <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3 mb-4">
                 <div>
-                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+                  <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                     {t('riskFactors.eyebrow')}
                   </p>
-                  <h2 className="text-xl font-bold text-white leading-tight">
+                  <h2 className="text-xl font-bold text-text-primary leading-tight">
                     {t('riskFactors.title')}
                   </h2>
-                  <p className="text-xs text-zinc-500 mt-1 max-w-2xl">
+                  <p className="text-xs text-text-muted mt-1 max-w-2xl">
                     {t('riskFactors.description')}
                   </p>
                 </div>
                 <div className="relative inline-flex items-center gap-2">
-                  <span className="text-xs text-zinc-400 font-medium">{t('riskFactors.sectorLabel')}</span>
+                  <span className="text-xs text-text-secondary font-medium">{t('riskFactors.sectorLabel')}</span>
                   <div className="relative">
                     <select
                       value={activeSectorId}
                       onChange={(e) =>
                         setSelectedCoefSectorId(Number(e.target.value))
                       }
-                      className="appearance-none rounded-lg border border-white/10 bg-zinc-800/80 pl-3 pr-8 py-1.5 text-sm text-white font-medium cursor-pointer hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+                      className="appearance-none rounded-lg border border-border bg-background-elevated pl-3 pr-8 py-1.5 text-sm text-text-primary font-medium cursor-pointer hover:border-border focus:outline-none focus:ring-2 focus:ring-border transition-colors"
                       aria-label={t('riskFactors.sectorAriaLabel')}
                     >
                       {sectorsByRisk.map((s) => (
@@ -881,7 +859,7 @@ export function Sectors() {
                       ))}
                     </select>
                     <ChevronDown
-                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-400"
+                      className="pointer-events-none absolute right-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-secondary"
                       aria-hidden="true"
                     />
                   </div>
@@ -906,8 +884,8 @@ export function Sectors() {
 
         {/* Model note footnote */}
         {!isLoading && !error && (
-          <p className="mt-8 text-[11px] text-zinc-600 leading-relaxed max-w-4xl">
-            <strong className="text-zinc-500">Note:</strong> {t('page.modelNote')}
+          <p className="mt-8 text-[11px] text-text-muted leading-relaxed max-w-4xl">
+            <strong className="text-text-muted">Note:</strong> {t('page.modelNote')}
           </p>
         )}
       </main>

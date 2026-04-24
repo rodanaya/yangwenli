@@ -65,12 +65,12 @@ function lerpColor(a: string, b: string, t: number): string {
 }
 
 function heatColor(pct: number, maxPct: number): string {
-  if (maxPct <= 0) return 'rgba(255,255,255,0.05)'
+  if (maxPct <= 0) return 'var(--color-background-elevated)'
   const t = Math.min(pct / maxPct, 1)
-  // 4-stop scale: transparent -> light amber -> orange -> deep red
-  if (t < 0.33) return lerpColor('#1a1a2e', '#92400e', t / 0.33)
-  if (t < 0.66) return lerpColor('#92400e', '#ea580c', (t - 0.33) / 0.33)
-  return lerpColor('#ea580c', '#dc2626', (t - 0.66) / 0.34)
+  // Bible §2: cream-mode ramp, cream → amber → red.
+  if (t < 0.33) return lerpColor('#f3f1ec', '#f59e0b', t / 0.33)
+  if (t < 0.66) return lerpColor('#f59e0b', '#ea580c', (t - 0.33) / 0.33)
+  return lerpColor('#ea580c', '#ef4444', (t - 0.66) / 0.34)
 }
 
 export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
@@ -179,7 +179,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                 return (
                   <div
                     key={sector.code}
-                    className="relative flex items-center justify-center border border-zinc-900/60 transition-all duration-150"
+                    className="relative flex items-center justify-center border border-border/60 transition-all duration-150"
                     style={{
                       width: cellWidth,
                       backgroundColor: heatColor(pct, maxPct),
@@ -204,7 +204,7 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
                     {/* Hover tooltip */}
                     {isHovered && cell && (
                       <div
-                        className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-zinc-900 border border-zinc-700 rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"
+                        className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 bg-background-card border border-border rounded-lg px-3 py-2 shadow-xl pointer-events-none whitespace-nowrap"
                       >
                         <p className="text-[10px] font-semibold text-text-primary mb-0.5">
                           {admin.fullName} &middot; {sector.nameEN}
@@ -235,14 +235,14 @@ export const AdminSectorHeatmap = memo(function AdminSectorHeatmap({
             className="h-3 rounded-sm"
             style={{
               width: 120,
-              background: `linear-gradient(to right, #1a1a2e, #92400e, #ea580c, #dc2626)`,
+              background: `linear-gradient(to right, #f3f1ec, #f59e0b, #ea580c, #ef4444)`,
             }}
           />
           <span className="text-[9px] text-text-muted font-mono">{maxPct.toFixed(0)}%</span>
           <span className="text-[9px] text-text-muted font-mono ml-2">% of admin total spend</span>
         </div>
       </div>
-      <p className="text-xs text-zinc-500 font-mono mt-2 pt-2 border-t border-zinc-800">
+      <p className="text-xs text-text-muted font-mono mt-2 pt-2 border-t border-border">
         {DATA_SOURCE}
       </p>
     </div>

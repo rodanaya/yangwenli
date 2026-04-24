@@ -64,7 +64,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
   if (isLoading) {
     return (
       <div className={className}>
-        <div className="h-[120px] bg-zinc-800/40 rounded animate-pulse" />
+        <div className="h-[120px] bg-background-elevated/40 rounded animate-pulse" />
       </div>
     )
   }
@@ -83,7 +83,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
         </span>
         <Link
           to="/categories"
-          className="text-[10px] font-mono text-zinc-500 hover:text-zinc-300 flex items-center gap-0.5 transition-colors"
+          className="text-[10px] font-mono text-text-muted hover:text-text-secondary flex items-center gap-0.5 transition-colors"
         >
           {lang === 'en' ? 'all categories' : 'todas'}
           <ArrowRight className="h-2.5 w-2.5" />
@@ -101,7 +101,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
           return (
             <div key={cat.category_id} className="flex items-center gap-2">
               {/* Rank */}
-              <span className="text-[9px] font-mono text-zinc-600 w-3 flex-shrink-0 text-right">
+              <span className="text-[9px] font-mono text-text-muted w-3 flex-shrink-0 text-right">
                 {idx + 1}
               </span>
 
@@ -112,7 +112,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
               />
 
               {/* Name */}
-              <span className="text-[10px] font-mono text-zinc-300 flex-1 min-w-0 truncate">
+              <span className="text-[10px] font-mono text-text-secondary flex-1 min-w-0 truncate">
                 {name}
               </span>
 
@@ -125,7 +125,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
                     style={{
                       width: 5,
                       height: 5,
-                      backgroundColor: i < filled ? '#f59e0b' : '#27272a',
+                      backgroundColor: i < filled ? '#f59e0b' : '#f3f1ec',
                       border: i < filled ? 'none' : '0.5px solid #3f3f46',
                     }}
                   />
@@ -145,7 +145,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
       </div>
 
       {/* Footer */}
-      <div className="mt-2 text-[9px] font-mono text-zinc-600">
+      <div className="mt-2 text-[9px] font-mono text-text-muted">
         {lang === 'en' ? '1 dot ≈ 10% avg risk score' : '1 punto ≈ 10% puntaje de riesgo'}
       </div>
     </div>

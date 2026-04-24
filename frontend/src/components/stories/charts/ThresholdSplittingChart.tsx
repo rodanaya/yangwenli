@@ -56,15 +56,15 @@ export function ThresholdSplittingChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-zinc-900 rounded-sm p-4 border border-zinc-800"
+      className="bg-background-card rounded-sm p-4 border border-border"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Threshold Splitting
       </p>
-      <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
         12 contracts in 6 hours, all below the $1,500M oversight limit
       </h3>
-      <p className="text-xs text-zinc-500 font-mono mb-4">
+      <p className="text-xs text-text-muted font-mono mb-4">
         HEMOSER · 2 Aug 2023 · Total: ${totalValue.toLocaleString()}M MXN
         ({Math.round((totalValue / THRESHOLD) * 100) / 100}x threshold if combined)
       </p>
@@ -73,12 +73,12 @@ export function ThresholdSplittingChart() {
         <div className="text-2xl font-mono font-bold" style={{ color: RISK_COLORS.high }}>
           $17.3B MXN
         </div>
-        <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+        <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
           Total split across 12 contracts to avoid oversight
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -193,14 +193,14 @@ export function ThresholdSplittingChart() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-0.5">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           Average contract: $1,439M MXN. Average gap below threshold: $61M (4.1%).
           The uniform clustering below $1,500M is statistically improbable under
           legitimate procurement — consistent with deliberate threshold splitting.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-2 font-mono">
+      <p className="text-[10px] text-text-muted mt-2 font-mono">
         Source: COMPRANET 2023 · Each dot = $20M MXN · RUBLI same-day detection
       </p>
     </motion.div>

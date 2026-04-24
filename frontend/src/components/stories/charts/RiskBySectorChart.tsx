@@ -54,19 +54,19 @@ export function RiskBySectorChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-zinc-900 rounded-sm p-4 border border-zinc-800"
+      className="bg-background-card rounded-sm p-4 border border-border"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Sector Risk Distribution
       </p>
-      <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
         Agriculture and Energy lead with 2x the national risk average
       </h3>
-      <p className="text-xs text-zinc-500 font-mono mb-4">
+      <p className="text-xs text-text-muted font-mono mb-4">
         % of contracts rated critical + high · National avg: {OECD_AVG}%
       </p>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -176,14 +176,14 @@ export function RiskBySectorChart() {
         </svg>
       </div>
 
-      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-zinc-800">
+      <div className="flex items-center gap-2 mt-3 pt-3 border-t border-border">
         <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
-        <span className="text-[10px] font-mono text-zinc-500">
+        <span className="text-[10px] font-mono text-text-muted">
           National average (OECD HR benchmark: 2-15%)
         </span>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-2 font-mono">
+      <p className="text-[10px] text-text-muted mt-2 font-mono">
         Source: COMPRANET 2002-2025 · RUBLI v0.6.5 · Each dot = 0.5pp · Sectors above avg at full opacity
       </p>
     </motion.div>

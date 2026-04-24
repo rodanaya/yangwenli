@@ -18,15 +18,10 @@ import { SECTOR_COLORS, RISK_COLORS, RISK_THRESHOLDS, getRiskLevelFromScore } fr
 import { categoriesApi } from '@/api/client'
 import { motion } from 'framer-motion'
 import {
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  LineChart,
-  Line,
-  Legend,
-} from '@/components/charts'
+  EditorialLineChart,
+  type LineSeries,
+  type ColorToken,
+} from '@/components/charts/editorial'
 import {
   TrendingUp,
   ArrowUpRight,
@@ -157,7 +152,7 @@ function MiniSparkline({ values, color = '#58a6ff', width = 56, height = 20 }: M
   const lastVal = values[values.length - 1]
   const firstNonZero = values.find(v => v > 0) ?? 0
   const trend = lastVal > firstNonZero * 1.1 ? 'up' : lastVal < firstNonZero * 0.9 ? 'down' : 'flat'
-  const trendColor = trend === 'up' ? '#fb923c' : trend === 'down' ? '#71717a' : color
+  const trendColor = trend === 'up' ? '#fb923c' : trend === 'down' ? 'var(--color-text-muted)' : color
 
   return (
     <svg
@@ -373,8 +368,8 @@ function CategoryDetailPanel({
                         <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
                           {Array.from({ length: DOTS }).map((_, i) => (
                             <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                              fill={i < filled ? barColor : '#2d2926'}
-                              stroke={i < filled ? 'none' : '#3d3734'}
+                              fill={i < filled ? barColor : 'var(--color-background-elevated)'}
+                              stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                               strokeWidth={0.5}
                               fillOpacity={i < filled ? 0.85 : 1}
                             />
@@ -512,8 +507,8 @@ function CategorySummaryCard({
                 <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
                   {Array.from({ length: DOTS }).map((_, i) => (
                     <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                      fill={i < filled ? riskColor : '#2d2926'}
-                      stroke={i < filled ? 'none' : '#3d3734'}
+                      fill={i < filled ? riskColor : 'var(--color-background-elevated)'}
+                      stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                       strokeWidth={0.5}
                     />
                   ))}
@@ -549,8 +544,8 @@ function CategorySummaryCard({
                 <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
                   {Array.from({ length: DOTS }).map((_, i) => (
                     <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                      fill={i < filled ? daColor : '#2d2926'}
-                      stroke={i < filled ? 'none' : '#3d3734'}
+                      fill={i < filled ? daColor : 'var(--color-background-elevated)'}
+                      stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                       strokeWidth={0.5}
                     />
                   ))}
@@ -637,7 +632,7 @@ function CategorySummaryCard({
             <p className="text-[9px] font-mono uppercase tracking-wide text-red-400 mb-1.5">{t('detail.riskIndicators')}</p>
             <ul className="space-y-1">
               {flags.map((f, i) => (
-                <li key={i} className="flex items-start gap-2 text-xs text-zinc-300">
+                <li key={i} className="flex items-start gap-2 text-xs text-text-secondary">
                   <AlertTriangle className="h-3 w-3 text-red-400 flex-shrink-0 mt-0.5" />
                   {f}
                 </li>
@@ -653,7 +648,7 @@ function CategorySummaryCard({
           <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
             {t('detail.finding')}
           </p>
-          <p className="text-sm text-zinc-200">
+          <p className="text-sm text-text-secondary">
             {category.avg_risk >= 0.40 && isHighDA
               ? t('flags.narrativeHighDA', {
                   riskLevel,
@@ -812,11 +807,11 @@ function SubcategoryPanel({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => {
                   const isEmpty = k >= catchEnd
-                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? '#71717a' : '#2d2926'
+                  const fill = k < classifiedFilled ? '#3b82f6' : k < catchEnd ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'
                   return (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
                       fill={fill}
-                      stroke={isEmpty ? '#3d3734' : undefined}
+                      stroke={isEmpty ? 'var(--color-border-hover)' : undefined}
                       strokeWidth={isEmpty ? 0.5 : 0}
                       fillOpacity={k < catchEnd ? 0.55 : 1}
                     />
@@ -889,8 +884,8 @@ function SubcategoryPanel({
                             const isTotal = k < totalFilled
                             return (
                               <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                fill={isDa ? baseColor : isTotal ? baseColor : '#2d2926'}
-                                stroke={!isTotal ? '#3d3734' : undefined}
+                                fill={isDa ? baseColor : isTotal ? baseColor : 'var(--color-background-elevated)'}
+                                stroke={!isTotal ? 'var(--color-border-hover)' : undefined}
                                 strokeWidth={!isTotal ? 0.5 : 0}
                                 fillOpacity={isDa ? 0.9 : isTotal ? 0.45 : 1}
                               />
@@ -1044,7 +1039,7 @@ function TopFindingsBar({
     if (view === 'value') {
       return {
         value: formatCompactMXN(cat.total_value),
-        color: '#fafafa',
+        color: 'var(--color-text-primary)',
         sub: t('topFindings.contracts', { n: formatNumber(cat.total_contracts) }),
       }
     }
@@ -1060,7 +1055,7 @@ function TopFindingsBar({
     const overLimit = cat.direct_award_pct > 25
     return {
       value: `${cat.direct_award_pct.toFixed(0)}%`,
-      color: overLimit ? '#fb923c' : '#fafafa',
+      color: overLimit ? '#fb923c' : 'var(--color-text-primary)',
       sub: overLimit ? `${(cat.direct_award_pct / 25).toFixed(1)}x ${t('hero.oecdLimit')}` : t('hero.withinOecdLimit'),
     }
   }
@@ -1069,7 +1064,7 @@ function TopFindingsBar({
     <section aria-labelledby="top-findings-heading">
       <div className="flex items-end justify-between gap-3 mb-3 flex-wrap">
         <div>
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('topFindings.eyebrow')}
           </p>
           <h2
@@ -1616,8 +1611,8 @@ function DAConcentrationChart({
                 <svg viewBox={`0 0 ${svgW} 14`} className="flex-1 h-3.5" preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={7} r={DR}
-                      fill={i < filled ? dotColor : '#2d2926'}
-                      stroke={i < filled ? undefined : '#3d3734'}
+                      fill={i < filled ? dotColor : 'var(--color-background-elevated)'}
+                      stroke={i < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={i < filled ? 0 : 0.5}
                       fillOpacity={i < filled ? 0.72 : 1}
                     />
@@ -1868,7 +1863,7 @@ function TreemapSquarified({
                 height={Math.max(0, r.h - 2)}
                 fill={sectorColor}
                 fillOpacity={dimmed ? 0.2 : riskOpacity}
-                stroke={isHov ? '#fafafa' : isCritical ? '#dc2626' : isHigh ? '#ea580c' : '#18181b'}
+                stroke={isHov ? 'var(--color-text-primary)' : isCritical ? '#dc2626' : isHigh ? '#ea580c' : 'var(--color-background-elevated)'}
                 strokeWidth={isHov ? 2 : isCritical || isHigh ? 1.5 : 1}
                 style={{ transition: 'fill-opacity 120ms, stroke 120ms, stroke-width 120ms' }}
               />
@@ -1889,7 +1884,7 @@ function TreemapSquarified({
                   y={r.y + 16}
                   fontSize={Math.min(13, Math.max(10, Math.sqrt(r.w * r.h) / 12))}
                   fontWeight={700}
-                  fill="#fafafa"
+                  fill="var(--color-text-primary)"
                   fillOpacity={dimmed ? 0.35 : 0.96}
                   style={{
                     fontFamily: 'var(--font-family-serif)',
@@ -1908,7 +1903,7 @@ function TreemapSquarified({
                   y={r.y + 32}
                   fontSize={11}
                   fontFamily="var(--font-family-mono)"
-                  fill="#fafafa"
+                  fill="var(--color-text-primary)"
                   fillOpacity={dimmed ? 0.3 : 0.82}
                   style={{ pointerEvents: 'none', textShadow: '0 1px 2px rgba(0,0,0,0.6)' }}
                 >
@@ -1921,7 +1916,7 @@ function TreemapSquarified({
                   y={r.y + 47}
                   fontSize={10}
                   fontFamily="var(--font-family-mono)"
-                  fill="#fafafa"
+                  fill="var(--color-text-primary)"
                   fillOpacity={dimmed ? 0.22 : 0.64}
                   style={{ pointerEvents: 'none' }}
                 >
@@ -2064,7 +2059,7 @@ function SignalNoiseOutliers({
     <section aria-labelledby="outliers-heading">
       <div className="flex items-end justify-between gap-3 mb-4 flex-wrap">
         <div className="max-w-2xl">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             RUBLI · {lang === 'en' ? 'Signal vs. Noise' : 'Señal vs. Ruido'}
           </p>
           <h2
@@ -2148,7 +2143,7 @@ function SignalNoiseOutliers({
                 >
                   {localeName(cat, lang)}
                 </p>
-                <p className="text-sm text-zinc-300 leading-relaxed mb-4">{headline}</p>
+                <p className="text-sm text-text-secondary leading-relaxed mb-4">{headline}</p>
 
                 {/* Mini stat row */}
                 <div className="grid grid-cols-3 gap-3 pt-3 border-t border-amber-500/10">
@@ -2248,7 +2243,7 @@ function VendorConcentrationCallout({
   const isHighlyConc = concentrationLabel === 'highly_concentrated'
   const isModConc = concentrationLabel === 'moderately_concentrated'
   const barColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#3b82f6'
-  const pillColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : '#71717a'
+  const pillColor = isHighlyConc ? '#dc2626' : isModConc ? '#ea580c' : 'var(--color-text-muted)'
 
   const concLabel =
     concentrationLabel === 'highly_concentrated'
@@ -2287,7 +2282,7 @@ function VendorConcentrationCallout({
             <span className="text-4xl font-mono font-bold tabular-nums" style={{ color: barColor }}>
               {top.market_share_pct.toFixed(1)}%
             </span>
-            <span className="text-sm text-zinc-400">
+            <span className="text-sm text-text-secondary">
               {lang === 'en' ? 'held by' : 'controlado por'}{' '}
               <button
                 onClick={() => onNavigate(`/vendors/${top.vendor_id}`)}
@@ -2297,7 +2292,7 @@ function VendorConcentrationCallout({
               </button>
             </span>
           </div>
-          <p className="text-xs text-zinc-500 mt-1">
+          <p className="text-xs text-text-muted mt-1">
             {lang === 'en'
               ? `${formatCompactMXN(top.vendor_value)} across ${formatNumber(top.contract_count)} contracts in ${categoryName}`
               : `${formatCompactMXN(top.vendor_value)} en ${formatNumber(top.contract_count)} contratos en ${categoryName}`
@@ -2314,7 +2309,7 @@ function VendorConcentrationCallout({
             <p className="text-lg font-mono font-bold tabular-nums" style={{ color: barColor }}>
               {hhi.toFixed(3)}
             </p>
-            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+            <p className="text-[9px] text-text-muted font-mono mt-0.5">
               {hhi >= 0.25
                 ? (lang === 'en' ? 'Monopolistic' : 'Monopólico')
                 : hhi >= 0.15
@@ -2330,7 +2325,7 @@ function VendorConcentrationCallout({
             <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
               {top3SharePct.toFixed(0)}%
             </p>
-            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+            <p className="text-[9px] text-text-muted font-mono mt-0.5">
               {lang === 'en' ? 'combined' : 'combinado'}
             </p>
           </div>
@@ -2341,7 +2336,7 @@ function VendorConcentrationCallout({
             <p className="text-lg font-mono font-bold tabular-nums text-text-primary">
               {formatCompactMXN(categoryTotalValue)}
             </p>
-            <p className="text-[9px] text-zinc-500 font-mono mt-0.5">
+            <p className="text-[9px] text-text-muted font-mono mt-0.5">
               {vendors.length} {lang === 'en' ? 'shown' : 'mostrados'}
             </p>
           </div>
@@ -2379,8 +2374,8 @@ function VendorConcentrationCallout({
                       <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-full h-2" preserveAspectRatio="none">
                         {Array.from({ length: DOTS }).map((_, i) => (
                           <circle key={i} cx={i * DOT_GAP + DOT_R} cy={4} r={DOT_R}
-                            fill={i < filled ? dotColor : '#2d2926'}
-                            stroke={i < filled ? 'none' : '#3d3734'}
+                            fill={i < filled ? dotColor : 'var(--color-background-elevated)'}
+                            stroke={i < filled ? 'none' : 'var(--color-border-hover)'}
                             strokeWidth={0.5}
                             fillOpacity={i < filled ? (idx === 0 ? 0.9 : 0.75) : 1}
                           />
@@ -2492,7 +2487,7 @@ function SexenioStackedDotColumns({
         <text
           x={8} y={10}
           fontSize="10"
-          fill="#71717a"
+          fill="var(--color-text-muted)"
           fontFamily="var(--font-family-mono)"
         >
           {`≈${bPerDot}B MXN/dot`}
@@ -2549,7 +2544,7 @@ function SexenioStackedDotColumns({
                 x={cx} y={21}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#71717a"
+                fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono)"
               >
                 MXN
@@ -2574,9 +2569,9 @@ function SexenioStackedDotColumns({
                   <motion.circle
                     key={`dot-${colIdx}-${i}`}
                     cx={cx} cy={cy} r={DOT_R}
-                    fill={fill ?? '#2d2926'}
+                    fill={fill ?? 'var(--color-background-elevated)'}
                     fillOpacity={fill ? 0.9 : 0.7}
-                    stroke={fill ? 'none' : '#3d3734'}
+                    stroke={fill ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={fill ? 0 : 0.5}
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
@@ -2602,7 +2597,7 @@ function SexenioStackedDotColumns({
                 x={cx} y={bottomY + 26}
                 textAnchor="middle"
                 fontSize="10"
-                fill="#71717a"
+                fill="var(--color-text-muted)"
                 fontFamily="var(--font-family-mono)"
               >
                 {meta.years}
@@ -2614,7 +2609,7 @@ function SexenioStackedDotColumns({
                   x={cx} y={bottomY + 37}
                   textAnchor="middle"
                   fontSize="10"
-                  fill="#71717a"
+                  fill="var(--color-text-muted)"
                   fontFamily="var(--font-family-mono)"
                 >
                   partial
@@ -3085,7 +3080,7 @@ export default function SpendingCategories() {
         <section aria-labelledby="treemap-heading" className="space-y-4">
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div className="max-w-2xl">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                 <Layers className="h-3 w-3 inline-block mr-1 -mt-0.5" />
                 RUBLI · {i18n.language === 'en' ? 'The Anatomy of Federal Spend' : 'La Anatomía del Gasto Federal'}
               </p>
@@ -3130,7 +3125,7 @@ export default function SpendingCategories() {
         <section aria-labelledby="ranking-heading" className="space-y-4">
           <div className="flex items-end justify-between gap-3 flex-wrap">
             <div className="max-w-2xl">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
                 RUBLI · {i18n.language === 'en' ? 'Where the Money Goes' : 'A Dónde Va el Dinero'}
               </p>
               <h2
@@ -3475,7 +3470,7 @@ export default function SpendingCategories() {
       <section aria-labelledby="risk-value-heading">
         <div className="h-px bg-border mb-6" />
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('riskMap.eyebrow')}
           </p>
           <h2
@@ -3515,7 +3510,7 @@ export default function SpendingCategories() {
       <section aria-labelledby="sexenio-shifts-heading">
         <div className="h-px bg-border mb-6" />
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
             {t('sexenio.eyebrow')}
           </p>
           <h2
@@ -3637,78 +3632,31 @@ export default function SpendingCategories() {
             {trendsLoading ? (
               <ChartSkeleton height={320} type="area" />
             ) : trendChartData.years.length > 0 ? (
-              <div style={{ height: 320 }} ref={trendChartRef}>
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart margin={{ top: 10, right: 30, bottom: 20, left: 20 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" vertical={false} />
-                    <XAxis
-                      dataKey="year"
-                      type="number"
-                      domain={[trendChartData.years[0], trendChartData.years[trendChartData.years.length - 1]]}
-                      ticks={trendChartData.years}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      interval={trendChartData.years.length > 10 ? 2 : 0}
+              <div ref={trendChartRef}>
+                {(() => {
+                  type Row = { year: number } & Record<string, number>
+                  const data: Row[] = trendChartData.years.map((y) => {
+                    const row: Row = { year: y }
+                    trendChartData.series.forEach((s) => {
+                      row[s.name] = s.data[y] || 0
+                    })
+                    return row
+                  })
+                  const series: LineSeries<Row>[] = trendChartData.series.map((s) => ({
+                    key: s.name,
+                    label: truncate(s.name, 28),
+                    colorToken: (s.sector_code ? `sector-${s.sector_code}` : 'neutral') as ColorToken,
+                  }))
+                  return (
+                    <EditorialLineChart
+                      data={data}
+                      xKey="year"
+                      series={series}
+                      yFormat="mxn-compact"
+                      height={320}
                     />
-                    <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)' }}
-                      tickLine={false}
-                      tickFormatter={(v: number) => formatCompactMXN(v)}
-                      width={72}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload, label }) => {
-                        if (!active || !payload?.length) return null
-                        return (
-                          <div
-                            className="rounded-lg border p-3 text-xs font-mono shadow-lg space-y-1.5"
-                            style={{ backgroundColor: 'var(--color-background-card)', borderColor: 'var(--color-border)' }}
-                          >
-                            <p className="font-bold text-text-primary text-[11px]">{label}</p>
-                            {payload.map((p, i) => (
-                              <div key={i} className="flex items-center gap-2">
-                                <span className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: p.color ?? '#888' }} />
-                                <span className="text-text-muted/80 truncate max-w-[180px]">{truncate(String(p.name), 30)}</span>
-                                <span className="ml-auto font-semibold font-mono tabular-nums" style={{ color: p.color ?? '#e2e8f0' }}>
-                                  {formatCompactMXN(p.value as number)}
-                                </span>
-                              </div>
-                            ))}
-                          </div>
-                        )
-                      }}
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={48}
-                      wrapperStyle={{ paddingTop: 8 }}
-                      formatter={(value: string) => (
-                        <span className="text-xs" style={{ color: 'var(--color-text-secondary)' }}>
-                          {truncate(value, 28)}
-                        </span>
-                      )}
-                    />
-                    {trendChartData.series.map((series) => {
-                      const lineColor = series.sector_code ? (SECTOR_COLORS[series.sector_code] ?? '#64748b') : '#64748b'
-                      return (
-                        <Line
-                          key={series.name}
-                          type="monotone"
-                          data={trendChartData.years.map(y => ({ year: y, value: series.data[y] || 0 }))}
-                          dataKey="value"
-                          name={series.name}
-                          stroke={lineColor}
-                          strokeWidth={2.5}
-                          dot={{ r: 3, fill: lineColor, strokeWidth: 0 }}
-                          activeDot={{ r: 5, strokeWidth: 2, stroke: '#0d1117' }}
-                          connectNulls={false}
-                        />
-                      )
-                    })}
-                  </LineChart>
-                </ResponsiveContainer>
+                  )
+                })()}
               </div>
             ) : (
               <div className="flex flex-col items-center justify-center h-64 gap-3 text-center">
@@ -3726,13 +3674,13 @@ export default function SpendingCategories() {
       {/* ================================================================= */}
       {/* 9. See Also cross-link                                            */}
       {/* ================================================================= */}
-      <div className="flex items-center gap-3 py-3 border-t border-zinc-800">
-        <span className="text-[10px] font-mono uppercase tracking-widest text-zinc-500">
+      <div className="flex items-center gap-3 py-3 border-t border-border">
+        <span className="text-[10px] font-mono uppercase tracking-widest text-text-muted">
           {i18n.language === 'en' ? 'See also' : 'Ver también'}
         </span>
         <button
           onClick={() => navigate('/price-analysis')}
-          className="inline-flex items-center gap-1.5 text-xs text-zinc-400 hover:text-white transition-colors border border-zinc-700/60 hover:border-zinc-500 rounded px-2.5 py-1"
+          className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors border border-border hover:border-border rounded px-2.5 py-1"
         >
           {i18n.language === 'en' ? 'Anomalous Price Analysis' : 'Análisis de Precios Anómalos'}
           <ExternalLink className="w-3 h-3" />

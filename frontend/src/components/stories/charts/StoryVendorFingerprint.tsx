@@ -31,7 +31,7 @@ export function StoryVendorFingerprint() {
     >
       {/* Section overline with risk pill */}
       <div className="flex items-center gap-3">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
           RUBLI · Vendor Forensics
         </p>
         <div className="inline-flex items-center gap-1.5 rounded-full px-3 py-1
@@ -42,10 +42,10 @@ export function StoryVendorFingerprint() {
       </div>
 
       {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         12 contracts in one day: inside HEMOSER&apos;s risk fingerprint
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         On August 2, 2023, ISSSTE awarded HEMOSER 12 separate cardiac supply contracts
         — a textbook &ldquo;threshold splitting&rdquo; pattern designed to keep each contract
         below the competitive bidding threshold. The SHAP model assigns HEMOSER a risk score
@@ -61,16 +61,16 @@ export function StoryVendorFingerprint() {
           { label: 'Price volatility', value: '+0.62', color: 'text-orange-400', note: 'contract sizes vary' },
           { label: 'Inst. diversity', value: '-0.14', color: 'text-teal-400', note: 'protective factor' },
         ].map((f) => (
-          <div key={f.label} className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-2.5 text-center">
+          <div key={f.label} className="rounded-lg border border-border bg-background-card p-2.5 text-center">
             <div className={`text-lg font-mono font-bold ${f.color}`}>{f.value}</div>
-            <div className="text-[9px] text-zinc-500 uppercase tracking-wide mt-0.5">{f.label}</div>
-            <div className="text-[9px] text-zinc-600 mt-0.5">{f.note}</div>
+            <div className="text-[9px] text-text-muted uppercase tracking-wide mt-0.5">{f.label}</div>
+            <div className="text-[9px] text-text-muted mt-0.5">{f.note}</div>
           </div>
         ))}
       </div>
 
       {/* Chart */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4 flex justify-center">
+      <div className="rounded-sm border border-border bg-background p-4 flex justify-center">
         <VendorFingerprintChart
           shapValues={HEMOSER_SHAP}
           riskScore={0.94}
@@ -82,11 +82,11 @@ export function StoryVendorFingerprint() {
       </div>
 
       {/* Reading guide */}
-      <div className="rounded-sm border border-zinc-700/40 bg-zinc-900/60 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 mb-1">
+      <div className="rounded-sm border border-border bg-background-card p-3">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
           HOW TO READ THIS CHART
         </p>
-        <p className="text-xs text-zinc-400 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           Each petal represents one of the 9 active risk model features.
           <strong className="text-red-400"> Red petals</strong> are risk-increasing factors;
           <strong className="text-teal-400"> teal petals</strong> are protective.
@@ -97,7 +97,7 @@ export function StoryVendorFingerprint() {
 
       {/* Investigation hook */}
       <div className="flex items-center justify-between">
-        <p className="text-[10px] text-zinc-600">
+        <p className="text-[10px] text-text-muted">
           Source: RUBLI v6.5 SHAP explanations · vendor_shap_v52 table
         </p>
         <a

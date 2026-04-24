@@ -138,7 +138,7 @@ export function DashboardSkeleton() {
                   <Skeleton className="h-8 w-28" />
                   <Skeleton className="h-3 w-24" />
                 </div>
-                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-10 w-10 rounded-sm" />
               </div>
             </CardContent>
           </Card>
@@ -267,7 +267,7 @@ export function CardGridSkeleton() {
             <CardContent className="p-4">
               <div className="flex items-start justify-between mb-3">
                 <div className="flex items-center gap-2">
-                  <Skeleton className="h-8 w-8 rounded-lg" />
+                  <Skeleton className="h-8 w-8 rounded-sm" />
                   <div className="space-y-1">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="h-3 w-20" />
@@ -373,7 +373,7 @@ export function SectorsSkeleton() {
           <Card key={i}>
             <CardContent className="p-4">
               <div className="flex items-center gap-3 mb-4">
-                <Skeleton className="h-10 w-10 rounded-lg" />
+                <Skeleton className="h-10 w-10 rounded-sm" />
                 <div className="space-y-1">
                   <Skeleton className="h-5 w-24" />
                   <Skeleton className="h-3 w-16" />

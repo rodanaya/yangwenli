@@ -612,17 +612,17 @@ export default function ContractField({
               <div
                 className={`rounded border px-2.5 py-1.5 cursor-pointer transition-all duration-200 backdrop-blur-sm ${
                   hoveredCluster === i
-                    ? 'bg-zinc-900/95 border-red-500/60 shadow-[0_0_14px_rgba(239,68,68,0.25)]'
-                    : 'bg-zinc-950/80 border-zinc-700/30 hover:border-red-500/40'
+                    ? 'bg-background-card border-red-500/60 shadow-[0_0_14px_rgba(239,68,68,0.25)]'
+                    : 'bg-background/80 border-border hover:border-red-500/40'
                 }`}
               >
                 <div className="flex items-center gap-1.5 text-[10px] font-mono uppercase tracking-widest">
                   <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse flex-shrink-0" />
                   <span className="text-red-400 font-semibold">{info.label}</span>
-                  <span className="text-zinc-700">·</span>
-                  <span className="text-zinc-500">{clusterCounts[i]} nodes</span>
+                  <span className="text-text-primary">·</span>
+                  <span className="text-text-muted">{clusterCounts[i]} nodes</span>
                 </div>
-                <div className="text-[9px] text-zinc-500 mt-0.5 pl-3">{info.desc}</div>
+                <div className="text-[9px] text-text-muted mt-0.5 pl-3">{info.desc}</div>
               </div>
             </Link>
           </div>

@@ -50,15 +50,21 @@ export function FeaturedFinding({
   action,
   tintColor,
 }: FeaturedFindingProps) {
-  const tint = tintColor ?? accent
+  // Bible §2: sector colors are for data categorization, not for bathing a
+  // risk lede. Bathing the banner in sector-green (agricultura/hacienda) reads
+  // as "safe" on a corruption page. Default to neutral elevated cream; only
+  // tint if the caller explicitly passes tintColor.
+  const tint = tintColor
   return (
     <section
       aria-label={kicker}
       className="relative mb-10 overflow-hidden"
       style={{
-        background: `linear-gradient(180deg, ${tint}0a 0%, rgba(9,9,11,0) 70%)`,
-        borderTop: '1px solid rgba(255,255,255,0.08)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        background: tint
+          ? `linear-gradient(180deg, ${tint}14 0%, var(--color-background-card) 70%)`
+          : 'var(--color-background-card)',
+        borderTop: '1px solid var(--color-border)',
+        borderBottom: '1px solid var(--color-border)',
         borderLeft: `3px solid ${accent}`,
       }}
     >
@@ -73,7 +79,7 @@ export function FeaturedFinding({
 
         {/* Serif headline */}
         <div
-          className="text-zinc-50 mb-5 max-w-4xl"
+          className="text-text-primary mb-5 max-w-4xl"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontWeight: 700,
@@ -87,7 +93,7 @@ export function FeaturedFinding({
 
         {/* Pull-quote deck with colored left rule */}
         <blockquote
-          className="max-w-3xl text-zinc-200 mb-5"
+          className="max-w-3xl text-text-secondary mb-5"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -105,13 +111,13 @@ export function FeaturedFinding({
           <div className="flex flex-wrap items-baseline gap-x-6 gap-y-2 mb-5">
             {meta.map((m, i) => (
               <div key={i} className="flex items-baseline gap-2">
-                <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-[0.15em]">
+                <span className="text-[10px] font-mono text-text-muted uppercase tracking-[0.15em]">
                   {m.label}
                 </span>
                 <span
                   className="font-mono tabular-nums text-sm"
                   style={{
-                    color: m.accent ? accent : '#e4e4e7',
+                    color: m.accent ? accent : 'var(--color-text-primary)',
                     fontWeight: m.accent ? 600 : 500,
                   }}
                 >

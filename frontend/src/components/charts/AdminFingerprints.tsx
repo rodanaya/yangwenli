@@ -76,11 +76,11 @@ const MAX_DA_PCT   = 85
 const RISK_COLOR   = '#dc2626'
 const DA_COLOR     = '#7c93a8'
 const GRID_COLOR   = 'rgba(255,255,255,0.06)'
-const HEADER_COLOR = '#a1a1aa'
+const HEADER_COLOR = 'var(--color-text-muted)'
 const MUTED_COLOR  = '#71717a'
 const TEXT_COLOR   = '#e5e5e5'
-const EMPTY_DOT    = '#27272a'   // dark — blends with dark card background
-const EMPTY_STROKE = '#3f3f46'   // subtle border for empty dots
+const EMPTY_DOT    = '#f3f1ec'   // dark — blends with dark card background
+const EMPTY_STROKE = '#e2ddd6'   // subtle border for empty dots
 
 export function AdminFingerprints() {
   const { i18n } = useTranslation()
@@ -284,7 +284,7 @@ export function AdminFingerprints() {
           ? 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award data unavailable pre-2007'
           : 'AMLO era: 41.8% high-risk · 2.4× Fox era · direct-award flag ausente pre-2007'}
       </text>
-      <text x={LABEL_X} y={SVG_H - 3} fill="#3f3f46" fontSize={8}
+      <text x={LABEL_X} y={SVG_H - 3} fill="#e2ddd6" fontSize={8}
         fontFamily="var(--font-family-mono, monospace)" fontStyle="italic">
         {lang === 'en'
           ? '* Sheinbaum: partial term (2025 data through cutoff)'

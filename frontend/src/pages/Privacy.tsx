@@ -16,17 +16,17 @@ interface SectionProps {
 function Section({ title, children }: SectionProps) {
   return (
     <section className="mb-10">
-      <h2 className="text-base font-semibold text-white/90 mb-3 pb-2 border-b border-white/[0.07]">
+      <h2 className="text-base font-semibold text-text-primary mb-3 pb-2 border-b border-border">
         {title}
       </h2>
-      <div className="space-y-3 text-sm text-white/60 leading-relaxed">{children}</div>
+      <div className="space-y-3 text-sm text-text-primary leading-relaxed">{children}</div>
     </section>
   )
 }
 
 function Tag({ children }: { children: React.ReactNode }) {
   return (
-    <span className="inline-flex items-center rounded bg-white/[0.07] border border-white/[0.10] text-white/55 text-[11px] font-mono px-1.5 py-0.5 mx-0.5">
+    <span className="inline-flex items-center rounded bg-background-elevated border border-border text-text-primary text-[11px] font-mono px-1.5 py-0.5 mx-0.5">
       {children}
     </span>
   )
@@ -45,41 +45,41 @@ export default function Privacy() {
           <div className="flex items-center justify-between mb-4">
             <div className="flex items-center gap-2.5">
               <Shield className="h-5 w-5 text-amber-500/80" aria-hidden="true" />
-              <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-white/30">
+              <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-text-primary">
                 {isEs ? 'Aviso de Privacidad' : 'Privacy Policy'}
               </span>
             </div>
             {/* Language toggle */}
-            <div className="flex items-center gap-1 rounded border border-white/10 bg-white/[0.04] p-0.5">
+            <div className="flex items-center gap-1 rounded border border-border bg-background-elevated p-0.5">
               <button
                 onClick={() => setLang('es')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'es' ? 'bg-amber-500/20 text-amber-400' : 'text-white/30 hover:text-white/60'}`}
+                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'es' ? 'bg-amber-500/20 text-amber-400' : 'text-text-primary hover:text-text-primary'}`}
               >
                 ES
               </button>
               <button
                 onClick={() => setLang('en')}
-                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'en' ? 'bg-amber-500/20 text-amber-400' : 'text-white/30 hover:text-white/60'}`}
+                className={`px-2.5 py-1 text-[11px] font-mono rounded transition-colors ${lang === 'en' ? 'bg-amber-500/20 text-amber-400' : 'text-text-primary hover:text-text-primary'}`}
               >
                 EN
               </button>
             </div>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
             {isEs ? 'Privacidad y Protección de Datos' : 'Privacy & Data Protection'}
           </h1>
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-text-primary">
             {isEs ? 'Última actualización: Abril 2026 — Versión 1.0' : 'Last updated: April 2026 — Version 1.0'}
           </p>
         </div>
 
         {/* Summary card */}
         <div className="rounded-lg border border-amber-500/20 bg-amber-500/[0.04] p-4 mb-10">
-          <p className="text-sm text-white/70 leading-relaxed">
+          <p className="text-sm text-text-primary leading-relaxed">
             <span className="font-semibold text-amber-400/80">TL;DR{isEs ? '' : ':'}:</span>{' '}
             {isEs
-              ? <>RUBLI procesa <strong className="text-white/80">registros públicos de contrataciones</strong> del gobierno federal mexicano. No recopilamos información personal de visitantes. No usamos cookies de rastreo ni analíticas. Los únicos datos de carácter personal que manejamos son los <strong className="text-white/80">RFC públicos de personas morales</strong> (empresas), publicados por el gobierno en COMPRANET.</>
-              : <>RUBLI processes <strong className="text-white/80">public procurement records</strong> from the Mexican federal government. We do not collect personal information about visitors. We do not use tracking cookies or analytics. The only personal-adjacent data we hold are the <strong className="text-white/80">public tax IDs (RFC) of legal entities</strong> (companies), which are published by the government in the COMPRANET database.</>
+              ? <>RUBLI procesa <strong className="text-text-primary">registros públicos de contrataciones</strong> del gobierno federal mexicano. No recopilamos información personal de visitantes. No usamos cookies de rastreo ni analíticas. Los únicos datos de carácter personal que manejamos son los <strong className="text-text-primary">RFC públicos de personas morales</strong> (empresas), publicados por el gobierno en COMPRANET.</>
+              : <>RUBLI processes <strong className="text-text-primary">public procurement records</strong> from the Mexican federal government. We do not collect personal information about visitors. We do not use tracking cookies or analytics. The only personal-adjacent data we hold are the <strong className="text-text-primary">public tax IDs (RFC) of legal entities</strong> (companies), which are published by the government in the COMPRANET database.</>
             }
           </p>
         </div>
@@ -104,23 +104,23 @@ export default function Privacy() {
         {/* ------------------------------------------------------------------ */}
         <Section title={isEs ? '2. Qué datos tratamos' : '2. What Data We Process'}>
           <div className="space-y-4">
-            <div className="rounded border border-white/[0.08] bg-white/[0.02] p-4">
+            <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Database className="h-4 w-4 text-blue-400/70" aria-hidden="true" />
-                <span className="text-sm font-medium text-white/80">{isEs ? 'Registros de contrataciones' : 'Procurement Records'}</span>
+                <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros de contrataciones' : 'Procurement Records'}</span>
               </div>
               <p>
                 {isEs
-                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-white/75">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
-                  : <>Approximately 3.1 million contract records sourced from <strong className="text-white/75">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
+                  ? <>Aproximadamente 3.1 millones de contratos obtenidos de <strong className="text-text-primary">COMPRANET</strong> (Sistema Electrónico de Contrataciones Gubernamentales), que abarca 2002–2025. Estos datos son publicados por el gobierno federal bajo su programa de datos abiertos y están disponibles gratuitamente en <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
+                  : <>Approximately 3.1 million contract records sourced from <strong className="text-text-primary">COMPRANET</strong> (the Mexican federal procurement system, <em>Sistema Electrónico de Contrataciones Gubernamentales</em>), covering 2002–2025. This data is published by the federal government under its open data programme and is freely accessible at <a href="https://compranet.hacienda.gob.mx" target="_blank" rel="noopener noreferrer" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">compranet.hacienda.gob.mx</a>.</>
                 }
               </p>
             </div>
 
-            <div className="rounded border border-white/[0.08] bg-white/[0.02] p-4">
+            <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
                 <FileText className="h-4 w-4 text-green-400/70" aria-hidden="true" />
-                <span className="text-sm font-medium text-white/80">{isEs ? 'Registros públicos de sanciones' : 'Public Sanctions Registries'}</span>
+                <span className="text-sm font-medium text-text-primary">{isEs ? 'Registros públicos de sanciones' : 'Public Sanctions Registries'}</span>
               </div>
               <p>
                 {isEs
@@ -130,21 +130,21 @@ export default function Privacy() {
               </p>
             </div>
 
-            <div className="rounded border border-white/[0.08] bg-white/[0.02] p-4">
+            <div className="rounded border border-border bg-background-elevated p-4">
               <div className="flex items-center gap-2 mb-2">
                 <Lock className="h-4 w-4 text-amber-400/70" aria-hidden="true" />
-                <span className="text-sm font-medium text-white/80">{isEs ? 'RFC — Solo personas morales' : 'RFC — Legal Entities Only'}</span>
+                <span className="text-sm font-medium text-text-primary">{isEs ? 'RFC — Solo personas morales' : 'RFC — Legal Entities Only'}</span>
               </div>
               <p>
                 {isEs
-                  ? <>Los registros de COMPRANET incluyen el <strong className="text-white/75">RFC (Registro Federal de Contribuyentes)</strong> de los proveedores e instituciones contratantes. RUBLI solo muestra y procesa RFCs pertenecientes a <strong className="text-white/75">personas morales</strong> (empresas, ONG, dependencias gubernamentales).</>
-                  : <>COMPRANET records include the <strong className="text-white/75">RFC (Registro Federal de Contribuyentes)</strong> — the Mexican tax identifier — of vendors and contracting institutions. RUBLI only displays and processes RFCs belonging to <strong className="text-white/75">legal entities</strong> (<em>personas morales</em>: companies, NGOs, government agencies).</>
+                  ? <>Los registros de COMPRANET incluyen el <strong className="text-text-primary">RFC (Registro Federal de Contribuyentes)</strong> de los proveedores e instituciones contratantes. RUBLI solo muestra y procesa RFCs pertenecientes a <strong className="text-text-primary">personas morales</strong> (empresas, ONG, dependencias gubernamentales).</>
+                  : <>COMPRANET records include the <strong className="text-text-primary">RFC (Registro Federal de Contribuyentes)</strong> — the Mexican tax identifier — of vendors and contracting institutions. RUBLI only displays and processes RFCs belonging to <strong className="text-text-primary">legal entities</strong> (<em>personas morales</em>: companies, NGOs, government agencies).</>
                 }
               </p>
               <p className="mt-2">
                 {isEs
-                  ? <>Los RFCs de <strong className="text-white/75">personas físicas</strong> son <strong className="text-white/75">enmascarados o excluidos</strong> del sistema. El RFC de una persona física codifica su fecha de nacimiento e iniciales del nombre, por lo que constituye dato personal conforme a la LFPDPPP. Lo tratamos en consecuencia.</>
-                  : <>RFCs belonging to <strong className="text-white/75">natural persons</strong> (<em>personas físicas</em>) are <strong className="text-white/75">masked or excluded</strong> from display. The RFC of a persona física encodes the holder's birth date and name initials and is therefore personal data under LFPDPPP. We treat it accordingly.</>
+                  ? <>Los RFCs de <strong className="text-text-primary">personas físicas</strong> son <strong className="text-text-primary">enmascarados o excluidos</strong> del sistema. El RFC de una persona física codifica su fecha de nacimiento e iniciales del nombre, por lo que constituye dato personal conforme a la LFPDPPP. Lo tratamos en consecuencia.</>
+                  : <>RFCs belonging to <strong className="text-text-primary">natural persons</strong> (<em>personas físicas</em>) are <strong className="text-text-primary">masked or excluded</strong> from display. The RFC of a persona física encodes the holder's birth date and name initials and is therefore personal data under LFPDPPP. We treat it accordingly.</>
                 }
               </p>
             </div>
@@ -156,7 +156,7 @@ export default function Privacy() {
           <p>{isEs ? 'Nuestro tratamiento de datos públicos de contrataciones se fundamenta en:' : 'Our processing of public procurement data is grounded in:'}</p>
           <ul className="list-disc list-inside space-y-2 ml-1">
             <li>
-              <strong className="text-white/80">{isEs ? 'Interés legítimo / investigación de interés público' : 'Legitimate interest / public interest research'}</strong>{' '}
+              <strong className="text-text-primary">{isEs ? 'Interés legítimo / investigación de interés público' : 'Legitimate interest / public interest research'}</strong>{' '}
               {isEs
                 ? 'conforme al Art. 10 de la LFPDPPP, que permite el tratamiento sin consentimiento cuando el fin es periodístico, histórico, estadístico o de investigación científica de interés público.'
                 : 'under Art. 10 of the LFPDPPP, which permits processing without consent when the purpose is journalistic, historical, statistical, or scientific research activity in the public interest.'
@@ -164,12 +164,12 @@ export default function Privacy() {
             </li>
             <li>
               {isEs
-                ? <><strong className="text-white/80">El mandato de datos abiertos</strong> del gobierno federal mexicano (<em>Política de Datos Abiertos</em>, DOF 2015), que obliga a publicar los datos de COMPRANET en formatos reutilizables.</>
-                : <>The <strong className="text-white/80">open data mandate</strong> of the Mexican federal government (<em>Política de Datos Abiertos</em>, DOF 2015), which requires COMPRANET data to be published in machine-readable formats for reuse.</>
+                ? <><strong className="text-text-primary">El mandato de datos abiertos</strong> del gobierno federal mexicano (<em>Política de Datos Abiertos</em>, DOF 2015), que obliga a publicar los datos de COMPRANET en formatos reutilizables.</>
+                : <>The <strong className="text-text-primary">open data mandate</strong> of the Mexican federal government (<em>Política de Datos Abiertos</em>, DOF 2015), which requires COMPRANET data to be published in machine-readable formats for reuse.</>
               }
             </li>
             <li>
-              <strong className="text-white/80">{isEs ? 'Rendición de cuentas y transparencia' : 'Accountability and transparency'}</strong>{' '}
+              <strong className="text-text-primary">{isEs ? 'Rendición de cuentas y transparencia' : 'Accountability and transparency'}</strong>{' '}
               {isEs
                 ? 'reconocidas en el Art. 6 de la Constitución Mexicana y la Ley General de Transparencia y Acceso a la Información Pública.'
                 : 'as recognised in Art. 6 of the Mexican Constitution and the Ley General de Transparencia y Acceso a la Información Pública.'
@@ -224,8 +224,8 @@ export default function Privacy() {
         <Section title={isEs ? '6. Sus derechos (LFPDPPP — ARCO)' : '6. Your Rights (LFPDPPP — ARCO)'}>
           <p>
             {isEs
-              ? <> Conforme a la LFPDPPP, usted tiene derecho de <strong className="text-white/80">Acceso, Rectificación, Cancelación y Oposición</strong> (derechos ARCO) respecto a sus datos personales.</>
-              : <>Under the LFPDPPP you have the right to <strong className="text-white/80">Access, Rectification, Cancellation, and Opposition</strong> (ARCO rights) with respect to your personal data.</>
+              ? <> Conforme a la LFPDPPP, usted tiene derecho de <strong className="text-text-primary">Acceso, Rectificación, Cancelación y Oposición</strong> (derechos ARCO) respecto a sus datos personales.</>
+              : <>Under the LFPDPPP you have the right to <strong className="text-text-primary">Access, Rectification, Cancellation, and Opposition</strong> (ARCO rights) with respect to your personal data.</>
             }
           </p>
           <p>
@@ -267,20 +267,20 @@ export default function Privacy() {
         </Section>
 
         {/* Footer links */}
-        <div className="mt-12 pt-6 border-t border-white/[0.07] flex flex-wrap gap-4 items-center">
+        <div className="mt-12 pt-6 border-t border-border flex flex-wrap gap-4 items-center">
           <a
             href="https://github.com/rodanaya/yangwenli"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-white/35 hover:text-white/60 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-primary hover:text-text-primary transition-colors"
           >
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             {isEs ? 'Código fuente (MIT)' : 'Source code (MIT)'}
           </a>
-          <a href="/terms" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+          <a href="/terms" className="text-xs text-text-primary hover:text-text-primary transition-colors">
             {isEs ? 'Términos de uso' : 'Terms of Use'}
           </a>
-          <a href="/methodology" className="text-xs text-white/35 hover:text-white/60 transition-colors">
+          <a href="/methodology" className="text-xs text-text-primary hover:text-text-primary transition-colors">
             {isEs ? 'Metodología' : 'Methodology'}
           </a>
         </div>

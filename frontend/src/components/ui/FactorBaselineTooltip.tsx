@@ -24,18 +24,18 @@ const FACTOR_KEYS: ReadonlySet<string> = new Set([
 
 function getZScoreColor(z: number): string {
   const abs = Math.abs(z)
-  if (abs > 3) return 'text-red-500'
-  if (abs > 2) return 'text-red-400'
-  if (abs > 1) return 'text-amber-700 dark:text-yellow-400'
-  return 'text-emerald-500'
+  if (abs > 3) return 'text-risk-critical'
+  if (abs > 2) return 'text-risk-critical'
+  if (abs > 1) return 'text-risk-high'
+  return 'text-risk-low'
 }
 
 function getZScoreBg(z: number): string {
   const abs = Math.abs(z)
-  if (abs > 3) return 'bg-red-500'
-  if (abs > 2) return 'bg-red-400'
-  if (abs > 1) return 'bg-amber-500'
-  return 'bg-emerald-500'
+  if (abs > 3) return 'bg-risk-critical'
+  if (abs > 2) return 'bg-risk-critical'
+  if (abs > 1) return 'bg-risk-high'
+  return 'bg-risk-low'
 }
 
 function getZScoreLabelKey(z: number): string {
@@ -64,10 +64,10 @@ function BellCurveSVG({ zScore }: { zScore: number }) {
         className="text-text-muted/40"
       />
       {/* 1-sigma zone */}
-      <rect x="78" y="0" width="44" height="60" fill="currentColor" className="text-emerald-500/10" rx="2" />
+      <rect x="78" y="0" width="44" height="60" fill="currentColor" className="text-risk-low/10" rx="2" />
       {/* 2-sigma zone */}
-      <rect x="55" y="0" width="23" height="60" fill="currentColor" className="text-yellow-500/10" rx="2" />
-      <rect x="122" y="0" width="23" height="60" fill="currentColor" className="text-yellow-500/10" rx="2" />
+      <rect x="55" y="0" width="23" height="60" fill="currentColor" className="text-risk-high/10" rx="2" />
+      <rect x="122" y="0" width="23" height="60" fill="currentColor" className="text-risk-high/10" rx="2" />
       {/* Marker */}
       <line x1={markerX} y1="0" x2={markerX} y2="60" strokeWidth="2" className={`stroke-current ${color.replace('bg-', 'text-')}`} />
       <circle cx={markerX} cy="8" r="3" className={`fill-current ${color.replace('bg-', 'text-')}`} />
@@ -126,7 +126,7 @@ export function FactorBaselineTooltip({
       {children}
       {isOpen && (
         <div
-          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-background-card border border-border rounded-lg shadow-lg p-3"
+          className="absolute z-50 bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 bg-background-card border border-border rounded-sm shadow-lg p-3"
           role="tooltip"
         >
           <div className="text-xs font-semibold text-text-primary mb-1">{label}</div>

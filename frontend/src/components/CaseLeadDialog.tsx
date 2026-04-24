@@ -421,7 +421,7 @@ export function CaseLeadDialog({ open, onOpenChange }: CaseLeadDialogProps) {
       {/* Toast notification */}
       {toastMsg && (
         <div
-          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium bg-risk-low/90 text-white"
+          className="fixed bottom-4 right-4 z-50 flex items-center gap-2 px-4 py-3 rounded-lg shadow-lg text-sm font-medium bg-risk-low/90 text-text-primary"
           role="status"
           aria-live="polite"
         >

@@ -98,7 +98,7 @@ export default function FraudTimelineRibbon({
                 style={{ backgroundColor: ERA_COLORS[eraKey] }}
                 aria-hidden="true"
               />
-              <span className="text-zinc-400">{label}</span>
+              <span className="text-text-secondary">{label}</span>
             </div>
           )
         })}
@@ -118,9 +118,9 @@ export default function FraudTimelineRibbon({
           style={{ width: `${totalWidth}px`, minHeight: '200px' }}
         >
           {/* Timeline line */}
-          <div className="absolute top-[60px] left-0 right-0 h-[2px] bg-zinc-800">
+          <div className="absolute top-[60px] left-0 right-0 h-[2px] bg-background-elevated">
             <div
-              className="h-full bg-zinc-600 origin-left"
+              className="h-full bg-text-muted origin-left"
               style={{
                 width: `${lineWidth}%`,
                 transition: 'width 1.5s cubic-bezier(0.16, 1, 0.3, 1)',
@@ -136,8 +136,8 @@ export default function FraudTimelineRibbon({
               className="absolute top-[46px] -translate-x-1/2"
               style={{ left: `${getPositionPct(year)}%` }}
             >
-              <div className="w-[1px] h-4 bg-zinc-700 mx-auto" aria-hidden="true" />
-              <span className="text-[10px] text-zinc-600 font-mono tabular-nums block text-center mt-0.5">
+              <div className="w-[1px] h-4 bg-background-elevated mx-auto" aria-hidden="true" />
+              <span className="text-[10px] text-text-muted font-mono tabular-nums block text-center mt-0.5">
                 {year}
               </span>
             </div>
@@ -169,7 +169,7 @@ export default function FraudTimelineRibbon({
                 >
                   {/* Connecting dot */}
                   <div
-                    className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-zinc-900"
+                    className="absolute left-1/2 -translate-x-1/2 w-3 h-3 rounded-full border-2 border-border"
                     style={{
                       backgroundColor: eraColor,
                       top: `${-(verticalOffset - 56)}px`,
@@ -207,7 +207,7 @@ export default function FraudTimelineRibbon({
                     >
                       {c.year}
                     </p>
-                    <p className="text-xs font-medium text-zinc-200 leading-tight line-clamp-2 mb-1">
+                    <p className="text-xs font-medium text-text-secondary leading-tight line-clamp-2 mb-1">
                       {c.caseName}
                     </p>
                     {c.valueBn !== undefined && (
@@ -224,7 +224,7 @@ export default function FraudTimelineRibbon({
       </div>
 
       {/* Scroll hint for mobile */}
-      <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-zinc-600 lg:hidden">
+      <div className="flex items-center justify-center gap-1 mt-1 text-[10px] text-text-muted lg:hidden">
         <span aria-hidden="true">&larr;</span>
         <span>Deslizar para ver mas</span>
         <span aria-hidden="true">&rarr;</span>

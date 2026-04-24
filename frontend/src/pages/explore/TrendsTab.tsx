@@ -38,27 +38,14 @@ import {
   FileSearch,
 } from 'lucide-react'
 import {
-  ResponsiveContainer,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ReferenceLine,
-  ReferenceArea,
-  ComposedChart,
-  Line,
-  Cell,
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  PolarRadiusAxis,
-  Radar,
-  Area,
-  ScatterChart,
-  Scatter,
-  ZAxis,
-  Legend,
-} from '@/components/charts'
+  EditorialComposedChart,
+  EditorialRadarChart,
+  EditorialScatterChart,
+  type ComposedLayer,
+  type RadarSeries,
+  type ChartAnnotation,
+  type ColorToken,
+} from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
 
 // =============================================================================
@@ -444,94 +431,33 @@ export default function TrendsTab() {
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
-              <div ref={historicalChartRef} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                    <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} />
-                    <YAxis
-                      yAxisId="left"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
+              <div ref={historicalChartRef}>
+                {(() => {
+                  const annotations: ChartAnnotation[] = [
+                    ...ADMINISTRATIONS.map<ChartAnnotation>((a) => ({
+                      kind: 'band', x1: a.start, x2: a.end, label: a.name, tone: 'admin',
+                    })),
+                    ...electionEvents.map<ChartAnnotation>((e) => ({
+                      kind: 'vrule', x: e.year, label: '', tone: 'warn',
+                    })),
+                    { kind: 'vrule', x: 2010, label: 'Bundled data', tone: 'info' },
+                  ]
+                  const layers: ComposedLayer<typeof timelineData[number]>[] = [
+                    { kind: 'line', key: 'avgRisk', label: 'Avg Risk %', colorToken: 'risk-high', axis: 'right' },
+                  ]
+                  return (
+                    <EditorialComposedChart
+                      data={timelineData}
+                      xKey="year"
+                      layers={layers}
+                      yFormat="integer"
+                      rightYFormat="pct"
+                      rightYDomain={[0, 50]}
+                      annotations={annotations}
+                      height={280}
                     />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => `${v}%`}
-                      domain={[0, 50]}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium">{data.year}</p>
-                              <p className="text-xs text-text-muted">
-                                Contracts: {formatNumber(data.contracts)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Value: {formatCompactMXN(data.value)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                ~{formatCompactUSD(data.value, data.year)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Avg Risk: {data.avgRisk.toFixed(1)}%
-                              </p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    {ADMINISTRATIONS.map((admin) => (
-                      <ReferenceArea
-                        key={admin.name}
-                        x1={admin.start}
-                        x2={admin.end}
-                        yAxisId="left"
-                        fill={admin.color}
-                        fillOpacity={1}
-                        label={{
-                          value: admin.name,
-                          position: 'insideTopLeft',
-                          style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
-                        }}
-                      />
-                    ))}
-                    {electionEvents.map((event) => (
-                      <ReferenceLine
-                        key={event.id}
-                        x={event.year}
-                        stroke={RISK_COLORS.high}
-                        strokeDasharray="3 3"
-                        yAxisId="left"
-                      />
-                    ))}
-                    <ReferenceLine
-                      x={2010}
-                      yAxisId="left"
-                      stroke="var(--color-text-muted)"
-                      strokeDasharray="4 2"
-                      strokeOpacity={0.5}
-                      label={{
-                        value: 'Bundled data',
-                        position: 'insideTopRight',
-                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
-                      }}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="avgRisk"
-                      stroke={RISK_COLORS.high}
-                      strokeWidth={2}
-                      dot={false}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  )
+                })()}
                 <div className="mt-3">
                   <DotStrip
                     data={timelineData.map((d) => ({
@@ -567,142 +493,29 @@ export default function TrendsTab() {
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
-              <div ref={transparencyChartRef} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradDA2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.45} />
-                        <stop offset="95%" stopColor="#58a6ff" stopOpacity={0.08} />
-                      </linearGradient>
-                      <linearGradient id="gradSB2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={RISK_COLORS.medium} stopOpacity={0.5} />
-                        <stop offset="95%" stopColor={RISK_COLORS.medium} stopOpacity={0.08} />
-                      </linearGradient>
-                      <linearGradient id="gradHR2" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor={RISK_COLORS.high} stopOpacity={0.55} />
-                        <stop offset="95%" stopColor={RISK_COLORS.high} stopOpacity={0.1} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.15} />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)', strokeOpacity: 0.3 }}
+              <div ref={transparencyChartRef}>
+                {(() => {
+                  const annotations: ChartAnnotation[] = [
+                    { kind: 'hrule', y: 50, label: 'Majority', tone: 'warn' },
+                  ]
+                  const layers: ComposedLayer<typeof timelineData[number]>[] = [
+                    { kind: 'area', key: 'directAwardPct', label: 'Direct Award %', colorToken: 'accent-data' },
+                    { kind: 'area', key: 'singleBidPct', label: 'Single Bid %', colorToken: 'risk-medium' },
+                    { kind: 'area', key: 'highRiskPct', label: 'High Risk %', colorToken: 'risk-high' },
+                    { kind: 'line', key: 'opacityIndex', label: 'Opacity Index', colorToken: 'sector-tecnologia' },
+                  ]
+                  return (
+                    <EditorialComposedChart
+                      data={timelineData}
+                      xKey="year"
+                      layers={layers}
+                      yFormat="pct"
+                      yDomain={[0, 100]}
+                      annotations={annotations}
+                      height={280}
                     />
-                    <YAxis
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                      tickFormatter={(v) => `${v}%`}
-                      domain={[0, 100]}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <ReferenceArea y1={50} y2={100} fill={RISK_COLORS.high} fillOpacity={0.03} />
-                    <ReferenceLine
-                      y={50}
-                      stroke={RISK_COLORS.high}
-                      strokeDasharray="6 4"
-                      strokeOpacity={0.3}
-                      label={{
-                        value: 'Majority',
-                        position: 'right',
-                        style: { fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' },
-                      }}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          const grade =
-                            data.opacityIndex < 30 ? 'A' :
-                            data.opacityIndex < 40 ? 'B' :
-                            data.opacityIndex < 50 ? 'C' :
-                            data.opacityIndex < 60 ? 'D' : 'F'
-                          const gradeColor =
-                            grade === 'A' ? RISK_COLORS.low :
-                            grade === 'B' ? '#58a6ff' :
-                            grade === 'C' ? RISK_COLORS.medium :
-                            grade === 'D' ? RISK_COLORS.high : RISK_COLORS.critical
-                          return (
-                            <div className="chart-tooltip">
-                              <div className="flex items-center justify-between gap-4 mb-1">
-                                <span className="font-medium">{data.year}</span>
-                                <span
-                                  className="text-xs font-bold px-1.5 py-0.5 rounded"
-                                  style={{ color: gradeColor, background: `${gradeColor}15` }}
-                                >
-                                  Grade {grade}
-                                </span>
-                              </div>
-                              <div className="space-y-0.5">
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#58a6ff' }} />
-                                  Direct Award: {data.directAwardPct.toFixed(1)}%
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: RISK_COLORS.medium }} />
-                                  Single Bid: {data.singleBidPct.toFixed(1)}%
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: RISK_COLORS.high }} />
-                                  High Risk: {data.highRiskPct.toFixed(1)}%
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5 pt-0.5 border-t border-border/50 mt-1">
-                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#c084fc' }} />
-                                  Opacity Index: {data.opacityIndex.toFixed(1)}
-                                </p>
-                              </div>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="directAwardPct"
-                      stroke="#58a6ff"
-                      strokeWidth={2}
-                      fill="url(#gradDA2)"
-                      name="Direct Award %"
-                      dot={false}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="singleBidPct"
-                      stroke={RISK_COLORS.medium}
-                      strokeWidth={2}
-                      fill="url(#gradSB2)"
-                      name="Single Bid %"
-                      dot={false}
-                    />
-                    <Area
-                      type="monotone"
-                      dataKey="highRiskPct"
-                      stroke={RISK_COLORS.high}
-                      strokeWidth={2}
-                      fill="url(#gradHR2)"
-                      name="High Risk %"
-                      dot={false}
-                    />
-                    <Line
-                      type="monotone"
-                      dataKey="opacityIndex"
-                      stroke="#c084fc"
-                      strokeWidth={3}
-                      dot={{ r: 2.5, fill: '#c084fc', strokeWidth: 0 }}
-                      activeDot={{ r: 4, fill: '#c084fc', stroke: '#fff', strokeWidth: 1.5 }}
-                      name="Opacity Index"
-                      strokeLinecap="round"
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={24}
-                      iconSize={8}
-                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  )
+                })()}
               </div>
             )}
           </CardContent>
@@ -755,61 +568,29 @@ export default function TrendsTab() {
             {sectorLoading ? (
               <Skeleton className="h-[300px]" />
             ) : radarData.chartData && radarData.sectors.length > 0 ? (
-              <div ref={radarChartRef} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <RadarChart data={radarData.chartData} cx="50%" cy="50%" outerRadius="70%">
-                    <PolarGrid stroke="var(--color-border)" opacity={0.4} />
-                    <PolarAngleAxis
-                      dataKey="axis"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
+              <div ref={radarChartRef}>
+                {(() => {
+                  const visibleSectors = radarData.sectors.filter((s) => !hiddenSectors.has(s.code))
+                  const axes = radarData.axes.map((a) => a.label)
+                  const series: RadarSeries[] = visibleSectors.map((s) => ({
+                    name: s.name,
+                    colorToken: `sector-${s.code}` as ColorToken,
+                    values: Object.fromEntries(
+                      radarData.axes.map((a) => [
+                        a.label,
+                        Number((s.values[a.key as keyof typeof s.values] ?? 0).toFixed(1)),
+                      ])
+                    ),
+                  }))
+                  return (
+                    <EditorialRadarChart
+                      axes={axes}
+                      series={series}
+                      valueDomain={[0, 100]}
+                      height={300}
                     />
-                    <PolarRadiusAxis
-                      angle={90}
-                      domain={[0, 100]}
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickCount={4}
-                    />
-                    {radarData.sectors.map((sector) => (
-                      <Radar
-                        key={sector.code}
-                        name={sector.name}
-                        dataKey={sector.code}
-                        stroke={sector.color}
-                        fill={sector.color}
-                        fillOpacity={hiddenSectors.has(sector.code) ? 0 : 0.1}
-                        strokeWidth={hiddenSectors.has(sector.code) ? 0 : 1.5}
-                        strokeOpacity={hiddenSectors.has(sector.code) ? 0 : 1}
-                      />
-                    ))}
-                    <RechartsTooltip
-                      content={({ active, payload, label }) => {
-                        if (active && payload && payload.length) {
-                          const visible = payload.filter((p: any) => !hiddenSectors.has(p.dataKey as string))
-                          if (!visible.length) return null
-                          return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium text-xs mb-1">{label}</p>
-                              {visible.map((p: any) => (
-                                <p
-                                  key={p.name}
-                                  className="text-xs flex items-center gap-1.5"
-                                  style={{ color: p.color }}
-                                >
-                                  <span
-                                    className="inline-block w-2 h-2 rounded-full"
-                                    style={{ backgroundColor: p.color }}
-                                  />
-                                  {p.name}: {p.value}
-                                </p>
-                              ))}
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                  </RadarChart>
-                </ResponsiveContainer>
+                  )
+                })()}
                 <div className="flex flex-wrap justify-center gap-x-2 gap-y-1 -mt-2">
                   {radarData.sectors.map((s) => (
                     <button
@@ -869,61 +650,19 @@ export default function TrendsTab() {
             {sectorLoading ? (
               <Skeleton className="h-[300px]" />
             ) : sectorBubbleData.length > 0 ? (
-              <div ref={bubbleChartRef} className="h-[300px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ScatterChart margin={{ top: 10, right: 10, bottom: 20, left: 10 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                    <XAxis
-                      type="number"
-                      dataKey="x"
-                      name="Contracts"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)}
-                      label={{ value: 'Contracts', position: 'insideBottom', offset: -10, style: { fill: 'var(--color-text-muted)', fontSize: 10 } }}
-                    />
-                    <YAxis
-                      type="number"
-                      dataKey="y"
-                      name="Avg Risk %"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => `${v}%`}
-                      label={{ value: 'Avg Risk %', angle: -90, position: 'insideLeft', offset: 10, style: { fill: 'var(--color-text-muted)', fontSize: 10 } }}
-                    />
-                    <ZAxis type="number" dataKey="z" range={[60, 800]} />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium text-xs" style={{ color: data.color }}>
-                                {data.name}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Contracts: {formatNumber(data.x)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Avg Risk: {data.y.toFixed(1)}%
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Value: {formatCompactMXN(data.value)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Vendors: {formatNumber(data.vendors)}
-                              </p>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Scatter data={sectorBubbleData} fill="#58a6ff">
-                      {sectorBubbleData.map((entry, index) => (
-                        <Cell key={entry.code ?? entry.name ?? index} fill={entry.color} fillOpacity={0.7} stroke={entry.color} strokeWidth={1} />
-                      ))}
-                    </Scatter>
-                  </ScatterChart>
-                </ResponsiveContainer>
+              <div ref={bubbleChartRef}>
+                <EditorialScatterChart
+                  data={sectorBubbleData}
+                  xKey="x"
+                  yKey="y"
+                  sizeKey="z"
+                  colorBy={(row) => `sector-${row.code}` as ColorToken}
+                  xFormat="integer"
+                  yFormat="pct"
+                  xLabel="Contracts"
+                  yLabel="Avg Risk %"
+                  height={300}
+                />
                 <div className="flex flex-wrap justify-center gap-x-3 gap-y-1 -mt-1">
                   {sectorBubbleData.map((s) => (
                     <span key={s.code} className="flex items-center gap-1 text-xs text-text-muted">
@@ -976,80 +715,26 @@ export default function TrendsTab() {
             {monthlyLoading ? (
               <Skeleton className="h-[280px]" />
             ) : monthlyChartData.length > 0 ? (
-              <div ref={monthlyChartRef} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={monthlyChartData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.3} />
-                    <XAxis
-                      dataKey="month"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(m) =>
-                        ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'][m - 1]
-                      }
+              <div ref={monthlyChartRef}>
+                {(() => {
+                  const monthLabels = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
+                  const layers: ComposedLayer<typeof monthlyChartData[number]>[] = [
+                    { kind: 'line', key: 'da_pct', label: 'DA%', colorToken: 'neutral', style: 'dashed', emphasis: 'secondary', axis: 'right' },
+                    { kind: 'line', key: 'avg_risk', label: 'Avg Risk', colorToken: 'risk-high', axis: 'right' },
+                  ]
+                  return (
+                    <EditorialComposedChart
+                      data={monthlyChartData}
+                      xKey="month"
+                      layers={layers}
+                      yFormat="integer"
+                      rightYFormat="pct"
+                      rightYDomain={[0, 100]}
+                      xTickFormatter={(m) => monthLabels[(Number(m) || 1) - 1] ?? String(m)}
+                      height={280}
                     />
-                    <YAxis
-                      yAxisId="left"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => `${(v / 1000).toFixed(0)}K`}
-                    />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }}
-                      tickFormatter={(v) => `${v}%`}
-                      domain={[0, 100]}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          return (
-                            <div className="chart-tooltip">
-                              <p className="font-medium text-xs">
-                                {data.month_name} {selectedYear}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Contracts: {formatNumber(data.contracts)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Value: {formatCompactMXN(data.value)}
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                DA%: {data.da_pct.toFixed(1)}%
-                              </p>
-                              <p className="text-xs text-text-muted">
-                                Avg Risk: {data.avg_risk.toFixed(1)}%
-                              </p>
-                              {data.isYearEnd && (
-                                <p className="text-xs text-risk-high mt-1">Year-end spending</p>
-                              )}
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="da_pct"
-                      stroke="var(--color-text-muted)"
-                      strokeWidth={1.5}
-                      strokeDasharray="4 3"
-                      dot={false}
-                      name="DA%"
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="avg_risk"
-                      stroke={RISK_COLORS.high}
-                      strokeWidth={2}
-                      dot={false}
-                      name="Avg Risk"
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  )
+                })()}
                 <div className="mt-3">
                   <DotStrip
                     data={monthlyChartData.map((entry) => ({
@@ -1089,130 +774,24 @@ export default function TrendsTab() {
             {trendsLoading ? (
               <Skeleton className="h-[280px]" />
             ) : (
-              <div ref={marketChartRef} className="h-[280px]">
-                <ResponsiveContainer width="100%" height="100%">
-                  <ComposedChart data={timelineData} margin={{ top: 5, right: 10, left: 0, bottom: 0 }}>
-                    <defs>
-                      <linearGradient id="gradVendors" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#58a6ff" stopOpacity={0.4} />
-                        <stop offset="95%" stopColor="#58a6ff" stopOpacity={0.05} />
-                      </linearGradient>
-                    </defs>
-                    <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.15} />
-                    <XAxis
-                      dataKey="year"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                      axisLine={{ stroke: 'var(--color-border)', strokeOpacity: 0.3 }}
+              <div ref={marketChartRef}>
+                {(() => {
+                  const layers: ComposedLayer<typeof timelineData[number]>[] = [
+                    { kind: 'area', key: 'vendorCount', label: 'Active Vendors', colorToken: 'accent-data', axis: 'left' },
+                    { kind: 'line', key: 'institutionCount', label: 'Institutions', colorToken: 'neutral', style: 'dashed', emphasis: 'secondary', axis: 'left' },
+                    { kind: 'line', key: 'contractsPerVendor', label: 'Contracts/Vendor', colorToken: 'sector-tecnologia', axis: 'right' },
+                  ]
+                  return (
+                    <EditorialComposedChart
+                      data={timelineData}
+                      xKey="year"
+                      layers={layers}
+                      yFormat="integer"
+                      rightYFormat="decimal"
+                      height={280}
                     />
-                    <YAxis
-                      yAxisId="left"
-                      tick={{ fill: 'var(--color-text-muted)', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                      tickFormatter={(v) => v >= 1000 ? `${(v / 1000).toFixed(0)}K` : String(v)}
-                      axisLine={false}
-                      tickLine={false}
-                    />
-                    <YAxis
-                      yAxisId="right"
-                      orientation="right"
-                      tick={{ fill: '#c084fc', fontSize: 10, fontFamily: 'var(--font-mono)' }}
-                      tickFormatter={(v) => `${v.toFixed(0)}`}
-                      domain={[0, 'auto']}
-                      axisLine={false}
-                      tickLine={false}
-                      label={{
-                        value: 'contracts/vendor',
-                        angle: -90,
-                        position: 'insideRight',
-                        style: { fill: '#c084fc', fontSize: 10, fontFamily: 'var(--font-mono)' },
-                        offset: 10,
-                      }}
-                    />
-                    <RechartsTooltip
-                      content={({ active, payload }) => {
-                        if (active && payload && payload.length) {
-                          const data = payload[0].payload
-                          const cpv = data.contractsPerVendor
-                          const concentrationLabel =
-                            cpv > 6 ? 'Concentrated' :
-                            cpv > 3 ? 'Moderate' : 'Diverse'
-                          const concentrationColor =
-                            cpv > 6 ? RISK_COLORS.high :
-                            cpv > 3 ? RISK_COLORS.medium : RISK_COLORS.low
-                          return (
-                            <div className="chart-tooltip">
-                              <div className="flex items-center justify-between gap-4 mb-1">
-                                <span className="font-medium">{data.year}</span>
-                                <span
-                                  className="text-xs font-mono px-1.5 py-0.5 rounded"
-                                  style={{ color: concentrationColor, background: `${concentrationColor}15` }}
-                                >
-                                  {concentrationLabel}
-                                </span>
-                              </div>
-                              <div className="space-y-0.5">
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full inline-block" style={{ background: '#58a6ff' }} />
-                                  Vendors: {formatNumber(data.vendorCount)}
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-sm inline-block" style={{ background: 'var(--color-text-muted)' }} />
-                                  Institutions: {formatNumber(data.institutionCount)}
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5">
-                                  <span className="w-2 h-2 rounded-full inline-block opacity-50" />
-                                  Contracts: {formatNumber(data.contracts)}
-                                </p>
-                                <p className="text-xs flex items-center gap-1.5 pt-0.5 border-t border-border/50 mt-1 font-medium" style={{ color: '#c084fc' }}>
-                                  <span className="w-2 h-2 rounded inline-block" style={{ background: '#c084fc' }} />
-                                  {cpv.toFixed(1)} contracts/vendor
-                                </p>
-                              </div>
-                            </div>
-                          )
-                        }
-                        return null
-                      }}
-                    />
-                    <Area
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="vendorCount"
-                      stroke="#58a6ff"
-                      strokeWidth={2}
-                      fill="url(#gradVendors)"
-                      name="Active Vendors"
-                      dot={false}
-                    />
-                    <Line
-                      yAxisId="left"
-                      type="monotone"
-                      dataKey="institutionCount"
-                      stroke="var(--color-text-muted)"
-                      strokeWidth={1}
-                      strokeDasharray="4 3"
-                      dot={false}
-                      name="Institutions"
-                      strokeOpacity={0.5}
-                    />
-                    <Line
-                      yAxisId="right"
-                      type="monotone"
-                      dataKey="contractsPerVendor"
-                      stroke="#c084fc"
-                      strokeWidth={3}
-                      dot={{ r: 3, fill: '#c084fc', strokeWidth: 0 }}
-                      activeDot={{ r: 5, fill: '#c084fc', stroke: '#fff', strokeWidth: 1.5 }}
-                      name="Contracts/Vendor"
-                      strokeLinecap="round"
-                    />
-                    <Legend
-                      verticalAlign="bottom"
-                      height={24}
-                      iconSize={8}
-                      wrapperStyle={{ fontSize: 10, color: 'var(--color-text-muted)', fontFamily: 'var(--font-mono)' }}
-                    />
-                  </ComposedChart>
-                </ResponsiveContainer>
+                  )
+                })()}
               </div>
             )}
           </CardContent>

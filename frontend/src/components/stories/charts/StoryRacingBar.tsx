@@ -62,14 +62,14 @@ export function StoryRacingBar() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Constelación de proveedores · AMLO 2019-2024
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Seis proveedores orbitan SEGALMEX — cuatro nunca compitieron por un contrato
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada burbuja es un proveedor agrícola. El tamaño es el valor total de sus contratos;
         el color es su tasa de adjudicación directa.
       </p>
@@ -77,25 +77,25 @@ export function StoryRacingBar() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-400">MXN {totalValue.toFixed(1)}B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Total del clúster (6 proveedores)
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-orange-400">4 de 6</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             con ≥99% adjudicación directa
           </div>
         </div>
         <div className="border-l-2 border-emerald-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-emerald-400">93.5%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             DA promedio del sector · OCDE 25%
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -196,7 +196,7 @@ export function StoryRacingBar() {
         </svg>
 
         {/* Legend */}
-        <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-zinc-500">
+        <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
           <span className="flex items-center gap-1.5">
             <span className="w-3 h-3 rounded-full" style={{ background: '#dc2626', opacity: 0.5 }} />
             100% adj. directa
@@ -209,7 +209,7 @@ export function StoryRacingBar() {
             <span className="w-3 h-3 rounded-full" style={{ background: '#22c55e', opacity: 0.5 }} />
             {'< 60% directa'}
           </span>
-          <span className="text-zinc-600 ml-auto">Tamaño = valor total · MXN B</span>
+          <span className="text-text-muted ml-auto">Tamaño = valor total · MXN B</span>
         </div>
       </div>
 
@@ -217,14 +217,14 @@ export function StoryRacingBar() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           ILAS México y Productos Loneg recibieron 100% de sus contratos sin licitación —
           promedio 275-302 millones por contrato. SEGALMEX, el proveedor central, fue intervenido
           por la ASF tras detectar faltantes por MXN 9.5B.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · sector 9 (Agricultura) · RUBLI v0.6.5
       </p>
     </motion.div>

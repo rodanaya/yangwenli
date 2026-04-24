@@ -55,15 +55,15 @@ export function StoryMoneySankeyChart() {
       className="w-full space-y-4"
     >
       {/* Section overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Money Flow Analysis
       </p>
 
       {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         3 intermediaries captured MXN 270B in federal health procurement
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Between 2019 and 2023, three pharmaceutical distributors absorbed the vast majority of
         IMSS, ISSSTE, and INSABI drug spending. All three score above 0.95 on the RUBLI risk model
         — the highest possible tier.
@@ -75,7 +75,7 @@ export function StoryMoneySankeyChart() {
           <div className="text-2xl font-mono font-bold text-red-400">
             MXN {(TOTAL_MXN / 1e9).toFixed(0)}B
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             total flow through 3 vendors
           </div>
         </div>
@@ -83,20 +83,20 @@ export function StoryMoneySankeyChart() {
           <div className="text-2xl font-mono font-bold text-amber-400">
             {TOTAL_CONTRACTS.toLocaleString()}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             contracts · avg MXN {(TOTAL_MXN / TOTAL_CONTRACTS / 1e6).toFixed(0)}M each
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-red-400">97%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             avg risk score · all critical
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <MoneySankeyChart flows={PHARMA_FLOWS} height={300} />
       </div>
 
@@ -105,7 +105,7 @@ export function StoryMoneySankeyChart() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           A single vendor — Farmacos Especializados — received MXN 136B from two institutions
           (IMSS + ISSSTE), equivalent to 50% of total identified flow. This level of concentration
           far exceeds OECD procurement diversification guidelines.
@@ -114,7 +114,7 @@ export function StoryMoneySankeyChart() {
 
       {/* Source line */}
       <div className="flex items-center justify-between">
-        <p className="text-[10px] text-zinc-600">
+        <p className="text-[10px] text-text-muted">
           Source: COMPRANET 2019-2023 · RUBLI risk model v0.6.5
         </p>
         <a

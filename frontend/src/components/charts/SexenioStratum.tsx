@@ -34,8 +34,8 @@ const TOOLTIP_W = 108
 // ── Colors ──────────────────────────────────────────────────────────────────
 const DOT_AMBER        = '#f59e0b'   // high + critical risk
 const DOT_ZINC         = '#71717a'   // low + medium risk
-const DOT_EMPTY        = '#27272a'   // unfilled
-const DOT_EMPTY_STROKE = '#3f3f46'
+const DOT_EMPTY        = '#f3f1ec'   // unfilled
+const DOT_EMPTY_STROKE = '#e2ddd6'
 const OECD_COLOR       = '#06b6d4'
 const TEXT_MUTED       = '#71717a'
 const PULSE_COLOR      = '#f59e0b'
@@ -279,7 +279,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           <text
             key={`lbl-${row.year}`}
             x={lx} y={SVG_H - 10}
-            fill={isCurrent ? PULSE_COLOR : isHov ? '#a1a1aa' : TEXT_MUTED}
+            fill={isCurrent ? PULSE_COLOR : isHov ? 'var(--color-text-secondary)' : TEXT_MUTED}
             fontSize={10}
             fontFamily="var(--font-family-mono, monospace)"
             fontWeight={isCurrent || isHov ? 'bold' : 'normal'}
@@ -319,7 +319,7 @@ export function SexenioStratum({ rows, className }: SexenioStratumProps) {
           <rect
             x={tooltipX - TOOLTIP_W / 2} y={PAD_T + 4}
             width={TOOLTIP_W} height={72}
-            fill="#18181b" stroke="#3f3f46" strokeWidth={0.5} rx={2}
+            fill="#18181b" stroke="#e2ddd6" strokeWidth={0.5} rx={2}
           />
           <text x={tooltipX} y={PAD_T + 18} textAnchor="middle"
                 fill="#f4f4f5" fontSize={12} fontFamily="monospace" fontWeight="bold">

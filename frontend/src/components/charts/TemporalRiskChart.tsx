@@ -13,17 +13,10 @@ import { memo, useCallback, useMemo } from 'react'
 import { useQuery, useQueryClient } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import {
-  ComposedChart,
-  Area,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-  Legend,
-} from '@/components/charts'
+  EditorialComposedChart,
+  type ComposedLayer,
+  type ChartAnnotation,
+} from '@/components/charts/editorial'
 import { analysisApi } from '@/api/client'
 import { cn } from '@/lib/utils'
 
@@ -153,46 +146,6 @@ function DownloadIcon({ className }: { className?: string }) {
 }
 
 // ============================================================================
-// CUSTOM TOOLTIP
-// ============================================================================
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: Array<{ name: string; value: number; color: string }>
-  label?: number
-}
-
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
-  if (!active || !payload || payload.length === 0 || label == null) return null
-
-  const scandal = SCANDAL_ANNOTATIONS.find((s) => s.year === label)
-
-  return (
-    <div className="bg-background-card border border-border/60 rounded-lg px-3 py-2.5 shadow-lg text-xs font-mono min-w-[160px]">
-      <p className="text-text-primary font-bold text-sm mb-1.5">{label}</p>
-      {payload.map((entry) => (
-        <div key={entry.name} className="flex items-center justify-between gap-3 mb-0.5">
-          <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-sm flex-shrink-0" style={{ backgroundColor: entry.color }} />
-            <span className="text-text-muted">{entry.name}</span>
-          </div>
-          <span className="text-text-primary font-semibold font-mono tabular-nums">
-            {entry.name === 'Avg Risk Score'
-              ? entry.value.toFixed(3)
-              : `${entry.value.toFixed(1)}%`}
-          </span>
-        </div>
-      ))}
-      {scandal && (
-        <div className="mt-2 pt-2 border-t border-border/40">
-          <p className="text-risk-high text-[10px] leading-snug">{scandal.label}</p>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ============================================================================
 // PROPS
 // ============================================================================
 
@@ -214,7 +167,6 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
   className,
 }: TemporalRiskChartProps) {
   const { t } = useTranslation('common')
-  const gradId = 'temporalRiskGrad'
   const queryClient = useQueryClient()
 
   // Try to fetch live data from /analysis/year-over-year
@@ -339,115 +291,27 @@ export const TemporalRiskChart = memo(function TemporalRiskChart({
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={height}>
-        <ComposedChart
-          data={chartData}
-          margin={{ top: 8, right: 48, bottom: 8, left: 0 }}
-        >
-          <defs>
-            <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="0%" stopColor="rgba(248,113,113,1)" stopOpacity={0.3} />
-              <stop offset="100%" stopColor="rgba(248,113,113,1)" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="#3f3f46"
-            vertical={false}
-          />
-
-          <XAxis
-            dataKey="year"
-            type="number"
-            domain={[minYear, maxYear]}
-            allowDecimals={false}
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickLine={false}
-            tickCount={Math.min(chartData.length, 8)}
-          />
-
-          {/* Left Y-axis: high-risk rate % */}
-          <YAxis
-            yAxisId="left"
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-            domain={[0, 'auto']}
-            width={36}
-          />
-
-          {/* Right Y-axis: avg risk score */}
-          <YAxis
-            yAxisId="right"
-            orientation="right"
-            tick={{ fill: '#71717a', fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)" }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v: number) => v.toFixed(2)}
-            domain={[0, 0.5]}
-            width={40}
-          />
-
-          <Tooltip content={<CustomTooltip />} />
-
-          <Legend
-            wrapperStyle={{ fontSize: 10, fontFamily: "var(--font-family-mono, ui-monospace, 'SF Mono', monospace)", color: 'var(--color-text-muted)', paddingTop: 8 }}
-          />
-
-          {/* Scandal reference lines — alternate label position to avoid overlap */}
-          {showScandals &&
-            SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map((scandal, idx) => (
-              <ReferenceLine
-                key={scandal.year}
-                yAxisId="left"
-                x={scandal.year}
-                stroke={scandal.color}
-                strokeWidth={1.5}
-                strokeDasharray="4 3"
-                opacity={0.7}
-                label={{
-                  value: scandal.shortLabel,
-                  position: idx % 2 === 0 ? 'insideTopRight' : 'insideTopLeft',
-                  fontSize: 9,
-                  fill: scandal.color,
-                  fontFamily: 'var(--font-mono, monospace)',
-                  opacity: 0.9,
-                }}
-              />
-            ))}
-
-          {/* Area: high-risk rate */}
-          <Area
-            yAxisId="left"
-            type="monotone"
-            dataKey="highRiskRate"
-            name="High-Risk Rate"
-            stroke="#f87171"
-            strokeWidth={2}
-            fill={`url(#${gradId})`}
-            dot={false}
-            activeDot={{ r: 3, fill: '#f87171', strokeWidth: 0 }}
-            isAnimationActive={false}
-          />
-
-          {/* Line: avg risk score */}
-          <Line
-            yAxisId="right"
-            type="monotone"
-            dataKey="avgScore"
-            name="Avg Risk Score"
-            stroke="#fb923c"
-            strokeWidth={1.5}
-            dot={false}
-            activeDot={{ r: 3, fill: '#fb923c', strokeWidth: 0 }}
-            strokeDasharray="6 2"
-            isAnimationActive={false}
-          />
-        </ComposedChart>
-      </ResponsiveContainer>
+      <EditorialComposedChart<TemporalDataPoint>
+        data={chartData}
+        xKey="year"
+        layers={
+          [
+            { kind: 'area', key: 'highRiskRate', label: 'High-Risk Rate', colorToken: 'risk-critical', axis: 'left' },
+            { kind: 'line', key: 'avgScore', label: 'Avg Risk Score', colorToken: 'risk-high', axis: 'right', style: 'dashed', emphasis: 'secondary' },
+          ] as ComposedLayer<TemporalDataPoint>[]
+        }
+        yFormat="pct"
+        rightYFormat="decimal"
+        rightYDomain={[0, 0.5]}
+        annotations={
+          showScandals
+            ? (SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map(
+                (s) => ({ kind: 'vrule', x: s.year, label: s.shortLabel, tone: 'critical' }) as ChartAnnotation,
+              ))
+            : []
+        }
+        height={height}
+      />
 
       {/* Scandal legend */}
       {showScandals && (

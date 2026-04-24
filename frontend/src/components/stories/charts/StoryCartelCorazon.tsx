@@ -44,16 +44,16 @@ export function StoryCartelCorazon() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Cártel del Corazón
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Lo que el IMSS pagó vs. lo que vale el mercado — por dispositivo cardíaco
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Vitalmex concentró el suministro de dispositivos cardíacos federales por
         más de una década. Cada punto equivale a $8,000 MXN — el sobrepago en rojo
         refleja una prima de monopolio del 20-40% documentada por OCDE en mercados
@@ -63,13 +63,13 @@ export function StoryCartelCorazon() {
       <div className="grid grid-cols-2 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-500">$50B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             en contratos cardíacos · un solo proveedor
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400">$10-20B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             sobrepago estimado · prima OCDE 20-40%
           </div>
         </div>
@@ -202,7 +202,7 @@ export function StoryCartelCorazon() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           COFECE abrió expediente por prácticas monopólicas en el mercado de
           equipamiento cardíaco — los precios de IMSS estaban entre 28% y 43%
           encima del precio de mercado OCDE. 10 mil millones de pesos adicionales
@@ -210,7 +210,7 @@ export function StoryCartelCorazon() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · Vitalmex portfolio 2010-2024 · estudios OCDE/WHO · expediente COFECE en curso
       </p>
     </motion.div>

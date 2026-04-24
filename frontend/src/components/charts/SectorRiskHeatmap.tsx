@@ -45,11 +45,12 @@ function metricColor(value: number, metric: CellMetric): string {
     t = Math.min(value / 100, 1)
   }
   if (t === 0) return 'transparent'
-  // Deep muted ramp aligned to v0.6.5 thresholds: low<0.25, medium<0.40, high<0.60, critical>=0.60
-  if (t < 0.25) return '#14532d' // deep green (low)
-  if (t < 0.40) return '#854d0e' // deep amber (medium)
-  if (t < 0.60) return '#9a3412' // deep orange (high)
-  return '#991b1b'               // deep red (critical)
+  // Bible §2: cream-mode ramp, no green for low. Warm zinc → amber → red.
+  // Thresholds aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
+  if (t < 0.25) return '#e2ddd6'   // warm border — low (zinc, not green)
+  if (t < 0.40) return '#a16207'   // medium (bible canonical)
+  if (t < 0.60) return '#f59e0b'   // high (bible canonical)
+  return '#ef4444'                 // critical (bible canonical)
 }
 
 interface TooltipData {
@@ -122,8 +123,8 @@ export function SectorRiskHeatmap() {
   if (isLoading) {
     return (
       <div className="space-y-2">
-        <Skeleton className="h-6 w-48 bg-zinc-800" />
-        <Skeleton className="h-64 w-full bg-zinc-800" />
+        <Skeleton className="h-6 w-48 bg-background-elevated" />
+        <Skeleton className="h-64 w-full bg-background-elevated" />
       </div>
     )
   }
@@ -141,8 +142,8 @@ export function SectorRiskHeatmap() {
             onClick={() => setMetric(m)}
             className={`px-2.5 py-1 rounded text-[10px] font-mono transition-all ${
               metric === m
-                ? 'bg-zinc-700 text-zinc-100 border border-zinc-600'
-                : 'border border-zinc-800 text-zinc-500 hover:text-zinc-400 hover:border-zinc-700'
+                ? 'bg-background-elevated text-text-primary border border-border'
+                : 'border border-border text-text-muted hover:text-text-secondary hover:border-border'
             }`}
           >
             {METRIC_LABELS[m]}
@@ -179,7 +180,7 @@ export function SectorRiskHeatmap() {
             {YEARS.map(y => (
               <div
                 key={y}
-                className="text-[8px] text-center font-mono text-zinc-600 shrink-0"
+                className="text-[8px] text-center font-mono text-text-muted shrink-0"
                 style={{ width: 21, writingMode: 'vertical-rl', height: 28, lineHeight: '21px' }}
               >
                 {y}
@@ -202,7 +203,7 @@ export function SectorRiskHeatmap() {
                       className="w-2 h-2 rounded-sm shrink-0"
                       style={{ backgroundColor: color }}
                     />
-                    <span className="text-[10px] text-zinc-400 font-mono truncate capitalize">
+                    <span className="text-[10px] text-text-secondary font-mono truncate capitalize">
                       {sector.nameEN}
                     </span>
                   </div>
@@ -212,7 +213,7 @@ export function SectorRiskHeatmap() {
                     {YEARS.map(year => {
                       const cell = lookup.get(sector.id)?.get(year)
                       const value = cell?.value ?? 0
-                      const bg = cell ? metricColor(value, metric) : '#1c1c1e'
+                      const bg = cell ? metricColor(value, metric) : 'var(--color-background-elevated)'
                       return (
                         <div
                           key={year}
@@ -222,7 +223,7 @@ export function SectorRiskHeatmap() {
                           onMouseLeave={handleMouseLeave}
                         >
                           {cell && (
-                            <span className="flex items-center justify-center h-full text-[7px] font-mono tabular-nums text-zinc-300/70">
+                            <span className="flex items-center justify-center h-full text-[7px] font-mono tabular-nums text-text-secondary/70">
                               {metric === 'risk'
                                 ? value.toFixed(2)
                                 : `${Math.round(value)}%`}
@@ -246,40 +247,40 @@ export function SectorRiskHeatmap() {
           style={{
             left: tooltip.x + 14,
             top: tooltip.y - 10,
-            backgroundColor: '#18181b',
+            backgroundColor: '#1a1714',
             border: '1px solid #3f3f46',
           }}
         >
           <div className="flex items-center gap-1.5 mb-1">
             <div className="w-2 h-2 rounded-sm" style={{ backgroundColor: tooltip.sectorColor }} />
-            <span className="font-semibold text-zinc-100 font-mono capitalize">{tooltip.sector}</span>
-            <span className="text-zinc-500 font-mono">{tooltip.year}</span>
+            <span className="font-semibold text-text-primary font-mono capitalize">{tooltip.sector}</span>
+            <span className="text-text-muted font-mono">{tooltip.year}</span>
           </div>
           <div className="space-y-0.5">
-            <p className="text-zinc-400 font-mono">
+            <p className="text-text-secondary font-mono">
               {METRIC_LABELS[metric]}:{' '}
-              <span className="text-zinc-100 font-bold">
+              <span className="text-text-primary font-bold">
                 {metric === 'risk' ? tooltip.value.toFixed(3) : `${tooltip.value.toFixed(1)}%`}
               </span>
             </p>
-            <p className="text-zinc-500 font-mono">
-              {t('heatmap.tooltipContracts', 'Contracts')}: <span className="text-zinc-300">{tooltip.contracts.toLocaleString(getLocale())}</span>
+            <p className="text-text-muted font-mono">
+              {t('heatmap.tooltipContracts', 'Contracts')}: <span className="text-text-secondary">{tooltip.contracts.toLocaleString(getLocale())}</span>
             </p>
-            <p className="text-zinc-500 font-mono">
-              {t('heatmap.tooltipValue', 'Value')}: <span className="text-zinc-300">{formatCompactMXN(tooltip.totalValue)}</span>
+            <p className="text-text-muted font-mono">
+              {t('heatmap.tooltipValue', 'Value')}: <span className="text-text-secondary">{formatCompactMXN(tooltip.totalValue)}</span>
             </p>
           </div>
         </div>
       )}
 
       {/* Color legend using RISK_COLORS */}
-      <div className="flex items-center gap-3 pt-2 border-t border-zinc-800">
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
+      <div className="flex items-center gap-3 pt-2 border-t border-border">
+        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendLow', 'Low')}</span>
         <div className="flex gap-[2px]">
           {[
-            { color: '#14532d', labelKey: 'heatmap.legendLow', fallback: 'Low' },
-            { color: '#854d0e', labelKey: 'heatmap.legendMedium', fallback: 'Medium' },
-            { color: '#9a3412', labelKey: 'heatmap.legendHigh', fallback: 'High' },
+            { color: '#e2ddd6', labelKey: 'heatmap.legendLow', fallback: 'Low' },
+            { color: '#a16207', labelKey: 'heatmap.legendMedium', fallback: 'Medium' },
+            { color: '#f59e0b', labelKey: 'heatmap.legendHigh', fallback: 'High' },
             { color: '#991b1b', labelKey: 'heatmap.legendCritical', fallback: 'Critical' },
           ].map((stop) => (
             <div
@@ -290,10 +291,10 @@ export function SectorRiskHeatmap() {
             />
           ))}
         </div>
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">{t('heatmap.legendHigh', 'High')}</span>
+        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">{t('heatmap.legendHigh', 'High')}</span>
         <div className="flex items-center gap-1 ml-3">
-          <div className="w-4 h-3 rounded-[1px] bg-zinc-800" />
-          <span className="text-[10px] font-mono text-zinc-600">{t('heatmap.noData', 'No data')}</span>
+          <div className="w-4 h-3 rounded-[1px] bg-background-elevated" />
+          <span className="text-[10px] font-mono text-text-muted">{t('heatmap.noData', 'No data')}</span>
         </div>
       </div>
     </div>

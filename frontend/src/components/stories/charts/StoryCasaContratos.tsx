@@ -60,14 +60,14 @@ export function StoryCasaContratos() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Captura institucional · red Grupo Higa
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         La casa de los contratos: una institución, siete proveedores, 85 mil millones
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada satélite es una empresa vinculada a Juan Armando Hinojosa Cantú. El tamaño
         refleja el número de contratos; el color, el nivel de riesgo estadístico. El patrón
         de captura es visible: un círculo cerrado de proveedores orbitando dos instituciones.
@@ -78,7 +78,7 @@ export function StoryCasaContratos() {
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">
             {totalValue.toFixed(0)}B
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN · red Higa total
           </div>
         </div>
@@ -86,7 +86,7 @@ export function StoryCasaContratos() {
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">
             {VENDORS.length}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             empresas vinculadas · misma orbita
           </div>
         </div>
@@ -94,13 +94,13 @@ export function StoryCasaContratos() {
           <div className="text-3xl font-mono font-bold text-orange-400 tabular-nums">
             {totalContracts}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             contratos · red completa
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -273,7 +273,7 @@ export function StoryCasaContratos() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Siete empresas con domicilios compartidos, representantes legales cruzados y un
           solo beneficiario económico final concentraron MXN 85B en obras federales. En
           COMPRANET cada contrato luce legal. Sumados, revelan un patrón de captura
@@ -281,7 +281,7 @@ export function StoryCasaContratos() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · Case 11 (Grupo Higa / Casa Blanca) · valores aproximados de red
       </p>
     </motion.div>

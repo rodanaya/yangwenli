@@ -29,13 +29,7 @@ import {
   Settings as SettingsIcon,
   Archive,
 } from 'lucide-react'
-import {
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-  Cell,
-  PieChart,
-  Pie,
-} from '@/components/charts'
+import { DotStrip } from '@/components/charts/DotStrip'
 
 // ============================================================================
 // Types & Constants
@@ -117,7 +111,7 @@ export function Settings() {
   return (
     <div className="space-y-6">
       {/* Editorial Page Header */}
-      <header className="pb-5 border-b border-zinc-800/60">
+      <header className="pb-5 border-b border-border">
         <p
           className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] mb-2"
           style={{ color: 'var(--color-accent)' }}
@@ -135,7 +129,7 @@ export function Settings() {
         >
           {t('pageTitle', 'Platform Settings')}
         </h1>
-        <p className="text-sm text-zinc-400 max-w-xl">
+        <p className="text-sm text-text-secondary max-w-xl">
           {t('pageDescription', 'Export data, review quality metrics, and configure platform preferences.')}
         </p>
       </header>
@@ -406,10 +400,10 @@ function ExportTab() {
             key={toast.id}
             className={`flex items-center gap-2 px-4 py-3 rounded-sm shadow-lg text-sm font-medium transition-all ${
               toast.type === 'success'
-                ? 'bg-risk-low/90 text-white'
+                ? 'bg-risk-low/90 text-text-primary'
                 : toast.type === 'warning'
-                  ? 'bg-risk-medium/90 text-white'
-                  : 'bg-risk-critical/90 text-white'
+                  ? 'bg-risk-medium/90 text-text-primary'
+                  : 'bg-risk-critical/90 text-text-primary'
             }`}
             role="alert"
             aria-live="polite"
@@ -996,50 +990,15 @@ function DQKPICard({
 
 function DQGradeDistributionChart({ data }: { data: GradeDistribution[] }) {
   const chartData = data.map((d) => ({
-    grade: `Grade ${d.grade}`,
-    count: d.count,
-    percentage: d.percentage,
+    label: `Grade ${d.grade}`,
+    value: d.count,
     color: GRADE_COLORS[d.grade] || '#64748b',
+    valueLabel: `${d.percentage.toFixed(1)}%`,
   }))
 
   return (
-    <div className="h-[250px]">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie
-            data={chartData}
-            dataKey="count"
-            nameKey="grade"
-            cx="50%"
-            cy="50%"
-            innerRadius={60}
-            outerRadius={90}
-            paddingAngle={2}
-            label={((props: { grade: string; percentage: number }) => `${props.grade} (${props.percentage.toFixed(1)}%)`) as unknown as import('recharts').PieLabel}
-            labelLine={false}
-          >
-            {chartData.map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color} />
-            ))}
-          </Pie>
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (active && payload && payload.length) {
-                const d = payload[0].payload
-                return (
-                  <div className="chart-tooltip">
-                    <p className="font-medium">{d.grade}</p>
-                    <p className="text-sm text-text-muted">
-                      {formatNumber(d.count)} contracts ({d.percentage.toFixed(1)}%)
-                    </p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="px-2">
+      <DotStrip data={chartData} formatVal={(v) => formatNumber(v)} />
     </div>
   )
 }
@@ -1095,7 +1054,7 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                 x={LABEL_W - 6}
                 y={yCenter + 10}
                 textAnchor="end"
-                fill="#71717a"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
@@ -1109,8 +1068,8 @@ function DQStructureQualityChart({ data }: { data: StructureQuality[] }) {
                     cx={LABEL_W + i * DOT_GAP + DOT_R}
                     cy={yCenter}
                     r={DOT_R}
-                    fill={isFilled ? item.color : '#2d2926'}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    fill={isFilled ? item.color : 'var(--color-background-elevated)'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.5}
                     fillOpacity={isFilled ? 0.85 : 1}
                     initial={{ opacity: 0 }}
@@ -1158,8 +1117,8 @@ function DQFieldCompletenessTable({ data }: { data: FieldCompleteness[] }) {
                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                      fill={k < filled ? color : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? color : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />

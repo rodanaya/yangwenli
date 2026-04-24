@@ -197,3 +197,7 @@ backend/data/comprasmx/*.csv
 # Auto-memory (user-specific)
 memory/
 scripts/resumable_upload.py
+
+# Audit artifacts — Playwright screenshots, session captures
+audit/
+.playwright-mcp/

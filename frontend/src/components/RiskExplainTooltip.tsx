@@ -41,7 +41,7 @@ export function RiskExplainTooltip({ contractId, riskScore, riskLevel, children 
         <Tooltip.Trigger asChild>{children}</Tooltip.Trigger>
         <Tooltip.Portal>
           <Tooltip.Content
-            className="z-50 max-w-xs rounded-lg border border-border bg-background-card p-3 shadow-xl"
+            className="z-50 max-w-xs rounded-sm border border-border bg-background-card p-3 shadow-xl"
             sideOffset={4}
           >
             <div className="text-xs font-semibold text-text-primary mb-2">

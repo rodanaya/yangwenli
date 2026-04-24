@@ -88,15 +88,15 @@ export function DaRateTrendChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-background border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Tendencia historica
       </p>
-      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         La adjudicación directa subió de 63% a 82% en tres sexenios
       </h3>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         3.3x el límite OCDE del 25% — cada administración peor que la anterior
       </p>
 
@@ -249,21 +249,21 @@ export function DaRateTrendChart() {
       </svg>
 
       {/* Era legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-zinc-500">
+      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
         {['calderon', 'pena', 'amlo'].map((era) => {
           const yearsInEra = DATA.filter((d) => d.era === era)
           const avg = yearsInEra.reduce((s, d) => s + d.rate, 0) / yearsInEra.length
           return (
             <span key={era} className="flex items-center gap-1.5">
               <span className="w-2.5 h-2.5 rounded-full" style={{ background: ERA_DOT[era] }} />
-              <span className="text-zinc-300 font-semibold">{ERA_LABEL[era]}</span>
-              <span className="text-zinc-500">promedio {avg.toFixed(1)}%</span>
+              <span className="text-text-secondary font-semibold">{ERA_LABEL[era]}</span>
+              <span className="text-text-muted">promedio {avg.toFixed(1)}%</span>
             </span>
           )
         })}
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-600 font-mono">
+      <p className="mt-3 text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2010-2024 · RUBLI v0.6.5
       </p>
     </motion.div>

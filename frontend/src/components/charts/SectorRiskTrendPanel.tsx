@@ -18,19 +18,32 @@ import { memo, useState, useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQueries, useQuery } from '@tanstack/react-query'
 import {
-  LineChart,
-  Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  ResponsiveContainer,
-  ReferenceLine,
-} from '@/components/charts'
+  EditorialLineChart,
+  type LineSeries,
+  type ChartAnnotation,
+  type ColorToken,
+} from '@/components/charts/editorial'
 import { analysisApi, sectorApi } from '@/api/client'
 import { SECTOR_COLORS, SECTORS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { YearOverYearChange } from '@/api/types'
+
+// Sector code → editorial token map
+const SECTOR_TOKEN_MAP: Record<string, ColorToken> = {
+  salud: 'sector-salud',
+  educacion: 'sector-educacion',
+  infraestructura: 'sector-infraestructura',
+  energia: 'sector-energia',
+  defensa: 'sector-defensa',
+  tecnologia: 'sector-tecnologia',
+  hacienda: 'sector-hacienda',
+  gobernacion: 'sector-gobernacion',
+  agricultura: 'sector-agricultura',
+  ambiente: 'sector-ambiente',
+  trabajo: 'sector-trabajo',
+  otros: 'sector-otros',
+  all: 'neutral',
+}
 
 // ============================================================================
 // TYPES
@@ -196,56 +209,6 @@ function DownloadIcon({ className }: { className?: string }) {
       <path d="M8 12l-4-4h2.5V3h3v5H12L8 12z" />
       <rect x="2" y="13" width="12" height="1.5" rx="0.75" />
     </svg>
-  )
-}
-
-// ============================================================================
-// CUSTOM TOOLTIP
-// ============================================================================
-
-interface TooltipEntry {
-  name: string
-  value: number
-  color: string
-  dataKey: string
-}
-
-interface CustomTooltipProps {
-  active?: boolean
-  payload?: TooltipEntry[]
-  label?: number
-  visibleSectors: string[]
-}
-
-function CustomTooltip({ active, payload, label, visibleSectors }: CustomTooltipProps) {
-  if (!active || !payload || payload.length === 0 || label == null) return null
-
-  const scandal = SCANDAL_ANNOTATIONS.find((s) => s.year === label)
-  const filtered = payload.filter((e) => visibleSectors.includes(e.dataKey))
-
-  return (
-    <div className="bg-background-card border border-border/60 rounded-lg px-3 py-2.5 shadow-lg text-xs font-mono min-w-[180px] max-w-[240px]">
-      <p className="text-text-primary font-bold text-sm mb-1.5">{label}</p>
-      {filtered.map((entry) => (
-        <div key={entry.dataKey} className="flex items-center justify-between gap-2 mb-0.5">
-          <div className="flex items-center gap-1.5 min-w-0">
-            <div
-              className="w-2 h-2 rounded-sm flex-shrink-0"
-              style={{ backgroundColor: entry.color }}
-            />
-            <span className="text-text-muted truncate">{entry.name}</span>
-          </div>
-          <span className="text-text-primary font-semibold font-mono tabular-nums flex-shrink-0">
-            {entry.value != null ? `${entry.value.toFixed(1)}%` : '—'}
-          </span>
-        </div>
-      ))}
-      {scandal && (
-        <div className="mt-2 pt-2 border-t border-border/40">
-          <p className="text-risk-high text-[10px] leading-snug">{scandal.label}</p>
-        </div>
-      )}
-    </div>
   )
 }
 
@@ -447,8 +410,6 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
     [sectorLines, enabledSectorCodes]
   )
 
-  const visibleKeys = useMemo(() => visibleLines.map((sl) => sl.sectorCode), [visibleLines])
-
   // Year range for reference lines
   const minYear = chartData[0]?.year ?? 2010
   const maxYear = chartData[chartData.length - 1]?.year ?? 2024
@@ -500,6 +461,32 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
   }
 
   const isSingleLine = sectorLines.length === 1 && sectorLines[0].sectorCode === 'all'
+
+  // Editorial chart series — only render visible lines (Editorial primitive
+  // doesn't support `hide` toggle; we filter at the source).
+  const editorialSeries: LineSeries<ChartPoint>[] = useMemo(
+    () =>
+      sectorLines
+        .filter((sl) => isSingleLine || enabledSectorCodes.has(sl.sectorCode))
+        .map((sl) => ({
+          key: sl.sectorCode as keyof ChartPoint & string,
+          label: sl.sectorName,
+          colorToken: SECTOR_TOKEN_MAP[sl.sectorCode] ?? 'neutral',
+          emphasis: 'secondary' as const,
+        })),
+    [sectorLines, enabledSectorCodes, isSingleLine],
+  )
+
+  const editorialAnnotations: ChartAnnotation[] = useMemo(
+    () =>
+      SCANDAL_ANNOTATIONS.filter((s) => s.year >= minYear && s.year <= maxYear).map((s) => ({
+        kind: 'vrule' as const,
+        x: s.year,
+        label: s.shortLabel,
+        tone: 'critical' as const,
+      })),
+    [minYear, maxYear],
+  )
 
   return (
     <div className={cn('bg-surface-secondary rounded-lg p-4', className)}>
@@ -573,94 +560,14 @@ export const SectorRiskTrendPanel = memo(function SectorRiskTrendPanel({
       )}
 
       {/* ---- Line Chart ---- */}
-      <ResponsiveContainer width="100%" height={380}>
-        <LineChart
-          data={chartData}
-          margin={{ top: 8, right: 16, bottom: 8, left: 0 }}
-        >
-          <CartesianGrid
-            strokeDasharray="3 3"
-            stroke="#3f3f46"
-            vertical={false}
-          />
-
-          <XAxis
-            dataKey="year"
-            type="number"
-            domain={[minYear, maxYear]}
-            allowDecimals={false}
-            tick={{
-              fill: '#71717a',
-              fontSize: 10,
-              fontFamily: 'var(--font-mono, monospace)',
-            }}
-            axisLine={{ stroke: '#3f3f46' }}
-            tickLine={false}
-            tickCount={Math.min(chartData.length, 8)}
-          />
-
-          <YAxis
-            tick={{
-              fill: '#71717a',
-              fontSize: 10,
-              fontFamily: 'var(--font-mono, monospace)',
-            }}
-            axisLine={false}
-            tickLine={false}
-            tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-            domain={[0, 'auto']}
-            width={36}
-          />
-
-          <Tooltip
-            content={
-              <CustomTooltip visibleSectors={visibleKeys} />
-            }
-          />
-
-          {/* Scandal reference lines */}
-          {SCANDAL_ANNOTATIONS.filter(
-            (s) => s.year >= minYear && s.year <= maxYear
-          ).map((scandal, idx) => (
-            <ReferenceLine
-              key={scandal.year}
-              x={scandal.year}
-              stroke={scandal.color}
-              strokeWidth={1.5}
-              strokeDasharray="4 3"
-              opacity={0.7}
-              label={{
-                value: scandal.shortLabel,
-                position: idx % 2 === 0 ? 'insideTopRight' : 'insideTopLeft',
-                fontSize: 10,
-                fill: scandal.color,
-                fontFamily: 'var(--font-mono, monospace)',
-                opacity: 0.9,
-              }}
-            />
-          ))}
-
-          {/* Sector lines */}
-          {sectorLines.map((sl) => (
-            <Line
-              key={sl.sectorCode}
-              type="monotone"
-              dataKey={sl.sectorCode}
-              name={sl.sectorName}
-              stroke={sl.color}
-              strokeWidth={enabledSectorCodes.has(sl.sectorCode) || isSingleLine ? 1.8 : 0}
-              dot={false}
-              activeDot={
-                enabledSectorCodes.has(sl.sectorCode) || isSingleLine
-                  ? { r: 3, fill: sl.color, strokeWidth: 0 }
-                  : false
-              }
-              hide={!enabledSectorCodes.has(sl.sectorCode) && !isSingleLine}
-              isAnimationActive={false}
-            />
-          ))}
-        </LineChart>
-      </ResponsiveContainer>
+      <EditorialLineChart<ChartPoint>
+        data={chartData}
+        xKey="year"
+        series={editorialSeries}
+        yFormat="pct"
+        annotations={editorialAnnotations}
+        height={380}
+      />
 
       {/* ---- Scandal legend ---- */}
       <div className="mt-3 flex flex-wrap gap-x-3 gap-y-1">

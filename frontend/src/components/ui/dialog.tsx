@@ -103,7 +103,7 @@ const DialogContent = React.forwardRef<HTMLDivElement, DialogContentProps>(
             overflowY: 'auto',
           }}
           className={cn(
-            'border bg-background p-6 shadow-lg rounded-lg',
+            'border border-border bg-background-card p-6 shadow-lg rounded-sm',
             className
           )}
           onKeyDown={(e) => { if (e.key === 'Escape') onOpenChange(false) }}

@@ -64,17 +64,11 @@ import {
 } from 'lucide-react'
 import { NetworkGraphModal } from '@/components/NetworkGraphModal'
 import {
-  ResponsiveContainer,
-  AreaChart,
-  Area,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ComposedChart,
-  Line,
-  ReferenceLine,
-} from '@/components/charts'
+  EditorialAreaChart,
+  EditorialComposedChart,
+  type ChartAnnotation,
+  type ComposedLayer,
+} from '@/components/charts/editorial'
 import { DotStrip } from '@/components/charts/DotStrip'
 
 // SimpleTabs and TabPanel imported from @/components/ui/SimpleTabs
@@ -85,7 +79,7 @@ const LEVEL_COLORS: Record<string, string> = {
   critical: '#dc2626',
   high: '#ea580c',
   medium: '#eab308',
-  low: '#71717a',
+  low: 'var(--color-text-muted)',
   unknown: '#64748b',
 }
 
@@ -497,22 +491,22 @@ export function InstitutionProfile() {
       {/* ---- EDITORIAL HERO ---- */}
       <header>
         {/* Dateline strip — newspaper masthead grammar */}
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-zinc-300">RUBLI</span>
+            <span className="text-text-secondary">RUBLI</span>
           </span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span>{lang === 'en' ? 'Institution' : 'Institución'}</span>
           {institution.siglas ? (
             <>
-              <span className="text-zinc-700">·</span>
-              <span className="font-mono tabular-nums text-zinc-300">{institution.siglas}</span>
+              <span className="text-text-primary">·</span>
+              <span className="font-mono tabular-nums text-text-secondary">{institution.siglas}</span>
             </>
           ) : null}
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span className="font-mono tabular-nums">v0.6.5</span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span className="font-mono tabular-nums">2002–2025</span>
         </div>
         {/* Kicker */}
@@ -814,8 +808,8 @@ export function InstitutionProfile() {
                                 <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                                   {Array.from({ length: N }).map((_, k) => (
                                     <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                                      fill={k < filled ? r.color : '#2d2926'}
-                                      stroke={k < filled ? undefined : '#3d3734'}
+                                      fill={k < filled ? r.color : 'var(--color-background-elevated)'}
+                                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                       strokeWidth={k < filled ? 0 : 0.5}
                                       fillOpacity={k < filled ? 0.85 : 1}
                                     />
@@ -1073,15 +1067,15 @@ export function InstitutionProfile() {
                                   const inPeerRange = k >= p25Idx && k < p75Idx
                                   return (
                                     <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                                      fill={inPeerRange ? '#a1a1aa' : '#2d2926'}
-                                      stroke={inPeerRange ? undefined : '#3d3734'}
+                                      fill={inPeerRange ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
+                                      stroke={inPeerRange ? undefined : 'var(--color-border-hover)'}
                                       strokeWidth={inPeerRange ? 0 : 0.5}
                                       fillOpacity={inPeerRange ? 0.25 : 0.6}
                                     />
                                   )
                                 })}
                                 {/* Peer median line */}
-                                <line x1={medianX} y1={0} x2={medianX} y2={10} stroke="#a1a1aa" strokeWidth={0.8} strokeOpacity={0.6} />
+                                <line x1={medianX} y1={0} x2={medianX} y2={10} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.6} />
                                 {/* This institution marker */}
                                 <circle cx={markerIdx * DG + DR} cy={5} r={DR + 1.2}
                                   fill={markerColor}
@@ -1519,22 +1513,21 @@ export function InstitutionProfile() {
                       </div>
                     </div>
                     <div role="img" aria-label="Chart showing audit findings and recovery rate over time">
-                    <ResponsiveContainer width="100%" height={160}>
-                      <ComposedChart data={asfData.findings} margin={{ top: 4, right: 8, bottom: 4, left: 8 }}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.5} />
-                        <XAxis dataKey="year" tick={{ fontSize: 10 }} />
-                        <YAxis yAxisId="left" tickFormatter={(v: number) => `${(v / 1e9).toFixed(1)}B`} tick={{ fontSize: 10 }} />
-                        <YAxis yAxisId="right" orientation="right" tick={{ fontSize: 10 }} />
-                        <RechartsTooltip
-                          formatter={(value: any, name: any) => {
-                            const num = value as number
-                            if (name === 'amount_mxn') return [formatCompactMXN(num), 'Monto']
-                            return [num, name === 'observations_total' ? 'Observaciones' : 'Solventadas']
-                          }}
+                    {(() => {
+                      type AsfRow = (typeof asfData.findings)[number]
+                      const layers: ComposedLayer<AsfRow>[] = [
+                        { kind: 'line', key: 'observations_total', label: 'Observaciones', colorToken: 'risk-high', axis: 'left' },
+                      ]
+                      return (
+                        <EditorialComposedChart
+                          data={asfData.findings}
+                          xKey="year"
+                          layers={layers}
+                          yFormat="integer"
+                          height={160}
                         />
-                        <Line yAxisId="right" type="monotone" dataKey="observations_total" stroke="#f59e0b" dot={false} name="observations_total" />
-                      </ComposedChart>
-                    </ResponsiveContainer>
+                      )
+                    })()}
                     </div>
                     <div className="mt-3">
                       <DotStrip
@@ -1691,13 +1684,13 @@ function BenchmarkBar({ label, value, benchmark, diff, highThreshold }: {
           <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} preserveAspectRatio="none" aria-hidden="true">
             {Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={4} r={DR}
-                fill={k < filled ? barColor : '#2d2926'}
-                stroke={k < filled ? undefined : '#3d3734'}
+                fill={k < filled ? barColor : 'var(--color-background-elevated)'}
+                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.85 : 1}
               />
             ))}
-            <line x1={benchX} y1={0} x2={benchX} y2={8} stroke="#a1a1aa" strokeWidth={0.8} strokeOpacity={0.7} />
+            <line x1={benchX} y1={0} x2={benchX} y2={8} stroke="var(--color-text-muted)" strokeWidth={0.8} strokeOpacity={0.7} />
           </svg>
         )
       })()}
@@ -1717,54 +1710,28 @@ function RiskTimelineChart({
   data: Array<{ year: number; avg_risk_score: number | null; contract_count: number; total_value: number }>
   riskColor: string
 }) {
-  const { i18n } = useTranslation('institutions')
-  const lang = i18n.language.startsWith('es') ? 'es' : 'en'
+  // Map hex riskColor → token so primitive can resolve via CSS var
+  const colorToken = (() => {
+    if (riskColor === RISK_COLORS.critical) return 'risk-critical' as const
+    if (riskColor === RISK_COLORS.high) return 'risk-high' as const
+    if (riskColor === RISK_COLORS.medium) return 'risk-medium' as const
+    return 'risk-low' as const
+  })()
   const chartData = data.map((pt) => ({
     year: pt.year,
-    risk: pt.avg_risk_score != null ? Math.round(pt.avg_risk_score * 1000) / 10 : null,
-    contracts: pt.contract_count,
-    value: pt.total_value,
+    risk: pt.avg_risk_score != null ? Math.round(pt.avg_risk_score * 1000) / 10 : 0,
   }))
-
   return (
     <div className="h-40" role="img" aria-label="Area chart showing contract value trend over time">
-      <ResponsiveContainer width="100%" height="100%">
-        <AreaChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 0 }}>
-          <defs>
-            <linearGradient id={`riskGrad-${riskColor.replace('#', '')}`} x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor={riskColor} stopOpacity={0.25} />
-              <stop offset="95%" stopColor={riskColor} stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
-          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
-          <YAxis domain={[0, 100]} tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v}%`} width={32} />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                const risk = payload[0]?.value
-                const contracts = payload[0]?.payload?.contracts
-                const value = payload[0]?.payload?.value
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    <p style={{ color: riskColor }}>{lang === 'en' ? 'Risk:' : 'Riesgo:'} {risk != null ? `${risk}%` : '--'}</p>
-                    <p className="text-text-muted">{formatNumber(contracts)} {lang === 'en' ? 'contracts' : 'contratos'}</p>
-                    <p className="text-text-muted">{formatCompactMXN(value)}</p>
-                  </div>
-                )
-              }
-              return null
-            }}
-          />
-          <Area type="monotone" dataKey="risk" stroke={riskColor} strokeWidth={2}
-            fill={`url(#riskGrad-${riskColor.replace('#', '')})`}
-            dot={{ fill: riskColor, r: 3, strokeWidth: 0 }}
-            activeDot={{ r: 5, strokeWidth: 0 }}
-            connectNulls
-          />
-        </AreaChart>
-      </ResponsiveContainer>
+      <EditorialAreaChart
+        data={chartData}
+        xKey="year"
+        yKey="risk"
+        colorToken={colorToken}
+        yFormat="pct"
+        yDomain={[0, 100]}
+        height={160}
+      />
     </div>
   )
 }
@@ -1792,35 +1759,26 @@ function SpendingOverTimeChart({ data }: {
 
   return (
     <div className="h-56" role="img" aria-label="Chart showing contract value and risk score trends over time">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
-          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
-          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} tickFormatter={(v) => `${v.toFixed(1)}B`} width={40} />
-          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                const valB = payload.find((p) => p.dataKey === 'valueBillions')?.value as number | undefined
-                const ct = payload.find((p) => p.dataKey === 'contracts')?.value as number | undefined
-                const risk = payload[0]?.payload?.riskPct
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    {valB != null && <p className="text-text-secondary">{lang === 'en' ? 'Spend:' : 'Gasto:'} {formatCompactMXN(valB * 1e9)}</p>}
-                    {ct != null && <p className="text-text-muted">{lang === 'en' ? 'Contracts:' : 'Contratos:'} {formatNumber(ct)}</p>}
-                    {risk != null && <p className="text-text-muted">{lang === 'en' ? 'Avg risk:' : 'Riesgo promedio:'} {risk.toFixed(1)}%</p>}
-                  </div>
-                )
-              }
-              return null
-            }}
+      {(() => {
+        type SpendRow = (typeof chartData)[number]
+        const layers: ComposedLayer<SpendRow>[] = [
+          { kind: 'line', key: 'contracts', label: t('columns.contracts'), colorToken: 'accent-data', axis: 'left' },
+        ]
+        const annotations: ChartAnnotation[] = [
+          { kind: 'vrule', x: 2018, label: 'AMLO', tone: 'info' },
+          { kind: 'vrule', x: 2020, label: 'COVID', tone: 'critical' },
+        ]
+        return (
+          <EditorialComposedChart
+            data={chartData}
+            xKey="year"
+            layers={layers}
+            yFormat="integer"
+            annotations={annotations}
+            height={180}
           />
-          <ReferenceLine yAxisId="left" x={2018} stroke="#8b5cf6" strokeDasharray="4 4" opacity={0.5} label={{ value: 'AMLO', position: 'top', fontSize: 9, fill: '#8b5cf6' }} />
-          <ReferenceLine yAxisId="left" x={2020} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: 'COVID', position: 'top', fontSize: 9, fill: '#dc2626' }} />
-          <Line yAxisId="right" type="monotone" dataKey="contracts" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} name={t('columns.contracts')} />
-        </ComposedChart>
-      </ResponsiveContainer>
+        )
+      })()}
       <div className="mt-3">
         <DotStrip
           data={chartData.map((entry) => ({
@@ -1871,8 +1829,8 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? '#22d3ee' : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? '#22d3ee' : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.7 : 1}
                       />
@@ -2025,8 +1983,8 @@ function LongestTenuredGantt({ vendors }: {
                         const inSpan = k >= startIdx && k < endIdx
                         return (
                           <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                            fill={inSpan ? barColor : '#2d2926'}
-                            stroke={inSpan ? undefined : '#3d3734'}
+                            fill={inSpan ? barColor : 'var(--color-background-elevated)'}
+                            stroke={inSpan ? undefined : 'var(--color-border-hover)'}
                             strokeWidth={inSpan ? 0 : 0.5}
                             fillOpacity={inSpan ? 0.85 : 1}
                           />
@@ -2069,39 +2027,27 @@ function HHITrendChart({ history }: {
 
   return (
     <div className="h-48" role="img" aria-label="Chart showing vendor concentration and market share trends over time">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
-          <defs>
-            <linearGradient id="hhiAreaGrad" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="#eab308" stopOpacity={0.3} />
-              <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
-            </linearGradient>
-          </defs>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
-          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
-          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
-          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={40} />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                const hhi = payload.find((p) => p.dataKey === 'hhi')?.value as number | undefined
-                const vendors = payload.find((p) => p.dataKey === 'vendors')?.value as number | undefined
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    {hhi != null && <p className="text-text-secondary">HHI: {hhi.toFixed(0)}</p>}
-                    {vendors != null && <p className="text-text-muted">{lang === 'en' ? 'Vendors:' : 'Proveedores:'} {vendors}</p>}
-                  </div>
-                )
-              }
-              return null
-            }}
+      {(() => {
+        type HhiRow = (typeof chartData)[number]
+        const layers: ComposedLayer<HhiRow>[] = [
+          { kind: 'area', key: 'hhi', label: 'HHI', colorToken: 'risk-medium', axis: 'left' },
+          { kind: 'line', key: 'vendors', label: lang === 'en' ? 'Vendors' : 'Proveedores', colorToken: 'accent-data', axis: 'right' },
+        ]
+        const annotations: ChartAnnotation[] = [
+          { kind: 'hrule', y: 2500, label: lang === 'en' ? 'Concentrated market' : 'Mercado concentrado', tone: 'critical' },
+        ]
+        return (
+          <EditorialComposedChart
+            data={chartData}
+            xKey="year"
+            layers={layers}
+            yFormat="integer"
+            rightYFormat="integer"
+            annotations={annotations}
+            height={192}
           />
-          <ReferenceLine yAxisId="left" y={2500} stroke="#dc2626" strokeDasharray="4 4" opacity={0.5} label={{ value: lang === 'en' ? 'Concentrated market' : 'Mercado concentrado', position: 'right', fontSize: 9, fill: '#dc2626' }} />
-          <Area yAxisId="left" type="monotone" dataKey="hhi" stroke="#eab308" strokeWidth={2} fill="url(#hhiAreaGrad)" dot={{ r: 2, fill: '#eab308' }} />
-          <Line yAxisId="right" type="monotone" dataKey="vendors" stroke="var(--color-accent-data)" strokeWidth={2} dot={{ r: 2 }} />
-        </ComposedChart>
-      </ResponsiveContainer>
+        )
+      })()}
     </div>
   )
 }
@@ -2134,31 +2080,21 @@ function CrossRegistryTimeline({ timeline, asfFindings }: {
 
   return (
     <div className="h-40" role="img" aria-label="Chart showing audit observations and risk score over time">
-      <ResponsiveContainer width="100%" height="100%">
-        <ComposedChart data={chartData} margin={{ top: 4, right: 8, bottom: 0, left: 4 }}>
-          <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.2} />
-          <XAxis dataKey="year" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} />
-          <YAxis yAxisId="left" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={36} />
-          <YAxis yAxisId="right" orientation="right" tick={{ fill: 'var(--color-text-muted)', fontSize: 10 }} tickLine={false} axisLine={false} width={36} />
-          <RechartsTooltip
-            content={({ active, payload, label }) => {
-              if (active && payload?.length) {
-                const ct = payload.find((p) => p.dataKey === 'contracts')?.value as number | undefined
-                const asf = payload.find((p) => p.dataKey === 'asfObs')?.value as number | undefined
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg space-y-1">
-                    <p className="font-bold text-text-primary">{label}</p>
-                    {ct != null && ct > 0 && <p style={{ color: 'var(--color-accent-data)' }}>{lang === 'en' ? 'Contracts:' : 'Contratos:'} {ct}</p>}
-                    {asf != null && asf > 0 && <p style={{ color: '#f59e0b' }}>{lang === 'en' ? 'ASF observations:' : 'ASF observaciones:'} {asf}</p>}
-                  </div>
-                )
-              }
-              return null
-            }}
+      {(() => {
+        type CrossRow = (typeof chartData)[number]
+        const layers: ComposedLayer<CrossRow>[] = [
+          { kind: 'line', key: 'asfObs', label: 'ASF Observations', colorToken: 'risk-high', axis: 'left' },
+        ]
+        return (
+          <EditorialComposedChart
+            data={chartData}
+            xKey="year"
+            layers={layers}
+            yFormat="integer"
+            height={160}
           />
-          <Line yAxisId="right" type="monotone" dataKey="asfObs" stroke="#f59e0b" strokeWidth={2} dot={{ r: 3, fill: '#f59e0b' }} name="ASF Observations" />
-        </ComposedChart>
-      </ResponsiveContainer>
+        )
+      })()}
       <div className="mt-3">
         <DotStrip
           data={chartData.map((entry: { year: number | string; contracts: number }) => ({

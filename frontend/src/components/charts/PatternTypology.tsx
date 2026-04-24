@@ -87,11 +87,11 @@ export function PatternTypology() {
               'rounded-sm border p-3.5',
               isFlagship
                 ? 'lg:col-span-2 border-red-500/30 bg-red-500/[0.04] shadow-[0_0_24px_rgba(220,38,38,0.06)]'
-                : 'border-stone-800/60 bg-stone-900/30',
+                : 'border-border/60 bg-background-card',
             ].join(' ')}
           >
             <div className="flex items-start justify-between gap-2 mb-2">
-              <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500">
+              <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
                 {t(p.labelKey)}
               </span>
               <span
@@ -112,7 +112,7 @@ export function PatternTypology() {
               {p.count.toLocaleString()}
             </div>
 
-            <div className="text-[10px] font-mono text-stone-400 mb-2">
+            <div className="text-[10px] font-mono text-text-secondary mb-2">
               {p.pct.toFixed(1)}% {t('patterns.typology.ofContracts')}
             </div>
 
@@ -124,8 +124,8 @@ export function PatternTypology() {
                 <svg viewBox={`0 0 ${N * DG} 8`} className="w-full" style={{ height: 8 }} aria-hidden="true">
                   {Array.from({ length: N }).map((_, i) => (
                     <circle key={i} cx={i * DG + DR} cy={4} r={DR}
-                      fill={i < filled ? p.color : '#27272a'}
-                      stroke={i < filled ? undefined : '#3f3f46'}
+                      fill={i < filled ? p.color : '#f3f1ec'}
+                      stroke={i < filled ? undefined : '#e2ddd6'}
                       strokeWidth={i < filled ? 0 : 0.5}
                       fillOpacity={i < filled ? 0.85 : 1}
                     />
@@ -134,7 +134,7 @@ export function PatternTypology() {
               )
             })()}
 
-            <p className="text-[10px] text-stone-500 mt-1.5 leading-relaxed">
+            <p className="text-[10px] text-text-muted mt-1.5 leading-relaxed">
               {t(p.descKey)}
             </p>
           </div>

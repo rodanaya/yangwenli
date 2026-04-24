@@ -57,8 +57,8 @@ const DOT_CRITICAL    = '#ef4444'
 const DOT_HIGH        = '#f59e0b'
 const DOT_MEDIUM      = '#a16207'
 const DOT_LOW         = '#52525b'   // was #3f3f46 — lifted for visibility
-const DOT_EMPTY       = '#27272a'
-const DOT_EMPTY_STR   = '#3f3f46'
+const DOT_EMPTY       = '#f3f1ec'
+const DOT_EMPTY_STR   = '#e2ddd6'
 const HEADER_COLOR    = '#71717a'
 const GRID_COLOR      = 'rgba(255,255,255,0.05)'
 
@@ -250,7 +250,7 @@ export function SectorMarimekko({ sectors, onSectorClick, className }: SectorMar
               })}
               <text
                 x={VALUE_X} y={legendY + 7}
-                fill="#3f3f46" fontSize={9}
+                fill="#e2ddd6" fontSize={9}
                 fontFamily="var(--font-family-mono, monospace)"
                 dominantBaseline="middle"
               >

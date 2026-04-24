@@ -25,7 +25,7 @@ export default function ChapterBanner({
   return (
     <ScrollReveal className={cn('my-12', className)}>
       <div
-        className="relative w-full bg-zinc-950 overflow-hidden rounded-lg"
+        className="relative w-full bg-background overflow-hidden rounded-lg"
         style={{ borderTop: `2px solid ${color}` }}
         role="heading"
         aria-level={2}
@@ -49,11 +49,11 @@ export default function ChapterBanner({
             >
               {t('storyType.chapter', 'Chapter')} {paddedNumber}
             </p>
-            <h2 className="text-2xl md:text-4xl font-bold text-zinc-100 leading-tight max-w-2xl">
+            <h2 className="text-2xl md:text-4xl font-bold text-text-primary leading-tight max-w-2xl">
               {title}
             </h2>
             {subtitle && (
-              <p className="text-sm md:text-base text-zinc-400 max-w-xl">
+              <p className="text-sm md:text-base text-text-secondary max-w-xl">
                 {subtitle}
               </p>
             )}

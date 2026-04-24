@@ -18,15 +18,15 @@ export function StorySeasonalityCalendar() {
       className="w-full space-y-4"
     >
       {/* Section overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Temporal Pattern
       </p>
 
       {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Every December, procurement risk spikes 64% — for 23 consecutive years
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         The &ldquo;December effect&rdquo; is the single most persistent anomaly in Mexican
         federal procurement. Government agencies rush to exhaust annual budgets before the
         fiscal year closes, pushing average contract amounts to MXN 4.87M — nearly double the
@@ -37,20 +37,20 @@ export function StorySeasonalityCalendar() {
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400">+64%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             December risk vs. October baseline
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400">MXN 4.87M</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             avg contract in December · 1.7x annual avg
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <SeasonalityCalendar />
       </div>
 
@@ -59,7 +59,7 @@ export function StorySeasonalityCalendar() {
         <p className="text-xs font-mono uppercase tracking-wide text-cyan-400 mb-1">
           OECD BENCHMARK
         </p>
-        <p className="text-sm text-zinc-300">
+        <p className="text-sm text-text-secondary">
           The OECD recommends even distribution of procurement across the fiscal year.
           Year-end spending spikes are a recognized corruption risk indicator in all
           OECD integrity frameworks — Mexico&apos;s December pattern is among the most extreme
@@ -68,7 +68,7 @@ export function StorySeasonalityCalendar() {
       </div>
 
       {/* Source */}
-      <p className="text-[10px] text-zinc-600">
+      <p className="text-[10px] text-text-muted">
         Source: COMPRANET 2002-2025 · 3.05M contracts · RUBLI v0.6.5 risk scores
       </p>
     </motion.div>

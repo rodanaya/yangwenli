@@ -46,14 +46,14 @@ export function EditorialMasthead({
   return (
     <header className={tight ? 'pb-4' : 'pb-8'}>
       {/* Dateline */}
-      <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+      <div className="flex flex-wrap items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-border">
         <span className="inline-flex items-center gap-1.5">
-          <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-          <span className="text-zinc-300">RUBLI</span>
+          <span className="w-1.5 h-1.5 rounded-full bg-risk-critical animate-pulse" />
+          <span className="text-text-secondary">RUBLI</span>
         </span>
         {dateline.map((seg, i) => (
           <span key={i} className="inline-flex items-center gap-3">
-            <span className="text-zinc-700" aria-hidden>·</span>
+            <span className="text-text-disabled" aria-hidden>·</span>
             <span>{seg}</span>
           </span>
         ))}
@@ -67,7 +67,7 @@ export function EditorialMasthead({
       {/* Title + optional right-side slot */}
       <div className="flex items-start justify-between gap-4">
         <h1
-          className="text-zinc-50 leading-[1.05]"
+          className="text-text-primary leading-[1.05]"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(2rem, 4vw, 3rem)',
@@ -83,7 +83,7 @@ export function EditorialMasthead({
       {/* Deck */}
       {deck && (
         <p
-          className="mt-3 max-w-3xl text-zinc-300"
+          className="mt-3 max-w-3xl text-text-secondary"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',

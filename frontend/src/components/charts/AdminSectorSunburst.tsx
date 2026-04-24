@@ -105,7 +105,7 @@ export function AdminSectorSunburst() {
     return { inner, outer }
   }, [matrix, grandTotal])
 
-  if (isLoading) return <Skeleton className="h-80 w-full bg-zinc-800" />
+  if (isLoading) return <Skeleton className="h-80 w-full bg-background-elevated" />
   if (!matrix) return null
 
   const totalW = CX * 2 + 20, totalH = CY * 2 + 20
@@ -118,8 +118,8 @@ export function AdminSectorSunburst() {
         style={{ maxWidth: 380 }}
         onMouseLeave={() => { setTooltip(null); setHoveredAdmin(null) }}
       >
-        {/* Dark background */}
-        <rect width={totalW} height={totalH} fill="#18181b" rx="8" />
+        {/* Cream ground — bible §2 */}
+        <rect width={totalW} height={totalH} fill="var(--color-background-elevated)" rx="2" />
 
         {/* Outer ring: sectors — full opacity */}
         {sunburstArcs.outer.map(({ adminIdx, sectorId, a0, a1, value }, i) => {
@@ -132,7 +132,7 @@ export function AdminSectorSunburst() {
               d={annularArc(CX, CY, R_MID + 2, isHovered ? R_OUTER + 6 : R_OUTER, a0, a1)}
               fill={fill}
               opacity={hoveredAdmin ? (isHovered ? 0.95 : 0.25) : 0.85}
-              stroke="#27272a"
+              stroke="#f3f1ec"
               strokeWidth={0.8}
               style={{ cursor: 'pointer', transition: 'opacity 0.15s' }}
               onMouseEnter={(e) => {
@@ -153,7 +153,7 @@ export function AdminSectorSunburst() {
                 d={annularArc(CX, CY, R_INNER, R_MID, a0, a1)}
                 fill={admin.color}
                 opacity={hoveredAdmin === admin.name ? 0.9 : 0.6}
-                stroke="#27272a"
+                stroke="#f3f1ec"
                 strokeWidth={1}
                 style={{ cursor: 'pointer' }}
                 onMouseEnter={(e) => {
@@ -195,12 +195,12 @@ export function AdminSectorSunburst() {
           style={{
             left: tooltip.x + 12,
             top: tooltip.y - 8,
-            backgroundColor: '#18181b',
+            backgroundColor: '#1a1714',
             border: '1px solid #3f3f46',
           }}
         >
-          <p className="font-semibold text-zinc-100 font-mono">{tooltip.label}</p>
-          <p className="text-zinc-400 font-mono">{formatCompactMXN(tooltip.value)}</p>
+          <p className="font-semibold text-text-primary font-mono">{tooltip.label}</p>
+          <p className="text-text-secondary font-mono">{formatCompactMXN(tooltip.value)}</p>
         </div>
       )}
 
@@ -209,7 +209,7 @@ export function AdminSectorSunburst() {
         {ADMINS.map(a => (
           <div key={a.name} className="flex items-center gap-1">
             <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: a.color }} />
-            <span className="text-[10px] font-mono text-zinc-500">{a.name}</span>
+            <span className="text-[10px] font-mono text-text-muted">{a.name}</span>
           </div>
         ))}
       </div>

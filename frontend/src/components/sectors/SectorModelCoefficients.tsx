@@ -79,7 +79,7 @@ function SectorModelCoefficients({
     staleTime: 10 * 60 * 1000,
   })
 
-  const wrapperClass = `bg-[#0a0a0a] border border-zinc-800/60 rounded-sm p-5 ${className ?? ''}`
+  const wrapperClass = `bg-background-card border border-border rounded-sm p-5 ${className ?? ''}`
 
   if (isLoading) {
     return (
@@ -88,9 +88,9 @@ function SectorModelCoefficients({
         <div className="mt-6 space-y-2">
           {Array.from({ length: 9 }).map((_, i) => (
             <div key={i} className="flex items-center gap-3">
-              <div className="h-3 w-40 bg-zinc-800/80 rounded-sm" />
+              <div className="h-3 w-40 bg-background-elevated rounded-sm" />
               <div
-                className="h-3 bg-zinc-800/60 rounded-sm"
+                className="h-3 bg-background-elevated rounded-sm"
                 style={{ width: `${30 + ((i * 17) % 55)}%` }}
               />
             </div>
@@ -104,7 +104,7 @@ function SectorModelCoefficients({
     return (
       <section className={wrapperClass}>
         <Header sectorName={sectorName} />
-        <p className="mt-4 text-[11px] text-zinc-400">
+        <p className="mt-4 text-[11px] text-text-secondary">
           No fue posible cargar los coeficientes del modelo para este sector.
         </p>
       </section>
@@ -116,7 +116,7 @@ function SectorModelCoefficients({
     return (
       <section className={wrapperClass}>
         <Header sectorName={sectorName} />
-        <p className="mt-4 text-[11px] text-zinc-400">
+        <p className="mt-4 text-[11px] text-text-secondary">
           No hay coeficientes disponibles para este sector.
         </p>
       </section>
@@ -145,7 +145,7 @@ function SectorModelCoefficients({
     <section className={wrapperClass} aria-label={`Coeficientes del modelo para ${sectorName}`}>
       <Header sectorName={sectorName} />
       {usesGlobal && (
-        <p className="mt-1 text-[10px] uppercase tracking-wider text-zinc-500">
+        <p className="mt-1 text-[10px] uppercase tracking-wider text-text-muted">
           Fallback al modelo global (n_positive &lt; 500)
         </p>
       )}
@@ -280,7 +280,7 @@ function SectorModelCoefficients({
       </div>
 
       {/* Legend */}
-      <div className="mt-4 flex items-center gap-5 text-[10px] uppercase tracking-wider text-zinc-500">
+      <div className="mt-4 flex items-center gap-5 text-[10px] uppercase tracking-wider text-text-muted">
         <span className="flex items-center gap-1.5">
           <span
             className="inline-block h-2 w-3"
@@ -313,10 +313,10 @@ function SectorModelCoefficients({
 function Header({ sectorName }: { sectorName: string }) {
   return (
     <header>
-      <h3 className="text-[11px] font-semibold tracking-[0.14em] text-zinc-300 uppercase">
+      <h3 className="text-[11px] font-semibold tracking-[0.14em] text-text-secondary uppercase">
         Factores de riesgo — {sectorName}
       </h3>
-      <p className="mt-1 text-[10px] text-zinc-500">
+      <p className="mt-1 text-[10px] text-text-muted">
         Coeficientes del modelo logístico v0.6.5
       </p>
     </header>

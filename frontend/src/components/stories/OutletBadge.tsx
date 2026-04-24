@@ -5,23 +5,23 @@ export type OutletType = 'longform' | 'investigative' | 'data_analysis' | 'rubli
 const OUTLET_CONFIG: Record<OutletType, { label: string; bg: string; text: string }> = {
   longform: {
     label: 'FORMATO LARGO',
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-200',
+    bg: 'bg-background-elevated',
+    text: 'text-text-secondary',
   },
   investigative: {
     label: 'INVESTIGACIÓN',
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-200',
+    bg: 'bg-background-elevated',
+    text: 'text-text-secondary',
   },
   data_analysis: {
     label: 'ANÁLISIS DE DATOS',
-    bg: 'bg-zinc-800',
-    text: 'text-zinc-200',
+    bg: 'bg-background-elevated',
+    text: 'text-text-secondary',
   },
   rubli: {
     label: 'RUBLI',
     bg: 'bg-[#dc2626]',
-    text: 'text-white',
+    text: 'text-text-primary',
   },
 }
 

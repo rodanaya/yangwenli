@@ -48,8 +48,8 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
   return (
     <ScrollReveal>
       <div
-        className="rounded-sm border border-border/30 bg-background-card/60 p-4"
-        style={{ borderLeftWidth: '3px', borderLeftColor: '#f97316' }}
+        className="rounded-sm border border-border bg-background-card p-4"
+        style={{ borderLeftWidth: '3px', borderLeftColor: 'var(--color-sector-trabajo)' }}
       >
         <div className="flex items-center justify-between mb-2">
           <div>
@@ -61,7 +61,7 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
             </p>
           </div>
           <div className="text-right flex-shrink-0">
-            <p className="text-lg font-black font-mono tabular-nums text-orange-400 leading-none">
+            <p className="text-lg font-black font-mono tabular-nums leading-none" style={{ color: 'var(--color-sector-trabajo)' }}>
               ${maxVal.toFixed(1)}B
             </p>
             <p className="text-[9px] text-text-muted font-mono">
@@ -80,10 +80,10 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
             const filled = maxVal > 0 ? Math.round((d.value / maxVal) * DOTS_PER_COL) : 0
             const color =
               d.value === maxVal
-                ? '#dc2626'
+                ? 'var(--color-risk-critical)'
                 : d.value >= maxVal * 0.85
-                  ? '#f97316'
-                  : '#a1a1aa'
+                  ? 'var(--color-sector-trabajo)'
+                  : 'var(--color-text-muted)'
             const baseOpacity = d.value === maxVal ? 1 : d.value >= maxVal * 0.85 ? 0.85 : 0.55
             const cx = colIdx * COL_W + COL_W / 2
 
@@ -100,9 +100,9 @@ export function DecemberAvalancheSparkline({ years }: DecemberAvalancheSparkline
                       cx={cx}
                       cy={cy}
                       r={DOT_R}
-                      fill={isFilled ? color : '#2d2926'}
+                      fill={isFilled ? color : '#f3f1ec'}
                       fillOpacity={isFilled ? baseOpacity : 1}
-                      stroke={isFilled ? 'none' : '#3d3734'}
+                      stroke={isFilled ? 'none' : '#e2ddd6'}
                       strokeWidth={isFilled ? 0 : 0.4}
                       initial={{ opacity: 0 }}
                       animate={{ opacity: 1 }}

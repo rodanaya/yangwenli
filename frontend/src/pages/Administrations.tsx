@@ -31,15 +31,15 @@ import {
   ResponsiveContainer,
   ComposedChart,
   Line,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip,
-  Legend,
-  ReferenceLine,
-  ReferenceArea,
 } from '@/components/charts'
 import { DotStrip } from '@/components/charts/DotStrip'
+import {
+  EditorialLineChart,
+  EditorialComposedChart,
+  type ChartAnnotation,
+  type LineSeries,
+  type ComposedLayer,
+} from '@/components/charts/editorial'
 import {
   TrendingUp,
   TrendingDown,
@@ -738,8 +738,8 @@ function AdminDossierPanel({
                             <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                               {Array.from({ length: N }).map((_, k) => (
                                 <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                                  fill={k < filled ? sector.color : '#2d2926'}
-                                  stroke={k < filled ? undefined : '#3d3734'}
+                                  fill={k < filled ? sector.color : 'var(--color-background-elevated)'}
+                                  stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                                   strokeWidth={k < filled ? 0 : 0.5}
                                   fillOpacity={k < filled ? 0.7 : 1}
                                 />
@@ -1265,7 +1265,7 @@ export default function Administrations() {
         const deltaValue = top.dDA.value
         const direction = deltaValue > 0 ? t('lede.rose') : t('lede.fell')
         const absDelta = Math.abs(deltaValue).toFixed(1)
-        const accent = deltaValue > 0 ? '#f87171' : '#71717a'
+        const accent = deltaValue > 0 ? '#f87171' : 'var(--color-text-muted)'
         return (
           <FeaturedComparison
             kicker={t('lede.kicker', { direction, absDelta })}
@@ -1618,8 +1618,8 @@ export default function Administrations() {
                         <svg viewBox={`0 0 ${N * DG} 10`} className="w-full" style={{ height: 10 }} preserveAspectRatio="none" aria-hidden="true">
                           {Array.from({ length: N }).map((_, k) => (
                             <circle key={k} cx={k * DG + DR} cy={5} r={DR}
-                              fill={k < filled ? color : '#2d2926'}
-                              stroke={k < filled ? undefined : '#3d3734'}
+                              fill={k < filled ? color : 'var(--color-background-elevated)'}
+                              stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                               strokeWidth={k < filled ? 0 : 0.5}
                               fillOpacity={k < filled ? 0.85 : 1}
                             />
@@ -1799,7 +1799,7 @@ export default function Administrations() {
                       return (
                         <g key={f}>
                           <line x1={ML - 3} y1={y} x2={ML} y2={y} stroke="#3f3f46" strokeWidth={1} />
-                          <text x={ML - 5} y={y + 1} fill="#a1a1aa" fontSize={10} textAnchor="end" dominantBaseline="middle" fontFamily="monospace">{formatNumber(val)}</text>
+                          <text x={ML - 5} y={y + 1} fill="var(--color-text-muted)" fontSize={10} textAnchor="end" dominantBaseline="middle" fontFamily="monospace">{formatNumber(val)}</text>
                         </g>
                       )
                     })}
@@ -1809,9 +1809,9 @@ export default function Administrations() {
                       return (
                         <g key={pct}>
                           <line x1={W - MR} y1={y} x2={W - MR + 3} y2={y} stroke="#3f3f46" strokeWidth={1} />
-                          <text x={W - MR + 5} y={y + 1} fill="#a1a1aa" fontSize={10} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
+                          <text x={W - MR + 5} y={y + 1} fill="var(--color-text-muted)" fontSize={10} textAnchor="start" dominantBaseline="middle" fontFamily="monospace">{pct}%</text>
                           {/* Horizontal grid */}
-                          <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="#3d3734" strokeWidth={0.5} strokeDasharray="3 4" />
+                          <line x1={ML} y1={y} x2={W - MR} y2={y} stroke="var(--color-border-hover)" strokeWidth={0.5} strokeDasharray="3 4" />
                         </g>
                       )
                     })}
@@ -1847,7 +1847,7 @@ export default function Administrations() {
                       return (
                         <g key={ev.id ?? ev.year}>
                           <line x1={x} y1={MT} x2={x} y2={MT + cH} stroke="#475569" strokeWidth={1} strokeDasharray="3 3" />
-                          <text x={x + 3} y={MT + 6} fill="#71717a" fontSize={10} fontFamily="monospace">{(ev.title ?? '').slice(0, 12)}</text>
+                          <text x={x + 3} y={MT + 6} fill="var(--color-text-muted)" fontSize={10} fontFamily="monospace">{(ev.title ?? '').slice(0, 12)}</text>
                         </g>
                       )
                     })}
@@ -1884,7 +1884,7 @@ export default function Administrations() {
 
                     {/* Year labels */}
                     {years.map((yr, i) => (
-                      <text key={yr.year} x={xOf(i)} y={H - 4} fill="#a1a1aa" fontSize={10} textAnchor="middle" fontFamily="monospace">
+                      <text key={yr.year} x={xOf(i)} y={H - 4} fill="var(--color-text-muted)" fontSize={10} textAnchor="middle" fontFamily="monospace">
                         {yr.year}
                       </text>
                     ))}
@@ -1894,7 +1894,7 @@ export default function Administrations() {
                       <g key={ln.key} transform={`translate(${ML + i * 102}, ${MT - 3})`}>
                         <line x1={0} y1={5} x2={14} y2={5} stroke={ln.color} strokeWidth={1.8} />
                         <circle cx={7} cy={5} r={2.2} fill={ln.color} />
-                        <text x={17} y={9} fill="#71717a" fontSize={10} fontFamily="monospace">{ln.label}</text>
+                        <text x={17} y={9} fill="var(--color-text-muted)" fontSize={10} fontFamily="monospace">{ln.label}</text>
                       </g>
                     ))}
                   </svg>
@@ -2444,7 +2444,7 @@ function AdminRadarChart({ allAggs, admins }: { allAggs: AdminAgg[]; admins: typ
                 y={pos.y}
                 textAnchor="middle"
                 dominantBaseline="middle"
-                fill="#71717a"
+                fill="var(--color-text-muted)"
                 fontSize={10}
                 fontFamily="var(--font-family-mono)"
               >
@@ -2506,7 +2506,7 @@ function TransitionMiniBar({
   const toPct = Math.min(100, (Math.abs(toValue) / safeMax) * 100)
   const isWorse = invertColor ? toValue < fromValue : toValue > fromValue
   const isBetter = invertColor ? toValue > fromValue : toValue < fromValue
-  const toBarColor = isWorse ? '#f87171' : isBetter ? '#71717a' : '#94a3b8'
+  const toBarColor = isWorse ? '#f87171' : isBetter ? 'var(--color-text-muted)' : '#94a3b8'
 
   return (
     <div className="space-y-1 mt-1.5">
@@ -2520,8 +2520,8 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? '#a1a1aa' : '#2d2926'}
-                    stroke={k < filled ? undefined : '#3d3734'}
+                    fill={k < filled ? 'var(--color-text-muted)' : 'var(--color-background-elevated)'}
+                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                     strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.5 : 1}
                   />
@@ -2541,8 +2541,8 @@ function TransitionMiniBar({
               <svg viewBox={`0 0 ${N * DG} 6`} className="w-full" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                 {Array.from({ length: N }).map((_, k) => (
                   <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                    fill={k < filled ? toBarColor : '#2d2926'}
-                    stroke={k < filled ? undefined : '#3d3734'}
+                    fill={k < filled ? toBarColor : 'var(--color-background-elevated)'}
+                    stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                     strokeWidth={k < filled ? 0 : 0.5}
                     fillOpacity={k < filled ? 0.85 : 1}
                   />
@@ -2844,8 +2844,8 @@ function MatrixCell({ adminName, sector, intensity, displayText, isSelectedAdmin
             const filled = Math.max(1, Math.round(intensity * N))
             return Array.from({ length: N }).map((_, k) => (
               <circle key={k} cx={k * DG + DR} cy={1.5} r={DR}
-                fill={k < filled ? bgColor : '#2d2926'}
-                stroke={k < filled ? undefined : '#3d3734'}
+                fill={k < filled ? bgColor : 'var(--color-background-elevated)'}
+                stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                 strokeWidth={k < filled ? 0 : 0.5}
                 fillOpacity={k < filled ? 0.6 : 1}
               />
@@ -3137,108 +3137,46 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
         <CardContent>
           {yoyData.length > 0 ? (
             <div ref={systemicChartRef}>
-            <ResponsiveContainer width="100%" height={360}>
-              <ComposedChart data={yoyData} margin={{ top: 20, right: 20, bottom: 5, left: 0 }}>
-                <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="year"
-                  tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'var(--font-family-mono)' }}
-                />
-                <YAxis
-                  domain={[0, 100]}
-                  tick={{ fill: '#71717a', fontSize: 10 }}
-                  tickFormatter={(v: number) => `${v}%`}
-                  width={40}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--color-background-card)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontFamily: 'var(--font-family-mono)',
-                  }}
-                  formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
-                />
-                <Legend wrapperStyle={{ fontSize: 11, fontFamily: 'var(--font-family-mono)' }} />
-                {/* Administration background bands — labels show name · party · year range */}
-                <ReferenceArea x1={2002} x2={2006} fill={ADMIN_COLORS['Fox']} fillOpacity={0.06} label={{ value: 'Fox · PAN · 02–06', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <ReferenceArea x1={2006} x2={2012} fill={ADMIN_COLORS['Calderon']} fillOpacity={0.06} label={{ value: 'Calderón · PAN · 06–12', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <ReferenceArea x1={2012} x2={2018} fill={ADMIN_COLORS['Pena Nieto']} fillOpacity={0.06} label={{ value: 'EPN · PRI · 12–18', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <ReferenceArea x1={2018} x2={2024} fill={ADMIN_COLORS['AMLO']} fillOpacity={0.06} label={{ value: 'AMLO · MORENA · 18–24', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <ReferenceArea x1={2024} x2={2026} fill={ADMIN_COLORS['Sheinbaum']} fillOpacity={0.06} label={{ value: 'Sheinbaum · MORENA · 24+', position: 'insideTopLeft', fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                {/* Direct award national average benchmark */}
-                <ReferenceLine y={78} stroke="rgba(255,165,0,0.4)" strokeDasharray="4 2" label={{ value: t('patternsView.nationalAvgLabel'), fill: 'rgba(255,165,0,0.5)', fontSize: 10 }} />
-                {/* Admin transition reference lines */}
-                {transitionYears.map((year) => (
-                  <ReferenceLine
-                    key={year}
-                    x={year}
-                    stroke="#4b5563"
-                    strokeDasharray="4 4"
-                    label={{
-                      value: adminLabels[year],
-                      position: 'top',
-                      fontSize: 10,
-                      fill: '#6b7280',
-                    }}
+              {(() => {
+                const annotations: ChartAnnotation[] = [
+                  { kind: 'band', x1: 2002, x2: 2006, label: 'Fox · PAN', tone: 'admin' },
+                  { kind: 'band', x1: 2006, x2: 2012, label: 'Calderón · PAN', tone: 'admin' },
+                  { kind: 'band', x1: 2012, x2: 2018, label: 'EPN · PRI', tone: 'admin' },
+                  { kind: 'band', x1: 2018, x2: 2024, label: 'AMLO · MORENA', tone: 'admin' },
+                  { kind: 'band', x1: 2024, x2: 2026, label: 'Sheinbaum · MORENA', tone: 'admin' },
+                  { kind: 'hrule', y: 78, label: t('patternsView.nationalAvgLabel'), tone: 'oecd' },
+                  ...transitionYears.map<ChartAnnotation>((year) => ({
+                    kind: 'vrule', x: year, label: adminLabels[year] ?? '', tone: 'info',
+                  })),
+                  ...((breaksData?.breakpoints ?? [])
+                    .filter((bp, i, arr) => arr.findIndex(b => b.year === bp.year) === i)
+                    .map<ChartAnnotation>((bp) => ({
+                      kind: 'vrule', x: bp.year, label: `~${bp.year}`, tone: 'warn',
+                    }))),
+                ]
+                // Pre-compute the scaled avg_risk×100 so EditorialLineChart can read it as a key
+                const seriesData = yoyData.map((r) => ({
+                  ...r,
+                  avg_risk_x100: (r.avg_risk ?? 0) * 100,
+                }))
+                const series: LineSeries<typeof seriesData[number]>[] = [
+                  { key: 'direct_award_pct', label: 'Direct Award %', colorToken: 'accent-data' },
+                  { key: 'single_bid_pct', label: 'Single Bid %', colorToken: 'risk-high' },
+                  { key: 'high_risk_pct', label: 'High Risk %', colorToken: 'risk-critical' },
+                  { key: 'avg_risk_x100', label: 'Avg Risk ×100', colorToken: 'sector-tecnologia', style: 'dashed', emphasis: 'secondary' },
+                ]
+                return (
+                  <EditorialLineChart
+                    data={seriesData}
+                    xKey="year"
+                    series={series}
+                    yFormat="pct"
+                    yDomain={[0, 100]}
+                    annotations={annotations}
+                    height={360}
                   />
-                ))}
-                {/* Detected structural breakpoints */}
-                {(breaksData?.breakpoints ?? [])
-                  .filter((bp, i, arr) => arr.findIndex(b => b.year === bp.year) === i)
-                  .map((bp) => (
-                    <ReferenceLine
-                      key={`break-${bp.year}-${bp.metric}`}
-                      x={bp.year}
-                      stroke="#f59e0b"
-                      strokeWidth={1}
-                      strokeDasharray="2 3"
-                      label={{
-                        value: `~${bp.year}`,
-                        position: 'insideTopRight',
-                        fontSize: 10,
-                        fill: '#f59e0b',
-                      }}
-                    />
-                  ))}
-                <Line
-                  type="monotone"
-                  dataKey="direct_award_pct"
-                  name="Direct Award %"
-                  stroke="#3b82f6"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="single_bid_pct"
-                  name="Single Bid %"
-                  stroke="#fbbf24"
-                  strokeWidth={2}
-                  dot={false}
-                />
-                <Line
-                  type="monotone"
-                  dataKey="high_risk_pct"
-                  name="High Risk %"
-                  stroke={RISK_COLORS.high}
-                  strokeWidth={2}
-                  dot={false}
-                />
-                {/* 4th line: avg_risk score, scaled ×100 to share the 0–100% Y-axis */}
-                <Line
-                  type="monotone"
-                  dataKey={(row: YearOverYearChange) => (row.avg_risk ?? 0) * 100}
-                  name="Avg Risk Score ×100"
-                  stroke="#8b5cf6"
-                  strokeWidth={1.75}
-                  strokeDasharray="4 2"
-                  dot={false}
-                  isAnimationActive={false}
-                />
-              </ComposedChart>
-            </ResponsiveContainer>
+                )
+              })()}
             </div>
           ) : (
             <div className="h-[360px] flex items-center justify-center text-text-muted text-sm">
@@ -3270,46 +3208,30 @@ function PatternsView({ yoyData, allTimeAvg, isLoading }: PatternsViewProps) {
             <div className="mb-3 text-xs text-text-muted leading-relaxed">
               {t('patternsView.politicalCycleDesc')}
             </div>
-            <ResponsiveContainer width="100%" height={220}>
-              <ComposedChart
-                data={politicalData.sexenio_year_breakdown}
-                margin={{ top: 10, right: 20, bottom: 5, left: 0 }}
-              >
-                <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
-                <XAxis
-                  dataKey="label"
-                  tick={{ fill: '#a1a1aa', fontSize: 10, fontFamily: 'var(--font-family-mono)' }}
-                  interval={0}
+            {(() => {
+              type SexenioRow = (typeof politicalData.sexenio_year_breakdown)[number]
+              const layers: ComposedLayer<SexenioRow>[] = [
+                {
+                  kind: 'line',
+                  key: 'direct_award_pct',
+                  label: 'Direct Award %',
+                  colorToken: 'accent-data',
+                  axis: 'right',
+                },
+              ]
+              return (
+                <EditorialComposedChart
+                  data={politicalData.sexenio_year_breakdown}
+                  xKey="label"
+                  layers={layers}
+                  yFormat="pct"
+                  rightYFormat="pct"
+                  yDomain={[0, 12]}
+                  rightYDomain={[60, 85]}
+                  height={220}
                 />
-                <YAxis
-                  yAxisId="risk"
-                  domain={[0, 12]}
-                  tick={{ fill: '#71717a', fontSize: 10 }}
-                  tickFormatter={(v: number) => `${v}%`}
-                  width={36}
-                />
-                <YAxis
-                  yAxisId="da"
-                  orientation="right"
-                  domain={[60, 85]}
-                  tick={{ fill: '#71717a', fontSize: 10 }}
-                  tickFormatter={(v: number) => `${v}%`}
-                  width={36}
-                />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: 'var(--color-background-card)',
-                    border: '1px solid var(--color-border)',
-                    borderRadius: 8,
-                    fontSize: 11,
-                    fontFamily: 'var(--font-family-mono)',
-                  }}
-                  formatter={(value: unknown, name?: string) => [`${Number(value).toFixed(1)}%`, name]}
-                />
-                <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                <Line yAxisId="da" type="monotone" dataKey="direct_award_pct" name="Direct Award %" stroke="#3b82f6" strokeWidth={2} dot={{ r: 3 }} />
-              </ComposedChart>
-            </ResponsiveContainer>
+              )
+            })()}
             <div className="mt-3">
               <DotStrip
                 data={(politicalData.sexenio_year_breakdown ?? []).map((r) => ({
@@ -3489,51 +3411,28 @@ function PoliticalCycleView() {
               </p>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={280}>
-                <ComposedChart data={breakdownData} margin={{ top: 8, right: 24, bottom: 8, left: 0 }}>
-                  <CartesianGrid stroke="#3f3f46" strokeDasharray="3 3" vertical={false} />
-                  <XAxis
-                    dataKey="label"
-                    tick={{ fill: '#71717a', fontSize: 11 }}
+              {(() => {
+                type BreakdownRow = (typeof breakdownData)[number]
+                const layers: ComposedLayer<BreakdownRow>[] = [
+                  {
+                    kind: 'line',
+                    key: 'direct_award_pct',
+                    label: 'Direct Award %',
+                    colorToken: 'accent-data',
+                    axis: 'right',
+                  },
+                ]
+                return (
+                  <EditorialComposedChart
+                    data={breakdownData}
+                    xKey="label"
+                    layers={layers}
+                    yFormat="pct"
+                    rightYFormat="pct"
+                    height={280}
                   />
-                  <YAxis
-                    yAxisId="risk"
-                    tickFormatter={(v: number) => `${v.toFixed(1)}%`}
-                    tick={{ fill: '#71717a', fontSize: 10 }}
-                    width={40}
-                  />
-                  <YAxis
-                    yAxisId="da"
-                    orientation="right"
-                    tickFormatter={(v: number) => `${v.toFixed(0)}%`}
-                    tick={{ fill: '#71717a', fontSize: 10 }}
-                    width={36}
-                  />
-                  <Tooltip
-                    contentStyle={{
-                      backgroundColor: 'var(--color-background-card)',
-                      border: '1px solid var(--color-border)',
-                      borderRadius: 8,
-                      fontSize: 11,
-                      fontFamily: 'var(--font-family-mono)',
-                    }}
-                    formatter={(value: unknown, name?: string) => [
-                      typeof value === 'number' ? `${value.toFixed(2)}%` : String(value ?? ''),
-                      name ?? '',
-                    ] as [string, string]}
-                  />
-                  <Legend wrapperStyle={{ fontSize: 10, fontFamily: 'var(--font-family-mono)' }} />
-                  <Line
-                    yAxisId="da"
-                    type="monotone"
-                    dataKey="direct_award_pct"
-                    name="Direct Award %"
-                    stroke="#3b82f6"
-                    strokeWidth={2}
-                    dot={{ r: 3 }}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
+                )
+              })()}
               <div className="mt-3 grid gap-3 sm:grid-cols-2">
                 <div>
                   <p className="text-[10px] text-text-muted font-mono mb-1">Avg Risk %</p>

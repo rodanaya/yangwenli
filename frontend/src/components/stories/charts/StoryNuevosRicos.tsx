@@ -96,22 +96,22 @@ export function StoryNuevosRicos() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-background border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Cohortes de proveedores
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Los proveedores nuevos bajo AMLO nacen más opacos — y con más dinero
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Cada punto es el cohorte de un año de registro · eje X = adj. directa · eje Y = valor capturado
       </p>
 
       <div className="border-l-2 border-red-500 pl-4 py-1 mb-4">
         <div className="text-3xl font-mono font-bold text-red-500">+25pp</div>
-        <div className="text-[11px] text-zinc-400 mt-0.5">
+        <div className="text-[11px] text-text-secondary mt-0.5">
           DA promedio Calderón → AMLO —{' '}
           <span className="text-cyan-400">{(eraCentroids[2].daPct / 25).toFixed(1)}x el límite OCDE</span>
         </div>
@@ -242,7 +242,7 @@ export function StoryNuevosRicos() {
       </svg>
 
       {/* Legend */}
-      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-zinc-500">
+      <div className="mt-4 flex flex-wrap gap-4 text-[10px] font-mono text-text-muted">
         {[
           { label: 'Riesgo crítico', color: '#dc2626' },
           { label: 'Alto',           color: '#ea580c' },
@@ -254,21 +254,21 @@ export function StoryNuevosRicos() {
             {label}
           </span>
         ))}
-        <span className="text-zinc-600 ml-auto">Tamaño del punto = volumen de contratos</span>
+        <span className="text-text-muted ml-auto">Tamaño del punto = volumen de contratos</span>
       </div>
 
       <div className="rounded-lg border border-amber-500/20 bg-amber-500/5 p-3 mt-3">
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           El centroide de AMLO (nodo naranja) se ubica arriba y a la derecha: más valor capturado
           con mayor opacidad. Los cohortes cruzan hacia zonas de riesgo alto (rojo) a medida que
           el eje X avanza.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono mt-3">
+      <p className="text-[10px] text-text-muted font-mono mt-3">
         Fuente: COMPRANET · cohortes por año de primer registro federal · RUBLI v0.6.5
       </p>
     </motion.div>

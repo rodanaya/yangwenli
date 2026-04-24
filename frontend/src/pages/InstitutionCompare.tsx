@@ -11,13 +11,9 @@ import { useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import { motion } from 'framer-motion'
 import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from '@/components/charts'
+  EditorialRadarChart,
+  type RadarSeries,
+} from '@/components/charts/editorial'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
 import { EditorialHeadline } from '@/components/ui/EditorialHeadline'
@@ -212,7 +208,7 @@ function InstitutionPreviewCard({
 
   return (
     <div
-      className="rounded-lg border border-border/60 bg-zinc-900/40 p-4 mt-3"
+      className="rounded-lg border border-border/60 bg-background/40 p-4 mt-3"
       style={{ borderTopWidth: '3px', borderTopColor: accentColor }}
     >
       <div className="flex items-start justify-between gap-3">
@@ -411,7 +407,7 @@ function MetricTable({
       <div className="overflow-x-auto rounded-lg border border-border/60">
         <table className="w-full text-sm" aria-label={isEs ? 'Comparacion de metricas institucionales' : 'Institutional metric comparison'}>
           <thead>
-            <tr className="border-b border-border bg-zinc-900/40">
+            <tr className="border-b border-border bg-background/40">
               <th className="px-4 py-3 text-left text-xs font-semibold text-text-muted uppercase tracking-wide">
                 {isEs ? 'Metrica' : 'Metric'}
               </th>
@@ -459,7 +455,7 @@ function MetricTable({
               return (
                 <tr
                   key={m.label}
-                  className="border-b border-border/20 hover:bg-zinc-800/20 transition-colors"
+                  className="border-b border-border/20 hover:bg-background-elevated transition-colors"
                 >
                   <td className="px-4 py-3 text-xs text-text-secondary font-medium">{isEs ? m.labelEs : m.label}</td>
                   <td className={cn(
@@ -537,7 +533,7 @@ function TopVendorsComparison({
               return (
                 <div
                   key={v.vendor_id}
-                  className="rounded border border-border/30 bg-zinc-900/30 px-3 py-2"
+                  className="rounded border border-border/30 bg-background/30 px-3 py-2"
                 >
                   <div className="flex items-start justify-between gap-2">
                     <div className="min-w-0 flex-1">
@@ -582,8 +578,8 @@ function TopVendorsComparison({
                       <svg viewBox={`0 0 ${N * DG} 5`} className="w-full mt-1.5" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                         {Array.from({ length: N }).map((_, k) => (
                           <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                            fill={k < filled ? accentColor : '#2d2926'}
-                            stroke={k < filled ? undefined : '#3d3734'}
+                            fill={k < filled ? accentColor : 'var(--color-background-elevated)'}
+                            stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                             strokeWidth={k < filled ? 0 : 0.5}
                             fillOpacity={k < filled ? 0.85 : 1}
                           />
@@ -671,9 +667,9 @@ function PairedDotStrips({
               cx={LABEL_W + i * DOT_GAP + DOT_GAP / 2}
               cy={cy}
               r={DOT_R}
-              fill={isFilled ? color : '#2d2926'}
+              fill={isFilled ? color : 'var(--color-background-elevated)'}
               fillOpacity={isFilled ? 0.85 : 1}
-              stroke={isFilled ? 'none' : '#3d3734'}
+              stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
               strokeWidth={isFilled ? 0 : 1}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -783,7 +779,7 @@ function RiskDistribution({
           <span> {isEsRisk ? 'Base:' : 'Base:'} {formatNumber(totalA)} vs {formatNumber(totalB)} {isEsRisk ? 'contratos.' : 'contracts.'}</span>
         )}
       </p>
-      <div className="rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Dot matrix chart comparing risk level distribution between two institutions">
+      <div className="rounded-lg border border-border/40 bg-background/30 p-4" role="img" aria-label="Dot matrix chart comparing risk level distribution between two institutions">
         <PairedDotStrips data={chartData} colorA={COLOR_A} colorB={COLOR_B} nameA={nameA} nameB={nameB} />
       </div>
       {/* Legend */}
@@ -827,48 +823,21 @@ function ComparisonRadar({
           ? 'Comparacion normalizada de 6 dimensiones de contratacion. 100% corresponde al valor mas alto entre ambas instituciones.'
           : 'Normalized comparison of 6 procurement dimensions. 100% corresponds to the highest value between both institutions.'}
       </p>
-      <div className="h-[320px] rounded-lg border border-border/40 bg-zinc-900/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
-        <ResponsiveContainer width="100%" height="100%">
-          <RadarChart data={radarData} margin={{ top: 10, right: 40, bottom: 10, left: 40 }}>
-            <PolarGrid stroke="#3d3734" />
-            <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-            <RechartsTooltip
-              content={({ active, payload }) => {
-                if (!active || !payload?.[0]) return null
-                const d = payload[0].payload as (typeof radarData)[0]
-                return (
-                  <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                    <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
-                    <p style={{ color: COLOR_A }}>
-                      {aName.slice(0, 22)}: {(d.instA * 100).toFixed(0)}%
-                    </p>
-                    <p style={{ color: COLOR_B }}>
-                      {bName.slice(0, 22)}: {(d.instB * 100).toFixed(0)}%
-                    </p>
-                    <p className="text-text-muted mt-1 text-[10px]">{isEsRadar ? 'Normalizado uno respecto al otro' : 'Normalized relative to each other'}</p>
-                  </div>
-                )
-              }}
-            />
-            <Radar
-              dataKey="instA"
-              name={aName}
-              stroke={COLOR_A}
-              fill={COLOR_A}
-              fillOpacity={0.15}
-              strokeWidth={2}
-            />
-            <Radar
-              dataKey="instB"
-              name={bName}
-              stroke={COLOR_B}
-              fill={COLOR_B}
-              fillOpacity={0.10}
-              strokeWidth={2}
-              strokeDasharray="5 3"
-            />
-          </RadarChart>
-        </ResponsiveContainer>
+      <div className="rounded-lg border border-border/40 bg-background/30 p-4" role="img" aria-label="Radar chart comparing six procurement dimensions between two institutions">
+        {(() => {
+          const axes = radarData.map((r) => r.factor)
+          const aValues: Record<string, number> = {}
+          const bValues: Record<string, number> = {}
+          radarData.forEach((r) => {
+            aValues[r.factor] = r.instA
+            bValues[r.factor] = r.instB
+          })
+          const series: RadarSeries[] = [
+            { name: aName, values: aValues, colorToken: 'oecd' },
+            { name: bName, values: bValues, colorToken: 'sector-tecnologia' },
+          ]
+          return <EditorialRadarChart axes={axes} series={series} height={320} />
+        })()}
       </div>
       {/* Legend */}
       <div className="flex items-center justify-center gap-6 mt-3">

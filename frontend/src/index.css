@@ -28,37 +28,47 @@
   --color-risk-medium: #a16207;
   --color-risk-low: #71717a;
 
-  /* Single canonical amber accent (Phase 1) */
-  --color-amber-500: #f59e0b;
+  /* Amber accent — bible §2 gold */
+  --color-amber-500: #a06820;
 
-  /* Dark-first canonical surface tokens (Phase 1)
-     These are the source of truth for new .surface-card components.
-     Existing --color-background-* tokens remain for backward compatibility. */
-  --color-bg-base: #0a0a0b;
-  --color-bg-card: #111113;
-  --color-bg-elevated: #18181b;
+  /* Canonical surface tokens — LIGHT-MODE, bible §2. These are the source of
+     truth for .surface-card, .card, and .fern-card. Sidebar stays dark via its
+     own --color-sidebar-* tokens below. */
+  --color-bg-base: #faf9f6;
+  --color-bg-card: #ffffff;
+  --color-bg-elevated: #f3f1ec;
 
-  /* Light-first editorial palette (default) */
+  /* Light-first editorial palette — bible §2 */
   --color-background: #faf9f6;
   --color-background-card: #ffffff;
   --color-background-elevated: #f3f1ec;
   --color-border: #e2ddd6;
   --color-border-hover: #ccc7be;
 
+  /* Text tokens — bible §3.4 */
   --color-text-primary: #1a1714;
   --color-text-secondary: #6b6560;
   --color-text-muted: #9c9490;
+  --color-text-disabled: #c5bfb8;
 
-  /* Primary accent — amber gold (intelligence / investigative authority) */
+  /* Dark-context text — only for sidebar and dark cards/modals (bible §3.4, §3.9) */
+  --color-text-on-dark-primary: #e8e0d8;
+  --color-text-on-dark-secondary: #a09890;
+  --color-text-on-dark-muted: #706860;
+
+  /* Primary accent — amber gold (bible §2) */
   --color-accent: #a06820;
   --color-accent-hover: #835616;
   --color-accent-glow: #a0682018;
 
-  /* Secondary accent — blue for data & charts */
+  /* Secondary accent — blue for data/links (bible §2) */
   --color-accent-data: #2563eb;
   --color-accent-data-glow: #2563eb11;
 
-  /* Sidebar — dark editorial sidebar on light pages */
+  /* OECD reference lines — cyan (bible §2, §4) */
+  --color-oecd: #22d3ee;
+
+  /* Sidebar — always dark (bible §2) */
   --color-sidebar: #1a1714;
   --color-sidebar-hover: #2a2420;
   --color-sidebar-active: #342e2a;
@@ -116,23 +126,23 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
 
-    /* ─── v0.2.5 Design Tokens ──────────────────────────────────────────── */
-    /* Multi-layer shadows — light mode */
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.08), 0 1px 2px -1px rgb(0 0 0 / 0.06);
-    --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.10), 0 2px 4px -2px rgb(0 0 0 / 0.06);
-    --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.07);
-    --shadow-xl: 0 20px 25px -5px rgb(0 0 0 / 0.14), 0 8px 10px -6px rgb(0 0 0 / 0.06);
+    /* ─── Editorial tokens (bible §5, §11) ─────────────────────────────── */
+    /* Multi-layer shadows — light/paper mode: warm umber alpha */
+    --shadow-sm: 0 1px 2px 0 rgb(26 23 20 / 0.04);
+    --shadow-md: 0 2px 6px -1px rgb(26 23 20 / 0.06), 0 1px 2px -1px rgb(26 23 20 / 0.04);
+    --shadow-lg: 0 6px 12px -3px rgb(26 23 20 / 0.08), 0 2px 4px -2px rgb(26 23 20 / 0.04);
+    --shadow-xl: 0 12px 20px -5px rgb(26 23 20 / 0.10), 0 4px 6px -4px rgb(26 23 20 / 0.04);
 
-    /* Card treatment — unified 12px radius matches rounded-xl */
-    --card-border: 1px solid rgba(0, 0, 0, 0.07);
-    --card-radius: 0.75rem;
+    /* Editorial card treatment — 2px radius per bible §5, not SaaS-rounded */
+    --card-border: 1px solid var(--color-border);
+    --card-radius: 2px;
 
-    /* Frosted glass surfaces (header, overlays) */
+    /* Frosted glass surfaces (header, overlays) — cream */
     --color-surface-glass: rgba(250, 249, 246, 0.88);
 
-    /* Border refinements — light mode */
-    --border-color: rgba(0, 0, 0, 0.09);
-    --border-color-strong: rgba(0, 0, 0, 0.16);
+    /* Border refinements — semantic aliases */
+    --border-color: var(--color-border);
+    --border-color-strong: var(--color-border-hover);
 
     /* Transitions — Phase 1 canonical timing (snappy but unhurried) */
     --transition-fast: 100ms ease;
@@ -144,61 +154,13 @@
     color-scheme: light;
   }
 
-  /* Dark theme — editorial obsidian */
+  /* Dark mode retired — RUBLI commits to cream light-mode broadsheet per
+     ART_DIRECTION.md §2. The sidebar and select dark cards/modals get
+     --color-text-on-dark-* overrides; the rest of the platform renders on
+     --color-background (#faf9f6). Kept as a no-op so existing toggleTheme()
+     consumers don't throw; cleanup lives in Header.tsx. */
   html.dark {
-    color-scheme: dark;
-    /* Stronger shadows for dark mode (richer depth on dark surfaces) */
-    --shadow-sm: 0 1px 3px 0 rgb(0 0 0 / 0.50), 0 1px 2px -1px rgb(0 0 0 / 0.40);
-    --shadow-md: 0 4px 8px -1px rgb(0 0 0 / 0.60), 0 2px 4px -2px rgb(0 0 0 / 0.45);
-    --shadow-lg: 0 12px 20px -4px rgb(0 0 0 / 0.70), 0 6px 8px -4px rgb(0 0 0 / 0.50);
-    --shadow-xl: 0 24px 32px -6px rgb(0 0 0 / 0.75), 0 10px 14px -6px rgb(0 0 0 / 0.55);
-
-    /* Dark card border */
-    --card-border: 1px solid rgba(255, 255, 255, 0.07);
-
-    /* Dark borders */
-    --border-color: rgba(255, 255, 255, 0.09);
-    --border-color-strong: rgba(255, 255, 255, 0.16);
-
-    /* Frosted glass — Phase 1 canonical (translucent zinc) */
-    --color-surface-glass: rgba(24, 24, 27, 0.7);
-
-    /* Midnight Intelligence palette — cool blue-black foundations + amber-gold accent */
-    --color-background: #060911;
-    --color-background-card: #0c1020;
-    --color-background-elevated: #131828;
-    --color-border: #1c2238;
-    --color-border-hover: #2a3350;
-    --color-text-primary: #fafafa;
-    --color-text-secondary: #a1a1aa;
-    --color-text-muted: #52525b;
-    --color-accent: #d4922a;
-    --color-accent-hover: #e8a535;
-    --color-accent-glow: #d4922a30;
-    --color-accent-data: #4d9ef5;
-    --color-accent-data-glow: #4d9ef518;
-    --color-sidebar: #03050d;
-    --color-sidebar-hover: #0c1020;
-    --color-sidebar-active: #131828;
-    --color-signal-pulse: #d4922a;
-    --color-signal-live: #3fb950;
-    --color-signal-warn: #d29922;
-    --color-signal-danger: #f85149;
-
-    /* Phase 1 canonical risk palette — no green, muted medium */
-    --color-risk-critical: #ef4444;
-    --color-risk-high: #f59e0b;
-    --color-risk-medium: #a16207;
-    --color-risk-low: #71717a;
-
-    /* Phase 1 canonical surface tokens (dark-first source of truth) */
-    --color-bg-base: #0a0a0b;
-    --color-bg-card: #111113;
-    --color-bg-elevated: #18181b;
-
-    /* Phase 1 canonical border tokens */
-    --border-color: rgba(255, 255, 255, 0.08);
-    --border-color-strong: rgba(255, 255, 255, 0.15);
+    color-scheme: light;
   }
 
   body {
@@ -410,13 +372,13 @@
 
   /* DEPRECATED: .card, .card-elevated, .fern-card are kept only as
    * backward-compatibility aliases. All three now render as .surface-card —
-   * the canonical editorial surface. New code should use .surface-card.
-   * A later pass will migrate the class names. */
+   * the canonical editorial surface (white on cream, 2px radius, bible §5).
+   * New code should use .surface-card. */
   .card,
   .card-elevated {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
+    border-radius: 2px;
   }
 
   .text-gradient {
@@ -437,32 +399,35 @@
 
   .sector-badge { @apply inline-flex items-center gap-1.5 px-2 py-0.5 rounded-md text-xs font-medium; }
 
-  /* Phase 1 canonical chart tooltip — dark zinc surface, used by Recharts */
+  /* Canonical chart tooltip — paper-dark (bible §8, V9)
+     Dark editorial ground #1a1714 with cream text — reads like a printed
+     newspaper callout against the cream page. */
   .chart-tooltip {
-    background: #1c1c1f;
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    border-radius: 0.375rem;
+    background: #1a1714;
+    border: 1px solid rgba(255, 255, 255, 0.08);
+    border-radius: 2px;
     padding: 0.5rem 0.75rem;
     font-size: 0.8125rem;
-    color: #e4e4e7;
-    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    color: #faf9f6;
+    box-shadow: 0 6px 18px rgba(26, 23, 20, 0.18);
   }
 
-  /* Phase 1 canonical surface-card pattern — dark-first replacement for .card/.fern-card.
-     New code should prefer this. Existing classes are kept for backward compatibility. */
+  /* Canonical editorial surface — white card on cream ground (bible §5).
+     2px radius, 1px warm-gray border, no shadow by default. */
   .surface-card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
+    border-radius: 2px;
   }
   .surface-card--elevated {
     background: var(--color-bg-elevated);
-    border-color: var(--color-border-strong);
+    border-color: var(--color-border-hover);
   }
   .surface-card--glass {
     background: var(--color-surface-glass);
     backdrop-filter: blur(12px);
     border-color: var(--color-border);
+    border-radius: 2px;
   }
 
   /* Live signal pulse */
@@ -650,12 +615,12 @@
     color: var(--color-text-muted);
   }
 
-  /* DEPRECATED: .fern-card — kept only as backward-compat alias for .surface-card.
-   * New code should use .surface-card. */
+  /* DEPRECATED: .fern-card — backward-compat alias for .surface-card.
+   * Renders as white-on-cream, 2px radius (bible §5). */
   .fern-card {
     background: var(--color-bg-card);
     border: 1px solid var(--color-border);
-    border-radius: 0.5rem;
+    border-radius: 2px;
   }
 
   /* Shimmer overlay for cards/panels — different from animate-shimmer (which sweeps the bg color) */

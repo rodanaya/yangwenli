@@ -165,7 +165,7 @@ function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         {t('distribution.subtitle', { total: formatNumber(total) })}
       </p>
       {/* Stacked dot-matrix */}
@@ -205,11 +205,11 @@ function TierDistributionBar({ distribution, t }: TierDistributionBarProps) {
           const tierKey = tier.label as string
           const displayLabel = t(`tiers.${tierKey}`)
           return (
-            <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+            <span key={tier.label} className="flex items-center gap-1.5 text-[10px] text-text-secondary">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
               <span className="font-mono font-bold" style={{ color: tier.color }}>{displayLabel}</span>
-              <span className="font-mono tabular-nums text-zinc-500">{formatNumber(count)}</span>
-              <span className="font-mono tabular-nums text-zinc-600">({pct}%)</span>
+              <span className="font-mono tabular-nums text-text-muted">{formatNumber(count)}</span>
+              <span className="font-mono tabular-nums text-text-muted">({pct}%)</span>
             </span>
           )
         })}
@@ -247,7 +247,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
         const color = pct > 70 ? '#71717a' : pct > 40 ? '#fbbf24' : '#f87171'
         return (
           <div key={key} className="flex items-center gap-2">
-            <span className="text-[9px] font-mono text-zinc-600 w-8 flex-shrink-0">{t(labelKey)}</span>
+            <span className="text-[9px] font-mono text-text-muted w-8 flex-shrink-0">{t(labelKey)}</span>
             {(() => {
               const N = 14, DR = 1.5, DG = 4
               const filled = Math.max(1, Math.round((pct / 100) * N))
@@ -264,7 +264,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
                 </svg>
               )
             })()}
-            <span className="text-[9px] font-mono tabular-nums text-zinc-500 w-8 text-right flex-shrink-0">
+            <span className="text-[9px] font-mono tabular-nums text-text-muted w-8 text-right flex-shrink-0">
               {value.toFixed(1)}/{max}
             </span>
           </div>
@@ -281,7 +281,7 @@ function PillarBars({ openness, price, vendors, process, external, t }: PillarBa
 function TrendIcon({ direction, t }: { direction: string | null; t: (key: string) => string }) {
   if (direction === 'improving') return <TrendingUp className="h-3 w-3 text-green-400" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3 w-3 text-red-400" aria-label={t('trend.declining')} />
-  return <Minus className="h-3 w-3 text-zinc-600" aria-label={t('trend.stable')} />
+  return <Minus className="h-3 w-3 text-text-muted" aria-label={t('trend.stable')} />
 }
 
 // ---------------------------------------------------------------------------
@@ -322,7 +322,7 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
             >
               {item.total_score.toFixed(0)}
             </span>
-            <span className="text-[9px] text-zinc-600 font-mono mt-0.5">{t('table.outOf')}</span>
+            <span className="text-[9px] text-text-muted font-mono mt-0.5">{t('table.outOf')}</span>
           </div>
 
           <div className="flex flex-col items-end gap-1.5">
@@ -353,20 +353,20 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
         {/* Name + sector */}
         <div>
-          <h2 className="text-xs font-bold text-white leading-snug line-clamp-2 group-hover:text-zinc-200 transition-colors">
+          <h2 className="text-xs font-bold text-text-primary leading-snug line-clamp-2 group-hover:text-text-secondary transition-colors">
             {item.institution_name}
           </h2>
           {item.sector_name && (
             <div className="flex items-center gap-1 mt-1">
-              <Building2 className="h-2.5 w-2.5 text-zinc-600 flex-shrink-0" aria-hidden="true" />
-              <span className="text-[10px] text-zinc-500">{item.sector_name}</span>
+              <Building2 className="h-2.5 w-2.5 text-text-muted flex-shrink-0" aria-hidden="true" />
+              <span className="text-[10px] text-text-muted">{item.sector_name}</span>
             </div>
           )}
         </div>
 
         {/* Percentile + trend */}
         <div className="flex items-center justify-between gap-2">
-          <span className="text-[10px] text-zinc-400 font-mono tabular-nums">
+          <span className="text-[10px] text-text-secondary font-mono tabular-nums">
             {t('table.percentile', { n: Math.round((item.national_percentile ?? 0) * 100) })}
           </span>
           <div className="flex items-center gap-1.5">
@@ -415,8 +415,8 @@ function InstitutionCard({ item, onNavigate, t }: InstitutionCardProps) {
 
 function InstitutionCardSkeleton() {
   return (
-    <div className="rounded-sm border border-white/8 bg-zinc-900/60 overflow-hidden">
-      <div className="h-1 w-full bg-zinc-800" />
+    <div className="rounded-sm border border-border bg-background-card overflow-hidden">
+      <div className="h-1 w-full bg-background-elevated" />
       <div className="p-4 space-y-3">
         <div className="flex items-start justify-between">
           <div className="space-y-1">
@@ -630,7 +630,7 @@ export default function InstitutionScorecards() {
 
           {/* Tier distribution bar */}
           <section
-            className="rounded-sm border border-white/8 bg-zinc-900/60 p-5"
+            className="rounded-sm border border-border bg-background-card p-5"
             aria-label={t('aria.distributionSection')}
           >
             {statsLoading ? (
@@ -656,15 +656,15 @@ export default function InstitutionScorecards() {
         <section className="space-y-4" aria-label={t('aria.filters')}>
           {/* Tier chips — prominent filter row */}
           <div className="flex flex-wrap items-center gap-2.5">
-            <span className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-400 mr-1">
+            <span className="text-[11px] font-mono font-bold uppercase tracking-[0.12em] text-text-secondary mr-1">
               {t('filters.byLevel')}
             </span>
             <button
               onClick={() => { setSelectedTier(null); setPage(1) }}
               className={`rounded-sm px-4 py-2 text-xs font-mono font-bold uppercase tracking-wide transition-all duration-150 border-2 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                 selectedTier === null
-                  ? 'bg-white text-zinc-900 border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
-                  : 'bg-transparent text-zinc-300 border-white/20 hover:border-white/40'
+                  ? 'bg-white text-text-primary border-white shadow-[0_0_20px_rgba(255,255,255,0.25)]'
+                  : 'bg-transparent text-text-secondary border-border hover:border-border-hover'
               }`}
               aria-pressed={selectedTier === null}
             >
@@ -689,7 +689,7 @@ export default function InstitutionScorecards() {
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {/* Sort controls */}
             <div className="flex items-center gap-2">
-              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-zinc-500">
+              <span className="text-[10px] font-mono font-bold uppercase tracking-[0.12em] text-text-muted">
                 {t('filters.sort')}
               </span>
               {(
@@ -709,8 +709,8 @@ export default function InstitutionScorecards() {
                     onClick={() => handleSortChange(key)}
                     className={`flex items-center gap-1 rounded-sm px-3 py-1.5 text-[11px] font-mono font-semibold border transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                       sortBy === key
-                        ? 'bg-zinc-700 border-white/20 text-white'
-                        : 'bg-transparent border-white/10 text-zinc-400 hover:border-white/20 hover:text-zinc-300'
+                        ? 'bg-background-elevated border-border text-text-primary'
+                        : 'bg-transparent border-border text-text-secondary hover:border-border hover:text-text-secondary'
                     }`}
                     aria-pressed={sortBy === key}
                     aria-label={t('aria.sortBy', { label, direction: dirLabel })}
@@ -728,7 +728,7 @@ export default function InstitutionScorecards() {
             <form onSubmit={handleSearchSubmit} className="flex items-center gap-2 flex-1 sm:max-w-xs ml-auto">
               <div className="relative flex-1">
                 <Search
-                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500 pointer-events-none"
+                  className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted pointer-events-none"
                   aria-hidden="true"
                 />
                 <input
@@ -736,13 +736,13 @@ export default function InstitutionScorecards() {
                   value={searchInput}
                   onChange={(e) => setSearchInput(e.target.value)}
                   placeholder={t('filters.search')}
-                  className="w-full rounded-sm border border-white/10 bg-zinc-800/80 pl-8 pr-3 py-1.5 text-sm text-white placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-white/20 transition-colors"
+                  className="w-full rounded-sm border border-border bg-background-elevated pl-8 pr-3 py-1.5 text-sm text-text-primary placeholder-zinc-600 focus:outline-none focus:ring-2 focus:ring-white/20 focus:border-border transition-colors"
                   aria-label={t('aria.searchByName')}
                 />
               </div>
               <button
                 type="submit"
-                className="rounded-sm border border-white/10 bg-zinc-800/80 px-3 py-1.5 text-xs font-semibold text-zinc-300 hover:border-white/20 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+                className="rounded-sm border border-border bg-background-elevated px-3 py-1.5 text-xs font-semibold text-text-secondary hover:border-border hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               >
                 {t('filters.go')}
               </button>
@@ -750,7 +750,7 @@ export default function InstitutionScorecards() {
                 <button
                   type="button"
                   onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
-                  className="text-xs text-zinc-500 hover:text-zinc-300 transition-colors focus:outline-none"
+                  className="text-xs text-text-muted hover:text-text-secondary transition-colors focus:outline-none"
                   aria-label={t('aria.clearSearch')}
                 >
                   {t('filters.clear')}
@@ -760,7 +760,7 @@ export default function InstitutionScorecards() {
           </div>
 
           {/* Result count */}
-          <p className="text-[11px] text-zinc-500">
+          <p className="text-[11px] text-text-muted">
             {listLoading ? (
               <Skeleton className="h-3 w-40 inline-block" />
             ) : (
@@ -772,7 +772,7 @@ export default function InstitutionScorecards() {
                 {selectedTier && (
                   <>{t('pagination.withTier')}<span className="font-bold" style={{ color: TIER_MAP[selectedTier]?.color ?? '#dc2626' }}>{t(`tiers.${selectedTier}`)}</span></>
                 )}
-                {search && <>{t('pagination.matching')}<span className="text-zinc-300">{search}</span>&quot;</>}
+                {search && <>{t('pagination.matching')}<span className="text-text-secondary">{search}</span>&quot;</>}
               </>
             )}
           </p>
@@ -801,13 +801,13 @@ export default function InstitutionScorecards() {
           {!listLoading && institutions.length === 0 && (
             <div
               role="alert"
-              className="rounded-sm border border-white/8 bg-zinc-900/60 p-12 text-center"
+              className="rounded-sm border border-border bg-background-card p-12 text-center"
             >
-              <Building2 className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
-              <p className="text-sm text-zinc-500">{t('noResults')}</p>
+              <Building2 className="h-8 w-8 text-text-primary mx-auto mb-3" aria-hidden="true" />
+              <p className="text-sm text-text-muted">{t('noResults')}</p>
               <button
                 onClick={() => { setSelectedTier(null); setSearch(''); setSearchInput(''); setPage(1) }}
-                className="mt-3 text-xs text-zinc-400 hover:text-white transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
+                className="mt-3 text-xs text-text-secondary hover:text-text-primary transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 underline"
                 aria-label={t('aria.clearFilters')}
               >
                 {t('aria.clearFilters')}
@@ -830,7 +830,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="flex items-center gap-1.5 rounded-sm border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               aria-label={t('pagination.previous')}
             >
               <ChevronLeft className="h-4 w-4" aria-hidden="true" />
@@ -859,8 +859,8 @@ export default function InstitutionScorecards() {
                     onClick={() => setPage(pageNum)}
                     className={`w-8 h-8 rounded-sm text-xs font-mono font-bold transition-all duration-150 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30 ${
                       pageNum === page
-                        ? 'bg-white text-zinc-900'
-                        : 'text-zinc-500 hover:text-zinc-300 hover:bg-zinc-800'
+                        ? 'bg-white text-text-primary'
+                        : 'text-text-muted hover:text-text-secondary hover:bg-background-elevated'
                     }`}
                     aria-label={t('pagination.pageLabel', { n: pageNum })}
                     aria-current={pageNum === page ? 'page' : undefined}
@@ -874,7 +874,7 @@ export default function InstitutionScorecards() {
             <button
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="flex items-center gap-1.5 rounded-sm border border-white/10 bg-zinc-800/80 px-4 py-2 text-sm font-semibold text-zinc-300 hover:border-white/20 hover:text-white disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
+              className="flex items-center gap-1.5 rounded-sm border border-border bg-background-elevated px-4 py-2 text-sm font-semibold text-text-secondary hover:border-border hover:text-text-primary disabled:opacity-40 disabled:cursor-not-allowed transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-white/30"
               aria-label={t('pagination.next')}
             >
               {t('pagination.next')}
@@ -888,7 +888,7 @@ export default function InstitutionScorecards() {
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400/70 mb-1">
             {t('footnotes.title')}
           </p>
-          <p className="text-[11px] text-zinc-400 leading-relaxed">
+          <p className="text-[11px] text-text-secondary leading-relaxed">
             {t('footnotes.scoring')} {t('footnotes.minContracts')}
           </p>
         </div>

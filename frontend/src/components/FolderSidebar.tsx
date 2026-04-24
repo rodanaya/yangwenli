@@ -143,7 +143,7 @@ export function FolderSidebar({
           <div className="flex items-center gap-1">
             <button
               onClick={handleCreate}
-              className="flex-1 rounded bg-accent px-2 py-1 text-[11px] text-white hover:bg-accent-hover"
+              className="flex-1 rounded bg-accent px-2 py-1 text-[11px] text-text-primary hover:bg-accent-hover"
             >
               {t('folderSidebar.create')}
             </button>

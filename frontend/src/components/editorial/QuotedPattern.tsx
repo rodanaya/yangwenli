@@ -26,7 +26,7 @@ export function QuotedPattern({ accent, children, kicker }: QuotedPatternProps) 
         </div>
       )}
       <blockquote
-        className="max-w-3xl text-zinc-200"
+        className="max-w-3xl text-text-secondary"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontStyle: 'italic',

@@ -43,7 +43,7 @@ function CopyButton({ text }: { text: string }) {
   return (
     <button
       onClick={handleCopy}
-      className="flex items-center gap-1 text-[10px] font-mono text-zinc-500 hover:text-zinc-300 transition-colors px-2 py-1 rounded border border-zinc-700 hover:border-zinc-500"
+      className="flex items-center gap-1 text-[10px] font-mono text-text-muted hover:text-text-secondary transition-colors px-2 py-1 rounded border border-border hover:border-border"
       aria-label="Copy to clipboard"
     >
       {copied ? (
@@ -62,20 +62,20 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
   const citationText = activeFormat === 'apa' ? APA : activeFormat === 'bibtex' ? BIBTEX : PLAIN
 
   return (
-    <div className={`border border-zinc-800 rounded-lg bg-zinc-900/40 ${className}`}>
+    <div className={`border border-border rounded-lg bg-background-card ${className}`}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-zinc-800/40 transition-colors rounded-lg"
+        className="w-full flex items-center gap-2 px-4 py-2.5 text-left hover:bg-background-elevated transition-colors rounded-lg"
         aria-expanded={open}
       >
-        <BookOpen className="h-3.5 w-3.5 text-zinc-500 flex-shrink-0" aria-hidden="true" />
-        <span className="text-xs text-zinc-400 font-medium flex-1">
+        <BookOpen className="h-3.5 w-3.5 text-text-muted flex-shrink-0" aria-hidden="true" />
+        <span className="text-xs text-text-secondary font-medium flex-1">
           How to cite this data{context ? ` — ${context}` : ''}
         </span>
         {open ? (
-          <ChevronUp className="h-3.5 w-3.5 text-zinc-600" aria-hidden="true" />
+          <ChevronUp className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
         ) : (
-          <ChevronDown className="h-3.5 w-3.5 text-zinc-600" aria-hidden="true" />
+          <ChevronDown className="h-3.5 w-3.5 text-text-muted" aria-hidden="true" />
         )}
       </button>
 
@@ -89,8 +89,8 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
                 onClick={() => setActiveFormat(fmt)}
                 className={`px-2.5 py-1 rounded text-[10px] font-mono uppercase tracking-wide transition-colors ${
                   activeFormat === fmt
-                    ? 'bg-zinc-700 text-zinc-200 border border-zinc-600'
-                    : 'text-zinc-500 hover:text-zinc-300 border border-transparent'
+                    ? 'bg-background-elevated text-text-secondary border border-border'
+                    : 'text-text-muted hover:text-text-secondary border border-transparent'
                 }`}
               >
                 {fmt === 'plain' ? 'Plain' : fmt.toUpperCase()}
@@ -100,7 +100,7 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
 
           {/* Citation text */}
           <div className="relative">
-            <pre className="text-[11px] text-zinc-400 font-mono bg-zinc-800/60 rounded p-3 whitespace-pre-wrap leading-relaxed border border-zinc-700/50">
+            <pre className="text-[11px] text-text-secondary font-mono bg-background-elevated rounded p-3 whitespace-pre-wrap leading-relaxed border border-border">
               {citationText}
             </pre>
             <div className="absolute top-2 right-2">
@@ -108,7 +108,7 @@ export function CitationBlock({ context, className = '' }: CitationBlockProps) {
             </div>
           </div>
 
-          <p className="text-[10px] text-zinc-600 leading-relaxed">
+          <p className="text-[10px] text-text-muted leading-relaxed">
             Risk scores are statistical similarity indicators — not legal determinations or proof of wrongdoing.
             Source data: COMPRANET (Secretaría de Hacienda y Crédito Público, México).
           </p>

@@ -71,31 +71,31 @@ export function StoryCeroCompetenciaChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 border border-zinc-800 p-5"
+      className="rounded-sm bg-background-card border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Competencia por Sector
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Menos de 1 de cada 10 contratos en Agricultura y Educación tuvo competencia real
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         % de contratos con procedimiento competitivo por sector · AMLO 2019-2024
       </p>
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-red-500">{criticalSectors}</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">sectores bajo 25%</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores bajo 25%</div>
         </div>
         <div className="border-l-2 border-cyan-400 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-cyan-400">0</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">sectores cumplen OCDE 75%</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">sectores cumplen OCDE 75%</div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -207,13 +207,13 @@ export function StoryCeroCompetenciaChart() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           Ningún sector alcanza la meta OCDE de 75% competitivo. Los 4 peores sectores
           (Agricultura, Educación, Trabajo, Hacienda) están 60+ puntos debajo del estándar.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-3">
+      <p className="text-[10px] text-text-muted mt-3">
         Fuente: COMPRANET · Meta OCDE: 75% competitivo · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>

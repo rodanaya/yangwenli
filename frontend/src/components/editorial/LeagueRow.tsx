@@ -59,13 +59,13 @@ export function LeagueRow({
     <Wrapper
       {...(onClick ? { type: 'button' as const, onClick } : {})}
       className={`group grid w-full items-center gap-4 py-4 px-1 md:px-3 text-left transition-colors ${
-        onClick ? 'hover:bg-[rgba(255,255,255,0.02)] cursor-pointer' : ''
+        onClick ? 'hover:bg-background-elevated cursor-pointer' : ''
       }`}
       style={{
         gridTemplateColumns:
           'minmax(2.5rem,auto) 4px minmax(0,2fr) minmax(0,3fr) auto',
-        borderBottom: '1px solid rgba(255,255,255,0.04)',
-        backgroundColor: highlight ? `${accent}0a` : undefined,
+        borderBottom: '1px solid var(--color-border)',
+        backgroundColor: highlight ? `${accent}14` : undefined,
       }}
     >
       {/* Rank */}
@@ -89,7 +89,7 @@ export function LeagueRow({
       {/* Name + tag */}
       <div className="min-w-0">
         <div
-          className="text-zinc-50 truncate"
+          className="text-text-primary truncate"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontWeight: 600,
@@ -101,13 +101,13 @@ export function LeagueRow({
           {name}
         </div>
         {tag && (
-          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mt-0.5 tabular-nums">
+          <div className="text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted mt-0.5 tabular-nums">
             {tag}
           </div>
         )}
         {narrative && (
           <div
-            className="text-zinc-300 mt-1.5 max-w-2xl"
+            className="text-text-secondary mt-1.5 max-w-2xl"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontStyle: 'italic',
@@ -127,15 +127,15 @@ export function LeagueRow({
             <div
               className="font-mono tabular-nums text-lg leading-none"
               style={{
-                color: m.color ?? '#e4e4e7',
+                color: m.color ?? 'var(--color-text-primary)',
                 fontWeight: 600,
               }}
             >
               {m.value}
             </div>
-            <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-zinc-500 mt-0.5">
+            <div className="text-[9px] font-mono uppercase tracking-[0.18em] text-text-muted mt-0.5">
               {m.label}
-              {m.sub && <span className="text-zinc-600"> · {m.sub}</span>}
+              {m.sub && <span className="text-text-disabled"> · {m.sub}</span>}
             </div>
           </div>
         ))}

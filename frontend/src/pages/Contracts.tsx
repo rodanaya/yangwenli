@@ -703,7 +703,7 @@ export function Contracts() {
                 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs whitespace-nowrap border transition-colors',
                 isActive
                   ? 'bg-amber-500/20 text-amber-400 border-amber-500/40 font-medium'
-                  : 'bg-zinc-800 text-zinc-300 hover:bg-zinc-700 border-zinc-700'
+                  : 'bg-background-elevated text-text-secondary hover:bg-background-elevated border-border'
               )}
             >
               <Icon className="h-3 w-3" />
@@ -1351,8 +1351,8 @@ function ContractRow({
                   <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? color : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
@@ -1508,8 +1508,8 @@ function ContractRow({
                   <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} className="flex-shrink-0" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? color : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? color : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />

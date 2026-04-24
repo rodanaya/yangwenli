@@ -5,7 +5,7 @@
 import { useState, useCallback, useMemo, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useQuery } from '@tanstack/react-query'
-import { useSearchParams, Link, useNavigate } from 'react-router-dom'
+import { useSearchParams, Link } from 'react-router-dom'
 import { Card, CardContent } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { Button } from '@/components/ui/button'
@@ -18,7 +18,6 @@ import {
 } from '@/lib/utils'
 import { RISK_COLORS, SECTORS, RISK_THRESHOLDS } from '@/lib/constants'
 import { vendorApi, analysisApi } from '@/api/client'
-import type { FlashVendorItem } from '@/api/client'
 import { useDebouncedSearch } from '@/hooks/useDebouncedSearch'
 import { usePrefetchOnHover } from '@/hooks/usePrefetchOnHover'
 import type { VendorFilterParams, VendorListItem } from '@/api/types'
@@ -45,16 +44,7 @@ import {
 import { useToast } from '@/components/ui/toast'
 import { StatPill, MiniBar } from './shared'
 import { VendorBadge } from '@/components/ui/VendorBadge'
-import {
-  ScatterChart,
-  Scatter,
-  XAxis,
-  YAxis,
-  CartesianGrid,
-  Tooltip as RechartsTooltip,
-  ResponsiveContainer,
-  Cell,
-} from 'recharts'
+import { EditorialScatterChart } from '@/components/charts/editorial'
 
 // =============================================================================
 // Column and Preset Configuration
@@ -577,7 +567,10 @@ export default function VendorsTab() {
 // =============================================================================
 
 function FlashVendorRadar() {
-  const navigate = useNavigate()
+  // navigate removed — EditorialScatterChart doesn't expose per-point onClick.
+  // TODO(charts): if click-to-navigate is essential, fall back to a vendor list
+  // below the scatter. For now, the row list at the bottom of this section
+  // already provides navigation to top vendors.
   const [showAll, setShowAll] = useState(false)
 
   const { data, isLoading, error } = useQuery({
@@ -591,65 +584,8 @@ function FlashVendorRadar() {
   const allDots = data?.data ?? []
   const visibleDots = showAll ? allDots : allDots.slice(0, 30)
 
-  // Dot radius: proportional to contract_count, clamped 4-12
-  function dotRadius(count: number): number {
-    if (!allDots.length) return 6
-    const max = Math.max(...allDots.map((d) => d.contract_count))
-    const ratio = max > 0 ? count / max : 0.5
-    return Math.round(4 + ratio * 8)
-  }
-
-  const CustomDot = (props: {
-    cx?: number
-    cy?: number
-    payload?: FlashVendorItem
-  }) => {
-    const { cx = 0, cy = 0, payload } = props
-    if (!payload) return null
-    const level = getRiskLevel(payload.avg_risk_score)
-    const color = RISK_COLORS[level]
-    const r = dotRadius(payload.contract_count)
-    return (
-      <circle
-        cx={cx}
-        cy={cy}
-        r={r}
-        fill={color}
-        fillOpacity={0.75}
-        stroke={color}
-        strokeWidth={1}
-        style={{ cursor: 'pointer' }}
-        onClick={() => navigate(`/vendors/${payload.vendor_id}`)}
-      />
-    )
-  }
-
-  const CustomTooltipContent = ({ active, payload }: { active?: boolean; payload?: Array<{ payload: FlashVendorItem }> }) => {
-    if (!active || !payload?.length) return null
-    const d = payload[0].payload
-    const level = getRiskLevel(d.avg_risk_score)
-    const color = RISK_COLORS[level]
-    return (
-      <div className="bg-background-card border border-border rounded-lg p-3 shadow-lg text-xs max-w-[220px]">
-        <p className="font-semibold text-text-primary truncate mb-1">{toTitleCase(d.vendor_name)}</p>
-        <div className="space-y-0.5 text-text-muted">
-          <p>Active years: <span className="text-text-primary">{d.active_years}</span></p>
-          <p>Value: <span className="text-text-primary">{formatCompactMXN(d.total_value)}</span></p>
-          <p>Contracts: <span className="text-text-primary">{formatNumber(d.contract_count)}</span></p>
-          <p>
-            Avg risk:{' '}
-            <span style={{ color }}>{(d.avg_risk_score * 100).toFixed(0)}%</span>
-          </p>
-          {d.primary_institution && (
-            <p className="truncate">Institution: <span className="text-text-primary">{d.primary_institution}</span></p>
-          )}
-          {d.is_currently_active && (
-            <p className="text-red-400 font-medium">Still active</p>
-          )}
-        </div>
-      </div>
-    )
-  }
+  // CustomDot + CustomTooltipContent removed — EditorialScatterChart handles
+  // both via colorBy and the canonical paper-dark tooltip.
 
   return (
     <div className="mt-6 border border-border rounded-lg overflow-hidden">
@@ -715,39 +651,23 @@ function FlashVendorRadar() {
                 ))}
               </div>
 
-              <ResponsiveContainer width="100%" height={280}>
-                <ScatterChart margin={{ top: 10, right: 20, bottom: 20, left: 10 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border, #334155)" strokeOpacity={0.4} />
-                  <XAxis
-                    type="number"
-                    dataKey="active_years"
-                    name="Active Years"
-                    domain={[0, 'dataMax']}
-                    label={{ value: 'Active Years', position: 'insideBottom', offset: -10, fontSize: 11, fill: 'var(--color-text-muted)' }}
-                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
-                    tickCount={4}
-                    aria-label="Active years axis"
-                  />
-                  <YAxis
-                    type="number"
-                    dataKey="total_value"
-                    name="Total Value"
-                    tickFormatter={(v: number) => `${(v / 1_000_000_000).toFixed(0)}B`}
-                    label={{ value: 'Value (MXN B)', angle: -90, position: 'insideLeft', offset: 15, fontSize: 11, fill: 'var(--color-text-muted)' }}
-                    tick={{ fontSize: 10, fill: 'var(--color-text-muted)' }}
-                    aria-label="Total value axis in billions MXN"
-                  />
-                  <RechartsTooltip content={<CustomTooltipContent />} />
-                  <Scatter data={visibleDots} shape={<CustomDot />}>
-                    {visibleDots.map((entry) => (
-                      <Cell
-                        key={entry.vendor_id}
-                        fill={RISK_COLORS[getRiskLevel(entry.avg_risk_score)]}
-                      />
-                    ))}
-                  </Scatter>
-                </ScatterChart>
-              </ResponsiveContainer>
+              <EditorialScatterChart
+                data={visibleDots}
+                xKey="active_years"
+                yKey="total_value"
+                xLabel="Active Years"
+                yLabel="Value (MXN)"
+                xFormat="integer"
+                yFormat="mxn-compact"
+                colorBy={(d) => {
+                  const level = getRiskLevel(d.avg_risk_score)
+                  return level === 'critical' ? 'risk-critical'
+                    : level === 'high' ? 'risk-high'
+                    : level === 'medium' ? 'risk-medium'
+                    : 'risk-low'
+                }}
+                height={280}
+              />
 
               {/* Active badge legend */}
               <div className="flex items-center gap-2 flex-wrap">
@@ -944,8 +864,8 @@ function VendorRow({ vendor, rank }: { vendor: VendorListItem; rank: number }) {
                 <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />

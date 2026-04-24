@@ -86,12 +86,12 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
     }))
 
     return {
-      backgroundColor: '#0d1117',
+      backgroundColor: 'var(--color-background-elevated)',
       tooltip: {
         trigger: 'item',
-        backgroundColor: '#1a1f2e',
-        borderColor: '#2d3748',
-        textStyle: { color: '#e2e8f0', fontSize: 11 },
+        backgroundColor: '#1a1714',
+        borderColor: 'rgba(255,255,255,0.08)',
+        textStyle: { color: '#faf9f6', fontSize: 11 },
         formatter: (params: {
           dataType: string
           data: { name?: string; contracts?: number }
@@ -133,7 +133,7 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
     return (
       <div
         className="flex items-center justify-center rounded"
-        style={{ height: 220, backgroundColor: '#0d1117' }}
+        style={{ height: 220, backgroundColor: 'var(--color-background-elevated)' }}
       >
         <div className="flex flex-col items-center gap-2">
           <Skeleton className="h-8 w-8 rounded-full" style={{ backgroundColor: '#2d3748' }} />
@@ -147,7 +147,7 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
     return (
       <div
         className="flex items-center justify-center rounded text-xs text-text-muted"
-        style={{ height: 220, backgroundColor: '#0d1117' }}
+        style={{ height: 220, backgroundColor: 'var(--color-background-elevated)' }}
       >
         No connections found
       </div>
@@ -155,7 +155,7 @@ export function NetworkMiniGraph({ entityId, entityType }: NetworkMiniGraphProps
   }
 
   return (
-    <div className="rounded overflow-hidden" style={{ height: 220, backgroundColor: '#0d1117' }}>
+    <div className="rounded overflow-hidden" style={{ height: 220, backgroundColor: 'var(--color-background-elevated)' }}>
       <ReactECharts
         option={option}
         style={{ height: '100%', width: '100%' }}

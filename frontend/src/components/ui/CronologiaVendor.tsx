@@ -47,16 +47,16 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
 
   if (!data.length) {
     return (
-      <div className={cn('rounded-lg border border-zinc-800 bg-zinc-900/40 p-4', className)}>
-        <p className="text-sm text-zinc-400 mb-2">{t('cronologia.title')}</p>
-        <p className="text-xs text-zinc-500 italic">{t('cronologia.noData', { vendor: vendorName })}</p>
+      <div className={cn('rounded-lg border border-border bg-background-card p-4', className)}>
+        <p className="text-sm text-text-secondary mb-2">{t('cronologia.title')}</p>
+        <p className="text-xs text-text-muted italic">{t('cronologia.noData', { vendor: vendorName })}</p>
       </div>
     )
   }
 
   return (
-    <div className={cn('rounded-lg border border-zinc-800 bg-zinc-900/40 p-4', className)}>
-      <p className="text-sm text-zinc-400 mb-3">{t('cronologia.title')}</p>
+    <div className={cn('rounded-lg border border-border bg-background-card p-4', className)}>
+      <p className="text-sm text-text-secondary mb-3">{t('cronologia.title')}</p>
 
       {/* Chart area — 120px tall */}
       <div className="relative" style={{ height: '120px' }}>
@@ -96,17 +96,17 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
                 {/* Tooltip */}
                 {isHovered && (
                   <div
-                    className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap bg-zinc-800 border border-zinc-700 rounded px-2 py-1.5 shadow-lg pointer-events-none"
+                    className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 z-20 whitespace-nowrap bg-background-elevated border border-border rounded px-2 py-1.5 shadow-lg pointer-events-none"
                     style={{ minWidth: '110px' }}
                   >
-                    <p className="text-[11px] font-bold text-white">{d.year}</p>
-                    <p className="text-[10px] text-zinc-300">
+                    <p className="text-[11px] font-bold text-text-primary">{d.year}</p>
+                    <p className="text-[10px] text-text-secondary">
                       {d.contractCount} {t('cronologia.contracts')}
                     </p>
-                    <p className="text-[10px] text-zinc-400">
+                    <p className="text-[10px] text-text-secondary">
                       ${formatCompact(d.totalValue)} MXN
                     </p>
-                    <p className="text-[10px] text-zinc-400">
+                    <p className="text-[10px] text-text-secondary">
                       {t('cronologia.risk')}: {(d.avgRiskScore * 100).toFixed(0)}%
                     </p>
                     {d.hasAnomaly && d.anomalyNote && (
@@ -129,7 +129,7 @@ export default function CronologiaVendor({ data, vendorName, className }: Cronol
             <span
               className={cn(
                 'text-[9px] font-mono',
-                hoveredYear === d.year ? 'text-zinc-200' : 'text-zinc-600'
+                hoveredYear === d.year ? 'text-text-secondary' : 'text-text-muted'
               )}
             >
               {data.length > 15 ? (d.year % 5 === 0 ? String(d.year).slice(-2) : '') : String(d.year).slice(-2)}

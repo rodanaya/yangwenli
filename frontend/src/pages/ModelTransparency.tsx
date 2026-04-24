@@ -51,7 +51,7 @@ const RISK_DISTRIBUTION = [
   { level: 'Critical', threshold: '≥ 0.60', count: 184_031, pct: 6.01, color: '#dc2626' },
   { level: 'High',     threshold: '≥ 0.40', count: 228_814, pct: 7.48, color: '#ea580c' },
   { level: 'Medium',   threshold: '≥ 0.25', count: 821_251, pct: 26.84, color: '#eab308' },
-  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: '#71717a' },
+  { level: 'Low',      threshold: '< 0.25', count: 1_817_198, pct: 59.39, color: 'var(--color-text-muted)' },
 ]
 
 interface VersionEntry {
@@ -128,10 +128,10 @@ function StatCard({ value, label, sub }: { value: string; label: string; sub?: s
       >
         {value}
       </div>
-      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-400 mt-2">
+      <div className="text-[10px] font-mono uppercase tracking-[0.18em] text-text-secondary mt-2">
         {label}
       </div>
-      {sub && <div className="text-xs text-zinc-500 mt-1.5 leading-relaxed">{sub}</div>}
+      {sub && <div className="text-xs text-text-muted mt-1.5 leading-relaxed">{sub}</div>}
     </div>
   )
 }
@@ -143,7 +143,7 @@ function SectionKicker({ children, accent = false }: { children: React.ReactNode
         className="h-1.5 w-1.5 rounded-full"
         style={{ backgroundColor: accent ? ACCENT : '#52525b' }}
       />
-      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-zinc-400">
+      <span className="text-[10px] font-mono uppercase tracking-[0.2em] text-text-secondary">
         {children}
       </span>
     </div>
@@ -155,7 +155,7 @@ function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headlin
     <div className="mb-6">
       <SectionKicker>{eyebrow}</SectionKicker>
       <h2
-        className="text-zinc-50 leading-[1.15] mb-2"
+        className="text-text-primary leading-[1.15] mb-2"
         style={{
           fontFamily: 'var(--font-family-serif)',
           fontSize: 'clamp(1.35rem, 2.2vw, 1.75rem)',
@@ -167,7 +167,7 @@ function SectionHeadline({ eyebrow, headline, deck }: { eyebrow: string; headlin
       </h2>
       {deck && (
         <p
-          className="text-zinc-400 max-w-3xl"
+          className="text-text-secondary max-w-3xl"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -226,7 +226,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
 
         <div className="max-w-3xl space-y-5">
           <p
-            className="text-zinc-200"
+            className="text-text-secondary"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: '1.15rem',
@@ -249,14 +249,14 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             by comparing it against patterns from 748 documented corruption cases — ghost
             companies, bid rigging, captured institutions, inflated contracts.
           </p>
-          <p className="text-[0.95rem] leading-[1.7] text-zinc-400" style={{ fontFamily: 'var(--font-family-serif)' }}>
-            The model is a calibrated <span className="text-zinc-200 font-medium">logistic regression</span> with
+          <p className="text-[0.95rem] leading-[1.7] text-text-secondary" style={{ fontFamily: 'var(--font-family-serif)' }}>
+            The model is a calibrated <span className="text-text-secondary font-medium">logistic regression</span> with
             Positive-Unlabeled learning correction (Elkan &amp; Noto, 2008). It takes 16 z-score
             features — vendor behavior, price dynamics, network structure, procurement procedure —
             and produces a similarity score to known fraud patterns. Nine features survive L1
             regularization and actively drive scores; the other seven are zeroed out.
           </p>
-          <p className="text-[0.95rem] leading-[1.7] text-zinc-400" style={{ fontFamily: 'var(--font-family-serif)' }}>
+          <p className="text-[0.95rem] leading-[1.7] text-text-secondary" style={{ fontFamily: 'var(--font-family-serif)' }}>
             One global model plus twelve sector-specific sub-models train jointly
             via curriculum learning — confirmed cases weighted 1.0, high-confidence 0.8, medium 0.5,
             low 0.2. Sectors with too few positives (Tecnología, Trabajo, Otros) fall back to
@@ -276,7 +276,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
             What the score means
           </p>
           <p
-            className="text-zinc-200 leading-[1.55]"
+            className="text-text-secondary leading-[1.55]"
             style={{
               fontFamily: 'var(--font-family-serif)',
               fontSize: '1.05rem',
@@ -337,7 +337,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
                 {sig.eyebrow}
               </p>
               <h3
-                className="text-zinc-50 mb-2"
+                className="text-text-primary mb-2"
                 style={{
                   fontFamily: 'var(--font-family-serif)',
                   fontSize: '1.3rem',
@@ -354,7 +354,7 @@ function SummaryTab({ auc, nContracts }: { auc: number; nContracts: number }) {
                 β = {sig.beta}
               </div>
               <p
-                className="text-zinc-400 text-sm leading-[1.6]"
+                className="text-text-secondary text-sm leading-[1.6]"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {sig.note}
@@ -384,7 +384,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
         {/* Divergent-bar chart, hairline rows */}
         <div className="border-y border-[rgba(255,255,255,0.08)]">
           {/* Header row */}
-          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 border-b border-[rgba(255,255,255,0.06)]">
+          <div className="grid grid-cols-[minmax(0,1.3fr)_minmax(0,2fr)_auto] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-[rgba(255,255,255,0.06)]">
             <span>Feature</span>
             <span className="text-center">Protective ← 0 → Risk-increasing</span>
             <span className="text-right font-mono tabular-nums w-20">β</span>
@@ -403,13 +403,13 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
               >
                 <div>
                   <div
-                    className="text-zinc-100"
+                    className="text-text-primary"
                     style={{ fontFamily: 'var(--font-family-serif)', fontSize: '1.02rem', fontWeight: 600, letterSpacing: '-0.01em' }}
                   >
                     {c.label}
                   </div>
                   {c.note && (
-                    <div className="text-[11px] text-zinc-500 mt-1 leading-snug max-w-xs">
+                    <div className="text-[11px] text-text-muted mt-1 leading-snug max-w-xs">
                       {c.note}
                     </div>
                   )}
@@ -429,8 +429,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = !isPositive && i < filled
                           return (
                             <circle key={`l-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#2d2926'}
-                              stroke={isFilled ? undefined : '#3d3734'}
+                              fill={isFilled ? color : 'var(--color-background-elevated)'}
+                              stroke={isFilled ? undefined : 'var(--color-border-hover)'}
                               strokeWidth={isFilled ? 0 : 0.5}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
@@ -442,8 +442,8 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                           const isFilled = isPositive && i < filled
                           return (
                             <circle key={`r-${i}`} cx={cx} cy={4} r={DR}
-                              fill={isFilled ? color : '#2d2926'}
-                              stroke={isFilled ? undefined : '#3d3734'}
+                              fill={isFilled ? color : 'var(--color-background-elevated)'}
+                              stroke={isFilled ? undefined : 'var(--color-border-hover)'}
                               strokeWidth={isFilled ? 0 : 0.5}
                               fillOpacity={isFilled ? 0.85 : 1}
                             />
@@ -465,7 +465,7 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
           })}
         </div>
 
-        <div className="mt-3 flex gap-6 text-[10px] text-zinc-500 font-mono uppercase tracking-[0.18em]">
+        <div className="mt-3 flex gap-6 text-[10px] text-text-muted font-mono uppercase tracking-[0.18em]">
           <div className="flex items-center gap-2">
             <span className="h-2 w-4" style={{ backgroundColor: POSITIVE }} />
             Risk-increasing
@@ -512,15 +512,15 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
             </svg>
           )
         })()}
-        <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-6">
+        <div className="flex justify-between text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-6">
           <span>Low</span>
-          <span className="text-zinc-300">High-risk threshold →</span>
+          <span className="text-text-secondary">High-risk threshold →</span>
           <span>Critical</span>
         </div>
 
         {/* Editorial hairline table */}
         <div className="border-y border-[rgba(255,255,255,0.08)]">
-          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 border-b border-[rgba(255,255,255,0.06)]">
+          <div className="grid grid-cols-[minmax(0,1.1fr)_minmax(0,0.8fr)_minmax(0,1fr)_minmax(0,0.6fr)] gap-4 py-2.5 px-1 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted border-b border-[rgba(255,255,255,0.06)]">
             <span>Level</span>
             <span>Threshold</span>
             <span className="text-right">Contracts</span>
@@ -540,14 +540,14 @@ function MetricsTab({ liveCoefficients }: { liveCoefficients: Coefficient[] }) {
                   style={{ backgroundColor: row.color }}
                 />
                 <span
-                  className="text-zinc-50"
+                  className="text-text-primary"
                   style={{ fontFamily: 'var(--font-family-serif)', fontSize: '1.1rem', fontWeight: 700, letterSpacing: '-0.015em' }}
                 >
                   {row.level}
                 </span>
               </div>
-              <span className="font-mono text-zinc-400 text-xs tabular-nums">{row.threshold}</span>
-              <span className="text-right font-mono tabular-nums text-zinc-200">
+              <span className="font-mono text-text-secondary text-xs tabular-nums">{row.threshold}</span>
+              <span className="text-right font-mono tabular-nums text-text-secondary">
                 {formatNumber(row.count)}
               </span>
               <span
@@ -585,7 +585,7 @@ function AuditTrailTab() {
           {VERSION_HISTORY.map((entry, i) => {
             const isActive = entry.status === 'active'
             const isLast = i === VERSION_HISTORY.length - 1
-            const dotColor = isActive ? ACCENT : entry.status === 'preserved' ? '#71717a' : '#3f3f46'
+            const dotColor = isActive ? ACCENT : entry.status === 'preserved' ? 'var(--color-text-muted)' : '#3f3f46'
 
             return (
               <li
@@ -597,7 +597,7 @@ function AuditTrailTab() {
                 <span
                   className="absolute -left-[29px] top-1 h-[15px] w-[15px] rounded-full flex items-center justify-center"
                   style={{
-                    backgroundColor: '#0a0a0a',
+                    backgroundColor: 'var(--color-background)',
                     border: `2px solid ${dotColor}`,
                     boxShadow: isActive ? `0 0 12px ${ACCENT}99` : undefined,
                   }}
@@ -612,7 +612,7 @@ function AuditTrailTab() {
 
                 {/* Dateline + status chip */}
                 <div className="flex items-center gap-3 mb-3 text-[10px] font-mono uppercase tracking-[0.18em]">
-                  <span className="text-zinc-500 font-mono tabular-nums">{entry.date}</span>
+                  <span className="text-text-muted font-mono tabular-nums">{entry.date}</span>
                   {isActive && (
                     <span
                       className="inline-flex items-center gap-1.5 px-2 py-0.5"
@@ -627,12 +627,12 @@ function AuditTrailTab() {
                     </span>
                   )}
                   {entry.status === 'preserved' && (
-                    <span className="px-2 py-0.5 text-zinc-400 border border-[rgba(255,255,255,0.12)]">
+                    <span className="px-2 py-0.5 text-text-secondary border border-[rgba(255,255,255,0.12)]">
                       Preserved
                     </span>
                   )}
                   {entry.status === 'superseded' && (
-                    <span className="px-2 py-0.5 text-zinc-500 border border-[rgba(255,255,255,0.06)]">
+                    <span className="px-2 py-0.5 text-text-muted border border-[rgba(255,255,255,0.06)]">
                       Superseded
                     </span>
                   )}
@@ -646,7 +646,7 @@ function AuditTrailTab() {
                     fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
                     fontWeight: 700,
                     letterSpacing: '-0.025em',
-                    color: isActive ? ACCENT : '#e4e4e7',
+                    color: isActive ? ACCENT : 'var(--color-text-primary)',
                   }}
                 >
                   {entry.version}
@@ -655,14 +655,14 @@ function AuditTrailTab() {
                 {/* Metric pair — bylines */}
                 <div className="flex gap-10 mb-4">
                   <div>
-                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">Test AUC</div>
+                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-text-muted">Test AUC</div>
                     <div
                       className="font-mono tabular-nums mt-1"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: '1.4rem',
                         fontWeight: 700,
-                        color: isActive ? ACCENT : '#e4e4e7',
+                        color: isActive ? ACCENT : 'var(--color-text-primary)',
                         letterSpacing: '-0.015em',
                       }}
                     >
@@ -670,14 +670,14 @@ function AuditTrailTab() {
                     </div>
                   </div>
                   <div>
-                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-zinc-500">High-risk rate</div>
+                    <div className="text-[9px] font-mono uppercase tracking-[0.22em] text-text-muted">High-risk rate</div>
                     <div
                       className="font-mono tabular-nums mt-1"
                       style={{
                         fontFamily: 'var(--font-family-serif)',
                         fontSize: '1.4rem',
                         fontWeight: 700,
-                        color: '#e4e4e7',
+                        color: 'var(--color-text-primary)',
                         letterSpacing: '-0.015em',
                       }}
                     >
@@ -688,7 +688,7 @@ function AuditTrailTab() {
 
                 {/* Narrative */}
                 <p
-                  className="text-zinc-300 max-w-3xl"
+                  className="text-text-secondary max-w-3xl"
                   style={{
                     fontFamily: 'var(--font-family-serif)',
                     fontSize: '0.98rem',
@@ -715,16 +715,16 @@ function AuditTrailTab() {
           Reproducibility · run ID CAL-v6.1-202603251039
         </p>
         <p
-          className="text-zinc-300 leading-[1.7]"
+          className="text-text-secondary leading-[1.7]"
           style={{ fontFamily: 'var(--font-family-serif)', fontSize: '0.98rem' }}
         >
           Training hyperparameters fixed via Optuna TPE (150 trials, vendor-stratified 70/30 split):
           {' '}
-          <span className="font-mono text-zinc-100 text-sm">C = 0.0100</span>,{' '}
-          <span className="font-mono text-zinc-100 text-sm">l1_ratio = 0.9673</span>,{' '}
-          PU correction <span className="font-mono text-zinc-100 text-sm">c = 0.3000</span>{' '}
+          <span className="font-mono text-text-primary text-sm">C = 0.0100</span>,{' '}
+          <span className="font-mono text-text-primary text-sm">l1_ratio = 0.9673</span>,{' '}
+          PU correction <span className="font-mono text-text-primary text-sm">c = 0.3000</span>{' '}
           (floor). Full training manifest and coefficient matrix archived in{' '}
-          <span className="font-mono text-zinc-100 text-sm">model_calibration</span>.
+          <span className="font-mono text-text-primary text-sm">model_calibration</span>.
         </p>
       </section>
     </div>
@@ -808,21 +808,21 @@ export default function ModelTransparency() {
       {/* Editorial hero                                                  */}
       {/* ============================================================== */}
       <header className="pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
-        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+        <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
           <span className="inline-flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-            <span className="text-zinc-300">RUBLI</span>
+            <span className="text-text-secondary">RUBLI</span>
           </span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span>{t('hero.breadcrumb')}</span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span className="font-mono tabular-nums">{modelMeta?.version ?? CURRENT_MODEL_VERSION}</span>
-          <span className="text-zinc-700">·</span>
+          <span className="text-text-primary">·</span>
           <span>{t('hero.modelType')}</span>
         </div>
         <p className="text-kicker text-kicker--investigation mb-3">{t('hero.kicker')}</p>
         <h1
-          className="text-zinc-50 leading-[1.05]"
+          className="text-text-primary leading-[1.05]"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontSize: 'clamp(2rem, 4vw, 3rem)',
@@ -833,7 +833,7 @@ export default function ModelTransparency() {
           {t('hero.headline')}
         </h1>
         <p
-          className="mt-3 max-w-3xl text-zinc-300"
+          className="mt-3 max-w-3xl text-text-secondary"
           style={{
             fontFamily: 'var(--font-family-serif)',
             fontStyle: 'italic',
@@ -858,7 +858,7 @@ export default function ModelTransparency() {
             />
             Live · AUC {auc.toFixed(3)}
           </span>
-          <span className="text-[11px] font-mono uppercase tracking-wide text-zinc-500">
+          <span className="text-[11px] font-mono uppercase tracking-wide text-text-muted">
             Trained {modelMeta?.trained_at ?? '2026-03-25'}
           </span>
         </div>

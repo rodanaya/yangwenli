@@ -50,31 +50,31 @@ export function StoryAusteridadChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 border border-zinc-800 p-5"
+      className="rounded-sm bg-background-card border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Austeridad
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         El gasto bajó 10%. La opacidad subió 8 puntos.
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Gasto total y tasa de adjudicación directa por administración · COMPRANET 2007-2024
       </p>
 
       <div className="flex gap-6 mb-5">
-        <div className="border-l-2 border-zinc-500 pl-3 py-0.5">
-          <div className="text-2xl font-mono font-bold text-zinc-300">-10%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">gasto Pena a AMLO</div>
+        <div className="border-l-2 border-border pl-3 py-0.5">
+          <div className="text-2xl font-mono font-bold text-text-secondary">-10%</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">gasto Pena a AMLO</div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-red-500">+8.6pp</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">opacidad Pena a AMLO</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">opacidad Pena a AMLO</div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -213,7 +213,7 @@ export function StoryAusteridadChart() {
         </svg>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-3">
+      <p className="text-[10px] text-text-muted mt-3">
         Fuente: COMPRANET · Análisis RUBLI v0.6.5
       </p>
     </motion.div>

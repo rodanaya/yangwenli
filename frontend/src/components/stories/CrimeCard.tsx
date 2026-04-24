@@ -65,8 +65,8 @@ export default function CrimeCard({
       whileHover={isClickable ? { scale: 1.01, y: -1 } : undefined}
       whileTap={isClickable ? { scale: 0.99 } : undefined}
       className={cn(
-        'group relative flex items-center gap-4 rounded-lg bg-zinc-900/60 px-4 py-3 transition-all duration-200',
-        isClickable && 'cursor-pointer hover:bg-zinc-800/80 hover:shadow-lg',
+        'group relative flex items-center gap-4 rounded-lg bg-background-card px-4 py-3 transition-all duration-200',
+        isClickable && 'cursor-pointer hover:bg-background-elevated hover:shadow-lg',
         className
       )}
       style={{
@@ -95,14 +95,14 @@ export default function CrimeCard({
       {/* Center info */}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2 mb-0.5">
-          <h4 className="text-sm font-semibold text-zinc-100 truncate">{caseName}</h4>
+          <h4 className="text-sm font-semibold text-text-primary truncate">{caseName}</h4>
           {era && (
-            <span className="text-[9px] uppercase tracking-wider text-zinc-500 font-medium shrink-0">
+            <span className="text-[9px] uppercase tracking-wider text-text-muted font-medium shrink-0">
               {era}
             </span>
           )}
         </div>
-        <div className="flex items-center gap-2 text-xs text-zinc-500">
+        <div className="flex items-center gap-2 text-xs text-text-muted">
           <span
             className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-medium"
             style={{ backgroundColor: `${config.color}15`, color: config.color }}
@@ -122,7 +122,7 @@ export default function CrimeCard({
           <p className="text-lg font-black text-red-400 font-mono tabular-nums leading-tight">
             {estimatedFraudBn.toLocaleString('es-MX', { maximumFractionDigits: 1 })}B
           </p>
-          <p className="text-[10px] text-zinc-500 uppercase tracking-wider">MXN</p>
+          <p className="text-[10px] text-text-muted uppercase tracking-wider">MXN</p>
         </div>
       )}
 

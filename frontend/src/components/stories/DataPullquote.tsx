@@ -61,7 +61,7 @@ export default function DataPullquote({
   return (
     <ScrollReveal className={cn('my-10', className)}>
       <figure
-        className="relative pl-6 py-6 pr-6 rounded-r-lg bg-zinc-900/40"
+        className="relative pl-6 py-6 pr-6 rounded-r-lg bg-background-card"
         style={{ borderLeft: `3px solid ${borderColor}` }}
         role="figure"
         aria-label="Cita con datos"
@@ -74,18 +74,18 @@ export default function DataPullquote({
         )}
 
         {/* Quote */}
-        <blockquote className="text-lg md:text-xl italic text-zinc-200 leading-relaxed mb-5 font-light">
+        <blockquote className="text-lg md:text-xl italic text-text-secondary leading-relaxed mb-5 font-light">
           &ldquo;{quote}&rdquo;
         </blockquote>
 
         {attribution && (
-          <figcaption className="text-xs text-zinc-500 uppercase tracking-wider mb-5">
+          <figcaption className="text-xs text-text-muted uppercase tracking-wider mb-5">
             &mdash; {attribution}
           </figcaption>
         )}
 
         {/* Stat block */}
-        <div className="border-t border-zinc-800 pt-4">
+        <div className="border-t border-border pt-4">
           <div className="flex items-baseline gap-2 mb-1">
             <span
               ref={countRef}
@@ -100,7 +100,7 @@ export default function DataPullquote({
                 : stat}
             </span>
           </div>
-          <p className="text-sm text-zinc-400 mb-3">{statLabel}</p>
+          <p className="text-sm text-text-secondary mb-3">{statLabel}</p>
 
           {/* Stat bar */}
           {barValue !== undefined && (
@@ -115,7 +115,7 @@ export default function DataPullquote({
                 <span className={cn('text-xs font-bold tabular-nums shrink-0', statColor)}>{stat}</span>
               </div>
               {barLabel && (
-                <p className="text-[10px] text-zinc-600 uppercase tracking-wider mt-1.5">{barLabel}</p>
+                <p className="text-[10px] text-text-muted uppercase tracking-wider mt-1.5">{barLabel}</p>
               )}
             </div>
           )}

@@ -324,8 +324,8 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
     <article
       className="rounded-sm overflow-hidden"
       style={{
-        backgroundColor: '#1a1614',
-        border: '1px solid rgba(255,255,255,0.04)',
+        backgroundColor: 'var(--color-background-card)',
+        border: '1px solid var(--color-border)',
         borderLeft: `3px solid ${caseData.color}`,
       }}
     >
@@ -340,17 +340,17 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
           >
             {caseData.pattern}
           </span>
-          <span className="text-[9px] font-mono text-zinc-600 uppercase tracking-[0.15em]">
+          <span className="text-[9px] font-mono text-text-muted uppercase tracking-[0.15em]">
             {isEs ? 'CASO' : 'CASE'}
           </span>
         </div>
         <h3
-          className="text-[15px] font-bold text-zinc-100 leading-tight"
+          className="text-[15px] font-bold text-text-primary leading-tight"
           style={{ fontFamily: 'var(--font-family-serif, serif)' }}
         >
           {caseData.title}
         </h3>
-        <p className="text-[11px] text-zinc-500 leading-snug mt-1">{caseData.narrative}</p>
+        <p className="text-[11px] text-text-muted leading-snug mt-1">{caseData.narrative}</p>
       </header>
 
       {/* Network viz */}
@@ -381,7 +381,7 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
           if (!pos) return null
           const isInst = n.kind === 'institution'
           const fill = isInst ? '#2d2926' : (n.risk ? RISK_FILL[n.risk] : '#fbbf24')
-          const stroke = isInst ? '#71717a' : caseData.color
+          const stroke = isInst ? 'var(--color-text-muted)' : caseData.color
           const r = isInst ? 11 : 7
           return (
             <g key={`n-${n.id}`}>
@@ -414,7 +414,7 @@ function FeaturedCaseCard({ caseData, isEs }: { caseData: FeaturedCase; isEs: bo
               <text
                 x={pos.x}
                 y={pos.y + r + 10}
-                fill={isInst ? '#a1a1aa' : '#e4e4e7'}
+                fill={isInst ? 'var(--color-text-muted)' : 'var(--color-text-primary)'}
                 fontSize={8.5}
                 fontFamily="ui-monospace,monospace"
                 textAnchor="middle"
@@ -635,8 +635,8 @@ function buildPatternMeta(isEs: boolean): Record<
         ? 'Intensidad suficiente para agrupación, sin señal dominante.'
         : 'Sufficient intensity for grouping, but no dominant signal.',
       icon: HelpCircle,
-      color: 'text-zinc-400',
-      tone: 'bg-zinc-800/40 border-zinc-700/40',
+      color: 'text-text-secondary',
+      tone: 'bg-background-elevated border-border',
     },
   }
 }
@@ -672,7 +672,7 @@ function RingCanvas({
   return (
     <svg
       viewBox={`0 0 ${SVG_W} ${SVG_H}`}
-      className="w-full rounded-sm bg-zinc-950/70 border border-zinc-800/80"
+      className="w-full rounded-sm bg-background border border-border"
       style={{ maxHeight: 520 }}
       role="group"
       aria-label={isEs ? 'Mapa visual de anillos de colusión' : 'Visual map of collusion rings'}
@@ -780,7 +780,7 @@ function RingCanvas({
               textAnchor="middle"
               y={fontSize * 0.85}
               fontSize={7}
-              fill="#71717a"
+              fill="var(--color-text-muted)"
               fontFamily="ui-monospace,monospace"
               letterSpacing="0.06em"
             >
@@ -829,7 +829,7 @@ function RingCanvasSkeleton() {
   return (
     <svg
       viewBox="0 0 640 324"
-      className="w-full rounded-sm bg-zinc-950/70 border border-zinc-800/80"
+      className="w-full rounded-sm bg-background border border-border"
       style={{ maxHeight: 340 }}
       aria-hidden="true"
     >
@@ -867,11 +867,11 @@ function RingDetailPanel({
   const sortedPairs = [...ring.pairs].sort((a, b) => b.co_bid_rate - a.co_bid_rate)
 
   return (
-    <div className="mt-4 rounded-sm border border-zinc-700/60 bg-zinc-900/80 p-5 animate-in fade-in slide-in-from-top-2 duration-200">
+    <div className="mt-4 rounded-sm border border-border bg-background-card p-5 animate-in fade-in slide-in-from-top-2 duration-200">
       {/* Header */}
       <div className="flex items-start justify-between mb-5">
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-zinc-500 mb-1.5">
+          <p className="font-mono text-[9px] uppercase tracking-[0.18em] text-text-muted mb-1.5">
             {isEs ? 'ANILLO' : 'RING'} {ringLetter}
           </p>
           <div
@@ -880,12 +880,12 @@ function RingDetailPanel({
             <PatternIcon className={`h-3 w-3 ${meta.color}`} aria-hidden="true" />
             <span className={meta.color}>{meta.label}</span>
           </div>
-          <p className="text-[11px] text-zinc-500 mt-1.5 max-w-md">{meta.desc}</p>
+          <p className="text-[11px] text-text-muted mt-1.5 max-w-md">{meta.desc}</p>
         </div>
         <button
           type="button"
           onClick={onClose}
-          className="p-1.5 rounded text-zinc-600 hover:text-zinc-300 hover:bg-zinc-800/60 transition-colors"
+          className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
           aria-label={isEs ? 'Cerrar detalle' : 'Close detail'}
         >
           <X className="h-3.5 w-3.5" aria-hidden="true" />
@@ -898,12 +898,12 @@ function RingDetailPanel({
           {
             value: ring.members.size,
             label: isEs ? 'Miembros' : 'Members',
-            color: 'text-zinc-100',
+            color: 'text-text-primary',
           },
           {
             value: formatNumber(ring.sharedProcedures),
             label: isEs ? 'Procedimientos' : 'Procedures',
-            color: 'text-zinc-100',
+            color: 'text-text-primary',
           },
           {
             value: `${ring.avgCoBidRate.toFixed(0)}%`,
@@ -913,10 +913,10 @@ function RingDetailPanel({
         ].map(({ value, label, color }) => (
           <div
             key={label}
-            className="rounded-sm bg-zinc-950/60 border border-zinc-800/60 p-3 text-center"
+            className="rounded-sm bg-background border border-border p-3 text-center"
           >
             <div className={`font-mono text-xl font-bold leading-none ${color}`}>{value}</div>
-            <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-500 mt-1">
+            <div className="font-mono text-[9px] uppercase tracking-wide text-text-muted mt-1">
               {label}
             </div>
           </div>
@@ -925,7 +925,7 @@ function RingDetailPanel({
 
       {/* Member chips */}
       <div className="mb-5">
-        <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-zinc-600 mb-2">
+        <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted mb-2">
           {isEs ? 'MIEMBROS' : 'MEMBERS'}
         </p>
         <div className="flex flex-wrap gap-1.5">
@@ -935,7 +935,7 @@ function RingDetailPanel({
               className={`text-[10px] font-mono px-2 py-0.5 rounded-sm border truncate max-w-[220px] ${
                 ring.dominantVendor === name
                   ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
-                  : 'border-zinc-700/60 bg-zinc-800/50 text-zinc-300'
+                  : 'border-border bg-background-elevated text-text-secondary'
               }`}
               title={name}
             >
@@ -949,7 +949,7 @@ function RingDetailPanel({
       {/* Top pairs within ring */}
       {sortedPairs.length > 0 && (
         <div>
-          <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-zinc-600 mb-2">
+          <p className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted mb-2">
             {isEs ? 'CONEXIONES INTERNAS' : 'INTERNAL CONNECTIONS'}
           </p>
           <div className="space-y-1.5">
@@ -959,12 +959,12 @@ function RingDetailPanel({
               return (
                 <div
                   key={`${pair.vendor_id_a}-${pair.vendor_id_b}`}
-                  className="flex items-center justify-between gap-3 rounded-sm bg-zinc-950/60 border border-zinc-800/50 px-3 py-2"
+                  className="flex items-center justify-between gap-3 rounded-sm bg-background border border-border px-3 py-2"
                 >
                   <div className="min-w-0 flex-1">
-                    <div className="text-[11px] text-zinc-300 truncate">{pair.vendor_name_a}</div>
-                    <div className="text-[11px] text-zinc-500 truncate">
-                      <span className="mr-1 text-zinc-700">↔</span>
+                    <div className="text-[11px] text-text-secondary truncate">{pair.vendor_name_a}</div>
+                    <div className="text-[11px] text-text-muted truncate">
+                      <span className="mr-1 text-text-primary">↔</span>
                       {pair.vendor_name_b}
                     </div>
                   </div>
@@ -976,7 +976,7 @@ function RingDetailPanel({
                       >
                         {pair.co_bid_rate.toFixed(0)}%
                       </div>
-                      <div className="font-mono text-[9px] text-zinc-600">
+                      <div className="font-mono text-[9px] text-text-muted">
                         {formatNumber(pair.shared_procedures)}{' '}
                         {isEs ? 'proced.' : 'procs.'}
                       </div>
@@ -991,7 +991,7 @@ function RingDetailPanel({
                           pair.vendor_name_b,
                         )
                       }
-                      className="p-1 rounded text-zinc-600 hover:text-zinc-300 hover:bg-zinc-700/50 transition-colors"
+                      className="p-1 rounded text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
                       title={isEs ? 'Ver contratos' : 'View contracts'}
                       aria-label={isEs ? 'Ver contratos compartidos' : 'View shared contracts'}
                     >
@@ -1032,7 +1032,7 @@ function Filters({
   const { t } = useTranslation('collusion')
 
   return (
-    <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-sm border border-zinc-800 bg-zinc-900/40">
+    <div className="flex flex-wrap items-center gap-4 mb-6 px-4 py-3 rounded-sm border border-border bg-background-card">
       <label className="flex items-center gap-2 cursor-pointer select-none">
         <div className="relative inline-flex items-center">
           <input
@@ -1042,18 +1042,18 @@ function Filters({
             className="sr-only peer"
             aria-label={t('filters.showFlaggedOnly')}
           />
-          <div className="w-9 h-5 bg-zinc-800 border border-zinc-700 rounded-full peer peer-checked:bg-red-700 peer-focus-visible:ring-2 peer-focus-visible:ring-red-500 transition-colors" />
-          <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-white rounded-full shadow transition-transform peer-checked:translate-x-4" />
+          <div className="w-9 h-5 bg-background-elevated border border-border rounded-full peer peer-checked:bg-red-700 peer-focus-visible:ring-2 peer-focus-visible:ring-red-500 transition-colors" />
+          <div className="absolute left-0.5 top-0.5 w-4 h-4 bg-background-card rounded-full shadow transition-transform peer-checked:translate-x-4" />
         </div>
-        <span className="text-sm text-zinc-400">{t('filters.showFlaggedOnly')}</span>
+        <span className="text-sm text-text-secondary">{t('filters.showFlaggedOnly')}</span>
       </label>
 
-      <div className="h-5 w-px bg-zinc-800 hidden sm:block" />
+      <div className="h-5 w-px bg-background-elevated hidden sm:block" />
 
       <div className="flex items-center gap-2">
         <label
           htmlFor="min-shared-input"
-          className="text-xs text-zinc-500 whitespace-nowrap font-mono uppercase tracking-wide"
+          className="text-xs text-text-muted whitespace-nowrap font-mono uppercase tracking-wide"
         >
           {t('filters.minShared')}
         </label>
@@ -1064,16 +1064,16 @@ function Filters({
           max={500}
           value={minShared}
           onChange={(e) => setMinShared(Math.max(1, Number(e.target.value)))}
-          className="w-20 rounded-sm border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="w-20 rounded-sm border border-border bg-background-elevated text-text-secondary text-sm font-mono px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         />
       </div>
 
-      <div className="h-5 w-px bg-zinc-800 hidden sm:block" />
+      <div className="h-5 w-px bg-background-elevated hidden sm:block" />
 
       <div className="flex items-center gap-2">
         <label
           htmlFor="sort-select"
-          className="text-xs text-zinc-500 whitespace-nowrap font-mono uppercase tracking-wide"
+          className="text-xs text-text-muted whitespace-nowrap font-mono uppercase tracking-wide"
         >
           {t('filters.sortBy')}
         </label>
@@ -1081,7 +1081,7 @@ function Filters({
           id="sort-select"
           value={sortBy}
           onChange={(e) => setSortBy(e.target.value as SortField)}
-          className="rounded-sm border border-zinc-700 bg-zinc-800 text-zinc-200 text-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
+          className="rounded-sm border border-border bg-background-elevated text-text-secondary text-sm px-2 py-1 focus:outline-none focus:ring-1 focus:ring-amber-500/50"
         >
           <option value="shared_procedures">{t('filters.sortShared')}</option>
           <option value="co_bid_rate">{t('filters.sortRate')}</option>
@@ -1091,7 +1091,7 @@ function Filters({
       <button
         type="button"
         onClick={onReset}
-        className="ml-auto text-[10px] font-mono uppercase tracking-wide text-zinc-600 hover:text-zinc-400 transition-colors"
+        className="ml-auto text-[10px] font-mono uppercase tracking-wide text-text-muted hover:text-text-secondary transition-colors"
       >
         {t('filters.reset')}
       </button>
@@ -1131,7 +1131,7 @@ function ConnectionRow({
     : 'bg-amber-500'
 
   return (
-    <div className="relative flex items-center gap-3 rounded-sm border border-zinc-800 bg-zinc-900/40 hover:bg-zinc-900/70 transition-colors px-4 py-3 overflow-hidden">
+    <div className="relative flex items-center gap-3 rounded-sm border border-border bg-background-card hover:bg-background-card transition-colors px-4 py-3 overflow-hidden">
       <div
         className={`absolute left-0 top-0 bottom-0 w-[2px] ${accentBar}`}
         aria-hidden="true"
@@ -1152,18 +1152,18 @@ function ConnectionRow({
             </span>
           )}
         </div>
-        <div className="text-xs text-zinc-200 truncate leading-snug" title={pair.vendor_name_a}>
+        <div className="text-xs text-text-secondary truncate leading-snug" title={pair.vendor_name_a}>
           {pair.vendor_name_a}
         </div>
-        <div className="text-xs text-zinc-400 truncate leading-snug" title={pair.vendor_name_b}>
-          <span className="text-zinc-600 mr-1">↔</span>
+        <div className="text-xs text-text-secondary truncate leading-snug" title={pair.vendor_name_b}>
+          <span className="text-text-muted mr-1">↔</span>
           {pair.vendor_name_b}
         </div>
       </div>
 
       {/* Shared procedures DotBar */}
       <div className="hidden sm:block shrink-0 w-28">
-        <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-600 mb-1">
+        <div className="font-mono text-[9px] uppercase tracking-wide text-text-muted mb-1">
           {isEs ? 'Compartidos' : 'Shared'}
         </div>
         <DotBar
@@ -1174,14 +1174,14 @@ function ConnectionRow({
           dots={15}
           size={5}
         />
-        <div className="font-mono text-[10px] text-zinc-400 mt-1 tabular-nums">
+        <div className="font-mono text-[10px] text-text-secondary mt-1 tabular-nums">
           {formatNumber(pair.shared_procedures)}
         </div>
       </div>
 
       {/* Co-bid rate DotBar */}
       <div className="shrink-0 w-28">
-        <div className="font-mono text-[9px] uppercase tracking-wide text-zinc-600 mb-1">
+        <div className="font-mono text-[9px] uppercase tracking-wide text-text-muted mb-1">
           {isEs ? 'Tasa co-lic.' : 'Co-bid rate'}
         </div>
         <DotBar
@@ -1209,7 +1209,7 @@ function ConnectionRow({
               pair.vendor_name_b,
             )
           }
-          className="p-1.5 rounded text-zinc-500 hover:text-zinc-200 hover:bg-zinc-700/50 transition-colors"
+          className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-elevated transition-colors"
           title={isEs ? 'Ver contratos compartidos' : 'View shared contracts'}
           aria-label={isEs ? 'Ver contratos compartidos' : 'View shared contracts'}
         >
@@ -1243,10 +1243,10 @@ function ConnectionRow({
 function EmptyState() {
   const { t } = useTranslation('collusion')
   return (
-    <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-8 text-center">
-      <Users className="h-8 w-8 text-zinc-700 mx-auto mb-3" aria-hidden="true" />
-      <p className="text-sm font-semibold text-zinc-300 mb-1">{t('empty.title')}</p>
-      <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">{t('empty.body')}</p>
+    <div className="rounded-sm border border-border bg-background-card p-8 text-center">
+      <Users className="h-8 w-8 text-text-primary mx-auto mb-3" aria-hidden="true" />
+      <p className="text-sm font-semibold text-text-secondary mb-1">{t('empty.title')}</p>
+      <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">{t('empty.body')}</p>
     </div>
   )
 }
@@ -1257,7 +1257,7 @@ function ErrorState() {
     <div className="rounded-sm border border-red-500/20 bg-red-500/5 p-8 text-center">
       <AlertTriangle className="h-8 w-8 text-red-400 mx-auto mb-3" aria-hidden="true" />
       <p className="text-sm font-semibold text-red-300 mb-1">{t('error.title')}</p>
-      <p className="text-xs text-zinc-500 max-w-md mx-auto leading-relaxed">{t('error.body')}</p>
+      <p className="text-xs text-text-muted max-w-md mx-auto leading-relaxed">{t('error.body')}</p>
     </div>
   )
 }
@@ -1404,7 +1404,7 @@ export default function CollusionExplorer() {
   const safeStats = stats
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-background text-text-primary">
       <div className="max-w-5xl mx-auto px-4 py-8">
         <EditorialPageShell
           kicker={
@@ -1475,7 +1475,7 @@ export default function CollusionExplorer() {
                 : 'Seven real architectures of capture — confirmed by investigation.'
             }
           >
-            <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-2xl">
+            <p className="text-sm text-text-secondary leading-relaxed mb-6 max-w-2xl">
               {isEs
                 ? 'Cada tarjeta es un caso documentado: la red no es una hipótesis estadística, es la red tal como está descrita en expedientes de SFP, ASF, periodismo y listas EFOS. Los nodos cuadrados son instituciones; los nodos circulares son proveedores. El grosor de las líneas escala con el valor de los contratos compartidos.'
                 : 'Each card is a documented case: the network is not a statistical hypothesis — it is the network as described in SFP, ASF, journalism, and EFOS records. Square nodes are institutions; circle nodes are vendors. Line thickness scales with shared-contract value.'}
@@ -1486,11 +1486,11 @@ export default function CollusionExplorer() {
               ))}
             </div>
             {/* Legend */}
-            <div className="mt-5 flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500">
+            <div className="mt-5 flex flex-wrap items-center gap-4 text-[10px] font-mono uppercase tracking-[0.15em] text-text-muted">
               <div className="flex items-center gap-1.5">
                 <span
                   className="inline-block"
-                  style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#2d2926', border: '1px solid #71717a' }}
+                  style={{ width: 10, height: 10, borderRadius: 2, backgroundColor: '#2d2926', border: '1px solid var(--color-text-muted)' }}
                 />
                 {isEs ? 'Institución' : 'Institution'}
               </div>
@@ -1506,7 +1506,7 @@ export default function CollusionExplorer() {
                 <span className="inline-block h-2.5 w-2.5 rounded-full" style={{ backgroundColor: '#fbbf24' }} />
                 {isEs ? 'Medio' : 'Medium'}
               </div>
-              <div className="flex items-center gap-1.5 ml-auto text-zinc-600">
+              <div className="flex items-center gap-1.5 ml-auto text-text-muted">
                 {isEs
                   ? 'Grosor de línea ∝ valor compartido'
                   : 'Line thickness ∝ shared value'}
@@ -1529,7 +1529,7 @@ export default function CollusionExplorer() {
                   : 'The connected groups that emerge when pairs are counted.'
               }
             >
-              <p className="text-sm text-zinc-400 leading-relaxed mb-5 max-w-2xl">
+              <p className="text-sm text-text-secondary leading-relaxed mb-5 max-w-2xl">
                 {isEs
                   ? 'Cada burbuja es un anillo. El arco exterior mide la intensidad media de co-licitación. Los puntos orbitando representan miembros. Haz clic en un anillo para ver el detalle.'
                   : 'Each bubble is a ring. The outer arc shows average co-bidding intensity. Orbiting dots represent members. Click a ring to see the breakdown.'}
@@ -1538,8 +1538,8 @@ export default function CollusionExplorer() {
               {ringsLoading ? (
                 <RingCanvasSkeleton />
               ) : rings.length === 0 ? (
-                <div className="rounded-sm border border-zinc-800 bg-zinc-900/40 p-8 text-center">
-                  <p className="text-sm text-zinc-400">
+                <div className="rounded-sm border border-border bg-background-card p-8 text-center">
+                  <p className="text-sm text-text-secondary">
                     {isEs
                       ? 'No se detectaron anillos con ≥3 miembros en los datos actuales.'
                       : 'No rings with ≥3 members detected in the current data.'}
@@ -1569,8 +1569,8 @@ export default function CollusionExplorer() {
               )}
 
               {/* Pattern legend — compact, inline */}
-              <div className="mt-5 rounded-sm border border-zinc-800/70 bg-zinc-900/30 p-4">
-                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-zinc-600 mb-3">
+              <div className="mt-5 rounded-sm border border-border bg-background-card p-4">
+                <p className="font-mono text-[9px] font-bold uppercase tracking-[0.18em] text-text-muted mb-3">
                   {isEs ? 'LEYENDA DE PATRONES' : 'PATTERN LEGEND'}
                 </p>
                 <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -1612,7 +1612,7 @@ export default function CollusionExplorer() {
                 : 'Each connection is an edge in the graph. This is how rings are built.'
             }
           >
-            <p className="text-sm text-zinc-400 leading-relaxed mb-6 max-w-2xl">
+            <p className="text-sm text-text-secondary leading-relaxed mb-6 max-w-2xl">
               {isEs
                 ? 'Cada fila es un par de proveedores que co-licitan por encima del umbral. Los pares etiquetados pertenecen a uno de los anillos identificados arriba.'
                 : 'Each row is a pair of vendors that co-bid above the threshold. Tagged pairs belong to one of the rings identified above.'}
@@ -1630,7 +1630,7 @@ export default function CollusionExplorer() {
 
             {!pairsLoading && !pairsError && total > 0 && (
               <p
-                className="text-[10px] font-mono uppercase tracking-wide text-zinc-600 mb-4"
+                className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-4"
                 aria-live="polite"
               >
                 {t('pagination.showing', {
@@ -1678,7 +1678,7 @@ export default function CollusionExplorer() {
 
             {totalPages > 1 && (
               <div
-                className="flex items-center justify-between mt-8 pt-4 border-t border-zinc-800"
+                className="flex items-center justify-between mt-8 pt-4 border-t border-border"
                 role="navigation"
                 aria-label="Pagination"
               >
@@ -1686,14 +1686,14 @@ export default function CollusionExplorer() {
                   type="button"
                   onClick={() => setPage((p) => Math.max(1, p - 1))}
                   disabled={page <= 1}
-                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-border bg-background-card text-text-secondary hover:text-text-secondary hover:border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={t('pagination.previous')}
                 >
                   <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
                   {t('pagination.previous')}
                 </button>
 
-                <span className="text-[10px] font-mono text-zinc-600" aria-live="polite">
+                <span className="text-[10px] font-mono text-text-muted" aria-live="polite">
                   {t('pagination.pageOf', { page, total: totalPages })}
                 </span>
 
@@ -1701,7 +1701,7 @@ export default function CollusionExplorer() {
                   type="button"
                   onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
                   disabled={page >= totalPages}
-                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+                  className="flex items-center gap-1.5 rounded-sm px-3 py-2 text-xs font-mono uppercase tracking-wide border border-border bg-background-card text-text-secondary hover:text-text-secondary hover:border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                   aria-label={t('pagination.next')}
                 >
                   {t('pagination.next')}
@@ -1722,7 +1722,7 @@ export default function CollusionExplorer() {
             title={isEs ? 'Cómo construimos los anillos.' : 'How we build the rings.'}
           >
             <div className="rounded-sm border border-amber-500/20 bg-amber-500/5 p-5 mb-4">
-              <p className="text-sm text-zinc-200 leading-relaxed mb-3">
+              <p className="text-sm text-text-secondary leading-relaxed mb-3">
                 <span className="font-mono text-[10px] uppercase tracking-[0.15em] text-amber-400 block mb-2">
                   {isEs ? 'HALLAZGO' : 'FINDING'}
                 </span>
@@ -1730,7 +1730,7 @@ export default function CollusionExplorer() {
                   ? 'Un par de proveedores que co-licitan al 80% es sospechoso. Pero es un anillo de 5 proveedores — donde cada uno se empareja con todos los demás por encima del umbral — el que constituye evidencia estructural de coordinación.'
                   : 'A pair of vendors co-bidding at 80% is suspicious. But a ring of 5 vendors — where each one pairs with all the others above the threshold — is what constitutes structural evidence of coordination.'}
               </p>
-              <p className="text-sm text-zinc-400 leading-relaxed">
+              <p className="text-sm text-text-secondary leading-relaxed">
                 {isEs ? (
                   <>
                     Tomamos los pares con tasa de co-licitación ≥50% (≥{DEFAULT_MIN_SHARED}{' '}
@@ -1752,16 +1752,16 @@ export default function CollusionExplorer() {
             </div>
 
             <details className="group">
-              <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 hover:text-zinc-300 transition-colors select-none">
+              <summary className="cursor-pointer list-none flex items-center gap-2 text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted hover:text-text-secondary transition-colors select-none">
                 <span className="group-open:rotate-90 transition-transform inline-block">▶</span>
                 {t('methodology.title')}
               </summary>
-              <div className="mt-3 rounded-sm border border-zinc-800 bg-zinc-900/30 p-5">
-                <p className="text-sm text-zinc-400 leading-relaxed">{t('methodology.body')}</p>
+              <div className="mt-3 rounded-sm border border-border bg-background-card p-5">
+                <p className="text-sm text-text-secondary leading-relaxed">{t('methodology.body')}</p>
               </div>
             </details>
 
-            <p className="text-[10px] text-zinc-700 mt-8 text-center">
+            <p className="text-[10px] text-text-primary mt-8 text-center">
               COMPRANET 2010-2025 · co_bidding_stats · RUBLI v0.6.5
             </p>
           </Act>

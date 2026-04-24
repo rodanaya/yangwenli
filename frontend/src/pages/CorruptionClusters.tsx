@@ -416,7 +416,7 @@ function DotBar({
         <span
           style={{
             fontSize: 11,
-            color: '#a1a1aa',
+            color: 'var(--color-text-muted)',
             fontFamily: 'var(--font-family-mono, monospace)',
             minWidth: 32,
             fontVariantNumeric: 'tabular-nums',
@@ -446,11 +446,11 @@ function ComplementaryTypologyCard({
   const ROW_W = DOTS * (DOT_SIZE + DOT_GAP) - DOT_GAP
   return (
     <article
-      className="rounded-lg p-5 transition-colors hover:bg-[#1d1917]"
+      className="rounded-sm p-5 transition-colors hover:bg-background-elevated"
       style={{
-        backgroundColor: '#1a1614',
+        backgroundColor: 'var(--color-background-card)',
         borderLeft: `3px solid ${typology.color}`,
-        border: '1px solid rgba(255,255,255,0.04)',
+        border: '1px solid var(--color-border)',
         borderLeftWidth: 3,
         borderLeftColor: typology.color,
       }}
@@ -465,7 +465,7 @@ function ComplementaryTypologyCard({
         <p className="text-[11px] text-text-muted/80 leading-snug mt-1">{typology.tagline}</p>
       </header>
 
-      <p className="text-[11px] text-zinc-500 leading-relaxed mb-4">
+      <p className="text-[11px] text-text-muted leading-relaxed mb-4">
         {typology.narrative}
       </p>
 
@@ -609,11 +609,11 @@ function PatternFingerprintCard({ pattern, isEs }: { pattern: PatternFull; isEs:
   return (
     <article
       id={pattern.code.toLowerCase()}
-      className="rounded-lg p-5 transition-colors scroll-mt-20 hover:bg-[#1d1917]"
+      className="rounded-sm p-5 transition-colors scroll-mt-20 hover:bg-background-elevated"
       style={{
-        backgroundColor: '#1a1614',
+        backgroundColor: 'var(--color-background-card)',
         borderLeft: `3px solid ${pattern.color}`,
-        border: '1px solid rgba(255,255,255,0.04)',
+        border: '1px solid var(--color-border)',
         borderLeftWidth: 3,
         borderLeftColor: pattern.color,
       }}
@@ -789,7 +789,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                 <td
                   className="px-3 py-2.5 rounded-l-md"
                   style={{
-                    backgroundColor: '#1a1614',
+                    backgroundColor: 'var(--color-background-card)',
                     borderLeft: `2px solid ${pat.color}`,
                   }}
                 >
@@ -809,7 +809,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                   <td
                     key={idx}
                     className="px-3 py-2.5"
-                    style={{ backgroundColor: '#1a1614' }}
+                    style={{ backgroundColor: 'var(--color-background-card)' }}
                     title={`${pat.label} · ${MATRIX_SECTORS[idx]}: ${n} ${isEs ? 'proveedores T1' : 'T1 vendors'}`}
                   >
                     <CellDots n={n} color={pat.color} />
@@ -817,7 +817,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
                 ))}
                 <td
                   className="px-3 py-2.5 text-right rounded-r-md"
-                  style={{ backgroundColor: '#1a1614' }}
+                  style={{ backgroundColor: 'var(--color-background-card)' }}
                 >
                   <span
                     className="text-[12px] font-mono font-bold tabular-nums"
@@ -875,7 +875,7 @@ function PatternVendorRow({
   return (
     <Link
       to={`/vendors/${vendor.vendor_id}`}
-      className="group flex items-center gap-3 rounded-md px-3 py-2 hover:bg-[#1d1917] transition-colors"
+      className="group flex items-center gap-3 rounded-sm px-3 py-2 hover:bg-background-elevated transition-colors"
     >
       <span
         className="flex-shrink-0 text-[10px] font-mono font-black w-4 text-right tabular-nums"
@@ -885,7 +885,7 @@ function PatternVendorRow({
         {rank}
       </span>
       <div className="min-w-0 flex-1">
-        <div className="text-[12px] text-text-primary font-semibold truncate leading-tight group-hover:text-white">
+        <div className="text-[12px] text-text-primary font-semibold truncate leading-tight group-hover:text-text-primary">
           {vendor.vendor_name}
         </div>
         <div className="text-[10px] text-text-muted/60 truncate mt-0.5">
@@ -933,10 +933,10 @@ function PatternVendorCard({
   const { color } = patternMeta
   return (
     <article
-      className="rounded-lg overflow-hidden"
+      className="rounded-sm overflow-hidden"
       style={{
-        backgroundColor: '#1a1614',
-        border: '1px solid rgba(255,255,255,0.04)',
+        backgroundColor: 'var(--color-background-card)',
+        border: '1px solid var(--color-border)',
         borderLeftWidth: 3,
         borderLeftColor: color,
       }}
@@ -1087,7 +1087,7 @@ export default function CorruptionClusters() {
         title={<>{isEs ? 'La firma estadística de cada patrón' : 'The statistical signature of each pattern'}</>}
         className="mt-8"
       >
-        <p className="text-xs text-zinc-500 leading-relaxed max-w-prose mb-6">
+        <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
           {isEs ? (
             <>
               Cada tipología deja una huella distintiva en seis dimensiones de
@@ -1159,7 +1159,7 @@ export default function CorruptionClusters() {
               {isEs ? 'Top 5 sectores · ARIA T1' : 'Top 5 sectors · ARIA T1'}
             </span>
           </div>
-          <p className="text-xs text-zinc-500 leading-relaxed max-w-prose">
+          <p className="text-xs text-text-muted leading-relaxed max-w-prose">
             {isEs ? (
               <>
                 Cada punto es un proveedor T1 confirmado en esa combinación
@@ -1202,7 +1202,7 @@ export default function CorruptionClusters() {
         }
         className="mt-10"
       >
-        <p className="text-xs text-zinc-500 leading-relaxed max-w-prose mb-6">
+        <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
           {isEs ? (
             <>
               Los siete patrones ARIA cubren la mayoría de las señales detectables en
@@ -1251,7 +1251,7 @@ export default function CorruptionClusters() {
               {gtTotal.toLocaleString()} {isEs ? 'casos · GT v1.1' : 'cases · GT v1.1'}
             </span>
           </div>
-          <p className="text-xs text-zinc-500 leading-relaxed max-w-prose">
+          <p className="text-xs text-text-muted leading-relaxed max-w-prose">
             {isEs
               ? 'La biblioteca de casos confirmados (ground truth) que alimenta ARIA. Cada patrón hereda su lógica de clasificación de estos casos documentados — sanciones SFP, auditorías ASF, investigaciones periodísticas y listas EFOS del SAT.'
               : 'The library of confirmed cases (ground truth) that feeds ARIA. Each pattern inherits its classification logic from these documented cases — SFP sanctions, ASF audits, investigative journalism, and SAT EFOS lists.'}
@@ -1304,7 +1304,7 @@ export default function CorruptionClusters() {
           title={<>{isEs ? 'Los nombres detrás de cada patrón' : 'The names behind each pattern'}</>}
           className="mt-10"
         >
-          <p className="text-xs text-zinc-500 leading-relaxed max-w-prose mb-6">
+          <p className="text-xs text-text-muted leading-relaxed max-w-prose mb-6">
             {isEs ? (
               <>
                 Proveedores Tier 1 y Tier 2 de la cola ARIA clasificados por patrón.

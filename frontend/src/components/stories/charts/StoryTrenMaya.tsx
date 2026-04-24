@@ -60,14 +60,14 @@ export function StoryTrenMaya() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Tren Maya · adjudicación por tramo
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         1,525 kilómetros de vía, cero licitaciones públicas abiertas
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada fila es un tramo del trazado. La tira de puntos muestra la tasa de
         adjudicación directa de ese tramo. El último tramo — bajo contratación SEDENA
         por declaratoria de seguridad nacional — queda fuera de COMPRANET.
@@ -78,7 +78,7 @@ export function StoryTrenMaya() {
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">
             {avgDA.toFixed(1)}%
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             adj. directa promedio · ponderada por km
           </div>
         </div>
@@ -86,7 +86,7 @@ export function StoryTrenMaya() {
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">
             {totalValue.toFixed(0)}B
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN visibles · resto en SEDENA clasificado
           </div>
         </div>
@@ -94,13 +94,13 @@ export function StoryTrenMaya() {
           <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">
             {totalKm}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             km total · 6 tramos · 0 licitaciones abiertas
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[720px]"
@@ -306,7 +306,7 @@ export function StoryTrenMaya() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Los cinco tramos bajo FONATUR promediaron 97.6% de adjudicación directa. Los
           tramos 6 y 7 se movieron a SEDENA bajo declaratoria de seguridad nacional,
           exentándolos de la Ley de Obras Públicas. El resultado: el megaproyecto más
@@ -314,7 +314,7 @@ export function StoryTrenMaya() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET FONATUR 2019-2024 · DOF 22/11/2021 · ASF Auditoría de Desempeño 2023 · cifras aprox.
       </p>
     </motion.div>

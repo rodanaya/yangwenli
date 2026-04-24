@@ -104,7 +104,7 @@ export function AddToDossierButton({
       {open && (
         <div
           ref={popoverRef}
-          className="absolute right-0 top-full mt-1.5 z-50 min-w-[220px] rounded-lg border border-border/60 bg-background-card shadow-xl"
+          className="absolute right-0 top-full mt-1.5 z-50 min-w-[220px] rounded-sm border border-border bg-background-card shadow-xl"
           role="menu"
         >
           <div className="px-3 py-2 border-b border-border/40">

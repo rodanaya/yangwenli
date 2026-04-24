@@ -47,15 +47,15 @@ export function DaBySectorChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-background border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Por sector
       </p>
-      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Cada fila es un sector — cada punto vale 2 puntos porcentuales
       </h3>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Todos cruzan la línea OCDE. Agricultura llega a 93% · Otros, el menor, triplica el límite.
       </p>
 
@@ -143,7 +143,7 @@ export function DaBySectorChart() {
         })}
       </svg>
 
-      <div className="mt-3 flex items-center gap-4 text-[10px] text-zinc-500 font-mono">
+      <div className="mt-3 flex items-center gap-4 text-[10px] text-text-muted font-mono">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-full opacity-50" style={{ background: '#64748b' }} />
           Debajo de OCDE
@@ -154,7 +154,7 @@ export function DaBySectorChart() {
         </span>
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-600 font-mono">
+      <p className="mt-2 text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2002-2025 · 3.05M contratos · RUBLI v0.6.5
       </p>
     </motion.div>

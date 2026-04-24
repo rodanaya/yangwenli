@@ -150,7 +150,7 @@ export function PoliticalIntelligenceStrip({ className }: { className?: string }
               className={cn(
                 'px-3 py-1.5 rounded-full text-xs font-semibold transition-all border',
                 isActive
-                  ? 'text-white border-transparent'
+                  ? 'text-text-primary border-transparent'
                   : 'text-text-secondary border-border hover:border-border-hover bg-background-elevated/50',
               )}
               style={isActive ? { backgroundColor: partyColor, borderColor: partyColor } : undefined}

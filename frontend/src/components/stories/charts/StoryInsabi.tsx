@@ -78,14 +78,14 @@ export function StoryInsabi() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Seguro Popular vs INSABI · sector salud
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         El experimento INSABI: cuatro indicadores, todos peor después de 2020
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Comparación directa entre la era Seguro Popular (2015-2019) y la era INSABI
         (2020-2023) en el mismo sector salud. Cada indicador es una tira de puntos:
         verde cuando Seguro Popular era mejor, rojo cuando INSABI empeoró la métrica.
@@ -94,25 +94,25 @@ export function StoryInsabi() {
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">~95%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             adj. directa INSABI · vs. ~78% promedio salud
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">18.2B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN sin trazabilidad · ASF 2023
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-orange-400 tabular-nums">12B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN sobreprecio estimado vs. licitación
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[720px]"
@@ -280,7 +280,7 @@ export function StoryInsabi() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           INSABI operó cuatro años. En los cuatro, todos los indicadores de salud del
           sistema de compras empeoraron: menos competencia, más riesgo, más desabasto,
           mayor concentración de gasto a fin de año. El instituto desapareció en 2023;
@@ -289,7 +289,7 @@ export function StoryInsabi() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2015-2023 · ASF Cuenta Pública 2020-2023 · PAHO reportes UNOPS
       </p>
     </motion.div>

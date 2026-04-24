@@ -48,7 +48,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
       riskScore: v.avg_risk_score ?? 0,
       itemStyle: {
         color: riskToColor(v.avg_risk_score ?? 0),
-        borderColor: '#2d2926',
+        borderColor: '#e2ddd6',
         borderWidth: 2,
       },
     }))
@@ -64,7 +64,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
         riskScore: 0,
         itemStyle: {
           color: '#52525b',
-          borderColor: '#2d2926',
+          borderColor: '#e2ddd6',
           borderWidth: 2,
         },
       }
@@ -78,8 +78,8 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
   const option = useMemo(() => ({
     backgroundColor: 'transparent',
     tooltip: {
-      backgroundColor: '#18181b',
-      borderColor: '#3f3f46',
+      backgroundColor: '#1a1714',
+      borderColor: '#e2ddd6',
       textStyle: {
         color: '#f4f4f5',
         fontFamily: "var(--font-family-mono)",
@@ -132,13 +132,13 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
         padding: [4, 6],
       },
       itemStyle: {
-        borderColor: '#2d2926',
+        borderColor: '#e2ddd6',
         borderWidth: 2,
         gapWidth: 2,
       },
       levels: [{
         itemStyle: {
-          borderColor: '#3f3f46',
+          borderColor: '#e2ddd6',
           borderWidth: 0,
           gapWidth: 2,
         },
@@ -157,7 +157,7 @@ export function VendorConcentrationTreemap({ vendors = [], totalInstitutionValue
 
   if (!allData.length) {
     return (
-      <div className="flex items-center justify-center text-xs text-zinc-500 py-8">
+      <div className="flex items-center justify-center text-xs text-text-muted py-8">
         No vendor concentration data available
       </div>
     )

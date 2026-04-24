@@ -18,15 +18,15 @@ import { getLocale } from '@/lib/utils'
 const MONTH_ABBR = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 const DISPLAY_YEARS = Array.from({ length: 10 }, (_, i) => 2025 - i).reverse() // 2016-2025
 
-// Risk color ramp — dark-mode optimized (transparent for no data, zinc-800 base)
+// Risk color ramp — cream-mode, bible §2 (NO green for low; zinc for low).
 // Breakpoints aligned to v0.6.5: low<0.25, medium<0.40, high<0.60, critical>=0.60
 function riskToColor(risk: number): string {
-  if (risk === 0) return '#2d2926'    // zinc-800 — no data
-  if (risk < 0.15) return '#166534'   // green-800 — low
-  if (risk < 0.25) return '#365314'   // lime-800 — low/medium boundary
-  if (risk < 0.40) return '#713f12'   // amber-900 — medium
-  if (risk < 0.60) return '#9a3412'   // orange-800 — high
-  return '#dc2626'                     // red-600 — critical (>=0.60)
+  if (risk === 0) return '#f3f1ec'    // elevated cream — no data
+  if (risk < 0.15) return '#e2ddd6'   // warm border gray — very low
+  if (risk < 0.25) return '#d4cfc7'   // light zinc — low
+  if (risk < 0.40) return '#a16207'   // medium (bible)
+  if (risk < 0.60) return '#f59e0b'   // high (bible)
+  return '#ef4444'                    // critical (bible)
 }
 
 function riskLabel(risk: number): string {
@@ -65,7 +65,7 @@ export function RiskCalendarHeatmap() {
     }))
   }, [results])
 
-  if (isLoading) return <Skeleton className="h-48 w-full bg-zinc-800" />
+  if (isLoading) return <Skeleton className="h-48 w-full bg-background-elevated" />
 
   const CELL_W = 28, CELL_H = 18, GAP = 3
   const LABEL_W = 36
@@ -78,7 +78,7 @@ export function RiskCalendarHeatmap() {
           {MONTH_ABBR.map(m => (
             <div
               key={m}
-              className="text-[9px] font-mono text-zinc-500 text-center"
+              className="text-[9px] font-mono text-text-muted text-center"
               style={{ width: CELL_W + GAP, flexShrink: 0 }}
             >
               {m}
@@ -91,7 +91,7 @@ export function RiskCalendarHeatmap() {
           {yearData.map(({ year, months }) => (
             <div key={year} className="flex items-center gap-0">
               <span
-                className="text-[10px] font-mono text-zinc-500 text-right shrink-0 tabular-nums"
+                className="text-[10px] font-mono text-text-muted text-right shrink-0 tabular-nums"
                 style={{ width: LABEL_W }}
               >
                 {year}
@@ -111,7 +111,7 @@ export function RiskCalendarHeatmap() {
                       style={{
                         width: CELL_W,
                         height: CELL_H,
-                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#2d2926',
+                        backgroundColor: contracts > 0 ? riskToColor(risk) : '#f3f1ec',
                         outline: isDecember ? '1px solid #71717a' : 'none',
                         outlineOffset: -1,
                       }}
@@ -135,23 +135,23 @@ export function RiskCalendarHeatmap() {
             style={{
               left: tooltip.x + 12,
               top: tooltip.y - 8,
-              backgroundColor: '#18181b',
+              backgroundColor: '#1a1714',
               border: '1px solid #3f3f46',
             }}
           >
-            <p className="font-semibold text-zinc-100 font-mono">
+            <p className="font-semibold text-text-primary font-mono">
               {MONTH_ABBR[tooltip.month - 1]} {tooltip.year}
             </p>
-            <p className="text-zinc-400 mt-0.5">
+            <p className="text-text-secondary mt-0.5">
               Risk:{' '}
               <span style={{ color: riskToColor(tooltip.risk) }} className="font-bold font-mono">
                 {tooltip.risk.toFixed(3)}
               </span>{' '}
-              <span className="text-zinc-500">({riskLabel(tooltip.risk)})</span>
+              <span className="text-text-muted">({riskLabel(tooltip.risk)})</span>
             </p>
-            <p className="text-zinc-400">
+            <p className="text-text-secondary">
               Contracts:{' '}
-              <span className="text-zinc-100 font-mono">{tooltip.contracts.toLocaleString(getLocale())}</span>
+              <span className="text-text-primary font-mono">{tooltip.contracts.toLocaleString(getLocale())}</span>
             </p>
           </div>
         )}
@@ -159,9 +159,9 @@ export function RiskCalendarHeatmap() {
 
       {/* Legend — dark-mode risk palette */}
       <div className="mt-3 flex items-center gap-2">
-        <span className="text-[10px] font-mono text-zinc-500 uppercase tracking-wide">Risk:</span>
+        <span className="text-[10px] font-mono text-text-muted uppercase tracking-wide">Risk:</span>
         {[
-          { label: 'None', color: '#2d2926' },
+          { label: 'None', color: '#f3f1ec' },
           { label: 'Low', color: RISK_COLORS.low },
           { label: 'Medium', color: RISK_COLORS.medium },
           { label: 'High', color: RISK_COLORS.high },
@@ -172,10 +172,10 @@ export function RiskCalendarHeatmap() {
               className="w-3 h-3 rounded-[2px]"
               style={{ backgroundColor: color, border: label === 'None' ? '1px solid #3f3f46' : 'none' }}
             />
-            <span className="text-[10px] font-mono text-zinc-500">{label}</span>
+            <span className="text-[10px] font-mono text-text-muted">{label}</span>
           </div>
         ))}
-        <span className="text-[10px] font-mono text-zinc-600 ml-2">
+        <span className="text-[10px] font-mono text-text-muted ml-2">
           outlined = December (budget year-end)
         </span>
       </div>

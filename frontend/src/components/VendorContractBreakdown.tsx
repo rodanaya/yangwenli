@@ -1,6 +1,6 @@
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { DotStrip } from '@/components/charts/DotStrip'
 import { cn, formatCompactMXN } from '@/lib/utils'
 
 // ============================================================================
@@ -24,17 +24,21 @@ interface VendorContractBreakdownProps {
 // Constants
 // ============================================================================
 
+// Procedure colors — bible-aligned: direct award maps to risk-high (amber);
+// open tender to neutral text-muted (procedurally healthy = no signal);
+// restricted to risk-medium (mid concern).
 const PROCEDURE_COLORS: Record<string, string> = {
-  'Direct Award': '#f97316',
-  'Open Tender': '#22c55e',
-  'Restricted': '#eab308',
+  'Direct Award': 'var(--color-risk-high)',
+  'Open Tender': 'var(--color-text-muted)',
+  'Restricted': 'var(--color-risk-medium)',
 }
 
+// Risk colors — bible §2 canonical (no green for low; zinc instead).
 const RISK_COLORS: Record<string, string> = {
-  critical: '#dc2626',
-  high: '#ea580c',
-  medium: '#eab308',
-  low: '#22c55e',
+  critical: 'var(--color-risk-critical)',
+  high: 'var(--color-risk-high)',
+  medium: 'var(--color-risk-medium)',
+  low: 'var(--color-risk-low)',
 }
 
 const RISK_ORDER = ['critical', 'high', 'medium', 'low']
@@ -71,41 +75,6 @@ function BreakdownSkeleton() {
         <div className="h-40 w-40 rounded-full bg-surface-muted/50 animate-pulse" />
       </div>
     </div>
-  )
-}
-
-// ============================================================================
-// Custom legend renderer — compact, dark-theme aware
-// ============================================================================
-
-interface LegendEntry {
-  value: string
-  color: string
-  payload?: { value: number; percent?: number }
-}
-
-function CustomLegend({ payload }: { payload?: LegendEntry[] }) {
-  if (!payload) return null
-  return (
-    <ul className="flex flex-wrap justify-center gap-x-3 gap-y-1 mt-2">
-      {payload.map((entry) => {
-        const pct =
-          entry.payload?.percent != null
-            ? `${(entry.payload.percent * 100).toFixed(0)}%`
-            : ''
-        return (
-          <li key={entry.value} className="flex items-center gap-1 text-xs text-text-muted">
-            <span
-              className="inline-block h-2 w-2 rounded-full flex-shrink-0"
-              style={{ backgroundColor: entry.color }}
-              aria-hidden="true"
-            />
-            <span>{entry.value}</span>
-            {pct && <span className="text-text-muted/60">{pct}</span>}
-          </li>
-        )
-      })}
-    </ul>
   )
 }
 
@@ -212,13 +181,6 @@ export function VendorContractBreakdown({
     }
   }, [contracts])
 
-  const tooltipStyle = {
-    backgroundColor: 'var(--color-background-card, #1e293b)',
-    border: '1px solid var(--color-border, rgba(255,255,255,0.1))',
-    borderRadius: '6px',
-    fontSize: '12px',
-    color: 'var(--color-text-primary, #e2e8f0)',
-  }
 
   return (
     <div
@@ -250,49 +212,23 @@ export function VendorContractBreakdown({
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={176}>
-                <PieChart>
-                  <Pie
-                    data={procedureData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={48}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                    aria-label="Procedure type distribution"
-                  >
-                    {procedureData.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={PROCEDURE_COLORS[entry.name] ?? '#64748b'}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(value: any, name: any) => [
-                      `${Number(value).toLocaleString()} contracts`,
-                      name,
-                    ]}
-                  />
-                  <Legend
-                    content={({ payload }) =>
-                      CustomLegend({
-                        payload: payload?.map((p) => ({
-                          value: p.value as string,
-                          color: p.color as string,
-                          payload: p.payload as { value: number; percent?: number },
-                        })),
-                      })
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <DotStrip
+                data={procedureData.map((d) => ({
+                  label: d.name,
+                  value: d.value,
+                  color: PROCEDURE_COLORS[d.name] ?? 'var(--color-text-muted)',
+                  valueLabel: `${d.value.toLocaleString()} (${(
+                    (d.value / procedureData.reduce((s, x) => s + x.value, 0)) *
+                    100
+                  ).toFixed(0)}%)`,
+                }))}
+                dots={40}
+                labelW={100}
+              />
             )}
           </div>
 
-          {/* Right: Risk Distribution donut */}
+          {/* Right: Risk Distribution */}
           <div className="flex-1 flex flex-col items-center">
             <span className="text-[11px] uppercase tracking-wider text-text-muted mb-1">
               Risk Distribution
@@ -309,45 +245,19 @@ export function VendorContractBreakdown({
                 </p>
               </div>
             ) : (
-              <ResponsiveContainer width="100%" height={176}>
-                <PieChart>
-                  <Pie
-                    data={riskData}
-                    cx="50%"
-                    cy="45%"
-                    innerRadius={48}
-                    outerRadius={70}
-                    paddingAngle={2}
-                    dataKey="value"
-                    aria-label="Risk level distribution"
-                  >
-                    {riskData.map((entry) => (
-                      <Cell
-                        key={entry.name}
-                        fill={RISK_COLORS[entry.name.toLowerCase()] ?? '#64748b'}
-                      />
-                    ))}
-                  </Pie>
-                  <Tooltip
-                    contentStyle={tooltipStyle}
-                    formatter={(value: any, name: any) => [
-                      `${Number(value).toLocaleString()} contracts`,
-                      name,
-                    ]}
-                  />
-                  <Legend
-                    content={({ payload }) =>
-                      CustomLegend({
-                        payload: payload?.map((p) => ({
-                          value: p.value as string,
-                          color: p.color as string,
-                          payload: p.payload as { value: number; percent?: number },
-                        })),
-                      })
-                    }
-                  />
-                </PieChart>
-              </ResponsiveContainer>
+              <DotStrip
+                data={riskData.map((d) => ({
+                  label: d.name,
+                  value: d.value,
+                  color: RISK_COLORS[d.name.toLowerCase()] ?? 'var(--color-text-muted)',
+                  valueLabel: `${d.value.toLocaleString()} (${(
+                    (d.value / riskData.reduce((s, x) => s + x.value, 0)) *
+                    100
+                  ).toFixed(0)}%)`,
+                }))}
+                dots={40}
+                labelW={100}
+              />
             )}
           </div>
         </div>

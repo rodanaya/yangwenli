@@ -62,12 +62,12 @@ function BarSkeleton({ label }: { label: string }) {
     <div className="space-y-3" aria-busy="true" aria-label={label}>
       {Array.from({ length: 12 }).map((_, i) => (
         <div key={i} className="flex items-center gap-3">
-          <div className="w-[140px] flex-shrink-0 h-3 rounded bg-zinc-800 animate-pulse" />
+          <div className="w-[140px] flex-shrink-0 h-3 rounded bg-background-elevated animate-pulse" />
           <div
-            className="h-5 rounded bg-zinc-800 animate-pulse"
+            className="h-5 rounded bg-background-elevated animate-pulse"
             style={{ width: `${30 + ((i * 47) % 55)}%` }}
           />
-          <div className="ml-auto w-8 h-3 rounded bg-zinc-800 animate-pulse" />
+          <div className="ml-auto w-8 h-3 rounded bg-background-elevated animate-pulse" />
         </div>
       ))}
     </div>
@@ -109,21 +109,21 @@ export default function SectorConcentrationChart({
 
   return (
     <section
-      className={cn('rounded-sm border border-white/8 bg-zinc-900/60 p-5', className)}
+      className={cn('rounded-sm border border-border bg-background-card/60 p-5', className)}
       aria-labelledby="sector-concentration-title"
     >
       {showTitle && (
         <div className="mb-4">
-          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 leading-none mb-1">
+          <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted leading-none mb-1">
             {t('charts.sectorConcentration.footnote')}
           </p>
           <h2
             id="sector-concentration-title"
-            className="text-base font-bold text-white leading-tight"
+            className="text-base font-bold text-text-primary leading-tight"
           >
             {t('charts.sectorConcentration.title')}
           </h2>
-          <p className="text-xs text-zinc-400 mt-0.5">
+          <p className="text-xs text-text-secondary mt-0.5">
             {t('charts.sectorConcentration.subtitle')}
           </p>
         </div>
@@ -134,14 +134,14 @@ export default function SectorConcentrationChart({
       {isError && !isLoading && (
         <p
           role="alert"
-          className="text-sm text-zinc-500 py-6 text-center"
+          className="text-sm text-text-muted py-6 text-center"
         >
           {t('charts.sectorConcentration.noData')}
         </p>
       )}
 
       {!isLoading && !isError && sorted.length === 0 && (
-        <p className="text-sm text-zinc-500 py-6 text-center">{t('charts.sectorConcentration.noData')}</p>
+        <p className="text-sm text-text-muted py-6 text-center">{t('charts.sectorConcentration.noData')}</p>
       )}
 
       {!isLoading && !isError && sorted.length > 0 && (
@@ -159,7 +159,7 @@ export default function SectorConcentrationChart({
               >
                 {/* Sector name with left border accent */}
                 <div
-                  className="w-[140px] flex-shrink-0 pl-2 border-l-2 text-xs font-medium text-zinc-300 truncate"
+                  className="w-[140px] flex-shrink-0 pl-2 border-l-2 text-xs font-medium text-text-secondary truncate"
                   style={{ borderColor: accentColor }}
                   title={getSectorName(row.sector_name)}
                 >
@@ -186,8 +186,8 @@ export default function SectorConcentrationChart({
                             cx={i * DG + DR}
                             cy={5}
                             r={DR}
-                            fill={i < filled ? barColor : '#2d2926'}
-                            stroke={i < filled ? undefined : '#3d3734'}
+                            fill={i < filled ? barColor : '#f3f1ec'}
+                            stroke={i < filled ? undefined : '#e2ddd6'}
                             strokeWidth={i < filled ? 0 : 0.5}
                             fillOpacity={i < filled ? 0.85 : 1}
                           />
@@ -220,7 +220,7 @@ export default function SectorConcentrationChart({
 
       {/* Legend */}
       {!isLoading && !isError && sorted.length > 0 && (
-        <div className="mt-4 pt-3 border-t border-white/5 flex flex-wrap gap-x-4 gap-y-1">
+        <div className="mt-4 pt-3 border-t border-border flex flex-wrap gap-x-4 gap-y-1">
           {[
             { color: '#dc2626', label: t('charts.sectorConcentration.legendHigh') },
             { color: '#ea580c', label: t('charts.sectorConcentration.legendModerate') },
@@ -229,14 +229,14 @@ export default function SectorConcentrationChart({
           ].map(({ color, label }) => (
             <div key={label} className="flex items-center gap-1.5">
               <span className="inline-block rounded-full" style={{ width: 6, height: 6, backgroundColor: color, opacity: 0.85 }} />
-              <span className="text-[10px] font-mono text-zinc-500">{label}</span>
+              <span className="text-[10px] font-mono text-text-muted">{label}</span>
             </div>
           ))}
         </div>
       )}
 
       {/* Footnote */}
-      <p className="mt-3 text-[10px] text-zinc-600 leading-snug">
+      <p className="mt-3 text-[10px] text-text-muted leading-snug">
         {t('charts.sectorConcentration.footnote')}
       </p>
     </section>

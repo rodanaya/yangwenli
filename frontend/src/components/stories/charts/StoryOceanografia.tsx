@@ -58,14 +58,14 @@ export function StoryOceanografia() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Cronología de contratos PEMEX → Oceanografía
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Once años de contratos offshore a un solo proveedor — hasta que estalló el fraude
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         De 2003 a febrero de 2014, Oceanografía S.A. acumuló contratos con subsidiarias de
         PEMEX en la región marina del Golfo. La relación creció año tras año hasta el arresto
         de Amado Yáñez Osuna y la pérdida de USD 235M registrada por Citigroup.
@@ -76,7 +76,7 @@ export function StoryOceanografia() {
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">
             {total.toFixed(1)}B
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             MXN total · 11 años · un solo proveedor
           </div>
         </div>
@@ -84,7 +84,7 @@ export function StoryOceanografia() {
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">
             {peakYear.year}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             año pico · {peakYear.valueB.toFixed(1)}B MXN
           </div>
         </div>
@@ -92,13 +92,13 @@ export function StoryOceanografia() {
           <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">
             02/2014
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             arresto de Yáñez · fin del esquema
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -225,7 +225,7 @@ export function StoryOceanografia() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           El esquema no fue accidente: fue un flujo continuo de 11 años amparado por la baja
           competencia en servicios offshore de PEMEX. Banamex descontó facturas falsas por
           USD 585M. Nadie cruzó facturas vs. contratos hasta que los controles internos de
@@ -233,7 +233,7 @@ export function StoryOceanografia() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · Case 8 (Oceanografía-PEMEX) · SEC filings Citigroup 2014 · valores aproximados
       </p>
     </motion.div>

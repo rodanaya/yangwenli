@@ -164,8 +164,8 @@ function DotBar({ value, color, dots = 20, size = 5, gap = 2 }: {
           cx={i * (size + gap) + size / 2}
           cy={size / 2}
           r={size / 2}
-          fill={i < filled ? color : '#27272a'}
-          stroke={i < filled ? undefined : '#3f3f46'}
+          fill={i < filled ? color : '#f3f1ec'}
+          stroke={i < filled ? undefined : '#e2ddd6'}
           strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
@@ -357,7 +357,7 @@ export function ConcentrationConstellation({
   const annoLines = [
     { row: criticalRow, anchor: marginAnchors.critical, color: '#ef4444', label: 'critical', y: PAD_T + 12 },
     { row: highRow,     anchor: marginAnchors.high,     color: '#f59e0b', label: 'high',     y: PAD_T + FIELD_H * 0.45 },
-    { row: lowRow,      anchor: marginAnchors.low,      color: '#a1a1aa', label: 'low',      y: PAD_T + FIELD_H * 0.85 },
+    { row: lowRow,      anchor: marginAnchors.low,      color: 'var(--color-text-muted)', label: 'low',      y: PAD_T + FIELD_H * 0.85 },
   ]
 
   // Guard hovered index against mode changes (stale high index after toggle)
@@ -585,7 +585,7 @@ export function ConcentrationConstellation({
             : 'translate(-50%, -130%)'
         return (
           <div
-            className="absolute z-10 pointer-events-none rounded-md border border-stone-700 bg-stone-900/95 backdrop-blur-sm p-2.5 shadow-xl"
+            className="absolute z-10 pointer-events-none rounded-md border border-border bg-background-card backdrop-blur-sm p-2.5 shadow-xl"
             style={{
               top: `${topPct}%`,
               left: `${leftPct}%`,
@@ -603,19 +603,19 @@ export function ConcentrationConstellation({
               </span>
               <span className="h-1 flex-1 rounded-full" style={{ backgroundColor: `${meta.color}44` }} />
             </div>
-            <div className="text-sm font-bold text-stone-100 mb-0.5">
+            <div className="text-sm font-bold text-text-primary mb-0.5">
               {meta.label}
               {meta.kicker && (
-                <span className="ml-1.5 text-[10px] font-mono text-stone-500">{meta.kicker}</span>
+                <span className="ml-1.5 text-[10px] font-mono text-text-muted">{meta.kicker}</span>
               )}
             </div>
-            <div className="text-[11px] text-stone-400 leading-snug mb-1.5">
+            <div className="text-[11px] text-text-secondary leading-snug mb-1.5">
               {meta.desc}
             </div>
             {/* DotBar — highRiskPct visualized as filled dots */}
             <div className="mb-1.5">
               <div className="flex items-center justify-between mb-0.5">
-                <span className="text-[10px] font-mono uppercase tracking-wider text-stone-500">
+                <span className="text-[10px] font-mono uppercase tracking-wider text-text-muted">
                   {isEs ? 'Alto + crítico' : 'High + critical'}
                 </span>
                 <span className="text-[10px] font-mono font-bold" style={{ color: meta.color }}>
@@ -624,9 +624,9 @@ export function ConcentrationConstellation({
               </div>
               <DotBar value={meta.highRiskPct} color={meta.color} />
             </div>
-            <div className="flex items-center gap-3 text-[10px] font-mono text-stone-500 mb-1">
+            <div className="flex items-center gap-3 text-[10px] font-mono text-text-muted mb-1">
               <span>{meta.vendors.toLocaleString()} {isEs ? 'proveedores' : 'vendors'}</span>
-              <span className="text-stone-600">·</span>
+              <span className="text-text-muted">·</span>
               <span style={{ color: meta.color }}>{meta.t1} T1</span>
             </div>
             {onClusterClick && (

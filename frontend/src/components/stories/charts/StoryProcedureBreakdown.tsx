@@ -58,14 +58,14 @@ export function StoryProcedureBreakdown() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Procedimiento por sector
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         9 de 12 sectores adjudican más de la mitad de sus contratos sin competencia
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada sector es un bloque con tres bandas: roja = adjudicación directa,
         naranja = licitación con un solo oferente, verde = licitación abierta.
         Cada punto vale 2 puntos porcentuales.
@@ -74,19 +74,19 @@ export function StoryProcedureBreakdown() {
       <div className="grid grid-cols-2 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400">93.4%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Agricultura · adj. directa · <span className="text-cyan-400">OCDE máx 25%</span>
           </div>
         </div>
         <div className="border-l-2 border-emerald-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-emerald-400">59.9%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Infraestructura · licitación abierta · único sector {'>'}50%
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -181,7 +181,7 @@ export function StoryProcedureBreakdown() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Defensa tiene la tasa más alta de licitación con un solo oferente (22.1%) —
           casi una cuarta parte de sus "competencias" reciben una sola propuesta.
           Combinado con 56.3% de adjudicación directa, efectivamente el 78.4% de los
@@ -189,7 +189,7 @@ export function StoryProcedureBreakdown() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2002-2025 · 3.05M contratos · OCDE Public Procurement Report 2023
       </p>
     </motion.div>

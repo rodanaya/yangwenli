@@ -255,7 +255,7 @@ export function NetworkGraphModal({
                   onClick={() => setDepth(d)}
                   className={`px-2.5 py-1 rounded text-xs font-medium transition-colors ${
                     depth === d
-                      ? 'bg-accent text-white'
+                      ? 'bg-accent text-text-primary'
                       : 'bg-background-elevated border border-border/40 text-text-secondary hover:text-accent hover:border-accent/40'
                   }`}
                 >

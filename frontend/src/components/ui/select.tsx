@@ -10,7 +10,7 @@ const Select = React.forwardRef<HTMLSelectElement, SelectProps>(
       <select
         ref={ref}
         className={cn(
-          'flex h-10 w-full rounded-md border border-border bg-background-card px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full rounded-sm border border-border bg-background-card px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         {...props}
@@ -76,7 +76,7 @@ const SelectTrigger = React.forwardRef<HTMLButtonElement, SelectTriggerProps>(
         ref={ref}
         type="button"
         className={cn(
-          'flex h-10 w-full items-center justify-between rounded-md border border-border bg-background-card px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50',
+          'flex h-10 w-full items-center justify-between rounded-sm border border-border bg-background-card px-3 py-2 text-sm text-text-primary focus:outline-none focus:ring-2 focus:ring-accent disabled:cursor-not-allowed disabled:opacity-50',
           className
         )}
         onClick={() => setOpen(!open)}
@@ -107,7 +107,7 @@ const SelectContent: React.FC<SelectContentProps> = ({ children }) => {
   const { open } = React.useContext(SelectContext)
   if (!open) return null
   return (
-    <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-md border border-border bg-background-card text-text-primary shadow-md max-h-60 overflow-auto">
+    <div className="absolute top-full left-0 z-50 mt-1 w-full rounded-sm border border-border bg-background-card text-text-primary shadow-md max-h-60 overflow-auto">
       <div className="p-1">{children}</div>
     </div>
   )

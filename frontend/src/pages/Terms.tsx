@@ -12,10 +12,10 @@ interface SectionProps {
 function Section({ title, children }: SectionProps) {
   return (
     <section className="mb-10">
-      <h2 className="text-base font-semibold text-white/90 mb-3 pb-2 border-b border-white/[0.07]">
+      <h2 className="text-base font-semibold text-text-primary mb-3 pb-2 border-b border-border">
         {title}
       </h2>
-      <div className="space-y-3 text-sm text-white/60 leading-relaxed">{children}</div>
+      <div className="space-y-3 text-sm text-text-primary leading-relaxed">{children}</div>
     </section>
   )
 }
@@ -29,14 +29,14 @@ export default function Terms() {
         <div className="mb-10">
           <div className="flex items-center gap-2.5 mb-4">
             <Scale className="h-5 w-5 text-amber-500/80" aria-hidden="true" />
-            <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-white/30">
+            <span className="text-[11px] font-mono uppercase tracking-[0.1em] text-text-primary">
               Terms of Use
             </span>
           </div>
-          <h1 className="text-2xl font-bold text-white mb-2">
+          <h1 className="text-2xl font-bold text-text-primary mb-2">
             Terms of Use
           </h1>
-          <p className="text-sm text-white/40">
+          <p className="text-sm text-text-primary">
             Last updated: April 2026 &mdash; Version 1.0
           </p>
         </div>
@@ -45,11 +45,11 @@ export default function Terms() {
         <div className="rounded-lg border border-orange-500/25 bg-orange-500/[0.04] p-4 mb-10">
           <div className="flex gap-3">
             <AlertTriangle className="h-4 w-4 text-orange-400/80 flex-shrink-0 mt-0.5" aria-hidden="true" />
-            <p className="text-sm text-white/70 leading-relaxed">
+            <p className="text-sm text-text-primary leading-relaxed">
               <span className="font-semibold text-orange-400/80">Risk scores are not proof of wrongdoing.</span>{' '}
               RUBLI's statistical risk indicators measure similarity to documented procurement
               irregularities. A high risk score means a contract's characteristics resemble
-              known problematic patterns — it does <strong className="text-white/80">not</strong> mean
+              known problematic patterns — it does <strong className="text-text-primary">not</strong> mean
               the contract, vendor, or institution is corrupt. Risk scores are tools for
               investigation triage, not verdicts.
             </p>
@@ -84,7 +84,7 @@ export default function Terms() {
 
         {/* ------------------------------------------------------------------ */}
         <Section title="3. Prohibited Uses">
-          <p>You may <strong className="text-white/80">not</strong>:</p>
+          <p>You may <strong className="text-text-primary">not</strong>:</p>
           <ul className="list-disc list-inside space-y-1.5 ml-1">
             <li>
               Redistribute or resell RUBLI data or outputs for commercial gain without
@@ -115,16 +115,16 @@ export default function Terms() {
           </p>
           <ul className="list-disc list-inside space-y-1.5 ml-1">
             <li>
-              <strong className="text-white/80">Probabilistic, not deterministic</strong> — they
+              <strong className="text-text-primary">Probabilistic, not deterministic</strong> — they
               reflect statistical patterns in procurement data, not factual findings of misconduct.
             </li>
             <li>
-              <strong className="text-white/80">Trained on documented cases</strong> — the model
+              <strong className="text-text-primary">Trained on documented cases</strong> — the model
               was calibrated against publicly documented corruption cases and may not capture
               all forms of procurement irregularity.
             </li>
             <li>
-              <strong className="text-white/80">Subject to known limitations</strong> — see the{' '}
+              <strong className="text-text-primary">Subject to known limitations</strong> — see the{' '}
               <a href="/methodology" className="text-amber-400/80 hover:text-amber-300 underline underline-offset-2">
                 Methodology
               </a>{' '}
@@ -132,7 +132,7 @@ export default function Terms() {
               caveats.
             </li>
             <li>
-              <strong className="text-white/80">Not legal opinions</strong> — nothing on this
+              <strong className="text-text-primary">Not legal opinions</strong> — nothing on this
               platform constitutes legal advice or a formal audit finding.
             </li>
           </ul>
@@ -145,23 +145,23 @@ export default function Terms() {
           </p>
           <ul className="list-disc list-inside space-y-1.5 ml-1">
             <li>
-              <strong className="text-white/80">COMPRANET</strong> — Sistema Electrónico de
+              <strong className="text-text-primary">COMPRANET</strong> — Sistema Electrónico de
               Contrataciones Gubernamentales (SHCP / Secretaría de la Función Pública)
             </li>
             <li>
-              <strong className="text-white/80">SAT EFOS</strong> — Empresas que Facturan
+              <strong className="text-text-primary">SAT EFOS</strong> — Empresas que Facturan
               Operaciones Simuladas (Servicio de Administración Tributaria)
             </li>
             <li>
-              <strong className="text-white/80">SFP Sanctions</strong> — Registro de
+              <strong className="text-text-primary">SFP Sanctions</strong> — Registro de
               Servidores Públicos Sancionados
             </li>
             <li>
-              <strong className="text-white/80">RUPC</strong> — Registro Único de Proveedores
+              <strong className="text-text-primary">RUPC</strong> — Registro Único de Proveedores
               y Contratistas
             </li>
             <li>
-              <strong className="text-white/80">ASF</strong> — Auditoría Superior de la
+              <strong className="text-text-primary">ASF</strong> — Auditoría Superior de la
               Federación public audit reports
             </li>
           </ul>
@@ -174,7 +174,7 @@ export default function Terms() {
         {/* ------------------------------------------------------------------ */}
         <Section title="6. No Warranty">
           <p>
-            RUBLI is provided <strong className="text-white/80">"as is"</strong>, without
+            RUBLI is provided <strong className="text-text-primary">"as is"</strong>, without
             warranty of any kind, express or implied. The maintainers make no representations
             about the accuracy, completeness, or fitness for purpose of any data or analysis
             presented. Data may contain errors inherited from the original government sources.
@@ -189,7 +189,7 @@ export default function Terms() {
         <Section title="7. Open Source Licence">
           <p>
             RUBLI's source code is released under the{' '}
-            <strong className="text-white/80">MIT Licence</strong>. You are free to inspect,
+            <strong className="text-text-primary">MIT Licence</strong>. You are free to inspect,
             fork, and build upon the codebase in accordance with that licence. The licence
             text is available in the{' '}
             <a
@@ -237,25 +237,25 @@ export default function Terms() {
         </Section>
 
         {/* Footer links */}
-        <div className="mt-12 pt-6 border-t border-white/[0.07] flex flex-wrap gap-4 items-center">
+        <div className="mt-12 pt-6 border-t border-border flex flex-wrap gap-4 items-center">
           <a
             href="https://github.com/rodanaya/yangwenli"
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1.5 text-xs text-white/35 hover:text-white/60 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-primary hover:text-text-primary transition-colors"
           >
             <Github className="h-3.5 w-3.5" aria-hidden="true" />
             Source code (MIT)
           </a>
           <a
             href="/privacy"
-            className="text-xs text-white/35 hover:text-white/60 transition-colors"
+            className="text-xs text-text-primary hover:text-text-primary transition-colors"
           >
             Privacy Policy
           </a>
           <a
             href="/methodology"
-            className="flex items-center gap-1.5 text-xs text-white/35 hover:text-white/60 transition-colors"
+            className="flex items-center gap-1.5 text-xs text-text-primary hover:text-text-primary transition-colors"
           >
             <BookOpen className="h-3.5 w-3.5" aria-hidden="true" />
             Methodology

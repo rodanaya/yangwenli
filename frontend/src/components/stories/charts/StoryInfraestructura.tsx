@@ -66,16 +66,16 @@ export function StoryInfraestructura() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Infraestructura sin competencia
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         La obra pública perdió competencia real durante 14 años
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada barra muestra cómo se adjudicaron los contratos de infraestructura
         ese año: rojo = adjudicación directa, naranja = licitación con un solo
         oferente, verde = licitación abierta competida. Los bloques verdes se
@@ -85,19 +85,19 @@ export function StoryInfraestructura() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-orange-400">$2.1T</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             con un solo oferente · 196,540 contratos
           </div>
         </div>
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-500">{avgBidders}</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             oferentes promedio / licitación
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-cyan-400">{oecdBidders}+</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">
             oferentes OCDE (Corea, Chile, UE)
           </div>
         </div>
@@ -277,7 +277,7 @@ export function StoryInfraestructura() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           En 14 años la licitación abierta en obra pública cayó del 66% al 32%.
           Tren Maya, Dos Bocas y AIFA se ejecutaron a través de entidades militares
           exentas de las reglas normales de contratación — moviendo cientos de miles
@@ -285,7 +285,7 @@ export function StoryInfraestructura() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2010-2024 · sector infraestructura · 196,540 contratos con oferente único
       </p>
     </motion.div>

@@ -184,7 +184,7 @@ function TrendIcon({ direction }: { direction: string | null }) {
   const { t } = useTranslation('institutionleague')
   if (direction === 'improving') return <TrendingUp className="h-3.5 w-3.5 text-green-400" aria-label={t('trend.improving')} />
   if (direction === 'declining') return <TrendingDown className="h-3.5 w-3.5 text-red-400" aria-label={t('trend.declining')} />
-  return <Minus className="h-3.5 w-3.5 text-zinc-600" aria-label={t('trend.stable')} />
+  return <Minus className="h-3.5 w-3.5 text-text-muted" aria-label={t('trend.stable')} />
 }
 
 /** 5 mini vertical bars showing all pillars at a glance */
@@ -205,13 +205,13 @@ function PillarSparkBars({ item }: { item: InstitutionScorecardItem }) {
     >
       {pillars.map(({ key, value, max }) => {
         const pct = Math.min(100, Math.max(2, (value / max) * 100))
-        const bg = pct > 65 ? '#71717a' : pct > 35 ? '#fbbf24' : '#f87171'
+        const bg = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? '#fbbf24' : '#f87171'
         return (
           <div key={key} className="flex flex-col items-center gap-[2px]">
-            <div className="w-[18px] h-7 bg-zinc-800/80 rounded-[2px] flex flex-col justify-end overflow-hidden">
+            <div className="w-[18px] h-7 bg-background-elevated rounded-[2px] flex flex-col justify-end overflow-hidden">
               <div style={{ height: `${pct}%`, background: bg }} className="w-full rounded-[1px] transition-all" />
             </div>
-            <span className="text-[7px] text-zinc-600 font-mono leading-none select-none">{key}</span>
+            <span className="text-[7px] text-text-muted font-mono leading-none select-none">{key}</span>
           </div>
         )
       })}
@@ -255,7 +255,7 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
 
   return (
     <div className="space-y-3">
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         {t('distribution.title')}
       </p>
       {/* Stacked dot-matrix */}
@@ -295,11 +295,11 @@ function TierDistributionBar({ distribution }: { distribution: Record<string, nu
         {tiers.filter(t => t.count > 0).map(({ tier, count }) => {
           const pct = ((count / total) * 100).toFixed(1)
           return (
-            <span key={tier.key} className="flex items-center gap-1.5 text-[10px] text-zinc-400">
+            <span key={tier.key} className="flex items-center gap-1.5 text-[10px] text-text-secondary">
               <span className="w-2.5 h-2.5 rounded-sm flex-shrink-0" style={{ backgroundColor: tier.color }} />
               <span className="font-mono font-bold" style={{ color: tier.color }}>{tier.label}</span>
-              <span className="font-mono tabular-nums text-zinc-500">{count}</span>
-              <span className="font-mono tabular-nums text-zinc-600">({pct}%)</span>
+              <span className="font-mono tabular-nums text-text-muted">{count}</span>
+              <span className="font-mono tabular-nums text-text-muted">({pct}%)</span>
             </span>
           )
         })}
@@ -352,8 +352,8 @@ function ChampionCard({
       onClick={() => onNavigate(item.institution_id)}
       className={`relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
         border ${isLeader
-          ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-zinc-950/10 hover:border-yellow-400/70'
-          : 'border-emerald-700/30 bg-gradient-to-b from-emerald-950/20 to-zinc-950/10 hover:border-emerald-600/50'
+          ? 'border-yellow-500/50 bg-gradient-to-b from-yellow-950/25 to-background-elevated hover:border-yellow-400/70'
+          : 'border-emerald-700/30 bg-gradient-to-b from-emerald-950/20 to-background-elevated hover:border-emerald-600/50'
         }`}
       aria-label={t('podiumAriaLabel', { rank, name: item.institution_name, score: item.total_score })}
     >
@@ -374,19 +374,19 @@ function ChampionCard({
         <span className="text-5xl font-black font-mono tabular-nums leading-none" style={{ color: tier.color }}>
           {item.total_score.toFixed(0)}
         </span>
-        <span className="text-zinc-600 text-[11px] font-mono">/100</span>
+        <span className="text-text-muted text-[11px] font-mono">/100</span>
       </div>
 
       {/* Institution name — clipped */}
-      <p className="text-zinc-100 text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors min-h-[2.5rem]">
+      <p className="text-text-primary text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-text-primary transition-colors min-h-[2.5rem]">
         {item.institution_name}
       </p>
 
       {/* Sector + tier */}
-      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-zinc-800/60">
+      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
         <TierBadge grade={item.grade} size="sm" />
         {item.sector_name && (
-          <span className="text-zinc-600 text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
+          <span className="text-text-muted text-[9px] font-mono uppercase tracking-wide truncate">{item.sector_name}</span>
         )}
       </div>
     </button>
@@ -414,7 +414,7 @@ function RedFlagCard({
     <button
       onClick={() => onNavigate(item.institution_id)}
       className="relative flex flex-col gap-3 p-4 rounded-sm text-left w-full group transition-all
-        border border-red-900/40 bg-gradient-to-b from-red-950/30 to-zinc-950/10 hover:border-red-700/60"
+        border border-red-900/40 bg-gradient-to-b from-red-950/30 to-background-elevated hover:border-red-700/60"
       aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
     >
       {/* Top bar: rank + flag */}
@@ -430,16 +430,16 @@ function RedFlagCard({
         <span className="text-5xl font-black font-mono tabular-nums leading-none text-red-500">
           {item.total_score.toFixed(0)}
         </span>
-        <span className="text-zinc-600 text-[11px] font-mono">/100</span>
+        <span className="text-text-muted text-[11px] font-mono">/100</span>
       </div>
 
       {/* Institution name */}
-      <p className="text-zinc-100 text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-white transition-colors min-h-[2.5rem]">
+      <p className="text-text-primary text-[13px] font-medium leading-snug line-clamp-2 group-hover:text-text-primary transition-colors min-h-[2.5rem]">
         {item.institution_name}
       </p>
 
       {/* Risk driver pill + tier */}
-      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-zinc-800/60">
+      <div className="flex items-center gap-2 flex-wrap mt-auto pt-2 border-t border-border">
         <TierBadge grade={item.grade} size="sm" />
         {item.top_risk_driver && (
           <RiskDriverPill driver={item.top_risk_driver} />
@@ -498,20 +498,20 @@ function ScoreHistogram({
   return (
     <div className="space-y-4">
       <div>
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
           {t('histogram.kicker')}
         </p>
-        <h3 className="text-lg font-serif font-bold text-zinc-100 leading-tight">
+        <h3 className="text-lg font-serif font-bold text-text-primary leading-tight">
           {t('histogram.headline', { total: formatNumber(total) })}
         </h3>
-        <p className="text-zinc-500 text-xs mt-1 italic">
+        <p className="text-text-muted text-xs mt-1 italic">
           {t('histogram.sub', { median: median.toFixed(1) })}
         </p>
       </div>
 
       {/* Histogram: 5 bars, shared baseline, fixed height 160px */}
       <div
-        className="relative rounded-sm border border-zinc-800 bg-zinc-900/50 p-5"
+        className="relative rounded-sm border border-border bg-background/50 p-5"
         role="img"
         aria-label={t('histogram.ariaLabel')}
       >
@@ -527,7 +527,7 @@ function ScoreHistogram({
                   <span className="text-lg font-mono font-bold tabular-nums leading-none" style={{ color: tier.color }}>
                     {formatNumber(band.count)}
                   </span>
-                  <span className="text-[9px] text-zinc-600 font-mono tabular-nums leading-tight mt-0.5">
+                  <span className="text-[9px] text-text-muted font-mono tabular-nums leading-tight mt-0.5">
                     {bandPct.toFixed(1)}%
                   </span>
                 </div>
@@ -547,12 +547,12 @@ function ScoreHistogram({
         </div>
 
         {/* X-axis labels: score ranges + tier names */}
-        <div className="grid grid-cols-5 gap-3 mt-3 pt-3 border-t border-zinc-800">
+        <div className="grid grid-cols-5 gap-3 mt-3 pt-3 border-t border-border">
           {bands.map((band) => {
             const tier = getTier(band.tierKey)
             return (
               <div key={band.tierKey} className="flex flex-col items-center gap-0.5 text-center">
-                <span className="text-[10px] font-mono font-bold tabular-nums text-zinc-400">
+                <span className="text-[10px] font-mono font-bold tabular-nums text-text-secondary">
                   {t('histogram.bandLabel', { min: band.min, max: band.max })}
                 </span>
                 <span className="text-[9px] font-mono uppercase tracking-wide truncate w-full" style={{ color: tier.color }}>
@@ -634,7 +634,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
             cy={center}
             r={radius * r}
             fill="none"
-            stroke="#3d3734"
+            stroke="var(--color-border-hover)"
             strokeWidth="0.5"
           />
         ))}
@@ -650,7 +650,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
               y1={center}
               x2={x}
               y2={y}
-              stroke="#3d3734"
+              stroke="var(--color-border-hover)"
               strokeWidth="0.5"
             />
           )
@@ -685,7 +685,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
               dominantBaseline="middle"
               fontSize="10"
               fontFamily="monospace"
-              fill="#a1a1aa"
+              fill="var(--color-text-muted)"
               className="uppercase tracking-wide"
             >
               {p.label}
@@ -696,7 +696,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
 
       {/* Numeric breakdown column */}
       <div className="flex flex-col gap-2 min-w-[160px]">
-        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+        <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
           {t('pillarRadar.title')}
         </p>
         {[
@@ -707,10 +707,10 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
           { label: t('pillarRadar.external'), value: item.pillar_external, max: 20 },
         ].map((p) => {
           const pct = (p.value / p.max) * 100
-          const barColor = pct > 65 ? '#71717a' : pct > 35 ? '#fbbf24' : '#f87171'
+          const barColor = pct > 65 ? 'var(--color-text-muted)' : pct > 35 ? '#fbbf24' : '#f87171'
           return (
             <div key={p.label} className="flex items-center gap-2">
-              <span className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 w-20">{p.label}</span>
+              <span className="text-[10px] font-mono uppercase tracking-wide text-text-muted w-20">{p.label}</span>
               {(() => {
                 const N = 20, DR = 2, DG = 5
                 const filled = Math.max(1, Math.round((pct / 100) * N))
@@ -718,8 +718,8 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
                   <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={3} r={DR}
-                        fill={k < filled ? barColor : '#2d2926'}
-                        stroke={k < filled ? undefined : '#3d3734'}
+                        fill={k < filled ? barColor : 'var(--color-background-elevated)'}
+                        stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.85 : 1}
                       />
@@ -727,7 +727,7 @@ function PillarRadar({ item }: { item: InstitutionScorecardItem }) {
                   </svg>
                 )
               })()}
-              <span className="text-[10px] font-mono tabular-nums text-zinc-400 w-10 text-right">
+              <span className="text-[10px] font-mono tabular-nums text-text-secondary w-10 text-right">
                 {p.value.toFixed(0)}/{p.max}
               </span>
             </div>
@@ -762,7 +762,7 @@ function SortHeader({
   return (
     <button
       onClick={() => onSort(sortKey)}
-      className={`flex items-center gap-1 hover:text-white transition-colors ${active ? 'text-white' : 'text-zinc-500'} ${className}`}
+      className={`flex items-center gap-1 hover:text-text-primary transition-colors ${active ? 'text-text-primary' : 'text-text-muted'} ${className}`}
       aria-label={t('sortAriaLabel', { label })}
     >
       <span className="text-[10px] font-mono font-bold tracking-[0.1em] uppercase">{label}</span>
@@ -912,10 +912,10 @@ export default function InstitutionLeague() {
 
   if (activeTab === 'fichas') {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="min-h-screen bg-background text-text-primary">
         <TabBar activeTab={activeTab} setTab={setTab} />
         <ErrorBoundary fallback={null}>
-          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">{t('loadingShort')}</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-text-muted text-sm">{t('loadingShort')}</div>}>
             <InstitutionScorecards />
           </Suspense>
         </ErrorBoundary>
@@ -925,10 +925,10 @@ export default function InstitutionLeague() {
 
   if (activeTab === 'reporte') {
     return (
-      <div className="min-h-screen bg-zinc-950 text-zinc-100">
+      <div className="min-h-screen bg-background text-text-primary">
         <TabBar activeTab={activeTab} setTab={setTab} />
         <ErrorBoundary fallback={null}>
-          <Suspense fallback={<div className="flex items-center justify-center h-64 text-zinc-500 text-sm">{t('loadingShort')}</div>}>
+          <Suspense fallback={<div className="flex items-center justify-center h-64 text-text-muted text-sm">{t('loadingShort')}</div>}>
             <ReportCard />
           </Suspense>
         </ErrorBoundary>
@@ -940,7 +940,7 @@ export default function InstitutionLeague() {
   const highRiskInstitutions = failingCount
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100">
+    <div className="min-h-screen bg-background text-text-primary">
       <TabBar activeTab={activeTab} setTab={setTab} />
       <div className="max-w-screen-xl mx-auto px-4 sm:px-6 pt-6">
         <EditorialPageShell
@@ -979,7 +979,7 @@ export default function InstitutionLeague() {
             }`}>
               {t('hallazgo')}
             </p>
-            <p className="text-base text-zinc-100 leading-relaxed font-medium">{editorialHeadline}</p>
+            <p className="text-base text-text-primary leading-relaxed font-medium">{editorialHeadline}</p>
           </div>
         </div>
       )}
@@ -1014,7 +1014,7 @@ export default function InstitutionLeague() {
             </div>
             {/* Tier distribution bar */}
             {statsData.grade_distribution && (
-              <div className="bg-zinc-900 border border-zinc-800 rounded-sm px-5 py-4">
+              <div className="bg-background border border-border rounded-sm px-5 py-4">
                 <TierDistributionBar distribution={statsData.grade_distribution} />
               </div>
             )}
@@ -1032,11 +1032,11 @@ export default function InstitutionLeague() {
                 </p>
                 <h2
                   id="champions-heading"
-                  className="text-lg font-serif font-bold text-zinc-100 leading-tight"
+                  className="text-lg font-serif font-bold text-text-primary leading-tight"
                 >
                   {t('champions.headline')}
                 </h2>
-                <p className="text-zinc-500 text-xs mt-1 italic max-w-2xl">
+                <p className="text-text-muted text-xs mt-1 italic max-w-2xl">
                   {t('champions.sub')}
                 </p>
               </div>
@@ -1064,11 +1064,11 @@ export default function InstitutionLeague() {
               </p>
               <h2
                 id="redflags-heading"
-                className="text-lg font-serif font-bold text-zinc-100 leading-tight"
+                className="text-lg font-serif font-bold text-text-primary leading-tight"
               >
                 {t('redFlags.headline')}
               </h2>
-              <p className="text-zinc-500 text-xs mt-1 italic max-w-2xl">
+              <p className="text-text-muted text-xs mt-1 italic max-w-2xl">
                 {t('redFlags.sub')}
               </p>
             </div>
@@ -1111,7 +1111,7 @@ export default function InstitutionLeague() {
               value={search}
               onChange={(e) => updateParams({ q: e.target.value || undefined, page: '1' })}
               placeholder={t('filters.searchPlaceholder')}
-              className="w-full bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-zinc-600 font-mono"
+              className="w-full bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-border font-mono"
             />
           </div>
 
@@ -1122,7 +1122,7 @@ export default function InstitutionLeague() {
               id="sector-filter"
               value={sectorFilter}
               onChange={(e) => updateParams({ sector: e.target.value || undefined, page: '1' })}
-              className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600"
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-border"
             >
               <option value="">{t('filters.allSectors')}</option>
               {sectorOptions.map((s) => (
@@ -1144,7 +1144,7 @@ export default function InstitutionLeague() {
                 const gradeVal = grades ? grades[0] : undefined
                 updateParams({ grade: gradeVal || undefined, page: '1' })
               }}
-              className="bg-zinc-900 border border-zinc-800 rounded-md px-3 py-1.5 text-sm text-zinc-100 focus:outline-none focus:border-zinc-600"
+              className="bg-background border border-border rounded-md px-3 py-1.5 text-sm text-text-primary focus:outline-none focus:border-border"
             >
               <option value="">{t('filters.allTiers')}</option>
               {TIER_NAMES.map((tierName) => {
@@ -1157,7 +1157,7 @@ export default function InstitutionLeague() {
           </div>
 
           {/* Result count */}
-          <span className="text-zinc-500 text-[10px] font-mono ml-auto tabular-nums tracking-wide">
+          <span className="text-text-muted text-[10px] font-mono ml-auto tabular-nums tracking-wide">
             {t('filters.results', { num: formatNumber(total) })}
           </span>
         </div>
@@ -1165,10 +1165,10 @@ export default function InstitutionLeague() {
         {/* Table */}
         <section aria-labelledby="league-table-heading" className="space-y-3">
           <div>
-            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500 mb-1">
+            <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted mb-1">
               {t('tableKicker')}
             </p>
-            <h2 id="league-table-heading" className="text-lg font-serif font-bold text-zinc-100 leading-tight">
+            <h2 id="league-table-heading" className="text-lg font-serif font-bold text-text-primary leading-tight">
               {t('tableHeadline', { total: formatNumber(total) })}
             </h2>
           </div>
@@ -1185,7 +1185,7 @@ export default function InstitutionLeague() {
               {Array.from({ length: 10 }).map((_, i) => (
                 <div
                   key={i}
-                  className="h-12 bg-zinc-800/40 rounded animate-pulse"
+                  className="h-12 bg-background-elevated rounded animate-pulse"
                   aria-hidden="true"
                 />
               ))}
@@ -1193,21 +1193,21 @@ export default function InstitutionLeague() {
           )}
 
           {!isLoading && !isError && items.length === 0 && (
-            <div className="rounded-sm border border-zinc-800 bg-zinc-900/50 p-8 text-center">
-              <p className="text-zinc-400 text-sm">{t('empty')}</p>
-              <p className="text-zinc-600 text-xs mt-1">
+            <div className="rounded-sm border border-border bg-background/50 p-8 text-center">
+              <p className="text-text-secondary text-sm">{t('empty')}</p>
+              <p className="text-text-muted text-xs mt-1">
                 {t('filters.adjustFilters')}
               </p>
             </div>
           )}
 
           {items.length > 0 && (
-            <div className="overflow-x-auto rounded-sm border border-zinc-800">
+            <div className="overflow-x-auto rounded-sm border border-border">
               <table className="w-full text-sm min-w-[900px]" role="grid" aria-label={t('tableAriaLabel')}>
                 <thead>
-                  <tr className="border-b border-zinc-800 bg-zinc-900/80">
+                  <tr className="border-b border-border bg-background/80">
                     <th className="px-3 py-2.5 text-left w-10">
-                      <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
+                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
                         #
                       </span>
                     </th>
@@ -1230,17 +1230,17 @@ export default function InstitutionLeague() {
                       />
                     </th>
                     <th className="px-3 py-2.5 text-center w-28">
-                      <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
+                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
                         {t('columns.grade')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-left hidden sm:table-cell w-32">
-                      <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
+                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
                         {t('columns.pillars')}
                       </span>
                     </th>
                     <th className="px-3 py-2.5 text-center w-16 hidden sm:table-cell">
-                      <span className="text-[10px] font-mono font-bold text-zinc-600 uppercase tracking-wide">
+                      <span className="text-[10px] font-mono font-bold text-text-muted uppercase tracking-wide">
                         {t('columns.trend')}
                       </span>
                     </th>
@@ -1276,9 +1276,9 @@ export default function InstitutionLeague() {
                     return (
                       <React.Fragment key={item.institution_id}>
                       <tr
-                        className={`border-b border-zinc-800/40 hover:bg-zinc-800/30 transition-colors cursor-pointer group ${
+                        className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group ${
                           isWorstPerformer ? 'bg-red-950/15' : ''
-                        } ${isExpanded ? 'bg-zinc-800/20' : ''}`}
+                        } ${isExpanded ? 'bg-background-elevated' : ''}`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
                         role="row"
                         aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
@@ -1314,7 +1314,7 @@ export default function InstitutionLeague() {
                             <button
                               type="button"
                               onClick={toggleExpand}
-                              className="flex-shrink-0 mt-0.5 p-0.5 rounded hover:bg-zinc-700/40 text-zinc-500 hover:text-zinc-200 transition-colors"
+                              className="flex-shrink-0 mt-0.5 p-0.5 rounded hover:bg-background-elevated text-text-muted hover:text-text-secondary transition-colors"
                               aria-label={isExpanded ? t('collapseRow') : t('expandRow')}
                               aria-expanded={isExpanded}
                             >
@@ -1324,12 +1324,12 @@ export default function InstitutionLeague() {
                               />
                             </button>
                             <div className="min-w-0 flex-1">
-                              <span className="text-zinc-200 group-hover:text-white transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
+                              <span className="text-text-secondary group-hover:text-text-primary transition-colors font-medium line-clamp-2 leading-snug" title={item.institution_name}>
                                 {item.institution_name}
                               </span>
                               <div className="flex items-center gap-2 flex-wrap">
                                 {item.sector_name && (
-                                  <span className="text-zinc-600 text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
+                                  <span className="text-text-muted text-[10px] font-mono uppercase tracking-wide">{item.sector_name}</span>
                                 )}
                                 {item.top_risk_driver && (
                                   <RiskDriverPill driver={item.top_risk_driver} />
@@ -1345,7 +1345,7 @@ export default function InstitutionLeague() {
                             <span className="text-xl font-bold font-mono tabular-nums" style={{ color: tier.color }}>
                               {item.total_score.toFixed(1)}
                             </span>
-                            <span className="text-zinc-600 text-[10px] font-mono">/100</span>
+                            <span className="text-text-muted text-[10px] font-mono">/100</span>
                           </div>
                         </td>
 
@@ -1366,7 +1366,7 @@ export default function InstitutionLeague() {
 
                         {/* National percentile */}
                         <td className="px-3 py-3 hidden md:table-cell">
-                          <span className="text-zinc-400 text-xs font-mono tabular-nums">
+                          <span className="text-text-secondary text-xs font-mono tabular-nums">
                             {item.national_percentile !== null
                               ? t('percentileLabel', { n: Math.round(item.national_percentile * 100) })
                               : '--'}
@@ -1375,7 +1375,7 @@ export default function InstitutionLeague() {
                       </tr>
                       {isExpanded && (
                         <tr
-                          className="border-b border-zinc-800/40 bg-zinc-900/60"
+                          className="border-b border-border bg-background/60"
                           style={{ borderLeft: `4px solid ${tier.color}` }}
                         >
                           <td colSpan={7} className="px-5 py-4">
@@ -1400,19 +1400,19 @@ export default function InstitutionLeague() {
               <button
                 disabled={page <= 1}
                 onClick={() => updateParams({ page: String(page - 1) })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 aria-label={t('pagination.previousAriaLabel')}
               >
                 <ChevronLeft className="h-4 w-4" aria-hidden="true" />
                 {t('pagination.previous')}
               </button>
-              <span className="text-zinc-500 text-sm font-mono tabular-nums">
+              <span className="text-text-muted text-sm font-mono tabular-nums">
                 {t('pagination.pageOf', { page, total: totalPages })}
               </span>
               <button
                 disabled={page >= totalPages}
                 onClick={() => updateParams({ page: String(page + 1) })}
-                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-zinc-900 border border-zinc-800 text-zinc-300 text-sm hover:bg-zinc-800 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded bg-background border border-border text-text-secondary text-sm hover:bg-background-elevated disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
                 aria-label={t('pagination.nextAriaLabel')}
               >
                 {t('pagination.next')}
@@ -1426,7 +1426,7 @@ export default function InstitutionLeague() {
       </Act>
 
         {/* Source footnote */}
-        <p className="text-[10px] text-zinc-700 font-mono text-center py-6 border-t border-zinc-800/40 mt-8">
+        <p className="text-[10px] text-text-primary font-mono text-center py-6 border-t border-border mt-8">
           {t('methodologyFootnote')}
         </p>
       </div>
@@ -1448,7 +1448,7 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
     { id: 'reporte', label: t('tabs.reporte') },
   ]
   return (
-    <div className="border-b border-zinc-800/60 bg-zinc-900/50 px-4 sm:px-6">
+    <div className="border-b border-border bg-background/50 px-4 sm:px-6">
       <div className="max-w-screen-xl mx-auto flex items-center gap-0">
         {tabs.map((tab) => (
           <button
@@ -1457,7 +1457,7 @@ function TabBar({ activeTab, setTab }: { activeTab: string; setTab: (tab: string
             className={`px-4 py-3 text-sm font-medium border-b-2 transition-colors whitespace-nowrap ${
               activeTab === tab.id
                 ? 'border-yellow-400 text-yellow-400'
-                : 'border-transparent text-zinc-400 hover:text-zinc-200'
+                : 'border-transparent text-text-secondary hover:text-text-secondary'
             }`}
           >
             {tab.label}
@@ -1490,16 +1490,16 @@ function StatCard({
     <Wrapper
       onClick={onClick}
       className={`
-        bg-zinc-900 border border-zinc-800 rounded-sm px-4 py-3 text-left
-        ${onClick ? 'hover:border-zinc-600 cursor-pointer transition-colors' : ''}
+        bg-background border border-border rounded-sm px-4 py-3 text-left
+        ${onClick ? 'hover:border-border cursor-pointer transition-colors' : ''}
       `}
     >
-      <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-zinc-500">{label}</p>
-      <p className={`text-2xl font-bold font-mono tabular-nums mt-1 ${accent === 'red' ? 'text-red-400' : 'text-white'}`}>
+      <p className="text-[10px] font-mono font-bold tracking-[0.15em] uppercase text-text-muted">{label}</p>
+      <p className={`text-2xl font-bold font-mono tabular-nums mt-1 ${accent === 'red' ? 'text-red-400' : 'text-text-primary'}`}>
         {value}
       </p>
       {sub && (
-        <p className="text-zinc-500 text-xs mt-0.5 truncate leading-snug">{sub}</p>
+        <p className="text-text-muted text-xs mt-0.5 truncate leading-snug">{sub}</p>
       )}
     </Wrapper>
   )

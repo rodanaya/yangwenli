@@ -50,7 +50,7 @@ const RISK_CELL_BG: Record<RiskLevel, string> = {
   critical: '#7f1d1d', // red-900
   high:     '#9a3412', // orange-900
   medium:   '#78350f', // amber-900
-  low:      '#27272a', // zinc-800
+  low:      '#f3f1ec', // zinc-800
 }
 
 const RISK_LABEL_ES: Record<RiskLevel, string> = {
@@ -169,7 +169,7 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
     return (
       <div className={className}>
         <HeatmapHeader lang={lang} />
-        <div className="mt-4 rounded border border-zinc-800 bg-zinc-900/50 px-4 py-8 text-center text-sm text-zinc-400">
+        <div className="mt-4 rounded border border-border bg-background-card/50 px-4 py-8 text-center text-sm text-text-secondary">
           {lang === 'en'
             ? 'Could not load the sector × administration breakdown.'
             : 'No se pudo cargar el desglose sector × administración.'}
@@ -186,18 +186,18 @@ export const SectorAdminHeatmap = memo(function SectorAdminHeatmap({
       <div className="relative mt-4 overflow-x-auto">
         <div className="inline-grid min-w-full" style={gridTemplate()}>
           {/* Top-left spacer */}
-          <div className="border-b border-zinc-800" />
+          <div className="border-b border-border" />
 
           {/* Column headers: administrations */}
           {ADMINISTRATIONS.map((admin) => (
             <div
               key={admin.name}
-              className="flex flex-col items-center justify-end border-b border-zinc-800 px-1 pb-2"
+              className="flex flex-col items-center justify-end border-b border-border px-1 pb-2"
             >
-              <span className="text-[10px] font-medium uppercase tracking-wide text-zinc-300">
+              <span className="text-[10px] font-medium uppercase tracking-wide text-text-secondary">
                 {admin.name}
               </span>
-              <span className="text-[10px] text-zinc-500">{admin.shortYears}</span>
+              <span className="text-[10px] text-text-muted">{admin.shortYears}</span>
             </div>
           ))}
 
@@ -230,13 +230,13 @@ export default SectorAdminHeatmap
 
 function HeatmapHeader({ lang }: { lang: string }) {
   return (
-    <div className="border-l-2 border-zinc-600 pl-3">
-      <h3 className="font-serif text-[11px] font-bold uppercase tracking-[0.15em] text-zinc-300">
+    <div className="border-l-2 border-border pl-3">
+      <h3 className="font-serif text-[11px] font-bold uppercase tracking-[0.15em] text-text-secondary">
         {lang === 'en'
           ? 'Average Risk — Sector × Administration'
           : 'Riesgo Promedio — Sector × Administración'}
       </h3>
-      <p className="mt-1 text-xs text-zinc-500">
+      <p className="mt-1 text-xs text-text-muted">
         {lang === 'en'
           ? 'Average v0.6.5 model score by sector and presidential term'
           : 'Puntuación promedio del modelo v0.6.5 por sector y período presidencial'}
@@ -258,19 +258,19 @@ interface RowGroupProps {
 function RowGroup({ sectorId, sectorName, cells, riskLabel, lang, onHover, onLeave }: RowGroupProps) {
   return (
     <>
-      <div className="flex items-center justify-end border-b border-zinc-900 pr-3 text-[12px] text-zinc-300">
+      <div className="flex items-center justify-end border-b border-border pr-3 text-[12px] text-text-secondary">
         {sectorName}
       </div>
       {ADMINISTRATIONS.map((admin) => {
         const cell = getCell(cells, sectorId, admin.name)
         const score = cell?.avgRisk ?? null
         const level = score !== null ? classifyRisk(score) : null
-        const bg = level ? RISK_CELL_BG[level] : '#18181b' // zinc-900 for no data
+        const bg = level ? RISK_CELL_BG[level] : '#1a1714' // zinc-900 for no data
 
         return (
           <div
             key={admin.name}
-            className="flex h-11 items-center justify-center border-b border-zinc-900 border-l border-l-zinc-900/60 text-[11px] font-bold text-white transition-colors hover:ring-1 hover:ring-zinc-500"
+            className="flex h-11 items-center justify-center border-b border-border border-l border-l-zinc-900/60 text-[11px] font-bold text-text-primary transition-colors hover:ring-1 hover:ring-zinc-500"
             style={{ backgroundColor: bg }}
             onMouseEnter={(e) => {
               if (score === null || !level) return
@@ -296,7 +296,7 @@ function RowGroup({ sectorId, sectorName, cells, riskLabel, lang, onHover, onLea
                 : `${sectorName}, ${admin.name}: ${lang === 'en' ? 'no data' : 'sin datos'}`
             }
           >
-            {score !== null ? score.toFixed(2) : <span className="text-zinc-600">—</span>}
+            {score !== null ? score.toFixed(2) : <span className="text-text-muted">—</span>}
           </div>
         )
       })}
@@ -307,13 +307,13 @@ function RowGroup({ sectorId, sectorName, cells, riskLabel, lang, onHover, onLea
 function SkeletonRow() {
   return (
     <>
-      <div className="flex items-center justify-end border-b border-zinc-900 pr-3">
-        <div className="h-3 w-20 animate-pulse rounded bg-zinc-800" />
+      <div className="flex items-center justify-end border-b border-border pr-3">
+        <div className="h-3 w-20 animate-pulse rounded bg-background-elevated" />
       </div>
       {ADMINISTRATIONS.map((a) => (
         <div
           key={a.name}
-          className="h-11 animate-pulse border-b border-zinc-900 bg-zinc-800/60"
+          className="h-11 animate-pulse border-b border-border bg-background-elevated/60"
         />
       ))}
     </>
@@ -323,16 +323,16 @@ function SkeletonRow() {
 function HeatmapTooltip(props: TooltipState & { riskLabel: Record<RiskLevel, string>; lang: string }) {
   return (
     <div
-      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded border border-zinc-700 bg-zinc-900/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm"
+      className="pointer-events-none absolute z-10 -translate-x-1/2 -translate-y-full rounded border border-border bg-background-card/95 px-3 py-2 text-xs shadow-lg backdrop-blur-sm"
       style={{ left: props.x, top: props.y - 4 }}
       role="tooltip"
     >
-      <div className="font-semibold text-zinc-100">{props.sectorName}</div>
-      <div className="text-zinc-400">
+      <div className="font-semibold text-text-primary">{props.sectorName}</div>
+      <div className="text-text-secondary">
         {props.adminName} · {props.adminYears}
       </div>
       <div className="mt-1 flex items-baseline gap-2">
-        <span className="font-mono text-base font-bold text-white">
+        <span className="font-mono text-base font-bold text-text-primary">
           {props.avgRisk.toFixed(3)}
         </span>
         <span
@@ -346,7 +346,7 @@ function HeatmapTooltip(props: TooltipState & { riskLabel: Record<RiskLevel, str
         </span>
       </div>
       {props.contracts > 0 && (
-        <div className="mt-0.5 text-[10px] text-zinc-500">
+        <div className="mt-0.5 text-[10px] text-text-muted">
           {props.contracts.toLocaleString('es-MX')}{' '}
           {props.lang === 'en' ? 'contracts' : 'contratos'}
         </div>
@@ -363,7 +363,7 @@ function Legend({ lang, riskLabel }: { lang: string; riskLabel: Record<RiskLevel
     { level: 'critical', range: '≥ 0.60' },
   ]
   return (
-    <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-zinc-500">
+    <div className="mt-4 flex flex-wrap items-center gap-3 text-[10px] text-text-muted">
       <span className="uppercase tracking-wide">
         {lang === 'en' ? 'Risk level:' : 'Nivel de riesgo:'}
       </span>
@@ -373,8 +373,8 @@ function Legend({ lang, riskLabel }: { lang: string; riskLabel: Record<RiskLevel
             className="inline-block h-3 w-3 rounded-sm"
             style={{ backgroundColor: RISK_CELL_BG[it.level] }}
           />
-          <span className="text-zinc-400">{riskLabel[it.level]}</span>
-          <span className="font-mono text-zinc-600">{it.range}</span>
+          <span className="text-text-secondary">{riskLabel[it.level]}</span>
+          <span className="font-mono text-text-muted">{it.range}</span>
         </span>
       ))}
     </div>

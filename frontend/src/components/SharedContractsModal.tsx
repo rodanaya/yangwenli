@@ -33,7 +33,7 @@ const RISK_BADGE_LABELS: Record<string, { es: string; en: string }> = {
 }
 
 function RiskBadge({ level, lang }: { level: string | null; lang: 'es' | 'en' }) {
-  if (!level) return <span className="text-zinc-600 text-[10px] font-mono">—</span>
+  if (!level) return <span className="text-text-muted text-[10px] font-mono">—</span>
   const key = level.toLowerCase()
   const style = RISK_BADGE_STYLE[key] ?? RISK_BADGE_STYLE.low
   const labels = RISK_BADGE_LABELS[key] ?? RISK_BADGE_LABELS.low
@@ -119,29 +119,29 @@ export function SharedContractsModal({
       aria-labelledby="shared-contracts-title"
       onClick={handleOverlayClick}
     >
-      <div ref={modalRef} onKeyDown={handleKeyDown} className="bg-[#0f1117] border border-white/10 rounded-sm max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
+      <div ref={modalRef} onKeyDown={handleKeyDown} className="bg-background-card border border-border rounded-sm max-w-4xl w-full max-h-[85vh] flex flex-col shadow-2xl">
         {/* Header */}
-        <div className="flex items-start justify-between px-5 py-4 border-b border-white/8 shrink-0">
+        <div className="flex items-start justify-between px-5 py-4 border-b border-border shrink-0">
           <div className="min-w-0 flex-1 pr-4">
             <div className="flex items-center gap-2 mb-1">
               <FileText className="h-4 w-4 text-amber-400 shrink-0" aria-hidden="true" />
               <h2
                 id="shared-contracts-title"
-                className="text-sm font-semibold text-zinc-100 uppercase tracking-wide"
+                className="text-sm font-semibold text-text-primary uppercase tracking-wide"
               >
                 {lang === 'en' ? 'Shared Contracts in Tenders' : 'Contratos Compartidos en Licitaciones'}
               </h2>
             </div>
-            <p className="text-xs text-zinc-400 truncate">
-              <span className="text-zinc-200 font-medium">{truncateName(vendorAName, 35)}</span>
-              <span className="mx-2 text-zinc-600">↔</span>
-              <span className="text-zinc-200 font-medium">{truncateName(vendorBName, 35)}</span>
+            <p className="text-xs text-text-secondary truncate">
+              <span className="text-text-secondary font-medium">{truncateName(vendorAName, 35)}</span>
+              <span className="mx-2 text-text-muted">↔</span>
+              <span className="text-text-secondary font-medium">{truncateName(vendorBName, 35)}</span>
             </p>
           </div>
           <button
             type="button"
             onClick={onClose}
-            className="shrink-0 p-1.5 rounded-lg text-zinc-400 hover:text-zinc-100 hover:bg-white/8 transition-colors"
+            className="shrink-0 p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-background-elevated transition-colors"
             aria-label={lang === 'en' ? 'Close modal' : 'Cerrar modal'}
           >
             <X className="h-4 w-4" />
@@ -170,8 +170,8 @@ export function SharedContractsModal({
         <div className="flex-1 overflow-y-auto min-h-0">
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3">
-              <div className="h-6 w-6 border-2 border-zinc-700 border-t-amber-500 rounded-full animate-spin" />
-              <span className="text-xs font-mono text-zinc-500 uppercase tracking-wider">
+              <div className="h-6 w-6 border-2 border-border border-t-amber-500 rounded-full animate-spin" />
+              <span className="text-xs font-mono text-text-muted uppercase tracking-wider">
                 {lang === 'en' ? 'Loading contracts…' : 'Cargando contratos…'}
               </span>
             </div>
@@ -179,12 +179,12 @@ export function SharedContractsModal({
             <div className="flex flex-col items-center justify-center py-16 gap-3">
               <AlertTriangle className="h-7 w-7 text-red-400" aria-hidden="true" />
               <p className="text-sm text-red-300 font-medium">{t('errors.failedToLoad')}</p>
-              <p className="text-xs text-zinc-500">{t('errors.couldNotLoad')}</p>
+              <p className="text-xs text-text-muted">{t('errors.couldNotLoad')}</p>
             </div>
           ) : contracts.length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 gap-3 border-t border-amber-900/20">
-              <FileText className="h-6 w-6 text-zinc-700" aria-hidden="true" />
-              <p className="text-sm font-normal text-zinc-400 max-w-sm text-center">
+              <FileText className="h-6 w-6 text-text-primary" aria-hidden="true" />
+              <p className="text-sm font-normal text-text-secondary max-w-sm text-center">
                 {lang === 'en'
                   ? 'These two vendors do not share contracts in the analyzed period.'
                   : 'Estos dos proveedores no comparten contratos en el período analizado.'}
@@ -194,58 +194,58 @@ export function SharedContractsModal({
             <div className="overflow-x-auto">
               <table className="w-full text-xs" aria-label={lang === 'en' ? 'Shared contracts' : 'Contratos compartidos'}>
                 <thead className="sticky top-0 z-10">
-                  <tr className="border-b border-white/8 bg-[#0f1117]">
+                  <tr className="border-b border-border bg-background-card">
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
+                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       {lang === 'en' ? 'Tender' : 'Licitación'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
+                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       {lang === 'en' ? 'Vendor' : 'Proveedor'}
                     </th>
                     <th
                       scope="col"
-                      className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
+                      className="text-right text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       {lang === 'en' ? 'Amount' : 'Monto'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5 whitespace-nowrap"
+                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5 whitespace-nowrap"
                     >
                       <Calendar className="h-3 w-3 inline mr-1" aria-hidden="true" />
                       {lang === 'en' ? 'Date' : 'Fecha'}
                     </th>
                     <th
                       scope="col"
-                      className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
+                      className="text-center text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       {lang === 'en' ? 'Risk' : 'Riesgo'}
                     </th>
                     <th
                       scope="col"
-                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-zinc-500 px-4 py-2.5"
+                      className="text-left text-[10px] font-mono uppercase tracking-[0.12em] text-text-muted px-4 py-2.5"
                     >
                       <Building2 className="h-3 w-3 inline mr-1" aria-hidden="true" />
                       {lang === 'en' ? 'Institution' : 'Institución'}
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-white/5">
+                <tbody className="divide-y divide-border">
                   {contracts.map((c: SharedContract) => (
                     <tr
                       key={c.id}
-                      className="hover:bg-white/3 transition-colors"
+                      className="hover:bg-background-elevated transition-colors"
                     >
                       {/* Licitación */}
-                      <td className="px-4 py-2.5 font-mono text-[11px] text-zinc-400 whitespace-nowrap">
+                      <td className="px-4 py-2.5 font-mono text-[11px] text-text-secondary whitespace-nowrap">
                         {c.procedure_number
                           ? <span title={c.procedure_number}>{truncateName(c.procedure_number, 22)}</span>
-                          : <span className="text-zinc-600">—</span>
+                          : <span className="text-text-muted">—</span>
                         }
                         {(c.is_single_bid || c.is_direct_award) && (
                           <div className="flex gap-1 mt-0.5">
@@ -266,26 +266,26 @@ export function SharedContractsModal({
                       {/* Proveedor */}
                       <td className="px-4 py-2.5 max-w-[180px]">
                         <span
-                          className="text-zinc-200 font-medium truncate block"
+                          className="text-text-secondary font-medium truncate block"
                           title={c.vendor_name}
                         >
                           {truncateName(c.vendor_name, 26)}
                         </span>
                         {c.sector_name && (
-                          <span className="text-[10px] font-mono text-zinc-600">{c.sector_name}</span>
+                          <span className="text-[10px] font-mono text-text-muted">{c.sector_name}</span>
                         )}
                       </td>
 
                       {/* Monto */}
-                      <td className="px-4 py-2.5 text-right font-mono text-zinc-200 whitespace-nowrap tabular-nums">
-                        {c.amount > 0 ? formatMXN(c.amount) : <span className="text-zinc-600">—</span>}
+                      <td className="px-4 py-2.5 text-right font-mono text-text-secondary whitespace-nowrap tabular-nums">
+                        {c.amount > 0 ? formatMXN(c.amount) : <span className="text-text-muted">—</span>}
                       </td>
 
                       {/* Fecha */}
-                      <td className="px-4 py-2.5 font-mono text-zinc-400 whitespace-nowrap">
+                      <td className="px-4 py-2.5 font-mono text-text-secondary whitespace-nowrap">
                         {c.contract_date
                           ? c.contract_date.slice(0, 10)
-                          : <span className="text-zinc-600">—</span>
+                          : <span className="text-text-muted">—</span>
                         }
                       </td>
 
@@ -297,10 +297,10 @@ export function SharedContractsModal({
                       {/* Institución */}
                       <td className="px-4 py-2.5 max-w-[200px]">
                         <span
-                          className="text-zinc-400 truncate block"
+                          className="text-text-secondary truncate block"
                           title={c.institution_name ?? undefined}
                         >
-                          {c.institution_name ? truncateName(c.institution_name, 28) : <span className="text-zinc-600">—</span>}
+                          {c.institution_name ? truncateName(c.institution_name, 28) : <span className="text-text-muted">—</span>}
                         </span>
                       </td>
                     </tr>
@@ -314,7 +314,7 @@ export function SharedContractsModal({
         {/* Pagination footer */}
         {totalPages > 1 && (
           <div
-            className="flex items-center justify-between px-5 py-3 border-t border-white/8 shrink-0"
+            className="flex items-center justify-between px-5 py-3 border-t border-border shrink-0"
             role="navigation"
             aria-label={lang === 'en' ? 'Contract pagination' : 'Paginación de contratos'}
           >
@@ -322,13 +322,13 @@ export function SharedContractsModal({
               type="button"
               onClick={() => setPage((p) => Math.max(1, p - 1))}
               disabled={page <= 1}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-border bg-background-card text-text-secondary hover:text-text-secondary hover:border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft className="h-3.5 w-3.5" aria-hidden="true" />
               {lang === 'en' ? 'Previous' : 'Anterior'}
             </button>
 
-            <span className="text-[10px] font-mono text-zinc-500" aria-live="polite">
+            <span className="text-[10px] font-mono text-text-muted" aria-live="polite">
               {lang === 'en' ? 'Page' : 'Página'} {page} {lang === 'en' ? 'of' : 'de'} {totalPages}
               {pagination && (
                 <> &middot; {formatNumber(pagination.total)} {lang === 'en' ? 'contracts' : 'contratos'}</>
@@ -339,7 +339,7 @@ export function SharedContractsModal({
               type="button"
               onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
               disabled={page >= totalPages}
-              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-zinc-800 bg-zinc-900 text-zinc-400 hover:text-zinc-200 hover:border-zinc-700 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-mono uppercase tracking-wide border border-border bg-background-card text-text-secondary hover:text-text-secondary hover:border-border disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               {lang === 'en' ? 'Next' : 'Siguiente'}
               <ChevronRight className="h-3.5 w-3.5" aria-hidden="true" />

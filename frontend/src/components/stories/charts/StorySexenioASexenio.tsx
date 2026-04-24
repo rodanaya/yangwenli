@@ -57,14 +57,14 @@ export function StorySexenioASexenio() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Adjudicación directa por sexenio
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         Cinco presidentes, tres partidos, una sola dirección: más adjudicación directa
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada columna es un sexenio. Cada punto vale 2 puntos porcentuales de tasa de
         adjudicación directa. La línea cian marca el máximo OCDE de 25%. El patrón
         trasciende partidos.
@@ -73,25 +73,25 @@ export function StorySexenioASexenio() {
       <div className="grid grid-cols-3 gap-4">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400 tabular-nums">80%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             AMLO · pico de adjudicación directa
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-amber-400 tabular-nums">+39pp</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             incremento Fox → AMLO en 24 años
           </div>
         </div>
         <div className="border-l-2 border-cyan-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-cyan-400 tabular-nums">25%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             máximo OCDE · todas superan 1.6x o más
           </div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5 overflow-x-auto">
+      <div className="rounded-sm border border-border bg-background p-5 overflow-x-auto">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto min-w-[640px]"
@@ -289,7 +289,7 @@ export function StorySexenioASexenio() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           PAN, PRI y MORENA — izquierda, centro y derecha — todas gobernaron bajo el mismo
           patrón: la tasa de adjudicación directa subió con cada administración. AMLO la
           llevó al pico histórico (80%), pero la tendencia no comenzó con él. La inercia
@@ -297,7 +297,7 @@ export function StorySexenioASexenio() {
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2002-2025 · 3.05M contratos · OCDE Public Procurement Report 2023
       </p>
     </motion.div>

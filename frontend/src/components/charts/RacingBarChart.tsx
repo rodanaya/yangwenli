@@ -116,7 +116,7 @@ export function RacingBarChart() {
         <div className="flex items-center gap-3">
           <span className="text-4xl font-black font-mono tabular-nums text-text-primary">{currentYear}</span>
           <span
-            className="text-xs font-semibold px-2 py-1 rounded-full text-white"
+            className="text-xs font-semibold px-2 py-1 rounded-full text-text-primary"
             style={{ backgroundColor: adminColor }}
           >
             {adminName}
@@ -171,8 +171,8 @@ export function RacingBarChart() {
                         cx={i * DG + DR}
                         cy={5}
                         r={DR}
-                        fill={i < filled ? entry.color : '#2d2926'}
-                        stroke={i < filled ? undefined : '#3d3734'}
+                        fill={i < filled ? entry.color : '#f3f1ec'}
+                        stroke={i < filled ? undefined : '#e2ddd6'}
                         strokeWidth={i < filled ? 0 : 0.5}
                         fillOpacity={i < filled ? 0.85 : 1}
                       />

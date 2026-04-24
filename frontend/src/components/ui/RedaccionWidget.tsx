@@ -33,10 +33,10 @@ function generateHeadline(pattern: string | null, sector: string, vendorName: st
 }
 
 const TIER_COLORS: Record<number, string> = {
-  1: 'bg-red-500/20 text-red-400 border-red-500/30',
-  2: 'bg-orange-500/20 text-orange-400 border-orange-500/30',
-  3: 'bg-amber-500/20 text-amber-400 border-amber-500/30',
-  4: 'bg-zinc-500/20 text-zinc-400 border-zinc-500/30',
+  1: 'bg-risk-critical/15 text-risk-critical border-risk-critical/30',
+  2: 'bg-risk-high/15 text-risk-high border-risk-high/30',
+  3: 'bg-risk-medium/15 text-risk-medium border-risk-medium/30',
+  4: 'bg-risk-low/15 text-risk-low border-risk-low/30',
 }
 
 function ipsColor(score: number): string {
@@ -48,7 +48,7 @@ function ipsColor(score: number): string {
 
 function StoryCardSkeleton() {
   return (
-    <div className="border-t border-zinc-700/50 pt-3 space-y-2">
+    <div className="border-t border-border pt-3 space-y-2">
       <Skeleton className="h-4 w-3/4" />
       <Skeleton className="h-3 w-full" />
       <Skeleton className="h-2 w-1/2" />
@@ -77,9 +77,9 @@ export default function RedaccionWidget() {
   }))
 
   return (
-    <div className="rounded-lg border border-border/40 bg-zinc-900/60 p-4">
+    <div className="rounded-sm border border-border bg-background-card p-4">
       {/* Section label */}
-      <p className="text-xs tracking-widest text-zinc-500 font-semibold mb-4" style={{ fontVariant: 'all-small-caps' }}>
+      <p className="text-xs tracking-widest text-text-muted font-semibold mb-4" style={{ fontVariant: 'all-small-caps' }}>
         REDACCION RUBLI
       </p>
 
@@ -92,14 +92,14 @@ export default function RedaccionWidget() {
             <StoryCardSkeleton />
           </>
         ) : error || stories.length === 0 ? (
-          <p className="text-xs text-zinc-500 italic">{t('redaccion.noAlerts')}</p>
+          <p className="text-xs text-text-muted italic">{t('redaccion.noAlerts')}</p>
         ) : (
           stories.map((story) => (
-            <div key={story.vendorId} className="border-t border-zinc-700/50 pt-3">
+            <div key={story.vendorId} className="border-t border-border pt-3">
               {/* Vendor name */}
               <Link
                 to={`/thread/${story.vendorId}`}
-                className="block text-sm font-bold text-white hover:text-zinc-200 transition-colors leading-snug"
+                className="block text-sm font-bold text-text-primary hover:text-accent transition-colors leading-snug"
                 style={{ fontFamily: 'var(--font-family-serif)' }}
               >
                 {story.vendorName.length > 60
@@ -108,7 +108,7 @@ export default function RedaccionWidget() {
               </Link>
 
               {/* Headline */}
-              <p className="text-xs text-zinc-400 mt-0.5 leading-relaxed">
+              <p className="text-xs text-text-secondary mt-0.5 leading-relaxed">
                 {story.headline}
               </p>
 
@@ -126,8 +126,8 @@ export default function RedaccionWidget() {
                     <svg viewBox={`0 0 ${N * DG} 6`} className="flex-1" style={{ height: 6 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, i) => (
                         <circle key={i} cx={i * DG + DR} cy={3} r={DR}
-                          fill={i < filled ? color : '#2d2926'}
-                          stroke={i < filled ? undefined : '#3d3734'}
+                          fill={i < filled ? color : '#f3f1ec'}
+                          stroke={i < filled ? undefined : '#e2ddd6'}
                           strokeWidth={i < filled ? 0 : 0.5}
                           fillOpacity={i < filled ? 0.85 : 1}
                         />
@@ -135,7 +135,7 @@ export default function RedaccionWidget() {
                     </svg>
                   )
                 })()}
-                <span className="text-[10px] font-mono text-zinc-500">
+                <span className="text-[10px] font-mono text-text-muted">
                   {(story.ipsScore * 100).toFixed(0)}
                 </span>
               </div>
@@ -143,7 +143,7 @@ export default function RedaccionWidget() {
               {/* Investigate link */}
               <Link
                 to={`/thread/${story.vendorId}`}
-                className="inline-flex items-center gap-1 text-[11px] text-zinc-500 hover:text-zinc-300 mt-1.5 transition-colors"
+                className="inline-flex items-center gap-1 text-[11px] text-text-muted hover:text-text-primary mt-1.5 transition-colors"
               >
                 Red Thread <ArrowRight className="h-3 w-3" />
               </Link>
@@ -153,10 +153,10 @@ export default function RedaccionWidget() {
       </div>
 
       {/* Footer link */}
-      <div className="border-t border-zinc-700/50 mt-4 pt-3">
+      <div className="border-t border-border mt-4 pt-3">
         <Link
           to="/aria"
-          className="inline-flex items-center gap-1 text-xs text-zinc-400 hover:text-zinc-200 transition-colors font-medium"
+          className="inline-flex items-center gap-1 text-xs text-text-secondary hover:text-accent transition-colors font-medium"
         >
           <ArrowRight className="h-3 w-3" />
           Ver todos los casos

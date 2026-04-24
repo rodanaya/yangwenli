@@ -57,19 +57,19 @@ export function VendorConcentrationChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="bg-zinc-900 rounded-sm p-4 border border-zinc-800"
+      className="bg-background-card rounded-sm p-4 border border-border"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Market Concentration
       </p>
-      <h3 className="text-base font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-base font-bold text-text-primary leading-tight mb-0.5">
         Top 20 vendors control 46.8% of federal spending
       </h3>
-      <p className="text-xs text-zinc-500 font-mono mb-4">
+      <p className="text-xs text-text-muted font-mono mb-4">
         Concentration by vendor category · % of total spend · OECD limit: 5%
       </p>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -178,23 +178,23 @@ export function VendorConcentrationChart() {
         </svg>
       </div>
 
-      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-zinc-800">
+      <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
         {(['critical', 'high', 'medium'] as const).map((level) => (
           <div key={level} className="flex items-center gap-1.5">
             <div
               className="w-2 h-2 rounded-sm"
               style={{ backgroundColor: CHART_RISK_COLORS[level] }}
             />
-            <span className="text-[10px] font-mono text-zinc-500 capitalize">{level}</span>
+            <span className="text-[10px] font-mono text-text-muted capitalize">{level}</span>
           </div>
         ))}
         <div className="flex items-center gap-1.5 ml-auto">
           <div className="w-4 h-0 border-t border-dashed" style={{ borderColor: OECD_COLOR }} />
-          <span className="text-[10px] font-mono text-zinc-500">OECD benchmark</span>
+          <span className="text-[10px] font-mono text-text-muted">OECD benchmark</span>
         </div>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-2 font-mono">
+      <p className="text-[10px] text-text-muted mt-2 font-mono">
         Source: COMPRANET 2002-2025 · Each dot = 0.25pp · RUBLI v0.6.5 risk model
       </p>
     </motion.div>

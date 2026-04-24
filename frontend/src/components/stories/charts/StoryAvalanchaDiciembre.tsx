@@ -53,16 +53,16 @@ export function StoryAvalanchaDiciembre() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5 space-y-4"
+      className="rounded-sm bg-background border border-border p-5 space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Avalancha de Diciembre
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         51.4 mil millones en 31 días — el mes donde el presupuesto huye del calendario
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Gasto federal por mes en 2014 · cada punto representa mil millones de pesos.
         Diciembre triplicó el promedio mensual porque la Ley de Presupuesto obliga
         a devolver lo no ejercido al Tesoro antes del 31.
@@ -71,15 +71,15 @@ export function StoryAvalanchaDiciembre() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-500">$51.4B</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">DIC 2014 · pico histórico</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">DIC 2014 · pico histórico</div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-orange-400">7,215</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">contratos en 31 días</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos en 31 días</div>
         </div>
-        <div className="border-l-2 border-zinc-500 pl-3 py-1">
-          <div className="text-3xl font-mono font-bold text-zinc-300">233/día</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">incluye sábados y domingos</div>
+        <div className="border-l-2 border-border pl-3 py-1">
+          <div className="text-3xl font-mono font-bold text-text-secondary">233/día</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">incluye sábados y domingos</div>
         </div>
       </div>
 
@@ -230,14 +230,14 @@ export function StoryAvalanchaDiciembre() {
         <p className="text-xs font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           Diciembre concentra entre 2.5 y 4× el gasto mensual promedio en los últimos
           23 años — patrón bipartidista. La urgencia es contable, no operativa:
           entregas se programan para febrero o marzo del año siguiente.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET 2014 · 7,215 contratos · Ley Federal de Presupuesto y Responsabilidad Hacendaria
       </p>
     </motion.div>

@@ -9,13 +9,9 @@ import { useTranslation } from 'react-i18next'
 import { useSearchParams, Link } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
 import {
-  RadarChart,
-  PolarGrid,
-  PolarAngleAxis,
-  Radar,
-  ResponsiveContainer,
-  Tooltip as RechartsTooltip,
-} from '@/components/charts'
+  EditorialRadarChart,
+  type RadarSeries,
+} from '@/components/charts/editorial'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskLevelPill } from '@/components/ui/RiskLevelPill'
@@ -172,12 +168,12 @@ function VendorSearchInput({
           {label}
         </span>
         <div
-          className="border rounded-lg p-4 bg-zinc-900/60 relative"
+          className="border rounded-lg p-4 bg-background/60 relative"
           style={{ borderColor: `${color}40` }}
         >
           <button
             onClick={onClear}
-            className="absolute top-2 right-2 p-1 rounded-full hover:bg-zinc-700/50 transition-colors"
+            className="absolute top-2 right-2 p-1 rounded-full hover:bg-background-elevated transition-colors"
             aria-label="Clear selection"
           >
             <X className="h-3.5 w-3.5 text-text-muted" />
@@ -218,7 +214,7 @@ function VendorSearchInput({
         {label}
       </span>
       <div
-        className="flex items-center gap-2 border border-border rounded-lg bg-zinc-900/60 px-4 py-3"
+        className="flex items-center gap-2 border border-border rounded-lg bg-background/60 px-4 py-3"
         style={{ borderColor: isOpen ? `${color}60` : undefined }}
       >
         <Search className="h-4 w-4 text-text-muted flex-shrink-0" />
@@ -282,66 +278,26 @@ function ComparisonRadar({
   bData,
   aName,
   bName,
-  aColor,
-  bColor,
 }: {
   aData: ReturnType<typeof buildRadarData>
   bData: ReturnType<typeof buildRadarData>
   aName: string
   bName: string
-  aColor: string
-  bColor: string
 }) {
-  const merged = aData.map((a, i) => ({
-    factor: a.factor,
-    vendorA: a.value,
-    vendorB: bData[i]?.value ?? 0,
-    rawZA: a.rawZ,
-    rawZB: bData[i]?.rawZ ?? 0,
-  }))
+  const axes = aData.map((a) => a.factor)
+  const aValues: Record<string, number> = {}
+  const bValues: Record<string, number> = {}
+  aData.forEach((a) => { aValues[a.factor] = a.value })
+  bData.forEach((b) => { bValues[b.factor] = b.value })
+
+  const series: RadarSeries[] = [
+    { name: aName, values: aValues, colorToken: 'oecd' },
+    { name: bName, values: bValues, colorToken: 'sector-tecnologia' },
+  ]
 
   return (
-    <div className="h-[320px]" role="img" aria-label="Radar chart comparing risk profile dimensions between two vendors">
-      <ResponsiveContainer width="100%" height="100%">
-        <RadarChart data={merged} margin={{ top: 10, right: 30, bottom: 10, left: 30 }}>
-          <PolarGrid stroke="#1e293b" />
-          <PolarAngleAxis dataKey="factor" tick={{ fontSize: 10, fill: '#94a3b8' }} />
-          <RechartsTooltip
-            content={({ active, payload }) => {
-              if (!active || !payload?.[0]) return null
-              const d = payload[0].payload as (typeof merged)[0]
-              return (
-                <div className="rounded border border-border bg-background-card px-3 py-2 text-xs shadow-lg">
-                  <p className="font-semibold text-text-primary mb-1">{d.factor}</p>
-                  <p style={{ color: aColor }}>
-                    {aName.slice(0, 20)}: z = {d.rawZA.toFixed(2)}
-                  </p>
-                  <p style={{ color: bColor }}>
-                    {bName.slice(0, 20)}: z = {d.rawZB.toFixed(2)}
-                  </p>
-                </div>
-              )
-            }}
-          />
-          <Radar
-            dataKey="vendorA"
-            name={aName}
-            stroke={aColor}
-            fill={aColor}
-            fillOpacity={0.15}
-            strokeWidth={2}
-          />
-          <Radar
-            dataKey="vendorB"
-            name={bName}
-            stroke={bColor}
-            fill={bColor}
-            fillOpacity={0.10}
-            strokeWidth={2}
-            strokeDasharray="5 3"
-          />
-        </RadarChart>
-      </ResponsiveContainer>
+    <div role="img" aria-label="Radar chart comparing risk profile dimensions between two vendors">
+      <EditorialRadarChart axes={axes} series={series} height={320} />
     </div>
   )
 }
@@ -480,8 +436,8 @@ function ComparisonStatCards({
         const bStr = vB !== null ? m.format(vB) : '--'
 
         // Determine which is "worse"
-        let aColor = 'border-zinc-600'
-        let bColor = 'border-zinc-600'
+        let aColor = 'border-border'
+        let bColor = 'border-border'
         if (vA !== null && vB !== null && Math.abs(vA - vB) > 0.001) {
           const aIsWorse = m.higherIsBad ? vA > vB : vA < vB
           aColor = aIsWorse ? 'border-red-500' : 'border-emerald-500'
@@ -491,7 +447,7 @@ function ComparisonStatCards({
         return (
           <div
             key={m.tKey}
-            className="bg-zinc-900/40 border border-zinc-800/60 rounded-lg p-4"
+            className="bg-background/40 border border-border rounded-lg p-4"
           >
             <p className="text-xs text-text-muted font-medium uppercase tracking-wider mb-3">
               {t(m.tKey)}
@@ -566,7 +522,7 @@ function MetricTable({
     <div className="overflow-x-auto rounded-md border border-border">
       <table className="w-full text-sm" aria-label="Vendor metric comparison">
         <thead>
-          <tr className="border-b border-border bg-zinc-900/60">
+          <tr className="border-b border-border bg-background/60">
             <th className="px-3 py-2 text-left text-xs font-semibold text-text-muted">{t('metricColLabel')}</th>
             <th className="px-3 py-2 text-center text-xs font-semibold text-cyan-400">
               {aName.slice(0, 22)}
@@ -627,7 +583,7 @@ function VerdictCallout({
 
   return (
     <div
-      className="mt-10 border rounded-lg p-6 bg-zinc-900/60"
+      className="mt-10 border rounded-lg p-6 bg-background/60"
       style={{ borderColor: `${borderColor}40`, borderTopWidth: '3px', borderTopColor: borderColor }}
     >
       <p className="text-[10px] font-semibold uppercase tracking-widest text-text-muted mb-2">
@@ -701,8 +657,8 @@ function VendorPicker() {
           className={cn(
             'px-8 py-2.5 rounded-lg text-sm font-semibold transition-all',
             canCompare
-              ? 'bg-accent text-white hover:bg-accent/90'
-              : 'bg-zinc-800 text-text-muted cursor-not-allowed'
+              ? 'bg-accent text-text-primary hover:bg-accent/90'
+              : 'bg-background-elevated text-text-muted cursor-not-allowed'
           )}
           aria-label={t('picker.compare')}
         >
@@ -862,7 +818,7 @@ export default function VendorCompare() {
           <ComparisonStatCards vendorA={vendorA} vendorB={vendorB} />
 
           {/* Radar Comparison */}
-          <Card className="mb-8 bg-zinc-900/40 border-zinc-800/60">
+          <Card className="mb-8 bg-background/40 border-border">
             <CardHeader>
               <CardTitle className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
                 {t('radarTitle')}
@@ -881,8 +837,6 @@ export default function VendorCompare() {
                     bData={radarB}
                     aName={toTitleCase(vendorA.name)}
                     bName={toTitleCase(vendorB.name)}
-                    aColor="#06b6d4"
-                    bColor="#a78bfa"
                   />
                   {/* Legend */}
                   <div className="flex items-center justify-center gap-6 mt-3">
@@ -905,7 +859,7 @@ export default function VendorCompare() {
           </Card>
 
           {/* Detailed Metric Table */}
-          <Card className="bg-zinc-900/40 border-zinc-800/60">
+          <Card className="bg-background/40 border-border">
             <CardHeader>
               <CardTitle className="text-sm" style={{ fontFamily: 'var(--font-family-serif)' }}>
                 {t('metricTitle')}

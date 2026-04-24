@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { analysisApi } from '@/api/client'
 import { Skeleton } from '@/components/ui/skeleton'
+// TODO(charts): primitive lacks mouse-event handlers — brushing/drag-to-select on this
+// chart requires onMouseDown/Move/Up at the ComposedChart level. Keeping inline.
 import {
   ResponsiveContainer,
   ComposedChart,
@@ -127,6 +129,9 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
           </button>
         )}
       </div>
+      {/* TODO(charts): EditorialComposedChart lacks onMouseDown/Move/Up brushing handlers
+          and the year-range selection interaction is core to this widget's UX.
+          Tokens migrated to bible-aligned values; structural migration deferred. */}
       <div
         style={{ height: 120, cursor: 'crosshair', userSelect: 'none' }}
         onMouseLeave={() => {
@@ -141,16 +146,10 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
             onMouseUp={handleMouseUp}
             margin={{ top: 4, right: 4, left: 4, bottom: 2 }}
           >
-            <defs>
-              <linearGradient id="barGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#6366f1" stopOpacity={0.85} />
-                <stop offset="100%" stopColor="#6366f1" stopOpacity={0.25} />
-              </linearGradient>
-            </defs>
-            <CartesianGrid strokeDasharray="3 3" stroke="rgb(71 85 105 / 0.12)" vertical={false} />
+            <CartesianGrid strokeDasharray="3 3" stroke="var(--color-border)" opacity={0.35} vertical={false} />
             <XAxis
               dataKey="year"
-              tick={{ fontSize: 9, fill: 'rgb(148 163 184)' }}
+              tick={{ fontSize: 11, fill: 'var(--color-text-muted)', fontFamily: 'var(--font-family-mono)' }}
               tickLine={false}
               axisLine={false}
               interval={4}
@@ -159,33 +158,37 @@ export function TimeSeriesPanel({ yearStart, yearEnd, onYearRangeChange }: TimeS
             <YAxis yAxisId="right" hide domain={[0, 'dataMax + 5']} />
             <RechartsTooltip
               contentStyle={{
-                backgroundColor: 'rgb(15 23 42)',
-                border: '1px solid rgb(71 85 105 / 0.4)',
-                borderRadius: 6,
+                background: '#1a1714',
+                border: '1px solid rgba(255,255,255,0.08)',
+                borderRadius: 2,
+                padding: '8px 10px',
+                color: '#faf9f6',
                 fontSize: 11,
-                color: 'rgb(226 232 240)',
+                fontFamily: 'var(--font-family-mono)',
               }}
-              formatter={(value: any, name: string | undefined) => {
+              formatter={(value, name) => {
                 if (name === 'contracts') return [Number(value).toLocaleString(), t('timeSeries.contractsLegend')]
                 if (name === 'avgRisk') return [`${Number(value).toFixed(1)}%`, t('timeSeries.avgRiskLegend')]
-                return [value, name ?? '']
+                return [String(value ?? ''), String(name ?? '')]
               }}
-              labelStyle={{ color: 'rgb(148 163 184)', fontSize: 10 }}
+              labelStyle={{ color: '#faf9f6', fontSize: 11, fontWeight: 600 }}
             />
             {hasSelection && (
               <ReferenceArea
                 x1={selStart}
                 x2={selEnd}
                 yAxisId="left"
-                fill="rgb(99 102 241 / 0.18)"
-                stroke="rgb(99 102 241 / 0.5)"
+                fill="var(--color-accent)"
+                fillOpacity={0.12}
+                stroke="var(--color-accent)"
+                strokeOpacity={0.5}
                 strokeWidth={1}
               />
             )}
             <Line
               type="monotone"
               dataKey="avgRisk"
-              stroke="#f87171"
+              stroke="var(--color-risk-critical)"
               strokeWidth={1.5}
               dot={false}
               yAxisId="right"

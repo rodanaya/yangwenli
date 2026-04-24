@@ -273,7 +273,11 @@ export function VendorContractRiskMatrix({
         </span>
       </div>
 
-      {/* Chart */}
+      {/* Chart — TODO(charts): EditorialScatterChart's quadrants prop offers
+          x/y median dividers, but this chart adds quadrant LABELS + a colored
+          ReferenceArea for the "investigate now" zone, which the primitive
+          doesn't expose. Tokens already align with bible §2; structural
+          migration deferred. */}
       <div style={{ height: 280 }}>
         <ResponsiveContainer width="100%" height="100%">
           <ScatterChart margin={{ top: 8, right: 24, bottom: 40, left: 16 }}>

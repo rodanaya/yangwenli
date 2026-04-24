@@ -103,7 +103,7 @@ export function SimpleTabs({
               {Icon && <Icon className="h-3.5 w-3.5" aria-hidden="true" />}
               {tab.label}
               {tab.badge != null && tab.badge > 0 && (
-                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-zinc-700 text-zinc-300 text-[10px] leading-none">
+                <span className="ml-1 px-1.5 py-0.5 rounded-full bg-background-elevated text-text-secondary text-[10px] leading-none">
                   {tab.badge}
                 </span>
               )}

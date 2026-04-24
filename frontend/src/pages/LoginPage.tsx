@@ -28,7 +28,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-background flex items-center justify-center px-4">
       <div className="w-full max-w-sm">
         {/* Masthead */}
         <div className="mb-8 text-center">
@@ -44,19 +44,19 @@ export default function LoginPage() {
             </svg>
           </div>
           <h1
-            className="text-2xl font-bold text-zinc-100 tracking-tight"
+            className="text-2xl font-bold text-text-primary tracking-tight"
             style={{ fontFamily: 'var(--font-family-serif, Georgia, serif)' }}
           >
             RUBLI
           </h1>
-          <p className="mt-1 text-[10px] text-zinc-500 tracking-[0.14em] uppercase font-mono">
+          <p className="mt-1 text-[10px] text-text-muted tracking-[0.14em] uppercase font-mono">
             {t('tagline')}
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-lg border border-zinc-800 bg-zinc-900 p-6">
-          <h2 className="text-sm font-semibold text-zinc-200 mb-5 tracking-tight">
+        <div className="rounded-lg border border-border bg-background p-6">
+          <h2 className="text-sm font-semibold text-text-secondary mb-5 tracking-tight">
             {t('login.title')}
           </h2>
 
@@ -64,7 +64,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-email"
-                className="block text-[11px] font-mono tracking-[0.08em] uppercase text-zinc-500 mb-1.5"
+                className="block text-[11px] font-mono tracking-[0.08em] uppercase text-text-muted mb-1.5"
               >
                 {t('login.emailLabel')}
               </label>
@@ -75,7 +75,7 @@ export default function LoginPage() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
+                className="w-full rounded-md border border-border bg-background-elevated px-3 py-2 text-sm font-mono text-text-primary placeholder-text-muted focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
                 placeholder={t('login.emailPlaceholder')}
               />
             </div>
@@ -83,7 +83,7 @@ export default function LoginPage() {
             <div>
               <label
                 htmlFor="login-password"
-                className="block text-[11px] font-mono tracking-[0.08em] uppercase text-zinc-500 mb-1.5"
+                className="block text-[11px] font-mono tracking-[0.08em] uppercase text-text-muted mb-1.5"
               >
                 {t('login.passwordLabel')}
               </label>
@@ -94,7 +94,7 @@ export default function LoginPage() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="w-full rounded-md border border-zinc-700 bg-zinc-800 px-3 py-2 text-sm font-mono text-zinc-100 placeholder-zinc-600 focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
+                className="w-full rounded-md border border-border bg-background-elevated px-3 py-2 text-sm font-mono text-text-primary placeholder-text-muted focus:border-amber-500 focus:outline-none focus:ring-1 focus:ring-amber-500 transition-colors"
                 placeholder={t('login.passwordPlaceholder')}
               />
             </div>
@@ -111,17 +111,17 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={submitting}
-              className="w-full rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-zinc-950 hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-zinc-900 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-md bg-amber-500 px-4 py-2 text-sm font-semibold text-text-primary hover:bg-amber-400 focus:outline-none focus:ring-2 focus:ring-amber-500 focus:ring-offset-2 focus:ring-offset-background transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {submitting ? t('login.submitting') : t('login.submit')}
             </button>
           </form>
 
-          <p className="mt-5 text-center text-xs text-zinc-600 font-mono">
+          <p className="mt-5 text-center text-xs text-text-muted font-mono">
             {t('login.noAccount')}{' '}
             <Link
               to="/register"
-              className="text-zinc-400 hover:text-zinc-200 underline underline-offset-2 transition-colors"
+              className="text-text-secondary hover:text-text-secondary underline underline-offset-2 transition-colors"
             >
               {t('login.createAccount')}
             </Link>

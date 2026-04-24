@@ -49,7 +49,7 @@ export function MetodologiaTooltip({ title, body, link, className }: Metodologia
         <div
           role="tooltip"
           className={cn(
-            'absolute z-50 w-64 p-3 rounded-lg shadow-xl text-xs',
+            'absolute z-50 w-64 p-3 rounded-sm shadow-xl text-xs',
             'bg-background-card border border-border text-text-secondary',
             'bottom-full left-1/2 -translate-x-1/2 mb-2'
           )}

@@ -852,8 +852,8 @@ function InstitutionRow({ institution, rank }: { institution: InstitutionRespons
                 <svg viewBox={`0 0 ${N * DG} 5`} width={N * DG} height={5} aria-hidden="true">
                   {Array.from({ length: N }).map((_, k) => (
                     <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                      fill={k < filled ? riskColor : '#2d2926'}
-                      stroke={k < filled ? undefined : '#3d3734'}
+                      fill={k < filled ? riskColor : 'var(--color-background-elevated)'}
+                      stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                       strokeWidth={k < filled ? 0 : 0.5}
                       fillOpacity={k < filled ? 0.85 : 1}
                     />

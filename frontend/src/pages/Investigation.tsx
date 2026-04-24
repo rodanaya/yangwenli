@@ -66,7 +66,9 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   },
   corroborated: {
     icon: CheckCircle2,
-    className: 'bg-emerald-500/10 text-emerald-500 border border-emerald-500/30',
+    // Bible §3.10: no green for verification semantics in a corruption context.
+    // Amber gold signals "confirmed finding" without implying safety.
+    className: 'bg-[color:var(--color-accent)]/10 text-[color:var(--color-accent)] border border-[color:var(--color-accent)]/30',
   },
   refuted: {
     icon: XCircle,
@@ -74,7 +76,7 @@ const STATUS_CONFIG: Record<InvestigationValidationStatus, {
   },
   inconclusive: {
     icon: HelpCircle,
-    className: 'bg-slate-500/10 text-slate-400 border border-slate-500/30',
+    className: 'bg-slate-500/10 text-text-secondary border border-border/30',
   },
 }
 
@@ -356,7 +358,7 @@ function CaseCard({
             const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
             const riskColor = caseItem.suspicion_score >= 0.6 ? '#ef4444'
               : caseItem.suspicion_score >= 0.4 ? '#f59e0b'
-              : caseItem.suspicion_score >= 0.25 ? '#a16207' : '#71717a'
+              : caseItem.suspicion_score >= 0.25 ? '#a16207' : 'var(--color-text-muted)'
             return (
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 10`} className="w-full h-2.5" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (
@@ -742,7 +744,7 @@ export function Investigation() {
               </p>
             </>
           ) : (
-            <div className="rounded-lg border border-border/50 overflow-hidden">
+            <div className="rounded-sm border border-border/50 overflow-hidden">
               {/* Table section header */}
               <div className="px-4 py-2.5 bg-background-elevated/40 border-b border-border/30">
                 <span className="text-[9px] font-mono font-bold tracking-[0.2em] uppercase text-text-muted/50">
@@ -870,7 +872,7 @@ function CaseTableRow({
             const filled = Math.round(Math.min(caseItem.suspicion_score, 1) * DOTS)
             const riskColor = priority.level === 'critical' ? '#ef4444'
               : priority.level === 'high' ? '#f59e0b'
-              : priority.level === 'medium' ? '#a16207' : '#71717a'
+              : priority.level === 'medium' ? '#a16207' : 'var(--color-text-muted)'
             return (
               <svg viewBox={`0 0 ${DOTS * DOT_GAP} 8`} className="w-16 h-2" preserveAspectRatio="none">
                 {Array.from({ length: DOTS }).map((_, i) => (

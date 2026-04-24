@@ -41,16 +41,16 @@ export function StoryCuartaAdjudicacion() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-background border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Hallazgo
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Cada sexenio batió el récord del anterior
       </p>
-      <p className="text-xs text-zinc-500 mb-5">
+      <p className="text-xs text-text-muted mb-5">
         Cuatro anillos, cuatro administraciones — el arco crece con cada era
       </p>
 
@@ -158,12 +158,12 @@ export function StoryCuartaAdjudicacion() {
                 <span className="text-2xl font-mono font-bold" style={{ color: ring.color }}>
                   {ring.rate}%
                 </span>
-                <span className="text-[10px] font-mono text-zinc-600">
+                <span className="text-[10px] font-mono text-text-muted">
                   {(ring.rate / 25).toFixed(1)}x OCDE
                 </span>
               </div>
-              <div className="text-xs text-zinc-300 font-semibold">{ring.era}</div>
-              <div className="text-[10px] text-zinc-500 font-mono">{ring.years}</div>
+              <div className="text-xs text-text-secondary font-semibold">{ring.era}</div>
+              <div className="text-[10px] text-text-muted font-mono">{ring.years}</div>
             </motion.div>
           ))}
         </div>
@@ -174,13 +174,13 @@ export function StoryCuartaAdjudicacion() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-red-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           La adjudicación directa promedio pasó de 42% bajo Calderón a 82% en 2023 bajo AMLO
           — una duplicación en dieciséis años. Cada anillo rompe el récord del anterior.
         </p>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-600 font-mono">
+      <p className="mt-3 text-[10px] text-text-muted font-mono">
         Fuente: COMPRANET · Análisis RUBLI v0.6.5
       </p>
     </motion.div>

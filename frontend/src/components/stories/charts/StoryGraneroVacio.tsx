@@ -50,31 +50,31 @@ export function StoryGraneroVacio() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 border border-zinc-800 p-5"
+      className="rounded-sm bg-background-card border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Sector Agricultura
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Cuatro empresas, MXN $14.8B, cero competencia
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Principales proveedores por valor total · AMLO 2019-24
       </p>
 
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-red-500">93.5%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">adj. directa en el sector</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">adj. directa en el sector</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-amber-400">6</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">proveedores dominan</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">proveedores dominan</div>
         </div>
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -167,13 +167,13 @@ export function StoryGraneroVacio() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           ILAS Mexico y Productos Loneg recibieron 100% de sus contratos sin licitación.
           Promedio por contrato: MXN 275M y MXN 302M respectivamente.
         </p>
       </div>
 
-      <div className="mt-3 flex gap-4 text-[10px] text-zinc-500">
+      <div className="mt-3 flex gap-4 text-[10px] text-text-muted">
         <span className="flex items-center gap-1.5">
           <span className="w-2 h-2 rounded-sm" style={{ background: '#dc2626' }} />
           100% DA
@@ -188,7 +188,7 @@ export function StoryGraneroVacio() {
         </span>
       </div>
 
-      <p className="text-[10px] text-zinc-600 mt-3">
+      <p className="text-[10px] text-text-muted mt-3">
         Fuente: COMPRANET · Cada punto = $100M MXN · Análisis RUBLI v0.6.5
       </p>
     </motion.div>

@@ -18,15 +18,15 @@ export function StoryAdminSunburst() {
       className="w-full space-y-4"
     >
       {/* Section overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Administration Comparison
       </p>
 
       {/* Editorial headline */}
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         MXN 9.9 trillion across 5 presidents — where did the money go?
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Each administration left a distinct procurement fingerprint. Pena Nieto&apos;s
         administration was the largest spender at MXN 3.1T, while AMLO&apos;s government shifted
         spending toward health and social programs. The inner ring shows each president&apos;s
@@ -37,45 +37,45 @@ export function StoryAdminSunburst() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-emerald-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-emerald-400">MXN 3.1T</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Pena Nieto · largest spender
           </div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-amber-400">79.5%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             AMLO direct awards · highest ever
           </div>
         </div>
         <div className="border-l-2 border-pink-500 pl-3 py-1">
           <div className="text-2xl font-mono font-bold text-pink-400">12.0%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             Sheinbaum high-risk rate (early)
           </div>
         </div>
       </div>
 
       {/* Chart */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4 flex justify-center">
+      <div className="rounded-sm border border-border bg-background p-4 flex justify-center">
         <AdminSectorSunburst />
       </div>
 
       {/* Reading guide */}
-      <div className="rounded-sm border border-zinc-700/40 bg-zinc-900/60 p-3">
-        <p className="text-[10px] font-mono uppercase tracking-wide text-zinc-500 mb-1">
+      <div className="rounded-sm border border-border bg-background-card p-3">
+        <p className="text-[10px] font-mono uppercase tracking-wide text-text-muted mb-1">
           HOW TO READ THIS CHART
         </p>
-        <p className="text-xs text-zinc-400 leading-relaxed">
-          <strong className="text-zinc-300">Inner ring:</strong> each arc represents one
+        <p className="text-xs text-text-secondary leading-relaxed">
+          <strong className="text-text-secondary">Inner ring:</strong> each arc represents one
           presidential administration, sized by total procurement spending.
-          <strong className="text-zinc-300"> Outer ring:</strong> each segment is one of 12
+          <strong className="text-text-secondary"> Outer ring:</strong> each segment is one of 12
           sectors, sized by that sector&apos;s spending under the corresponding president.
           Hover to see exact values.
         </p>
       </div>
 
       {/* Source */}
-      <p className="text-[10px] text-zinc-600">
+      <p className="text-[10px] text-text-muted">
         Source: COMPRANET 2002-2025 · 3.05M contracts · 12 sectors
       </p>
     </motion.div>

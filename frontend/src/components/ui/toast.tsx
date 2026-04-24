@@ -120,7 +120,7 @@ const ToastItem = memo(function ToastItem({
   return (
     <div
       className={cn(
-        'flex items-start gap-3 rounded-lg border p-4 shadow-lg animate-slide-up',
+        'flex items-start gap-3 rounded-sm border p-4 shadow-lg animate-slide-up',
         'bg-background-card',
         colors[toast.type]
       )}

@@ -84,7 +84,7 @@ function IPSBar({ score }: { score: number }) {
           </svg>
         )
       })()}
-      <span className="text-[11px] font-mono text-slate-400">{score.toFixed(2)}</span>
+      <span className="text-[11px] font-mono text-text-secondary">{score.toFixed(2)}</span>
     </div>
   )
 }
@@ -141,13 +141,13 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
         </div>
 
         {/* Tier toggle */}
-        <div className="flex gap-1 bg-slate-800 rounded-lg p-1">
+        <div className="flex gap-1 bg-background-elevated rounded-lg p-1">
           {([1, 2] as const).map(t => (
             <button
               key={t}
               onClick={() => setTier(t)}
               className={`px-3 py-1 text-xs rounded-md transition-colors ${
-                tier === t ? 'bg-red-600 text-white' : 'text-slate-400 hover:text-white'
+                tier === t ? 'bg-red-600 text-text-primary' : 'text-text-secondary hover:text-text-primary'
               }`}
             >
               T{t}
@@ -198,7 +198,7 @@ export function AnomalyLeadsWidget({ className }: { className?: string }) {
                   </td>
                   <td className="py-2 pr-2">
                     <span
-                      className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-white"
+                      className="inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold text-text-primary"
                       style={{ backgroundColor: getSectorColor(v.primary_sector_name) }}
                     >
                       {v.primary_sector_name ?? 'N/A'}

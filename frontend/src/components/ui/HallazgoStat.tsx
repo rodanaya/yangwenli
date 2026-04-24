@@ -14,7 +14,7 @@ export function HallazgoStat({
   value,
   label,
   annotation,
-  color = 'border-red-500',
+  color = 'border-risk-critical',
   className,
   style,
 }: HallazgoStatProps) {

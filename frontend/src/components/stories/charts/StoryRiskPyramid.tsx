@@ -37,14 +37,14 @@ export function StoryRiskPyramid() {
       transition={{ duration: 0.5 }}
       className="w-full space-y-4"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
         RUBLI · Distribución de riesgo
       </p>
 
-      <h3 className="text-xl font-bold font-serif leading-tight text-zinc-100">
+      <h3 className="text-xl font-bold font-serif leading-tight text-text-primary">
         6% de los contratos concentran 42% del dinero — y son todos de riesgo crítico
       </h3>
-      <p className="text-sm text-zinc-400 leading-relaxed max-w-2xl">
+      <p className="text-sm text-text-secondary leading-relaxed max-w-2xl">
         Cada punto representa 2% del total de contratos. Los niveles se angostan hacia arriba:
         la cima crítica es estrecha por número, pero la más ancha por valor.
       </p>
@@ -53,26 +53,26 @@ export function StoryRiskPyramid() {
       <div className="grid grid-cols-3 gap-3">
         <div className="border-l-2 border-red-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-red-400">MXN 4.1T</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             en contratos críticos
           </div>
         </div>
         <div className="border-l-2 border-orange-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-orange-400">6.9x</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             ratio valor / volumen (crítico)
           </div>
         </div>
         <div className="border-l-2 border-emerald-500 pl-3 py-1">
           <div className="text-3xl font-mono font-bold text-emerald-400">13.5%</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-wide mt-0.5">
             tasa de alto riesgo · OCDE máx 15%
           </div>
         </div>
       </div>
 
       {/* The pyramid */}
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-5">
+      <div className="rounded-sm border border-border bg-background p-5">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -167,14 +167,14 @@ export function StoryRiskPyramid() {
         <p className="text-xs font-mono uppercase tracking-wide text-red-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-sm text-zinc-200">
+        <p className="text-sm text-text-secondary">
           La forma de la pirámide se invierte cuando la medida cambia de número a valor:
           <strong className="text-red-400"> 6% de contratos cargan 42% del dinero</strong>.
           El patrón es consistente en los 12 sectores — la corrupción gravita hacia los contratos grandes.
         </p>
       </div>
 
-      <p className="text-[10px] text-zinc-600 font-mono">
+      <p className="text-[10px] text-text-muted font-mono">
         Fuente: 3.05M contratos · RUBLI v0.6.5 · umbrales crítico≥0.60, alto≥0.40, medio≥0.25
       </p>
     </motion.div>

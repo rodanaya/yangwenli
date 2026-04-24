@@ -67,7 +67,7 @@ const RISK_LEVELS_V6 = [
   { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: '#f87171' },
   { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: '#fb923c' },
   { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: '#71717a' },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: 'var(--color-text-muted)' },
 ] as const
 
 const CORRUPTION_CASES = [
@@ -389,8 +389,8 @@ const CoefficientChart = memo(function CoefficientChart() {
                     cx={MD_LABEL_W + i * MD_DOT_GAP + MD_DOT_R}
                     cy={yCenter}
                     r={MD_DOT_R}
-                    fill={isFilled ? color : '#2d2926'}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    fill={isFilled ? color : 'var(--color-background-elevated)'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.4}
                     fillOpacity={isFilled ? 0.85 : 1}
                     initial={{ opacity: 0 }}
@@ -458,8 +458,8 @@ const V33WeightsChart = memo(function V33WeightsChart() {
                     cx={MD_LABEL_W + i * MD_DOT_GAP + MD_DOT_R}
                     cy={yCenter}
                     r={MD_DOT_R}
-                    fill={isFilled ? 'var(--color-accent)' : '#2d2926'}
-                    stroke={isFilled ? 'none' : '#3d3734'}
+                    fill={isFilled ? 'var(--color-accent)' : 'var(--color-background-elevated)'}
+                    stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                     strokeWidth={0.4}
                     fillOpacity={isFilled ? 0.75 : 1}
                     initial={{ opacity: 0 }}
@@ -674,14 +674,14 @@ export function Methodology() {
       <header className="relative pt-4 pb-8" style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}>
         <div className="flex items-start justify-between gap-6">
           <div className="max-w-3xl">
-            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-zinc-500 mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
+            <div className="flex items-center gap-3 text-[10px] font-mono uppercase tracking-[0.18em] text-text-muted mb-3 pb-2 border-b border-[rgba(255,255,255,0.06)]">
               <span className="inline-flex items-center gap-1.5">
                 <span className="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse" />
-                <span className="text-zinc-300">RUBLI</span>
+                <span className="text-text-secondary">RUBLI</span>
               </span>
-              <span className="text-zinc-700">·</span>
+              <span className="text-text-primary">·</span>
               <span>{t('kicker')}</span>
-              <span className="text-zinc-700">·</span>
+              <span className="text-text-primary">·</span>
               <span className="font-mono tabular-nums">v0.6.5</span>
             </div>
             <p className="text-kicker text-kicker--investigation mb-3">{t('kicker')}</p>

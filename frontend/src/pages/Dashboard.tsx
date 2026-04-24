@@ -90,7 +90,7 @@ function RiskDistributionPanel({
           {formatNumber(totalContracts)}
         </span>
       </div>
-      <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+      <p className="text-xs text-text-muted mb-3 leading-relaxed">
         {t('editorial.riskDistSubtitle', 'Share of {{total}} contracts at each risk level. High-risk = critical + high.', {
           total: formatNumber(totalContracts),
         })}
@@ -193,7 +193,7 @@ function SectorTable({ sectors, loading }: { sectors: SectorTableRow[]; loading:
           <h3 className="text-sm font-bold text-text-primary">
             {t('editorial.sectorTableTitle', 'Sector breakdown')}
           </h3>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5">
             {t('editorial.sectorTableSubtitle', 'Contracts, total value and risk for each of the 12 federal sectors, ordered by spend.')}
           </p>
         </div>
@@ -560,14 +560,14 @@ export function Dashboard() {
 
               {actITab === 'timeline' ? (
                 <>
-                  <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                  <p className="text-xs text-text-muted mb-3 leading-relaxed">
                     {t('editorial.sexenioSubtitle', 'Column height ∝ √(contract value). Warm fill = contracts at high or critical risk. Dashed line = OECD 15% ceiling. Presidential terms delineated.')}
                   </p>
                   <SexenioStratum rows={sexenioRows} />
                 </>
               ) : (
                 <>
-                  <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                  <p className="text-xs text-text-muted mb-3 leading-relaxed">
                     {constellationMode === 'sectors'
                       ? t('editorial.constellationSubtitleSectors', 'Cada punto representa un conjunto de contratos. Los críticos se agrupan en los 12 sectores federales — donde el dinero público se concentra.')
                       : constellationMode === 'sexenios'
@@ -646,7 +646,7 @@ export function Dashboard() {
                     v0.6.5
                   </span>
                 </div>
-                <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+                <p className="text-xs text-text-muted mb-3 leading-relaxed">
                   {t('editorial.sectorChartSubtitle', 'Bar width = total contract value. Fill = risk composition. Sorted by spend.')}
                 </p>
                 {dashLoading ? (
@@ -842,7 +842,7 @@ export function Dashboard() {
                   2001–2025
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              <p className="text-xs text-text-muted mb-3 leading-relaxed">
                 {t(
                   'editorial.adminSubtitle',
                   'High-risk rate and direct award percentage for each presidential administration. AMLO era: 41.8% high-risk vs. Fox era 17.7%.'
@@ -864,7 +864,7 @@ export function Dashboard() {
                   v0.6.5
                 </span>
               </div>
-              <p className="text-xs text-zinc-500 mb-3 leading-relaxed">
+              <p className="text-xs text-text-muted mb-3 leading-relaxed">
                 {t(
                   'editorial.patternsSubtitle',
                   'Five procurement red flags across 3,051,294 contracts. Co-licitación alone flags 1.5M contracts — nearly half the entire dataset.'

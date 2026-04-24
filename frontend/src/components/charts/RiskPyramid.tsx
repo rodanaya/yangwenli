@@ -57,7 +57,7 @@ export function RiskPyramid() {
           CONTRACT COUNT
         </text>
         <text x={LEFT_PAD + PANEL_SPAN / 2} y={21} textAnchor="middle"
-              fill="#3f3f46" fontSize={6} fontFamily="monospace">
+              fill="#e2ddd6" fontSize={6} fontFamily="monospace">
           each dot ≈ 2 pct of contracts
         </text>
         <text x={LEFT_PAD + PANEL_SPAN + CENTER_W + PANEL_SPAN / 2} y={13} textAnchor="middle"
@@ -65,7 +65,7 @@ export function RiskPyramid() {
           CONTRACT VALUE
         </text>
         <text x={LEFT_PAD + PANEL_SPAN + CENTER_W + PANEL_SPAN / 2} y={21} textAnchor="middle"
-              fill="#3f3f46" fontSize={6} fontFamily="monospace">
+              fill="#e2ddd6" fontSize={6} fontFamily="monospace">
           each dot ≈ 2 pct of total MXN
         </text>
 
@@ -86,8 +86,8 @@ export function RiskPyramid() {
                     cx={LEFT_DOT0_CX + i * DOT_SPACING}
                     cy={rowY}
                     r={DOT_R}
-                    fill={filled ? d.color : '#2d2926'}
-                    stroke={filled ? undefined : '#3d3734'}
+                    fill={filled ? d.color : '#f3f1ec'}
+                    stroke={filled ? undefined : '#e2ddd6'}
                     strokeWidth={filled ? 0 : 0.5}
                     fillOpacity={filled ? 0.88 : 0.32}
                   />
@@ -124,8 +124,8 @@ export function RiskPyramid() {
                     cx={RIGHT_DOT0_CX + i * DOT_SPACING}
                     cy={rowY}
                     r={DOT_R}
-                    fill={filled ? d.color : '#2d2926'}
-                    stroke={filled ? undefined : '#3d3734'}
+                    fill={filled ? d.color : '#f3f1ec'}
+                    stroke={filled ? undefined : '#e2ddd6'}
                     strokeWidth={filled ? 0 : 0.5}
                     fillOpacity={filled ? 0.88 : 0.32}
                   />

@@ -34,18 +34,18 @@ export function StoryHemoserSplitting() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 border border-zinc-800 p-5"
+      className="rounded-sm bg-background-card border border-border p-5"
     >
       {/* Overline */}
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · Fraccionamiento
       </p>
 
       {/* Editorial headline */}
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         El fraccionamiento no es un accidente: 93K contratos sospechosos bajo AMLO
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Contratos con patrón de fraccionamiento en el mismo día · 2019-2024
       </p>
 
@@ -53,11 +53,11 @@ export function StoryHemoserSplitting() {
       <div className="flex gap-6 mb-5">
         <div className="border-l-2 border-red-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-red-500">93K</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">contratos fraccionados</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">contratos fraccionados</div>
         </div>
         <div className="border-l-2 border-amber-500 pl-3 py-0.5">
           <div className="text-2xl font-mono font-bold text-amber-400">20.5K</div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-wide">pico en 2023</div>
+          <div className="text-[10px] text-text-muted uppercase tracking-wide">pico en 2023</div>
         </div>
       </div>
 
@@ -169,13 +169,13 @@ export function StoryHemoserSplitting() {
           <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
           2023: 20,512 contratos — máximo del sexenio
         </span>
-        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-zinc-800 border border-zinc-700 text-[10px] text-zinc-400">
+        <span className="inline-flex items-center gap-1.5 rounded-full px-3 py-1 bg-background-elevated border border-border text-[10px] text-text-secondary">
           MOLINOS AZTECA 2021: 1,340 contratos, MXN 945M
         </span>
       </div>
 
       {/* Source */}
-      <p className="text-[10px] text-zinc-600 mt-3">
+      <p className="text-[10px] text-text-muted mt-3">
         * 2024 año parcial · Fraccionamiento = múltiples contratos al mismo proveedor el mismo día · Fuente: RUBLI v0.6.5
       </p>
     </motion.div>

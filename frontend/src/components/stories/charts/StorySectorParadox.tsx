@@ -61,16 +61,16 @@ export function StorySectorParadox() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-950 border border-zinc-800/60 p-5"
+      className="rounded-sm bg-background border border-border p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1.5">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1.5">
         RUBLI · La paradoja de la adjudicación directa
       </p>
 
-      <p className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <p className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Agricultura tiene 93% de adjudicación directa — pero solo 2% de riesgo alto
       </p>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Infraestructura tiene la menor tasa de DA, pero la mayor concentración de riesgo estructural
       </p>
 
@@ -178,14 +178,14 @@ export function StorySectorParadox() {
         <p className="text-[10px] font-mono uppercase tracking-wide text-amber-400 mb-1">
           HALLAZGO
         </p>
-        <p className="text-xs text-zinc-300 leading-relaxed">
+        <p className="text-xs text-text-secondary leading-relaxed">
           La posición de <strong className="text-orange-300">Infraestructura</strong> (baja DA, alto
           riesgo) desmiente el atajo "adjudicación directa = corrupción". El modelo detecta
           patrones estructurales que el flag binario no captura.
         </p>
       </div>
 
-      <p className="mt-3 text-[10px] text-zinc-600 font-mono">
+      <p className="mt-3 text-[10px] text-text-muted font-mono">
         Tamaño = gasto total (MXN T) · Fuente: COMPRANET · 12 sectores · RUBLI v0.6.5
       </p>
     </motion.div>

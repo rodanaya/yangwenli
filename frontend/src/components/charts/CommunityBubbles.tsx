@@ -115,7 +115,7 @@ export function CommunityBubbles() {
               })}
               onMouseLeave={() => setTooltip(null)}
             >
-              <circle cx={x} cy={y} r={r} fill={fill} opacity={opacity} stroke="#27272a" strokeWidth={1} />
+              <circle cx={x} cy={y} r={r} fill={fill} opacity={opacity} stroke="#f3f1ec" strokeWidth={1} />
               {r > 22 && (
                 <text
                   x={x} y={y}

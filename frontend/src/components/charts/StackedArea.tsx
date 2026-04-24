@@ -1,6 +1,11 @@
 /**
  * Stacked Area Chart Component
  * For showing risk distribution trends over time
+ *
+ * TODO(charts): EditorialAreaChart is single-series only. This component is
+ * a true 4-series stacked area (low/medium/high/critical). Tokens already
+ * follow bible §2 (RISK_COLORS, --color-text-muted, .chart-tooltip).
+ * Migration deferred until the editorial primitive grows multi-series support.
  */
 
 import { memo, useMemo } from 'react'

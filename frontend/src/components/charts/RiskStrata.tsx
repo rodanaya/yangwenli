@@ -47,8 +47,8 @@ const C = {
   critical:    '#ef4444',
   high:        '#f59e0b',
   medium:      '#92400e',   // dark amber — subdued, not alarming
-  lowFill:     '#27272a',   // near-black
-  lowStroke:   '#3f3f46',
+  lowFill:     '#f3f1ec',   // near-black
+  lowStroke:   '#e2ddd6',
 } as const
 
 const LABEL_C: Record<string, string> = {
@@ -110,7 +110,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
       </text>
       <text
         x={0} y={48}
-        fill="#a1a1aa"
+        fill="var(--color-text-muted)"
         fontSize={9}
         fontFamily="var(--font-family-mono, monospace)"
         letterSpacing="0.10em"
@@ -158,7 +158,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
             {/* Level name */}
             <text
               x={STATS_X + 15} y={y + 7}
-              fill={isHigh ? '#a1a1aa' : '#52525b'}
+              fill={isHigh ? 'var(--color-text-muted)' : '#52525b'}
               fontSize={9}
               fontFamily="var(--font-family-mono, monospace)"
               letterSpacing="0.06em"
@@ -194,7 +194,7 @@ export function RiskStrata({ rows, totalContracts, hrRate, className }: RiskStra
       {/* ── Caption ─────────────────────────────────────────────────── */}
       <text
         x={GRID_X} y={SVG_H - 5}
-        fill="#3f3f46"
+        fill="#e2ddd6"
         fontSize={8}
         fontFamily="var(--font-family-mono, monospace)"
       >

@@ -52,8 +52,8 @@ const PATTERN_META: Record<PatternKey, { text: string; bg: string; border: strin
   P1: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
   P2: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
   P3: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
-  P4: { text: 'text-zinc-400',  bg: 'bg-zinc-800/50',  border: 'border-zinc-700/30',  dot: 'bg-zinc-500' },
-  P5: { text: 'text-zinc-400',  bg: 'bg-zinc-800/50',  border: 'border-zinc-700/30',  dot: 'bg-zinc-500' },
+  P4: { text: 'text-text-secondary',  bg: 'bg-background-elevated',  border: 'border-border',  dot: 'bg-background-elevated' },
+  P5: { text: 'text-text-secondary',  bg: 'bg-background-elevated',  border: 'border-border',  dot: 'bg-background-elevated' },
   P6: { text: 'text-red-400',   bg: 'bg-red-500/10',   border: 'border-red-500/20',   dot: 'bg-red-500' },
   P7: { text: 'text-amber-400', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
 }
@@ -62,15 +62,15 @@ const PATTERN_META: Record<PatternKey, { text: string; bg: string; border: strin
 const IPS_TEXT_COLOR = (score: number) => {
   if (score >= 0.75) return 'text-red-400'   // critical
   if (score >= 0.50) return 'text-amber-400' // high
-  if (score >= 0.30) return 'text-zinc-300'  // medium
-  return 'text-zinc-500'                      // low
+  if (score >= 0.30) return 'text-text-secondary'  // medium
+  return 'text-text-muted'                      // low
 }
 
 const IPS_BG_COLOR = (score: number) => {
   if (score >= 0.75) return 'bg-red-500/10 border-red-500/20'
   if (score >= 0.50) return 'bg-amber-500/10 border-amber-500/20'
-  if (score >= 0.30) return 'bg-zinc-800/50 border-zinc-700/30'
-  return 'bg-zinc-900/50 border-zinc-800'
+  if (score >= 0.30) return 'bg-background-elevated border-border'
+  return 'bg-background-card border-border'
 }
 
 type TierConfig = {
@@ -84,12 +84,12 @@ type TierConfig = {
   descKey: string
 }
 
-// Tier accent: T1 critical=red, T2 high=amber, T3 medium=zinc-400, T4 low=zinc-600
+// Tier accent: T1 critical=red, T2 high=amber, T3 medium=muted border, T4 low=subtle border
 const TIER_CONFIG: TierConfig[] = [
-  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', accent: 'border-l-red-500',   textColor: 'text-red-400',   pillBg: 'bg-red-500/10',   pillText: 'text-red-400',   descKey: 'tier1.description' },
-  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', accent: 'border-l-amber-500', textColor: 'text-amber-400', pillBg: 'bg-amber-500/10', pillText: 'text-amber-400', descKey: 'tier2.description' },
-  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', accent: 'border-l-zinc-500',  textColor: 'text-zinc-400',  pillBg: 'bg-zinc-800/50',  pillText: 'text-zinc-400',  descKey: 'tier3.description' },
-  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', accent: 'border-l-zinc-700',  textColor: 'text-zinc-600',  pillBg: 'bg-zinc-900/50',  pillText: 'text-zinc-500',  descKey: 'tier4.description' },
+  { tier: 1, labelKey: 'tier1.label', nameKey: 'tier1.name', accent: 'border-l-risk-critical',   textColor: 'text-risk-critical',   pillBg: 'bg-risk-critical/10',   pillText: 'text-risk-critical',   descKey: 'tier1.description' },
+  { tier: 2, labelKey: 'tier2.label', nameKey: 'tier2.name', accent: 'border-l-risk-high', textColor: 'text-risk-high', pillBg: 'bg-risk-high/10', pillText: 'text-risk-high', descKey: 'tier2.description' },
+  { tier: 3, labelKey: 'tier3.label', nameKey: 'tier3.name', accent: 'border-l-border',  textColor: 'text-text-secondary',  pillBg: 'bg-background-elevated',  pillText: 'text-text-secondary',  descKey: 'tier3.description' },
+  { tier: 4, labelKey: 'tier4.label', nameKey: 'tier4.name', accent: 'border-l-border',  textColor: 'text-text-muted',  pillBg: 'bg-background-card',  pillText: 'text-text-muted',  descKey: 'tier4.description' },
 ]
 
 type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
@@ -97,10 +97,10 @@ type ReviewStatus = 'pending' | 'confirmed' | 'dismissed' | 'reviewing'
 // Phase 1: review status pills use the canonical 3-color system (red/amber/zinc).
 // "confirmed" no longer uses green — confirmed-corrupt is a critical finding, not a "safe" state.
 const REVIEW_STATUS_META: Record<ReviewStatus, { className: string }> = {
-  pending:   { className: 'bg-zinc-800/60 text-zinc-400 border-zinc-700' },
+  pending:   { className: 'bg-background-elevated text-text-secondary border-border' },
   reviewing: { className: 'bg-amber-500/10 text-amber-400 border-amber-500/20' },
   confirmed: { className: 'bg-red-500/10 text-red-400 border-red-500/20' },
-  dismissed: { className: 'bg-zinc-900/60 text-zinc-500 border-zinc-800' },
+  dismissed: { className: 'bg-background-card text-text-muted border-border' },
 }
 
 // ============================================================================
@@ -128,15 +128,15 @@ function TierFilterPill({
         'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
         isActive
           ? cn(tier.pillBg, tier.pillText, 'border-current')
-          : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+          : 'bg-background-card text-text-secondary border-border hover:border-border'
       )}
       aria-pressed={isActive}
     >
-      <span className={cn('font-mono font-bold', isActive ? tier.textColor : 'text-zinc-500')}>
+      <span className={cn('font-mono font-bold', isActive ? tier.textColor : 'text-text-muted')}>
         {t(tier.labelKey).replace(/^Nivel\s+/i, 'T')}
       </span>
       {loading
-        ? <span className="w-6 h-2.5 rounded bg-zinc-700 animate-pulse" />
+        ? <span className="w-6 h-2.5 rounded bg-background-elevated animate-pulse" />
         : <span className="font-mono tabular-nums">{formatNumber(count)}</span>
       }
     </button>
@@ -167,7 +167,7 @@ function TierNavigationRow({
     <button
       onClick={onClick}
       className={cn(
-        'w-full text-left flex items-center gap-4 px-4 py-3 rounded-sm border border-zinc-800 border-l-4 transition-all',
+        'w-full text-left flex items-center gap-4 px-4 py-3 rounded-sm border border-border border-l-4 transition-all',
         tier.accent,
         isActive
           ? 'bg-background-elevated border-opacity-100'
@@ -179,7 +179,7 @@ function TierNavigationRow({
         <div className={cn('text-[10px] font-mono font-bold uppercase tracking-[0.15em]', tier.textColor)}>
           {t(tier.labelKey)}
         </div>
-        <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
+        <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
           {t(tier.nameKey)}
         </div>
       </div>
@@ -189,29 +189,29 @@ function TierNavigationRow({
           <div className={cn('stat-sm tabular-nums', tier.textColor)}>
             {formatNumber(count)}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
             {t('leads.vendorCount')}
           </div>
         </div>
         <div>
-          <div className="stat-sm font-mono tabular-nums text-zinc-200">
+          <div className="stat-sm font-mono tabular-nums text-text-secondary">
             {avgRisk != null ? `${(avgRisk * 100).toFixed(0)}%` : '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
             {t('tierCard.avgRisk')}
           </div>
         </div>
         <div className="hidden sm:block">
-          <div className="stat-sm font-mono tabular-nums text-zinc-200">
+          <div className="stat-sm font-mono tabular-nums text-text-secondary">
             {valueAtRisk != null && valueAtRisk > 0 ? formatCompactMXN(valueAtRisk) : '—'}
           </div>
-          <div className="text-[10px] text-zinc-500 uppercase tracking-[0.15em] mt-0.5">
+          <div className="text-[10px] text-text-muted uppercase tracking-[0.15em] mt-0.5">
             {t('tierCard.valueAtRisk')}
           </div>
         </div>
       </div>
 
-      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isActive ? 'text-amber-400 translate-x-0.5' : 'text-zinc-600')} />
+      <ChevronRight className={cn('h-4 w-4 shrink-0 transition-transform', isActive ? 'text-amber-400 translate-x-0.5' : 'text-text-muted')} />
     </button>
   )
 }
@@ -241,13 +241,13 @@ function PatternChip({
         'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
         isActive
           ? cn(meta.bg, meta.text, meta.border)
-          : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+          : 'bg-background-card text-text-secondary border-border hover:border-border'
       )}
       aria-pressed={isActive}
     >
       <span className={cn('h-1.5 w-1.5 rounded-full', meta.dot)} />
-      <span className={cn(isActive ? meta.text : 'text-zinc-300')}>{t(`patterns.${pattern}`)}</span>
-      <span className="font-mono tabular-nums text-zinc-500">{formatNumber(count)}</span>
+      <span className={cn(isActive ? meta.text : 'text-text-secondary')}>{t(`patterns.${pattern}`)}</span>
+      <span className="font-mono tabular-nums text-text-muted">{formatNumber(count)}</span>
     </button>
   )
 }
@@ -304,10 +304,10 @@ function ReviewPopover({
   return (
     <div
       ref={ref}
-      className="absolute right-0 top-8 z-50 w-56 rounded-sm border border-zinc-800 bg-zinc-950 shadow-xl p-3 space-y-2"
+      className="absolute right-0 top-8 z-50 w-56 rounded-sm border border-border bg-background shadow-xl p-3 space-y-2"
       onClick={(e) => e.stopPropagation()}
     >
-      <p className="text-[10px] uppercase tracking-[0.15em] font-mono text-zinc-500 font-bold mb-2">
+      <p className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted font-bold mb-2">
         {t('reviewPopover.reviewStatus')}
       </p>
       {statuses.map((s) => {
@@ -320,8 +320,8 @@ function ReviewPopover({
             className={cn(
               'w-full flex items-center gap-2 px-2 py-1.5 rounded text-xs font-medium border transition-colors',
               isSelected
-                ? cn(meta.className, 'ring-1 ring-white/10')
-                : 'bg-zinc-900/40 border-zinc-800 text-zinc-400 hover:border-zinc-700'
+                ? cn(meta.className, 'ring-1 ring-border')
+                : 'bg-background-card border-border text-text-secondary hover:border-border'
             )}
           >
             {isSelected && <Check className="h-3 w-3 shrink-0" />}
@@ -330,17 +330,17 @@ function ReviewPopover({
           </button>
         )
       })}
-      <div className="flex items-center gap-2 pt-1 border-t border-zinc-800">
+      <div className="flex items-center gap-2 pt-1 border-t border-border">
         <button
           onClick={() => mutation.mutate(status)}
           disabled={mutation.isPending}
-          className="flex-1 py-1.5 rounded text-xs font-medium bg-amber-500 text-zinc-950 hover:bg-amber-400 disabled:opacity-50 transition-colors"
+          className="flex-1 py-1.5 rounded text-xs font-medium bg-amber-500 text-text-primary hover:bg-amber-400 disabled:opacity-50 transition-colors"
         >
           {mutation.isPending ? t('reviewPopover.saving') : t('reviewPopover.save')}
         </button>
         <button
           onClick={onClose}
-          className="p-1.5 rounded text-zinc-500 hover:text-zinc-300 hover:bg-zinc-900 transition-colors"
+          className="p-1.5 rounded text-text-muted hover:text-text-secondary hover:bg-background-card transition-colors"
           aria-label={t('reviewPopover.close')}
         >
           <XIcon className="h-3.5 w-3.5" />
@@ -356,7 +356,7 @@ function ReviewPopover({
         </button>
       )}
       {inGroundTruth && (
-        <p className="text-[10px] text-zinc-500 text-center">{t('reviewPopover.alreadyInGT')}</p>
+        <p className="text-[10px] text-text-muted text-center">{t('reviewPopover.alreadyInGT')}</p>
       )}
       {(mutation.isError || promoteMutation.isError) && (
         <p className="text-[10px] text-red-400">{t('reviewPopover.error')}</p>
@@ -377,7 +377,7 @@ function ReviewPopover({
 const TIER_GHOST_META = {
   confirmed:    { label: 'Confirmed', labelEs: 'Confirmado',    color: '#ef4444', bg: 'bg-red-500/10',    border: 'border-red-500/20',    dot: 'bg-red-500' },
   multi_signal: { label: 'Multi-Signal', labelEs: 'Multi-Señal', color: '#f59e0b', bg: 'bg-amber-500/10', border: 'border-amber-500/20', dot: 'bg-amber-500' },
-  behavioral:   { label: 'Behavioral', labelEs: 'Conductual',   color: '#71717a', bg: 'bg-zinc-800/50',   border: 'border-zinc-700/30',  dot: 'bg-zinc-500' },
+  behavioral:   { label: 'Behavioral', labelEs: 'Conductual',   color: 'var(--color-text-muted)', bg: 'bg-background-elevated',   border: 'border-border',  dot: 'bg-background-elevated' },
 }
 
 const SIG_LABELS: Record<string, { en: string; es: string }> = {
@@ -423,13 +423,13 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
           <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-amber-400">
             {isEs ? 'ANÁLISIS DE CONFIANZA · EMPRESAS FANTASMA' : 'GHOST CONFIDENCE ANALYSIS'}
           </p>
-          <p className="text-xs text-zinc-500 mt-0.5">
+          <p className="text-xs text-text-muted mt-0.5">
             {isEs
               ? '11 señales independientes — convergen para producir una cola de investigación defendible'
               : '11 independent signals — convergence builds a defensible investigation referral'}
           </p>
         </div>
-        <div className="shrink-0 flex items-center gap-1 text-[10px] font-mono text-zinc-600">
+        <div className="shrink-0 flex items-center gap-1 text-[10px] font-mono text-text-muted">
           <span>{isEs ? 'puntuado' : 'scored'}</span>
           <span className="text-amber-500">{(tierSummary.confirmed + tierSummary.multi_signal + tierSummary.behavioral).toLocaleString()}</span>
           <span>{isEs ? 'proveedores P2' : 'P2 vendors'}</span>
@@ -449,18 +449,18 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
                 'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                 tierTab === tier
                   ? cn(meta.bg, meta.border)
-                  : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                  : 'bg-background-card text-text-secondary border-border hover:border-border'
               )}
             >
               <span className={cn('h-1.5 w-1.5 rounded-full shrink-0', meta.dot)} />
               <span style={tierTab === tier ? { color: meta.color } : undefined}>
                 {isEs ? meta.labelEs : meta.label}
               </span>
-              <span className="font-mono tabular-nums text-zinc-500">{count.toLocaleString()}</span>
+              <span className="font-mono tabular-nums text-text-muted">{count.toLocaleString()}</span>
             </button>
           )
         })}
-        <div className="ml-auto self-center text-[10px] text-zinc-600 font-mono hidden sm:block">
+        <div className="ml-auto self-center text-[10px] text-text-muted font-mono hidden sm:block">
           {tierTab === 'confirmed' && (isEs ? 'Verificación externa (EFOS SAT / SFP)' : 'External verification (EFOS SAT / SFP)')}
           {tierTab === 'multi_signal' && (isEs ? '3+ señales independientes convergentes' : '3+ independent signals converging')}
           {tierTab === 'behavioral' && (isEs ? 'Solo patrón P2 — evidencia adicional necesaria' : 'P2 pattern only — additional evidence needed')}
@@ -474,7 +474,7 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
             {Array.from({ length: 5 }).map((_, i) => <Skeleton key={i} className="h-12 rounded-sm" />)}
           </div>
         ) : suspects.length === 0 ? (
-          <div className="py-8 text-center text-sm text-zinc-500">
+          <div className="py-8 text-center text-sm text-text-muted">
             {isEs ? 'No hay sospechosos en este nivel' : 'No suspects in this tier'}
           </div>
         ) : (
@@ -486,7 +486,7 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
                 <button
                   key={s.vendor_id}
                   onClick={() => navigate(`/vendors/${s.vendor_id}`)}
-                  className="w-full text-left group flex items-start gap-3 px-3 py-2.5 rounded-sm border border-transparent hover:border-zinc-800 hover:bg-zinc-900/60 transition-all"
+                  className="w-full text-left group flex items-start gap-3 px-3 py-2.5 rounded-sm border border-transparent hover:border-border hover:bg-background-card transition-all"
                 >
                   {/* Score badge */}
                   <div className="shrink-0 w-10 text-right pt-0.5">
@@ -498,11 +498,11 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
                   {/* Name + signals */}
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="text-sm font-medium text-zinc-100 truncate group-hover:text-white">
+                      <span className="text-sm font-medium text-text-primary truncate group-hover:text-text-primary">
                         {s.vendor_name || `#${s.vendor_id}`}
                       </span>
                       {s.total_contracts != null && (
-                        <span className="text-[10px] font-mono text-zinc-600 shrink-0">
+                        <span className="text-[10px] font-mono text-text-muted shrink-0">
                           {s.total_contracts} {isEs ? 'contratos' : 'contracts'}
                         </span>
                       )}
@@ -519,7 +519,7 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
                               'text-[10px] font-mono px-1.5 py-0.5 rounded border',
                               isExternal
                                 ? 'bg-red-500/10 border-red-500/20 text-red-400'
-                                : 'bg-zinc-800/60 border-zinc-700/40 text-zinc-400'
+                                : 'bg-background-elevated border-border text-text-secondary'
                             )}
                           >
                             {isEs ? sigLabel.es : sigLabel.en}
@@ -531,11 +531,11 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
 
                   {/* Signals count */}
                   <div className="shrink-0 self-center">
-                    <span className="text-[10px] font-mono tabular-nums text-zinc-500">
+                    <span className="text-[10px] font-mono tabular-nums text-text-muted">
                       {s.ghost_signal_count} {isEs ? 'señ' : 'sig'}
                     </span>
                   </div>
-                  <ArrowRight className="h-3.5 w-3.5 text-zinc-700 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all self-center shrink-0" />
+                  <ArrowRight className="h-3.5 w-3.5 text-text-primary group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all self-center shrink-0" />
                 </button>
               )
             })}
@@ -544,19 +544,19 @@ function GhostSuspectsPanel({ isEs }: { isEs: boolean }) {
 
         {/* Ghost pagination */}
         {totalPages > 1 && (
-          <div className="flex items-center justify-between mt-3 pt-3 border-t border-zinc-800">
+          <div className="flex items-center justify-between mt-3 pt-3 border-t border-border">
             <button
               onClick={() => setGhostPage(Math.max(1, ghostPage - 1))}
               disabled={ghostPage === 1}
-              className="px-3 py-1 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+              className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >← {isEs ? 'Anterior' : 'Previous'}</button>
-            <span className="text-xs text-zinc-500 font-mono tabular-nums">
+            <span className="text-xs text-text-muted font-mono tabular-nums">
               {ghostPage} / {totalPages}
             </span>
             <button
               onClick={() => setGhostPage(Math.min(totalPages, ghostPage + 1))}
               disabled={ghostPage === totalPages}
-              className="px-3 py-1 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+              className="px-3 py-1 text-xs border border-border rounded-sm text-text-secondary hover:border-border disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
             >{isEs ? 'Siguiente' : 'Next'} →</button>
           </div>
         )}
@@ -605,7 +605,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
           }
         }}
         className={cn(
-          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-sm border border-zinc-800 border-l-4 bg-zinc-900/40 hover:bg-zinc-900 hover:border-zinc-700 transition-all cursor-pointer',
+          'group relative flex items-center gap-3 sm:gap-4 px-4 py-2 rounded-sm border border-border border-l-4 bg-background-card hover:bg-background-card hover:border-border transition-all cursor-pointer',
           tierCfg.accent
         )}
       >
@@ -623,7 +623,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
         {/* Vendor name + subline — the editorial anchor */}
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2">
-            <h3 className="text-base font-semibold text-zinc-100 truncate leading-tight">
+            <h3 className="text-base font-semibold text-text-primary truncate leading-tight">
               {item.vendor_name}
             </h3>
             {item.new_vendor_risk && (
@@ -633,7 +633,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
             )}
           </div>
           {sublineParts.length > 0 && (
-            <p className="text-xs text-zinc-500 truncate mt-0.5">
+            <p className="text-xs text-text-muted truncate mt-0.5">
               {sublineParts.join(' · ')}
             </p>
           )}
@@ -666,7 +666,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
             <span className={cn('font-mono font-bold text-base leading-none', IPS_TEXT_COLOR(ips))}>
               {ipsPct}
             </span>
-            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-zinc-500">IPS</span>
+            <span className="font-mono text-[9px] uppercase tracking-[0.15em] text-text-muted">IPS</span>
           </div>
         </div>
 
@@ -674,7 +674,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
         <div className="relative flex items-center gap-1 shrink-0" onClick={(e) => e.stopPropagation()}>
           <button
             onClick={() => setReviewOpen((v) => !v)}
-            className="hidden sm:inline-flex p-1.5 rounded text-zinc-500 hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
+            className="hidden sm:inline-flex p-1.5 rounded text-text-muted hover:text-amber-400 hover:bg-amber-500/10 transition-colors"
             aria-label={t('reviewPopover.updateTitle')}
             title={t('reviewPopover.updateTitle')}
           >
@@ -688,7 +688,7 @@ function InvestigationRow({ item }: { item: AriaQueueItem }) {
               onClose={() => setReviewOpen(false)}
             />
           )}
-          <ArrowRight className="h-4 w-4 text-zinc-600 group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+          <ArrowRight className="h-4 w-4 text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </motion.div>
@@ -792,11 +792,11 @@ export default function AriaPage() {
       <div className="min-h-screen bg-background flex items-center justify-center">
         <div className="text-center max-w-sm px-4">
           <p className="text-xs font-mono uppercase tracking-widest text-red-500 mb-2">{t('connectionError.title')}</p>
-          <p className="text-lg font-bold text-zinc-100 mb-2">{t('connectionError.headline')}</p>
-          <p className="text-sm text-zinc-500">{t('connectionError.body')}</p>
+          <p className="text-lg font-bold text-text-primary mb-2">{t('connectionError.headline')}</p>
+          <p className="text-sm text-text-muted">{t('connectionError.body')}</p>
           <button
             onClick={() => window.location.reload()}
-            className="mt-4 px-4 py-2 rounded bg-zinc-800 text-zinc-300 text-xs font-mono hover:bg-zinc-700 transition-colors"
+            className="mt-4 px-4 py-2 rounded bg-background-elevated text-text-secondary text-xs font-mono hover:bg-background-elevated transition-colors"
           >
             {t('connectionError.retry')}
           </button>
@@ -842,7 +842,7 @@ export default function AriaPage() {
           severity="critical"
           meta={
             <span className="flex items-center gap-1.5">
-              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-zinc-500" />
+              <span className="relative inline-flex h-1.5 w-1.5 rounded-full bg-background-elevated" />
               v0.6.5
               <MetodologiaTooltip
                 title={t('methodology.title')}
@@ -854,13 +854,13 @@ export default function AriaPage() {
           actions={
             <div className="flex flex-col sm:flex-row gap-3 w-full sm:items-center">
               <div className="relative flex-1 max-w-sm">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-zinc-500" />
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-text-muted" />
                 <input
                   type="text"
                   placeholder={t('leads.searchPlaceholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-zinc-900/60 border border-zinc-800 rounded-sm text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:border-amber-500/60 font-mono"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-background-card border border-border rounded-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber-500/60 font-mono"
                 />
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">
@@ -869,8 +869,8 @@ export default function AriaPage() {
                   className={cn(
                     'inline-flex items-center gap-1 px-2.5 py-1 rounded-sm border text-xs font-medium transition-colors',
                     tierFilter == null
-                      ? 'bg-zinc-800 text-zinc-100 border-zinc-700'
-                      : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+                      ? 'bg-background-elevated text-text-primary border-border'
+                      : 'bg-background-card text-text-muted border-border hover:border-border'
                   )}
                 >
                   {t('filters.all')}
@@ -901,11 +901,11 @@ export default function AriaPage() {
         <section aria-label={t('threatLevels')}>
           <div className="flex items-center justify-between mb-3">
             <div className="flex items-center gap-2">
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                 {t('threatLevels')}
               </p>
-              <span className="text-[10px] text-zinc-600 font-mono">·</span>
-              <p className="text-[10px] text-zinc-600 font-mono uppercase tracking-[0.15em]">
+              <span className="text-[10px] text-text-muted font-mono">·</span>
+              <p className="text-[10px] text-text-muted font-mono uppercase tracking-[0.15em]">
                 {t('tierCard.clickFilter')}
               </p>
             </div>
@@ -948,7 +948,7 @@ export default function AriaPage() {
           <section aria-label={t('patternSection.title')}>
             <div className="flex items-center gap-2 mb-3">
               <AlertTriangle className="h-3.5 w-3.5 text-orange-400" />
-              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+              <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                 {t('patternSection.title')}
               </p>
             </div>
@@ -971,12 +971,12 @@ export default function AriaPage() {
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                   newVendorOnly
                     ? 'bg-amber-500/10 text-amber-400 border-amber-500/20'
-                    : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                    : 'bg-background-card text-text-secondary border-border hover:border-border'
                 )}
               >
                 {t('filters.newVendorOnly')}
                 {stats?.new_vendor_count != null && (
-                  <span className="font-mono tabular-nums text-zinc-500">{formatNumber(stats.new_vendor_count)}</span>
+                  <span className="font-mono tabular-nums text-text-muted">{formatNumber(stats.new_vendor_count)}</span>
                 )}
               </button>
               <button
@@ -984,8 +984,8 @@ export default function AriaPage() {
                 className={cn(
                   'inline-flex items-center gap-1.5 px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors',
                   novelOnly
-                    ? 'bg-zinc-800 text-zinc-200 border-zinc-700'
-                    : 'bg-zinc-900/40 text-zinc-400 border-zinc-800 hover:border-zinc-700'
+                    ? 'bg-background-elevated text-text-secondary border-border'
+                    : 'bg-background-card text-text-secondary border-border hover:border-border'
                 )}
                 title={t('filters.novelOnlyTooltip')}
               >
@@ -1023,14 +1023,14 @@ export default function AriaPage() {
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-2 mb-3">
             <div>
               <div className="flex items-center gap-2">
-                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500">
+                <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted">
                   {tierFilter != null
                     ? t(TIER_CONFIG.find((c) => c.tier === tierFilter)!.labelKey)
                     : t('queueSection.title', { defaultValue: 'Cola completa' })}
                 </p>
                 {activeFilterCount > 0 && (
                   <>
-                    <span className="text-[10px] text-zinc-600 font-mono">·</span>
+                    <span className="text-[10px] text-text-muted font-mono">·</span>
                     <button
                       onClick={clearAll}
                       className="text-[10px] font-mono uppercase tracking-[0.15em] text-amber-400 hover:text-amber-300 transition-colors"
@@ -1041,7 +1041,7 @@ export default function AriaPage() {
                 )}
               </div>
               {totalLeads > 0 && (
-                <p className="text-xs text-zinc-500 font-mono mt-1 tabular-nums">
+                <p className="text-xs text-text-muted font-mono mt-1 tabular-nums">
                   {formatNumber(totalLeads)} {t('leads.vendorCount')}
                 </p>
               )}
@@ -1058,7 +1058,7 @@ export default function AriaPage() {
 
           {/* Review status filter — compact chip row */}
           <div className="flex flex-wrap items-center gap-1.5 mb-3">
-            <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-zinc-500">
+            <span className="text-[10px] uppercase tracking-[0.15em] font-mono text-text-muted">
               {t('table.review')}
             </span>
             {([null, 'pending', 'reviewing', 'confirmed', 'dismissed'] as (ReviewStatus | null)[]).map((s) => {
@@ -1072,9 +1072,9 @@ export default function AriaPage() {
                     'px-2 py-0.5 rounded text-[11px] font-medium border transition-colors',
                     isActive
                       ? s
-                        ? cn(meta!.className, 'ring-1 ring-white/10')
-                        : 'bg-zinc-800 text-zinc-100 border-zinc-700'
-                      : 'bg-zinc-900/40 text-zinc-500 border-zinc-800 hover:border-zinc-700'
+                        ? cn(meta!.className, 'ring-1 ring-border')
+                        : 'bg-background-elevated text-text-primary border-border'
+                      : 'bg-background-card text-text-muted border-border hover:border-border'
                   )}
                 >
                   {s ? t('status.' + s) : t('reviewFilter.all')}
@@ -1091,8 +1091,8 @@ export default function AriaPage() {
             </div>
           ) : leadsItems.length === 0 ? (
             <div className="surface-card p-10 text-center">
-              <Search className="h-8 w-8 mx-auto mb-3 text-zinc-700" />
-              <p className="text-sm font-medium text-zinc-300 mb-1">
+              <Search className="h-8 w-8 mx-auto mb-3 text-text-primary" />
+              <p className="text-sm font-medium text-text-secondary mb-1">
                 {search
                   ? t('emptyState.noSearchResults', { query: search })
                   : tierFilter != null
@@ -1102,7 +1102,7 @@ export default function AriaPage() {
                     : t('leads.empty', { defaultValue: isEs ? 'Sin resultados' : 'No results' })}
               </p>
               {!search && tierFilter != null && (
-                <p className="text-xs text-zinc-500 mt-1">
+                <p className="text-xs text-text-muted mt-1">
                   {isEs
                     ? 'Ajusta los filtros o revisa otros niveles.'
                     : 'Adjust filters or review other tiers.'}
@@ -1111,7 +1111,7 @@ export default function AriaPage() {
               {activeFilterCount > 0 && (
                 <button
                   onClick={clearAll}
-                  className="mt-3 px-3 py-1.5 rounded-sm text-xs font-medium bg-zinc-900 border border-zinc-800 text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 transition-colors font-mono"
+                  className="mt-3 px-3 py-1.5 rounded-sm text-xs font-medium bg-background-card border border-border text-text-secondary hover:border-border hover:text-text-secondary transition-colors font-mono"
                 >
                   {t('filterBar.clearAll', { defaultValue: isEs ? 'Limpiar filtros' : 'Clear filters' })}
                 </button>
@@ -1132,21 +1132,21 @@ export default function AriaPage() {
 
           {/* Pagination */}
           {totalPages > 1 && (
-            <div className="flex items-center justify-between mt-4 pt-3 border-t border-zinc-800">
+            <div className="flex items-center justify-between mt-4 pt-3 border-t border-border">
               <button
                 onClick={() => setPage(Math.max(1, page - 1))}
                 disabled={page === 1}
-                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+                className="px-3 py-1.5 text-xs border border-border rounded-sm text-text-secondary hover:border-border hover:text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
               >
                 {t('pagination.previous', { defaultValue: '← Anterior' })}
               </button>
-              <span className="text-xs text-zinc-500 font-mono tabular-nums">
+              <span className="text-xs text-text-muted font-mono tabular-nums">
                 {t('pagination.pageOf', { page, total: totalPages, defaultValue: `${page} / ${totalPages}` })}
               </span>
               <button
                 onClick={() => setPage(Math.min(totalPages, page + 1))}
                 disabled={page === totalPages}
-                className="px-3 py-1.5 text-xs border border-zinc-800 rounded-sm text-zinc-400 hover:border-zinc-700 hover:text-zinc-200 disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
+                className="px-3 py-1.5 text-xs border border-border rounded-sm text-text-secondary hover:border-border hover:text-text-secondary disabled:opacity-40 disabled:cursor-not-allowed transition-colors font-mono"
               >
                 {t('pagination.next', { defaultValue: 'Siguiente →' })}
               </button>
@@ -1158,15 +1158,15 @@ export default function AriaPage() {
         {/* 6. METHODOLOGY FOOTER — minimal                                */}
         {/* ============================================================== */}
         <section>
-          <div className="rounded-sm border border-zinc-800 bg-zinc-900/30 p-4">
+          <div className="rounded-sm border border-border bg-background-card p-4">
             <div className="flex items-start gap-3">
-              <FileText className="h-3.5 w-3.5 text-zinc-600 shrink-0 mt-0.5" />
-              <div className="text-xs text-zinc-500 space-y-1 leading-relaxed">
-                <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-zinc-400">
+              <FileText className="h-3.5 w-3.5 text-text-muted shrink-0 mt-0.5" />
+              <div className="text-xs text-text-muted space-y-1 leading-relaxed">
+                <p className="font-mono uppercase tracking-[0.15em] text-[10px] font-bold text-text-secondary">
                   {t('about.title', { defaultValue: 'Sobre ARIA' })}
                 </p>
                 <p>{t('about.description')}</p>
-                <p className="text-zinc-600">{t('about.disclaimer')}</p>
+                <p className="text-text-muted">{t('about.disclaimer')}</p>
               </div>
             </div>
           </div>

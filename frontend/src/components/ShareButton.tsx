@@ -75,7 +75,7 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
     <div ref={ref} className={`relative inline-block ${className}`}>
       <button
         onClick={() => setOpen(o => !o)}
-        className="inline-flex items-center gap-1.5 text-xs font-medium text-zinc-400 hover:text-zinc-200 transition-colors px-2.5 py-1.5 rounded border border-zinc-700 hover:border-zinc-500"
+        className="inline-flex items-center gap-1.5 text-xs font-medium text-text-secondary hover:text-text-secondary transition-colors px-2.5 py-1.5 rounded border border-border hover:border-border"
         aria-label={t('share.title')}
         aria-expanded={open}
         aria-haspopup="menu"
@@ -96,12 +96,12 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
       {open && (
         <div
           role="menu"
-          className="absolute right-0 mt-1 w-40 rounded-lg border border-zinc-700 bg-zinc-900 shadow-xl z-50 py-1 text-xs"
+          className="absolute right-0 mt-1 w-40 rounded-lg border border-border bg-background-card shadow-xl z-50 py-1 text-xs"
         >
           <button
             role="menuitem"
             onClick={handleWhatsApp}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
             <MessageCircle className="h-3.5 w-3.5 text-emerald-400 flex-shrink-0" />
             {t('share.whatsapp')}
@@ -109,18 +109,18 @@ export function ShareButton({ summary, url, label, className = '' }: ShareButton
           <button
             role="menuitem"
             onClick={handleX}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
             <Twitter className="h-3.5 w-3.5 text-sky-400 flex-shrink-0" />
             {t('share.postOnX')}
           </button>
-          <div className="h-px bg-zinc-800 my-1" role="separator" />
+          <div className="h-px bg-background-elevated my-1" role="separator" />
           <button
             role="menuitem"
             onClick={handleCopyLink}
-            className="w-full flex items-center gap-2.5 px-3 py-2 text-zinc-300 hover:bg-zinc-800 hover:text-white transition-colors"
+            className="w-full flex items-center gap-2.5 px-3 py-2 text-text-secondary hover:bg-background-elevated hover:text-text-primary transition-colors"
           >
-            <Link className="h-3.5 w-3.5 text-zinc-400 flex-shrink-0" />
+            <Link className="h-3.5 w-3.5 text-text-secondary flex-shrink-0" />
             {t('share.copyLink')}
           </button>
         </div>

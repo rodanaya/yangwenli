@@ -63,15 +63,15 @@ export function SexenioComparisonChart() {
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.5 }}
-      className="rounded-sm bg-zinc-900 p-5"
+      className="rounded-sm bg-background-card p-5"
     >
-      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-zinc-500 mb-1">
+      <p className="text-[10px] font-mono font-bold uppercase tracking-[0.15em] text-text-muted mb-1">
         RUBLI · Diagnostico sexenal
       </p>
-      <h3 className="text-lg font-bold text-zinc-100 leading-tight mb-0.5">
+      <h3 className="text-lg font-bold text-text-primary leading-tight mb-0.5">
         Todos los indicadores empeoran con cada sexenio
       </h3>
-      <p className="text-xs text-zinc-500 mb-4">
+      <p className="text-xs text-text-muted mb-4">
         Mayor deterioro: {worstMetric.name} (+{worstMetric.delta.toFixed(1)} pts Fox a AMLO)
       </p>
 
@@ -80,12 +80,12 @@ export function SexenioComparisonChart() {
         {SEXENIO_ROWS.map((r) => (
           <div key={r.key} className="flex items-center gap-1.5">
             <span className="h-2.5 w-2.5 rounded-sm" style={{ background: r.color, opacity: r.opacity }} />
-            <span className="text-[10px] font-mono text-zinc-500">{r.label}</span>
+            <span className="text-[10px] font-mono text-text-muted">{r.label}</span>
           </div>
         ))}
       </div>
 
-      <div className="rounded-sm border border-zinc-800 bg-zinc-950 p-4">
+      <div className="rounded-sm border border-border bg-background p-4">
         <svg
           viewBox={`0 0 ${W} ${H}`}
           className="w-full h-auto"
@@ -206,7 +206,7 @@ export function SexenioComparisonChart() {
         </svg>
       </div>
 
-      <p className="mt-2 text-[10px] text-zinc-600 text-right font-mono">
+      <p className="mt-2 text-[10px] text-text-muted text-right font-mono">
         Fuente: COMPRANET 2002-2025 · Cada punto = 1pp · RUBLI v0.6.5
       </p>
     </motion.div>
