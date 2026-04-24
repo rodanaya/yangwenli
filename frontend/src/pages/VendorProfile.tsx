@@ -31,7 +31,7 @@ import CronologiaVendor from '@/components/ui/CronologiaVendor'
 import { AriaMemoPanel } from '@/components/widgets/AriaMemoPanel'
 import { buildVendorNarrative } from '@/lib/narratives'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
-import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, VendorNarrativeResponse, VendorSimilarCasesResponse, AriaQueueItem, ContractHistogramResponse } from '@/api/types'
+import type { ContractListItem, VendorExternalFlags, VendorWaterfallContribution, VendorQQWResponse, VendorSHAPResponse, AriaQueueItem, ContractHistogramResponse } from '@/api/types'
 import {
   EditorialAreaChart,
   EditorialComposedChart,
@@ -56,7 +56,6 @@ import {
   ShieldCheck,
   Brain,
   Download,
-  Newspaper,
   Copy,
   Check,
   ChevronLeft,
@@ -1850,13 +1849,17 @@ export function VendorProfile() {
         defaultTab="overview"
         onTabChange={setActiveTab}
         tabs={[
+          // Tab bar collapsed from 7 to 5 in the 2026-04 editorial pass:
+          // - Periodista removed entirely (auto-memo + narrative-arc redundant
+          //   with Overview risk gauge + Contracts timeline)
+          // - External merged into ARIA (both are external/model signal
+          //   surfaces — EFOS/SFP/ASF badges now render at the top of the
+          //   Signals tab alongside IPS and Pattern Confidences)
           { key: 'overview', label: t('tabs.overview'), icon: BarChart3 },
           { key: 'risk', label: t('tabs.risk'), icon: Shield },
           { key: 'history', label: t('tabs.history'), icon: Activity },
           { key: 'network', label: t('tabs.network'), icon: Network },
-          { key: 'external', label: t('tabs.external'), icon: ShieldCheck },
-          { key: 'aria', label: 'ARIA', icon: Target },
-          { key: 'periodista', label: 'Periodista', icon: Newspaper },
+          { key: 'aria', label: t('tabs.signals', 'Signals'), icon: Target },
         ]}
       >
         {/* TAB 1: Overview */}
@@ -3793,12 +3796,14 @@ export function VendorProfile() {
         </TabPanel>
 
         {/* TAB 5: External Records */}
-        <TabPanel tabKey="external">
-          <ExternalFlagsPanel flags={externalFlags} qqw={qqwData} />
-        </TabPanel>
-
-        {/* TAB 6: ARIA Investigation Workbench */}
+        {/* TAB 5: Signals (merged External + ARIA) */}
         <TabPanel tabKey="aria">
+          {/* External registry flags (EFOS / SFP / ASF / RUPC) render first —
+              these are the regulator-side verdicts and the reader should see
+              them before the model's own scoring. */}
+          <div className="mb-6">
+            <ExternalFlagsPanel flags={externalFlags} qqw={qqwData} />
+          </div>
           <ScrollSection>
           <div className="space-y-6">
             {ariaLoading ? (
@@ -3996,10 +4001,10 @@ export function VendorProfile() {
           </ScrollSection>
         </TabPanel>
 
-        {/* TAB 7: Periodista */}
-        <TabPanel tabKey="periodista">
-          <PeriodistaPanel vendorId={vendorId} vendorName={vendor?.name ?? ''} avgRiskScore={vendor?.avg_risk_score} activeTab={activeTab} onExportCSV={exportContractsCSV} />
-        </TabPanel>
+        {/* Former "Periodista" tab removed — its only remaining content was
+            a narrative-arc chart that duplicated the Contracts timeline and
+            a "similar cases" list that's better discovered via the Red
+            Thread CTA from the hero. Auto-memo already killed upstream. */}
       </SimpleTabs>
 
       <ContractDetailModal
@@ -4693,292 +4698,5 @@ function ExternalFlagsPanel({ flags, qqw }: { flags: VendorExternalFlags | undef
   )
 }
 
-// ============================================================================
-// Periodista Panel — Journalist-oriented vendor analysis tab
-// ============================================================================
-
-const ARC_ICONS: Record<string, string> = {
-  explosive_entry: '\uD83D\uDE80',
-  capture_pattern: '\uD83C\uDFDB\uFE0F',
-  single_burst: '\u26A1',
-  steady_growth: '\uD83D\uDCC8',
-  disappeared: '\uD83D\uDC7B',
-  irregular: '\u2753',
-}
-
-const ARC_LABELS: Record<string, string> = {
-  explosive_entry: 'Entrada explosiva',
-  capture_pattern: 'Patrón de captura',
-  single_burst: 'Ráfaga única',
-  steady_growth: 'Crecimiento constante',
-  disappeared: 'Desaparecido',
-  irregular: 'Irregular',
-}
-
-function PeriodistaPanel({
-  vendorId,
-  activeTab,
-  onExportCSV,
-}: {
-  vendorId: number
-  vendorName: string
-  avgRiskScore?: number
-  activeTab: string
-  onExportCSV?: () => void
-}) {
-  const { i18n: ppI18n } = useTranslation('vendors')
-  const isEsPP = ppI18n.language.startsWith('es')
-
-  const { data: narrative, isLoading: narrativeLoading, isError: narrativeError } = useQuery<VendorNarrativeResponse>({
-    queryKey: ['vendor', vendorId, 'narrative'],
-    queryFn: () => vendorApi.getNarrative(vendorId),
-    enabled: !!vendorId && activeTab === 'periodista',
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
-
-  const { data: similarCasesResponse, isLoading: casesLoading, isError: casesError } = useQuery<VendorSimilarCasesResponse>({
-    queryKey: ['vendor', vendorId, 'similar-cases'],
-    queryFn: () => vendorApi.getSimilarCases(vendorId),
-    enabled: !!vendorId && activeTab === 'periodista',
-    staleTime: 5 * 60 * 1000,
-    retry: false,
-  })
-  const similarCases = similarCasesResponse?.similar_cases
-
-  // Former auto-lede generator removed in the 2026-04 editorial pass —
-  // produced boilerplate "This vendor shows the 'X' pattern. Risk Y." text
-  // that reporters read as auto-generated filler, not journalism.
-
-
-  return (
-    <div className="space-y-8">
-      {/* 1. Narrativa del proveedor */}
-      <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          {isEsPP ? 'Narrativa' : 'Narrative'}
-        </h3>
-
-        {narrativeLoading ? (
-          <div className="space-y-3">
-            <Skeleton className="h-8 w-60" />
-            <Skeleton className="h-[200px] w-full" />
-          </div>
-        ) : narrativeError ? (
-          <div className="flex items-start gap-2 p-4 rounded-sm border border-amber-500/20 bg-amber-500/5">
-            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <div className="flex-1">
-              <p className="text-sm text-text-secondary">
-                {isEsPP
-                  ? 'No se pudo cargar la narrativa del proveedor.'
-                  : 'Could not load the vendor narrative.'}
-              </p>
-              <p className="text-[11px] text-text-muted mt-1">
-                {isEsPP
-                  ? 'El servicio de análisis temporal no está disponible. Los datos estructurados siguen accesibles en las otras pestañas.'
-                  : 'The temporal analysis service is unavailable. Structured data remains accessible in the other tabs.'}
-              </p>
-            </div>
-          </div>
-        ) : narrative ? (
-          <div className="space-y-4">
-            {/* Arc shape badge */}
-            <div className="flex items-center gap-3 flex-wrap">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-background-elevated border border-border text-sm font-semibold text-text-primary">
-                {ARC_ICONS[narrative.arc_shape] ?? '\u2753'} {narrative.arc_label || ARC_LABELS[narrative.arc_shape] || 'Irregular'}
-              </span>
-              {narrative.peak_year && (
-                <span className="text-xs text-text-muted">
-                  Pico: {narrative.peak_year}
-                </span>
-              )}
-              <span className="text-xs text-text-muted">
-                {narrative.active_years} anios activos
-              </span>
-              <span className="text-xs text-text-muted">
-                Total: {formatCompactMXN(narrative.total_value_mxn)}
-              </span>
-            </div>
-
-            {/* Year-by-year dot columns */}
-            {narrative.years.length > 0 && (() => {
-              const years = narrative.years
-              const ROWS = 28
-              const COL_W = Math.max(18, Math.min(32, Math.floor(700 / years.length)))
-              const DOT_GAP = 7
-              const DOT_R = 2.75
-              const LEFT_PAD = 12
-              const TOP_PAD = 10
-              const BOTTOM_LABEL = 22
-              const viewH = TOP_PAD + ROWS * DOT_GAP + BOTTOM_LABEL
-              const viewW = LEFT_PAD * 2 + years.length * COL_W
-              const maxVal = Math.max(...years.map((y) => y.total_value_mxn), 1)
-              // Label every Nth year to avoid overlap
-              const labelStep = Math.max(1, Math.ceil(years.length / 10))
-              return (
-                <div
-                  role="img"
-                  aria-label="Dot column chart showing annual contract value by year for this vendor's investigation narrative"
-                >
-                  <span className="sr-only">Dot column chart showing the annual contract value in MXN for each year of this vendor's procurement activity.</span>
-                  <svg
-                    viewBox={`0 0 ${viewW} ${viewH}`}
-                    width="100%"
-                    height={220}
-                    style={{ display: 'block' }}
-                  >
-                    {years.map((entry, colIdx) => {
-                      const riskLevel = entry.avg_risk_score != null ? getRiskLevel(entry.avg_risk_score) : 'low'
-                      const color = RISK_COLORS[riskLevel]
-                      const filledDots = Math.max(
-                        entry.total_value_mxn > 0 ? 1 : 0,
-                        Math.round((entry.total_value_mxn / maxVal) * ROWS)
-                      )
-                      const cx = LEFT_PAD + colIdx * COL_W + COL_W / 2
-                      const showLabel = colIdx === 0 || colIdx === years.length - 1 || colIdx % labelStep === 0
-                      return (
-                        <g key={colIdx}>
-                          <title>
-                            {`${entry.year} — ${formatCompactMXN(entry.total_value_mxn)} · ${entry.contract_count} contracts${
-                              entry.avg_risk_score != null ? ` · risk ${entry.avg_risk_score.toFixed(2)}` : ''
-                            }`}
-                          </title>
-                          {Array.from({ length: ROWS }).map((_, rowIdx) => {
-                            const fromBottom = ROWS - 1 - rowIdx
-                            const active = fromBottom < filledDots
-                            const cy = TOP_PAD + rowIdx * DOT_GAP + DOT_GAP / 2
-                            return (
-                              <motion.circle
-                                key={rowIdx}
-                                cx={cx}
-                                cy={cy}
-                                r={DOT_R}
-                                fill={active ? color : 'rgba(255,255,255,0.05)'}
-                                fillOpacity={active ? 0.85 : 1}
-                                initial={{ opacity: 0, scale: 0.6 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                transition={{
-                                  duration: 0.2,
-                                  delay: active ? colIdx * 0.015 + fromBottom * 0.008 : 0,
-                                }}
-                              />
-                            )
-                          })}
-                          {showLabel && (
-                            <text
-                              x={cx}
-                              y={viewH - 8}
-                              textAnchor="middle"
-                              fontSize={10}
-                              fill="var(--color-text-muted)"
-                              fontFamily="var(--font-family-mono)"
-                            >
-                              {entry.year}
-                            </text>
-                          )}
-                        </g>
-                      )
-                    })}
-                  </svg>
-                </div>
-              )
-            })()}
-          </div>
-        ) : (
-          <div>
-            <p className="text-sm text-text-muted">No se pudo generar la narrativa.</p>
-            <p className="text-[11px] text-text-muted mt-1">
-              El servicio LLM está temporalmente fuera de línea — los datos estructurados siguen disponibles.
-            </p>
-          </div>
-        )}
-      </div>
-
-      {/* 2. Casos similares */}
-      <div>
-        <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
-          Casos similares
-        </h3>
-
-        {casesLoading ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {[1, 2, 3].map((i) => (
-              <Skeleton key={i} className="h-32 w-full rounded-sm" />
-            ))}
-          </div>
-        ) : casesError ? (
-          <div className="flex items-start gap-2 p-4 rounded-sm border border-amber-500/20 bg-amber-500/5">
-            <AlertTriangle className="h-4 w-4 text-amber-500 shrink-0 mt-0.5" />
-            <p className="text-sm text-text-secondary">
-              No se pudieron cargar los casos similares. El servicio de análisis comparativo está temporalmente no disponible.
-            </p>
-          </div>
-        ) : similarCases && similarCases.length > 0 ? (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {similarCases.slice(0, 3).map((sc) => (
-              <div
-                key={sc.case_id}
-                className="bg-background-elevated border border-border rounded-sm p-4 space-y-2"
-              >
-                <p className="font-semibold text-text-primary text-sm">{sc.case_name}</p>
-                <div className="flex items-center gap-2 flex-wrap">
-                  <span className="inline-flex px-2 py-0.5 rounded-md bg-accent/10 text-accent text-xs font-medium">
-                    {sc.case_type}
-                  </span>
-                  <span className="text-xs font-bold text-text-secondary">
-                    {Math.round(sc.similarity_score * 100)}% similitud
-                  </span>
-                </div>
-                {sc.shared_features.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sc.shared_features.map((f) => (
-                      <span key={f} className="inline-flex px-1.5 py-0.5 rounded-md bg-emerald-500/10 text-emerald-400 text-[10px]">
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                )}
-                {sc.divergent_features.length > 0 && (
-                  <div className="flex flex-wrap gap-1">
-                    {sc.divergent_features.map((f) => (
-                      <span key={f} className="inline-flex px-1.5 py-0.5 rounded-md bg-background-card text-text-muted text-[10px]">
-                        {f}
-                      </span>
-                    ))}
-                  </div>
-                )}
-              </div>
-            ))}
-          </div>
-        ) : (
-          <p className="text-sm text-text-muted">
-            {isEsPP
-              ? 'No se encontraron casos similares con suficiente historial de datos.'
-              : 'No similar cases found with sufficient data history.'}
-          </p>
-        )}
-      </div>
-
-      {/* Former "Parrafo para periodista" auto-memo removed in the 2026-04
-          editorial pass. The block produced a boilerplate sentence of the
-          form "This vendor shows the 'X' pattern. With an average risk
-          score of Y, it is classified as Z." with a "Copiar párrafo"
-          button. Reporters read it as auto-text fluff, not journalism —
-          the Read Investigation CTA (which opens the full Red Thread
-          narrative) does the real editorial work here. */}
-
-      {/* 4. Descargar evidencia */}
-      <div>
-        <button
-          onClick={onExportCSV}
-          className="inline-flex items-center gap-2 px-4 py-2 rounded-sm text-sm font-medium bg-background-elevated border border-border text-text-secondary hover:bg-background-card transition-colors"
-        >
-          <Download className="h-4 w-4" />
-          Descargar evidencia CSV
-        </button>
-      </div>
-    </div>
-  )
-}
 
 export default VendorProfile
