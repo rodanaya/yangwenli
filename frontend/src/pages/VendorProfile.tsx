@@ -11,7 +11,7 @@ import { ScrollArea } from '@/components/ui/scroll-area'
 import { formatCompactMXN, formatNumber, formatPercentSafe, formatDate, toTitleCase, getRiskLevel } from '@/lib/utils'
 import { realUSDLabel } from '@/lib/currency'
 import { vendorApi, networkApi, scorecardApi, ariaApi } from '@/api/client'
-import { GradeBadge10, VendorScorecardCard } from '@/components/ui/ScorecardWidgets'
+import { GradeBadge10 } from '@/components/ui/ScorecardWidgets'
 import type { VendorScorecardData } from '@/components/ui/ScorecardWidgets'
 import { SanctionsAlertBanner } from '@/components/SanctionsAlertBanner'
 import { WaterfallRiskChart } from '@/components/WaterfallRiskChart'
@@ -41,7 +41,6 @@ import {
   type ChartAnnotation,
   type ComposedLayer,
 } from '@/components/charts/editorial'
-import VendorFingerprintChart from '@/components/charts/VendorFingerprintChart'
 import {
   Users,
   Building2,
@@ -63,7 +62,6 @@ import {
   Newspaper,
   Copy,
   Check,
-  Crosshair,
   ChevronLeft,
   ChevronRight,
   Target,
@@ -698,89 +696,11 @@ function SHAPPanel({ shapData }: { shapData: VendorSHAPResponse }) {
   )
 }
 
-// ============================================================================
-// P15: Counterfactual "What If?" panel
-// Shows estimated score if each top factor were at sector average (z=0)
-// Math: sigmoid(logit_current - beta_i * z_i) / PU_c
-// ============================================================================
-const PU_C = 0.3000
-const INTERCEPT = -2.3837
-
-function sigmoid(x: number): number {
-  return 1 / (1 + Math.exp(-x))
-}
-
-function CounterfactualPanel({
-  currentScore,
-  waterfallData,
-}: {
-  currentScore: number
-  waterfallData: VendorWaterfallContribution[]
-}) {
-  const { t } = useTranslation('vendors')
-  // Reconstruct logit from current score: score = sigmoid(logit) / PU_c
-  // so sigmoid(logit) = score * PU_c, logit = log(s/(1-s)) where s = score * PU_c
-  const s = Math.min(Math.max(currentScore * PU_C, 0.001), 0.999)
-  const currentLogit = Math.log(s / (1 - s))
-
-  // Get top contributing factors (those with positive contribution)
-  const topFactors = waterfallData
-    .filter((f) => f.contribution > 0 && MODEL_COEFFICIENTS[f.feature] != null)
-    .sort((a, b) => b.contribution - a.contribution)
-    .slice(0, 5)
-
-  if (topFactors.length === 0) {
-    return <p className="text-xs text-text-muted">{t('risk.noSignificantFactors')}</p>
-  }
-
-  return (
-    <div className="space-y-2">
-      {topFactors.map((f) => {
-        const coeff = MODEL_COEFFICIENTS[f.feature] ?? 0
-        // z_value approx = contribution / coeff (since contribution = coeff * z_i approximately)
-        const zApprox = coeff !== 0 ? f.contribution / Math.abs(coeff) : 0
-        const factorLogitContribution = coeff * zApprox
-        const counterfactualLogit = currentLogit - factorLogitContribution
-        const cfScore = Math.min(sigmoid(counterfactualLogit) / PU_C, 1.0)
-        const delta = cfScore - currentScore
-        const cfLevel = getRiskLevel(cfScore)
-        const cfColor = RISK_COLORS[cfLevel]
-
-        return (
-          <div
-            key={f.feature}
-            className="flex items-center gap-3 py-1.5 px-2 rounded border border-border/30 bg-background-elevated/30"
-          >
-            <div className="flex-1 min-w-0">
-              <span className="text-xs text-text-secondary font-medium truncate block">
-                {parseFactorLabel(f.feature).label}
-              </span>
-              <span className="text-[9px] text-text-muted">
-                {t('risk.counterfactualAtAvg')}
-              </span>
-            </div>
-            <div className="flex items-center gap-2 flex-shrink-0">
-              <span className="text-xs font-mono tabular-nums" style={{ color: cfColor }}>
-                {(cfScore * 100).toFixed(0)}
-              </span>
-              <span
-                className={cn(
-                  'text-[10px] font-mono tabular-nums',
-                  delta < -0.02 ? 'text-risk-low' : delta > 0.02 ? 'text-risk-critical' : 'text-text-muted'
-                )}
-              >
-                {delta >= 0 ? '+' : ''}{(delta * 100).toFixed(0)}pp
-              </span>
-            </div>
-          </div>
-        )
-      })}
-      <p className="text-[9px] text-text-muted/50 pt-1 border-t border-border/20">
-        {t('risk.counterfactualFootnote', { c: PU_C, intercept: INTERCEPT })}
-      </p>
-    </div>
-  )
-}
+// Former CounterfactualPanel ("Qué Pasaría Si…?") block (PU_C, INTERCEPT,
+// sigmoid helpers + the panel itself) removed in the 2026-04 editorial
+// pass. The panel's sigmoid-of-subtracted-logit-after-PU-correction math
+// produced values that couldn't be read as "if this factor went to sector
+// average, risk would be X" — wildly misleading for readers.
 
 // ============================================================================
 // ActionOverflowMenu — secondary actions dropdown to declutter the header
@@ -1002,19 +922,8 @@ export function VendorProfile() {
     retry: false,
   })
 
-  // P9: Model evolution trajectory — deferred until Risk tab
-  interface TrajectoryResponse {
-    vendor_id: number
-    vendor_name: string
-    scores: Record<string, number | null>
-  }
-  const { data: trajectoryData } = useQuery<TrajectoryResponse>({
-    queryKey: ['vendor', vendorId, 'trajectory'],
-    queryFn: () => vendorApi.getTrajectory(vendorId) as Promise<TrajectoryResponse>,
-    enabled: !!vendorId && activeTab === 'risk',
-    staleTime: 60 * 60 * 1000,
-    retry: false,
-  })
+  // Former P9 Model-Evolution query removed along with the v3.3/v4.0/v5.1/
+  // v0.6.5 circles block — see comment at the former render site.
 
   // Rolling stats timeline from vendor_rolling_stats — deferred until Risk tab
   const { data: rollingTimeline } = useQuery({
@@ -2098,20 +2007,12 @@ export function VendorProfile() {
             <div className="space-y-6">
               {/* RiskGauge + ScoreDrivers moved into the hero panel above */}
 
-              {/* Procurement Integrity Score */}
-              {scorecard && (
-                <Card className="surface-card">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <span>{t('cards.integrityScore')}</span>
-                      <GradeBadge10 grade={scorecard.grade} size="sm" />
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <VendorScorecardCard sc={scorecard} />
-                  </CardContent>
-                </Card>
-              )}
+              {/* Former Integrity Score "F-grade" block removed in the
+                  2026-04 editorial pass. Duplicated the hero's pattern-
+                  match score with a different visual vocabulary (letter
+                  grade + five dot-matrix subcategories), producing two
+                  ways to say "88/100 critical" that readers had to
+                  mentally reconcile. Canonical score lives in the hero. */}
 
               {/* Procurement Patterns */}
               <Card className="surface-card">
@@ -3068,91 +2969,11 @@ export function VendorProfile() {
                 </Card>
               )}
 
-              {/* P9: Model Evolution Badge — v3.3 → v4.0 → v5.1 → v6.4 trajectory */}
-              {trajectoryData?.scores && (
-                <Card className="surface-card">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <TrendingUp className="h-4 w-4" />
-                      {t('modelEvolution')}
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-0">
-                      {[
-                        { key: 'v3', label: 'v3.3' },
-                        { key: 'v4', label: 'v4.0' },
-                        { key: 'v5', label: 'v5.1' },
-                        { key: 'v6', label: 'v0.6.5' },
-                      ].map((model, idx, arr) => {
-                        const rawVal = trajectoryData.scores[model.key]
-                        const score = rawVal != null ? rawVal : null
-                        const level = score != null ? getRiskLevel(score) : null
-                        const color = level ? RISK_COLORS[level] : 'var(--color-text-muted)'
-                        const isLast = idx === arr.length - 1
-                        return (
-                          <div key={model.key} className="flex items-center">
-                            <div className="flex flex-col items-center gap-1">
-                              <span className="text-[9px] text-text-muted font-mono">{model.label}</span>
-                              <div
-                                className={cn(
-                                  'w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold border-2',
-                                  isLast && 'ring-2 ring-offset-1 ring-offset-background-card'
-                                )}
-                                style={{
-                                  borderColor: color,
-                                  color: color,
-                                  backgroundColor: score != null ? `${color}15` : 'transparent',
-                                  ...(isLast ? { ringColor: color } : {}),
-                                }}
-                              >
-                                {score != null ? (score * 100).toFixed(0) : '—'}
-                              </div>
-                              {score != null && level && (
-                                <span className="text-[8px] font-semibold uppercase tracking-[0.15em]" style={{ color }}>
-                                  {level === 'critical' ? t('riskBadge.critical') : level === 'high' ? t('riskBadge.high') : level === 'medium' ? t('riskBadge.medium') : t('riskBadge.low')}
-                                </span>
-                              )}
-                            </div>
-                            {!isLast && (
-                              <div className="w-4 h-px mx-0.5 bg-border/60" />
-                            )}
-                          </div>
-                        )
-                      })}
-                    </div>
-                    {/* Verdict badge */}
-                    {(() => {
-                      const v3 = trajectoryData.scores['v3']
-                      const v6 = trajectoryData.scores['v6']
-                      if (v3 == null || v6 == null) return null
-                      const delta = v6 - v3
-                      const absDelta = Math.abs(delta)
-                      const verdict = absDelta < 0.05 ? 'stable' : delta > 0 ? 'worsening' : 'improving'
-                      const isEsVerdict = i18n.language.startsWith('es')
-                      const verdictLabel = verdict === 'worsening'
-                        ? (isEsVerdict ? 'Riesgo creciente' : 'Growing risk')
-                        : verdict === 'improving'
-                          ? (isEsVerdict ? 'Riesgo decreciente' : 'Declining risk')
-                          : (isEsVerdict ? 'Riesgo estable' : 'Stable risk')
-                      const verdictColor = verdict === 'worsening' ? '#f87171' : verdict === 'improving' ? 'var(--color-text-muted)' : 'var(--color-text-muted)'
-                      return (
-                        <div className="flex items-center gap-1.5 mt-3 pt-2 border-t border-border/30">
-                          {verdict === 'worsening' && <TrendingUp className="h-3 w-3" style={{ color: verdictColor }} />}
-                          {verdict === 'improving' && <TrendingDown className="h-3 w-3" style={{ color: verdictColor }} />}
-                          {verdict === 'stable' && <Minus className="h-3 w-3" style={{ color: verdictColor }} />}
-                          <span className="text-[10px] font-semibold" style={{ color: verdictColor }}>
-                            {verdictLabel}
-                          </span>
-                          <span className="text-[9px] text-text-muted ml-auto">
-                            {delta > 0 ? '+' : ''}{(delta * 100).toFixed(0)}pp v3→v6
-                          </span>
-                        </div>
-                      )
-                    })()}
-                  </CardContent>
-                </Card>
-              )}
+              {/* Former P9 — Model Evolution circles (v3.3/v4.0/v5.1/v0.6.5)
+                  removed in the 2026-04 editorial-pass. Shows a different
+                  risk number for the same vendor across model versions,
+                  which confuses rather than informs. The canonical score
+                  lives in the hero and the Risk Profile ring. */}
             </div>
 
             {/* Right: Waterfall + Factor List */}
@@ -3257,33 +3078,14 @@ export function VendorProfile() {
               </Card>
               )}
 
-              {/* La Huella Digital — Nightingale rose corruption fingerprint */}
-              {shapData && (
-                <div className="surface-card p-4">
-                  <div className="editorial-rule mb-1">
-                    <span className="editorial-label">LA HUELLA DIGITAL</span>
-                  </div>
-                  <p className="text-xs text-text-muted mb-3">
-                    {i18n.language.startsWith('es')
-                      ? 'Firma única de riesgo · Área proporcional a la contribución SHAP de cada factor'
-                      : 'Unique risk fingerprint · Area proportional to each factor\'s SHAP contribution'}
-                  </p>
-                  <div className="flex justify-center">
-                    <VendorFingerprintChart
-                      shapValues={shapData.shap_values}
-                      riskScore={shapData.risk_score}
-                      vendorName={vendor?.name}
-                      size={300}
-                      animate={true}
-                    />
-                  </div>
-                  <p className="text-xs text-text-muted/50 italic mt-3 text-center">
-                    {i18n.language.startsWith('es')
-                      ? 'Pétalos rojos = factores de riesgo · Pétalos azules = factores protectores · Área proporcional al valor SHAP'
-                      : 'Red petals = risk factors · Blue petals = protective factors · Area proportional to SHAP value'}
-                  </p>
-                </div>
-              )}
+              {/* Former "La Huella Digital" Nightingale-rose radar chart
+                  removed in the 2026-04 editorial pass. Showed the same 10
+                  SHAP factors as the z-score bar chart immediately above,
+                  but in a radar grammar that's a worse viz for this data
+                  (reader can't compare magnitudes across petals, and the
+                  "unique fingerprint" framing overpromises interpretive
+                  depth). Bar chart + SHAP panel + factor list do the same
+                  work more legibly. */}
 
               {/* Top 3 Contributing Factors — bar summary */}
               {waterfallData && waterfallData.length >= 1 && (
@@ -3333,27 +3135,14 @@ export function VendorProfile() {
                 </CardContent>
               </Card>
 
-              {/* P15: Counterfactual "What If?" panel */}
-              {waterfallData && waterfallData.length >= 2 && riskProfile?.avg_risk_score != null && (
-                <Card className="surface-card">
-                  <CardHeader className="pb-2">
-                    <CardTitle className="text-sm flex items-center gap-2">
-                      <Crosshair className="h-4 w-4 text-accent" />
-                      Que Pasaria Si...?
-                      <span className="text-[9px] bg-accent/10 text-accent px-1.5 py-0.5 rounded ml-1">Contrafactual</span>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-[10px] text-text-muted mb-3">
-                      Score estimado si cada factor estuviera en el promedio del sector (z=0).
-                    </p>
-                    <CounterfactualPanel
-                      currentScore={riskProfile.avg_risk_score}
-                      waterfallData={waterfallData}
-                    />
-                  </CardContent>
-                </Card>
-              )}
+              {/* Former P15 — Qué Pasaría Si counterfactual removed in the
+                  2026-04 editorial pass. The panel claimed each factor's
+                  isolated impact on the score ("Price Volatility -77pp" on
+                  an 88-point base) but the math was structurally broken —
+                  sigmoid of a subtracted logit after PU-correction
+                  produces values that can't be read as "if this factor
+                  went to sector average, risk would be X." Confused
+                  readers and couldn't be rescued without a full redesign. */}
 
               {/* #32 — Contract Size Histogram */}
               {histogramData && histogramData.buckets.some((b) => b.count > 0) && (
@@ -4962,7 +4751,6 @@ const ARC_LABELS: Record<string, string> = {
 
 function PeriodistaPanel({
   vendorId,
-  avgRiskScore,
   activeTab,
   onExportCSV,
 }: {
@@ -4974,7 +4762,6 @@ function PeriodistaPanel({
 }) {
   const { i18n: ppI18n } = useTranslation('vendors')
   const isEsPP = ppI18n.language.startsWith('es')
-  const [copiedLede, setCopiedLede] = useState(false)
 
   const { data: narrative, isLoading: narrativeLoading, isError: narrativeError } = useQuery<VendorNarrativeResponse>({
     queryKey: ['vendor', vendorId, 'narrative'],
@@ -4993,45 +4780,10 @@ function PeriodistaPanel({
   })
   const similarCases = similarCasesResponse?.similar_cases
 
-  // Build auto-generated lede paragraph
-  const ledeParagraph = useMemo(() => {
-    if (!narrative) return null
-    const arcLabel = narrative.arc_label || ARC_LABELS[narrative.arc_shape] || (isEsPP ? 'Patrón irregular' : 'Irregular pattern')
-    const riskScore = avgRiskScore ?? 0
-    const riskLevelLabel = getRiskLevel(riskScore)
-    const riskLabelEs: Record<string, string> = {
-      critical: 'crítico',
-      high: 'alto',
-      medium: 'medio',
-      low: 'bajo',
-    }
-    let text: string
-    if (isEsPP) {
-      text = `Este proveedor muestra el patrón "${arcLabel}". `
-      if (similarCases && similarCases.length > 0) {
-        const topCase = similarCases[0]
-        const pct = Math.round(topCase.similarity_score * 100)
-        text += `Sus patrones de contratación tienen un ${pct}% de similitud con el caso '${topCase.case_name}', que involucró ${topCase.case_type}. `
-      }
-      text += `Con un puntaje de riesgo promedio de ${riskScore.toFixed(2)}, está clasificado como ${riskLabelEs[riskLevelLabel] ?? riskLevelLabel}.`
-    } else {
-      text = `This vendor shows the "${arcLabel}" pattern. `
-      if (similarCases && similarCases.length > 0) {
-        const topCase = similarCases[0]
-        const pct = Math.round(topCase.similarity_score * 100)
-        text += `Its contracting patterns are ${pct}% similar to the '${topCase.case_name}' case, which involved ${topCase.case_type}. `
-      }
-      text += `With an average risk score of ${riskScore.toFixed(2)}, it is classified as ${riskLevelLabel}.`
-    }
-    return text
-  }, [narrative, similarCases, avgRiskScore, isEsPP])
+  // Former auto-lede generator removed in the 2026-04 editorial pass —
+  // produced boilerplate "This vendor shows the 'X' pattern. Risk Y." text
+  // that reporters read as auto-generated filler, not journalism.
 
-  const handleCopyLede = () => {
-    if (!ledeParagraph) return
-    navigator.clipboard.writeText(ledeParagraph)
-    setCopiedLede(true)
-    setTimeout(() => setCopiedLede(false), 2000)
-  }
 
   return (
     <div className="space-y-8">
@@ -5241,40 +4993,13 @@ function PeriodistaPanel({
         )}
       </div>
 
-      {/* 3. Parrafo para periodista */}
-      {ledeParagraph && (
-        <div>
-          <h3 className="text-lg font-bold text-text-primary mb-4" style={{ fontFamily: 'var(--font-family-serif)' }}>
-            Parrafo para periodista
-          </h3>
-          <div className="bg-background-elevated border border-border rounded-sm p-5">
-            <p className="text-sm text-text-secondary leading-relaxed mb-4">
-              {ledeParagraph}
-            </p>
-            <button
-              onClick={handleCopyLede}
-              className={cn(
-                'inline-flex items-center gap-2 px-3 py-1.5 rounded-sm text-xs font-medium transition-all',
-                copiedLede
-                  ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20'
-                  : 'bg-background-card text-text-secondary border border-border hover:bg-background-elevated'
-              )}
-            >
-              {copiedLede ? (
-                <>
-                  <Check className="h-3.5 w-3.5" />
-                  Copiado
-                </>
-              ) : (
-                <>
-                  <Copy className="h-3.5 w-3.5" />
-                  Copiar parrafo
-                </>
-              )}
-            </button>
-          </div>
-        </div>
-      )}
+      {/* Former "Parrafo para periodista" auto-memo removed in the 2026-04
+          editorial pass. The block produced a boilerplate sentence of the
+          form "This vendor shows the 'X' pattern. With an average risk
+          score of Y, it is classified as Z." with a "Copiar párrafo"
+          button. Reporters read it as auto-text fluff, not journalism —
+          the Read Investigation CTA (which opens the full Red Thread
+          narrative) does the real editorial work here. */}
 
       {/* 4. Descargar evidencia */}
       <div>

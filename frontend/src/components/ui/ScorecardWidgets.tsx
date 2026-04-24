@@ -1,7 +1,14 @@
 /**
- * Shared scorecard UI components for the 10-tier Procurement Integrity grading system.
+ * Shared scorecard UI components for the Procurement Integrity grading system.
  * Used by ReportCard, VendorProfile, and InstitutionProfile pages.
+ *
+ * The underlying backend still returns 10 letter grades (S/A/B+/B/C+/C/D/D-/
+ * F/F-), but the UI renders 5 global-audience tier labels (Excelente/
+ * Satisfactorio/Regular/Deficiente/Crítico in ES; Excellent/Satisfactory/
+ * Moderate/Poor/Critical in EN). Letter grades are US school vocabulary
+ * and don't travel to a global audience.
  */
+import { useTranslation } from 'react-i18next'
 
 /** Convert a raw API enum string (e.g. "low_risk", "pillar_conduct") to a readable label */
 function formatRiskDriver(raw: string): string {
@@ -55,6 +62,25 @@ const GRADE_LABELS: Record<string, string> = {
   'D-': 'Grave', 'F': 'Crítico', 'F-': 'Bandera Roja',
 }
 
+// Collapse the 10-grade ladder into 5 global-audience tiers.
+// A/B/C/D/F letter grades read as US school-grade vocabulary; users in a
+// global audience (incl. Mexico, LatAm, EU) read them as culturally
+// opaque. Labels below replace letters in the badge render.
+const GRADE_TIER_ES: Record<string, string> = {
+  'S': 'Excelente', 'A': 'Excelente',
+  'B+': 'Satisfactorio', 'B': 'Satisfactorio',
+  'C+': 'Regular', 'C': 'Regular',
+  'D': 'Deficiente', 'D-': 'Deficiente',
+  'F': 'Crítico', 'F-': 'Crítico',
+}
+const GRADE_TIER_EN: Record<string, string> = {
+  'S': 'Excellent', 'A': 'Excellent',
+  'B+': 'Satisfactory', 'B': 'Satisfactory',
+  'C+': 'Moderate', 'C': 'Moderate',
+  'D': 'Poor', 'D-': 'Poor',
+  'F': 'Critical', 'F-': 'Critical',
+}
+
 // ---------------------------------------------------------------------------
 // GradeBadge10
 // ---------------------------------------------------------------------------
@@ -66,20 +92,29 @@ export function GradeBadge10({
   grade: string
   size?: 'sm' | 'md' | 'lg' | 'xl'
 }) {
+  const { i18n } = useTranslation()
+  const isEs = i18n.language.startsWith('es')
+  const tierLabel = (isEs ? GRADE_TIER_ES[grade] : GRADE_TIER_EN[grade])
+    ?? (GRADE_LABELS[grade] ?? grade)
   const c = GRADE10_COLORS[grade] ?? GRADE10_COLORS['F']
-  const sizeClasses = {
-    sm:  'w-7 h-7 text-sm',
-    md:  'w-9 h-9 text-base',
-    lg:  'w-12 h-12 text-xl',
-    xl:  'w-16 h-16 text-3xl',
+  const sizePill = {
+    sm:  'px-2 py-0.5 text-[10px]',
+    md:  'px-2.5 py-1 text-[11px]',
+    lg:  'px-3 py-1.5 text-xs',
+    xl:  'px-4 py-2 text-sm',
   }[size]
   return (
     <span
       title={GRADE_LABELS[grade] ?? grade}
-      className={`inline-flex items-center justify-center rounded-lg font-bold flex-shrink-0 ${sizeClasses}`}
-      style={{ fontFamily: 'var(--font-family-serif)', backgroundColor: c.bg, color: c.text, border: `1px solid ${c.border}` }}
+      className={`inline-flex items-center justify-center rounded-sm font-bold tracking-[0.08em] uppercase flex-shrink-0 ${sizePill}`}
+      style={{
+        fontFamily: 'var(--font-family-mono)',
+        backgroundColor: c.bg,
+        color: c.text,
+        border: `1px solid ${c.border}`,
+      }}
     >
-      {grade}
+      {tierLabel}
     </span>
   )
 }
