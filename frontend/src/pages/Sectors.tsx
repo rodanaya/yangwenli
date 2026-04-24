@@ -11,12 +11,13 @@
 import { useMemo, useState } from 'react'
 import { motion } from 'framer-motion'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useSearchParams, useNavigate } from 'react-router-dom'
+import { categoriesApi } from '@/api/client'
 import { useQuery, useQueries } from '@tanstack/react-query'
 import { ErrorBoundary } from '@/components/ErrorBoundary'
 import { Skeleton } from '@/components/ui/skeleton'
 import { RiskBadge } from '@/components/ui/badge'
-import { formatCompactMXN, formatNumber } from '@/lib/utils'
+import { formatCompactMXN, formatNumber, cn } from '@/lib/utils'
 import { sectorApi } from '@/api/client'
 import {
   SECTOR_COLORS,
@@ -580,13 +581,52 @@ function RiskRankingStrip({
 
 export function Sectors() {
   const { t, i18n } = useTranslation('sectors')
+  const navigate = useNavigate()
   const [sortKey, setSortKey] = useState<SortKey>('total_value_mxn')
   const [selectedCoefSectorId, setSelectedCoefSectorId] = useState<number | null>(null)
+
+  // WHO / WHAT tab state. Previously /categories was its own page (3,700 LOC,
+  // orphaned from the sidebar, and analytically complementary to /sectors
+  // rather than distinct). Merged here per 5-agent review: one page, two
+  // axes. URL-synced so deep links like /sectors?view=categories work.
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view: 'sectors' | 'categories' =
+    searchParams.get('view') === 'categories' ? 'categories' : 'sectors'
+  const setView = (v: 'sectors' | 'categories') => {
+    const next = new URLSearchParams(searchParams)
+    if (v === 'sectors') next.delete('view')
+    else next.set('view', v)
+    setSearchParams(next, { replace: true })
+  }
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['sectors', 'list'],
     queryFn: () => sectorApi.getAll(),
     staleTime: 5 * 60 * 1000,
+  })
+
+  // Category summary — only fetched when the user is on the WHAT tab.
+  const { data: categoryData, isLoading: categoryLoading } = useQuery<{
+    data: Array<{
+      category_id: number
+      name_es: string
+      name_en: string
+      sector_id: number | null
+      sector_code: string | null
+      total_contracts: number
+      total_value: number
+      avg_risk: number
+      direct_award_pct: number
+      single_bid_pct: number
+      top_vendor: { id: number; name: string } | null
+      top_institution: { id: number; name: string } | null
+    }>
+    total: number
+  }>({
+    queryKey: ['categories', 'summary'],
+    queryFn: () => categoriesApi.getSummary(),
+    staleTime: 5 * 60 * 1000,
+    enabled: view === 'categories',
   })
 
   const sectors = data?.data ?? []
@@ -701,6 +741,196 @@ export function Sectors() {
 
       {/* ── MAIN CONTENT ─────────────────────────────────────────────────────── */}
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+        {/* ── WHO / WHAT axis toggle ─────────────────────────────────
+            Sectors = WHO bought (12 agency taxonomy).
+            Categories = WHAT was bought (72 Partida/CUCoP classifications).
+            One page, two investigative lenses. */}
+        <div className="mb-8 flex items-center gap-0 border-b border-border">
+          <button
+            type="button"
+            onClick={() => setView('sectors')}
+            className={cn(
+              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
+              view === 'sectors'
+                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                : 'border-transparent text-text-muted hover:text-text-secondary',
+            )}
+            aria-pressed={view === 'sectors'}
+          >
+            <span className="font-mono text-[10px] font-bold tracking-[0.18em] uppercase mr-2">WHO</span>
+            <span>{i18n.language === 'es' ? 'Sectores' : 'Sectors'}</span>
+            <span className="ml-2 font-mono text-[11px] text-text-muted">12</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('categories')}
+            className={cn(
+              'px-5 py-3 text-sm font-medium transition-colors border-b-2 -mb-px',
+              view === 'categories'
+                ? 'border-[color:var(--color-text-primary)] text-text-primary'
+                : 'border-transparent text-text-muted hover:text-text-secondary',
+            )}
+            aria-pressed={view === 'categories'}
+          >
+            <span className="font-mono text-[10px] font-bold tracking-[0.18em] uppercase mr-2">WHAT</span>
+            <span>{i18n.language === 'es' ? 'Categorías' : 'Categories'}</span>
+            <span className="ml-2 font-mono text-[11px] text-text-muted">
+              {categoryData?.total ?? '—'}
+            </span>
+          </button>
+        </div>
+
+        {/* ── CATEGORIES VIEW — the WHAT axis ─────────────────────── */}
+        {view === 'categories' && (
+          <>
+            {categoryLoading ? (
+              <div className="space-y-2">
+                <Skeleton className="h-8 w-96" />
+                <Skeleton className="h-4 w-full max-w-2xl" />
+                <div className="mt-6 space-y-1">
+                  {[1,2,3,4,5,6,7,8].map(i => <Skeleton key={i} className="h-12 w-full" />)}
+                </div>
+              </div>
+            ) : categoryData && categoryData.data.length > 0 ? (() => {
+              const topByRisk = [...categoryData.data].sort((a, b) => b.avg_risk - a.avg_risk)[0]
+              const topByValue = [...categoryData.data].sort((a, b) => b.total_value - a.total_value)[0]
+              const sortedByRisk = [...categoryData.data].sort((a, b) => b.avg_risk - a.avg_risk)
+              return (
+                <>
+                  {/* Editorial lede */}
+                  <div className="mb-8 pb-6 border-b border-border">
+                    <p className="text-[10px] font-mono font-bold uppercase tracking-[0.18em] text-text-muted mb-2">
+                      {i18n.language === 'es' ? 'Hallazgo · Categorías' : 'Finding · Categories'}
+                    </p>
+                    <h2
+                      className="text-text-primary leading-[1.1] mb-3"
+                      style={{
+                        fontFamily: 'var(--font-family-serif)',
+                        fontSize: 'clamp(1.5rem, 3vw, 2.25rem)',
+                        fontWeight: 800,
+                        letterSpacing: '-0.02em',
+                      }}
+                    >
+                      {i18n.language === 'es' ? (
+                        <>
+                          <span style={{ color: SECTOR_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#dc2626' }}>
+                            {topByRisk.name_es}
+                          </span>
+                          {' '}es la categoría de mayor riesgo:{' '}
+                          <span className="font-mono tabular-nums">{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          {' '}promedio.
+                        </>
+                      ) : (
+                        <>
+                          <span style={{ color: SECTOR_COLORS[topByRisk.sector_code ?? 'otros'] ?? '#dc2626' }}>
+                            {topByRisk.name_en}
+                          </span>
+                          {' '}is the highest-risk category:{' '}
+                          <span className="font-mono tabular-nums">{(topByRisk.avg_risk * 100).toFixed(1)}%</span>
+                          {' '}average.
+                        </>
+                      )}
+                    </h2>
+                    <p className="text-base text-text-secondary leading-[1.6] max-w-prose">
+                      {i18n.language === 'es' ? (
+                        <>
+                          Las categorías agrupan <strong className="text-text-primary">qué</strong> compró el gobierno — medicamentos, obra pública, software — independientemente de quién. Por volumen, <strong className="text-text-primary">{topByValue.name_es}</strong> lidera con <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> en contratos. Por riesgo, {topByRisk.name_es} encabeza la lista.
+                        </>
+                      ) : (
+                        <>
+                          Categories group <strong className="text-text-primary">what</strong> the government bought — medicines, civil works, software — regardless of who bought it. By volume, <strong className="text-text-primary">{topByValue.name_en}</strong> leads with <strong className="text-text-primary">{formatSpend(topByValue.total_value)}</strong> in contracts. By risk, {topByRisk.name_en} tops the list.
+                        </>
+                      )}
+                    </p>
+                  </div>
+
+                  {/* Ranked table */}
+                  <div className="mb-6 text-[10px] font-mono tracking-[0.15em] uppercase text-text-muted">
+                    {i18n.language === 'es' ? 'Ordenadas por riesgo · descendente' : 'Sorted by risk · descending'}
+                  </div>
+                  <div className="rounded-sm border border-border overflow-hidden">
+                    {sortedByRisk.map((cat, idx) => {
+                      const riskLevel = getRiskLevelFromScore(cat.avg_risk)
+                      const sectorColor = cat.sector_code ? SECTOR_COLORS[cat.sector_code] ?? '#64748b' : '#64748b'
+                      return (
+                        <button
+                          key={cat.category_id}
+                          type="button"
+                          onClick={() => navigate(`/categories/${cat.category_id}`)}
+                          className="w-full flex items-center gap-4 px-5 py-3.5 border-b border-border last:border-b-0 hover:bg-[color:var(--color-background-elevated)] transition-colors text-left"
+                          style={{ borderLeft: `3px solid ${sectorColor}` }}
+                        >
+                          <span className="flex-shrink-0 w-8 font-mono text-[11px] font-bold text-text-muted tabular-nums">
+                            {String(idx + 1).padStart(2, '0')}
+                          </span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <h3 className="text-sm font-semibold text-text-primary truncate">
+                                {i18n.language === 'es' ? cat.name_es : cat.name_en}
+                              </h3>
+                              {cat.sector_code && (
+                                <span className="text-[9px] font-mono tracking-widest uppercase text-text-muted">
+                                  {t(cat.sector_code) as string}
+                                </span>
+                              )}
+                            </div>
+                            {cat.top_vendor && (
+                              <p className="text-[11px] text-text-muted mt-0.5 truncate">
+                                {i18n.language === 'es' ? 'Top proveedor: ' : 'Top vendor: '}
+                                <span className="text-text-secondary">{cat.top_vendor.name}</span>
+                              </p>
+                            )}
+                          </div>
+                          <div className="flex-shrink-0 text-right min-w-[90px]">
+                            <div className="font-mono text-sm tabular-nums text-text-primary">
+                              {formatSpend(cat.total_value)}
+                            </div>
+                            <div className="text-[10px] font-mono text-text-muted mt-0.5">
+                              {formatNumber(cat.total_contracts)} {i18n.language === 'es' ? 'cont.' : 'contracts'}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right min-w-[80px]">
+                            <div
+                              className="font-mono text-sm font-bold tabular-nums"
+                              style={{ color: RISK_COLORS[riskLevel] }}
+                            >
+                              {(cat.avg_risk * 100).toFixed(1)}%
+                            </div>
+                            <div className="text-[10px] font-mono text-text-muted mt-0.5 uppercase tracking-wider">
+                              {i18n.language === 'es' ? 'Riesgo' : 'Risk'}
+                            </div>
+                          </div>
+                          <div className="flex-shrink-0 text-right min-w-[70px]">
+                            <div className="font-mono text-sm tabular-nums text-text-secondary">
+                              {cat.direct_award_pct.toFixed(0)}%
+                            </div>
+                            <div className="text-[10px] font-mono text-text-muted mt-0.5 uppercase tracking-wider">
+                              {i18n.language === 'es' ? 'Adj.Dir.' : 'Direct'}
+                            </div>
+                          </div>
+                        </button>
+                      )
+                    })}
+                  </div>
+                  <p className="mt-4 text-[11px] text-text-muted leading-relaxed max-w-prose">
+                    {i18n.language === 'es'
+                      ? <>Las categorías usan códigos Partida/CUCoP. La cobertura confiable es 2023–2025 (100% Partida en Estructura D); años anteriores pueden tener clasificación parcial. Haz clic en una categoría para ver contratos, proveedores e instituciones.</>
+                      : <>Categories use Partida/CUCoP codes. Reliable coverage is 2023–2025 (100% Partida in Structure D); earlier years may have partial classification. Click any category to drill into contracts, vendors, and institutions.</>
+                    }
+                  </p>
+                </>
+              )
+            })() : (
+              <div className="py-16 text-center text-sm text-text-muted">
+                {i18n.language === 'es' ? 'No hay categorías disponibles.' : 'No categories available.'}
+              </div>
+            )}
+          </>
+        )}
+
+        {/* ── SECTORS VIEW — the WHO axis (original content) ─────── */}
+        {view === 'sectors' && (<>
 
         {/* ── HERO FINDING — editorial lede ─────────────────────────── */}
         {!isLoading && sectors.length > 0 && (() => {
@@ -910,6 +1140,7 @@ export function Sectors() {
             <strong className="text-text-muted">Note:</strong> {t('page.modelNote')}
           </p>
         )}
+        </>)}
       </main>
     </div>
   )

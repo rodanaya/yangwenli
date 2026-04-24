@@ -82,7 +82,7 @@ export function CategoryHotspot({ className }: { className?: string }) {
           {lang === 'en' ? 'HIGH-RISK CATEGORIES' : 'CATEGORÍAS DE ALTO RIESGO'}
         </span>
         <Link
-          to="/categories"
+          to="/sectors?view=categories"
           className="text-[10px] font-mono text-text-muted hover:text-text-secondary flex items-center gap-0.5 transition-colors"
         >
           {lang === 'en' ? 'all categories' : 'todas'}

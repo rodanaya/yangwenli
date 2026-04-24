@@ -2152,7 +2152,7 @@ export default function PriceIntelligence() {
           {t('seeAlso')}
         </span>
         <Link
-          to="/categories"
+          to="/sectors?view=categories"
           className="inline-flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors border border-border hover:border-border rounded px-2.5 py-1"
         >
           {t('spendingCategories')}

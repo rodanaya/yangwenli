@@ -37,7 +37,7 @@ const ModelTransparency = lazy(() => import('@/pages/ModelTransparency'))
 const Investigation = lazy(() => import('@/pages/Investigation'))
 const InvestigationCaseDetail = lazy(() => import('@/pages/InvestigationCaseDetail'))
 const Executive = lazy(() => import('@/pages/Executive'))
-const SpendingCategories = lazy(() => import('@/pages/SpendingCategories'))
+// SpendingCategories removed; /categories now redirects to /sectors?view=categories
 const CategoryProfile = lazy(() => import('@/pages/CategoryProfile'))
 const CaseLibrary = lazy(() => import('@/pages/CaseLibrary'))
 const CaseDetail = lazy(() => import('@/pages/CaseDetail'))
@@ -154,14 +154,8 @@ function App() {
                   </SuspenseBoundary>
                 }
               />
-              <Route
-                path="categories"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <SpendingCategories />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* Retired: /categories merged into /sectors as the WHAT axis */}
+              <Route path="categories" element={<Navigate to="/sectors?view=categories" replace />} />
               <Route
                 path="categories/:id"
                 element={

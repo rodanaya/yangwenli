@@ -419,7 +419,7 @@ export default function CategoryProfile() {
           {t('profile.notFound.description', { id })}
         </p>
         <Link
-          to="/categories"
+          to="/sectors?view=categories"
           className="inline-flex items-center gap-2 text-sm text-accent hover:text-accent/80 transition-colors"
         >
           <ArrowLeft className="h-4 w-4" />
@@ -453,7 +453,7 @@ export default function CategoryProfile() {
       {/* ================================================================= */}
       <div>
         <Link
-          to="/categories"
+          to="/sectors?view=categories"
           className="inline-flex items-center gap-1.5 text-xs text-text-muted hover:text-accent transition-colors mb-4"
         >
           <ArrowLeft className="h-3.5 w-3.5" />
