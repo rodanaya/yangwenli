@@ -190,6 +190,53 @@
     "sectionLabel": "POR QUÉ ESTE PROVEEDOR ESTÁ MARCADO",
     "disclaimer": "Las alertas son indicadores estadísticos de riesgo, no prueba de irregularidades. Úselas solo para priorizar investigaciones."
   },
+  "vendorFlags": {
+    "groundTruth": {
+      "headline": "Documentado en un caso de corrupción conocido",
+      "detail": "Este proveedor aparece en {{n}} caso(s) de la base de entrenamiento del modelo v0.6.5."
+    },
+    "efosDefinitivo": {
+      "headline": "Empresa fantasma confirmada por el SAT (EFOS Definitivo)",
+      "detail": "La autoridad tributaria mexicana ha listado definitivamente este RFC bajo el Art. 69-B como empresa fantasma emisora de facturas simuladas."
+    },
+    "efosPresunto": {
+      "headline": "Presunta empresa fantasma (EFOS Presunto)",
+      "detail": "Listada por el SAT como presunta empresa fantasma y actualmente bajo investigación."
+    },
+    "sfp": {
+      "headline": "{{n}} sanción(es) de la SFP en registro",
+      "detail": "Sancionada por la Secretaría de la Función Pública."
+    },
+    "ariaT1": {
+      "headline": "ARIA Nivel 1 — bajo investigación activa",
+      "detail": "Patrón principal: {{pattern}}"
+    },
+    "ariaT2": {
+      "headline": "ARIA Nivel 2 — revisión prioritaria",
+      "detail": "Patrón principal: {{pattern}}"
+    },
+    "riskCritical": {
+      "headline": "Puntaje de riesgo crítico ({{pct}}/100) — mayor similitud con patrones de corrupción documentados"
+    },
+    "riskHigh": {
+      "headline": "Puntaje de riesgo alto ({{pct}}/100) — fuerte similitud con patrones de corrupción documentados"
+    },
+    "highDirectAward": {
+      "headline": "{{pct}}% adjudicaciones directas — evita la licitación competitiva"
+    },
+    "highSingleBid": {
+      "headline": "{{pct}}% licitador único en procedimientos competitivos"
+    },
+    "highClustering": {
+      "headline": "Alta concentración de red ({{pct}}%) — los socios licitadores forman un grupo muy unido"
+    },
+    "coBidding": {
+      "headline": "Patrones sospechosos de co-licitación detectados"
+    },
+    "primaryDriver": {
+      "headline": "Factor principal: {{factor}} ({{z}}σ sobre la norma sectorial)"
+    }
+  },
   "waterfall": {
     "description": "Las barras positivas aumentan el riesgo (rojo/naranja). Las barras negativas reducen el riesgo (verde). La altura de la barra refleja la contribución de cada factor a la puntuación total.",
     "totalScore": "Puntuación Total",

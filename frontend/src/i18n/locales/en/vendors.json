@@ -190,6 +190,53 @@
     "sectionLabel": "RISK INDICATORS FOR THIS VENDOR",
     "disclaimer": "Flags are statistical risk indicators, not proof of wrongdoing. Use for investigation triage only."
   },
+  "vendorFlags": {
+    "groundTruth": {
+      "headline": "Documented in a known corruption case",
+      "detail": "This vendor appears in {{n}} ground-truth case(s) used to train the v0.6.5 risk model."
+    },
+    "efosDefinitivo": {
+      "headline": "SAT-confirmed ghost company (EFOS Definitivo)",
+      "detail": "The Mexican tax authority has definitively listed this RFC under Art. 69-B as a ghost company issuing simulated invoices."
+    },
+    "efosPresunto": {
+      "headline": "Alleged ghost company (EFOS Presunto)",
+      "detail": "Listed by SAT as an alleged ghost company and currently under investigation."
+    },
+    "sfp": {
+      "headline": "{{n}} SFP sanction record(s) on file",
+      "detail": "Sanctioned by the Secretaría de la Función Pública."
+    },
+    "ariaT1": {
+      "headline": "ARIA Tier 1 — under active investigation",
+      "detail": "Primary pattern: {{pattern}}"
+    },
+    "ariaT2": {
+      "headline": "ARIA Tier 2 — priority review",
+      "detail": "Primary pattern: {{pattern}}"
+    },
+    "riskCritical": {
+      "headline": "Critical risk score ({{pct}}/100) — strongest similarity to documented corruption patterns"
+    },
+    "riskHigh": {
+      "headline": "High risk score ({{pct}}/100) — strong similarity to documented corruption patterns"
+    },
+    "highDirectAward": {
+      "headline": "{{pct}}% direct awards — bypasses competitive tendering"
+    },
+    "highSingleBid": {
+      "headline": "{{pct}}% single-bidder in competitive procedures"
+    },
+    "highClustering": {
+      "headline": "High network clustering ({{pct}}%) — bidding partners form a tightly-knit group"
+    },
+    "coBidding": {
+      "headline": "Suspicious co-bidding patterns detected"
+    },
+    "primaryDriver": {
+      "headline": "Primary driver: {{factor}} ({{z}}σ above sector norm)"
+    }
+  },
   "waterfall": {
     "description": "Positive bars increase risk (red/orange). Negative bars reduce risk (green). Bar height reflects each factor's contribution to the overall score.",
     "totalScore": "Total Score",
