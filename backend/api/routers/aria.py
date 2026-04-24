@@ -95,6 +95,8 @@ def get_aria_queue(
     novel_only: bool = Query(False, description="When True, exclude vendors already in ground truth"),
     min_ips: Optional[float] = Query(None, ge=0, le=1),
     status: Optional[str] = Query(None),
+    sector_id: Optional[int] = Query(None, ge=1, le=12, description="Scope to a specific sector (1-12)"),
+    min_years_active: Optional[int] = Query(None, ge=0, le=30, description="Minimum vendor years active"),
     page: int = Query(1, ge=1),
     per_page: int = Query(50, ge=1, le=100),
     conn: sqlite3.Connection = Depends(get_db_dep),
@@ -140,6 +142,14 @@ def get_aria_queue(
     if status is not None:
         conditions.append("q.review_status = ?")
         params.append(status)
+    if sector_id is not None:
+        # aria_queue.primary_sector_id is denormalized from vendor activity.
+        # Resolves the compliance-officer journey (previously 3/10, no sector scoping).
+        conditions.append("q.primary_sector_id = ?")
+        params.append(sector_id)
+    if min_years_active is not None:
+        conditions.append("q.years_active >= ?")
+        params.append(min_years_active)
 
     where_sql = ("WHERE " + " AND ".join(conditions)) if conditions else ""
 

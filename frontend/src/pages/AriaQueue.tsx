@@ -24,7 +24,7 @@ import { TableExportButton } from '@/components/TableExportButton'
 import type { AriaQueueItem, AriaStatsResponse, GhostSuspect } from '@/api/types'
 import { Skeleton } from '@/components/ui/skeleton'
 import { cn, formatCompactMXN, formatNumber } from '@/lib/utils'
-import { getSectorNameEN } from '@/lib/constants'
+import { getSectorNameEN, SECTORS } from '@/lib/constants'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import {
@@ -706,6 +706,7 @@ export default function AriaPage() {
   const [tierFilter, setTierFilter] = useState<number | null>(1)   // start on T1 — most urgent
   const [newVendorOnly, setNewVendorOnly] = useState(false)
   const [novelOnly, setNovelOnly] = useState(false)
+  const [sectorFilter, setSectorFilter] = useState<number | null>(null)
   const [reviewStatusFilter, setReviewStatusFilter] = useState<ReviewStatus | null>(null)
   const [page, setPage] = useState(1)
 
@@ -718,7 +719,7 @@ export default function AriaPage() {
   })
 
   const { data: leadsData, isLoading: leadsLoading, isError: leadsError } = useQuery({
-    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, reviewStatusFilter }],
+    queryKey: ['aria-queue-leads', { page, search, patternFilter, tierFilter, newVendorOnly, novelOnly, sectorFilter, reviewStatusFilter }],
     queryFn: () =>
       ariaApi.getQueue({
         page,
@@ -729,6 +730,7 @@ export default function AriaPage() {
         novel_only: novelOnly || undefined,
         status: reviewStatusFilter ?? undefined,
         tier: tierFilter ?? undefined,
+        sector_id: sectorFilter ?? undefined,
       }),
     staleTime: 2 * 60_000,
   })
@@ -773,6 +775,7 @@ export default function AriaPage() {
     setTierFilter(null)
     setNewVendorOnly(false)
     setNovelOnly(false)
+    setSectorFilter(null)
     setReviewStatusFilter(null)
     setSearch('')
     setPage(1)
@@ -991,6 +994,28 @@ export default function AriaPage() {
               >
                 {t('filters.novelOnly')}
               </button>
+              <select
+                value={sectorFilter ?? ''}
+                onChange={(e) => {
+                  const v = e.target.value
+                  setSectorFilter(v === '' ? null : Number(v))
+                  setPage(1)
+                }}
+                className={cn(
+                  'inline-flex items-center px-3 py-1.5 rounded-sm border text-xs font-medium transition-colors cursor-pointer',
+                  sectorFilter != null
+                    ? 'bg-background-elevated text-text-primary border-border'
+                    : 'bg-background-card text-text-secondary border-border hover:border-border'
+                )}
+                aria-label={isEs ? 'Filtrar por sector' : 'Filter by sector'}
+              >
+                <option value="">{isEs ? 'Todos los sectores' : 'All sectors'}</option>
+                {SECTORS.map((s) => (
+                  <option key={s.id} value={s.id}>
+                    {isEs ? s.name : s.nameEN}
+                  </option>
+                ))}
+              </select>
             </div>
           </section>
         )}

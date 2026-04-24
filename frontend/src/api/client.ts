@@ -2669,6 +2669,8 @@ export const ariaApi = {
     new_vendor_only?: boolean
     novel_only?: boolean
     status?: string
+    sector_id?: number
+    min_years_active?: number
     page?: number
     per_page?: number
   }): Promise<AriaQueueResponse> {

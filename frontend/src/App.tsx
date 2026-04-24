@@ -9,7 +9,6 @@ import { ToastProvider } from '@/components/ui/toast'
 import { MainLayout } from '@/components/layout/MainLayout'
 import { SuspenseBoundary } from '@/components/SuspenseBoundary'
 import {
-  DashboardSkeleton,
   TablePageSkeleton,
   CardGridSkeleton,
   DetailPageSkeleton,
@@ -22,7 +21,6 @@ const EntityProfileDrawer = lazy(() =>
 )
 
 // Lazy load all page components for code splitting
-const Dashboard = lazy(() => import('@/pages/Dashboard'))
 const Contracts = lazy(() => import('@/pages/Contracts'))
 const ContractDetail = lazy(() => import('@/pages/ContractDetail'))
 const Explore = lazy(() => import('@/pages/explore'))
@@ -56,8 +54,6 @@ const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
 const StoryNarrative = lazy(() => import('@/pages/StoryNarrative'))
 const InstitutionLeague = lazy(() => import('@/pages/InstitutionLeague'))
-const CollusionExplorer = lazy(() => import('@/pages/CollusionExplorer'))
-const StateExplorer = lazy(() => import('@/pages/StateExplorer'))
 const ProcurementCalendar = lazy(() => import('@/pages/ProcurementCalendar'))
 const Privacy = lazy(() => import('@/pages/Privacy'))
 const Terms = lazy(() => import('@/pages/Terms'))
@@ -140,14 +136,8 @@ function App() {
               <Route path="institution-ranking" element={<Navigate to="/institutions" replace />} />
               <Route path="league" element={<Navigate to="/institutions" replace />} />
               <Route path="institution-league" element={<Navigate to="/institutions" replace />} />
-              <Route
-                path="dashboard"
-                element={
-                  <SuspenseBoundary fallback={<DashboardSkeleton />}>
-                    <Dashboard />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* Retired: /dashboard merged into / (Executive landing). */}
+              <Route path="dashboard" element={<Navigate to="/" replace />} />
               <Route
                 path="explore"
                 element={
@@ -413,14 +403,8 @@ function App() {
               <Route path="sector/:id" element={<SectorRedirect />} />
               <Route path="scandals" element={<Navigate to="/cases" replace />} />
 
-              <Route
-                path="collusion"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <CollusionExplorer />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* Retired: /collusion merged into /network. */}
+              <Route path="collusion" element={<Navigate to="/network" replace />} />
 
               <Route
                 path="scorecards"
@@ -455,14 +439,8 @@ function App() {
                 }
               />
 
-              <Route
-                path="states"
-                element={
-                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
-                    <StateExplorer />
-                  </SuspenseBoundary>
-                }
-              />
+              {/* Retired: /states merged into /administrations. */}
+              <Route path="states" element={<Navigate to="/administrations" replace />} />
 
               <Route
                 path="privacy"

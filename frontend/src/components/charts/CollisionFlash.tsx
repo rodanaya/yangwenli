@@ -73,7 +73,7 @@ export function CollisionFlash({ className }: { className?: string }) {
           {lang === 'en' ? 'CO-BIDDING ALERT' : 'ALERTA CO-LICITACIÓN'}
         </span>
         <Link
-          to="/collusion"
+          to="/network"
           className="text-[10px] font-mono text-text-muted hover:text-text-secondary flex items-center gap-0.5 transition-colors"
         >
           {lang === 'en' ? 'all pairs' : 'todos'}
