@@ -2964,6 +2964,59 @@ export const intersectionApi = {
   },
 }
 
+// ============================================================================
+// CAPTURE API — institutional-capture creep detection (deterministic HHI-style)
+// ============================================================================
+
+export interface CapturePoint {
+  year: number
+  share_pct: number
+  value_mxn: number
+}
+
+export interface CaptureItem {
+  institution_id: number
+  institution_name: string
+  institution_full_name: string | null
+  institution_sector_id: number | null
+  institution_sector_name: string | null
+  vendor_id: number
+  vendor_name: string
+  earliest_year: number
+  earliest_share_pct: number
+  peak_year: number
+  peak_share_pct: number
+  latest_year: number
+  latest_share_pct: number
+  years_observed: number
+  cumulative_value_mxn: number
+  institution_total_window: number
+  score: number
+  timeline: CapturePoint[]
+}
+
+export interface CaptureTopResponse {
+  thresholds: {
+    min_inst_total_mxn: number
+    min_cumulative_value_mxn: number
+    floor_share_pct: number
+    ceil_share_pct: number
+    min_years: number
+    year_window: string
+  }
+  total_captures: number
+  total_unfiltered: number
+  data: CaptureItem[]
+}
+
+export const captureApi = {
+  async getTop(params: { limit?: number; sector_id?: number } = {}): Promise<CaptureTopResponse> {
+    const q = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<CaptureTopResponse>(`/capture/top?${q}`)
+    return data
+  },
+}
+
 export const collusionApi = {
   async getPairs(params: {
     is_potential_collusion?: boolean

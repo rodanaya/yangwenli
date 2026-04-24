@@ -50,6 +50,7 @@ const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
 const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
 const Intersection = lazy(() => import('@/pages/Intersection'))
+const CaptureCreep = lazy(() => import('@/pages/CaptureCreep'))
 const CorruptionClusters = lazy(() => import('@/pages/CorruptionClusters'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
@@ -227,6 +228,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <Intersection />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="capture"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <CaptureCreep />
                   </SuspenseBoundary>
                 }
               />
