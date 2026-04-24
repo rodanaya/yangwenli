@@ -102,6 +102,7 @@ from .routers.health import router as health_router
 from .routers.analysis_patterns import router as analysis_patterns_router
 from .routers.analysis_vendor_sector import router as analysis_vendor_sector_router
 from .routers.collusion import router as collusion_router
+from .routers.intersection import router as intersection_router
 
 logger = structlog.get_logger("rubli.api")
 
@@ -408,6 +409,7 @@ app.include_router(analysis_router, prefix="/api/v1")
 app.include_router(analysis_patterns_router, prefix="/api/v1")
 app.include_router(analysis_vendor_sector_router, prefix="/api/v1")
 app.include_router(collusion_router, prefix="/api/v1")
+app.include_router(intersection_router, prefix="/api/v1")
 app.include_router(watchlist_folders_router, prefix="/api/v1")
 app.include_router(watchlist_router, prefix="/api/v1")
 app.include_router(reports_router, prefix="/api/v1")

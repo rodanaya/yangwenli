@@ -49,6 +49,7 @@ const YearInReview = lazy(() => import('@/pages/YearInReview'))
 const VendorCompare = lazy(() => import('@/pages/VendorCompare'))
 const InstitutionCompare = lazy(() => import('@/pages/InstitutionCompare'))
 const AriaQueue = lazy(() => import('@/pages/AriaQueue'))
+const Intersection = lazy(() => import('@/pages/Intersection'))
 const CorruptionClusters = lazy(() => import('@/pages/CorruptionClusters'))
 const Journalists = lazy(() => import('@/pages/Journalists'))
 const RedThread = lazy(() => import('@/pages/RedThread'))
@@ -218,6 +219,14 @@ function App() {
                 element={
                   <SuspenseBoundary fallback={<GenericPageSkeleton />}>
                     <AriaQueue />
+                  </SuspenseBoundary>
+                }
+              />
+              <Route
+                path="intersection"
+                element={
+                  <SuspenseBoundary fallback={<GenericPageSkeleton />}>
+                    <Intersection />
                   </SuspenseBoundary>
                 }
               />

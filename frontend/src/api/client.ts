@@ -2904,6 +2904,66 @@ export interface SharedContractsResponse {
   }
 }
 
+// ============================================================================
+// INTERSECTION API — model vs regulators contradiction surface
+// ============================================================================
+
+export interface IntersectionVendor {
+  vendor_id: number
+  vendor_name: string
+  avg_risk_score: number
+  ips_final: number
+  ips_tier: number
+  primary_pattern: string | null
+  total_contracts: number
+  total_value_mxn: number
+  primary_sector_id: number | null
+  primary_sector_name: string | null
+  is_efos_definitivo: boolean
+  is_sfp_sanctioned: boolean
+  in_ground_truth: boolean
+}
+
+export interface IntersectionSummary {
+  thresholds: { rubli_flags: number; rubli_clean: number; min_contracts: number }
+  counts: { novelty: number; confirmed: number; blindspot: number; clean: number }
+  rankings: {
+    novelty: IntersectionVendor[]
+    confirmed: IntersectionVendor[]
+    blindspot: IntersectionVendor[]
+  }
+  registry_breakdown: {
+    efos_definitivo: number
+    sfp_sanctioned: number
+    in_ground_truth: number
+  }
+}
+
+export interface IntersectionQuadrantPage {
+  quadrant: string
+  data: IntersectionVendor[]
+  pagination: { page: number; per_page: number; total: number; total_pages: number }
+}
+
+export const intersectionApi = {
+  async getSummary(topN = 10): Promise<IntersectionSummary> {
+    const { data } = await api.get<IntersectionSummary>(
+      `/intersection/summary?top_n_per_quadrant=${topN}`,
+    )
+    return data
+  },
+  async getQuadrant(
+    quadrant: 'novelty' | 'confirmed' | 'blindspot',
+    params: { page?: number; per_page?: number; sector_id?: number } = {},
+  ): Promise<IntersectionQuadrantPage> {
+    const q = buildQueryParams(params as QueryParams)
+    const { data } = await api.get<IntersectionQuadrantPage>(
+      `/intersection/quadrant/${quadrant}?${q}`,
+    )
+    return data
+  },
+}
+
 export const collusionApi = {
   async getPairs(params: {
     is_potential_collusion?: boolean

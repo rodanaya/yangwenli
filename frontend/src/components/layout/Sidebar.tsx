@@ -18,6 +18,7 @@ import {
   Building2,
   Network,
   Activity,
+  GitCompareArrows,
 } from 'lucide-react'
 import { LanguageToggle } from '@/components/LanguageToggle'
 import { Button } from '@/components/ui/button'
@@ -65,6 +66,7 @@ const NAV_SECTIONS: NavSectionDef[] = [
     sectionKey: 'sections.investigate',
     items: [
       { i18nKey: 'ariaQueue', href: '/aria', icon: Shield, badgeSource: 'aria-t1' },
+      { i18nKey: 'intersection', href: '/intersection', icon: GitCompareArrows },
       { i18nKey: 'caseLibrary', href: '/cases', icon: Library, badgeSource: 'cases' },
       { i18nKey: 'network', href: '/network', icon: Network },
     ],
