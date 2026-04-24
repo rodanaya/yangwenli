@@ -541,7 +541,7 @@ export function EntityProfileDrawer() {
       <div
         role="presentation"
         onClick={close}
-        className="fixed inset-0 z-40 bg-[color:var(--color-sidebar)]/40 backdrop-blur-[1px]"
+        className="fixed inset-0 z-40 bg-[color:var(--color-text-primary)]/40 backdrop-blur-[1px]"
         aria-hidden="true"
       />
 

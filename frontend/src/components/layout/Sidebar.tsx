@@ -105,10 +105,10 @@ function NavSection({
           <span className="text-[9px] font-bold tracking-[0.22em] uppercase text-[color:var(--color-text-on-dark-muted)] select-none font-mono">
             {title}
           </span>
-          <span className="flex-1 h-px bg-white/5" aria-hidden="true" />
+          <span className="flex-1 h-px bg-border" aria-hidden="true" />
         </div>
       )}
-      {collapsed && <div className="mb-1.5 mx-auto w-4 h-px bg-white/10" />}
+      {collapsed && <div className="mb-1.5 mx-auto w-4 h-px bg-border" />}
       <div className="space-y-0.5">{children}</div>
     </div>
   )
@@ -188,7 +188,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         // the "half-empty dark zone" that user flagged three times.
         // If content ever exceeds viewport, overflow-y-auto kicks in.
         // Desktop: full viewport height with flex-col anchoring footer.
-        'fixed left-0 top-0 flex flex-col border-r border-white/5 bg-[color:var(--color-sidebar)] z-50',
+        'fixed left-0 top-0 flex flex-col border-r border-border bg-[color:var(--color-sidebar)] z-50',
         'max-h-screen overflow-y-auto md:h-screen md:overflow-y-visible',
         'transition-all duration-200 ease-out',
         // Mobile: overlay -- hidden off-screen, revealed when open
@@ -200,7 +200,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       )}
     >
       {/* Logo — signal spike mark */}
-      <div className="flex items-center gap-3 px-4 py-5 border-b border-white/5">
+      <div className="flex items-center gap-3 px-4 py-5 border-b border-border">
         <div className="relative flex-shrink-0">
           <svg width="32" height="32" viewBox="0 0 32 32" fill="none" aria-hidden="true">
             {/* Baseline — warm dark, flanking the spike */}
@@ -282,7 +282,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
                 href="/api/v1/docs"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="group flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-[color:var(--color-text-on-dark-muted)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-white/[0.025] transition-all duration-100"
+                className="group flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium text-text-muted hover:text-text-primary hover:bg-[color:var(--color-sidebar-hover)] transition-all duration-100"
               >
                 <Activity className="h-4 w-4 flex-shrink-0 text-[color:var(--color-text-on-dark-muted)] group-hover:text-[color:var(--color-text-on-dark-secondary)]" aria-hidden="true" />
                 <span className="truncate">{t('apiExplorer')}</span>
@@ -303,7 +303,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
           the sidebar, right above the footer — which is exactly where the
           dark gap lives. */}
       {!isCollapsed && ariaT1Count > 0 && (
-        <div className="mx-2 mb-2 px-3 py-3 rounded-sm border border-white/8 bg-white/[0.015]">
+        <div className="mx-2 mb-2 px-3 py-3 rounded-sm border border-border bg-background-card">
           <div className="flex items-center gap-1.5 mb-2">
             <span className="h-1.5 w-1.5 rounded-full bg-red-500 animate-pulse" />
             <span className="text-[9px] font-mono font-bold uppercase tracking-[0.18em] text-red-400/80">
@@ -327,7 +327,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       )}
 
       {/* System status panel */}
-      <div className="px-2 py-2 border-t border-white/5">
+      <div className="px-2 py-2 border-t border-border">
         {!isCollapsed ? (
           <div className="space-y-1.5 px-1">
             <div className="flex items-center gap-1.5">
@@ -356,14 +356,14 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
         <div className="px-3 pb-1 flex items-center gap-3">
           <a
             href="/privacy"
-            className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
+            className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.privacy')}
           </a>
-          <span className="text-white/15 text-[10px]" aria-hidden="true">·</span>
+          <span className="text-text-disabled text-[10px]" aria-hidden="true">·</span>
           <a
             href="/terms"
-            className="text-[10px] text-white/25 hover:text-white/50 transition-colors"
+            className="text-[10px] text-text-muted hover:text-text-secondary transition-colors"
           >
             {tc('legal.terms')}
           </a>
@@ -399,7 +399,7 @@ export function Sidebar({ collapsed, onToggle, mobileOpen, onMobileClose }: Side
       </div>
 
       {/* Bottom bar -- language toggle + collapse button */}
-      <div className="border-t border-white/5 p-2">
+      <div className="border-t border-border p-2">
         <div className="flex items-center justify-end">
           <div className="flex items-center gap-0.5">
             {isCollapsed ? (
@@ -485,8 +485,8 @@ function SidebarNavItem({
         'group relative flex items-center gap-2.5 rounded-sm px-2.5 py-1.5 text-sm font-medium transition-all duration-100',
         'focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-[color:var(--color-accent)]',
         isActive
-          ? 'border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-accent-glow)] text-[color:var(--color-text-on-dark-primary)] pl-[calc(0.625rem-3px)]'
-          : 'text-[color:var(--color-text-on-dark-secondary)] hover:text-[color:var(--color-text-on-dark-primary)] hover:bg-white/[0.03]',
+          ? 'border-l-[3px] border-[color:var(--color-accent)] bg-[color:var(--color-accent-glow)] text-text-primary pl-[calc(0.625rem-3px)] font-semibold'
+          : 'text-text-secondary hover:text-text-primary hover:bg-[color:var(--color-sidebar-hover)]',
         collapsed && 'justify-center px-0',
       )}
       aria-current={isActive ? 'page' : undefined}
@@ -496,7 +496,7 @@ function SidebarNavItem({
         <Icon
           className={cn(
             'h-4 w-4 transition-colors',
-            isActive ? 'text-[color:var(--color-text-on-dark-primary)]' : 'text-[color:var(--color-text-on-dark-muted)] group-hover:text-[color:var(--color-text-on-dark-secondary)]',
+            isActive ? 'text-text-primary' : 'text-text-muted group-hover:text-text-secondary',
           )}
           aria-hidden="true"
         />
@@ -520,7 +520,7 @@ function SidebarNavItem({
       {/* Count badge -- subdued, shows total items */}
       {countBadge > 0 && !collapsed && badge === 0 && (
         <span
-          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-[color:var(--color-sidebar-hover)] text-[10px] font-mono text-[color:var(--color-text-on-dark-muted)] px-1 border border-white/5"
+          className="ml-auto flex h-4 min-w-[1.25rem] items-center justify-center rounded-sm bg-[color:var(--color-sidebar-hover)] text-[10px] font-mono text-text-muted px-1 border border-border"
           aria-label={`${countBadge} items`}
         >
           {countBadge > 999 ? `${Math.round(countBadge / 1000)}k` : countBadge}
@@ -533,7 +533,7 @@ function SidebarNavItem({
     return (
       <Tooltip>
         <TooltipTrigger asChild>{linkContent}</TooltipTrigger>
-        <TooltipContent side="right" sideOffset={8} className="bg-[color:var(--color-sidebar)] border-white/10 text-[color:var(--color-text-on-dark-secondary)]">
+        <TooltipContent side="right" sideOffset={8} className="bg-[color:var(--color-text-primary)] border-[color:var(--color-text-primary)] text-[color:var(--color-bg-base)]">
           <p className="text-xs font-mono">{item.title}</p>
         </TooltipContent>
       </Tooltip>

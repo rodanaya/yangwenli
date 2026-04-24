@@ -51,10 +51,14 @@
   --color-text-muted: #9c9490;
   --color-text-disabled: #c5bfb8;
 
-  /* Dark-context text — only for sidebar and dark cards/modals (bible §3.4, §3.9) */
-  --color-text-on-dark-primary: #e8e0d8;
-  --color-text-on-dark-secondary: #a09890;
-  --color-text-on-dark-muted: #706860;
+  /* Legacy dark-context tokens, now aliased to light-mode text. The sidebar
+     used to be dark (#1a1714) and these tokens carried the inverted text.
+     After the 2026-04 editorial-unification pass the sidebar became cream,
+     so these tokens now match the regular text tokens — kept as aliases so
+     existing usage across Sidebar.tsx continues working without a rename. */
+  --color-text-on-dark-primary: #1a1714;
+  --color-text-on-dark-secondary: #6b6560;
+  --color-text-on-dark-muted: #9c9490;
 
   /* Primary accent — amber gold (bible §2) */
   --color-accent: #a06820;
@@ -68,10 +72,17 @@
   /* OECD reference lines — cyan (bible §2, §4) */
   --color-oecd: #22d3ee;
 
-  /* Sidebar — always dark (bible §2) */
-  --color-sidebar: #1a1714;
-  --color-sidebar-hover: #2a2420;
-  --color-sidebar-active: #342e2a;
+  /* Sidebar — unified editorial light (2026-04 aesthetic pass).
+     Previously dark (#1a1714) to read as "command center chrome" on a cream
+     page. That split (dark tool / light newspaper) worked for Bloomberg
+     Terminal but fought RUBLI's investigative-journalism positioning —
+     NYT/ProPublica/OCCRP run single-palette editorial layouts. Sidebar now
+     uses a cream variant just 3% darker than the page, giving visual
+     separation without the "two different apps glued together" feel.
+     Active/hover states lean on the amber accent + bolder typography. */
+  --color-sidebar: #f5f2ed;
+  --color-sidebar-hover: #ede8e0;
+  --color-sidebar-active: #e4ded4;
 
   /* Signal colors */
   --color-signal-pulse: #a06820;
