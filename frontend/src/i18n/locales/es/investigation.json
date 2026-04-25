@@ -1,25 +1,9 @@
 {
-  "title": "Investigación",
-  "hero": {
-    "trackingLabel": "CASOS DE INVESTIGACIÓN",
-    "subtitle": "Pistas de investigación generadas por IA a partir de la detección de anomalías",
-    "casesCount": "{{count}} Casos",
-    "confirmedDetail": "confirmados externamente",
-    "valueAtRisk": "valor en riesgo"
-  },
-  "description": "Cada caso representa un clúster de contratos sospechosos identificados mediante detección de anomalías estadísticas. Revisa, corrobora y valida con fuentes externas.",
   "status": {
     "pending": "Pendiente",
     "corroborated": "Corroborado",
     "refuted": "Refutado",
     "inconclusive": "No concluyente"
-  },
-  "sections": {
-    "pipeline": "Canal de Validación",
-    "confirmed": "Objetivos de Investigación Confirmados",
-    "confirmedSubtitle": "Validados externamente a través de reportes periodísticos, auditorías de la ASF y procedimientos legales",
-    "allCases": "Todos los Casos de Investigación",
-    "bySector": "Casos por Sector"
   },
   "filters": {
     "allStatuses": "Todos los estados",
@@ -29,159 +13,19 @@
   "table": {
     "case": "Caso",
     "sector": "Sector",
-    "scoreValue": "Puntaje / Valor",
     "status": "Estado"
   },
-  "empty": "No hay casos que coincidan con los filtros actuales.",
-  "contracts": "contratos",
-  "funnel": {
-    "detected": "Detectados",
-    "researched": "Investigados",
-    "corroborated": "Corroborados",
-    "groundTruth": "Verdad Base",
-    "hitRate": "de acierto",
-    "hitRateText": "{{confirmed}} de {{checked}} proveedores investigados tienen investigaciones de corrupción documentadas"
-  },
-  "tabs": {
-    "overview": "Resumen",
-    "evidence": "Evidencias ({{count}})"
-  },
-  "research": "Preguntas de Investigación",
   "vendors": "Proveedores",
-  "externalEvidence": "Evidencia Externa",
-  "noEvidence": "No hay evidencia externa adjunta aún.",
-  "source": "Fuente",
-  "evidenceForm": {
-    "title": "Agregar Evidencia",
-    "urlPlaceholder": "URL de la fuente",
-    "titlePlaceholder": "Título de la fuente",
-    "summaryPlaceholder": "Breve resumen de la evidencia",
-    "types": {
-      "news": "Noticia",
-      "asf_audit": "Auditoría ASF",
-      "legal": "Legal",
-      "investigative": "Investigativo"
-    },
-    "submit": "Enviar",
-    "cancel": "Cancelar"
-  },
-  "addEvidence": "Agregar Evidencia",
-  "review": "Revisar:",
-  "actions": {
-    "corroborate": "Corroborar",
-    "refute": "Refutar",
-    "inconclusive": "No concluyente",
-    "promoteToGroundTruth": "Promover a Verdad Base",
-    "promotedSuccess": "Promovido exitosamente"
-  },
-  "tooltip": {
-    "cases": "casos"
-  },
-  "cases": {
-    "title": "Casos de Investigación",
-    "newCase": "Nuevo Caso",
-    "columns": {
-      "name": "Nombre del Caso",
-      "status": "Estado",
-      "vendorCount": "Proveedores",
-      "contractCount": "Contratos",
-      "totalValue": "Valor Total",
-      "created": "Fecha de Creación",
-      "lastUpdated": "Última Actualización"
-    },
-    "statuses": {
-      "open": "Abierto",
-      "in_progress": "En Progreso",
-      "closed": "Cerrado",
-      "archived": "Archivado"
-    },
-    "empty": "No hay casos de investigación activos.",
-    "emptyAction": "Crear un nuevo caso"
-  },
-  "groundTruth": {
-    "title": "Verdad Base",
-    "subtitle": "Casos de corrupción documentados en la contratación pública mexicana",
-    "columns": {
-      "caseName": "Caso",
-      "type": "Tipo",
-      "vendors": "Proveedores",
-      "contracts": "Contratos",
-      "detectionRate": "Tasa de Detección",
-      "avgScore": "Puntaje Prom."
-    },
-    "types": {
-      "ghost_companies": "Empresas Fantasma",
-      "procurement_fraud": "Fraude en Contratación",
-      "embezzlement": "Peculado",
-      "overpricing": "Sobreprecio",
-      "bribery": "Soborno",
-      "conflict_of_interest": "Conflicto de Interés",
-      "invoice_fraud": "Fraude de Facturas"
-    }
-  },
-  "workflowGuide": {
-    "title": "Cómo Usar Este Flujo de Trabajo",
-    "step1": {
-      "label": "Revisar",
-      "desc": "Lea el resumen del caso y examine los contratos vinculados. Revise la distribución de puntuaciones de riesgo."
-    },
-    "step2": {
-      "label": "Corroborar",
-      "desc": "Encontraste evidencia externa (nota de prensa, auditoría de la ASF, expediente judicial o datos del SAT) que confirma el patrón sospechoso."
-    },
-    "step3": {
-      "label": "Refutar",
-      "desc": "Encontraste una explicación legítima: exención por contrato de emergencia, proveedor único calificado, o una auditoría anterior que limpió a este proveedor."
-    },
-    "step4": {
-      "label": "Inconcluso",
-      "desc": "El patrón está marcado pero aún no encontraste evidencia externa. Déjalo en seguimiento o pásalo a otro investigador."
-    },
-    "groundTruthNote": "Los casos corroborados pueden enviarse como nuevo ground truth para el reentrenamiento del modelo v0.6.5, mejorando la detección futura."
-  },
-  "vendorReport": {
-    "title": "Reporte de Proveedor",
-    "profile": "Perfil",
-    "contracts": "Contratos",
-    "riskAnalysis": "Análisis de Riesgo",
-    "priceHypotheses": "Hipótesis de Precio",
-    "network": "Conexiones de Red",
-    "redFlags": "Banderas Rojas",
-    "generateReport": "Generar Reporte"
-  },
   "queue": {
     "critical": "Crítico",
     "high": "Alto",
     "medium": "Medio",
     "low": "Bajo",
     "priority": "Prioridad",
-    "totalAtRisk": "Total en riesgo",
-    "allPriorities": "Todos",
-    "empty": "No hay casos que coincidan con los filtros actuales.",
-    "funnel": {
-      "detected": "Detectados",
-      "researching": "En investigación",
-      "corroborated": "Corroborados",
-      "promoted": "Promovidos"
-    }
+    "allPriorities": "Todos"
   },
   "caseDetail": {
-    "backToQueue": "Cola de Investigación",
-    "narrative": "Narrativa del Caso",
-    "vendors": "Proveedores Involucrados",
-    "contracts": "Contratos Principales",
-    "questions": "Preguntas de Investigación",
-    "evidence": "Registro de Evidencias",
-    "noEvidence": "Aún no hay evidencias registradas. Agrega fuentes externas para corroborar o refutar este caso.",
-    "addEvidence": "Agregar Evidencia",
-    "changeStatus": "Cambiar Estado",
-    "promoteToGroundTruth": "Promover a Verdad Base",
-    "loadError": "No se pudo cargar el caso. Es posible que no exista.",
     "untitledSource": "Fuente sin título",
-    "promote": {
-      "confirm": "Esto agregará el caso a la base de datos de verdad base y se usará para reentrenar el modelo de riesgo en el próximo ciclo. Esta acción no se puede deshacer. ¿Estás seguro?",
-      "success": "Caso promovido a verdad base exitosamente."
-    },
     "breadcrumb": "Investigaciones",
     "caseLabel": "Caso de Investigación",
     "confidencePct": "{{pct}}% de confianza",
@@ -204,91 +48,28 @@
     "redThread": "Hilo Rojo →",
     "investigationQuestions": "Preguntas de investigación",
     "highPriorityLabel": "Alta prioridad",
-    "supportingEvidence_one": "{{count}} evidencia de apoyo",
     "supportingEvidence_other": "{{count}} evidencias de apoyo",
     "evidenceLog": "Registro de evidencias",
     "noEvidenceLogged": "Aún no hay evidencia externa registrada.",
     "attachEvidenceHint": "Adjunta artículos de noticias, auditorías de la ASF o expedientes legales para corroborar este caso.",
     "logNewEvidence": "Registrar nueva evidencia",
     "sourceUrlPlaceholder": "URL de la fuente (https://…)",
-    "articleTitlePlaceholder": "Título del artículo / documento",
-    "summaryPlaceholder": "Resumen / relevancia para este caso",
-    "evidenceTypeNews": "Artículo de noticias",
-    "evidenceTypeASF": "Auditoría ASF",
-    "evidenceTypeLegal": "Expediente legal",
-    "evidenceTypeInvestigative": "Reporte de investigación",
-    "credibilityLow": "Credibilidad baja",
-    "credibilityMedium": "Credibilidad media",
-    "credibilityHigh": "Credibilidad alta",
-    "submitBtn": "Enviar",
-    "cancelBtn": "Cancelar",
-    "reviewDecision": "Decisión de revisión",
-    "reviewInstructions": "Corrobora, refuta o marca como no concluyente según la evidencia anterior.",
-    "corroborateBtn": "Corroborar",
-    "refuteBtn": "Refutar",
-    "inconclusiveBtn": "No concluyente",
-    "savingStatus": "Guardando…",
-    "promotedToGT": "Promovido a verdad base.",
-    "reviewWorkflow": "Flujo de revisión",
-    "changeCaseStatus": "Cambiar estado del caso",
-    "statusPending": "Pendiente",
-    "statusCorroborated": "Corroborado",
-    "statusRefuted": "Refutado",
-    "statusInconclusive": "No concluyente",
-    "reviewNotesPlaceholder": "Notas de revisión (opcional)",
-    "reviewerNamePlaceholder": "Nombre del revisor",
-    "saveBtn": "Guardar",
-    "groundTruthLabel": "Verdad base",
-    "promoteConfirmTitle": "¿Promover a verdad base?",
-    "promoteConfirmBody": "Este caso se agregará al corpus de verdad base y se usará para la calibración futura del modelo de riesgo. Esta acción queda registrada y es auditable.",
-    "promoteBtn": "Promover",
-    "promotedSuccess": "Promovido exitosamente.",
     "notFoundLabel": "Investigación · No Encontrado",
     "notFoundTitle": "Caso {{caseId}} no encontrado",
     "notFoundBody": "Esta investigación puede no existir o no se pudo cargar. Verifica el ID del caso e intenta de nuevo.",
     "allInvestigations": "← Todas las investigaciones"
   },
-  "statusModal": {
-    "notesPlaceholder": "Notas opcionales...",
-    "reviewerPlaceholder": "Tu nombre (opcional)",
-    "save": "Guardar"
-  },
   "card": {
-    "priority": "PRIORIDAD {{n}}",
     "contracts": "contratos",
     "estLoss": "Pérdida Est.",
-    "atRisk": "En Riesgo",
-    "avgRisk": "Riesgo Prom.",
-    "criticalPct": "Crítico",
-    "topSignal": "Señal Principal",
-    "viewContracts": "Ver Contratos",
-    "close": "Cerrar"
+    "atRisk": "En Riesgo"
   },
-  "pageTitle": "Investigación",
-  "pageSubtitle": "Análisis profundo de proveedores y contratos",
   "viewCards": "Vista de tarjetas",
   "viewTable": "Vista de tabla",
-  "caseCount_one": "{{count}} caso",
   "caseCount_other": "{{count}} casos",
   "noInvestigationCasesFound": "No se encontraron casos de investigación",
   "tryAdjustingFilters": "Intenta ajustar tus filtros",
   "noCasesYet": "Aún no se han creado casos",
-  "kpi": {
-    "openCases": "Casos Abiertos",
-    "totalAtRisk": "Total en Riesgo",
-    "estLosses": "Pérd. Est.",
-    "sectorsAffected": "Sectores Afectados"
-  },
-  "sidebar": {
-    "estTotalLoss": "Pérdida Total Est.",
-    "acrossCases": "en {{n}} casos",
-    "signalRadar": "Radar de Señales",
-    "sectors": "Sectores",
-    "quickLinks": "Accesos Rápidos",
-    "spendingCategories": "Categorías de Gasto",
-    "criticalContracts": "Contratos Riesgo Crítico",
-    "caseLibrary": "Biblioteca de Casos"
-  },
   "signalTags": {
     "multiple_price_anomalies": "Anomalía de Precio",
     "high_single_bid_rate": "Un Solo Postor",
@@ -303,66 +84,9 @@
     "value": "Valor",
     "evidence": "Evidencia"
   },
-  "intake": {
-    "title": "Iniciar una Investigación",
-    "subtitle": "¿Qué deseas investigar?",
-    "byInstitution": "Por Institución",
-    "byVendor": "Por Proveedor",
-    "byPattern": "Por Patrón de Contrato",
-    "byTimePeriod": "Por Período de Tiempo",
-    "searchPlaceholder": "Buscar...",
-    "institutionPlaceholder": "Buscar nombre de institución...",
-    "vendorPlaceholder": "Buscar nombre de proveedor o RFC...",
-    "go": "Buscar",
-    "patterns": {
-      "directAward": "Adjudicación Directa",
-      "singleBid": "Licitación Única",
-      "decemberRush": "Cierre de Diciembre"
-    },
-    "yearFrom": "Desde año",
-    "yearTo": "Hasta año",
-    "browseExisting": "O explora los casos existentes"
-  },
-  "entryTiles": {
-    "bySector": "Por Sector",
-    "bySectorSub": "Riesgo de contratación en 12 sectores",
-    "byAdmin": "Por Administración",
-    "byAdminSub": "Gasto por régimen, 2000-2024",
-    "networks": "Redes de Proveedores",
-    "networksSub": "Co-licitación y empresas fantasma",
-    "capture": "Patrones de Captura",
-    "captureSub": "Patrones de control institucional"
-  },
-  "search": {
-    "placeholder": "Buscar por proveedor, institución, sector, tipo de fraude..."
-  },
-  "angles": {
-    "bySector": "Por Sector",
-    "byAdmin": "Por Administración",
-    "byNetwork": "Por Red",
-    "byPattern": "Por Patrón"
-  },
-  "entrySearch": "Buscar contratos, proveedores o casos...",
-  "headerTracking": "Sistema ARIA · Investigaciones Activas · Generado por ML",
-  "headerTitle": "El Archivo",
-  "headerDesc": "Investigaciones generadas por algoritmo. Cada caso representa un patrón estadístico de riesgo que requiere corroboración periodística.",
-  "headerPipeline": "En curso: detección automatizada → investigación → corroboración → archivo definitivo",
   "filterHeader": "Filtros de investigación",
   "searchPlaceholder": "Buscar caso, proveedor, sector...",
   "tableHeader": "Registro de investigaciones",
-  "asfLookup": {
-    "button": "Buscar en ASF",
-    "newsSearch": "Buscar Noticias",
-    "title": "Coincidencias ASF",
-    "subtitle": "Hallazgos de la Auditoría Superior de la Federación que coinciden con proveedores en este caso",
-    "noMatches": "No se encontraron hallazgos de la ASF para los proveedores en este caso.",
-    "findingType": "Tipo de Hallazgo",
-    "entity": "Entidad",
-    "vendor": "Proveedor",
-    "amount": "Monto",
-    "year": "Año",
-    "viewReport": "Ver Reporte →"
-  },
   "verify": {
     "heading": "Cómo verificar esta pista",
     "toggle": "▸ Cómo verificar",
@@ -375,48 +99,5 @@
   },
   "riskScoreLabel": "Indicador de riesgo",
   "riskScoreTooltip": "Indicador de riesgo = similitud estadística con patrones conocidos de corrupción. No es prueba de irregularidad.",
-  "loadingError": "No se pudo cargar la información. Intente de nuevo más tarde.",
-  "saving": "Guardando...",
-  "vendorTableHeaders": {
-    "vendor": "Proveedor",
-    "role": "Rol",
-    "contracts": "Contratos",
-    "value": "Valor",
-    "avgRisk": "Riesgo Prom."
-  },
-  "suspicionScore": "Puntuación de Riesgo",
-  "totalValue": "Valor Total",
-  "credibility": {
-    "low": "Credibilidad baja",
-    "medium": "Credibilidad media",
-    "high": "Credibilidad alta"
-  },
-  "highPriority": "Alta Prioridad",
-  "methodology": {
-    "kicker": "Cómo se generan estos casos",
-    "body": "Cada caso representa un clúster de contratos estadísticamente anómalos, detectados por el ensemble PyOD (IForest + COPOD) y confirmados por puntuación de riesgo v0.6.5 > 0.60. Los casos \"corroborados\" han sido verificados contra fuentes externas (ASF, SFP, periodismo de investigación). Los casos \"pendientes\" son leads activos sin verificación externa aún."
-  },
-  "pipeline": {
-    "detected": "DETECTADOS",
-    "investigating": "INVESTIGANDO",
-    "corroborated": "CORROBORADOS",
-    "archived": "ARCHIVADOS"
-  },
-  "topLeads": {
-    "kicker": "RUBLI · Casos Prioritarios",
-    "title": "Tres pistas que merecen tu atención",
-    "whyItMatters": "Por qué importa",
-    "criticalRisk": "Riesgo crítico detectado por el modelo",
-    "contractsInPattern": "{{n}} contratos en patrón anómalo",
-    "singleVendor": "Proveedor único — posible monopolio",
-    "linkedVendors": "{{n}} proveedores vinculados",
-    "highDA": "Alta tasa de adjudicación directa",
-    "priceAnomalies": "Anomalías de precio recurrentes",
-    "corporateGroup": "Patrón de grupo corporativo",
-    "riskScore": "Puntuación de riesgo {{pct}}/100 — sector {{sector}}",
-    "badgeCritical": "CRÍTICO",
-    "badgeHigh": "ALTO",
-    "badgeMedium": "MEDIO",
-    "viewCase": "Ver caso"
-  }
+  "loadingError": "No se pudo cargar la información. Intente de nuevo más tarde."
 }

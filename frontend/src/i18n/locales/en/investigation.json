@@ -1,25 +1,9 @@
 {
-  "title": "Investigation",
-  "hero": {
-    "trackingLabel": "INVESTIGATION CASES",
-    "subtitle": "ML-generated investigation leads from anomaly detection",
-    "casesCount": "{{count}} Cases",
-    "confirmedDetail": "externally confirmed",
-    "valueAtRisk": "value at risk"
-  },
-  "description": "Each case represents a cluster of suspicious contracts identified through statistical anomaly detection. Review, corroborate, and validate against external sources.",
   "status": {
     "pending": "Pending",
     "corroborated": "Corroborated",
     "refuted": "Refuted",
     "inconclusive": "Inconclusive"
-  },
-  "sections": {
-    "pipeline": "Validation Pipeline",
-    "confirmed": "Corroborated Cases",
-    "confirmedSubtitle": "Externally validated through news reports, ASF audits, and legal proceedings",
-    "allCases": "All Investigation Cases",
-    "bySector": "Cases by Sector"
   },
   "filters": {
     "allStatuses": "All statuses",
@@ -29,159 +13,19 @@
   "table": {
     "case": "Case",
     "sector": "Sector",
-    "scoreValue": "Score / Value",
     "status": "Status"
   },
-  "empty": "No cases match the current filters.",
-  "contracts": "contracts",
-  "funnel": {
-    "detected": "Detected",
-    "researched": "Researched",
-    "corroborated": "Corroborated",
-    "groundTruth": "Ground Truth",
-    "hitRate": "hit rate",
-    "hitRateText": "{{confirmed}} of {{checked}} investigated vendors have documented corruption investigations"
-  },
-  "tabs": {
-    "overview": "Overview",
-    "evidence": "Evidence ({{count}})"
-  },
-  "research": "Research Questions",
   "vendors": "Vendors",
-  "externalEvidence": "External Evidence",
-  "noEvidence": "No external evidence attached yet.",
-  "source": "Source",
-  "evidenceForm": {
-    "title": "Add Evidence",
-    "urlPlaceholder": "Source URL",
-    "titlePlaceholder": "Source title",
-    "summaryPlaceholder": "Brief summary of the evidence",
-    "types": {
-      "news": "News",
-      "asf_audit": "ASF Audit",
-      "legal": "Legal",
-      "investigative": "Investigative"
-    },
-    "submit": "Submit",
-    "cancel": "Cancel"
-  },
-  "addEvidence": "Add Evidence",
-  "review": "Review:",
-  "actions": {
-    "corroborate": "Corroborate",
-    "refute": "Refute",
-    "inconclusive": "Inconclusive",
-    "promoteToGroundTruth": "Promote to Ground Truth",
-    "promotedSuccess": "Promoted successfully"
-  },
-  "tooltip": {
-    "cases": "cases"
-  },
-  "cases": {
-    "title": "Investigation Cases",
-    "newCase": "New Case",
-    "columns": {
-      "name": "Case Name",
-      "status": "Status",
-      "vendorCount": "Vendors",
-      "contractCount": "Contracts",
-      "totalValue": "Total Value",
-      "created": "Created",
-      "lastUpdated": "Last Updated"
-    },
-    "statuses": {
-      "open": "Open",
-      "in_progress": "In Progress",
-      "closed": "Closed",
-      "archived": "Archived"
-    },
-    "empty": "No active investigation cases.",
-    "emptyAction": "Create a new case"
-  },
-  "groundTruth": {
-    "title": "Ground Truth",
-    "subtitle": "Documented corruption cases in Mexican government procurement",
-    "columns": {
-      "caseName": "Case",
-      "type": "Type",
-      "vendors": "Vendors",
-      "contracts": "Contracts",
-      "detectionRate": "Detection Rate",
-      "avgScore": "Avg Score"
-    },
-    "types": {
-      "ghost_companies": "Ghost Companies",
-      "procurement_fraud": "Procurement Fraud",
-      "embezzlement": "Embezzlement",
-      "overpricing": "Overpricing",
-      "bribery": "Bribery",
-      "conflict_of_interest": "Conflict of Interest",
-      "invoice_fraud": "Invoice Fraud"
-    }
-  },
-  "workflowGuide": {
-    "title": "How to Use This Workflow",
-    "step1": {
-      "label": "Review",
-      "desc": "Read the case summary and examine the linked contracts. Check the risk score distribution."
-    },
-    "step2": {
-      "label": "Corroborate",
-      "desc": "You found external evidence (news article, ASF audit report, court record, or SAT data) confirming the suspicious pattern."
-    },
-    "step3": {
-      "label": "Refute",
-      "desc": "You found a legitimate explanation — emergency contract exemption, sole qualified supplier, or a prior audit cleared this vendor."
-    },
-    "step4": {
-      "label": "Inconclusive",
-      "desc": "The pattern is flagged but you found no external evidence yet. Leave for monitoring or pass to another investigator."
-    },
-    "groundTruthNote": "Corroborated cases can be submitted as new ground truth for v0.6.5 model retraining, improving future detection."
-  },
-  "vendorReport": {
-    "title": "Vendor Report",
-    "profile": "Profile",
-    "contracts": "Contracts",
-    "riskAnalysis": "Risk Analysis",
-    "priceHypotheses": "Price Hypotheses",
-    "network": "Network Connections",
-    "redFlags": "Red Flags",
-    "generateReport": "Generate Report"
-  },
   "queue": {
     "critical": "Critical",
     "high": "High",
     "medium": "Medium",
     "low": "Low",
     "priority": "Priority",
-    "totalAtRisk": "Total at risk",
-    "allPriorities": "All",
-    "empty": "No cases match the current filters.",
-    "funnel": {
-      "detected": "Detected",
-      "researching": "Researching",
-      "corroborated": "Corroborated",
-      "promoted": "Promoted"
-    }
+    "allPriorities": "All"
   },
   "caseDetail": {
-    "backToQueue": "Investigation Queue",
-    "narrative": "Case Narrative",
-    "vendors": "Involved Vendors",
-    "contracts": "Top Contracts",
-    "questions": "Investigation Questions",
-    "evidence": "Evidence Log",
-    "noEvidence": "No evidence recorded yet. Add external sources to support or refute this case.",
-    "addEvidence": "Add Evidence",
-    "changeStatus": "Change Status",
-    "promoteToGroundTruth": "Promote to Ground Truth",
-    "loadError": "Could not load case. It may not exist.",
     "untitledSource": "Untitled source",
-    "promote": {
-      "confirm": "This will add the case to the ground truth database and use it to retrain the risk model in the next cycle. This action cannot be undone. Are you sure?",
-      "success": "Case promoted to ground truth successfully."
-    },
     "breadcrumb": "Investigations",
     "caseLabel": "Investigation Case",
     "confidencePct": "{{pct}}% confidence",
@@ -204,91 +48,28 @@
     "redThread": "Red Thread →",
     "investigationQuestions": "Investigation questions",
     "highPriorityLabel": "High priority",
-    "supportingEvidence_one": "{{count}} supporting evidence",
     "supportingEvidence_other": "{{count}} supporting evidence",
     "evidenceLog": "Evidence log",
     "noEvidenceLogged": "No external evidence logged yet.",
     "attachEvidenceHint": "Attach news articles, ASF audits, or legal filings to corroborate this case.",
     "logNewEvidence": "Log new evidence",
     "sourceUrlPlaceholder": "Source URL (https://…)",
-    "articleTitlePlaceholder": "Article / document title",
-    "summaryPlaceholder": "Summary / relevance to this case",
-    "evidenceTypeNews": "News article",
-    "evidenceTypeASF": "ASF audit",
-    "evidenceTypeLegal": "Legal filing",
-    "evidenceTypeInvestigative": "Investigative report",
-    "credibilityLow": "Low credibility",
-    "credibilityMedium": "Medium credibility",
-    "credibilityHigh": "High credibility",
-    "submitBtn": "Submit",
-    "cancelBtn": "Cancel",
-    "reviewDecision": "Review decision",
-    "reviewInstructions": "Corroborate, refute, or mark inconclusive based on the evidence above.",
-    "corroborateBtn": "Corroborate",
-    "refuteBtn": "Refute",
-    "inconclusiveBtn": "Inconclusive",
-    "savingStatus": "Saving…",
-    "promotedToGT": "Promoted to ground truth.",
-    "reviewWorkflow": "Review workflow",
-    "changeCaseStatus": "Change case status",
-    "statusPending": "Pending",
-    "statusCorroborated": "Corroborated",
-    "statusRefuted": "Refuted",
-    "statusInconclusive": "Inconclusive",
-    "reviewNotesPlaceholder": "Review notes (optional)",
-    "reviewerNamePlaceholder": "Reviewer name",
-    "saveBtn": "Save",
-    "groundTruthLabel": "Ground truth",
-    "promoteConfirmTitle": "Promote to ground truth?",
-    "promoteConfirmBody": "This case will be added to the ground truth corpus and used for future risk model calibration. This action is recorded and auditable.",
-    "promoteBtn": "Promote",
-    "promotedSuccess": "Promoted successfully.",
     "notFoundLabel": "Investigation · Not Found",
     "notFoundTitle": "Case {{caseId}} not found",
     "notFoundBody": "This investigation may not exist or failed to load. Check the case ID and try again.",
     "allInvestigations": "← All investigations"
   },
-  "statusModal": {
-    "notesPlaceholder": "Optional notes...",
-    "reviewerPlaceholder": "Your name (optional)",
-    "save": "Save"
-  },
   "card": {
-    "priority": "PRIORITY {{n}}",
     "contracts": "contracts",
     "estLoss": "Value at Risk",
-    "atRisk": "At Risk",
-    "avgRisk": "Avg Risk",
-    "criticalPct": "Critical",
-    "topSignal": "Top Signal",
-    "viewContracts": "View Contracts",
-    "close": "Close"
+    "atRisk": "At Risk"
   },
-  "pageTitle": "Investigation",
-  "pageSubtitle": "Deep-dive vendor and contract analysis",
   "viewCards": "Card view",
   "viewTable": "Table view",
-  "caseCount_one": "{{count}} case",
   "caseCount_other": "{{count}} cases",
   "noInvestigationCasesFound": "No investigation cases found",
   "tryAdjustingFilters": "Try adjusting your filters",
   "noCasesYet": "No cases have been created yet",
-  "kpi": {
-    "openCases": "Open Cases",
-    "totalAtRisk": "Total At Risk",
-    "estLosses": "Value at Risk",
-    "sectorsAffected": "Sectors Affected"
-  },
-  "sidebar": {
-    "estTotalLoss": "Total Value at Risk",
-    "acrossCases": "across {{n}} cases",
-    "signalRadar": "Signal Radar",
-    "sectors": "Sectors",
-    "quickLinks": "Quick Links",
-    "spendingCategories": "Spending Categories",
-    "criticalContracts": "Critical Risk Contracts",
-    "caseLibrary": "Case Library"
-  },
   "signalTags": {
     "multiple_price_anomalies": "Price Anomaly",
     "high_single_bid_rate": "Single Bid",
@@ -303,66 +84,9 @@
     "value": "Value",
     "evidence": "Evidence"
   },
-  "intake": {
-    "title": "Start an Investigation",
-    "subtitle": "What do you want to investigate?",
-    "byInstitution": "By Institution",
-    "byVendor": "By Vendor",
-    "byPattern": "By Contract Pattern",
-    "byTimePeriod": "By Time Period",
-    "searchPlaceholder": "Search...",
-    "institutionPlaceholder": "Search institution name...",
-    "vendorPlaceholder": "Search vendor name or RFC...",
-    "go": "Search",
-    "patterns": {
-      "directAward": "Direct Award",
-      "singleBid": "Single Bid",
-      "decemberRush": "December Rush"
-    },
-    "yearFrom": "From year",
-    "yearTo": "To year",
-    "browseExisting": "Or browse existing cases"
-  },
-  "entryTiles": {
-    "bySector": "By Sector",
-    "bySectorSub": "Procurement risk across 12 sectors",
-    "byAdmin": "By Administration",
-    "byAdminSub": "Spending by regime, 2000-2024",
-    "networks": "Vendor Networks",
-    "networksSub": "Co-bidding and shell companies",
-    "capture": "Capture Patterns",
-    "captureSub": "Institutional control patterns"
-  },
-  "search": {
-    "placeholder": "Search by vendor, institution, sector, fraud type..."
-  },
-  "angles": {
-    "bySector": "By Sector",
-    "byAdmin": "By Administration",
-    "byNetwork": "By Network",
-    "byPattern": "By Pattern"
-  },
-  "entrySearch": "Search contracts, vendors, or cases...",
-  "headerTracking": "ARIA System · Active Investigations · ML-Generated",
-  "headerTitle": "The Archive",
-  "headerDesc": "Algorithmically generated investigations. Each case represents a statistical risk pattern that requires journalistic corroboration.",
-  "headerPipeline": "In progress: automated detection \u2192 investigation \u2192 corroboration \u2192 definitive archive",
   "filterHeader": "Investigation filters",
   "searchPlaceholder": "Search case, vendor, sector...",
   "tableHeader": "Investigation records",
-  "asfLookup": {
-    "button": "ASF Lookup",
-    "newsSearch": "News Search",
-    "title": "ASF Audit Matches",
-    "subtitle": "Findings from the Auditoría Superior de la Federación matching vendors in this case",
-    "noMatches": "No ASF findings found for vendors in this case.",
-    "findingType": "Finding Type",
-    "entity": "Entity",
-    "vendor": "Vendor",
-    "amount": "Amount",
-    "year": "Year",
-    "viewReport": "View Report →"
-  },
   "verify": {
     "heading": "How to verify this lead",
     "toggle": "▸ How to verify",
@@ -375,48 +99,5 @@
   },
   "riskScoreLabel": "Risk indicator",
   "riskScoreTooltip": "Risk score = statistical similarity to known corruption patterns. Not proof of wrongdoing.",
-  "loadingError": "Could not load information. Please try again later.",
-  "saving": "Saving...",
-  "vendorTableHeaders": {
-    "vendor": "Vendor",
-    "role": "Role",
-    "contracts": "Contracts",
-    "value": "Value",
-    "avgRisk": "Avg Risk"
-  },
-  "suspicionScore": "Risk Score",
-  "totalValue": "Total Value",
-  "credibility": {
-    "low": "Low credibility",
-    "medium": "Medium credibility",
-    "high": "High credibility"
-  },
-  "highPriority": "High Priority",
-  "methodology": {
-    "kicker": "How these cases are generated",
-    "body": "Each case represents a cluster of statistically anomalous contracts, detected by the PyOD ensemble (IForest + COPOD) and confirmed by v0.6.5 risk score > 0.60. \"Corroborated\" cases have been verified against external sources (ASF, SFP, investigative journalism). \"Pending\" cases are active leads without external verification yet."
-  },
-  "pipeline": {
-    "detected": "DETECTED",
-    "investigating": "INVESTIGATING",
-    "corroborated": "CORROBORATED",
-    "archived": "ARCHIVED"
-  },
-  "topLeads": {
-    "kicker": "RUBLI · Priority Cases",
-    "title": "Three leads worth your attention",
-    "whyItMatters": "Why it matters",
-    "criticalRisk": "Critical risk detected by model",
-    "contractsInPattern": "{{n}} contracts in anomalous pattern",
-    "singleVendor": "Single vendor — possible monopoly",
-    "linkedVendors": "{{n}} linked vendors",
-    "highDA": "High direct award rate",
-    "priceAnomalies": "Recurring price anomalies",
-    "corporateGroup": "Corporate group pattern",
-    "riskScore": "Risk score {{pct}}/100 — {{sector}} sector",
-    "badgeCritical": "CRITICAL",
-    "badgeHigh": "HIGH",
-    "badgeMedium": "MEDIUM",
-    "viewCase": "View case"
-  }
+  "loadingError": "Could not load information. Please try again later."
 }
