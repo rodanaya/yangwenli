@@ -1,15 +1,9 @@
 {
   "title": "Watchlist",
   "subtitle": "Vendors and institutions under monitoring",
-  "subtitleFull": "Track entities and monitor risk score changes over time",
   "addToWatchlist": "Add to watchlist",
-  "removeFromWatchlist": "Remove from watchlist",
   "columns": {
-    "name": "Name",
     "type": "Type",
-    "reason": "Reason",
-    "dateAdded": "Date Added",
-    "riskScore": "Risk Score",
     "contracts": "Contracts",
     "status": "Status",
     "entity": "Entity",
@@ -63,18 +57,9 @@
     "items": "items"
   },
   "empty": "Your watchlist is empty.",
-  "emptyDescription": "Add vendors or institutions to monitor their contracts and risks.",
-  "emptyAction": "Explore vendors",
-  "emptyWorkspace": "Your workspace is empty",
-  "emptyWorkspaceDescription": "Save vendors, institutions, or contracts to track their risk over time. Use the bookmark icon on any profile page to add an entity here.",
-  "browseVendors": "Browse vendors",
-  "browseInstitutions": "Browse institutions",
   "noItemsMatch": "No items match your filters",
   "noItemsMatchDescription": "Try adjusting or clearing the active filters to see more results.",
   "clearFilters": "Clear filters",
-  "notes": "Notes",
-  "addNote": "Add note",
-  "exportList": "Export list",
   "exportDossier": "Export Dossier",
   "refresh": "Refresh",
   "investigate": "Investigate",
@@ -90,12 +75,7 @@
   "loadingRiskFactors": "Loading risk factors…",
   "noRiskFactorData": "No risk factor data available for this vendor.",
   "dossierTab": {
-    "organize": "Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts.",
-    "newDossier": "New Dossier",
-    "searchVendors": "Search vendors",
-    "inDossier": "{{count}} item{{plural}} in dossier",
-    "focusVendor": "Focus vendor:",
-    "downloadReport": "Download Dossier Report"
+    "searchVendors": "Search vendors"
   },
   "dossierStatus": {
     "all": "All",
@@ -135,10 +115,5 @@
     "lede": "Organize your investigations into case folders. Each dossier holds vendors, institutions, and contracts — private to your account, exportable anytime.",
     "new": "New dossier"
   },
-  "tip": "Tip: open a vendor from the explorer or the ARIA queue, then use the eye icon to add them to your workspace.",
-  "sortBy": "Sort by",
-  "hideRiskFactors": "Hide risk factors",
-  "showRiskFactors": "Show risk factors",
-  "openInvestigation": "Open in Investigation Queue",
-  "removeTitle": "Remove from watchlist"
+  "tip": "Tip: open a vendor from the explorer or the ARIA queue, then use the eye icon to add them to your workspace."
 }

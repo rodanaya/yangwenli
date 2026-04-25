@@ -1,15 +1,9 @@
 {
   "title": "Lista de Vigilancia",
   "subtitle": "Proveedores e instituciones bajo monitoreo",
-  "subtitleFull": "Rastrea entidades y monitorea cambios en la puntuación de riesgo a lo largo del tiempo",
   "addToWatchlist": "Agregar a vigilancia",
-  "removeFromWatchlist": "Quitar de vigilancia",
   "columns": {
-    "name": "Nombre",
     "type": "Tipo",
-    "reason": "Razón",
-    "dateAdded": "Fecha Agregado",
-    "riskScore": "Puntuación de Riesgo",
     "contracts": "Contratos",
     "status": "Estado",
     "entity": "Entidad",
@@ -63,18 +57,9 @@
     "items": "elementos"
   },
   "empty": "La lista de vigilancia está vacía.",
-  "emptyDescription": "Agrega proveedores o instituciones para monitorear sus contratos y riesgos.",
-  "emptyAction": "Explorar proveedores",
-  "emptyWorkspace": "Tu espacio de trabajo está vacío",
-  "emptyWorkspaceDescription": "Guarda proveedores, instituciones o contratos para rastrear su riesgo a lo largo del tiempo. Usa el ícono de marcador en cualquier página de perfil para agregar una entidad aquí.",
-  "browseVendors": "Explorar proveedores",
-  "browseInstitutions": "Explorar instituciones",
   "noItemsMatch": "Ningún elemento coincide con tus filtros",
   "noItemsMatchDescription": "Intenta ajustar o limpiar los filtros activos para ver más resultados.",
   "clearFilters": "Limpiar filtros",
-  "notes": "Notas",
-  "addNote": "Agregar nota",
-  "exportList": "Exportar lista",
   "exportDossier": "Exportar Expediente",
   "refresh": "Actualizar",
   "investigate": "Investigar",
@@ -90,12 +75,7 @@
   "loadingRiskFactors": "Cargando factores de riesgo…",
   "noRiskFactorData": "No hay datos de factores de riesgo disponibles para este proveedor.",
   "dossierTab": {
-    "organize": "Organiza tus investigaciones en carpetas de caso. Cada expediente contiene proveedores, instituciones y contratos.",
-    "newDossier": "Nuevo Expediente",
-    "searchVendors": "Buscar proveedores",
-    "inDossier": "{{count}} elemento{{plural}} en expediente",
-    "focusVendor": "Proveedor central:",
-    "downloadReport": "Descargar Reporte del Expediente"
+    "searchVendors": "Buscar proveedores"
   },
   "dossierStatus": {
     "all": "Todos",
@@ -135,10 +115,5 @@
     "lede": "Organiza tus investigaciones en carpetas de caso. Cada dossier contiene proveedores, instituciones y contratos — privado para tu cuenta, exportable en cualquier momento.",
     "new": "Nuevo dossier"
   },
-  "tip": "Tip: abre un proveedor desde el explorador o la cola ARIA, y usa el ícono de ojo para agregarlo a tu espacio de trabajo.",
-  "sortBy": "Ordenar por",
-  "hideRiskFactors": "Ocultar factores de riesgo",
-  "showRiskFactors": "Mostrar factores de riesgo",
-  "openInvestigation": "Abrir en Cola de Investigación",
-  "removeTitle": "Quitar de vigilancia"
+  "tip": "Tip: abre un proveedor desde el explorador o la cola ARIA, y usa el ícono de ojo para agregarlo a tu espacio de trabajo."
 }
