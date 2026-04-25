@@ -18,6 +18,7 @@ import {
 } from '@/components/charts/editorial'
 import { staggerContainer, staggerItem, fadeIn } from '@/lib/animations'
 import { Skeleton } from '@/components/ui/skeleton'
+import { DotBar } from '@/components/ui/DotBar'
 import { EditorialPageShell } from '@/components/layout/EditorialPageShell'
 import { Act } from '@/components/layout/Act'
 import { HallazgoStat } from '@/components/ui/HallazgoStat'
@@ -182,26 +183,16 @@ function SectorDistributionFull({
                 {s.name}
               </span>
               <div className="flex-1 flex items-center gap-2">
-                <svg viewBox={`0 0 ${40 * 7} 20`} className="flex-1 h-5" preserveAspectRatio="none">
-                  {Array.from({ length: 40 }).map((_, i) => {
-                    const isFilled = i < Math.round((barPct / 100) * 40)
-                    return (
-                      <motion.circle
-                        key={i}
-                        cx={i * 7 + 3}
-                        cy={10}
-                        r={2.5}
-                        fill={isFilled ? s.color : '#2d2926'}
-                        stroke={isFilled ? 'none' : '#3d3734'}
-                        strokeWidth={0.5}
-                        fillOpacity={isFilled ? 0.85 : 1}
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ duration: 0.2, delay: 0.02 * i }}
-                      />
-                    )
-                  })}
-                </svg>
+                {/* Was: 40 motion.circle nodes per row × 12 rows = 480 animated SVG
+                    elements with hardcoded #2d2926/#3d3734 dark-mode dots. Replaced
+                    by canonical <DotBar/>: same 4-bar visual story, 22 dots, no
+                    per-dot animation, cream-mode tokens. */}
+                <DotBar
+                  value={barPct}
+                  max={100}
+                  color={s.color}
+                  className="flex-1 h-5"
+                />
                 <span className="text-[10px] font-mono text-text-primary/90 font-semibold w-16 text-right tabular-nums flex-shrink-0">
                   {formatCompactMXN(s.value)}
                 </span>
