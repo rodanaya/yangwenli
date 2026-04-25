@@ -1,10 +1,4 @@
 {
-  "title": "Explorar Datos",
-  "tabs": {
-    "vendors": "Proveedores",
-    "institutions": "Instituciones",
-    "trends": "Tendencias"
-  },
   "page": {
     "title": "Explorar Contratos",
     "subtitle": "Filtra cruzado entre 3.05M registros de contratación",
@@ -42,7 +36,6 @@
     }
   },
   "vendors": {
-    "title": "Proveedores",
     "searchPlaceholder": "Buscar por nombre o RFC...",
     "columns": {
       "name": "Nombre",
@@ -52,8 +45,6 @@
       "highRiskPct": "% Alto Riesgo",
       "directAwardPct": "% Adj. Directa",
       "singleBidPct": "% Licitación Única",
-      "sector": "Sector Principal",
-      "years": "Años Activo",
       "anomalyPct": "% Anomalías"
     },
     "presets": {
@@ -63,23 +54,11 @@
       "mostFlagged": "Más Sospechosos",
       "outliers": "Valores Atípicos",
       "bigPlayers": "Grandes Actores (1K+)"
-    },
-    "empty": "No se encontraron proveedores con los filtros seleccionados.",
-    "emptyAction": "Ajustar filtros"
+    }
   },
   "institutions": {
-    "title": "Instituciones",
     "searchPlaceholder": "Buscar por nombre o siglas...",
     "count": "{{n}} instituciones",
-    "columns": {
-      "name": "Nombre",
-      "type": "Tipo",
-      "contracts": "Contratos",
-      "totalValue": "Valor Total (MXN)",
-      "avgRisk": "Riesgo Promedio",
-      "vendorCount": "Proveedores",
-      "directAwardPct": "% Adj. Directa"
-    },
     "col": {
       "name": "Institución",
       "total_contracts": "Contratos",
@@ -135,27 +114,9 @@
       "medium": "Mediano",
       "small": "Pequeño",
       "micro": "Micro"
-    },
-    "empty": "No se encontraron instituciones con los filtros seleccionados.",
-    "emptyAction": "Ajustar filtros"
+    }
   },
   "trends": {
-    "title": "Tendencias Temporales",
-    "contractsOverTime": "Contratos por Año",
-    "valueOverTime": "Valor por Año",
-    "riskOverTime": "Riesgo Promedio por Año",
-    "directAwardTrend": "Tendencia de Adjudicación Directa",
-    "historicalTitle": "Tendencias Históricas",
-    "historicalDesc": "Volumen de contratos y riesgo promedio, 2002–2025",
-    "transparencyTitle": "Pulso de Transparencia en Contratación",
-    "transparencyDesc": "Indicadores de salud en capas — relleno más oscuro = menos transparencia",
-    "contracts": "contratos",
-    "avgRisk": "Riesgo prom.",
-    "vendors": "proveedores",
-    "da": "AD",
-    "sb": "LU",
-    "yoyPts": "pts AaA",
-    "administration": "Administración",
     "radarPresets": {
       "risk": "Perfil de Riesgo",
       "transparency": "Transparencia",
@@ -185,39 +146,10 @@
     "lowHint": "Baja similitud — monitoreo estándar"
   },
   "resultTable": {
-    "showingVendors": "Mostrando {{start}}–{{end}} de {{total}} proveedores · ordenados por puntuación de riesgo",
-    "showingInstitutions": "Mostrando {{start}}–{{end}} de {{total}} instituciones · ordenadas por puntuación de riesgo",
-    "showingVendorsSorted": "Mostrando {{start}}–{{end}} de {{total}} proveedores · ordenados por {{field}} {{dir}}",
-    "showingInstitutionsSorted": "Mostrando {{start}}–{{end}} de {{total}} instituciones · ordenadas por {{field}} {{dir}}",
-    "pageAvgRisk": "Riesgo prom. en página:",
-    "highPlusOnPage": "Alto+ en página:",
-    "aiConfirmed": "Confirmado por IA",
-    "aiConfirmedBadge": "confirmado por IA",
-    "vendor": "Proveedor",
-    "institution": "Institución",
     "contracts": "Contratos",
     "totalValue": "Valor Total",
     "risk": "Riesgo",
-    "daPercent": "% Adj.",
-    "anomaly": "Anomalía",
-    "addToDossier": "Agregar al expediente",
-    "noDossiers": "Sin expedientes",
-    "newDossier": "Nuevo expediente",
-    "failedToLoad": "Error al cargar resultados",
-    "retry": "Reintentar",
-    "noMatchFilters": "Ningún {{entityType}} coincide con los filtros actuales",
-    "broadenSearch": "Intenta ampliar la búsqueda:",
-    "removeSearchTerm": "Elimina el término de búsqueda — prueba con un nombre más corto o diferente",
-    "includeMoreRisk": "Incluye más niveles de riesgo (haz clic en Crítico / Alto en la barra superior)",
-    "changeSector": "Haz clic en otro sector del mapa o elimina el filtro de sector",
-    "widerYearRange": "Arrastra un rango de años más amplio en la gráfica de tiempo",
-    "noEntityFound": "No se encontraron {{entityType}}s",
-    "total": "total"
-  },
-  "dossier": {
-    "addToDossier": "Agregar al expediente",
-    "noDossiersYet": "Sin expedientes aún",
-    "whyTrack": "¿Por qué seguir a {{name}}?"
+    "daPercent": "% Adj."
   },
   "treemap": {
     "sectorsByValue": "Sectores por valor",
@@ -225,11 +157,8 @@
     "risk": "Riesgo"
   },
   "filters": {
-    "sector": "Sector",
     "allSectors": "Todos los sectores",
-    "riskLevel": "Nivel de Riesgo",
     "allRiskLevels": "Todos los niveles",
-    "allRisk": "Todos los niveles de riesgo",
     "allTypes": "Todos los tipos",
     "allSizes": "Todos los tamaños",
     "clearAll": "Limpiar todo",
@@ -238,20 +167,7 @@
     "hasRfc": "Con RFC",
     "noRfc": "Sin RFC",
     "rfcStatus": "Estado RFC",
-    "sortBy": "Ordenar por",
-    "sortOrder": "Orden",
-    "ascending": "Ascendente",
-    "descending": "Descendente",
-    "reset": "Limpiar filtros",
-    "apply": "Aplicar",
     "clearFilter": "Quitar filtro"
-  },
-  "search": {
-    "nameOrRfc": "Buscar nombre o RFC...",
-    "nameOrAcronym": "Buscar nombre o sigla...",
-    "searching": "Buscando…",
-    "noResultsFor": "Sin resultados para «{{query}}»",
-    "placeholder": "Buscar proveedores, RFC, instituciones…"
   },
   "stats": {
     "pageValue": "Gasto en página",
@@ -264,13 +180,8 @@
     "totalVendors": "Proveedores totales"
   },
   "empty": {
-    "noVendorsMatch": "Ningún proveedor coincide con los filtros",
-    "failedToLoadVendors": "Error al cargar proveedores",
-    "noFlashVendors": "Sin proveedores destacados con estos umbrales",
-    "failedToLoad": "Error al cargar resultados",
     "failedToLoadInstitutions": "Error al cargar instituciones",
-    "noInstitutionsMatch": "Ninguna institución coincide con los filtros",
-    "stillActive": "Activo"
+    "noInstitutionsMatch": "Ninguna institución coincide con los filtros"
   },
   "concentration": {
     "title": "Alertas de Concentración de Valor",

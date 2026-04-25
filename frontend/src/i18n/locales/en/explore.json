@@ -1,10 +1,4 @@
 {
-  "title": "Explore Data",
-  "tabs": {
-    "vendors": "Vendors",
-    "institutions": "Institutions",
-    "trends": "Trends"
-  },
   "page": {
     "title": "Explore Contracts",
     "subtitle": "Cross-filter 3.05M procurement records",
@@ -42,7 +36,6 @@
     }
   },
   "vendors": {
-    "title": "Vendors",
     "searchPlaceholder": "Search by name or RFC...",
     "columns": {
       "name": "Name",
@@ -52,8 +45,6 @@
       "highRiskPct": "% High Risk",
       "directAwardPct": "% Direct Award",
       "singleBidPct": "% Single Bid",
-      "sector": "Primary Sector",
-      "years": "Years Active",
       "anomalyPct": "Anomaly %"
     },
     "presets": {
@@ -63,23 +54,11 @@
       "mostFlagged": "Most Flagged",
       "outliers": "Statistical Outliers",
       "bigPlayers": "Big Players (1K+)"
-    },
-    "empty": "No vendors found matching your filters.",
-    "emptyAction": "Adjust filters"
+    }
   },
   "institutions": {
-    "title": "Institutions",
     "searchPlaceholder": "Search by name or acronym...",
     "count": "{{n}} institutions",
-    "columns": {
-      "name": "Name",
-      "type": "Type",
-      "contracts": "Contracts",
-      "totalValue": "Total Value (MXN)",
-      "avgRisk": "Avg Risk",
-      "vendorCount": "Vendors",
-      "directAwardPct": "% Direct Award"
-    },
     "col": {
       "name": "Institution",
       "total_contracts": "Contracts",
@@ -135,27 +114,9 @@
       "medium": "Medium",
       "small": "Small",
       "micro": "Micro"
-    },
-    "empty": "No institutions found matching your filters.",
-    "emptyAction": "Adjust filters"
+    }
   },
   "trends": {
-    "title": "Temporal Trends",
-    "contractsOverTime": "Contracts by Year",
-    "valueOverTime": "Value by Year",
-    "riskOverTime": "Average Risk by Year",
-    "directAwardTrend": "Direct Award Trend",
-    "historicalTitle": "Historical Trends",
-    "historicalDesc": "Contract volume and avg risk, 2002–2025",
-    "transparencyTitle": "Procurement Transparency Pulse",
-    "transparencyDesc": "Layered health metrics — darker fill = less transparent procurement",
-    "contracts": "contracts",
-    "avgRisk": "Avg risk",
-    "vendors": "vendors",
-    "da": "DA",
-    "sb": "SB",
-    "yoyPts": "pts YoY",
-    "administration": "Administration",
     "radarPresets": {
       "risk": "Risk Profile",
       "transparency": "Transparency",
@@ -185,39 +146,10 @@
     "lowHint": "Low similarity — standard monitoring"
   },
   "resultTable": {
-    "showingVendors": "Showing {{start}}–{{end}} of {{total}} vendors · sorted by risk score",
-    "showingInstitutions": "Showing {{start}}–{{end}} of {{total}} institutions · sorted by risk score",
-    "showingVendorsSorted": "Showing {{start}}–{{end}} of {{total}} vendors · sorted by {{field}} {{dir}}",
-    "showingInstitutionsSorted": "Showing {{start}}–{{end}} of {{total}} institutions · sorted by {{field}} {{dir}}",
-    "pageAvgRisk": "Page avg risk:",
-    "highPlusOnPage": "High+ on page:",
-    "aiConfirmed": "AI Confirmed",
-    "aiConfirmedBadge": "AI confirmed",
-    "vendor": "Vendor",
-    "institution": "Institution",
     "contracts": "Contracts",
     "totalValue": "Total Value",
     "risk": "Risk",
-    "daPercent": "DA %",
-    "anomaly": "Anomaly",
-    "addToDossier": "Add to dossier",
-    "noDossiers": "No dossiers yet",
-    "newDossier": "New dossier",
-    "failedToLoad": "Failed to load results",
-    "retry": "Retry",
-    "noMatchFilters": "No {{entityType}}s match your current filters",
-    "broadenSearch": "Try broadening your search:",
-    "removeSearchTerm": "Remove the search term — try a shorter or different name",
-    "includeMoreRisk": "Include more risk levels (click Critical / High in the strip above)",
-    "changeSector": "Click a different sector in the treemap, or clear the sector filter",
-    "widerYearRange": "Drag a wider year range in the time series chart",
-    "noEntityFound": "No {{entityType}}s found",
-    "total": "total"
-  },
-  "dossier": {
-    "addToDossier": "Add to dossier",
-    "noDossiersYet": "No dossiers yet",
-    "whyTrack": "Why track {{name}}?"
+    "daPercent": "DA %"
   },
   "treemap": {
     "sectorsByValue": "Sectors by value",
@@ -225,11 +157,8 @@
     "risk": "Risk"
   },
   "filters": {
-    "sector": "Sector",
     "allSectors": "All sectors",
-    "riskLevel": "Risk Level",
     "allRiskLevels": "All levels",
-    "allRisk": "All risk levels",
     "allTypes": "All types",
     "allSizes": "All sizes",
     "clearAll": "Clear all",
@@ -238,20 +167,7 @@
     "hasRfc": "Has RFC",
     "noRfc": "No RFC",
     "rfcStatus": "RFC status",
-    "sortBy": "Sort by",
-    "sortOrder": "Order",
-    "ascending": "Ascending",
-    "descending": "Descending",
-    "reset": "Clear filters",
-    "apply": "Apply",
     "clearFilter": "Clear filter"
-  },
-  "search": {
-    "nameOrRfc": "Search name or RFC...",
-    "nameOrAcronym": "Search name or acronym...",
-    "searching": "Searching…",
-    "noResultsFor": "No results for \u201c{{query}}\u201d",
-    "placeholder": "Search vendors, RFC, institutions…"
   },
   "stats": {
     "pageValue": "Page value",
@@ -264,13 +180,8 @@
     "totalVendors": "Total vendors"
   },
   "empty": {
-    "noVendorsMatch": "No vendors match your filters",
-    "failedToLoadVendors": "Failed to load vendors",
-    "noFlashVendors": "No flash vendors found with current thresholds",
-    "failedToLoad": "Failed to load results",
     "failedToLoadInstitutions": "Failed to load institutions",
-    "noInstitutionsMatch": "No institutions match your filters",
-    "stillActive": "Still active"
+    "noInstitutionsMatch": "No institutions match your filters"
   },
   "concentration": {
     "title": "Value Concentration Alerts",

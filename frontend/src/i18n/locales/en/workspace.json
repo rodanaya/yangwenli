@@ -1,32 +1,10 @@
 {
-  "workspace": {
-    "startInvestigation": "Start Your Investigation",
-    "startInvestigationDesc": "Create a dossier to organize vendors, institutions, and contracts under a single investigation.",
-    "step1": "Search for a vendor or institution",
-    "step2": "Add them to a dossier",
-    "step3": "Analyze their contracts and export findings",
-    "createFirstDossier": "Create First Dossier",
-    "activeDossier": "Active Investigation",
-    "dossierItems": "items",
-    "highestRisk": "Highest Risk",
-    "viewContracts": "View Contracts",
-    "analyzingVendor": "Analyzing vendor contracts"
-  },
   "guide": {
     "title": "Start Your Investigation",
     "description": "Use dossiers to organize your investigation. Add vendors, institutions, and contracts to build a complete picture of procurement patterns.",
-    "step1Title": "1. Search",
-    "step1Description": "Find vendors, institutions, or contracts of interest",
-    "step2Title": "2. Add to dossier",
-    "step2Description": "Save relevant entities to a named investigation folder",
-    "step3Title": "3. Analyze & export",
-    "step3Description": "Review patterns, risk scores, and export your findings",
     "createFirstDossier": "Create First Dossier",
     "searchVendorLink": "Or search for a vendor to start",
     "exampleInvestigations": "Example investigations",
-    "example1": "Track a contractor across multiple agencies over several years",
-    "example2": "Compare risk scores for contracts awarded before vs. after elections",
-    "example3": "Research single-bid award patterns in the health sector for a story",
     "howItWorks": "How it works",
     "howItWorksP1": "Dossiers are private investigation folders that live in your browser. Each dossier can hold any mix of vendors, institutions, and individual contracts.",
     "howItWorksP2": "Use the Add to Dossier button on any vendor or institution profile page to start gathering research material. Dossiers persist between sessions so you can return to an investigation later.",
@@ -35,65 +13,13 @@
     "addToDossierLabel": "Add to Dossier",
     "exportLabel": "Export"
   },
-  "annotations": {
-    "title": "My Annotations",
-    "description": "Private notes saved locally in your browser.",
-    "noNotes": "No notes yet.",
-    "notesSaved": "{{count}} note saved.",
-    "notesSavedPlural": "{{count}} notes saved.",
-    "refresh": "Refresh",
-    "refreshLabel": "Refresh annotations",
-    "empty": "No annotations yet. Click the sticky note icon on any contract or vendor to add a note.",
-    "browseContracts": "Browse Contracts",
-    "sectionContracts": "Contract annotations",
-    "sectionVendors": "Vendor annotations",
-    "contractsHeading": "Contracts ({{count}})",
-    "vendorsHeading": "Vendors ({{count}})",
-    "vendor": "Vendor",
-    "contract": "Contract",
-    "goTo": "Go to {{entityType}} {{id}}",
-    "deleteNote": "Delete note",
-    "deleteLabel": "Delete annotation for {{entityType}} {{id}}"
-  },
-  "export": {
-    "exportAs": "Export As",
-    "csvFormat": "CSV Spreadsheet",
-    "jsonFormat": "JSON Data",
-    "pngFormat": "Chart Image (PNG)",
-    "printFormat": "Print / PDF",
-    "downloadData": "Download Data",
-    "exportFiltered": "Export Filtered",
-    "exporting": "Exporting...",
-    "exportSuccess": "Export complete",
-    "selectFormat": "Select export format",
-    "includesNRecords": "Includes {{count}} records"
-  },
   "search": {
     "noResults": "No results for \"{{query}}\""
-  },
-  "annotationPin": {
-    "editTitle": "Edit Note",
-    "addTitle": "Add Note",
-    "editAria": "Edit annotation for {{name}}",
-    "addAria": "Add annotation for {{name}}",
-    "editHover": "Edit note",
-    "addHover": "Add note",
-    "placeholder": "Add your investigation notes here…",
-    "overLimit": "{{count}} over limit",
-    "charsLeft": "{{count}} chars left",
-    "delete": "Delete",
-    "cancel": "Cancel",
-    "save": "Save"
   },
   "folderSidebar": {
     "allItems": "All items",
     "namePlaceholder": "Folder name",
     "create": "Create",
     "newFolder": "New Folder"
-  },
-  "dossierCreate": {
-    "quickStart": "Quick Start",
-    "previewDefault": "New Dossier",
-    "noDescription": "No description"
   }
 }

@@ -1,101 +1,13 @@
 {
-  "trackingLabel": "TEMPORAL PULSE",
-  "title": "Temporal Pulse",
-  "subtitle": "Contracts in {{year}} — rhythms, spikes, and political cycles",
-  "heroDetail": "{{value}} total value · {{risk}} avg risk",
-  "yearLabel": "Year:",
-  "investigate": "Investigate →",
-  "investigateYear": "Investigate {{year}} →",
-  "anomalous": "anomalous",
-  "stats": {
-    "totalContracts": "TOTAL CONTRACTS",
-    "totalContractsDetail": "In {{year}}",
-    "totalValue": "TOTAL VALUE",
-    "totalValueDetail": "Contract spending",
-    "avgRiskScore": "AVG RISK SCORE",
-    "avgRiskScoreDetail": "Average risk indicator",
-    "decemberSpike": "DECEMBER SPIKE",
-    "decemberSpikeDetail": "Dec vs avg month"
-  },
-  "administrations": {
-    "Fox": "Fox",
-    "Calderon": "Calderon",
-    "Pena Nieto": "Pena Nieto",
-    "AMLO": "AMLO",
-    "Sheinbaum": "Sheinbaum"
-  },
-  "monthlyRhythm": {
-    "title": "Monthly Procurement Rhythm ({{year}})",
-    "description": "Contract volume by month with risk overlay. December bars highlighted when they exceed the annual average. Click any bar to investigate contracts from that period — December bars show year-end contracts specifically."
-  },
-  "decemberAnalysis": {
-    "title": "December Spike Analysis (2018-2024)",
-    "description": "December contract counts vs average of other months. Years where December exceeds 1.5x are highlighted. Budget-clearing behavior drives predictable year-end surges."
-  },
-  "yoyTrend": {
-    "title": "Year-over-Year Contract Volume",
-    "description": "Annual contract volume and high-risk rate trends (2002–2025). Click any bar to investigate contracts from that year."
-  },
-  "q4Breakdown": {
-    "title": "Q4 vs Q1-Q3 Spend (by Year)",
-    "description": "Q4 spending vs average Q1-Q3 monthly spend per year. A ratio > 3× indicates systematic end-of-year budget dumps.",
-    "q4Label": "Q4 Total",
-    "q1q3Label": "Q1-Q3 Monthly Avg",
-    "ratio": "Q4 Ratio"
-  },
-  "sectorDecember": {
-    "title": "December Rush by Sector",
-    "description": "Percentage of each sector's annual contracts awarded in December. Sectors above 15% show systematic year-end budget pressure.",
-    "pctDecember": "% of Annual Contracts in December"
-  },
-  "tooltip": {
-    "contracts": "Contracts",
-    "value": "Value",
-    "avgRisk": "Avg Risk",
-    "directAwards": "Direct Awards",
-    "singleBids": "Single Bids",
-    "yearEndPeriod": "Year-end period",
-    "clickToInvestigate": "Click to investigate",
-    "december": "December",
-    "avgOther": "Avg Other",
-    "ratio": "Ratio",
-    "spikeDetected": "spike detected"
-  },
-  "legend": {
-    "contracts": "Contracts",
-    "avgRiskPct": "Avg Risk %",
-    "december": "December",
-    "avgOtherMonths": "Avg Other Months"
-  },
-  "keyEvents": {
-    "financialCrisis": "Financial Crisis",
-    "newPriGovt": "New PRI Govt",
-    "amloTakesOffice": "AMLO Takes Office",
-    "covid19": "COVID-19",
-    "sheinbaum": "Sheinbaum"
-  },
-  "empty": {
-    "noDataForYear": "No data available for {{year}}",
-    "noMultiYearData": "No multi-year data available",
-    "noYoyData": "No year-over-year data available"
-  },
-  "loading": "Loading...",
   "seasonality": {
-    "title": "The December Effect",
-    "subtitle": "Risk spikes 64% every December — the year-end budget dump",
     "toggle_risk": "Avg Risk",
     "toggle_amount": "Avg Amount",
     "callout": "Year-end fiscal pressure pushes larger, less competitive contracts through rushed approval chains every December — a pattern that repeats without exception across all 23 years of data.",
-    "tooltip_avgRisk": "Avg Risk",
-    "tooltip_avgAmount": "Avg Amount",
-    "tooltip_contracts": "Contracts",
-    "center_risk": "+{{pct}}% risk",
     "center_vsAvg": "vs Oct avg",
     "legend_dec": "Dec",
     "legend_adjMonths": "Nov / Jan",
     "legend_other": "Other",
-    "annotation_label": "Year-End Budget Dump",
-    "annotation_perContract": "Avg MX${{amount}}M per contract"
+    "annotation_label": "Year-End Budget Dump"
   },
   "months": {
     "Jan": "Jan",

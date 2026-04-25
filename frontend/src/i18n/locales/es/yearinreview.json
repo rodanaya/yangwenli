@@ -1,17 +1,10 @@
 {
-  "title": "Año en Revisión",
-  "subtitle": "Resumen anual de contrataciones — contratos, gasto y patrones de riesgo",
-  "edition": "Edición Anual",
-  "annualReport": "Informe Anual",
   "yearSelector": "Seleccionar año",
-  "loading": "Cargando datos del año…",
   "noData": "Sin datos disponibles para este año",
   "contracts": "contratos",
-  "risk": "riesgo",
   "riskLabel": "Riesgo",
   "allYears": "Todos los años",
   "goToYear": "Ver {{year}} en revisión",
-  "heroSubtitle": "{{contracts}} contratos · {{spending}} en gasto federal · {{riskPct}}% de alto riesgo",
   "sexenioYear": "Año {{current}}/{{total}}",
   "heroStats": {
     "totalContracts": "Total de Contratos",
@@ -30,103 +23,15 @@
     "label": "Momento Más Destacado",
     "topVendorLabel": "Proveedor con mayor gasto en {{year}}"
   },
-  "topVendors": {
-    "sectionLabel": "Los 5 Mayores Proveedores",
-    "headline": "Quiénes recibieron más dinero en {{year}}",
-    "title": "Top 10 Proveedores por Valor",
-    "subtitle": "Proveedores con mayor valor contratado en el año seleccionado",
-    "rank": "Posición",
-    "vendor": "Proveedor",
-    "value": "Valor Total",
-    "limitedCoverage": "La cobertura de RFCs es limitada en años anteriores — solo {{count}} proveedores identificados."
-  },
-  "topRiskVendors": {
-    "sectionLabel": "Proveedores de Mayor Riesgo",
-    "headline": "Banderas rojas de {{year}}",
-    "title": "Proveedores de Mayor Riesgo",
-    "subtitle": "Proveedores con mayor puntuación de riesgo promedio ese año (mínimo 5 contratos)"
-  },
-  "sectorBreakdown": {
-    "sectionLabel": "Distribución Sectorial",
-    "headline": "Cómo se repartió el gasto en {{year}}"
-  },
-  "sectorGrowth": {
-    "title": "Crecimiento por Sector",
-    "headline": "Qué sectores crecieron y cuáles se contrajeron",
-    "subtitle": "Cambio interanual en valor de contratos por sector",
-    "noComparison": "No hay datos del año anterior para comparar",
-    "growth": "Crecimiento"
-  },
   "yoyDeltas": {
     "directAward": "Adjudicación Directa",
     "avgRisk": "Riesgo Promedio"
   },
   "findings": {
-    "sectionLabel": "Hallazgos del Año",
-    "headline": "Anomalías estadísticas detectadas en {{year}}",
-    "highRiskAboveOECD": "Tasa de alto riesgo del {{pct}}% — por encima del umbral OCDE del 15%",
-    "highDirectAward": "{{pct}}% de contratos por adjudicación directa — concentración de poder discrecional",
-    "highSingleBid": "{{pct}}% de procedimientos competitivos con un solo licitante",
-    "spendingSpike": "Incremento del {{pct}}% en gasto respecto al año anterior",
-    "spendingDrop": "Caída del {{pct}}% en gasto respecto al año anterior"
+    "highDirectAward": "{{pct}}% de contratos por adjudicación directa — concentración de poder discrecional"
   },
   "administrationBanner": {
-    "title": "Administración Presidencial",
-    "Fox": "Vicente Fox (PAN) · 2000–2006",
-    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
-    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
-    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
-    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–presente"
-  },
-  "topInstitutions": {
-    "title": "Top 10 Instituciones por Gasto",
-    "subtitle": "Instituciones con mayor gasto en el año seleccionado",
-    "rank": "Posición",
-    "institution": "Institución",
-    "value": "Gasto Total"
-  },
-  "riskBreakdown": {
-    "title": "Distribución de Nivel de Riesgo",
-    "subtitle": "Distribución de contratos por nivel de riesgo en el año seleccionado",
-    "critical": "Crítico",
-    "high": "Alto",
-    "medium": "Medio",
-    "low": "Bajo",
-    "noData": "Sin datos de riesgo disponibles para este año"
-  },
-  "vsLastYear": "vs año anterior",
-  "topStory": {
-    "label": "TITULAR PRINCIPAL",
-    "severity": {
-      "critical": "CRÍTICO",
-      "high": "ALERTA ALTA",
-      "normal": "HALLAZGO CLAVE"
-    }
-  },
-  "yoy": {
-    "label": "AÑO SOBRE AÑO",
-    "subtitle": "Cambio respecto al año anterior",
-    "firstYear": "Primer año en el conjunto de datos — no hay comparación con año anterior",
-    "contracts": "Contratos",
-    "totalValue": "Valor Total",
-    "avgRisk": "Puntaje de Riesgo Prom.",
-    "directAward": "Tasa de Adjudicación Directa",
-    "improved": "mejoró",
-    "worsened": "empeoró",
-    "noChange": "sin cambio"
-  },
-  "riskDist": {
-    "label": "DISTRIBUCIÓN DE RIESGO",
-    "critical": "Crítico",
-    "high": "Alto",
-    "medium": "Medio",
-    "low": "Bajo",
-    "yearEndLabel": "Concentración en fin de año",
-    "yearEndNote": "Históricamente, la contratación del gobierno mexicano aumenta en el cuarto trimestre cuando las dependencias apresuran el gasto del presupuesto anual."
-  },
-  "editorial": {
-    "kicker": "RUBLI · Informe Anual de Riesgo en Contratación Pública",
-    "body": "Cada año cuenta su propia historia de gasto público. Aquí encontrarás el perfil completo: quiénes ganaron, cuánto costó, qué patrones de riesgo dominaron, y cómo se compara con el promedio histórico 2002-2025."
+    "title": "Administración Presidencial"
   },
   "sectorAll": {
     "sectionLabel": "Panorama Sectorial Completo",
@@ -148,10 +53,7 @@
     "historicalAvg": "Promedio 2002-2025",
     "oecdTarget": "Umbral OCDE (15%)",
     "aboveOECD": "Por encima del umbral OCDE",
-    "belowOECD": "Dentro del rango OCDE",
-    "verdictWorse": "{{pct}} pp por encima del promedio histórico — año más riesgoso",
-    "verdictBetter": "{{pct}} pp por debajo del promedio histórico — año más limpio",
-    "verdictEqual": "Alineado con el promedio histórico"
+    "belowOECD": "Dentro del rango OCDE"
   },
   "procedureType": {
     "sectionLabel": "Tipo de Procedimiento",
@@ -178,12 +80,9 @@
     "sectionLabel": "Contratos Notables por Riesgo",
     "headline": "Los 10 contratos de mayor riesgo en {{year}}",
     "subtitle": "Contratos con los puntajes de riesgo más altos según el modelo v0.6.5. No son prueba de irregularidad — son prioridades de investigación.",
-    "viewContract": "Ver contrato",
     "noRiskContracts": "No se encontraron contratos de alto riesgo para este año.",
     "vendor": "Proveedor",
-    "institution": "Institución",
-    "amount": "Monto",
-    "score": "Riesgo"
+    "institution": "Institución"
   },
   "monthly": {
     "sectionLabel": "Gasto Mes por Mes",
@@ -193,15 +92,6 @@
     "decemberSpikeNote": "{{pct}}% del gasto anual se concentró en diciembre — {{label}}",
     "abnormal": "anómalo",
     "elevated": "elevado",
-    "normal": "normal",
-    "monthLabel": "Mes",
-    "valueLabel": "Gasto",
-    "contractsLabel": "Contratos"
-  },
-  "sectionDivider": {
-    "overview": "Panorama",
-    "patterns": "Patrones",
-    "actors": "Actores",
-    "deep": "Análisis Profundo"
+    "normal": "normal"
   }
 }

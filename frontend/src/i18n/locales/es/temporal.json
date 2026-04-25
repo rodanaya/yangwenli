@@ -1,101 +1,13 @@
 {
-  "trackingLabel": "PULSO TEMPORAL",
-  "title": "Pulso Temporal",
-  "subtitle": "Contratos en {{year}} — ritmos, picos y ciclos políticos",
-  "heroDetail": "{{value}} valor total · {{risk}} riesgo promedio",
-  "yearLabel": "Año:",
-  "investigate": "Investigar →",
-  "investigateYear": "Investigar {{year}} →",
-  "anomalous": "anómalo",
-  "stats": {
-    "totalContracts": "TOTAL DE CONTRATOS",
-    "totalContractsDetail": "En {{year}}",
-    "totalValue": "VALOR TOTAL",
-    "totalValueDetail": "Gasto en contratos",
-    "avgRiskScore": "RIESGO PROMEDIO",
-    "avgRiskScoreDetail": "Indicador promedio de riesgo",
-    "decemberSpike": "PICO DE DICIEMBRE",
-    "decemberSpikeDetail": "Dic vs mes promedio"
-  },
-  "administrations": {
-    "Fox": "Fox",
-    "Calderon": "Calderón",
-    "Pena Nieto": "Peña Nieto",
-    "AMLO": "AMLO",
-    "Sheinbaum": "Sheinbaum"
-  },
-  "monthlyRhythm": {
-    "title": "Ritmo Mensual de Contratación ({{year}})",
-    "description": "Volumen de contratos por mes con superposición de riesgo. Las barras de diciembre se resaltan cuando superan el promedio anual. Haga clic en cualquier barra para investigar contratos de ese período."
-  },
-  "decemberAnalysis": {
-    "title": "Análisis de Pico de Diciembre (2018-2024)",
-    "description": "Recuento de contratos de diciembre vs promedio de otros meses. Se resaltan los años donde diciembre supera 1.5x. El comportamiento de liquidación presupuestal genera picos predecibles a fin de año."
-  },
-  "yoyTrend": {
-    "title": "Volumen de Contratos Año a Año",
-    "description": "Tendencias de volumen anual de contratos y tasa de alto riesgo (2002–2025). Haz clic en cualquier barra para investigar contratos de ese año."
-  },
-  "q4Breakdown": {
-    "title": "Gasto T4 vs T1-T3 (por Año)",
-    "description": "Gasto del T4 vs promedio mensual T1-T3 por año. Una razón > 3× indica vertederos sistemáticos de presupuesto de fin de año.",
-    "q4Label": "Total T4",
-    "q1q3Label": "Prom. Mensual T1-T3",
-    "ratio": "Razón T4"
-  },
-  "sectorDecember": {
-    "title": "Avalancha de Diciembre por Sector",
-    "description": "Porcentaje de contratos anuales de cada sector adjudicados en diciembre. Sectores por encima del 15% muestran presión sistemática de fin de año.",
-    "pctDecember": "% de Contratos Anuales en Diciembre"
-  },
-  "tooltip": {
-    "contracts": "Contratos",
-    "value": "Valor",
-    "avgRisk": "Riesgo Prom.",
-    "directAwards": "Adj. Directas",
-    "singleBids": "Licitaciones Únicas",
-    "yearEndPeriod": "Período de fin de año",
-    "clickToInvestigate": "Clic para investigar",
-    "december": "Diciembre",
-    "avgOther": "Prom. Otros",
-    "ratio": "Razón",
-    "spikeDetected": "pico detectado"
-  },
-  "legend": {
-    "contracts": "Contratos",
-    "avgRiskPct": "Riesgo Prom. %",
-    "december": "Diciembre",
-    "avgOtherMonths": "Prom. Otros Meses"
-  },
-  "keyEvents": {
-    "financialCrisis": "Crisis Financiera",
-    "newPriGovt": "Nuevo Gobierno PRI",
-    "amloTakesOffice": "AMLO Toma el Poder",
-    "covid19": "COVID-19",
-    "sheinbaum": "Sheinbaum"
-  },
-  "empty": {
-    "noDataForYear": "Sin datos disponibles para {{year}}",
-    "noMultiYearData": "Sin datos multianuales disponibles",
-    "noYoyData": "Sin datos año a año disponibles"
-  },
-  "loading": "Cargando...",
   "seasonality": {
-    "title": "El Efecto Diciembre",
-    "subtitle": "El riesgo se dispara 64% cada diciembre — el vaciado presupuestal de fin de año",
     "toggle_risk": "Riesgo Prom.",
     "toggle_amount": "Monto Prom.",
     "callout": "La presión fiscal de fin de año impulsa contratos más grandes y menos competitivos a través de cadenas de aprobación apresuradas cada diciembre — un patrón que se repite sin excepción en los 23 años de datos.",
-    "tooltip_avgRisk": "Riesgo Prom.",
-    "tooltip_avgAmount": "Monto Prom.",
-    "tooltip_contracts": "Contratos",
-    "center_risk": "+{{pct}}% riesgo",
     "center_vsAvg": "vs prom. Oct",
     "legend_dec": "Dic",
     "legend_adjMonths": "Nov / Ene",
     "legend_other": "Otros",
-    "annotation_label": "Vaciado Presupuestal",
-    "annotation_perContract": "Prom. MX${{amount}}M por contrato"
+    "annotation_label": "Vaciado Presupuestal"
   },
   "months": {
     "Jan": "Ene",

@@ -1,17 +1,10 @@
 {
-  "title": "Year in Review",
-  "subtitle": "Annual procurement summary — contracts, spending, and risk patterns",
-  "edition": "Annual Edition",
-  "annualReport": "Annual Report",
   "yearSelector": "Select Year",
-  "loading": "Loading year data…",
   "noData": "No data available for this year",
   "contracts": "contracts",
-  "risk": "risk",
   "riskLabel": "Risk",
   "allYears": "All Years",
   "goToYear": "View {{year}} in review",
-  "heroSubtitle": "{{contracts}} contracts · {{spending}} in federal spending · {{riskPct}}% high-risk",
   "sexenioYear": "Year {{current}}/{{total}}",
   "heroStats": {
     "totalContracts": "Total Contracts",
@@ -30,103 +23,15 @@
     "label": "Spotlight",
     "topVendorLabel": "Top vendor by value in {{year}}"
   },
-  "topVendors": {
-    "sectionLabel": "Top 5 Vendors",
-    "headline": "Who received the most money in {{year}}",
-    "title": "Top 10 Vendors by Value",
-    "subtitle": "Highest-value vendors in selected year",
-    "rank": "Rank",
-    "vendor": "Vendor",
-    "value": "Total Value",
-    "limitedCoverage": "Vendor ID coverage is limited for this period — only {{count}} providers identified."
-  },
-  "topRiskVendors": {
-    "sectionLabel": "Highest-Risk Vendors",
-    "headline": "Red flags from {{year}}",
-    "title": "Top Risk Vendors",
-    "subtitle": "Vendors with highest average risk score that year (min 5 contracts)"
-  },
-  "sectorBreakdown": {
-    "sectionLabel": "Sector Distribution",
-    "headline": "How spending was distributed in {{year}}"
-  },
-  "sectorGrowth": {
-    "title": "Sector Growth Ranking",
-    "headline": "Which sectors grew and which contracted",
-    "subtitle": "Year-over-year change in contract value by sector",
-    "noComparison": "No prior-year data available for comparison",
-    "growth": "Growth"
-  },
   "yoyDeltas": {
     "directAward": "Direct Award",
     "avgRisk": "Avg. Risk"
   },
   "findings": {
-    "sectionLabel": "Key Findings",
-    "headline": "Statistical anomalies detected in {{year}}",
-    "highRiskAboveOECD": "High-risk rate of {{pct}}% — above the OECD 15% threshold",
-    "highDirectAward": "{{pct}}% of contracts awarded directly — concentration of discretionary power",
-    "highSingleBid": "{{pct}}% of competitive procedures received only a single bid",
-    "spendingSpike": "Spending increased {{pct}}% compared to the prior year",
-    "spendingDrop": "Spending dropped {{pct}}% compared to the prior year"
+    "highDirectAward": "{{pct}}% of contracts awarded directly — concentration of discretionary power"
   },
   "administrationBanner": {
-    "title": "Presidential Administration",
-    "Fox": "Vicente Fox (PAN) · 2000–2006",
-    "Calderon": "Felipe Calderón (PAN) · 2006–2012",
-    "PenaNieto": "Enrique Peña Nieto (PRI) · 2012–2018",
-    "AMLO": "Andrés Manuel López Obrador (MORENA) · 2018–2024",
-    "Sheinbaum": "Claudia Sheinbaum (MORENA) · 2024–present"
-  },
-  "topInstitutions": {
-    "title": "Top 10 Institutions by Spend",
-    "subtitle": "Highest-spending institutions in selected year",
-    "rank": "Rank",
-    "institution": "Institution",
-    "value": "Total Spend"
-  },
-  "riskBreakdown": {
-    "title": "Risk Level Breakdown",
-    "subtitle": "Distribution of contracts by risk level for selected year",
-    "critical": "Critical",
-    "high": "High",
-    "medium": "Medium",
-    "low": "Low",
-    "noData": "No risk data available for this year"
-  },
-  "vsLastYear": "vs prior year",
-  "topStory": {
-    "label": "TOP STORY",
-    "severity": {
-      "critical": "CRITICAL",
-      "high": "HIGH ALERT",
-      "normal": "KEY FINDING"
-    }
-  },
-  "yoy": {
-    "label": "YEAR OVER YEAR",
-    "subtitle": "Change from prior year",
-    "firstYear": "First year in dataset — no prior year comparison available",
-    "contracts": "Contracts",
-    "totalValue": "Total Value",
-    "avgRisk": "Avg Risk Score",
-    "directAward": "Direct Award Rate",
-    "improved": "improved",
-    "worsened": "worsened",
-    "noChange": "unchanged"
-  },
-  "riskDist": {
-    "label": "RISK DISTRIBUTION",
-    "critical": "Critical",
-    "high": "High",
-    "medium": "Medium",
-    "low": "Low",
-    "yearEndLabel": "Year-end concentration",
-    "yearEndNote": "Historically, Mexican government procurement spikes in Q4 as agencies rush to exhaust annual budgets."
-  },
-  "editorial": {
-    "kicker": "RUBLI · Annual Public Procurement Risk Report",
-    "body": "Every year tells its own story of public spending. Here you will find the complete profile: who won, what it cost, which risk patterns dominated, and how it compares to the 2002-2025 historical average."
+    "title": "Presidential Administration"
   },
   "sectorAll": {
     "sectionLabel": "Full Sector Landscape",
@@ -148,10 +53,7 @@
     "historicalAvg": "2002-2025 average",
     "oecdTarget": "OECD threshold (15%)",
     "aboveOECD": "Above OECD threshold",
-    "belowOECD": "Within OECD range",
-    "verdictWorse": "{{pct}} pp above historical average — a riskier year",
-    "verdictBetter": "{{pct}} pp below historical average — a cleaner year",
-    "verdictEqual": "In line with historical average"
+    "belowOECD": "Within OECD range"
   },
   "procedureType": {
     "sectionLabel": "Procedure Type",
@@ -178,12 +80,9 @@
     "sectionLabel": "Notable Risk Contracts",
     "headline": "The 10 highest-risk contracts in {{year}}",
     "subtitle": "Contracts with the highest risk scores under model v0.6.5. Not proof of wrongdoing — these are investigation priorities.",
-    "viewContract": "View contract",
     "noRiskContracts": "No high-risk contracts found for this year.",
     "vendor": "Vendor",
-    "institution": "Institution",
-    "amount": "Amount",
-    "score": "Risk"
+    "institution": "Institution"
   },
   "monthly": {
     "sectionLabel": "Month-by-Month Spending",
@@ -193,15 +92,6 @@
     "decemberSpikeNote": "{{pct}}% of annual spending concentrated in December — {{label}}",
     "abnormal": "anomalous",
     "elevated": "elevated",
-    "normal": "normal",
-    "monthLabel": "Month",
-    "valueLabel": "Spending",
-    "contractsLabel": "Contracts"
-  },
-  "sectionDivider": {
-    "overview": "Overview",
-    "patterns": "Patterns",
-    "actors": "Actors",
-    "deep": "Deep Dive"
+    "normal": "normal"
   }
 }
