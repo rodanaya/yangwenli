@@ -1092,7 +1092,7 @@ export function InstitutionProfile() {
                                 {/* This institution marker */}
                                 <circle cx={markerIdx * DG + DR} cy={5} r={DR + 1.2}
                                   fill={markerColor}
-                                  stroke="#000"
+                                  stroke="var(--color-text-primary)"
                                   strokeWidth={0.5}
                                 />
                               </svg>
@@ -1842,7 +1842,7 @@ function VendorRankedList({ vendors, totalValue }: { vendors: InstitutionVendorI
                   <svg viewBox={`0 0 ${N * DG} 5`} className="w-full" style={{ height: 5 }} preserveAspectRatio="none" aria-hidden="true">
                     {Array.from({ length: N }).map((_, k) => (
                       <circle key={k} cx={k * DG + DR} cy={2.5} r={DR}
-                        fill={k < filled ? '#22d3ee' : 'var(--color-background-elevated)'}
+                        fill={k < filled ? 'var(--color-oecd)' : 'var(--color-background-elevated)'}
                         stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                         strokeWidth={k < filled ? 0 : 0.5}
                         fillOpacity={k < filled ? 0.7 : 1}
