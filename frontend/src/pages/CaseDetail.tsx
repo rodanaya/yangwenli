@@ -7,6 +7,7 @@ import { AddToDossierButton } from '@/components/AddToDossierButton'
 import { InstitutionBadge } from '@/components/InstitutionBadge'
 import { ArrowLeft, ExternalLink, ArrowUpRight } from 'lucide-react'
 import { RISK_COLORS, getRiskLevelFromScore, SECTORS } from '@/lib/constants'
+import { DotBar } from '@/components/ui/DotBar'
 import type { FraudType, LinkedVendor, ScandalDetail } from '@/api/types'
 import { slideUp } from '@/lib/animations'
 
@@ -28,49 +29,12 @@ const AMBER = 'var(--color-risk-high)'
 const EMERALD = 'var(--color-accent)'  // bible: no green; use amber gold for positive signal
 const CYAN = 'var(--color-oecd)'
 
-const DOT_EMPTY_FILL = '#2d2926'
-const DOT_EMPTY_STROKE = '#3d3734'
-
-// ─────────────────────────────────────────────────────────────────────────────
-// DotBar — PRESERVED exactly as in original (empty dots use #2d2926)
-// ─────────────────────────────────────────────────────────────────────────────
-function DotBar({
-  value,
-  max = 1,
-  color = CRIMSON_HI,
-  dots = 20,
-  size = 7,
-  gap = 3,
-}: {
-  value: number
-  max?: number
-  color?: string
-  dots?: number
-  size?: number
-  gap?: number
-}) {
-  const filled = Math.max(0, Math.min(dots, Math.round((value / max) * dots)))
-  return (
-    <svg
-      width={dots * (size + gap) - gap}
-      height={size}
-      style={{ display: 'block' }}
-      aria-hidden
-    >
-      {Array.from({ length: dots }, (_, i) => (
-        <circle
-          key={i}
-          cx={i * (size + gap) + size / 2}
-          cy={size / 2}
-          r={size / 2}
-          fill={i < filled ? color : DOT_EMPTY_FILL}
-          stroke={i < filled ? undefined : DOT_EMPTY_STROKE}
-          strokeWidth={i < filled ? 0 : 0.5}
-        />
-      ))}
-    </svg>
-  )
-}
+// Local DotBar replaced by the canonical primitive from @/components/ui/DotBar.
+// See marathon Batch B critique — page-local empty-dot fill `#2d2926` was
+// dark-mode residue on the cream base. Cream-mode tokens for the empty-dot
+// states still used by the timeline + risk grid below:
+const DOT_EMPTY_FILL = 'var(--color-background-elevated)'
+const DOT_EMPTY_STROKE = 'var(--color-border-hover)'
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Fraud-type accent colors
@@ -398,7 +362,7 @@ function YearRangeBar({
               x2={x}
               y1={baselineY}
               y2={baselineY + (isMajor ? tickH : tickH / 2)}
-              stroke={isMajor ? DOT_EMPTY_STROKE : '#242020'}
+              stroke={isMajor ? DOT_EMPTY_STROKE : 'var(--color-border)'}
               strokeWidth={1}
             />
           )
@@ -1287,7 +1251,7 @@ function CaseBody({
                       {/* DotBar risk viz */}
                       {score != null && (
                         <div style={{ maxWidth: 340 }}>
-                          <DotBar value={score} max={1} color={scoreColor} dots={20} size={6} gap={3} />
+                          <DotBar value={score} max={1} color={scoreColor} />
                         </div>
                       )}
 

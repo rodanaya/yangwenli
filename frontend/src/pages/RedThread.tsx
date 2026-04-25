@@ -185,7 +185,7 @@ function ChapterSubject({ vendor, aria, t }: {
           {t('subject.riskBadge', { level: riskLevel })}
         </span>
         {aria && (
-          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-red-950 text-red-300 border border-red-800">
+          <span className="px-3 py-1 rounded-full text-xs font-semibold uppercase tracking-widest bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30">
             {t('subject.ariaTier', { tier: aria.ips_tier })}
           </span>
         )}
@@ -439,8 +439,8 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
                     <svg viewBox={`0 0 ${N * DG} 4`} className="w-full" style={{ height: 3 }} preserveAspectRatio="none" aria-hidden="true">
                       {Array.from({ length: N }).map((_, k) => (
                         <circle key={k} cx={k * DG + DR} cy={2} r={DR}
-                          fill={k < filled ? color : '#2d2926'}
-                          stroke={k < filled ? undefined : '#3d3734'}
+                          fill={k < filled ? color : 'var(--color-background-elevated)'}
+                          stroke={k < filled ? undefined : 'var(--color-border-hover)'}
                           strokeWidth={k < filled ? 0 : 0.5}
                           fillOpacity={k < filled ? 0.45 : 0.3}
                         />
@@ -597,7 +597,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
         to={`/network?vendor=${vendorId}`}
         className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all mb-6"
       >
-        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-red-950 flex items-center justify-center transition-colors flex-shrink-0">
+        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-[color:var(--color-risk-critical)]/10 flex items-center justify-center transition-colors flex-shrink-0">
           <GitBranch className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
@@ -614,7 +614,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
         to={`/vendors/${vendorId}?tab=network`}
         className="group flex items-center gap-4 bg-background hover:bg-background-elevated border border-border hover:border-border rounded-sm p-6 transition-all"
       >
-        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-red-950 flex items-center justify-center transition-colors flex-shrink-0">
+        <div className="w-12 h-12 rounded-full bg-background-elevated group-hover:bg-[color:var(--color-risk-critical)]/10 flex items-center justify-center transition-colors flex-shrink-0">
           <Building2 className="w-5 h-5 text-text-muted group-hover:text-[#dc2626] transition-colors" />
         </div>
         <div className="flex-1">
@@ -758,7 +758,7 @@ function RiskHistoryDotMatrix({
               x2={chartW - 4}
               y1={y}
               y2={y}
-              stroke="#3d3734"
+              stroke="var(--color-border-hover)"
               strokeDasharray="3 3"
               strokeWidth={0.5}
             />
@@ -792,8 +792,8 @@ function RiskHistoryDotMatrix({
                   cx={xCenter}
                   cy={dotY}
                   r={RH_DOT_R}
-                  fill={isFilled ? color : '#2d2926'}
-                  stroke={isFilled ? 'none' : '#3d3734'}
+                  fill={isFilled ? color : 'var(--color-background-elevated)'}
+                  stroke={isFilled ? 'none' : 'var(--color-border-hover)'}
                   strokeWidth={0.5}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
@@ -883,7 +883,7 @@ function ChapterVerdict({
         {aria && (aria.is_efos_definitivo || aria.is_sfp_sanctioned || aria.in_ground_truth) && (
           <div className="flex flex-wrap gap-2 mb-6">
             {aria.is_efos_definitivo && (
-              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-red-950 text-red-300 border border-red-800 flex items-center gap-1.5">
+              <span className="px-3 py-1 rounded-full text-xs font-semibold bg-[color:var(--color-risk-critical)]/10 text-[color:var(--color-risk-critical)] border border-[color:var(--color-risk-critical)]/30 flex items-center gap-1.5">
                 <Shield className="w-3 h-3" /> {t('verdict.efosLabel')}
               </span>
             )}
