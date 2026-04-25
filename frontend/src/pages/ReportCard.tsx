@@ -14,7 +14,7 @@ import { useQuery } from '@tanstack/react-query'
 import type { AxiosError } from 'axios'
 import { useNavigate } from 'react-router-dom'
 import { phiApi, analysisApi } from '@/api/client'
-import { SECTORS, SECTOR_COLORS } from '@/lib/constants'
+import { SECTORS, SECTOR_COLORS, RISK_COLORS } from '@/lib/constants'
 
 // ---------------------------------------------------------------------------
 // Types
@@ -252,11 +252,13 @@ function HeroImpactSection({
     (dist?.medium?.count_pct ?? 0) +
     (dist?.low?.count_pct ?? 0)
 
+  // Routed through canonical RISK_COLORS (was 4 hex constants duplicating
+  // the same map elsewhere in the codebase per Batch A critique).
   const barLevels: Array<{ key: keyof RiskDistribution; color: string; label: string }> = [
-    { key: 'critical', color: '#ef4444', label: 'Critical' },
-    { key: 'high',     color: '#f59e0b', label: 'High'     },
-    { key: 'medium',   color: '#a16207', label: 'Medium'   },
-    { key: 'low',      color: '#71717a', label: 'Low'      },
+    { key: 'critical', color: RISK_COLORS.critical, label: 'Critical' },
+    { key: 'high',     color: RISK_COLORS.high,     label: 'High'     },
+    { key: 'medium',   color: RISK_COLORS.medium,   label: 'Medium'   },
+    { key: 'low',      color: RISK_COLORS.low,      label: 'Low'      },
   ]
 
   return (
@@ -413,22 +415,16 @@ function HeroSection({
             <div className="flex flex-col items-center">
               {/* Extra-large numeric score — national index hero */}
               <div className="flex items-baseline gap-1">
+                {/* Glow pulse honors prefers-reduced-motion — was an infinite
+                    textShadow loop ignoring the OS setting per Batch A critique. */}
                 <motion.span
-                  className="leading-none font-black font-mono tabular-nums"
+                  className="leading-none font-black font-mono tabular-nums motion-safe:[animation:reportcard-glow_3.2s_ease-in-out_infinite]"
                   style={{
                     fontSize: '7.5rem',
                     color: mx.color,
                     textShadow: `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
                   }}
                   aria-label={`${Math.round(score)} de 100`}
-                  animate={{
-                    textShadow: [
-                      `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
-                      `0 0 60px ${mx.color}60, 0 0 100px ${mx.color}30`,
-                      `0 0 40px ${mx.color}40, 0 0 80px ${mx.color}20`,
-                    ],
-                  }}
-                  transition={{ duration: 3.2, repeat: Infinity, ease: 'easeInOut' }}
                 >
                   {Math.round(score)}
                 </motion.span>
