@@ -825,7 +825,7 @@ export default function CapturaHeatmap() {
               onChange={(e) =>
                 setSectorId(e.target.value ? Number(e.target.value) : undefined)
               }
-              className="bg-surface-card border border-border hover:border-border focus:border-primary focus:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
+              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[180px]"
             >
               <option value="">{t('filters.allSectors')}</option>
               {SECTORS.map((s) => (
@@ -844,7 +844,7 @@ export default function CapturaHeatmap() {
               id="captura-year-select"
               value={yearRange}
               onChange={(e) => setYearRange(e.target.value)}
-              className="bg-surface-card border border-border hover:border-border focus:border-primary focus:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
+              className="bg-surface-card border border-border hover:border-border focus-visible:border-accent focus-visible:outline-none rounded-sm px-4 py-2 text-sm text-text-primary transition-colors min-w-[150px]"
             >
               <option value="all">{t('filters.allYears')}</option>
               <option value="2018">{t('filters.period2018')}</option>

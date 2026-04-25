@@ -676,7 +676,7 @@ export default function AriaPage() {
                   placeholder={t('leads.searchPlaceholder')}
                   value={search}
                   onChange={(e) => { setSearch(e.target.value); setPage(1) }}
-                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-background-card border border-border rounded-sm text-text-primary placeholder:text-text-muted focus:outline-none focus:border-amber-500/60 font-mono"
+                  className="w-full pl-9 pr-3 py-1.5 text-sm bg-background-card border border-border rounded-sm text-text-primary placeholder:text-text-muted focus-visible:outline-none focus-visible:border-accent font-mono"
                 />
               </div>
               <div className="flex items-center gap-1.5 flex-wrap">

@@ -3524,7 +3524,7 @@ function ComparePeriodView() {
   })
 
   const inputCls =
-    'w-20 h-8 px-2 rounded border border-border/40 bg-background-elevated/60 text-sm font-mono focus:outline-none focus:border-accent/50 transition-colors text-text-primary'
+    'w-20 h-8 px-2 rounded border border-border/40 bg-background-elevated/60 text-sm font-mono focus-visible:outline-none focus-visible:border-accent/50 transition-colors text-text-primary'
 
   const rows = useMemo(() => (data ? buildCompareRows(data) : []), [data])
 
