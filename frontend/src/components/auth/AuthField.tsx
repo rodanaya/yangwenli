@@ -33,7 +33,7 @@ export function AuthField({
       </label>
       <input
         id={id}
-        className={`w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent focus:outline-none focus:ring-1 focus:ring-accent transition-colors ${
+        className={`w-full rounded-sm border border-border bg-background px-3 py-2 text-sm text-text-primary placeholder-text-muted focus:border-accent focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-accent transition-colors ${
           mono ? 'font-mono' : 'font-sans'
         } ${className ?? ''}`}
         {...inputProps}

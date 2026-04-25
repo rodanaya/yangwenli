@@ -222,7 +222,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
             >
               <button
                 type="button"
-                className="truncate hover:underline focus:outline-none"
+                className="truncate hover:underline rounded-sm focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                 onClick={() => applyQuery(s.value)}
                 aria-label={`Apply saved search: ${s.label}`}
                 title={s.label}
@@ -235,7 +235,7 @@ export function CommandPalette({ open, onOpenChange }: CommandPaletteProps) {
                   e.stopPropagation()
                   removeSavedSearch(i)
                 }}
-                className="shrink-0 opacity-60 hover:opacity-100 focus:outline-none"
+                className="shrink-0 opacity-60 hover:opacity-100 rounded-sm focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                 aria-label={`Remove saved search: ${s.label}`}
               >
                 <XIcon className="h-2.5 w-2.5" aria-hidden="true" />
