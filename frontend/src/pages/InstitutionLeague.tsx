@@ -1242,11 +1242,18 @@ export default function InstitutionLeague() {
                     return (
                       <React.Fragment key={item.institution_id}>
                       <tr
-                        className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group ${
-                          isWorstPerformer ? 'bg-red-950/15' : ''
+                        className={`border-b border-border hover:bg-background-elevated transition-colors cursor-pointer group focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-[-2px] ${
+                          isWorstPerformer ? 'bg-risk-critical/10' : ''
                         } ${isExpanded ? 'bg-background-elevated' : ''}`}
                         onClick={() => navigate(`/institutions/${item.institution_id}`)}
-                        role="row"
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault()
+                            navigate(`/institutions/${item.institution_id}`)
+                          }
+                        }}
+                        tabIndex={0}
+                        role="button"
                         aria-label={t('rowAriaLabel', { rank, name: item.institution_name, score: item.total_score, tier: tier.label })}
                         style={{ borderLeft: `4px solid ${tier.color}` }}
                       >
