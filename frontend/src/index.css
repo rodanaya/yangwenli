@@ -48,7 +48,7 @@
   /* Text tokens — bible §3.4 */
   --color-text-primary: #1a1714;
   --color-text-secondary: #6b6560;
-  --color-text-muted: #9c9490;
+  --color-text-muted: #7a716c;
   --color-text-disabled: #c5bfb8;
 
   /* Legacy dark-context tokens, now aliased to light-mode text. The sidebar

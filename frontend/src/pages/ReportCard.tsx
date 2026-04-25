@@ -466,9 +466,9 @@ function HeroSection({
             animate={{ opacity: 1, x: 0 }}
             transition={{ delay: 0.4, duration: 0.6 }}
           >
-            <h1 className="text-2xl md:text-3xl font-serif font-bold leading-snug mb-3 text-text-primary">
+            <h2 className="text-2xl md:text-3xl font-serif font-bold leading-snug mb-3 text-text-primary">
               {headline}
-            </h1>
+            </h2>
 
             {/* Risk distribution bar */}
             {national.risk_distribution && (

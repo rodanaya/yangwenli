@@ -5,9 +5,13 @@ interface SkeletonProps extends React.HTMLAttributes<HTMLDivElement> {
   shimmer?: boolean
 }
 
-function Skeleton({ className, shimmer = false, ...props }: SkeletonProps) {
+function Skeleton({ className, shimmer = false, role, ...props }: SkeletonProps) {
   return (
     <div
+      role={role ?? 'status'}
+      aria-live="polite"
+      aria-label={props['aria-label'] ?? 'Loading'}
+      aria-busy="true"
       className={cn(
         'rounded-md bg-background-elevated',
         shimmer ? 'animate-shimmer' : 'animate-pulse',
