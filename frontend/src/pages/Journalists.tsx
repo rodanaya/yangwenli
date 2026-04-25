@@ -4,6 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import { useTranslation } from 'react-i18next'
 import { ariaApi } from '@/api/client'
 import { cn } from '@/lib/utils'
+import { DotBar } from '@/components/ui/DotBar'
 
 // ---------------------------------------------------------------------------
 // INVESTIGATIONS — hardcoded editorial metadata
@@ -138,12 +139,14 @@ const INVESTIGATIONS: Investigation[] = [
 // Visual system
 // ---------------------------------------------------------------------------
 
+// Routed through canonical risk + sector tokens. Was 5 hex constants per
+// FRAUD_COLOR + 4 dark-mode pill styles per STATUS_META. Cream-mode now.
 const FRAUD_COLOR: Record<FraudType, string> = {
-  ghost_company: '#ef4444',
-  monopoly: '#60a5fa',
-  overpricing: '#fb923c',
-  embezzlement: '#f59e0b',
-  procurement_fraud: '#a78bfa',
+  ghost_company: 'var(--color-risk-critical)',
+  monopoly: 'var(--color-sector-educacion)',
+  overpricing: 'var(--color-sector-infraestructura)',
+  embezzlement: 'var(--color-risk-high)',
+  procurement_fraud: 'var(--color-sector-tecnologia)',
 }
 
 const STATUS_META: Record<
@@ -152,21 +155,21 @@ const STATUS_META: Record<
 > = {
   procesado: {
     label: 'PROSECUTED',
-    color: 'text-red-500',
-    border: 'border-red-500/25',
-    bg: 'bg-red-500/[0.06]',
+    color: 'text-risk-critical',
+    border: 'border-risk-critical/30',
+    bg: 'bg-risk-critical/[0.06]',
   },
   auditado: {
     label: 'UNDER AUDIT',
-    color: 'text-cyan-400',
-    border: 'border-cyan-400/25',
-    bg: 'bg-cyan-400/[0.06]',
+    color: 'text-[color:var(--color-oecd)]',
+    border: 'border-[color:var(--color-oecd)]/30',
+    bg: 'bg-[color:var(--color-oecd)]/[0.06]',
   },
   reporteado: {
     label: 'REPORTED',
-    color: 'text-amber-400',
-    border: 'border-amber-400/25',
-    bg: 'bg-amber-400/[0.06]',
+    color: 'text-risk-high',
+    border: 'border-risk-high/30',
+    bg: 'bg-risk-high/[0.06]',
   },
   solo_datos: {
     label: 'DATA LEAD',
@@ -204,22 +207,16 @@ function formatBillions(amount: number): string {
 // ---------------------------------------------------------------------------
 
 function IntensityBar({ value, color }: { value: number; color: string }) {
-  const N = 12
-  const filled = Math.max(1, Math.round(Math.min(1, value) * N))
+  // Routed through canonical <DotBar/>. Empty-cell fill was rgba(255,255,255,0.08)
+  // — invisible on cream. DotBar uses var(--color-border) for the noise-floor.
   return (
-    <div className="flex items-center gap-[3px]" aria-hidden="true">
-      {Array.from({ length: N }).map((_, i) => (
-        <span
-          key={i}
-          className="block"
-          style={{
-            width: 5,
-            height: 5,
-            background: i < filled ? color : 'rgba(255,255,255,0.08)',
-          }}
-        />
-      ))}
-    </div>
+    <DotBar
+      value={Math.min(1, value)}
+      max={1}
+      color={color}
+      className="w-full"
+      ariaLabel="Investigation intensity"
+    />
   )
 }
 
