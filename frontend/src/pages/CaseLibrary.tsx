@@ -448,7 +448,7 @@ export default function CaseLibrary() {
 
         {/* ─────────── Stats row (3 numbers) ─────────── */}
         <div
-          className="grid grid-cols-3 mb-10"
+          className="grid grid-cols-1 sm:grid-cols-3 mb-10"
           style={{ borderBottom: `1px solid ${BORDER}` }}
         >
           {[
