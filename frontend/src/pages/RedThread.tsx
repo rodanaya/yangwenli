@@ -146,7 +146,7 @@ function ChapterSubject({ vendor, aria, t }: {
   const riskColor = RISK_DOT_COLORS[riskLevel]
 
   return (
-    <section id="chapter-subject" className="min-h-screen flex flex-col justify-center py-24 px-8 max-w-4xl mx-auto">
+    <section id="chapter-subject" className="min-h-screen flex flex-col justify-center py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <ChapterLabel>{t('chapters.headings.subject')}</ChapterLabel>
 
       <motion.h1
@@ -281,7 +281,7 @@ function ChapterTimeline({ totalContracts, vendorFirstYear, vendorLastYear, time
   const maxValue = Math.max(...sortedTimeline.map((item) => item.total_value), 1)
 
   return (
-    <section id="chapter-timeline" className="min-h-screen py-24 px-8 max-w-5xl mx-auto">
+    <section id="chapter-timeline" className="min-h-screen py-24 px-4 sm:px-8 max-w-5xl mx-auto">
       <RedThreadChapter
         label={t('chapters.headings.timeline')}
         title={t('timeline.heading', { total: formatNumber(displayTotal), minYear, maxYear })}
@@ -390,7 +390,7 @@ function ChapterPattern({ waterfall, ariaPattern, t }: {
   const maxAbs = Math.max(...sorted.map((f) => Math.abs(f.contribution)), 0.01)
 
   return (
-    <section id="chapter-pattern" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
+    <section id="chapter-pattern" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.pattern')} title={t('pattern.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('pattern.description')}
@@ -513,7 +513,7 @@ function ChapterNetwork({ vendorId, vendor, coBidders, t }: {
   t: TFunction
 }) {
   return (
-    <section id="chapter-network" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
+    <section id="chapter-network" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.network')} title={t('network.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('network.description')}
@@ -650,7 +650,7 @@ function ChapterMoney({ timeline, t }: {
   const peakRiskYear = timeline.reduce((max, item) => (item.avg_risk_score ?? 0) > (max.avg_risk_score ?? 0) ? item : max, timeline[0] ?? { year: 0, total_value: 0, avg_risk_score: null, contract_count: 0 })
 
   return (
-    <section id="chapter-money" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
+    <section id="chapter-money" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter
         label={t('chapters.headings.money')}
         title={t('money.heading', { value: formatCompactMXN(totalValue) })}
@@ -848,7 +848,7 @@ function ChapterVerdict({
   const patternMeta = aria?.primary_pattern ? PATTERN_META[aria.primary_pattern] : null
 
   return (
-    <section id="chapter-verdict" className="min-h-screen py-24 px-8 max-w-4xl mx-auto">
+    <section id="chapter-verdict" className="min-h-screen py-24 px-4 sm:px-8 max-w-4xl mx-auto">
       <RedThreadChapter label={t('chapters.headings.verdict')} title={t('verdict.heading')} />
       <p className="text-text-muted mb-10 max-w-xl">
         {t('verdict.description')}
@@ -1174,19 +1174,19 @@ export default function RedThread() {
       <ChapterNav active={activeChapter} chapters={chapters} />
 
       {/* Back nav */}
-      <div className="sticky top-0 z-40 px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between">
+      <div className="sticky top-0 z-40 px-3 sm:px-8 py-3 bg-[var(--color-background)]/80 backdrop-blur-sm border-b border-border flex items-center justify-between gap-2">
         <button
           onClick={() => navigate('/aria')}
-          className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm"
+          className="flex items-center gap-2 text-text-muted hover:text-text-primary transition-colors text-sm flex-shrink-0"
         >
           <ArrowLeft className="w-4 h-4" />
           {t('nav.back')}
         </button>
-        <div className="flex items-center gap-3">
-          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-risk-critical)] animate-pulse" />
+        <div className="hidden sm:flex items-center gap-3 min-w-0">
+          <div className="w-1.5 h-1.5 rounded-full bg-[var(--color-risk-critical)] animate-pulse flex-shrink-0" />
           <span className="text-xs text-text-secondary uppercase tracking-widest">{t('nav.redThread')}</span>
           <span className="text-xs text-text-muted">·</span>
-          <span className="text-xs text-text-muted max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>
+          <span className="text-xs text-text-muted max-w-[160px] md:max-w-[240px] truncate" title={vendor.name}>{formatVendorName(vendor.name, 40)}</span>
         </div>
         <Link
           to={`/vendors/${id}`}
