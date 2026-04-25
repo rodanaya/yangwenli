@@ -1,7 +1,8 @@
-import { useState, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useQuery } from '@tanstack/react-query'
+import { useQueryState, parseAsStringEnum } from 'nuqs'
 import { useUrlSearch } from '@/hooks'
 import { caseLibraryApi } from '@/api/client'
 import type {
@@ -12,6 +13,7 @@ import type {
   CaseLibraryParams,
 } from '@/api/types'
 import { TableExportButton } from '@/components/TableExportButton'
+import { formatCompactMXN } from '@/lib/utils'
 import { AlertCircle, Search, X, ArrowRight, ChevronRight } from 'lucide-react'
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -57,10 +59,8 @@ const LEGAL_STATUS_STYLE: Record<
 
 function formatMXN(n?: number | null): string {
   if (!n) return '—'
-  if (n >= 1e12) return `$${(n / 1e12).toFixed(1)}T`
-  if (n >= 1e9) return `$${(n / 1e9).toFixed(1)}B`
-  if (n >= 1e6) return `$${(n / 1e6).toFixed(0)}M`
-  return `$${n.toLocaleString()}`
+  // Delegates to the canonical formatter — single source of truth.
+  return formatCompactMXN(n)
 }
 
 function formatMXNHero(n: number): string {
@@ -191,7 +191,7 @@ function CaseRow({
           </div>
 
           <h3
-            className="text-[15px] leading-snug text-text-primary group-hover:text-amber-300 transition-colors"
+            className="text-[15px] leading-snug text-text-primary group-hover:text-accent transition-colors"
             style={{ fontFamily: 'var(--font-family-serif)', fontWeight: 600 }}
           >
             {name}
@@ -247,13 +247,13 @@ function CaseRow({
             className="text-[10px] uppercase tracking-[0.15em] text-text-muted mt-1"
             style={{ fontFamily: 'var(--font-family-mono)' }}
           >
-            {lang === 'es' ? 'MXN · PÉRDIDA EST.' : 'MXN · EST. LOSS'}
+            {lang === 'es' ? 'PÉRDIDA EST.' : 'EST. LOSS'}
           </div>
         </div>
 
         {/* Right: chevron */}
         <div className="flex-shrink-0 self-center">
-          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-amber-400 group-hover:translate-x-0.5 transition-all" />
+          <ChevronRight className="h-4 w-4 text-text-muted group-hover:text-accent group-hover:translate-x-0.5 transition-all" />
         </div>
       </div>
     </button>
@@ -292,8 +292,36 @@ export default function CaseLibrary() {
   const { t, i18n } = useTranslation('cases')
   const navigate = useNavigate()
 
-  const [filters, setFilters] = useState<CaseLibraryParams>({})
+  // URL-synced filters — refresh preserves state, links are shareable.
+  const [fraudType, setFraudType] = useQueryState(
+    'fraud',
+    parseAsStringEnum<FraudType>([
+      'ghost_company', 'monopoly', 'overpricing', 'bid_rigging',
+      'procurement_fraud', 'embezzlement', 'bribery',
+      'conflict_of_interest', 'emergency_fraud', 'tender_rigging', 'other',
+    ])
+  )
+  const [administration, setAdministration] = useQueryState(
+    'admin',
+    parseAsStringEnum<Administration>(['fox', 'calderon', 'epn', 'amlo', 'sheinbaum'])
+  )
+  const [legalStatus, setLegalStatus] = useQueryState(
+    'status',
+    parseAsStringEnum<LegalStatus>([
+      'impunity', 'investigation', 'prosecuted',
+      'convicted', 'acquitted', 'dismissed', 'unresolved',
+    ])
+  )
   const { search, setSearch } = useUrlSearch()
+
+  const filters: CaseLibraryParams = useMemo(
+    () => ({
+      fraud_type: fraudType ?? undefined,
+      administration: administration ?? undefined,
+      legal_status: legalStatus ?? undefined,
+    }),
+    [fraudType, administration, legalStatus]
+  )
 
   const queryParams: CaseLibraryParams = useMemo(
     () => ({ ...filters, search: search || undefined }),
@@ -507,10 +535,12 @@ export default function CaseLibrary() {
               <button
                 type="button"
                 onClick={() => {
-                  setFilters({})
+                  setFraudType(null)
+                  setAdministration(null)
+                  setLegalStatus(null)
                   setSearch(null)
                 }}
-                className="text-[10px] tracking-wider uppercase text-text-muted hover:text-amber-400 transition-colors flex items-center gap-1"
+                className="text-[10px] tracking-wider uppercase text-text-muted hover:text-accent transition-colors flex items-center gap-1"
                 style={{ fontFamily: 'var(--font-family-mono)' }}
               >
                 <X className="h-3 w-3" />
@@ -529,19 +559,15 @@ export default function CaseLibrary() {
             </span>
             <FilterPill
               label={t('filters.all')}
-              active={filters.fraud_type == null}
-              onClick={() =>
-                setFilters((f) => ({ ...f, fraud_type: undefined }))
-              }
+              active={fraudType == null}
+              onClick={() => setFraudType(null)}
             />
             {FRAUD_FILTERS.map((f) => (
               <FilterPill
                 key={f.value}
                 label={t(f.key)}
-                active={filters.fraud_type === f.value}
-                onClick={() =>
-                  setFilters((prev) => ({ ...prev, fraud_type: f.value }))
-                }
+                active={fraudType === f.value}
+                onClick={() => setFraudType(f.value)}
               />
             ))}
           </div>
@@ -556,19 +582,15 @@ export default function CaseLibrary() {
             </span>
             <FilterPill
               label={t('filters.all')}
-              active={filters.administration == null}
-              onClick={() =>
-                setFilters((f) => ({ ...f, administration: undefined }))
-              }
+              active={administration == null}
+              onClick={() => setAdministration(null)}
             />
             {ADMIN_FILTERS.map((f) => (
               <FilterPill
                 key={f.value}
                 label={t(f.key).split(' ')[0]}
-                active={filters.administration === f.value}
-                onClick={() =>
-                  setFilters((prev) => ({ ...prev, administration: f.value }))
-                }
+                active={administration === f.value}
+                onClick={() => setAdministration(f.value)}
               />
             ))}
           </div>
@@ -583,19 +605,15 @@ export default function CaseLibrary() {
             </span>
             <FilterPill
               label={t('filters.all')}
-              active={filters.legal_status == null}
-              onClick={() =>
-                setFilters((f) => ({ ...f, legal_status: undefined }))
-              }
+              active={legalStatus == null}
+              onClick={() => setLegalStatus(null)}
             />
             {STATUS_FILTERS.map((f) => (
               <FilterPill
                 key={f.value}
                 label={t(f.key)}
-                active={filters.legal_status === f.value}
-                onClick={() =>
-                  setFilters((prev) => ({ ...prev, legal_status: f.value }))
-                }
+                active={legalStatus === f.value}
+                onClick={() => setLegalStatus(f.value)}
               />
             ))}
           </div>
@@ -684,10 +702,12 @@ export default function CaseLibrary() {
                 <button
                   type="button"
                   onClick={() => {
-                    setFilters({})
+                    setFraudType(null)
+                    setAdministration(null)
+                    setLegalStatus(null)
                     setSearch(null)
                   }}
-                  className="mt-4 inline-flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-amber-400 hover:text-amber-300 transition-colors"
+                  className="mt-4 inline-flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-accent hover:text-accent-hover transition-colors"
                   style={{ fontFamily: 'var(--font-family-mono)' }}
                 >
                   <X className="h-3 w-3" />
