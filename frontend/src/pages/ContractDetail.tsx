@@ -40,18 +40,9 @@ import {
   Copy,
 } from 'lucide-react'
 
-// ----------------------------------------------------------------------------
-// Administration helper — maps contract year to Mexican presidential term
-// ----------------------------------------------------------------------------
-function getAdministration(year?: number | null): string {
-  if (!year) return ''
-  if (year <= 2000) return 'Zedillo'
-  if (year <= 2006) return 'Fox'
-  if (year <= 2012) return 'Calderón'
-  if (year <= 2018) return 'Peña Nieto'
-  if (year <= 2024) return 'AMLO'
-  return 'Sheinbaum'
-}
+// Administration helper imported from canonical lib/administrations.
+// Was a 4-file duplicate with slightly different accent handling.
+import { getAdministrationShortName as getAdministration } from '@/lib/administrations'
 
 // ----------------------------------------------------------------------------
 // Main page

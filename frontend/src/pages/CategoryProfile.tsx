@@ -74,17 +74,16 @@ function truncate(text: string, maxLen: number): string {
   return text.length > maxLen ? text.slice(0, maxLen - 1) + '\u2026' : text
 }
 
-const ADMIN_DISPLAY: Record<string, string> = {
-  Fox: 'Fox',
-  Calderon: 'Calderon',
-  'Calderón': 'Calderon',
-  'Pena Nieto': 'Pena Nieto',
-  'Peña Nieto': 'Pena Nieto',
-  AMLO: 'AMLO',
-  Sheinbaum: 'Sheinbaum',
-}
+// Imported from canonical lib/administrations — was a 4-file duplicate.
+import { ADMIN_DISPLAY_LEGACY as ADMIN_DISPLAY, ADMIN_DISPLAY as ADMIN_DISPLAY_CANONICAL } from '@/lib/administrations'
 
-const ADMIN_ORDER = ['Fox', 'Calderon', 'Pena Nieto', 'AMLO', 'Sheinbaum']
+const ADMIN_ORDER = [
+  ADMIN_DISPLAY_CANONICAL.fox,
+  ADMIN_DISPLAY_CANONICAL.calderon,
+  ADMIN_DISPLAY_CANONICAL.epn,
+  ADMIN_DISPLAY_CANONICAL.amlo,
+  ADMIN_DISPLAY_CANONICAL.sheinbaum,
+]
 
 function getConcentrationBadge(label: string, t: (key: string) => string) {
   switch (label) {
