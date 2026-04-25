@@ -7,6 +7,7 @@ import { staggerContainer, staggerItem } from '@/lib/animations'
 // Card components replaced by fern-card editorial utility class
 import { Badge } from '@/components/ui/badge'
 import { cn } from '@/lib/utils'
+import { RISK_COLORS } from '@/lib/constants'
 import {
   ChevronDown,
   ChevronRight,
@@ -63,11 +64,13 @@ const V33_WEIGHTS = [
   { nameKey: 'thresholdSplitting', weight: 7 },
 ] as const
 
+// Colors routed through canonical RISK_COLORS instead of three local hex
+// duplicates that drifted from the rest of the platform.
 const RISK_LEVELS_V6 = [
-  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: '#f87171' },
-  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: '#fb923c' },
-  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: '#fbbf24' },
-  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: 'var(--color-text-muted)' },
+  { level: 'Critical', threshold: '>= 0.60', meaning: 'Very high similarity to known corruption patterns', pct: '6.03%', count: '184,031', color: RISK_COLORS.critical },
+  { level: 'High', threshold: '>= 0.40', meaning: 'High similarity to known corruption patterns', pct: '7.50%', count: '228,814', color: RISK_COLORS.high },
+  { level: 'Medium', threshold: '>= 0.25', meaning: 'Moderate similarity to known corruption patterns', pct: '26.91%', count: '821,251', color: RISK_COLORS.medium },
+  { level: 'Low', threshold: '< 0.25', meaning: 'Low similarity to known corruption patterns', pct: '59.55%', count: '1,817,198', color: RISK_COLORS.low },
 ] as const
 
 const CORRUPTION_CASES = [
