@@ -1,10 +1,8 @@
 {
   "title": "Contracts",
-  "editorialTitle": "Federal Contract Registry",
   "searchPlaceholder": "Search by title or contract number...",
   "guidance": "Select a preset to start investigating, or use filters to find specific contracts. Click any row to expand risk factors. Use the compare tool to analyze contracts side-by-side.",
   "presets": {
-    "sectionLabel": "Investigation Presets",
     "suspiciousMonopolies": {
       "label": "Single-Bidder Contracts",
       "description": "Critical-risk single-bidder contracts — one vendor in a competitive procedure"
@@ -43,24 +41,14 @@
     }
   },
   "columns": {
-    "id": "ID",
-    "title": "Title",
     "risk": "Risk",
     "vendor": "Vendor",
     "institution": "Institution",
     "amount": "Amount (MXN)",
     "date": "Date",
-    "year": "Year",
     "sector": "Sector",
-    "riskScore": "Risk Score",
-    "riskLevel": "Risk Level",
-    "procedureType": "Procedure",
     "procedure": "Procedure",
-    "isDirectAward": "Direct Award",
-    "isSingleBid": "Single Bid",
-    "anomalyScore": "Anomaly D²",
-    "riskScoreTooltipTitle": "About the risk score",
-    "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal."
+    "anomalyScore": "Anomaly D²"
   },
   "detail": {
     "title": "Contract Detail",
@@ -109,8 +97,7 @@
     "critical": "Critical",
     "highPlus": "High+",
     "direct": "Direct",
-    "directAwardRate": "Direct Award Rate",
-    "singleBidRate": "Single Bid Rate"
+    "directAwardRate": "Direct Award Rate"
   },
   "table": {
     "anomalyTooltip": "Mahalanobis distance — how statistically unusual this contract is across all risk dimensions. Higher = more unusual.",
@@ -122,11 +109,7 @@
     "riskScoreTooltipBody": "The risk score (0-1) measures similarity to documented corruption patterns. It is not proof of irregularity — it is an investigation signal."
   },
   "actions": {
-    "retry": "Retry",
-    "saveFilter": "Save filter",
-    "filterSaved": "Saved",
-    "compare": "Compare",
-    "selected": "selected"
+    "filterSaved": "Saved"
   },
   "error": {
     "failedToLoad": "Failed to load contracts",
@@ -148,11 +131,5 @@
     "medium": "Medium",
     "low": "Low"
   },
-  "statsBar": {
-    "contracts": "contracts",
-    "audited": "MXN audited",
-    "atCriticalRisk": "at critical risk",
-    "directAwardRate": "direct award",
-    "pageKicker": "Federal Contracts Registry · 2001–2025"
-  }
+  "statsBar": {}
 }

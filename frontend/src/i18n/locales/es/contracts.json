@@ -1,10 +1,8 @@
 {
   "title": "Contratos",
-  "editorialTitle": "Registro Federal de Contratos",
   "searchPlaceholder": "Buscar por título o número de contrato...",
   "guidance": "Seleccione un preset para comenzar a investigar, o use filtros para encontrar contratos específicos. Haga clic en cualquier fila para expandir los factores de riesgo. Use la herramienta de comparación para analizar contratos lado a lado.",
   "presets": {
-    "sectionLabel": "Consultas de Investigación",
     "suspiciousMonopolies": {
       "label": "Contratos con Un Solo Licitante",
       "description": "Contratos de riesgo crítico con un solo licitante — un proveedor en procedimiento competitivo"
@@ -19,23 +17,23 @@
     },
     "ghostCompanies": {
       "label": "Discrepancia de Sector",
-      "description": "Adjudicaciones directas a proveedores fuera de su sector registrado — patr\u00f3n asociado a entidades sin operaciones reales"
+      "description": "Adjudicaciones directas a proveedores fuera de su sector registrado — patrón asociado a entidades sin operaciones reales"
     },
     "networkClusters": {
       "label": "Grupos en Red",
-      "description": "Contratos de riesgo cr\u00edtico de miembros de red — proveedores con alta actividad de co-oferta"
+      "description": "Contratos de riesgo crítico de miembros de red — proveedores con alta actividad de co-oferta"
     },
     "splitContracts": {
       "label": "Contratos Fraccionados",
-      "description": "Fraccionamiento de umbrales — m\u00faltiples contratos el mismo d\u00eda cercanos a l\u00edmites de supervisi\u00f3n"
+      "description": "Fraccionamiento de umbrales — múltiples contratos el mismo día cercanos a límites de supervisión"
     },
     "mostAnomalous": {
       "label": "Más Anómalos",
       "description": "Contratos más alejados de las normas estadísticas — mayor distancia de Mahalanobis en todas las dimensiones de riesgo"
     },
     "recentCritical": {
-      "label": "Recientes y Cr\u00edticos",
-      "description": "Contratos de riesgo cr\u00edtico de 2024 — resultados de alta puntuaci\u00f3n m\u00e1s recientes"
+      "label": "Recientes y Críticos",
+      "description": "Contratos de riesgo crítico de 2024 — resultados de alta puntuación más recientes"
     },
     "biggestDirectAwards": {
       "label": "Mayores Adj. Directas",
@@ -43,24 +41,14 @@
     }
   },
   "columns": {
-    "id": "ID",
-    "title": "Título",
     "risk": "Riesgo",
     "vendor": "Proveedor",
     "institution": "Institución",
     "amount": "Monto (MXN)",
     "date": "Fecha",
-    "year": "Año",
     "sector": "Sector",
-    "riskScore": "Puntuación de Riesgo",
-    "riskLevel": "Nivel de Riesgo",
-    "procedureType": "Tipo de Procedimiento",
     "procedure": "Procedimiento",
-    "isDirectAward": "Adj. Directa",
-    "isSingleBid": "Licitación Única",
-    "anomalyScore": "Anomalía D²",
-    "riskScoreTooltipTitle": "Sobre la puntuación de riesgo",
-    "riskScoreTooltipBody": "La puntuación de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación."
+    "anomalyScore": "Anomalía D²"
   },
   "detail": {
     "title": "Detalle del Contrato",
@@ -109,8 +97,7 @@
     "critical": "Críticos",
     "highPlus": "Alto+",
     "direct": "Directos",
-    "directAwardRate": "Tasa de Adj. Directa",
-    "singleBidRate": "Tasa de Licitación Única"
+    "directAwardRate": "Tasa de Adj. Directa"
   },
   "table": {
     "anomalyTooltip": "Distancia de Mahalanobis — qué tan estadísticamente inusual es este contrato en todas las dimensiones de riesgo. Mayor = más inusual.",
@@ -122,11 +109,7 @@
     "riskScoreTooltipBody": "La puntuación de riesgo (0-1) mide similitud con patrones de corrupción documentados. No es prueba de irregularidad — es una señal de investigación."
   },
   "actions": {
-    "retry": "Reintentar",
-    "saveFilter": "Guardar filtro",
-    "filterSaved": "Guardado",
-    "compare": "Comparar",
-    "selected": "seleccionados"
+    "filterSaved": "Guardado"
   },
   "error": {
     "failedToLoad": "Error al cargar contratos",
@@ -148,11 +131,5 @@
     "medium": "Medio",
     "low": "Bajo"
   },
-  "statsBar": {
-    "contracts": "contratos",
-    "audited": "MXN auditados",
-    "atCriticalRisk": "en riesgo crítico",
-    "directAwardRate": "adjudicación directa",
-    "pageKicker": "Registro Nacional de Contratos Federales · 2001–2025"
-  }
+  "statsBar": {}
 }
