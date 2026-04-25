@@ -507,8 +507,8 @@ function ComplementaryTypologyCard({
                     cx={i * (DOT_SIZE + DOT_GAP) + DOT_SIZE / 2}
                     cy={DOT_SIZE / 2}
                     r={DOT_SIZE / 2}
-                    fill={i < filled ? accent : '#2d2926'}
-                    stroke={i < filled ? undefined : '#3d3734'}
+                    fill={i < filled ? accent : 'var(--color-background-elevated)'}
+                    stroke={i < filled ? undefined : 'var(--color-border-hover)'}
                     strokeWidth={i < filled ? 0 : 0.5}
                   />
                 ))}
@@ -568,8 +568,8 @@ function EvidenceStrip({ gtTypes, gtTotal }: { gtTypes: ReturnType<typeof buildG
             cx={i * DOT_GAP + DOT_R}
             cy={DOT_R + 4}
             r={DOT_R}
-            fill={color || '#2d2926'}
-            stroke={color ? 'none' : '#3d3734'}
+            fill={color || 'var(--color-background-elevated)'}
+            stroke={color ? 'none' : 'var(--color-border-hover)'}
             strokeWidth={0.5}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
@@ -739,8 +739,8 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
               width: 6,
               height: 6,
               borderRadius: '50%',
-              backgroundColor: i < filled ? color : '#2d2926',
-              border: i < filled ? 'none' : '1px solid #e2ddd6',
+              backgroundColor: i < filled ? color : 'var(--color-background-elevated)',
+              border: i < filled ? 'none' : '1px solid var(--color-border)',
               boxSizing: 'border-box',
             }}
           />
@@ -841,7 +841,7 @@ function SectorMatrix({ patterns, isEs }: { patterns: PatternFull[]; isEs: boole
         <div className="flex items-center gap-2">
           <span
             className="inline-block"
-            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: '#2d2926', border: '1px solid #e2ddd6', boxSizing: 'border-box' }}
+            style={{ width: 6, height: 6, borderRadius: '50%', backgroundColor: 'var(--color-background-elevated)', border: '1px solid var(--color-border)', boxSizing: 'border-box' }}
           />
           <span>0</span>
         </div>
@@ -966,7 +966,7 @@ function PatternVendorCard({
                 T1: <span className="font-bold" style={{ color }}>{spotlight.t1_count}</span>
               </span>
               <span className="text-[10px] font-mono text-text-muted/60">
-                T2: <span className="font-bold text-amber-400/80">{spotlight.t2_count}</span>
+                T2: <span className="font-bold text-risk-high/80">{spotlight.t2_count}</span>
               </span>
               <span className="text-[10px] font-mono text-text-muted/60">
                 {isEs ? 'Total' : 'Total'}: {spotlight.vendor_count.toLocaleString()}

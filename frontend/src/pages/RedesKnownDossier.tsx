@@ -274,7 +274,7 @@ const PATTERN_ICON: Record<PatternCode, React.ElementType> = {
 function DotBar({
   value,
   color,
-  emptyColor = '#2d2926',
+  emptyColor = 'var(--color-background-elevated)',
   dots = 20,
   size = 6,
   gap = 2,
@@ -304,7 +304,7 @@ function DotBar({
           cy={size / 2}
           r={size / 2}
           fill={i < filled ? color : emptyColor}
-          stroke={i < filled ? undefined : '#3d3734'}
+          stroke={i < filled ? undefined : 'var(--color-border-hover)'}
           strokeWidth={i < filled ? 0 : 0.5}
         />
       ))}
@@ -365,7 +365,7 @@ function Nucleos({ communities, activeId, onHover, onSelect, isEs }: NucleusProp
     <div className="relative rounded-sm border border-border/30 bg-background-card overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-border">
         <p
-          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-red-400/80"
+          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-critical/80"
           style={{ fontFamily: FONT_MONO }}
         >
           {isEs ? 'Acto I · Los Núcleos' : 'Act I · The Cores'}
@@ -838,7 +838,7 @@ function SignatureRow({
       <span
         className={cn(
           'text-[10px] font-mono font-bold tabular-nums w-10 text-right',
-          overBenchmark ? 'text-red-400' : 'text-text-primary',
+          overBenchmark ? 'text-risk-critical' : 'text-text-primary',
         )}
       >
         {pct}%
@@ -885,7 +885,7 @@ function FlujoDeValor({ communities, isEs }: { communities: Community[]; isEs: b
     <div className="rounded-sm border border-border/30 bg-background-card overflow-hidden">
       <div className="px-5 pt-4 pb-3 border-b border-border">
         <p
-          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
+          className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-high/80"
           style={{ fontFamily: FONT_MONO }}
         >
           {isEs ? 'Acto III · Flujo de Valor' : 'Act III · Value Flow'}
@@ -1064,7 +1064,7 @@ export default function RedesKnownDossier() {
         <div className="flex items-center gap-3 mb-4">
           <div className="h-px flex-1 bg-gradient-to-r from-red-500/60 to-transparent" />
           <span
-            className="text-[10px] tracking-[0.35em] uppercase font-mono text-red-400/80"
+            className="text-[10px] tracking-[0.35em] uppercase font-mono text-risk-critical/80"
           >
             {isEs ? 'Inteligencia de Red · ARIA + Louvain' : 'Network Intelligence · ARIA + Louvain'}
           </span>
@@ -1143,7 +1143,7 @@ export default function RedesKnownDossier() {
       <div className="pt-4">
         <div className="flex items-center gap-3 mb-4">
           <span
-            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-amber-400/80"
+            className="text-[10px] font-mono font-bold uppercase tracking-[0.2em] text-risk-high/80"
           >
             {isEs ? 'Acto II · El Dossier' : 'Act II · The Dossier'}
           </span>
