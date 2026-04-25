@@ -988,7 +988,7 @@ export function Methodology() {
 
               <CoefficientChart />
 
-              <div className="grid grid-cols-3 gap-2 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs">
                 <div className="flex items-center gap-1.5">
                   <div className="h-2.5 w-2.5 rounded-full bg-[#f59e0b]" aria-hidden="true" />
                   <span className="text-text-muted">{t('body.features.legendIncreasesRisk')}</span>
@@ -1483,7 +1483,7 @@ export function Methodology() {
               </p>
 
               {/* Severity summary */}
-              <div className="grid grid-cols-3 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div className="flex items-center gap-2 p-2.5 rounded-md bg-risk-critical/5 border border-risk-critical/15">
                   <span className="h-2.5 w-2.5 rounded-full bg-risk-critical" />
                   <div>
