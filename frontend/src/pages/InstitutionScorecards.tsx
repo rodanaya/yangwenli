@@ -762,7 +762,7 @@ export default function InstitutionScorecards() {
                 <button
                   type="button"
                   onClick={() => { setSearch(''); setSearchInput(''); setPage(1) }}
-                  className="text-xs text-text-muted hover:text-text-secondary transition-colors focus:outline-none"
+                  className="text-xs text-text-muted hover:text-text-secondary transition-colors rounded-sm focus-visible:outline-2 focus-visible:outline-accent focus-visible:outline-offset-2"
                   aria-label={t('aria.clearSearch')}
                 >
                   {t('filters.clear')}
